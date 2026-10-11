@@ -237,7 +237,7 @@ export function CorrectionEditor({
   /** Record fields that differ from the library, marked "Changed". */
   readonly changedKeys: readonly string[]
 }) {
-  const kind = editorFor(category)
+  const kind = editorFor(category, current.libraryType)
   const [stopId, setStopId] = useState("")
   const changed = useMemo(
     () => new Set(changedKeys as (keyof FormData)[]),

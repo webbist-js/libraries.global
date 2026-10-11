@@ -1,36 +1,36 @@
 "use client"
 
-import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
-import { useId, useMemo, useState } from "react"
+import { useId, useSyncExternalStore } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-import { countNoun, formatCount } from "./location-page.helpers"
+import { formatCount } from "./location-page.helpers"
 
 export type LocationChildItem = {
   slug: string
   name: string
-  /** Capital city, region type… */
   subtitle?: string | null
   href: string
+  addHref?: string
   count: number
+  shareCount?: number
+  coverage?: string | null
 }
+const PAGE_SIZE = 20
+const subscribe = (change: () => void) => {
+  window.addEventListener("popstate", change)
+  window.addEventListener("place-browser-change", change)
 
-type SortMode = "count" | "name"
+  return () => {
+    window.removeEventListener("popstate", change)
+    window.removeEventListener("place-browser-change", change)
+  }
+}
+const snapshot = () => window.location.search
+const serverSnapshot = () => ""
 
-// Empty-location chips shown before "Show all" when not filtering.
-const EMPTY_PREVIEW = 30
-
-const byName = (a: LocationChildItem, b: LocationChildItem) =>
-  a.name.localeCompare(b.name, "en-GB")
-
-/**
- * The child-location section of a continent or country page: a filterable,
- * sortable grid of count cards for places with libraries, then a chip list
- * of places with none yet.
- */
+/** Bounded rows, honest share bars and separate discovery/contribution links. */
 export function LocationChildBrowser({
   id,
   title,
@@ -38,300 +38,449 @@ export function LocationChildBrowser({
   items,
   noun,
   addHref,
+  countsAvailable = true,
+  totalCount,
+  shareLabel = "Share of documented place-based libraries",
+  coverageLabel = "Sub-areas with records",
 }: {
   readonly id: string
-  /** Section title, e.g. "Countries". */
   readonly title: string
   readonly description?: string | null
   readonly items: LocationChildItem[]
-  /** e.g. { singular: "country", plural: "countries" } */
   readonly noun: { singular: string; plural: string }
   readonly addHref: string
+  readonly countsAvailable?: boolean
+  readonly totalCount?: number
+  readonly shareLabel?: string
+  readonly coverageLabel?: string
 }) {
-  const tUi = useUiTranslations("ui")
-
   const inputId = useId()
-  const [query, setQuery] = useState("")
-  const [sort, setSort] = useState<SortMode>("count")
-  const [showAllEmpty, setShowAllEmpty] = useState(false)
-
-  const q = query.trim().toLocaleLowerCase("en-GB")
-  const matches = (item: LocationChildItem) =>
-    !q ||
-    item.name.toLocaleLowerCase("en-GB").includes(q) ||
-    Boolean(item.subtitle?.toLocaleLowerCase("en-GB").includes(q))
-
-  const { populated, empty, max } = useMemo(() => {
-    const withLibraries = items.filter((i) => i.count > 0)
-
-    return {
-      populated: withLibraries,
-      empty: items.filter((i) => i.count === 0).sort(byName),
-      max: Math.max(1, ...withLibraries.map((i) => i.count)),
-    }
-  }, [items])
-
-  const shown = populated
-    .filter(matches)
-    .sort(
-      sort === "name" ? byName : (a, b) => b.count - a.count || byName(a, b)
+  const search = useSyncExternalStore(subscribe, snapshot, serverSnapshot)
+  const params = new URLSearchParams(search)
+  const query = params.get(`${id}_q`) ?? ""
+  const populated = items.filter((item) => item.count > 0).length
+  const empty = items.length - populated
+  const rawView =
+    params.get(`${id}_view`) ??
+    (countsAvailable && populated && empty ? "populated" : "all")
+  const sort = params.get(`${id}_sort`) ?? "count"
+  const page = Math.max(1, Number(params.get(`${id}_page`)) || 1)
+  const set = (key: string, value: string) => {
+    const next = new URL(window.location.href)
+    if (value) next.searchParams.set(`${id}_${key}`, value)
+    else next.searchParams.delete(`${id}_${key}`)
+    if (key !== "page") next.searchParams.delete(`${id}_page`)
+    window.history.replaceState(null, "", next)
+    window.dispatchEvent(new Event("place-browser-change"))
+  }
+  const view =
+    (rawView === "empty" && empty) || (rawView === "populated" && populated)
+      ? rawView
+      : "all"
+  const q = query.trim().toLocaleLowerCase()
+  const matches = items
+    .filter(
+      (item) =>
+        (!q ||
+          `${item.name} ${item.subtitle ?? ""}`
+            .toLocaleLowerCase()
+            .includes(q)) &&
+        (!countsAvailable ||
+          view === "all" ||
+          (view === "empty" ? item.count === 0 : item.count > 0))
     )
-  const emptyShown = empty.filter(matches)
-  const emptyVisible =
-    q || showAllEmpty ? emptyShown : emptyShown.slice(0, EMPTY_PREVIEW)
-
-  const plural = (n: number) => countNoun(n, noun.singular, noun.plural)
-  const status = q
-    ? shown.length + emptyShown.length === 0
-      ? `No ${noun.plural} match “${query.trim()}”`
-      : `${formatCount(shown.length)} of ${formatCount(populated.length)} ${plural(populated.length)} with libraries match “${query.trim()}”`
-    : populated.length === 0
-      ? `No ${noun.plural} have libraries documented yet`
-      : `${formatCount(populated.length)} ${plural(populated.length)} ${populated.length === 1 ? "has" : "have"} libraries documented`
+    .sort(
+      (a, b) =>
+        (sort === "name" || !countsAvailable ? 0 : b.count - a.count) ||
+        a.name.localeCompare(b.name)
+    )
+  const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE))
+  const current = Math.min(page, pages)
+  const preview =
+    countsAvailable &&
+    (view === "populated" || (view === "all" && empty === 0)) &&
+    !q &&
+    sort === "count" &&
+    current === 1 &&
+    params.get(`${id}_expanded`) !== "1" &&
+    matches.length > 5
+  const rows = preview
+    ? matches.slice(0, 5)
+    : matches.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+  const total = totalCount ?? items.reduce((sum, item) => sum + item.count, 0)
+  const hasCoverage = items.some((item) => item.coverage != null)
+  const columns = hasCoverage
+    ? "sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(100px,.8fr)_minmax(0,1.6fr)]"
+    : "sm:grid-cols-[minmax(0,1.3fr)_minmax(100px,.8fr)_minmax(0,1.6fr)]"
+  const tabs = [
+    { value: "all", label: `All places · ${formatCount(items.length)}` },
+    ...(countsAvailable && populated
+      ? [
+          {
+            value: "populated",
+            label: `With records · ${formatCount(populated)}`,
+          },
+        ]
+      : []),
+    ...(countsAvailable && empty
+      ? [{ value: "empty", label: `No records yet · ${formatCount(empty)}` }]
+      : []),
+  ]
 
   return (
     <section id={id} className="scroll-mt-24" aria-labelledby={`${id}-title`}>
-      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
-        <div className="max-w-[62ch]">
+      <div className="flex flex-wrap items-end justify-between gap-5">
+        <div>
           <h2
             id={`${id}-title`}
-            className="m-0 text-[clamp(32px,4vw,44px)] leading-[1.05] tracking-[-0.01em]"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              color: T.ink.base,
-            }}
+            className="m-0 text-[clamp(30px,4vw,44px)] leading-tight"
+            style={{ fontFamily: T.font.serif }}
           >
             {title}
           </h2>
           {description ? (
             <p
-              className="mt-2.5 mb-0 text-[15px] leading-[1.6]"
+              className="mt-3 max-w-[65ch] text-[15px] leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               {description}
             </p>
           ) : null}
         </div>
-
-        {items.length > 1 ? (
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="relative">
-              <label htmlFor={inputId} className="sr-only">
-                {tUi("filter")} {noun.plural}
-              </label>
-              <Icon
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
-                height={16}
-                icon="mdi:magnify"
-                style={{ color: T.ink.low }}
-                width={16}
-              />
-              <input
-                id={inputId}
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={`Filter ${noun.plural}`}
-                autoComplete="off"
-                className="h-10 w-[220px] rounded-[14px] border bg-white pr-3 pl-9 text-[14.5px] placeholder:text-(--t-ink-low)"
-                style={{ borderColor: T.border.hi, color: T.ink.base }}
-              />
-            </div>
-
-            <fieldset
-              className="m-0 flex rounded-full border-0 p-1"
-              style={{ background: T.bg.muted2 }}
-            >
-              <legend className="sr-only">Sort {noun.plural}</legend>
-              {(
-                [
-                  ["count", "Most libraries"],
-                  ["name", "A–Z"],
-                ] as const
-              ).map(([value, text]) => (
-                <label key={value} className="relative cursor-pointer">
-                  <input
-                    type="radio"
-                    name={`${id}-sort`}
-                    value={value}
-                    checked={sort === value}
-                    onChange={() => setSort(value)}
-                    className="peer sr-only"
-                  />
-                  <span className="block rounded-full border border-transparent px-3.5 py-1.5 text-[13.5px] font-semibold text-(--t-ink-dim) peer-checked:border-(--t-border-line) peer-checked:bg-white peer-checked:text-(--t-ink-base) peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--t-accent-primary)">
-                    {text}
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="mt-6 mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p
-          aria-live="polite"
-          className="m-0 flex items-center gap-2 text-[14px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ background: T.accent.primary }}
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="sr-only" htmlFor={inputId}>
+            Search {noun.plural}
+          </label>
+          <input
+            id={inputId}
+            type="search"
+            value={query}
+            onChange={(event) => set("q", event.target.value)}
+            placeholder={`Find a ${noun.singular.toLocaleLowerCase()}`}
+            className="min-h-11 w-full rounded-full border bg-white px-4 text-sm sm:w-56"
+            style={{ borderColor: T.border.hi }}
           />
-          {status}
-        </p>
-        {q ? (
+        </div>
+      </div>
+      <div className="mt-5 mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div
+          className="inline-flex max-w-full flex-wrap gap-1 rounded-[24px] p-1 sm:rounded-full"
+          role="group"
+          aria-label={`Filter ${noun.plural}`}
+          style={{ background: T.bg.muted }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              aria-pressed={view === tab.value}
+              onClick={() => set("view", tab.value)}
+              className="min-h-11 rounded-full px-4 text-sm font-semibold"
+              style={{
+                background: view === tab.value ? T.bg.deep : "transparent",
+                color: T.ink.base,
+                boxShadow:
+                  view === tab.value
+                    ? "0 1px 2px rgba(23,22,43,.1)"
+                    : undefined,
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div
+          className="flex items-center gap-1 text-sm"
+          role="group"
+          aria-label={`Sort ${noun.plural}`}
+          style={{ color: T.ink.dim }}
+        >
+          <span>Sort:</span>
           <button
             type="button"
-            onClick={() => setQuery("")}
-            className="text-[13.5px] font-semibold underline underline-offset-[3px]"
-            style={{ color: T.accent.primary }}
+            aria-pressed={sort === "count"}
+            onClick={() => set("sort", "count")}
+            className="min-h-11 px-1"
+            style={{
+              fontWeight: sort === "count" ? 600 : 400,
+              color: sort === "count" ? T.ink.base : T.ink.dim,
+            }}
           >
-            Clear filter
+            Most records
           </button>
-        ) : null}
+          <span aria-hidden="true">·</span>
+          <button
+            type="button"
+            aria-pressed={sort === "name"}
+            onClick={() => set("sort", "name")}
+            className="min-h-11 px-1"
+            style={{
+              fontWeight: sort === "name" ? 600 : 400,
+              color: sort === "name" ? T.ink.base : T.ink.dim,
+            }}
+          >
+            A–Z
+          </button>
+        </div>
       </div>
-
-      {shown.length > 0 ? (
-        <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {shown.map((item) => (
-            <li key={item.slug} className="flex">
-              <CountCard item={item} max={max} />
-            </li>
-          ))}
-        </ul>
+      {!countsAvailable ? (
+        <p role="status" className="text-sm" style={{ color: T.ink.dim }}>
+          Library counts are temporarily unavailable. You can still explore
+          these places.
+        </p>
       ) : null}
-
-      {emptyShown.length > 0 ? (
-        <div
-          className="mt-4 rounded-[20px] px-5 py-4"
-          style={{ background: T.bg.deep, border: `1px dashed ${T.border.hi}` }}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3
-              className="m-0 flex items-center gap-2 text-[14px] font-semibold"
-              style={{ color: T.ink.base }}
-            >
-              <span
-                aria-hidden="true"
-                className="size-2.5 rounded-full border-[1.5px]"
-                style={{ borderColor: T.ink.low }}
-              />
-              No libraries documented yet
-              <span style={{ color: T.ink.dim }}>
-                · {formatCount(emptyShown.length)}
-              </span>
-            </h3>
-            <GlobalLink
-              href={addHref}
-              className="text-[14px] font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
-            >
-              Add the first one
-            </GlobalLink>
+      <p
+        aria-live="polite"
+        className={preview && !q ? "sr-only" : "mt-4 mb-4 text-sm"}
+        style={{ color: T.ink.dim }}
+      >
+        {formatCount(matches.length)}{" "}
+        {matches.length === 1 ? noun.singular : noun.plural}
+        {q ? ` matching "${query.trim()}"` : ""}
+        {pages > 1 && !preview ? ` · Page ${current} of ${pages}` : ""}
+      </p>
+      <div
+        className="overflow-hidden rounded-[22px] border bg-white"
+        style={{ borderColor: T.border.line }}
+      >
+        {countsAvailable ? (
+          <div
+            className={
+              "hidden gap-4 border-b px-[22px] py-3 text-[13px] font-semibold sm:grid " +
+              columns
+            }
+            style={{
+              background: T.bg.void,
+              color: T.ink.dim,
+              borderColor: T.border.line,
+            }}
+          >
+            <span className="capitalize">{noun.singular}</span>
+            {hasCoverage ? <span>{coverageLabel}</span> : null}
+            <span className="text-right">Documented libraries</span>
+            <span>{view === "empty" ? "Add a first record" : shareLabel}</span>
           </div>
-          <ul className="m-0 mt-3 flex list-none flex-wrap gap-2 p-0">
-            {emptyVisible.map((item) => (
-              <li key={item.slug}>
-                <GlobalLink
-                  href={addHref}
-                  aria-label={`Add a library in ${item.name}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-[13.5px] font-semibold transition-colors hover:border-(--t-accent-primary)"
-                  style={{ borderColor: T.border.line, color: T.ink.base }}
-                >
-                  {item.name}
-                  <Icon
-                    aria-hidden="true"
-                    height={13}
-                    icon="mdi:plus"
-                    style={{ color: T.accent.primary }}
-                    width={13}
-                  />
-                </GlobalLink>
+        ) : null}
+        <ul className="m-0 list-none divide-y p-0">
+          {rows.map((item) => {
+            const geographicCount = item.shareCount ?? item.count
+            const share =
+              total > 0 ? Math.min(100, (geographicCount / total) * 100) : 0
+
+            return (
+              <li
+                key={item.slug}
+                className={
+                  "grid items-center gap-x-4 gap-y-2 px-[22px] py-0.5 " +
+                  columns
+                }
+              >
+                <div className="min-w-0">
+                  <GlobalLink
+                    href={item.href}
+                    className="inline-flex min-h-11 items-center text-[20px] leading-tight hover:underline"
+                    style={{ fontFamily: T.font.serif }}
+                  >
+                    {item.name}
+                  </GlobalLink>
+                  {item.subtitle && !hasCoverage ? (
+                    <p className="m-0 text-[12px]" style={{ color: T.ink.dim }}>
+                      {item.subtitle}
+                    </p>
+                  ) : null}
+                </div>
+                {hasCoverage ? (
+                  <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                    {item.coverage ?? "Unavailable"}
+                  </span>
+                ) : null}
+                {countsAvailable ? (
+                  <>
+                    <span className="text-[15px] font-semibold tabular-nums sm:text-right">
+                      {formatCount(item.count)}
+                    </span>
+                    {item.count > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            aria-hidden="true"
+                            className="block h-2 flex-1 overflow-hidden rounded-full"
+                            style={{ background: T.bg.muted }}
+                          >
+                            <span
+                              className="block h-full rounded-full"
+                              style={{
+                                width: share + "%",
+                                background: T.accent.primary,
+                              }}
+                            />
+                          </span>
+                          <span
+                            className="w-12 text-right text-[13px] tabular-nums"
+                            style={{ color: T.ink.dim }}
+                          >
+                            {share > 0 && share < 0.1
+                              ? "<0.1"
+                              : share.toLocaleString("en-GB", {
+                                  maximumFractionDigits: 1,
+                                })}
+                            %
+                          </span>
+                        </div>
+                        {!geographicCount ? (
+                          <span
+                            className="mt-1 block text-xs"
+                            style={{ color: T.ink.dim }}
+                          >
+                            Digital records have no geographic share
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <GlobalLink
+                        href={item.addHref ?? addHref}
+                        aria-label={"Add the first library in " + item.name}
+                        className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border px-3 text-[13px] font-semibold no-underline hover:bg-(--t-bg-surface)"
+                        style={{ color: T.ink.base, borderColor: T.border.hi }}
+                      >
+                        Add a library
+                      </GlobalLink>
+                    )}
+                  </>
+                ) : null}
               </li>
-            ))}
-          </ul>
-          {!q && !showAllEmpty && emptyShown.length > EMPTY_PREVIEW ? (
+            )
+          })}
+        </ul>
+        {preview ? (
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 border-t px-[22px] py-3 text-[14px]"
+            style={{ borderColor: T.border.line, color: T.ink.dim }}
+          >
+            <p className="m-0 flex-1">
+              {matches
+                .slice(5, 11)
+                .map((item) => item.name + " " + formatCount(item.count))
+                .join(" · ")}
+              {matches.length > 11 ? ` · ${matches.length - 11} more` : ""}
+            </p>
             <button
               type="button"
-              onClick={() => setShowAllEmpty(true)}
-              className="mt-3 text-[14px] font-semibold underline underline-offset-[3px]"
+              className="min-h-11 font-semibold underline underline-offset-4"
               style={{ color: T.accent.primary }}
+              onClick={() => set("expanded", "1")}
             >
-              Show all {formatCount(emptyShown.length)}
+              Show all {formatCount(matches.length)}
             </button>
-          ) : null}
+          </div>
+        ) : null}
+      </div>
+      {countsAvailable && populated > 0 && view !== "empty" ? (
+        <p
+          className="mt-4 text-[13px] leading-relaxed"
+          style={{ color: T.ink.dim }}
+        >
+          Bars show how this index’s place-based records are spread across
+          places. They don’t measure how complete a place’s listing is.
+        </p>
+      ) : null}
+      {countsAvailable && empty > 0 && view !== "empty" && !q ? (
+        <div
+          className="mt-6 rounded-[22px] p-6"
+          style={{ background: T.bg.space }}
+        >
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div className="flex-1">
+              <h3
+                className="m-0 text-[28px] leading-tight"
+                style={{ fontFamily: T.font.serif }}
+              >
+                {formatCount(empty)} {empty === 1 ? noun.singular : noun.plural}{" "}
+                with no documented libraries yet
+              </h3>
+              <p
+                className="mt-1.5 mb-0 text-[15px] leading-[1.55]"
+                style={{ color: T.ink.dim }}
+              >
+                No one has added a library here yet — it doesn’t mean there are
+                none. Open a {noun.singular.toLocaleLowerCase()} to explore it,
+                or add the first library.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="min-h-11 shrink-0 text-sm font-semibold underline underline-offset-3"
+              style={{ color: T.accent.primary }}
+              onClick={() => set("view", "empty")}
+            >
+              Show all {formatCount(empty)}
+            </button>
+          </div>
+          <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2 lg:grid-cols-4">
+            {items
+              .filter((item) => !item.count)
+              .slice(0, 8)
+              .map((item) => (
+                <li
+                  key={item.slug}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-[14px] px-3 py-2.5"
+                  style={{ background: T.bg.deep }}
+                >
+                  <GlobalLink
+                    href={item.href}
+                    className="inline-flex min-h-11 items-center text-[15px] font-semibold underline underline-offset-3"
+                    style={{ color: T.ink.base }}
+                  >
+                    {item.name}
+                  </GlobalLink>
+                  <GlobalLink
+                    href={item.addHref ?? addHref}
+                    aria-label={"Add the first library in " + item.name}
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border px-3 text-[13px] font-semibold no-underline hover:bg-(--t-bg-surface)"
+                    style={{ color: T.ink.base, borderColor: T.border.hi }}
+                  >
+                    Add a library
+                  </GlobalLink>
+                </li>
+              ))}
+          </ul>
         </div>
       ) : null}
+      {!rows.length ? (
+        <p className="py-4">
+          No {noun.plural} match this filter.{" "}
+          <button
+            type="button"
+            className="min-h-11 underline"
+            onClick={() => {
+              set("q", "")
+              set("view", "all")
+            }}
+          >
+            Clear filters
+          </button>
+        </p>
+      ) : null}
+      {pages > 1 && !preview ? (
+        <nav aria-label={`${title} pages`} className="mt-4 flex gap-3">
+          <button
+            type="button"
+            disabled={current === 1}
+            className="min-h-11 rounded-xl border px-4 disabled:opacity-40"
+            onClick={() => set("page", String(current - 1))}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={current === pages}
+            className="min-h-11 rounded-xl border px-4 disabled:opacity-40"
+            onClick={() => set("page", String(current + 1))}
+          >
+            Next
+          </button>
+        </nav>
+      ) : null}
     </section>
-  )
-}
-
-function CountCard({
-  item,
-  max,
-}: {
-  readonly item: LocationChildItem
-  readonly max: number
-}) {
-  const share = Math.max(4, Math.round((item.count / max) * 100))
-
-  return (
-    <GlobalLink
-      href={item.href}
-      className="flex w-full flex-col gap-3 rounded-2xl border bg-white px-4 pt-3.5 pb-4 transition-[border-color,box-shadow] hover:border-(--t-border-hi) hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"
-      style={{ borderColor: T.border.line }}
-    >
-      <span className="flex items-start justify-between gap-3">
-        <span className="min-w-0">
-          <span
-            className="block text-[19px] leading-[1.15]"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              color: T.ink.base,
-            }}
-          >
-            {item.name}
-          </span>
-          {item.subtitle ? (
-            <span
-              className="mt-1 block text-[12.5px] leading-[1.35]"
-              style={{ color: T.ink.dim }}
-            >
-              {item.subtitle}
-            </span>
-          ) : null}
-        </span>
-        <span className="flex shrink-0 flex-col items-end">
-          <span
-            className="text-[24px] leading-none"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              color: T.ink.base,
-            }}
-          >
-            {formatCount(item.count)}
-          </span>
-          <span className="mt-1 text-[11.5px]" style={{ color: T.ink.dim }}>
-            {countNoun(item.count, "library", "libraries")}
-          </span>
-        </span>
-      </span>
-      <span
-        aria-hidden="true"
-        className="mt-auto block h-1 overflow-hidden rounded-full"
-        style={{ background: T.bg.muted }}
-      >
-        <span
-          className="block h-full rounded-full"
-          style={{ width: `${share}%`, background: T.accent.primary }}
-        />
-      </span>
-    </GlobalLink>
   )
 }

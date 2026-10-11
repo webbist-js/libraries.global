@@ -15,6 +15,12 @@ vi.mock("@/lib/meilisearch", () => ({
   searchLocaleFilter: (l?: string) => `locale = "${l ?? "en"}"`,
 }))
 
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
+vi.mock("@/lib/auth-server", () => ({ getSessionSSR: async () => null }))
+vi.mock("@/lib/drives/drive-holds-server", () => ({
+  fetchHolds: async () => ({ heldByOthers: [], mine: null }),
+}))
+
 const { GET } = await import("../route")
 
 const OPEN_DRIVE = {
@@ -264,4 +270,22 @@ describe("GET /api/drives/[slug]/tasks", () => {
 
     expect(res.status).toBe(429)
   })
+})
+
+it("narrows the drive’s scope to the selected country without replacing its focus", async () => {
+  await get(
+    "http://localhost/api/drives/yorkshire-hours/tasks?continent=europe&country=united-kingdom"
+  )
+  const [, params] = search.mock.calls[0] as [string, { filter: string }]
+  expect(params.filter).toBe(
+    `${TODO_FILTER} AND locale = "en" AND continent_slug = "europe" AND country_slug = "united-kingdom"`
+  )
+})
+
+it("ignores malformed place values instead of changing the drive scope", async () => {
+  await get(
+    "http://localhost/api/drives/yorkshire-hours/tasks?country=%22%20OR%20needs%20%3D%20hours"
+  )
+  const [, params] = search.mock.calls[0] as [string, { filter: string }]
+  expect(params.filter).toBe(`${TODO_FILTER} AND locale = "en"`)
 })

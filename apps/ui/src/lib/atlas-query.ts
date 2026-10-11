@@ -111,11 +111,21 @@ const LIST_FIELDS = [
   "clock_valid_until",
   "access_codes",
   "completeness",
-  ...["open", "regular_open"].flatMap((prefix) =>
+  ...["open", "regular_open", "staff_open"].flatMap((prefix) =>
     ATLAS_OPEN_DAYS.flatMap((day) =>
       Array.from({ length: ATLAS_OPEN_FRAMES_PER_DAY }, (_, n) => [
-        atlasOpenField(day, n, "from", prefix as "open" | "regular_open"),
-        atlasOpenField(day, n, "to", prefix as "open" | "regular_open"),
+        atlasOpenField(
+          day,
+          n,
+          "from",
+          prefix as "open" | "regular_open" | "staff_open"
+        ),
+        atlasOpenField(
+          day,
+          n,
+          "to",
+          prefix as "open" | "regular_open" | "staff_open"
+        ),
       ]).flat()
     )
   ),
@@ -218,7 +228,7 @@ export class AtlasQueryEngine {
     libraryAccess = false
   ): string {
     if (
-      scope.filters.opening === "now" &&
+      ["now", "staff_now"].includes(scope.filters.opening) &&
       population !== "closures" &&
       (this.state.projectionRevision !== this.state.indexedThrough ||
         (this.state.clockDue !== null &&
@@ -235,10 +245,9 @@ export class AtlasQueryEngine {
       ...("cursor" in request ? { cursor: undefined } : {}),
       dictionary: this.state.dictionary.version,
       epoch: this.state.queryEpoch,
-      minute:
-        request.scope.filters.opening === "now"
-          ? Math.floor(this.now.getTime() / 60000)
-          : null,
+      minute: ["now", "staff_now"].includes(request.scope.filters.opening)
+        ? Math.floor(this.now.getTime() / 60000)
+        : null,
     }
 
     return {

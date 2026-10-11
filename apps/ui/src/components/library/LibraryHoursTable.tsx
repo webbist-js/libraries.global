@@ -2,21 +2,22 @@
 
 import { Icon } from "@iconify/react"
 import {
+  OPENING_MODE_LABELS,
+  hasOpeningHours,
+  type OpeningTimesStaffing,
   effectiveLibraryHours,
   effectiveLibraryWeekHours,
   noticeLocalDate,
   noticeAddDays,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
-import { Fragment, useEffect, useState } from "react"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 
 import {
   DAY_ORDER,
-  DAY_SHORT,
   formatDayTimes,
   getOpenStatus,
-  hasStaffingDetail,
   timelinePercent,
   timelineWindow,
   type DayKey,
@@ -37,13 +38,11 @@ function useNoticeWeekHours(
       const date = noticeLocalDate(new Date(), timezone)
       const weekday = new Date(`${date}T12:00:00Z`).getUTCDay()
       setValue(
-        notices.length
-          ? (effectiveLibraryWeekHours(
-              hours,
-              notices,
-              noticeAddDays(date, -(weekday + 6) % 7)
-            ) as OpeningTimesValue)
-          : hours
+        effectiveLibraryWeekHours(
+          hours,
+          notices,
+          noticeAddDays(date, -(weekday + 6) % 7)
+        ) as OpeningTimesValue
       )
     }
     update()
@@ -104,14 +103,27 @@ function useOpenStatus(
   return status
 }
 
-const STAFFED = "var(--tint-public-fg)"
-// Self-service: striped, so it isn't told apart by colour alone.
-const SELF_SERVICE = `repeating-linear-gradient(135deg, ${STAFFED} 0 2px, color-mix(in srgb, ${STAFFED} 40%, white) 2px 5px)`
+const MODE_STYLES: Record<string, string> = {
+  staffed: "#2F5D3A",
+  self_service:
+    "repeating-linear-gradient(135deg, #2F5D3A 0 4px, #D5E6D8 4px 8px)",
+  volunteer: "#CA8A24",
+  appointment:
+    "repeating-linear-gradient(90deg, #716B86 0 2px, #E7E3EE 2px 6px)",
+  open: "#8D85C9",
+}
 
-/**
- * Opening hours as a week of bars along a shared time axis (a semantic
- * table: one row per day). Today's row is highlighted after mount.
- */
+const MODE_DESCRIPTIONS: Record<string, string> = {
+  staffed: "Library staff are on hand for help, enquiries and services.",
+  self_service:
+    "The building is open without staff. A library card may be needed for entry; check the library’s requirements.",
+  volunteer: "Volunteers are on hand. Some services may be limited.",
+  appointment:
+    "Visits require a booking. Check the library’s booking arrangements before going.",
+  open: "Open to visitors; staffing is not recorded.",
+}
+
+/** A shared time axis, with each day’s individual opening periods written out. */
 export function LibraryHoursTable({
   openingTimes,
   timezone,
@@ -122,13 +134,16 @@ export function LibraryHoursTable({
   readonly notices?: readonly LibraryNotice[]
 }) {
   const tUi = useUiTranslations("ui")
-
+  const locale = useLocale()
   const today = useToday(timezone)
-  openingTimes = useNoticeWeekHours(openingTimes, timezone, notices)
-  const days = openingTimes?.days
-  const hasHours = Boolean(days?.some((d) => d.enabled && d.timeframes?.length))
+  const recordedHours = hasOpeningHours(openingTimes)
+  const hours = useNoticeWeekHours(openingTimes, timezone, notices)
+  const days = hours?.days
+  const hasHours = Boolean(
+    days?.some((day) => day.enabled && day.timeframes?.length)
+  )
 
-  if (!hasHours) {
+  if (!hasHours && !recordedHours) {
     return (
       <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
         Hours not added yet.
@@ -136,148 +151,190 @@ export function LibraryHoursTable({
     )
   }
 
-  const window = timelineWindow(openingTimes)
-  const staffing = hasStaffingDetail(openingTimes)
-  const span = window.endHour - window.startHour
-  const step = span <= 8 ? 2 : span <= 14 ? 4 : 6
-  const ticks: number[] = []
-  for (let h = window.startHour; h < window.endHour; h += step) ticks.push(h)
-  ticks.push(window.endHour)
-  const hh = (h: number) => `${String(h).padStart(2, "0")}:00`
+  const overnight = (days ?? []).some(
+    (day) =>
+      day.enabled &&
+      day.timeframes?.some(
+        (frame) => frame.overnight || frame.endTime < frame.startTime
+      )
+  )
+  const window = overnight
+    ? { startHour: 0, endHour: 24 }
+    : timelineWindow(hours)
+  const modes = [
+    ...new Set(
+      (days ?? [])
+        .filter((day) => day.enabled)
+        .flatMap((day) =>
+          (day.timeframes ?? []).map((frame) => frame.staffing ?? "open")
+        )
+    ),
+  ]
+  const weekdayName = (key: DayKey) =>
+    new Intl.DateTimeFormat(locale, {
+      weekday: "long",
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(2024, 0, 1 + DAY_ORDER.indexOf(key))))
+  const hourLabel = (hour: number) =>
+    `${String(Math.floor(hour)).padStart(2, "0")}:${String(Math.round((hour % 1) * 60)).padStart(2, "0")}`
+  const endMinute = (frame: {
+    startTime: string
+    endTime: string
+    overnight?: boolean
+  }) => {
+    const [hour, minute] = frame.endTime.split(":").map(Number)
+
+    return (
+      hour * 60 +
+      minute +
+      (frame.overnight || frame.endTime < frame.startTime ? 1440 : 0)
+    )
+  }
 
   return (
     <div>
       <div
         aria-hidden="true"
-        className="mb-2 flex flex-wrap justify-end gap-x-3 gap-y-1 text-[12.5px]"
+        className="mb-2 flex justify-between px-3 text-[11px] tabular-nums"
         style={{ color: T.ink.dim }}
       >
-        <span className="flex items-center gap-1.5">
-          <span
-            className="h-2 w-3.5 rounded-full"
-            style={{ background: STAFFED }}
-          />
-          {staffing ? "Staffed" : tUi("open")}
-        </span>
-        {staffing ? (
-          <span className="flex items-center gap-1.5">
-            <span
-              className="h-2 w-3.5 rounded-full"
-              style={{ background: SELF_SERVICE }}
-            />
-            Self-service
-          </span>
-        ) : null}
-        <span className="flex items-center gap-1.5">
-          <span
-            className="h-2 w-3.5 rounded-full"
-            style={{ background: T.bg.muted2 }}
-          />
-          {tUi("closed")}
-        </span>
+        <span>{hourLabel(window.startHour)}</span>
+        <span>{hourLabel((window.startHour + window.endHour) / 2)}</span>
+        <span>{hourLabel(window.endHour)}</span>
       </div>
+      <ol
+        aria-label={`Opening hours by day${timezone ? `, ${timezone} time` : ""}`}
+        className="m-0 list-none space-y-2 p-0"
+      >
+        {DAY_ORDER.map((key) => {
+          const day = days?.find((item) => item.day === key)
+          const frames = day?.enabled
+            ? [...(day.timeframes ?? [])].sort((a, b) =>
+                a.startTime.localeCompare(b.startTime)
+              )
+            : []
+          const isToday = today === key
+          const first = frames[0]
+          const last = [...frames].sort(
+            (a, b) => endMinute(b) - endMinute(a)
+          )[0]
+          const range =
+            first && last
+              ? `${first.startTime}–${last.endTime}${last.overnight || last.endTime < last.startTime ? " · next day" : ""}`
+              : tUi("closed")
 
-      <table className="w-full border-collapse text-[14.5px]">
-        <caption className="sr-only">
-          Opening hours by day{timezone ? `, ${timezone} time` : ""}
-        </caption>
-        <thead>
-          <tr>
-            <td className="w-[88px]" />
-            <td aria-hidden="true" className="relative h-5 px-1">
-              {ticks.map((h) => (
-                <span
-                  key={h}
-                  className="absolute top-0 -translate-x-1/2 text-[11.5px] tabular-nums"
-                  style={{
-                    left: `${((h - window.startHour) / span) * 100}%`,
-                    color: T.ink.low,
-                  }}
-                >
-                  {hh(h)}
-                </span>
-              ))}
-            </td>
-          </tr>
-        </thead>
-        <tbody>
-          {DAY_ORDER.map((key) => {
-            const day = days?.find((d) => d.day === key)
-            const frames = day?.enabled ? (day.timeframes ?? []) : []
-            const isToday = today === key
-
-            return (
-              <tr
-                key={key}
-                style={{ background: isToday ? T.accent.chip : "transparent" }}
-              >
-                <th
-                  scope="row"
-                  className="rounded-l-xl py-2 pr-2 pl-2.5 text-left align-top whitespace-nowrap"
-                  style={{
-                    fontWeight: isToday ? 700 : 500,
-                    color: T.ink.base,
-                  }}
-                >
-                  {DAY_SHORT[key]}
+          return (
+            <li
+              key={key}
+              className="rounded-2xl border px-3 py-3"
+              style={{
+                background: isToday ? T.accent.chip : "transparent",
+                borderColor: isToday ? T.border.hi : "transparent",
+              }}
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[15px]">
+                <span className={isToday ? "font-bold" : "font-semibold"}>
+                  {weekdayName(key)}
                   {isToday ? " (today)" : ""}
-                </th>
-                <td className="rounded-r-xl py-2 pr-2.5 pl-1">
-                  <span
-                    aria-hidden="true"
-                    className="relative mt-1.5 block h-2 overflow-hidden rounded-full"
-                    style={{ background: T.bg.muted2 }}
-                  >
-                    {frames.map((tf) => {
-                      const left = timelinePercent(tf.startTime, window)
-                      const right = timelinePercent(tf.endTime, window)
+                </span>
+                <span className="tabular-nums" style={{ color: T.ink.dim }}>
+                  {range}
+                </span>
+              </div>
+              <div
+                aria-hidden="true"
+                className="relative mt-2 h-2.5 overflow-hidden rounded-full border"
+                style={{ background: "#EEEAE2", borderColor: "#D8D3CA" }}
+              >
+                {frames.flatMap((frame, index) => {
+                  const left = timelinePercent(frame.startTime, window)
+                  const right = timelinePercent(frame.endTime, window)
+                  const spans =
+                    frame.overnight || frame.endTime < frame.startTime
+                      ? [
+                          [left, 100],
+                          [0, right],
+                        ]
+                      : [[left, right]]
 
-                      return (
-                        <span
-                          key={`${tf.startTime}-${tf.endTime}`}
-                          className="absolute inset-y-0 rounded-full"
-                          style={{
-                            left: `${left}%`,
-                            width: `calc(${right - left}% - 2px)`,
-                            background:
-                              tf.staffing === "self_service"
-                                ? SELF_SERVICE
-                                : STAFFED,
-                          }}
-                        />
-                      )
-                    })}
-                  </span>
-                  <span
-                    className="mt-1 block text-[13.5px] leading-snug tabular-nums"
-                    style={{
-                      color: frames.length ? T.ink.base : T.ink.dim,
-                      fontWeight: isToday ? 600 : 400,
-                    }}
-                  >
-                    {frames.length === 0
-                      ? tUi("closed")
-                      : frames.map((tf, i) => (
-                          <Fragment key={`${tf.startTime}-${tf.endTime}`}>
-                            {i > 0 ? ", " : ""}
-                            {tf.startTime}–{tf.endTime}
-                            {staffing && tf.staffing === "self_service" ? (
-                              <span
-                                style={{ color: T.ink.dim, fontWeight: 400 }}
-                              >
-                                {" "}
-                                self-service
-                              </span>
-                            ) : null}
-                          </Fragment>
-                        ))}
-                  </span>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+                  return spans
+                    .filter(([start, end]) => end > start)
+                    .map(([start, end], segment) => (
+                      <span
+                        key={`${index}-${segment}`}
+                        className="absolute inset-y-0"
+                        style={{
+                          left: `${start}%`,
+                          width: `${end - start}%`,
+                          background:
+                            MODE_STYLES[frame.staffing ?? "open"] ??
+                            MODE_STYLES.open,
+                        }}
+                      />
+                    ))
+                })}
+              </div>
+              {frames.length > 0 ? (
+                <ul className="m-0 mt-2 list-none space-y-1 p-0 text-[14px]">
+                  {frames.map((frame, index) => (
+                    <li key={index}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                        <span className="tabular-nums">
+                          {frame.startTime}–{frame.endTime}
+                          {frame.overnight || frame.endTime < frame.startTime
+                            ? " · next day"
+                            : ""}
+                        </span>
+                        <span style={{ color: T.ink.dim }}>
+                          {OPENING_MODE_LABELS[
+                            (frame.staffing ?? "open") as OpeningTimesStaffing
+                          ] ?? "Open"}
+                        </span>
+                      </div>
+                      {frame.note ? (
+                        <p
+                          className="m-0 mt-0.5 text-[13px] leading-relaxed"
+                          style={{ color: T.ink.dim }}
+                        >
+                          {frame.note}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          )
+        })}
+      </ol>
+      <details
+        className="mt-3 rounded-xl border p-3"
+        style={{ borderColor: T.border.line, background: T.bg.surface }}
+      >
+        <summary className="cursor-pointer text-[13px] font-semibold">
+          What the opening modes mean
+        </summary>
+        <ul className="m-0 mt-3 grid list-none gap-3 p-0 text-[13px] sm:grid-cols-2">
+          {modes.map((mode) => (
+            <li key={mode}>
+              <div className="flex items-center gap-2 font-semibold">
+                <span
+                  aria-hidden="true"
+                  className="h-3 w-6 shrink-0 rounded-sm"
+                  style={{ background: MODE_STYLES[mode] ?? MODE_STYLES.open }}
+                />
+                {OPENING_MODE_LABELS[mode as OpeningTimesStaffing] ?? "Open"}
+              </div>
+              <p
+                className="m-0 mt-1 leading-relaxed"
+                style={{ color: T.ink.dim }}
+              >
+                {MODE_DESCRIPTIONS[mode] ?? MODE_DESCRIPTIONS.open}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   )
 }
@@ -291,19 +348,54 @@ export function LibraryOpenStatusBadge({
   openingTimes,
   timezone,
   notices = NO_NOTICES,
+  operationalStatus,
+  prominent = false,
 }: {
+  readonly prominent?: boolean
+  readonly operationalStatus?: string | null
   readonly openingTimes: OpeningTimesValue | null
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
 }) {
   const status = useOpenStatus(openingTimes, timezone, notices)
-  if (!status || status.state === "unknown") return null
+  const fixed: Record<string, string> = {
+    permanently_closed: "Permanently closed",
+    temporarily_closed: "Temporarily closed",
+    planned: "Not open yet",
+    appointment_only: "Visits by appointment",
+  }
+  if (operationalStatus && fixed[operationalStatus])
+    return (
+      <p
+        className={
+          prominent
+            ? "m-0 text-[30px] leading-tight"
+            : "m-0 text-sm font-semibold"
+        }
+        style={{ fontFamily: prominent ? T.font.serif : undefined }}
+      >
+        {fixed[operationalStatus]}
+      </p>
+    )
+  if (!status || status.state === "unknown")
+    return (
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
+        Current opening status unavailable · check the published hours
+      </p>
+    )
   const open = status.state === "open"
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold"
-      style={{ color: open ? T.accent.ok : T.accent.danger }}
+      className={
+        prominent
+          ? "inline-flex items-center gap-2 text-[30px] leading-tight"
+          : "inline-flex items-center gap-1.5 text-[13.5px] font-semibold"
+      }
+      style={{
+        color: open ? T.accent.ok : T.accent.danger,
+        fontFamily: prominent ? T.font.serif : undefined,
+      }}
     >
       <Icon
         aria-hidden="true"
@@ -392,14 +484,18 @@ export function FactCard({
   icon,
   label,
   value,
+  note,
+  className,
 }: {
   readonly icon: string
   readonly label: string
   readonly value: string
+  readonly note?: string
+  readonly className?: string
 }) {
   return (
     <div
-      className="flex min-w-0 items-start gap-3 rounded-2xl px-3.5 py-3"
+      className={`flex min-w-0 items-start gap-3 rounded-2xl px-3.5 py-3 ${className ?? ""}`}
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
       <span
@@ -419,6 +515,14 @@ export function FactCard({
         >
           {value}
         </span>
+        {note ? (
+          <span
+            className="mt-1 text-[12px] leading-relaxed"
+            style={{ color: T.ink.dim }}
+          >
+            {note}
+          </span>
+        ) : null}
       </span>
     </div>
   )

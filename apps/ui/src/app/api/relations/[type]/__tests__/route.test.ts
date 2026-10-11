@@ -138,3 +138,39 @@ describe("localized editorial relations", () => {
     expect(strapiUrl()).toContain("locale=en")
   })
 })
+
+describe("CMS hierarchy labels", () => {
+  it("requests all four country labels in the UI locale", async () => {
+    await countries("continentDocumentId=eu&locale=cs")
+    for (const field of [
+      "regionTypeLabel",
+      "regionsSectionLabel",
+      "areaTypeLabel",
+      "areasSectionLabel",
+    ])
+      expect(strapiUrl()).toContain(field)
+    expect(strapiUrl()).toContain("locale=cs")
+  })
+  it("requests and returns the Borough override", async () => {
+    const row = {
+      documentId: "london",
+      name: "Greater London",
+      areaTypeLabel: "Borough",
+      areasSectionLabel: "Boroughs",
+    }
+    fetchMock.mockResolvedValue(Response.json({ data: [row] }))
+    const res = await GET(
+      new Request(
+        "http://localhost/api/relations/regions?countryDocumentId=eng"
+      ),
+      { params: Promise.resolve({ type: "regions" }) }
+    )
+    expect(strapiUrl()).toContain("areaTypeLabel")
+    expect(strapiUrl()).toContain("areasSectionLabel")
+    expect(await res.json()).toEqual({ data: [row] })
+  })
+  it("reports unavailable place lists instead of a valid zero", async () => {
+    fetchMock.mockResolvedValue(new Response("down", { status: 500 }))
+    expect((await areas("regionDocumentId=london")).status).toBe(503)
+  })
+})

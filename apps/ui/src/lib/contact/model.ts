@@ -23,9 +23,33 @@ export const FEEDBACK_TASKS = [
   "explore",
   "other",
 ] as const
+export const ATLAS_FEEDBACK_TASKS = [
+  "find_library",
+  "plan_visit",
+  "compare_areas",
+  "check_accessibility",
+  "export_data",
+  "explore",
+  "other",
+] as const
+export const ATLAS_FEEDBACK_FEATURES = [
+  "search",
+  "filters",
+  "map_layers",
+  "library_details",
+  "list_view",
+  "area_comparison",
+  "accessibility",
+  "exports",
+  "other",
+] as const
 export const TASK_OUTCOMES = ["yes", "partly", "no", "browsing"] as const
 export type ContactType = (typeof CONTACT_TYPES)[number]
 export type FeedbackTopic = (typeof FEEDBACK_TOPICS)[number]
+export type FeedbackTask =
+  | (typeof FEEDBACK_TASKS)[number]
+  | (typeof ATLAS_FEEDBACK_TASKS)[number]
+export type AtlasFeedbackFeature = (typeof ATLAS_FEEDBACK_FEATURES)[number]
 
 /** Keep credentials, search terms and account tokens out of automatic context. */
 export function contextPath(value: string): string {
@@ -53,7 +77,7 @@ export type ContactContext = {
 }
 
 export type ContactIntent =
-  | { mode: "feedback" }
+  | { mode: "feedback"; product?: "atlas" }
   | { mode: "contact"; type: ContactType; sourceSubject?: string }
 
 /** Applies to site support addresses, including CMS-authored links and configured beta aliases. */

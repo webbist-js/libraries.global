@@ -35,7 +35,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
   const { slug, locale } = await params
-  const doc = (await fetchLegalDocument(slug, locale as Locale))?.data
+  const res = await fetchLegalDocument(slug, locale as Locale)
+  const doc = res?.data
   if (!doc) return { title: "Page not found", robots: { index: false } }
 
   return buildMetadata({
@@ -47,6 +48,7 @@ export async function generateMetadata({
     locale,
     image: formatStrapiMediaUrl(doc.seo?.metaImage?.url),
     modifiedTime: doc.updatedAt,
+    robots: res?.localeFallback ? "noindex-follow" : "index",
   })
 }
 
@@ -78,6 +80,7 @@ export default async function LegalDocumentRoute({
       />
       <LegalDocumentPage
         document={doc}
+        untranslatedLocale={docRes?.localeFallback ? locale : null}
         documents={navRes.data}
         locale={locale}
       />

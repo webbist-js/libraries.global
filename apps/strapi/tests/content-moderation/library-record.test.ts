@@ -164,18 +164,17 @@ const tf = (startTime: string, endTime: string, staffing = "staffed") => ({
 })
 
 describe("sanitizeOpeningTimes", () => {
-  it("fills all seven days in order and drops invalid values", () => {
+  it("fills all seven days in order and preserves explicit modes", () => {
     const hours = sanitizeOpeningTimes({
       version: 1,
       days: [
         { day: "tuesday", enabled: true, timeframes: [tf("09:00", "17:00")] },
-        { day: "funday", enabled: true, timeframes: [] },
         {
           day: "monday",
           enabled: true,
           timeframes: [
             tf("13:00", "18:00", "volunteer"),
-            tf("08:00", "12:00", "robots"),
+            tf("08:00", "12:00", "open"),
           ],
         },
       ],
@@ -192,7 +191,7 @@ describe("sanitizeOpeningTimes", () => {
     expect(
       hours.days[0]!.timeframes.map((t) => [t.startTime, t.staffing])
     ).toEqual([
-      ["08:00", "staffed"],
+      ["08:00", "open"],
       ["13:00", "volunteer"],
     ])
     expect(hours.days[2]).toEqual({
@@ -202,6 +201,24 @@ describe("sanitizeOpeningTimes", () => {
     })
   })
 
+  it("refuses unknown days and modes rather than replacing them with plausible hours", () => {
+    expect(
+      sanitizeOpeningTimes({
+        days: [{ day: "funday", enabled: true, timeframes: [] }],
+      })
+    ).toBeNull()
+    expect(
+      sanitizeOpeningTimes({
+        days: [
+          {
+            day: "monday",
+            enabled: true,
+            timeframes: [tf("09:00", "17:00", "robots")],
+          },
+        ],
+      })
+    ).toBeNull()
+  })
   it("refuses overlapping or excessive timeframes, and non-hours", () => {
     expect(
       sanitizeOpeningTimes({
@@ -220,9 +237,19 @@ describe("sanitizeOpeningTimes", () => {
           {
             day: "monday",
             enabled: true,
-            timeframes: ["01", "03", "05", "07", "09", "11", "13"].map((h) =>
-              tf(`${h}:00`, `${h}:30`)
-            ),
+            timeframes: [
+              "01",
+              "02",
+              "03",
+              "04",
+              "05",
+              "06",
+              "07",
+              "08",
+              "09",
+              "10",
+              "11",
+            ].map((h) => tf(`${h}:00`, `${h}:30`)),
           },
         ],
       })

@@ -3,6 +3,7 @@ import "server-only"
 import {
   submittedSourceRecords,
   type LibrarySourceRecord,
+  type LibraryNotice,
 } from "@repo/shared-data"
 import type { Data, UID } from "@repo/strapi-types"
 import { draftMode } from "next/headers"
@@ -78,6 +79,24 @@ async function withLocaleFallback<R extends { data?: unknown }>(
   if (fallback?.data) return { ...fallback, localeFallback: true }
 
   return res ? { ...res, localeFallback: false } : undefined
+}
+
+/** Keep the default taxonomy/navigation complete, with translations overriding by document. */
+async function withLocaleNavigation<
+  R extends { data: { documentId: string }[] },
+>(locale: Locale, fetchIn: (locale: Locale) => Promise<R>): Promise<R> {
+  if (locale === routing.defaultLocale) return fetchIn(locale)
+
+  const [translated, original] = await Promise.all([
+    fetchIn(locale),
+    fetchIn(routing.defaultLocale),
+  ])
+  const entries = new Map<string, R["data"][number]>(
+    original.data.map((entry) => [entry.documentId, entry])
+  )
+  for (const entry of translated.data) entries.set(entry.documentId, entry)
+
+  return { ...translated, data: [...entries.values()] }
 }
 
 // ------ Page fetching functions
@@ -507,6 +526,12 @@ type LocationCmsFields = {
   /** Optional overrides for the generated title/description/image. */
   seo?: Data.Component<"shared.seo"> | null
   libraryTypeCounts?: LibraryTypeCount[]
+  statistics?: {
+    libraries: boolean
+    children: boolean
+    types: boolean
+    preview?: boolean
+  }
 }
 
 // ── Child locations (computed by Strapi) ─────────────────────────────────────
@@ -515,6 +540,14 @@ export type LatLng = { lat: number; lng: number }
 
 /** A country or region listed on its parent's page, with its library tally. */
 export type LocationChildCount = {
+  regionTypeLabel?: string | null
+  regionsSectionLabel?: string | null
+  descendantWithRecords?: number | null
+  descendantTotal?: number | null
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
+  placeBasedCount?: number
+  documentId?: string
   /** Published libraries in this child. */
   libraryCount?: number
   /** Its map centre, else the mean position of its libraries. */
@@ -529,6 +562,7 @@ export type PopulatedContinentData = Omit<
 > & {
   quickLinks?: QuickLink[]
   libraryCount?: number
+  regionsWithLibraries?: number | null
   regionCount?: number
   countries?: ({
     name: string
@@ -574,7 +608,7 @@ export type PopulatedCountryData = Omit<
 
 export type PopulatedRegionData = Omit<
   Data.ContentType<"api::region.region">,
-  "libraries"
+  "libraries" | "areas"
 > & {
   heroImage?: Data.ContentType<"plugin::upload.file"> | null
   heroTagline?: string | null
@@ -595,6 +629,7 @@ export type PopulatedRegionData = Omit<
   mapConfig?: MapConfig | null
   libraryCount?: number
   areaCount?: number
+  areas?: ({ name: string; slug: string } & LocationChildCount)[]
   /** Up to 100 of the region's libraries, featured first. */
   libraries?: RegionLibrary[]
   /** Map centre, else the mean position of its libraries. */
@@ -605,6 +640,11 @@ export type PopulatedRegionData = Omit<
 
 /** A library row on its region's page. */
 export type RegionLibrary = {
+  /** Omitted if the notice lookup failed; an empty array means no notices. */
+  notices?: LibraryNotice[]
+  mobileTimetable?: unknown
+  absentFacilities?: unknown
+  homeLibrary?: { name?: string; slug?: string } | null
   documentId: string
   name: string
   slug: string
@@ -643,6 +683,10 @@ export type RegionSibling = {
 }
 
 export async function fetchContinent(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchContinentIn(slug, l))
+}
+
+async function fetchContinentIn(slug: string, locale: Locale) {
   const dm = await draftMode()
   try {
     // Uses a custom public route (/continents/detail/:slug) that bypasses
@@ -775,6 +819,11 @@ export async function fetchCountry(slug: string, locale: Locale) {
   // Missing static assets can match the dynamic location route. Reject that
   // route's locale before it becomes a misleading Strapi populate failure.
   if (!routing.locales.includes(locale)) return
+
+  return withLocaleFallback(locale, (l) => fetchCountryIn(slug, l))
+}
+
+async function fetchCountryIn(slug: string, locale: Locale) {
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI(
@@ -796,6 +845,10 @@ export async function fetchCountry(slug: string, locale: Locale) {
 }
 
 export async function fetchRegion(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchRegionIn(slug, l))
+}
+
+async function fetchRegionIn(slug: string, locale: Locale) {
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI(
@@ -1359,6 +1412,10 @@ export async function fetchWikiLanding(locale: Locale) {
  * everywhere at once.
  */
 export async function fetchWikiSections(locale: Locale) {
+  return withLocaleNavigation(locale, fetchWikiSectionsIn)
+}
+
+async function fetchWikiSectionsIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/wiki-sections", {
       locale,
@@ -1514,6 +1571,13 @@ export async function fetchLegalDocuments(
   locale: Locale,
   status?: "draft" | "published"
 ) {
+  return withLocaleNavigation(locale, (l) => fetchLegalDocumentsIn(l, status))
+}
+
+async function fetchLegalDocumentsIn(
+  locale: Locale,
+  status?: "draft" | "published"
+) {
   try {
     return (await PublicStrapiClient.fetchAPI("/legal-documents/nav", {
       locale,
@@ -1533,6 +1597,10 @@ export async function fetchLegalDocuments(
 }
 
 export async function fetchLegalDocument(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) => fetchLegalDocumentIn(slug, l))
+}
+
+async function fetchLegalDocumentIn(slug: string, locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI(
       `/legal-documents/detail/${encodeURIComponent(slug)}`,

@@ -3,7 +3,7 @@ import { emptyAtlasFilters, parseAtlasQueryRequest } from "@repo/shared-data"
 import { useEffect } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
-import { act, cleanup, render } from "@/test/render"
+import { act, cleanup, render, screen, within } from "@/test/render"
 
 const observed = vi.hoisted(() => ({ map: null as any, list: null as any }))
 vi.mock("@/lib/access-client", () => ({
@@ -164,7 +164,12 @@ it("switches the complete provider without a bulk download and preserves indepen
       throw new Error(`Unexpected bulk or legacy request: ${url}`)
     })
   )
-  render(<AtlasExplorer scalable />)
+  const atlas = render(
+    <AtlasExplorer
+      scalable
+      feedbackPrompt={<button type="button">Atlas feedback</button>}
+    />
+  )
   await act(async () => {
     await vi.advanceTimersByTimeAsync(1000)
   })
@@ -181,7 +186,39 @@ it("switches the complete provider without a bulk download and preserves indepen
   expect(observed.map.selected.id).toBe("selected")
   expect(observed.map.mobileRouteLines).toBe(false)
   expect(observed.map.mobileOpacity).toBe(0.4)
+  expect(screen.getByRole("button", { name: "Atlas feedback" })).toBeTruthy()
   await act(async () => observed.map.onError("webgl"))
   expect(observed.list.remoteScope.filters).toEqual(emptyAtlasFilters())
   expect(observed.list.libraries).toEqual([])
+  expect(screen.getByRole("button", { name: "Atlas feedback" })).toBeTruthy()
+
+  atlas.unmount()
+  window.history.replaceState(null, "", "/en/map?layers=pins")
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => ({
+      matches: query === "(max-width: 767px)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+  )
+  render(
+    <AtlasExplorer
+      scalable
+      feedbackPrompt={<button type="button">Atlas feedback</button>}
+    />
+  )
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  expect(
+    screen.getByRole("button", { name: "Panel size: peek. Change size" })
+  ).toBeTruthy()
+  expect(
+    within(screen.getByRole("region", { name: "Explore panel" })).getByRole(
+      "button",
+      { name: "Atlas feedback" }
+    )
+  ).toBeTruthy()
 })

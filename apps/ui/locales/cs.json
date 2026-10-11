@@ -208,6 +208,72 @@
         }
       }
     },
+    "atlas": {
+      "eyebrow": "Pomozte utvářet Atlas",
+      "title": "Jak se vám používal Atlas?",
+      "description": "Napište nám, které části jste použili, jak fungovaly a co byste chtěli vidět příště.",
+      "stepOne": "Používání Atlasu",
+      "stepTwo": "Vaše zkušenosti a nápady",
+      "short": "Přibližně dvě minuty",
+      "success": "Vaše zpětná vazba nám pomáhá vylepšovat Atlas a rozhodovat, co přidat jako další.",
+      "task": "Co jste chtěli v Atlasu udělat?",
+      "tasks": {
+        "find_library": "Najít knihovnu",
+        "plan_visit": "Naplánovat návštěvu",
+        "compare_areas": "Porovnat oblasti nebo pokrytí knihovnami",
+        "check_accessibility": "Zjistit bezbariérovou přístupnost",
+        "export_data": "Exportovat údaje o knihovnách",
+        "explore": "Prozkoumat mapu",
+        "other": "Něco jiného"
+      },
+      "features": {
+        "label": "Které části Atlasu jste použili?",
+        "hint": "Vyberte všechny odpovídající možnosti. Pokud žádná neodpovídá, vyberte Jiné.",
+        "required": "Vyberte alespoň jednu část Atlasu nebo možnost Jiné.",
+        "options": {
+          "search": "Vyhledávání",
+          "filters": "Filtry",
+          "map_layers": "Mapové vrstvy a legendy",
+          "library_details": "Podrobnosti o knihovně",
+          "list_view": "Zobrazení seznamu",
+          "area_comparison": "Porovnání oblastí",
+          "accessibility": "Informace o bezbariérovosti",
+          "exports": "Export dat",
+          "other": "Jiné"
+        }
+      },
+      "clarity": "Jak srozumitelné byly legendy mapy a výsledky?",
+      "clarityScore": "Srozumitelnost: {value} z 5",
+      "unclear": "Nesrozumitelné",
+      "clear": "Srozumitelné",
+      "wishlist": {
+        "label": "Co bych chtěl(a) vidět",
+        "hint": "Funkce, mapová vrstva nebo informace, která by vám pomohla. K čemu byste ji použili?",
+        "placeholder": "Chtěl(a) bych mít možnost… protože…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "Co se v Atlasu stalo a co jste očekávali?",
+          "hint": "Uveďte funkci nebo mapovou vrstvu a kde jste narazili na problém. Neuvádějte hesla ani soukromé údaje.",
+          "placeholder": "V Atlasu jsem chtěl(a)… Očekával(a) jsem… Místo toho…"
+        },
+        "idea": {
+          "label": "Co bych chtěl(a) vidět v Atlasu",
+          "hint": "Jakou funkci, mapovou vrstvu nebo informaci byste přidali či změnili a s čím by vám to pomohlo?",
+          "placeholder": "Chtěl(a) bych mít možnost… protože…"
+        },
+        "experience": {
+          "label": "Co bylo v Atlasu snadné, matoucí nebo chybělo?",
+          "hint": "Zamyslete se nad vyhledáváním, filtry, legendami mapy nebo podrobnostmi o knihovnách. Konkrétní příklad pomůže.",
+          "placeholder": "Při použití… jsem zjistil(a)…"
+        },
+        "praise": {
+          "label": "Co vám v Atlasu dobře fungovalo?",
+          "hint": "Která funkce vám pomohla a proč? Dobré věci chceme zachovat.",
+          "placeholder": "Užitečné pro mě bylo… protože…"
+        }
+      }
+    },
     "contact": {
       "eyebrow": "Napište našemu týmu",
       "title": "Jak vám můžeme pomoci?",
@@ -484,7 +550,8 @@
     "contribute_menu": "Nabídka příspěvků",
     "your_work": "Vaše práce",
     "everyone": "Všichni",
-    "support_us_on_ko_fi": "Podpořte nás na Ko-fi",
+    "buy_me_a_coffee": "Kupte mi kávu",
+    "about_the_project": "O projektu",
     "opens_in_a_new_tab": "(otevře se v nové kartě)",
     "account_menu": "Nabídka účtu",
     "profile": "Profil",

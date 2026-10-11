@@ -14,6 +14,10 @@ import {
   type OpeningTimesDay,
   type OpeningTimesDayKey,
 } from "./opening-times.types"
+import {
+  OpeningBlockDetails,
+  OpeningScheduleOverrides,
+} from "./OpeningScheduleOverrides"
 
 export {
   DAY_LABELS,
@@ -79,7 +83,9 @@ function makeId(): string {
 function hasInvalidRange(tf: OpeningTimeframe): boolean {
   if (!tf.startTime || !tf.endTime) return false
 
-  return toMins(tf.startTime) >= toMins(tf.endTime)
+  return tf.overnight
+    ? toMins(tf.endTime) >= toMins(tf.startTime)
+    : toMins(tf.startTime) >= toMins(tf.endTime)
 }
 
 function overlappingIndices(timeframes: OpeningTimeframe[]): Set<number> {
@@ -316,6 +322,7 @@ function TimeframeRow({
   onStartTimeChange,
   onEndTimeChange,
   onRemove,
+  onDetailsChange,
 }: {
   timeframe: OpeningTimeframe
   index: number
@@ -324,13 +331,18 @@ function TimeframeRow({
   onStartTimeChange: (v: string) => void
   onEndTimeChange: (v: string) => void
   onRemove: () => void
+  onDetailsChange: (frame: OpeningTimeframe) => void
 }) {
   const tUi = useUiTranslations("ui")
 
   const invalidRange = hasInvalidRange(timeframe)
   const hasError = isOverlapping || invalidRange
   const minFromMins = minFrom ? toMins(minFrom) : 0
-  const minToMins = timeframe.startTime ? toMins(timeframe.startTime) + 15 : 15
+  const minToMins = timeframe.overnight
+    ? 0
+    : timeframe.startTime
+      ? toMins(timeframe.startTime) + 15
+      : 15
 
   return (
     <div
@@ -373,6 +385,7 @@ function TimeframeRow({
         ))}
       </select>
 
+      <OpeningBlockDetails frame={timeframe} onChange={onDetailsChange} />
       {hasError && (
         <span
           style={{
@@ -468,7 +481,7 @@ export function OpeningTimesEditor({
       patchDay(value, dayKey, {
         timeframes: [
           ...timeframes,
-          { id: makeId(), startTime, endTime, staffing: "staffed" },
+          { id: makeId(), startTime, endTime, staffing: "open" },
         ],
       })
     )
@@ -477,7 +490,7 @@ export function OpeningTimesEditor({
   const updateTimeframe = (
     dayKey: OpeningTimesDayKey,
     i: number,
-    patch: Partial<Pick<OpeningTimeframe, "startTime" | "endTime">>
+    patch: Partial<OpeningTimeframe>
   ) => {
     const day = value.days.find((d) => d.day === dayKey)
     if (!day) return
@@ -485,22 +498,6 @@ export function OpeningTimesEditor({
     const timeframes = day.timeframes.map((tf, idx) =>
       idx === i ? { ...tf, ...patch } : tf
     )
-
-    // Auto-advance endTime if startTime change makes range invalid
-    if (patch.startTime !== undefined) {
-      const updated = timeframes[i]!
-      if (
-        updated.endTime &&
-        toMins(updated.startTime) >= toMins(updated.endTime)
-      ) {
-        timeframes[i] = {
-          ...updated,
-          endTime: minsToTime(
-            Math.min(snapTo15(toMins(updated.startTime) + 60), 1440)
-          ),
-        }
-      }
-    }
 
     onChange(patchDay(value, dayKey, { timeframes }))
   }
@@ -543,6 +540,7 @@ export function OpeningTimesEditor({
         overflow: "hidden",
       }}
     >
+      <OpeningScheduleOverrides value={value} onChange={onChange} />
       {value.days.map((day, dayIdx) => {
         const badIndices = overlapMap[day.day] ?? new Set<number>()
         const isEven = dayIdx % 2 === 0
@@ -605,7 +603,7 @@ export function OpeningTimesEditor({
               <div
                 style={{
                   marginTop: "10px",
-                  paddingLeft: "98px",
+                  paddingLeft: "0",
                   display: "flex",
                   flexDirection: "column",
                   gap: "7px",
@@ -627,6 +625,9 @@ export function OpeningTimesEditor({
                       }
                       onEndTimeChange={(v) =>
                         updateTimeframe(day.day, i, { endTime: v })
+                      }
+                      onDetailsChange={(frame) =>
+                        updateTimeframe(day.day, i, frame)
                       }
                       onRemove={() => removeTimeframe(day.day, i)}
                     />

@@ -66,6 +66,62 @@ it("adds structured product metrics to beta feedback and escapes visitor HTML", 
   expect(email.html).toContain("&lt;script&gt;")
   expect(email.html).not.toContain("<script>")
 })
+it("delivers Atlas feature answers, clarity and feature requests in its own email category", async () => {
+  await sendContactNotification(
+    {
+      mode: "feedback",
+      topic: "experience",
+      task: "compare_areas",
+      outcome: "partly",
+      ease: 3,
+      atlas: {
+        features: ["map_layers", "area_comparison", "exports"],
+        clarity: 4,
+        wishlist: '<script>alert("wishlist")</script> More export formats.',
+      },
+      message: "It would help to compare library access between areas.",
+      context: { page: "/atlas", locale: "en" },
+    },
+    "Atlas test browser",
+    "atlas-reference"
+  )
+  const email = sendMail.mock.calls[0]![0]
+  expect(email.subject).toBe("[Atlas feedback] Experience · /atlas")
+  expect(email.to).toBe("info@libraries.global")
+  expect(email.replyTo).toBeUndefined()
+  expect(email.text).toContain("System notification · Atlas feedback")
+  expect(email.text).toContain("Task: Compare areas")
+  expect(email.text).toContain(
+    "Features used: Map layers, Area comparison, Exports"
+  )
+  expect(email.text).toContain(
+    "Map and data clarity (1 = unclear, 5 = clear): 4/5"
+  )
+  expect(email.text).toContain("Things they’d like to see")
+  expect(email.text).toContain("More export formats.")
+  expect(email.html).toContain("&lt;script&gt;")
+  expect(email.html).not.toContain("<script>")
+})
+it("labels an Atlas idea message as the wishlist without requiring a separate wishlist field", () => {
+  const wishes = "Please let me save an area comparison for future visits."
+  const email = contactEmail(
+    {
+      mode: "feedback",
+      topic: "idea",
+      task: "compare_areas",
+      outcome: "partly",
+      atlas: { features: ["area_comparison"] },
+      message: wishes,
+      context: { page: "/atlas", locale: "en" },
+    },
+    "Atlas test browser",
+    "reference",
+    new Date()
+  )
+  expect(email.subject).toBe("[Atlas feedback] Suggestion · /atlas")
+  expect(email.text).toContain("Things they’d like to see")
+  expect(email.text).toContain(wishes)
+})
 it("always sends to the admin mailbox and uses the visitor only as Reply-To", async () => {
   vi.stubEnv("EMAIL_FROM", "Libraries Global <info@libraries.global>")
   await sendContactNotification(contact, "Browser", "reference")

@@ -1,6 +1,12 @@
+import { DEFAULT_LOCALE } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
-import { isPostgres, libraryJoin, tableOf } from "./library-sql"
+import { isPostgres } from "./library-sql"
+import {
+  canonicalPlaceLibraries,
+  scopePlaceQuery,
+  PLACE_LIBRARY_FILTERS,
+} from "./place-library-scope"
 
 import librarySchema from "../api/library/content-types/library/schema.json"
 
@@ -21,16 +27,15 @@ async function countBySql(
   opts: CountOptions
 ): Promise<TypeCount[]> {
   const knex = strapi.db.connection
-  const libraries = tableOf(strapi, "api::library.library")
-  const rel = libraryJoin(strapi, relation)
-
-  const query = knex(`${libraries} as l`)
-    .join(`${rel.linkTable} as rl`, `rl.${rel.libraryColumn}`, "l.id")
-    .join(`${rel.table} as r`, "r.id", `rl.${rel.targetColumn}`)
-    .where("r.document_id", documentId)
-  if (opts.status === "published") query.whereNotNull("l.published_at")
-  else query.whereNull("l.published_at")
-  if (opts.locale) query.where("l.locale", opts.locale)
+  const query = scopePlaceQuery(
+    canonicalPlaceLibraries(strapi, opts.locale, opts.status, {
+      relation,
+      documentId,
+    }),
+    strapi,
+    relation,
+    documentId
+  )
 
   const rows = (await query
     .groupBy("l.library_type")
@@ -55,20 +60,17 @@ async function countByType(
 ): Promise<TypeCount[]> {
   const counts = await Promise.all(
     LIBRARY_TYPES.map(async (type) => {
-      try {
-        const count = await strapi.documents("api::library.library").count({
-          filters: {
-            [relation]: { documentId: { $eq: documentId } },
-            libraryType: { $eq: type },
-          } as never,
-          locale: opts.locale,
-          status: opts.status,
-        })
+      const count = await strapi.documents("api::library.library").count({
+        filters: {
+          [relation]: { documentId: { $eq: documentId } },
+          libraryType: { $eq: type },
+          ...PLACE_LIBRARY_FILTERS,
+        } as never,
+        locale: DEFAULT_LOCALE,
+        status: opts.status,
+      })
 
-        return { type, count }
-      } catch {
-        return { type, count: 0 }
-      }
+      return { type, count }
     })
   )
 

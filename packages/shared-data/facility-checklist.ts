@@ -70,6 +70,8 @@ export const MOBILE_FACILITY_CHECKLIST: readonly FacilityCheck[] = [
 export function facilityChecklistFor(
   libraryType: string | null | undefined
 ): readonly FacilityCheck[] {
+  if (libraryType === "Digital") return []
+
   return libraryType === "Mobile"
     ? MOBILE_FACILITY_CHECKLIST
     : FACILITY_CHECKLIST

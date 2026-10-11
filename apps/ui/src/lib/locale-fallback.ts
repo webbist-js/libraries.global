@@ -1,9 +1,9 @@
 /**
  * Default-locale fallback for translated pages. When a Knowledge article,
- * Journal article or library has no version in the requested locale, the
- * fetchers in `strapi-api/content/server.ts` return the default-locale
- * version flagged `localeFallback`; pages then say so under the title and
- * keep the stand-in out of search engines (`buildMetadata` robots
+ * Journal article, library, location or legal document has no version in the
+ * requested locale, the fetchers in `strapi-api/content/server.ts` return
+ * the default-locale version flagged `localeFallback`. Pages say so under
+ * the title and keep the stand-in out of search engines (`buildMetadata` robots
  * "noindex-follow", i.e. `{ index: false, follow: true }`).
  */
 

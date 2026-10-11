@@ -1,7 +1,7 @@
 "use client"
+
 import {
   addDays,
-  cycleWeekOf,
   describeRepeat,
   localDateTime,
   normalizeMobileTimetable,
@@ -15,6 +15,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds"
+import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryNoticeBanners } from "@/components/library/LibraryNoticeBanners"
 import { useStaff } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
@@ -23,9 +24,9 @@ import { shortDate, weekdayCopy } from "@/lib/staff/format"
 import { useStaffLibraryHref } from "@/lib/staff/use-library-href"
 
 import { MobileRouteMap } from "./MobileRouteMap"
-import { MobileTodayStrip } from "./MobileTodayStrip"
 import { NearestStopFinder } from "./NearestStopFinder"
 import { StopDrawer } from "./StopDrawer"
+import { timetablePresentation } from "./timetable-presentation"
 import { useMobileClock } from "./useMobileClock"
 
 const days = [
@@ -93,17 +94,57 @@ export function StopsTimesSection({
 
   const tt = normalizeMobileTimetable(value)
   const [view, setView] = useState<"day" | "place">("day")
-  const [chosenWeek, setChosenWeek] = useState<number | null>(null)
+  const [chosenWeek, setChosenWeek] = useState<{
+    week: number
+    start: string
+  } | null>(null)
   const [stopId, setStopId] = useState<string | null>(null)
   const staff = useStaff()
   const staffHref = useStaffLibraryHref(id, slug)
   const now = useMobileClock()
   const timetableNotices: TimetableNotice[] = notices
   const today = now ? localDateTime(now, timezone).date : null
-  // The tabs open on the week the service is in now, until the reader picks one.
-  const thisWeek = tt && today ? cycleWeekOf(tt, today) : null
-  const week = chosenWeek ?? thisWeek ?? 1
+  const presentation =
+    tt && now
+      ? timetablePresentation(tt, timetableNotices, now, timezone)
+      : null
+  const week = chosenWeek?.week ?? presentation?.week ?? 1
+  const start = chosenWeek?.start ?? presentation?.monday ?? tt?.cycle.anchor
   const nextVisitOf = nextVisitLookup(tt, timetableNotices, now, timezone)
+  const publishedRows = (tt?.visits ?? []).map((visit) => ({
+    ...visit,
+    actualDate: null as string | null,
+    cancelled: false,
+  }))
+  const shownRows =
+    tt && start && view === "day"
+      ? occurrences(tt, timetableNotices, start, addDays(start, 6)).flatMap(
+          (occurrence) => {
+            const visit = tt.visits.find(
+              (item) => item.id === occurrence.visitId
+            )
+
+            return visit
+              ? [
+                  {
+                    ...visit,
+                    arrive: occurrence.arrive,
+                    depart: occurrence.depart,
+                    actualDate: occurrence.date,
+                    cancelled: Boolean(occurrence.cancelledBy),
+                  },
+                ]
+              : []
+          }
+        )
+      : publishedRows
+  const repeats = new Set(
+    shownRows.map(
+      (visit) =>
+        `${describeRepeat(visit, tt!.cycle)}${visit.validFrom ? ` · from ${shortDate(visit.validFrom)}` : ""}${visit.validTo ? ` · until ${shortDate(visit.validTo)}` : ""}`
+    )
+  )
+  const sharedRepeat = repeats.size === 1 ? [...repeats][0] : null
 
   return (
     <section
@@ -128,15 +169,22 @@ export function StopsTimesSection({
         ) : null}
       </div>
       <LibraryNoticeBanners notices={notices} timezone={timezone} />
+      {presentation?.expired ? (
+        <p role="status">
+          All recorded visits have ended.{" "}
+          <OpenCorrectionLink category="Stops & times">
+            Suggest an updated timetable
+          </OpenCorrectionLink>
+        </p>
+      ) : null}
       {tt?.visits.length ? (
         <>
-          <MobileTodayStrip
-            id={id}
-            tt={tt}
-            notices={timetableNotices}
-            timezone={timezone}
-            status={status}
-          />
+          {presentation?.warning ? (
+            <p role="status" className="rounded-xl border p-4 text-sm">
+              The published timetable ends on {shortDate(presentation.warning)}.
+              A current timetable would help visitors plan ahead.
+            </p>
+          ) : null}
           <NearestStopFinder stops={tt.stops} onSelect={setStopId} />
           <div className="flex flex-wrap gap-3">
             <SegmentedControl
@@ -152,13 +200,19 @@ export function StopsTimesSection({
               <SegmentedControl
                 label={tUi("cycle_week")}
                 value={String(week)}
-                onChange={(value) => setChosenWeek(Number(value))}
+                onChange={(value) => {
+                  const target = Number(value)
+                  if (presentation)
+                    setChosenWeek({
+                      week: target,
+                      start: presentation.weekStart(target),
+                    })
+                }}
                 options={Array.from({ length: tt.cycle.weeks }, (_, index) => ({
                   value: String(index + 1),
-                  label:
-                    thisWeek === index + 1
-                      ? `Week ${index + 1} · this week`
-                      : `Week ${index + 1}`,
+                  label: presentation
+                    ? `Week ${index + 1} · ${shortDate(presentation.weekStart(index + 1))}–${shortDate(addDays(presentation.weekStart(index + 1), 6))}`
+                    : `Week ${index + 1}`,
                 }))}
               />
             ) : null}
@@ -170,9 +224,10 @@ export function StopsTimesSection({
                 style={{ color: T.ink.dim }}
               >
                 {view === "day"
-                  ? `Week ${week} of the published cycle. Monthly and specific-date visits show their own repeat rules.`
+                  ? `Week ${week}: ${start ? `${shortDate(start)}–${shortDate(addDays(start, 6))}` : "published cycle"}.`
                   : "All stops and their published visits."}{" "}
-                Times are local to {timezone}.
+                Times are local to {timezone}.{" "}
+                {sharedRepeat ? `Repeats: ${sharedRepeat}.` : ""}
               </caption>
               <thead>
                 <tr>
@@ -181,18 +236,14 @@ export function StopsTimesSection({
                   </th>
                   <th scope="col">{view === "day" ? "Stop" : "Day"}</th>
                   <th scope="col">Time</th>
-                  <th scope="col">Repeats</th>
-                  <th scope="col">Next visit</th>
+                  {sharedRepeat ? null : <th scope="col">Repeats</th>}
+                  <th scope="col">
+                    {view === "day" ? "Visit date" : "Next visit"}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {tt.visits
-                  .filter(
-                    (visit) =>
-                      view === "place" ||
-                      visit.repeat.kind !== "cycle" ||
-                      visit.repeat.weeks.includes(week)
-                  )
+                {shownRows
                   .sort((a, b) =>
                     view === "place"
                       ? (
@@ -220,7 +271,7 @@ export function StopsTimesSection({
 
                     return (
                       <tr
-                        key={visit.id}
+                        key={`${visit.id}-${visit.actualDate ?? "published"}`}
                         className="border-t"
                         style={{ borderColor: T.border.divider }}
                       >
@@ -240,18 +291,23 @@ export function StopsTimesSection({
                         <td className="pr-4 whitespace-nowrap">
                           {visit.arrive}–{visit.depart}
                         </td>
-                        <td className="pr-4">
-                          {describeRepeat(visit, tt.cycle)}
-                          {visit.validFrom
-                            ? ` · from ${shortDate(visit.validFrom)}`
-                            : ""}
-                          {visit.validTo
-                            ? ` · until ${shortDate(visit.validTo)}`
-                            : ""}
-                        </td>
+                        {sharedRepeat ? null : (
+                          <td className="pr-4">
+                            {describeRepeat(visit, tt.cycle)}
+                            {visit.validFrom
+                              ? ` · from ${shortDate(visit.validFrom)}`
+                              : ""}
+                            {visit.validTo
+                              ? ` · until ${shortDate(visit.validTo)}`
+                              : ""}
+                          </td>
+                        )}
                         <td className="whitespace-nowrap">
                           {(() => {
                             const next = today ? nextVisitOf(visit.id) : null
+
+                            if (visit.actualDate)
+                              return `${shortDate(visit.actualDate)}${visit.cancelled ? " · cancelled" : ""}`
 
                             return next
                               ? `${weekdayCopy(next.date, today!)}, ${next.arrive}`
@@ -274,6 +330,8 @@ export function StopsTimesSection({
             timezone={timezone}
             onStop={setStopId}
             selectedStop={stopId}
+            date={start}
+            caption={`${tt.stops.length} unique stops across the published cycle; the line shows the first active service on or after ${start ? shortDate(start) : "today"}.`}
           />
           <StopDrawer
             id={id}
@@ -295,7 +353,7 @@ export function StopsTimesSection({
             href={
               staff.can("edit", id)
                 ? staffHref("/edit?step=timetable")
-                : "/contribute/index"
+                : `/contribute?${new URLSearchParams({ action: "correction", library: slug ?? "", name, category: "Stops & times" })}#start`
             }
           >
             Add the stops and timetable →

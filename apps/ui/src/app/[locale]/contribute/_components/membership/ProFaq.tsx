@@ -1,6 +1,8 @@
+"use client"
+
 import { Icon } from "@iconify/react"
 
-import { CONTACT_EMAIL } from "@/lib/constants"
+import { useContactModal } from "@/components/contact/ContactModalProvider"
 import { T } from "@/lib/design-tokens"
 
 import { H2_STYLE } from "./PlanBits"
@@ -42,6 +44,8 @@ export function ProFaq({
   readonly showContact?: boolean
   readonly firstOpen?: boolean
 } = {}) {
+  const { openContact } = useContactModal()
+
   return (
     <section
       aria-labelledby={id}
@@ -59,12 +63,14 @@ export function ProFaq({
             >
               Something else? The maintainers reply within 5 working days.
             </p>
-            <a
+            <button
+              type="button"
+              aria-haspopup="dialog"
               className="mt-1 inline-flex h-10 items-center rounded-full bg-(--t-accent-primary) px-5 text-[14.5px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Question about plans")}`}
+              onClick={() => openContact("plans")}
             >
               Ask a question
-            </a>
+            </button>
           </>
         ) : null}
       </div>

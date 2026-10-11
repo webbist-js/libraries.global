@@ -8,6 +8,7 @@ import {
   facilityAnswersBody,
   type FacilityRow,
 } from "@/components/library/facility-rows"
+import { LibraryFeatureDetails } from "@/components/library/LibraryFeatureDetails"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -37,7 +38,7 @@ function writeSaved(slug: string, answers: Record<string, Answer> | null) {
 }
 
 const answerPill =
-  "min-w-[42px] rounded-full border px-2.5 py-1 text-[13px] font-semibold transition-colors disabled:cursor-default"
+  "min-h-11 min-w-[42px] rounded-full border px-2.5 py-1 text-[13px] font-semibold transition-colors disabled:cursor-default"
 
 /**
  * The accessibility grid: documented facilities are marked Yes, confirmed
@@ -50,6 +51,7 @@ const answerPill =
  */
 export function LibraryFacilityAnswers({
   rows,
+  grouped = false,
   librarySlug,
   libraryName,
   libraryPath,
@@ -57,6 +59,7 @@ export function LibraryFacilityAnswers({
   driveDocumentId,
   onSent,
 }: {
+  readonly grouped?: boolean
   readonly rows: FacilityRow[]
   readonly librarySlug: string
   readonly libraryName: string
@@ -147,86 +150,187 @@ export function LibraryFacilityAnswers({
 
   const locked = state === "sent" || state === "sending"
 
-  return (
-    <div>
-      <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
-        {rows.map(({ label, icon, state: known }) => {
-          const picked = answers[label]
-          const labelId = `fac-${label.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`
+  const renderRow = ({
+    label,
+    icon,
+    state: known,
+    summary,
+    description,
+    detailCategory,
+  }: FacilityRow) => {
+    const picked = answers[label]
+    const labelId = `fac-${label.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`
 
-          return (
-            <li
-              key={label}
-              className="flex items-center gap-3 py-2.5"
-              style={{ borderTop: `1px solid ${T.border.divider}` }}
-            >
-              <span
-                aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-[10px]"
-                style={{
-                  background:
-                    known === "yes" ? "var(--tint-public-bg)" : T.bg.muted,
-                  color: known === "yes" ? "var(--tint-public-fg)" : T.ink.dim,
-                }}
-              >
-                <Icon height={18} icon={icon} width={18} />
-              </span>
-              <span
-                id={labelId}
-                className="min-w-0 flex-1 text-[15px] font-medium"
-                style={{ color: T.ink.base }}
-              >
-                {label}
-              </span>
-              {known !== "unknown" ? (
-                <span
-                  className="inline-flex items-center gap-1 text-[13.5px] font-semibold"
+    return (
+      <li
+        key={label}
+        className={
+          grouped
+            ? known === "unknown"
+              ? "my-3 flex flex-wrap items-center gap-3 rounded-xl p-3"
+              : "flex items-center gap-3 py-1.5"
+            : "flex flex-wrap items-center gap-3 py-2.5"
+        }
+        style={{
+          borderTop: `1px solid ${T.border.divider}`,
+          background: grouped && known === "unknown" ? T.bg.surface : undefined,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          className={
+            grouped
+              ? "hidden"
+              : "flex size-8 shrink-0 items-center justify-center rounded-[10px]"
+          }
+          style={{
+            background: known === "yes" ? "var(--tint-public-bg)" : T.bg.muted,
+            color: known === "yes" ? "var(--tint-public-fg)" : T.ink.dim,
+          }}
+        >
+          <Icon height={18} icon={icon} width={18} />
+        </span>
+        <span
+          id={labelId}
+          className={
+            grouped
+              ? "min-w-0 flex-1 text-[13px] font-medium"
+              : "min-w-0 flex-1 text-[15px] font-medium"
+          }
+          style={{ color: T.ink.base }}
+        >
+          <LibraryFeatureDetails
+            name={label}
+            summary={summary}
+            description={description}
+            detailCategory={detailCategory}
+          />
+        </span>
+        {known !== "unknown" ? (
+          <span
+            className="inline-flex items-center gap-1 text-[13.5px] font-semibold"
+            style={{
+              color: known === "yes" ? "var(--tint-public-fg)" : T.ink.dim,
+            }}
+          >
+            <Icon
+              aria-hidden="true"
+              height={16}
+              icon={known === "yes" ? "mdi:check" : "mdi:close"}
+              width={16}
+            />
+            {known === "yes" ? tUi("yes") : tUi("no")}
+          </span>
+        ) : (
+          <span
+            role="group"
+            aria-labelledby={labelId}
+            className={
+              grouped
+                ? "flex w-full shrink-0 flex-wrap gap-1.5"
+                : "flex shrink-0 gap-1.5"
+            }
+          >
+            <span className="sr-only">Not recorded. </span>
+            {(["yes", "no"] as const).map((a) => {
+              const on = picked === a
+
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  aria-pressed={on}
+                  disabled={locked}
+                  onClick={() => choose(label, a)}
+                  className={answerPill}
                   style={{
-                    color:
-                      known === "yes" ? "var(--tint-public-fg)" : T.ink.dim,
+                    background: on ? T.ink.base : T.bg.deep,
+                    borderColor: on ? T.ink.base : T.border.hi,
+                    color: on ? "#fff" : T.ink.base,
                   }}
                 >
-                  <Icon
-                    aria-hidden="true"
-                    height={16}
-                    icon={known === "yes" ? "mdi:check" : "mdi:close"}
-                    width={16}
-                  />
-                  {known === "yes" ? tUi("yes") : tUi("no")}
-                </span>
-              ) : (
-                <span
-                  role="group"
-                  aria-labelledby={labelId}
-                  className="flex shrink-0 gap-1.5"
-                >
-                  {(["yes", "no"] as const).map((a) => {
-                    const on = picked === a
+                  {a === "yes" ? tUi("yes") : tUi("no")}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              disabled={locked}
+              onClick={() => {
+                setAnswers((previous) => {
+                  const next = { ...previous }
+                  delete next[label]
+                  writeSaved(librarySlug, next)
 
-                    return (
-                      <button
-                        key={a}
-                        type="button"
-                        aria-pressed={on}
-                        disabled={locked}
-                        onClick={() => choose(label, a)}
-                        className={answerPill}
-                        style={{
-                          background: on ? T.ink.base : T.bg.deep,
-                          borderColor: on ? T.ink.base : T.border.hi,
-                          color: on ? "#fff" : T.ink.base,
-                        }}
-                      >
-                        {a === "yes" ? tUi("yes") : tUi("no")}
-                      </button>
-                    )
-                  })}
-                </span>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+                  return next
+                })
+              }}
+              className={answerPill}
+            >
+              Not sure
+            </button>
+          </span>
+        )}
+      </li>
+    )
+  }
+
+  return (
+    <div>
+      {grouped ? (
+        rows.some((row) => row.state !== "unknown") ? (
+          <div className="grid gap-6 md:grid-cols-2">
+            <div>
+              <h3 className="m-0 mb-3 text-[14px] font-semibold">Access</h3>
+              <ul className="m-0 list-none p-0">
+                {rows
+                  .filter(
+                    (row) =>
+                      row.category === "accessibility" &&
+                      row.state !== "unknown"
+                  )
+                  .map(renderRow)}
+              </ul>
+            </div>
+            <div>
+              <h3 className="m-0 mb-3 text-[14px] font-semibold">Facilities</h3>
+              <ul className="m-0 list-none p-0">
+                {rows
+                  .filter(
+                    (row) =>
+                      row.category === "amenity" && row.state !== "unknown"
+                  )
+                  .map(renderRow)}
+              </ul>
+              {rows.some((row) => row.state === "unknown") ? (
+                <>
+                  <h3 className="mt-5 mb-2 text-[14px] font-semibold">
+                    Not recorded yet
+                  </h3>
+                  <ul className="m-0 list-none p-0">
+                    {rows
+                      .filter((row) => row.state === "unknown")
+                      .map(renderRow)}
+                  </ul>
+                </>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <h3 className="m-0 mb-3 text-[14px] font-semibold">
+              Not recorded yet
+            </h3>
+            <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
+              {rows.map(renderRow)}
+            </ul>
+          </div>
+        )
+      ) : (
+        <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
+          {rows.map(renderRow)}
+        </ul>
+      )}
 
       <div aria-live="polite" className="mt-3">
         {state === "sent" ? (

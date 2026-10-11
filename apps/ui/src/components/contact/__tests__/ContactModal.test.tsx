@@ -21,7 +21,7 @@ const context = {
   viewport: { width: 390, height: 844 },
   screen: { width: 390, height: 844 },
 }
-function mount(mode: "contact" | "feedback" = "feedback") {
+function mount(mode: "contact" | "feedback" | "atlas" = "feedback") {
   vi.stubGlobal("fetch", fetchMock)
   fetchMock.mockResolvedValue(
     Response.json({ ok: true, reference: "12345678-reference" })
@@ -30,9 +30,11 @@ function mount(mode: "contact" | "feedback" = "feedback") {
     <NextIntlClientProvider locale="en" messages={messages}>
       <ContactModal
         intent={
-          mode === "feedback"
-            ? { mode }
-            : { mode, type: "plans", sourceSubject: "Team plan" }
+          mode === "contact"
+            ? { mode, type: "plans", sourceSubject: "Team plan" }
+            : mode === "atlas"
+              ? { mode: "feedback", product: "atlas" }
+              : { mode }
         }
         context={context}
         trigger={null}
@@ -41,14 +43,20 @@ function mount(mode: "contact" | "feedback" = "feedback") {
     </NextIntlClientProvider>
   )
 }
-function questions() {
-  fireEvent.change(screen.getByLabelText("What were you here to do?"), {
-    target: { value: "find_library" },
-  })
+function questions(atlas = false) {
+  fireEvent.change(
+    screen.getByLabelText(
+      atlas ? "What were you using Atlas to do?" : "What were you here to do?"
+    ),
+    {
+      target: { value: "find_library" },
+    }
+  )
   fireEvent.change(screen.getByLabelText("Did you manage to do it?"), {
     target: { value: "no" },
   })
   fireEvent.click(screen.getByLabelText("2 out of 5"))
+  if (atlas) fireEvent.click(screen.getByRole("checkbox", { name: "Search" }))
   fireEvent.click(screen.getByRole("button", { name: "Continue" }))
 }
 afterEach(() => {
@@ -85,6 +93,7 @@ describe("guided feedback and contact modal", () => {
       email: "",
       context,
     })
+    expect(payload).not.toHaveProperty("atlas")
     expect(
       await screen.findByRole("heading", {
         name: "Thanks for getting in touch.",
@@ -152,6 +161,184 @@ describe("guided feedback and contact modal", () => {
       sourceSubject: "Team plan",
       email: "reader@example.org",
     })
+  })
+  it("asks about Atlas features and submits a feature-specific draft and wishes", async () => {
+    mount("atlas")
+    expect(
+      screen.getByRole("dialog", { name: "How was Atlas for you?" })
+    ).toBeTruthy()
+    expect(
+      screen.queryByRole("option", { name: "Manage my library" })
+    ).toBeNull()
+    fireEvent.change(
+      screen.getByLabelText("What were you using Atlas to do?"),
+      {
+        target: { value: "compare_areas" },
+      }
+    )
+    fireEvent.change(screen.getByLabelText("Did you manage to do it?"), {
+      target: { value: "partly" },
+    })
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Map layers and keys" })
+    )
+    fireEvent.click(screen.getByRole("checkbox", { name: "Area comparison" }))
+    fireEvent.click(screen.getByLabelText("3 out of 5"))
+    fireEvent.click(screen.getByLabelText("Clarity: 2 out of 5"))
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }))
+    const message = "The map key was hard to understand when comparing areas."
+    const wishlist = "I’d like a layer showing opening hours for each library."
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /What happened in Atlas/ }),
+      {
+        target: { value: message },
+      }
+    )
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /Things I’d like to see/ }),
+      {
+        target: { value: wishlist },
+      }
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Send feedback" }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toMatchObject({
+      mode: "feedback",
+      topic: "problem",
+      task: "compare_areas",
+      outcome: "partly",
+      ease: 3,
+      message,
+      atlas: {
+        features: ["map_layers", "area_comparison"],
+        clarity: 2,
+        wishlist,
+      },
+    })
+  })
+  it("requires a feature selection and moves focus to the checkbox group", async () => {
+    mount("atlas")
+    fireEvent.change(
+      screen.getByLabelText("What were you using Atlas to do?"),
+      {
+        target: { value: "explore" },
+      }
+    )
+    fireEvent.change(screen.getByLabelText("Did you manage to do it?"), {
+      target: { value: "browsing" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }))
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Choose at least one part of Atlas, or Other."
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+    const search = screen.getByRole("checkbox", { name: "Search" })
+    await waitFor(() => expect(document.activeElement).toBe(search))
+    fireEvent.click(screen.getByRole("checkbox", { name: "Other" }))
+    expect(screen.queryByRole("alert")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }))
+    expect(
+      screen.getByRole("textbox", { name: /What happened in Atlas/ })
+    ).toBeTruthy()
+  })
+  it("asks for Atlas ideas once without a duplicate wishes field", async () => {
+    mount("atlas")
+    fireEvent.click(screen.getByRole("radio", { name: "I have an idea" }))
+    questions(true)
+    const idea = screen.getByRole("textbox", {
+      name: /Things I’d like to see in Atlas/,
+    }) as HTMLTextAreaElement
+    expect(idea.maxLength).toBe(5000)
+    expect(
+      screen.getAllByRole("textbox", { name: /Things I’d like to see/ })
+    ).toHaveLength(1)
+    const message = "I’d like to compare library opening hours on the map."
+    fireEvent.change(idea, { target: { value: message } })
+    fireEvent.click(screen.getByRole("button", { name: "Send feedback" }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toMatchObject({
+      topic: "idea",
+      message,
+      atlas: { features: ["search"] },
+    })
+    expect(
+      JSON.parse(fetchMock.mock.calls[0]![1].body).atlas
+    ).not.toHaveProperty("wishlist")
+  })
+  it("keeps a long Atlas draft valid when switching to the idea topic", async () => {
+    mount("atlas")
+    questions(true)
+    const message = "I’d like to see more detail about libraries. ".repeat(60)
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /What happened in Atlas/ }),
+      {
+        target: { value: message },
+      }
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Back" }))
+    fireEvent.click(screen.getByRole("radio", { name: "I have an idea" }))
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }))
+    expect(
+      (
+        screen.getByRole("textbox", {
+          name: /Things I’d like to see in Atlas/,
+        }) as HTMLTextAreaElement
+      ).value
+    ).toBe(message)
+    fireEvent.click(screen.getByRole("button", { name: "Send feedback" }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toMatchObject({
+      topic: "idea",
+      message: message.trim(),
+      atlas: { features: ["search"] },
+    })
+  })
+  it("retains Atlas answers, feature choices and wishes after failure and going back", async () => {
+    mount("atlas")
+    fireEvent.click(screen.getByLabelText("Clarity: 4 out of 5"))
+    questions(true)
+    fetchMock.mockResolvedValue(
+      Response.json({ error: "unavailable" }, { status: 503 })
+    )
+    const message = "The search did not find the library I expected."
+    const wishlist = "I’d like to search by opening hours too."
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /What happened in Atlas/ }),
+      {
+        target: { value: message },
+      }
+    )
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /Things I’d like to see/ }),
+      {
+        target: { value: wishlist },
+      }
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Send feedback" }))
+    expect(await screen.findByRole("alert")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Back" }))
+    expect(
+      (screen.getByRole("checkbox", { name: "Search" }) as HTMLInputElement)
+        .checked
+    ).toBe(true)
+    expect(
+      (screen.getByLabelText("Clarity: 4 out of 5") as HTMLInputElement).checked
+    ).toBe(true)
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }))
+    expect(
+      (
+        screen.getByRole("textbox", {
+          name: /What happened in Atlas/,
+        }) as HTMLTextAreaElement
+      ).value
+    ).toBe(message)
+    expect(
+      (
+        screen.getByRole("textbox", {
+          name: /Things I’d like to see/,
+        }) as HTMLTextAreaElement
+      ).value
+    ).toBe(wishlist)
   })
   it("closes on Escape", () => {
     mount()

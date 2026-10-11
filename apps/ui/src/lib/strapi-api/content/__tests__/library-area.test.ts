@@ -45,7 +45,22 @@ describe("fetchLibraryArea", () => {
       location: null,
       openingTimes: null,
     })
-    for (const [, opts] of search.mock.calls)
-      expect(opts.filter).toBe('region_slug = "london" AND locale = "en"')
+    for (const [, opts] of search.mock.calls) {
+      expect(opts.filter).toContain('region_slug = "london"')
+      expect(opts.filter).toMatch(/ AND locale = "en"$/)
+      expect(opts.filter).toContain(
+        'operationalStatus NOT IN ["permanently_closed","planned"]'
+      )
+    }
+  })
+
+  it("does not present missing count facets as an empty region", async () => {
+    const result = await fetchLibraryArea({
+      slug: "x",
+      regionSlug: "london",
+      location: null,
+      openingTimes: null,
+    })
+    expect(result.regionTotal).toBeNull()
   })
 })

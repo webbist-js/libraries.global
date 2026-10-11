@@ -48,6 +48,10 @@ export function MobileTodayStrip({
         Paused for now. The timetable below is shown as a record of the service.
       </p>
     )
+  if (status === "planned")
+    return (
+      <p>Service planned. Check the timetable for the recorded start dates.</p>
+    )
   if (!now)
     return (
       <p

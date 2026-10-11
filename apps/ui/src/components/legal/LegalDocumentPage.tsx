@@ -7,6 +7,7 @@ import { SectionTabs } from "@/components/ds/SectionTabs"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type {
@@ -57,10 +58,12 @@ export function LegalDocumentPage({
   document: doc,
   documents,
   locale,
+  untranslatedLocale = null,
 }: {
   readonly document: LegalDocumentDetail
   readonly documents: LegalDocumentNavItem[]
   readonly locale: Locale
+  readonly untranslatedLocale?: string | null
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -123,6 +126,10 @@ export function LegalDocumentPage({
             >
               {parseHeroText(doc.heroTitle || title)}
             </h1>
+
+            {untranslatedLocale ? (
+              <NotTranslatedNote locale={untranslatedLocale} />
+            ) : null}
 
             <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               {doc.lead ? (

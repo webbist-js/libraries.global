@@ -1,0 +1,193 @@
+{
+  "key": "plugin_content_manager_configuration_components::library.source-record",
+  "type": "object",
+  "environment": null,
+  "tag": null,
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 10,
+      "relationOpenMode": "modal",
+      "mainField": "url",
+      "defaultSortBy": "dataset",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "dataset": {
+        "edit": {
+          "label": "Dataset key",
+          "description": "Imported sources only: use the registered Dataset key. Leave empty for a public reference.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Dataset key",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "recordId": {
+        "edit": {
+          "label": "Dataset record ID",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Dataset record ID",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "retrievedAt": {
+        "edit": {
+          "label": "Retrieved on",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Retrieved on",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "url": {
+        "edit": {
+          "label": "Source URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Source URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "label": {
+        "edit": {
+          "label": "Source label",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Source label",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "role": {
+        "edit": {
+          "label": "Source role",
+          "description": "Origin identifies the original imported record; reference supports individual facts.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Source role",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "fields": {
+        "edit": {
+          "label": "Supported fact fields",
+          "description": "JSON array of the fact fields this source supports, such as [\"openingTimes\", \"website\"].",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Supported fact fields",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "submissionDocumentId": {
+        "edit": {
+          "label": "Submission document ID",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "Submission document ID",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": ["id", "dataset", "recordId", "retrievedAt"],
+      "edit": [
+        [
+          {
+            "name": "url",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "label",
+            "size": 8
+          },
+          {
+            "name": "role",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "dataset",
+            "size": 6
+          },
+          {
+            "name": "recordId",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "retrievedAt",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "fields",
+            "size": 12
+          }
+        ]
+      ]
+    },
+    "uid": "library.source-record",
+    "isComponent": true
+  }
+}

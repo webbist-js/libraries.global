@@ -40,11 +40,21 @@ export const atlasSettings = {
       { length: ATLAS_LIMITS.maxCellZoom + 1 },
       (_, z) => `atlas_cell_${z}`
     ),
-    ...["open", "regular_open"].flatMap((prefix) =>
+    ...["open", "regular_open", "staff_open"].flatMap((prefix) =>
       ATLAS_OPEN_DAYS.flatMap((day) =>
         Array.from({ length: ATLAS_OPEN_FRAMES_PER_DAY }, (_, n) => [
-          atlasOpenField(day, n, "from", prefix as "open" | "regular_open"),
-          atlasOpenField(day, n, "to", prefix as "open" | "regular_open"),
+          atlasOpenField(
+            day,
+            n,
+            "from",
+            prefix as "open" | "regular_open" | "staff_open"
+          ),
+          atlasOpenField(
+            day,
+            n,
+            "to",
+            prefix as "open" | "regular_open" | "staff_open"
+          ),
         ]).flat()
       )
     ),

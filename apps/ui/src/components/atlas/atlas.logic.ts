@@ -35,6 +35,7 @@ export interface AtlasLibrary {
   path: string | null
   tz: string | null
   /** 7 arrays (Mon–Sun) of [startMinute, endMinute]; null when hours unknown. */
+  staffHours?: number[][][] | null
   hours: number[][][] | null
   notices?: LibraryNotice[]
   closedDates?: string[]
@@ -359,7 +360,7 @@ export function accessibilityOptions(
 
 export interface AtlasFilters {
   types: TypeGroupKey[]
-  opening: "any" | "now" | "at"
+  opening: "any" | "now" | "staff_now" | "at"
   /** Used when opening is "at": day 0–6 (Mon–Sun) and minutes since midnight. */
   atDay: number
   atMinutes: number
@@ -414,7 +415,31 @@ export function matches(
 ): boolean {
   if (f.types.length > 0 && !f.types.includes(typeGroupOf(lib.type)))
     return false
+  if (f.opening === "staff_now") {
+    if (
+      !lib.tz ||
+      [
+        "permanently_closed",
+        "temporarily_closed",
+        "planned",
+        "appointment_only",
+      ].includes(lib.status)
+    )
+      return false
+    const { day, minutes } = nowIn(lib.tz, now)
+    if (!isOpenAt(lib.staffHours ?? null, day, minutes)) return false
+  }
   if (f.opening === "now") {
+    if (
+      !lib.tz ||
+      [
+        "permanently_closed",
+        "temporarily_closed",
+        "planned",
+        "appointment_only",
+      ].includes(lib.status)
+    )
+      return false
     const { day, minutes } = nowIn(lib.tz, now)
     if (!isOpenAt(lib.hours, day, minutes)) return false
   }
@@ -861,7 +886,10 @@ export function parseUrlState(params: URLSearchParams): AtlasUrlState {
       types: csv(params.get("type")).filter((t): t is TypeGroupKey =>
         GROUP_KEYS.has(t as TypeGroupKey)
       ),
-      opening: opening === "now" || opening === "at" ? opening : "any",
+      opening:
+        opening === "now" || opening === "staff_now" || opening === "at"
+          ? opening
+          : "any",
       atDay: at.length === 2 && at[0]! >= 0 && at[0]! <= 6 ? at[0]! : 6,
       atMinutes:
         at.length === 2 && at[1]! >= 0 && at[1]! < 1440 ? at[1]! : 12 * 60,

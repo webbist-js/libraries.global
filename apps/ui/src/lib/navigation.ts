@@ -62,7 +62,9 @@ export const createPublicFullPath = (slug: string, locale: string): string => {
 }
 
 export const formatHref = (href: string | undefined | null): string => {
-  if (!href || href === "#") {
+  if (href?.startsWith("#")) return href
+
+  if (!href) {
     // Empty path -> return hash to prevent unwanted issues
     return "#"
   }

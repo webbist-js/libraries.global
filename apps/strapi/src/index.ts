@@ -7,6 +7,7 @@ import { registerAtlasOutboxMiddleware } from "./documentMiddlewares/atlas-outbo
 import { registerChangeRecordsMiddleware } from "./documentMiddlewares/change-records"
 import { registerLibraryPublishPlacesMiddleware } from "./documentMiddlewares/library-publish-places"
 import { registerMobileTimetableMiddleware } from "./documentMiddlewares/mobile-timetable"
+import { registerOpeningScheduleMiddleware } from "./documentMiddlewares/opening-schedule"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerRoleGrantSubscriber } from "./lifeCycles/roleGrant"
@@ -104,6 +105,7 @@ export default {
     registerChangeRecordsMiddleware({ strapi })
     // Refuse to publish a library into a draft place (Strapi drops the link).
     registerLibraryPublishPlacesMiddleware({ strapi })
+    registerOpeningScheduleMiddleware({ strapi })
     registerMobileTimetableMiddleware({ strapi })
 
     // Seed approved topics (idempotent — skips existing names)

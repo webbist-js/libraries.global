@@ -6,9 +6,11 @@ import {
   type CompletenessSection as RegistrySection,
   type GapKey,
   type GapRecord,
+  openingScheduleStatus,
   effectiveLibraryHours,
-  noticeLocalDate,
   type LibraryNotice,
+  type OpeningTimesException,
+  type OpeningTimesSeason,
 } from "@repo/shared-data"
 
 export const DAY_ORDER = [
@@ -37,6 +39,8 @@ export interface OpeningTimeframe {
   startTime: string
   endTime: string
   staffing?: string | null
+  overnight?: boolean
+  note?: string
 }
 
 export interface OpeningTimesDay {
@@ -48,9 +52,11 @@ export interface OpeningTimesDay {
 export interface OpeningTimesValue {
   version?: number
   days: OpeningTimesDay[]
+  exceptions?: OpeningTimesException[]
+  seasons?: OpeningTimesSeason[]
 }
 
-export type OpenState = "open" | "closed" | "unknown"
+export type OpenState = "open" | "closed" | "unknown" | "appointment"
 
 export interface OpenStatus {
   state: OpenState
@@ -64,31 +70,6 @@ function timeToMinutes(time: string): number {
   return (h ?? 0) * 60 + (m ?? 0)
 }
 
-/** Current [dayKey, minutesSinceMidnight] in the library's IANA timezone. */
-function nowInZone(timezone: string | null | undefined, now: Date) {
-  try {
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: timezone ?? undefined,
-      weekday: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).formatToParts(now)
-    const get = (type: string) =>
-      parts.find((p) => p.type === type)?.value ?? ""
-    const dayKey = get("weekday").toLowerCase() as DayKey
-    const minutes =
-      Number.parseInt(get("hour"), 10) * 60 + Number.parseInt(get("minute"), 10)
-
-    return { dayKey, minutes }
-  } catch {
-    const jsDay = now.getDay()
-    const dayKey = DAY_ORDER[jsDay === 0 ? 6 : jsDay - 1] as DayKey
-
-    return { dayKey, minutes: now.getHours() * 60 + now.getMinutes() }
-  }
-}
-
 /**
  * Compute the live open/closed status from the opening-times custom field.
  * Returns "unknown" when no usable hours exist.
@@ -99,68 +80,11 @@ export function getOpenStatus(
   now: Date = new Date(),
   notices: readonly LibraryNotice[] = []
 ): OpenStatus {
-  const effective = effectiveLibraryHours(
-    openingTimes,
-    notices,
-    noticeLocalDate(now, timezone)
+  const result = openingScheduleStatus(openingTimes, timezone, now, (date) =>
+    effectiveLibraryHours(openingTimes, notices, date)
   )
-  if (effective.closed) return { state: "closed", label: "Closed today" }
-  openingTimes = effective.hours as OpeningTimesValue | null
-  const days = openingTimes?.days
-  if (!Array.isArray(days) || days.length === 0) {
-    return { state: "unknown", label: "Hours not added yet" }
-  }
-  const hasAny = days.some((d) => d.enabled && d.timeframes?.length > 0)
-  if (!hasAny) {
-    return { state: "unknown", label: "Hours not added yet" }
-  }
 
-  const { dayKey, minutes } = nowInZone(timezone, now)
-  const today = days.find((d) => d.day === dayKey)
-
-  if (today?.enabled) {
-    for (const tf of today.timeframes ?? []) {
-      const start = timeToMinutes(tf.startTime)
-      const end = timeToMinutes(tf.endTime)
-      if (minutes >= start && minutes < end) {
-        return { state: "open", label: `Open until ${tf.endTime} today` }
-      }
-    }
-    // Not open now — is there a later timeframe today?
-    const upcoming = (today.timeframes ?? [])
-      .filter((tf) => timeToMinutes(tf.startTime) > minutes)
-      .sort(
-        (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
-      )[0]
-    if (upcoming) {
-      return {
-        state: "closed",
-        label: `Closed · opens ${upcoming.startTime} today`,
-      }
-    }
-  }
-
-  // Find the next open day (up to a week ahead)
-  const todayIndex = DAY_ORDER.indexOf(dayKey)
-  for (let offset = 1; offset <= 7; offset++) {
-    const key = DAY_ORDER[(todayIndex + offset) % 7] as DayKey
-    const day = days.find((d) => d.day === key)
-    const first = day?.enabled
-      ? [...(day.timeframes ?? [])].sort(
-          (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
-        )[0]
-      : undefined
-    if (first) {
-      const dayLabel = offset === 1 ? "tomorrow" : DAY_LABELS[key]
-
-      return {
-        state: "closed",
-        label: `Closed · opens ${first.startTime} ${dayLabel}`,
-      }
-    }
-  }
-
-  return { state: "closed", label: "Closed" }
+  return { state: result.state, label: result.label }
 }
 
 /** Format one day's timeframes as "09:00–17:00" (multiple joined with ", "). */

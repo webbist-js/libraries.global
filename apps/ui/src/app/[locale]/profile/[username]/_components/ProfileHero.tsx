@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalLink from "@/components/global/GlobalLink"
 import { avatarSrc } from "@/lib/avatar"
+import { KOFI_URL } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import { isFounder } from "@/lib/founder"
 import { resolvePublicPrefs, type UserProfile } from "@/lib/types/profile"
@@ -305,6 +306,18 @@ export function ProfileHero({
                 title={tUi("community_contributor")}
               />
             </div>
+
+            {isFounder(profile.username) ? (
+              <GlobalLink
+                href={KOFI_URL}
+                className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-[15px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
+                style={{ borderColor: T.border.hi }}
+              >
+                <Icon icon="simple-icons:kofi" className="size-4" aria-hidden />
+                {tUi("buy_me_a_coffee")}
+                <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
+              </GlobalLink>
+            ) : null}
           </div>
 
           {/* Actions */}

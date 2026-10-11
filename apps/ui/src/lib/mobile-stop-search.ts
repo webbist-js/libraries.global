@@ -233,6 +233,7 @@ export type MobileStopPage = {
   hits: MobileStopHit[]
   /** Stops in the whole place, from a facet; only the first page carries it. */
   total: number
+  services?: number | null
   /** The cursor for the next page, or null on the last one. */
   next: string | null
 }
@@ -252,7 +253,7 @@ export async function searchPlaceMobileStops(
     .search<MobileStopHit>("", {
       filter: after ? `${scope} AND id > ${JSON.stringify(after)}` : scope,
       limit: STOP_PAGE_SIZE,
-      facets: ["kind"],
+      facets: after ? ["kind"] : ["kind", "library_document_id"],
       sort: ["id:asc"],
     })
   const hits = response.hits
@@ -260,6 +261,13 @@ export async function searchPlaceMobileStops(
   return {
     hits,
     total: after ? 0 : (response.facetDistribution?.kind?.stop ?? 0),
+    services:
+      after ||
+      !response.facetDistribution?.library_document_id ||
+      Object.keys(response.facetDistribution.library_document_id).length >=
+        10000
+        ? null
+        : Object.keys(response.facetDistribution.library_document_id).length,
     next: hits.length === STOP_PAGE_SIZE ? hits.at(-1)!.id : null,
   }
 }

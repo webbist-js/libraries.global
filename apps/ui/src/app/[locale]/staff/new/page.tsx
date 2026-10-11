@@ -1,6 +1,9 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import {
+  getLocale,
+  getTranslations as getUiTranslations,
+} from "next-intl/server"
 
 import { Notice } from "@/components/ds/Notice"
 import { PageHero } from "@/components/ds/PageHero"
@@ -9,6 +12,8 @@ import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard
 import { StaffAccessRequired } from "@/components/staff/StaffAccessRequired"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { contributionPlaceParams, placeAddHref } from "@/lib/contribution-place"
+import { contributionPlacePrefill } from "@/lib/contribution-place-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { isActiveTeam } from "@/lib/staff/team-status"
 import type { TeamSummary } from "@/lib/staff/types"
@@ -19,12 +24,26 @@ export const metadata = privateMetadata("Add a library as staff")
 export default async function StaffNewLibraryPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ name?: string }>
+  readonly searchParams: Promise<{
+    name?: string
+    continent?: string
+    country?: string
+    region?: string
+    area?: string
+  }>
 }) {
   const tUi = await getUiTranslations("ui")
 
+  const params = await searchParams
+  const locale = await getLocale()
+  const place = contributionPlaceParams(params)
+  const prefill = await contributionPlacePrefill(params, locale)
   const session = await getSessionSSR(await headers())
-  if (!session?.user) redirect("/auth/signin?callbackUrl=/staff/new")
+  if (!session?.user) {
+    const base = placeAddHref(place, "/staff/new", params.name)
+    const callback = `${locale === "en" ? "" : `/${locale}`}${base}`
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`)
+  }
   const libraries = staffLibrariesOf(session.user)
   const memberships = sessionTeamsOf(session.user)
   if (!libraries.length && !memberships.length)
@@ -53,7 +72,7 @@ export default async function StaffNewLibraryPage({
     )
   if (!libraries.length && !teams.some((team) => team.verified))
     return <StaffAccessRequired signedIn />
-  const { name } = await searchParams
+  const { name } = params
 
   return (
     <>
@@ -75,9 +94,10 @@ export default async function StaffNewLibraryPage({
             id: team.id,
             name: team.name,
           }))}
-          initialData={
-            name?.trim() ? { name: name.trim().slice(0, 200) } : undefined
-          }
+          initialData={{
+            ...prefill,
+            ...(name?.trim() ? { name: name.trim().slice(0, 200) } : {}),
+          }}
         />
       </Container>
     </>

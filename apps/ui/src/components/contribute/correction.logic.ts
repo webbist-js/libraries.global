@@ -100,8 +100,13 @@ const EDITORS: Record<string, EditorKind> = {
   "Services and facilities": "facilities",
 }
 
-export const editorFor = (category: string): EditorKind =>
-  EDITORS[category] ?? "text"
+export const editorFor = (
+  category: string,
+  libraryType?: string
+): EditorKind =>
+  category === "Opening hours" && libraryType === "Mobile"
+    ? "timetable"
+    : (EDITORS[category] ?? "text")
 
 /** The keys each structured editor may change. */
 const KEYS: Record<EditorKind, readonly string[]> = {
@@ -233,7 +238,7 @@ export function recordChanges(
   current: CorrectionRecord,
   edit: RecordEdit
 ): RecordChanges {
-  const keys = KEYS[editorFor(category)]
+  const keys = KEYS[editorFor(category, current.libraryType)]
   const changes: Record<string, unknown> = {}
   const previous: Record<string, unknown> = {}
   const suggestedOptions: Partial<Record<OptionKey, string[]>> = {}

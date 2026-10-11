@@ -208,6 +208,72 @@
         }
       }
     },
+    "atlas": {
+      "eyebrow": "Aidez à façonner Atlas",
+      "title": "Comment avez-vous trouvé Atlas ?",
+      "description": "Dites-nous quelles fonctions vous avez utilisées, comment elles ont fonctionné et ce que vous aimeriez voir ensuite.",
+      "stepOne": "Utilisation d’Atlas",
+      "stepTwo": "Votre avis et vos idées",
+      "short": "Environ deux minutes",
+      "success": "Votre avis nous aide à améliorer Atlas et à choisir les prochaines fonctionnalités.",
+      "task": "Que souhaitiez-vous faire avec Atlas ?",
+      "tasks": {
+        "find_library": "Trouver une bibliothèque",
+        "plan_visit": "Préparer une visite",
+        "compare_areas": "Comparer des zones ou leur couverture en bibliothèques",
+        "check_accessibility": "Vérifier l’accessibilité",
+        "export_data": "Exporter des données sur les bibliothèques",
+        "explore": "Explorer la carte",
+        "other": "Autre chose"
+      },
+      "features": {
+        "label": "Quelles fonctions d’Atlas avez-vous utilisées ?",
+        "hint": "Sélectionnez toutes les réponses qui conviennent. Choisissez Autre si aucune ne correspond.",
+        "required": "Choisissez au moins une fonction d’Atlas, ou Autre.",
+        "options": {
+          "search": "Recherche",
+          "filters": "Filtres",
+          "map_layers": "Couches et légendes de la carte",
+          "library_details": "Détails des bibliothèques",
+          "list_view": "Vue en liste",
+          "area_comparison": "Comparaison de zones",
+          "accessibility": "Informations sur l’accessibilité",
+          "exports": "Export de données",
+          "other": "Autre"
+        }
+      },
+      "clarity": "Les légendes de la carte et les résultats étaient-ils clairs ?",
+      "clarityScore": "Clarté : {value} sur 5",
+      "unclear": "Peu clairs",
+      "clear": "Clairs",
+      "wishlist": {
+        "label": "Ce que j’aimerais voir",
+        "hint": "Une fonctionnalité, une couche cartographique ou une information qui vous aiderait. Dans quel but l’utiliseriez-vous ?",
+        "placeholder": "J’aimerais pouvoir… parce que…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "Que s’est-il passé dans Atlas et qu’attendiez-vous ?",
+          "hint": "Précisez la fonction ou la couche cartographique et où vous avez été bloqué. N’incluez pas de mot de passe ni d’informations privées.",
+          "placeholder": "Dans Atlas, j’essayais de… Je m’attendais à… À la place…"
+        },
+        "idea": {
+          "label": "Ce que j’aimerais voir dans Atlas",
+          "hint": "Quelle fonctionnalité, couche cartographique ou information ajouteriez-vous ou changeriez-vous, et dans quel but ?",
+          "placeholder": "J’aimerais pouvoir… parce que…"
+        },
+        "experience": {
+          "label": "Qu’avez-vous trouvé facile, déroutant ou manquant dans Atlas ?",
+          "hint": "Pensez à la recherche, aux filtres, aux légendes de la carte ou aux détails des bibliothèques. Un exemple précis nous aide.",
+          "placeholder": "En utilisant… j’ai trouvé…"
+        },
+        "praise": {
+          "label": "Qu’est-ce qui a bien fonctionné pour vous dans Atlas ?",
+          "hint": "Quelle fonction vous a aidé, et pourquoi ? Nous souhaitons conserver les points positifs.",
+          "placeholder": "J’ai trouvé… utile parce que…"
+        }
+      }
+    },
     "contact": {
       "eyebrow": "Parlez à l’équipe",
       "title": "Comment pouvons-nous vous aider ?",
@@ -484,7 +550,8 @@
     "contribute_menu": "Menu des contributions",
     "your_work": "Votre travail",
     "everyone": "Tout le monde",
-    "support_us_on_ko_fi": "Soutenez-nous sur Ko-fi",
+    "buy_me_a_coffee": "Offrez-moi un café",
+    "about_the_project": "À propos du projet",
     "opens_in_a_new_tab": "(s’ouvre dans un nouvel onglet)",
     "account_menu": "Menu du compte",
     "profile": "Profil",

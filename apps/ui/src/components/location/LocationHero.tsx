@@ -4,6 +4,8 @@ import type React from "react"
 import { Breadcrumb } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
+import { PlaceSearchForm } from "@/components/location/PlaceSearchForm"
 import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
@@ -14,14 +16,23 @@ export interface LocationHeroStat {
 }
 
 /** White stat card with a serif value. */
-function LocationStatCard({ stat }: { readonly stat: LocationHeroStat }) {
+function LocationStatCard({
+  stat,
+  className,
+}: {
+  readonly stat: LocationHeroStat
+  readonly className?: string
+}) {
   return (
     <div
-      className="flex min-w-0 flex-col gap-1.5 rounded-2xl px-4 py-3.5"
+      className={cn(
+        "flex min-h-[140px] min-w-0 flex-col justify-end gap-1.5 rounded-2xl px-4 py-4",
+        className
+      )}
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
       <span
-        className="text-[30px] leading-none tracking-[-0.01em]"
+        className="text-[34px] leading-none tracking-[-0.01em]"
         style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
       >
         {stat.value}
@@ -52,10 +63,13 @@ export function LocationHero({
   typeIcon,
   code,
   title,
+  untranslatedLocale = null,
   intro,
   stats = [],
   actions,
   aside,
+  contribution,
+  search,
 }: {
   readonly breadcrumbLabels?: Record<string, string>
   readonly typeLabel?: string | null
@@ -64,12 +78,15 @@ export function LocationHero({
   /** Short technical code shown in the pill, e.g. "GB-ENG". */
   readonly code?: string | null
   readonly title: string
+  readonly untranslatedLocale?: string | null
   readonly intro?: string | null
   readonly stats?: LocationHeroStat[]
   /** Buttons under the stats (search, add). */
   readonly actions?: React.ReactNode
   /** Optional right-column figure (the hero map). */
   readonly aside?: React.ReactNode
+  readonly contribution?: React.ReactNode
+  readonly search?: { level: "continent" | "country" | "region"; slug: string }
 }) {
   return (
     <section
@@ -82,8 +99,8 @@ export function LocationHero({
 
         <div
           className={cn(
-            "mt-6 grid gap-x-12 gap-y-8 lg:items-center",
-            aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"
+            "mt-6 grid gap-x-10 gap-y-8 lg:items-stretch",
+            aside && "lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]"
           )}
         >
           <div className="min-w-0">
@@ -120,7 +137,7 @@ export function LocationHero({
             ) : null}
 
             <h1
-              className="m-0 text-[clamp(44px,6vw,76px)] leading-[1.02] tracking-[-0.02em] text-balance"
+              className="m-0 text-[clamp(48px,7vw,88px)] leading-[.92] tracking-[-0.03em] text-balance"
               style={{
                 fontFamily: T.font.serif,
                 fontWeight: 500,
@@ -130,26 +147,33 @@ export function LocationHero({
               {title}
             </h1>
 
+            {untranslatedLocale ? (
+              <NotTranslatedNote locale={untranslatedLocale} />
+            ) : null}
+
             {intro ? (
               <p
-                className="mt-4 mb-0 max-w-[58ch] text-[17px] leading-[1.6]"
+                className="mt-4 mb-0 max-w-[58ch] text-[18px] leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
                 {intro}
               </p>
             ) : null}
 
+            {search ? <PlaceSearchForm name={title} {...search} /> : null}
+
             {stats.length > 0 ? (
-              <div
-                className={cn(
-                  "mt-6 grid gap-2.5",
-                  stats.length >= 3
-                    ? "grid-cols-2 sm:grid-cols-3"
-                    : "grid-cols-2"
-                )}
-              >
-                {stats.map((stat) => (
-                  <LocationStatCard key={stat.label} stat={stat} />
+              <div className="mt-6 grid grid-cols-2 gap-2.5">
+                {stats.map((stat, index) => (
+                  <LocationStatCard
+                    key={stat.label}
+                    stat={stat}
+                    className={
+                      stats.length === 3 && index === 2
+                        ? "col-span-2"
+                        : undefined
+                    }
+                  />
                 ))}
               </div>
             ) : null}
@@ -161,8 +185,9 @@ export function LocationHero({
             ) : null}
           </div>
 
-          {aside ? <div className="min-w-0">{aside}</div> : null}
+          {aside ? <div className="min-w-0 lg:grid">{aside}</div> : null}
         </div>
+        {contribution ? <div className="mt-8">{contribution}</div> : null}
       </Container>
     </section>
   )
@@ -184,7 +209,7 @@ export function LocationHeroAction({
     <GlobalLink
       href={href}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-colors",
+        "inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-colors",
         primary
           ? "bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)"
           : "border border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface)"

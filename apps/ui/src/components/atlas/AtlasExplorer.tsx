@@ -130,11 +130,14 @@ function useTier(): { tier: Tier; ready: boolean } {
 
 export function AtlasExplorer({
   contributePrompt,
+  feedbackPrompt,
   scalable = false,
 }: {
   /** Server-rendered invitation to contribute, at the foot of the Search
    * tab; null when the reader has hidden it. */
   readonly contributePrompt?: ReactNode
+  /** Feedback stays in the bottom controls in both map and list views. */
+  readonly feedbackPrompt?: ReactNode
   readonly scalable?: boolean
 }) {
   const tUi = useUiTranslations("ui")
@@ -1409,6 +1412,14 @@ export function AtlasExplorer({
               </>
             )}
           </div>
+          {feedbackPrompt ? (
+            <div
+              className="flex shrink-0 items-center justify-end border-t px-3"
+              style={{ borderColor: T.border.divider }}
+            >
+              {feedbackPrompt}
+            </div>
+          ) : null}
         </section>
         {plansOpen ? (
           <AtlasPlansSheet
@@ -1613,29 +1624,39 @@ export function AtlasExplorer({
 
       {list ? (
         <div
-          className="absolute top-4 bottom-4 z-20 overflow-hidden rounded-[22px]"
+          className="absolute top-4 bottom-4 z-20 flex flex-col overflow-hidden rounded-[22px]"
           style={{ ...PANEL_STYLE, left: leftEdge, right: GAP }}
         >
-          <AtlasListView
-            key={scalable ? JSON.stringify(data.scope) : "legacy"}
-            remoteScope={scalable ? data.scope : undefined}
-            notice={
-              <>
-                {dataNotices}
-                {stopList}
-                {usableLayers.includes("access") ? legends : null}
-              </>
-            }
-            libraries={inView}
-            accessibility={
-              usableLayers.includes("access") ? accessibility : undefined
-            }
-            center={center}
-            now={now}
-            onHover={setHovered}
-            onShowMap={() => setList(false)}
-            onSeePlans={() => setPlansOpen(true)}
-          />
+          <div className="min-h-0 flex-1">
+            <AtlasListView
+              key={scalable ? JSON.stringify(data.scope) : "legacy"}
+              remoteScope={scalable ? data.scope : undefined}
+              notice={
+                <>
+                  {dataNotices}
+                  {stopList}
+                  {usableLayers.includes("access") ? legends : null}
+                </>
+              }
+              libraries={inView}
+              accessibility={
+                usableLayers.includes("access") ? accessibility : undefined
+              }
+              center={center}
+              now={now}
+              onHover={setHovered}
+              onShowMap={() => setList(false)}
+              onSeePlans={() => setPlansOpen(true)}
+            />
+          </div>
+          {feedbackPrompt ? (
+            <div
+              className="flex shrink-0 items-center justify-end border-t px-3 py-2"
+              style={{ borderColor: T.border.divider }}
+            >
+              {feedbackPrompt}
+            </div>
+          ) : null}
         </div>
       ) : (
         <div
@@ -1655,6 +1676,7 @@ export function AtlasExplorer({
           />
           <AtlasCount count={resultCount ?? inView.length} sub={countSub} />
           <span className="flex-1" />
+          {feedbackPrompt}
           <ViewToggle list={list} onChange={setList} />
         </div>
       )}

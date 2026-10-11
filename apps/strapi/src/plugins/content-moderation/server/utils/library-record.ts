@@ -1,4 +1,5 @@
 import {
+  validateOpeningSchedule,
   FACILITY_CHECKLIST,
   submittedSourceRecords,
   appendSourceRecords,
@@ -155,7 +156,7 @@ const RELATION_SETS = new Set(["services", "amenities", "accessibility"])
 /** Where each relation's options live, for new options a contributor names. */
 export const OPTION_COLLECTIONS: Record<string, string> = OPTION_UIDS
 
-const MAX_TIMEFRAMES_PER_DAY = 6
+const MAX_TIMEFRAMES_PER_DAY = 10
 const MAX_SUGGESTED_OPTIONS = 5
 const MAX_OPTION_NAME = 80
 
@@ -168,6 +169,7 @@ const MAX_OPTION_NAME = 80
 export function sanitizeOpeningTimes(raw: unknown): OpeningTimesValue | null {
   if (!raw || typeof raw !== "object") return null
   if (!Array.isArray((raw as { days?: unknown }).days)) return null
+  if (validateOpeningSchedule(raw).length) return null
   const value = normalizeOpeningTimesValue(raw)
   for (const day of value.days) {
     if (day.timeframes.length > MAX_TIMEFRAMES_PER_DAY) return null
@@ -631,17 +633,7 @@ function hoursKey(v: unknown): string {
   if (!v || typeof v !== "object" || !Array.isArray((v as any).days))
     return canonical(null)
 
-  return canonical(
-    normalizeOpeningTimesValue(v).days.map((d) => ({
-      day: d.day,
-      enabled: d.enabled,
-      timeframes: d.timeframes.map(({ startTime, endTime, staffing }) => ({
-        startTime,
-        endTime,
-        staffing,
-      })),
-    }))
-  )
+  return canonical(withoutIds(normalizeOpeningTimesValue(v)))
 }
 
 function locationKey(v: unknown): string {

@@ -167,6 +167,8 @@ export default function LibraryRoutePage(props: {
   const noticesPromise = fetchPublicLibraryNotices(library.documentId)
   const areaPromise = fetchLibraryArea({
     slug: librarySlug,
+    documentId: library.documentId,
+    entityRef: library.entityRef,
     regionSlug: library.region?.slug,
     location: toLatLng(library.location),
     openingTimes: library.openingTimes as OpeningTimesValue | null,

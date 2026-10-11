@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 
+import { facilityRows } from "@/components/library/facility-rows"
 import {
   type OpeningTimesValue,
   recordChecklist,
@@ -19,6 +20,7 @@ import {
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { StaffLibraryEntry } from "@/components/library/StaffLibraryEntry"
 import {
+  sectionCheckedAt,
   availableSections,
   verifyRecordOf,
 } from "@/components/library/verify.logic"
@@ -39,6 +41,9 @@ export function libraryChecklist(library: Lib) {
   const rec = asRecord(library)
 
   return recordChecklist({
+    libraryType: library.libraryType,
+    mobileTimetable: rec.mobileTimetable,
+    homeLibrary: rec.homeLibrary,
     heroImage: library.heroImage,
     openingTimes: library.openingTimes as OpeningTimesValue | null,
     streetAddress: library.streetAddress,
@@ -70,8 +75,10 @@ export function LibraryRecordPanel({
 
   const rec = asRecord(library)
   const { done, total, items } = libraryChecklist(library)
-  const reviewed =
-    (rec.lastVerifiedAt as string | null) ?? (rec.updatedAt as string | null)
+  const reviewed = (rec.lastVerifiedAt as string | null) ?? null
+  const access = facilityRows(library).filter(
+    (row) => row.category !== "service"
+  )
 
   return (
     <section aria-labelledby="rec-h" className={PANEL} style={panelStyle}>
@@ -106,7 +113,7 @@ export function LibraryRecordPanel({
 
       <div className="mt-4 flex items-baseline justify-between">
         <h3 className="m-0 text-[14px] font-bold" style={{ color: T.ink.base }}>
-          Completeness
+          Core details recorded
         </h3>
         <span
           className="text-[14px] font-semibold"
@@ -156,7 +163,7 @@ export function LibraryRecordPanel({
       >
         <LibIcon d={LIB_ICONS.calendar} size={14} />
         {reviewed
-          ? `Last reviewed ${new Date(reviewed).toLocaleDateString("en-GB", {
+          ? `Last confirmed ${new Date(reviewed).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
               year: "numeric",
@@ -165,6 +172,7 @@ export function LibraryRecordPanel({
         {followers !== null && library.documentId ? (
           <>
             <span aria-hidden="true">·</span>
+
             <LibraryFollowerCount
               initial={followers}
               libraryDocumentId={library.documentId}
@@ -172,6 +180,41 @@ export function LibraryRecordPanel({
           </>
         ) : null}
       </p>
+      <dl className="mt-4 grid gap-2 text-xs" style={{ color: T.ink.dim }}>
+        {access.length ? (
+          <div className="flex justify-between gap-3">
+            <dt>Access and facilities</dt>
+            <dd className="m-0">
+              {access.filter((row) => row.state !== "unknown").length} of{" "}
+              {access.length} answered
+            </dd>
+          </div>
+        ) : null}
+        {availableSections(verifyRecordOf(library)).map((section) => (
+          <div key={section} className="flex justify-between gap-3">
+            <dt>
+              {section === "hours" && library.libraryType === "Mobile"
+                ? "Timetable checked"
+                : `${section[0]!.toUpperCase()}${section.slice(1)} checked`}
+            </dt>
+            <dd className="m-0">
+              {sectionCheckedAt(library, section)
+                ? new Date(
+                    sectionCheckedAt(library, section)!
+                  ).toLocaleDateString("en-GB")
+                : "Not yet checked"}
+            </dd>
+          </div>
+        ))}
+        {typeof rec.contentUpdatedAt === "string" ? (
+          <div className="flex justify-between gap-3">
+            <dt>Content updated</dt>
+            <dd className="m-0">
+              {new Date(rec.contentUpdatedAt).toLocaleDateString("en-GB")}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
     </section>
   )
 }
@@ -192,8 +235,14 @@ export function LibraryTasksPanel({
 
   return (
     <LibraryHelpPanel
+      showDrive={false}
+      libraryType={library.libraryType}
       facilityQuestions={facilityQuestions}
-      gaps={gaps}
+      gaps={
+        facilityQuestions > 0 && !gaps.includes("facilities")
+          ? ["facilities", ...gaps]
+          : gaps
+      }
       libraryDocumentId={library.documentId ?? ""}
       libraryName={library.name ?? ""}
       librarySlug={library.slug ?? ""}

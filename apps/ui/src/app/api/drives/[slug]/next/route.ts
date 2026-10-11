@@ -10,6 +10,7 @@ import {
   nearParam,
   TASK_ATTRIBUTES,
   taskOf,
+  taskPlaceFilter,
   taskSort,
   type DriveTaskHit,
 } from "@/lib/drives/drive-tasks"
@@ -79,6 +80,7 @@ export async function POST(
     q?: unknown
     near?: unknown
     locale?: unknown
+    place?: Record<string, unknown>
   }
   const skip = skipParam(body.skip)
   const q = qParam(body.q)
@@ -105,7 +107,7 @@ export async function POST(
     openedAt: drive.openedAt,
   })
   const result = await meiliClient.index("library").search<DriveTaskHit>(q, {
-    filter: `${filters.todo} AND ${searchLocaleFilter(locale)}${exclusionClause(exclude)}`,
+    filter: `${filters.todo} AND ${searchLocaleFilter(locale)}${taskPlaceFilter(body.place ?? {})}${exclusionClause(exclude)}`,
     sort: taskSort(near),
     limit: CANDIDATE_LIMIT,
     attributesToRetrieve: [...TASK_ATTRIBUTES],

@@ -12,6 +12,7 @@ import {
   localDateTime,
   WEEKDAYS,
 } from "../mobile-timetable"
+import { normalizeOpeningSchedule } from "../opening-schedule"
 import type {
   AtlasDayShort,
   AtlasOpeningField,
@@ -29,11 +30,13 @@ export const ATLAS_OPEN_DAYS = [
   "sunday",
 ] as const
 export const ATLAS_OPEN_FRAMES_PER_DAY = 10
+type AtlasOpeningPrefix = "open" | "regular_open" | "staff_open"
+
 export const atlasOpenField = (
   day: string,
   frame: number,
   edge: "from" | "to",
-  prefix: "open" | "regular_open" = "open"
+  prefix: AtlasOpeningPrefix = "open"
 ): AtlasOpeningField =>
   `${prefix}_${day.slice(0, 3) as AtlasDayShort}_${frame}_${edge}`
 export const ATLAS_OPEN_FIELD_NAMES = ATLAS_OPEN_DAYS.flatMap((day) =>
@@ -44,8 +47,6 @@ export const ATLAS_OPEN_FIELD_NAMES = ATLAS_OPEN_DAYS.flatMap((day) =>
 )
 export type AtlasInterval = [number, number]
 export type AtlasWeek = AtlasInterval[][]
-type Day = { day?: unknown; enabled?: unknown; timeframes?: unknown }
-type Timeframe = { startTime?: unknown; endTime?: unknown }
 
 function minute(value: unknown): number | null {
   if (typeof value !== "string") return null
@@ -64,28 +65,23 @@ export function atlasWeeklyIntervals(
   input: unknown,
   strictFrames = false
 ): AtlasWeek {
-  const value = input as { days?: unknown } | null
-  const days = Array.isArray(value?.days) ? (value.days as Day[]) : []
-
-  return ATLAS_OPEN_DAYS.map((key) => {
-    const intervals: AtlasInterval[] = []
-    for (const day of days) {
-      if (!day || typeof day !== "object") continue
-      if (
-        typeof day.day !== "string" ||
-        day.day.toLowerCase() !== key ||
-        !day.enabled ||
-        !Array.isArray(day.timeframes)
-      )
-        continue
-      for (const tf of day.timeframes as Timeframe[]) {
-        if (!tf || typeof tf !== "object") continue
-        const from = minute(tf.startTime)
-        const to = minute(tf.endTime)
-        if (from !== null && to !== null && to > from)
-          intervals.push([from, to])
-      }
+  const value = normalizeOpeningSchedule(input)
+  const week: AtlasWeek = ATLAS_OPEN_DAYS.map(() => [])
+  value.days.forEach((day, index) => {
+    if (!day.enabled) return
+    for (const frame of day.timeframes) {
+      if (frame.staffing === "appointment") continue
+      const from = minute(frame.startTime),
+        to = minute(frame.endTime)
+      if (from === null || to === null || from === 1440) continue
+      if (frame.overnight && to < from) {
+        week[index]!.push([from, 1440])
+        week[(index + 1) % 7]!.push([0, to])
+      } else if (to > from) week[index]!.push([from, to])
     }
+  })
+
+  return week.map((intervals) => {
     if (strictFrames && intervals.length > ATLAS_OPEN_FRAMES_PER_DAY)
       throw new RangeError(
         "Atlas opening intervals exceed the indexed frame limit"
@@ -103,7 +99,7 @@ export function atlasOpenFields(input: unknown): Record<string, number> {
 }
 export function atlasIntervalFields(
   week: AtlasWeek,
-  prefix: "open" | "regular_open" = "open"
+  prefix: AtlasOpeningPrefix = "open"
 ): AtlasOpeningFields {
   const fields: AtlasOpeningFields = {}
   ATLAS_OPEN_DAYS.forEach((day, offset) => {
@@ -204,12 +200,22 @@ export function atlasHoursProjection(
     return noticeEndDate(notice) >= monday
   })
   const regular = atlasWeeklyIntervals(input, true)
-  const effectiveInput = notices.length
-    ? effectiveLibraryWeekHours(input, notices, monday)
-    : input
-  const effective = notices.length
-    ? atlasWeeklyIntervals(effectiveInput, true)
-    : regular
+  const effectiveInput = effectiveLibraryWeekHours(input, notices, monday)
+  const effective = atlasWeeklyIntervals(effectiveInput, true)
+  const staffing = normalizeOpeningSchedule(effectiveInput)
+  const staff = atlasWeeklyIntervals(
+    {
+      ...staffing,
+      days: staffing.days.map((day) => ({
+        ...day,
+        timeframes: day.timeframes.filter(
+          (frame) =>
+            frame.staffing === "staffed" || frame.staffing === "volunteer"
+        ),
+      })),
+    },
+    true
+  )
   const closed_dates = notices.length
     ? Array.from({ length: 7 }, (_, day) => addDays(monday, day)).filter(
         (date) =>
@@ -228,11 +234,15 @@ export function atlasHoursProjection(
       if (noticeMonday > local.date) boundaries.push(noticeMonday)
     }
   }
+  const overrides = normalizeOpeningSchedule(input)
+  if (overrides.exceptions?.length || overrides.seasons?.length)
+    boundaries.push(addDays(local.date, 1))
   const next = boundaries.sort()[0]
 
   return {
     ...atlasIntervalFields(regular, "regular_open"),
     ...atlasIntervalFields(effective),
+    ...atlasIntervalFields(staff, "staff_open"),
     late_sunday: atlasLateOrSunday(regular),
     closed_dates,
     has_hours: input !== null && input !== undefined,
@@ -247,7 +257,7 @@ export function atlasProjectionOpenAt(
   record: AtlasProjection,
   day: number,
   minutes: number,
-  prefix: "open" | "regular_open" = "regular_open"
+  prefix: "open" | "regular_open" | "staff_open" = "regular_open"
 ): boolean {
   const key = ATLAS_OPEN_DAYS[day]
   if (!key || !Number.isInteger(minutes) || minutes < 0 || minutes >= 1440)
@@ -269,7 +279,8 @@ export function atlasProjectionOpenAt(
 
 export function atlasProjectionOpenNow(
   record: AtlasProjection,
-  now: Date
+  now: Date,
+  staffOnly = false
 ): boolean {
   if (
     record.clock_valid_until &&
@@ -284,7 +295,7 @@ export function atlasProjectionOpenNow(
       record,
       WEEKDAYS.indexOf(local.weekday),
       local.minute,
-      "open"
+      staffOnly ? "staff_open" : "open"
     )
   )
 }
@@ -292,7 +303,7 @@ export function atlasProjectionOpenNow(
 function intervalFilter(
   day: string,
   minutes: number,
-  prefix: "open" | "regular_open"
+  prefix: "open" | "regular_open" | "staff_open"
 ): string {
   return Array.from(
     { length: ATLAS_OPEN_FRAMES_PER_DAY },
@@ -318,12 +329,13 @@ const currentFilters = new Map<string, string>()
 
 export function atlasOpenNowFilter(
   timezones: readonly string[],
-  now: Date
+  now: Date,
+  staffOnly = false
 ): string {
   if (!Number.isFinite(now.getTime()))
     throw new RangeError("Invalid Atlas evaluation instant")
   const canonicalZones = [...new Set(timezones.map(atlasTimezone))].sort()
-  const cacheKey = `${Math.floor(now.getTime() / 60000)}:${canonicalZones.join(",")}`
+  const cacheKey = `${staffOnly}:${Math.floor(now.getTime() / 60000)}:${canonicalZones.join(",")}`
   const cached = currentFilters.get(cacheKey)
   if (cached) return cached
   const groups = new Map<
@@ -347,7 +359,7 @@ export function atlasOpenNowFilter(
   const filter = `(${[...groups.values()]
     .map(
       ({ day, minute: m, date, zones: z }) =>
-        `(open_tz IN ${JSON.stringify(z)} AND (${intervalFilter(day, m, "open")}) AND NOT closed_dates = ${JSON.stringify(date)})`
+        `(open_tz IN ${JSON.stringify(z)} AND (${intervalFilter(day, m, staffOnly ? "staff_open" : "open")}) AND NOT closed_dates = ${JSON.stringify(date)})`
     )
     .join(" OR ")})`
   if (currentFilters.size >= 32)

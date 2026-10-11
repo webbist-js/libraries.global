@@ -422,7 +422,8 @@ describe.each(INDEXES)("Meilisearch index %s", (name) => {
 
     // Exactly the displayed keys: nothing extra, nothing missing. The
     // opening-hours fields are sparse (only real timeframes are stored).
-    const isOpen = (key: string) => /^open_[a-z]{3}_\d_(from|to)$/.test(key)
+    const isOpen = (key: string) =>
+      /^(?:open|regular_open|staff_open)_[a-z]{3}_\d+_(from|to)$/.test(key)
     expect(
       Object.keys(doc)
         .filter((k) => !isOpen(k))
@@ -514,15 +515,23 @@ describe("Meilisearch transforms keep their derived fields", () => {
           name: "Switzerland",
           regionTypeLabel: "Canton",
           regionsSectionLabel: "Cantons",
+          areaTypeLabel: "Commune",
+          areasSectionLabel: "Communes",
         },
       },
     })
     expect(doc.country_region_label).toBe("Canton")
     expect(doc.country_regions_label).toBe("Cantons")
+    expect(doc.country_area_label).toBe("Commune")
+    expect(doc.country_areas_label).toBe("Communes")
 
     const countryPopulate = meili.library.entriesQuery?.populate?.country
     expect(countryPopulate?.fields).toContain("regionTypeLabel")
     expect(countryPopulate?.fields).toContain("regionsSectionLabel")
+    expect(countryPopulate?.fields).toContain("areaTypeLabel")
+    expect(meili.library.entriesQuery?.populate?.region?.fields).toContain(
+      "areasSectionLabel"
+    )
 
     const displayed = meili.library.settings.displayedAttributes ?? []
     expect(displayed).toContain("country_region_label")

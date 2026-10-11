@@ -11,6 +11,7 @@
  */
 import { isGapKey, noticeLocalDate, type GapKey } from "@repo/shared-data"
 
+import { findPlaceCatalogue } from "@/lib/find-place-catalogue"
 import {
   type FindPlaceLevel,
   FIND_PLACE_LEVELS,
@@ -35,6 +36,7 @@ export interface LibrarySearchHitV2 extends LibrarySearchHit {
   timezone?: string | null
   iiifEndpoint?: string | null
   completeness?: number | null
+  needs?: string[]
 }
 
 export type FindSort = "complete" | "gaps" | "name" | "near"
@@ -46,7 +48,9 @@ export interface FindQuery {
   accessibilityNames?: string[]
   serviceNames?: string[]
   digital?: boolean
+  includeInactive?: boolean
   openNow?: boolean
+  staffNow?: boolean
   needs?: string[]
   nearLat?: number
   nearLng?: number
@@ -63,6 +67,7 @@ export interface FindQuery {
 }
 
 export interface FindPlaceRef {
+  documentId?: string
   slug: string
   name: string
   /** The country's Region labels (country level only). */
@@ -156,6 +161,7 @@ const RETRIEVE = [
   "timezone",
   "iiifEndpoint",
   "completeness",
+  "needs",
   "accessibility_names",
   "service_names",
   "_geo",
@@ -193,7 +199,11 @@ const ANY_OF = [
  * "Open now": each zone's libraries checked against that zone's own weekday
  * and minute. Zones sharing a local time share one clause.
  */
-export function openNowFilter(zones: string[], now: Date): string {
+export function openNowFilter(
+  zones: string[],
+  now: Date,
+  staffOnly = false
+): string {
   const groups = new Map<
     string,
     { day: string; minute: number; zones: string[] }
@@ -212,7 +222,7 @@ export function openNowFilter(zones: string[], now: Date): string {
     const frames = Array.from(
       { length: FRAMES_PER_DAY },
       (_, n) =>
-        `(open_${day}_${n}_from <= ${minute} AND open_${day}_${n}_to > ${minute})`
+        `(${staffOnly ? "staff_open" : "open"}_${day}_${n}_from <= ${minute} AND ${staffOnly ? "staff_open" : "open"}_${day}_${n}_to > ${minute})`
     ).join(" OR ")
 
     return `(open_tz IN ${quoted(z)} AND (${frames}) AND NOT closed_dates = ${JSON.stringify(noticeLocalDate(now, z[0]))})`
@@ -226,6 +236,8 @@ const placeClause = (place: NonNullable<FindQuery["place"]>) =>
 
 export function findFilter(q: FindQuery, zones: string[]): string {
   const parts: string[] = []
+  if (!q.includeInactive)
+    parts.push('operationalStatus NOT IN ["permanently_closed", "planned"]')
   if (q.place) parts.push(placeClause(q.place))
   if (q.libraryTypes?.length)
     parts.push(`libraryType IN ${quoted(q.libraryTypes)}`)
@@ -236,7 +248,13 @@ export function findFilter(q: FindQuery, zones: string[]): string {
   if (q.needs?.length) parts.push(`needs IN ${quoted(q.needs)}`)
   if (q.nearLat != null && q.nearLng != null && q.nearRadius != null)
     parts.push(`_geoRadius(${q.nearLat}, ${q.nearLng}, ${q.nearRadius})`)
-  if (q.openNow) parts.push(openNowFilter(zones, q.now ?? new Date()))
+  if (q.openNow || q.staffNow) {
+    parts.push(
+      'operationalStatus NOT IN ["permanently_closed", "temporarily_closed", "planned", "appointment_only"]',
+      openNowFilter(zones, q.now ?? new Date(), q.staffNow),
+      `(clock_valid_until_ts IS NULL OR clock_valid_until_ts NOT EXISTS OR clock_valid_until_ts > ${Math.floor((q.now ?? new Date()).getTime() / 1000)})`
+    )
+  }
   if (q.source) parts.push(`source = ${JSON.stringify(q.source)}`)
   parts.push(searchLocaleFilter(q.locale))
 
@@ -313,52 +331,84 @@ function placeChain(
     FIND_PLACE_LEVELS.indexOf(place.level) + 1
   )
 
-  return cached(
-    `chain:${searchLocale(locale)}:${place.level}:${place.slug}`,
-    () =>
-      meiliClient
-        .index("library")
-        .search("", {
-          filter: `${placeClause(place)} AND ${searchLocaleFilter(locale)}`,
-          limit: 1,
-          attributesToRetrieve: levels.flatMap((l) =>
-            l === "country"
-              ? [
-                  `${l}_slug`,
-                  `${l}_name`,
-                  "country_region_label",
-                  "country_regions_label",
-                ]
-              : [`${l}_slug`, `${l}_name`]
-          ),
-        })
-        .then((res) => {
-          const chain: PlaceChain = {}
-          for (const level of levels) {
-            const ref = placeRef(res.hits?.[0], level)
-            if (ref) chain[level] = ref
-          }
-          // A place with no libraries still names itself.
-          chain[place.level] ??= {
-            slug: place.slug,
-            name: nameFromSlug(place.slug),
-          }
-
-          const hit = res.hits?.[0] as Record<string, unknown> | undefined
-          if (chain.country && hit) {
-            const label = hit.country_region_label
-            const section = hit.country_regions_label
-            chain.country = {
-              ...chain.country,
-              ...(typeof label === "string" ? { regionTypeLabel: label } : {}),
-              ...(typeof section === "string"
-                ? { regionsSectionLabel: section }
-                : {}),
+  return findPlaceCatalogue(place, locale).then(
+    (catalogue) =>
+      catalogue ??
+      cached(`chain:${searchLocale(locale)}:${place.level}:${place.slug}`, () =>
+        meiliClient
+          .index("library")
+          .search("", {
+            filter: `${placeClause(place)} AND ${searchLocaleFilter(locale)}`,
+            limit: 1,
+            attributesToRetrieve: levels.flatMap((l) =>
+              l === "country"
+                ? [
+                    `${l}_slug`,
+                    `${l}_name`,
+                    "country_region_label",
+                    "country_regions_label",
+                    "country_area_label",
+                    "country_areas_label",
+                  ]
+                : l === "region"
+                  ? [
+                      "region_slug",
+                      "region_name",
+                      "region_area_label",
+                      "region_areas_label",
+                    ]
+                  : [`${l}_slug`, `${l}_name`]
+            ),
+          })
+          .then((res) => {
+            const chain: PlaceChain = {}
+            for (const level of levels) {
+              const ref = placeRef(res.hits?.[0], level)
+              if (ref) chain[level] = ref
             }
-          }
+            // A place with no libraries still names itself.
+            chain[place.level] ??= {
+              slug: place.slug,
+              name: nameFromSlug(place.slug),
+            }
 
-          return chain
-        })
+            const hit = res.hits?.[0] as Record<string, unknown> | undefined
+            if (chain.country && hit) {
+              const label = hit.country_region_label
+              const section = hit.country_regions_label
+              const areaLabel = hit.country_area_label
+              const areaSection = hit.country_areas_label
+              chain.country = {
+                ...chain.country,
+                ...(typeof label === "string"
+                  ? { regionTypeLabel: label }
+                  : {}),
+                ...(typeof section === "string"
+                  ? { regionsSectionLabel: section }
+                  : {}),
+                ...(typeof areaLabel === "string"
+                  ? { areaTypeLabel: areaLabel }
+                  : {}),
+                ...(typeof areaSection === "string"
+                  ? { areasSectionLabel: areaSection }
+                  : {}),
+              }
+            }
+            if (chain.region && hit) {
+              chain.region = {
+                ...chain.region,
+                ...(typeof hit.region_area_label === "string"
+                  ? { areaTypeLabel: hit.region_area_label }
+                  : {}),
+                ...(typeof hit.region_areas_label === "string"
+                  ? { areasSectionLabel: hit.region_areas_label }
+                  : {}),
+              }
+            }
+
+            return chain
+          })
+      )
   )
 }
 
@@ -419,11 +469,14 @@ type Distribution = Record<string, Record<string, number>> | undefined
 const countOf = (dist: Distribution, facet: string) =>
   Object.values(dist?.[facet] ?? {}).reduce((sum, n) => sum + n, 0)
 
-export async function searchFind(q: FindQuery): Promise<FindResult> {
+export async function searchFind(
+  q: FindQuery,
+  catalogue?: Partial<Record<FindPlaceLevel, FindPlaceRef>>
+): Promise<FindResult> {
   const hitsPerPage = q.hitsPerPage ?? 24
   const [zones, chain] = await Promise.all([
     openZones(q.locale),
-    placeChain(q.place, q.locale),
+    catalogue ? Promise.resolve(catalogue) : placeChain(q.place, q.locale),
   ])
   const base = { indexUid: "library", q: q.query ?? "" }
   // The Location filter counts each place under every other filter.
@@ -563,6 +616,32 @@ export async function searchFind(q: FindQuery): Promise<FindResult> {
   }
 }
 
+/** A bounded, region-wide selection, independent of the CMS library preview. */
+export async function regionNationalLibraries(
+  slug: string,
+  locale?: string
+): Promise<{ libraries: LibrarySearchHitV2[]; total: number } | null> {
+  try {
+    const result = await meiliClient
+      .index("library")
+      .search<LibrarySearchHitV2>("", {
+        filter: `${placeClause({ level: "region", slug })} AND libraryType = "National" AND operationalStatus NOT IN ["permanently_closed", "planned"] AND ${searchLocaleFilter(locale)}`,
+        sort: ["featured:desc", "name:asc"],
+        hitsPerPage: 3,
+        page: 1,
+        facets: ["locale"],
+        attributesToRetrieve: RETRIEVE,
+      })
+
+    return {
+      libraries: result.hits,
+      total: countOf(result.facetDistribution as Distribution, "locale"),
+    }
+  } catch {
+    return null
+  }
+}
+
 /** Every published library in the route's search locale: an exact count. */
 export async function libraryTotal(locale?: string): Promise<number> {
   const res = await meiliClient.index("library").search("", {
@@ -588,7 +667,7 @@ export async function placeGapCounts(
 ): Promise<{ total: number; gaps: Partial<Record<GapKey, number>> } | null> {
   try {
     const res = await meiliClient.index("library").search("", {
-      filter: `${placeClause({ level, slug })} AND ${searchLocaleFilter(locale)}`,
+      filter: `${placeClause({ level, slug })} AND operationalStatus NOT IN ["permanently_closed", "planned"] AND ${searchLocaleFilter(locale)}`,
       limit: 0,
       facets: ["needs", "locale"],
     })

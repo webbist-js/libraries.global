@@ -1,8 +1,6 @@
 // "In the area": counted figures, the numbered nearby list and the Pro
 // reach teaser. Every figure here comes from the index (library-area.ts).
 
-import { useTranslations as useUiTranslations } from "next-intl"
-
 import { formatDistance } from "@/components/library/library-page.helpers"
 import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"
 import {
@@ -64,13 +62,13 @@ export function LibraryAreaSection({
   libraryName,
   regionName,
   area,
+  addHref = "/contribute/index/new",
 }: {
   readonly libraryName: string
   readonly regionName?: string | null
   readonly area: LibraryAreaData
+  readonly addHref?: string
 }) {
-  const tUi = useUiTranslations("ui")
-
   const place = regionName ?? "the region"
   const nearest = area.neighbours[0]
   const stats: Stat[] = []
@@ -95,10 +93,8 @@ export function LibraryAreaSection({
   if (area.sundays)
     stats.push({
       value: `${area.sundays.open} of ${area.sundays.total}`,
-      label: "Open on Sundays",
-      note: area.sundays.includesThis
-        ? "Including this one"
-        : "Not including this one",
+      label: "Opening this Sunday",
+      note: `Of usable recorded schedules${area.sundays.includesThis ? " · including this one" : ""}`,
     })
 
   const hasDistances = area.neighbours.some((n) => n.km !== null)
@@ -106,12 +102,12 @@ export function LibraryAreaSection({
   return (
     <LibrarySectionCard
       id="area"
-      title={tUi("in_the_area")}
+      title="Nearby in the index"
       iconPath={LIB_ICONS.map}
       tone="public"
       intro={`How ${libraryName} fits into ${place}, counted from the libraries in the index.`}
     >
-      {stats.length > 0 ? (
+      {stats.length > 0 && area.neighbours.length > 0 ? (
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
           {stats.map((s) => (
             <StatCard key={s.label} stat={s} />
@@ -123,7 +119,9 @@ export function LibraryAreaSection({
         className="mt-6 mb-1 text-[15px] font-bold"
         style={{ color: T.ink.base }}
       >
-        Nearby libraries
+        {area.sameRegion
+          ? "Other libraries in this region"
+          : "Libraries within 5 km"}
       </h3>
       {area.neighbours.length > 0 ? (
         <>
@@ -187,9 +185,13 @@ export function LibraryAreaSection({
         </>
       ) : (
         <p className="m-0 text-[14.5px]" style={{ color: T.ink.dim }}>
-          No other libraries in the index nearby yet.{" "}
+          {area.neighboursUnavailable
+            ? "Nearby library results are temporarily unavailable."
+            : area.sameRegion
+              ? "No other libraries in this region are documented yet."
+              : "No other libraries within 5 km are documented yet."}{" "}
           <Link
-            href="/contribute/index/new"
+            href={addHref}
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
@@ -198,9 +200,15 @@ export function LibraryAreaSection({
         </p>
       )}
 
-      <div className="mt-6">
+      <details
+        className="mt-5 border-t pt-2"
+        style={{ borderColor: T.border.line }}
+      >
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
+          Explore travel-time reach
+        </summary>
         <LibraryReachTeaser />
-      </div>
+      </details>
     </LibrarySectionCard>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -23,6 +23,55 @@ type CountryOption = RelationOption & {
 }
 type RegionOption = RelationOption & AreaLabelFields
 
+type RelationState<Option> = { key: string; data: Option[]; error: boolean }
+
+function useRelationOptions<Option>(
+  type: string,
+  parent: string,
+  locale: string,
+  revision: number
+) {
+  const key = `${type}:${parent}:${locale}:${revision}`
+  const [state, setState] = useState<RelationState<Option>>({
+    key: "",
+    data: [],
+    error: false,
+  })
+  useEffect(() => {
+    if (type !== "continents" && !parent) return
+    const controller = new AbortController()
+    const query = new URLSearchParams({ locale })
+    const parentField = {
+      countries: "continentDocumentId",
+      regions: "countryDocumentId",
+      areas: "regionDocumentId",
+    }[type]
+    if (parentField) query.set(parentField, parent)
+    fetch(`/api/relations/${type}?${query}`, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Place choices unavailable")
+
+        return res.json()
+      })
+      .then((json) => {
+        if (!controller.signal.aborted)
+          setState({ key, data: json.data ?? [], error: false })
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setState({ key, data: [], error: true })
+      })
+
+    return () => controller.abort()
+  }, [type, parent, locale, revision, key])
+  const current = state.key === key
+
+  return {
+    data: current ? state.data : [],
+    loaded: current && !state.error,
+    error: current && state.error,
+  }
+}
+
 export function LocationHierarchySelector({
   f,
   setFormData,
@@ -32,69 +81,42 @@ export function LocationHierarchySelector({
 }) {
   const tUi = useUiTranslations("ui")
 
-  const [continents, setContinents] = useState<RelationOption[]>([])
-  const [countries, setCountries] = useState<CountryOption[]>([])
-  const [regions, setRegions] = useState<RegionOption[]>([])
-  const [areas, setAreas] = useState<RelationOption[]>([])
-  // The Region `areas` was loaded for: until it matches, the list is loading.
-  const [areasFor, setAreasFor] = useState("")
-
-  useEffect(() => {
-    fetch("/api/relations/continents")
-      .then((r) => r.json())
-      .then((j) => setContinents(j.data ?? []))
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (!f.continentDocumentId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCountries([])
-
-      return
-    }
-    fetch(
-      `/api/relations/countries?continentDocumentId=${encodeURIComponent(f.continentDocumentId)}`
-    )
-      .then((r) => r.json())
-      .then((j) => setCountries(j.data ?? []))
-      .catch(() => {})
-  }, [f.continentDocumentId])
-
-  useEffect(() => {
-    if (!f.countryDocumentId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRegions([])
-
-      return
-    }
-    fetch(
-      `/api/relations/regions?countryDocumentId=${encodeURIComponent(f.countryDocumentId)}`
-    )
-      .then((r) => r.json())
-      .then((j) => setRegions(j.data ?? []))
-      .catch(() => {})
-  }, [f.countryDocumentId])
-
-  useEffect(() => {
-    const regionId = f.regionDocumentId
-    if (!regionId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAreas([])
-      setAreasFor("")
-
-      return
-    }
-    fetch(
-      `/api/relations/areas?regionDocumentId=${encodeURIComponent(regionId)}`
-    )
-      .then((r) => r.json())
-      .then((j) => {
-        setAreas(j.data ?? [])
-        setAreasFor(regionId)
-      })
-      .catch(() => {})
-  }, [f.regionDocumentId])
+  const locale = useLocale()
+  const [revision, setRevision] = useState(0)
+  const continentOptions = useRelationOptions<RelationOption>(
+    "continents",
+    "",
+    locale,
+    revision
+  )
+  const countryOptions = useRelationOptions<CountryOption>(
+    "countries",
+    f.continentDocumentId,
+    locale,
+    revision
+  )
+  const regionOptions = useRelationOptions<RegionOption>(
+    "regions",
+    f.countryDocumentId,
+    locale,
+    revision
+  )
+  const areaOptions = useRelationOptions<RelationOption>(
+    "areas",
+    f.regionDocumentId,
+    locale,
+    revision
+  )
+  const continents = continentOptions.data
+  const countries = countryOptions.data
+  const regions = regionOptions.data
+  const areas = areaOptions.data
+  const unavailable = [
+    continentOptions,
+    countryOptions,
+    regionOptions,
+    areaOptions,
+  ].some((options) => options.error)
 
   const selectStyle: React.CSSProperties = {
     ...fieldInputStyle,
@@ -108,10 +130,8 @@ export function LocationHierarchySelector({
   )
   // A Region with no Areas (every Scottish council, say): nothing to pick.
   const noAreas =
-    !!f.regionDocumentId &&
-    areasFor === f.regionDocumentId &&
-    areas.length === 0
-  const areaEnabled = !!f.regionDocumentId && !noAreas
+    !!f.regionDocumentId && areaOptions.loaded && areas.length === 0
+  const areaEnabled = !!f.regionDocumentId && areaOptions.loaded && !noAreas
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -127,6 +147,18 @@ export function LocationHierarchySelector({
         Link to the content hierarchy for atlas navigation and breadcrumbs.
         Select continent first, then narrow down.
       </p>
+      {unavailable ? (
+        <p role="alert" style={{ color: T.ink.dim }}>
+          Place choices are unavailable.{" "}
+          <button
+            type="button"
+            onClick={() => setRevision((value) => value + 1)}
+            className="min-h-11 underline"
+          >
+            Try again
+          </button>
+        </p>
+      ) : null}
       <div
         style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}
       >

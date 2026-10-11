@@ -3,6 +3,7 @@
 
 import { noticeLocalDate } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
+import type { ReactNode } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { LibrarySearchHitV2 } from "@/lib/find-search"
@@ -16,7 +17,9 @@ import {
   openStatus,
 } from "./find-helpers"
 
-function statusBadge(hit: LibrarySearchHitV2, status: OpenStatus, now?: Date) {
+type LibraryTileHit = Omit<LibrarySearchHitV2, "id">
+
+function statusBadge(hit: LibraryTileHit, status: OpenStatus, now?: Date) {
   if (
     hit.closed_dates?.includes(noticeLocalDate(now ?? new Date(), hit.timezone))
   )
@@ -52,7 +55,7 @@ function statusBadge(hit: LibrarySearchHitV2, status: OpenStatus, now?: Date) {
   return { label: "Hours not added yet", bg: T.bg.muted, fg: T.ink.dim }
 }
 
-function locationLine(hit: LibrarySearchHitV2, distanceKmValue?: number) {
+function locationLine(hit: LibraryTileHit, distanceKmValue?: number) {
   const parts = [hit.city, hit.region_name, hit.country_name].filter(Boolean)
   const base = [
     parts.join(", "),
@@ -73,7 +76,7 @@ function Monogram({
   size,
   radius,
 }: {
-  hit: LibrarySearchHitV2
+  hit: LibraryTileHit
   size: "card" | "row"
   radius: number
 }) {
@@ -119,10 +122,19 @@ export function LibraryResultCard({
   hit,
   distanceKmValue,
   now,
+  href: hrefOverride,
+  statusBadge: statusOverride,
+  children,
 }: {
-  hit: LibrarySearchHitV2
+  hit: LibraryTileHit
   distanceKmValue?: number
   now?: Date
+  /** Place pages already know the record's canonical path. */
+  href?: string | null
+  /** Notice-aware status supplied by a place page. */
+  statusBadge?: ReactNode
+  /** Optional contribution details within the standard tile. */
+  children?: ReactNode
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -133,8 +145,10 @@ export function LibraryResultCard({
     ? { known: true, open: false }
     : openStatus(hit.openingTimes, hit.timezone, now)
   const badge = statusBadge(hit, status, now)
-  const href = buildLibraryPath(hit)
-  const hasPhoto = Boolean(hit.heroImage?.url)
+  const href = hrefOverride ?? buildLibraryPath(hit)
+  const hasPhoto = Boolean(
+    hit.heroImage?.formats?.small?.url ?? hit.heroImage?.url
+  )
 
   const title = (
     <h3
@@ -147,27 +161,22 @@ export function LibraryResultCard({
 
   return (
     <article
-      className="group flex flex-col overflow-hidden transition-[border-color,box-shadow] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,0.08)]"
+      className="group flex h-full flex-col overflow-hidden transition-[border-color,box-shadow] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,0.08)]"
       style={{
         background: T.bg.deep,
         border: `1px solid ${T.border.line}`,
         borderRadius: 20,
       }}
     >
-      <div className="relative h-[150px] p-2">
-        <Monogram hit={hit} size="card" radius={14} />
-        {!hasPhoto ? (
-          <span
-            aria-hidden="true"
-            className="absolute bottom-4 left-4 rounded-full px-2 py-0.5 text-[12px] font-semibold"
-            style={{ background: "rgba(255,255,255,.82)", color: T.ink.dim }}
-          >
-            No photo yet
-          </span>
-        ) : null}
-      </div>
+      {hasPhoto ? (
+        <div className="relative h-[150px] p-2">
+          <Monogram hit={hit} size="card" radius={14} />
+        </div>
+      ) : null}
 
-      <div className="flex flex-1 flex-col gap-2 px-[18px] pt-1 pb-[18px]">
+      <div
+        className={`flex flex-1 flex-col gap-2 px-[18px] pb-[18px] ${hasPhoto ? "pt-1" : "pt-[18px]"}`}
+      >
         {href ? (
           <Link
             href={href}
@@ -184,33 +193,36 @@ export function LibraryResultCard({
           {locationLine(hit, distanceKmValue) || "Location not documented"}
         </p>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-col items-start gap-2">
           <span
-            className="rounded-full px-2.5 py-1 text-[13px] font-semibold"
+            className="rounded-full px-2.5 py-1 text-[13px] font-semibold whitespace-nowrap"
             style={{ background: tint.bg, color: tint.fg }}
           >
             {hit.libraryType ?? tUi("library")}
           </span>
-          <span
-            className="rounded-full px-2.5 py-1 text-[13px] font-semibold"
-            style={{ background: badge.bg, color: badge.fg }}
-          >
-            {badge.label}
-          </span>
+          {statusOverride === undefined ? (
+            <span
+              className="rounded-full px-2.5 py-1 text-[13px] font-semibold"
+              style={{ background: badge.bg, color: badge.fg }}
+            >
+              {badge.label}
+            </span>
+          ) : (
+            statusOverride
+          )}
         </div>
 
-        <p
-          className="m-0 mt-auto pt-1 text-[14px] leading-[1.5]"
-          style={{ color: T.ink.dim }}
-        >
-          {hit.libraryType === "Mobile" && hit.stop_count
-            ? `${hit.stop_count} stops · ${hit.cycle_weeks ?? 1}-week cycle`
-            : hit.summary
-              ? hit.summary.length > 110
-                ? `${hit.summary.slice(0, 110)}…`
-                : hit.summary
-              : "Collections not yet documented"}
-        </p>
+        {hit.summary ? (
+          <p
+            className="m-0 text-[14px] leading-[1.5]"
+            style={{ color: T.ink.dim }}
+          >
+            {hit.summary.length > 110
+              ? `${hit.summary.slice(0, 110)}…`
+              : hit.summary}
+          </p>
+        ) : null}
+        {children}
       </div>
     </article>
   )
@@ -220,10 +232,16 @@ export function LibraryResultRow({
   hit,
   distanceKmValue,
   now,
+  href: hrefOverride,
+  statusBadge: statusOverride,
+  children,
 }: {
-  hit: LibrarySearchHitV2
+  hit: LibraryTileHit
   distanceKmValue?: number
   now?: Date
+  href?: string | null
+  statusBadge?: ReactNode
+  children?: ReactNode
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -234,7 +252,7 @@ export function LibraryResultRow({
     ? { known: true, open: false }
     : openStatus(hit.openingTimes, hit.timezone, now)
   const badge = statusBadge(hit, status, now)
-  const href = buildLibraryPath(hit)
+  const href = hrefOverride ?? buildLibraryPath(hit)
 
   const name = (
     <span
@@ -247,7 +265,7 @@ export function LibraryResultRow({
 
   return (
     <li
-      className="flex items-center gap-3.5 px-[18px] py-4 transition-colors hover:bg-(--t-bg-surface)"
+      className="flex flex-wrap items-center gap-3.5 px-[18px] py-4 transition-colors hover:bg-(--t-bg-surface)"
       style={{ borderTop: `1px solid ${T.border.divider}` }}
     >
       <div className="size-[52px] shrink-0">
@@ -277,12 +295,17 @@ export function LibraryResultRow({
       >
         {hit.libraryType ?? tUi("library")}
       </span>
-      <span
-        className="hidden rounded-full px-2.5 py-1 text-[13px] font-semibold md:inline"
-        style={{ background: badge.bg, color: badge.fg }}
-      >
-        {badge.label}
-      </span>
+      {statusOverride === undefined ? (
+        <span
+          className="hidden rounded-full px-2.5 py-1 text-[13px] font-semibold md:inline"
+          style={{ background: badge.bg, color: badge.fg }}
+        >
+          {badge.label}
+        </span>
+      ) : (
+        statusOverride
+      )}
+      {children}
     </li>
   )
 }

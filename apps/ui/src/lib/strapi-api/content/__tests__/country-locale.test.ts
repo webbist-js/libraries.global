@@ -22,6 +22,7 @@ it("does not turn unmatched map asset paths into country reads with an invalid l
 it("still reads the country detail in a supported locale", async () => {
   expect(await fetchCountry("england", "en")).toEqual({
     data: { name: "England" },
+    localeFallback: false,
   })
   expect(fetchAPI).toHaveBeenCalledWith("/countries/detail/england", {
     locale: "en",

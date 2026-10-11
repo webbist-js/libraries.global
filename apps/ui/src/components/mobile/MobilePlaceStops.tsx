@@ -1,10 +1,9 @@
 "use client"
-import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Card } from "@/components/ds"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import {
   loadStopTimetable,
@@ -76,8 +75,13 @@ export function MobilePlaceStops({
       page: number
       cursors: (string | null)[]
     }>({ key, page: 0, cursors: [null] }),
-    [total, setTotal] = useState(0),
+    [totals, setTotals] = useState<{
+      key: string
+      stops: number
+      services: number | null
+    }>({ key, stops: 0, services: null }),
     [data, setData] = useState<{
+      key: string
       hits: MobileStopHit[]
       next: string | null
     } | null>(null),
@@ -92,8 +96,17 @@ export function MobilePlaceStops({
     searchPlaceMobileStops(level, slug, after)
       .then((value) => {
         if (!active) return
-        setData({ hits: value.hits, next: value.next })
-        if (!after) setTotal(value.total)
+        setData({
+          key: `${key}:${after ?? ""}`,
+          hits: value.hits,
+          next: value.next,
+        })
+        if (!after)
+          setTotals({
+            key,
+            stops: value.total,
+            services: value.services ?? null,
+          })
         setError("")
       })
       .catch(() => {
@@ -118,7 +131,16 @@ export function MobilePlaceStops({
 
     return () => controller.abort()
   }, [selected])
-  if (data && total === 0 && !error) return null
+  const total = totals.key === key ? totals.stops : 0
+  const serviceCount = totals.key === key ? totals.services : null
+  const visible = data?.key === `${key}:${after ?? ""}` ? data : null
+  const groups = new Map<string, MobileStopHit[]>()
+  for (const hit of visible?.hits ?? [])
+    groups.set(hit.library_document_id, [
+      ...(groups.get(hit.library_document_id) ?? []),
+      hit,
+    ])
+  if (visible && total === 0 && !error) return null
 
   return (
     <section aria-labelledby={`mobile-stops-${slug}`}>
@@ -127,52 +149,55 @@ export function MobilePlaceStops({
         style={{ fontFamily: T.font.serif }}
         className="text-3xl"
       >
-        Mobile library stops in {name}
+        Mobile libraries that visit {name}
       </h2>
       <p>
         These libraries come to you. Visit times use each service’s local
         timezone.
       </p>
       {error && <p role="status">{error}</p>}
-      {data && (
+      {visible && (
         <>
           <p style={{ color: T.ink.dim }}>
-            {total.toLocaleString()} stops · page {page + 1}
+            {serviceCount !== null ? `${serviceCount} services · ` : ""}
+            {total.toLocaleString()} stops · {groups.size} services on this page
+            · page {page + 1}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
-            {data.hits.map((hit) => (
-              <Card key={hit.id} className="p-5">
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold"
-                  style={{
-                    background: TYPE_TINT.public.bg,
-                    color: TYPE_TINT.public.fg,
-                  }}
-                >
-                  <Icon aria-hidden="true" icon="mdi:bus-stop" width={14} />
-                  Mobile stop
-                </span>
-                <MobileStopSummary
-                  hit={hit}
-                  onSelect={() => {
-                    setTimetable(null)
-                    setSelected(hit)
-                  }}
-                />
-                {hit.library_path ? (
-                  <Link
-                    href={hit.library_path}
-                    style={{ color: T.accent.primary }}
+            {[...groups].map(([id, stops]) => (
+              <Card key={id} className="p-5">
+                <h3 className="m-0 text-lg font-semibold">
+                  {stops[0]!.library_path ? (
+                    <Link href={stops[0]!.library_path}>
+                      {stops[0]!.library_name}
+                    </Link>
+                  ) : (
+                    stops[0]!.library_name
+                  )}
+                </h3>
+                <p className="text-sm" style={{ color: T.ink.dim }}>
+                  {stops.length} {stops.length === 1 ? "stop" : "stops"} shown
+                  in {name}
+                </p>
+                {stops.map((hit) => (
+                  <div
+                    key={hit.id}
+                    className="border-t py-3"
+                    style={{ borderColor: T.border.line }}
                   >
-                    {hit.library_name} →
-                  </Link>
-                ) : (
-                  <span>{hit.library_name}</span>
-                )}
+                    <MobileStopSummary
+                      hit={hit}
+                      onSelect={() => {
+                        setTimetable(null)
+                        setSelected(hit)
+                      }}
+                    />
+                  </div>
+                ))}
               </Card>
             ))}
           </div>
-          {(page > 0 || data.next) && (
+          {(page > 0 || visible.next) && (
             <nav
               aria-label={tUi("mobile_stops_pages")}
               className="mt-5 flex gap-3"
@@ -190,13 +215,13 @@ export function MobilePlaceStops({
                 type="button"
                 className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
-                disabled={!data.next}
+                disabled={!visible.next}
                 onClick={() => {
-                  if (!data.next) return
+                  if (!visible.next) return
                   setPaging({
                     key,
                     page: page + 1,
-                    cursors: [...cursors.slice(0, page + 1), data.next],
+                    cursors: [...cursors.slice(0, page + 1), visible.next],
                   })
                 }}
               >

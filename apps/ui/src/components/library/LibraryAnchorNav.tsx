@@ -57,7 +57,7 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
                 <a
                   href={item.href}
                   aria-current={active ? "location" : undefined}
-                  className="flex items-center gap-[7px] rounded-full border px-3 py-1.5 text-[14px] font-medium whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+                  className="flex min-h-11 items-center gap-[7px] rounded-full border px-3 py-1.5 text-[14px] font-medium whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-muted-2)"
                   style={{
                     color: T.ink.base,
                     background: active ? T.bg.deep : "transparent",

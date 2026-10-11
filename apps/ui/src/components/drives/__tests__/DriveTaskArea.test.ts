@@ -122,6 +122,10 @@ function respond(url: string, init?: RequestInit) {
     return Promise.resolve(
       Response.json({ data: TASKS, page: 0, hasMore: false })
     )
+  if (url.startsWith("/api/drives/ohio-hours/holds"))
+    return Promise.resolve(
+      Response.json({ data: { expiresAt: "2026-10-12T00:00:00Z" } })
+    )
   if (url.startsWith("/api/drives/ohio-hours/mine"))
     return Promise.resolve(
       Response.json({ data: { sent: 2, inReview: 1, accepted: 1 } })
@@ -241,7 +245,7 @@ describe("DriveTaskArea", () => {
     render(h(DriveTaskArea, { drive: DRIVE }))
     await screen.findByText("Alpha Library")
     fireEvent.click(row("Alpha Library"))
-    fireEvent.click(screen.getByRole("button", { name: "Skip" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Skip" }))
     expect(document.activeElement).toBe(
       screen.getByRole("heading", { name: "Beta Library" })
     )
@@ -256,7 +260,7 @@ describe("DriveTaskArea", () => {
     await screen.findByText("Alpha Library")
     expect(screen.queryByRole("dialog")).toBeNull()
     fireEvent.click(row("Alpha Library"))
-    const dialog = screen.getByRole("dialog")
+    const dialog = await screen.findByRole("dialog")
     expect(within(dialog).getByRole("heading", { name: "Alpha Library" })).toBe(
       document.activeElement
     )
@@ -275,4 +279,35 @@ describe("DriveTaskArea", () => {
     expect(urls.some((u) => u.includes("/mine"))).toBe(false)
     expect(urls).not.toContain("/api/contribute/standing")
   })
+})
+
+it("keeps the selected place in task searches", async () => {
+  render(
+    h(DriveTaskArea, {
+      drive: DRIVE,
+      initialPlace: { country: "united-states", region: "ohio" },
+    })
+  )
+  await screen.findByText("Alpha Library")
+  const urls = fetchMock.mock.calls.map(([url]) => String(url))
+  expect(urls).toContain(
+    "/api/drives/ohio-hours/tasks?country=united-states&region=ohio&page=0&locale=en"
+  )
+})
+
+it("preserves the selected place through sign-in", async () => {
+  session.value = { data: null, isPending: false }
+  render(
+    h(DriveTaskArea, {
+      drive: DRIVE,
+      initialPlace: { country: "united-states", region: "ohio" },
+    })
+  )
+  await screen.findByText("Alpha Library")
+  fireEvent.click(row("Alpha Library"))
+  const link = await screen.findByRole("link", { name: "Sign in to help" })
+  const href = new URL(link.getAttribute("href")!, "http://localhost")
+  expect(href.searchParams.get("callbackUrl")).toBe(
+    "/community/drives/ohio-hours?country=united-states&region=ohio"
+  )
 })

@@ -267,6 +267,8 @@ describe("updateStatus", () => {
 
   it("earns no hours or status points for values identical to the record's", async () => {
     const edit = pendingHoursEdit()
+    edit.fields.openingTimes.days[0].timeframes[0].staffing = "staffed"
+    edit.payloadHash = payloadHash(edit)
     const f = makeFakeStrapi({
       [UID]: [edit],
       "api::library.library": [

@@ -6,6 +6,7 @@ import type { RefObject } from "react"
 
 import styles from "@/components/contact/contact.module.css"
 import {
+  ATLAS_FEEDBACK_TASKS,
   CONTACT_TYPES,
   FEEDBACK_TASKS,
   FEEDBACK_TOPICS,
@@ -13,6 +14,7 @@ import {
   type ContactContext,
   type ContactIntent,
   type ContactType,
+  type FeedbackTask,
   type FeedbackTopic,
 } from "@/lib/contact/model"
 
@@ -24,10 +26,11 @@ const topicIcons = {
 }
 
 type QuestionProps = {
+  atlas?: boolean
   topic: FeedbackTopic
   setTopic: (value: FeedbackTopic) => void
-  task: (typeof FEEDBACK_TASKS)[number] | ""
-  setTask: (value: (typeof FEEDBACK_TASKS)[number]) => void
+  task: FeedbackTask | ""
+  setTask: (value: FeedbackTask) => void
   outcome: string
   setOutcome: (value: string) => void
   ease?: number
@@ -35,6 +38,7 @@ type QuestionProps = {
 }
 
 export function FeedbackQuestions({
+  atlas = false,
   topic,
   setTopic,
   task,
@@ -45,6 +49,15 @@ export function FeedbackQuestions({
   setEase,
 }: QuestionProps) {
   const t = useTranslations("contactModal")
+  const tasks = atlas
+    ? ATLAS_FEEDBACK_TASKS.map((value) => ({
+        value,
+        label: t(`atlas.tasks.${value}`),
+      }))
+    : FEEDBACK_TASKS.map((value) => ({
+        value,
+        label: t(`feedback.tasks.${value}`),
+      }))
 
   return (
     <>
@@ -75,20 +88,20 @@ export function FeedbackQuestions({
         </div>
       </fieldset>
       <label className={styles.field}>
-        <span className={styles.label}>{t("feedback.task")}</span>
+        <span className={styles.label}>
+          {t(atlas ? "atlas.task" : "feedback.task")}
+        </span>
         <select
           value={task}
-          onChange={(event) =>
-            setTask(event.target.value as (typeof FEEDBACK_TASKS)[number])
-          }
+          onChange={(event) => setTask(event.target.value as FeedbackTask)}
           required
         >
           <option value="" disabled>
             {t("choose")}
           </option>
-          {FEEDBACK_TASKS.map((value) => (
+          {tasks.map(({ value, label }) => (
             <option key={value} value={value}>
-              {t(`feedback.tasks.${value}`)}
+              {label}
             </option>
           ))}
         </select>
@@ -141,15 +154,18 @@ export function FeedbackQuestions({
 
 type DetailProps = {
   feedback: boolean
+  atlas?: boolean
   type: ContactType
   setType: (value: ContactType) => void
   topic: FeedbackTopic
-  task: (typeof FEEDBACK_TASKS)[number] | ""
+  task: FeedbackTask | ""
   intent: ContactIntent
   context: ContactContext
   messageRef: RefObject<HTMLTextAreaElement | null>
   message: string
   setMessage: (value: string) => void
+  wishlist: string
+  setWishlist: (value: string) => void
   steps: string
   setSteps: (value: string) => void
   name: string
@@ -160,6 +176,7 @@ type DetailProps = {
 
 export function ContactDetails({
   feedback,
+  atlas = false,
   type,
   setType,
   topic,
@@ -169,6 +186,8 @@ export function ContactDetails({
   messageRef,
   message,
   setMessage,
+  wishlist,
+  setWishlist,
   steps,
   setSteps,
   name,
@@ -179,8 +198,15 @@ export function ContactDetails({
   const t = useTranslations("contactModal")
   const isIssue = feedback ? topic === "problem" : type === "report_issue"
   const promptKey = feedback
-    ? (`feedback.prompts.${topic}` as const)
+    ? (`${atlas ? "atlas" : "feedback"}.prompts.${topic}` as const)
     : (`contact.prompts.${type}` as const)
+  const taskLabels = atlas
+    ? Object.fromEntries(
+        ATLAS_FEEDBACK_TASKS.map((value) => [value, t(`atlas.tasks.${value}`)])
+      )
+    : Object.fromEntries(
+        FEEDBACK_TASKS.map((value) => [value, t(`feedback.tasks.${value}`)])
+      )
 
   return (
     <>
@@ -201,7 +227,7 @@ export function ContactDetails({
       ) : (
         <p className={styles.summary}>
           {t(`feedback.topics.${topic}`)} <span aria-hidden="true">·</span>{" "}
-          {task ? t(`feedback.tasks.${task}`) : null}
+          {taskLabels[task]}
         </p>
       )}
       {intent.mode === "contact" && intent.sourceSubject ? (
@@ -235,6 +261,23 @@ export function ContactDetails({
             maxLength={2000}
             rows={2}
             placeholder={t("stepsPlaceholder")}
+          />
+        </label>
+      ) : null}
+      {atlas && topic !== "idea" ? (
+        <label className={styles.field}>
+          <span className={styles.label}>
+            {t("atlas.wishlist.label")}{" "}
+            <span className={styles.optional}>{t("optional")}</span>
+          </span>
+          <span className={styles.hint}>{t("atlas.wishlist.hint")}</span>
+          <textarea
+            name="wishlist"
+            value={wishlist}
+            onChange={(event) => setWishlist(event.target.value)}
+            maxLength={2000}
+            rows={2}
+            placeholder={t("atlas.wishlist.placeholder")}
           />
         </label>
       ) : null}

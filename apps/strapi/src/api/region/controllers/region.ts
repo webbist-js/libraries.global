@@ -1,7 +1,13 @@
+import { DEFAULT_LOCALE } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
+import { noticesForLibraries } from "../../../utils/library-notices"
 import { centerFor, tallyLibrariesByChild } from "../../../utils/library-tally"
 import { countLibrariesByType } from "../../../utils/library-type-counts"
+import {
+  countPlaceLibraries,
+  PLACE_LIBRARY_FILTERS,
+} from "../../../utils/place-library-scope"
 import {
   FEATURED_LIBRARY_POPULATE,
   MAP_CONFIG_POPULATE,
@@ -120,10 +126,17 @@ export default factories.createCoreController(
       const region = results[0] ?? null
 
       // ── Computed aggregates ─────────────────────────────────────────────────
+      const statistics = {
+        libraries: true,
+        children: true,
+        types: true,
+        preview: true,
+      }
       let libraryCount = 0
       let libraryTypeCounts: { type: string; count: number }[] = []
       let areaCount = 0
       let libraries: unknown[] = []
+      let areas: unknown[] = []
       let center: { lat: number; lng: number } | null = null
       let siblings: {
         name: string
@@ -140,34 +153,77 @@ export default factories.createCoreController(
       if (region?.id) {
         const scope = scopedWhere(status, locale)
         ;[libraryCount, areaCount] = await Promise.all([
-          strapi.db
-            .query("api::library.library")
-            .count({ where: { region: { id: { $eq: region.id } }, ...scope } })
-            .catch(() => 0),
+          countPlaceLibraries(strapi, "region", region.documentId, {
+            locale,
+            status,
+          }).catch(() => {
+            statistics.libraries = false
+
+            return 0
+          }),
           strapi.db
             .query("api::area.area")
             .count({ where: { region: { id: { $eq: region.id } }, ...scope } })
-            .catch(() => 0),
+            .catch(() => {
+              statistics.children = false
+
+              return 0
+            }),
         ])
       }
 
       if (region?.documentId) {
+        try {
+          const [areaRows, areaTallies] = await Promise.all([
+            strapi.documents("api::area.area").findMany({
+              filters: {
+                region: { documentId: { $eq: region.documentId } },
+              } as never,
+              fields: ["name", "slug"],
+              locale,
+              status,
+              sort: "name:asc" as never,
+              limit: 1000,
+            }),
+            tallyLibrariesByChild(strapi, {
+              parent: "region",
+              parentDocumentId: region.documentId,
+              child: "area",
+              locale,
+              status,
+            }),
+          ])
+          if (areaRows.length < areaCount) statistics.children = false
+          areas = areaRows.map((area) => ({
+            ...area,
+            libraryCount: areaTallies.get(area.documentId)?.count ?? 0,
+            placeBasedCount:
+              areaTallies.get(area.documentId)?.placeBasedCount ?? 0,
+          }))
+        } catch {
+          statistics.children = false
+        }
         // Type counts, the library list (list, map pins, missing-detail
         // chips) and the sibling regions of the same country (the "Nearby"
         // card) are independent of each other.
         const [typeCounts, rows, nearby] = await Promise.all([
-          libraryCount > 0
+          libraryCount > 0 || !statistics.libraries
             ? countLibrariesByType(strapi, "region", region.documentId, {
                 locale,
                 status,
-              }).catch(() => [])
+              }).catch(() => {
+                statistics.types = false
+
+                return []
+              })
             : Promise.resolve([]),
-          libraryCount > 0
+          libraryCount > 0 || !statistics.libraries
             ? strapi
                 .documents("api::library.library")
                 .findMany({
                   filters: {
                     region: { documentId: { $eq: region.documentId } },
+                    ...PLACE_LIBRARY_FILTERS,
                   } as never,
                   fields: [
                     "name",
@@ -185,8 +241,11 @@ export default factories.createCoreController(
                     "streetAddress",
                     "operationalStatus",
                     "featured",
+                    "mobileTimetable",
+                    "absentFacilities",
                   ] as never,
                   populate: {
+                    homeLibrary: { fields: ["name", "slug"] },
                     heroImage: mediaPopulate,
                     accessibility: { fields: ["documentId"] },
                     services: { fields: ["documentId"] },
@@ -194,10 +253,14 @@ export default factories.createCoreController(
                   } as never,
                   sort: [{ featured: "desc" }, { name: "asc" }] as never,
                   limit: REGION_LIBRARY_LIMIT,
-                  locale,
+                  locale: DEFAULT_LOCALE,
                   status,
                 })
-                .catch(() => [])
+                .catch(() => {
+                  statistics.preview = false
+
+                  return []
+                })
             : Promise.resolve([]),
           countryDocumentId
             ? Promise.all([
@@ -205,7 +268,7 @@ export default factories.createCoreController(
                   parent: "country",
                   parentDocumentId: countryDocumentId,
                   child: "region",
-                  locale,
+                  locale: DEFAULT_LOCALE,
                   status,
                 }),
                 strapi.documents("api::region.region").findMany({
@@ -214,7 +277,7 @@ export default factories.createCoreController(
                   } as never,
                   fields: ["name", "slug", "typeLabel"] as never,
                   populate: { mapConfig: MAP_CONFIG_POPULATE } as never,
-                  locale,
+                  locale: DEFAULT_LOCALE,
                   status,
                 }),
               ]).catch(() => null)
@@ -222,7 +285,14 @@ export default factories.createCoreController(
         ])
 
         libraryTypeCounts = typeCounts
-        libraries = rows
+        const notices = await noticesForLibraries(
+          strapi,
+          rows.map((row) => row.documentId)
+        ).catch(() => null)
+        libraries = rows.map((row) => ({
+          ...row,
+          ...(notices ? { notices: notices.get(row.documentId) ?? [] } : {}),
+        }))
 
         if (nearby) {
           const [tallies, siblingRows] = nearby
@@ -251,7 +321,9 @@ export default factories.createCoreController(
           ? {
               ...region,
               libraryCount,
+              statistics,
               areaCount,
+              areas,
               libraryTypeCounts,
               libraries,
               center,

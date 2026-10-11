@@ -7,6 +7,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Bloom, EffectComposer } from "@react-three/postprocessing"
 import {
   Suspense,
+  createContext,
+  useContext,
   type ComponentRef,
   type RefObject,
   useEffect,
@@ -56,11 +58,30 @@ import {
   latLngToVector3,
 } from "@/components/home/knowledge-globe-data"
 import {
+  globeHomeAzimuthDelta,
+  globeViewAdjustment,
+  useGlobeMotionClock,
+  useGlobeReducedMotion,
+} from "@/components/home/knowledge-globe-motion"
+import type { GlobeNarrativeController } from "@/components/home/knowledge-globe-narrative"
+import {
+  addNarrativeIndex,
+  applyNarrativeToPoints,
+  createNarrativeGuide,
+  createNarrativeUniforms,
+  fadeNarrativeWorldMaterial,
+  narrativeFragmentShader,
+  narrativeVertexShader,
+  type NarrativeUniforms,
+} from "@/components/home/knowledge-globe-narrative-renderer"
+import {
   GLOBE_SETTINGS,
   GLOBE_QUALITY_TUNING,
 } from "@/components/home/knowledge-globe-settings"
 import { cn } from "@/lib/styles"
 
+const MotionTimeContext = createContext<RefObject<number>>({ current: 0 })
+const NarrativeContext = createContext<NarrativeUniforms | null>(null)
 const NODE_GLOW_GEOMETRY = new THREE.PlaneGeometry(1, 1)
 const GLOBE_QUALITY = GLOBE_QUALITY_TUNING[GLOBE_SETTINGS.qualityProfile]
 const RENDERED_ARC_ROUTES = ARC_ROUTES.map((route) => ({
@@ -149,6 +170,8 @@ function DotGlobe({
   readonly showGlow?: boolean
   readonly showHotspots?: boolean
 }) {
+  const motionTime = useContext(MotionTimeContext)
+  const narrative = useContext(NarrativeContext)
   const maskTexture = useTexture("/images/globe/earth-specular.jpg")
   const glowMaterialRef = useRef<THREE.ShaderMaterial>(null)
   const hotspotMaterialRef = useRef<THREE.ShaderMaterial>(null)
@@ -160,7 +183,7 @@ function DotGlobe({
         ? maskTexture.image
         : null
 
-    return createLandDotsGeometry({
+    const result = createLandDotsGeometry({
       maskImage: image,
       radius: EARTH_RADIUS,
       density: landDotDensity ?? GLOBE_SETTINGS.landDotDensity,
@@ -168,7 +191,16 @@ function DotGlobe({
       lngBounds,
       activitySources,
     })
-  }, [maskTexture.image, latBounds, lngBounds, landDotDensity, activitySources])
+
+    return narrative ? addNarrativeIndex(result) : result
+  }, [
+    maskTexture.image,
+    latBounds,
+    lngBounds,
+    landDotDensity,
+    activitySources,
+    narrative,
+  ])
 
   // Ocean — sparser, dimmer indigo dots so the whole sphere reads as a
   // dot-matrix object rather than land floating on a void.
@@ -179,7 +211,7 @@ function DotGlobe({
         ? maskTexture.image
         : null
 
-    return createLandDotsGeometry({
+    const result = createLandDotsGeometry({
       maskImage: image,
       radius: EARTH_RADIUS,
       density: (landDotDensity ?? GLOBE_SETTINGS.landDotDensity) * 0.55,
@@ -187,7 +219,9 @@ function DotGlobe({
       lngBounds,
       invert: true,
     })
-  }, [maskTexture.image, latBounds, lngBounds, landDotDensity])
+
+    return narrative ? addNarrativeIndex(result) : result
+  }, [maskTexture.image, latBounds, lngBounds, landDotDensity, narrative])
 
   const glowGeometry = useMemo(
     () => createLandGlowGeometry(geometry),
@@ -203,8 +237,10 @@ function DotGlobe({
       uBaseColor: { value: new THREE.Color("#d8d0bd") },
       uHighlightColor: { value: new THREE.Color("#fff8e6") },
       uSizeScale: { value: dotSize * 0.82 },
+      ...narrative,
+      uNarrativeLayer: { value: 0 },
     }),
-    [dotSize]
+    [dotSize, narrative]
   )
 
   const oceanUniforms = useMemo(
@@ -214,8 +250,10 @@ function DotGlobe({
       uBaseColor: { value: new THREE.Color("#5a60b8") },
       uHighlightColor: { value: new THREE.Color("#8c90d8") },
       uSizeScale: { value: dotSize * 0.8 },
+      ...narrative,
+      uNarrativeLayer: { value: 1 },
     }),
-    [dotSize]
+    [dotSize, narrative]
   )
 
   useEffect(() => {
@@ -226,77 +264,97 @@ function DotGlobe({
     }
   }, [geometry, oceanGeometry, glowGeometry])
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     const glowTimeUniform = glowMaterialRef.current?.uniforms.uTime
     const hotspotTimeUniform = hotspotMaterialRef.current?.uniforms.uTime
 
     if (glowTimeUniform != null) {
-      glowTimeUniform.value = clock.elapsedTime
+      glowTimeUniform.value = motionTime.current
     }
 
     if (hotspotTimeUniform != null) {
-      hotspotTimeUniform.value = clock.elapsedTime
+      hotspotTimeUniform.value = motionTime.current
     }
   })
 
   return (
     <>
-      <points geometry={oceanGeometry}>
+      <points geometry={oceanGeometry} frustumCulled={!narrative}>
         <shaderMaterial
           depthWrite={false}
-          fragmentShader={LAND_DOT_FRAGMENT_SHADER}
+          fragmentShader={
+            narrative
+              ? narrativeFragmentShader(LAND_DOT_FRAGMENT_SHADER)
+              : LAND_DOT_FRAGMENT_SHADER
+          }
           toneMapped={false}
           transparent
           uniforms={oceanUniforms}
-          vertexShader={LAND_DOT_VERTEX_SHADER}
+          vertexShader={
+            narrative
+              ? narrativeVertexShader(LAND_DOT_VERTEX_SHADER)
+              : LAND_DOT_VERTEX_SHADER
+          }
         />
       </points>
 
-      <points geometry={geometry}>
+      <points geometry={geometry} frustumCulled={!narrative}>
         <shaderMaterial
           depthWrite={false}
-          fragmentShader={LAND_DOT_FRAGMENT_SHADER}
+          fragmentShader={
+            narrative
+              ? narrativeFragmentShader(LAND_DOT_FRAGMENT_SHADER)
+              : LAND_DOT_FRAGMENT_SHADER
+          }
           toneMapped={false}
           transparent
           uniforms={uniforms}
-          vertexShader={LAND_DOT_VERTEX_SHADER}
+          vertexShader={
+            narrative
+              ? narrativeVertexShader(LAND_DOT_VERTEX_SHADER)
+              : LAND_DOT_VERTEX_SHADER
+          }
         />
       </points>
 
       {showGlow ? (
-        <points geometry={glowGeometry}>
-          <shaderMaterial
-            ref={glowMaterialRef}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-            fragmentShader={LAND_GLOW_FRAGMENT_SHADER}
-            toneMapped={false}
-            transparent
-            uniforms={{
-              uGlowColor: {
-                value: new THREE.Color("#f2c879").multiplyScalar(0.6),
-              },
-              uSizeScale: { value: dotSize * 1.18 },
-              uTime: { value: 0 },
-            }}
-            vertexShader={LAND_GLOW_VERTEX_SHADER}
-          />
-        </points>
+        <NarrativeDecoration>
+          <points geometry={glowGeometry}>
+            <shaderMaterial
+              ref={glowMaterialRef}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+              fragmentShader={LAND_GLOW_FRAGMENT_SHADER}
+              toneMapped={false}
+              transparent
+              uniforms={{
+                uGlowColor: {
+                  value: new THREE.Color("#f2c879").multiplyScalar(0.6),
+                },
+                uSizeScale: { value: dotSize * 1.18 },
+                uTime: { value: 0 },
+              }}
+              vertexShader={LAND_GLOW_VERTEX_SHADER}
+            />
+          </points>
+        </NarrativeDecoration>
       ) : null}
 
       {showHotspots ? (
-        <points geometry={geometry}>
-          <shaderMaterial
-            ref={hotspotMaterialRef}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-            fragmentShader={HOTSPOT_FRAGMENT_SHADER}
-            toneMapped={false}
-            transparent
-            uniforms={{ uTime: { value: 0 } }}
-            vertexShader={HOTSPOT_VERTEX_SHADER}
-          />
-        </points>
+        <NarrativeDecoration>
+          <points geometry={geometry}>
+            <shaderMaterial
+              ref={hotspotMaterialRef}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+              fragmentShader={HOTSPOT_FRAGMENT_SHADER}
+              toneMapped={false}
+              transparent
+              uniforms={{ uTime: { value: 0 } }}
+              vertexShader={HOTSPOT_VERTEX_SHADER}
+            />
+          </points>
+        </NarrativeDecoration>
       ) : null}
     </>
   )
@@ -399,6 +457,7 @@ function KnowledgeNode({
   readonly light: GlobeLight
   readonly prominent?: boolean
 }) {
+  const motionTime = useContext(MotionTimeContext)
   const groupRef = useRef<THREE.Group>(null)
   const haloRef = useRef<THREE.Mesh>(null)
   const outerHaloRef = useRef<THREE.Mesh>(null)
@@ -508,14 +567,14 @@ function KnowledgeNode({
     glowUniforms.uCameraPosition.value.copy(camera.position)
   }
 
-  useFrame(({ camera, clock }) => {
+  useFrame(({ camera }) => {
     if (groupRef.current == null) {
       return
     }
 
     const pulse =
       0.58 +
-      0.42 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 0.9 + light.phase))
+      0.42 * (0.5 + 0.5 * Math.sin(motionTime.current * 0.9 + light.phase))
 
     groupRef.current.getWorldPosition(worldPosition)
     groupRef.current.getWorldScale(worldScale)
@@ -626,6 +685,7 @@ function KnowledgeArc({
   readonly points: THREE.Vector3[]
   readonly route: ArcRoute
 }) {
+  const motionTime = useContext(MotionTimeContext)
   const geometry = useMemo(() => {
     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
     const progress = points.map((_, i) => i / Math.max(points.length - 1, 1))
@@ -675,10 +735,10 @@ function KnowledgeArc({
 
   const lineRef = useRef<THREE.Line>(null)
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     const timeUniform = (lineRef.current?.material as THREE.ShaderMaterial)
       ?.uniforms.uTime
-    if (timeUniform != null) timeUniform.value = clock.elapsedTime
+    if (timeUniform != null) timeUniform.value = motionTime.current
   })
 
   return <primitive object={line} ref={lineRef} />
@@ -785,7 +845,8 @@ function createDustGeometry() {
   return geometry
 }
 
-function OrbitalDust({ animate }: { readonly animate: boolean }) {
+function OrbitalDust() {
+  const motionTime = useContext(MotionTimeContext)
   const geometry = useMemo(() => createDustGeometry(), [])
   const uniforms = useMemo(
     () => ({
@@ -802,9 +863,9 @@ function OrbitalDust({ animate }: { readonly animate: boolean }) {
 
   useEffect(() => () => geometry.dispose(), [geometry])
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     const timeUniform = materialRef.current?.uniforms.uTime
-    if (timeUniform != null) timeUniform.value = animate ? clock.elapsedTime : 0
+    if (timeUniform != null) timeUniform.value = motionTime.current
   })
 
   return (
@@ -849,6 +910,8 @@ function createNodeSpriteTexture() {
 }
 
 function LibraryPointsLayer({ lights }: { readonly lights: GlobeLight[] }) {
+  const narrative = useContext(NarrativeContext)
+  const materialRef = useRef<THREE.PointsMaterial>(null)
   const texture = useMemo(() => createNodeSpriteTexture(), [])
   const geometry = useMemo(() => {
     const positions: number[] = []
@@ -862,8 +925,8 @@ function LibraryPointsLayer({ lights }: { readonly lights: GlobeLight[] }) {
     )
     pointsGeometry.computeBoundingSphere()
 
-    return pointsGeometry
-  }, [lights])
+    return narrative ? addNarrativeIndex(pointsGeometry) : pointsGeometry
+  }, [lights, narrative])
 
   useEffect(() => {
     return () => {
@@ -872,9 +935,18 @@ function LibraryPointsLayer({ lights }: { readonly lights: GlobeLight[] }) {
     }
   }, [geometry, texture])
 
+  useFrame(() => {
+    if (narrative && materialRef.current)
+      materialRef.current.blending =
+        narrative.uNarrativePaper.value > 0.05
+          ? THREE.NormalBlending
+          : THREE.AdditiveBlending
+  })
+
   return (
-    <points geometry={geometry}>
+    <points geometry={geometry} frustumCulled={!narrative}>
       <pointsMaterial
+        ref={materialRef}
         blending={THREE.AdditiveBlending}
         color="#ffdf9e"
         depthWrite={false}
@@ -883,6 +955,14 @@ function LibraryPointsLayer({ lights }: { readonly lights: GlobeLight[] }) {
         sizeAttenuation
         toneMapped={false}
         transparent
+        onBeforeCompile={
+          narrative
+            ? (shader) => applyNarrativeToPoints(shader, narrative)
+            : undefined
+        }
+        customProgramCacheKey={() =>
+          narrative ? "knowledge-narrative-v1" : "knowledge-points"
+        }
       />
     </points>
   )
@@ -993,11 +1073,12 @@ function SatelliteOrbit({
   readonly nodePhase: number
   readonly speed: number
 }) {
+  const motionTime = useContext(MotionTimeContext)
   const nodeRef = useRef<THREE.Mesh>(null)
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (nodeRef.current == null) return
-    const a = ((clock.elapsedTime * speed + nodePhase) % 1) * Math.PI * 2
+    const a = ((motionTime.current * speed + nodePhase) % 1) * Math.PI * 2
     nodeRef.current.position.set(
       Math.cos(a) * orbitRadius,
       0,
@@ -1046,15 +1127,16 @@ function StarfieldLayer({
   readonly radius: number
   readonly rotationSpeed: [number, number]
 }) {
+  const motionTime = useContext(MotionTimeContext)
   const groupRef = useRef<THREE.Group>(null)
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (groupRef.current == null) {
       return
     }
 
-    groupRef.current.rotation.y = clock.elapsedTime * rotationSpeed[0]
-    groupRef.current.rotation.x = clock.elapsedTime * rotationSpeed[1]
+    groupRef.current.rotation.y = motionTime.current * rotationSpeed[0]
+    groupRef.current.rotation.x = motionTime.current * rotationSpeed[1]
   })
 
   return (
@@ -1238,14 +1320,12 @@ function PolarSpin({
   readonly speed: number
 }) {
   const ref = useRef<THREE.Group>(null)
-  const reducedMotion = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    []
-  )
-  useFrame((_, delta) => {
-    if (ref.current && !reducedMotion) ref.current.rotation.y += delta * speed
+  const motionTime = useContext(MotionTimeContext)
+  const previousTime = useRef(0)
+  useFrame(() => {
+    const delta = motionTime.current - previousTime.current
+    previousTime.current = motionTime.current
+    if (ref.current) ref.current.rotation.y += delta * speed
   })
 
   return <group ref={ref}>{children}</group>
@@ -1272,14 +1352,445 @@ function facingAngles(
   }
 }
 
+/** Keep the established sphere framing, and smoothly adjust it for a selected
+ * place. Returning the camera too makes a shortcut work after manual orbiting. */
+function GlobeOrientation({
+  children,
+  controlsRef,
+  pitch,
+  yaw,
+  tilt,
+  view,
+  resetKey,
+  reducedMotion,
+  frameDelta,
+  autoRotate,
+  transitionRef,
+}: {
+  readonly children: React.ReactNode
+  readonly controlsRef: RefObject<ComponentRef<typeof OrbitControls> | null>
+  readonly pitch: number
+  readonly yaw: number
+  readonly tilt: number
+  readonly view?: GlobeView
+  readonly resetKey?: number
+  readonly reducedMotion: boolean
+  readonly frameDelta: RefObject<number>
+  readonly autoRotate: boolean
+  readonly transitionRef: RefObject<boolean>
+}) {
+  const invalidate = useThree((state) => state.invalidate)
+  const groupRef = useRef<THREE.Group>(null)
+  const mounted = useRef(false)
+  const animation = useRef({
+    from: new THREE.Quaternion(),
+    to: new THREE.Quaternion(),
+    azimuth: 0,
+    azimuthDelta: 0,
+    polar: Math.PI / 2,
+    homePolar: Math.PI / 2,
+    elapsed: 0,
+  })
+  const lat = view?.lat
+  const lng = view?.lng
+
+  useLayoutEffect(() => {
+    const group = groupRef.current
+    if (!group) return
+    const next = animation.current
+    next.to.copy(
+      lat !== undefined && lng !== undefined
+        ? globeViewAdjustment({ lat, lng }, { pitch, yaw, tilt })
+        : new THREE.Quaternion()
+    )
+
+    if (!mounted.current) {
+      group.quaternion.copy(next.to)
+      mounted.current = true
+
+      return
+    }
+
+    next.from.copy(group.quaternion)
+    next.elapsed = 0
+    const controls = controlsRef.current
+    if (controls) {
+      next.azimuth = controls.getAzimuthalAngle()
+      next.azimuthDelta = globeHomeAzimuthDelta(next.azimuth)
+      next.polar = controls.getPolarAngle()
+      next.homePolar = new THREE.Spherical().setFromVector3(
+        controls.position0.clone().sub(controls.target0)
+      ).phi
+    }
+    transitionRef.current = true
+    invalidate()
+  }, [
+    controlsRef,
+    invalidate,
+    lat,
+    lng,
+    pitch,
+    resetKey,
+    tilt,
+    transitionRef,
+    yaw,
+  ])
+
+  useFrame(() => {
+    const group = groupRef.current
+    if (!group || !transitionRef.current) return
+    const next = animation.current
+    next.elapsed += frameDelta.current
+    const progress = reducedMotion ? 1 : Math.min(next.elapsed / 1.1, 1)
+    const eased = 1 - (1 - progress) ** 3
+    group.quaternion.slerpQuaternions(next.from, next.to, eased)
+
+    const controls = controlsRef.current
+    if (controls) {
+      // OrbitControls' setters apply their own damping; the transition already
+      // supplies easing, so apply these angles directly while it is running.
+      const damping = controls.enableDamping
+      controls.autoRotate = false
+      controls.enableDamping = false
+      controls.setAzimuthalAngle(next.azimuth + next.azimuthDelta * eased)
+      controls.setPolarAngle(
+        THREE.MathUtils.lerp(next.polar, next.homePolar, eased)
+      )
+      controls.enableDamping = damping
+    }
+
+    if (progress === 1) {
+      transitionRef.current = false
+      if (controls) controls.autoRotate = autoRotate
+    } else invalidate()
+  }, -1.5)
+
+  return <group ref={groupRef}>{children}</group>
+}
+
+function cancelViewTransition(
+  transitionRef: RefObject<boolean>,
+  controlsRef: RefObject<ComponentRef<typeof OrbitControls> | null>,
+  autoRotate: boolean
+) {
+  transitionRef.current = false
+  if (controlsRef.current) controlsRef.current.autoRotate = autoRotate
+}
+
+function resolveGlobeTilt(
+  override: number | undefined,
+  hasDataCentroid: boolean
+) {
+  if (override !== undefined) return THREE.MathUtils.degToRad(override)
+
+  return hasDataCentroid ? 0 : EARTH_TILT
+}
+
+function NarrativeDecoration({
+  children,
+}: {
+  readonly children: React.ReactNode
+}) {
+  const narrative = useContext(NarrativeContext)
+  const groupRef = useRef<THREE.Group>(null)
+  const materials = useRef<
+    {
+      material: THREE.Material
+      opacity: number
+      depthWrite: boolean
+      transparent: boolean
+    }[]
+  >([])
+  useEffect(() => {
+    if (!narrative || !groupRef.current) return
+    const restores: (() => void)[] = []
+    const seen = new Set<THREE.Material>()
+    groupRef.current.traverse((object) => {
+      const material = (object as THREE.Mesh).material
+      if (!material) return
+      for (const entry of Array.isArray(material) ? material : [material]) {
+        if (seen.has(entry)) continue
+        seen.add(entry)
+        materials.current.push({
+          material: entry,
+          opacity: entry.opacity,
+          depthWrite: entry.depthWrite,
+          transparent: entry.transparent,
+        })
+        if (entry instanceof THREE.ShaderMaterial)
+          restores.push(
+            fadeNarrativeWorldMaterial(entry, narrative.uNarrativeWorldAlpha)
+          )
+        else entry.transparent = true
+      }
+    })
+
+    return () => {
+      restores.forEach((restore) => restore())
+      materials.current.forEach(
+        ({ material, opacity, depthWrite, transparent }) => {
+          material.opacity = opacity
+          material.depthWrite = depthWrite
+          material.transparent = transparent
+        }
+      )
+      materials.current = []
+    }
+  }, [narrative])
+  useFrame(() => {
+    if (!narrative || !groupRef.current) return
+    const alpha = narrative.uNarrativeWorldAlpha.value
+    groupRef.current.visible = alpha > 0.001
+    materials.current.forEach(({ material, opacity, depthWrite }) => {
+      material.depthWrite = depthWrite && alpha > 0.98
+      if (!(material instanceof THREE.ShaderMaterial))
+        material.opacity = opacity * alpha
+    })
+  })
+
+  return narrative ? <group ref={groupRef}>{children}</group> : <>{children}</>
+}
+
+function NarrativeMotion({
+  controller,
+  uniforms,
+  globeRef,
+  frameDelta,
+  reducedMotion,
+  active,
+  baseScale,
+  surfaceRef,
+}: {
+  readonly controller: GlobeNarrativeController
+  readonly uniforms: NarrativeUniforms
+  readonly globeRef: RefObject<THREE.Group | null>
+  readonly frameDelta: RefObject<number>
+  readonly reducedMotion: boolean
+  readonly active: boolean
+  readonly baseScale: number
+  readonly surfaceRef: RefObject<HTMLDivElement | null>
+}) {
+  const invalidate = useThree((state) => state.invalidate)
+  const camera = useThree((state) => state.camera)
+  const size = useThree((state) => state.size)
+  const worldScale = useMemo(() => new THREE.Vector3(), [])
+  const uniformRef = useRef(uniforms)
+  useLayoutEffect(() => {
+    uniformRef.current = uniforms
+  }, [uniforms])
+  useEffect(() => {
+    return () => {
+      if (camera instanceof THREE.PerspectiveCamera) camera.clearViewOffset()
+      if (surfaceRef.current) surfaceRef.current.style.removeProperty("opacity")
+      if (globeRef.current) {
+        globeRef.current.scale.setScalar(baseScale)
+        globeRef.current.visible = true
+      }
+    }
+  }, [baseScale, camera, globeRef, surfaceRef])
+  useEffect(() => {
+    const requestFrame = () => {
+      if (active) invalidate()
+    }
+    requestFrame()
+
+    return controller.subscribe(requestFrame)
+  }, [active, controller, invalidate])
+  useFrame(() => {
+    if (!active) return
+    const current = uniformRef.current
+    const delta = Math.min(frameDelta.current, 0.1)
+    let unsettled = false
+    for (const [key, uniform] of [
+      ["progress", current.uNarrativeProgress],
+      ["focus", current.uNarrativeFocus],
+      ["step", current.uNarrativeStep],
+      ["growth", current.uNarrativeGrowth],
+      ["frameX", current.uNarrativeFrameX],
+      ["frameY", current.uNarrativeFrameY],
+      ["frameScale", current.uNarrativeFrameScale],
+      ["frameAspect", current.uNarrativeAspect],
+      ["paper", current.uNarrativePaper],
+      ["opacity", current.uNarrativeOpacity],
+    ] as const) {
+      const target = controller.current[key]
+      uniform.value = reducedMotion
+        ? target
+        : THREE.MathUtils.damp(uniform.value, target, 8, delta)
+      if (Math.abs(uniform.value - target) > 0.001) unsettled = true
+      else uniform.value = target
+    }
+    if (
+      camera instanceof THREE.PerspectiveCamera &&
+      size.width > 0 &&
+      size.height > 0
+    ) {
+      // Lens shift moves the optical centre while preserving a circular sphere.
+      camera.setViewOffset(
+        size.width,
+        size.height,
+        (-current.uNarrativeFrameX.value * size.width) / 2,
+        (current.uNarrativeFrameY.value * size.height) / 2,
+        size.width,
+        size.height
+      )
+    }
+    if (surfaceRef.current)
+      surfaceRef.current.style.opacity = String(current.uNarrativeOpacity.value)
+    current.uNarrativeWorldAlpha.value =
+      1 - THREE.MathUtils.smoothstep(current.uNarrativeProgress.value, 1, 1.9)
+    if (globeRef.current) {
+      const sphereRatio = THREE.MathUtils.clamp(
+        (EARTH_RADIUS * baseScale) / camera.position.length(),
+        0,
+        0.95
+      )
+      const planeCorrection = 1 / Math.sqrt(1 - sphereRatio * sphereRatio)
+      const morph = THREE.MathUtils.smoothstep(
+        current.uNarrativeProgress.value,
+        1,
+        2
+      )
+      globeRef.current.scale.setScalar(
+        baseScale *
+          current.uNarrativeFrameScale.value *
+          THREE.MathUtils.lerp(1, planeCorrection, morph)
+      )
+      globeRef.current.visible = current.uNarrativeOpacity.value > 0.001
+      globeRef.current.getWorldPosition(current.uNarrativeCenter.value)
+      globeRef.current.getWorldScale(worldScale)
+      current.uNarrativeScale.value = worldScale.x
+    }
+    if (unsettled) invalidate()
+  }, -0.5)
+
+  return null
+}
+
+function NarrativeGuides({
+  uniforms,
+}: {
+  readonly uniforms: NarrativeUniforms
+}) {
+  const groupRef = useRef<THREE.Group>(null)
+  const materials = useRef<(THREE.LineBasicMaterial | null)[]>([])
+  const lines = useRef<(THREE.LineSegments | null)[]>([])
+  const camera = useThree((state) => state.camera)
+  const paperColor = useMemo(() => new THREE.Color("#4b3b80"), [])
+  const darkColor = useMemo(() => new THREE.Color("#b9b4f5"), [])
+  const geometries = useMemo(
+    () => [1, 2, 3, 4, 5, 6, 7].map(createNarrativeGuide),
+    []
+  )
+  useEffect(
+    () => () => geometries.forEach((geometry) => geometry.dispose()),
+    [geometries]
+  )
+  useFrame(() => {
+    if (groupRef.current) groupRef.current.quaternion.copy(camera.quaternion)
+    const progress = uniforms.uNarrativeProgress.value
+    materials.current.forEach((material, index) => {
+      if (!material) return
+      let weight = Math.max(0, 1 - Math.abs(progress - Math.min(index + 1, 6)))
+      if (index === 5)
+        weight *= Math.min(1, uniforms.uNarrativeGrowth.value * 2)
+      if (index === 6)
+        weight *= Math.max(0, (uniforms.uNarrativeGrowth.value - 0.5) * 2)
+      material.opacity = weight * (index === 0 ? 0.12 : 0.22)
+      material.visible = weight > 0.001
+      material.color.lerpColors(
+        darkColor,
+        paperColor,
+        uniforms.uNarrativePaper.value
+      )
+      material.blending =
+        uniforms.uNarrativePaper.value > 0.05
+          ? THREE.NormalBlending
+          : THREE.AdditiveBlending
+      if (index >= 1 && index <= 3)
+        lines.current[index]?.scale.set(uniforms.uNarrativeAspect.value, 1, 1)
+      if (index === 0) {
+        const contextLine = lines.current[index]
+        if (contextLine)
+          contextLine.rotation.z = (uniforms.uNarrativeFocus.value - 2.5) * 0.12
+        material.color.setHSL(
+          0.68 + uniforms.uNarrativeFocus.value * 0.025,
+          0.65,
+          THREE.MathUtils.lerp(0.8, 0.28, uniforms.uNarrativePaper.value)
+        )
+      }
+      if (index >= 5)
+        lines.current[index]?.scale.setScalar(
+          0.76 + uniforms.uNarrativeGrowth.value * 0.24
+        )
+    })
+  })
+
+  return (
+    <group ref={groupRef}>
+      {geometries.map((geometry, index) => (
+        <lineSegments
+          key={geometry.uuid}
+          geometry={geometry}
+          frustumCulled={false}
+          ref={(line) => {
+            lines.current[index] = line
+          }}
+        >
+          <lineBasicMaterial
+            ref={(material) => {
+              materials.current[index] = material
+            }}
+            blending={THREE.AdditiveBlending}
+            color="#b9b4f5"
+            depthWrite={false}
+            opacity={0}
+            toneMapped={false}
+            transparent
+          />
+        </lineSegments>
+      ))}
+    </group>
+  )
+}
+
+function useNarrativeLayers(
+  controller: GlobeNarrativeController | undefined,
+  hubs: GlobeLight[],
+  lights: GlobeLight[]
+) {
+  const narrativeLights = useMemo(
+    () => (controller ? [...lights, ...hubs] : lights),
+    [hubs, lights, controller]
+  )
+  const narrativeUniforms = useMemo(
+    () => (controller ? createNarrativeUniforms(controller.current) : null),
+    [controller]
+  )
+
+  return { narrativeLights, narrativeUniforms }
+}
+
 function GlobeScene({
   markers,
   overrides,
   controlsRef,
+  motionPaused,
+  active,
+  view,
+  resetKey,
+  narrative,
+  surfaceRef,
 }: {
   readonly markers?: readonly LibraryMarker[]
   readonly overrides?: GlobeOverrides
   readonly controlsRef: RefObject<ComponentRef<typeof OrbitControls> | null>
+  readonly motionPaused: boolean
+  readonly active: boolean
+  readonly view?: GlobeView
+  readonly resetKey?: number
+  readonly narrative?: GlobeNarrativeController
+  readonly surfaceRef: RefObject<HTMLDivElement | null>
 }) {
   const pinned = overrides?.pin !== undefined
   const pinScale = useCornerPin(overrides?.pin)
@@ -1310,6 +1821,11 @@ function GlobeScene({
 
   const hubMarkers = dataLayers?.hubs ?? HUB_MARKERS
   const knowledgeLights = dataLayers?.lights ?? KNOWLEDGE_LIGHTS
+  const { narrativeLights, narrativeUniforms } = useNarrativeLayers(
+    narrative,
+    hubMarkers,
+    knowledgeLights
+  )
   const renderedArcs = dataLayers?.arcs ?? RENDERED_ARC_ROUTES
   const activitySources = dataLayers?.activity ?? ACTIVITY_SOURCES
 
@@ -1323,19 +1839,15 @@ function GlobeScene({
   // Axial tilt is decorative on the illustrative globe; with real data it
   // rolls the centred cluster off-axis, so it's dropped when markers drive
   // the framing.
-  const globeTilt =
-    overrides?.globeTilt !== undefined
-      ? THREE.MathUtils.degToRad(overrides.globeTilt)
-      : centroid
-        ? 0
-        : EARTH_TILT
-  const reducedMotion = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    []
-  )
-  const autoRotate = (overrides?.autoRotate ?? true) && !reducedMotion
+  const globeTilt = resolveGlobeTilt(overrides?.globeTilt, centroid !== null)
+  const {
+    time: motionTime,
+    frameDelta,
+    reducedMotion,
+    paused,
+  } = useGlobeMotionClock(motionPaused, active)
+  const viewTransition = useRef(false)
+  const autoRotate = (overrides?.autoRotate ?? true) && !paused
   const autoRotateSpeed =
     overrides?.autoRotateSpeed ?? GLOBE_SETTINGS.autoRotateSpeed
   const interactive = overrides?.interactive ?? true
@@ -1353,138 +1865,183 @@ function GlobeScene({
   const landDotSize = overrides?.landDotSize
   const latBounds = overrides?.latBounds
   const lngBounds = overrides?.lngBounds
+  const globeRef = useRef<THREE.Group>(null)
 
   return (
-    <>
-      <ambientLight intensity={GLOBE_SETTINGS.ambientLight} />
-      <hemisphereLight
-        color="#fdf8ec"
-        groundColor="#17162b"
-        intensity={GLOBE_SETTINGS.ambientLight * 1.46}
-      />
-      <directionalLight
-        color="#fff6e6"
-        intensity={GLOBE_SETTINGS.directionalLight}
-        position={[5, 4, 8]}
-      />
-      <pointLight
-        color="#8a7ce8"
-        intensity={GLOBE_SETTINGS.pointLight * 0.7}
-        position={[-7, -2, -10]}
-      />
-
-      {showStars ? (
-        <>
-          <StarfieldLayer
-            count={4000}
-            depth={48}
-            factor={0.5}
-            radius={80}
-            rotationSpeed={[0, 0]}
+    <MotionTimeContext value={motionTime}>
+      <NarrativeContext value={narrativeUniforms}>
+        {narrative && narrativeUniforms ? (
+          <NarrativeMotion
+            controller={narrative}
+            uniforms={narrativeUniforms}
+            globeRef={globeRef}
+            frameDelta={frameDelta}
+            reducedMotion={reducedMotion}
+            active={active}
+            baseScale={pinScale ?? centeredScale ?? globeScale}
+            surfaceRef={surfaceRef}
           />
-          <StarfieldLayer
-            count={2000}
-            depth={72}
-            factor={1}
-            radius={120}
-            rotationSpeed={[0, 0]}
-          />
-          <StarfieldLayer
-            count={800}
-            depth={120}
-            factor={2}
-            radius={200}
-            rotationSpeed={[0, 0]}
-          />
-        </>
-      ) : null}
+        ) : null}
+        <ambientLight intensity={GLOBE_SETTINGS.ambientLight} />
+        <hemisphereLight
+          color="#fdf8ec"
+          groundColor="#17162b"
+          intensity={GLOBE_SETTINGS.ambientLight * 1.46}
+        />
+        <directionalLight
+          color="#fff6e6"
+          intensity={GLOBE_SETTINGS.directionalLight}
+          position={[5, 4, 8]}
+        />
+        <pointLight
+          color="#8a7ce8"
+          intensity={GLOBE_SETTINGS.pointLight * 0.7}
+          position={[-7, -2, -10]}
+        />
 
-      <group
-        position={pinned ? [0, 0, 0] : [-0.02, globeY, 0]}
-        scale={pinScale ?? centeredScale ?? globeScale}
-      >
-        {showSatellites ? <Satellites /> : null}
-        {showDust ? <OrbitalDust animate={!reducedMotion} /> : null}
+        {showStars ? (
+          <NarrativeDecoration>
+            <StarfieldLayer
+              count={4000}
+              depth={48}
+              factor={0.5}
+              radius={80}
+              rotationSpeed={[0, 0]}
+            />
+            <StarfieldLayer
+              count={2000}
+              depth={72}
+              factor={1}
+              radius={120}
+              rotationSpeed={[0, 0]}
+            />
+            <StarfieldLayer
+              count={800}
+              depth={120}
+              factor={2}
+              radius={200}
+              rotationSpeed={[0, 0]}
+            />
+          </NarrativeDecoration>
+        ) : null}
 
-        {/* Pitch/tilt applied outside, yaw inside — so yaw spins the sphere
+        <group
+          ref={globeRef}
+          position={pinned || narrative ? [0, 0, 0] : [-0.02, globeY, 0]}
+          scale={pinScale ?? centeredScale ?? globeScale}
+        >
+          <NarrativeDecoration>
+            {showSatellites ? <Satellites /> : null}
+            {showDust ? <OrbitalDust /> : null}
+          </NarrativeDecoration>
+          {narrativeUniforms ? (
+            <NarrativeGuides uniforms={narrativeUniforms} />
+          ) : null}
+
+          <GlobeOrientation
+            controlsRef={controlsRef}
+            pitch={globePitch}
+            yaw={globeYaw}
+            tilt={globeTilt}
+            view={pinned ? undefined : view}
+            resetKey={resetKey}
+            reducedMotion={reducedMotion}
+            frameDelta={frameDelta}
+            autoRotate={autoRotate}
+            transitionRef={viewTransition}
+          >
+            {/* Pitch/tilt applied outside, yaw inside — so yaw spins the sphere
             about its own poles and lng→front math stays exact. */}
-        <group rotation={[THREE.MathUtils.degToRad(globePitch), 0, globeTilt]}>
-          <PolarSpin speed={pinned && autoRotate ? autoRotateSpeed : 0}>
-            <group rotation={[0, THREE.MathUtils.degToRad(globeYaw), 0]}>
-              <GlobeShell />
-              {showGraticule ? <Graticule /> : null}
-              <DotGlobe
-                activitySources={activitySources}
-                landDotDensity={landDotDensity}
-                landDotSize={landDotSize}
-                latBounds={latBounds}
-                lngBounds={lngBounds}
-                showGlow={showGlow}
-                showHotspots={showHotspots}
-              />
+            <group
+              rotation={[THREE.MathUtils.degToRad(globePitch), 0, globeTilt]}
+            >
+              <PolarSpin speed={pinned && autoRotate ? autoRotateSpeed : 0}>
+                <group rotation={[0, THREE.MathUtils.degToRad(globeYaw), 0]}>
+                  <NarrativeDecoration>
+                    <GlobeShell />
+                    {showGraticule ? <Graticule /> : null}
+                  </NarrativeDecoration>
+                  <DotGlobe
+                    activitySources={activitySources}
+                    landDotDensity={landDotDensity}
+                    landDotSize={landDotSize}
+                    latBounds={latBounds}
+                    lngBounds={lngBounds}
+                    showGlow={showGlow}
+                    showHotspots={showHotspots}
+                  />
 
-              {showArcs
-                ? renderedArcs.map(({ points, route }) => (
-                    <KnowledgeArc
-                      key={`${route.phase}-${route.color}`}
-                      points={points}
-                      route={route}
-                    />
-                  ))
-                : null}
+                  <NarrativeDecoration>
+                    {showArcs
+                      ? renderedArcs.map(({ points, route }) => (
+                          <KnowledgeArc
+                            key={`${route.phase}-${route.color}`}
+                            points={points}
+                            route={route}
+                          />
+                        ))
+                      : null}
+                  </NarrativeDecoration>
 
-              {showNodes ? (
-                <>
-                  {dataLayers ? (
-                    <LibraryPointsLayer lights={knowledgeLights} />
-                  ) : (
-                    knowledgeLights.map((light) => (
-                      <KnowledgeNode
-                        key={`${light.phase}-${light.size}`}
-                        light={light}
-                      />
-                    ))
-                  )}
-                  {hubMarkers.map((light) => (
-                    <KnowledgeNode
-                      key={`hub-${light.phase}-${light.size}`}
-                      light={light}
-                      prominent
-                    />
-                  ))}
-                </>
-              ) : null}
+                  {showNodes ? (
+                    <>
+                      {dataLayers || narrative ? (
+                        <LibraryPointsLayer lights={narrativeLights} />
+                      ) : (
+                        knowledgeLights.map((light) => (
+                          <KnowledgeNode
+                            key={`${light.phase}-${light.size}`}
+                            light={light}
+                          />
+                        ))
+                      )}
+                      <NarrativeDecoration>
+                        {hubMarkers.map((light) => (
+                          <KnowledgeNode
+                            key={`hub-${light.phase}-${light.size}`}
+                            light={light}
+                            prominent
+                          />
+                        ))}
+                      </NarrativeDecoration>
+                    </>
+                  ) : null}
+                </group>
+              </PolarSpin>
             </group>
-          </PolarSpin>
+          </GlobeOrientation>
         </group>
-      </group>
 
-      {pinned ? null : (
-        <OrbitControls
-          ref={controlsRef}
-          autoRotate={autoRotate}
-          autoRotateSpeed={autoRotateSpeed}
-          dampingFactor={0.08}
-          enableDamping
-          enablePan={false}
-          enableRotate={interactive}
-          enableZoom={false}
-          maxPolarAngle={maxPolarAngle}
-          minPolarAngle={minPolarAngle}
-          rotateSpeed={0.34}
-        />
-      )}
+        {pinned ? null : (
+          <OrbitControls
+            ref={controlsRef}
+            autoRotate={autoRotate}
+            autoRotateSpeed={autoRotateSpeed}
+            dampingFactor={0.08}
+            enableDamping
+            enablePan={false}
+            enableRotate={interactive}
+            enableZoom={false}
+            maxPolarAngle={maxPolarAngle}
+            minPolarAngle={minPolarAngle}
+            rotateSpeed={0.34}
+            onStart={() =>
+              cancelViewTransition(viewTransition, controlsRef, autoRotate)
+            }
+          />
+        )}
 
-      <EffectComposer enableNormalPass={false} multisampling={0}>
-        <Bloom
-          intensity={0.85}
-          luminanceSmoothing={0.7}
-          luminanceThreshold={0.32}
-          mipmapBlur
-          radius={0.66}
-        />
-      </EffectComposer>
-    </>
+        <EffectComposer enableNormalPass={false} multisampling={0}>
+          <Bloom
+            intensity={0.85}
+            luminanceSmoothing={0.7}
+            luminanceThreshold={0.32}
+            mipmapBlur
+            radius={0.66}
+          />
+        </EffectComposer>
+      </NarrativeContext>
+    </MotionTimeContext>
   )
 }
 
@@ -1493,13 +2050,27 @@ export function KnowledgeGlobeCanvas({
   markers,
   overrides,
   active = true,
+  motionPaused = false,
+  view,
+  resetKey,
+  narrative,
 }: {
   readonly className?: string
   readonly markers?: readonly LibraryMarker[]
   readonly overrides?: GlobeOverrides
   readonly active?: boolean
+  /** Freeze ambient animation while retaining manual rotation. */
+  readonly motionPaused?: boolean
+  /** A coordinate to face in centered, interactive views. */
+  readonly view?: GlobeView
+  /** Change to restore the current view or original opening orientation. */
+  readonly resetKey?: number
+  /** Scroll and chapter controls update the same mounted particle scene. */
+  readonly narrative?: GlobeNarrativeController
 }) {
+  const reducedMotion = useGlobeReducedMotion()
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const surfaceRef = useRef<HTMLDivElement>(null)
   const fov = overrides?.cameraFov ?? GLOBE_SETTINGS.cameraFov
   const cameraZ = overrides?.cameraZ ?? GLOBE_SETTINGS.cameraZ
   const cameraY = overrides?.cameraY ?? 0.06
@@ -1508,6 +2079,7 @@ export function KnowledgeGlobeCanvas({
 
   return (
     <div
+      ref={surfaceRef}
       className={cn(
         "relative h-full w-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#B9B4F5]",
         className
@@ -1529,6 +2101,8 @@ export function KnowledgeGlobeCanvas({
         )
           return
 
+        if (!event.key.startsWith("Arrow")) return
+        controls.dispatchEvent({ type: "start", target: controls })
         const step = Math.PI / 18
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           controls.setAzimuthalAngle(
@@ -1546,7 +2120,7 @@ export function KnowledgeGlobeCanvas({
       }}
     >
       {/* Ambient canvas glow — a soft warm indigo wash behind the globe */}
-      {pinned ? null : (
+      {pinned || narrative ? null : (
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -1557,7 +2131,13 @@ export function KnowledgeGlobeCanvas({
         />
       )}
       <Canvas
-        frameloop={active ? "always" : "never"}
+        frameloop={
+          active
+            ? motionPaused || reducedMotion
+              ? "demand"
+              : "always"
+            : "never"
+        }
         camera={{
           fov,
           position: [0, cameraY, cameraZ],
@@ -1582,6 +2162,12 @@ export function KnowledgeGlobeCanvas({
             markers={markers}
             overrides={overrides}
             controlsRef={controlsRef}
+            motionPaused={motionPaused}
+            active={active}
+            view={view}
+            resetKey={resetKey}
+            narrative={narrative}
+            surfaceRef={surfaceRef}
           />
         </Suspense>
       </Canvas>

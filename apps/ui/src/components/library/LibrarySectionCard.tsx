@@ -83,6 +83,8 @@ export function LibrarySectionCard({
   tone = "indigo",
   dashed = false,
   compact = false,
+  showIcon = false,
+  titleClassName,
   children,
 }: {
   readonly id: string
@@ -92,6 +94,8 @@ export function LibrarySectionCard({
   readonly tone?: SectionTone
   readonly dashed?: boolean
   readonly compact?: boolean
+  readonly showIcon?: boolean
+  readonly titleClassName?: string
   readonly children: React.ReactNode
 }) {
   const t = TONES[tone]
@@ -106,31 +110,35 @@ export function LibrarySectionCard({
           : "scroll-mt-32 rounded-3xl p-5 sm:p-7"
       }
       style={{
-        background: T.bg.deep,
+        background: id === "changes" ? T.bg.space : T.bg.deep,
         border: dashed
           ? `1px dashed ${T.border.hi}`
           : `1px solid ${T.border.line}`,
       }}
     >
       <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={
-            compact
-              ? "flex size-8 shrink-0 items-center justify-center rounded-[10px]"
-              : "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[11px]"
-          }
-          style={{ background: t.bg, color: t.fg }}
-        >
-          <LibIcon d={iconPath} size={compact ? 17 : 19} />
-        </span>
+        {showIcon ? (
+          <span
+            aria-hidden="true"
+            className={
+              compact
+                ? "flex size-8 shrink-0 items-center justify-center rounded-[10px]"
+                : "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[11px]"
+            }
+            style={{ background: t.bg, color: t.fg }}
+          >
+            <LibIcon d={iconPath} size={compact ? 17 : 19} />
+          </span>
+        ) : null}
         <div className="min-w-0">
           <h2
             id={`${id}-h`}
             className={
-              compact
-                ? "m-0 text-[22px] leading-tight"
-                : "m-0 text-[26px] leading-tight sm:text-[28px]"
+              titleClassName
+                ? `m-0 leading-tight ${titleClassName}`
+                : compact
+                  ? "m-0 text-[22px] leading-tight"
+                  : "m-0 text-[26px] leading-tight sm:text-[28px]"
             }
             style={{
               fontFamily: T.font.serif,

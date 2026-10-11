@@ -12,6 +12,7 @@ import { DriveShareButton } from "@/components/drives/DriveShareButton"
 import { DriveTaskArea } from "@/components/drives/DriveTaskArea"
 import { focusChipOf, gapPhraseOf } from "@/components/drives/focus-meta"
 import { Notice } from "@/components/ds"
+import type { ContributionPlace } from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
 import {
   type DriveView,
@@ -212,8 +213,10 @@ export function DriveDetailPage({
   counts,
   boardActions,
   story,
+  initialPlace,
 }: {
   readonly drive: Drive
+  readonly initialPlace?: ContributionPlace
   readonly view: DriveView | null
   readonly week: readonly DriveLeaderboardEntry[]
   readonly all: readonly DriveLeaderboardEntry[]
@@ -358,7 +361,13 @@ export function DriveDetailPage({
             </section>
           ) : null}
 
-          {drive.status === "open" ? <DriveTaskArea drive={drive} /> : null}
+          {drive.status === "open" ? (
+            <DriveTaskArea
+              key={JSON.stringify(initialPlace ?? {})}
+              drive={drive}
+              initialPlace={initialPlace}
+            />
+          ) : null}
         </div>
 
         <aside

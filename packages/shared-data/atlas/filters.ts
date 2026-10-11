@@ -128,7 +128,11 @@ export function atlasMatchesProjection(
     !atlasProjectionOpenAt(record, f.atDay, f.atMinutes)
   )
     return false
-  if (f.opening === "now" && !atlasProjectionOpenNow(record, now)) return false
+  if (
+    (f.opening === "now" || f.opening === "staff_now") &&
+    !atlasProjectionOpenNow(record, now, f.opening === "staff_now")
+  )
+    return false
   if (a.enabled && a.view !== "compare") {
     const membership = atlasAccessMembership(record, access)
     if (a.view === "matches" ? !membership.matches : !membership.unconfirmed)
@@ -204,8 +208,14 @@ export function atlasMeiliFilter(
     )
   if (f.opening === "at")
     conditions.push(atlasOpenAtFilter(f.atDay, f.atMinutes))
-  if (f.opening === "now")
-    conditions.push(atlasOpenNowFilter(options.timezones, options.now))
+  if (f.opening === "now" || f.opening === "staff_now")
+    conditions.push(
+      atlasOpenNowFilter(
+        options.timezones,
+        options.now,
+        f.opening === "staff_now"
+      )
+    )
   if (a.enabled && a.view !== "compare" && !options.ignoreAccessView) {
     const access = atlasAccessFilter(resolved)
     conditions.push(a.view === "gaps" ? `NOT (${access})` : access)
@@ -360,7 +370,7 @@ export function parseAtlasScope(input: unknown): AtlasScope {
           Object.keys(ATLAS_TYPE_GROUPS) as (keyof typeof ATLAS_TYPE_GROUPS)[]
         )
       ),
-      opening: choice(f.opening, ["any", "now", "at"]),
+      opening: choice(f.opening, ["any", "now", "staff_now", "at"]),
       atDay: number(f.atDay, 0, 6, true),
       atMinutes: number(f.atMinutes, 0, 1439, true),
       operators: strings(f.operators).map((v) =>

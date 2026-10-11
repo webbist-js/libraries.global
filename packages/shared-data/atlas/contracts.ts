@@ -136,7 +136,7 @@ export type AtlasDayShort =
   | "sat"
   | "sun"
 export type AtlasOpeningField =
-  `${"open" | "regular_open"}_${AtlasDayShort}_${number}_${"from" | "to"}`
+  `${"open" | "regular_open" | "staff_open"}_${AtlasDayShort}_${number}_${"from" | "to"}`
 export type AtlasCellZoom = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 export type AtlasOpeningFields = Partial<Record<AtlasOpeningField, number>>
 export type AtlasCellFields = Record<`atlas_cell_${AtlasCellZoom}`, string>
@@ -196,7 +196,7 @@ export type AtlasProjection = AtlasOpeningFields &
 
 export interface AtlasFilters {
   types: AtlasTypeGroup[]
-  opening: "any" | "now" | "at"
+  opening: "any" | "now" | "staff_now" | "at"
   atDay: number
   atMinutes: number
   operators: AtlasOperatorGroup[]

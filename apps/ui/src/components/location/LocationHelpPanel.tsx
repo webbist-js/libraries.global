@@ -1,11 +1,10 @@
-import { Icon } from "@iconify/react"
-
 import {
   hubHref,
   type WizardLibrary,
 } from "@/components/contribute/wizard.logic"
-import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
+
+import { LocationContributionBanner } from "./LocationContributionBanner"
 
 type HelpAction = {
   icon: string
@@ -76,83 +75,15 @@ export function locationHelpActions({
   return actions
 }
 
-/** "Help keep {place}'s index current": a nudge plus the contribution routes. */
+/** Closing contribution band, shared with Find libraries. */
 export function LocationHelpPanel({
   name,
-  body,
-  actions = locationHelpActions(),
+  addHref = "/contribute/index/new",
 }: {
   readonly name: string
   readonly body: string
   readonly actions?: HelpAction[]
+  readonly addHref?: string
 }) {
-  return (
-    <section
-      aria-labelledby="help-title"
-      className="grid gap-x-10 gap-y-7 rounded-3xl px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:items-center"
-      style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
-    >
-      <div>
-        <h2
-          id="help-title"
-          className="m-0 text-[clamp(28px,3.4vw,40px)] leading-[1.1] tracking-[-0.01em] text-balance"
-          style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            color: T.ink.base,
-          }}
-        >
-          Help keep {name}&rsquo;s index current
-        </h2>
-        <p
-          className="mt-3 mb-0 max-w-[56ch] text-[15.5px] leading-[1.6]"
-          style={{ color: T.ink.dim }}
-        >
-          {body}
-        </p>
-      </div>
-
-      <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-        {actions.map((action) => (
-          <li key={action.title}>
-            <GlobalLink
-              href={action.href}
-              className="group flex items-center gap-3.5 rounded-2xl border px-4 py-3 transition-colors hover:border-(--t-accent-primary) hover:bg-(--t-bg-surface)"
-              style={{ borderColor: T.border.line, background: T.bg.deep }}
-            >
-              <span
-                aria-hidden="true"
-                className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                style={{ background: action.tintBg, color: action.tintFg }}
-              >
-                <Icon height={17} icon={action.icon} width={17} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span
-                  className="block text-[14.5px] font-semibold"
-                  style={{ color: T.ink.base }}
-                >
-                  {action.title}
-                </span>
-                <span
-                  className="block text-[13px] leading-[1.4]"
-                  style={{ color: T.ink.dim }}
-                >
-                  {action.description}
-                </span>
-              </span>
-              <Icon
-                aria-hidden="true"
-                className="shrink-0 transition-transform group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0"
-                height={18}
-                icon="mdi:chevron-right"
-                style={{ color: T.accent.primary }}
-                width={18}
-              />
-            </GlobalLink>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
+  return <LocationContributionBanner name={name} addHref={addHref} />
 }

@@ -9,6 +9,7 @@ import {
   withLeaderLock,
 } from "../src/utils/leader-lock"
 import { ingestLocalPopulation } from "../src/utils/local-population-ingest"
+import { refreshDueOpeningSchedules } from "../src/utils/opening-schedule-refresh"
 import { ingestPopulation } from "../src/utils/population-ingest"
 import { resyncExpiredRoleGrants } from "../src/utils/role-grants"
 
@@ -70,6 +71,13 @@ const driveLifecycleJob = {
 }
 
 export default {
+  openingSchedules: {
+    task: ({ strapi }: { strapi: any }) =>
+      refreshDueOpeningSchedules(strapi).catch((error) =>
+        strapi.log.warn("[hours] Due schedule refresh failed", error)
+      ),
+    options: { rule: "* * * * *" },
+  },
   notificationAnnouncements: {
     task: async ({ strapi }: { strapi: any }) => {
       try {

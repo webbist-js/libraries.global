@@ -18,9 +18,15 @@ vi.mock("@/lib/strapi-api", () => ({
 
 const {
   fetchBlogArticle,
+  fetchContinent,
+  fetchCountry,
+  fetchLegalDocument,
+  fetchLegalDocuments,
   fetchLibrary,
   fetchLibraryForEditing,
+  fetchRegion,
   fetchWikiArticle,
+  fetchWikiSections,
 } = await import("@/lib/strapi-api/content/server")
 
 type Params = { locale?: string }
@@ -59,6 +65,10 @@ describe.each([
   ["fetchLibraryForEditing", fetchLibraryForEditing],
   ["fetchWikiArticle", fetchWikiArticle],
   ["fetchBlogArticle", fetchBlogArticle],
+  ["fetchContinent", fetchContinent],
+  ["fetchCountry", fetchCountry],
+  ["fetchRegion", fetchRegion],
+  ["fetchLegalDocument", fetchLegalDocument],
 ] as const)("%s locale fallback", (_name, fetcher) => {
   it("returns the requested locale when it exists", async () => {
     strapiWith(["en", "cs"])
@@ -87,6 +97,42 @@ describe.each([
     strapiWith([])
     const res = await fetcher("slug", "cs")
     expect(res?.data ?? null).toBeNull()
+  })
+})
+
+describe.each([
+  ["Knowledge sections", fetchWikiSections],
+  ["Legal navigation", fetchLegalDocuments],
+] as const)("%s locale fallback", (_name, fetcher) => {
+  const english = [
+    { documentId: "one", slug: "one", name: "One", title: "One" },
+    { documentId: "two", slug: "two", name: "Two", title: "Two" },
+  ]
+
+  it("uses English navigation when there are no translated entries", async () => {
+    fetchAPI.mockImplementation(async (_path, params: Params) => ({
+      data: params.locale === "en" ? english : [],
+    }))
+    expect((await fetcher("cs")).data).toEqual(english)
+  })
+
+  it("keeps translated entries and fills missing entries from English", async () => {
+    const translated = { ...english[1], name: "Dva", title: "Dva" }
+    fetchAPI.mockImplementation(async (_path, params: Params) => ({
+      data: params.locale === "en" ? english : [translated],
+    }))
+    expect((await fetcher("cs")).data).toEqual([english[0], translated])
+  })
+
+  it("does not duplicate the default-locale request", async () => {
+    fetchAPI.mockResolvedValue({ data: english })
+    expect((await fetcher("en")).data).toEqual(english)
+    expect(fetchAPI).toHaveBeenCalledTimes(1)
+  })
+
+  it("remains empty when no locale has entries", async () => {
+    fetchAPI.mockResolvedValue({ data: [] })
+    expect((await fetcher("cs")).data).toEqual([])
   })
 })
 

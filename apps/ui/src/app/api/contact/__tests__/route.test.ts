@@ -70,6 +70,53 @@ describe("website contact delivery", () => {
     expect(response.status).toBe(200)
     expect(send.mock.calls[0]![0].email).toBeUndefined()
   })
+  it("delivers normalized Atlas feedback with its feature answers and wishlist", async () => {
+    const response = await POST(
+      request({
+        mode: "feedback",
+        topic: "experience",
+        task: "check_accessibility",
+        outcome: "yes",
+        message: "The accessibility filters helped me plan a visit.",
+        atlas: {
+          features: ["filters", "accessibility", "library_details"],
+          clarity: 5,
+          wishlist: "  Show public transport connections.  ",
+        },
+        context: { page: "/atlas?search=private", locale: "en" },
+      })
+    )
+    expect(response.status).toBe(200)
+    const { reference } = await response.json()
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        task: "check_accessibility",
+        atlas: {
+          features: ["filters", "accessibility", "library_details"],
+          clarity: 5,
+          wishlist: "Show public transport connections.",
+        },
+        context: { page: "/atlas", locale: "en" },
+      }),
+      "Test browser",
+      reference
+    )
+  })
+  it("rejects duplicate Atlas feature answers before sending email", async () => {
+    const response = await POST(
+      request({
+        mode: "feedback",
+        topic: "problem",
+        task: "export_data",
+        outcome: "no",
+        message: "The export did not include the selected libraries.",
+        atlas: { features: ["exports", "exports"] },
+        context: { page: "/atlas", locale: "en" },
+      })
+    )
+    expect(response.status).toBe(400)
+    expect(send).not.toHaveBeenCalled()
+  })
   it("rejects cross-origin requests and missing origin", async () => {
     expect(
       (await POST(request(contact, { origin: "https://other.test" }))).status

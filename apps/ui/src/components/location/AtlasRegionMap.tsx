@@ -128,7 +128,7 @@ export function AtlasRegionMap({
     <div
       role="region"
       aria-label={label}
-      className="relative h-[420px] overflow-hidden rounded-2xl"
+      className="relative h-[420px] overflow-hidden rounded-2xl lg:h-auto lg:min-h-[420px]"
     >
       <AtlasMap
         ref={map}

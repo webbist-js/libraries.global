@@ -1,10 +1,15 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import {
+  getLocale,
+  getTranslations as getUiTranslations,
+} from "next-intl/server"
 
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { contributionPlaceParams, placeAddHref } from "@/lib/contribution-place"
+import { contributionPlacePrefill } from "@/lib/contribution-place-server"
 import { T } from "@/lib/design-tokens"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { isActiveTeam } from "@/lib/staff/team-status"
@@ -18,13 +23,28 @@ export const metadata = privateMetadata("Add a library")
 export default async function AddLibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ name?: string; draft?: string }>
+  searchParams: Promise<{
+    name?: string
+    draft?: string
+    continent?: string
+    country?: string
+    region?: string
+    area?: string
+  }>
 }) {
   const tUi = await getUiTranslations("ui")
 
+  const params = await searchParams
+  const locale = await getLocale()
+  const place = contributionPlaceParams(params)
+  const prefill = await contributionPlacePrefill(params, locale)
   const session = await getSessionSSR(await headers())
-  if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/index/new")
-  const { name, draft } = await searchParams
+  if (!session?.user) {
+    const base = placeAddHref(place, "/contribute/index/new", params.name)
+    const callback = `${locale === "en" ? "" : `/${locale}`}${base}${params.draft === "contribute" ? `${base.includes("?") ? "&" : "?"}draft=contribute` : ""}`
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`)
+  }
+  const { name, draft } = params
   // Existing ordinary proposals keep their original review flow when the
   // contributor later becomes staff. New staff adds use the staff route.
   const ordinaryDraft = draft === "contribute"
@@ -47,11 +67,7 @@ export default async function AddLibraryPage({
       hasVerifiedTeam ||
       (memberships.length > 0 && !teams?.body))
   )
-    redirect(
-      name?.trim()
-        ? `/staff/new?name=${encodeURIComponent(name.trim().slice(0, 200))}`
-        : "/staff/new"
-    )
+    redirect(placeAddHref(place, "/staff/new", name))
 
   return (
     <div
@@ -65,9 +81,10 @@ export default async function AddLibraryPage({
       />
       <IndexRecordWizard
         mode="new"
-        initialData={
-          name?.trim() ? { name: name.trim().slice(0, 200) } : undefined
-        }
+        initialData={{
+          ...prefill,
+          ...(name?.trim() ? { name: name.trim().slice(0, 200) } : {}),
+        }}
       />
     </div>
   )

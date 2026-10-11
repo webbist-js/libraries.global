@@ -208,6 +208,72 @@
         }
       }
     },
+    "atlas": {
+      "eyebrow": "Help shape Atlas",
+      "title": "How was Atlas for you?",
+      "description": "Tell us which parts you used, how they worked, and what you’d like to see next.",
+      "stepOne": "Using Atlas",
+      "stepTwo": "Your feedback and ideas",
+      "short": "About two minutes",
+      "success": "Your feedback helps us make Atlas more useful and choose what to build next.",
+      "task": "What were you using Atlas to do?",
+      "tasks": {
+        "find_library": "Find a library",
+        "plan_visit": "Plan a visit",
+        "compare_areas": "Compare areas or library coverage",
+        "check_accessibility": "Check accessibility",
+        "export_data": "Export library data",
+        "explore": "Explore the map",
+        "other": "Something else"
+      },
+      "features": {
+        "label": "Which parts of Atlas did you use?",
+        "hint": "Select all that apply. Choose Other if none of these fits.",
+        "required": "Choose at least one part of Atlas, or Other.",
+        "options": {
+          "search": "Search",
+          "filters": "Filters",
+          "map_layers": "Map layers and keys",
+          "library_details": "Library details",
+          "list_view": "List view",
+          "area_comparison": "Area comparison",
+          "accessibility": "Accessibility information",
+          "exports": "Data exports",
+          "other": "Other"
+        }
+      },
+      "clarity": "How clear were the map keys and results?",
+      "clarityScore": "Clarity: {value} out of 5",
+      "unclear": "Unclear",
+      "clear": "Clear",
+      "wishlist": {
+        "label": "Things I’d like to see",
+        "hint": "A feature, map layer, or piece of information that would help you. What would you use it for?",
+        "placeholder": "I’d like to be able to… because…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "What happened in Atlas, and what did you expect?",
+          "hint": "Mention the feature or map layer and where you got stuck. Please leave out passwords and private information.",
+          "placeholder": "In Atlas, I was trying to… I expected… Instead…"
+        },
+        "idea": {
+          "label": "Things I’d like to see in Atlas",
+          "hint": "What feature, map layer, or information would you add or change, and what would it help you do?",
+          "placeholder": "I’d like to be able to… because…"
+        },
+        "experience": {
+          "label": "What felt easy, confusing, or missing in Atlas?",
+          "hint": "Think about searching, filters, map keys, or library details. A specific example helps.",
+          "placeholder": "When I used… I found…"
+        },
+        "praise": {
+          "label": "What worked well for you in Atlas?",
+          "hint": "Which feature helped you, and why? We want to keep the good parts.",
+          "placeholder": "I found… useful because…"
+        }
+      }
+    },
     "contact": {
       "eyebrow": "Talk to the team",
       "title": "How can we help?",
@@ -484,7 +550,8 @@
     "contribute_menu": "Contribute menu",
     "your_work": "Your work",
     "everyone": "Everyone",
-    "support_us_on_ko_fi": "Support us on Ko-fi",
+    "buy_me_a_coffee": "Buy me a coffee",
+    "about_the_project": "About the project",
     "opens_in_a_new_tab": "(opens in a new tab)",
     "account_menu": "Account menu",
     "profile": "Profile",

@@ -407,7 +407,12 @@ export async function searchWikiArticles(
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-export function buildLibraryPath(hit: LibrarySearchHit): string | null {
+export function buildLibraryPath(
+  hit: Pick<
+    LibrarySearchHit,
+    "continent_slug" | "country_slug" | "region_slug" | "slug"
+  >
+): string | null {
   const { continent_slug, country_slug, region_slug, slug } = hit
   if (continent_slug && country_slug && region_slug && slug) {
     return `/${continent_slug}/${country_slug}/${region_slug}/${slug}`

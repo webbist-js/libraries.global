@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import {
@@ -6,65 +7,65 @@ import {
   formatCount,
   type LocationGapKey,
 } from "@/components/location/location-page.helpers"
-import { LocationLibraryCard } from "@/components/location/LocationLibraryCard"
+import { RegionLibraryIndex } from "@/components/region/RegionLibraryIndex"
 import { T } from "@/lib/design-tokens"
 import type {
   RegionLibrary,
   RegionSibling,
 } from "@/lib/strapi-api/content/server"
 
-/** Cards rendered on a region page; "See all" opens the rest in Find libraries. */
 export const REGION_LIST_LIMIT = 24
 
-/** "Libraries in {region}": a grid of record cards, then an add prompt. */
 export function RegionLibraryList({
   regionName,
   basePath,
   libraries,
   gapsBySlug,
+  gapCounts,
   total,
+  countsAvailable = true,
   findHref,
+  addHref = "/contribute/index/new",
+  featuredIds = [],
+  typeCounts,
+  nearby,
 }: {
+  readonly addHref?: string
+  readonly featuredIds?: readonly string[]
+  readonly typeCounts?: Record<string, number>
+  readonly nearby?: ReactNode
   readonly regionName: string
-  /** "/europe/england/hertfordshire" — library slugs are appended. */
   readonly basePath: string
   readonly libraries: RegionLibrary[]
   readonly gapsBySlug: Record<string, LocationGapKey[]>
-  /** Published libraries in the region (the list may be capped). */
+  readonly gapCounts?: Partial<Record<LocationGapKey, number>> | null
   readonly total: number
+  readonly countsAvailable?: boolean
   readonly findHref: string
 }) {
-  // The region's full first page still feeds the map and the gap counts;
-  // the grid shows a page's worth so a big region stays light.
-  const shown = libraries.slice(0, REGION_LIST_LIMIT)
+  const regionSlug =
+    new URLSearchParams(findHref.split("?")[1]).get("region") ??
+    basePath.split("/").at(-1)!
 
   return (
-    <div className="flex flex-col gap-3">
-      <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
-        {shown.map((library) => (
-          <li key={library.documentId}>
-            <LocationLibraryCard
-              library={library}
-              href={`${basePath}/${library.slug}`}
-              place={library.city ?? library.district}
-              gaps={gapsBySlug[library.slug] ?? []}
-            />
-          </li>
-        ))}
-      </ul>
-
-      {total > shown.length ? (
-        <GlobalLink
-          href={findHref}
-          className="self-start text-[14.5px] font-semibold underline underline-offset-[3px]"
-          style={{ color: T.accent.primary }}
-        >
-          See all {formatCount(total)} libraries in {regionName}
-        </GlobalLink>
-      ) : null}
-
+    <div className="space-y-6">
+      <RegionLibraryIndex
+        key={regionSlug}
+        regionName={regionName}
+        regionSlug={regionSlug}
+        basePath={basePath}
+        libraries={libraries}
+        gapsBySlug={gapsBySlug}
+        gapCounts={gapCounts}
+        typeCounts={typeCounts}
+        total={total}
+        countsAvailable={countsAvailable}
+        findHref={findHref}
+        featuredIds={featuredIds}
+        nearby={nearby}
+      />
       <GlobalLink
-        href="/contribute/index/new"
+        href={addHref}
         className="flex items-center gap-3.5 rounded-[20px] border border-dashed px-5 py-4 transition-colors hover:border-(--t-accent-primary) hover:bg-white"
         style={{ borderColor: T.border.hi }}
       >
@@ -85,8 +86,7 @@ export function RegionLibraryList({
               : `Know a library in ${regionName}?`}
           </span>
           <span className="block text-[13.5px]" style={{ color: T.ink.dim }}>
-            Add it with a source. A reviewer checks it before it&rsquo;s
-            published.
+            Add it with a source. A reviewer checks it before it’s published.
           </span>
         </span>
       </GlobalLink>
@@ -94,7 +94,7 @@ export function RegionLibraryList({
   )
 }
 
-/** Side card: nearby (or the busiest) sibling regions with their counts. */
+/** Keep exploring neighbouring places from the index sidebar. */
 export function NearbyRegions({
   title,
   regions,
@@ -102,54 +102,59 @@ export function NearbyRegions({
 }: {
   readonly title: string
   readonly regions: RegionSibling[]
-  /** "/europe/england" — region slugs are appended. */
   readonly basePath: string
 }) {
   if (regions.length === 0) return null
 
   return (
     <nav
-      aria-labelledby="nearby-title"
-      className="rounded-[20px] border bg-white px-5 pt-4 pb-2"
-      style={{ borderColor: T.border.line }}
+      aria-label={title}
+      className="rounded-2xl border p-4"
+      style={{ borderColor: T.border.line, background: T.bg.space }}
     >
-      <h2
-        id="nearby-title"
-        className="m-0 pb-3 text-[15px] font-semibold"
-        style={{
-          color: T.ink.base,
-          borderBottom: `1px solid ${T.border.divider}`,
-        }}
+      <div className="flex items-center gap-2">
+        <Icon
+          aria-hidden="true"
+          icon="mdi:map-marker-path"
+          width={19}
+          height={19}
+          style={{ color: T.accent.primary }}
+        />
+        <h3 className="m-0 text-[17px] font-semibold">{title}</h3>
+      </div>
+      <p
+        className="mt-2 mb-3 text-[13px] leading-relaxed"
+        style={{ color: T.ink.dim }}
       >
-        {title}
-      </h2>
-      <ul className="m-0 list-none p-0">
-        {regions.map((region, i) => (
-          <li
-            key={region.slug}
-            style={
-              i > 0 ? { borderTop: `1px solid ${T.border.divider}` } : undefined
-            }
-          >
+        Keep exploring the libraries documented nearby.
+      </p>
+      <ul className="m-0 list-none space-y-1 p-0">
+        {regions.map((region) => (
+          <li key={region.slug}>
             <GlobalLink
               href={`${basePath}/${region.slug}`}
-              className="flex items-baseline justify-between gap-3 py-3 hover:underline"
-              style={{ textUnderlineOffset: 3 }}
+              className="flex min-h-14 items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-white"
             >
-              <span
-                className="text-[14.5px] font-semibold"
-                style={{ color: T.ink.base }}
-              >
-                {region.name}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-semibold">
+                  {region.name}
+                </span>
+                <span
+                  className="block text-[12px]"
+                  style={{ color: T.ink.dim }}
+                >
+                  {region.libraryCount > 0
+                    ? `${formatCount(region.libraryCount)} ${countNoun(region.libraryCount, "library", "libraries")}`
+                    : "No records yet"}
+                </span>
               </span>
-              <span
-                className="shrink-0 text-[13px]"
-                style={{ color: T.ink.dim }}
-              >
-                {region.libraryCount > 0
-                  ? `${formatCount(region.libraryCount)} ${countNoun(region.libraryCount, "library", "libraries")}`
-                  : "None yet"}
-              </span>
+              <Icon
+                aria-hidden="true"
+                icon="mdi:arrow-right"
+                width={16}
+                height={16}
+                style={{ color: T.accent.primary }}
+              />
             </GlobalLink>
           </li>
         ))}

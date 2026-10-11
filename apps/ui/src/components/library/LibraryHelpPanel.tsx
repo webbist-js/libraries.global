@@ -38,13 +38,14 @@ const INDIGO = { bg: T.accent.chip, fg: T.accent.primary }
 function tasksFor(
   gaps: readonly ChecklistKey[],
   library: { slug: string; name: string },
-  questions: number
+  questions: number,
+  mobile = false
 ): Task[] {
   const all: Task[] = [
     {
       key: "facilities",
       title: "Add accessibility details",
-      meta: `About 2 minutes · ${questions} ${questions === 1 ? "question" : "questions"}`,
+      meta: `${questions} ${questions === 1 ? "question" : "questions"}`,
       icon: "mdi:human",
       tint: ACADEMIC,
       href: "#access",
@@ -52,7 +53,7 @@ function tasksFor(
     {
       key: "about",
       title: "Describe the collections",
-      meta: "About 5 minutes",
+      meta: "Add a source with what you know",
       icon: "mdi:bookshelf",
       tint: SPECIAL,
       category: "Collections",
@@ -67,16 +68,16 @@ function tasksFor(
     },
     {
       key: "hours",
-      title: "Add the opening hours",
-      meta: "About 3 minutes",
+      title: mobile ? "Add stops and times" : "Add the opening hours",
+      meta: "Add a source with what you know",
       icon: "mdi:clock-outline",
       tint: INDIGO,
-      category: "Opening hours",
+      category: mobile ? "Stops & times" : "Opening hours",
     },
     {
       key: "address",
       title: "Add the address",
-      meta: "About 1 minute",
+      meta: "Add a source with what you know",
       icon: "mdi:map-marker-outline",
       tint: INDIGO,
       category: "Address or location",
@@ -84,7 +85,7 @@ function tasksFor(
     {
       key: "location",
       title: "Put it on the map",
-      meta: "About 1 minute",
+      meta: "Add a source with what you know",
       icon: "mdi:map-marker-radius-outline",
       tint: INDIGO,
       category: "Address or location",
@@ -92,7 +93,7 @@ function tasksFor(
     {
       key: "history",
       title: "Add a date from its history",
-      meta: "About 2 minutes",
+      meta: "Add a source with what you know",
       icon: "mdi:history",
       tint: SPECIAL,
       category: "Something else",
@@ -100,7 +101,7 @@ function tasksFor(
     {
       key: "contact",
       title: "Add the official website",
-      meta: "About 1 minute",
+      meta: "Add a source with what you know",
       icon: "mdi:web",
       tint: INDIGO,
       category: "Something else",
@@ -233,6 +234,8 @@ export function LibraryHelpPanel({
   translateLocales = [],
   libraryPlace,
   libraryWebsite,
+  libraryType,
+  showDrive = true,
 }: {
   readonly gaps: readonly ChecklistKey[]
   readonly librarySlug: string
@@ -250,6 +253,8 @@ export function LibraryHelpPanel({
     city?: string | null
     regionName?: string | null
   } | null
+  readonly showDrive?: boolean
+  readonly libraryType?: string | null
   readonly libraryWebsite?: string | null
 }) {
   const routeLocale = useLocale()
@@ -258,12 +263,13 @@ export function LibraryHelpPanel({
   const tasks = tasksFor(
     gaps,
     { slug: librarySlug, name: libraryName },
-    facilityQuestions
+    facilityQuestions,
+    libraryType === "Mobile"
   )
 
   const targets = translateTargets(translateLocales, routeLocale)
 
-  const driveNote = (
+  const driveNote = showDrive ? (
     <LibraryDriveNote
       library={{
         documentId: libraryDocumentId,
@@ -275,7 +281,7 @@ export function LibraryHelpPanel({
         href: pathname,
       }}
     />
-  )
+  ) : null
 
   if (tasks.length === 0 && targets.length === 0) return driveNote
 

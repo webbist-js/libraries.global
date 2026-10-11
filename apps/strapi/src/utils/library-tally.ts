@@ -1,25 +1,34 @@
+import { DEFAULT_LOCALE } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
-import { isPostgres, libraryJoin, tableOf } from "./library-sql"
+import { isPostgres, libraryJoin } from "./library-sql"
+import {
+  canonicalPlaceLibraries,
+  PLACE_LIBRARY_FILTERS,
+} from "./place-library-scope"
 
 export type LibraryTally = {
   count: number
+  placeBasedCount: number
   /** Mean position of the child's libraries, or null when none are located. */
   center: { lat: number; lng: number } | null
 }
 
 type TallyOptions = {
-  parent: "continent" | "country"
+  parent: "continent" | "country" | "region"
   parentDocumentId: string
-  child: "country" | "region"
+  child: "country" | "region" | "area"
   locale?: string
   status: "draft" | "published"
 }
 
 type TallyRow = {
+  id?: number
+  libraryType?: string | null
   location?: { lat?: unknown; lng?: unknown } | null
   country?: { documentId?: string } | null
   region?: { documentId?: string } | null
+  area?: { documentId?: string } | null
 }
 
 const toCoord = (value: unknown): number | null => {
@@ -30,7 +39,7 @@ const toCoord = (value: unknown): number | null => {
 
 /** A jsonb coordinate as a float, only when it really is a number. */
 const coordSql = (key: "lat" | "lng") =>
-  `CASE WHEN jsonb_typeof(l.location->'lat') = 'number' ` +
+  `CASE WHEN l.library_type is distinct from 'Digital' AND jsonb_typeof(l.location->'lat') = 'number' ` +
   `AND jsonb_typeof(l.location->'lng') = 'number' ` +
   `THEN (l.location->>'${key}')::float END`
 
@@ -43,28 +52,36 @@ async function tallyBySql(
   opts: TallyOptions
 ): Promise<Map<string, LibraryTally>> {
   const knex = strapi.db.connection
-  const libraries = tableOf(strapi, "api::library.library")
   const parent = libraryJoin(strapi, opts.parent)
   const child = libraryJoin(strapi, opts.child)
 
-  const query = knex(`${libraries} as l`)
+  const query = canonicalPlaceLibraries(strapi, opts.locale, opts.status, {
+    relation: opts.parent,
+    documentId: opts.parentDocumentId,
+  })
     .join(`${parent.linkTable} as pl`, `pl.${parent.libraryColumn}`, "l.id")
     .join(`${parent.table} as p`, "p.id", `pl.${parent.targetColumn}`)
     .join(`${child.linkTable} as cl`, `cl.${child.libraryColumn}`, "l.id")
     .join(`${child.table} as c`, "c.id", `cl.${child.targetColumn}`)
     .where("p.document_id", opts.parentDocumentId)
-  if (opts.status === "published") query.whereNotNull("l.published_at")
-  else query.whereNull("l.published_at")
-  if (opts.locale) query.where("l.locale", opts.locale)
 
   const rows = (await query
     .groupBy("c.document_id")
     .select(
       "c.document_id as child_id",
       knex.raw("count(*) as count"),
+      knex.raw(
+        "count(*) filter (where l.library_type is distinct from 'Digital') as place_based_count"
+      ),
       knex.raw(`avg(${coordSql("lat")}) as lat`),
       knex.raw(`avg(${coordSql("lng")}) as lng`)
-    )) as { child_id: string; count: unknown; lat: unknown; lng: unknown }[]
+    )) as {
+    child_id: string
+    count: unknown
+    place_based_count: unknown
+    lat: unknown
+    lng: unknown
+  }[]
 
   return new Map(
     rows.map((row) => {
@@ -75,6 +92,7 @@ async function tallyBySql(
         row.child_id,
         {
           count: Number(row.count) || 0,
+          placeBasedCount: Number(row.place_based_count) || 0,
           center: lat !== null && lng !== null ? { lat, lng } : null,
         },
       ]
@@ -89,39 +107,55 @@ async function tallyByRows(
 ): Promise<Map<string, LibraryTally>> {
   const tallies = new Map<
     string,
-    { count: number; lat: number; lng: number; located: number }
+    {
+      count: number
+      placeBasedCount: number
+      lat: number
+      lng: number
+      located: number
+    }
   >()
 
-  const rows = (await strapi.documents("api::library.library").findMany({
-    filters: {
-      [opts.parent]: { documentId: { $eq: opts.parentDocumentId } },
-    } as never,
-    fields: ["location"] as never,
-    populate: { [opts.child]: { fields: ["documentId"] } } as never,
-    locale: opts.locale,
-    status: opts.status,
-    sort: "id:asc" as never,
-    limit: -1,
-  })) as unknown as TallyRow[]
+  let after = 0
+  while (true) {
+    const rows = (await strapi.documents("api::library.library").findMany({
+      filters: {
+        [opts.parent]: { documentId: { $eq: opts.parentDocumentId } },
+        ...PLACE_LIBRARY_FILTERS,
+        ...(after ? { id: { $gt: after } } : {}),
+      } as never,
+      fields: ["id", "location", "libraryType"] as never,
+      populate: { [opts.child]: { fields: ["documentId"] } } as never,
+      locale: DEFAULT_LOCALE,
+      status: opts.status,
+      sort: "id:asc" as never,
+      limit: 500,
+    })) as unknown as TallyRow[]
 
-  for (const row of rows) {
-    const childId = row[opts.child]?.documentId
-    if (!childId) continue
-    const entry = tallies.get(childId) ?? {
-      count: 0,
-      lat: 0,
-      lng: 0,
-      located: 0,
+    for (const row of rows) {
+      const childId = row[opts.child]?.documentId
+      if (!childId) continue
+      const entry = tallies.get(childId) ?? {
+        count: 0,
+        placeBasedCount: 0,
+        lat: 0,
+        lng: 0,
+        located: 0,
+      }
+      entry.count += 1
+      if (row.libraryType !== "Digital") entry.placeBasedCount += 1
+      const lat = toCoord(row.location?.lat)
+      const lng = toCoord(row.location?.lng)
+      if (row.libraryType !== "Digital" && lat !== null && lng !== null) {
+        entry.lat += lat
+        entry.lng += lng
+        entry.located += 1
+      }
+      tallies.set(childId, entry)
     }
-    entry.count += 1
-    const lat = toCoord(row.location?.lat)
-    const lng = toCoord(row.location?.lng)
-    if (lat !== null && lng !== null) {
-      entry.lat += lat
-      entry.lng += lng
-      entry.located += 1
-    }
-    tallies.set(childId, entry)
+
+    if (rows.length < 500 || !rows.at(-1)?.id) break
+    after = rows.at(-1)!.id!
   }
 
   return new Map(
@@ -129,6 +163,7 @@ async function tallyByRows(
       id,
       {
         count: t.count,
+        placeBasedCount: t.placeBasedCount,
         center: t.located
           ? { lat: t.lat / t.located, lng: t.lng / t.located }
           : null,

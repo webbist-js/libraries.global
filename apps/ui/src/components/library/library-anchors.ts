@@ -14,6 +14,12 @@ export interface AnchorItem {
 export const LIBRARY_ANCHORS = {
   visit: { href: "#visit", label: "Visit", icon: LIB_ICONS.pin },
   stops: { href: "#stops", label: "Stops & times", icon: LIB_ICONS.pin },
+  facilities: {
+    href: "#facilities",
+    label: "Facilities",
+    icon: LIB_ICONS.building,
+  },
+  services: { href: "#services", label: "Services", icon: LIB_ICONS.book },
   access: { href: "#access", label: "Accessibility", icon: LIB_ICONS.access },
   history: { href: "#history", label: "History", icon: LIB_ICONS.clock },
   collections: {
@@ -22,7 +28,7 @@ export const LIBRARY_ANCHORS = {
     icon: LIB_ICONS.book,
   },
   events: { href: "#events", label: "Events", icon: LIB_ICONS.calendar },
-  area: { href: "#area", label: "In the area", icon: LIB_ICONS.map, pro: true },
+  area: { href: "#area", label: "Nearby", icon: LIB_ICONS.map },
   changes: { href: "#changes", label: "Changes", icon: LIB_ICONS.list },
   reuse: { href: "#reuse", label: "Reuse", icon: LIB_ICONS.download },
 } as const satisfies Record<string, AnchorItem>

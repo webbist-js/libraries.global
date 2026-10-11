@@ -126,9 +126,17 @@ const LIBRARY_LIST_POPULATE = {
   heroImage: mediaPopulate,
   continent: continentRef,
   country: {
-    fields: ["name", "slug", "iso2", "regionTypeLabel", "regionsSectionLabel"],
+    fields: [
+      "name",
+      "slug",
+      "iso2",
+      "regionTypeLabel",
+      "regionsSectionLabel",
+      "areaTypeLabel",
+      "areasSectionLabel",
+    ],
   },
-  region: locationRef,
+  region: { fields: ["name", "slug", "areaTypeLabel", "areasSectionLabel"] },
   area: locationRef,
   accessibility: optionRef,
   services: optionRef,
@@ -180,6 +188,15 @@ export const LIBRARY_SHAPES: ShapeSet = {
     ],
     populate: {
       ...LIBRARY_LIST_POPULATE,
+      accessibility: {
+        fields: ["name", "category", "icon", "summary", "description"],
+      },
+      services: {
+        fields: ["name", "category", "icon", "summary", "description"],
+      },
+      amenities: {
+        fields: ["name", "category", "icon", "summary", "description"],
+      },
       homeLibrary: {
         fields: [
           "name",

@@ -84,7 +84,7 @@ describe("findFilter", () => {
         []
       )
     ).toBe(
-      'region_slug = "new-york" AND libraryType IN ["Public"] AND has_iiif = true AND needs IN ["photo", "hours"] AND locale = "en"'
+      'operationalStatus NOT IN ["permanently_closed", "planned"] AND region_slug = "new-york" AND libraryType IN ["Public"] AND has_iiif = true AND needs IN ["photo", "hours"] AND locale = "en"'
     )
   })
 
@@ -111,7 +111,7 @@ describe("findFilter", () => {
         []
       )
     ).toBe(
-      'accessibility_names = "Accessible parking" AND accessibility_names = "Assistance dogs welcome" AND service_names = "Wi-Fi" AND locale = "en"'
+      'operationalStatus NOT IN ["permanently_closed", "planned"] AND accessibility_names = "Accessible parking" AND accessibility_names = "Assistance dogs welcome" AND service_names = "Wi-Fi" AND locale = "en"'
     )
   })
 })

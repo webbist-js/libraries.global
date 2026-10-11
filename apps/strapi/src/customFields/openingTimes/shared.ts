@@ -1,6 +1,13 @@
+import {
+  normalizeOpeningSchedule,
+  type OpeningTimesValue,
+} from "@repo/shared-data"
+
+export type { OpeningTimesValue } from "@repo/shared-data"
+
 export const OPENING_TIMES_FIELD_NAME = "opening-times"
 export const OPENING_TIMES_CUSTOM_FIELD_UID = `global::${OPENING_TIMES_FIELD_NAME}`
-export const OPENING_TIMES_VERSION = 1
+export const OPENING_TIMES_VERSION = 2
 
 export const OPENING_TIMES_DAY_ORDER = [
   "monday",
@@ -28,6 +35,8 @@ export const OPENING_TIMES_STAFFING_OPTIONS = [
   "staffed",
   "volunteer",
   "self_service",
+  "open",
+  "appointment",
 ] as const
 
 export type OpeningTimesStaffing =
@@ -40,6 +49,8 @@ export const OPENING_TIMES_STAFFING_LABELS: Record<
   staffed: "Staffed",
   volunteer: "Volunteer",
   self_service: "Self service",
+  open: "Open · staffing not recorded",
+  appointment: "By appointment",
 }
 
 export interface OpeningTimeframe {
@@ -47,17 +58,14 @@ export interface OpeningTimeframe {
   startTime: string
   endTime: string
   staffing: OpeningTimesStaffing
+  overnight?: boolean
+  note?: string
 }
 
 export interface OpeningTimesDay {
   day: OpeningTimesDayKey
   enabled: boolean
   timeframes: OpeningTimeframe[]
-}
-
-export interface OpeningTimesValue {
-  version: number
-  days: OpeningTimesDay[]
 }
 
 const TIME_INTERVAL_MINUTES = 15
@@ -79,15 +87,9 @@ export const TIME_OPTIONS = Array.from(
 export const START_TIME_OPTIONS = TIME_OPTIONS.slice(0, -1)
 export const END_TIME_OPTIONS = TIME_OPTIONS.slice(1)
 
-const START_TIME_SET = new Set(START_TIME_OPTIONS)
-const END_TIME_SET = new Set(END_TIME_OPTIONS)
-const STAFFING_SET = new Set<OpeningTimesStaffing>(
-  OPENING_TIMES_STAFFING_OPTIONS
-)
-
 const DEFAULT_START_TIME = "09:00"
 const DEFAULT_END_TIME = "17:00"
-const DEFAULT_STAFFING: OpeningTimesStaffing = "staffed"
+const DEFAULT_STAFFING: OpeningTimesStaffing = "open"
 
 let fallbackIdCounter = 0
 
@@ -104,21 +106,6 @@ const createId = () => {
 
   return `opening-timeframe-${Date.now()}-${fallbackIdCounter}`
 }
-
-const isOpeningTimesDayKey = (value: unknown): value is OpeningTimesDayKey =>
-  typeof value === "string" &&
-  OPENING_TIMES_DAY_ORDER.includes(value as OpeningTimesDayKey)
-
-const isOpeningTimesStaffing = (
-  value: unknown
-): value is OpeningTimesStaffing =>
-  typeof value === "string" && STAFFING_SET.has(value as OpeningTimesStaffing)
-
-const isValidStartTime = (value: unknown): value is string =>
-  typeof value === "string" && START_TIME_SET.has(value)
-
-const isValidEndTime = (value: unknown): value is string =>
-  typeof value === "string" && END_TIME_SET.has(value)
 
 export const timeToMinutes = (time: string) => {
   const [hours, minutes] = time.split(":").map(Number)
@@ -176,12 +163,17 @@ export const createDefaultTimeframe = (): OpeningTimeframe => ({
 })
 
 export const cloneTimeframe = (
-  timeframe: Pick<OpeningTimeframe, "startTime" | "endTime" | "staffing">
+  timeframe: Pick<
+    OpeningTimeframe,
+    "startTime" | "endTime" | "staffing" | "overnight" | "note"
+  >
 ): OpeningTimeframe => ({
   id: createId(),
   startTime: timeframe.startTime,
   endTime: timeframe.endTime,
   staffing: timeframe.staffing,
+  ...(timeframe.overnight ? { overnight: true } : {}),
+  ...(timeframe.note ? { note: timeframe.note } : {}),
 })
 
 export const createDefaultOpeningTimesValue = (): OpeningTimesValue => ({
@@ -193,89 +185,5 @@ export const createDefaultOpeningTimesValue = (): OpeningTimesValue => ({
   })),
 })
 
-const normalizeTimeframe = (value: unknown): OpeningTimeframe => {
-  const timeframe =
-    value != null && typeof value === "object"
-      ? (value as Partial<OpeningTimeframe>)
-      : {}
-
-  const startTime = isValidStartTime(timeframe.startTime)
-    ? timeframe.startTime
-    : DEFAULT_START_TIME
-  const nextStartTime = getNextTimeOption(startTime) ?? DEFAULT_END_TIME
-
-  const endTime =
-    isValidEndTime(timeframe.endTime) &&
-    compareTimes(startTime, timeframe.endTime) < 0
-      ? timeframe.endTime
-      : nextStartTime
-
-  return {
-    id:
-      typeof timeframe.id === "string" && timeframe.id.length > 0
-        ? timeframe.id
-        : createId(),
-    startTime,
-    endTime,
-    staffing: isOpeningTimesStaffing(timeframe.staffing)
-      ? timeframe.staffing
-      : DEFAULT_STAFFING,
-  }
-}
-
-const normalizeDay = (
-  dayKey: OpeningTimesDayKey,
-  value: unknown
-): OpeningTimesDay => {
-  const day =
-    value != null && typeof value === "object"
-      ? (value as Partial<OpeningTimesDay>)
-      : {}
-  const rawTimeframes = Array.isArray(day.timeframes) ? day.timeframes : []
-
-  return {
-    day: dayKey,
-    enabled: day.enabled === true,
-    timeframes: sortTimeframes(rawTimeframes.map(normalizeTimeframe)),
-  }
-}
-
-export const normalizeOpeningTimesValue = (
-  value: unknown
-): OpeningTimesValue => {
-  const fallbackValue = createDefaultOpeningTimesValue()
-
-  if (value == null || typeof value !== "object") {
-    return fallbackValue
-  }
-
-  const record = value as Record<string, unknown>
-  const daysArray = Array.isArray(record.days) ? record.days : null
-  const daysByKey = new Map<OpeningTimesDayKey, unknown>()
-
-  if (daysArray != null) {
-    for (const day of daysArray) {
-      if (
-        day != null &&
-        typeof day === "object" &&
-        isOpeningTimesDayKey(day.day)
-      ) {
-        daysByKey.set(day.day, day)
-      }
-    }
-  } else {
-    for (const dayKey of OPENING_TIMES_DAY_ORDER) {
-      daysByKey.set(dayKey, record[dayKey])
-    }
-  }
-
-  return {
-    version:
-      typeof record.version === "number"
-        ? record.version
-        : OPENING_TIMES_VERSION,
-    days: OPENING_TIMES_DAY_ORDER.map((dayKey) =>
-      normalizeDay(dayKey, daysByKey.get(dayKey))
-    ),
-  }
-}
+export const normalizeOpeningTimesValue = (value: unknown): OpeningTimesValue =>
+  normalizeOpeningSchedule(value)

@@ -34,6 +34,7 @@ type ModalRequest = {
 }
 const ContactModalContext = createContext<{
   openFeedback: () => void
+  openAtlasFeedback: () => void
   openContact: (type?: ContactType) => void
 } | null>(null)
 
@@ -69,13 +70,17 @@ export function ContactModalProvider({
     []
   )
   const openFeedback = useCallback(() => open({ mode: "feedback" }), [open])
+  const openAtlasFeedback = useCallback(
+    () => open({ mode: "feedback", product: "atlas" }),
+    [open]
+  )
   const openContact = useCallback(
     (type: ContactType = "general_inquiry") => open({ mode: "contact", type }),
     [open]
   )
   const value = useMemo(
-    () => ({ openFeedback, openContact }),
-    [openFeedback, openContact]
+    () => ({ openFeedback, openAtlasFeedback, openContact }),
+    [openFeedback, openAtlasFeedback, openContact]
   )
 
   useEffect(() => {

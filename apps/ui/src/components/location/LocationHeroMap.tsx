@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import type { AtlasScope } from "@repo/shared-data"
+import { atlasPopulationBaseline, type AtlasScope } from "@repo/shared-data"
 import type { Map as MapLibreMap } from "maplibre-gl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -72,8 +72,12 @@ export function LocationHeroMap({
   bounds,
   childNoun,
   atlasPlace,
+  countryRecords = [],
+  listHref,
 }: {
   /** Accessible name for the map region, e.g. "Map of libraries in Europe". */
+  readonly countryRecords?: readonly { iso2?: string | null; count: number }[]
+  readonly listHref?: string
   readonly label: string
   /** Visible legend line over the map. */
   readonly caption: string
@@ -175,6 +179,63 @@ export function LocationHeroMap({
 
       map.on("load", () => {
         if (!alive) return
+        const countries = new Map<string, number>()
+        for (const record of countryRecords) {
+          const code = record.iso2?.toUpperCase()
+          const shape = atlasPopulationBaseline.countries.find(
+            (country) =>
+              country.iso2 === code ||
+              (code?.startsWith("GB-") && country.iso2 === "GB")
+          )
+          if (shape)
+            countries.set(
+              shape.iso3,
+              (countries.get(shape.iso3) ?? 0) + record.count
+            )
+        }
+        if (countries.size) {
+          const known = [...countries.keys()]
+          const populated = [...countries]
+            .filter(([, count]) => count > 0)
+            .map(([code]) => code)
+          const empty = [...countries]
+            .filter(([, count]) => count === 0)
+            .map(([code]) => code)
+          map.addSource("place-record-countries", {
+            type: "geojson",
+            data: atlasPopulationBaseline.geometryUrl,
+          })
+          map.addLayer({
+            id: "place-record-fill",
+            type: "fill",
+            source: "place-record-countries",
+            filter: ["in", ["get", "iso3"], ["literal", populated]],
+            paint: { "fill-color": "#4338CA", "fill-opacity": 0.14 },
+          })
+          map.addLayer({
+            id: "place-record-outline",
+            type: "line",
+            source: "place-record-countries",
+            filter: ["in", ["get", "iso3"], ["literal", known]],
+            paint: {
+              "line-color": "#4338CA",
+              "line-opacity": 0.35,
+              "line-width": 1,
+            },
+          })
+          map.addLayer({
+            id: "place-record-empty",
+            type: "line",
+            source: "place-record-countries",
+            filter: ["in", ["get", "iso3"], ["literal", empty]],
+            paint: {
+              "line-color": "#4338CA",
+              "line-opacity": 0.8,
+              "line-width": 1.5,
+              "line-dasharray": [3, 2],
+            },
+          })
+        }
         regroupRef.current()
         setReady(true)
       })
@@ -242,7 +303,7 @@ export function LocationHeroMap({
 
   return (
     <figure
-      className="relative m-0 h-[280px] overflow-hidden rounded-3xl sm:h-[340px]"
+      className="relative m-0 h-[320px] overflow-hidden rounded-[22px] sm:h-[400px] lg:h-auto lg:min-h-[400px]"
       style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >
       <div
@@ -262,6 +323,16 @@ export function LocationHeroMap({
           The map can&rsquo;t load in this browser. The list below has the same
           places.
         </p>
+      ) : null}
+
+      {listHref ? (
+        <a
+          href={listHref}
+          className="absolute top-3 left-3 z-[2] inline-flex min-h-11 items-center rounded-full border bg-white px-3 text-[12px] font-semibold"
+          style={{ borderColor: T.border.line }}
+        >
+          View places as a list →
+        </a>
       ) : null}
 
       {/* Overlay markers — real links, above the canvas, below the controls */}
@@ -396,7 +467,15 @@ export function LocationHeroMap({
             n
           </span>
         )}
-        <span>{caption}</span>
+        <span>
+          {countryRecords.length ? (
+            <span className="mb-1 flex flex-wrap gap-3">
+              <span>■ Place-based records</span>
+              <span>▱ None recorded yet</span>
+            </span>
+          ) : null}
+          {caption}
+        </span>
       </figcaption>
     </figure>
   )

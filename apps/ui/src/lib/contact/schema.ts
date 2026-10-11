@@ -2,6 +2,8 @@ import { SUPPORTED_LOCALES } from "@repo/shared-data"
 import { z } from "zod"
 
 import {
+  ATLAS_FEEDBACK_FEATURES,
+  ATLAS_FEEDBACK_TASKS,
   CONTACT_TYPES,
   FEEDBACK_TASKS,
   FEEDBACK_TOPICS,
@@ -42,6 +44,17 @@ const base = {
   context: contactContextSchema,
   website: z.string().max(200).optional(),
 }
+const atlasFeedbackSchema = z
+  .object({
+    features: z
+      .array(z.enum(ATLAS_FEEDBACK_FEATURES))
+      .min(1)
+      .max(ATLAS_FEEDBACK_FEATURES.length)
+      .refine((features) => new Set(features).size === features.length),
+    clarity: z.number().int().min(1).max(5).optional(),
+    wishlist: z.string().trim().max(2000).optional(),
+  })
+  .strict()
 
 export const contactSubmissionSchema = z.discriminatedUnion("mode", [
   z
@@ -57,9 +70,10 @@ export const contactSubmissionSchema = z.discriminatedUnion("mode", [
       ...base,
       mode: z.literal("feedback"),
       topic: z.enum(FEEDBACK_TOPICS),
-      task: z.enum(FEEDBACK_TASKS),
+      task: z.enum([...FEEDBACK_TASKS, ...ATLAS_FEEDBACK_TASKS]),
       outcome: z.enum(TASK_OUTCOMES),
       ease: z.number().int().min(1).max(5).optional(),
+      atlas: atlasFeedbackSchema.optional(),
     })
     .strict(),
 ])

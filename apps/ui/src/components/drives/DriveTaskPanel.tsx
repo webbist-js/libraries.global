@@ -680,10 +680,12 @@ export function DriveTaskPanel({
   onSent,
   onSkip,
   nameRef,
+  returnTo,
 }: {
   readonly drive: Pick<Drive, "documentId" | "slug" | "focus">
   readonly task: DriveTask
   readonly signedIn: boolean
+  readonly returnTo?: string
   /** The reader holds a Library Claim on it: record changes are edits. */
   readonly claimed: boolean
   readonly quota: PendingQuota | null
@@ -738,7 +740,7 @@ export function DriveTaskPanel({
     body: Body
   } | null>(null)
 
-  const drivePath = `/community/drives/${drive.slug}`
+  const drivePath = returnTo ?? `/community/drives/${drive.slug}`
   const website = task.website || record?.website || ""
   const recordMode = isRecordMode(mode) ? mode : null
   const evidenceMode: EvidenceMode | null =
@@ -1032,7 +1034,10 @@ export function DriveTaskPanel({
   const showEvidence =
     record !== null &&
     (recordMode !== null || (mode === "record" && openCategories.length > 0))
-  const evidenceHint = evidenceHintOf(recordMode, evidenceNeeded)
+  const evidenceHint =
+    recordMode === "hours" && record?.libraryType === "Mobile"
+      ? "Required. The timetable or official page showing these stops and times."
+      : evidenceHintOf(recordMode, evidenceNeeded)
 
   return (
     <div className="flex flex-col gap-5">

@@ -3,6 +3,7 @@
 
 import {
   hasOpeningHours,
+  normalizeMobileTimetable,
   sectionCheckedAt as sharedSectionCheckedAt,
   VERIFY_SECTIONS,
   type VerifySection,
@@ -28,6 +29,8 @@ export const SECTION_LABELS: Record<VerifySection, string> = {
 
 /** The parts of a library record a verify reads. */
 export type VerifyRecord = {
+  libraryType?: string | null
+  mobileTimetable?: unknown
   openingTimes?: unknown
   operationalStatus?: string | null
   streetAddress?: string | null
@@ -47,6 +50,8 @@ export function verifyRecordOf(library: object): VerifyRecord {
   const r = library as Record<string, unknown>
 
   return {
+    libraryType: str(r.libraryType),
+    mobileTimetable: r.mobileTimetable ?? null,
     openingTimes: r.openingTimes ?? null,
     operationalStatus: str(r.operationalStatus),
     streetAddress: str(r.streetAddress),
@@ -82,7 +87,12 @@ export function sectionCheckedAt(
 /** Only the sections the library has a value for. */
 export function availableSections(library: VerifyRecord): VerifySection[] {
   const has: Record<VerifySection, boolean> = {
-    hours: hasOpeningHours(library.openingTimes),
+    hours:
+      library.libraryType === "Mobile"
+        ? Boolean(
+            normalizeMobileTimetable(library.mobileTimetable)?.visits.length
+          )
+        : hasOpeningHours(library.openingTimes),
     status:
       filled(library.operationalStatus) &&
       library.operationalStatus !== "unknown",
@@ -132,6 +142,14 @@ export function sectionSummary(
 ): string {
   switch (section) {
     case "hours":
+      if (library.libraryType === "Mobile") {
+        const tt = normalizeMobileTimetable(library.mobileTimetable)
+
+        return tt
+          ? `${tt.stops.length} stops · ${tt.cycle.weeks}-week cycle`
+          : ""
+      }
+
       return hoursPreview(library.openingTimes)
     case "status":
       return statusLabel(library.operationalStatus)

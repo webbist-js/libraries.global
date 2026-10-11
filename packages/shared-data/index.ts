@@ -183,3 +183,5 @@ export * from "./email"
 export * from "./notification-preferences"
 
 export * from "./library-sources"
+
+export * from "./opening-schedule"

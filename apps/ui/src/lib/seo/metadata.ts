@@ -30,6 +30,20 @@ export function getSiteUrl(): string {
   return raw.replace(/\/+$/, "")
 }
 
+/** Reuse/citation links always point to the public site, including during local preview. */
+export function publicCanonicalUrl(value: string): string {
+  const configured = process.env.PUBLIC_CANONICAL_ORIGIN ?? FALLBACK_SITE_URL
+  const url = new URL(value, configured)
+  if (["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname)) {
+    const publicUrl = new URL(configured)
+    url.protocol = publicUrl.protocol
+    url.hostname = publicUrl.hostname
+    url.port = publicUrl.port
+  }
+
+  return url.toString()
+}
+
 /**
  * Locale-aware pathname matching next-intl's `localePrefix: "as-needed"`:
  * the default locale is unprefixed, others get `/{locale}`.

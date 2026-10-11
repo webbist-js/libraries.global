@@ -5,6 +5,7 @@ import { setRequestLocale } from "next-intl/server"
 
 import { AtlasContributeCard } from "@/components/atlas/AtlasContributeCard"
 import { AtlasExplorer } from "@/components/atlas/AtlasExplorer"
+import { AtlasFeedbackButton } from "@/components/atlas/AtlasFeedbackButton"
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
 import { scalableAtlasEnabled, ATLAS_COHORT_COOKIE } from "@/lib/atlas-rollout"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -44,6 +45,7 @@ export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
     <>
       <h1 className="sr-only">Atlas: map of the world&apos;s libraries</h1>
       <AtlasExplorer
+        feedbackPrompt={<AtlasFeedbackButton />}
         scalable={scalableAtlasEnabled(
           cookieStore.get(ATLAS_COHORT_COOKIE)?.value
         )}

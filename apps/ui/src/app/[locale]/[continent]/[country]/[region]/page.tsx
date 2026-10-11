@@ -9,6 +9,7 @@ import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { placeGapCounts } from "@/lib/find-search"
+import { placeGapInsights } from "@/lib/place-insights-server"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
   buildLibraryItemListSchema,
@@ -40,7 +41,8 @@ export async function generateMetadata({
     country: countrySlug,
     region: slug,
   } = await params
-  const data = (await fetchRegion(slug, locale as Locale))?.data
+  const res = await fetchRegion(slug, locale as Locale)
+  const data = res?.data
   if (!data) return { title: "Region not found", robots: { index: false } }
 
   const name = data.name ?? "Region"
@@ -75,7 +77,9 @@ export async function generateMetadata({
       data.seo?.metaImage?.url ?? data.heroImage?.url
     ),
     imageAlt: data.heroImage?.alternativeText,
-    robots: locationRobots(data.libraryCount),
+    robots: res?.localeFallback
+      ? "noindex-follow"
+      : locationRobots(data.libraryCount),
   })
 }
 
@@ -103,7 +107,8 @@ export default function RegionPage(props: {
   const gapCountsPromise = placeGapCounts("region", slug, locale)
   const drivesPromise = drivesHere("region", slug, locale)
 
-  const regionData = use(regionPromise)?.data
+  const regionRes = use(regionPromise)
+  const regionData = regionRes?.data
 
   if (!regionData) notFound()
   const realContinent =
@@ -118,6 +123,9 @@ export default function RegionPage(props: {
   }
   const gapCounts = use(gapCountsPromise)
   const drives = use(drivesPromise)
+  const gapRows = use(
+    placeGapInsights("region", slug, regionData.libraryTypeCounts ?? [], locale)
+  )
   const parentContinent =
     regionData.continent?.slug ??
     regionData.country?.continent?.slug ??
@@ -159,11 +167,13 @@ export default function RegionPage(props: {
       />
       <RegionDetailPage
         region={regionData}
+        untranslatedLocale={regionRes?.localeFallback ? locale : null}
         locale={locale}
         slug={slug}
         countrySlug={countrySlug}
         continentSlug={continentSlug}
         gapCounts={gapCounts}
+        gapRows={gapRows}
         drives={drives}
       />
     </>

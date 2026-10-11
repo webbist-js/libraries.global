@@ -25,7 +25,9 @@ export function DriveCard({
   view,
   now,
   preview = false,
+  showHelpers = true,
 }: {
+  readonly showHelpers?: boolean
   readonly view: DriveView
   readonly now?: Date
   readonly preview?: boolean
@@ -122,7 +124,7 @@ export function DriveCard({
                 </strong>{" "}
                 of {fmt(progress.total)} {unitNoun(drive.unit, progress.total)}
               </span>
-              {helpers != null ? (
+              {showHelpers && helpers != null ? (
                 <span style={{ color: T.ink.dim }}>{fmt(helpers)} helping</span>
               ) : null}
             </span>

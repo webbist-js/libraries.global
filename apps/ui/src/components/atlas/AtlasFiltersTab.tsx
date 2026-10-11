@@ -221,6 +221,7 @@ export function AtlasFiltersTab({
           options={[
             { value: "any", label: tUi("any_time") },
             { value: "now", label: tUi("open_now"), icon: "clock" },
+            { value: "staff_now", label: "Staff on hand now", icon: "clock" },
             { value: "at", label: "Open at…" },
           ]}
         />

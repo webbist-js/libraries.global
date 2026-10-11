@@ -150,6 +150,7 @@ const STATIC_ROUTES: {
   priority: number
 }[] = [
   { path: "", changeFrequency: "daily", priority: 1 },
+  { path: "about", changeFrequency: "monthly", priority: 0.6 },
   { path: "libraries", changeFrequency: "daily", priority: 0.9 },
   { path: "map", changeFrequency: "weekly", priority: 0.7 },
   { path: "events", changeFrequency: "daily", priority: 0.7 },

@@ -22,6 +22,13 @@ const TYPE_MAP: Record<string, string> = {
 
 /** Section lists: no draft state, carry a slug, and Wiki Sections keep their own order. */
 const SECTION_TYPES = new Set(["blog-sections", "wiki-sections"])
+const COUNTRY_LABELS = [
+  "regionTypeLabel",
+  "regionsSectionLabel",
+  "areaTypeLabel",
+  "areasSectionLabel",
+]
+const REGION_LABELS = ["areaTypeLabel", "areasSectionLabel"]
 
 /** Curated, approved topics from the topics plugin (its own route shape). */
 async function approvedTopics(locale: string) {
@@ -62,13 +69,17 @@ type CountryRow = {
   name: string
   iso2?: string | null
   continent?: { documentId?: string } | null
+  regionTypeLabel?: string | null
+  regionsSectionLabel?: string | null
+  areaTypeLabel?: string | null
+  areasSectionLabel?: string | null
 }
 
 /**
  * Atlas countries by ISO code (`?iso2=GB-ENG,GB`), in the order asked, for
  * the location lookup. The UK's countries are filed by ISO 3166-2 code.
  */
-async function countriesByCode(raw: string) {
+async function countriesByCode(raw: string, locale: string) {
   const codes = raw
     .split(",")
     .map((code) => code.trim().toUpperCase())
@@ -80,13 +91,13 @@ async function countriesByCode(raw: string) {
     .map((code, i) => `filters[iso2][$in][${i}]=${encodeURIComponent(code)}`)
     .join("&")
   const res = await fetch(
-    `${STRAPI}/api/countries?${filters}&status=published&pagination[limit]=${codes.length}&fields[0]=name&fields[1]=iso2&populate[continent][fields][0]=name`,
+    `${STRAPI}/api/countries?${filters}&status=published&pagination[limit]=${codes.length}&locale=${locale}&fields[0]=name&fields[1]=iso2&${COUNTRY_LABELS.map((field, index) => `fields[${index + 2}]=${field}`).join("&")}&populate[continent][fields][0]=name`,
     {
       headers: { ...(SECRET ? { "X-Service-Secret": SECRET } : {}) },
       next: { revalidate: 3600 },
     }
   )
-  if (!res.ok) return NextResponse.json({ data: [] })
+  if (!res.ok) return NextResponse.json({ data: [] }, { status: 503 })
   const rows = ((await res.json()) as { data?: CountryRow[] }).data ?? []
 
   return NextResponse.json({
@@ -101,6 +112,11 @@ async function countriesByCode(raw: string) {
               name: row.name,
               iso2: code,
               continentDocumentId,
+              ...Object.fromEntries(
+                COUNTRY_LABELS.filter(
+                  (field) => row[field as keyof CountryRow] !== undefined
+                ).map((field) => [field, row[field as keyof CountryRow]])
+              ),
             },
           ]
         : []
@@ -121,7 +137,7 @@ export async function GET(
   if (type === "topics") return approvedTopics(locale)
   if (type === "locales") return locales()
   const iso2 = searchParams.get("iso2")
-  if (type === "countries" && iso2) return countriesByCode(iso2)
+  if (type === "countries" && iso2) return countriesByCode(iso2, locale)
   const strapiPlural = TYPE_MAP[type]
   if (!strapiPlural)
     return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -142,12 +158,24 @@ export async function GET(
   // The largest real parents hold about 850 places (Minas Gerais, Brazil).
   const limit = type === "countries" ? 300 : 1000
   const status = SECTION_TYPES.has(type) ? "" : "&status=published"
-  const extraFields = SECTION_TYPES.has(type) ? "&fields[2]=slug" : ""
+  const fields = [
+    "name",
+    "documentId",
+    ...(SECTION_TYPES.has(type) ? ["slug"] : []),
+    ...(type === "countries"
+      ? COUNTRY_LABELS
+      : type === "regions"
+        ? REGION_LABELS
+        : []),
+  ]
+  const fieldParams = fields
+    .map((field, index) => `fields[${index}]=${field}`)
+    .join("&")
   const sort =
     type === "wiki-sections"
       ? "sort[0]=order:asc&sort[1]=name:asc"
       : "sort=name:asc"
-  const url = `${STRAPI}/api/${strapiPlural}?locale=${locale}&${sort}&pagination[limit]=${limit}${status}&fields[0]=name&fields[1]=documentId${extraFields}${filterParam}`
+  const url = `${STRAPI}/api/${strapiPlural}?locale=${locale}&${sort}&pagination[limit]=${limit}${status}&${fieldParams}${filterParam}`
 
   // The world place import adds Regions and Areas and sets each Country's
   // Place Labels (the wizard's select labels), so those lists refresh within
@@ -163,7 +191,11 @@ export async function GET(
     next: { revalidate, tags: cacheTagsFor(`/${strapiPlural}`, {}) },
   })
 
-  if (!res.ok) return NextResponse.json({ data: [] }, { status: 200 })
+  if (!res.ok)
+    return NextResponse.json(
+      { data: [], error: "Place choices are unavailable" },
+      { status: 503 }
+    )
   const json = await res.json()
 
   return NextResponse.json({ data: json.data ?? [] })

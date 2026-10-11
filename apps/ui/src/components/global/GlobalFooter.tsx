@@ -1,11 +1,10 @@
-import { Icon } from "@iconify/react"
 import type { Data } from "@repo/strapi-types"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
-import { KOFI_URL, SITE_NAME } from "@/lib/constants"
+import { SITE_NAME } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import type { LegalDocumentNavItem } from "@/lib/strapi-api/content/server"
 
@@ -83,13 +82,10 @@ export function GlobalFooter({
             ) : null}
 
             <GlobalLink
-              href={KOFI_URL}
-              className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-[15px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
-              style={{ borderColor: T.border.hi }}
+              href="/about"
+              className="mt-5 text-[14px] text-(--t-ink-base) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
             >
-              <Icon icon="simple-icons:kofi" className="size-4" aria-hidden />
-              {tUi("support_us_on_ko_fi")}{" "}
-              <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
+              {tUi("about_the_project")}
             </GlobalLink>
           </div>
 

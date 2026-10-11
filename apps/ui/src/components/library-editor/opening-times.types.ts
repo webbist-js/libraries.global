@@ -24,29 +24,18 @@ export const DAY_LABELS: Record<OpeningTimesDayKey, string> = {
   sunday: "Sunday",
 }
 
-export type OpeningTimesStaffing = "staffed" | "volunteer" | "self_service"
+export type {
+  OpeningTimesStaffing,
+  OpeningTimeframe,
+  OpeningTimesDay,
+} from "@repo/shared-data"
+import type { OpeningTimesValue } from "@repo/shared-data"
 
-export interface OpeningTimeframe {
-  id: string
-  startTime: string
-  endTime: string
-  staffing: OpeningTimesStaffing
-}
-
-export interface OpeningTimesDay {
-  day: OpeningTimesDayKey
-  enabled: boolean
-  timeframes: OpeningTimeframe[]
-}
-
-export interface OpeningTimesData {
-  version: number
-  days: OpeningTimesDay[]
-}
+export type OpeningTimesData = OpeningTimesValue
 
 export function emptyOpeningTimes(): OpeningTimesData {
   return {
-    version: 1,
+    version: 2,
     days: DAY_ORDER.map((day) => ({ day, enabled: false, timeframes: [] })),
   }
 }

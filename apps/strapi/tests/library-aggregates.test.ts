@@ -66,6 +66,8 @@ function knexStub(rowsFor: (table: string) => unknown) {
 
     return builder
   }
+  knex.from = (subquery: unknown) =>
+    knex("canonical libraries as l").from(subquery)
   knex.raw = vi.fn((sql: string, bindings?: unknown[]) => ({ sql, bindings }))
   const ops = (i = 0) => queries[i]?.ops.map(([m]) => m) ?? []
   const args = (i: number, method: string) =>
@@ -137,6 +139,7 @@ describe("tallyLibrariesByChild (E4)", () => {
     })
     expect(tallies.get("regA")).toEqual({
       count: 3,
+      placeBasedCount: 3,
       center: { lat: 40, lng: 50 },
     })
     const types = await countLibrariesByType(strapi, "region", "regA", {
@@ -163,8 +166,20 @@ describe("tallyLibrariesByChild (E4)", () => {
   })
   it("on Postgres runs one grouped query over the link tables and never loads library rows", async () => {
     const { strapi, queries, ops, args, knex } = postgres({}, () => [
-      { child_id: "regA", count: "3", lat: "51.5", lng: "-0.1" },
-      { child_id: "regB", count: "1", lat: null, lng: null },
+      {
+        child_id: "regA",
+        count: "3",
+        place_based_count: "3",
+        lat: "51.5",
+        lng: "-0.1",
+      },
+      {
+        child_id: "regB",
+        count: "1",
+        place_based_count: "1",
+        lat: null,
+        lng: null,
+      },
     ])
 
     const tallies = await tallyLibrariesByChild(strapi, {
@@ -176,13 +191,14 @@ describe("tallyLibrariesByChild (E4)", () => {
     })
 
     expect(libraryFindManyCalls(strapi)).toBe(0)
-    expect(queries).toHaveLength(1)
-    expect(queries[0].table).toBe("libraries as l")
-    expect(ops()).toContain("groupBy")
-    expect(args(0, "groupBy")).toEqual([["c.document_id"]])
+    expect(queries).toHaveLength(2)
+    expect(queries[0].table).toBe("libraries as source")
+    expect(queries[1].table).toBe("canonical libraries as l")
+    expect(ops(1)).toContain("groupBy")
+    expect(args(1, "groupBy")).toEqual([["c.document_id"]])
     // Full join tuples: a swapped link column would still name the same
     // tables but count the wrong rows.
-    expect(args(0, "join")).toEqual(
+    expect(args(1, "join")).toEqual(
       expect.arrayContaining([
         ["libraries_country_lnk as pl", "pl.library_id", "l.id"],
         ["countries as p", "p.id", "pl.country_id"],
@@ -190,21 +206,24 @@ describe("tallyLibrariesByChild (E4)", () => {
         ["regions as c", "c.id", "cl.region_id"],
       ])
     )
-    expect(args(0, "where")).toEqual(
-      expect.arrayContaining([
-        ["p.document_id", "gb"],
-        ["l.locale", "en"],
-      ])
+    expect(args(1, "where")).toEqual(
+      expect.arrayContaining([["p.document_id", "gb"]])
     )
+    expect(args(0, "whereIn")).toEqual([["source.locale", ["en"]]])
     expect(ops()).toContain("whereNotNull")
     expect(
       knex.raw.mock.calls.some(([sql]: [string]) => /avg\(/.test(sql))
     ).toBe(true)
     expect(tallies.get("regA")).toEqual({
       count: 3,
+      placeBasedCount: 3,
       center: { lat: 51.5, lng: -0.1 },
     })
-    expect(tallies.get("regB")).toEqual({ count: 1, center: null })
+    expect(tallies.get("regB")).toEqual({
+      count: 1,
+      placeBasedCount: 1,
+      center: null,
+    })
   })
 
   it("filters drafts with whereNull when status is draft", async () => {
@@ -249,6 +268,7 @@ describe("tallyLibrariesByChild (E4)", () => {
     expect(libraryFindManyCalls(strapi)).toBe(1)
     expect(tallies.get("regA")).toEqual({
       count: 2,
+      placeBasedCount: 2,
       center: { lat: 2, lng: 3 },
     })
   })
@@ -269,20 +289,18 @@ describe("countLibrariesByType (E4)", () => {
     })
 
     expect(libraryFindManyCalls(strapi)).toBe(0)
-    expect(queries).toHaveLength(1)
-    expect(args(0, "groupBy")).toEqual([["l.library_type"]])
-    expect(args(0, "join")).toEqual(
+    expect(queries).toHaveLength(2)
+    expect(args(1, "groupBy")).toEqual([["l.library_type"]])
+    expect(args(1, "join")).toEqual(
       expect.arrayContaining([
-        ["libraries_country_lnk as rl", "rl.library_id", "l.id"],
-        ["countries as r", "r.id", "rl.country_id"],
+        ["libraries_country_lnk as pl", "pl.library_id", "l.id"],
+        ["countries as p", "p.id", "pl.country_id"],
       ])
     )
-    expect(args(0, "where")).toEqual(
-      expect.arrayContaining([
-        ["r.document_id", "gb"],
-        ["l.locale", "en"],
-      ])
+    expect(args(1, "where")).toEqual(
+      expect.arrayContaining([["p.document_id", "gb"]])
     )
+    expect(args(0, "whereIn")).toEqual([["source.locale", ["en"]]])
     expect(ops()).toContain("whereNotNull")
     expect(counts).toEqual([
       { type: "National", count: 30 },

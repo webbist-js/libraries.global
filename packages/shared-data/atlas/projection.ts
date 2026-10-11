@@ -82,6 +82,20 @@ export function projectAtlasLibrary(
     ]),
   ].sort()
   const open_tz = atlasTimezone(source.timezone)
+  let validZone = Boolean(source.timezone)
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: source.timezone ?? undefined })
+  } catch {
+    validZone = false
+  }
+  const scheduleEligible =
+    validZone &&
+    ![
+      "permanently_closed",
+      "temporarily_closed",
+      "planned",
+      "appointment_only",
+    ].includes(source.operationalStatus ?? "")
   const cells = Object.fromEntries(
     Array.from({ length: ATLAS_LIMITS.maxCellZoom + 1 }, (_, z) => [
       `atlas_cell_${z}`,
@@ -142,8 +156,8 @@ export function projectAtlasLibrary(
         ? Math.max(0, Math.min(100, source.completeness))
         : null,
     ...atlasHoursProjection(
-      source.openingTimes,
-      source.notices ?? [],
+      scheduleEligible ? source.openingTimes : null,
+      scheduleEligible ? (source.notices ?? []) : [],
       open_tz,
       options.now
     ),

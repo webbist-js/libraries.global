@@ -12,16 +12,18 @@ import {
 import { useTranslations } from "next-intl"
 import { useRef, useState, type FormEvent, type RefObject } from "react"
 
+import AtlasFeedbackFields from "@/components/contact/AtlasFeedbackFields"
 import styles from "@/components/contact/contact.module.css"
 import {
   ContactDetails,
   FeedbackQuestions,
 } from "@/components/contact/ContactFields"
 import type {
-  FEEDBACK_TASKS,
+  AtlasFeedbackFeature,
   ContactContext,
   ContactIntent,
   ContactType,
+  FeedbackTask,
   FeedbackTopic,
 } from "@/lib/contact/model"
 import { contactSubmissionSchema } from "@/lib/contact/schema"
@@ -39,14 +41,19 @@ export default function ContactModal({
 }) {
   const t = useTranslations("contactModal")
   const feedback = intent.mode === "feedback"
+  const atlas = feedback && intent.product === "atlas"
   const [step, setStep] = useState(feedback ? "questions" : "details")
   const [topic, setTopic] = useState<FeedbackTopic>("problem")
   const [type, setType] = useState<ContactType>(
     intent.mode === "contact" ? intent.type : "general_inquiry"
   )
-  const [task, setTask] = useState<(typeof FEEDBACK_TASKS)[number] | "">("")
+  const [task, setTask] = useState<FeedbackTask | "">("")
   const [outcome, setOutcome] = useState("")
   const [ease, setEase] = useState<number>()
+  const [features, setFeatures] = useState<AtlasFeedbackFeature[]>([])
+  const [clarity, setClarity] = useState<number>()
+  const [wishlist, setWishlist] = useState("")
+  const [featureError, setFeatureError] = useState(false)
   const [message, setMessage] = useState("")
   const [steps, setSteps] = useState("")
   const [name, setName] = useState("")
@@ -58,9 +65,18 @@ export default function ContactModal({
   const headingRef = useRef<HTMLHeadingElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const messageRef = useRef<HTMLTextAreaElement>(null)
+  const firstFeatureRef = useRef<HTMLInputElement>(null)
   const isIssue = feedback ? topic === "problem" : type === "report_issue"
 
-  function focusDetails() {
+  function continueToDetails() {
+    if (atlas && features.length === 0) {
+      setFeatureError(true)
+      requestAnimationFrame(() => firstFeatureRef.current?.focus())
+
+      return
+    }
+    setError("")
+    setStep("details")
     requestAnimationFrame(() => messageRef.current?.focus())
   }
 
@@ -68,15 +84,30 @@ export default function ContactModal({
     event.preventDefault()
     if (sending) return
     if (step === "questions") {
-      setStep("details")
-      focusDetails()
+      continueToDetails()
 
       return
     }
     const form = new FormData(event.currentTarget)
+    const atlasWishlist = topic === "idea" ? undefined : wishlist || undefined
     const parsed = contactSubmissionSchema.safeParse({
       ...(feedback
-        ? { mode: "feedback", topic, task, outcome, ease }
+        ? {
+            mode: "feedback",
+            topic,
+            task,
+            outcome,
+            ease,
+            ...(atlas
+              ? {
+                  atlas: {
+                    features,
+                    clarity,
+                    wishlist: atlasWishlist,
+                  },
+                }
+              : {}),
+          }
         : { mode: "contact", type, sourceSubject: intent.sourceSubject }),
       name,
       email,
@@ -154,6 +185,7 @@ export default function ContactModal({
         >
           <ContactHeader
             feedback={feedback}
+            atlas={atlas}
             sent={sent}
             step={step}
             sending={sending}
@@ -166,19 +198,36 @@ export default function ContactModal({
               <div className={styles.body}>
                 <fieldset disabled={sending} className={styles.fields}>
                   {step === "questions" ? (
-                    <FeedbackQuestions
-                      topic={topic}
-                      setTopic={setTopic}
-                      task={task}
-                      setTask={setTask}
-                      outcome={outcome}
-                      setOutcome={setOutcome}
-                      ease={ease}
-                      setEase={setEase}
-                    />
+                    <>
+                      <FeedbackQuestions
+                        atlas={atlas}
+                        topic={topic}
+                        setTopic={setTopic}
+                        task={task}
+                        setTask={setTask}
+                        outcome={outcome}
+                        setOutcome={setOutcome}
+                        ease={ease}
+                        setEase={setEase}
+                      />
+                      {atlas ? (
+                        <AtlasFeedbackFields
+                          features={features}
+                          setFeatures={(values) => {
+                            setFeatures(values)
+                            if (values.length > 0) setFeatureError(false)
+                          }}
+                          featureError={featureError}
+                          firstFeatureRef={firstFeatureRef}
+                          clarity={clarity}
+                          setClarity={setClarity}
+                        />
+                      ) : null}
+                    </>
                   ) : (
                     <ContactDetails
                       feedback={feedback}
+                      atlas={atlas}
                       type={type}
                       setType={setType}
                       topic={topic}
@@ -188,6 +237,8 @@ export default function ContactModal({
                       messageRef={messageRef}
                       message={message}
                       setMessage={setMessage}
+                      wishlist={wishlist}
+                      setWishlist={setWishlist}
                       steps={steps}
                       setSteps={setSteps}
                       name={name}
@@ -205,6 +256,7 @@ export default function ContactModal({
               </div>
               <ContactFooter
                 feedback={feedback}
+                atlas={atlas}
                 step={step}
                 sending={sending}
                 onBack={() => {
@@ -223,42 +275,35 @@ export default function ContactModal({
 
 function ContactHeader({
   feedback,
+  atlas,
   sent,
   step,
   sending,
   headingRef,
 }: {
   feedback: boolean
+  atlas: boolean
   sent: boolean
   step: string
   sending: boolean
   headingRef: RefObject<HTMLHeadingElement | null>
 }) {
   const t = useTranslations("contactModal")
+  const feedbackKey = atlas ? "atlas" : "feedback"
+  const modeKey = feedback ? feedbackKey : "contact"
 
   return (
     <div className={styles.header}>
       <div className={styles.eyebrow}>
-        <MessageSquare size={14} aria-hidden="true" />{" "}
-        {feedback ? t("feedback.eyebrow") : t("contact.eyebrow")}
+        <MessageSquare size={14} aria-hidden="true" /> {t(`${modeKey}.eyebrow`)}
       </div>
       <Dialog.Title asChild>
         <h2 className={styles.title} tabIndex={-1} ref={headingRef}>
-          {sent
-            ? t("successTitle")
-            : feedback
-              ? t("feedback.title")
-              : t("contact.title")}
+          {sent ? t("successTitle") : t(`${modeKey}.title`)}
         </h2>
       </Dialog.Title>
       <Dialog.Description className={styles.description}>
-        {sent
-          ? feedback
-            ? t("feedback.success")
-            : t("contact.success")
-          : feedback
-            ? t("feedback.description")
-            : t("contact.description")}
+        {t(`${modeKey}.${sent ? "success" : "description"}`)}
       </Dialog.Description>
       <Dialog.Close
         className={styles.close}
@@ -277,7 +322,11 @@ function ContactHeader({
           <span />
           <span data-active={step === "details"} />
           <p>
-            {t(step === "questions" ? "feedback.stepOne" : "feedback.stepTwo")}
+            {t(
+              step === "questions"
+                ? `${feedbackKey}.stepOne`
+                : `${feedbackKey}.stepTwo`
+            )}
           </p>
         </div>
       ) : null}
@@ -312,11 +361,13 @@ function SuccessReceipt({
 
 function ContactFooter({
   feedback,
+  atlas,
   step,
   sending,
   onBack,
 }: {
   feedback: boolean
+  atlas: boolean
   step: string
   sending: boolean
   onBack: () => void
@@ -337,7 +388,13 @@ function ContactFooter({
         </button>
       ) : (
         <span className={styles.footerNote}>
-          {t(step === "questions" ? "feedback.short" : "private")}
+          {t(
+            step === "questions"
+              ? atlas
+                ? "atlas.short"
+                : "feedback.short"
+              : "private"
+          )}
         </span>
       )}
       <button className={styles.primary} type="submit" disabled={sending}>
