@@ -1,5 +1,7 @@
 import type { Core } from "@strapi/strapi"
 
+import openStreetMap from "./openstreetmap-dataset.json"
+
 /**
  * The datasets Libraries Global imports, so every imported record can be
  * traced to a publisher and a licence. A record points at its dataset through
@@ -30,6 +32,7 @@ export type DatasetSeed = {
 }
 
 export const DATASET_SEED: DatasetSeed[] = [
+  openStreetMap as DatasetSeed,
   {
     key: "wikidata",
     name: "Wikidata library institutions",
