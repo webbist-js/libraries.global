@@ -14,6 +14,7 @@ import {
   computeCompleteness,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
 import {
   bridgeUserHeaders,
   strapiServiceHeaders,
@@ -1571,7 +1572,15 @@ export async function fetchLegalDocuments(
   locale: Locale,
   status?: "draft" | "published"
 ) {
-  return withLocaleNavigation(locale, (l) => fetchLegalDocumentsIn(l, status))
+  const result = await withLocaleNavigation(locale, (l) =>
+    fetchLegalDocumentsIn(l, status)
+  )
+
+  // The temporary entrance notice has its own link, never a main-site legal tab.
+  return {
+    ...result,
+    data: result.data.filter((doc) => doc.slug !== BETA_LEGAL_SLUG),
+  }
 }
 
 async function fetchLegalDocumentsIn(

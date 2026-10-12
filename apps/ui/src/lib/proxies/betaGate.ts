@@ -11,7 +11,15 @@ import { betaPath, betaPublicRequest, betaPublicShell } from "@/lib/beta/scope"
 export function betaShellRequest(req: NextRequest): NextRequest {
   const headers = new Headers(req.headers)
   headers.delete("x-beta-public-shell")
-  if (betaEnabled() && betaPublicShell(req.nextUrl.pathname))
+  const path = betaPath(req.nextUrl.pathname)
+  const entrance = path === "/beta" || path === "/beta/"
+  // Legal URLs stay readable before entry. A verified pass restores the site
+  // providers, header and footer. The entrance itself remains independent.
+  if (
+    betaEnabled() &&
+    betaPublicShell(req.nextUrl.pathname) &&
+    (entrance || !validBetaPass(req.cookies.get(BETA_COOKIE)?.value))
+  )
     headers.set("x-beta-public-shell", "true")
 
   return new NextRequest(req, { headers })

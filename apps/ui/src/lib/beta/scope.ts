@@ -2,6 +2,8 @@ import { SUPPORTED_LOCALES } from "@repo/shared-data"
 
 const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
 
+export const BETA_LEGAL_SLUG = "beta"
+
 const MACHINE_PATHS = new Set([
   "/api/health",
   "/api/cron/retention",
@@ -33,6 +35,7 @@ export function betaPublicShell(pathname: string): boolean {
   return (
     path === "/beta" ||
     path === "/beta/" ||
+    path === `/legal/${BETA_LEGAL_SLUG}` ||
     path === "/legal/privacy" ||
     path === "/privacy" ||
     path === "/legal/terms" ||

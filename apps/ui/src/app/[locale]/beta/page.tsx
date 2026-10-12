@@ -8,6 +8,7 @@ import {
 } from "next-intl/server"
 
 import styles from "@/components/beta/beta.module.css"
+import { BetaFooter } from "@/components/beta/BetaFooter"
 import { BetaForms } from "@/components/beta/BetaForms"
 import {
   BETA_COOKIE,
@@ -43,11 +44,6 @@ export default async function BetaPage({
   )
     redirect(next)
   const t = await getUiTranslations("beta")
-  const email = process.env.BETA_CONTACT_EMAIL ?? "hello@libraries.global"
-  const source =
-    process.env.BETA_SOURCE_URL ??
-    "https://github.com/webbist-js/libraries.global"
-  const privacy = `${prefix}/legal/privacy`
 
   return (
     <div className={styles.page}>
@@ -79,16 +75,7 @@ export default async function BetaPage({
         </section>
         <BetaForms next={next} locale={locale} available={betaConfigured()} />
       </main>
-      <footer className={styles.footer}>
-        <p>{t("independent")}</p>
-        <nav aria-label={t("footerLabel")}>
-          <a href={privacy}>{t("privacy")}</a>
-          <a href={`mailto:${email}`}>{email}</a>
-          <a href={source} target="_blank" rel="noreferrer">
-            {t("source")}
-          </a>
-        </nav>
-      </footer>
+      <BetaFooter locale={locale} />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { BETA_COOKIE, createBetaPass } from "@/lib/beta/access"
+import { BETA_COOKIE, BETA_MAX_AGE, createBetaPass } from "@/lib/beta/access"
 import { betaPublicRequest } from "@/lib/beta/scope"
 
 import { betaGate, betaShellRequest } from "../betaGate"
@@ -84,5 +84,55 @@ describe("beta routing", () => {
     expect(
       betaShellRequest(request("/beta")).headers.get("x-beta-public-shell")
     ).toBe("true")
+  })
+  it.each([
+    "/legal/terms",
+    "/legal/privacy",
+    "/legal/cookies",
+    "/legal/membership",
+    "/legal/cancellation-refunds",
+    "/legal/beta",
+    "/cs/legal/membership",
+    "/fr/legal/terms",
+    "/email/preferences",
+  ])("uses the full site shell after beta entry on %s", (path) => {
+    const req = request(path, {
+      cookie: `${BETA_COOKIE}=${createBetaPass()}`,
+      "x-beta-public-shell": "true",
+    })
+    expect(betaGate(req)).toBeNull()
+    expect(betaShellRequest(req).headers.has("x-beta-public-shell")).toBe(false)
+  })
+  it("keeps the entrance independent and makes the temporary notice public", () => {
+    for (const path of [
+      "/beta",
+      "/legal/beta",
+      "/cs/legal/beta",
+      "/fr/legal/beta",
+    ])
+      for (const accepted of [false, true]) {
+        const cookie = accepted ? `${BETA_COOKIE}=${createBetaPass()}` : ""
+        const req = request(path, { cookie })
+        expect(betaGate(req)).toBeNull()
+        expect(betaShellRequest(req).headers.has("x-beta-public-shell")).toBe(
+          path === "/beta" || !accepted
+        )
+      }
+    expect(betaPublicRequest("/legal/beta", "HEAD")).toBe(true)
+    expect(betaPublicRequest("/legal/beta", "POST")).toBe(false)
+    expect(betaPublicRequest("/legal/beta/other", "GET")).toBe(false)
+  })
+  it("keeps invalid and expired passes in the public legal shell", () => {
+    for (const pass of [
+      "forged",
+      createBetaPass(Date.now() - (BETA_MAX_AGE + 1) * 1000),
+    ]) {
+      const req = request("/legal/membership", {
+        cookie: `${BETA_COOKIE}=${pass}`,
+      })
+      expect(betaShellRequest(req).headers.get("x-beta-public-shell")).toBe(
+        "true"
+      )
+    }
   })
 })

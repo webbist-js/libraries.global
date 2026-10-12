@@ -68,9 +68,11 @@ export function LegalDocumentPage({
   const tUi = useUiTranslations("ui")
 
   const title = doc.title ?? "Legal"
-  const membershipPolicy = ["membership", "cancellation-refunds"].includes(
-    doc.slug ?? ""
-  )
+  const membershipPolicy = [
+    "membership",
+    "cancellation-refunds",
+    "beta",
+  ].includes(doc.slug ?? "")
   const contactEmail = membershipPolicy
     ? "info@libraries.global"
     : LEGAL_CONTACT_EMAIL

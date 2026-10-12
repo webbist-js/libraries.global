@@ -242,7 +242,12 @@ export function BetaForms({
               {waitlistError}
             </p>
             <p id="beta-waitlist-note" className={styles.note}>
-              {t("waitlistNote")}
+              {t("waitlistNote")}{" "}
+              <a
+                href={`${locale === "en" ? "" : `/${locale}`}/legal/beta#privacy`}
+              >
+                {t("privacy")}
+              </a>
             </p>
           </>
         )}

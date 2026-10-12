@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { BetaFooter } from "@/components/beta/BetaFooter"
 import LegalDocumentPage from "@/components/legal/LegalDocumentPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
 import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
@@ -48,7 +51,10 @@ export async function generateMetadata({
     locale,
     image: formatStrapiMediaUrl(doc.seo?.metaImage?.url),
     modifiedTime: doc.updatedAt,
-    robots: res?.localeFallback ? "noindex-follow" : "index",
+    robots:
+      slug === BETA_LEGAL_SLUG || res?.localeFallback
+        ? "noindex-follow"
+        : "index",
   })
 }
 
@@ -66,6 +72,7 @@ export default async function LegalDocumentRoute({
   ])
   const doc = docRes?.data
   if (!doc) notFound()
+  const publicShell = (await headers()).get("x-beta-public-shell") === "true"
 
   return (
     <>
@@ -81,9 +88,10 @@ export default async function LegalDocumentRoute({
       <LegalDocumentPage
         document={doc}
         untranslatedLocale={docRes?.localeFallback ? locale : null}
-        documents={navRes.data}
+        documents={slug === BETA_LEGAL_SLUG ? [doc] : navRes.data}
         locale={locale}
       />
+      {publicShell && <BetaFooter locale={locale} />}
     </>
   )
 }
