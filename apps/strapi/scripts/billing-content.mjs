@@ -179,7 +179,8 @@ export function membershipLegalContent(
         ),
         section(
           "Model cancellation form",
-          "Use this form or any clear statement of cancellation.",
+          "Optional example for statutory cancellation; no form is needed to stop renewal in Settings.",
+          "You do not need to fill in this form to stop future renewals. Use Settings → Membership & billing → Manage membership for that. The example below is an optional way to tell us that you are exercising a statutory cancellation right for the membership purchase. You can instead email a clear statement in your own words. Stopping renewal through the billing controls does not automatically request a refund of a payment already made.",
           `To ${operator}, postal contact: ${contact}; email: ${contactEmail}.`,
           "I give notice that I cancel my contract for the following membership service: [Supporter or Pro].",
           "Ordered on: [date]. Name: [your name]. Address: [your address]. Account email and order reference: [details]. Date: [date]. Signature: [only if sent on paper]."
