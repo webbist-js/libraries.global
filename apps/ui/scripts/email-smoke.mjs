@@ -31,21 +31,24 @@ if (to && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to))
   throw new Error("Invalid --to address")
 const previewDir = argument("--preview-dir")
 const only = argument("--only")
-let samples = args.includes("--suite")
-  ? emailSamples()
-  : [
-      {
-        id: "delivery-check",
-        ...emailTemplate({
-          title: "Libraries Global email delivery check",
-          eyebrow: "Delivery sample",
-          body: "This is a delivery check from Libraries Global. It does not change an account or subscription.",
-          url: "https://libraries.global",
-          action: "Visit Libraries Global",
-          postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
-        }),
-      },
-    ]
+let samples =
+  args.includes("--suite") || args.includes("--billing")
+    ? emailSamples()
+    : [
+        {
+          id: "delivery-check",
+          ...emailTemplate({
+            title: "Libraries Global email delivery check",
+            eyebrow: "Delivery sample",
+            body: "This is a delivery check from Libraries Global. It does not change an account or subscription.",
+            url: "https://libraries.global",
+            action: "Visit Libraries Global",
+            postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
+          }),
+        },
+      ]
+if (args.includes("--billing"))
+  samples = samples.filter((sample) => sample.id.startsWith("billing-"))
 if (only) {
   samples = samples.filter((sample) => sample.id === only)
   if (!samples.length)

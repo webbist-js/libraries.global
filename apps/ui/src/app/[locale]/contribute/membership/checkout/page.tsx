@@ -28,7 +28,7 @@ export default async function CheckoutPage({
       : undefined
 
   return (
-    <main className="mx-auto my-8 max-w-5xl overflow-hidden rounded-3xl border bg-white">
+    <main className="mx-auto my-6 max-w-6xl overflow-hidden rounded-3xl border bg-white sm:my-10">
       <CheckoutFlow
         user={
           user

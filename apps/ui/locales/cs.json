@@ -1464,6 +1464,28 @@
       "unknown": "Stav nedostupný"
     },
     "termsLanguageNote": "Podmínky členství jsou zatím dostupné v angličtině.",
-    "cancellationPolicy": "Zrušení a vrácení peněz"
+    "cancellationPolicy": "Zrušení a vrácení peněz",
+    "perMonth": "měsíc",
+    "perYear": "rok",
+    "twoMonthsFree": "2 měsíce zdarma",
+    "billedMonthly": "Měsíční platba",
+    "billedYearly": "Roční platba",
+    "basePrice": "Cena členství",
+    "renewsMonthly": "Obnovuje se každý měsíc, dokud členství nezrušíte. Stripe při platbě potvrdí první datum obnovení.",
+    "renewsYearly": "Obnovuje se každý rok, dokud členství nezrušíte. Stripe při platbě potvrdí první datum obnovení.",
+    "switchYearly": "Přejít na roční platbu: {amount}",
+    "annualSaving": "Ušetříte {amount} ročně",
+    "includedSupporter": "Vše z členství Supporter",
+    "historyBenefit": "Podrobná historie změn knihoven",
+    "exportBenefit": "Exporty CSV a GeoJSON až {count} knihoven",
+    "comparisonBenefit": "Srovnání počtu obyvatel",
+    "recognitionBenefit": "Volitelná značka Supporter a veřejné poděkování",
+    "supporterIntro": "Pomozte zachovat bezplatný index a získejte historii a exporty.",
+    "proIntro": "Větší exporty a analýza počtu obyvatel.",
+    "recognitionTitle": "Jak vás zobrazujeme",
+    "badgeHelp": "Malá značka vedle vašeho jména. Kdykoli ji můžete skrýt.",
+    "creditHelp": "Vaše jméno na veřejném seznamu poděkování. Ve výchozím nastavení je vypnuté.",
+    "securePaymentBenefit": "Stripe bezpečně zpracovává vaše platební údaje.",
+    "dismiss": "Zrušit"
   }
 }

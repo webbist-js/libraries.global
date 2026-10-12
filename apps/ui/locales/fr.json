@@ -1464,6 +1464,28 @@
       "unknown": "Statut indisponible"
     },
     "termsLanguageNote": "Les politiques d’adhésion sont actuellement disponibles en anglais.",
-    "cancellationPolicy": "Annulation et remboursements"
+    "cancellationPolicy": "Annulation et remboursements",
+    "perMonth": "mois",
+    "perYear": "an",
+    "twoMonthsFree": "2 mois offerts",
+    "billedMonthly": "Facturation mensuelle",
+    "billedYearly": "Facturation annuelle",
+    "basePrice": "Prix de l’abonnement",
+    "renewsMonthly": "Renouvellement chaque mois jusqu’à résiliation. Stripe confirme la première date de renouvellement au paiement.",
+    "renewsYearly": "Renouvellement chaque année jusqu’à résiliation. Stripe confirme la première date de renouvellement au paiement.",
+    "switchYearly": "Passer à l’année : {amount}",
+    "annualSaving": "Économisez {amount} par an",
+    "includedSupporter": "Tout ce qui est inclus dans Supporter",
+    "historyBenefit": "Historique détaillé des modifications des bibliothèques",
+    "exportBenefit": "Exports CSV et GeoJSON de {count} bibliothèques maximum",
+    "comparisonBenefit": "Comparaisons de population",
+    "recognitionBenefit": "Badge Supporter et remerciement public facultatifs",
+    "supporterIntro": "Gardez l’index gratuit, avec des outils d’historique et d’export.",
+    "proIntro": "Plus de capacité d’export et d’analyse de population.",
+    "recognitionTitle": "Votre visibilité",
+    "badgeHelp": "Un petit badge à côté de votre nom. Masquez-le à tout moment.",
+    "creditHelp": "Votre nom sur la liste publique de remerciements. Désactivé sauf si vous le choisissez.",
+    "securePaymentBenefit": "Stripe traite vos informations de paiement en toute sécurité.",
+    "dismiss": "Annuler"
   }
 }

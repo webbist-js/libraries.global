@@ -43,7 +43,7 @@ export function CheckoutButton({
           {t("join", { plan: t(plan) })}
         </button>
       </DialogTrigger>
-      <DialogContent className="max-h-dvh max-w-full gap-0 overflow-auto rounded-none bg-white p-0 sm:max-w-5xl sm:rounded-3xl [&_[data-slot=dialog-close]]:grid [&_[data-slot=dialog-close]]:size-11 [&_[data-slot=dialog-close]]:place-items-center">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-3xl bg-white p-0 sm:max-w-[calc(100%-3rem)] lg:max-w-6xl [&_[data-slot=dialog-close]]:grid [&_[data-slot=dialog-close]]:size-11 [&_[data-slot=dialog-close]]:place-items-center [&_[data-slot=dialog-close]]:rounded-full [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-(--t-border-line) [&_[data-slot=dialog-close]]:bg-white [&_[data-slot=dialog-close]]:opacity-100">
         <DialogTitle className="sr-only">{t("secureCheckout")}</DialogTitle>
         <DialogDescription className="sr-only">
           {t("providerExplanation")}

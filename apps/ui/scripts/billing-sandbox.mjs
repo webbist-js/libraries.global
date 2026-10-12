@@ -2,6 +2,7 @@ import { spawn } from "node:child_process"
 import { randomBytes } from "node:crypto"
 import { chmodSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
+import { setTimeout } from "node:timers/promises"
 import { fileURLToPath } from "node:url"
 import { parseEnv } from "node:util"
 
@@ -61,7 +62,8 @@ if (process.argv.includes("--configure-local")) {
   })
   console.log("Local sandbox catalogue and credentials configured privately.")
 }
-if (process.argv.includes("--work")) {
+if (process.argv.includes("--work") || process.argv.includes("--watch")) {
+  const watch = process.argv.includes("--watch")
   const origin =
     process.env.BILLING_LOCAL_ORIGIN ??
     ui.APP_PUBLIC_URL ??
@@ -75,28 +77,48 @@ if (process.argv.includes("--work")) {
     throw new Error(
       "Sandbox worker requires local configuration and a localhost origin"
     )
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${ui.CRON_SECRET}` },
-    signal: AbortSignal.timeout(60_000),
-  })
-  if (!response.ok)
-    throw new Error(`Sandbox worker returned HTTP ${response.status}`)
-  const data = await response.json()
-  console.log(
-    JSON.stringify(
-      Object.fromEntries(
-        [
-          "processed",
-          "synced",
-          "failed",
-          "pendingEvents",
-          "pendingProjections",
-        ].map((name) => [name, data[name]])
-      ),
-      null,
-      2
+  const stop = new AbortController()
+  if (watch) {
+    for (const signal of ["SIGINT", "SIGTERM"])
+      process.once(signal, () => stop.abort())
+    console.log(
+      "Local sandbox worker running every 5 seconds. Ctrl-C stops it."
     )
-  )
+  }
+  let lastResult
+  do {
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${ui.CRON_SECRET}` },
+        signal: AbortSignal.any([stop.signal, AbortSignal.timeout(60_000)]),
+      })
+      if (!response.ok)
+        throw new Error(`Sandbox worker returned HTTP ${response.status}`)
+      const data = await response.json()
+      const result = JSON.stringify(
+        Object.fromEntries(
+          [
+            "processed",
+            "synced",
+            "failed",
+            "pendingEvents",
+            "pendingProjections",
+          ].map((name) => [name, data[name]])
+        )
+      )
+      if (result !== lastResult) console.log(result)
+      lastResult = result
+    } catch (error) {
+      if (stop.signal.aborted) break
+      if (!watch) throw error
+      console.error(
+        "Local sandbox worker failed; retrying. Check the UI server and billing configuration."
+      )
+      lastResult = undefined
+    }
+    if (!watch) break
+    await setTimeout(5000, undefined, { signal: stop.signal }).catch(() => {})
+  } while (!stop.signal.aborted)
 }
 if (process.argv.includes("--listen")) {
   const runner = process.env.npm_execpath
@@ -168,6 +190,7 @@ if (process.argv.includes("--listen")) {
 if (
   !process.argv.includes("--configure-local") &&
   !process.argv.includes("--work") &&
+  !process.argv.includes("--watch") &&
   !process.argv.includes("--listen")
 )
-  throw new Error("Choose --configure-local, --listen or --work")
+  throw new Error("Choose --configure-local, --listen, --work or --watch")

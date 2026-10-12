@@ -1,6 +1,6 @@
 # Billing launch review — 12 October 2026
 
-The application work is implemented and the production build passes. Final purchase acceptance and live Stripe preparation remain dependent on the user's hosted-test completion, email recipient, public legal address and production URL. This report does not claim the two new purchases or production payments have passed.
+The application work is implemented and the production build passes. Final purchase acceptance and live Stripe preparation remain dependent on the user's hosted-test completion, mailbox confirmation, public legal address and production URL. This report does not claim the two new purchases or production payments have passed.
 
 ## What changed
 
@@ -20,7 +20,7 @@ Knowledge articles were updated through the configured Strapi content-manager MC
 - All four sandbox prices and three portal policies match mode, amount, interval, inclusive tax and allowlist expectations. Both products are active with SaaS classification.
 - Real authenticated sandbox scheduling and Undo preserve the paid Pro period and create no extra invoice. Strapi acknowledges the future change and Undo, with exactly one owned notification each. Forged customer input returns 400, cross-origin mutation 403 and another owner's attempt 404.
 - The previously completed Pro monthly/yearly journey and paid annual proration remain provider evidence. The two fresh Supporter/Pro sessions were last checked open/unpaid with Managed Payments enabled. Human hosted verification is required to finish them.
-- All 43 HTML/text email previews render. Brevo connection, TLS and credentials verify. No test email has been sent yet because the recipient is unconfirmed.
+- All 43 HTML/text email previews render. Brevo connection, TLS and credentials verify. All eleven application billing examples and the new-account verification example were accepted by SMTP for `info@libraries.global` on 12 October 2026. Inbox delivery and authentication headers still need the owner’s confirmation.
 - Official live MCP reads succeed; account charges/payouts and submitted details are enabled. The supplied live runtime key can read prices. Live products/prices/webhooks are still absent. The idempotent setup helper is prepared and defaults to read-only; its deployment values remain private and purchase flags remain off.
 
 ## Design review
@@ -43,6 +43,18 @@ Fixed findings:
 
 A CSS-only zoom experiment retained desktop media queries and produced overflow; it was not treated as proof of browser zoom behavior. The 640px reflow check passes. Actual browser zoom/device wallet confirmation remains part of manual acceptance. General development-only indicators are not production UI.
 
+## Checkout spacing follow-up
+
+The owner reported that the earlier accessible layouts did not match the visual references closely enough. Saved browser screenshots confirm cramped headings, a 1024px modal, small unstructured plan cards, a bare Back link and a top-heavy summary. Margin-based spacing mixed with reset margins on headings/fieldsets made the spacing inconsistent.
+
+The follow-up uses explicit flex gaps, a 1152px maximum checkout dialog and 60/40 desktop split, larger serif headings/prices, equal feature cards, connected steps, a circular close control and a warm-paper summary with a real annual-saving action. Details has larger recognition cards, a read-only email display, separated consent and aligned Back/Stripe controls. Loading no longer describes unavailable prices as “Coming soon”. Plan changes use the same spacing/control treatment, include interval labels and current-plan marking, and disable choices while a request is in flight. Programmatic step focus and summary locking during payment handoff are covered by component tests. Payment inputs remain Stripe-hosted.
+
+Validation for this follow-up: 27 checkout component/API tests pass, including all four request selections and step focus. UI typecheck and the final 253-page production build pass. Focused ESLint has no errors and three existing warnings (component complexity, test function scope and CLI email validation regex). Billing translation keys match across EN/FR/CS. The read-only catalogue check confirms four prices and three portal policies. The local worker reports no failures or pending events/projections.
+
+The browser automation tool rejected opening the local page because of its URL policy. No alternate browser surface or workaround was used. This follow-up was reviewed against existing rendered screenshots and the supplied references; fresh browser geometry, zoom and Axe checks remain owner acceptance items. Earlier Axe results above apply to the earlier rendering, not proof of the revised layout.
+
+[Local acceptance checklist](BILLING-LOCAL-TESTS.md) covers both memberships, monthly/yearly prices, consent, settlement, access/export limits, recognition, changes and failure cases. The local sandbox worker now has a watch command so paid-return status can complete without repeatedly running a manual cron pass.
+
 ## Security review
 
 Ownership, mode separation, verified identity, origin/body/quantity/price guards, raw signature validation, replay/out-of-order handling, durable retries, private revisions, quotas and erased-account protections were checked. No custom card/CVC processing was introduced. Financial data remains outside public profiles/directories. Pending choices never grant tools.
@@ -54,7 +66,7 @@ This is tested behavior, not an absolute security guarantee. Real initial Suppor
 ## Remaining external inputs and launch work
 
 1. Complete the two owned hosted sandbox checkouts from the pending question. Then verify settled invoices, ready status, Strapi acknowledgement, both access caps, Settings and recognition. Keep fixture credentials/capability links private.
-2. Provide the test-email recipient. Send the billing examples, record SMTP acceptance and inspect the received messages/authentication headers. Stripe's sandbox financial receipts are not automatically emailed.
+2. Inspect the twelve samples sent to `info@libraries.global`, including presentation and authentication headers. SMTP accepted them; inbox delivery is not inferred. Stripe’s sandbox financial receipts are not automatically emailed.
 3. Confirm operator/public postal details. Publish the two new legal policies and confirm the public version/links before checkout opens. No private mailing address has been silently published.
 4. Provide the production origin/deployment. `libraries.global` did not resolve to a reachable website here. After sandbox acceptance, execute live MCP preparation for two products, four prices, three portals and the deployed webhook. Capture/install its secret privately, then verify the signed receiver and mode.
 5. Deploy production migrations/shared access/Strapi/UI with separate environment databases and matching bridge/mode. Schedule authenticated billing each minute and retention daily on the actual host, connect alerts, verify notification delivery and remove closed-beta barriers for a public launch. Confirm Managed Payments programme/terms, classification and public support/refund-escalation settings; existing charges/payout flags alone are insufficient evidence.

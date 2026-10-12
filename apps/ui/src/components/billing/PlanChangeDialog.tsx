@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -125,11 +126,11 @@ export function PlanChangeDialog({
         </button>
       </DialogTrigger>
       <DialogContent
-        className="max-h-dvh overflow-y-auto rounded-3xl sm:max-w-xl [&_[data-slot=dialog-close]]:grid [&_[data-slot=dialog-close]]:size-11 [&_[data-slot=dialog-close]]:place-items-center"
+        className="flex max-h-[calc(100dvh-2rem)] flex-col gap-6 overflow-y-auto overscroll-contain rounded-3xl p-6 sm:max-w-2xl sm:p-8 [&_[data-slot=dialog-close]]:grid [&_[data-slot=dialog-close]]:size-11 [&_[data-slot=dialog-close]]:place-items-center [&_[data-slot=dialog-close]]:rounded-full [&_[data-slot=dialog-close]]:border [&_[data-slot=dialog-close]]:border-(--t-border-line) [&_[data-slot=dialog-close]]:bg-white [&_[data-slot=dialog-close]]:opacity-100"
         style={{ background: T.bg.deep, color: T.ink.base }}
       >
         <DialogTitle
-          className="pr-12 text-3xl"
+          className="pr-12 text-3xl leading-tight font-normal sm:text-4xl"
           style={{ fontFamily: T.font.serif }}
         >
           {t("changePlan")}
@@ -137,11 +138,23 @@ export function PlanChangeDialog({
         <DialogDescription style={{ color: T.ink.dim }}>
           {t("changeReviewExplanation")}
         </DialogDescription>
-        <fieldset className="flex gap-3">
+        <fieldset
+          disabled={busy}
+          className="m-0 flex w-fit max-w-full flex-wrap gap-1 rounded-full border border-(--t-border-line) p-1"
+        >
           <legend className="sr-only">{t("interval")}</legend>
           {(["month", "year"] as const).map((value) => (
-            <label key={value} className="rounded-full border px-5 py-3">
+            <label
+              key={value}
+              className="flex min-h-11 cursor-pointer items-center rounded-full px-5 py-3 font-semibold focus-within:outline-2 focus-within:outline-offset-2"
+              style={{
+                background:
+                  selectedInterval === value ? T.ink.base : "transparent",
+                color: selectedInterval === value ? "white" : T.ink.base,
+              }}
+            >
               <input
+                className="sr-only"
                 type="radio"
                 name="change-interval"
                 checked={selectedInterval === value}
@@ -151,14 +164,17 @@ export function PlanChangeDialog({
                 }}
                 style={{ accentColor: T.accent.primary }}
               />
-              <span className="ml-2">{t(value)}</span>
+              <span>{t(value)}</span>
             </label>
           ))}
         </fieldset>
         {!catalogue ? (
           <p role="status">{t("loading")}</p>
         ) : (
-          <fieldset className="grid gap-3 sm:grid-cols-2">
+          <fieldset
+            disabled={busy}
+            className="m-0 grid gap-4 p-0 sm:grid-cols-2"
+          >
             <legend className="sr-only">{t("plan")}</legend>
             {(["supporter", "pro"] as const).map((value) => {
               const price = catalogue.prices.find(
@@ -168,43 +184,56 @@ export function PlanChangeDialog({
               return (
                 <label
                   key={value}
-                  className="rounded-2xl border-2 p-4"
+                  className="flex cursor-pointer flex-col gap-4 rounded-2xl border-2 p-5 focus-within:outline-2 focus-within:outline-offset-4"
                   style={{
                     borderColor:
                       selectedPlan === value ? T.accent.primary : T.border.line,
                     background: selectedPlan === value ? "#faf9ff" : "white",
                   }}
                 >
-                  <input
-                    type="radio"
-                    name="change-plan"
-                    checked={selectedPlan === value}
-                    disabled={
-                      !price ||
-                      (value === "pro" && plan !== "pro" && complimentaryPro)
-                    }
-                    onChange={() => {
-                      setSelectedPlan(value)
-                      setQuote(null)
-                    }}
-                    style={{ accentColor: T.accent.primary }}
-                  />
-                  <span
-                    className="ml-2 text-2xl"
-                    style={{ fontFamily: T.font.serif }}
-                  >
-                    {t(value)}
+                  <span className="flex flex-wrap items-center gap-3">
+                    <input
+                      className="size-5 shrink-0"
+                      type="radio"
+                      name="change-plan"
+                      checked={selectedPlan === value}
+                      disabled={
+                        !price ||
+                        (value === "pro" && plan !== "pro" && complimentaryPro)
+                      }
+                      onChange={() => {
+                        setSelectedPlan(value)
+                        setQuote(null)
+                      }}
+                      style={{ accentColor: T.accent.primary }}
+                    />
+                    <span
+                      className="text-3xl leading-none"
+                      style={{ fontFamily: T.font.serif }}
+                    >
+                      {t(value)}
+                    </span>
+                    {value === plan && selectedInterval === interval ? (
+                      <span className="rounded-full bg-(--t-bg-muted) px-2.5 py-1 text-xs font-semibold">
+                        {t("currentPlan")}
+                      </span>
+                    ) : null}
                   </span>
-                  <p className="font-semibold">
+                  <p className="m-0 font-semibold tabular-nums">
                     {price
                       ? formatBillingMoney(
                           price.unitAmount,
                           price.currency,
                           locale
                         )
-                      : t("comingSoon")}
+                      : t("comingSoon")}{" "}
+                    {price
+                      ? `/ ${t(selectedInterval === "month" ? "perMonth" : "perYear")}`
+                      : ""}
                   </p>
-                  <p className="text-sm">{t(`${value}Description`)}</p>
+                  <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                    {t(`${value}Description`)}
+                  </p>
                   {value === "pro" && plan !== "pro" && complimentaryPro ? (
                     <p className="text-sm">{t("complimentary")}</p>
                   ) : null}
@@ -234,26 +263,37 @@ export function PlanChangeDialog({
             <p className="text-sm">{t("scheduledNoCharge")}</p>
           </div>
         ) : null}
-        <button
-          type="button"
-          disabled={
-            busy ||
-            current ||
-            !selected ||
-            (selectedPlan === "pro" && plan !== "pro" && complimentaryPro)
-          }
-          onClick={review}
-          className="min-h-12 rounded-full px-6 font-semibold text-white disabled:opacity-50"
-          style={{ background: T.accent.primary }}
-        >
-          {current
-            ? t("currentPlan")
-            : busy
-              ? t("opening")
-              : quote
-                ? t("confirmSchedule")
-                : t("reviewChange")}
-        </button>
+        <div className="flex flex-wrap justify-end gap-3">
+          <DialogClose asChild>
+            <button
+              type="button"
+              disabled={busy}
+              className="min-h-12 rounded-full border px-6 font-semibold hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4"
+            >
+              {t("dismiss")}
+            </button>
+          </DialogClose>
+          <button
+            type="button"
+            disabled={
+              busy ||
+              current ||
+              !selected ||
+              (selectedPlan === "pro" && plan !== "pro" && complimentaryPro)
+            }
+            onClick={review}
+            className="min-h-12 flex-1 rounded-full px-6 py-3 font-semibold text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-4 disabled:opacity-50 sm:flex-none"
+            style={{ background: T.accent.primary }}
+          >
+            {current
+              ? t("currentPlan")
+              : busy
+                ? t("opening")
+                : quote
+                  ? t("confirmSchedule")
+                  : t("reviewChange")}
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   )

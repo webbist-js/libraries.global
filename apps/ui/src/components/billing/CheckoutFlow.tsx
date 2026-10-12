@@ -1,16 +1,22 @@
 "use client"
 
+import { ArrowLeft, ArrowRight, Check, Info, LockKeyhole } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { MEMBERSHIP_TERMS_VERSION } from "@/lib/billing/constants"
 import { T } from "@/lib/design-tokens"
 
-import { formatBillingMoney, type PriceCatalogue } from "./types"
-
-const pill =
-  "inline-flex min-h-12 items-center justify-center rounded-full border px-6 py-3 font-semibold focus-visible:outline-2 focus-visible:outline-offset-4"
+import {
+  CheckoutHeader,
+  CheckoutPlanPicker,
+  CheckoutSteps,
+  CheckoutSummary,
+  checkoutButton,
+  checkoutPrimary,
+} from "./CheckoutPresentation"
+import type { PriceCatalogue } from "./types"
 
 export function CheckoutFlow({
   user,
@@ -35,6 +41,8 @@ export function CheckoutFlow({
   const [plan, setPlan] = useState(initialPlan)
   const [interval, setInterval] = useState(initialInterval)
   const [step, setStep] = useState<"plan" | "details">("plan")
+  const heading = useRef<HTMLHeadingElement>(null)
+  const previousStep = useRef(step)
   const [terms, setTerms] = useState(false)
   const [listed, setListed] = useState(false)
   const [badge, setBadge] = useState(true)
@@ -46,6 +54,11 @@ export function CheckoutFlow({
   const price = catalogue?.prices.find(
     (p) => p.plan === plan && p.interval === interval
   )
+
+  useEffect(() => {
+    if (previousStep.current !== step) heading.current?.focus()
+    previousStep.current = step
+  }, [step])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -125,299 +138,266 @@ export function CheckoutFlow({
   }
   const callback = `/contribute/membership/checkout?plan=${plan}&interval=${interval}${attempt ? `&attempt=${encodeURIComponent(attempt)}` : ""}`
 
-  if (state && !user?.verified)
-    return (
-      <div className="space-y-6 p-6 sm:p-10">
-        <h2 className="text-4xl" style={{ fontFamily: T.font.serif }}>
-          {t("confirming")}
-        </h2>
-        <p>{user ? t("verify") : t("signInExplanation")}</p>
-        <GlobalLink
-          className={pill}
-          href={`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`}
-        >
-          {t("signIn")}
-        </GlobalLink>
-      </div>
-    )
-
   if (state)
     return (
-      <div className="space-y-6 p-6 sm:p-10" aria-live="polite">
-        <h2 className="text-4xl" style={{ fontFamily: T.font.serif }}>
-          {state === "ready" ? t("thankYou") : t("confirming")}
+      <div
+        className="flex flex-col gap-8 p-6 sm:p-12"
+        style={{ color: T.ink.base }}
+        aria-live="polite"
+      >
+        <CheckoutHeader sandbox={catalogue?.sandbox} />
+        {state === "ready" && user?.verified ? (
+          <span className="grid size-16 place-items-center rounded-full bg-green-50 text-(--t-accent-ok)">
+            <Check className="size-8" aria-hidden="true" />
+          </span>
+        ) : null}
+        <h2
+          className="m-0 text-4xl leading-tight text-balance sm:text-5xl"
+          style={{ fontFamily: T.font.serif }}
+        >
+          {state === "ready" && user?.verified
+            ? t("thankYou")
+            : t("confirming")}
         </h2>
-        <p>
-          {state === "ready"
-            ? t("ready")
-            : state === "expired"
-              ? t("expired")
-              : t("pending")}
+        <p className="m-0 max-w-xl text-base leading-relaxed text-(--t-ink-dim)">
+          {!user?.verified
+            ? user
+              ? t("verify")
+              : t("signInExplanation")
+            : state === "ready"
+              ? t("ready")
+              : state === "expired"
+                ? t("expired")
+                : t("pending")}
         </p>
-        <GlobalLink className={pill} href="/profile/settings#membership">
-          {t("manage")}
+        <GlobalLink
+          className={`${checkoutPrimary} self-start`}
+          href={
+            user?.verified
+              ? "/profile/settings#membership"
+              : `/auth/signin?callbackUrl=${encodeURIComponent(callback)}`
+          }
+        >
+          {user?.verified ? t("manage") : t("signIn")}
         </GlobalLink>
       </div>
     )
 
   return (
     <div
-      className="grid min-w-0 md:grid-cols-[1.4fr_1fr]"
+      className="grid min-w-0 lg:grid-cols-[3fr_2fr]"
       style={{ color: T.ink.base }}
     >
-      <div className="space-y-6 p-6 sm:p-10">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <span className="text-2xl" style={{ fontFamily: T.font.serif }}>
-            Libraries <i>Global</i>
-          </span>
-          <span className="text-sm font-semibold">{t("secureCheckout")}</span>
-          {catalogue?.sandbox ? (
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-900">
-              {t("sandbox")}
-            </span>
-          ) : null}
+      <div className="flex min-w-0 flex-col gap-7 p-6 sm:gap-8 sm:p-10 lg:p-12">
+        <CheckoutHeader sandbox={catalogue?.sandbox} />
+        <div className="flex flex-col gap-7 sm:gap-8">
+          <CheckoutSteps step={step} />
+          <h2
+            ref={heading}
+            tabIndex={-1}
+            className="m-0 text-4xl leading-[1.08] text-balance focus-visible:outline-2 focus-visible:outline-offset-4 sm:text-[46px]"
+            style={{ fontFamily: T.font.serif }}
+          >
+            {step === "plan" ? t("choose") : t("yourDetails")}
+          </h2>
         </div>
-        <ol
-          className="m-0 flex list-none items-center gap-3 p-0 text-sm sm:gap-5"
-          aria-label={t("steps")}
-        >
-          {(["plan", "details", "payment"] as const).map((value, index) => {
-            const current = step === value
-            const complete = step === "details" && value === "plan"
-
-            return (
-              <li
-                key={value}
-                aria-current={current ? "step" : undefined}
-                className="flex flex-1 items-center gap-2 font-semibold"
-              >
-                <span
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full border"
-                  style={{
-                    background: complete
-                      ? T.accent.ok
-                      : current
-                        ? T.accent.primary
-                        : "white",
-                    color: complete || current ? "white" : T.ink.dim,
-                  }}
-                >
-                  {complete ? "✓" : index + 1}
-                </span>
-                {t(value)}
-              </li>
-            )
-          })}
-        </ol>
-        <h2
-          className="m-0 text-3xl sm:text-4xl"
-          style={{ fontFamily: T.font.serif }}
-        >
-          {step === "plan" ? t("choose") : t("yourDetails")}
-        </h2>
         {!catalogue ? (
-          <p role="status">{t("loading")}</p>
+          <p className="m-0" role="status">
+            {t("loading")}
+          </p>
         ) : !catalogue.available ? (
-          <p>{t("unavailable")}</p>
+          <p className="m-0">{t("unavailable")}</p>
         ) : step === "plan" ? (
           <>
-            <fieldset className="inline-flex flex-wrap gap-1 rounded-full border p-1">
-              <legend className="sr-only">{t("interval")}</legend>
-              {(["month", "year"] as const).map((value) => (
-                <label
-                  key={value}
-                  className={`${pill} cursor-pointer border-0 focus-within:outline-2 focus-within:outline-offset-2`}
-                  style={{
-                    background: interval === value ? T.ink.base : "transparent",
-                    color: interval === value ? "white" : T.ink.base,
-                  }}
-                >
-                  <input
-                    className="sr-only"
-                    type="radio"
-                    name="interval"
-                    checked={interval === value}
-                    onChange={() => setInterval(value)}
-                  />{" "}
-                  <span className="ml-2">{t(value)}</span>
-                </label>
-              ))}
-            </fieldset>
-            <fieldset className="grid gap-3 sm:grid-cols-2">
-              <legend className="sr-only">{t("plan")}</legend>
-              {(["supporter", "pro"] as const).map((value) => {
-                const selected = catalogue.prices.find(
-                  (p) => p.plan === value && p.interval === interval
-                )
-                const unavailable =
-                  !selected || (value === "pro" && user?.complimentaryPro)
-
-                return (
-                  <label
-                    key={value}
-                    className="rounded-2xl border-2 p-5 focus-within:outline-2 focus-within:outline-offset-4"
-                    style={{
-                      borderColor:
-                        plan === value ? T.accent.primary : T.border.line,
-                      background: plan === value ? "#faf9ff" : "white",
-                    }}
-                  >
-                    <input
-                      style={{ accentColor: T.accent.primary }}
-                      type="radio"
-                      name="plan"
-                      checked={plan === value}
-                      disabled={Boolean(unavailable)}
-                      onChange={() => setPlan(value)}
-                    />{" "}
-                    <span
-                      className="ml-2 text-2xl"
-                      style={{ fontFamily: T.font.serif }}
-                    >
-                      {t(value)}
-                    </span>
-                    <p
-                      className="my-5 text-3xl"
-                      style={{ fontFamily: T.font.serif }}
-                    >
-                      {selected
-                        ? formatBillingMoney(
-                            selected.unitAmount,
-                            selected.currency,
-                            locale
-                          )
-                        : t("comingSoon")}{" "}
-                      {selected ? `/ ${t(interval)}` : ""}
-                    </p>
-                    <p className="text-sm">{t(`${value}Description`)}</p>
-                  </label>
-                )
-              })}
-            </fieldset>
-            {user?.complimentaryPro ? <p>{t("complimentary")}</p> : null}
+            <CheckoutPlanPicker
+              catalogue={catalogue}
+              plan={plan}
+              interval={interval}
+              complimentaryPro={user?.complimentaryPro}
+              onPlan={setPlan}
+              onInterval={setInterval}
+            />
+            {user?.complimentaryPro ? (
+              <p className="m-0 text-sm leading-relaxed">
+                {t("complimentary")}
+              </p>
+            ) : null}
             <button
               type="button"
-              className={`${pill} w-full disabled:opacity-50`}
-              style={{ background: T.accent.primary, color: "white" }}
+              className={`${checkoutPrimary} mt-auto w-full`}
               disabled={
                 !price || (plan === "pro" && Boolean(user?.complimentaryPro))
               }
               onClick={() => setStep("details")}
             >
-              {t("continue")}
+              {t("join", { plan: t(plan) })}
+              <ArrowRight className="size-4" aria-hidden="true" />
             </button>
           </>
         ) : (
           <>
             {user?.verified ? (
               <>
-                <p>
-                  {t("accountEmail")} <strong>{user.email}</strong>
+                <div className="flex flex-col gap-2">
+                  <p className="m-0 text-sm font-semibold">
+                    {t("accountEmail")}
+                  </p>
+                  <p className="m-0 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) px-5 py-4 break-words">
+                    {user.email}
+                  </p>
+                </div>
+                <fieldset className="m-0 flex flex-col gap-4 p-0">
+                  <legend className="mb-4 text-lg font-semibold">
+                    {t("recognitionTitle")}
+                  </legend>
+                  <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-(--t-border-line) p-5 focus-within:outline-2 focus-within:outline-offset-4 hover:bg-(--t-bg-surface)">
+                    <input
+                      className="mt-1 size-5 shrink-0"
+                      name="supporterBadgeVisible"
+                      style={{ accentColor: T.accent.primary }}
+                      type="checkbox"
+                      checked={badge}
+                      onChange={(e) => setBadge(e.target.checked)}
+                    />
+                    <span className="flex min-w-0 flex-col gap-1">
+                      <span className="font-semibold">{t("badge")}</span>
+                      <span className="text-sm leading-relaxed text-(--t-ink-dim)">
+                        {t("badgeHelp")}
+                      </span>
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-(--t-border-line) p-5 focus-within:outline-2 focus-within:outline-offset-4 hover:bg-(--t-bg-surface)">
+                    <input
+                      className="mt-1 size-5 shrink-0"
+                      name="supporterListed"
+                      style={{ accentColor: T.accent.primary }}
+                      type="checkbox"
+                      checked={listed}
+                      onChange={(e) => setListed(e.target.checked)}
+                    />
+                    <span className="flex min-w-0 flex-col gap-1">
+                      <span className="font-semibold">{t("credit")}</span>
+                      <span className="text-sm leading-relaxed text-(--t-ink-dim)">
+                        {t("creditHelp")}
+                      </span>
+                    </span>
+                  </label>
+                </fieldset>
+                <p className="m-0 flex items-start gap-3 text-sm leading-relaxed text-(--t-ink-dim)">
+                  <Info
+                    className="mt-0.5 size-4 shrink-0 text-(--t-accent-primary)"
+                    aria-hidden="true"
+                  />
+                  <span>{t("creditExplanation")}</span>
                 </p>
-                <label className="flex gap-3 rounded-xl border p-4">
-                  <input
-                    style={{ accentColor: T.accent.primary }}
-                    type="checkbox"
-                    checked={badge}
-                    onChange={(e) => setBadge(e.target.checked)}
-                  />
-                  {t("badge")}
-                </label>
-                <label className="flex gap-3 rounded-xl border p-4">
-                  <input
-                    style={{ accentColor: T.accent.primary }}
-                    type="checkbox"
-                    checked={listed}
-                    onChange={(e) => setListed(e.target.checked)}
-                  />
-                  {t("credit")}
-                </label>
-                <p className="text-sm">{t("creditExplanation")}</p>
-                <label className="flex gap-3">
-                  <input
-                    style={{ accentColor: T.accent.primary }}
-                    type="checkbox"
-                    checked={terms}
-                    onChange={(e) => setTerms(e.target.checked)}
-                  />
-                  <span>
-                    {t("termsConsent")}{" "}
-                    <GlobalLink className="underline" href="/legal/membership">
-                      {t("terms")}
+                <div className="flex flex-col gap-4 border-t border-(--t-border-line) pt-6">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg focus-within:outline-2 focus-within:outline-offset-4">
+                    <input
+                      className="mt-1 size-5 shrink-0"
+                      name="membershipTerms"
+                      style={{ accentColor: T.accent.primary }}
+                      type="checkbox"
+                      checked={terms}
+                      onChange={(e) => setTerms(e.target.checked)}
+                    />
+                    <span className="text-sm leading-relaxed">
+                      {t("termsConsent")}{" "}
+                      <GlobalLink
+                        className="text-(--t-accent-primary) underline underline-offset-4"
+                        href="/legal/membership"
+                      >
+                        {t("terms")}
+                      </GlobalLink>
+                    </span>
+                  </label>
+                  <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
+                    {t("termsLanguageNote")}{" "}
+                    <GlobalLink
+                      className="underline underline-offset-4"
+                      href="/legal/cancellation-refunds"
+                    >
+                      {t("cancellationPolicy")}
                     </GlobalLink>
-                  </span>
-                </label>
-                <p className="text-sm">
-                  {t("termsLanguageNote")}{" "}
-                  <GlobalLink
-                    className="underline"
-                    href="/legal/cancellation-refunds"
-                  >
-                    {t("cancellationPolicy")}
-                  </GlobalLink>
-                </p>
-                <p className="text-sm">{t("providerExplanation")}</p>
-                <button
-                  type="button"
-                  className={`${pill} w-full disabled:opacity-50`}
-                  disabled={busy || !terms || !price}
-                  style={{ background: T.accent.primary, color: "white" }}
-                  onClick={checkout}
-                >
-                  {busy ? t("opening") : t("continueStripe")}
-                </button>
+                  </p>
+                </div>
+                <div className="mt-auto flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      className={checkoutButton}
+                      disabled={busy}
+                      onClick={() => setStep("plan")}
+                    >
+                      <ArrowLeft className="size-4" aria-hidden="true" />
+                      {t("back")}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${checkoutPrimary} flex-1`}
+                      disabled={busy || !terms || !price}
+                      onClick={checkout}
+                    >
+                      <LockKeyhole
+                        className="size-4 shrink-0"
+                        aria-hidden="true"
+                      />
+                      {busy ? t("opening") : t("continueStripe")}
+                    </button>
+                  </div>
+                  <p className="m-0 text-center text-xs leading-relaxed text-(--t-ink-dim)">
+                    {t("providerExplanation")}
+                  </p>
+                </div>
               </>
             ) : (
               <>
-                <p>{user ? t("verify") : t("signInExplanation")}</p>
-                <GlobalLink
-                  className={pill}
-                  href={`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`}
-                >
-                  {t("signIn")}
-                </GlobalLink>
-                {!user ? (
+                <p className="m-0 leading-relaxed text-(--t-ink-dim)">
+                  {user ? t("verify") : t("signInExplanation")}
+                </p>
+                <div className="flex flex-wrap gap-3">
                   <GlobalLink
-                    className={pill}
-                    href={`/auth/register?callbackUrl=${encodeURIComponent(callback)}`}
+                    className={checkoutPrimary}
+                    href={`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`}
                   >
-                    {t("createAccount")}
+                    {t("signIn")}
                   </GlobalLink>
-                ) : null}
+                  {!user ? (
+                    <GlobalLink
+                      className={checkoutButton}
+                      href={`/auth/register?callbackUrl=${encodeURIComponent(callback)}`}
+                    >
+                      {t("createAccount")}
+                    </GlobalLink>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  className={`${checkoutButton} self-start`}
+                  onClick={() => setStep("plan")}
+                >
+                  <ArrowLeft className="size-4" aria-hidden="true" />
+                  {t("back")}
+                </button>
               </>
             )}
-            <button
-              type="button"
-              className="block underline"
-              onClick={() => setStep("plan")}
-            >
-              {t("back")}
-            </button>
           </>
         )}
-        {error ? <p role="alert">{t("error")}</p> : null}
+        {error ? (
+          <p
+            className="m-0 rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-relaxed text-red-800"
+            role="alert"
+          >
+            {t("error")}
+          </p>
+        ) : null}
       </div>
-      <aside
-        className="space-y-5 border-t p-6 sm:p-10 md:border-t-0 md:border-l"
-        style={{ background: T.bg.void, borderColor: T.border.line }}
-      >
-        <h3 className="font-semibold">{t("summary")}</h3>
-        <p className="text-3xl" style={{ fontFamily: T.font.serif }}>
-          {t(plan)}
-        </p>
-        <p>
-          {price
-            ? `${formatBillingMoney(price.unitAmount, price.currency, locale)} / ${t(interval)}`
-            : t("comingSoon")}
-        </p>
-        <p className="text-sm">{t("taxAndCurrency")}</p>
-        <hr style={{ borderColor: T.border.line }} />
-        <p>{t("cancel")}</p>
-        <p>{t("trust")}</p>
-        <GlobalLink className="underline" href="/profile/settings#membership">
-          {t("manage")}
-        </GlobalLink>
-      </aside>
+      <CheckoutSummary
+        catalogue={catalogue}
+        plan={plan}
+        interval={interval}
+        onInterval={setInterval}
+        disabled={busy}
+      />
     </div>
   )
 }

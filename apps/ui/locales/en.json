@@ -1464,6 +1464,28 @@
       "unknown": "Status unavailable"
     },
     "termsLanguageNote": "Membership policies are currently available in English.",
-    "cancellationPolicy": "Cancellation and refunds"
+    "cancellationPolicy": "Cancellation and refunds",
+    "perMonth": "month",
+    "perYear": "year",
+    "twoMonthsFree": "2 months free",
+    "billedMonthly": "Billed monthly",
+    "billedYearly": "Billed yearly",
+    "basePrice": "Membership price",
+    "renewsMonthly": "Renews every month until you cancel. Stripe confirms the first renewal date at checkout.",
+    "renewsYearly": "Renews every year until you cancel. Stripe confirms the first renewal date at checkout.",
+    "switchYearly": "Switch to yearly: {amount}",
+    "annualSaving": "Save {amount} a year",
+    "includedSupporter": "Everything in Supporter",
+    "historyBenefit": "Detailed library change history",
+    "exportBenefit": "CSV and GeoJSON exports of up to {count} libraries",
+    "comparisonBenefit": "Population comparisons",
+    "recognitionBenefit": "Optional Supporter mark and public credit",
+    "supporterIntro": "Help keep the index free, with history and export tools.",
+    "proIntro": "More export capacity and population analysis.",
+    "recognitionTitle": "How you’re shown",
+    "badgeHelp": "A small mark next to your name. Hide it at any time.",
+    "creditHelp": "Your name on the public thank-you list. Off unless you choose it.",
+    "securePaymentBenefit": "Stripe handles your payment details securely.",
+    "dismiss": "Cancel"
   }
 }

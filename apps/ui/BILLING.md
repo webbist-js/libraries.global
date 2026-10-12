@@ -33,6 +33,8 @@ Account erasure stops subscriptions and open sessions first and refuses uncertai
 
 ## Local sandbox and checks
 
+For the owner’s browser acceptance steps, test cards and restart instructions, use [BILLING-LOCAL-TESTS.md](BILLING-LOCAL-TESTS.md). `billing:sandbox:watch` runs the local worker every five seconds while its terminal remains open.
+
 Safe IDs are in [billing-sandbox-catalogue.json](scripts/billing-sandbox-catalogue.json). The helper uses private `STRIPE_SANDBOX` from Strapi's ignored environment and never substitutes a live key.
 
 ```bash
@@ -98,11 +100,12 @@ Strapi writes `billing_update` transactionally with each projection revision. Ac
 pnpm --filter @repo/ui email:check --suite --preview-dir /tmp/libraries-billing-email-previews
 # Verify SMTP/TLS/credentials without sending.
 pnpm --filter @repo/ui email:check
-# An explicitly authorized recipient is required for test sends.
-pnpm --filter @repo/ui email:check --suite --only billing-supporter-ready --to RECIPIENT
+# Deliberate resend to the authorized test inbox: eleven billing samples.
+pnpm --filter @repo/ui email:check --billing --to info@libraries.global
+pnpm --filter @repo/ui email:check --suite --only verification --to info@libraries.global
 ```
 
-All 43 previews render and Brevo SMTP verification passes. Sends await the user's recipient. SMTP acceptance and mailbox delivery are separate; inspect received authentication headers and links. App notices use English; billing controls are EN/FR/CS and English-only legal policies are labelled. Membership does not enrol anyone in marketing.
+All 43 previews render and Brevo SMTP verification passes. On 12 October 2026, the server accepted all eleven application billing samples plus the checkout account-verification sample for `info@libraries.global`, as explicitly requested. SMTP acceptance and mailbox delivery are separate; inspect received authentication headers and links. App notices use English; billing controls are EN/FR/CS and English-only legal policies are labelled. Membership does not enrol anyone in marketing.
 
 ## Knowledge, legal and recovery
 
