@@ -14,6 +14,7 @@ import {
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
 import GlobalLink from "@/components/global/GlobalLink"
 import { SectionCard } from "@/components/profile-form/FormParts"
+import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 
 export function MembershipBillingSection() {
@@ -107,13 +108,14 @@ export function MembershipBillingSection() {
       {error ? (
         <div role="alert">
           <p>{t("error")}</p>
-          <button
+          <Button
             type="button"
-            className="underline"
+            variant="link"
+            className="min-h-11 px-0 text-(--t-accent-primary)"
             onClick={() => setReload((n) => n + 1)}
           >
             {t("retry")}
-          </button>
+          </Button>
         </div>
       ) : !summary ? (
         <p role="status">{t("loading")}</p>
@@ -218,16 +220,17 @@ export function MembershipBillingSection() {
                         ),
                       })}
                     </p>
-                    <button
+                    <Button
                       type="button"
-                      className="min-h-11 underline"
+                      variant="surface"
+                      size="pill"
                       onClick={summary.scheduledChange.canUndo ? undo : manage}
                       disabled={busy}
                     >
                       {summary.scheduledChange.canUndo
                         ? t("undoScheduledChange")
                         : t("reviewScheduledChange")}
-                    </button>
+                    </Button>
                   </div>
                 ) : null}
                 <p className="text-sm">
@@ -277,14 +280,15 @@ export function MembershipBillingSection() {
               </p>
             )}
             {summary.canManage ? (
-              <button
+              <Button
                 type="button"
-                className="min-h-11 rounded-full border px-5 font-semibold"
+                variant="surface"
+                size="pill"
                 onClick={manage}
                 disabled={busy}
               >
                 {busy ? t("opening") : t("manage")}
-              </button>
+              </Button>
             ) : (
               <GlobalLink className="underline" href="/contribute/membership">
                 {t("viewPlans")}
@@ -311,14 +315,15 @@ export function MembershipBillingSection() {
                   {summary.paymentMethod.expiryYear}
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
-                className="min-h-11 rounded-full border px-5 font-semibold"
+                variant="surface"
+                size="pill"
                 disabled={busy}
                 onClick={manage}
               >
                 {t("update")}
-              </button>
+              </Button>
             </div>
           ) : null}
           {summary.billingDetails ? (
@@ -338,14 +343,15 @@ export function MembershipBillingSection() {
                     .join(" · ")}
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
-                className="min-h-11 rounded-full border px-5 font-semibold"
+                variant="surface"
+                size="pill"
                 disabled={busy}
                 onClick={manage}
               >
                 {t("edit")}
-              </button>
+              </Button>
             </div>
           ) : null}
           <p>{t("portalExplanation")}</p>

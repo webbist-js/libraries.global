@@ -11,6 +11,7 @@ import {
   LinksSection,
 } from "@/components/profile-form/ProfileSections"
 import { useProfileForm } from "@/components/profile-form/useProfileForm"
+import { Button } from "@/components/ui/button"
 import { useMounted } from "@/hooks/useMounted"
 import { useProfile } from "@/hooks/useProfile"
 import type { BetterAuthUser } from "@/lib/auth-server"
@@ -111,15 +112,17 @@ export function SettingsShell({
             steps={form.steps("privacy")}
             links={ACCOUNT_LINKS}
           >
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="pill"
               disabled={!mounted || saving || form.usernameStatus === "taken"}
               onClick={() => void handleSave()}
-              className="inline-flex w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
-              style={{ border: "none", fontFamily: T.font.sans }}
+              className="w-full border-0 disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ fontFamily: T.font.sans }}
             >
               {saving ? tUi("saving") : "Save profile"}
-            </button>
+            </Button>
             <p
               className="m-0 text-[13.5px] leading-[1.55]"
               style={{ color: T.ink.dim }}

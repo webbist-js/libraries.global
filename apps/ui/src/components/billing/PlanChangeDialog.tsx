@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -13,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { T } from "@/lib/design-tokens"
+import { cn } from "@/lib/styles"
 
 import {
   formatBillingMoney,
@@ -119,16 +121,13 @@ export function PlanChangeDialog({
       }}
     >
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="min-h-11 rounded-full border px-5 font-semibold"
-        >
+        <Button type="button" variant="surface" size="pill">
           {t("changePlan")}
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent
         className="flex max-h-[calc(100dvh-2rem)] flex-col gap-5 overflow-y-auto overscroll-contain rounded-3xl p-6 sm:max-w-2xl sm:gap-6 sm:p-8"
-        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-white opacity-100 hover:bg-(--t-bg-surface) data-[state=open]:bg-white"
+        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-white opacity-100 hover:bg-(--t-bg-surface)"
         style={{ background: T.bg.deep, color: T.ink.base }}
       >
         <DialogHeader className="shrink-0 gap-3 text-left">
@@ -153,12 +152,12 @@ export function PlanChangeDialog({
           {(["month", "year"] as const).map((value) => (
             <label
               key={value}
-              className="flex min-h-11 cursor-pointer items-center rounded-full px-5 py-2.5 font-semibold has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary)"
-              style={{
-                background:
-                  selectedInterval === value ? T.ink.base : "transparent",
-                color: selectedInterval === value ? "white" : T.ink.base,
-              }}
+              className={cn(
+                "flex min-h-11 cursor-pointer items-center rounded-full px-5 py-2.5 font-semibold transition-colors has-[input:disabled]:pointer-events-none has-[input:disabled]:opacity-60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary)",
+                selectedInterval === value
+                  ? "bg-(--t-ink-base) text-white hover:bg-(--t-ink-base)/90"
+                  : "bg-transparent text-(--t-ink-base) hover:bg-(--t-bg-surface)"
+              )}
             >
               <input
                 className="sr-only"
@@ -191,12 +190,13 @@ export function PlanChangeDialog({
               return (
                 <label
                   key={value}
-                  className="flex min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border-2 p-5 has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary)"
-                  style={{
-                    borderColor:
-                      selectedPlan === value ? T.accent.primary : T.border.line,
-                    background: selectedPlan === value ? "#faf9ff" : "white",
-                  }}
+                  className={cn(
+                    "flex min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border-2 p-5 transition-colors has-[input:disabled]:pointer-events-none has-[input:disabled]:opacity-60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary)",
+                    selectedPlan === value
+                      ? "border-(--t-accent-primary) bg-[#faf9ff]"
+                      : "border-(--t-border-line) bg-(--t-bg-deep)",
+                    "hover:border-(--t-accent-primary) hover:bg-(--t-bg-selected)"
+                  )}
                 >
                   <span className="flex flex-wrap items-center gap-3">
                     <input
@@ -272,16 +272,20 @@ export function PlanChangeDialog({
         ) : null}
         <div className="flex shrink-0 flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
           <DialogClose asChild>
-            <button
+            <Button
               type="button"
+              variant="surface"
+              size="pill"
               disabled={busy}
-              className="inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-full border border-(--t-border-line) px-6 py-3 font-semibold hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4 sm:w-auto"
+              className="min-h-12 w-full text-base sm:w-auto"
             >
               {t("dismiss")}
-            </button>
+            </Button>
           </DialogClose>
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="pill"
             disabled={
               busy ||
               current ||
@@ -289,7 +293,7 @@ export function PlanChangeDialog({
               (selectedPlan === "pro" && plan !== "pro" && complimentaryPro)
             }
             onClick={review}
-            className="inline-flex min-h-12 w-full max-w-full shrink-0 items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 font-semibold text-white hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className="min-h-12 w-full max-w-full text-base sm:w-auto"
           >
             {current
               ? t("currentPlan")
@@ -298,7 +302,7 @@ export function PlanChangeDialog({
                 : quote
                   ? t("confirmSchedule")
                   : t("reviewChange")}
-          </button>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

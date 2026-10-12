@@ -61,6 +61,12 @@ The owner's screenshot exposed overlapping Cancel and Stripe-review buttons. The
 
 Billing choices now show their outer focus outline for keyboard interaction rather than every pointer click. Shared dialog layers sit above the sticky site header and drawers. The 27 focused checkout, dialog and plan-change tests pass, including independent close-button styling, Cancel without a billing mutation, Escape/focus restoration and the separate reduction confirmation. UI typechecking, the 259-page production build and scoped lint pass, with the existing checkout complexity warning. The generated CSS contains the new focus, layering and mobile stacking rules. This review uses the supplied screenshot and source; fresh browser geometry and zoom checks remain outstanding because the browser tool blocked the local URL.
 
+## Checkout hover follow-up
+
+Primary checkout actions previously concatenated a secondary-button class containing a pale hover background with an indigo hover class. CSS generation order could select the pale background while retaining white text. Checkout, plan-change actions, existing billing-management controls and Save profile now use the shared `Button` component, with separate primary/surface variants and wrapping pill sizes. The primary variant uses the same indigo resting/hover tokens as the approved Save profile appearance. Navigation controls remain links through `asChild`, and explicit action button types, consent and disabled conditions are preserved.
+
+Plan cards and interval choices use state classes rather than inline backgrounds/borders that overrode hover styling. The circular dismiss control also uses the shared button and no longer has an open-state background rule competing with hover. The 34 focused checkout/settings/dialog and plan-change tests, UI typechecking and the 259-page production build pass. Scoped lint has no errors; existing complexity and handler-name warnings remain. The shared primary and surface variants each resolve to one hover background, and their hover CSS is generated. Fresh visual/device checks remain unverified because the browser tool blocked the local URL.
+
 ## Security review
 
 Ownership, mode separation, verified identity, origin/body/quantity/price guards, raw signature validation, replay/out-of-order handling, durable retries, private revisions, quotas and erased-account protections were checked. No custom card/CVC processing was introduced. Financial data remains outside public profiles/directories. Pending choices never grant tools.

@@ -3,13 +3,11 @@
 import { Check, LockKeyhole } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
+import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
+import { cn } from "@/lib/styles"
 
 import { formatBillingMoney, type PriceCatalogue } from "./types"
-
-export const checkoutButton =
-  "inline-flex min-h-14 items-center justify-center gap-2 rounded-full border px-6 py-3 text-base font-semibold transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-not-allowed disabled:opacity-50"
-export const checkoutPrimary = `${checkoutButton} border-transparent bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)`
 
 export function CheckoutHeader({ sandbox }: { readonly sandbox?: boolean }) {
   const t = useTranslations("billing")
@@ -131,11 +129,12 @@ export function CheckoutPlanPicker({
         {(["month", "year"] as const).map((value) => (
           <label
             key={value}
-            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2.5 font-semibold has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary) sm:px-5"
-            style={{
-              background: interval === value ? T.ink.base : "transparent",
-              color: interval === value ? "white" : T.ink.base,
-            }}
+            className={cn(
+              "flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2.5 font-semibold transition-colors has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary) sm:px-5",
+              interval === value
+                ? "bg-(--t-ink-base) text-white hover:bg-(--t-ink-base)/90"
+                : "bg-transparent text-(--t-ink-base) hover:bg-(--t-bg-surface)"
+            )}
           >
             <input
               className="sr-only"
@@ -181,11 +180,15 @@ export function CheckoutPlanPicker({
           return (
             <label
               key={value}
-              className={`flex min-w-0 flex-col gap-5 rounded-3xl border-2 p-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary) sm:p-6 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-(--t-accent-primary)"}`}
-              style={{
-                borderColor: plan === value ? T.accent.primary : T.border.line,
-                background: plan === value ? "#faf9ff" : "white",
-              }}
+              className={cn(
+                "flex min-w-0 flex-col gap-5 rounded-3xl border-2 p-5 transition-colors has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary) sm:p-6",
+                plan === value
+                  ? "border-(--t-accent-primary) bg-[#faf9ff]"
+                  : "border-(--t-border-line) bg-(--t-bg-deep)",
+                disabled
+                  ? "cursor-not-allowed opacity-60"
+                  : "cursor-pointer hover:border-(--t-accent-primary) hover:bg-(--t-bg-selected)"
+              )}
             >
               <span className="flex flex-wrap items-center gap-3">
                 <input
@@ -323,11 +326,13 @@ export function CheckoutSummary({
         {t(interval === "month" ? "renewsMonthly" : "renewsYearly")}
       </p>
       {annualSaving > 0 && yearly ? (
-        <button
+        <Button
           type="button"
+          variant="surface"
+          size="pill"
           disabled={disabled}
           onClick={() => onInterval("year")}
-          className="flex min-h-11 flex-col items-start gap-1 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-left text-sm text-green-800 hover:bg-green-100 focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex-col items-start gap-1 rounded-2xl border-green-200 bg-green-50 px-4 text-left text-sm font-normal text-green-800 hover:bg-green-100"
         >
           <span className="font-semibold">
             {t("switchYearly", {
@@ -343,7 +348,7 @@ export function CheckoutSummary({
               amount: formatBillingMoney(annualSaving, yearly.currency, locale),
             })}
           </span>
-        </button>
+        </Button>
       ) : null}
       <ul className="mt-auto mb-0 flex list-none flex-col gap-4 border-t border-(--t-border-line) pt-6 pl-0 text-sm leading-relaxed">
         {[t("cancel"), t("trust"), t("securePaymentBenefit")].map((benefit) => (

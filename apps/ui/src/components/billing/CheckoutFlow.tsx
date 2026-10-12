@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { Button } from "@/components/ui/button"
 import { MEMBERSHIP_TERMS_VERSION } from "@/lib/billing/constants"
 import { T } from "@/lib/design-tokens"
 
@@ -13,8 +14,6 @@ import {
   CheckoutPlanPicker,
   CheckoutSteps,
   CheckoutSummary,
-  checkoutButton,
-  checkoutPrimary,
 } from "./CheckoutPresentation"
 import type { PriceCatalogue } from "./types"
 import { useMembershipRefresh } from "./useMembershipRefresh"
@@ -203,16 +202,17 @@ export function CheckoutFlow({
                   ? t("confirmationUnavailable")
                   : t("pending")}
         </p>
-        <GlobalLink
-          className={`${checkoutPrimary} self-start`}
-          href={
-            user?.verified
-              ? "/profile/settings#membership"
-              : `/auth/signin?callbackUrl=${encodeURIComponent(callback)}`
-          }
-        >
-          {user?.verified ? t("manage") : t("signIn")}
-        </GlobalLink>
+        <Button asChild variant="primary" size="pill-lg" className="self-start">
+          <GlobalLink
+            href={
+              user?.verified
+                ? "/profile/settings#membership"
+                : `/auth/signin?callbackUrl=${encodeURIComponent(callback)}`
+            }
+          >
+            {user?.verified ? t("manage") : t("signIn")}
+          </GlobalLink>
+        </Button>
       </div>
     )
 
@@ -255,9 +255,11 @@ export function CheckoutFlow({
                 {t("complimentary")}
               </p>
             ) : null}
-            <button
+            <Button
               type="button"
-              className={`${checkoutPrimary} mt-auto w-full`}
+              variant="primary"
+              size="pill-lg"
+              className="mt-auto w-full"
               disabled={
                 !price || (plan === "pro" && Boolean(user?.complimentaryPro))
               }
@@ -265,7 +267,7 @@ export function CheckoutFlow({
             >
               {t("join", { plan: t(plan) })}
               <ArrowRight className="size-4" aria-hidden="true" />
-            </button>
+            </Button>
           </>
         ) : (
           <>
@@ -355,18 +357,21 @@ export function CheckoutFlow({
                 </div>
                 <div className="mt-auto flex flex-col gap-4">
                   <div className="flex flex-wrap items-center gap-3">
-                    <button
+                    <Button
                       type="button"
-                      className={checkoutButton}
+                      variant="surface"
+                      size="pill-lg"
                       disabled={busy}
                       onClick={() => setStep("plan")}
                     >
                       <ArrowLeft className="size-4" aria-hidden="true" />
                       {t("back")}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className={`${checkoutPrimary} flex-1`}
+                      variant="primary"
+                      size="pill-lg"
+                      className="min-w-0 flex-1"
                       disabled={busy || !terms || !price}
                       onClick={checkout}
                     >
@@ -375,7 +380,7 @@ export function CheckoutFlow({
                         aria-hidden="true"
                       />
                       {busy ? t("opening") : t("continueStripe")}
-                    </button>
+                    </Button>
                   </div>
                   <p className="m-0 text-center text-xs leading-relaxed text-(--t-ink-dim)">
                     {t("providerExplanation")}
@@ -388,29 +393,33 @@ export function CheckoutFlow({
                   {user ? t("verify") : t("signInExplanation")}
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <GlobalLink
-                    className={checkoutPrimary}
-                    href={`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`}
-                  >
-                    {t("signIn")}
-                  </GlobalLink>
-                  {!user ? (
+                  <Button asChild variant="primary" size="pill-lg">
                     <GlobalLink
-                      className={checkoutButton}
-                      href={`/auth/register?callbackUrl=${encodeURIComponent(callback)}`}
+                      href={`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`}
                     >
-                      {t("createAccount")}
+                      {t("signIn")}
                     </GlobalLink>
+                  </Button>
+                  {!user ? (
+                    <Button asChild variant="surface" size="pill-lg">
+                      <GlobalLink
+                        href={`/auth/register?callbackUrl=${encodeURIComponent(callback)}`}
+                      >
+                        {t("createAccount")}
+                      </GlobalLink>
+                    </Button>
                   ) : null}
                 </div>
-                <button
+                <Button
                   type="button"
-                  className={`${checkoutButton} self-start`}
+                  variant="surface"
+                  size="pill-lg"
+                  className="self-start"
                   onClick={() => setStep("plan")}
                 >
                   <ArrowLeft className="size-4" aria-hidden="true" />
                   {t("back")}
-                </button>
+                </Button>
               </>
             )}
           </>
