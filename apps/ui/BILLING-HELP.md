@@ -10,7 +10,7 @@ Choose a plan and billing interval on the Membership page. Sign in or create a f
 
 Stripe Managed Payments hosts the payment page. The prices above are tax-inclusive base GBP prices; Stripe confirms tax, any local currency conversion and the final recurring total before payment. Eligible payment methods, including Apple Pay or Google Pay when available, appear on Stripe's page. Libraries Global never receives your full card details or CVC.
 
-The seller for the payment transaction is identified on Stripe's checkout and financial confirmation. Stripe sends financial receipts and invoices. Libraries Global separately confirms membership access. Payment confirmation can take a short time while the signed notification is checked. If confirmation is delayed, check Settings rather than paying again.
+Alexander Bennett, the operator of Libraries Global, is the seller and supplier of the membership service. Stripe Managed Payments is merchant of record for the payment transaction; this does not replace Libraries Global as the service seller. Stripe sends financial receipts and invoices. Libraries Global separately confirms membership access. Payment confirmation can take a short time while the signed notification is checked. If confirmation is delayed, check Settings rather than paying again.
 
 ## Membership and billing in Settings
 
@@ -32,7 +32,7 @@ The Supporter mark and public supporters-page credit are independent optional ch
 
 ## Cancellation, refunds and account deletion
 
-Cancel renewal in Membership & billing, or through Link using your financial confirmation if you cannot enter the app. Settled access normally continues to the paid period end. Cancellation of future renewal is separate from a refund request. Read the cancellation/refund policy and the order terms identified at Stripe checkout; statutory rights remain unchanged. Contact info@libraries.global for product/access help and use the transaction-support route on the Stripe confirmation for payment or refund help.
+Cancel renewal in Membership & billing, or through Link using your financial confirmation if you cannot enter the app. Settled access normally continues to the paid period end. Cancellation of future renewal is separate from a refund request. Read our cancellation/refund policy and the Link terms shown at checkout. Link’s refund policy prevails over a more restrictive policy we set, and statutory rights remain unchanged. Contact info@libraries.global for product/access help and use the transaction-support route on the Stripe confirmation for payment or refund help.
 
 Refund and dispute decisions can suspend the refunded paid access; any independent complimentary access still applies. Deleting an account first stops its subscriptions and expires open checkout sessions. If that cannot be confirmed, deletion is refused so billing cannot continue against an erased account. Provider financial records and minimal reconciliation references can remain where needed for accounting, disputes or legal obligations.
 

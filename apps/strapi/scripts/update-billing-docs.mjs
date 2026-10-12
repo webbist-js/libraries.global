@@ -41,7 +41,7 @@ const revision = {
   version: "2026-10-12",
   date: "2026-10-12",
   summary:
-    "Membership digital tools, recurring billing, cancellation, privacy and payment records.",
+    "Membership digital tools, recurring billing, cancellation and payment records; clarified service-seller responsibilities, Stripe merchant-of-record role and Link refund-policy precedence.",
 }
 const legal = await client.listAll("legal-document", {
   locale: "en",

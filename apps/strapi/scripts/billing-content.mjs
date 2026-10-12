@@ -54,14 +54,14 @@ export function membershipLegalContent(
       sections: [
         section(
           "The service and operator",
-          "Digital tools supplied by Libraries Global; payment seller identified by Stripe.",
+          "Libraries Global sells the membership service; Stripe handles the payment transaction.",
           linkedParagraph(
             `Libraries Global is operated by ${operator}. These membership terms supplement the `,
             { text: "general terms of use", url: "/legal/terms" },
             `. Membership, access and cancellation enquiries: ${contactEmail}. Postal contact: ${contact}`
           ),
           linkedParagraph(
-            "The payment transaction is sold through Stripe's merchant-of-record service. The seller and transaction terms are identified at checkout and in your financial confirmation. Those terms govern payment processing and transaction support; these terms describe the software tools and access supplied by Libraries Global. ",
+            `The operator named above is the seller and supplier of the membership service. Stripe Managed Payments, provided by Sold through Link, LLC or its affiliates, acts as merchant of record for the payment transaction. Merchant of record does not mean seller of record: we remain responsible for the tools, their delivery and our obligations to customers. Stripe handles payment processing, applicable indirect taxes, financial confirmations and transaction support under the Link terms shown at checkout. These membership terms describe the service we supply. `,
             {
               text: "Link transaction support",
               url: "https://support.link.com/topics/sold-through-link",
@@ -102,7 +102,7 @@ export function membershipLegalContent(
               text: "cancellation and refund policy",
               url: "/legal/cancellation-refunds",
             },
-            " and the transaction terms identified at Stripe checkout. Refund requests and statutory cancellation rights are considered under those terms and applicable law. Stopping renewal does not by itself request a refund. Nothing here excludes rights that the law gives you."
+            " and the Link transaction terms shown at checkout. Link's refund policy takes precedence over any more restrictive refund policy we set. Statutory consumer rights also apply. Stopping renewal does not by itself request a refund. Nothing here excludes rights that the law gives you."
           ),
           `For tool/access problems contact ${contactEmail}. For transaction or refund support use the support route on your Stripe checkout or financial confirmation; you may also contact us to help identify the order. Do not send passwords, full card details or sign-in links. A full current-period refund or a payment dispute can suspend the affected paid access while independent complimentary access remains.`
         ),
@@ -138,7 +138,7 @@ export function membershipLegalContent(
         section(
           "Who to contact",
           "Send membership and cancellation requests to info@libraries.global.",
-          `Libraries Global is operated by ${operator}. Contact: ${contactEmail}. Postal contact: ${contact}. The transaction seller is identified on Stripe's checkout and your financial confirmation.`,
+          `Libraries Global is operated by ${operator}, the seller and supplier of the membership service. Contact: ${contactEmail}. Postal contact: ${contact}. Stripe Managed Payments acts as merchant of record for the payment transaction and provides transaction support through Link. This does not replace our responsibilities as the service seller.`,
           linkedParagraph(
             "This policy accompanies our ",
             { text: "membership terms", url: "/legal/membership" },
@@ -153,14 +153,22 @@ export function membershipLegalContent(
         section(
           "Request a refund or exercise statutory cancellation rights",
           "Use the transaction support route shown on the Stripe confirmation.",
-          `The payment seller and transaction terms are identified at checkout and on your financial confirmation. Use that seller's transaction-support route to request a refund or exercise a statutory cancellation right. You may also contact ${contactEmail} with the invoice reference, account email, purchase date and request; we can help identify the transaction and explain the access status.`,
-          "For UK consumers buying a service online, the statutory cancellation period normally ends 14 days after the day the contract is entered into. Tell us or the transaction seller clearly that you wish to cancel before that period ends; no special form is required. Requesting immediate tool access does not waive these rights. Any lawful proportionate charge for a service already supplied must meet the applicable legal conditions. Other countries may provide additional rights. Any cancellation or refund rights that apply to a renewal are also honoured. Stopping renewal is separate from cancelling a purchase or requesting a refund."
+          `Use Link's transaction-support route shown on your financial confirmation to request a payment refund. You can also notify us at ${contactEmail} to exercise a statutory cancellation right or ask about a refund. Include the invoice reference, account email, purchase date and request; we will help identify the transaction and coordinate with Link where needed.`,
+          "For UK consumers buying a service online, the statutory cancellation period normally ends 14 days after the day the contract is entered into. Tell us clearly that you wish to cancel before that period ends; no special form is required. Requesting immediate tool access does not waive these rights. Any lawful proportionate charge for a service already supplied must meet the applicable legal conditions. Other countries may provide additional rights. Any cancellation or refund rights that apply to a renewal are also honoured. Stopping renewal is separate from cancelling a purchase or requesting a refund.",
+          linkedParagraph(
+            "Our refund policy is subject to ",
+            {
+              text: "Link's refund policy",
+              url: "https://support.link.com/questions/sold-through-link-refunds",
+            },
+            ". Link's policy prevails if ours is more restrictive, and statutory rights remain unaffected. Link may also authorise refunds under its policy even when our own policy would not. This is not a promise of an unconditional refund for every purchase."
+          )
         ),
         section(
           "Refund timing and payment method",
           "Statutory refunds follow the applicable deadline and original payment method.",
           "For a valid UK statutory cancellation of a service, reimbursement is due without undue delay and normally within 14 days after the seller is informed of the cancellation, subject to any lawful charge for service already supplied. The same payment method is used unless you expressly agree otherwise, and no refund fee is charged. Your bank or payment provider may take additional time to display the returned funds.",
-          "For other refund requests, the seller's transaction terms and applicable law determine eligibility and timing. If the tools do not match their description or are faulty, your statutory remedies remain available. Contact us about the access/service problem and use the transaction-support route for any payment refund."
+          "For other refund requests, Link's refund policy, the transaction terms and applicable law determine eligibility and timing. If the tools do not match their description or are faulty, your statutory remedies remain available. Contact us about the access/service problem; Link handles the payment refund process."
         ),
         section(
           "Information to include",
@@ -184,7 +192,7 @@ export function membershipLegalContent(
         section(
           "If something goes wrong",
           "Check billing status and contact support before paying again.",
-          `If a payment is uncertain or membership remains confirming, check your owned billing page and financial confirmation before submitting another payment. Contact ${contactEmail} for access problems. For unresolved transaction issues, use the complaints/support process identified in the seller's transaction terms. Your statutory remedies are unaffected.`,
+          `If a payment is uncertain or membership remains confirming, check your owned billing page and financial confirmation before submitting another payment. Contact ${contactEmail} for access problems. For unresolved transaction issues, use Link's complaints/support process. You can also contact us about your membership contract and statutory rights. Your statutory remedies are unaffected.`,
           linkedParagraph(
             "You can read the ",
             {

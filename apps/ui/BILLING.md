@@ -1,6 +1,6 @@
 # Membership billing runbook
 
-Stripe Managed Payments hosts Checkout, financial confirmations and payment management. Better Auth owns identity; Strapi owns private access projections, complimentary grants, Teams and notifications. Membership never changes community roles, trust, points, moderation or staff authority.
+Stripe Managed Payments hosts Checkout, financial confirmations and payment management. Better Auth owns identity; Strapi owns private access projections, complimentary grants, Teams and notifications. Membership never changes community roles, trust, points, moderation or staff authority. Libraries Global’s operator remains the service seller; Stripe Managed Payments is merchant of record for transactions, not seller of record. Stripe handles payment operations and indirect taxes, while service delivery and applicable consumer obligations remain with the operator. Link’s refund policy overrides a more restrictive seller policy. [Managed Payments service terms, sections 2.1(a) and 3.3](https://stripe.com/legal/ssa-services-terms).
 
 The application and sandbox catalogue are ready for acceptance. Live purchases remain off. The latest owned Supporter/Pro test sessions are waiting for human completion of Stripe's hosted verification. Live Stripe has been inspected through official MCP: charges and payouts are enabled, but no live products or webhook have been created yet. Live preparation follows sandbox acceptance and a confirmed production URL.
 
