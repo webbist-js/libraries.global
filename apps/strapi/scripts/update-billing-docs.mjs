@@ -18,6 +18,7 @@ const url = process.env.STRAPI_URL || "http://127.0.0.1:1337"
 if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url))
   throw new Error("Local CMS migration only")
 const apply = process.argv.includes("--apply")
+const legalOnly = process.argv.includes("--legal-only")
 const client = new StrapiMcpClient(source.STRAPI_MCP_TOKEN, `${url}/mcp`)
 await client.initialize()
 const clean = (value) =>
@@ -47,7 +48,7 @@ const legal = await client.listAll("legal-document", {
   status: "draft",
 })
 const knowledge = {}
-for (const locale of ["en", "fr", "cs"])
+for (const locale of legalOnly ? [] : ["en", "fr", "cs"])
   knowledge[locale] = await client.listAll("wiki-article", {
     locale,
     status: "draft",
@@ -73,7 +74,7 @@ const publishExisting = async (type, doc, locale, data) => {
   }
   console.log(`${apply ? "Updated" : "Preview"} ${locale}: ${doc.slug}`)
 }
-for (const doc of legal.filter((d) =>
+for (const doc of (legalOnly ? [] : legal).filter((d) =>
   ["privacy", "cookies", "terms"].includes(d.slug)
 )) {
   let sections = clean(doc.sections ?? [])
@@ -112,17 +113,38 @@ for (const doc of legal.filter((d) =>
 // Public postal details must be supplied explicitly, never copied from private mail configuration.
 const operator =
   process.env.BILLING_LEGAL_OPERATOR ||
+  source.BILLING_LEGAL_OPERATOR ||
   "Alexander Bennett, an independent developer in England"
-const postal = process.env.BILLING_LEGAL_POSTAL_ADDRESS?.trim() || undefined
-for (const data of membershipLegalContent(operator, postal)) {
+const postal =
+  (
+    process.env.BILLING_LEGAL_POSTAL_ADDRESS ||
+    source.BILLING_LEGAL_POSTAL_ADDRESS
+  )?.trim() || undefined
+const contactEmail =
+  process.env.BILLING_LEGAL_EMAIL ||
+  source.BILLING_LEGAL_EMAIL ||
+  "info@libraries.global"
+for (const data of membershipLegalContent(operator, postal, contactEmail)) {
   const existing = legal.find((d) => d.slug === data.slug)
+  if (apply && !postal && ["published", "modified"].includes(existing?.status))
+    throw new Error(
+      "Supply the public postal address before updating published membership policies"
+    )
   if (apply) {
     const result = await client.call(
       existing ? "update_legal-document" : "create_legal-document",
       {
         ...(existing ? { documentId: existing.documentId } : {}),
         locale: "en",
-        data: { ...data, revisions: [revision] },
+        data: {
+          ...data,
+          revisions: [
+            ...clean(existing?.revisions ?? []).filter(
+              (r) => r.version !== revision.version
+            ),
+            revision,
+          ],
+        },
       }
     )
     const documentId = existing?.documentId ?? result.data?.documentId

@@ -68,6 +68,12 @@ export function LegalDocumentPage({
   const tUi = useUiTranslations("ui")
 
   const title = doc.title ?? "Legal"
+  const membershipPolicy = ["membership", "cancellation-refunds"].includes(
+    doc.slug ?? ""
+  )
+  const contactEmail = membershipPolicy
+    ? "info@libraries.global"
+    : LEGAL_CONTACT_EMAIL
   const sections = doc.sections ?? []
   const anchors = sectionAnchors(sections)
   const summaryPoints = doc.summaryPoints ?? []
@@ -478,10 +484,12 @@ export function LegalDocumentPage({
                 <div className="mt-5 flex flex-wrap gap-2">
                   <a
                     className="inline-flex items-center rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-                    href={`mailto:${LEGAL_CONTACT_EMAIL}`}
-                    data-contact-type="privacy"
+                    href={`mailto:${contactEmail}`}
+                    data-contact-type={
+                      membershipPolicy ? "membership" : "privacy"
+                    }
                   >
-                    {tUi("email")} {LEGAL_CONTACT_EMAIL}
+                    {tUi("email")} {contactEmail}
                   </a>
                   <GlobalLink
                     className="inline-flex items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[14px] font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"

@@ -1,6 +1,6 @@
 # Billing launch review — 12 October 2026
 
-The application work is implemented and the production build passes. Final purchase acceptance and live Stripe preparation remain dependent on the user's hosted-test completion, mailbox confirmation, public legal address and production URL. This report does not claim the two new purchases or production payments have passed.
+The application work is implemented and the production build passes. Final purchase acceptance and live Stripe preparation remain dependent on the user's hosted-test completion, mailbox confirmation and production URL. This report does not claim the two new purchases or production payments have passed.
 
 ## What changed
 
@@ -10,7 +10,7 @@ Hosted Managed Payments, owned checkout attempts, invoice settlement, private St
 
 Billing notices cover Supporter activation, upgrades/downgrades, scheduled changes, undo, cancellation/resumption, recovery and access ending. The queue remains revisioned and private. Reserved fictional recipients are excluded from SMTP. Billing retention and user-exported consent/change records are implemented.
 
-Knowledge articles were updated through the configured Strapi content-manager MCP in EN/FR/CS. General terms, privacy and cookies were updated. Membership terms and cancellation/refund policy, including a model cancellation form, are drafts until public postal details are confirmed. The terms version for new accounts and membership consent is aligned to 2026-10-12; old recorded consents are preserved.
+Knowledge articles were updated through the configured Strapi content-manager MCP in EN/FR/CS. General terms, privacy and cookies were updated. Membership terms and cancellation/refund policy, including a model cancellation form, are now published in the configured CMS with the owner-confirmed operator/email and explicitly authorised email-footer postal address. The terms version for new accounts and membership consent is aligned to 2026-10-12; old recorded consents are preserved.
 
 ## Verified evidence
 
@@ -67,9 +67,15 @@ This is tested behavior, not an absolute security guarantee. Real initial Suppor
 
 1. Complete the two owned hosted sandbox checkouts from the pending question. Then verify settled invoices, ready status, Strapi acknowledgement, both access caps, Settings and recognition. Keep fixture credentials/capability links private.
 2. Inspect the twelve samples sent to `info@libraries.global`, including presentation and authentication headers. SMTP accepted them; inbox delivery is not inferred. Stripe’s sandbox financial receipts are not automatically emailed.
-3. Confirm operator/public postal details. Publish the two new legal policies and confirm the public version/links before checkout opens. No private mailing address has been silently published.
+3. Confirm the deployed site serves /legal/membership and /legal/cancellation-refunds at the recorded 2026-10-12 revision. Both are published and validated through the configured CMS; the postal address was explicitly authorised. Production must use the matching content/version.
 4. Provide the production origin/deployment. `libraries.global` did not resolve to a reachable website here. After sandbox acceptance, execute live MCP preparation for two products, four prices, three portals and the deployed webhook. Capture/install its secret privately, then verify the signed receiver and mode.
 5. Deploy production migrations/shared access/Strapi/UI with separate environment databases and matching bridge/mode. Schedule authenticated billing each minute and retention daily on the actual host, connect alerts, verify notification delivery and remove closed-beta barriers for a public launch. Confirm Managed Payments programme/terms, classification and public support/refund-escalation settings; existing charges/payout flags alone are insufficient evidence.
 6. Enable live purchase flags only after the above checks. No real customer charge was made for testing. The normal Stripe runtime key is separate from MCP authentication; use OAuth or an Agent-tagged MCP key after Stripe's 31 October deadline.
 
 [BILLING.md](BILLING.md) contains setup, testing and recovery commands; [BILLING-HELP.md](BILLING-HELP.md) contains customer guidance; [BILLING-SPEC.md](BILLING-SPEC.md) records the agreed scope and scheduling amendment.
+
+## Membership legal pages follow-up
+
+The two standalone policies were reviewed and published on 12 October 2026. Membership has seven sections; cancellation/refunds has eight, including contact details, stopping renewal, initial statutory cancellation, refund timing/method, the model form and access consequences. Both use info@libraries.global. Reciprocal links, general terms/privacy links and Link transaction support are real structured content links. Existing section navigation and print/save controls remain available. The membership page also provides #membership-terms and #cancellation-refunds anchors leading to the full policies.
+
+The new legal-only updater preserves earlier revisions, backs up before writes and refuses to overwrite a published policy with a missing postal address. Frontend read-only CMS fetches for both pages return HTTP 200; publication, contact/address equality, absence of placeholders and legal-navigation inclusion were checked without printing private configuration. UI typecheck, 25 legal/billing helper and checkout tests, focused UI/script lint and the 259-page production build pass. The membership/refunds reader’s contact button also uses info@libraries.global.

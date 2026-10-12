@@ -1486,6 +1486,11 @@
     "badgeHelp": "Malá značka vedle vašeho jména. Kdykoli ji můžete skrýt.",
     "creditHelp": "Vaše jméno na veřejném seznamu poděkování. Ve výchozím nastavení je vypnuté.",
     "securePaymentBenefit": "Stripe bezpečně zpracovává vaše platební údaje.",
-    "dismiss": "Zrušit"
+    "dismiss": "Zrušit",
+    "legalHeading": "Podmínky členství a vrácení peněz",
+    "legalLead": "Před platbou si přečtěte tyto podmínky. Každou stránku můžete vytisknout nebo uložit.",
+    "membershipTerms": "Podmínky členství",
+    "legalTermsBody": "Vaše nástroje, ceny, obnovování, změny tarifu a účet.",
+    "legalRefundsBody": "Zrušení obnovování, žádosti o vrácení peněz a zákonná práva na odstoupení."
   }
 }

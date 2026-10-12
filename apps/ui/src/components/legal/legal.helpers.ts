@@ -14,6 +14,8 @@ const LEGAL_ICONS: Record<string, string> = {
   "data-licence": "mdi:web",
   cookies: "mdi:cookie-outline",
   independence: "mdi:source-branch",
+  membership: "mdi:card-account-details-outline",
+  "cancellation-refunds": "mdi:cash-refund",
 }
 
 export function legalIcon(slug?: string | null): string {

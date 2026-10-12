@@ -2,6 +2,18 @@ const paragraph = (text) => ({
   type: "paragraph",
   children: [{ type: "text", text }],
 })
+const linkedParagraph = (...parts) => ({
+  type: "paragraph",
+  children: parts.map((part) =>
+    typeof part === "string"
+      ? { type: "text", text: part }
+      : {
+          type: "link",
+          url: part.url,
+          children: [{ type: "text", text: part.text }],
+        }
+  ),
+})
 const heading = (text) => ({
   type: "heading",
   level: 2,
@@ -10,18 +22,22 @@ const heading = (text) => ({
 const section = (title, inShort, ...body) => ({
   heading: title,
   inShort,
-  body: body.map(paragraph),
+  body: body.map((value) =>
+    typeof value === "string" ? paragraph(value) : value
+  ),
 })
 
 export function membershipLegalContent(
   operator,
-  postalAddress = "Postal contact address must be confirmed before live checkout is enabled."
+  postalAddress = "Postal contact address must be confirmed before live checkout is enabled.",
+  contactEmail = "info@libraries.global"
 ) {
   const contact = postalAddress
 
   return [
     {
       title: "Membership terms",
+      heroTitle: "Membership *terms.*",
       slug: "membership",
       navLabel: "Membership",
       lead: "Terms for Supporter and Pro digital tools, recurring payments and access.",
@@ -39,8 +55,19 @@ export function membershipLegalContent(
         section(
           "The service and operator",
           "Digital tools supplied by Libraries Global; payment seller identified by Stripe.",
-          `Libraries Global is operated by ${operator}. These membership terms supplement the general terms of use. Product and access enquiries: info@libraries.global. Legal enquiries: legal@libraries.global. Postal contact: ${contact}`,
-          "The payment transaction is sold through Stripe's merchant-of-record service. The seller and transaction terms are identified at checkout and in your financial confirmation. Those terms govern payment processing and transaction support; these terms describe the software tools and access supplied by Libraries Global."
+          linkedParagraph(
+            `Libraries Global is operated by ${operator}. These membership terms supplement the `,
+            { text: "general terms of use", url: "/legal/terms" },
+            `. Membership, access and cancellation enquiries: ${contactEmail}. Postal contact: ${contact}`
+          ),
+          linkedParagraph(
+            "The payment transaction is sold through Stripe's merchant-of-record service. The seller and transaction terms are identified at checkout and in your financial confirmation. Those terms govern payment processing and transaction support; these terms describe the software tools and access supplied by Libraries Global. ",
+            {
+              text: "Link transaction support",
+              url: "https://support.link.com/topics/sold-through-link",
+            },
+            " can help with payment questions."
+          )
         ),
         section(
           "The tools you receive",
@@ -69,18 +96,31 @@ export function membershipLegalContent(
         section(
           "Cancellation, refunds and complaints",
           "Renewal cancellation and a refund request are separate.",
-          "Read the cancellation and refund policy and the transaction terms identified at Stripe checkout. Refund requests and statutory cancellation rights are considered under those terms and applicable law. We do not promise an automatic refund merely because renewal is stopped. Nothing here excludes rights that the law gives you.",
-          "For tool/access problems contact info@libraries.global. For transaction or refund support use the support route on your Stripe checkout or financial confirmation; you may also contact us to help identify the order. Do not send passwords, full card details or sign-in links. A full current-period refund or a payment dispute can suspend the affected paid access while independent complimentary access remains."
+          linkedParagraph(
+            "Read our ",
+            {
+              text: "cancellation and refund policy",
+              url: "/legal/cancellation-refunds",
+            },
+            " and the transaction terms identified at Stripe checkout. Refund requests and statutory cancellation rights are considered under those terms and applicable law. Stopping renewal does not by itself request a refund. Nothing here excludes rights that the law gives you."
+          ),
+          `For tool/access problems contact ${contactEmail}. For transaction or refund support use the support route on your Stripe checkout or financial confirmation; you may also contact us to help identify the order. Do not send passwords, full card details or sign-in links. A full current-period refund or a payment dispute can suspend the affected paid access while independent complimentary access remains.`
         ),
         section(
           "Account deletion and financial records",
           "Billing is stopped before account erasure.",
-          "Account deletion first cancels subscriptions and expires open checkout sessions. If that cannot be confirmed, deletion is refused until billing is reconciled. Completed event references are removed after 90 days. Minimal account/payment reference bindings are removed six years after account erasure by daily housekeeping; they prevent late events from recreating access. Stripe handles its own financial records and any separate deletion request under its privacy terms."
+          "Account deletion first cancels subscriptions and expires open checkout sessions. If that cannot be confirmed, deletion is refused until billing is reconciled. Completed event references are removed after 90 days. Minimal account/payment reference bindings are removed six years after account erasure by daily housekeeping; they prevent late events from recreating access. Stripe handles its own financial records and any separate deletion request under its privacy terms.",
+          linkedParagraph(
+            "Our ",
+            { text: "privacy notice", url: "/legal/privacy" },
+            " explains payment references, consent records and account information."
+          )
         ),
       ],
     },
     {
       title: "Cancellation and refunds",
+      heroTitle: "Cancellation *and refunds.*",
       slug: "cancellation-refunds",
       navLabel: "Cancellation & refunds",
       lead: "How to stop membership renewal, request a refund and get payment help.",
@@ -96,6 +136,16 @@ export function membershipLegalContent(
       ],
       sections: [
         section(
+          "Who to contact",
+          "Send membership and cancellation requests to info@libraries.global.",
+          `Libraries Global is operated by ${operator}. Contact: ${contactEmail}. Postal contact: ${contact}. The transaction seller is identified on Stripe's checkout and your financial confirmation.`,
+          linkedParagraph(
+            "This policy accompanies our ",
+            { text: "membership terms", url: "/legal/membership" },
+            ". It explains both stopping future renewals and cancelling a purchase or requesting a refund."
+          )
+        ),
+        section(
           "Stop future renewals",
           "Use Membership & billing in Settings.",
           "Sign in to the account that bought the membership, open Settings → Membership & billing → Manage membership, and use Stripe's cancellation controls. You can also manage renewal through Link using your financial confirmation if you cannot enter our app. You do not need to delete your account or contact us just to stop renewal. Check the effective date and retain the confirmation. Settled tools normally remain available to the paid period end."
@@ -103,20 +153,26 @@ export function membershipLegalContent(
         section(
           "Request a refund or exercise statutory cancellation rights",
           "Use the transaction support route shown on the Stripe confirmation.",
-          "The payment seller and transaction terms are identified at checkout and on your financial confirmation. Use that seller's transaction-support route to request a refund or exercise a statutory cancellation right. You may also contact info@libraries.global with the invoice reference, account email, purchase date and request; we can help identify the transaction and explain the access status.",
-          "For UK consumers buying a service online, the statutory cancellation period normally ends 14 days after the day the contract is entered into. You can notify us using the contact details or example below; no special form is required. Requesting immediate tool access does not waive these rights. Any lawful proportionate charge for a service already supplied must meet the applicable legal conditions. Other countries may provide additional rights. We do not apply a blanket no-refunds clause or promise an automatic full refund after every renewal charge. Stopping renewal is separate from cancelling a purchase or requesting a refund."
+          `The payment seller and transaction terms are identified at checkout and on your financial confirmation. Use that seller's transaction-support route to request a refund or exercise a statutory cancellation right. You may also contact ${contactEmail} with the invoice reference, account email, purchase date and request; we can help identify the transaction and explain the access status.`,
+          "For UK consumers buying a service online, the statutory cancellation period normally ends 14 days after the day the contract is entered into. Tell us or the transaction seller clearly that you wish to cancel before that period ends; no special form is required. Requesting immediate tool access does not waive these rights. Any lawful proportionate charge for a service already supplied must meet the applicable legal conditions. Other countries may provide additional rights. Any cancellation or refund rights that apply to a renewal are also honoured. Stopping renewal is separate from cancelling a purchase or requesting a refund."
+        ),
+        section(
+          "Refund timing and payment method",
+          "Statutory refunds follow the applicable deadline and original payment method.",
+          "For a valid UK statutory cancellation of a service, reimbursement is due without undue delay and normally within 14 days after the seller is informed of the cancellation, subject to any lawful charge for service already supplied. The same payment method is used unless you expressly agree otherwise, and no refund fee is charged. Your bank or payment provider may take additional time to display the returned funds.",
+          "For other refund requests, the seller's transaction terms and applicable law determine eligibility and timing. If the tools do not match their description or are faulty, your statutory remedies remain available. Contact us about the access/service problem and use the transaction-support route for any payment refund."
         ),
         section(
           "Information to include",
           "Order reference, date and a clear request; no payment credentials.",
-          "You can write: I wish to cancel my membership purchase and request the refund available under my applicable cancellation rights. Include your name, account email, invoice/order reference and purchase date. Legal contact: legal@libraries.global. Product support: info@libraries.global. Postal contact: " +
+          `You can write: I wish to cancel my membership purchase and request the refund available under my applicable cancellation rights. Include your name, account email, invoice/order reference and purchase date. Email: ${contactEmail}. Postal contact: ` +
             contact +
             ". Do not include a password, sign-in link, full card number or CVC."
         ),
         section(
           "Model cancellation form",
           "Use this form or any clear statement of cancellation.",
-          `To ${operator}, postal contact: ${contact}; email: legal@libraries.global.`,
+          `To ${operator}, postal contact: ${contact}; email: ${contactEmail}.`,
           "I give notice that I cancel my contract for the following membership service: [Supporter or Pro].",
           "Ordered on: [date]. Name: [your name]. Address: [your address]. Account email and order reference: [details]. Date: [date]. Signature: [only if sent on paper]."
         ),
@@ -128,7 +184,20 @@ export function membershipLegalContent(
         section(
           "If something goes wrong",
           "Check billing status and contact support before paying again.",
-          "If a payment is uncertain or membership remains confirming, check your owned billing page and financial confirmation before submitting another payment. Contact info@libraries.global for access problems. For unresolved transaction issues, use the complaints/support process identified in the seller's transaction terms. Your statutory remedies are unaffected."
+          `If a payment is uncertain or membership remains confirming, check your owned billing page and financial confirmation before submitting another payment. Contact ${contactEmail} for access problems. For unresolved transaction issues, use the complaints/support process identified in the seller's transaction terms. Your statutory remedies are unaffected.`,
+          linkedParagraph(
+            "You can read the ",
+            {
+              text: "UK Consumer Contracts Regulations",
+              url: "https://www.legislation.gov.uk/uksi/2013/3134",
+            },
+            " and contact ",
+            {
+              text: "Link transaction support",
+              url: "https://support.link.com/topics/sold-through-link",
+            },
+            " for payment help."
+          )
         ),
       ],
     },

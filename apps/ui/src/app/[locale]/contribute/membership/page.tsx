@@ -17,6 +17,7 @@ import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 import { FreePlansCard } from "../_components/membership/FreePlansCard"
 import { LibraryStaffSection } from "../_components/membership/LibraryStaffSection"
 import { MembershipPlans } from "../_components/membership/MembershipPlans"
+import { MembershipPolicies } from "../_components/membership/MembershipPolicies"
 import { PlanCompareTable } from "../_components/membership/PlanCompareTable"
 import { PlanStatusBanner } from "../_components/membership/PlanStatusBanner"
 import { ProFaq } from "../_components/membership/ProFaq"
@@ -108,6 +109,7 @@ export default async function MembershipPage() {
               : null
           }
         />
+        <MembershipPolicies />
         <p
           className="m-0 text-[16px] leading-relaxed"
           style={{ color: T.ink.dim }}

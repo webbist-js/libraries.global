@@ -1486,6 +1486,11 @@
     "badgeHelp": "Un petit badge à côté de votre nom. Masquez-le à tout moment.",
     "creditHelp": "Votre nom sur la liste publique de remerciements. Désactivé sauf si vous le choisissez.",
     "securePaymentBenefit": "Stripe traite vos informations de paiement en toute sécurité.",
-    "dismiss": "Annuler"
+    "dismiss": "Annuler",
+    "legalHeading": "Conditions d’adhésion et remboursements",
+    "legalLead": "Lisez ces politiques avant le paiement. Vous pouvez imprimer ou enregistrer chaque page.",
+    "membershipTerms": "Conditions d’adhésion",
+    "legalTermsBody": "Vos outils, tarifs, renouvellements, changements de formule et compte.",
+    "legalRefundsBody": "Arrêt du renouvellement, demandes de remboursement et droits légaux d’annulation."
   }
 }

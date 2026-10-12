@@ -1486,6 +1486,11 @@
     "badgeHelp": "A small mark next to your name. Hide it at any time.",
     "creditHelp": "Your name on the public thank-you list. Off unless you choose it.",
     "securePaymentBenefit": "Stripe handles your payment details securely.",
-    "dismiss": "Cancel"
+    "dismiss": "Cancel",
+    "legalHeading": "Membership terms and refunds",
+    "legalLead": "Read these policies before checkout. You can print or save each page.",
+    "membershipTerms": "Membership terms",
+    "legalTermsBody": "Your tools, prices, renewals, plan changes and account.",
+    "legalRefundsBody": "Stopping renewal, refund requests and your statutory cancellation rights."
   }
 }
