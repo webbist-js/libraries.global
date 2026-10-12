@@ -126,7 +126,10 @@ if (process.argv.includes("--listen")) {
     throw new Error("Run through pnpm billing:sandbox:listen")
   const target =
     process.env.BILLING_FORWARD_URL ??
-    "http://localhost:3000/api/billing/webhook"
+    new URL(
+      "/api/billing/webhook",
+      ui.APP_PUBLIC_URL ?? "http://localhost:3000"
+    ).href
   const url = new URL(target)
   if (
     !["localhost", "127.0.0.1"].includes(url.hostname) ||
@@ -168,7 +171,7 @@ if (process.argv.includes("--listen")) {
       save({ STRIPE_WEBHOOK_SECRET: secret })
       ready = true
       console.log(
-        "Sandbox listener ready. Local signing secret saved privately; restart the UI server to load it."
+        `Sandbox listener ready at ${url.origin}${url.pathname}. Local signing secret saved privately; restart the UI server if it has not reloaded the updated environment.`
       )
     }
     const status = value.match(/\[(\d{3})\].*POST/)?.[1]

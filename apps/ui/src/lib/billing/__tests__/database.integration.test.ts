@@ -194,7 +194,10 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
     }
     const provider = {
       subscriptions: { retrieve: async () => subscription },
-      invoices: { list: async () => ({ data: [invoice] }) },
+      invoices: {
+        list: async () => ({ data: [invoice] }),
+        retrieve: async () => invoice,
+      },
       checkout: {
         sessions: {
           retrieve: async () => ({
@@ -221,6 +224,19 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
         (await pool.query("select count(*) from billing_events")).rows[0].count
       )
     ).toBe(1)
+    vi.stubEnv("STRAPI_BRIDGE_SECRET", "fixture")
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200 }))
+    try {
+      const firstPass = await runBillingWorker(pool, provider)
+      expect(firstPass).toMatchObject({
+        processed: 1,
+        synced: 1,
+        failed: 0,
+        pendingProjections: 0,
+      })
+    } finally {
+      vi.unstubAllGlobals()
+    }
     await refreshSubscription(pool, provider, "sub_fixture")
     await refreshSubscription(pool, provider, "sub_fixture")
     const settled = (
@@ -247,7 +263,7 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
       expect(
         (await pool.query("select synced_revision from billing_memberships"))
           .rows[0].synced_revision
-      ).toBe("0")
+      ).toBe("1")
       await syncMembership(pool, settled)
       expect(
         (await pool.query("select synced_revision from billing_memberships"))

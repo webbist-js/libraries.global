@@ -2,7 +2,7 @@
 
 Stripe Managed Payments hosts Checkout, financial confirmations and payment management. Better Auth owns identity; Strapi owns private access projections, complimentary grants, Teams and notifications. Membership never changes community roles, trust, points, moderation or staff authority. Libraries Global’s operator remains the service seller; Stripe Managed Payments is merchant of record for transactions, not seller of record. Stripe handles payment operations and indirect taxes, while service delivery and applicable consumer obligations remain with the operator. Link’s refund policy overrides a more restrictive seller policy. [Managed Payments service terms, sections 2.1(a) and 3.3](https://stripe.com/legal/ssa-services-terms).
 
-The application and sandbox catalogue are ready for acceptance. Live purchases remain off. The latest owned Supporter/Pro test sessions are waiting for human completion of Stripe's hosted verification. Live Stripe has been inspected through official MCP: charges and payouts are enabled, but no live products or webhook have been created yet. Live preparation follows sandbox acceptance and a confirmed production URL.
+The application and sandbox catalogue are ready for acceptance. The owner's initial Pro annual purchase has settled and synchronized to Strapi. Initial Supporter settlement, declined/3DS/wallet paths and production acceptance still need completion. Live preparation remains separate from sandbox testing and requires a confirmed production URL.
 
 ## Delivered plans
 
@@ -42,13 +42,17 @@ pnpm --filter @repo/access build
 pnpm --filter @repo/ui billing:sandbox:configure
 pnpm --filter @repo/ui billing:migrate
 pnpm --filter @repo/ui billing:check
-BILLING_FORWARD_URL=http://localhost:3005/api/billing/webhook pnpm --filter @repo/ui billing:sandbox:listen
+pnpm --filter @repo/ui billing:sandbox:listen
 # Start/restart after the listener saves its private signing secret.
-APP_PUBLIC_URL=http://localhost:3005 pnpm --filter @repo/ui dev --port 3005
-BILLING_LOCAL_ORIGIN=http://localhost:3005 pnpm --filter @repo/ui billing:sandbox:work
+pnpm --filter @repo/ui dev --port 3000
+pnpm --filter @repo/ui billing:sandbox:work
 ```
 
 Run the worker again if projections remain pending. Local development has no Vercel scheduler. CLI signing secrets differ from deployed endpoint secrets. Unowned synthetic events cannot grant access. Fixture profiles stay private and reserved `.invalid` recipients are excluded from SMTP delivery.
+
+The listener and worker default to `APP_PUBLIC_URL` in the private UI environment; the example above uses `http://localhost:3000`, with matching `NEXT_PUBLIC_APP_URL`. Restart helpers when changing ports, and clear or update explicit forwarding/worker origin overrides. A stopped app or wrong forwarding port prevents timely confirmation even though Stripe has paid the invoice.
+
+Checkout keeps polling through delayed synchronization and transient failures, using slower checks after the initial 30 seconds. On verified readiness it refetches the existing reactive session with `disableCookieCache: true` and refreshes server UI. That flag also bypasses the per-process Strapi profile cache for that authenticated user; no plan or role is accepted from the browser. Acknowledged billing sync invalidates the local profile cache, and the worker attempts to sync projections created during the same run before its existing time budget expires. Settings keeps pending paid purchases visible and refreshes membership/access automatically. Existing paid/refund/mode/ownership guards remain authoritative.
 
 ```bash
 pnpm --filter @repo/access test

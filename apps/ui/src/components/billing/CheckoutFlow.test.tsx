@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -36,7 +37,12 @@ const catalogue = {
   ],
 }
 const fetcher = vi.fn()
+const refreshMembership = vi.hoisted(() => vi.fn())
+vi.mock("@/components/billing/useMembershipRefresh", () => ({
+  useMembershipRefresh: () => refreshMembership,
+}))
 beforeEach(() => {
+  refreshMembership.mockReset().mockResolvedValue(undefined)
   vi.stubGlobal("fetch", fetcher)
   fetcher
     .mockReset()
@@ -44,6 +50,7 @@ beforeEach(() => {
 })
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 describe("checkout account and payment handoff", () => {
@@ -152,5 +159,41 @@ describe("checkout account and payment handoff", () => {
     )
     expect(screen.queryByText("thankYou")).toBeNull()
     expect(screen.getByText("confirming")).toBeTruthy()
+  })
+  it("finishes a delayed confirmation after the old 30-second cutoff and refreshes access without sign-in", async () => {
+    vi.useFakeTimers()
+    let checks = 0
+    fetcher.mockImplementation(async (url: string) => ({
+      ok: true,
+      json: async () =>
+        url.includes("/status")
+          ? { state: ++checks < 19 ? "sync_pending" : "ready" }
+          : catalogue,
+    }))
+    render(<CheckoutFlow user={buyer} attempt="owned-attempt" />)
+    await act(() => vi.advanceTimersByTimeAsync(50_000))
+    expect(screen.getByText("thankYou")).toBeTruthy()
+    expect(refreshMembership).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole("link", { name: "signIn" })).toBeNull()
+  })
+  it("recovers from a temporary status failure without another payment", async () => {
+    vi.useFakeTimers()
+    let checks = 0
+    fetcher.mockImplementation(async (url: string) => {
+      if (url.includes("/status") && ++checks === 1) throw new Error("offline")
+
+      return {
+        ok: true,
+        json: async () =>
+          url.includes("/status") ? { state: "ready" } : catalogue,
+      }
+    })
+    render(<CheckoutFlow user={buyer} attempt="owned-attempt" />)
+    await act(() => vi.advanceTimersByTimeAsync(20_000))
+    expect(screen.getByText("thankYou")).toBeTruthy()
+    expect(refreshMembership).toHaveBeenCalledTimes(1)
+    expect(
+      fetcher.mock.calls.some(([url]) => url === "/api/billing/checkout")
+    ).toBe(false)
   })
 })

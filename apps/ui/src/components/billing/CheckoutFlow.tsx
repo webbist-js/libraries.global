@@ -17,6 +17,7 @@ import {
   checkoutPrimary,
 } from "./CheckoutPresentation"
 import type { PriceCatalogue } from "./types"
+import { useMembershipRefresh } from "./useMembershipRefresh"
 
 export function CheckoutFlow({
   user,
@@ -37,6 +38,7 @@ export function CheckoutFlow({
 }) {
   const t = useTranslations("billing")
   const locale = useLocale()
+  const refreshMembership = useMembershipRefresh()
   const [catalogue, setCatalogue] = useState<PriceCatalogue | null>(null)
   const [plan, setPlan] = useState(initialPlan)
   const [interval, setInterval] = useState(initialInterval)
@@ -80,18 +82,47 @@ export function CheckoutFlow({
     let timer: ReturnType<typeof setTimeout> | undefined
     let count = 0
     const poll = async () => {
+      let finished = false
+      let delay = ++count < 15 ? 2000 : 5000
       try {
         const res = await fetch(
           `/api/billing/status?attempt=${encodeURIComponent(attempt)}`,
-          { signal: controller.signal }
+          {
+            signal: AbortSignal.any([
+              controller.signal,
+              AbortSignal.timeout(15_000),
+            ]),
+            cache: "no-store",
+          }
         )
+        if (res.status === 429) {
+          const retry = Number(res.headers.get("retry-after"))
+          delay = Math.max(
+            10_000,
+            Math.min(60_000, Number.isFinite(retry) ? retry * 1000 : 10_000)
+          )
+        }
         if (!res.ok) throw new Error("status")
         const status = (await res.json()) as { state: string }
+        if (controller.signal.aborted) return
+        if (
+          !["ready", "expired", "processing", "sync_pending"].includes(
+            status.state
+          )
+        )
+          throw new Error("status")
+        if (status.state === "ready") {
+          await refreshMembership()
+          if (controller.signal.aborted) return
+        }
         setState(status.state)
-        if (!["ready", "expired"].includes(status.state) && ++count < 15)
-          timer = setTimeout(poll, 2000)
+        finished = ["ready", "expired"].includes(status.state)
       } catch {
         if (!controller.signal.aborted) setState("unavailable")
+        delay = Math.max(delay, 5000)
+      } finally {
+        if (!finished && !controller.signal.aborted)
+          timer = setTimeout(poll, delay)
       }
     }
     poll()
@@ -100,7 +131,7 @@ export function CheckoutFlow({
       controller.abort()
       clearTimeout(timer)
     }
-  }, [attempt, cancelled, user?.verified])
+  }, [attempt, cancelled, user?.verified, refreshMembership])
 
   const checkout = async () => {
     setBusy(true)
@@ -168,7 +199,9 @@ export function CheckoutFlow({
               ? t("ready")
               : state === "expired"
                 ? t("expired")
-                : t("pending")}
+                : state === "unavailable"
+                  ? t("confirmationUnavailable")
+                  : t("pending")}
         </p>
         <GlobalLink
           className={`${checkoutPrimary} self-start`}

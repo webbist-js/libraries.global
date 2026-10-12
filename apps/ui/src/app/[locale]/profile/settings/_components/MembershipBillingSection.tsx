@@ -11,6 +11,7 @@ import {
   membershipStatusKey,
   invoiceStatusKey,
 } from "@/components/billing/types"
+import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
 import GlobalLink from "@/components/global/GlobalLink"
 import { SectionCard } from "@/components/profile-form/FormParts"
 import { T } from "@/lib/design-tokens"
@@ -18,24 +19,51 @@ import { T } from "@/lib/design-tokens"
 export function MembershipBillingSection() {
   const t = useTranslations("billing")
   const locale = useLocale()
+  const refreshMembership = useMembershipRefresh()
   const [summary, setSummary] = useState<BillingSummary | null>(null)
   const [error, setError] = useState(false)
   const [busy, setBusy] = useState(false)
   const [reload, setReload] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
-    fetch("/api/billing/summary", { signal: controller.signal })
-      .then(async (res) => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let refreshed = false
+    const load = async () => {
+      try {
+        const res = await fetch("/api/billing/summary", {
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(15_000),
+          ]),
+          cache: "no-store",
+        })
         if (!res.ok) throw new Error("billing")
-        setSummary((await res.json()) as BillingSummary)
-        setError(false)
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setError(true)
-      })
+        const data = (await res.json()) as BillingSummary
+        if (controller.signal.aborted) return
+        if (data.membership && !data.confirmationPending && !refreshed) {
+          refreshed = true
+          await refreshMembership()
+          if (!controller.signal.aborted) await load()
 
-    return () => controller.abort()
-  }, [reload])
+          return
+        }
+        setSummary(data)
+        setError(false)
+        if (data.confirmationPending) timer = setTimeout(load, 5000)
+      } catch {
+        if (!controller.signal.aborted) {
+          setError(true)
+          timer = setTimeout(load, 10_000)
+        }
+      }
+    }
+    load()
+
+    return () => {
+      controller.abort()
+      clearTimeout(timer)
+    }
+  }, [reload, refreshMembership])
   const manage = async () => {
     setBusy(true)
     try {
@@ -97,7 +125,11 @@ export function MembershipBillingSection() {
           >
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="m-0 text-3xl" style={{ fontFamily: T.font.serif }}>
-                {membership ? t(membership.plan) : t("noMembership")}
+                {membership
+                  ? t(membership.plan)
+                  : summary.confirmationPending
+                    ? t("confirming")
+                    : t("noMembership")}
               </h3>
               {membership ? (
                 <span
@@ -117,7 +149,11 @@ export function MembershipBillingSection() {
                         : T.accent.ok,
                   }}
                 >
-                  {membershipStatus ? t(membershipStatus) : null}
+                  {summary.confirmationPending
+                    ? t("membershipConfirming")
+                    : membershipStatus
+                      ? t(membershipStatus)
+                      : null}
                 </span>
               ) : null}
               {summary.foundingPrice ? (
@@ -226,13 +262,20 @@ export function MembershipBillingSection() {
                 ) : null}
               </>
             ) : (
-              <p>{t("freeRemains")}</p>
+              <p>
+                {summary.confirmationPending ? t("pending") : t("freeRemains")}
+              </p>
             )}
-            <p>
-              {t("effectiveAccess")}:{" "}
-              {t(`accessPlans.${summary.effectivePlan}`)} ·{" "}
-              {t(`accessSources.${summary.accessSource}`)}
-            </p>
+            {summary.confirmationPending && membership ? (
+              <p role="status">{t("pending")}</p>
+            ) : null}
+            {(!summary.confirmationPending || membership) && (
+              <p>
+                {t("effectiveAccess")}:{" "}
+                {t(`accessPlans.${summary.effectivePlan}`)} ·{" "}
+                {t(`accessSources.${summary.accessSource}`)}
+              </p>
+            )}
             {summary.canManage ? (
               <button
                 type="button"

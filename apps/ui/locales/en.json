@@ -1395,6 +1395,7 @@
     "ready": "Your payment is confirmed and your membership is ready.",
     "confirming": "Confirming your membership",
     "pending": "Confirmation may take a little longer. Check Membership & billing; do not make another payment.",
+    "confirmationUnavailable": "We couldn't check your membership right now. We'll keep trying automatically. You can also check Membership & billing; do not make another payment.",
     "expired": "This checkout has expired. Your existing membership and access are unchanged.",
     "settingsTitle": "Membership & billing",
     "settingsLead": "Your membership, access and invoices. Payments are processed by Stripe Managed Payments.",

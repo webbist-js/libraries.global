@@ -17,6 +17,7 @@ export type BillingSummary = {
   accessSource: PlanSource
   canManage: boolean
   available: boolean
+  confirmationPending?: boolean
   paymentMethod?: {
     brand: string
     last4: string

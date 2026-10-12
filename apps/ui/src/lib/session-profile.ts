@@ -182,8 +182,10 @@ export function invalidateSessionProfile(baUserId: string): void {
 }
 
 export async function fetchSessionProfile(
-  baUserId: string
+  baUserId: string,
+  forceRefresh = false
 ): Promise<SessionProfile | null> {
+  if (forceRefresh) invalidateSessionProfile(baUserId)
   const hit = cache.get(baUserId)
   if (hit && Date.now() - hit.at < SESSION_PROFILE_TTL_MS) return hit.value
 

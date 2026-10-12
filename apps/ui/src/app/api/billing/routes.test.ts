@@ -143,4 +143,27 @@ describe("owned billing reads and provider management", () => {
     })
     expect(f.invoices).not.toHaveBeenCalled()
   })
+  it("reports a paid invoice awaiting its owned checkout projection as confirming, without granting access", async () => {
+    f.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({
+      rows: [
+        {
+          customer_id: "cus_owner",
+          mode: "sandbox",
+          deleting: false,
+          erased_at: null,
+          confirmation_pending: true,
+        },
+      ],
+    })
+    f.user.mockResolvedValue({ id: "owner", plan: "free", planSource: "none" })
+    f.invoices.mockResolvedValue({
+      data: [{ id: "in_paid", status: "paid", lines: { data: [] } }],
+    })
+    expect(await (await summary(request)).json()).toMatchObject({
+      membership: null,
+      confirmationPending: true,
+      effectivePlan: "free",
+    })
+    expect(f.query.mock.calls[1]?.[1]).toEqual(["owner"])
+  })
 })

@@ -14,8 +14,10 @@ export async function GET(req: Request) {
     const result = await authDbPool.query<{
       snapshot: unknown
       subscription_id: string
+      revision: string
+      synced_revision: string
     }>(
-      "select snapshot,subscription_id from billing_memberships where user_id=$1 order by snapshot->>'memberSince' desc,updated_at desc limit 1",
+      "select snapshot,subscription_id,revision,synced_revision from billing_memberships where user_id=$1 order by snapshot->>'memberSince' desc,updated_at desc limit 1",
       [user.id]
     )
     const account = await authDbPool.query<{
@@ -23,8 +25,9 @@ export async function GET(req: Request) {
       erased_at: Date | null
       deleting: boolean
       mode: string
+      confirmation_pending: boolean
     }>(
-      "select customer_id,erased_at,deleting,mode from billing_accounts where user_id=$1",
+      "select customer_id,erased_at,deleting,mode,exists(select 1 from billing_attempts a where a.user_id=billing_accounts.user_id and a.state in ('preparing','open') and (a.expires_at is null or a.expires_at>now())) as confirmation_pending from billing_accounts where user_id=$1",
       [user.id]
     )
     const customer = account.rows[0]
@@ -56,6 +59,10 @@ export async function GET(req: Request) {
         : []
 
     const snapshot = result.rows[0]?.snapshot
+    const membership =
+      isPaidMembership(snapshot) && snapshot.mode === config.mode
+        ? snapshot
+        : null
     const canManage = Boolean(
       customer?.customer_id &&
       !customer.erased_at &&
@@ -80,10 +87,15 @@ export async function GET(req: Request) {
 
     return billingJson({
       ...overview,
-      membership:
-        isPaidMembership(snapshot) && snapshot.mode === config.mode
-          ? snapshot
-          : null,
+      membership,
+      confirmationPending:
+        canManage &&
+        Boolean(
+          membership
+            ? result.rows[0]?.revision !== result.rows[0]?.synced_revision
+            : customer?.confirmation_pending &&
+                invoices.some((invoice) => invoice.status === "paid")
+        ),
       effectivePlan: user.plan ?? "free",
       accessSource: user.planSource ?? "none",
       invoices,

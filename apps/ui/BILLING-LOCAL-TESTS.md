@@ -1,6 +1,6 @@
 # Local membership acceptance
 
-Open [local membership](http://localhost:3005/contribute/membership). The current local UI, Strapi, Stripe sandbox listener and billing worker are running. Reload the page to pick up the layout changes. These are sandbox purchases; use Stripe test details.
+Open [local membership](http://localhost:3000/contribute/membership). The current local UI, Strapi, Stripe sandbox listener and billing worker are running. Reload the page to pick up the flow changes. These are sandbox purchases; use Stripe test details.
 
 ## Start again after a restart
 
@@ -15,24 +15,28 @@ pnpm --filter @repo/ui billing:check
 
 The check must report `mode: sandbox`, four matching prices and three matching portal policies. The helper only accepts the sandbox key/catalogue; it does not copy production credentials. Keep environment files private.
 
-Leave these running in three separate terminals:
+Set `APP_PUBLIC_URL` and `NEXT_PUBLIC_APP_URL` in the private UI environment to `http://localhost:3000`. The listener and worker read this origin by default. Leave these running in three separate terminals:
 
 ```bash
 # 1: wait for “Sandbox listener ready”. It saves the signing secret privately.
-BILLING_FORWARD_URL=http://localhost:3005/api/billing/webhook pnpm --filter @repo/ui billing:sandbox:listen
+pnpm --filter @repo/ui billing:sandbox:listen
 ```
 
 ```bash
 # 2: start after listener readiness; restart if its signing secret changes.
-APP_PUBLIC_URL=http://localhost:3005 NEXT_DIST_DIR=.next/billing-review pnpm --filter @repo/ui dev --port 3005
+NEXT_DIST_DIR=.next/billing-review pnpm --filter @repo/ui dev --port 3000
 ```
 
 ```bash
 # 3: process payments and Strapi projections every five seconds.
-BILLING_LOCAL_ORIGIN=http://localhost:3005 pnpm --filter @repo/ui billing:sandbox:watch
+pnpm --filter @repo/ui billing:sandbox:watch
 ```
 
 Ctrl-C stops each process. Without the worker, Stripe can show a successful payment while the application is still confirming membership. A one-off pass is also available with `billing:sandbox:work`.
+
+If you choose another port, update both public-origin values, start the UI on that port and restart both helpers. Check the listener's printed forwarding URL. Explicit `BILLING_FORWARD_URL` and `BILLING_LOCAL_ORIGIN` overrides take precedence and must match that port; old background helpers keep their earlier origin until restarted. A production domain is not needed for local card tests.
+
+Confirmation keeps checking after 30 seconds, backs off to five-second checks and recovers from temporary status failures. The worker attempts to acknowledge newly settled projections in the same run when its time budget allows. The app shows success only after paid coverage and Strapi acknowledgment agree. It then refreshes the existing Better Auth session and server UI; no new login is needed. Settings also polls a paid purchase awaiting projection and refreshes access when ready, so a paid invoice is not left beside a stale “No paid membership” card.
 
 ## Initial purchases
 

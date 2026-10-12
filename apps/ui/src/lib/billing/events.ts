@@ -6,6 +6,8 @@ import type { PaidMembership } from "@repo/access"
 import type { Pool, PoolClient } from "pg"
 import type Stripe from "stripe"
 
+import { invalidateSessionProfile } from "@/lib/session-profile"
+
 import { BillingError, billingConfig } from "./config"
 import { withBillingLock } from "./database"
 import { invoiceSubscription, projectMembership } from "./projection"
@@ -261,6 +263,34 @@ export async function syncMembership(pool: Pool, row: MembershipRow) {
     "update billing_memberships set synced_revision=greatest(synced_revision,$2),sync_attempts=0,next_sync_at=now() where subscription_id=$1",
     [row.subscription_id, Number(row.revision)]
   )
+  invalidateSessionProfile(row.user_id)
+}
+
+async function syncPendingMemberships(
+  pool: Pool,
+  client: PoolClient,
+  withinBudget: () => boolean
+) {
+  const pending = await client.query<MembershipRow>(
+    "select * from billing_memberships where synced_revision<revision and next_sync_at<=now() order by next_sync_at limit 30"
+  )
+  let synced = 0,
+    failed = 0
+  for (const row of pending.rows) {
+    if (!withinBudget()) break
+    try {
+      await syncMembership(pool, row)
+      synced++
+    } catch {
+      await client.query(
+        "update billing_memberships set sync_attempts=sync_attempts+1,next_sync_at=now()+(least(3600,30*power(2,least(sync_attempts,7))) * interval '1 second') where subscription_id=$1",
+        [row.subscription_id]
+      )
+      failed++
+    }
+  }
+
+  return { synced, failed }
 }
 
 /** Run independently of the purchase flag; turning checkout off cannot stop recovery. */
@@ -272,26 +302,11 @@ export async function runBillingWorker(pool: Pool, stripe: Stripe) {
     const events = await client.query<EventRow>(
       "select * from billing_events where state='pending' and next_attempt_at<=now() order by received_at limit 30"
     )
-    let processed = 0,
-      failed = 0,
-      synced = 0
+    let processed = 0
     // Prioritize already-settled access before reading more provider events.
-    const pending = await client.query<MembershipRow>(
-      "select * from billing_memberships where synced_revision<revision and next_sync_at<=now() order by next_sync_at limit 30"
+    let { failed, synced } = await syncPendingMemberships(pool, client, () =>
+      withinBudget(10)
     )
-    for (const row of pending.rows) {
-      if (!withinBudget(10)) break
-      try {
-        await syncMembership(pool, row)
-        synced++
-      } catch {
-        await client.query(
-          "update billing_memberships set sync_attempts=sync_attempts+1,next_sync_at=now()+(least(3600,30*power(2,least(sync_attempts,7))) * interval '1 second') where subscription_id=$1",
-          [row.subscription_id]
-        )
-        failed++
-      }
-    }
     for (const event of events.rows) {
       if (!withinBudget(25)) break
       try {
@@ -356,6 +371,13 @@ export async function runBillingWorker(pool: Pool, stripe: Stripe) {
         failed++
       }
     }
+    // A purchase settled or recovered above can become usable in this pass,
+    // rather than waiting for the next scheduled worker. Retry backoff still applies.
+    const fresh = await syncPendingMemberships(pool, client, () =>
+      withinBudget(35)
+    )
+    failed += fresh.failed
+    synced += fresh.synced
     await client.query(
       "delete from billing_rate_limits where resets_at<now()-interval '1 day'"
     )

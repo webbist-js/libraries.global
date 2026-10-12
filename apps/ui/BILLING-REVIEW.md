@@ -61,7 +61,15 @@ Ownership, mode separation, verified identity, origin/body/quantity/price guards
 
 The unpaid-upgrade bug was fixed: a failed Pro upgrade cannot remove a still-settled Supporter period. The worker rechecks state after acquiring the owner lock, so a stale candidate cannot recreate an undone change or act on an erased account. Successful/expired attempts discard capability URLs. Retention preserves pending work/live accounts and bounds completed references/erased bindings.
 
-This is tested behavior, not an absolute security guarantee. Real initial Supporter settlement, current fresh Pro settlement, decline/3DS/wallet/device paths and production infrastructure are not yet fully accepted. Refund/dispute hold clearing remains an explicit operator reconciliation with provider evidence and an audit record; no customer bypass endpoint exists.
+This is tested behavior, not an absolute security guarantee. The initial Pro annual settlement is accepted in the follow-up below. Initial Supporter settlement, decline/3DS/wallet/device paths and production infrastructure remain outstanding. Refund/dispute hold clearing remains an explicit operator reconciliation with provider evidence and an audit record; no customer bypass endpoint exists.
+
+## Local post-purchase follow-up — 12 October 2026
+
+The owner's latest initial Pro annual checkout completed in Stripe. Local helpers still pointed to port 3005 after the app moved to 3000, so no fresh webhook/worker processing reached that purchase. The recovery worker fetched the owned completed session and verified settlement, then synchronized its active Pro projection to Strapi. The authoritative bridge now returns active paid Pro, and the billing revision is acknowledged. The helpers were restarted at the configured port 3000; a signed non-payment webhook probe returned HTTP 200. No new charge, customer impersonation or manual access grant was used.
+
+The confirmation page's former 15-check cutoff was removed. It now recovers from transient failures and refreshes the existing session on verified readiness. Settings automatically updates a paid purchase awaiting projection. Worker synchronization now attempts newly settled projections in the same pass, avoiding an unnecessary extra scheduled-run wait. Forced session refresh fetches current private bridge data and fails closed when that bridge is unavailable. Initial Supporter settlement, decline/3DS/wallet/device tests and production acceptance remain outstanding.
+
+Validation: 48 focused checkout/settings/session/security tests and 3 isolated local billing integration tests passed. Frontend typechecking, scoped lint with no errors and the production build (259 pages) passed. The paid-projection and signed-webhook checks used service credentials, never a customer session token. The owner should reload the running app and check the updated flow in their authenticated browser.
 
 ## Remaining external inputs and launch work
 

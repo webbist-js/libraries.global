@@ -267,8 +267,11 @@ export const auth = betterAuth({
         await sendMagicLinkEmail(email, url)
       },
     }),
-    customSession(async ({ user, session }) => {
-      const profile = await fetchSessionProfile(user.id)
+    customSession(async ({ user, session }, context) => {
+      const profile = await fetchSessionProfile(
+        user.id,
+        context.query?.disableCookieCache === true
+      )
 
       return { user: { ...user, ...buildSessionAccess(profile) }, session }
     }),

@@ -1395,6 +1395,7 @@
     "ready": "Platba je potvrzena a členství je připraveno.",
     "confirming": "Potvrzování členství",
     "pending": "Potvrzení může chvíli trvat. Zkontrolujte Členství a fakturaci; neprovádějte další platbu.",
+    "confirmationUnavailable": "Členství teď nelze ověřit. Budeme to automaticky zkoušet znovu. Můžete také zkontrolovat Členství a fakturaci; neplaťte znovu.",
     "expired": "Platnost této platby vypršela. Vaše stávající členství a přístup se nezměnily.",
     "settingsTitle": "Členství a fakturace",
     "settingsLead": "Vaše členství, přístup a faktury. Platby zpracovává Stripe Managed Payments.",

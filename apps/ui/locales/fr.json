@@ -1395,6 +1395,7 @@
     "ready": "Votre paiement est confirmé et votre adhésion est disponible.",
     "confirming": "Confirmation de votre adhésion",
     "pending": "La confirmation peut prendre un peu de temps. Consultez Adhésion et facturation ; ne payez pas une seconde fois.",
+    "confirmationUnavailable": "Nous ne pouvons pas vérifier votre adhésion pour le moment. Nous réessaierons automatiquement. Vous pouvez aussi consulter Adhésion et facturation ; ne payez pas à nouveau.",
     "expired": "Ce paiement a expiré. Votre adhésion et votre accès existants restent inchangés.",
     "settingsTitle": "Adhésion et facturation",
     "settingsLead": "Votre adhésion, vos accès et vos factures. Les paiements sont traités par Stripe Managed Payments.",
