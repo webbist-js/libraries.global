@@ -283,7 +283,7 @@ export function CheckoutFlow({
                   <legend className="mb-4 text-lg font-semibold">
                     {t("recognitionTitle")}
                   </legend>
-                  <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-(--t-border-line) p-5 focus-within:outline-2 focus-within:outline-offset-4 hover:bg-(--t-bg-surface)">
+                  <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-(--t-border-line) p-5 hover:bg-(--t-bg-surface) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary)">
                     <input
                       className="mt-1 size-5 shrink-0"
                       name="supporterBadgeVisible"
@@ -299,7 +299,7 @@ export function CheckoutFlow({
                       </span>
                     </span>
                   </label>
-                  <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-(--t-border-line) p-5 focus-within:outline-2 focus-within:outline-offset-4 hover:bg-(--t-bg-surface)">
+                  <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-(--t-border-line) p-5 hover:bg-(--t-bg-surface) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary)">
                     <input
                       className="mt-1 size-5 shrink-0"
                       name="supporterListed"
@@ -324,7 +324,7 @@ export function CheckoutFlow({
                   <span>{t("creditExplanation")}</span>
                 </p>
                 <div className="flex flex-col gap-4 border-t border-(--t-border-line) pt-6">
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg focus-within:outline-2 focus-within:outline-offset-4">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary)">
                     <input
                       className="mt-1 size-5 shrink-0"
                       name="membershipTerms"

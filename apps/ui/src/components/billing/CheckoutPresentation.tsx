@@ -131,7 +131,7 @@ export function CheckoutPlanPicker({
         {(["month", "year"] as const).map((value) => (
           <label
             key={value}
-            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2.5 font-semibold focus-within:outline-2 focus-within:outline-offset-2 sm:px-5"
+            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2.5 font-semibold has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary) sm:px-5"
             style={{
               background: interval === value ? T.ink.base : "transparent",
               color: interval === value ? "white" : T.ink.base,
@@ -181,7 +181,7 @@ export function CheckoutPlanPicker({
           return (
             <label
               key={value}
-              className={`flex min-w-0 flex-col gap-5 rounded-3xl border-2 p-5 focus-within:outline-2 focus-within:outline-offset-4 sm:p-6 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-(--t-accent-primary)"}`}
+              className={`flex min-w-0 flex-col gap-5 rounded-3xl border-2 p-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary) sm:p-6 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-(--t-accent-primary)"}`}
               style={{
                 borderColor: plan === value ? T.accent.primary : T.border.line,
                 background: plan === value ? "#faf9ff" : "white",

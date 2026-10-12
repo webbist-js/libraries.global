@@ -55,6 +55,12 @@ The browser automation tool rejected opening the local page because of its URL p
 
 [Local acceptance checklist](BILLING-LOCAL-TESTS.md) covers both memberships, monthly/yearly prices, consent, settlement, access/export limits, recognition, changes and failure cases. The local sandbox worker now has a watch command so paid-return status can complete without repeatedly running a manual cron pass.
 
+## Plan-change modal styling follow-up
+
+The owner's screenshot exposed overlapping Cancel and Stripe-review buttons. The circular close-button styles targeted every `DialogClose` descendant, so Cancel inherited the icon's fixed square width. `DialogContent` now accepts separate built-in close-button styling, and both billing dialogs use it. Cancel keeps its natural width on desktop; the actions stack at narrow widths and wrap long labels. The title and explanation share a compact header, cards and the schedule notice have explicit spacing, and scrolling preserves each section's height.
+
+Billing choices now show their outer focus outline for keyboard interaction rather than every pointer click. Shared dialog layers sit above the sticky site header and drawers. The 27 focused checkout, dialog and plan-change tests pass, including independent close-button styling, Cancel without a billing mutation, Escape/focus restoration and the separate reduction confirmation. UI typechecking, the 259-page production build and scoped lint pass, with the existing checkout complexity warning. The generated CSS contains the new focus, layering and mobile stacking rules. This review uses the supplied screenshot and source; fresh browser geometry and zoom checks remain outstanding because the browser tool blocked the local URL.
+
 ## Security review
 
 Ownership, mode separation, verified identity, origin/body/quantity/price guards, raw signature validation, replay/out-of-order handling, durable retries, private revisions, quotas and erased-account protections were checked. No custom card/CVC processing was introduced. Financial data remains outside public profiles/directories. Pending choices never grant tools.
