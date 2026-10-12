@@ -32,7 +32,7 @@ const docs = await client.listAll("legal-document", {
 })
 const existing = docs.find((doc) => doc.slug === "beta")
 const revision = {
-  version: "2026-10-12",
+  version: "1.0",
   date: "2026-10-12",
   summary:
     "Temporary beta-entrance, access-request privacy and essential-cookie notice; standard site and membership policies continue to apply after entry.",
@@ -41,7 +41,9 @@ const data = {
   ...betaLegalContent(operator.trim(), postal.trim(), email.trim()),
   revisions: [
     ...(existing?.revisions ?? [])
-      .filter((r) => r.version !== revision.version)
+      .filter(
+        (r) => r.version !== revision.version && r.version !== revision.date
+      )
       .map(({ id, ...r }) => r),
     revision,
   ],

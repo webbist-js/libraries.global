@@ -27,6 +27,8 @@ The first command previews. The second backs up the existing beta document to a 
 
 Edit the notice when the entrance, waitlist or data practices change. For an ordinary content revision, use a new version/date and retain the previous revision. Review waitlist records when invitations end; remove data no longer needed and retain only necessary withdrawal/suppression evidence. Provider-held records need their own deletion controls, as stated in the privacy notice.
 
+Revision identifiers are numbers such as `1.0`; publication dates have their own field. The current beta, terms, privacy, cookies, membership and cancellation/refund releases are version 1.0, dated 12 October 2026. `normalize-legal-versions.mjs` corrects the earlier date-based identifiers through MCP without changing policy copy or recorded consents. Run it with `node --experimental-transform-types apps/strapi/scripts/normalize-legal-versions.mjs` to preview, then add `--apply` to update and republish the affected documents. It backs up existing records and refuses to publish documents with unrelated pending edits. The publication scripts also use numbered versions so a rerun cannot restore the mistaken labels.
+
 ## Retiring the gate
 
 Set `BETA_GATE_ENABLED=false` in the deployed frontend when public access opens. All legal pages then use the normal site layout. The entrance redirects into the site, so its beta legal links disappear. Keep `/legal/beta` published and excluded from main navigation as an archived reference for earlier invitations; do not leave email or saved links broken.

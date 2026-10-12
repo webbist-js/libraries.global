@@ -58,7 +58,7 @@ const choice = {
   plan: "pro" as const,
   interval: "month" as const,
   locale: "en" as const,
-  termsVersion: "2026-10-12",
+  termsVersion: "1.0",
 }
 
 describe.skipIf(!enabled)("billing database isolation and concurrency", () => {

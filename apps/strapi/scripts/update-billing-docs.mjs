@@ -38,7 +38,7 @@ const paragraph = (text) => ({
   children: [{ type: "text", text }],
 })
 const revision = {
-  version: "2026-10-12",
+  version: "1.0",
   date: "2026-10-12",
   summary:
     "Membership digital tools, recurring billing, cancellation and payment records; clarified service-seller responsibilities, Stripe merchant-of-record role and Link refund-policy precedence.",
@@ -100,7 +100,7 @@ for (const doc of (legalOnly ? [] : legal).filter((d) =>
   if (index !== -1) sections[index] = replacement
   else sections.push(replacement)
   const revisions = clean(doc.revisions ?? []).filter(
-    (r) => r.version !== revision.version
+    (r) => r.version !== revision.version && r.version !== revision.date
   )
   revisions.push(revision)
   await publishExisting("legal-document", doc, "en", {
@@ -140,7 +140,8 @@ for (const data of membershipLegalContent(operator, postal, contactEmail)) {
           ...data,
           revisions: [
             ...clean(existing?.revisions ?? []).filter(
-              (r) => r.version !== revision.version
+              (r) =>
+                r.version !== revision.version && r.version !== revision.date
             ),
             revision,
           ],
