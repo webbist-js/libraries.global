@@ -34,6 +34,10 @@ export function billingConfig() {
     supporterApproved: process.env.STRIPE_SUPPORTER_APPROVED === "true",
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
     portalConfiguration: process.env.STRIPE_PORTAL_CONFIGURATION,
+    supporterPortalConfiguration:
+      process.env.STRIPE_PORTAL_CONFIGURATION_SUPPORTER,
+    recoveryPortalConfiguration:
+      process.env.STRIPE_PORTAL_CONFIGURATION_RECOVERY,
     origin: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
     prices: {
       pro: {

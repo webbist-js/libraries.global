@@ -5,7 +5,7 @@
  * acceptance. Bump it when a legal document changes in a way people must
  * re-accept.
  */
-export const TERMS_VERSION = "2026-09-27"
+export const TERMS_VERSION = "2026-10-12"
 
 /** Shown next to every way of creating an account. */
 export const MINIMUM_ACCOUNT_AGE = 18

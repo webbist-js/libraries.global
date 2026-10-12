@@ -18,17 +18,21 @@ const base = (over: Partial<EntitlementInput> = {}): EntitlementInput => ({
   ...over,
 })
 
-describe("Supporter recognition plan", () => {
-  it("has free limits and no Pro features, and expires like other plans", () => {
+describe("Supporter digital tools plan", () => {
+  it("includes history and small exports, retains free community access and expires", () => {
     const ent = resolveEntitlements(
       base({ grants: [{ plan: "supporter", expiresAt: null }] })
     )
     expect(ent.plan).toBe("supporter")
-    expect(ent.features.size).toBe(0)
+    expect([...ent.features].sort()).toEqual([
+      "atlas.export",
+      "library.history",
+    ])
+    expect(can(ent, "atlas.analysis")).toBe(false)
     expect(ent.limits).toEqual({
       savedViews: 3,
       savedSearches: 3,
-      exportRows: 0,
+      exportRows: 500,
     })
     expect(
       resolveEntitlements(
@@ -229,10 +233,11 @@ describe("features", () => {
 })
 
 describe("library.history", () => {
-  it("pro and team see field-by-field history; free and public don't", () => {
-    const of = (plan: "pro" | "team") =>
+  it("supporter, pro and team see field-by-field history; free and public don't", () => {
+    const of = (plan: "supporter" | "pro" | "team") =>
       resolveEntitlements(base({ grants: [{ plan, expiresAt: null }] }))
     expect(can(of("pro"), "library.history")).toBe(true)
+    expect(can(of("supporter"), "library.history")).toBe(true)
     expect(can(of("team"), "library.history")).toBe(true)
     expect(can(resolveEntitlements(base()), "library.history")).toBe(false)
     expect(

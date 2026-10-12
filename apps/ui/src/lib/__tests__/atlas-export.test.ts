@@ -6,6 +6,7 @@ import {
 } from "@repo/shared-data"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import type { AtlasBackend, AtlasBackendState } from "../atlas-backend"
 import {
   AtlasExportConflict,
   AtlasExportLimit,
@@ -13,7 +14,6 @@ import {
   parseAtlasExport,
   selectAtlasExport,
 } from "../atlas-export"
-import type { AtlasBackend, AtlasBackendState } from "../atlas-backend"
 import { fetchExportRows } from "../library-export-bridge"
 
 vi.mock("../library-export-bridge", () => ({ fetchExportRows: vi.fn() }))
@@ -65,6 +65,32 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 describe("Atlas server-selected exports", () => {
+  it("enforces Supporter's 500 rows across server-selected scopes without truncation", async () => {
+    const api = backend()
+    const hits = Array.from({ length: 500 }, (_, i) => ({
+      ...row,
+      atlas_id: i + 1,
+      documentId: `supporter${i}`,
+    }))
+    let page = 0
+    api.search = vi.fn(async (body) => ({
+      hits: body.limit === 0 ? [] : page++ === 0 ? hits : [],
+      estimatedTotalHits: 500,
+      facetDistribution: { locale: { en: 500 } },
+    }))
+    expect((await selectAtlasExport(api, request, 500, now)).rows).toHaveLength(
+      500
+    )
+    api.search = vi.fn(async () => ({
+      hits: [],
+      estimatedTotalHits: 501,
+      facetDistribution: { locale: { en: 501 } },
+    }))
+    await expect(
+      selectAtlasExport(api, request, 500, now)
+    ).rejects.toMatchObject({ limit: 500 })
+    expect(api.search).toHaveBeenCalledOnce()
+  })
   it("rejects client IDs and requires a bounded spatial scope", () => {
     expect(() =>
       parseAtlasExport({ ...request, format: "csv", ids: ["one"] })

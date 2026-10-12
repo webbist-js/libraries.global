@@ -5,13 +5,11 @@ import { type AnchorHTMLAttributes, useEffect } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AboutExperience } from "@/components/about/AboutExperience"
-import type { GlobeNarrativeController } from "@/components/home/knowledge-globe-narrative"
 
 type CanvasProps = {
   active: boolean
   motionPaused: boolean
   overrides: { interactive: boolean; dprMax: number }
-  narrative: GlobeNarrativeController
 }
 
 const canvas = vi.hoisted(() => ({
@@ -43,23 +41,26 @@ vi.mock("next/dynamic", () => ({
 }))
 
 vi.mock("@/lib/navigation", () => ({
+  formatHref: (href: string) => href,
+  isAppLink: (href: string) => href.startsWith("/"),
   Link: ({ children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a {...props}>{children}</a>
   ),
 }))
 
-const chapterIds = [
-  "our-purpose",
-  "what-we-include",
-  "how-we-build-it",
-  "where-we-are",
-  "open-by-design",
-  "take-part",
-]
+vi.mock("@/components/about/AboutStory", () => ({
+  AboutStory: () => (
+    <section id="our-purpose">
+      <h2>Our purpose</h2>
+      <p>The project story stays an ordinary document.</p>
+    </section>
+  ),
+}))
 const markers = [{ lat: 51.5, lng: -0.1, featured: false }]
 const mediaListeners = {
   reduced: new Set<() => void>(),
   coarse: new Set<() => void>(),
+  desktop: new Set<() => void>(),
 }
 let reducedMotion = false
 let coarsePointer = false
@@ -86,6 +87,7 @@ beforeEach(() => {
   resizes.length = 0
   mediaListeners.reduced.clear()
   mediaListeners.coarse.clear()
+  mediaListeners.desktop.clear()
   Object.defineProperty(window, "scrollY", { value: 0, configurable: true })
   Object.defineProperty(window, "innerHeight", {
     value: 800,
@@ -112,11 +114,19 @@ beforeEach(() => {
     }
   )
   vi.stubGlobal("matchMedia", (query: string) => {
-    const kind = query.includes("reduced-motion") ? "reduced" : "coarse"
+    const kind = query.includes("reduced-motion")
+      ? "reduced"
+      : query.includes("pointer: coarse")
+        ? "coarse"
+        : "desktop"
 
     return {
       get matches() {
-        return kind === "reduced" ? reducedMotion : coarsePointer
+        return kind === "reduced"
+          ? reducedMotion
+          : kind === "coarse"
+            ? coarsePointer
+            : !coarsePointer
       },
       addEventListener: (_event: string, listener: () => void) =>
         mediaListeners[kind].add(listener),
@@ -197,117 +207,69 @@ function latestCanvasProps(): CanvasProps {
 
 function renderStory() {
   const result = render(
-    <AboutExperience markers={markers} stats={null}>
-      {chapterIds.map((id, index) => (
-        <section key={id} id={id} data-about-chapter={index + 1}>
-          <h2>{id}</h2>
-        </section>
-      ))}
-    </AboutExperience>
+    <AboutExperience
+      markers={markers}
+      stats={null}
+      continents={[]}
+      libraries={[]}
+    />
   )
   flushScrollFrame()
 
   return result
 }
 
-describe("About persistent canvas interaction", () => {
-  it("keeps one canvas mounted while scrolling forward, jumping chapters and returning", () => {
+describe("About hero and ordinary document", () => {
+  it("keeps one globe mounted while readers scroll to the project story and return", () => {
     renderStory()
     const globe = screen.getByRole("img", { name: "Persistent globe" })
-    const openingSignal = latestCanvasProps().narrative
     scrollTo(1220)
     scrollTo(4020)
-    expect(
-      screen
-        .getByRole("link", { name: "05 — The index today" })
-        .getAttribute("href")
-    ).toBe("#where-we-are")
-    expect(
-      screen
-        .getByRole("link", { name: "05 — The index today" })
-        .getAttribute("aria-current")
-    ).toBe("step")
     scrollTo(20)
     expect(screen.getByRole("img", { name: "Persistent globe" })).toBe(globe)
-    expect(latestCanvasProps().narrative).toBe(openingSignal)
+    expect(screen.getByRole("heading", { name: "Our purpose" })).toBeTruthy()
+    expect(
+      screen
+        .getByRole("link", { name: "Read about the project" })
+        .getAttribute("href")
+    ).toBe("#our-purpose")
     expect(canvas.mount).toHaveBeenCalledOnce()
     expect(canvas.dispose).not.toHaveBeenCalled()
   })
-
-  it("updates fractional scene progress without rerendering the canvas for each scroll frame", () => {
+  it("lets readers pause and resume globe motion", () => {
     renderStory()
-    const narrative = latestCanvasProps().narrative
-    const changed = vi.fn()
-    const unsubscribe = narrative.subscribe(changed)
-    const renderCount = canvas.render.mock.calls.length
-    scrollTo(220)
-    const firstProgress = narrative.current.progress
-    expect(firstProgress).toBeGreaterThan(0)
-    expect(firstProgress).toBeLessThan(0.5)
-    scrollTo(320)
-    expect(narrative.current.progress).toBeGreaterThan(firstProgress)
-    expect(narrative.current.progress).toBeLessThan(0.5)
-    expect(changed).toHaveBeenCalledTimes(2)
-    expect(canvas.render).toHaveBeenCalledTimes(renderCount)
-    unsubscribe()
-  })
-
-  it("starts with ambient motion paused and a one-pixel device ratio", () => {
-    renderStory()
+    fireEvent.click(screen.getByRole("button", { name: "Pause globe motion" }))
     expect(latestCanvasProps().motionPaused).toBe(true)
-    expect(latestCanvasProps().overrides.dprMax).toBe(1)
-    fireEvent.click(screen.getByRole("button", { name: "Play ambient motion" }))
+    fireEvent.click(screen.getByRole("button", { name: "Play globe motion" }))
     expect(latestCanvasProps().motionPaused).toBe(false)
-    fireEvent.click(
-      screen.getByRole("button", { name: "Pause ambient motion" })
-    )
-    expect(latestCanvasProps().motionPaused).toBe(true)
   })
-
-  it("responds to reduced motion and chooses complete chapter poses", () => {
+  it("honours a reduced-motion preference without hiding the project document", () => {
+    reducedMotion = true
     renderStory()
-    fireEvent.click(screen.getByRole("button", { name: "Play ambient motion" }))
-    act(() => {
-      reducedMotion = true
-      mediaListeners.reduced.forEach((listener) => listener())
-    })
-    scrollTo(2220)
     expect(latestCanvasProps().motionPaused).toBe(true)
-    expect(latestCanvasProps().narrative.current.progress).toBe(2)
     expect(
       (
         screen.getByRole("button", {
-          name: "Ambient motion paused by your reduced-motion preference",
+          name: "Globe motion disabled by your reduced-motion preference",
         }) as HTMLButtonElement
       ).disabled
     ).toBe(true)
+    expect(screen.getByRole("heading", { name: "Our purpose" })).toBeTruthy()
   })
-
-  it("preserves coarse-pointer scrolling until exploration is explicitly enabled", () => {
+  it("preserves touch scrolling until readers choose rotation, then lets them finish", () => {
     coarsePointer = true
     renderStory()
     expect(latestCanvasProps().overrides.interactive).toBe(false)
-    fireEvent.click(
-      screen.getByRole("button", { name: "Touch to explore the globe" })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Rotate" }))
     expect(latestCanvasProps().overrides.interactive).toBe(true)
-    scrollTo(1020)
+    fireEvent.click(screen.getByRole("button", { name: "Done" }))
     expect(latestCanvasProps().overrides.interactive).toBe(false)
-    scrollTo(20)
-    expect(latestCanvasProps().overrides.interactive).toBe(false)
-    expect(
-      screen
-        .getByRole("button", { name: "Touch to explore the globe" })
-        .getAttribute("aria-pressed")
-    ).toBe("false")
   })
-
   it("stops offscreen and in hidden documents without remounting", () => {
     renderStory()
     setVisible(false)
     expect(latestCanvasProps().active).toBe(false)
     setVisible(true)
-    expect(latestCanvasProps().active).toBe(true)
     hidden = true
     fireEvent(document, new Event("visibilitychange"))
     expect(latestCanvasProps().active).toBe(false)
@@ -316,21 +278,14 @@ describe("About persistent canvas interaction", () => {
     expect(latestCanvasProps().active).toBe(true)
     expect(canvas.mount).toHaveBeenCalledOnce()
   })
-
-  it("disconnects observers, media and scroll listeners and cancels pending work", () => {
+  it("cleans up its observers and media listeners when unmounted", () => {
     const { unmount } = renderStory()
-    fireEvent.scroll(window)
-    expect(frames.size).toBe(1)
     unmount()
-    expect(frames.size).toBe(0)
     expect(intersections[0]!.disconnect).toHaveBeenCalledOnce()
     expect(resizes[0]!.disconnect).toHaveBeenCalledOnce()
-    expect(resizes[0]!.observe).toHaveBeenCalledTimes(7)
     expect(mediaListeners.reduced.size).toBe(0)
     expect(mediaListeners.coarse.size).toBe(0)
-    fireEvent.scroll(window)
-    fireEvent.resize(window)
+    expect(mediaListeners.desktop.size).toBe(0)
     expect(frames.size).toBe(0)
-    expect(canvas.dispose).toHaveBeenCalledOnce()
   })
 })

@@ -182,7 +182,7 @@ export function LibraryHoursTable({
     endTime: string
     overnight?: boolean
   }) => {
-    const [hour, minute] = frame.endTime.split(":").map(Number)
+    const [hour = 0, minute = 0] = frame.endTime.split(":").map(Number)
 
     return (
       hour * 60 +
@@ -249,7 +249,7 @@ export function LibraryHoursTable({
                 {frames.flatMap((frame, index) => {
                   const left = timelinePercent(frame.startTime, window)
                   const right = timelinePercent(frame.endTime, window)
-                  const spans =
+                  const spans: [number, number][] =
                     frame.overnight || frame.endTime < frame.startTime
                       ? [
                           [left, 100],

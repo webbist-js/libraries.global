@@ -8,6 +8,8 @@ import {
   formatBillingMoney,
   formatBillingDate,
   type BillingSummary,
+  membershipStatusKey,
+  invoiceStatusKey,
 } from "@/components/billing/types"
 import GlobalLink from "@/components/global/GlobalLink"
 import { SectionCard } from "@/components/profile-form/FormParts"
@@ -50,6 +52,23 @@ export function MembershipBillingSection() {
     }
   }
   const membership = summary?.membership
+  const membershipStatus = membership ? membershipStatusKey(membership) : null
+  const undo = async () => {
+    setBusy(true)
+    try {
+      const response = await fetch("/api/billing/undo-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      })
+      if (!response.ok) throw new Error("undo")
+      setReload((n) => n + 1)
+    } catch {
+      setError(true)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <SectionCard
@@ -98,13 +117,7 @@ export function MembershipBillingSection() {
                         : T.accent.ok,
                   }}
                 >
-                  {membership.revoked || membership.graceExpired
-                    ? t("suspended")
-                    : membership.status === "past_due"
-                      ? t("paymentAttention")
-                      : membership.status === "active"
-                        ? t("active")
-                        : t("renewalStopped")}
+                  {membershipStatus ? t(membershipStatus) : null}
                 </span>
               ) : null}
               {summary.foundingPrice ? (
@@ -114,14 +127,21 @@ export function MembershipBillingSection() {
               ) : null}
               {summary.canManage &&
               summary.available &&
-              membership?.status === "active" &&
+              membershipStatus === "active" &&
+              membership &&
               !membership.cancelAtPeriodEnd &&
               !summary.scheduledChange &&
+              !summary.paymentAttention &&
               !membership.revoked &&
               !membership.graceExpired ? (
                 <PlanChangeDialog
                   plan={membership.plan}
                   interval={membership.interval}
+                  onComplete={() => setReload((n) => n + 1)}
+                  complimentaryPro={
+                    ["pro", "team"].includes(summary.effectivePlan) &&
+                    summary.accessSource !== "paid"
+                  }
                 />
               ) : null}
             </div>
@@ -165,10 +185,12 @@ export function MembershipBillingSection() {
                     <button
                       type="button"
                       className="min-h-11 underline"
-                      onClick={manage}
+                      onClick={summary.scheduledChange.canUndo ? undo : manage}
                       disabled={busy}
                     >
-                      {t("reviewScheduledChange")}
+                      {summary.scheduledChange.canUndo
+                        ? t("undoScheduledChange")
+                        : t("reviewScheduledChange")}
                     </button>
                   </div>
                 ) : null}
@@ -177,7 +199,8 @@ export function MembershipBillingSection() {
                   {formatBillingDate(membership.memberSince, locale)}
                 </p>
                 {membership.status === "past_due" ||
-                membership.status === "unpaid" ? (
+                membership.status === "unpaid" ||
+                summary.paymentAttention ? (
                   <div
                     role="status"
                     className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900"
@@ -284,7 +307,12 @@ export function MembershipBillingSection() {
           ) : null}
           <p>{t("portalExplanation")}</p>
           {summary.invoices.length ? (
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto [contain:paint] focus-visible:outline-2"
+              role="region"
+              aria-label={t("invoices")}
+              tabIndex={0}
+            >
               <table className="w-full text-left">
                 <caption className="mb-3 text-left font-semibold">
                   {t("invoices")}
@@ -301,10 +329,10 @@ export function MembershipBillingSection() {
                 <tbody>
                   {summary.invoices.map((invoice) => (
                     <tr key={invoice.id} className="border-t">
-                      <td className="p-2">
+                      <td className="p-2 whitespace-nowrap">
                         {formatBillingDate(invoice.created * 1000, locale)}
                       </td>
-                      <td className="p-2">
+                      <td className="min-w-48 p-2">
                         <span className="font-semibold">
                           {invoice.description ?? t("membershipInvoice")}
                         </span>
@@ -313,23 +341,28 @@ export function MembershipBillingSection() {
                           {invoice.number}
                         </span>
                       </td>
-                      <td className="p-2">
+                      <td className="p-2 whitespace-nowrap">
                         {formatBillingMoney(
                           invoice.total,
                           invoice.currency,
                           locale
                         )}
                       </td>
-                      <td className="p-2">{invoice.status}</td>
+                      <td className="p-2">
+                        {t(
+                          `invoiceStatuses.${invoiceStatusKey(invoice.status)}`
+                        )}
+                      </td>
                       <td className="p-2">
                         {invoice.pdf ? (
                           <a
                             href={invoice.pdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="underline"
+                            className="inline-flex min-h-11 items-center underline"
+                            aria-label={`${t("download")} ${invoice.number ?? t("invoice")}`}
                           >
-                            {invoice.number ?? t("download")}
+                            PDF
                           </a>
                         ) : (
                           "—"

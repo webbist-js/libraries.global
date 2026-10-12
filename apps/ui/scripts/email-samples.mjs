@@ -59,6 +59,45 @@ export function emailSamples() {
   }
   const billingSamples = [
     ["billing-ready", paid, null],
+    [
+      "billing-supporter-ready",
+      { ...paid, plan: "supporter", unitAmount: 300 },
+      null,
+    ],
+    [
+      "billing-upgraded-to-pro",
+      paid,
+      { ...paid, plan: "supporter", unitAmount: 300 },
+    ],
+    [
+      "billing-downgraded-to-supporter",
+      { ...paid, plan: "supporter", unitAmount: 300 },
+      paid,
+    ],
+    [
+      "billing-change-scheduled",
+      {
+        ...paid,
+        pendingChange: {
+          plan: "supporter",
+          interval: "month",
+          effectiveAt: paid.paidThrough,
+        },
+      },
+      paid,
+    ],
+    [
+      "billing-change-undone",
+      paid,
+      {
+        ...paid,
+        pendingChange: {
+          plan: "supporter",
+          interval: "month",
+          effectiveAt: paid.paidThrough,
+        },
+      },
+    ],
     ["billing-canceled", { ...paid, cancelAtPeriodEnd: true }, paid],
     ["billing-resumed", paid, { ...paid, cancelAtPeriodEnd: true }],
     ["billing-recovered", paid, { ...paid, status: "past_due" }],

@@ -13,6 +13,8 @@ const choice = z
     plan: z.enum(["pro", "supporter"]),
     interval: z.enum(["month", "year"]),
     locale: z.enum(["en", "cs", "fr"]),
+    action: z.enum(["review", "confirm"]).optional(),
+    effectiveAt: z.number().int().positive().optional(),
   })
   .strict()
 

@@ -1,8 +1,8 @@
 /**
  * The one source of plan copy and prices for the Membership page
  * (/contribute/membership), the Atlas plans sheet and the account menu.
- * Amounts are display strings only and are placeholders until the owner
- * confirms them (pricing spec, 2026-09-27); P-D swaps them for Stripe prices.
+ * Individual amounts are the agreed tax-inclusive GBP base prices. Checkout
+ * reads the owned Stripe catalogue and confirms the actual recurring charge.
  * No other code may hard-code an amount.
  */
 import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
@@ -10,6 +10,7 @@ import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
 import { CONTACT_EMAIL } from "./constants"
 
 export type PlanCardKey = "public" | "free" | "supporter" | "pro" | "team"
+export type DigitalPlanKey = "supporter" | "pro" | "team"
 
 export type PlanPrice =
   | { monthly?: string; yearly?: string; note?: string }
@@ -37,7 +38,7 @@ export type PlanCard = {
   cta: PlanCta
 }
 
-export const PRICES_ARE_PLACEHOLDERS = true
+export const PRICES_ARE_PLACEHOLDERS = false
 
 export const ATLAS_PER_CAPITA_LABEL =
   "Library access: population comparisons for countries and supported local areas"
@@ -114,12 +115,12 @@ export const PRO_FEATURE_COPY: Record<
  * field names are public, previous → next is Pro (`library.history`).
  */
 export const LIBRARY_HISTORY_UPGRADE = {
-  text: "See what changed, field by field, with Pro.",
+  text: "See what changed, field by field, with Supporter or Pro.",
   href: "/contribute/membership",
 } as const
 
 /** A plan's features, read from the resolver so the copy can't drift from it. */
-export function featuresOf(plan: "pro" | "team"): Feature[] {
+export function featuresOf(plan: DigitalPlanKey): Feature[] {
   const { features } = resolveEntitlements({
     signedIn: true,
     now: new Date(0),
@@ -130,6 +131,14 @@ export function featuresOf(plan: "pro" | "team"): Feature[] {
 }
 
 const feature = (text: string): PlanInclude => ({ text, kind: "feature" })
+
+export function exportLimitOf(plan: "supporter" | "pro" | "team") {
+  return resolveEntitlements({
+    signedIn: true,
+    now: new Date(0),
+    grants: [{ plan, expiresAt: null }],
+  }).limits.exportRows
+}
 const soon = (text: string): PlanInclude => ({
   text: `${text} (coming soon)`,
   kind: "soon",
@@ -137,8 +146,17 @@ const soon = (text: string): PlanInclude => ({
 const note = (text: string): PlanInclude => ({ text, kind: "note" })
 
 /** Live features first, listed plainly; the rest flagged "(coming soon)". */
-function featureItems(features: readonly Feature[]): PlanInclude[] {
-  const copy = features.map((f) => PRO_FEATURE_COPY[f])
+function featureItems(
+  features: readonly Feature[],
+  plan?: "supporter" | "pro" | "team"
+): PlanInclude[] {
+  const copy = features.map((f) => ({
+    ...PRO_FEATURE_COPY[f],
+    label:
+      f === "atlas.export" && plan
+        ? `${PRO_FEATURE_COPY[f].label} (up to ${exportLimitOf(plan).toLocaleString("en-GB")} libraries per download)`
+        : PRO_FEATURE_COPY[f].label,
+  }))
 
   return [
     ...copy.filter((c) => c.status === "live").map((c) => feature(c.label)),
@@ -150,6 +168,7 @@ function featureItems(features: readonly Feature[]): PlanInclude[] {
 }
 
 const PRO_ONLY = featuresOf("pro")
+const SUPPORTER_ONLY = featuresOf("supporter")
 const TEAM_ONLY = featuresOf("team").filter((f) => !PRO_ONLY.includes(f))
 const TEAM_FEATURES = featureItems(TEAM_ONLY)
 
@@ -222,7 +241,10 @@ export const PLANS: readonly PlanCard[] = [
       feature("Everything in Free account"),
       feature("An optional Supporter mark you can hide"),
       feature("Optional credit on the supporters page"),
-      note("No extra features and no extra trust: it’s patronage."),
+      ...featureItems(SUPPORTER_ONLY, "supporter"),
+      note(
+        "Payment never changes your community role or how edits are reviewed."
+      ),
     ],
     cta: { kind: "soon", label: "Coming soon" },
   },
@@ -235,7 +257,10 @@ export const PLANS: readonly PlanCard[] = [
       note: "Founding price, held while you stay a member.",
     },
     who: "Researchers, journalists, consultants, enthusiasts",
-    includes: [feature("Everything in Supporter"), ...featureItems(PRO_ONLY)],
+    includes: [
+      feature("Everything in Supporter"),
+      ...featureItems(PRO_ONLY, "pro"),
+    ],
     cta: { kind: "soon", label: "Coming soon" },
   },
   {

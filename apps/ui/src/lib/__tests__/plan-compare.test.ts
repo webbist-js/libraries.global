@@ -49,13 +49,18 @@ describe("compareGroups", () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it("shows the live export for Pro and Team only", () => {
+  it("shows live exports and exact limits for Supporter, Pro and Team", () => {
     expect(row("atlas.export").cells).toEqual({
       public: "no",
       free: "no",
-      supporter: "no",
+      supporter: "yes",
       pro: "yes",
       team: "yes",
+    })
+    expect(row("atlas.export").cellLabels).toEqual({
+      supporter: "500",
+      pro: "10,000",
+      team: "50,000",
     })
   })
 

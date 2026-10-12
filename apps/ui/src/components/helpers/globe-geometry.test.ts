@@ -72,10 +72,12 @@ describe("globe mask pixels", () => {
     const getImageData = vi.fn(() => ({
       data: new Uint8ClampedArray(8 * 4 * 4),
     }))
-    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
-      drawImage,
-      getImageData,
-    } as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(((
+      type: string
+    ) =>
+      type === "2d"
+        ? { drawImage, getImageData }
+        : null) as typeof HTMLCanvasElement.prototype.getContext)
     const options = {
       maskImage: image,
       radius: 3.2,

@@ -72,17 +72,21 @@ export interface EntitlementInput {
   teams?: TeamInput[]
 }
 
+const SUPPORTER_FEATURES: readonly Feature[] = [
+  "atlas.export",
+  "library.history",
+]
+
 const PRO_FEATURES: readonly Feature[] = [
+  ...SUPPORTER_FEATURES,
   "atlas.contextLayers",
   "atlas.analysis",
-  "atlas.export",
   "atlas.compare",
   "index.export",
   "index.alerts",
   "index.compare",
   "library.watch",
   "library.notes",
-  "library.history",
   "data.benchmark",
   "data.explorerExport",
   "events.personalFeed",
@@ -116,7 +120,7 @@ export const LIBRARY_SCOPED_FEATURES: readonly Feature[] = [
 const PLAN_FEATURES: Record<PlanKey, readonly Feature[]> = {
   public: [],
   free: [],
-  supporter: [],
+  supporter: SUPPORTER_FEATURES,
   pro: PRO_FEATURES,
   team: TEAM_FEATURES,
 }
@@ -135,7 +139,7 @@ const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
   supporter: {
     savedViews: 3,
     savedSearches: 3,
-    exportRows: 0,
+    exportRows: 500,
   },
   pro: {
     savedViews: 1000,

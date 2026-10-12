@@ -36,6 +36,8 @@ export function betaPublicShell(pathname: string): boolean {
     path === "/legal/privacy" ||
     path === "/privacy" ||
     path === "/legal/terms" ||
+    path === "/legal/membership" ||
+    path === "/legal/cancellation-refunds" ||
     path === "/legal/cookies" ||
     path === "/email/preferences"
   )

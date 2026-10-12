@@ -12,6 +12,7 @@ import {
   syncMembership,
   runBillingWorker,
 } from "../events"
+import { purgeBillingMetadata } from "../retention"
 
 const enabled = process.env.BILLING_DB_TEST === "true"
 const schema = `billing_test_${randomUUID().replaceAll("-", "")}`
@@ -282,5 +283,44 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+  it("purges aged successful events and erased bindings without removing live owners or retry work", async () => {
+    await pool.query(
+      "insert into billing_accounts(user_id,mode,create_token,erased_at) values ($1,'sandbox',$2,'2020-01-01'),($3,'sandbox',$4,null)",
+      ["old_erased", randomUUID(), "still_live", randomUUID()]
+    )
+    await pool.query(
+      "insert into billing_attempts(id,user_id,plan,interval,price_id,terms_version,state) values ($1,'old_erased','supporter','month','price_old','old','expired')",
+      [randomUUID()]
+    )
+    await pool.query(
+      "insert into billing_events(event_id,event_type,object_id,state,completed_at,received_at) values ('evt_old_complete','invoice.paid','in_old','complete','2025-01-01','2025-01-01'),('evt_old_retry','invoice.paid','in_retry','pending',null,'2025-01-01'),('evt_recent','invoice.paid','in_recent','complete','2026-10-11','2026-10-11')"
+    )
+    const result = await purgeBillingMetadata(
+      pool,
+      new Date("2026-10-12T00:00:00Z")
+    )
+    expect(result).toEqual({ events: 1, erasedAccounts: 1 })
+    expect(
+      (
+        await pool.query(
+          "select user_id from billing_accounts where user_id in ('old_erased','still_live')"
+        )
+      ).rows
+    ).toEqual([{ user_id: "still_live" }])
+    expect(
+      (
+        await pool.query(
+          "select event_id from billing_events where event_id like 'evt_old%' or event_id='evt_recent' order by event_id"
+        )
+      ).rows
+    ).toEqual([{ event_id: "evt_old_retry" }, { event_id: "evt_recent" }])
+    expect(
+      (
+        await pool.query(
+          "select count(*) from billing_attempts where user_id='old_erased'"
+        )
+      ).rows[0].count
+    ).toBe("0")
   })
 })

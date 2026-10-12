@@ -9,6 +9,9 @@ export const runtime = "nodejs"
 export async function POST(req: Request) {
   const secret = billingConfig().webhookSecret
   if (!secret) return billingJson({ error: "webhook_unconfigured" }, 503)
+  const signature = req.headers.get("stripe-signature")
+  if (!signature || signature.length > 4096)
+    return billingJson({ error: "invalid_signature" }, 400)
   // Never parse JSON before signature verification, and bound the actual body.
   const reader = req.body?.getReader()
   if (!reader) return billingJson({ error: "invalid_body" }, 400)
@@ -28,11 +31,7 @@ export async function POST(req: Request) {
   const raw = Buffer.concat(chunks)
   let event
   try {
-    event = billingStripe().webhooks.constructEvent(
-      raw,
-      req.headers.get("stripe-signature") ?? "",
-      secret
-    )
+    event = billingStripe().webhooks.constructEvent(raw, signature, secret)
   } catch {
     return billingJson({ error: "invalid_signature" }, 400)
   }

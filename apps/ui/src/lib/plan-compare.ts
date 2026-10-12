@@ -10,6 +10,7 @@ import { type Feature, FEATURES } from "@repo/access"
 import {
   ATLAS_PER_CAPITA_LABEL,
   featuresOf,
+  exportLimitOf,
   type PlanCardKey,
   type PlanPrice,
   PLANS,
@@ -22,6 +23,7 @@ export type CompareRow = {
   id: string
   label: string
   cells: Record<PlanCardKey, CompareCell>
+  cellLabels?: Partial<Record<PlanCardKey, string>>
 }
 
 export type CompareGroup = { id: string; title: string; rows: CompareRow[] }
@@ -116,7 +118,12 @@ function includeRows(): { group: string; row: CompareRow }[] {
         const label = item.text.endsWith(SOON_SUFFIX)
           ? item.text.slice(0, -SOON_SUFFIX.length)
           : item.text
-        if (FEATURE_LABELS.has(label)) return []
+        if (
+          [...FEATURE_LABELS].some(
+            (feature) => label === feature || label.startsWith(`${feature} (`)
+          )
+        )
+          return []
 
         return [
           {
@@ -136,6 +143,7 @@ function featureRow(feature: Feature): CompareRow {
   const copy = PRO_FEATURE_COPY[feature]
   const status: CompareCell = copy.status === "live" ? "yes" : "soon"
   const pro = featuresOf("pro").includes(feature)
+  const supporter = featuresOf("supporter").includes(feature)
   const team = featuresOf("team").includes(feature)
 
   return {
@@ -144,10 +152,20 @@ function featureRow(feature: Feature): CompareRow {
     cells: {
       public: "no",
       free: "no",
-      supporter: "no",
+      supporter: supporter ? status : "no",
       pro: pro ? status : "no",
       team: team ? status : "no",
     },
+    ...(feature === "atlas.export"
+      ? {
+          cellLabels: Object.fromEntries(
+            (["supporter", "pro", "team"] as const).map((plan) => [
+              plan,
+              `${exportLimitOf(plan).toLocaleString("en-GB")}`,
+            ])
+          ),
+        }
+      : {}),
   }
 }
 

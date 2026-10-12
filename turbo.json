@@ -1,9 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env",
-    "**/.env.*local"
-  ],
+  "globalDependencies": ["**/.env", "**/.env.*local"],
   "globalEnv": [
     "APP_PUBLIC_URL",
     "PUBLIC_CANONICAL_ORIGIN",
@@ -115,24 +112,19 @@
     "STRIPE_PRICE_SUPPORTER_MONTHLY",
     "STRIPE_PRICE_SUPPORTER_ANNUAL",
     "STRIPE_PORTAL_CONFIGURATION",
+    "STRIPE_PORTAL_CONFIGURATION_SUPPORTER",
+    "STRIPE_PORTAL_CONFIGURATION_RECOVERY",
+    "BILLING_LEGAL_OPERATOR",
+    "BILLING_LEGAL_POSTAL_ADDRESS",
     "CRON_SECRET"
   ],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "dist/**",
-        "public/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "public/**"]
     },
     "build:static": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -142,14 +134,10 @@
       ]
     },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+      "dependsOn": ["^lint"]
     },
     "lint:fix": {
-      "dependsOn": [
-        "^lint:fix"
-      ]
+      "dependsOn": ["^lint:fix"]
     },
     "sync-types": {
       "cache": false
@@ -165,28 +153,19 @@
       "persistent": true
     },
     "start": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": [
-        "^build",
-        "^typecheck"
-      ]
+      "dependsOn": ["^build", "^typecheck"]
     },
     "test": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "cache": true
     },
     "test:unit": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "cache": true
     },
     "axe-test": {
@@ -214,9 +193,7 @@
       "persistent": false
     },
     "dev:atlas": {
-      "dependsOn": [
-        "@repo/shared-data#build"
-      ],
+      "dependsOn": ["@repo/shared-data#build"],
       "cache": false,
       "persistent": true
     }

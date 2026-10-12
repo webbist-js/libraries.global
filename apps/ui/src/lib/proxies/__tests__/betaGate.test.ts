@@ -57,6 +57,11 @@ describe("beta routing", () => {
     expect(betaPublicRequest("/privacy", "GET")).toBe(true)
     expect(betaPublicRequest("/privacy", "POST")).toBe(false)
     expect(betaPublicRequest("/legal/terms", "GET")).toBe(true)
+    expect(betaPublicRequest("/legal/membership", "GET")).toBe(true)
+    expect(betaPublicRequest("/fr/legal/cancellation-refunds", "GET")).toBe(
+      true
+    )
+    expect(betaPublicRequest("/legal/membership", "POST")).toBe(false)
     expect(betaPublicRequest("/cs/legal/terms", "GET")).toBe(true)
     expect(betaPublicRequest("/legal/terms", "POST")).toBe(false)
     expect(betaPublicRequest("/legal/terms/other", "GET")).toBe(false)

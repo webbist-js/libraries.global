@@ -49,13 +49,17 @@ if (process.argv.includes("--configure-local")) {
     BILLING_ENV: "sandbox",
     PRO_ENABLED: "true",
     STRIPE_MANAGED_PAYMENTS_ENABLED: "true",
-    STRIPE_SUPPORTER_APPROVED: "false",
+    STRIPE_SUPPORTER_APPROVED: String(
+      catalogue.supporterDigitalToolsConfigured === true
+    ),
     STRIPE_PORTAL_CONFIGURATION: catalogue.portalConfigurationId,
+    STRIPE_PORTAL_CONFIGURATION_SUPPORTER:
+      catalogue.supporterPortalConfigurationId,
+    STRIPE_PORTAL_CONFIGURATION_RECOVERY:
+      catalogue.recoveryPortalConfigurationId,
     CRON_SECRET: ui.CRON_SECRET || randomBytes(32).toString("hex"),
   })
-  console.log(
-    "Local sandbox catalogue and credentials configured privately. Supporter remains inactive."
-  )
+  console.log("Local sandbox catalogue and credentials configured privately.")
 }
 if (process.argv.includes("--work")) {
   const origin =

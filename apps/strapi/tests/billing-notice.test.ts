@@ -51,4 +51,23 @@ describe("membership access notice ownership", () => {
       billingNotice({ ...paid, cancelAtPeriodEnd: true }, paid)?.body
     ).toContain("complimentary access remain")
   })
+  it("confirms scheduled choices and undo without calling the future plan active", () => {
+    const scheduled = {
+      ...paid,
+      pendingChange: {
+        plan: "supporter" as const,
+        interval: "month" as const,
+        effectiveAt: paid.paidThrough!,
+      },
+    }
+    expect(billingNotice(scheduled, paid)).toMatchObject({
+      title: "Your membership change is scheduled",
+      sendEmail: true,
+    })
+    expect(billingNotice(scheduled, scheduled)).toBeNull()
+    expect(billingNotice(paid, scheduled)).toMatchObject({
+      title: "Your scheduled membership change was undone",
+      sendEmail: true,
+    })
+  })
 })

@@ -1366,14 +1366,14 @@
     "pro": "Pro",
     "supporter": "Soutien",
     "comingSoon": "Bientôt disponible",
-    "proDescription": "Analyses et exports en complément de l’index gratuit.",
-    "supporterDescription": "Un soutien pour faire fonctionner l’index. Sans fonctions supplémentaires.",
-    "complimentary": "Vous bénéficiez déjà de Pro gratuitement. Vous pourrez soutenir le projet avec la formule Soutien lorsqu’elle sera disponible.",
+    "proDescription": "Tout le plan Soutien, des exports de 10 000 bibliothèques et des comparaisons démographiques. D’autres outils d’analyse sont à venir.",
+    "supporterDescription": "Historique détaillé des modifications et exports CSV/GeoJSON de 500 bibliothèques par téléchargement.",
+    "complimentary": "Vous disposez déjà de Pro offert. Vous pouvez aussi acheter Soutien pour financer le projet.",
     "continue": "Continuer",
     "accountEmail": "E-mail du compte :",
     "badge": "Afficher une marque de soutien sur mon profil",
     "credit": "Me citer sur la page publique des soutiens",
-    "termsConsent": "J’accepte les conditions de l’adhésion récurrente.",
+    "termsConsent": "J’accepte les conditions de l’abonnement renouvelable et demande un accès immédiat aux outils. Mes droits légaux de rétractation restent inchangés.",
     "terms": "Lire les conditions",
     "providerExplanation": "Continuez vers Stripe pour confirmer le montant total et payer via son service de marchand officiel.",
     "opening": "Ouverture de la facturation sécurisée…",
@@ -1385,7 +1385,7 @@
     "back": "Retour",
     "error": "La facturation est temporairement indisponible. Vérifiez votre adhésion avant de réessayer un paiement.",
     "summary": "Récapitulatif",
-    "taxAndCurrency": "Stripe confirme les taxes et la devise locale avant le paiement. La facture indique le montant réellement débité.",
+    "taxAndCurrency": "Les montants affichés ici utilisent la devise de facturation de base. Stripe confirme les taxes et tout paiement en devise locale au moment du paiement et dans votre confirmation financière.",
     "cancel": "Annulez le renouvellement à tout moment dans Adhésion et facturation.",
     "trust": "Le paiement ne change ni votre rôle ni la vérification de vos modifications.",
     "manage": "Gérer l’adhésion",
@@ -1430,7 +1430,7 @@
     "changePlan": "Changer d’offre",
     "currentPlan": "Offre actuelle",
     "reviewChange": "Vérifier le changement avec Stripe",
-    "changeReviewExplanation": "Stripe affiche le montant exact, le crédit pour le temps inutilisé et la date d’effet avant votre confirmation. Votre rôle dans la communauté reste identique.",
+    "changeReviewExplanation": "Stripe confirme les mises à niveau payantes. Les formules inférieures et les intervalles plus courts conservent votre période payée et sont programmés après votre vérification.",
     "scheduledChange": "Passage à {plan} ({interval}, {amount}) le {date}. Votre abonnement payé actuel reste actif jusque-là.",
     "reviewScheduledChange": "Consulter le changement prévu sur Stripe",
     "accessPlans": {
@@ -1447,6 +1447,23 @@
       "grant": "Accès offert",
       "verified": "Personnel de bibliothèque vérifié",
       "earned": "Obtenu grâce aux contributions"
-    }
+    },
+    "creditExplanation": "La reconnaissance publique nécessite un profil public. Les profils privés ou limités ne sont jamais listés ; le paiement ne modifie pas la confidentialité.",
+    "scheduledReview": "Passage à {plan} ({interval}, {amount}) le {date}. Vos outils payés actuels restent disponibles jusque-là.",
+    "scheduledNoCharge": "Aucun débit aujourd’hui. Le prix récurrent de base ci-dessus s’applique à cette date ; Stripe confirme tout montant en devise locale. Vous pouvez annuler le changement avant son début.",
+    "confirmSchedule": "Confirmer le changement programmé",
+    "undoScheduledChange": "Annuler le changement programmé",
+    "membershipConfirming": "Confirmation du paiement",
+    "membershipEnded": "Terminée",
+    "invoiceStatuses": {
+      "draft": "Brouillon",
+      "open": "En attente de paiement",
+      "paid": "Payée",
+      "uncollectible": "Impayée",
+      "void": "Annulée",
+      "unknown": "Statut indisponible"
+    },
+    "termsLanguageNote": "Les politiques d’adhésion sont actuellement disponibles en anglais.",
+    "cancellationPolicy": "Annulation et remboursements"
   }
 }

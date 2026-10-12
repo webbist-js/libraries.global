@@ -30,6 +30,12 @@ export const BILLING_EVENTS = new Set([
   "charge.dispute.created",
   "charge.dispute.closed",
   "refund.updated",
+  "subscription_schedule.created",
+  "subscription_schedule.updated",
+  "subscription_schedule.canceled",
+  "subscription_schedule.released",
+  "subscription_schedule.completed",
+  "subscription_schedule.aborted",
 ])
 type EventRow = {
   event_id: string
@@ -61,6 +67,16 @@ export async function receiveBillingEvent(pool: Pool, event: Stripe.Event) {
 }
 
 async function eventSubscription(stripe: Stripe, event: EventRow) {
+  if (event.event_type.startsWith("subscription_schedule.")) {
+    const schedule = await stripe.subscriptionSchedules.retrieve(
+      event.object_id
+    )
+
+    return {
+      id: stripeId(schedule.subscription ?? schedule.released_subscription),
+      revoke: false,
+    }
+  }
   if (event.event_type.startsWith("customer.subscription."))
     return { id: event.object_id, revoke: false }
   if (event.event_type.startsWith("checkout.session.")) {
@@ -154,7 +170,7 @@ export async function refreshSubscription(
 ) {
   return withBillingLock(pool, `subscription:${id}`, async (client) => {
     const subscription = await stripe.subscriptions.retrieve(id, {
-      expand: ["latest_invoice"],
+      expand: ["latest_invoice", "schedule.phases.items.price"],
     })
     if (subscription.livemode !== (billingConfig().mode === "live"))
       throw new BillingError("subscription_environment_mismatch")

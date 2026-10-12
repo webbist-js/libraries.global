@@ -38,15 +38,17 @@ export const maxDuration = 120
 // for the rest: about 1.75 MB, under Vercel's 4.5 MB request body limit.
 const MAX_BODY_BYTES = MAX_EXPORT_IDS * (MAX_ID_LENGTH + 3) + 1024
 
-const ExportBody = z.object({
-  format: z.enum(["csv", "geojson"]),
-  // Strapi's documentId rule, so a malformed id is a 400 here rather than a
-  // failed bridge call. Well-formed ids Strapi doesn't have are skipped.
-  ids: z
-    .array(z.string().regex(DOCUMENT_ID_PATTERN))
-    .min(1)
-    .max(MAX_EXPORT_IDS),
-})
+const ExportBody = z
+  .object({
+    format: z.enum(["csv", "geojson"]),
+    // Strapi's documentId rule, so a malformed id is a 400 here rather than a
+    // failed bridge call. Well-formed ids Strapi doesn't have are skipped.
+    ids: z
+      .array(z.string().regex(DOCUMENT_ID_PATTERN))
+      .min(1)
+      .max(MAX_EXPORT_IDS),
+  })
+  .strict()
 
 const FILE_TYPES = {
   csv: "text/csv; charset=utf-8",

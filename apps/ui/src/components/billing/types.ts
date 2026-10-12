@@ -30,12 +30,14 @@ export type BillingSummary = {
     postalCode: string | null
   } | null
   foundingPrice?: boolean
+  paymentAttention?: boolean
   scheduledChange?: {
     plan: "pro" | "supporter"
     interval: "month" | "year"
     date: number
     unitAmount: number
     currency: string
+    canUndo?: boolean
   } | null
   nextAttempt?: { date: number; total: number; currency: string } | null
   invoices: {
@@ -48,6 +50,47 @@ export type BillingSummary = {
     status: string | null
     pdf: string | null
   }[]
+}
+
+/** Display uses settlement coverage as well as provider status. */
+export function membershipStatusKey(
+  membership: PaidMembership,
+  now = Date.now()
+) {
+  if (
+    membership.revoked ||
+    membership.graceExpired ||
+    membership.status === "paused"
+  )
+    return "suspended"
+  if (["past_due", "unpaid"].includes(membership.status))
+    return "paymentAttention"
+  const covered = Boolean(
+    membership.paidThrough && Date.parse(membership.paidThrough) > now
+  )
+  if (membership.status === "canceled" || membership.cancelAtPeriodEnd)
+    return covered ? "renewalStopped" : "membershipEnded"
+  if (covered && membership.status === "active") return "active"
+  if (
+    membership.status === "incomplete_expired" ||
+    (membership.paidThrough && !covered)
+  )
+    return "membershipEnded"
+
+  return "membershipConfirming"
+}
+export function invoiceStatusKey(status: string | null) {
+  switch (status) {
+    case "draft":
+    case "open":
+    case "paid":
+    case "uncollectible":
+    case "void":
+      return status
+
+    default:
+      return "unknown"
+  }
 }
 const ZERO_DECIMAL = new Set([
   "bif",

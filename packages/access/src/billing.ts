@@ -17,6 +17,12 @@ export interface PaidMembership {
   /** Last settled catalogue price, retained across founding-price catalogue changes. */
   settledPriceId?: string
   graceExpired?: boolean
+  /** Future billing choice only; never used to grant access. */
+  pendingChange?: {
+    plan: "supporter" | "pro"
+    interval: "month" | "year"
+    effectiveAt: string
+  } | null
 }
 
 /** Provider status alone cannot grant access: a settled invoice must cover it. */
@@ -92,6 +98,19 @@ export function isPaidMembership(value: unknown): value is PaidMembership {
         /^price_[\da-z_]+$/i.test(v.settledPriceId))) &&
     typeof v.cancelAtPeriodEnd === "boolean" &&
     typeof v.revoked === "boolean" &&
-    (v.graceExpired === undefined || typeof v.graceExpired === "boolean")
+    (v.graceExpired === undefined || typeof v.graceExpired === "boolean") &&
+    (v.pendingChange === undefined ||
+      v.pendingChange === null ||
+      (typeof v.pendingChange === "object" &&
+        !Array.isArray(v.pendingChange) &&
+        ["supporter", "pro"].includes(
+          (v.pendingChange as Record<string, unknown>).plan as string
+        ) &&
+        ["month", "year"].includes(
+          (v.pendingChange as Record<string, unknown>).interval as string
+        ) &&
+        typeof (v.pendingChange as Record<string, unknown>).effectiveAt ===
+          "string" &&
+        date((v.pendingChange as Record<string, unknown>).effectiveAt)))
   )
 }

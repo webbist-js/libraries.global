@@ -157,14 +157,15 @@ export function AtlasExportButton({
           style={style}
         >
           <Icon name="lock" size={16} />
-          Export · Pro
+          Export · Membership
         </button>
         <p
           id={noteId}
           className="order-last m-0 basis-full text-[14px]"
           style={{ color: T.ink.dim }}
         >
-          Export is a Pro feature.
+          Supporter exports up to 500 libraries per download; Pro exports up to
+          10,000.
         </p>
       </>
     )

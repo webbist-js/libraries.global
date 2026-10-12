@@ -332,6 +332,7 @@ export function CheckoutFlow({
                   />
                   {t("credit")}
                 </label>
+                <p className="text-sm">{t("creditExplanation")}</p>
                 <label className="flex gap-3">
                   <input
                     style={{ accentColor: T.accent.primary }}
@@ -341,11 +342,20 @@ export function CheckoutFlow({
                   />
                   <span>
                     {t("termsConsent")}{" "}
-                    <GlobalLink className="underline" href="/legal/terms">
+                    <GlobalLink className="underline" href="/legal/membership">
                       {t("terms")}
                     </GlobalLink>
                   </span>
                 </label>
+                <p className="text-sm">
+                  {t("termsLanguageNote")}{" "}
+                  <GlobalLink
+                    className="underline"
+                    href="/legal/cancellation-refunds"
+                  >
+                    {t("cancellationPolicy")}
+                  </GlobalLink>
+                </p>
                 <p className="text-sm">{t("providerExplanation")}</p>
                 <button
                   type="button"

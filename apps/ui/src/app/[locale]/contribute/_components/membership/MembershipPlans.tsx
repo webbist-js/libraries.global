@@ -61,7 +61,7 @@ function BillingToggle({
           <button
             key={value}
             aria-checked={on}
-            className="inline-flex h-9 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors"
             onClick={() => onChange(value)}
             onKeyDown={(e) => {
               if (
@@ -384,6 +384,7 @@ export function MembershipPlans({
     email: string
     verified: boolean
     complimentaryPro: boolean
+    hasPaidMembership?: boolean
   } | null
 }) {
   const tUi = useUiTranslations("ui")
@@ -421,9 +422,16 @@ export function MembershipPlans({
             current={plan.key === currentPlan}
             plan={plan}
             purchase={
-              billingAvailable &&
-              (plan.key === "pro" ||
-                (plan.key === "supporter" && supporterApproved)) ? (
+              plan.key !== "team" && checkoutUser?.hasPaidMembership ? (
+                <GlobalLink
+                  href="/profile/settings#membership"
+                  className={PILL}
+                >
+                  Manage membership
+                </GlobalLink>
+              ) : billingAvailable &&
+                (plan.key === "pro" ||
+                  (plan.key === "supporter" && supporterApproved)) ? (
                 <CheckoutButton
                   plan={plan.key === "pro" ? "pro" : "supporter"}
                   interval={billing === "yearly" ? "year" : "month"}

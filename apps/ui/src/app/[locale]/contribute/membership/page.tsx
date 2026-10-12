@@ -6,8 +6,10 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { staffLibrariesOf } from "@/lib/access-server"
+import { authDbPool } from "@/lib/auth"
 import { getSessionSSR } from "@/lib/auth-server"
 import { billingConfig } from "@/lib/billing/config"
+import { hasManagedMembership } from "@/lib/billing/current-membership"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -53,9 +55,13 @@ export default async function MembershipPage() {
   // Staff of at least one library go to the staff area; anyone else to the
   // claim flow (signed out, the claim page asks them to sign in).
   const isStaff = staffLibrariesOf(user).length > 0
+  const hasPaidMembership =
+    user && billingConfig().configured
+      ? await hasManagedMembership(authDbPool, user.id)
+      : false
 
   return (
-    <div style={{ background: T.bg.void, color: T.ink.base }}>
+    <main style={{ background: T.bg.void, color: T.ink.base }}>
       <ContributeSectionHeader
         section={tUi("membership")}
         title="Plans and *Pro*"
@@ -94,6 +100,7 @@ export default async function MembershipPage() {
               ? {
                   email: user.email,
                   verified: user.emailVerified,
+                  hasPaidMembership,
                   complimentaryPro:
                     ["pro", "team"].includes(user.plan ?? "") &&
                     user.planSource !== "paid",
@@ -120,6 +127,6 @@ export default async function MembershipPage() {
         <ProFreeRoutes />
         <ProFaq />
       </Container>
-    </div>
+    </main>
   )
 }

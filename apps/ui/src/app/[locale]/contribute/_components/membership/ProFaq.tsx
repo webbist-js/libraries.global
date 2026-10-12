@@ -13,8 +13,8 @@ const FAQ: { q: string; a: string }[] = [
     a: "Everything factual. Every library record, with its hours and services, search, the map and lists stay free for everyone, signed in or not. Contributing is free too.",
   },
   {
-    q: "Does Pro change my role or how my edits are reviewed?",
-    a: "No. Money never buys trust. Pro doesn’t award points, raise your tier, change your contributor role or skip review.",
+    q: "Does membership change my role or how my edits are reviewed?",
+    a: "No. Money never buys trust. Supporter and Pro do not award points, raise your tier, change your contributor role or skip review.",
   },
   {
     q: "How does Team work?",
@@ -22,11 +22,19 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Is VAT added at checkout?",
-    a: "No. The Supporter and Pro prices shown are what you pay. Team is invoiced, and its price is quoted ex VAT.",
+    a: "Supporter and Pro use tax-inclusive GBP base prices. Stripe confirms the applicable tax, local currency and final recurring total before you pay; your invoice shows the actual charge. Team is quoted and invoiced separately, excluding VAT where stated.",
   },
   {
     q: "Can I cancel?",
-    a: "Nobody can be charged yet. Once checkout exists, you’ll be able to cancel at any time, with a no-questions refund within 14 days of paying.",
+    a: "Cancel renewal at any time through Membership & billing in Settings. Your settled membership remains available until the paid period ends. Refund requests are handled under the cancellation and refund policy and Stripe’s order terms; your statutory rights remain unchanged.",
+  },
+  {
+    q: "What does Supporter include?",
+    a: "Detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download. Pro includes those tools, raises the export cap to 10,000 and adds population comparisons. Unfinished analysis tools are marked Coming soon.",
+  },
+  {
+    q: "Can I use Apple Pay or Google Pay?",
+    a: "Stripe’s secure checkout shows supported payment methods for your device and location, including Apple Pay and Google Pay when available. Card payment remains available. Libraries Global does not receive your full card details.",
   },
 ]
 

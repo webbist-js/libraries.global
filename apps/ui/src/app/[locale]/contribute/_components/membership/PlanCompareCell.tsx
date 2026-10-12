@@ -5,8 +5,22 @@ import { T } from "@/lib/design-tokens"
 import type { CompareCell } from "@/lib/plan-compare"
 
 /** One plan × feature cell: a tick, a "Soon" chip, or a dash (all labelled). */
-export function PlanCompareCell({ cell }: { readonly cell: CompareCell }) {
+export function PlanCompareCell({
+  cell,
+  label,
+}: {
+  readonly cell: CompareCell
+  readonly label?: string
+}) {
   const tUi = useUiTranslations("ui")
+
+  if (cell === "yes" && label)
+    return (
+      <span className="font-semibold">
+        {label}
+        <span className="sr-only"> libraries per download</span>
+      </span>
+    )
 
   if (cell === "yes")
     return (

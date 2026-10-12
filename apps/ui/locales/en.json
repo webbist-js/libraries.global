@@ -1366,14 +1366,14 @@
     "pro": "Pro",
     "supporter": "Supporter",
     "comingSoon": "Coming soon",
-    "proDescription": "Analysis and exports on top of the free index.",
-    "supporterDescription": "Patronage to keep the index running. No additional features.",
-    "complimentary": "You already have complimentary Pro. You can support the project with Supporter when it becomes available.",
+    "proDescription": "Everything in Supporter, exports of up to 10,000 libraries and population comparisons. More analysis tools are coming soon.",
+    "supporterDescription": "Detailed library change history and CSV/GeoJSON exports of up to 500 libraries per download.",
+    "complimentary": "You already have complimentary Pro. You can also buy Supporter to help fund the project.",
     "continue": "Continue",
     "accountEmail": "Account email:",
     "badge": "Show a Supporter mark on my profile",
     "credit": "Credit me on the public supporters page",
-    "termsConsent": "I agree to the recurring membership terms.",
+    "termsConsent": "I agree to the recurring membership terms and request immediate access to the tools. My statutory cancellation rights remain unchanged.",
     "terms": "Read the terms",
     "providerExplanation": "Continue to Stripe to confirm the total and pay through its merchant of record service.",
     "opening": "Opening secure billing…",
@@ -1385,7 +1385,7 @@
     "back": "Back",
     "error": "Billing is temporarily unavailable. Check membership status before retrying a payment.",
     "summary": "Order summary",
-    "taxAndCurrency": "Tax and local currency are confirmed by Stripe before you pay. Your invoice shows the amount actually charged.",
+    "taxAndCurrency": "Amounts here use the base billing currency. Stripe confirms tax and any local-currency charge at checkout and in your financial confirmation.",
     "cancel": "Cancel renewal at any time in Membership & billing.",
     "trust": "Payment never changes your community role or how edits are reviewed.",
     "manage": "Manage membership",
@@ -1430,7 +1430,7 @@
     "changePlan": "Change plan",
     "currentPlan": "Current plan",
     "reviewChange": "Review change with Stripe",
-    "changeReviewExplanation": "Stripe shows the exact charge, unused-time credit and effective date before you confirm. Your community role stays the same.",
+    "changeReviewExplanation": "Stripe confirms paid upgrades. Lower plans and shorter billing intervals keep your current paid period and are scheduled after your review.",
     "scheduledChange": "Changing to {plan} ({interval}, {amount}) on {date}. Your current paid plan continues until then.",
     "reviewScheduledChange": "Review scheduled change with Stripe",
     "accessPlans": {
@@ -1447,6 +1447,23 @@
       "grant": "Complimentary access",
       "verified": "Verified library staff",
       "earned": "Earned through contributions"
-    }
+    },
+    "creditExplanation": "Public credit requires a public profile. Private and limited profiles are never listed; checkout does not change your profile privacy.",
+    "scheduledReview": "Moving to {plan} ({interval}, {amount}) on {date}. Your current paid tools stay available until then.",
+    "scheduledNoCharge": "Nothing is charged today. The recurring base price above applies from that date; Stripe confirms any local-currency charge. You can undo this before it starts.",
+    "confirmSchedule": "Confirm scheduled change",
+    "undoScheduledChange": "Undo scheduled change",
+    "membershipConfirming": "Confirming payment",
+    "membershipEnded": "Ended",
+    "invoiceStatuses": {
+      "draft": "Draft",
+      "open": "Awaiting payment",
+      "paid": "Paid",
+      "uncollectible": "Unpaid",
+      "void": "Voided",
+      "unknown": "Status unavailable"
+    },
+    "termsLanguageNote": "Membership policies are currently available in English.",
+    "cancellationPolicy": "Cancellation and refunds"
   }
 }

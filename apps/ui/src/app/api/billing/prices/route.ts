@@ -26,14 +26,19 @@ export async function GET() {
       .filter((selection) => selection.id)
     const prices = await Promise.all(
       selections.map(async ({ plan, interval, id }) => {
-        const price = await stripe.prices.retrieve(id!)
+        const price = await stripe.prices.retrieve(id!, { expand: ["product"] })
+        const product = price.product
         if (
           !price.active ||
           price.livemode !== (config.mode === "live") ||
           price.recurring?.interval !== interval ||
           price.recurring.interval_count !== 1 ||
           price.currency !== "gbp" ||
-          price.unit_amount === null
+          price.unit_amount === null ||
+          typeof product === "string" ||
+          product.deleted ||
+          !product.active ||
+          !product.tax_code
         )
           throw new Error("catalogue mismatch")
 

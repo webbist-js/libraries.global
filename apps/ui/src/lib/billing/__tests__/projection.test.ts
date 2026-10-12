@@ -119,6 +119,31 @@ describe("provider projection", () => {
       projectMembership(subscription(), [invoice()], previous, now).unitAmount
     ).toBe(500)
   })
+  it("keeps settled Supporter coverage after an unpaid upgrade's grace expires", () => {
+    const previous = {
+      ...projectMembership(subscription(), [invoice()], null, now),
+      plan: "supporter" as const,
+      settledPriceId: "price_supporter",
+      paidThrough: "2026-12-01T00:00:00Z",
+      pastDueSince: "2026-10-01T00:00:00Z",
+    }
+    const sub = subscription()
+    sub.status = "past_due"
+    const result = projectMembership(sub, [], previous, now)
+    expect(result).toMatchObject({
+      plan: "supporter",
+      status: "active",
+      graceExpired: false,
+      paidThrough: previous.paidThrough,
+    })
+    const expired = projectMembership(
+      sub,
+      [],
+      previous,
+      new Date("2026-12-10T00:00:00Z")
+    )
+    expect(expired.graceExpired).toBe(true)
+  })
   it("grants a settled upgrade proration but ignores a negative credit line", () => {
     const previous = {
       ...projectMembership(subscription(), [invoice()], null, now),

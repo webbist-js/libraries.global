@@ -70,17 +70,43 @@ export function projectMembership(
   const graceExpired = Boolean(
     since && now.getTime() - Date.parse(since) > 7 * 86_400_000
   )
+  const schedule = subscription.schedule
+  const phase =
+    schedule &&
+    typeof schedule !== "string" &&
+    schedule.status === "active" &&
+    schedule.current_phase
+      ? schedule.phases.find(
+          (p) =>
+            p.start_date >= schedule.current_phase!.end_date &&
+            p.start_date * 1000 > now.getTime()
+        )
+      : null
+  const futurePrice = phase?.items[0]?.price
+  const futureChoice =
+    phase?.items.length === 1 ? planForPrice(stripeId(futurePrice) ?? "") : null
+  const pendingChange =
+    futureChoice && phase
+      ? { ...futureChoice, effectiveAt: iso(phase.start_date)! }
+      : null
 
   // An unpaid upgrade cannot turn a settled Supporter period into Pro. Retain
   // the already-paid plan until an invoice proves settlement at the new price.
-  if (!paidThrough && previous?.paidThrough)
+  if (!paidThrough && previous?.paidThrough) {
+    const covered = Date.parse(previous.paidThrough) > now.getTime()
+
     return {
       ...previous,
-      status: subscription.status,
+      status:
+        covered && subscription.status === "past_due"
+          ? "active"
+          : subscription.status,
       pastDueSince: since,
-      graceExpired,
+      graceExpired: covered ? false : graceExpired,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      pendingChange,
     }
+  }
 
   return {
     mode: subscription.livemode ? "live" : "sandbox",
@@ -101,6 +127,7 @@ export function projectMembership(
     graceExpired,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
     revoked: previous?.revoked ?? false,
+    pendingChange,
     ...(paidThrough ? { settledPriceId: item.price.id } : {}),
   }
 }

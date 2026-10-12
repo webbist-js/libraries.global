@@ -369,9 +369,9 @@ export function LibraryDetailPage({
                 ) : library.libraryType === "Digital" ? null : (
                   <LibraryAreaSection
                     addHref={placeAddHref({
-                      continent: library.continent?.slug,
-                      country: library.country?.slug,
-                      region: library.region?.slug,
+                      continent: library.continent?.slug ?? undefined,
+                      country: library.country?.slug ?? undefined,
+                      region: library.region?.slug ?? undefined,
                     })}
                     area={area}
                     libraryName={library.name ?? "This library"}

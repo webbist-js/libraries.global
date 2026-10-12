@@ -13,13 +13,18 @@ export function billingNotice(
     !membership.revoked &&
     !previous?.paidThrough
   const changed =
-    previous &&
-    (previous.status !== membership.status ||
-      previous.cancelAtPeriodEnd !== membership.cancelAtPeriodEnd ||
-      previous.revoked !== membership.revoked ||
-      previous.graceExpired !== membership.graceExpired ||
-      previous.plan !== membership.plan ||
-      previous.interval !== membership.interval)
+    (previous &&
+      (previous.status !== membership.status ||
+        previous.cancelAtPeriodEnd !== membership.cancelAtPeriodEnd ||
+        previous.revoked !== membership.revoked ||
+        previous.graceExpired !== membership.graceExpired ||
+        previous.plan !== membership.plan ||
+        previous.interval !== membership.interval)) ||
+    Boolean(
+      previous &&
+      JSON.stringify(previous.pendingChange ?? null) !==
+        JSON.stringify(membership.pendingChange ?? null)
+    )
   if (!activated && !changed) return null
   const [title, body] = activated
     ? [
@@ -46,10 +51,22 @@ export function billingNotice(
                 "Your membership payment has recovered",
                 "Your membership is active again. See Membership & billing for the current period and invoices.",
               ]
-            : [
-                "Your membership has changed",
-                "Open Membership & billing to see your current membership, access and invoices.",
-              ]
+            : membership.pendingChange
+              ? [
+                  "Your membership change is scheduled",
+                  `Your membership will move to ${membership.pendingChange.plan === "pro" ? "Pro" : "Supporter"} (${membership.pendingChange.interval === "year" ? "yearly" : "monthly"}) on ${new Date(membership.pendingChange.effectiveAt).toLocaleDateString("en-GB")}. Nothing is charged for scheduling this change. Your current paid tools stay available until then. You can undo it in Membership & billing before it starts.`,
+                ]
+              : previous?.pendingChange &&
+                  previous.plan === membership.plan &&
+                  previous.interval === membership.interval
+                ? [
+                    "Your scheduled membership change was undone",
+                    "Your current membership will continue. Open Membership & billing to check the recurring price and renewal date.",
+                  ]
+                : [
+                    "Your membership has changed",
+                    "Open Membership & billing to see your current membership, access and invoices.",
+                  ]
 
   return {
     title,

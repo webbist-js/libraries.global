@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { hasOpeningHours } from "@repo/shared-data"
+import { hasOpeningHours, gapDefinition, type GapKey } from "@repo/shared-data"
 import { useLocale } from "next-intl"
 import {
   useCallback,
@@ -42,10 +42,7 @@ import {
 } from "@/components/index-page/FindFilterSidebar"
 import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
 import { LibraryOpenStatusBadge } from "@/components/library/LibraryHoursTable"
-import {
-  gapLabel,
-  type LocationGapKey,
-} from "@/components/location/location-page.helpers"
+import type { LocationGapKey } from "@/components/location/location-page.helpers"
 import { T } from "@/lib/design-tokens"
 import {
   searchFind,
@@ -221,7 +218,7 @@ export function RegionLibraryIndex({
     )
     const gaps = hit.needs ?? gapsBySlug[hit.slug] ?? []
     const gap = (state.needs.find((key) => gaps.includes(key)) ?? gaps[0]) as
-      | LocationGapKey
+      | GapKey
       | undefined
     const mobile = hit.libraryType === "Mobile"
     const physical = !mobile && hit.libraryType !== "Digital"
@@ -272,14 +269,14 @@ export function RegionLibraryIndex({
     const improve = gap ? (
       <GlobalLink
         href={action}
-        aria-label={`${gap === "hours" && mobile ? "Add stops and times" : `Add ${gapLabel(gap).toLowerCase()}`} for ${hit.name}`}
+        aria-label={`${gap === "hours" && mobile ? "Add stops and times" : `Add ${gapDefinition(gap, hit.libraryType).label.toLowerCase()}`} for ${hit.name}`}
         className={ACTION_CLASS}
         style={{ background: T.accent.chip, color: T.accent.primary }}
       >
         <Icon aria-hidden="true" icon="mdi:plus" width={15} height={15} />
         {gap === "hours" && mobile
           ? "Add stops and times"
-          : `Add ${gapLabel(gap).toLowerCase()}`}
+          : `Add ${gapDefinition(gap, hit.libraryType).label.toLowerCase()}`}
       </GlobalLink>
     ) : null
 

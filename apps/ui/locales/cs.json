@@ -1366,14 +1366,14 @@
     "pro": "Pro",
     "supporter": "Podporovatel",
     "comingSoon": "Připravujeme",
-    "proDescription": "Analýzy a exporty nad rámec bezplatného indexu.",
-    "supporterDescription": "Podpora provozu indexu. Bez dalších funkcí.",
-    "complimentary": "Pro již máte zdarma. Projekt můžete podpořit jako Podporovatel, až bude dostupný.",
+    "proDescription": "Vše z plánu Podporovatel, exporty až 10 000 knihoven a populační srovnání. Další analytické nástroje připravujeme.",
+    "supporterDescription": "Podrobná historie změn knihoven a exporty CSV/GeoJSON až 500 knihoven na jedno stažení.",
+    "complimentary": "Pro již máte zdarma. Zakoupením plánu Podporovatel můžete navíc přispět na provoz projektu.",
     "continue": "Pokračovat",
     "accountEmail": "E-mail účtu:",
     "badge": "Zobrazovat označení Podporovatel v profilu",
     "credit": "Uvést mě na veřejné stránce podporovatelů",
-    "termsConsent": "Souhlasím s podmínkami opakovaného členství.",
+    "termsConsent": "Souhlasím s podmínkami opakovaného členství a žádám okamžitý přístup k nástrojům. Má zákonná práva na odstoupení zůstávají zachována.",
     "terms": "Přečíst podmínky",
     "providerExplanation": "Pokračujte ke Stripe, potvrďte celkovou částku a zaplaťte prostřednictvím jeho služby obchodníka odpovědného za platbu.",
     "opening": "Otevírání bezpečné fakturace…",
@@ -1385,7 +1385,7 @@
     "back": "Zpět",
     "error": "Fakturace je dočasně nedostupná. Před opakováním platby zkontrolujte stav členství.",
     "summary": "Přehled objednávky",
-    "taxAndCurrency": "Daň a místní měnu potvrdí Stripe před platbou. Faktura uvádí skutečně účtovanou částku.",
+    "taxAndCurrency": "Částky zde používají základní fakturační měnu. Stripe potvrdí daň a případnou platbu v místní měně při platbě a ve finančním potvrzení.",
     "cancel": "Obnovení můžete kdykoli zrušit v Členství a fakturaci.",
     "trust": "Platba nemění vaši komunitní roli ani kontrolu úprav.",
     "manage": "Spravovat členství",
@@ -1430,7 +1430,7 @@
     "changePlan": "Změnit plán",
     "currentPlan": "Současný plán",
     "reviewChange": "Zkontrolovat změnu ve Stripe",
-    "changeReviewExplanation": "Stripe před potvrzením zobrazí přesnou částku, kredit za nevyužitý čas a datum změny. Vaše role v komunitě se nemění.",
+    "changeReviewExplanation": "Placený přechod na vyšší tarif potvrzuje Stripe. Nižší tarify a kratší intervaly zachovají zaplacené období a budou naplánovány po vaší kontrole.",
     "scheduledChange": "Změna na {plan} ({interval}, {amount}) dne {date}. Současný zaplacený plán platí do té doby.",
     "reviewScheduledChange": "Zkontrolovat naplánovanou změnu ve Stripe",
     "accessPlans": {
@@ -1447,6 +1447,23 @@
       "grant": "Bezplatný přístup",
       "verified": "Ověřený pracovník knihovny",
       "earned": "Získáno příspěvky"
-    }
+    },
+    "creditExplanation": "Veřejné poděkování vyžaduje veřejný profil. Soukromé a omezené profily se nezveřejňují; platba nemění soukromí profilu.",
+    "scheduledReview": "Přechod na {plan} ({interval}, {amount}) dne {date}. Současné zaplacené nástroje zůstanou dostupné do té doby.",
+    "scheduledNoCharge": "Dnes se nic neúčtuje. Uvedená základní opakovaná cena platí od tohoto data; případnou částku v místní měně potvrdí Stripe. Změnu lze zrušit před jejím začátkem.",
+    "confirmSchedule": "Potvrdit naplánovanou změnu",
+    "undoScheduledChange": "Zrušit naplánovanou změnu",
+    "membershipConfirming": "Potvrzování platby",
+    "membershipEnded": "Ukončeno",
+    "invoiceStatuses": {
+      "draft": "Koncept",
+      "open": "Čeká na platbu",
+      "paid": "Zaplaceno",
+      "uncollectible": "Nezaplaceno",
+      "void": "Stornováno",
+      "unknown": "Stav nedostupný"
+    },
+    "termsLanguageNote": "Podmínky členství jsou zatím dostupné v angličtině.",
+    "cancellationPolicy": "Zrušení a vrácení peněz"
   }
 }

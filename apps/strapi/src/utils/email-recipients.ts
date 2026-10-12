@@ -31,7 +31,11 @@ export async function verifiedEmailMap(
         data: { id: string; email: string }[]
       }
       for (const row of data)
-        if (unique.includes(row.id) && typeof row.email === "string")
+        if (
+          unique.includes(row.id) &&
+          typeof row.email === "string" &&
+          !row.email.toLowerCase().endsWith(".invalid")
+        )
           result.set(row.id, row.email)
     }
   } catch {

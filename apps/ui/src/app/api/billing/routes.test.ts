@@ -51,6 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv("BILLING_ENV", "sandbox")
   vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fixture")
+  vi.stubEnv("STRIPE_PORTAL_CONFIGURATION", "bpc_pro")
   f.user.mockResolvedValue({ id: "owner", plan: "pro", planSource: "earned" })
   f.portal.mockResolvedValue({ url: "https://billing.stripe.com/p/session" })
   f.invoices.mockResolvedValue({ data: [] })
@@ -106,7 +107,9 @@ describe("owned billing reads and provider management", () => {
       deleting: false,
       erased_at: null,
     }
-    f.query.mockResolvedValueOnce({ rows: [account] })
+    f.query
+      .mockResolvedValueOnce({ rows: [account] })
+      .mockResolvedValueOnce({ rows: [] })
     expect((await portal(request)).status).toBe(200)
     expect(f.user).toHaveBeenCalledWith(request, true)
     expect(f.portal).toHaveBeenCalledWith(

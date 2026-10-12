@@ -15,7 +15,7 @@
       "taxBehavior": "inclusive",
       "productActive": true,
       "taxCode": "txcd_10103000",
-      "eligibility": "sandbox_candidate"
+      "eligibility": "digital_tools_candidate"
     },
     {
       "plan": "pro",
@@ -28,7 +28,7 @@
       "taxBehavior": "inclusive",
       "productActive": true,
       "taxCode": "txcd_10103000",
-      "eligibility": "sandbox_candidate"
+      "eligibility": "digital_tools_candidate"
     },
     {
       "plan": "supporter",
@@ -39,9 +39,9 @@
       "unitAmount": 300,
       "currency": "gbp",
       "taxBehavior": "inclusive",
-      "productActive": false,
-      "taxCode": null,
-      "eligibility": "pending"
+      "productActive": true,
+      "taxCode": "txcd_10103000",
+      "eligibility": "digital_tools_candidate"
     },
     {
       "plan": "supporter",
@@ -52,9 +52,9 @@
       "unitAmount": 3000,
       "currency": "gbp",
       "taxBehavior": "inclusive",
-      "productActive": false,
-      "taxCode": null,
-      "eligibility": "pending"
+      "productActive": true,
+      "taxCode": "txcd_10103000",
+      "eligibility": "digital_tools_candidate"
     }
   ],
   "portalConfigurationId": "bpc_1UPWrVRLTEHJHjvPmmvfTejE",
@@ -67,5 +67,8 @@
     },
     "apiVersion": "2026-03-25.dahlia"
   },
-  "portalChangePolicy": "Pro month to year: provider preview and immediate settlement; year to month: scheduled at period end; founding prices only; Supporter inactive"
+  "portalChangePolicy": "Pro portal excludes Supporter; app schedules reductions with owned provider phases and undo; Supporter portal permits paid upgrades; recovery portal disables plan changes",
+  "supporterDigitalToolsConfigured": true,
+  "supporterPortalConfigurationId": "bpc_1UPYHARLTEHJHjvPkBg2EdAM",
+  "recoveryPortalConfigurationId": "bpc_1UPYHBRLTEHJHjvPDzvpPFCG"
 }

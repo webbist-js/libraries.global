@@ -437,8 +437,10 @@ export default async function SupportersPage({
               className="mt-3 mb-0 max-w-xl text-[15px] leading-relaxed"
               style={{ color: T.ink.onDark }}
             >
-              Supporter is our lowest paid plan, with an optional Supporter mark
-              and credit on this page. Paid checkout is coming soon.
+              Supporter adds detailed library change history and exports of up
+              to 500 libraries per download, with an optional Supporter mark and
+              credit on this page. Choose a membership to see available checkout
+              options.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

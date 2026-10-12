@@ -99,8 +99,25 @@ describe("owned billing display data", () => {
       date: 200,
       unitAmount: 500,
       currency: "gbp",
+      canUndo: false,
     })
     expect(result.foundingPrice).toBe(true)
     vi.unstubAllEnvs()
+  })
+  it("flags an unpaid upgrade invoice without claiming a new paid plan", async () => {
+    const stripe = provider()
+    const current = await stripe.subscriptions.retrieve("sub_owned")
+    stripe.subscriptions.retrieve = vi.fn().mockResolvedValue({
+      ...current,
+      latest_invoice: {
+        status: "open",
+        amount_due: 200,
+        next_payment_attempt: null,
+      },
+    })
+    expect(
+      (await providerOverview(stripe, "sub_owned", "cus_owner", "sandbox"))
+        .paymentAttention
+    ).toBe(true)
   })
 })

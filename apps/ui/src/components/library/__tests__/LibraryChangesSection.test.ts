@@ -135,7 +135,9 @@ describe("LibraryChangesSection", () => {
     expect(screen.queryByText("Activity over time")).toBeNull()
     expect(screen.queryByText("Recent changes")).toBeNull()
     expect(
-      screen.queryByText("See what changed, field by field, with Pro.")
+      screen.queryByText(
+        "See what changed, field by field, with Supporter or Pro."
+      )
     ).toBeNull()
     expect(container.querySelector('svg[role="img"]')).toBeNull()
     expect(screen.getByText("LIB-1").closest("details")?.open).toBe(false)

@@ -162,12 +162,14 @@ describe("useAtlasExport", () => {
 describe("AtlasExportButton", () => {
   const libs = [{ id: "a" }, { id: "b" }] as AtlasLibrary[]
 
-  it("without Pro, reads Export · Pro, explains why in visible text and opens the plans sheet", () => {
+  it("without Pro, reads Export · Membership, explains why in visible text and opens the plans sheet", () => {
     const onSeePlans = vi.fn()
     render(createElement(AtlasExportButton, { libraries: libs, onSeePlans }))
 
-    const button = screen.getByRole("button", { name: "Export · Pro" })
-    const note = screen.getByText("Export is a Pro feature.")
+    const button = screen.getByRole("button", { name: "Export · Membership" })
+    const note = screen.getByText(
+      "Supporter exports up to 500 libraries per download; Pro exports up to 10,000."
+    )
     expect(note.className).not.toContain("sr-only")
     expect(button.getAttribute("aria-describedby")).toBe(note.id)
     fireEvent.click(button)

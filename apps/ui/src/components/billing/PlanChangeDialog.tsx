@@ -12,14 +12,22 @@ import {
 } from "@/components/ui/dialog"
 import { T } from "@/lib/design-tokens"
 
-import { formatBillingMoney, type PriceCatalogue } from "./types"
+import {
+  formatBillingMoney,
+  formatBillingDate,
+  type PriceCatalogue,
+} from "./types"
 
 export function PlanChangeDialog({
   plan,
   interval,
+  onComplete,
+  complimentaryPro = false,
 }: {
   readonly plan: "pro" | "supporter"
   readonly interval: "month" | "year"
+  readonly onComplete?: () => void
+  readonly complimentaryPro?: boolean
 }) {
   const t = useTranslations("billing")
   const locale = useLocale()
@@ -29,6 +37,13 @@ export function PlanChangeDialog({
   const [catalogue, setCatalogue] = useState<PriceCatalogue | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
+  const [quote, setQuote] = useState<{
+    kind: "schedule"
+    effectiveAt: number
+    unitAmount: number
+    currency: string
+    scheduled: boolean
+  } | null>(null)
   useEffect(() => {
     if (!open) return
     const controller = new AbortController()
@@ -58,10 +73,26 @@ export function PlanChangeDialog({
           plan: selectedPlan,
           interval: selectedInterval,
           locale,
+          ...(quote
+            ? { action: "confirm", effectiveAt: quote.effectiveAt }
+            : {}),
         }),
       })
       if (!response.ok) throw new Error("change")
-      const result = (await response.json()) as { url: string }
+      const result = (await response.json()) as
+        | { url: string }
+        | NonNullable<typeof quote>
+      if ("kind" in result && result.kind === "schedule") {
+        if (result.scheduled) {
+          setOpen(false)
+          setQuote(null)
+          onComplete?.()
+        } else setQuote(result)
+        setBusy(false)
+
+        return
+      }
+      if (!("url" in result)) throw new Error("provider")
       const url = new URL(result.url)
       if (
         url.protocol !== "https:" ||
@@ -78,7 +109,13 @@ export function PlanChangeDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value)
+        if (!value) setQuote(null)
+      }}
+    >
       <DialogTrigger asChild>
         <button
           type="button"
@@ -108,7 +145,10 @@ export function PlanChangeDialog({
                 type="radio"
                 name="change-interval"
                 checked={selectedInterval === value}
-                onChange={() => setSelectedInterval(value)}
+                onChange={() => {
+                  setSelectedInterval(value)
+                  setQuote(null)
+                }}
                 style={{ accentColor: T.accent.primary }}
               />
               <span className="ml-2">{t(value)}</span>
@@ -139,8 +179,14 @@ export function PlanChangeDialog({
                     type="radio"
                     name="change-plan"
                     checked={selectedPlan === value}
-                    disabled={!price}
-                    onChange={() => setSelectedPlan(value)}
+                    disabled={
+                      !price ||
+                      (value === "pro" && plan !== "pro" && complimentaryPro)
+                    }
+                    onChange={() => {
+                      setSelectedPlan(value)
+                      setQuote(null)
+                    }}
                     style={{ accentColor: T.accent.primary }}
                   />
                   <span
@@ -159,20 +205,54 @@ export function PlanChangeDialog({
                       : t("comingSoon")}
                   </p>
                   <p className="text-sm">{t(`${value}Description`)}</p>
+                  {value === "pro" && plan !== "pro" && complimentaryPro ? (
+                    <p className="text-sm">{t("complimentary")}</p>
+                  ) : null}
                 </label>
               )
             })}
           </fieldset>
         )}
         {error ? <p role="alert">{t("error")}</p> : null}
+        {quote ? (
+          <div
+            role="status"
+            className="rounded-xl border border-amber-200 bg-amber-50 p-4"
+          >
+            <p>
+              {t("scheduledReview", {
+                plan: t(selectedPlan),
+                interval: t(selectedInterval),
+                amount: formatBillingMoney(
+                  quote.unitAmount,
+                  quote.currency,
+                  locale
+                ),
+                date: formatBillingDate(quote.effectiveAt * 1000, locale),
+              })}
+            </p>
+            <p className="text-sm">{t("scheduledNoCharge")}</p>
+          </div>
+        ) : null}
         <button
           type="button"
-          disabled={busy || current || !selected}
+          disabled={
+            busy ||
+            current ||
+            !selected ||
+            (selectedPlan === "pro" && plan !== "pro" && complimentaryPro)
+          }
           onClick={review}
           className="min-h-12 rounded-full px-6 font-semibold text-white disabled:opacity-50"
           style={{ background: T.accent.primary }}
         >
-          {current ? t("currentPlan") : busy ? t("opening") : t("reviewChange")}
+          {current
+            ? t("currentPlan")
+            : busy
+              ? t("opening")
+              : quote
+                ? t("confirmSchedule")
+                : t("reviewChange")}
         </button>
       </DialogContent>
     </Dialog>

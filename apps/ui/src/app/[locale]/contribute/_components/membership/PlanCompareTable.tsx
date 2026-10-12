@@ -118,7 +118,7 @@ export function PlanCompareTable() {
       <PlanSectionHeader
         control={
           <label
-            className="inline-flex cursor-pointer items-center gap-2.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold"
             style={{ borderColor: T.border.hi }}
           >
             <input
@@ -155,7 +155,10 @@ export function PlanCompareTable() {
         Showing {rowCount} features
       </p>
       <div
-        className="overflow-x-auto rounded-[22px] border bg-white"
+        className="overflow-x-auto rounded-[22px] border bg-white [contain:paint]"
+        role="region"
+        aria-label="What each plan includes"
+        tabIndex={0}
         style={{ borderColor: T.border.line }}
       >
         <table className="w-full min-w-[720px] border-collapse text-[15px]">
@@ -234,7 +237,10 @@ export function PlanCompareTable() {
                           background: key === "pro" ? PRO_TINT : undefined,
                         }}
                       >
-                        <PlanCompareCell cell={row.cells[key]} />
+                        <PlanCompareCell
+                          cell={row.cells[key]}
+                          label={row.cellLabels?.[key]}
+                        />
                       </td>
                     ))}
                   </tr>

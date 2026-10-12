@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS billing_accounts (
   erased_at timestamptz
 );
 ALTER TABLE billing_accounts ADD COLUMN IF NOT EXISTS mode text NOT NULL DEFAULT 'sandbox';
+CREATE INDEX IF NOT EXISTS billing_accounts_erased ON billing_accounts(erased_at) WHERE erased_at IS NOT NULL;
 CREATE TABLE IF NOT EXISTS billing_attempts (
   id uuid PRIMARY KEY,
   user_id text NOT NULL REFERENCES billing_accounts(user_id),
@@ -53,8 +54,20 @@ CREATE TABLE IF NOT EXISTS billing_events (
   completed_at timestamptz
 );
 CREATE INDEX IF NOT EXISTS billing_events_pending ON billing_events(next_attempt_at) WHERE state='pending';
+CREATE INDEX IF NOT EXISTS billing_events_completed ON billing_events(completed_at) WHERE completed_at IS NOT NULL;
 CREATE TABLE IF NOT EXISTS billing_rate_limits (
   key text PRIMARY KEY,
   hits integer NOT NULL DEFAULT 1,
   resets_at timestamptz NOT NULL
 );
+CREATE TABLE IF NOT EXISTS billing_plan_changes (
+  id uuid PRIMARY KEY,
+  user_id text NOT NULL REFERENCES billing_accounts(user_id),
+  subscription_id text NOT NULL,
+  price_id text NOT NULL,
+  period_end bigint NOT NULL,
+  schedule_id text,
+  state text NOT NULL DEFAULT 'preparing' CHECK (state IN ('preparing','scheduled','released')),
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS billing_plan_changes_pending ON billing_plan_changes(subscription_id) WHERE state IN ('preparing','scheduled');

@@ -20,14 +20,21 @@ import {
 import { Icon } from "./atlas-ui"
 import { type LayerId, layerDef, type Tier } from "./atlas.logic"
 
-type SheetPlan = "public" | "free" | "pro" | "team"
-const SHEET_PLANS: readonly SheetPlan[] = ["public", "free", "pro", "team"]
+type SheetPlan = "public" | "free" | "supporter" | "pro" | "team"
+const SHEET_PLANS: readonly SheetPlan[] = [
+  "public",
+  "free",
+  "supporter",
+  "pro",
+  "team",
+]
 
 // Names and prices come from lib/plans; these short lines fit the narrow
 // columns (the /pro page carries the full "who" copy).
 const TAGLINE: Record<SheetPlan, string> = {
   public: "No account",
   free: "Free sign-up",
+  supporter: "History & small exports",
   pro: "For researchers",
   team: "Libraries & councils",
 }
@@ -39,6 +46,7 @@ type SheetRow = {
   id: string
   label: string
   cells: Record<string, CompareCell>
+  cellLabels?: Partial<Record<PlanCardKey, string>>
 }
 
 /** A row for a set of Atlas layers: from their tier up, ✓ once all are built. */
@@ -50,6 +58,7 @@ function layerRow(label: string, ids: LayerId[]): SheetRow {
   const planRank: Record<SheetPlan, number> = {
     public: 0,
     free: 1,
+    supporter: 1,
     pro: 2,
     team: 2,
   }
@@ -87,8 +96,22 @@ function sheetRows(): SheetRow[] {
 const ROWS = sheetRows()
 
 /** A tick, a "Soon" chip or a dash, each with a text label. */
-function SheetCell({ cell }: { readonly cell: CompareCell }) {
+function SheetCell({
+  cell,
+  label,
+}: {
+  readonly cell: CompareCell
+  readonly label?: string
+}) {
   const tUi = useUiTranslations("ui")
+
+  if (cell === "yes" && label)
+    return (
+      <span className="font-semibold">
+        {label}
+        <span className="sr-only"> libraries per download</span>
+      </span>
+    )
 
   if (cell === "yes")
     return (
@@ -234,7 +257,7 @@ export function AtlasPlansSheet({
           cost money to run, and help keep the rest free.
         </p>
         <div
-          className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-white"
+          className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-white [contain:paint]"
           style={{ borderColor: T.border.line }}
         >
           <table className="w-full min-w-[680px] border-collapse text-[15px]">
@@ -293,7 +316,10 @@ export function AtlasPlansSheet({
                         background: p.key === "pro" ? PRO_TINT : undefined,
                       }}
                     >
-                      <SheetCell cell={row.cells[p.key] ?? "no"} />
+                      <SheetCell
+                        cell={row.cells[p.key] ?? "no"}
+                        label={row.cellLabels?.[p.key]}
+                      />
                     </td>
                   ))}
                 </tr>

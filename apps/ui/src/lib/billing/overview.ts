@@ -23,6 +23,10 @@ function scheduledChange(subscription: Stripe.Subscription) {
     date: phase.start_date,
     unitAmount: price.unit_amount,
     currency: price.currency,
+    canUndo:
+      schedule.metadata?.lg_change === "period_end" &&
+      schedule.metadata?.lg_period_end === String(phase.start_date) &&
+      phase.start_date * 1000 > Date.now(),
   }
 }
 
@@ -79,6 +83,12 @@ export async function providerOverview(
     foundingPrice:
       subscription.items.data[0]?.price.metadata.lg_cohort === "founding",
     scheduledChange: scheduledChange(subscription),
+    paymentAttention: Boolean(
+      invoice &&
+      invoice.status !== "paid" &&
+      invoice.amount_due > 0 &&
+      ["open", "uncollectible"].includes(invoice.status ?? "")
+    ),
     nextAttempt: invoice?.next_payment_attempt
       ? {
           date: invoice.next_payment_attempt,
