@@ -7,6 +7,7 @@ import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { billingConfig } from "@/lib/billing/config"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -84,7 +85,22 @@ export default async function MembershipPage() {
         <PlanStatusBanner plan={user?.plan} planSource={user?.planSource} />
         <FreePlansCard signedIn={Boolean(user)} />
         <LibraryStaffSection isStaff={isStaff} />
-        <MembershipPlans currentPlan={currentPlan} />
+        <MembershipPlans
+          currentPlan={currentPlan}
+          billingAvailable={billingConfig().enabled}
+          supporterApproved={billingConfig().supporterApproved}
+          checkoutUser={
+            user
+              ? {
+                  email: user.email,
+                  verified: user.emailVerified,
+                  complimentaryPro:
+                    ["pro", "team"].includes(user.plan ?? "") &&
+                    user.planSource !== "paid",
+                }
+              : null
+          }
+        />
         <p
           className="m-0 text-[16px] leading-relaxed"
           style={{ color: T.ink.dim }}

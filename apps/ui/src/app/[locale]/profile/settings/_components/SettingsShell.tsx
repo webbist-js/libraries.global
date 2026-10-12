@@ -19,12 +19,18 @@ import { useRouter } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { DataAccountSection } from "./DataAccountSection"
+import { MembershipBillingSection } from "./MembershipBillingSection"
 import { NotificationsSection } from "./NotificationsSection"
 import { PrivacySection } from "./PrivacySection"
 import { SignInSecuritySection } from "./SignInSecuritySection"
 
 /** The account cards under the profile ones, listed in the side card. */
 const ACCOUNT_LINKS = [
+  {
+    id: "membership",
+    label: "Membership & billing",
+    icon: "mdi:credit-card-outline",
+  },
   { id: "notifications", label: "Notifications", icon: "mdi:bell-outline" },
   { id: "security", label: "Sign-in & security", icon: "mdi:lock-outline" },
   { id: "data", label: "Your data & account", icon: "mdi:tray-arrow-down" },
@@ -84,6 +90,7 @@ export function SettingsShell({
           />
           <InterestsSection form={form} />
           <LinksSection form={form} />
+          <MembershipBillingSection />
           <PrivacySection
             profile={profile}
             visibility={form.visibility}

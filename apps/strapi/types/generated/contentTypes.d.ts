@@ -3313,6 +3313,7 @@ export interface ApiNotificationNotification
         "newsletter_confirmation",
         "staff_update",
         "feed_update",
+        "billing_update",
       ]
     > &
       Schema.Attribute.Required
@@ -3378,6 +3379,56 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiPaidMembershipPaidMembership
+  extends Struct.CollectionTypeSchema {
+  collectionName: "paid_memberships"
+  info: {
+    description: "Read-only Stripe Managed Payments projection. Updated by the private billing bridge."
+    displayName: "Paid membership"
+    pluralName: "paid-memberships"
+    singularName: "paid-membership"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::paid-membership.paid-membership"
+    > &
+      Schema.Attribute.Private
+    membership: Schema.Attribute.JSON &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    revision: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    subscriptionId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -6148,6 +6199,7 @@ declare module "@strapi/strapi" {
       "api::library.library": ApiLibraryLibrary
       "api::notification.notification": ApiNotificationNotification
       "api::page.page": ApiPagePage
+      "api::paid-membership.paid-membership": ApiPaidMembershipPaidMembership
       "api::pro-verification.pro-verification": ApiProVerificationProVerification
       "api::redirect.redirect": ApiRedirectRedirect
       "api::region.region": ApiRegionRegion

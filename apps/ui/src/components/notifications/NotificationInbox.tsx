@@ -75,6 +75,12 @@ const kinds = {
     icon: Rss,
     action: "View details",
   },
+  billing_update: {
+    category: "community",
+    label: "Membership",
+    icon: ShieldCheck,
+    action: "Manage membership",
+  },
   new_follower: {
     category: "community",
     label: "New followers",

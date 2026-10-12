@@ -4,8 +4,11 @@ import {
   resolveEntitlements,
   isSupporterPlan,
   type TeamInput,
+  paidMembershipInput,
+  type PaidMembership,
 } from "@repo/access"
 
+import { loadPaidMembership } from "./paid-membership"
 import { loadTeamInputs } from "./team-access"
 
 const PROFILE = "api::user-profile.user-profile"
@@ -16,6 +19,7 @@ const PRO_VERIFICATION = "api::pro-verification.pro-verification"
 const MAX_PLAN_ROWS = 20
 
 export type PlanRows = {
+  paidMembership?: PaidMembership | null
   /** Unexpired `entitlement-grant` rows for a known plan. */
   grants: { plan: "supporter" | "pro" | "team"; expiresAt: string | null }[]
   /** Unexpired `pro-verification` rows. */
@@ -42,7 +46,7 @@ export async function loadPlanRows(
   baUserId: string,
   now: number = Date.now()
 ): Promise<PlanRows> {
-  const [grantRows, verificationRows] = await Promise.all([
+  const [grantRows, verificationRows, paidMembership] = await Promise.all([
     strapi.documents(ENTITLEMENT_GRANT as any).findMany({
       filters: { baUserId: { $eq: baUserId } },
       fields: ["plan", "expiresAt"],
@@ -55,9 +59,11 @@ export async function loadPlanRows(
       sort: "id:asc",
       limit: MAX_PLAN_ROWS,
     }) as Promise<{ expiresAt?: string | null }[]>,
+    loadPaidMembership(strapi, baUserId, new Date(now)),
   ])
 
   return {
+    paidMembership,
     grants: (grantRows ?? [])
       .filter((g) => isUnexpired(g.expiresAt, now))
       .filter(
@@ -122,6 +128,7 @@ export async function resolveUserEntitlements(
     rewardsTier: inputs.tier,
     earnedProUntil: inputs.earnedProUntil,
     teams: inputs.teams,
+    subscription: paidMembershipInput(inputs.paidMembership),
   }
 
   return resolveEntitlements(input)

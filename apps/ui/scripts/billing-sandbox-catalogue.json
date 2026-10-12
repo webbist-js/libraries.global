@@ -1,0 +1,71 @@
+{
+  "environment": "sandbox",
+  "createdAt": "2026-10-12T00:13:06.020Z",
+  "apiVersion": "2026-03-25.dahlia",
+  "taxClassification": "Pro SaaS personal-use candidate; owner must confirm before live use",
+  "catalogue": [
+    {
+      "plan": "pro",
+      "interval": "month",
+      "productId": "prod_VQNcjO5go4KXl8",
+      "priceId": "price_1UPWrTRLTEHJHjvPZ3E11IVC",
+      "lookupKey": "lg_pro_founding_month_gbp_v1",
+      "unitAmount": 500,
+      "currency": "gbp",
+      "taxBehavior": "inclusive",
+      "productActive": true,
+      "taxCode": "txcd_10103000",
+      "eligibility": "sandbox_candidate"
+    },
+    {
+      "plan": "pro",
+      "interval": "year",
+      "productId": "prod_VQNcjO5go4KXl8",
+      "priceId": "price_1UPWrURLTEHJHjvPGR14Txrx",
+      "lookupKey": "lg_pro_founding_year_gbp_v1",
+      "unitAmount": 5000,
+      "currency": "gbp",
+      "taxBehavior": "inclusive",
+      "productActive": true,
+      "taxCode": "txcd_10103000",
+      "eligibility": "sandbox_candidate"
+    },
+    {
+      "plan": "supporter",
+      "interval": "month",
+      "productId": "prod_VQNcAksDUsZVKx",
+      "priceId": "price_1UPWrVRLTEHJHjvPP6cwTNEF",
+      "lookupKey": "lg_supporter_month_gbp_v1",
+      "unitAmount": 300,
+      "currency": "gbp",
+      "taxBehavior": "inclusive",
+      "productActive": false,
+      "taxCode": null,
+      "eligibility": "pending"
+    },
+    {
+      "plan": "supporter",
+      "interval": "year",
+      "productId": "prod_VQNcAksDUsZVKx",
+      "priceId": "price_1UPWrVRLTEHJHjvPcRlP4PEo",
+      "lookupKey": "lg_supporter_year_gbp_v1",
+      "unitAmount": 3000,
+      "currency": "gbp",
+      "taxBehavior": "inclusive",
+      "productActive": false,
+      "taxCode": null,
+      "eligibility": "pending"
+    }
+  ],
+  "portalConfigurationId": "bpc_1UPWrVRLTEHJHjvPmmvfTejE",
+  "portalPlanChangesEnabled": true,
+  "managedPaymentsProbe": {
+    "managedPaymentsAccepted": true,
+    "livemode": false,
+    "managedPayments": {
+      "enabled": true
+    },
+    "apiVersion": "2026-03-25.dahlia"
+  },
+  "portalChangePolicy": "Pro month to year: provider preview and immediate settlement; year to month: scheduled at period end; founding prices only; Supporter inactive"
+}

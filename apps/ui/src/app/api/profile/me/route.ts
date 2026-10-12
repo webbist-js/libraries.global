@@ -1,7 +1,8 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { auth } from "@/lib/auth"
+import { auth, authDbPool } from "@/lib/auth"
+import { stopBillingBeforeDeletion } from "@/lib/billing/deletion"
 import { deleteStrapiProfile } from "@/lib/delete-profile"
 import { readOwnProfile } from "@/lib/own-profile-server"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
@@ -178,6 +179,17 @@ export async function DELETE(req: Request) {
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  try {
+    await stopBillingBeforeDeletion(authDbPool, session.user.id)
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "We couldn't stop future membership payments. Please retry before deleting your account.",
+      },
+      { status: 503 }
+    )
+  }
   const removed = await deleteStrapiProfile({
     baUserId: session.user.id,
     email: session.user.email,

@@ -16,6 +16,7 @@ import {
   driveThanksEmail,
   moderatorAlertEmail,
 } from "../../strapi/src/plugins/content-moderation/server/utils/email-templates.ts"
+import { billingNotice } from "../../strapi/src/utils/billing-notice.ts"
 
 /** Inert previews: no tokens, enrollments, queue records or real moderation changes. */
 export function emailSamples() {
@@ -42,7 +43,44 @@ export function emailSamples() {
       action,
     }),
   })
+  const paid = {
+    mode: "sandbox",
+    plan: "pro",
+    status: "active",
+    interval: "month",
+    currency: "gbp",
+    unitAmount: 500,
+    memberSince: "2026-10-12T12:00:00Z",
+    periodEnd: "2026-11-12T12:00:00Z",
+    paidThrough: "2026-11-12T12:00:00Z",
+    pastDueSince: null,
+    cancelAtPeriodEnd: false,
+    revoked: false,
+  }
+  const billingSamples = [
+    ["billing-ready", paid, null],
+    ["billing-canceled", { ...paid, cancelAtPeriodEnd: true }, paid],
+    ["billing-resumed", paid, { ...paid, cancelAtPeriodEnd: true }],
+    ["billing-recovered", paid, { ...paid, status: "past_due" }],
+    ["billing-ended", { ...paid, graceExpired: true }, paid],
+    ["billing-changed", { ...paid, interval: "year" }, paid],
+  ].map(([id, next, previous]) => {
+    const notice = billingNotice(
+      next,
+      previous,
+      new Date("2026-10-12T12:00:00Z")
+    )
+
+    return simple(
+      id,
+      notice.title,
+      notice.body,
+      "/profile/settings#membership",
+      "Manage membership"
+    )
+  })
   const samples = [
+    ...billingSamples,
     simple(
       "verification",
       "Confirm your Libraries Global email address",

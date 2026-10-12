@@ -55,6 +55,8 @@ export interface EntitlementInput {
     status: string
     periodEnd?: string | null
     pastDueSince?: string | null
+    /** Verified paid period; supplied by billing, never inferred from status. */
+    paidThrough?: string | null
   } | null
   /** Strapi `entitlement-grant` rows (P-D). Unknown plans are ignored. */
   grants?: { plan: string; expiresAt: string | null }[]
@@ -187,7 +189,9 @@ function paidPlan(
   switch (s.status) {
     case "active":
     case "trialing":
-      return plan
+      return s.paidThrough !== undefined && !notExpired(s.paidThrough, now)
+        ? null
+        : plan
     case "past_due":
       return s.pastDueSince &&
         now.getTime() - Date.parse(s.pastDueSince) <= PAST_DUE_GRACE_MS

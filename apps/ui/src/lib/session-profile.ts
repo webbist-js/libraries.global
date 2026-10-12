@@ -10,9 +10,13 @@ import {
   type RoleGrant,
   SESSION_PROFILE_MAX_CLAIMS,
   type StaffClaim,
+  type PaidMembership,
+  isPaidMembership,
 } from "@repo/access"
 import { type DismissiblePrompt, isDismissiblePrompt } from "@repo/shared-data"
 import { z } from "zod"
+
+import { billingConfig } from "./billing/config"
 
 export const SESSION_PROFILE_TTL_MS = 60_000
 export const SESSION_PROFILE_MAX_ROLE_GRANTS = 50
@@ -37,6 +41,7 @@ export type SessionProfileTeam = {
 export const SESSION_PROFILE_MAX_TEAMS = 10
 
 export type SessionProfile = {
+  paidMembership?: PaidMembership | null
   staff: (StaffClaim & { name: string; slug: string; libraryType: string })[]
   contributorRole: ContributorRole
   username: string | null
@@ -55,6 +60,7 @@ export type SessionProfile = {
 }
 
 const Body = z.object({
+  paidMembership: z.unknown().optional(),
   staff: z
     .array(
       z.object({
@@ -230,6 +236,10 @@ async function loadSessionProfile(
       ? d.contributorRole
       : "reader"
     const value: SessionProfile = {
+      ...(isPaidMembership(d.paidMembership) &&
+      d.paidMembership.mode === billingConfig().mode
+        ? { paidMembership: d.paidMembership }
+        : {}),
       staff: d.staff ?? [],
       contributorRole,
       username: d.username ?? null,

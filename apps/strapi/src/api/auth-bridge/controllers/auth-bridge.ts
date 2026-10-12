@@ -793,6 +793,9 @@ export default {
         .map((a) => a.library?.documentId)
         .filter((id): id is string => !!id),
       grants: planRows.grants,
+      ...(planRows.paidMembership
+        ? { paidMembership: planRows.paidMembership }
+        : {}),
       roleGrants,
       verifications: planRows.verifications,
       teams: teams.map((t) => ({

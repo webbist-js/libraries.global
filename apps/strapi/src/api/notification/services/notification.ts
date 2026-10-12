@@ -38,6 +38,7 @@ type Kind =
   | "newsletter_confirmation"
   | "staff_update"
   | "feed_update"
+  | "billing_update"
 type Input = {
   baUserId?: string
   eventKey: string

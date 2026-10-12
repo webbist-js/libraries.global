@@ -121,6 +121,8 @@ export const auth = betterAuth({
       // Refusing here keeps the sign-in record until the profile is gone, so
       // nothing is orphaned.
       beforeDelete: async (user) => {
+        const { stopBillingBeforeDeletion } = await import("./billing/deletion")
+        await stopBillingBeforeDeletion(pool, user.id)
         const result = await deleteStrapiProfile({
           baUserId: user.id,
           email: user.email,

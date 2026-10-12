@@ -201,3 +201,13 @@ Public legal/utility layouts receive the same explicit public runtime configurat
 Utility actions and their footer use localized native anchors (`UtilityLink`). They perform a full navigation across the public-shell/app boundary, so a layout cached by the Next.js router cannot carry the provider-free email layout into a signed-in app page. Disabling the beta gate restores the ordinary app layout and navigation on legal pages.
 
 The final anonymous browser run passed for email actions and Terms, Privacy and Cookies, with one main landmark, no horizontal overflow and no hydration or browser exceptions. Expired account links show their local status icon immediately. The UI was restarted after its dev worker began returning plain HTTP 500 responses; both local apps remain available for review. Invalid email links offer direct contact at `info@libraries.global` as well as the signed-in settings route.
+
+## Managed Payments membership notices
+
+`billing_update` is an essential access-notice kind. The private billing sync endpoint persists its projection and enqueues a notice in one transaction, using `billing:<subscription>:<revision>` for deduplication. Older or duplicate revisions do not enqueue another notice. Billing writes no community roles, trust or staff assignments. Verified-recipient lookup and deleted-account handling use the existing delivery service.
+
+The application sends membership-ready, cancellation/resumption, payment-recovery, plan/interval change and paid-access-ended notices. First delinquency is inbox-only: Stripe/Link owns payment recovery. Essential email notices use `transactional` and are independent of optional activity, newsletter and marketing consent. Buying membership does not opt anyone into marketing. The billing notice utility is `src/utils/billing-notice.ts`; current email fallback language is English.
+
+Stripe Managed Payments owns financial receipts, invoices, refund/credit confirmations and subscription financial reminders. Configure the appropriate Dashboard email settings and verify Link's sender; do not duplicate these as app emails. Sandbox financial receipts are not sent automatically. App billing previews are fictional, use the existing HTML/text email shell, and appear as `billing-*` samples in `apps/ui/scripts/email-samples.mjs`. Offline preview generation sends no email.
+
+See [billing setup, webhook events and acceptance](../ui/BILLING.md). The purchase flag does not disable projection recovery or essential delivery. A real sandbox monthly purchase and a paid monthly-to-yearly change have been verified through signed events and private Strapi projection. Billing notices have offline HTML/text previews; actual billing-email delivery remains unverified.

@@ -14,6 +14,17 @@ export const env = createEnv({
    * require them to be present at build time, which is not always desired or possible (see README).
    */
   server: {
+    PRO_ENABLED: optionalZodBoolean(),
+    BILLING_ENV: z.enum(["sandbox", "live"]).optional(),
+    STRIPE_MANAGED_PAYMENTS_ENABLED: optionalZodBoolean(),
+    STRIPE_SUPPORTER_APPROVED: optionalZodBoolean(),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_PRO_ANNUAL: z.string().optional(),
+    STRIPE_PRICE_SUPPORTER_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_SUPPORTER_ANNUAL: z.string().optional(),
+    STRIPE_PORTAL_CONFIGURATION: z.string().optional(),
     APP_PUBLIC_URL: z.string().url().optional(),
     DEBUG_STATIC_PARAMS_GENERATION: optionalZodBoolean(),
     SHOW_NON_BLOCKING_ERRORS: optionalZodBoolean(),
@@ -75,6 +86,18 @@ export const env = createEnv({
    * You'll get type errors if not all variables from `server` & `client` are included here.
    */
   runtimeEnv: {
+    PRO_ENABLED: process.env.PRO_ENABLED,
+    BILLING_ENV: process.env.BILLING_ENV,
+    STRIPE_MANAGED_PAYMENTS_ENABLED:
+      process.env.STRIPE_MANAGED_PAYMENTS_ENABLED,
+    STRIPE_SUPPORTER_APPROVED: process.env.STRIPE_SUPPORTER_APPROVED,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
+    STRIPE_PRICE_PRO_ANNUAL: process.env.STRIPE_PRICE_PRO_ANNUAL,
+    STRIPE_PRICE_SUPPORTER_MONTHLY: process.env.STRIPE_PRICE_SUPPORTER_MONTHLY,
+    STRIPE_PRICE_SUPPORTER_ANNUAL: process.env.STRIPE_PRICE_SUPPORTER_ANNUAL,
+    STRIPE_PORTAL_CONFIGURATION: process.env.STRIPE_PORTAL_CONFIGURATION,
     // server
     APP_PUBLIC_URL: process.env.APP_PUBLIC_URL,
     DEBUG_STATIC_PARAMS_GENERATION: process.env.DEBUG_STATIC_PARAMS_GENERATION,

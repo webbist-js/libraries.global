@@ -5,6 +5,7 @@ const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
 const MACHINE_PATHS = new Set([
   "/api/health",
   "/api/cron/retention",
+  "/api/cron/billing",
   "/api/revalidate",
   "/api/preview",
   "/api/internal/session/invalidate",
@@ -41,6 +42,7 @@ export function betaPublicShell(pathname: string): boolean {
 }
 
 export function betaPublicRequest(pathname: string, method: string): boolean {
+  if (pathname === "/api/billing/webhook") return method === "POST"
   const path = betaPath(pathname)
   if (pathname.startsWith("/_next/static/") || ASSETS.has(pathname))
     return method === "GET" || method === "HEAD"

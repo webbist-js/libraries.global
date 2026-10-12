@@ -1,4 +1,9 @@
-import { isSupporterPlan, TIER_NAMES } from "@repo/access"
+import {
+  isSupporterPlan,
+  TIER_NAMES,
+  isPaidMembership,
+  selectPaidMembership,
+} from "@repo/access"
 import {
   type SupporterEntry,
   type SupportersResponse,
@@ -84,36 +89,52 @@ export async function readSupporters(
       { expiresAt: { $gt: now.toISOString() } },
     ],
   }
-  const [grants, verifications, members, earned, config] = await Promise.all([
-    readAll(strapi, "api::entitlement-grant.entitlement-grant", {
-      filters: {
-        $and: [unexpired, { plan: { $in: ["supporter", "pro", "team"] } }],
-      },
-      fields: ["baUserId", "plan", "createdAt"],
-    }),
-    readAll(strapi, "api::pro-verification.pro-verification", {
-      filters: unexpired,
-      fields: ["baUserId", "verifiedAt", "createdAt"],
-    }),
-    readAll(strapi, "plugin::access.team-member", {
-      filters: { status: "active", team: { status: "active" } },
-      fields: ["baUserId", "acceptedAt"],
-      populate: { team: { fields: ["status", "expiresAt"] } },
-    }),
-    readAll(strapi, PROFILE, {
-      filters: {
-        $or: [
-          { tier: { $in: TIER_NAMES.slice(TIER_NAMES.indexOf("Archivist")) } },
-          { earnedProUntil: { $gt: now.toISOString() } },
-        ],
-      },
-      fields: ["baUserId"],
-    }),
-    strapi.documents("api::site-config.site-config").findFirst({}),
-  ])
+  const [grants, verifications, members, earned, config, paid] =
+    await Promise.all([
+      readAll(strapi, "api::entitlement-grant.entitlement-grant", {
+        filters: {
+          $and: [unexpired, { plan: { $in: ["supporter", "pro", "team"] } }],
+        },
+        fields: ["baUserId", "plan", "createdAt"],
+      }),
+      readAll(strapi, "api::pro-verification.pro-verification", {
+        filters: unexpired,
+        fields: ["baUserId", "verifiedAt", "createdAt"],
+      }),
+      readAll(strapi, "plugin::access.team-member", {
+        filters: { status: "active", team: { status: "active" } },
+        fields: ["baUserId", "acceptedAt"],
+        populate: { team: { fields: ["status", "expiresAt"] } },
+      }),
+      readAll(strapi, PROFILE, {
+        filters: {
+          $or: [
+            {
+              tier: { $in: TIER_NAMES.slice(TIER_NAMES.indexOf("Archivist")) },
+            },
+            { earnedProUntil: { $gt: now.toISOString() } },
+          ],
+        },
+        fields: ["baUserId"],
+      }),
+      strapi.documents("api::site-config.site-config").findFirst({}),
+      readAll(strapi, "api::paid-membership.paid-membership", {
+        fields: ["baUserId", "membership"],
+      }),
+    ])
 
   // Each person counts once, even with several grants or Team seats.
   const eligible = new Map<string, string | null>()
+  for (const row of paid) {
+    if (
+      row.baUserId &&
+      isPaidMembership(row.membership) &&
+      row.membership.mode ===
+        (process.env.BILLING_ENV === "live" ? "live" : "sandbox") &&
+      selectPaidMembership([row.membership], now)
+    )
+      eligible.set(row.baUserId, row.membership.memberSince)
+  }
   const activeMembers = members.filter(
     (m) =>
       m.team?.status === "active" &&
