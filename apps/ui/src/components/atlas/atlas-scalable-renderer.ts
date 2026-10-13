@@ -11,6 +11,7 @@ import type {
   ExpressionSpecification,
   PointLike,
   GeoJSONSource,
+  HeatmapLayerSpecification,
 } from "maplibre-gl"
 
 import type { AtlasGeneration } from "./atlas-data-client"
@@ -492,7 +493,7 @@ export class AtlasScalableRenderer {
         for (const [property, value] of Object.entries(layer.opacity))
           this.map.setPaintProperty(
             layer.id,
-            property,
+            property as keyof NonNullable<HeatmapLayerSpecification["paint"]>,
             value as ExpressionSpecification
           )
       this.remove(this.current)

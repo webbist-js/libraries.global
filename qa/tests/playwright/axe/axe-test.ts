@@ -6,6 +6,7 @@ import AxeBuilder from "@axe-core/playwright"
 import { chromium } from "@playwright/test"
 import type { AxeResults, NodeResult, Result } from "axe-core"
 import dotenv from "dotenv"
+
 import urls from "helpers/urls.json"
 
 dotenv.config({ path: path.resolve(__dirname, "../.env"), override: true })

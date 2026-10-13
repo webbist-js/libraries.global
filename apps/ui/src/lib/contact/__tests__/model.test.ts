@@ -28,6 +28,17 @@ describe("existing mail link rollout", () => {
       mailtoContactIntent("mailto:beta@example.org", ["beta@example.org"])
     ).toMatchObject({ mode: "contact" })
   })
+  it("selects membership support separately from plan inquiries", () => {
+    expect(
+      mailtoContactIntent(
+        "mailto:info@libraries.global?subject=Membership%20support"
+      )
+    ).toEqual({
+      mode: "contact",
+      type: "membership_support",
+      sourceSubject: "Membership support",
+    })
+  })
   it("leaves a library’s own email and non-mail links alone", () => {
     expect(mailtoContactIntent("mailto:librarian@library.example")).toBeNull()
     expect(mailtoContactIntent("https://libraries.global")).toBeNull()

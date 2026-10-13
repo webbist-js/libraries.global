@@ -87,12 +87,13 @@ describe("GET /api/libraries/[documentId]/history", () => {
     expect(res.headers.get("Cache-Control")).toContain("no-store")
   })
 
-  it("sends no secret and no values flag without the feature, and strips any values", async () => {
+  it("authenticates the service without user proof or values access and strips upstream values", async () => {
     getSession.mockResolvedValue(user([]))
     const res = await call()
     const { url, headers } = strapiCall()
     expect(url.searchParams.has("values")).toBe(false)
-    expect(headers.has("X-Service-Secret")).toBe(false)
+    expect(headers.get("X-Service-Secret")).toBe("s3cret")
+    expect(headers.has("X-Ba-User-Id")).toBe(false)
     const body = await res.json()
     expect(body.data[0].fields[0]).toEqual({ field: "website" })
   })

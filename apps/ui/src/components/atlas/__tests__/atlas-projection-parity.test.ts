@@ -22,7 +22,12 @@ const rows = fixture.records.flatMap((entry, n) => {
     canonicalLocale: "en",
     now,
   })
-  if (!projection) return []
+  // The legacy map listed buildings; moving-library depots are not locations.
+  if (
+    !projection ||
+    (source.libraryType === "Mobile" && source.mobileTimetable != null)
+  )
+    return []
   const legacy: AtlasLibrary = {
     id: source.documentId,
     name: source.name,

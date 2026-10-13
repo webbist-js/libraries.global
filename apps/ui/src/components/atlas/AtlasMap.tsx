@@ -4,12 +4,14 @@ import type {
   AtlasLibraryAccessResponse,
   PublicLiveState,
 } from "@repo/shared-data"
+import type { Point } from "geojson"
 import type * as MapLibre from "maplibre-gl"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { MAP_WORKER_URL } from "@/lib/maplibre"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
@@ -267,6 +269,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       let observer: ResizeObserver | null = null
 
       import("maplibre-gl").then((maplibregl) => {
+        maplibregl.setWorkerUrl(MAP_WORKER_URL)
         if (!protocolRegistered) {
           maplibregl.addProtocol("pmtiles", atlasProtocol.tile)
           protocolRegistered = true
@@ -659,8 +662,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                   .getClusterExpansionZoom(Number(mobile.properties.cluster_id))
                   .then((zoom) =>
                     map.easeTo({
-                      center: (mobile.geometry as GeoJSON.Point)
-                        .coordinates as [number, number],
+                      center: (mobile.geometry as Point).coordinates as [
+                        number,
+                        number,
+                      ],
                       zoom,
                       duration: reducedMotion() ? 0 : 400,
                     })
@@ -668,7 +673,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                   .catch(() => {})
               else
                 map.easeTo({
-                  center: (mobile.geometry as GeoJSON.Point).coordinates as [
+                  center: (mobile.geometry as Point).coordinates as [
                     number,
                     number,
                   ],
@@ -874,7 +879,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             ]
           : ["concat", "pin-", ["get", "group"]]
       )
-      const clusterRadius = [
+      const clusterRadius: MapLibre.ExpressionSpecification = [
         "step",
         ["get", "point_count"],
         compare ? 26 : 15,
@@ -885,7 +890,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         1000,
         compare ? 42 : 32,
       ]
-      const clusterStyle = access
+      const clusterStyle: ReturnType<typeof accessibilityClusterStyle> = access
         ? accessibilityClusterStyle("point_count", "accessMatches", compare)
         : {
             circle: {
@@ -905,12 +910,30 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             label: ["get", "point_count_abbreviated"],
           }
       for (const [property, value] of Object.entries(clusterStyle.circle))
-        map.setPaintProperty("clusters", property, value)
+        map.setPaintProperty(
+          "clusters",
+          property as keyof NonNullable<
+            MapLibre.CircleLayerSpecification["paint"]
+          >,
+          value
+        )
       for (const [property, value] of Object.entries(clusterStyle.halo))
-        map.setPaintProperty("cluster-halo", property, value)
+        map.setPaintProperty(
+          "cluster-halo",
+          property as keyof NonNullable<
+            MapLibre.CircleLayerSpecification["paint"]
+          >,
+          value
+        )
       if (map.getLayer("cluster-count")) {
         for (const [property, value] of Object.entries(clusterStyle.text))
-          map.setPaintProperty("cluster-count", property, value)
+          map.setPaintProperty(
+            "cluster-count",
+            property as keyof NonNullable<
+              MapLibre.SymbolLayerSpecification["paint"]
+            >,
+            value
+          )
         map.setLayoutProperty("cluster-count", "text-field", clusterStyle.label)
       }
       // Completeness uses individual pins; accessibility keeps scalable clusters.

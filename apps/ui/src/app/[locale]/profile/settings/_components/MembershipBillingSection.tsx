@@ -12,6 +12,7 @@ import {
   invoiceStatusKey,
 } from "@/components/billing/types"
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
+import { useContactModal } from "@/components/contact/ContactModalProvider"
 import GlobalLink from "@/components/global/GlobalLink"
 import { SectionCard } from "@/components/profile-form/FormParts"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,8 @@ import { T } from "@/lib/design-tokens"
 
 export function MembershipBillingSection() {
   const t = useTranslations("billing")
+  const tContact = useTranslations("contactModal.contact")
+  const { openContact } = useContactModal()
   const locale = useLocale()
   const refreshMembership = useMembershipRefresh()
   const [summary, setSummary] = useState<BillingSummary | null>(null)
@@ -294,6 +297,17 @@ export function MembershipBillingSection() {
                 {t("viewPlans")}
               </GlobalLink>
             )}
+            {membership ||
+            ["supporter", "pro", "team"].includes(summary.effectivePlan) ? (
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                className="min-h-11 rounded-full border px-5 font-semibold"
+                onClick={() => openContact("membership_support")}
+              >
+                {tContact("types.membership_support")}
+              </button>
+            ) : null}
           </div>
           {summary.paymentMethod ? (
             <div className="flex flex-wrap items-center gap-4 border-b py-5">

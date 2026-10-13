@@ -10,7 +10,7 @@ export function BetaFeedback({ label }: { readonly label: string }) {
   const { openFeedback } = useContactModal()
   const pathname = betaPath(usePathname() ?? "/")
 
-  if (pathname === "/map" || pathname === "/map/") return null
+  if (["/beta", "/beta/", "/map", "/map/"].includes(pathname)) return null
 
   return (
     <button

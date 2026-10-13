@@ -40,16 +40,21 @@ function build(rows: Record<string, unknown>[]) {
   const controller = factory({
     strapi: { ...faked.strapi, contentType: () => ({ uid: LIBRARY }) },
   } as any)
-  // Every `strapi.documents(LIBRARY)` call hands out its own findMany mock:
-  // gather the params of all of them, in call order.
+  // Collect id-ordered table pages separately from the additional bounded
+  // notice lookups, which fetch timetable context for each library chunk.
   const findManyParams = () =>
-    faked.strapi.documents.mock.calls.flatMap(([uid]: [string], i: number) =>
-      uid === LIBRARY
-        ? faked.strapi.documents.mock.results[i].value.findMany.mock.calls.map(
-            (c: any[]) => c[0]
-          )
-        : []
-    )
+    [
+      ...new Set(
+        faked.strapi.documents.mock.calls.flatMap(
+          ([uid]: [string], i: number) =>
+            uid === LIBRARY
+              ? [faked.strapi.documents.mock.results[i].value.findMany]
+              : []
+        )
+      ),
+    ]
+      .flatMap((query: any) => query.mock.calls.map((c: any[]) => c[0]))
+      .filter((params: any) => params.sort === "id:asc")
 
   return { ...faked, controller, findManyParams }
 }

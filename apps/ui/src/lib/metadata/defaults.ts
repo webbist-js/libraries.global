@@ -14,10 +14,6 @@ export function getDefaultMetadata(siteUrl: string, t: TranslateFn) {
     robots: "index, follow",
     applicationName: "Libraries Global",
 
-    icons: {
-      icon: "favicon.ico",
-    },
-
     metadataBase: new URL(siteUrl),
   } as Metadata
 }

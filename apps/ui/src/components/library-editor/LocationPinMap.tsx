@@ -11,6 +11,7 @@ import {
   isLongitude,
   readCoord,
 } from "@/lib/geocode/coordinates"
+import { MAP_WORKER_URL } from "@/lib/maplibre"
 
 import { fieldHintStyle } from "./wizard.constants"
 
@@ -87,7 +88,8 @@ export function LocationPinMap({
     let observer: ResizeObserver | undefined
 
     import("maplibre-gl")
-      .then(({ default: maplibregl }) => {
+      .then((maplibregl) => {
+        maplibregl.setWorkerUrl(MAP_WORKER_URL)
         if (!alive || !containerRef.current) return
         let map: MapLibreMap
         try {

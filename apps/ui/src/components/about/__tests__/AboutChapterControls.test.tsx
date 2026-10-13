@@ -25,7 +25,10 @@ vi.mock("@/lib/navigation", () => ({
   ),
 }))
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 function renderControl(
   children: ReactNode,
@@ -129,12 +132,12 @@ describe("About chapter controls", () => {
     ).toBe("/libraries")
   })
 
-  it("assembles a generic record on scroll and respects manual choices until progress changes", () => {
+  it("follows the scroll driver’s record stages and respects manual choices until the next stage", () => {
     const narrative = createGlobeNarrative({ progress: 2.6 })
     const { container, unmount } = renderControl(<RecordSteps />, narrative)
     expect(screen.getByText(/Stage 1 of 3/)).toBeTruthy()
 
-    act(() => narrative.set({ progress: 2.9 }))
+    act(() => narrative.set({ progress: 2.9, step: 1 }))
     expect(narrative.current.step).toBe(1)
     expect(screen.getByText(/Stage 2 of 3/)).toBeTruthy()
 
@@ -149,7 +152,7 @@ describe("About chapter controls", () => {
     act(() => narrative.set({ focus: 4 }))
     expect(screen.getByText(/Stage 3 of 3/)).toBeTruthy()
 
-    act(() => narrative.set({ progress: 2.55 }))
+    act(() => narrative.set({ progress: 2.55, step: 0 }))
     expect(narrative.current.step).toBe(0)
     expect(screen.getByText(/Stage 1 of 3/)).toBeTruthy()
     expect(screen.getByText("An illustrative record")).toBeTruthy()
@@ -238,6 +241,8 @@ describe("About chapter controls", () => {
   })
 
   it("grows and resets the illustrative network without implying a submission", () => {
+    const send = vi.fn()
+    vi.stubGlobal("fetch", send)
     const { narrative } = renderControl(<ContributionNetwork />)
     fireEvent.click(screen.getByRole("button", { name: "Add a point" }))
     expect(narrative.current.growth).toBe(0.5)
@@ -260,6 +265,6 @@ describe("About chapter controls", () => {
     )
     expect(narrative.current.growth).toBe(0)
     expect(screen.getByText("It begins with one record.")).toBeTruthy()
-    expect(screen.getByText(/Nothing is submitted/)).toBeTruthy()
+    expect(send).not.toHaveBeenCalled()
   })
 })

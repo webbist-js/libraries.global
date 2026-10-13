@@ -381,7 +381,7 @@ export function AboutStory({
             <div className="about-contribute-option">
               <p className="about-eyebrow">Questions or ideas?</p>
               <GlobalLink
-                href="mailto:hello@libraries.global"
+                href="mailto:info@libraries.global"
                 className="about-text-link"
               >
                 Get in touch{" "}

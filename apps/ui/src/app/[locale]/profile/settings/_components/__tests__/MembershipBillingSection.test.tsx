@@ -1,9 +1,15 @@
 // @vitest-environment happy-dom
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
-const refreshMembership = vi.hoisted(() => vi.fn())
+const { refreshMembership, openContact } = vi.hoisted(() => ({
+  refreshMembership: vi.fn(),
+  openContact: vi.fn(),
+}))
+vi.mock("@/components/contact/ContactModalProvider", () => ({
+  useContactModal: () => ({ openContact }),
+}))
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
   useTranslations: () => (key: string) => key,
@@ -53,6 +59,7 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetcher)
   fetcher.mockReset()
   refreshMembership.mockReset().mockResolvedValue(undefined)
+  openContact.mockReset()
 })
 afterEach(() => {
   cleanup()
@@ -86,6 +93,10 @@ it("updates a paid purchase from confirming to Pro access in the same logged-in 
   await act(() => vi.advanceTimersByTimeAsync(5000))
   expect(screen.getByRole("heading", { name: "pro" })).toBeTruthy()
   expect(screen.getByText(/accessPlans.pro/)).toBeTruthy()
+  fireEvent.click(
+    screen.getByRole("button", { name: "types.membership_support" })
+  )
+  expect(openContact).toHaveBeenCalledWith("membership_support")
   expect(refreshMembership).toHaveBeenCalledTimes(1)
   expect(
     fetcher.mock.calls.every(([url]) => url === "/api/billing/summary")
@@ -105,6 +116,39 @@ it("leaves a normal free account on the free state without payment polling", asy
   expect(screen.getByRole("heading", { name: "noMembership" })).toBeTruthy()
   expect(fetcher).toHaveBeenCalledTimes(1)
   expect(refreshMembership).not.toHaveBeenCalled()
+  expect(
+    screen.queryByRole("button", { name: "types.membership_support" })
+  ).toBeNull()
+})
+it.each(["supporter", "pro", "team"])(
+  "offers support for %s access without a personal paid subscription",
+  async (effectivePlan) => {
+    fetcher.mockResolvedValue({
+      ok: true,
+      json: async () => ({ ...base, canManage: false, effectivePlan }),
+    })
+    render(<MembershipBillingSection />)
+    await act(() => vi.advanceTimersByTimeAsync(0))
+    fireEvent.click(
+      screen.getByRole("button", { name: "types.membership_support" })
+    )
+    expect(openContact).toHaveBeenCalledWith("membership_support")
+  }
+)
+it("keeps billing support available when payment problems remove membership access", async () => {
+  fetcher.mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      ...base,
+      membership: { ...member, status: "past_due", graceExpired: true },
+    }),
+  })
+  render(<MembershipBillingSection />)
+  await act(() => vi.advanceTimersByTimeAsync(0))
+  fireEvent.click(
+    screen.getByRole("button", { name: "types.membership_support" })
+  )
+  expect(openContact).toHaveBeenCalledWith("membership_support")
 })
 it("stops confirmation polling when the settings section closes", async () => {
   fetcher.mockResolvedValue({

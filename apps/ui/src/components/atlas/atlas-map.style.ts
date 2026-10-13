@@ -2,7 +2,12 @@
 // layer paint. Canvas and MapLibre paint can't read CSS variables, so the hex
 // values below mirror the design tokens in styles/globals.css.
 
-import type { ExpressionSpecification } from "maplibre-gl"
+import type {
+  ExpressionSpecification,
+  HeatmapLayerSpecification,
+  CircleLayerSpecification,
+  SymbolLayerSpecification,
+} from "maplibre-gl"
 
 import type { TypeGroupKey } from "./atlas.logic"
 
@@ -20,7 +25,12 @@ export function accessibilityClusterStyle(
   totalProperty: string,
   matchesProperty: string,
   compare: boolean
-) {
+): {
+  circle: NonNullable<CircleLayerSpecification["paint"]>
+  halo: NonNullable<CircleLayerSpecification["paint"]>
+  text: NonNullable<SymbolLayerSpecification["paint"]>
+  label: ExpressionSpecification
+} {
   const total: ExpressionSpecification = ["get", totalProperty]
   const matches: ExpressionSpecification = ["get", matchesProperty]
   const confirmed: ExpressionSpecification = ["==", matches, total]
@@ -275,7 +285,9 @@ export function addPinImages(map: ImageSink): void {
 }
 
 /** Fade from the ramp's first hue at zero density, keeping the basemap clear. */
-export function heatColor(ramp: readonly [string, ...string[]]): unknown[] {
+export function heatColor(
+  ramp: readonly [string, ...string[]]
+): ExpressionSpecification {
   const stops: unknown[] = [
     "interpolate",
     ["linear"],
@@ -285,16 +297,16 @@ export function heatColor(ramp: readonly [string, ...string[]]): unknown[] {
   ]
   ramp.forEach((c, i) => stops.push((i + 1) / ramp.length, c))
 
-  return stops
+  return stops as ExpressionSpecification
 }
 
 /** Same zoom handover for complete points, tiles and bounded density grids. */
 export function heatmapPaint(
   opacity: number,
-  weight: unknown = 1,
+  weight: number | ExpressionSpecification = 1,
   grid = false
-): Record<string, unknown> {
-  const radius = grid
+): NonNullable<HeatmapLayerSpecification["paint"]> {
+  const radius: ExpressionSpecification = grid
     ? [
         "interpolate",
         ["exponential", 2],
@@ -307,7 +319,7 @@ export function heatmapPaint(
             [8, 25],
             [11, 34],
           ] as const
-        ).flatMap(([zoom, size]) => [
+        ).flatMap(([zoom, size]): (number | ExpressionSpecification)[] => [
           zoom,
           [
             "max",
@@ -338,7 +350,9 @@ export function heatmapPaint(
 }
 
 /** Step ramp for completeness 0–100. */
-export function completenessColor(property = "complete"): unknown[] {
+export function completenessColor(
+  property = "complete"
+): ExpressionSpecification {
   const s = RAMP.seq
 
   return [

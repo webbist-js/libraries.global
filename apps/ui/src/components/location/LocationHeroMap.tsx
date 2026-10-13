@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { parseBounds } from "@/components/map/map.helpers"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
+import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { Link } from "@/lib/navigation"
 
 import { AtlasRegionMap } from "./AtlasRegionMap"
@@ -129,7 +130,8 @@ export function LocationHeroMap({
     let alive = true
     let observer: ResizeObserver | undefined
 
-    import("maplibre-gl").then(({ default: maplibregl }) => {
+    import("maplibre-gl").then((maplibregl) => {
+      maplibregl.setWorkerUrl(MAP_WORKER_URL)
       if (!alive || !containerRef.current) return
 
       const coords = [...points, ...pins].map((p) => [p.lng, p.lat] as const)

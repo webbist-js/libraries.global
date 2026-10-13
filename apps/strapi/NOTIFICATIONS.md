@@ -67,7 +67,7 @@ Both require a new explicit opt-in recorded with a consent timestamp. They have 
 
 Essential access and requested sign-in messages do not use optional email settings or an unsubscribe footer. Optional queued account emails carry a visible category-specific unsubscribe link and RFC 8058 one-click headers. Confirmation and unsubscribe pages require neither sign-in nor the beta password. Opening a link is read-only; the user action/one-click POST applies the change. Guest confirmations are cancelled if consent is withdrawn before sending. Recipients and preferences are checked again at delivery time. Queued messages for deleted accounts are skipped or erased.
 
-The old Strapi end-user activation lifecycle is unregistered; Better Auth owns end-user credentials. Support/feedback links to `hello@libraries.global` are mailto links, not an automatic support-ticket or acknowledgment system. Configure that mailbox or forward it to `info@libraries.global` externally.
+The old Strapi end-user activation lifecycle is unregistered; Better Auth owns end-user credentials. Support/feedback links use the monitored `info@libraries.global` mailbox. These mailto links do not automatically create a support ticket or send an acknowledgment.
 
 ## Configure and operate
 

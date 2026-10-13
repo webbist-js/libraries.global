@@ -16,6 +16,7 @@ import { coarseRing } from "@/components/atlas/mobile-map-data"
 import { EmptyState } from "@/components/ds/EmptyState"
 import { BASEMAP_ATTRIBUTION } from "@/components/map/map.helpers"
 import { T } from "@/lib/design-tokens"
+import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { weekdayCopy } from "@/lib/staff/format"
 
 import { useMobileClock } from "./useMobileClock"
@@ -195,6 +196,7 @@ export function MobileRouteMap({
     let stopped = false,
       observer: ResizeObserver | null = null
     import("maplibre-gl").then((lib) => {
+      lib.setWorkerUrl(MAP_WORKER_URL)
       if (stopped || !element.current) return
       const pins = latest.current.tt.stops.flatMap((stop) =>
         stop.location ? [stop.location] : []

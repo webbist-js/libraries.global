@@ -97,24 +97,26 @@ export function sitemapQuery(source: SitemapSource, locale: string) {
   const config = SOURCES[source]
   const filters: Record<string, unknown>[] = []
   if ("seo" in config) {
-    filters.push({
-      $or: [
-        { seo: { metaRobots: { $null: true } } },
-        {
-          seo: {
-            metaRobots: {
-              $notContainsi: "noindex",
+    filters.push(
+      {
+        $or: [
+          { seo: { metaRobots: { $null: true } } },
+          {
+            seo: {
+              metaRobots: {
+                $notContainsi: "noindex",
+              },
             },
           },
-        },
-      ],
-    })
-    filters.push({
-      $or: [
-        { seo: { metaRobots: { $null: true } } },
-        { seo: { metaRobots: { $notContainsi: "none" } } },
-      ],
-    })
+        ],
+      },
+      {
+        $or: [
+          { seo: { metaRobots: { $null: true } } },
+          { seo: { metaRobots: { $notContainsi: "none" } } },
+        ],
+      }
+    )
   }
   if (source === "profiles") {
     filters.push({ profileVisibility: "public", username: nonempty })
@@ -184,6 +186,7 @@ export async function sitemapRows(
     start: window.start,
     limit: window.limit,
   } as never)
+
   // Project again: Document Service results also contain implicit system fields.
   // In particular, public profile discovery must never expose private attributes.
   return rows.map((row) => {

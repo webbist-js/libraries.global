@@ -598,6 +598,8 @@ const prepareAwsS3Config = (env) => {
         baseUrl: env("CDN_URL"),
         rootPath: env("CDN_ROOT_PATH"),
         s3Options: {
+          endpoint: env("AWS_ENDPOINT"),
+          forcePathStyle: env.bool("AWS_FORCE_PATH_STYLE", false),
           credentials: {
             accessKeyId: awsAccessKeyId,
             secretAccessKey: awsAccessSecret,
@@ -635,7 +637,7 @@ const prepareEmailConfig = (env) => {
       },
       settings: {
         defaultFrom: env("EMAIL_FROM", "noreply@libraries.global"),
-        defaultReplyTo: env("EMAIL_REPLY_TO", "hello@libraries.global"),
+        defaultReplyTo: env("EMAIL_REPLY_TO", "info@libraries.global"),
       },
     }
   }
@@ -683,7 +685,7 @@ const prepareEmailConfig = (env) => {
         defaultReplyTo:
           env("EMAIL_REPLY_TO") ||
           env("MAILTRAP_EMAIL") ||
-          "hello@libraries.global",
+          "info@libraries.global",
       },
     }
   }

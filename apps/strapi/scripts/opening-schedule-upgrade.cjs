@@ -6,15 +6,16 @@
  * Report is read-only. Apply/rollback never publish, alter source evidence or touch unrelated fields.
  * Reindex the changed library projections after applying or rolling back.
  */
-const { createReadStream, createWriteStream } = require("node:fs")
 const { once } = require("node:events")
-const { createInterface } = require("node:readline")
+const { createReadStream, createWriteStream } = require("node:fs")
 const path = require("node:path")
-const { Client } = require("pg")
+const { createInterface } = require("node:readline")
+
 const {
   normalizeOpeningSchedule,
   validateOpeningSchedule,
 } = require("@repo/shared-data")
+const { Client } = require("pg")
 
 process.loadEnvFile(path.resolve(__dirname, "../.env"))
 const [mode = "report", backup] = process.argv.slice(2)

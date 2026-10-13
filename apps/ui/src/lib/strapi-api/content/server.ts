@@ -1810,7 +1810,8 @@ function logHistoryError(message: string, e: unknown) {
  * Strapi can't answer. `values` asks for previous → next and is honoured
  * only with a `user`, whose bridge headers carry the service secret; the
  * caller decides it from the session's `library.history` entitlement.
- * Without values no secret is sent and the read is cached.
+ * Without values only service authentication is sent, without user proof;
+ * the bounded public field-name read is cached.
  */
 export async function fetchLibraryHistory(
   documentId: string,

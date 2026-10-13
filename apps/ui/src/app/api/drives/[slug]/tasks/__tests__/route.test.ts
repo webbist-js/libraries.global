@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { fetchDrive, fetchDriveInReview, search } = vi.hoisted(() => ({
-  fetchDrive: vi.fn(),
-  fetchDriveInReview: vi.fn(),
-  search: vi.fn(),
-}))
+const { fetchDrive, fetchDriveInReview, fetchHolds, getSessionSSR, search } =
+  vi.hoisted(() => ({
+    fetchDrive: vi.fn(),
+    fetchDriveInReview: vi.fn(),
+    fetchHolds: vi.fn(),
+    getSessionSSR: vi.fn(),
+    search: vi.fn(),
+  }))
+
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
+vi.mock("@/lib/auth-server", () => ({ getSessionSSR }))
+vi.mock("@/lib/drives/drive-holds-server", () => ({ fetchHolds }))
 
 vi.mock("@/lib/drives/drives-server", () => ({
   fetchDrive,
@@ -52,6 +59,8 @@ const get = (url: string, address = ip()) =>
   })
 
 beforeEach(() => {
+  getSessionSSR.mockReset().mockResolvedValue(null)
+  fetchHolds.mockReset().mockResolvedValue({ heldByOthers: [], mine: null })
   fetchDrive.mockReset().mockResolvedValue(OPEN_DRIVE)
   fetchDriveInReview.mockReset().mockResolvedValue([])
   search.mockReset().mockResolvedValue({ hits: [], estimatedTotalHits: 0 })

@@ -1,0 +1,13 @@
+{
+	admin off
+	auto_https disable_redirects
+	servers {
+		protocols h1 h2
+	}
+}
+
+https://10.106.0.4:8443 {
+	bind 10.106.0.4
+	tls internal
+	reverse_proxy 127.0.0.1:7700
+}

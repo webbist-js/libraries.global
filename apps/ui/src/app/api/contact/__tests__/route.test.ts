@@ -70,6 +70,22 @@ describe("website contact delivery", () => {
     expect(response.status).toBe(200)
     expect(send.mock.calls[0]![0].email).toBeUndefined()
   })
+  it("delivers membership support through the existing contact route", async () => {
+    const response = await POST(
+      request({ ...contact, type: "membership_support" })
+    )
+    expect(response.status).toBe(200)
+    const { reference } = await response.json()
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "contact",
+        type: "membership_support",
+        email: "reader@example.org",
+      }),
+      "Test browser",
+      reference
+    )
+  })
   it("delivers normalized Atlas feedback with its feature answers and wishlist", async () => {
     const response = await POST(
       request({

@@ -288,6 +288,7 @@
         "report_issue": "Signaler un problème",
         "general_inquiry": "Question générale",
         "account_support": "Aide concernant mon compte",
+        "membership_support": "Assistance adhésion",
         "library_correction": "Corriger les informations d’une bibliothèque",
         "plans": "Offres et adhésion",
         "partnership": "Partenariat ou collaboration",
@@ -308,6 +309,11 @@
           "label": "De quelle aide avez-vous besoin ?",
           "hint": "Décrivez le problème de compte. Nous ne vous demanderons jamais votre mot de passe ni votre code de connexion.",
           "placeholder": "Je rencontre des difficultés avec…"
+        },
+        "membership_support": {
+          "label": "De quelle aide avez-vous besoin pour votre adhésion ?",
+          "hint": "Précisez votre adhésion Supporter, Pro ou Team et tout problème de facturation, d’accès ou de fonctionnalités. N’incluez pas de coordonnées bancaires, de mot de passe ni de code de sécurité.",
+          "placeholder": "Je suis membre et j’ai besoin d’aide pour…"
         },
         "library_correction": {
           "label": "Quelle bibliothèque et quelles informations faut-il corriger ?",

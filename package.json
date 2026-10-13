@@ -72,7 +72,20 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.2.9",
-      "@types/react-dom": "19.2.3"
+      "@types/react-dom": "19.2.3",
+      "sharp@<0.35.5": "0.35.5",
+      "prosemirror-view@<1.42.3": "1.42.3",
+      "linkify-it@>=5.0.0 <5.0.2": "5.0.2",
+      "defu@>=6.0.0 <6.1.5": "6.1.5",
+      "websocket-driver@<0.7.5": "0.7.5",
+      "proxy-addr@>=2.0.0 <2.0.8": "2.0.8",
+      "tinypool@>=2.0.0 <2.1.2": "2.1.2",
+      "handlebars@>=4.0.0 <4.7.10": "4.7.10",
+      "minimatch@>=9.0.0 <9.0.7": "9.0.7",
+      "brace-expansion@>=2.0.0 <2.1.6": "2.1.6",
+      "react-use>js-cookie": "3.0.7",
+      "shell-quote@>=1.1.0 <1.11.0": "1.11.0",
+      "prosemirror-model@>=1.0.0 <1.25.12": "1.25.12"
     },
     "packageExtensions": {
       "@hookform/resolvers": {
@@ -83,7 +96,7 @@
     },
     "patchedDependencies": {
       "strapi-plugin-meilisearch@0.16.5": "patches/strapi-plugin-meilisearch@0.16.5.patch",
-      "better-auth@1.4.18": "patches/better-auth@1.4.18.patch"
+      "better-auth@1.7.7": "patches/better-auth@1.7.7.patch"
     }
   }
 }

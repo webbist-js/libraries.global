@@ -1,5 +1,5 @@
-import { afterEach, expect, it, vi } from "vitest"
 import { NextRequest, NextResponse } from "next/server"
+import { afterEach, expect, it, vi } from "vitest"
 
 import { atlasCohortFromHeaders, scalableAtlasEnabled } from "../atlas-rollout"
 import { atlasCohortRequest, atlasCohortResponse } from "../proxies/atlasCohort"

@@ -122,7 +122,7 @@ it("keeps location pins on and locks both controls while a marker layer needs th
   fireEvent.click(screen.getByRole("switch", { name: "Accessibility" }))
   expect(pins().getAttribute("aria-checked")).toBe("true")
   expect(pins().disabled).toBe(true)
-  expect(screen.getByText("Required by Accessibility.")).toBeTruthy()
+  expect(screen.getByText("Needed by Accessibility")).toBeTruthy()
   expect(pins().getAttribute("aria-describedby")).toBe("atlas-pins-required")
   const quickDisable = screen.getByRole("button", {
     name: "Disable Library locations",
@@ -134,7 +134,7 @@ it("keeps location pins on and locks both controls while a marker layer needs th
 
   fireEvent.click(screen.getByRole("switch", { name: "Record completeness" }))
   expect(pins().disabled).toBe(true)
-  expect(screen.getByText("Required by Record completeness.")).toBeTruthy()
+  expect(screen.getByText("Needed by Record completeness")).toBeTruthy()
   expect(
     screen
       .getByRole("switch", { name: "Accessibility" })
@@ -192,9 +192,11 @@ it("lets signed-out visitors browse and search the analysis, while applying feat
     />
   )
   expect(screen.getByRole("heading", { name: "Accessibility" })).toBeTruthy()
-  expect(screen.queryByRole("checkbox")).toBeNull()
-  fireEvent.click(screen.getByRole("tab", { name: "Explore" }))
-  expect(screen.getByText("7")).toBeTruthy()
+  const catalogue = screen.getByText(/All 2 features/).closest("details")!
+  expect(catalogue.open).toBe(false)
+  fireEvent.click(screen.getByText(/All 2 features/))
+  expect(catalogue.open).toBe(true)
+  expect(screen.getAllByText("7").length).toBeGreaterThan(0)
   expect(screen.queryByText("Loading library records…")).toBeNull()
   fireEvent.change(screen.getByRole("searchbox", { name: "Find a feature" }), {
     target: { value: "quiet" },
@@ -241,7 +243,10 @@ it("counts pins and mobile routes separately and keeps route controls independen
     screen.queryByRole("checkbox", { name: "Show route lines" })
   ).toBeNull()
   fireEvent.click(
-    screen.getByRole("button", { name: "Configure Mobile library routes" })
+    within(screen.getByRole("region", { name: "Locations" })).getByRole(
+      "button",
+      { name: "Configure Mobile library routes" }
+    )
   )
   fireEvent.click(screen.getByRole("checkbox", { name: "Show route lines" }))
   expect(
@@ -331,20 +336,16 @@ it("lets readers independently select hearing support and quiet spaces from the 
     )
   }
   render(<Harness />)
-  fireEvent.click(screen.getByRole("tab", { name: "Explore" }))
-  await waitFor(() =>
-    expect(screen.getByRole("checkbox", { name: /Hearing loop/ })).toBeTruthy()
-  )
+  await waitFor(() => expect(screen.getByText(/All 3 features/)).toBeTruthy())
+  fireEvent.click(screen.getByText(/All 3 features/))
   fireEvent.click(screen.getByRole("checkbox", { name: /Hearing loop/ }))
   fireEvent.click(screen.getByRole("checkbox", { name: /Quiet room/ }))
-  expect(
-    (screen.getByRole("checkbox", { name: /Hearing loop/ }) as HTMLInputElement)
-      .checked
-  ).toBe(true)
-  expect(
-    (screen.getByRole("checkbox", { name: /Quiet room/ }) as HTMLInputElement)
-      .checked
-  ).toBe(true)
+  const hearing = () =>
+    screen.getByRole("checkbox", { name: /Hearing loop/ }) as HTMLInputElement
+  const quiet = () =>
+    screen.getByRole("checkbox", { name: /Quiet room/ }) as HTMLInputElement
+  expect(hearing().checked).toBe(true)
+  expect(quiet().checked).toBe(true)
   expect(
     (
       screen.getByRole("checkbox", {
@@ -352,45 +353,24 @@ it("lets readers independently select hearing support and quiet spaces from the 
       }) as HTMLInputElement
     ).checked
   ).toBe(false)
-  fireEvent.click(screen.getByRole("tab", { name: "Overview" }))
-  expect(screen.queryByRole("checkbox")).toBeNull()
-  expect(screen.getByText("Hearing loop + Quiet room")).toBeTruthy()
   expect(screen.getByText("25%")).toBeTruthy()
-  fireEvent.click(screen.getByRole("tab", { name: "Compare" }))
-  fireEvent.click(
-    screen.getByRole("radio", { name: "Confirmed versus unconfirmed" })
-  )
   expect(
-    (
-      screen.getByRole("radio", {
-        name: "Confirmed versus unconfirmed",
-      }) as HTMLInputElement
-    ).checked
-  ).toBe(true)
-  expect(screen.getByRole("status").textContent).toContain("of 4 records")
-  expect(screen.getByText(/Clusters show confirmed/)).toBeTruthy()
-  fireEvent.click(screen.getByRole("tab", { name: "Data" }))
-  fireEvent.click(
-    screen.getByRole("checkbox", { name: "Show unconfirmed records only" })
-  )
-  fireEvent.click(screen.getByRole("tab", { name: "Overview" }))
-  expect(screen.getByText(/Only unconfirmed records are shown/)).toBeTruthy()
-  fireEvent.click(screen.getByRole("tab", { name: "Explore" }))
+    screen.getByRole("region", { name: "Accessibility coverage" }).textContent
+  ).toContain("of 4 libraries")
+  fireEvent.click(screen.getByRole("button", { name: "Both" }))
   expect(
-    (screen.getByRole("checkbox", { name: /Hearing loop/ }) as HTMLInputElement)
-      .checked
-  ).toBe(true)
+    screen.getByRole("button", { name: "Both" }).getAttribute("aria-pressed")
+  ).toBe("true")
+  fireEvent.click(screen.getByRole("button", { name: "Not yet" }))
   expect(
-    (screen.getByRole("checkbox", { name: /Quiet room/ }) as HTMLInputElement)
-      .checked
-  ).toBe(true)
-  fireEvent.click(
-    screen.getByRole("button", { name: /Clear selected features/ })
-  )
-  expect(
-    (screen.getByRole("checkbox", { name: /Hearing loop/ }) as HTMLInputElement)
-      .checked
-  ).toBe(false)
+    screen.getByRole("button", { name: "Not yet" }).getAttribute("aria-pressed")
+  ).toBe("true")
+  expect(hearing().checked).toBe(true)
+  expect(quiet().checked).toBe(true)
+  fireEvent.click(screen.getByRole("button", { name: "Recorded" }))
+  fireEvent.click(screen.getByRole("button", { name: "Clear chosen features" }))
+  expect(hearing().checked).toBe(false)
+  expect(quiet().checked).toBe(false)
 })
 it("uses one active state for quick disable, catalogue switches and exclusive visualisations", () => {
   function Harness() {

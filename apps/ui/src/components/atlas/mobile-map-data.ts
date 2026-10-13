@@ -3,6 +3,7 @@ import {
   localDateTime,
   type PublicLiveState,
 } from "@repo/shared-data"
+import type { Feature, LineString, Point, Polygon } from "geojson"
 
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
@@ -25,9 +26,9 @@ export function mobileMapData(
   live: Record<string, PublicLiveState>,
   now: Date
 ) {
-  const lines: GeoJSON.Feature<GeoJSON.LineString>[] = [],
-    vehicles: GeoJSON.Feature<GeoJSON.Point>[] = [],
-    rings: GeoJSON.Feature<GeoJSON.Polygon>[] = []
+  const lines: Feature<LineString>[] = [],
+    vehicles: Feature<Point>[] = [],
+    rings: Feature<Polygon>[] = []
   const numbers = new Map<string, string>()
   for (const library of libraries.slice(0, 25)) {
     if (!library.timetable || library.status === "permanently_closed") continue

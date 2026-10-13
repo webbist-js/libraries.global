@@ -51,9 +51,19 @@ export async function DELETE(req: Request) {
     )
 
   try {
+    // Resolve the provider through this session's accounts. Better Auth 1.7
+    // takes the local account row ID, never a caller-supplied provider subject.
+    const accounts = await auth.api.listUserAccounts({ headers: hdrs })
+    const account = accounts.find((entry) => entry.providerId === providerId)
+    if (!account)
+      return NextResponse.json(
+        { error: "Connection not found" },
+        { status: 404 }
+      )
+
     await auth.api.unlinkAccount({
       headers: hdrs,
-      body: { providerId },
+      body: { accountId: account.id },
     })
 
     return NextResponse.json({ ok: true })

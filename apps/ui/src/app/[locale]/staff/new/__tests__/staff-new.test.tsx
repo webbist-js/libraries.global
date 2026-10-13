@@ -85,14 +85,14 @@ describe("new library routing", () => {
   it("redirects staff adds to the staff area and preserves the suggested name", async () => {
     mocks.session.mockResolvedValue(session([library]))
     await expect(contributePage(query)).rejects.toThrow(
-      "REDIRECT:/staff/new?name=New%20Library"
+      "REDIRECT:/staff/new?name=New+Library"
     )
     expect(mocks.teams).not.toHaveBeenCalled()
   })
   it("routes a verified active Team's first library through staff creation", async () => {
     mocks.session.mockResolvedValue(session([], [team]))
     await expect(contributePage(query)).rejects.toThrow(
-      "REDIRECT:/staff/new?name=New%20Library"
+      "REDIRECT:/staff/new?name=New+Library"
     )
   })
   it("keeps ordinary contributions available without staff access", async () => {
@@ -151,7 +151,7 @@ describe("staff creation page", () => {
   it("sends signed-out viewers to sign in", async () => {
     mocks.session.mockResolvedValue(null)
     await expect(staffPage(query)).rejects.toThrow(
-      "REDIRECT:/auth/signin?callbackUrl=/staff/new"
+      "REDIRECT:/auth/signin?callbackUrl=%2Fstaff%2Fnew"
     )
   })
 })
@@ -161,6 +161,7 @@ vi.mock("next-intl/server", async () => {
   const messages = (await import("../../../../../../locales/en.json")).default
 
   return {
+    getLocale: async () => "en",
     getTranslations: async (config: string | { namespace?: string }) =>
       createTranslator({
         locale: "en",

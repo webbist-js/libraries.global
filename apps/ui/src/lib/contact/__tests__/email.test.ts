@@ -6,6 +6,7 @@ const { sendMail, transport } = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/email-transport", () => ({ createEmailTransport: transport }))
 import { contactEmail, sendContactNotification } from "../email"
+import type { ContactType } from "../model"
 import type { ContactSubmission } from "../schema"
 
 const contact: ContactSubmission = {
@@ -132,6 +133,29 @@ it("always sends to the admin mailbox and uses the visitor only as Reply-To", as
       replyTo: { address: "reader@example.org", name: "Reader" },
       disableUrlAccess: true,
       disableFileAccess: true,
+    })
+  )
+})
+it.each<[ContactType, string]>([
+  ["report_issue", "Issue report"],
+  ["general_inquiry", "General inquiry"],
+  ["account_support", "Account support"],
+  ["membership_support", "Membership support"],
+  ["library_correction", "Library correction"],
+  ["plans", "Plans and membership"],
+  ["partnership", "Partnership"],
+  ["privacy", "Privacy inquiry"],
+])("routes %s to info with its set subject", async (type, label) => {
+  await sendContactNotification(
+    { ...contact, type, sourceSubject: "Visitor-supplied context" },
+    "Browser",
+    "reference"
+  )
+  expect(sendMail).toHaveBeenCalledWith(
+    expect.objectContaining({
+      to: "info@libraries.global",
+      subject: `[Contact] ${label} · /contribute`,
+      replyTo: { address: "reader@example.org", name: "Reader" },
     })
   )
 })

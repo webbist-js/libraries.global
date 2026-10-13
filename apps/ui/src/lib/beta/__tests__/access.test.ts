@@ -5,6 +5,7 @@ import {
   betaDestination,
   createBetaPass,
   matchesBetaPassword,
+  sameOriginRequest,
   validBetaPass,
 } from "../access"
 
@@ -71,4 +72,32 @@ describe("safe continuation", () => {
     expect(betaDestination("/cs/libraries?q=London")).toBe(
       "/cs/libraries?q=London"
     ))
+})
+
+describe("production request origin", () => {
+  it("accepts the public HTTPS origin behind an internal Next.js address", () => {
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("APP_PUBLIC_URL", "https://libraries.global")
+    const request = (origin: string, extra: Record<string, string> = {}) =>
+      new Request("http://libraries-global-app.internal:3000/api/beta/access", {
+        headers: { origin, ...extra },
+      })
+    expect(sameOriginRequest(request("https://libraries.global"))).toBe(true)
+    expect(sameOriginRequest(request("https://evil.example"))).toBe(false)
+    expect(
+      sameOriginRequest(
+        request("https://libraries.global", { "sec-fetch-site": "cross-site" })
+      )
+    ).toBe(false)
+  })
+  it("fails closed if the production origin is absent or invalid", () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const req = new Request("https://libraries.global/api/beta/access", {
+      headers: { origin: "https://libraries.global" },
+    })
+    vi.stubEnv("APP_PUBLIC_URL", "")
+    expect(sameOriginRequest(req)).toBe(false)
+    vi.stubEnv("APP_PUBLIC_URL", "invalid")
+    expect(sameOriginRequest(req)).toBe(false)
+  })
 })

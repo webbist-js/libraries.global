@@ -6,6 +6,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { Link } from "@/lib/navigation"
 
 /** A numbered neighbour pin; the number matches the "Nearby libraries" list. */
@@ -60,7 +61,8 @@ export function LibraryHeroMap({
     let alive = true
     let observer: ResizeObserver | undefined
 
-    import("maplibre-gl").then(({ default: maplibregl }) => {
+    import("maplibre-gl").then((maplibregl) => {
+      maplibregl.setWorkerUrl(MAP_WORKER_URL)
       if (!alive || !containerRef.current) return
       let map: MapLibreMap
       try {

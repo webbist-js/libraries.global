@@ -4,6 +4,7 @@ export const CONTACT_TYPES = [
   "report_issue",
   "general_inquiry",
   "account_support",
+  "membership_support",
   "library_correction",
   "plans",
   "partnership",
@@ -100,7 +101,8 @@ export function mailtoContactIntent(
       .slice(0, 120)
     const text = subject?.toLowerCase() ?? ""
     let type: ContactType = "general_inquiry"
-    if (/issue|bug|problem|error/.test(text)) type = "report_issue"
+    if (/\bmembership support\b/.test(text)) type = "membership_support"
+    else if (/issue|bug|problem|error/.test(text)) type = "report_issue"
     else if (/\b(?:plans?|pro|grants?|verification|team)\b/.test(text))
       type = "plans"
     else if (/privacy|legal|data request/.test(text)) type = "privacy"

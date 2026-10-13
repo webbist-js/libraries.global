@@ -15,6 +15,7 @@ const { fetchAPI, DocsArticle, LegalDocument, notFound, permanentRedirect } =
   }))
 
 vi.mock("next/headers", () => ({
+  headers: async () => new Headers(),
   draftMode: async () => ({ isEnabled: false }),
 }))
 vi.mock("next/navigation", () => ({ notFound, permanentRedirect }))
@@ -39,6 +40,7 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/lib/navigation", () => ({
   routing: { defaultLocale: "en", locales: ["en", "cs"] },
 }))
+vi.mock("@/lib/auth-server", () => ({ getSessionSSR: async () => null }))
 vi.mock("@/lib/live-locales", () => ({ LIVE_LOCALES: ["en", "cs"] }))
 vi.mock("@/lib/env-vars", () => ({
   getEnvVar: () => "https://libraries.global",

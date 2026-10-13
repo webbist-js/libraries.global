@@ -288,6 +288,7 @@
         "report_issue": "Report an issue",
         "general_inquiry": "General inquiry",
         "account_support": "Account help",
+        "membership_support": "Membership support",
         "library_correction": "Correct library information",
         "plans": "Plans and membership",
         "partnership": "Partnership or collaboration",
@@ -308,6 +309,11 @@
           "label": "What do you need help with?",
           "hint": "Describe the account problem. We’ll never ask for your password or sign-in code.",
           "placeholder": "I’m having trouble with…"
+        },
+        "membership_support": {
+          "label": "What do you need help with in your membership?",
+          "hint": "Tell us about your Supporter, Pro or Team membership and any problem with billing, access or features. Don’t include card details, passwords or security codes.",
+          "placeholder": "I’m a member and need help with…"
         },
         "library_correction": {
           "label": "Which library, and what needs correcting?",

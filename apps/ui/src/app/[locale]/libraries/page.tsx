@@ -77,7 +77,7 @@ export default async function FindLibraryRoute(props: {
           ? await findPlaceCatalogue(query.place, locale)
           : undefined
 
-        return searchFind(query, chain)
+        return searchFind({ ...query, locale }, chain)
       })().catch(() => null),
       libraryTotal(locale).catch(() => strapiLibraryTotal()),
       headers().then(getSessionSSR),

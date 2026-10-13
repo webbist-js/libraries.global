@@ -1,5 +1,6 @@
 import { atlasPlaceSortKey, type AtlasCursorPayload } from "@repo/shared-data"
 import { afterEach, expect, it, vi } from "vitest"
+
 import { readAtlasCursor, signAtlasCursor } from "../atlas-cursor"
 
 afterEach(() => vi.unstubAllEnvs())

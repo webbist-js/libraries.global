@@ -3,14 +3,19 @@ import "server-only"
 import { emailTemplate, type EmailSection } from "@repo/shared-data"
 
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/constants"
-import type { AtlasFeedbackFeature, FeedbackTask } from "@/lib/contact/model"
+import type {
+  AtlasFeedbackFeature,
+  ContactType,
+  FeedbackTask,
+} from "@/lib/contact/model"
 import type { ContactSubmission } from "@/lib/contact/schema"
 import { createEmailTransport } from "@/lib/email-transport"
 
-const contactLabels = {
+const contactLabels: Record<ContactType, string> = {
   report_issue: "Issue report",
   general_inquiry: "General inquiry",
   account_support: "Account support",
+  membership_support: "Membership support",
   library_correction: "Library correction",
   plans: "Plans and membership",
   partnership: "Partnership",

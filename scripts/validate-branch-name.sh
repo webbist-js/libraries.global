@@ -2,13 +2,13 @@
 set -eu
 
 # Enforce branch naming convention:
-#   <type>/STAR-<number>-<description>
+#   <type>/<description> (optional STAR ticket prefix)
 #
 # Examples:
-#   feat/STAR-1582-repo-config
-#   fix/STAR-42-null-pointer-on-login
+#   feat/repo-config
+#   fix/null-pointer-on-login
 #
-# Allowed types: build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+# Allowed prefixes: build, chore, ci, codex, docs, feat, fix, perf, refactor, revert, style, test
 #
 # Branches that are allowed to bypass this check (mainline + detached):
 #   main, master, develop, dev, release/*, hotfix/*
@@ -28,7 +28,7 @@ case "${branch}" in
   release/*|hotfix/*) exit 0 ;;
 esac
 
-pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)/STAR-[0-9]+-[a-z0-9][a-z0-9-]*$'
+pattern='^(build|chore|ci|codex|docs|feat|fix|perf|refactor|revert|style|test)/(STAR-[0-9]+-)?[a-z0-9][a-z0-9-]*$'
 
 if printf "%s" "${branch}" | grep -Eq "${pattern}"; then
   exit 0
@@ -38,16 +38,15 @@ cat <<EOF
 Invalid branch name: '${branch}'
 
 Expected:
-  <type>/STAR-<number>-<description>
+  <type>/<description>
 
 Where:
-  type: build | chore | ci | docs | feat | fix | perf | refactor | revert | style | test
-  number: digits (e.g. 1582)
+  type: build | chore | ci | codex | docs | feat | fix | perf | refactor | revert | style | test
   description: lowercase kebab-case
 
 Examples:
-  feat/STAR-1582-repo-config
-  fix/STAR-42-null-pointer-on-login
+  feat/repo-config
+  fix/null-pointer-on-login
 
 Fixing already created branches:
   git branch -m <old-branch-name> <new-branch-name>

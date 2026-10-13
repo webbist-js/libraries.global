@@ -108,5 +108,14 @@ export function sameOriginRequest(req: Request): boolean {
   if (!origin || req.headers.get("sec-fetch-site") === "cross-site")
     return false
 
-  return origin === new URL(req.url).origin
+  // Self-hosted Next.js constructs req.url from its internal listen address.
+  // The configured production origin stays authoritative behind the proxy.
+  const expected =
+    process.env.NODE_ENV === "production" ? process.env.APP_PUBLIC_URL : req.url
+  if (!expected) return false
+  try {
+    return origin === new URL(expected).origin
+  } catch {
+    return false
+  }
 }

@@ -104,6 +104,7 @@ describe("Atomic Atlas tile reconciliation", () => {
           return Response.json({ status: "expired", schemaVersion: 1 })
         const body = JSON.parse(init.body)
         seen.push(body)
+
         return Response.json({
           schemaVersion: 1,
           queryEpoch: "epoch",
@@ -172,6 +173,7 @@ describe("Atomic Atlas tile reconciliation", () => {
           })
         if (url === "/api/atlas/changes") {
           seen.push(JSON.parse(init.body))
+
           return Response.json({
             schemaVersion: 1,
             status: "complete",
@@ -184,6 +186,7 @@ describe("Atomic Atlas tile reconciliation", () => {
         }
         const body = JSON.parse(init.body)
         seen.push(body)
+
         return Response.json({
           schemaVersion: 1,
           queryEpoch: "epoch",

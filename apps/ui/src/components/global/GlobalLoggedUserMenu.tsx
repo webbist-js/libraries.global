@@ -2,8 +2,9 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import type React from "react"
+import { useRef, type ReactNode } from "react"
 
+import { useContactModal } from "@/components/contact/ContactModalProvider"
 import { useNotifications } from "@/components/notifications/NotificationProvider"
 import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import {
@@ -85,8 +86,8 @@ function MenuLink({
 }: {
   href: string
   icon: string
-  trailing?: React.ReactNode
-  children: React.ReactNode
+  trailing?: ReactNode
+  children: ReactNode
 }) {
   return (
     <DropdownMenuItem
@@ -125,6 +126,10 @@ export function GlobalLoggedUserMenu({
   } | null
 }) {
   const tUi = useUiTranslations("ui")
+  const tContact = useUiTranslations("contactModal.contact")
+  const { openContact } = useContactModal()
+  const menuTrigger = useRef<HTMLButtonElement>(null)
+  const supportSelected = useRef(false)
 
   const { unread } = useNotifications()
   const initials = getInitials(user.name || user.email)
@@ -146,11 +151,15 @@ export function GlobalLoggedUserMenu({
     caps.has("moderate.queue") ||
     caps.has("drives.manage")
   const planName = planShortName(user.plan)
+  const hasMembershipSupport = ["supporter", "pro", "team"].includes(
+    user.plan ?? ""
+  )
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          ref={menuTrigger}
           type="button"
           aria-label={`Account menu for ${firstName}${unread ? `, ${unread} unread notifications` : ""}`}
           style={{
@@ -192,6 +201,14 @@ export function GlobalLoggedUserMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
+        onCloseAutoFocus={(event) => {
+          if (!supportSelected.current) return
+          supportSelected.current = false
+          event.preventDefault()
+          // Open after the menu closes; return the dialog's focus to its trigger.
+          menuTrigger.current?.focus()
+          openContact("membership_support")
+        }}
         aria-label={tUi("account_menu")}
         align="end"
         sideOffset={20}
@@ -307,6 +324,26 @@ export function GlobalLoggedUserMenu({
           >
             {tUi("membership")}{" "}
           </MenuLink>
+          {hasMembershipSupport ? (
+            <DropdownMenuItem
+              aria-haspopup="dialog"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-2.5 py-2.5 text-[15px] font-medium focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
+              onSelect={() => {
+                supportSelected.current = true
+              }}
+              style={{ color: T.ink.base }}
+            >
+              <Icon
+                icon="mdi:lifebuoy"
+                width={19}
+                height={19}
+                aria-hidden="true"
+                className="shrink-0"
+                style={{ color: T.ink.dim }}
+              />
+              <span>{tContact("types.membership_support")}</span>
+            </DropdownMenuItem>
+          ) : null}
           <MenuLink href="/profile/settings" icon="mdi:cog-outline">
             {tUi("settings")}{" "}
           </MenuLink>

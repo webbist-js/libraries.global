@@ -6,14 +6,10 @@ import {
   type AtlasPerCapitaResponse,
   type AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
+import type { AnchorHTMLAttributes } from "react"
 import { afterEach, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 import { layerAccess, layerDef, toggleLayer } from "../atlas.logic"
 import {
@@ -24,6 +20,12 @@ import {
   sortAccessAreas,
 } from "../AtlasAccessAnalysis"
 import { AtlasPerCapitaControls, perCapitaCsv } from "../AtlasPerCapita"
+
+vi.mock("@/lib/navigation", () => ({
+  Link: ({ children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props}>{children}</a>
+  ),
+}))
 
 afterEach(cleanup)
 const { countries, ...baseline } = atlasPopulationBaseline
@@ -147,19 +149,25 @@ it("separates area exploration, comparison and provenance while preserving selec
   expect(screen.queryByRole("table")).toBeNull()
   expect(screen.queryByText(/Boundary version:/)).toBeNull()
   fireEvent.click(screen.getByRole("tab", { name: "Explore" }))
-  fireEvent.change(screen.getByRole("combobox", { name: "Inspect an area" }), {
-    target: { value: "NOD" },
+  fireEvent.change(screen.getByRole("searchbox", { name: "Find an area" }), {
+    target: { value: "Not indexed" },
   })
+  fireEvent.click(
+    within(
+      screen.getByRole("region", { name: "Area search results" })
+    ).getByRole("button", { name: /Not indexed/ })
+  )
   expect(analysis.onSelect).toHaveBeenCalledWith("NOD")
   fireEvent.click(screen.getByRole("button", { name: /Zoom to/ }))
   expect(analysis.onFit).toHaveBeenCalledWith("GBR")
   fireEvent.click(screen.getByRole("tab", { name: "Compare" }))
-  fireEvent.click(screen.getByRole("button", { name: "All areas as a table" }))
   expect(screen.getByRole("table")).toBeTruthy()
-  expect(screen.getByRole("columnheader", { name: "Baseline" })).toBeTruthy()
-  expect(screen.getByLabelText("Selected area context").textContent).toContain(
-    "United Kingdom"
-  )
+  expect(screen.getByRole("columnheader", { name: "Libraries" })).toBeTruthy()
+  expect(
+    screen.getByLabelText(
+      "6 matching libraries out of 60 indexed before filters"
+    )
+  ).toBeTruthy()
   fireEvent.click(screen.getByRole("tab", { name: "Data" }))
   expect(screen.getByText(/library index is incomplete/)).toBeTruthy()
   expect(screen.getByText(/Boundary version:/)).toBeTruthy()
@@ -293,11 +301,14 @@ it("preserves table search and selected metric when switching tasks, with a boun
     />
   )
   fireEvent.click(screen.getByRole("tab", { name: "Compare" }))
-  fireEvent.click(screen.getByRole("button", { name: "All areas as a table" }))
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "Show all 31 areas in the comparison table",
+    })
+  )
   expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(26)
   expect(
-    (screen.getByRole("combobox", { name: "Direction" }) as HTMLSelectElement)
-      .value
+    (screen.getByRole("combobox", { name: "Order" }) as HTMLSelectElement).value
   ).toBe("desc")
   fireEvent.change(screen.getByRole("searchbox", { name: "Search areas" }), {
     target: { value: "Area 01" },
@@ -312,7 +323,9 @@ it("preserves table search and selected metric when switching tasks, with a boun
     ).value
   ).toBe("Area 01")
   expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(2)
-  expect(screen.getByLabelText("Selected area context").textContent).toContain(
-    "Area 01"
-  )
+  expect(
+    within(screen.getByRole("table"))
+      .getByRole("button", { name: "Area 01" })
+      .getAttribute("aria-pressed")
+  ).toBe("true")
 })

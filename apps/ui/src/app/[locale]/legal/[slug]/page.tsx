@@ -7,7 +7,6 @@ import { BetaFooter } from "@/components/beta/BetaFooter"
 import LegalDocumentPage from "@/components/legal/LegalDocumentPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
-import { isDevelopment } from "@/lib/general-helpers"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
@@ -16,21 +15,9 @@ import {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-// The layout reads proxy headers to show the public legal shell during beta.
-export const dynamic = "auto"
-export const revalidate = 300
-export const dynamicParams = true
-
-export async function generateStaticParams({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  if (isDevelopment()) return []
-  const result = await fetchLegalDocuments(locale as Locale)
-
-  return result.data.flatMap((doc) => (doc.slug ? [{ slug: doc.slug }] : []))
-}
+// Draft mode and the beta legal shell depend on this request's cookies/headers.
+// These pages must also work when the image is built without CMS credentials.
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({
   params,

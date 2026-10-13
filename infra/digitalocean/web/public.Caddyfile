@@ -1,0 +1,23 @@
+{
+	admin off
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+	servers {
+		protocols h1 h2
+	}
+}
+
+import holding.Caddyfile
+
+# Loopback-only health and preview endpoint in both deployment modes.
+http://127.0.0.1:8080 {
+	bind 127.0.0.1
+	import launch-holding
+}
+
+libraries.global {
+	import launch-holding
+}
+
+www.libraries.global {
+	redir https://libraries.global{uri} 308
+}

@@ -59,11 +59,14 @@ export const metadata: Metadata = {
   robots: { index: isProduction(), follow: true },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "16x16 32x32 48x48 64x64 256x256" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      {
+        url: "/favicon.ico?v=globe-1",
+        sizes: "16x16 32x32 48x48 64x64 256x256",
+      },
+      { url: "/favicon.svg?v=globe-1", type: "image/svg+xml" },
     ],
     apple: {
-      url: "/apple-touch-icon.png",
+      url: "/apple-touch-icon.png?v=globe-1",
       sizes: "180x180",
       type: "image/png",
     },
@@ -94,7 +97,7 @@ export default async function RootLayout({
   const betaShell = requestHeaders.get("x-beta-public-shell") === "true"
   const nonce = requestHeaders.get("x-nonce") ?? undefined
   const contactAliases = [
-    process.env.BETA_CONTACT_EMAIL ?? "hello@libraries.global",
+    process.env.BETA_CONTACT_EMAIL ?? "info@libraries.global",
   ]
   const [footerRes, legalRes] = await Promise.all([
     liveConsole || betaShell ? Promise.resolve(null) : fetchFooter(locale),

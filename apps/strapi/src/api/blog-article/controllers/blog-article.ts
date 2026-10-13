@@ -33,7 +33,12 @@ export default factories.createCoreController(
             // Public profile fields only: the Document Service doesn't strip
             // private attributes, so name them.
             authorProfile: {
-              fields: ["username", "firstName", "lastName", "profileVisibility"],
+              fields: [
+                "username",
+                "firstName",
+                "lastName",
+                "profileVisibility",
+              ],
               populate: { avatar: true },
             } as Record<string, unknown>,
             section: { fields: ["name", "slug"] },

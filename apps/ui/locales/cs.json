@@ -288,6 +288,7 @@
         "report_issue": "Nahlásit problém",
         "general_inquiry": "Obecný dotaz",
         "account_support": "Pomoc s účtem",
+        "membership_support": "Podpora členství",
         "library_correction": "Opravit údaje o knihovně",
         "plans": "Plány a členství",
         "partnership": "Partnerství nebo spolupráce",
@@ -308,6 +309,11 @@
           "label": "S čím potřebujete pomoci?",
           "hint": "Popište problém s účtem. Nikdy nebudeme chtít vaše heslo ani přihlašovací kód.",
           "placeholder": "Mám potíže s…"
+        },
+        "membership_support": {
+          "label": "S čím potřebujete pomoci v rámci členství?",
+          "hint": "Napište nám o svém členství Supporter, Pro nebo Team a případných potížích s platbami, přístupem či funkcemi. Neuvádějte údaje o kartě, hesla ani bezpečnostní kódy.",
+          "placeholder": "Jsem členem a potřebuji pomoci s…"
         },
         "library_correction": {
           "label": "O kterou knihovnu jde a co je potřeba opravit?",

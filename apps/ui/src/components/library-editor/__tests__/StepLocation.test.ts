@@ -81,7 +81,7 @@ const DATA: Record<string, unknown> = {
       continentDocumentId: "eu",
     },
   ],
-  "/api/relations/continents": [{ documentId: "eu", name: "Europe" }],
+  "/api/relations/continents?locale=en": [{ documentId: "eu", name: "Europe" }],
   "/api/relations/countries?continentDocumentId=eu": [
     { documentId: "eng", name: "England" },
   ],
@@ -204,7 +204,10 @@ describe("StepLocation", () => {
       ).value
     ).toBe("Radlett Library")
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/relations/continents")
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/relations/continents?locale=en",
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      )
     )
   })
 
@@ -218,7 +221,10 @@ describe("StepLocation", () => {
       ).value
     ).toBe("")
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/relations/continents")
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/relations/continents?locale=en",
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      )
     )
   })
 
@@ -238,7 +244,10 @@ describe("StepLocation", () => {
     ).toBeNull()
     expect(screen.queryByRole("button", { name: "Drop pin" })).toBeNull()
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/relations/continents")
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/relations/continents?locale=en",
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      )
     )
   })
 })

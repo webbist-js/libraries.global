@@ -6,9 +6,9 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 
+import { withAtlasLibraryWrite } from "../../../../utils/atlas-outbox"
 import { openValues, sealValues, type Slot } from "../utils/credential-crypto"
 import { recordCredentialEvent } from "../utils/credential-events"
-import { withAtlasLibraryWrite } from "../../../../utils/atlas-outbox"
 
 export const CREDENTIAL_UID = "plugin::events.event-credential"
 const LIBRARY_UID = "api::library.library"

@@ -6,7 +6,7 @@
   "types": "./types",
   "scripts": {
     "build": "pnpm run build:plugins && strapi build",
-    "build:plugins": "cd src/plugins/content-moderation && pnpm exec strapi-plugin build && cd - && cd src/plugins/rewards && pnpm exec strapi-plugin build && cd - && cd src/plugins/events && pnpm exec strapi-plugin build && cd - && cd src/plugins/library-staff && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/mobile-libraries && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/access && ../../../node_modules/.bin/strapi-plugin build && cd -",
+    "build:plugins": "cd src/plugins/content-moderation && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/rewards && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/events && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/library-staff && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/mobile-libraries && ../../../node_modules/.bin/strapi-plugin build && cd - && cd src/plugins/access && ../../../node_modules/.bin/strapi-plugin build && cd -",
     "config:dump": "strapi configuration:dump -f dump.json",
     "config:restore": "strapi configuration:restore -f dump.json",
     "dev": "pnpm run run:db && pnpm run develop",
@@ -52,6 +52,7 @@
     "@strapi/plugin-users-permissions": "5.55.1",
     "@strapi/provider-email-mailgun": "5.55.1",
     "@strapi/provider-email-nodemailer": "5.55.1",
+    "@strapi/provider-upload-aws-s3": "5.55.1",
     "@strapi/strapi": "5.55.1",
     "@strapi/utils": "5.55.1",
     "axios": "^1.16.1",
@@ -70,16 +71,17 @@
     "strapi-plugin-meilisearch": "^0.16.5",
     "strapi-plugin-timezone-select": "2.0.0",
     "styled-components": "^6.0.0",
-    "vitest": "^4.0.18",
     "tz-lookup": "^6.1.25"
   },
   "devDependencies": {
     "@strapi/icons": "2.2.4",
+    "@strapi/sdk-plugin": "5.4.0",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.11"
   },
   "strapi": {
     "uuid": "@repo/strapi"

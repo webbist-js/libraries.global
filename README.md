@@ -169,21 +169,21 @@ The Playwright suites need a running site and browsers (`pnpm -F @repo/tests-pla
 
 The UI follows the v2 "warm paper" design system: tokens in `apps/ui/src/lib/design-tokens.ts`, primitives in `apps/ui/src/components/ds`. The accessibility baseline (visible focus rings, a skip link, reduced motion, status shown as colour + icon + text) is required, not optional. [CLAUDE.md](./CLAUDE.md) has the full frontend conventions.
 
-The Husky pre-commit hook runs lint-staged (ESLint and Prettier) and checks branch names. Branches other than `main`, `dev`, `release/*` and `hotfix/*` must look like `<type>/STAR-<number>-<description>`, for example `feat/STAR-42-open-now-filter`. Commit messages must be [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), checked by commitlint.
+The Husky pre-commit hook runs lint-staged (ESLint and Prettier) and checks branch names. Topic branches use `<type>/<description>`, for example `feat/open-now-filter` or `codex/github-protection`. Legacy `STAR-<number>-` prefixes remain accepted. Commit messages must be [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/), checked by commitlint.
 
-If a commit adds an environment variable, name it in the message (`env.SENTRY_DSN`). The auto-PR workflow copies those names into the PR description.
+Describe added or changed environment variables in the pull request so maintainers can update deployment configuration. Never include credential values.
 
 ## CI and releases
 
 - `dev` is the working branch. [ci.yml](.github/workflows/ci.yml) runs lint, format check, unit tests and both builds on every pull request to `dev` or `main`.
-- [auto-pr.yml](.github/workflows/auto-pr.yml) keeps a pull request from `dev` to `main` open and up to date.
+- Protected branches require a pull request, passing CI and resolved review conversations. Contributions target `dev`; the owner reviews contributor changes.
 - Merging to `main` runs [semantic-release](.github/workflows/release.yml), which tags and publishes a GitHub release.
 - [qa.yml](.github/workflows/qa.yml) runs the Playwright suites on demand against a deployed `BASE_URL`.
-- [docs.yml](.github/workflows/docs.yml) publishes `apps/docs` to GitHub Pages.
+- [docs.yml](.github/workflows/docs.yml) publishes `apps/docs` to GitHub Pages only when `DOCS_PUBLISH_ENABLED` is explicitly enabled.
 
 ## Deployment
 
-The UI will deploy to Vercel and Strapi to Strapi Cloud. The production Meilisearch host and the sync worker's host aren't set up yet. `apps/ui/vercel.json` schedules a daily `/api/cron/retention` job, which needs `CRON_SECRET`, to delete expired sessions and old rate-limit rows. Sections 4 to 6 of the [pre-golive checklist](./docs/pre-golive-checklist.md) cover production env vars, OAuth callbacks and launch checks.
+The closed beta runs on DigitalOcean in London, with Next.js, Strapi, independent workers, Managed PostgreSQL with a standby, Spaces and persistent Meilisearch storage. The approved baseline is $164.50/month before tax and usage overages. The [infrastructure record](./infra/digitalocean/README.md) documents the running services, verified migration, private CMS access, release images and recovery steps. Authenticated systemd jobs handle daily retention and every-minute sandbox billing processing. GitHub Actions production deployment remains to connect. The [DigitalOcean launch checklist](./docs/operations/digitalocean-launch-checklist.md) and [pre-golive checklist](./docs/pre-golive-checklist.md) track the remaining public-launch work.
 
 ## Documentation
 

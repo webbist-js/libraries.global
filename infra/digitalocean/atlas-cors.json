@@ -1,0 +1,19 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": [
+        "https://libraries.global",
+        "https://www.libraries.global"
+      ],
+      "AllowedMethods": ["GET", "HEAD"],
+      "AllowedHeaders": ["Range", "If-Match", "If-None-Match"],
+      "ExposeHeaders": [
+        "ETag",
+        "Content-Range",
+        "Content-Length",
+        "Accept-Ranges"
+      ],
+      "MaxAgeSeconds": 86400
+    }
+  ]
+}

@@ -1,30 +1,11 @@
 # Security Policy
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-We take the security of our project seriously. If you discover a security vulnerability within this project, please report it to us as soon as possible. We appreciate your efforts to responsibly disclose your findings.
+Use [GitHub private vulnerability reporting](https://github.com/webbist-js/libraries.global/security/advisories/new) to report a suspected security issue to the maintainer. You can also email info@libraries.global.
 
-**Please DO NOT open a public GitHub issue.**
+Include the affected feature or version, steps to reproduce, the likely impact, and a proof of concept if available. Share sensitive details through the private report; do not post credentials or exploit details in public issues.
 
-Instead, please send an email to:
+## Supported versions
 
-`info@libraries.global`
-
-In your email, please provide as much information as possible to help us understand and reproduce the issue, including:
-
-- A detailed description of the vulnerability.
-- Steps to reproduce the vulnerability.
-- The impact of the vulnerability.
-- Any proof-of-concept code or exploits.
-- Your name and contact information (optional, but appreciated for follow-up).
-
-We will keep you informed of the progress towards a fix and will announce fixes when they are released.
-
-## Supported Versions
-
-The following versions of our project are currently supported with security updates.
-
-| Version | Supported                |
-| ------- | ------------------------ |
-| Latest  | Yes                      |
-| Older   | No (Upgrade recommended) |
+Security fixes target the current default branch and the current production version. Older versions may need an upgrade to receive a fix.

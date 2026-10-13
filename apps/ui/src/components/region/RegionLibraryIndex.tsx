@@ -124,6 +124,7 @@ export function RegionLibraryIndex({
       try {
         const next = await searchFind({
           ...JSON.parse(searchKey),
+          locale,
           hitsPerPage: PAGE_SIZE,
           now: new Date(),
         })
@@ -139,7 +140,7 @@ export function RegionLibraryIndex({
       active = false
       clearTimeout(timer)
     }
-  }, [searchKey, retry])
+  }, [searchKey, retry, locale])
 
   const now = useMemo(() => new Date(), [result])
   const featured = new Set(featuredIds)

@@ -1,0 +1,80 @@
+name: libraries-global-app
+
+x-runtime: &runtime
+  restart: unless-stopped
+  network_mode: host
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  volumes:
+    - ./database-ca.crt:/run/secrets/database-ca.crt:ro
+    - ./search-ca.crt:/run/secrets/search-ca.crt:ro
+
+services:
+  cms:
+    <<: *runtime
+    image: ${CMS_IMAGE:-libraries-global-strapi:launch-amd64}
+    env_file:
+      - path: ./strapi.production.env
+        format: raw
+    mem_limit: 3g
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:1337/_health').then(r=>process.exit(r.status===204?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+  ui:
+    <<: *runtime
+    image: ${UI_IMAGE:-libraries-global-ui:launch-amd64}
+    environment:
+      # A stable loopback hostname avoids NextURL normalizing 127.0.0.1 to
+      # localhost and treating next-intl's internal rewrite as an HTTPS proxy.
+      HOSTNAME: libraries-global-app.internal
+      PORT: '3000'
+    extra_hosts:
+      - libraries-global-app.internal:127.0.0.1
+    env_file:
+      - path: ./ui.production.env
+        format: raw
+    mem_limit: 2g
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/beta',{headers:{host:'libraries.global','x-forwarded-host':'libraries.global','x-forwarded-proto':'https'}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  atlas:
+    <<: *runtime
+    image: ${WORKER_IMAGE:-libraries-global-worker:launch-amd64}
+    profiles: [workers]
+    command: [node, dist/atlas/index.js]
+    env_file:
+      - path: ./atlas.production.env
+        format: raw
+    mem_limit: 384m
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3101/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+  events:
+    <<: *runtime
+    image: ${WORKER_IMAGE:-libraries-global-worker:launch-amd64}
+    profiles: [workers]
+    command: [node, dist/index.js]
+    env_file:
+      - path: ./events.production.env
+        format: raw
+    mem_limit: 256m
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
