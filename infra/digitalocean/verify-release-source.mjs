@@ -4,6 +4,7 @@ const REPOSITORY = "webbist-js/libraries.global"
 const REQUIRED_CHECKS = [
   "Install, Lint, Test and Build",
   "Analyze (javascript-typescript)",
+  "Analyze (python)",
   "Analyze (actions)",
 ]
 

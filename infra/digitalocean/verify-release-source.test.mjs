@@ -10,6 +10,7 @@ const sha = "1234567890abcdef1234567890abcdef12345678"
 const names = [
   "Install, Lint, Test and Build",
   "Analyze (javascript-typescript)",
+  "Analyze (python)",
   "Analyze (actions)",
 ]
 const checks = () =>
@@ -83,4 +84,17 @@ test("uses the newest check so an earlier pass cannot hide a failed rerun", () =
   assert.throws(() => assertPassingChecks(result, sha))
   result.push({ ...result[0], id: 21 })
   assert.doesNotThrow(() => assertPassingChecks(result, sha))
+})
+
+test("waits for the configured Python security analysis", () => {
+  const result = checks()
+  const python = result.find((check) => check.name === "Analyze (python)")
+  python.conclusion = "failure"
+  assert.throws(() => assertPassingChecks(result, sha))
+  assert.throws(() =>
+    assertPassingChecks(
+      result.filter((check) => check !== python),
+      sha
+    )
+  )
 })
