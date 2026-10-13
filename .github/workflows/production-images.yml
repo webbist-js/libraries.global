@@ -19,8 +19,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      DOCKER_CONFIG: /tmp/libraries-global-registry
-      REGISTRY: ${{ vars.DO_CONTAINER_REGISTRY }}
+      REGISTRY: ${{ secrets.DO_CONTAINER_REGISTRY }}
     steps:
       - name: Checkout the selected commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,15 +31,11 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/release/verify-release-source.mjs
 
-      - name: Install the scoped registry configuration
+      - name: Install the scoped registry login
         env:
-          REGISTRY_CONFIG: ${{ secrets.DO_REGISTRY_DOCKER_CONFIG }}
-        run: |
-          set -euo pipefail
-          test -n "$REGISTRY_CONFIG"
-          mkdir -m 700 "$DOCKER_CONFIG"
-          printf '%s' "$REGISTRY_CONFIG" > "$DOCKER_CONFIG/config.json"
-          chmod 600 "$DOCKER_CONFIG/config.json"
+          DO_REGISTRY_USERNAME: ${{ secrets.DO_REGISTRY_USERNAME }}
+          DO_REGISTRY_TOKEN: ${{ secrets.DO_REGISTRY_TOKEN }}
+        run: node scripts/release/registry-auth.mjs
 
       - name: Build and publish immutable image references
         run: |
@@ -56,23 +51,7 @@ jobs:
             docker push "$image"
             docker image inspect --format '{{index .RepoDigests 0}}' "$image" > "$RUNNER_TEMP/$service.image"
           done
-          node --input-type=module <<'JS'
-          import { readFileSync, writeFileSync } from 'node:fs'
-          const images = Object.fromEntries(['ui', 'strapi', 'worker'].map(service => {
-            const image = readFileSync(`${process.env.RUNNER_TEMP}/${service}.image`, 'utf8').trim()
-            const prefix = `${process.env.REGISTRY}/${service}@sha256:`
-            if (!image.startsWith(prefix) || !/^[a-f0-9]{64}$/.test(image.slice(prefix.length))) {
-              throw new Error('Invalid published image digest')
-            }
-            return [service, image]
-          }))
-          writeFileSync(`${process.env.RUNNER_TEMP}/release-manifest.json`, JSON.stringify({
-            schema: 1,
-            repository: 'webbist-js/libraries.global',
-            commit: process.env.GITHUB_SHA,
-            images,
-          }, null, 2) + '\n')
-          JS
+          node scripts/release/image-manifest.mjs
 
       - name: Save the credential-free release manifest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -84,4 +63,7 @@ jobs:
 
       - name: Remove registry credentials
         if: always()
-        run: rm -rf "$DOCKER_CONFIG"
+        run: |
+          if [ -n "${DOCKER_CONFIG:-}" ]; then
+            rm -rf -- "$DOCKER_CONFIG"
+          fi
