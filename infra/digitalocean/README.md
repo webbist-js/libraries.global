@@ -54,6 +54,18 @@ The selected source is the local Strapi database and uploads. The source dump an
 
 Production Strapi now includes the matching S3 upload provider and supports `AWS_ENDPOINT=https://lon1.digitaloceanspaces.com`. Set `AWS_REGION=lon1`, `AWS_BUCKET=libraries-global-production-media`, the media key, and the CDN base URL. PostgreSQL uses `DATABASE_SSL=true`, `DATABASE_SSL_CA_FILE=/run/secrets/database-ca.crt` and certificate validation. Set bounded connection pools; the managed primary allows 47 connections. Trust the private search CA through `NODE_EXTRA_CA_CERTS` for Node services.
 
+## Dependency maintenance
+
+Update Strapi core, its official plugins/providers and the type-generation package together on one published stable version. Keep the CMS framework dependencies at the versions selected by Strapi; do not force a replacement dependency graph with repository-wide security overrides. Review third-party CMS plugins separately. The release candidate moves the official packages from 5.55.1 to [5.57.0](https://github.com/strapi/strapi/releases/tag/v5.57.0); deployment follows the build, migration and plugin checks.
+
+## GitHub Actions image publishing
+
+[production-images.yml](../../.github/workflows/production-images.yml) prepares x86-64 UI, CMS and worker images from the protected `dev` branch. It runs only on manual dispatch when `DO_IMAGE_PUBLISH_ENABLED=true`. The default is disabled. A source guard verifies the repository, current branch head and successful CI/CodeQL analysis checks on that exact commit before obtaining the registry configuration. PRs and forks cannot publish.
+
+Before enabling it, configure the `production-images` environment with owner review and deployment limited to `dev`. Its `DO_REGISTRY_DOCKER_CONFIG` secret must contain an explicitly approved, time-limited DigitalOcean registry writer credential. Previous Mac/server credential approval does not authorize sending that credential to GitHub. Registry authentication stays outside the build context and is removed when the job ends. Runtime database, Google, billing, bucket and SSH credentials remain on their existing hosts.
+
+The job labels each image with its source commit and saves a credential-free `release-manifest.json` containing full registry digest references. Image publishing does not promote a production release. Controlled promotion uses the operator's existing SSH access after reviewing the manifest, making a fresh backup and checking the candidate against an isolated database copy. Validate image revision labels, stage the previous `release.env`, select digest references, then start Compose with health checks. If startup fails, restore the previous image selection and verify recovery. Database changes require a reviewed migration and recovery plan; changing image tags does not undo them. Account MFA, environment setup, approved registry access and an actual build/promotion rehearsal remain pending.
+
 ## Running beta and billing
 
 The existing closed-beta entrance is live at `https://libraries.global/beta`, using `WEB_MODE=beta`. Its EN/CS/FR entrance hides the feedback button and uses `info@libraries.global`; deployed checks and a fresh-visitor browser preview passed. Valid invitation access opens the real application, including the migrated home page and membership catalogue. Trusted HTTPS and the www redirect work; beta access and noindex controls remain enabled. Waitlist consent persistence, CMS image processing, Spaces upload and CDN delivery passed using owned disposable fixtures, which were removed. The frontend upload credential was verified to refuse media deletion.

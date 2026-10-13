@@ -1,0 +1,87 @@
+name: Production images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-images
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Configure the protected environment and its scoped registry credential
+    # before enabling this variable. PRs and forks never publish images.
+    if: github.repository == 'webbist-js/libraries.global' && github.ref == 'refs/heads/dev' && vars.DO_IMAGE_PUBLISH_ENABLED == 'true'
+    environment: production-images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      DOCKER_CONFIG: /tmp/libraries-global-registry
+      REGISTRY: registry.digitalocean.com/libraries-global-production
+    steps:
+      - name: Checkout the selected commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify the protected source and successful checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node infra/digitalocean/verify-release-source.mjs
+
+      - name: Install the scoped registry configuration
+        env:
+          REGISTRY_CONFIG: ${{ secrets.DO_REGISTRY_DOCKER_CONFIG }}
+        run: |
+          set -euo pipefail
+          test -n "$REGISTRY_CONFIG"
+          mkdir -m 700 "$DOCKER_CONFIG"
+          printf '%s' "$REGISTRY_CONFIG" > "$DOCKER_CONFIG/config.json"
+          chmod 600 "$DOCKER_CONFIG/config.json"
+
+      - name: Build and publish immutable image references
+        run: |
+          set -euo pipefail
+          for service in ui strapi worker; do
+            app="$service"
+            if [ "$service" = worker ]; then app=sync-worker; fi
+            image="$REGISTRY/$service:git-$GITHUB_SHA"
+            docker build --platform linux/amd64 \
+              --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+              --label "org.opencontainers.image.source=https://github.com/webbist-js/libraries.global" \
+              --file "apps/$app/Dockerfile" --tag "$image" .
+            docker push "$image"
+            docker image inspect --format '{{index .RepoDigests 0}}' "$image" > "$RUNNER_TEMP/$service.image"
+          done
+          node --input-type=module <<'JS'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          const images = Object.fromEntries(['ui', 'strapi', 'worker'].map(service => {
+            const image = readFileSync(`${process.env.RUNNER_TEMP}/${service}.image`, 'utf8').trim()
+            const prefix = `${process.env.REGISTRY}/${service}@sha256:`
+            if (!image.startsWith(prefix) || !/^[a-f0-9]{64}$/.test(image.slice(prefix.length))) {
+              throw new Error('Invalid published image digest')
+            }
+            return [service, image]
+          }))
+          writeFileSync(`${process.env.RUNNER_TEMP}/release-manifest.json`, JSON.stringify({
+            schema: 1,
+            repository: 'webbist-js/libraries.global',
+            commit: process.env.GITHUB_SHA,
+            images,
+          }, null, 2) + '\n')
+          JS
+
+      - name: Save the credential-free release manifest
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: production-images-${{ github.sha }}
+          path: ${{ runner.temp }}/release-manifest.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove registry credentials
+        if: always()
+        run: rm -rf "$DOCKER_CONFIG"

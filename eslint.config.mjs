@@ -11,6 +11,7 @@ export default [
       "scripts/**/*.{ts,mjs,js}",
       "apps/strapi/scripts/**/*.{ts,mjs,js}",
       "qa/benchmarks/atlas/**/*.ts",
+      "infra/digitalocean/*.{mjs,js}",
     ],
     rules: {
       "no-console": "off",
