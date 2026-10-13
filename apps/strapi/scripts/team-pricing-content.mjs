@@ -22,7 +22,7 @@ const copy = {
     heading: "Team prices and API access",
     team: teamPricingText,
     pro: proPricingText,
-    api: `The Team API add-on is being prepared for the closed beta. It will be a separate £${pricing.teamApi.month / 100}/month purchase for an active Team, with monthly allowances of 100,000 successful requests and 10 GiB of uncompressed JSON response data, and up to five active keys. Team Organisers will manage keys and billing; members will be able to view usage. API purchases are not enabled in production yet.`,
+    api: `The Team API add-on is available to invited testers in the closed beta using Stripe Test mode. Its price is a separate £${pricing.teamApi.month / 100}/month purchase for an active Team, with monthly allowances of 100,000 successful requests and 10 GiB of uncompressed JSON response data, and up to five active keys. Team Organisers manage keys and billing; members can view usage. Beta checkout uses test payments and makes no real charge; live purchases are not enabled.`,
     cancellation:
       "Team membership and API billing are separate. A lapsed Team stops API requests but does not cancel the API subscription; the organiser must stop renewal through Manage API billing. Library staff authority and Team verification are independent of payment.",
   },
@@ -30,7 +30,7 @@ const copy = {
     heading: "Tarifs Team et accès à l’API",
     team: `Team coûte ${pricing.team.year / 100} £ par an hors TVA pour ${pricing.team.includedSeats} places, puis ${pricing.team.extraSeatYear / 100} £ par an hors TVA par place supplémentaire. Les services de bibliothèques publiques bénéficient de ${pricing.team.publicServiceDiscountPercent} % de réduction : ${discounted(pricing.team.year)} £ par an pour cinq places et ${discounted(pricing.team.extraSeatYear)} £ par place supplémentaire, hors TVA. Team fait l’objet d’un devis et d’une facture annuelle ; nous configurons l’équipe et ses places après confirmation du paiement.`,
     pro: `Le tarif fondateur Pro reste de ${pricing.pro.founding.month / 100} £ par mois ou ${pricing.pro.founding.year / 100} £ par an tant que l’adhésion continue. Le tarif standard sera de ${pricing.pro.standard.month / 100} £ par mois ou ${pricing.pro.standard.year / 100} £ par an lorsque les outils Reach seront disponibles ; il n’est pas proposé avant leur disponibilité.`,
-    api: `Une option API pour Team est en préparation pour la bêta fermée. Elle sera facturée séparément ${pricing.teamApi.month / 100} £ par mois pour une équipe active, avec 100 000 requêtes réussies, 10 Gio de réponses JSON non compressées et cinq clés actives par mois civil. Les organisateurs géreront les clés et la facturation ; les membres pourront consulter l’utilisation. Les achats API ne sont pas encore activés en production.`,
+    api: `L’option API pour Team est disponible pour les testeurs invités de la bêta fermée en mode test Stripe. Son tarif est de ${pricing.teamApi.month / 100} £ par mois pour une équipe active, avec 100 000 requêtes réussies, 10 Gio de réponses JSON non compressées et cinq clés actives par mois civil. Les organisateurs gèrent les clés et la facturation ; les membres peuvent consulter l’utilisation. Le paiement bêta utilise des paiements de test sans débit réel ; les achats réels ne sont pas activés.`,
     cancellation:
       "L’adhésion Team et la facturation API sont distinctes. Une équipe inactive ne peut plus utiliser l’API, mais l’abonnement API n’est pas annulé automatiquement : l’organisateur doit arrêter son renouvellement dans Manage API billing. Le paiement n’accorde ni vérification de l’équipe ni droits d’accès au personnel.",
   },
@@ -38,7 +38,7 @@ const copy = {
     heading: "Ceny Team a přístup k API",
     team: `Team stojí ${pricing.team.year / 100} £ ročně bez DPH za ${pricing.team.includedSeats} míst a ${pricing.team.extraSeatYear / 100} £ ročně bez DPH za každé další místo. Veřejné knihovní služby mají slevu ${pricing.team.publicServiceDiscountPercent} %: ${discounted(pricing.team.year)} £ ročně za pět míst a ${discounted(pricing.team.extraSeatYear)} £ za každé další místo, bez DPH. Team má individuální nabídku a roční fakturaci; tým a místa nastavíme po potvrzení platby.`,
     pro: `Zakládající cena Pro zůstává ${pricing.pro.founding.month / 100} £ měsíčně nebo ${pricing.pro.founding.year / 100} £ ročně, dokud členství trvá. Standardní cena bude ${pricing.pro.standard.month / 100} £ měsíčně nebo ${pricing.pro.standard.year / 100} £ ročně po zpřístupnění nástrojů Reach; předtím se nenabízí.`,
-    api: `Pro uzavřenou betu připravujeme doplněk Team API. Pro aktivní tým bude stát samostatně ${pricing.teamApi.month / 100} £ měsíčně a nabídne 100 000 úspěšných požadavků, 10 GiB nekomprimovaných odpovědí JSON a pět aktivních klíčů za kalendářní měsíc. Organizátoři budou spravovat klíče a fakturaci; členové uvidí využití. Nákupy API zatím nejsou v produkci zapnuté.`,
+    api: `Doplněk Team API je dostupný pozvaným testerům uzavřené bety v testovacím režimu Stripe. Pro aktivní tým stojí samostatně ${pricing.teamApi.month / 100} £ měsíčně a nabídne 100 000 úspěšných požadavků, 10 GiB nekomprimovaných odpovědí JSON a pět aktivních klíčů za kalendářní měsíc. Organizátoři spravují klíče a fakturaci; členové vidí využití. Beta používá testovací platby bez skutečného účtování; skutečné nákupy nejsou zapnuté.`,
     cancellation:
       "Členství Team a fakturace API jsou oddělené. Neaktivní tým ztratí přístup k API, ale předplatné API se automaticky nezruší; organizátor musí zastavit obnovování přes Manage API billing. Platba neposkytuje ověření týmu ani oprávnění zaměstnanců knihovny.",
   },
@@ -125,7 +125,10 @@ export function pricingLegalSections(doc) {
 const apiRecordEndpoint =
   "GET /api/v1/libraries/{entityRef} returns one published record by its exact entity reference. Take entityRef from search or list results and URL-encode it as one path segment (encodeURIComponent in JavaScript), for example europe:united-kingdom:scotland:national-library-of-scotland. Unknown references return 404. Treat pagination cursors as opaque."
 
-/** Correct only the obsolete detail endpoint in the existing API guide. */
+export const apiKnowledgeSummary =
+  "The paid Team API add-on: public search and library records, keys, shared allowances and usage reporting. Invited beta testers can use Stripe Test mode; live purchases are not enabled."
+
+/** Update the existing guide’s endpoint and closed-beta availability. */
 export function apiKnowledgeBody(doc) {
   if (doc.slug !== "team-api-access") return null
   const replace = (value) => {
@@ -135,10 +138,14 @@ export function apiKnowledgeBody(doc) {
         Object.entries(value).map(([key, child]) => [
           key,
           key === "text" && typeof child === "string"
-            ? child.replace(
-                "GET /api/v1/libraries/{documentId} returns one published record.",
-                apiRecordEndpoint
+            ? child.startsWith(
+                "The Team API add-on is being prepared for the closed beta."
               )
+              ? copy.en.api
+              : child.replace(
+                  "GET /api/v1/libraries/{documentId} returns one published record.",
+                  apiRecordEndpoint
+                )
             : replace(child),
         ])
       )
@@ -153,8 +160,7 @@ export function apiKnowledgeArticle(sectionDocumentId) {
   return {
     title: "Team API access",
     slug: "team-api-access",
-    summary:
-      "The paid Team API add-on: public search and library records, keys, shared allowances and usage reporting. Prepared for the closed beta; production purchases are not enabled yet.",
+    summary: apiKnowledgeSummary,
     author: "Libraries Global Editorial Team",
     section: { connect: [{ documentId: sectionDocumentId }] },
     body: [

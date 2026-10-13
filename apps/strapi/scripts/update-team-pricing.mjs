@@ -6,6 +6,7 @@ import { isDeepStrictEqual, parseEnv } from "node:util"
 import {
   apiKnowledgeArticle,
   apiKnowledgeBody,
+  apiKnowledgeSummary,
   pricingGuideBody,
   pricingLegalSections,
   stripComponentIds,
@@ -125,7 +126,10 @@ if (!existingApi)
   })
 else {
   const body = apiKnowledgeBody(existingApi)
-  if (!isDeepStrictEqual(body, stripComponentIds(existingApi.body))) {
+  if (
+    !isDeepStrictEqual(body, stripComponentIds(existingApi.body)) ||
+    existingApi.summary !== apiKnowledgeSummary
+  ) {
     if (existingApi.status === "modified")
       throw new Error("Unpublished edits need review: en/team-api-access")
     before.push({ type: "wiki-article", locale: "en", doc: existingApi })
@@ -133,7 +137,12 @@ else {
       type: "wiki-article",
       locale: "en",
       doc: existingApi,
-      data: { title: existingApi.title, slug: existingApi.slug, body },
+      data: {
+        title: existingApi.title,
+        slug: existingApi.slug,
+        summary: apiKnowledgeSummary,
+        body,
+      },
     })
   }
 }

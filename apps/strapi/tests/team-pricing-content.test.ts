@@ -82,7 +82,9 @@ describe("Team pricing content", () => {
     expect(JSON.stringify(body)).toContain("£480/year")
     expect(JSON.stringify(body)).toContain("£120/year")
     expect(JSON.stringify(body)).toContain("£96/year")
-    expect(JSON.stringify(body)).toContain("not enabled in production yet")
+    expect(JSON.stringify(body)).toContain(
+      "Beta checkout uses test payments and makes no real charge"
+    )
     expect(pricingGuideBody({ ...original, body }, "en")).toEqual(body)
     expect(original.body[0]!.id).toBe(123)
   })
