@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { useLocale } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { formatDate } from "@/lib/article-helpers"
@@ -15,12 +16,17 @@ export function BlogArticleCard({
   readonly index?: number
   readonly className?: string
 }) {
+  const locale = useLocale()
   if (!article.slug) return null
 
   const imgUrl = article.heroImage?.url
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
-  const date = formatDate(article.publishedAt ?? article.updatedAt, "short")
+  const date = formatDate(
+    article.publishedAt ?? article.updatedAt,
+    "short",
+    locale
+  )
 
   return (
     <GlobalLink

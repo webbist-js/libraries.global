@@ -1,0 +1,1942 @@
+{
+  "Cancel": {
+    "cs": "Zrušit",
+    "fr": "Annuler"
+  },
+  "Close": {
+    "cs": "Zavřít",
+    "fr": "Fermer"
+  },
+  "Save": {
+    "cs": "Uložit",
+    "fr": "Enregistrer"
+  },
+  "Save changes": {
+    "cs": "Uložit změny",
+    "fr": "Enregistrer les modifications"
+  },
+  "Saving…": {
+    "cs": "Ukládání…",
+    "fr": "Enregistrement…"
+  },
+  "Saved": {
+    "cs": "Uloženo",
+    "fr": "Enregistré"
+  },
+  "Loading…": {
+    "cs": "Načítání…",
+    "fr": "Chargement…"
+  },
+  "Loading": {
+    "cs": "Načítání",
+    "fr": "Chargement"
+  },
+  "Search": {
+    "cs": "Hledat",
+    "fr": "Rechercher"
+  },
+  "Search…": {
+    "cs": "Hledat…",
+    "fr": "Rechercher…"
+  },
+  "Back": {
+    "cs": "Zpět",
+    "fr": "Retour"
+  },
+  "Next": {
+    "cs": "Další",
+    "fr": "Suivant"
+  },
+  "Continue": {
+    "cs": "Pokračovat",
+    "fr": "Continuer"
+  },
+  "Submit": {
+    "cs": "Odeslat",
+    "fr": "Envoyer"
+  },
+  "Send": {
+    "cs": "Odeslat",
+    "fr": "Envoyer"
+  },
+  "Retry": {
+    "cs": "Zkusit znovu",
+    "fr": "Réessayer"
+  },
+  "Try again": {
+    "cs": "Zkusit znovu",
+    "fr": "Réessayer"
+  },
+  "Add": {
+    "cs": "Přidat",
+    "fr": "Ajouter"
+  },
+  "Remove": {
+    "cs": "Odebrat",
+    "fr": "Supprimer"
+  },
+  "Delete": {
+    "cs": "Smazat",
+    "fr": "Supprimer"
+  },
+  "Edit": {
+    "cs": "Upravit",
+    "fr": "Modifier"
+  },
+  "View": {
+    "cs": "Zobrazit",
+    "fr": "Voir"
+  },
+  "Preview": {
+    "cs": "Náhled",
+    "fr": "Aperçu"
+  },
+  "Done": {
+    "cs": "Hotovo",
+    "fr": "Terminé"
+  },
+  "Yes": {
+    "cs": "Ano",
+    "fr": "Oui"
+  },
+  "No": {
+    "cs": "Ne",
+    "fr": "Non"
+  },
+  "Unknown": {
+    "cs": "Neznámé",
+    "fr": "Inconnu"
+  },
+  "Required": {
+    "cs": "Povinné",
+    "fr": "Obligatoire"
+  },
+  "required": {
+    "cs": "povinné",
+    "fr": "obligatoire"
+  },
+  "(optional)": {
+    "cs": "(nepovinné)",
+    "fr": "(facultatif)"
+  },
+  "Optional": {
+    "cs": "Nepovinné",
+    "fr": "Facultatif"
+  },
+  "Name": {
+    "cs": "Název",
+    "fr": "Nom"
+  },
+  "Title": {
+    "cs": "Název",
+    "fr": "Titre"
+  },
+  "Summary": {
+    "cs": "Shrnutí",
+    "fr": "Résumé"
+  },
+  "Description": {
+    "cs": "Popis",
+    "fr": "Description"
+  },
+  "Language": {
+    "cs": "Jazyk",
+    "fr": "Langue"
+  },
+  "Tags": {
+    "cs": "Štítky",
+    "fr": "Étiquettes"
+  },
+  "Source": {
+    "cs": "Zdroj",
+    "fr": "Source"
+  },
+  "Sources": {
+    "cs": "Zdroje",
+    "fr": "Sources"
+  },
+  "Link": {
+    "cs": "Odkaz",
+    "fr": "Lien"
+  },
+  "Link URL": {
+    "cs": "URL odkazu",
+    "fr": "URL du lien"
+  },
+  "Remove link": {
+    "cs": "Odebrat odkaz",
+    "fr": "Supprimer le lien"
+  },
+  "Quote": {
+    "cs": "Citace",
+    "fr": "Citation"
+  },
+  "Attribution": {
+    "cs": "Uvedení autora",
+    "fr": "Attribution"
+  },
+  "Who said it": {
+    "cs": "Autor citace",
+    "fr": "Auteur de la citation"
+  },
+  "Source, e.g. a book or page": {
+    "cs": "Zdroj, např. kniha nebo stránka",
+    "fr": "Source, par exemple un livre ou une page"
+  },
+  "Code": {
+    "cs": "Kód",
+    "fr": "Code"
+  },
+  "Language, e.g. bash": {
+    "cs": "Jazyk, např. bash",
+    "fr": "Langage, par exemple bash"
+  },
+  "Callout": {
+    "cs": "Zvýrazněný blok",
+    "fr": "Encadré"
+  },
+  "Callout kind": {
+    "cs": "Typ zvýrazněného bloku",
+    "fr": "Type d’encadré"
+  },
+  "Callout title": {
+    "cs": "Nadpis zvýrazněného bloku",
+    "fr": "Titre de l’encadré"
+  },
+  "Title (optional)": {
+    "cs": "Název (nepovinné)",
+    "fr": "Titre (facultatif)"
+  },
+  "Image": {
+    "cs": "Obrázek",
+    "fr": "Image"
+  },
+  "Alt text": {
+    "cs": "Alternativní text",
+    "fr": "Texte alternatif"
+  },
+  "Describe the image for screen readers": {
+    "cs": "Popište obrázek pro čtečky obrazovky",
+    "fr": "Décrivez l’image pour les lecteurs d’écran"
+  },
+  "Caption": {
+    "cs": "Popisek",
+    "fr": "Légende"
+  },
+  "Caption (optional)": {
+    "cs": "Popisek (nepovinné)",
+    "fr": "Légende (facultative)"
+  },
+  "Formatting": {
+    "cs": "Formátování",
+    "fr": "Mise en forme"
+  },
+  "Heading 2": {
+    "cs": "Nadpis 2",
+    "fr": "Titre de niveau 2"
+  },
+  "Heading 3": {
+    "cs": "Nadpis 3",
+    "fr": "Titre de niveau 3"
+  },
+  "Paragraph": {
+    "cs": "Odstavec",
+    "fr": "Paragraphe"
+  },
+  "Bold": {
+    "cs": "Tučné",
+    "fr": "Gras"
+  },
+  "Italic": {
+    "cs": "Kurzíva",
+    "fr": "Italique"
+  },
+  "Bulleted list": {
+    "cs": "Seznam s odrážkami",
+    "fr": "Liste à puces"
+  },
+  "Numbered list": {
+    "cs": "Číslovaný seznam",
+    "fr": "Liste numérotée"
+  },
+  "Code block": {
+    "cs": "Blok kódu",
+    "fr": "Bloc de code"
+  },
+  "Insert image": {
+    "cs": "Vložit obrázek",
+    "fr": "Insérer une image"
+  },
+  "Undo": {
+    "cs": "Zpět",
+    "fr": "Annuler"
+  },
+  "Redo": {
+    "cs": "Znovu",
+    "fr": "Rétablir"
+  },
+  "Choose an image to insert": {
+    "cs": "Vyberte obrázek k vložení",
+    "fr": "Choisissez une image à insérer"
+  },
+  "One or two sentences shown in search and on cards": {
+    "cs": "Jedna nebo dvě věty zobrazené ve vyhledávání a na kartách",
+    "fr": "Une ou deux phrases affichées dans les résultats et sur les cartes"
+  },
+  "All articles": {
+    "cs": "Všechny články",
+    "fr": "Tous les articles"
+  },
+  "You have an unsent draft": {
+    "cs": "Máte neodeslaný koncept",
+    "fr": "Vous avez un brouillon non envoyé"
+  },
+  "Continue draft": {
+    "cs": "Pokračovat v konceptu",
+    "fr": "Reprendre le brouillon"
+  },
+  "Start again": {
+    "cs": "Začít znovu",
+    "fr": "Recommencer"
+  },
+  "Source article": {
+    "cs": "Zdrojový článek",
+    "fr": "Article source"
+  },
+  "Select text to format it with the toolbar.": {
+    "cs": "Vyberte text a upravte ho pomocí panelu nástrojů.",
+    "fr": "Sélectionnez le texte pour le mettre en forme avec la barre d’outils."
+  },
+  "Nothing written yet.": {
+    "cs": "Zatím není nic napsáno.",
+    "fr": "Aucun texte pour le moment."
+  },
+  "My submissions": {
+    "cs": "Moje příspěvky",
+    "fr": "Mes contributions"
+  },
+  "Loading sections…": {
+    "cs": "Načítání sekcí…",
+    "fr": "Chargement des rubriques…"
+  },
+  "Topics, places and libraries this is about.": {
+    "cs": "Témata, místa a knihovny, kterých se článek týká.",
+    "fr": "Les sujets, lieux et bibliothèques concernés."
+  },
+  "Add a topic, place or library": {
+    "cs": "Přidat téma, místo nebo knihovnu",
+    "fr": "Ajouter un sujet, un lieu ou une bibliothèque"
+  },
+  "Suggested:": {
+    "cs": "Navrhované:",
+    "fr": "Suggestions :"
+  },
+  "What changed": {
+    "cs": "Co se změnilo",
+    "fr": "Modifications apportées"
+  },
+  "One line for the reviewer and the article’s history.": {
+    "cs": "Jedna věta pro recenzenta a historii článku.",
+    "fr": "Une phrase pour la personne qui vérifie et l’historique de l’article."
+  },
+  "Edit summary": {
+    "cs": "Shrnutí úpravy",
+    "fr": "Résumé de la modification"
+  },
+  "How editing works": {
+    "cs": "Jak fungují úpravy",
+    "fr": "Comment fonctionne la rédaction"
+  },
+  "Published articles keep their revision history.": {
+    "cs": "Publikované články uchovávají historii změn.",
+    "fr": "Les articles publiés conservent l’historique de leurs révisions."
+  },
+  "Library": {
+    "cs": "Knihovna",
+    "fr": "Bibliothèque"
+  },
+  "Libraries": {
+    "cs": "Knihovny",
+    "fr": "Bibliothèques"
+  },
+  "Find libraries": {
+    "cs": "Najít knihovny",
+    "fr": "Trouver des bibliothèques"
+  },
+  "Community": {
+    "cs": "Komunita",
+    "fr": "Communauté"
+  },
+  "Journal": {
+    "cs": "Magazín",
+    "fr": "Journal"
+  },
+  "Events": {
+    "cs": "Události",
+    "fr": "Événements"
+  },
+  "Knowledge": {
+    "cs": "Znalosti",
+    "fr": "Connaissances"
+  },
+  "Atlas": {
+    "cs": "Atlas",
+    "fr": "Atlas"
+  },
+  "Contribute": {
+    "cs": "Přispět",
+    "fr": "Contribuer"
+  },
+  "Sign in": {
+    "cs": "Přihlásit se",
+    "fr": "Se connecter"
+  },
+  "Sign in to contribute": {
+    "cs": "Přihlásit se a přispět",
+    "fr": "Se connecter pour contribuer"
+  },
+  "Create account": {
+    "cs": "Vytvořit účet",
+    "fr": "Créer un compte"
+  },
+  "Membership": {
+    "cs": "Členství",
+    "fr": "Adhésion"
+  },
+  "Contributing is free.": {
+    "cs": "Přispívání je zdarma.",
+    "fr": "Contribuer est gratuit."
+  },
+  "Sign in to suggest edits, add libraries and join drives.": {
+    "cs": "Přihlaste se, navrhujte úpravy, přidávejte knihovny a zapojte se do výzev.",
+    "fr": "Connectez-vous pour proposer des corrections, ajouter des bibliothèques et participer aux campagnes."
+  },
+  "Support the index and explore Pro.": {
+    "cs": "Podpořte katalog a prozkoumejte Pro.",
+    "fr": "Soutenez le répertoire et découvrez Pro."
+  },
+  "Contribute menu": {
+    "cs": "Nabídka příspěvků",
+    "fr": "Menu des contributions"
+  },
+  "Your work": {
+    "cs": "Vaše práce",
+    "fr": "Votre travail"
+  },
+  "Everyone": {
+    "cs": "Všichni",
+    "fr": "Tout le monde"
+  },
+  "Support us on Ko-fi": {
+    "cs": "Podpořte nás na Ko-fi",
+    "fr": "Soutenez-nous sur Ko-fi"
+  },
+  "(opens in a new tab)": {
+    "cs": "(otevře se v nové kartě)",
+    "fr": "(s’ouvre dans un nouvel onglet)"
+  },
+  "Account menu": {
+    "cs": "Nabídka účtu",
+    "fr": "Menu du compte"
+  },
+  "Profile": {
+    "cs": "Profil",
+    "fr": "Profil"
+  },
+  "Complete your profile": {
+    "cs": "Doplňte svůj profil",
+    "fr": "Compléter votre profil"
+  },
+  "My profile": {
+    "cs": "Můj profil",
+    "fr": "Mon profil"
+  },
+  "Following": {
+    "cs": "Sledované",
+    "fr": "Abonnements"
+  },
+  "Badges & points": {
+    "cs": "Odznaky a body",
+    "fr": "Badges et points"
+  },
+  "Tools": {
+    "cs": "Nástroje",
+    "fr": "Outils"
+  },
+  "Account": {
+    "cs": "Účet",
+    "fr": "Compte"
+  },
+  "Notifications": {
+    "cs": "Oznámení",
+    "fr": "Notifications"
+  },
+  "Settings": {
+    "cs": "Nastavení",
+    "fr": "Paramètres"
+  },
+  "Sign out": {
+    "cs": "Odhlásit se",
+    "fr": "Se déconnecter"
+  },
+  "Close menu": {
+    "cs": "Zavřít nabídku",
+    "fr": "Fermer le menu"
+  },
+  "Main": {
+    "cs": "Hlavní",
+    "fr": "Principal"
+  },
+  "Saved draft": {
+    "cs": "Uložený koncept",
+    "fr": "Brouillon enregistré"
+  },
+  "You have unsaved progress. Resume where you left off?": {
+    "cs": "Máte rozpracovaný koncept. Pokračovat tam, kde jste skončili?",
+    "fr": "Vous avez un brouillon en cours. Reprendre là où vous en étiez ?"
+  },
+  "Start fresh": {
+    "cs": "Začít od začátku",
+    "fr": "Repartir de zéro"
+  },
+  "Facility checklist": {
+    "cs": "Kontrolní seznam vybavení",
+    "fr": "Liste des équipements"
+  },
+  "Hero": {
+    "cs": "Hlavní obrázek",
+    "fr": "Image principale"
+  },
+  "Set hero": {
+    "cs": "Nastavit hlavní obrázek",
+    "fr": "Définir comme image principale"
+  },
+  "No changes yet": {
+    "cs": "Zatím žádné změny",
+    "fr": "Aucune modification pour le moment"
+  },
+  "Library record form": {
+    "cs": "Formulář knihovny",
+    "fr": "Formulaire de la bibliothèque"
+  },
+  "Improving an existing record.": {
+    "cs": "Úprava existujícího záznamu.",
+    "fr": "Amélioration d’une fiche existante."
+  },
+  "Change only what you can source. Changed fields are marked.": {
+    "cs": "Měňte pouze informace, které můžete doložit. Změněná pole jsou označena.",
+    "fr": "Modifiez uniquement les informations que vous pouvez sourcer. Les champs modifiés sont signalés."
+  },
+  "Choose a different library": {
+    "cs": "Vybrat jinou knihovnu",
+    "fr": "Choisir une autre bibliothèque"
+  },
+  "You’re editing as staff": {
+    "cs": "Upravujete jako pracovník knihovny",
+    "fr": "Vous intervenez en tant que membre du personnel"
+  },
+  "Adding a library as staff": {
+    "cs": "Přidání knihovny pracovníkem",
+    "fr": "Ajout d’une bibliothèque par son personnel"
+  },
+  "Team coverage": {
+    "cs": "Pokrytí týmu",
+    "fr": "Périmètre de l’équipe"
+  },
+  "No Team · free staff access": {
+    "cs": "Bez týmu · bezplatný přístup pracovníků",
+    "fr": "Sans équipe · accès gratuit du personnel"
+  },
+  "Step navigation": {
+    "cs": "Navigace mezi kroky",
+    "fr": "Navigation entre les étapes"
+  },
+  "Skip to sources": {
+    "cs": "Přejít ke zdrojům",
+    "fr": "Passer aux sources"
+  },
+  "Continent": {
+    "cs": "Kontinent",
+    "fr": "Continent"
+  },
+  "Country": {
+    "cs": "Země",
+    "fr": "Pays"
+  },
+  "— select —": {
+    "cs": "— vyberte —",
+    "fr": "— sélectionner —"
+  },
+  "Location access is off": {
+    "cs": "Přístup k poloze je vypnutý",
+    "fr": "L’accès à la position est désactivé"
+  },
+  "Search or drop a pin instead.": {
+    "cs": "Použijte vyhledávání nebo umístěte bod na mapu.",
+    "fr": "Utilisez la recherche ou placez un repère."
+  },
+  "Couldn’t get your location": {
+    "cs": "Polohu se nepodařilo zjistit",
+    "fr": "Impossible d’obtenir votre position"
+  },
+  "Your location is approximate": {
+    "cs": "Vaše poloha je přibližná",
+    "fr": "Votre position est approximative"
+  },
+  "Find the library or its address": {
+    "cs": "Najít knihovnu nebo její adresu",
+    "fr": "Rechercher la bibliothèque ou son adresse"
+  },
+  "Places": {
+    "cs": "Místa",
+    "fr": "Lieux"
+  },
+  "Filled in from OpenStreetMap. Check the details below.": {
+    "cs": "Vyplněno z OpenStreetMap. Zkontrolujte údaje níže.",
+    "fr": "Renseigné depuis OpenStreetMap. Vérifiez les détails ci-dessous."
+  },
+  "No matches. Try the street and town, or enter the address below.": {
+    "cs": "Žádné výsledky. Zkuste ulici a město nebo zadejte adresu níže.",
+    "fr": "Aucun résultat. Essayez la rue et la ville, ou saisissez l’adresse ci-dessous."
+  },
+  "Search isn’t available right now": {
+    "cs": "Vyhledávání je momentálně nedostupné",
+    "fr": "La recherche est momentanément indisponible"
+  },
+  "Enter the address below.": {
+    "cs": "Zadejte adresu níže.",
+    "fr": "Saisissez l’adresse ci-dessous."
+  },
+  "Map for placing the library’s pin": {
+    "cs": "Mapa pro umístění knihovny",
+    "fr": "Carte pour placer le repère de la bibliothèque"
+  },
+  "The map can’t load in this browser. Use the latitude and longitude boxes above.": {
+    "cs": "Mapu nelze v tomto prohlížeči načíst. Použijte pole pro zeměpisnou šířku a délku výše.",
+    "fr": "La carte ne peut pas être chargée dans ce navigateur. Utilisez les champs de latitude et de longitude ci-dessus."
+  },
+  "Zoom in and click the map to drop a pin, or search above.": {
+    "cs": "Přibližte mapu a kliknutím umístěte bod nebo použijte vyhledávání výše.",
+    "fr": "Zoomez et cliquez sur la carte pour placer un repère, ou utilisez la recherche ci-dessus."
+  },
+  "Copy to…": {
+    "cs": "Kopírovat do…",
+    "fr": "Copier vers…"
+  },
+  "Mon–Fri": {
+    "cs": "Po–Pá",
+    "fr": "Lun–Ven"
+  },
+  "Sat–Sun": {
+    "cs": "So–Ne",
+    "fr": "Sam–Dim"
+  },
+  "All days": {
+    "cs": "Všechny dny",
+    "fr": "Tous les jours"
+  },
+  "From…": {
+    "cs": "Od…",
+    "fr": "De…"
+  },
+  "Until…": {
+    "cs": "Do…",
+    "fr": "Jusqu’à…"
+  },
+  "Remove slot": {
+    "cs": "Odebrat časový úsek",
+    "fr": "Supprimer le créneau"
+  },
+  "+ Add time slot": {
+    "cs": "+ Přidat časový úsek",
+    "fr": "+ Ajouter un créneau"
+  },
+  "Remove social link": {
+    "cs": "Odebrat odkaz na sociální síť",
+    "fr": "Supprimer le lien social"
+  },
+  "+ Add social link": {
+    "cs": "+ Přidat odkaz na sociální síť",
+    "fr": "+ Ajouter un lien social"
+  },
+  "View public page": {
+    "cs": "Zobrazit veřejnou stránku",
+    "fr": "Voir la page publique"
+  },
+  "Publish your changes": {
+    "cs": "Publikovat změny",
+    "fr": "Publier vos modifications"
+  },
+  "These changes appear immediately, with your name in the record’s history.": {
+    "cs": "Tyto změny se zobrazí okamžitě s vaším jménem v historii záznamu.",
+    "fr": "Ces modifications apparaîtront immédiatement, avec votre nom dans l’historique de la fiche."
+  },
+  "Sent to a moderator": {
+    "cs": "Odesláno moderátorovi",
+    "fr": "Envoyé à la modération"
+  },
+  "Note (optional)": {
+    "cs": "Poznámka (nepovinné)",
+    "fr": "Note (facultative)"
+  },
+  "Reload record": {
+    "cs": "Znovu načíst záznam",
+    "fr": "Recharger la fiche"
+  },
+  "Nearest address to the pin:": {
+    "cs": "Nejbližší adresa k bodu:",
+    "fr": "Adresse la plus proche du repère :"
+  },
+  "Use this address": {
+    "cs": "Použít tuto adresu",
+    "fr": "Utiliser cette adresse"
+  },
+  "Set from the address. Check these.": {
+    "cs": "Nastaveno podle adresy. Zkontrolujte údaje.",
+    "fr": "Défini à partir de l’adresse. Vérifiez ces valeurs."
+  },
+  "Street address": {
+    "cs": "Ulice a číslo",
+    "fr": "Adresse"
+  },
+  "City / Town": {
+    "cs": "Město / Obec",
+    "fr": "Ville / Commune"
+  },
+  "District / Borough": {
+    "cs": "Čtvrť / Obvod",
+    "fr": "Quartier / Arrondissement"
+  },
+  "Postal code": {
+    "cs": "PSČ",
+    "fr": "Code postal"
+  },
+  "Latitude": {
+    "cs": "Zeměpisná šířka",
+    "fr": "Latitude"
+  },
+  "Longitude": {
+    "cs": "Zeměpisná délka",
+    "fr": "Longitude"
+  },
+  "Content hierarchy": {
+    "cs": "Hierarchie obsahu",
+    "fr": "Hiérarchie du contenu"
+  },
+  "Changed": {
+    "cs": "Změněno",
+    "fr": "Modifié"
+  },
+  "Shared across languages": {
+    "cs": "Společné pro všechny jazyky",
+    "fr": "Commun à toutes les langues"
+  },
+  "Reviewed by a moderator": {
+    "cs": "Kontroluje moderátor",
+    "fr": "Vérifié par la modération"
+  },
+  "Select…": {
+    "cs": "Vyberte…",
+    "fr": "Sélectionner…"
+  },
+  "Choose one to continue.": {
+    "cs": "Vyberte možnost a pokračujte.",
+    "fr": "Choisissez une option pour continuer."
+  },
+  "Fill this in to continue.": {
+    "cs": "Vyplňte toto pole a pokračujte.",
+    "fr": "Remplissez ce champ pour continuer."
+  },
+  "Show": {
+    "cs": "Zobrazit",
+    "fr": "Afficher"
+  },
+  "Hide": {
+    "cs": "Skrýt",
+    "fr": "Masquer"
+  },
+  "Wizard steps": {
+    "cs": "Kroky formuláře",
+    "fr": "Étapes du formulaire"
+  },
+  "Ready to send.": {
+    "cs": "Připraveno k odeslání.",
+    "fr": "Prêt à envoyer."
+  },
+  "Record completeness": {
+    "cs": "Úplnost záznamu",
+    "fr": "Complétude de la fiche"
+  },
+  "Identity": {
+    "cs": "Identita",
+    "fr": "Identité"
+  },
+  "What library is this?": {
+    "cs": "O jakou knihovnu jde?",
+    "fr": "De quelle bibliothèque s’agit-il ?"
+  },
+  "Library name": {
+    "cs": "Název knihovny",
+    "fr": "Nom de la bibliothèque"
+  },
+  "Short name / abbreviation": {
+    "cs": "Krátký název / zkratka",
+    "fr": "Nom abrégé / sigle"
+  },
+  "Official / formal name (if different)": {
+    "cs": "Oficiální název (pokud se liší)",
+    "fr": "Nom officiel (s’il est différent)"
+  },
+  "Library type": {
+    "cs": "Typ knihovny",
+    "fr": "Type de bibliothèque"
+  },
+  "Operator type": {
+    "cs": "Typ provozovatele",
+    "fr": "Type de gestionnaire"
+  },
+  "Operational status": {
+    "cs": "Provozní stav",
+    "fr": "État de fonctionnement"
+  },
+  "Run by": {
+    "cs": "Provozovatel",
+    "fr": "Géré par"
+  },
+  "Summary / description": {
+    "cs": "Shrnutí / popis",
+    "fr": "Résumé / description"
+  },
+  "Closure reason": {
+    "cs": "Důvod uzavření",
+    "fr": "Motif de fermeture"
+  },
+  "Stops & times": {
+    "cs": "Zastávky a časy",
+    "fr": "Arrêts et horaires"
+  },
+  "Where does the vehicle stop?": {
+    "cs": "Kde vozidlo zastavuje?",
+    "fr": "Où le véhicule s’arrête-t-il ?"
+  },
+  "Published timetable page or PDF": {
+    "cs": "Zveřejněný jízdní řád nebo PDF",
+    "fr": "Page ou PDF du calendrier publié"
+  },
+  "How do people visit?": {
+    "cs": "Jak knihovnu navštívit?",
+    "fr": "Comment visiter la bibliothèque ?"
+  },
+  "Website URL": {
+    "cs": "URL webu",
+    "fr": "URL du site web"
+  },
+  "Plan your visit URL": {
+    "cs": "URL informací pro návštěvníky",
+    "fr": "URL des informations de visite"
+  },
+  "Catalogue / OPAC URL": {
+    "cs": "URL katalogu / OPAC",
+    "fr": "URL du catalogue / OPAC"
+  },
+  "Membership / reader registration URL": {
+    "cs": "URL členství / registrace čtenáře",
+    "fr": "URL d’adhésion / d’inscription des lecteurs"
+  },
+  "Booking URL": {
+    "cs": "URL rezervací",
+    "fr": "URL de réservation"
+  },
+  "Donation URL": {
+    "cs": "URL darů",
+    "fr": "URL de don"
+  },
+  "Virtual tour URL": {
+    "cs": "URL virtuální prohlídky",
+    "fr": "URL de visite virtuelle"
+  },
+  "Virtual tour embed code": {
+    "cs": "Kód pro vložení virtuální prohlídky",
+    "fr": "Code d’intégration de la visite virtuelle"
+  },
+  "Phone": {
+    "cs": "Telefon",
+    "fr": "Téléphone"
+  },
+  "Public email": {
+    "cs": "Veřejný e-mail",
+    "fr": "E-mail public"
+  },
+  "Admission policy": {
+    "cs": "Podmínky vstupu",
+    "fr": "Conditions d’accès"
+  },
+  "Languages served": {
+    "cs": "Jazyky služeb",
+    "fr": "Langues proposées"
+  },
+  "Getting there (transit info)": {
+    "cs": "Doprava do knihovny",
+    "fr": "Comment venir (transports)"
+  },
+  "Visitor notes": {
+    "cs": "Informace pro návštěvníky",
+    "fr": "Informations pratiques"
+  },
+  "Opening hours": {
+    "cs": "Otevírací doba",
+    "fr": "Horaires d’ouverture"
+  },
+  "Services & amenities": {
+    "cs": "Služby a vybavení",
+    "fr": "Services et équipements"
+  },
+  "Services": {
+    "cs": "Služby",
+    "fr": "Services"
+  },
+  "Amenities": {
+    "cs": "Vybavení",
+    "fr": "Équipements"
+  },
+  "Accessibility features": {
+    "cs": "Prvky přístupnosti",
+    "fr": "Dispositifs d’accessibilité"
+  },
+  "Accessibility notes": {
+    "cs": "Informace o přístupnosti",
+    "fr": "Informations sur l’accessibilité"
+  },
+  "Social media": {
+    "cs": "Sociální sítě",
+    "fr": "Réseaux sociaux"
+  },
+  "Collections": {
+    "cs": "Fondy",
+    "fr": "Collections"
+  },
+  "What does it hold?": {
+    "cs": "Co obsahuje fond?",
+    "fr": "Que contient la collection ?"
+  },
+  "Collection size (volumes / items)": {
+    "cs": "Velikost fondu (svazky / položky)",
+    "fr": "Taille de la collection (volumes / documents)"
+  },
+  "Collection types": {
+    "cs": "Typy fondů",
+    "fr": "Types de collections"
+  },
+  "Special collections (notable holdings)": {
+    "cs": "Zvláštní sbírky (významné fondy)",
+    "fr": "Collections particulières (fonds remarquables)"
+  },
+  "Classification system": {
+    "cs": "Klasifikační systém",
+    "fr": "Système de classification"
+  },
+  "IIIF endpoint URL": {
+    "cs": "URL rozhraní IIIF",
+    "fr": "URL du point d’accès IIIF"
+  },
+  "History": {
+    "cs": "Historie",
+    "fr": "Histoire"
+  },
+  "When did it begin?": {
+    "cs": "Kdy byla založena?",
+    "fr": "Quand a-t-elle été fondée ?"
+  },
+  "Founded year": {
+    "cs": "Rok založení",
+    "fr": "Année de fondation"
+  },
+  "Current building opened": {
+    "cs": "Otevření současné budovy",
+    "fr": "Ouverture du bâtiment actuel"
+  },
+  "Closed year (if applicable)": {
+    "cs": "Rok uzavření (pokud je znám)",
+    "fr": "Année de fermeture (le cas échéant)"
+  },
+  "Architect": {
+    "cs": "Architekt",
+    "fr": "Architecte"
+  },
+  "Architectural style": {
+    "cs": "Architektonický styl",
+    "fr": "Style architectural"
+  },
+  "Building notes": {
+    "cs": "Informace o budově",
+    "fr": "Informations sur le bâtiment"
+  },
+  "Photo": {
+    "cs": "Fotografie",
+    "fr": "Photo"
+  },
+  "Add a photo.": {
+    "cs": "Přidejte fotografii.",
+    "fr": "Ajoutez une photo."
+  },
+  "Image credit / attribution": {
+    "cs": "Autor fotografie / uvedení autora",
+    "fr": "Crédit photo / attribution"
+  },
+  "Image notes": {
+    "cs": "Poznámky k fotografiím",
+    "fr": "Notes sur les photos"
+  },
+  "Sources & send": {
+    "cs": "Zdroje a odeslání",
+    "fr": "Sources et envoi"
+  },
+  "Cite your sources.": {
+    "cs": "Uveďte zdroje.",
+    "fr": "Citez vos sources."
+  },
+  "Evidence type": {
+    "cs": "Typ dokladu",
+    "fr": "Type de source"
+  },
+  "Evidence URL": {
+    "cs": "URL dokladu",
+    "fr": "URL de la source"
+  },
+  "Primary source (Wikidata, Wikipedia…)": {
+    "cs": "Primární zdroj (Wikidata, Wikipedie…)",
+    "fr": "Source principale (Wikidata, Wikipédia…)"
+  },
+  "Source URL": {
+    "cs": "URL zdroje",
+    "fr": "URL de la source"
+  },
+  "Submission summary": {
+    "cs": "Shrnutí příspěvku",
+    "fr": "Résumé de la contribution"
+  },
+  "Briefly describe what you're adding and how you verified it.": {
+    "cs": "Stručně popište, co přidáváte a jak jste údaje ověřili.",
+    "fr": "Décrivez brièvement ce que vous ajoutez et comment vous l’avez vérifié."
+  },
+  "Note to reviewer (optional)": {
+    "cs": "Poznámka pro recenzenta (nepovinné)",
+    "fr": "Note pour la personne qui vérifie (facultative)"
+  },
+  "Additional context for the editorial team.": {
+    "cs": "Další informace pro redakční tým.",
+    "fr": "Informations supplémentaires pour l’équipe éditoriale."
+  },
+  "Password": {
+    "cs": "Heslo",
+    "fr": "Mot de passe"
+  },
+  "Show password": {
+    "cs": "Zobrazit heslo",
+    "fr": "Afficher le mot de passe"
+  },
+  "Hide password": {
+    "cs": "Skrýt heslo",
+    "fr": "Masquer le mot de passe"
+  },
+  "Email": {
+    "cs": "E-mail",
+    "fr": "E-mail"
+  },
+  "Email address": {
+    "cs": "E-mailová adresa",
+    "fr": "Adresse e-mail"
+  },
+  "Current password": {
+    "cs": "Současné heslo",
+    "fr": "Mot de passe actuel"
+  },
+  "New password": {
+    "cs": "Nové heslo",
+    "fr": "Nouveau mot de passe"
+  },
+  "Confirm password": {
+    "cs": "Potvrdit heslo",
+    "fr": "Confirmer le mot de passe"
+  },
+  "Back to settings": {
+    "cs": "Zpět do nastavení",
+    "fr": "Retour aux paramètres"
+  },
+  "Skip to main content": {
+    "cs": "Přejít k obsahu",
+    "fr": "Aller au contenu principal"
+  },
+  "Feedback": {
+    "cs": "Zpětná vazba",
+    "fr": "Votre avis"
+  },
+  "Back to the beta": {
+    "cs": "Zpět k betě",
+    "fr": "Retour à la bêta"
+  },
+  "Help": {
+    "cs": "Nápověda",
+    "fr": "Aide"
+  },
+  "Filter": {
+    "cs": "Filtr",
+    "fr": "Filtrer"
+  },
+  "Filters": {
+    "cs": "Filtry",
+    "fr": "Filtres"
+  },
+  "Clear filters": {
+    "cs": "Vymazat filtry",
+    "fr": "Effacer les filtres"
+  },
+  "Reset": {
+    "cs": "Obnovit",
+    "fr": "Réinitialiser"
+  },
+  "Sort by": {
+    "cs": "Řadit podle",
+    "fr": "Trier par"
+  },
+  "Export": {
+    "cs": "Exportovat",
+    "fr": "Exporter"
+  },
+  "Download": {
+    "cs": "Stáhnout",
+    "fr": "Télécharger"
+  },
+  "Copy": {
+    "cs": "Kopírovat",
+    "fr": "Copier"
+  },
+  "Copied": {
+    "cs": "Zkopírováno",
+    "fr": "Copié"
+  },
+  "Copy link": {
+    "cs": "Kopírovat odkaz",
+    "fr": "Copier le lien"
+  },
+  "Share": {
+    "cs": "Sdílet",
+    "fr": "Partager"
+  },
+  "Previous": {
+    "cs": "Předchozí",
+    "fr": "Précédent"
+  },
+  "Next page": {
+    "cs": "Další stránka",
+    "fr": "Page suivante"
+  },
+  "Previous page": {
+    "cs": "Předchozí stránka",
+    "fr": "Page précédente"
+  },
+  "Location": {
+    "cs": "Poloha",
+    "fr": "Localisation"
+  },
+  "Address": {
+    "cs": "Adresa",
+    "fr": "Adresse"
+  },
+  "Status": {
+    "cs": "Stav",
+    "fr": "État"
+  },
+  "Published": {
+    "cs": "Publikováno",
+    "fr": "Publié"
+  },
+  "Draft": {
+    "cs": "Koncept",
+    "fr": "Brouillon"
+  },
+  "Pending": {
+    "cs": "Čeká na kontrolu",
+    "fr": "En attente"
+  },
+  "Approved": {
+    "cs": "Schváleno",
+    "fr": "Approuvé"
+  },
+  "Rejected": {
+    "cs": "Zamítnuto",
+    "fr": "Refusé"
+  },
+  "Learn more": {
+    "cs": "Zjistit více",
+    "fr": "En savoir plus"
+  },
+  "Read more": {
+    "cs": "Číst více",
+    "fr": "Lire la suite"
+  },
+  "View all": {
+    "cs": "Zobrazit vše",
+    "fr": "Tout voir"
+  },
+  "No results": {
+    "cs": "Žádné výsledky",
+    "fr": "Aucun résultat"
+  },
+  "No results found": {
+    "cs": "Nenalezeny žádné výsledky",
+    "fr": "Aucun résultat trouvé"
+  },
+  "Contact": {
+    "cs": "Kontakt",
+    "fr": "Contact"
+  },
+  "Accessibility": {
+    "cs": "Přístupnost",
+    "fr": "Accessibilité"
+  },
+  "Follow": {
+    "cs": "Sledovat",
+    "fr": "Suivre"
+  },
+  "Unfollow": {
+    "cs": "Přestat sledovat",
+    "fr": "Ne plus suivre"
+  },
+  "Following libraries": {
+    "cs": "Sledované knihovny",
+    "fr": "Bibliothèques suivies"
+  },
+  "Translate this record": {
+    "cs": "Přeložit tento záznam",
+    "fr": "Traduire cette fiche"
+  },
+  "Translate into another language": {
+    "cs": "Přeložit do jiného jazyka",
+    "fr": "Traduire dans une autre langue"
+  },
+  "Open data · Open source · Free to use": {
+    "cs": "Otevřená data · Otevřený kód · Zdarma",
+    "fr": "Données ouvertes · Code ouvert · Utilisation gratuite"
+  },
+  "Every library, *one map.*": {
+    "cs": "Každá knihovna, *jedna mapa.*",
+    "fr": "Toutes les bibliothèques, *une seule carte.*"
+  },
+  "An open record of the world’s libraries: find one near you, see how places are served, and help document the rest.": {
+    "cs": "Otevřený přehled knihoven světa: najděte knihovnu poblíž, prozkoumejte dostupnost služeb a pomozte doplnit ostatní.",
+    "fr": "Un répertoire ouvert des bibliothèques du monde : trouvez-en une près de vous, découvrez la desserte des territoires et aidez à documenter les autres."
+  },
+  "Find them. Learn about them. *Help document them.*": {
+    "cs": "Najděte je. Poznejte je. *Pomozte je zdokumentovat.*",
+    "fr": "Trouvez-les. Découvrez-les. *Aidez à les documenter.*"
+  },
+  "For visitors": {
+    "cs": "Pro návštěvníky",
+    "fr": "Pour les visiteurs"
+  },
+  "Find a library": {
+    "cs": "Najít knihovnu",
+    "fr": "Trouver une bibliothèque"
+  },
+  "Search by name or place, check hours and access, and plan a visit.": {
+    "cs": "Hledejte podle názvu nebo místa, zjistěte otevírací dobu a přístupnost a naplánujte návštěvu.",
+    "fr": "Recherchez par nom ou lieu, consultez les horaires et l’accessibilité, et préparez votre visite."
+  },
+  "Browse the index": {
+    "cs": "Procházet katalog",
+    "fr": "Parcourir le répertoire"
+  },
+  "For anyone who knows a library": {
+    "cs": "Pro každého, kdo zná knihovnu",
+    "fr": "Pour tous ceux qui connaissent une bibliothèque"
+  },
+  "Help build the index": {
+    "cs": "Pomozte budovat katalog",
+    "fr": "Aidez à construire le répertoire"
+  },
+  "Add missing libraries, fix details and share photos. Reviewers check every change.": {
+    "cs": "Přidávejte chybějící knihovny, opravujte údaje a sdílejte fotografie. Každou změnu kontrolují recenzenti.",
+    "fr": "Ajoutez des bibliothèques manquantes, corrigez des détails et partagez des photos. Chaque modification est vérifiée."
+  },
+  "Start contributing": {
+    "cs": "Začít přispívat",
+    "fr": "Commencer à contribuer"
+  },
+  "For researchers and planners": {
+    "cs": "Pro výzkumníky a plánovače",
+    "fr": "Pour les chercheurs et les aménageurs"
+  },
+  "Analyse access": {
+    "cs": "Analyzovat dostupnost",
+    "fr": "Analyser l’accès"
+  },
+  "Map library locations, opening hours and accessibility features. Deeper analysis with Pro.": {
+    "cs": "Zmapujte polohu knihoven, otevírací dobu a přístupnost. Podrobnější analýzy s Pro.",
+    "fr": "Cartographiez les bibliothèques, leurs horaires et leurs dispositifs d’accessibilité. Des analyses plus poussées avec Pro."
+  },
+  "Open the atlas": {
+    "cs": "Otevřít atlas",
+    "fr": "Ouvrir l’atlas"
+  },
+  "Libraries *worth knowing*": {
+    "cs": "Knihovny, *které stojí za poznání*",
+    "fr": "Des bibliothèques *à découvrir*"
+  },
+  "Open tasks right now": {
+    "cs": "Aktuální úkoly",
+    "fr": "Tâches ouvertes en ce moment"
+  },
+  "See how places *are served.*": {
+    "cs": "Zjistěte, jak jsou místa *obsloužena.*",
+    "fr": "Découvrez comment les territoires *sont desservis.*"
+  },
+  "Every library on one map. Filter by type, opening hours or services, then switch on layers for accessibility, events and record completeness.": {
+    "cs": "Každá knihovna na jedné mapě. Filtrujte podle typu, otevírací doby nebo služeb a zapněte vrstvy přístupnosti, událostí a úplnosti záznamů.",
+    "fr": "Toutes les bibliothèques sur une carte. Filtrez par type, horaires ou services, puis activez les couches d’accessibilité, d’événements et de complétude des fiches."
+  },
+  "What Pro adds": {
+    "cs": "Co přináší Pro",
+    "fr": "Ce qu’ajoute Pro"
+  },
+  "Library facts are *always free.*": {
+    "cs": "Informace o knihovnách jsou *vždy zdarma.*",
+    "fr": "Les informations sur les bibliothèques sont *toujours gratuites.*"
+  },
+  "Plans pay for analysis and extra data and keep the index independent. No ads, and money never buys a place in the index.": {
+    "cs": "Placené plány financují analýzy a další data a zachovávají nezávislost katalogu. Bez reklam a bez placeného umístění v katalogu.",
+    "fr": "Les offres financent les analyses et les données supplémentaires, et garantissent l’indépendance du répertoire. Aucune publicité et aucun classement acheté."
+  },
+  "Where we are *so far.*": {
+    "cs": "Kam jsme se *zatím dostali.*",
+    "fr": "Où nous en sommes *aujourd’hui.*"
+  },
+  "There’s no complete open record of the world’s libraries. We’re building one, country by country. Counts are published records only.": {
+    "cs": "Úplný otevřený přehled knihoven světa neexistuje. Budujeme ho postupně, zemi po zemi. Počty zahrnují pouze publikované záznamy.",
+    "fr": "Il n’existe pas de répertoire ouvert complet des bibliothèques du monde. Nous en construisons un, pays par pays. Les chiffres concernent uniquement les fiches publiées."
+  },
+  "What’s on at libraries": {
+    "cs": "Co se děje v knihovnách",
+    "fr": "L’actualité des bibliothèques"
+  },
+  "Talks, exhibitions, storytimes and workshops, collected from library calendars and booking sites.": {
+    "cs": "Přednášky, výstavy, čtení pro děti a workshopy z kalendářů knihoven a rezervačních webů.",
+    "fr": "Conférences, expositions, lectures de contes et ateliers, recueillis dans les calendriers des bibliothèques et sur les sites de réservation."
+  },
+  "From the *journal*": {
+    "cs": "Z našeho *magazínu*",
+    "fr": "À lire dans le *journal*"
+  },
+  "How it all works, *in plain words.*": {
+    "cs": "Jak to celé funguje, *jednoduše.*",
+    "fr": "Comment tout fonctionne, *en termes simples.*"
+  },
+  "Knowledge hub": {
+    "cs": "Znalostní centrum",
+    "fr": "Centre de ressources"
+  },
+  "Finding a library": {
+    "cs": "Hledání knihovny",
+    "fr": "Trouver une bibliothèque"
+  },
+  "Browse by place, search and filter the index, or explore the map.": {
+    "cs": "Procházejte podle místa, hledejte a filtrujte katalog nebo prozkoumejte mapu.",
+    "fr": "Parcourez par lieu, recherchez et filtrez le répertoire, ou explorez la carte."
+  },
+  "How review works": {
+    "cs": "Jak funguje kontrola",
+    "fr": "Comment fonctionne la vérification"
+  },
+  "Who checks contributions, and what happens to yours.": {
+    "cs": "Kdo kontroluje příspěvky a co se stane s vaším.",
+    "fr": "Qui vérifie les contributions et ce qu’il advient de la vôtre."
+  },
+  "Claiming a library you work for": {
+    "cs": "Převzetí správy knihovny, kde pracujete",
+    "fr": "Revendiquer la bibliothèque où vous travaillez"
+  },
+  "How staff and volunteers become verified stewards of a record.": {
+    "cs": "Jak se pracovníci a dobrovolníci stávají ověřenými správci záznamu.",
+    "fr": "Comment le personnel et les bénévoles deviennent des responsables vérifiés d’une fiche."
+  },
+  "Reusing the data": {
+    "cs": "Opětovné použití dat",
+    "fr": "Réutiliser les données"
+  },
+  "The licence on records and photos, and what it asks of you.": {
+    "cs": "Licence záznamů a fotografií a její podmínky.",
+    "fr": "La licence des fiches et des photos, et les conditions à respecter."
+  },
+  "Two minutes can *finish a record.*": {
+    "cs": "Dvě minuty mohou *doplnit záznam.*",
+    "fr": "Deux minutes peuvent *compléter une fiche.*"
+  },
+  "You don’t need to be a librarian. Pick a gap, add what you know with a source, and a reviewer checks it. Every accepted change is credited to you.": {
+    "cs": "Nemusíte být knihovník. Vyberte chybějící údaj, doplňte ho se zdrojem a recenzent jej zkontroluje. Každá přijatá změna vám bude připsána.",
+    "fr": "Pas besoin d’être bibliothécaire. Choisissez une information manquante, ajoutez ce que vous savez avec une source, et une personne le vérifiera. Chaque modification acceptée vous est attribuée."
+  },
+  "Add a missing library": {
+    "cs": "Přidat chybějící knihovnu",
+    "fr": "Ajouter une bibliothèque manquante"
+  },
+  "Pick a gap": {
+    "cs": "Vyberte chybějící údaj",
+    "fr": "Choisissez une information manquante"
+  },
+  "Add it with a source": {
+    "cs": "Doplňte ji se zdrojem",
+    "fr": "Ajoutez-la avec une source"
+  },
+  "A reviewer checks it": {
+    "cs": "Recenzent ji zkontroluje",
+    "fr": "Une personne la vérifie"
+  },
+  "Open by design": {
+    "cs": "Otevřenost od základu",
+    "fr": "Ouvert par conception"
+  },
+  "Source code": {
+    "cs": "Zdrojový kód",
+    "fr": "Code source"
+  },
+  "The whole platform is open source. Read it, fork it, improve it.": {
+    "cs": "Celá platforma má otevřený kód. Čtěte ho, vytvořte vlastní verzi a vylepšujte ho.",
+    "fr": "Toute la plateforme est open source. Consultez son code, créez votre version et améliorez-la."
+  },
+  "Methodology": {
+    "cs": "Metodika",
+    "fr": "Méthodologie"
+  },
+  "What we include, how we count, and known gaps.": {
+    "cs": "Co zahrnujeme, jak počítáme a jaké mezery známe.",
+    "fr": "Ce que nous incluons, comment nous comptons et les lacunes connues."
+  },
+  "Data licence": {
+    "cs": "Licence dat",
+    "fr": "Licence des données"
+  },
+  "Reuse the index under an open licence, with provenance.": {
+    "cs": "Používejte katalog pod otevřenou licencí s uvedením původu.",
+    "fr": "Réutilisez le répertoire sous licence ouverte, en indiquant la provenance."
+  },
+  "Know a library? *Put it on the map.*": {
+    "cs": "Znáte knihovnu? *Přidejte ji na mapu.*",
+    "fr": "Vous connaissez une bibliothèque ? *Placez-la sur la carte.*"
+  },
+  "Create a free account": {
+    "cs": "Vytvořit bezplatný účet",
+    "fr": "Créer un compte gratuit"
+  },
+  "Make your first contribution": {
+    "cs": "Přidat první příspěvek",
+    "fr": "Faire votre première contribution"
+  },
+  "Join the index": {
+    "cs": "Připojte se ke katalogu",
+    "fr": "Rejoignez le répertoire"
+  },
+  "A free account takes a minute. Follow the libraries you care about and get credit for every accepted change.": {
+    "cs": "Bezplatný účet vytvoříte za minutu. Sledujte knihovny, na kterých vám záleží, a získejte uznání za každou přijatou změnu.",
+    "fr": "Un compte gratuit se crée en une minute. Suivez les bibliothèques qui vous intéressent et recevez le mérite de chaque modification acceptée."
+  },
+  "Add what you know": {
+    "cs": "Přidejte, co víte",
+    "fr": "Partagez ce que vous savez"
+  },
+  "Fill a gap in a record or add a missing library. A reviewer checks it first, and regular contributors get Pro free.": {
+    "cs": "Doplňte chybějící údaje nebo přidejte knihovnu. Recenzent vše nejprve zkontroluje a pravidelní přispěvatelé získávají Pro zdarma.",
+    "fr": "Complétez une fiche ou ajoutez une bibliothèque manquante. Chaque ajout est vérifié, et les contributeurs réguliers bénéficient de Pro gratuitement."
+  },
+  "Libraries Global": {
+    "cs": "Libraries Global",
+    "fr": "Libraries Global"
+  },
+  "Libraries Global · Indexing the world’s libraries": {
+    "cs": "Libraries Global · Katalog knihoven světa",
+    "fr": "Libraries Global · Le répertoire des bibliothèques du monde"
+  },
+  "Uniting the world's knowledge repositories into a single, accessible network. Empowering communities through shared resources. ": {
+    "cs": "Propojujeme knihovny světa do jedné přístupné sítě. Sdílené zdroje pomáhají komunitám.",
+    "fr": "Relier les bibliothèques du monde au sein d’un réseau accessible. Soutenir les communautés grâce à des ressources partagées."
+  },
+  "Privacy policy": {
+    "cs": "Zásady ochrany soukromí",
+    "fr": "Politique de confidentialité"
+  },
+  "Terms of use": {
+    "cs": "Podmínky použití",
+    "fr": "Conditions d’utilisation"
+  },
+  "Explore": {
+    "cs": "Prozkoumat",
+    "fr": "Explorer"
+  },
+  "Plans & Pro": {
+    "cs": "Plány a Pro",
+    "fr": "Offres et Pro"
+  },
+  "Suggest a correction": {
+    "cs": "Navrhnout opravu",
+    "fr": "Proposer une correction"
+  },
+  "Open data": {
+    "cs": "Otevřená data",
+    "fr": "Données ouvertes"
+  },
+  "Build, contribute, extend the index.": {
+    "cs": "Budujte, přispívejte, rozšiřujte katalog.",
+    "fr": "Construisez, contribuez et enrichissez le répertoire."
+  },
+  "Libraries Global is an open-source atlas of the world's libraries. These docs cover how to run it locally, ship a feature, call the public API, contribute an entry, or lift a component out of our design system.": {
+    "cs": "Libraries Global je atlas knihoven světa s otevřeným kódem. Dokumentace popisuje místní spuštění, vývoj funkcí, použití veřejného API, přidávání záznamů a využití komponent našeho designového systému.",
+    "fr": "Libraries Global est un atlas open source des bibliothèques du monde. Cette documentation explique comment l’exécuter localement, développer une fonctionnalité, utiliser l’API publique, contribuer à une fiche ou réutiliser un composant de notre système de design."
+  },
+  "Documentation": {
+    "cs": "Dokumentace",
+    "fr": "Documentation"
+  },
+  "Field notes *from the stacks.*": {
+    "cs": "Zápisky *mezi regály.*",
+    "fr": "Carnets de terrain *entre les rayonnages.*"
+  },
+  "Dispatches, histories, and curator's annotations from the hands doing the catalog work — written by librarians, archivists, and researchers at work inside the world's houses of memory.": {
+    "cs": "Zprávy, historie a kurátorské poznámky od těch, kdo budují katalogy — knihovníků, archivářů a výzkumníků v institucích paměti celého světa.",
+    "fr": "Reportages, récits historiques et notes de conservation par celles et ceux qui cataloguent : bibliothécaires, archivistes et chercheurs dans les institutions de mémoire du monde."
+  },
+  "The Library Journal · since 2024": {
+    "cs": "Knihovní magazín · od roku 2024",
+    "fr": "Le journal des bibliothèques · depuis 2024"
+  },
+  "Book lending": {
+    "cs": "Půjčování knih",
+    "fr": "Prêt de livres"
+  },
+  "Borrow books for free with a library card.": {
+    "cs": "S průkazem knihovny si můžete zdarma půjčovat knihy.",
+    "fr": "Empruntez gratuitement des livres avec une carte de bibliothèque."
+  },
+  "Home library service": {
+    "cs": "Donášková služba knihovny",
+    "fr": "Portage de livres à domicile"
+  },
+  "Books delivered to people who can't get to the library.": {
+    "cs": "Doručování knih lidem, kteří nemohou přijít do knihovny.",
+    "fr": "Livraison de livres aux personnes qui ne peuvent pas se déplacer à la bibliothèque."
+  },
+  "Digital lending": {
+    "cs": "Digitální výpůjčky",
+    "fr": "Prêt numérique"
+  },
+  "Borrow eBooks, eAudiobooks and eMagazines online.": {
+    "cs": "Půjčování e-knih, audioknih a elektronických časopisů online.",
+    "fr": "Empruntez des livres, livres audio et magazines numériques en ligne."
+  },
+  "BFI Replay": {
+    "cs": "BFI Replay",
+    "fr": "BFI Replay"
+  },
+  "Free access to the BFI's digitised film and TV archive.": {
+    "cs": "Bezplatný přístup k digitalizovanému filmovému a televiznímu archivu BFI.",
+    "fr": "Accès gratuit aux archives numérisées de films et de télévision du BFI."
+  },
+  "British Newspaper Archive": {
+    "cs": "British Newspaper Archive",
+    "fr": "British Newspaper Archive"
+  },
+  "Free access to digitised historic British newspapers.": {
+    "cs": "Bezplatný přístup k digitalizovaným historickým britským novinám.",
+    "fr": "Accès gratuit aux journaux britanniques historiques numérisés."
+  },
+  "Findmypast": {
+    "cs": "Findmypast",
+    "fr": "Findmypast"
+  },
+  "Free access to Findmypast family history records.": {
+    "cs": "Bezplatný přístup ke genealogickým záznamům Findmypast.",
+    "fr": "Accès gratuit aux archives généalogiques de Findmypast."
+  },
+  "Family history": {
+    "cs": "Genealogie",
+    "fr": "Généalogie"
+  },
+  "Help and resources for researching family history.": {
+    "cs": "Pomoc a zdroje pro genealogický výzkum.",
+    "fr": "Aide et ressources pour les recherches généalogiques."
+  },
+  "Children's activities": {
+    "cs": "Aktivity pro děti",
+    "fr": "Activités pour enfants"
+  },
+  "Story times, rhyme times and activities for children.": {
+    "cs": "Čtení pohádek, říkanky a aktivity pro děti.",
+    "fr": "Lectures de contes, comptines et activités pour enfants."
+  },
+  "Hobby and interest groups": {
+    "cs": "Zájmové skupiny",
+    "fr": "Groupes de loisirs"
+  },
+  "Clubs and groups that meet at the library.": {
+    "cs": "Kluby a skupiny, které se scházejí v knihovně.",
+    "fr": "Clubs et groupes qui se réunissent à la bibliothèque."
+  },
+  "Digital skills sessions": {
+    "cs": "Kurzy digitálních dovedností",
+    "fr": "Ateliers numériques"
+  },
+  "Help getting online and using computers and devices.": {
+    "cs": "Pomoc s přístupem na internet a používáním počítačů a dalších zařízení.",
+    "fr": "Aide pour accéder à internet et utiliser les ordinateurs et appareils numériques."
+  },
+  "Career support": {
+    "cs": "Podpora při hledání práce",
+    "fr": "Accompagnement professionnel"
+  },
+  "Help with job searching, CVs and applications.": {
+    "cs": "Pomoc s hledáním práce, životopisy a žádostmi o zaměstnání.",
+    "fr": "Aide à la recherche d’emploi, aux CV et aux candidatures."
+  },
+  "Business support": {
+    "cs": "Podpora podnikání",
+    "fr": "Aide aux entreprises"
+  },
+  "Resources and advice for small businesses and start-ups.": {
+    "cs": "Zdroje a poradenství pro malé podniky a začínající firmy.",
+    "fr": "Ressources et conseils pour les petites entreprises et les jeunes entreprises."
+  },
+  "Cafes & restaurant": {
+    "cs": "Kavárna a restaurace",
+    "fr": "Café et restaurant"
+  },
+  "A cafe or restaurant on site.": {
+    "cs": "Kavárna nebo restaurace v prostorách knihovny.",
+    "fr": "Un café ou un restaurant sur place."
+  },
+  "Wi-Fi": {
+    "cs": "Wi-Fi",
+    "fr": "Wi-Fi"
+  },
+  "Free or public Wi-Fi is available for visitors.": {
+    "cs": "Návštěvníkům je k dispozici bezplatná nebo veřejná Wi-Fi.",
+    "fr": "Un accès Wi-Fi gratuit ou public est disponible pour les visiteurs."
+  },
+  "Public computers": {
+    "cs": "Veřejné počítače",
+    "fr": "Ordinateurs publics"
+  },
+  "Shared public computers are available for use.": {
+    "cs": "K dispozici jsou sdílené počítače pro veřejnost.",
+    "fr": "Des ordinateurs partagés sont à la disposition du public."
+  },
+  "Printing": {
+    "cs": "Tisk",
+    "fr": "Impression"
+  },
+  "Printing services are available on site.": {
+    "cs": "Tiskové služby jsou k dispozici na místě.",
+    "fr": "Des services d’impression sont disponibles sur place."
+  },
+  "Study spaces": {
+    "cs": "Studijní místa",
+    "fr": "Espaces d’étude"
+  },
+  "Dedicated spaces are available for reading, study, or focused work.": {
+    "cs": "Prostory pro čtení, studium nebo soustředěnou práci.",
+    "fr": "Des espaces sont disponibles pour lire, étudier ou travailler au calme."
+  },
+  "Photocopying": {
+    "cs": "Kopírování",
+    "fr": "Photocopie"
+  },
+  "Photocopiers are available to visitors.": {
+    "cs": "Návštěvníci mohou využívat kopírky.",
+    "fr": "Des photocopieurs sont à la disposition des visiteurs."
+  },
+  "Scanning": {
+    "cs": "Skenování",
+    "fr": "Numérisation"
+  },
+  "Document scanning is available to visitors.": {
+    "cs": "Návštěvníci mohou skenovat dokumenty.",
+    "fr": "La numérisation de documents est proposée aux visiteurs."
+  },
+  "Fax": {
+    "cs": "Fax",
+    "fr": "Fax"
+  },
+  "A fax service is available.": {
+    "cs": "K dispozici je faxová služba.",
+    "fr": "Un service de fax est disponible."
+  },
+  "Bookable spaces": {
+    "cs": "Rezervovatelné prostory",
+    "fr": "Espaces réservables"
+  },
+  "Rooms or spaces can be booked for meetings and events.": {
+    "cs": "Místnosti a prostory lze rezervovat pro schůzky a události.",
+    "fr": "Des salles ou espaces peuvent être réservés pour des réunions et événements."
+  },
+  "Garden": {
+    "cs": "Zahrada",
+    "fr": "Jardin"
+  },
+  "An outdoor garden or green space is open to visitors.": {
+    "cs": "Návštěvníkům je přístupná venkovní zahrada nebo zeleň.",
+    "fr": "Un jardin ou un espace vert extérieur est ouvert aux visiteurs."
+  },
+  "Step-free access": {
+    "cs": "Bezbariérový přístup bez schodů",
+    "fr": "Accès sans marches"
+  },
+  "Entry and movement through the library without steps.": {
+    "cs": "Vstup a pohyb po knihovně bez schodů.",
+    "fr": "Entrée et circulation dans la bibliothèque sans marches."
+  },
+  "Wheelchair access": {
+    "cs": "Přístup pro vozíčkáře",
+    "fr": "Accès en fauteuil roulant"
+  },
+  "The library can be accessed and used by wheelchair users.": {
+    "cs": "Knihovna je přístupná a použitelná pro osoby na vozíku.",
+    "fr": "La bibliothèque est accessible et utilisable par les personnes en fauteuil roulant."
+  },
+  "Lift access": {
+    "cs": "Přístup výtahem",
+    "fr": "Accès par ascenseur"
+  },
+  "Lifts are available to reach upper or lower floors.": {
+    "cs": "Výtahy umožňují přístup do vyšších a nižších pater.",
+    "fr": "Des ascenseurs permettent d’accéder aux étages supérieurs ou inférieurs."
+  },
+  "Accessible toilets": {
+    "cs": "Bezbariérové toalety",
+    "fr": "Toilettes accessibles"
+  },
+  "Accessible toilet facilities are available on site.": {
+    "cs": "Na místě jsou k dispozici bezbariérové toalety.",
+    "fr": "Des toilettes accessibles sont disponibles sur place."
+  },
+  "Adjustable seating": {
+    "cs": "Přizpůsobitelné sezení",
+    "fr": "Sièges adaptés"
+  },
+  "Seating options are available to support different comfort and accessibility needs.": {
+    "cs": "Různé možnosti sezení pro pohodlí a potřeby přístupnosti.",
+    "fr": "Des options de sièges répondent à différents besoins de confort et d’accessibilité."
+  },
+  "Low-height service desk": {
+    "cs": "Snížený obslužný pult",
+    "fr": "Comptoir d’accueil abaissé"
+  },
+  "A lower-height desk or service point is available for easier access.": {
+    "cs": "Snížený pult usnadňuje přístup k obsluze.",
+    "fr": "Un comptoir abaissé facilite l’accès au service."
+  },
+  "Hearing loop": {
+    "cs": "Indukční smyčka",
+    "fr": "Boucle magnétique"
+  },
+  "Hearing loop support is available in selected spaces or service points.": {
+    "cs": "Ve vybraných prostorách a u obslužných míst je k dispozici indukční smyčka.",
+    "fr": "Une boucle magnétique est disponible dans certains espaces ou points de service."
+  },
+  "Braille signage": {
+    "cs": "Značení v Braillově písmu",
+    "fr": "Signalétique en braille"
+  },
+  "Braille signage is available in parts of the building.": {
+    "cs": "V částech budovy je značení v Braillově písmu.",
+    "fr": "Une signalétique en braille est présente dans certaines parties du bâtiment."
+  },
+  "Accessible parking": {
+    "cs": "Bezbariérové parkování",
+    "fr": "Stationnement accessible"
+  },
+  "Accessible parking spaces are available near the library.": {
+    "cs": "V blízkosti knihovny jsou bezbariérová parkovací místa.",
+    "fr": "Des places de stationnement accessibles sont disponibles près de la bibliothèque."
+  },
+  "Automatic doors": {
+    "cs": "Automatické dveře",
+    "fr": "Portes automatiques"
+  },
+  "Automatic or assisted doors are available at the entrance or key internal access points.": {
+    "cs": "U vchodu nebo důležitých vnitřních průchodů jsou automatické či asistované dveře.",
+    "fr": "Des portes automatiques ou assistées sont présentes à l’entrée ou aux principaux passages intérieurs."
+  },
+  "Accessible public transport": {
+    "cs": "Bezbariérová veřejná doprava",
+    "fr": "Transports publics accessibles"
+  },
+  "Accessible bus or rail connections close to the library.": {
+    "cs": "Bezbariérové autobusové nebo vlakové spojení v blízkosti knihovny.",
+    "fr": "Des liaisons accessibles en bus ou en train se trouvent près de la bibliothèque."
+  },
+  "Assistive technology": {
+    "cs": "Asistenční technologie",
+    "fr": "Technologies d’assistance"
+  },
+  "Screen readers, magnifiers or other assistive technology are available.": {
+    "cs": "K dispozici jsou čtečky obrazovky, lupy nebo další asistenční technologie.",
+    "fr": "Des lecteurs d’écran, loupes ou autres technologies d’assistance sont disponibles."
+  },
+  "Baby changing facilities": {
+    "cs": "Přebalovací zázemí",
+    "fr": "Espace à langer"
+  },
+  "Baby changing facilities are available to visitors.": {
+    "cs": "Návštěvníkům je k dispozici přebalovací zázemí.",
+    "fr": "Un espace à langer est à la disposition des visiteurs."
+  },
+  "DDA-compliant": {
+    "cs": "Soulad s DDA",
+    "fr": "Conforme à la DDA"
+  },
+  "The building meets UK disability access requirements.": {
+    "cs": "Budova splňuje britské požadavky na přístupnost pro osoby se zdravotním postižením.",
+    "fr": "Le bâtiment respecte les exigences britanniques d’accessibilité pour les personnes handicapées."
+  },
+  "Low vision support": {
+    "cs": "Podpora pro slabozraké",
+    "fr": "Aide aux personnes malvoyantes"
+  },
+  "Large print, magnifiers or other support for visitors with low vision.": {
+    "cs": "Velké písmo, lupy nebo další podpora pro slabozraké návštěvníky.",
+    "fr": "Des documents en gros caractères, loupes ou autres aides sont proposés aux personnes malvoyantes."
+  },
+  "Neurodivergent-friendly spaces": {
+    "cs": "Prostory pro neurodivergentní návštěvníky",
+    "fr": "Espaces adaptés aux personnes neurodivergentes"
+  },
+  "Spaces designed with neurodivergent visitors in mind.": {
+    "cs": "Prostory navržené s ohledem na neurodivergentní návštěvníky.",
+    "fr": "Des espaces conçus en tenant compte des personnes neurodivergentes."
+  },
+  "Quiet room": {
+    "cs": "Klidová místnost",
+    "fr": "Salle calme"
+  },
+  "A quiet room or low-stimulus space is available.": {
+    "cs": "K dispozici je klidová místnost nebo prostor s omezenými podněty.",
+    "fr": "Une salle calme ou un espace à faible stimulation est disponible."
+  },
+  "Sensory-friendly environment": {
+    "cs": "Smyslově šetrné prostředí",
+    "fr": "Environnement sensoriel adapté"
+  },
+  "Lighting, sound and layout chosen to reduce sensory overload.": {
+    "cs": "Osvětlení, zvuk a uspořádání pomáhají omezit smyslové přetížení.",
+    "fr": "L’éclairage, les sons et l’aménagement sont choisis pour réduire la surcharge sensorielle."
+  },
+  "Assistance dogs welcome": {
+    "cs": "Asistenční psi vítáni",
+    "fr": "Chiens d’assistance bienvenus"
+  },
+  "Guide dogs and other assistance dogs are welcome.": {
+    "cs": "Vodicí a další asistenční psi jsou vítáni.",
+    "fr": "Les chiens guides et autres chiens d’assistance sont les bienvenus."
+  },
+  "Sign language interpretation": {
+    "cs": "Tlumočení do znakového jazyka",
+    "fr": "Interprétation en langue des signes"
+  },
+  "Sign language interpretation can be arranged.": {
+    "cs": "Je možné zajistit tlumočení do znakového jazyka.",
+    "fr": "Une interprétation en langue des signes peut être organisée."
+  },
+  "Staff support": {
+    "cs": "Pomoc pracovníků",
+    "fr": "Aide du personnel"
+  },
+  "Staff are available to help visitors with access needs.": {
+    "cs": "Pracovníci pomáhají návštěvníkům s potřebami přístupnosti.",
+    "fr": "Le personnel peut aider les visiteurs ayant des besoins d’accessibilité."
+  },
+  "Tactile flooring": {
+    "cs": "Hmatové značení podlah",
+    "fr": "Guidage tactile au sol"
+  },
+  "Tactile paving or flooring guides visitors through the building.": {
+    "cs": "Hmatová dlažba nebo značení vede návštěvníky budovou.",
+    "fr": "Un revêtement ou guidage tactile au sol aide les visiteurs à se déplacer dans le bâtiment."
+  },
+  "Visual alarms": {
+    "cs": "Světelné alarmy",
+    "fr": "Alarmes visuelles"
+  },
+  "Fire alarms include visual signals.": {
+    "cs": "Požární alarmy zahrnují světelné signály.",
+    "fr": "Les alarmes incendie comprennent des signaux visuels."
+  },
+  "Step-free lift": {
+    "cs": "Bezbariérový výtah",
+    "fr": "Ascenseur sans marches"
+  },
+  "Low-height shelves": {
+    "cs": "Nízké police",
+    "fr": "Rayonnages abaissés"
+  },
+  "Wheelchair space inside": {
+    "cs": "Prostor pro vozík uvnitř",
+    "fr": "Espace intérieur pour fauteuil roulant"
+  },
+  "Visitors can connect personal devices to the internet while using the library, subject to local access policies.": {
+    "cs": "Návštěvníci mohou v knihovně připojit vlastní zařízení k internetu podle místních pravidel přístupu.",
+    "fr": "Les visiteurs peuvent connecter leurs appareils personnels à internet dans la bibliothèque, selon les règles d’accès locales."
+  },
+  "Visitors can access computers for browsing, study, email, printing, research, or other library-supported tasks.": {
+    "cs": "Návštěvníci mohou používat počítače k prohlížení webu, studiu, e-mailu, tisku, výzkumu a dalším činnostem podporovaným knihovnou.",
+    "fr": "Les visiteurs peuvent utiliser des ordinateurs pour naviguer, étudier, envoyer des e-mails, imprimer, faire des recherches ou effectuer d’autres tâches proposées par la bibliothèque."
+  },
+  "Visitors can print documents using library equipment, with availability and charges depending on the library.": {
+    "cs": "Návštěvníci mohou tisknout dokumenty na zařízení knihovny. Dostupnost a ceny určuje knihovna.",
+    "fr": "Les visiteurs peuvent imprimer des documents avec le matériel de la bibliothèque ; la disponibilité et les tarifs dépendent de l’établissement."
+  },
+  "The library provides seating and work areas for visitors who want to read, revise, research, or work quietly.": {
+    "cs": "Knihovna nabízí místa k sezení a práci pro čtení, studium, výzkum a klidnou práci.",
+    "fr": "La bibliothèque propose des places assises et des espaces de travail pour lire, réviser, faire des recherches ou travailler au calme."
+  },
+  "Supports easier access for wheelchair users, visitors with reduced mobility, and anyone who benefits from step-free routes through the building.": {
+    "cs": "Usnadňuje přístup osobám na vozíku, návštěvníkům se sníženou pohyblivostí a všem, kdo potřebují trasy bez schodů.",
+    "fr": "Facilite l’accès aux personnes en fauteuil roulant, aux visiteurs à mobilité réduite et à toute personne bénéficiant de parcours sans marches dans le bâtiment."
+  },
+  "Includes routes, entrances, and core public spaces designed or adapted to support wheelchair access.": {
+    "cs": "Zahrnuje trasy, vstupy a hlavní veřejné prostory navržené nebo upravené pro přístup vozíčkářů.",
+    "fr": "Comprend des parcours, entrées et principaux espaces publics conçus ou adaptés pour l’accès en fauteuil roulant."
+  },
+  "Helps visitors move between floors where stairs would otherwise limit access.": {
+    "cs": "Pomáhá návštěvníkům pohybovat se mezi patry tam, kde by schody omezovaly přístup.",
+    "fr": "Aide les visiteurs à se déplacer entre les étages lorsque les escaliers limiteraient l’accès."
+  },
+  "Provides toilet access designed to support wheelchair users and other visitors with access needs.": {
+    "cs": "Poskytuje toalety přizpůsobené osobám na vozíku a dalším návštěvníkům s potřebami přístupnosti.",
+    "fr": "Propose des toilettes adaptées aux personnes en fauteuil roulant et aux autres visiteurs ayant des besoins d’accessibilité."
+  },
+  "May include varied seat heights, supportive chairs, or flexible seating arrangements for visitors who need them.": {
+    "cs": "Může zahrnovat různé výšky sedadel, podpůrná křesla nebo přizpůsobitelné uspořádání sezení.",
+    "fr": "Peut comprendre différentes hauteurs d’assise, des fauteuils offrant un soutien ou des configurations de sièges modulables."
+  },
+  "Supports more comfortable interaction for wheelchair users and others who benefit from a more accessible counter height.": {
+    "cs": "Usnadňuje komunikaci osobám na vozíku a dalším návštěvníkům, kterým vyhovuje přístupnější výška pultu.",
+    "fr": "Facilite les échanges pour les personnes en fauteuil roulant et celles qui bénéficient d’un comptoir à une hauteur plus accessible."
+  },
+  "Helps visitors who use hearing aids or compatible listening devices access clearer sound in supported areas.": {
+    "cs": "Umožňuje návštěvníkům se sluchadly nebo kompatibilními zařízeními lépe slyšet ve vybavených prostorách.",
+    "fr": "Permet aux visiteurs utilisant des appareils auditifs ou des dispositifs compatibles d’entendre plus clairement dans les espaces équipés."
+  },
+  "Supports navigation and wayfinding for blind and visually impaired visitors.": {
+    "cs": "Pomáhá nevidomým a slabozrakým návštěvníkům s orientací.",
+    "fr": "Facilite l’orientation des visiteurs aveugles et malvoyants."
+  },
+  "Supports easier arrival for visitors with mobility needs or reduced walking tolerance.": {
+    "cs": "Usnadňuje příjezd návštěvníkům s omezenou pohyblivostí nebo obtížemi při chůzi.",
+    "fr": "Facilite l’arrivée des visiteurs à mobilité réduite ou ayant des difficultés à marcher."
+  },
+  "Makes entry and movement easier for visitors using wheelchairs, mobility aids, or carrying bags, books, or children’s equipment.": {
+    "cs": "Usnadňuje vstup a pohyb návštěvníkům na vozíku, s pomůckami pro pohyb nebo s taškami, knihami a dětským vybavením.",
+    "fr": "Facilite l’entrée et la circulation des visiteurs en fauteuil roulant, utilisant des aides à la mobilité ou portant des sacs, livres ou équipements pour enfants."
+  },
+  "These docs will help you explore the platform, contribute or update library records, and claim and manage your organisation’s data.": {
+    "fr": "Cette documentation vous aide à découvrir la plateforme, à contribuer aux fiches des bibliothèques ou à les mettre à jour, et à revendiquer et gérer les données de votre organisation.",
+    "cs": "Tato dokumentace vám pomůže poznat platformu, přispívat do záznamů knihoven nebo je aktualizovat a převzít správu dat vaší organizace."
+  }
+}

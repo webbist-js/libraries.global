@@ -1,8 +1,8 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
-import { hubHref } from "@/components/contribute/wizard.logic"
 import { announceFollow } from "@/components/library/follow-events"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
@@ -20,6 +20,7 @@ const pillBase: React.CSSProperties = {
   fontSize: "14px",
   fontWeight: 600,
   cursor: "pointer",
+  minHeight: "44px",
 }
 
 /**
@@ -28,50 +29,66 @@ const pillBase: React.CSSProperties = {
  * correction drawer, see LibraryCorrection).
  */
 export function LibraryHeroActions({
-  librarySlug,
   libraryName,
   libraryDocumentId,
+  directionsUrl,
+  website,
+  catalogueUrl,
 }: {
+  readonly directionsUrl?: string | null
+  readonly website?: string | null
+  readonly catalogueUrl?: string | null
   readonly librarySlug: string
   readonly libraryName: string
   readonly libraryDocumentId: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { open } = useCorrectionDrawer()
 
   return (
     <div className="flex flex-wrap gap-2">
+      {[
+        { href: directionsUrl, title: "Get directions" },
+        { href: website, title: "Website" },
+        { href: catalogueUrl, title: "Catalogue" },
+      ]
+        .filter((item) => item.href)
+        .slice(0, 3)
+        .map((item, index) => (
+          <a
+            key={item.title}
+            href={item.href!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold"
+            style={{
+              background: index === 0 ? T.accent.primary : T.bg.deep,
+              color: index === 0 ? "white" : T.ink.base,
+              borderColor: T.border.line,
+            }}
+          >
+            {item.title}
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        ))}
       <FollowPill
         libraryDocumentId={libraryDocumentId}
         libraryName={libraryName}
       />
-      <Link
-        href={hubHref("photo", { slug: librarySlug, name: libraryName })}
-        style={{
-          ...pillBase,
-          padding: "8px 16px",
-          border: `1px solid ${T.border.hi}`,
-          background: T.bg.deep,
-          color: T.ink.base,
-          textDecoration: "none",
-        }}
-        className="transition-colors hover:!bg-(--t-bg-surface)"
-      >
-        <LibIcon d={LIB_ICONS.camera} />
-        Add photos
-      </Link>
       <button
         type="button"
         onClick={() => open()}
         style={{
           ...pillBase,
           border: 0,
-          background: T.accent.primary,
-          color: "#fff",
+          background: T.bg.deep,
+          color: T.ink.base,
         }}
-        className="transition-colors hover:!bg-(--t-accent-primary-hover)"
+        className="transition-colors hover:!bg-(--t-bg-surface)"
       >
         <LibIcon d={LIB_ICONS.pencil} />
-        Suggest a correction
+        {tUi("suggest_a_correction")}
       </button>
     </div>
   )
@@ -85,6 +102,8 @@ function FollowPill({
   readonly libraryDocumentId: string
   readonly libraryName: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: session, isPending } = authClient.useSession()
   const [following, setFollowing] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
@@ -135,15 +154,15 @@ function FollowPill({
         href="/auth/signin"
         style={{
           ...pillBase,
-          border: `1px solid ${T.border.hi}`,
-          background: T.bg.deep,
+          border: "1px solid transparent",
+          background: "transparent",
           color: T.ink.base,
           textDecoration: "none",
         }}
         className="transition-colors hover:!bg-(--t-bg-surface)"
       >
         <LibIcon d={LIB_ICONS.bookmark} />
-        Follow
+        {tUi("follow")}{" "}
       </Link>
     )
   }
@@ -158,14 +177,18 @@ function FollowPill({
       disabled={loading || following === null}
       style={{
         ...pillBase,
-        border: `1px solid ${isFollowing ? T.ink.base : T.border.hi}`,
-        background: isFollowing ? T.ink.base : T.bg.deep,
+        border: "1px solid transparent",
+        background: isFollowing ? T.ink.base : "transparent",
         color: isFollowing ? "#fff" : T.ink.base,
         opacity: loading || following === null ? 0.7 : 1,
       }}
     >
       <LibIcon d={LIB_ICONS.bookmark} />
-      {following === null ? "Follow" : isFollowing ? "Following" : "Follow"}
+      {following === null
+        ? tUi("follow")
+        : isFollowing
+          ? tUi("following")
+          : tUi("follow")}
     </button>
   )
 }

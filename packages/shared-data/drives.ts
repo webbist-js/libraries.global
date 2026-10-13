@@ -249,7 +249,7 @@ export function libraryInScope(
 
 /** How each Focus gap can be filled: by submission kind, by field, or both. */
 const GAP_FILL: Record<GapKey, { kinds?: string[]; fields?: string[] }> = {
-  hours: { fields: ["openingTimes"] },
+  hours: { fields: ["openingTimes", "mobileTimetable"] },
   photo: { kinds: ["photo"], fields: ["uploadedImages"] },
   accessibility: { kinds: ["facilities"], fields: ["accessibility"] },
   contact: { fields: ["website", "phone", "email", "catalogueUrl"] },

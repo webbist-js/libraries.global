@@ -35,6 +35,7 @@ export function PageHero({
   children,
   leadPlacement = "right",
   actions,
+  staff = false,
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
   readonly breadcrumb?: BreadcrumbItem[]
@@ -65,6 +66,8 @@ export function PageHero({
   /** Put the lead and actions below the title, leaving the right slot for stats. */
   readonly leadPlacement?: "left" | "right"
   readonly actions?: ReactNode
+  /** Wider title column and display type for a library's staff workspace. */
+  readonly staff?: boolean
   /**
    * Section tabs (`SectionTabs`) on the band's bottom edge, for sections
    * with sub-pages (Contribute, Knowledge).
@@ -88,9 +91,11 @@ export function PageHero({
       ) : null}
       <Container
         className={[
-          leadPlacement === "left"
-            ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
-            : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
+          staff
+            ? "grid gap-x-12 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-end"
+            : leadPlacement === "left"
+              ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
+              : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
           compact ? "gap-y-5" : "gap-y-8",
           leadPlacement === "left" && breadcrumb?.length
             ? "pt-3 pb-12 sm:pb-16"
@@ -106,7 +111,7 @@ export function PageHero({
             <div
               className={[
                 "flex flex-wrap items-center gap-2",
-                compact ? "mb-4" : "mb-5",
+                compact || staff ? "mb-3" : "mb-5",
               ].join(" ")}
             >
               {back ? (
@@ -130,7 +135,7 @@ export function PageHero({
                 </Link>
               ) : eyebrow ? (
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 text-[14px] font-semibold ${staff ? "py-1.5" : "py-1"}`}
                   style={{
                     background: T.bg.deep,
                     borderColor: T.border.line,
@@ -161,11 +166,13 @@ export function PageHero({
             className="m-0 text-balance"
             style={{
               fontFamily: T.font.serif,
-              fontSize: compact
-                ? "clamp(32px,3.6vw,46px)"
-                : leadPlacement === "left"
-                  ? "clamp(48px,6.5vw,88px)"
-                  : "clamp(40px,5vw,68px)",
+              fontSize: staff
+                ? "clamp(40px,5.8vw,80px)"
+                : compact
+                  ? "clamp(32px,3.6vw,46px)"
+                  : leadPlacement === "left"
+                    ? "clamp(48px,6.5vw,88px)"
+                    : "clamp(40px,5vw,68px)",
               fontWeight: 500,
               lineHeight: 1.04,
               letterSpacing: "-0.02em",
@@ -177,7 +184,7 @@ export function PageHero({
           </h1>
           {meta ? (
             <div
-              className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px]"
+              className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 ${staff ? "text-[17px]" : "text-[15px]"}`}
               style={{ color: T.ink.dim }}
             >
               {meta}

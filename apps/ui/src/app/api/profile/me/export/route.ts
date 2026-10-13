@@ -1,7 +1,7 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { auth } from "@/lib/auth"
+import { auth, authDbPool } from "@/lib/auth"
 import { readOwnProfile } from "@/lib/own-profile-server"
 
 /**
@@ -29,7 +29,35 @@ export async function GET() {
       termsVersion?: string | null
       termsAcceptedAt?: Date | string | null
     }
+    let memberships: unknown[] = []
+    let membershipChanges: unknown[] = []
+    let membershipConsents: unknown[] = []
+    try {
+      memberships = (
+        await authDbPool.query(
+          "select snapshot,updated_at from billing_memberships where user_id=$1",
+          [user.id]
+        )
+      ).rows
+      membershipChanges = (
+        await authDbPool.query(
+          "select price_id,period_end,state,created_at from billing_plan_changes where user_id=$1",
+          [user.id]
+        )
+      ).rows
+      membershipConsents = (
+        await authDbPool.query(
+          "select plan,interval,price_id,terms_version,created_at,state from billing_attempts where user_id=$1 order by created_at",
+          [user.id]
+        )
+      ).rows
+    } catch (error) {
+      if ((error as { code?: string }).code !== "42P01") throw error
+    }
     const payload = {
+      memberships,
+      membershipChanges,
+      membershipConsents,
       exportedAt: new Date().toISOString(),
       account: {
         email: user.email,

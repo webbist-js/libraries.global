@@ -1,0 +1,14 @@
+{
+  "key": "openstreetmap",
+  "name": "OpenStreetMap administrative boundaries",
+  "publisher": "OpenStreetMap contributors",
+  "sourceUrl": "https://www.openstreetmap.org/copyright",
+  "licence": "ODbL 1.0",
+  "licenceUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "licenceStatus": "stated_by_publisher",
+  "redistribution": "permitted_with_attribution",
+  "attribution": "Geographic placement derived from © OpenStreetMap contributors, ODbL 1.0.",
+  "coverage": "Supporting administrative geography for library coordinates; institution facts retain their original sources.",
+  "importMechanism": "Cached Overpass point-in-boundary queries, matched to current official municipality codes and existing region relations.",
+  "notes": "Supports region and area placement only. Does not establish present operation, a visitor address, or personal verification. Original Wikidata records and coordinates are preserved. Boundary evidence and reporting-code matches are retained in the repair report."
+}

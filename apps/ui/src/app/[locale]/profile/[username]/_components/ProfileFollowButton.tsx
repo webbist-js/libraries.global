@@ -1,9 +1,10 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
+import { Link, useRouter } from "@/lib/navigation"
 
 export function ProfileFollowButton({
   targetUsername,
@@ -12,6 +13,9 @@ export function ProfileFollowButton({
   targetUsername: string
   isSignedIn: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
+  const router = useRouter()
   const [following, setFollowing] = useState(false)
   const [loading, setLoading] = useState(isSignedIn)
   const [busy, setBusy] = useState(false)
@@ -40,7 +44,10 @@ export function ProfileFollowButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: targetUsername, action }),
       })
-      if (res.ok) setFollowing(action === "follow")
+      if (res.ok) {
+        setFollowing(action === "follow")
+        router.refresh()
+      }
     } catch {
       // silent
     } finally {
@@ -79,7 +86,7 @@ export function ProfileFollowButton({
         >
           <path d="M12 5v14M5 12h14" strokeLinecap="round" />
         </svg>
-        Follow
+        {tUi("follow")}{" "}
       </Link>
     )
   }
@@ -125,7 +132,7 @@ export function ProfileFollowButton({
               strokeLinejoin="round"
             />
           </svg>
-          Following
+          {tUi("following")}{" "}
         </>
       ) : (
         <>
@@ -139,7 +146,7 @@ export function ProfileFollowButton({
           >
             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
           </svg>
-          Follow
+          {tUi("follow")}{" "}
         </>
       )}
     </button>

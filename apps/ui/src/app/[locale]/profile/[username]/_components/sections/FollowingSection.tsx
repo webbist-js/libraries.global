@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { DriveCard } from "@/components/drives/DriveCard"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
@@ -93,6 +95,8 @@ export function FollowingSection({
   /** Libraries this user stewards (profile.claimedLibraries). */
   claimedLibraries?: ClaimedLibrary[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const cardStyle = { ...CARD, padding: "20px 24px 24px" }
 
   return (
@@ -101,7 +105,7 @@ export function FollowingSection({
         <section aria-labelledby="fl-stewards" style={cardStyle}>
           <SectionHead
             id="fl-stewards"
-            title="Stewards"
+            title={tUi("stewards")}
             count={plural(claimedLibraries.length, "library", "libraries")}
           />
           <FollowedLibrariesGrid
@@ -116,7 +120,7 @@ export function FollowingSection({
       <section aria-labelledby="fl-libraries" style={cardStyle}>
         <SectionHead
           id="fl-libraries"
-          title="Libraries"
+          title={tUi("libraries")}
           count={
             followedLibraries.length > 0
               ? plural(followedLibraries.length, "library", "libraries")
@@ -133,7 +137,7 @@ export function FollowingSection({
       <section aria-labelledby="fl-drives" style={cardStyle}>
         <SectionHead
           id="fl-drives"
-          title="Drives"
+          title={tUi("drives")}
           count={
             followedDrives.length > 0
               ? plural(followedDrives.length, "drive", "drives")
@@ -146,7 +150,7 @@ export function FollowingSection({
       <section aria-labelledby="fl-people" style={cardStyle}>
         <SectionHead
           id="fl-people"
-          title="People"
+          title={tUi("people")}
           count={
             followedUsers.length > 0
               ? plural(followedUsers.length, "person", "people")

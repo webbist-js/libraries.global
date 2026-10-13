@@ -40,7 +40,8 @@ export function PlansSection({
   return (
     <section
       aria-labelledby="plans-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
+      data-homepage-surface="paper"
+      className="mx-auto w-full max-w-[1360px] px-4 sm:px-8"
     >
       <div
         className="rounded-[32px] border px-[clamp(20px,5vw,72px)] py-[clamp(32px,5vw,72px)]"

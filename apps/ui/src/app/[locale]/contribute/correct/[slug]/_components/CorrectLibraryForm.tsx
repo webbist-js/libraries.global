@@ -1,20 +1,21 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
-import { primaryCtaSm } from "@/lib/styles"
-
-import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
 import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "../../../index/_components/wizard.constants"
-import { RequiredTag } from "../../../index/_components/WizardFields"
+} from "@/components/library-editor/wizard.constants"
+import { RequiredTag } from "@/components/library-editor/WizardFields"
+import { T } from "@/lib/design-tokens"
+import { primaryCtaSm } from "@/lib/styles"
+
+import { ContributeSectionHeader } from "../../../_components/ContributeSectionHeader"
 
 const CORRECTION_CATEGORIES = [
   { value: "opening_hours", label: "Opening hours" },
@@ -120,6 +121,8 @@ export function CorrectLibraryForm({
   slug,
   libraryName,
 }: CorrectLibraryFormProps) {
+  const tUi = useUiTranslations("ui")
+
   const [category, setCategory] = useState<CorrectionCategory | "">("")
   const [note, setNote] = useState("")
   const [pending, setPending] = useState(false)
@@ -164,7 +167,7 @@ export function CorrectLibraryForm({
     >
       <ContributeSectionHeader
         compact
-        section="Suggest a correction"
+        section={tUi("suggest_a_correction")}
         title={`Correct *${libraryName}.*`}
         lead="Spotted something wrong on this library's page? Tell us what needs fixing and an editor will review it."
       />
@@ -332,7 +335,7 @@ export function CorrectLibraryForm({
                     disabled={disabled}
                     className={`${primaryCtaSm} text-[15px] disabled:cursor-not-allowed disabled:opacity-45`}
                   >
-                    {pending ? "Submitting…" : "Submit correction"}
+                    {pending ? tUi("submitting") : "Submit correction"}
                     {!pending && (
                       <Icon
                         icon="mdi:arrow-right"

@@ -105,3 +105,19 @@ describe("article editor pages read ?locale=", () => {
     expect(shellLocale(await page(args()))).toBeUndefined()
   })
 })
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const messages = (await import("../../../../../../locales/en.json")).default
+
+  return {
+    getTranslations: async (config: string | { namespace?: string }) =>
+      createTranslator({
+        locale: "en",
+        messages,
+        namespace: (typeof config === "string" ? config : config.namespace) as
+          | keyof typeof messages
+          | undefined,
+      }),
+  }
+})

@@ -1,13 +1,12 @@
 "use client"
-import * as Dialog from "@radix-ui/react-dialog"
-import type { ReactNode } from "react"
+
+import { type ReactNode, useId } from "react"
 
 import { T } from "@/lib/design-tokens"
 
-/**
- * A modal sheet from the right or the bottom. Radix names the dialog from
- * its Title; pass `labelledBy` only to name it from another element.
- */
+import { Drawer } from "./Drawer"
+
+/** Controlled drawer with standard body padding and a fixed action footer. */
 export function Sheet({
   open,
   onClose,
@@ -16,6 +15,7 @@ export function Sheet({
   children,
   footer,
   labelledBy,
+  size = "lg",
 }: {
   readonly open: boolean
   readonly onClose: () => void
@@ -24,51 +24,32 @@ export function Sheet({
   readonly children: ReactNode
   readonly footer?: ReactNode
   readonly labelledBy?: string
+  readonly size?: "md" | "lg" | "xl"
 }) {
+  const id = useId()
+
   return (
-    <Dialog.Root
+    <Drawer
       open={open}
-      onOpenChange={(value) => {
-        if (!value) onClose()
-      }}
+      onClose={onClose}
+      side={side}
+      size={size}
+      title={title}
+      titleId={labelledBy ?? id}
+      footer={
+        footer ? (
+          <footer
+            className="shrink-0 border-t px-5 py-4 sm:px-6"
+            style={{ borderColor: T.border.line }}
+          >
+            {footer}
+          </footer>
+        ) : undefined
+      }
     >
-      <Dialog.Portal>
-        <Dialog.Overlay
-          className="fixed inset-0 z-[80]"
-          style={{ background: T.overlay.scrim }}
-        />
-        <Dialog.Content
-          aria-describedby={undefined}
-          {...(labelledBy ? { "aria-labelledby": labelledBy } : {})}
-          className={`fixed z-[81] flex max-h-[95dvh] flex-col overflow-y-auto overscroll-contain border p-6 ${side === "right" ? "inset-y-0 right-0 w-full sm:max-w-2xl" : "inset-x-0 bottom-0 rounded-t-[20px]"}`}
-          style={{ background: T.bg.void, borderColor: T.border.hi }}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <Dialog.Title
-              {...(labelledBy ? { id: labelledBy } : {})}
-              className="m-0 text-2xl"
-              style={{ fontFamily: T.font.serif }}
-            >
-              {title}
-            </Dialog.Title>
-            <Dialog.Close
-              className="min-h-11 shrink-0 rounded-full border bg-white px-4 font-semibold hover:bg-(--t-bg-surface)"
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
-            >
-              Close
-            </Dialog.Close>
-          </div>
-          <div className="py-5">{children}</div>
-          {footer ? (
-            <footer
-              className="border-t pt-4"
-              style={{ borderColor: T.border.line }}
-            >
-              {footer}
-            </footer>
-          ) : null}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+        {children}
+      </div>
+    </Drawer>
   )
 }

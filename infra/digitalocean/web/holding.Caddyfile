@@ -1,0 +1,22 @@
+(launch-holding) {
+	header {
+		X-Robots-Tag "noindex, nofollow"
+		Cache-Control "no-store"
+		Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+	}
+	root * /srv
+	handle /healthz {
+		respond "Launch preparation gateway is running." 200
+	}
+	handle /robots.txt {
+		file_server
+	}
+	handle {
+		header Retry-After 3600
+		file_server {
+			status 503
+		}
+	}
+}

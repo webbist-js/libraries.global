@@ -175,6 +175,26 @@ export function ReviewModal({
               ]}
             />
           </Box>
+          {sub.submissionType === "new_library" &&
+            !!sub.draftData?.staffCreation && (
+              <Box paddingBottom={4}>
+                <Alert
+                  title="Staff ownership requested"
+                  variant="warning"
+                  closeLabel="Close"
+                  onClose={() => {}}
+                >
+                  Approval also grants the submitter owner access to this
+                  library.
+                  {typeof (
+                    sub.draftData.staffCreation as Record<string, unknown>
+                  ).teamName === "string"
+                    ? ` It adds the library to ${(sub.draftData.staffCreation as Record<string, unknown>).teamName}’s Team coverage.`
+                    : ""}{" "}
+                  Verify their staff relationship and service before approving.
+                </Alert>
+              </Box>
+            )}
           {(sub.note || sub.editSummary) &&
             sub.submissionType !== "wiki_edit" &&
             sub.submissionType !== "blog_submission" && (

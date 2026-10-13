@@ -139,6 +139,7 @@ describe("library export (bridge)", () => {
           continentSlug: "europe",
           countrySlug: "england",
           regionSlug: "west-yorkshire",
+          sourceRecords: [],
         },
         [id(2)]: {
           name: "Unplaced Library",
@@ -157,6 +158,7 @@ describe("library export (bridge)", () => {
           continentSlug: null,
           countrySlug: null,
           regionSlug: null,
+          sourceRecords: [],
         },
       },
     })
@@ -180,6 +182,7 @@ describe("library export (bridge)", () => {
           "email",
         ],
         populate: {
+          sourceRecords: true,
           continent: { fields: ["slug"] },
           country: { fields: ["slug", "name"] },
           region: { fields: ["slug", "name"] },

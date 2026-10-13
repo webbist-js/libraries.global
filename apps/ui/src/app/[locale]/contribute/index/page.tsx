@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
@@ -82,6 +83,8 @@ export default async function IndexEditorPage({
 }: {
   searchParams: Promise<{ intent?: string | string[] }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ intent }, session] = await Promise.all([
     searchParams,
     getSessionSSR(await headers()),
@@ -110,7 +113,7 @@ export default async function IndexEditorPage({
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       <ContributeSectionHeader
-        section="Index editor"
+        section={tUi("index_editor")}
         title="Add or improve *a library.*"
         lead="Search the index first. Improve the record if it’s there, or add it if it isn’t. An editor reviews every change before it goes live."
       />
@@ -129,7 +132,7 @@ export default async function IndexEditorPage({
                 margin: "0 0 6px",
               }}
             >
-              Your record
+              {tUi("your_record")}
             </h2>
             <p
               className="m-0 flex items-center gap-2 text-[15px]"
@@ -257,7 +260,7 @@ export default async function IndexEditorPage({
               </ol>
             </section>
             <aside
-              aria-label="Tip"
+              aria-label={tUi("tip")}
               className="rounded-[20px] px-6 py-5"
               style={{ background: "var(--tint-national-bg)" }}
             >

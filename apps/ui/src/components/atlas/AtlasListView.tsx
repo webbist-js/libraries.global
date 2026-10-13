@@ -1,20 +1,26 @@
 "use client"
 
+import type { AtlasListResponse, AtlasScope } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
+import { atlasListLibrary } from "./atlas-data-adapter"
 import { Icon, TypeBadge } from "./atlas-ui"
 import {
   type AtlasLibrary,
   distanceSq,
+  hasAccessibility,
   openNow,
   todayHoursLabel,
   typeGroupOf,
 } from "./atlas.logic"
+import { AccessibilitySwatch } from "./AtlasAccessibility"
 import { AtlasCount, ViewToggle } from "./AtlasBottomBar"
 import { AtlasExportButton } from "./AtlasExportButton"
+import { useAtlasRequest } from "./useAtlasData"
 
 type SortKey = "distance" | "name" | "place"
 const PAGE = 20
@@ -24,7 +30,7 @@ const PAGE = 20
  * filters. Hovering or focusing a row highlights its pin.
  */
 export function AtlasListView({
-  libraries,
+  libraries: localLibraries,
   center,
   now,
   onHover,
@@ -32,6 +38,8 @@ export function AtlasListView({
   onSeePlans,
   notice,
   compact = false,
+  accessibility,
+  remoteScope,
 }: {
   readonly libraries: AtlasLibrary[]
   readonly center: { lat: number; lng: number }
@@ -43,11 +51,36 @@ export function AtlasListView({
   /** Data notices (offline, load errors) shown above the table. */
   readonly notice?: React.ReactNode
   readonly compact?: boolean
+  readonly accessibility?: string[]
+  readonly remoteScope?: AtlasScope
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [sort, setSort] = useState<SortKey>("distance")
   const [page, setPage] = useState(0)
+  const [cursor, setCursor] = useState<string | undefined>(),
+    [previous, setPrevious] = useState<(string | undefined)[]>([])
+  const [refresh, setRefresh] = useState(0)
+  const remote = useAtlasRequest<AtlasListResponse>(
+    remoteScope
+      ? {
+          schemaVersion: 1,
+          purpose: "list",
+          scope: remoteScope,
+          centre: center,
+          sort,
+          ...(sort === "distance" ? { page } : { cursor }),
+        }
+      : null,
+    refresh
+  )
+  const libraries = remoteScope
+    ? (remote.value?.rows ?? []).map(atlasListLibrary)
+    : localLibraries
+  const total = remoteScope ? (remote.value?.exactTotal ?? 0) : libraries.length
 
   const sorted = useMemo(() => {
+    if (remoteScope) return libraries
     const xs = [...libraries]
     if (sort === "name") xs.sort((a, b) => a.name.localeCompare(b.name))
     else if (sort === "place")
@@ -64,15 +97,24 @@ export function AtlasListView({
       )
 
     return xs
-  }, [libraries, sort, center.lat, center.lng])
+  }, [libraries, sort, center.lat, center.lng, remoteScope])
 
-  const pages = Math.max(1, Math.ceil(sorted.length / PAGE))
+  const pages = Math.max(
+    1,
+    Math.ceil(
+      (remoteScope ? (remote.value?.reachableTotal ?? 0) : sorted.length) / PAGE
+    )
+  )
   // Panning the map changes the list; clamp rather than reset in an effect.
-  const current = Math.min(page, pages - 1)
-  const rows = sorted.slice(current * PAGE, current * PAGE + PAGE)
+  const current = remoteScope ? page : Math.min(page, pages - 1)
+  const rows = remoteScope
+    ? sorted
+    : sorted.slice(current * PAGE, current * PAGE + PAGE)
   const changeSort = (key: SortKey) => {
     setSort(key)
     setPage(0)
+    setCursor(undefined)
+    setPrevious([])
   }
 
   const sortButton = (key: SortKey, label: string) => (
@@ -93,7 +135,7 @@ export function AtlasListView({
 
   return (
     <section
-      aria-label="Libraries in view"
+      aria-label={tUi("libraries_in_view")}
       className="flex h-full min-h-0 flex-col"
     >
       <div
@@ -101,7 +143,7 @@ export function AtlasListView({
         style={{ borderColor: T.border.divider }}
       >
         <div className="flex-1">
-          <AtlasCount count={libraries.length} sub="libraries in view" />
+          <AtlasCount count={total} sub="libraries in view" />
         </div>
         <label className="flex items-center gap-2 text-[14px] font-semibold">
           Sort
@@ -112,11 +154,20 @@ export function AtlasListView({
             style={{ borderColor: T.border.hi }}
           >
             <option value="distance">Nearest the centre</option>
-            <option value="name">Name</option>
+            <option value="name">{tUi("name")}</option>
             <option value="place">Place</option>
           </select>
         </label>
-        <AtlasExportButton libraries={sorted} onSeePlans={onSeePlans} />
+        <AtlasExportButton
+          libraries={sorted}
+          onSeePlans={onSeePlans}
+          total={total}
+          request={
+            remoteScope
+              ? { schemaVersion: 1, scope: remoteScope, sort, centre: center }
+              : undefined
+          }
+        />
         <ViewToggle list onChange={(list) => !list && onShowMap()} />
       </div>
 
@@ -129,7 +180,32 @@ export function AtlasListView({
         </div>
       ) : null}
 
-      {libraries.length === 0 ? (
+      {remoteScope && !remote.value ? (
+        <p role="status" className="p-6">
+          {remote.error ?? "Loading libraries…"}
+          {remote.error ? (
+            <button
+              type="button"
+              className="ml-3 underline"
+              onClick={() => {
+                setPage(0)
+                setCursor(undefined)
+                setPrevious([])
+                setRefresh((value) => value + 1)
+              }}
+            >
+              Reload list
+            </button>
+          ) : null}
+        </p>
+      ) : null}
+      {remoteScope && sort === "distance" && total > 1000 ? (
+        <p className="px-6 text-sm">
+          Showing the nearest 1,000 of {total.toLocaleString()} libraries. Sort
+          by name or place to reach every record.
+        </p>
+      ) : null}
+      {libraries.length === 0 && (!remoteScope || remote.value) ? (
         <p className="m-0 p-6 text-[16px]" style={{ color: T.ink.dim }}>
           No libraries in this part of the map match your filters. Zoom out or
           loosen a filter.
@@ -148,7 +224,7 @@ export function AtlasListView({
                   className="border-b px-3.5 py-3 text-left text-[13px] whitespace-nowrap"
                   style={{ borderColor: T.border.hi }}
                 >
-                  {sortButton("name", "Name")}
+                  {sortButton("name", tUi("name"))}
                 </th>
                 {!compact ? (
                   <th
@@ -156,7 +232,7 @@ export function AtlasListView({
                     className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
                     style={{ borderColor: T.border.hi }}
                   >
-                    Type
+                    {tUi("type")}
                   </th>
                 ) : null}
                 <th
@@ -166,6 +242,15 @@ export function AtlasListView({
                 >
                   {sortButton("place", "Place")}
                 </th>
+                {accessibility ? (
+                  <th
+                    scope="col"
+                    className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
+                    style={{ borderColor: T.border.hi }}
+                  >
+                    {tUi("accessibility")}{" "}
+                  </th>
+                ) : null}
                 <th
                   scope="col"
                   className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
@@ -237,6 +322,21 @@ export function AtlasListView({
                     >
                       {l.city ?? l.region ?? "—"}
                     </td>
+                    {accessibility ? (
+                      <td
+                        className="border-b px-3.5 py-3"
+                        style={{ borderColor: T.border.divider }}
+                      >
+                        <span className="flex items-center gap-2 whitespace-nowrap">
+                          <AccessibilitySwatch
+                            confirmed={hasAccessibility(l, accessibility)}
+                          />
+                          {hasAccessibility(l, accessibility)
+                            ? "Confirmed"
+                            : "Not confirmed"}
+                        </span>
+                      </td>
+                    ) : null}
                     <td
                       className="border-b px-3.5 py-3"
                       style={{ borderColor: T.border.divider }}
@@ -295,21 +395,41 @@ export function AtlasListView({
         >
           <span className="text-[14px]" style={{ color: T.ink.dim }}>
             Showing {current * PAGE + 1}–
-            {Math.min(sorted.length, (current + 1) * PAGE)} of{" "}
-            {sorted.length.toLocaleString()}
+            {remoteScope
+              ? current * PAGE + rows.length
+              : Math.min(sorted.length, (current + 1) * PAGE)}{" "}
+            of {total.toLocaleString()}
           </span>
           <div className="flex gap-2">
             <PagerButton
-              disabled={current === 0}
-              onClick={() => setPage(current - 1)}
+              disabled={
+                current === 0 ||
+                (remoteScope && sort !== "distance" && previous.length === 0) ||
+                Boolean(remoteScope && !remote.value)
+              }
+              onClick={() => {
+                setPage(current - 1)
+                if (remoteScope && sort !== "distance") {
+                  setCursor(previous.at(-1))
+                  setPrevious(previous.slice(0, -1))
+                }
+              }}
             >
-              Previous
+              {tUi("previous")}{" "}
             </PagerButton>
             <PagerButton
-              disabled={current >= pages - 1}
-              onClick={() => setPage(current + 1)}
+              disabled={
+                remoteScope ? !remote.value?.hasMore : current >= pages - 1
+              }
+              onClick={() => {
+                setPage(current + 1)
+                if (remoteScope && sort !== "distance") {
+                  setPrevious([...previous.slice(-99), cursor])
+                  setCursor(remote.value?.nextCursor)
+                }
+              }}
             >
-              Next
+              {tUi("next")}{" "}
             </PagerButton>
           </div>
         </div>
@@ -323,6 +443,8 @@ function OpenState({
 }: {
   readonly state: "open" | "closed" | "unknown"
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (state === "open")
     return (
       <span
@@ -330,7 +452,7 @@ function OpenState({
         style={{ color: T.accent.ok }}
       >
         <Icon name="check" size={16} stroke={2.4} />
-        Open
+        {tUi("open")}
       </span>
     )
   if (state === "closed")
@@ -340,7 +462,7 @@ function OpenState({
         style={{ color: T.accent.danger }}
       >
         <Icon name="x" size={16} stroke={2.4} />
-        Closed
+        {tUi("closed")}
       </span>
     )
 
@@ -350,7 +472,7 @@ function OpenState({
       style={{ color: T.ink.dim }}
     >
       <Icon name="info" size={16} />
-      Unknown
+      {tUi("unknown")}{" "}
     </span>
   )
 }

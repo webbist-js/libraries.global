@@ -1,11 +1,27 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { cleanup, render, screen } from "@/test/render"
+
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}))
+vi.mock("@/lib/navigation", () => ({
+  routing: { defaultLocale: "en", locales: ["en"] },
+  usePathname: () => "/north-america/united-states/new-york",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  Link: ({
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement>) =>
+    createElement("a", props, children),
+}))
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
@@ -59,7 +75,7 @@ describe("RegionLibraryList", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(24)
     expect(
       screen
-        .getByRole("link", { name: "See all 1,083 libraries in New York" })
+        .getByRole("link", { name: "Open in the full library index" })
         .getAttribute("href")
     ).toBe("/libraries?region=new-york")
   })

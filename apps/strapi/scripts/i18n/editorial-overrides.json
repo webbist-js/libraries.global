@@ -1,0 +1,322 @@
+{
+  "Getting started": {
+    "cs": "Začínáme",
+    "fr": "Premiers pas"
+  },
+  "What Libraries Global is, how to use it and more importantly - how to contribute to it.": {
+    "cs": "Co je Libraries Global, jak jej používat a především jak do něj přispívat.",
+    "fr": "Ce qu’est Libraries Global, comment l’utiliser et surtout comment y contribuer."
+  },
+  "Contributing": {
+    "cs": "Přispívání",
+    "fr": "Contribuer"
+  },
+  "Adding and correcting records, claiming a library, improving the docs, and how points and badges work.": {
+    "cs": "Přidávání a opravy záznamů, převzetí správy knihovny, zlepšování dokumentace a fungování bodů a odznaků.",
+    "fr": "Ajouter et corriger des fiches, revendiquer une bibliothèque, améliorer la documentation et comprendre les points et les badges."
+  },
+  "Data & API": {
+    "cs": "Data a API",
+    "fr": "Données et API"
+  },
+  "How the data is organised, the licence that covers it, and the planned public API.": {
+    "cs": "Jak jsou data uspořádána, jaká licence se na ně vztahuje a jaké veřejné API připravujeme.",
+    "fr": "L’organisation des données, leur licence et l’API publique prévue."
+  },
+  "Design system": {
+    "cs": "Designový systém",
+    "fr": "Système de design"
+  },
+  "What the site's colours and labels mean, and the accessibility rules every page follows.": {
+    "cs": "Význam barev a štítků na webu a pravidla přístupnosti, která dodržují všechny stránky.",
+    "fr": "La signification des couleurs et des libellés du site, et les règles d’accessibilité suivies sur chaque page."
+  },
+  "Governance": {
+    "cs": "Správa projektu",
+    "fr": "Gouvernance"
+  },
+  "Roles and permissions, and how contributions are reviewed.": {
+    "cs": "Role, oprávnění a způsob kontroly příspěvků.",
+    "fr": "Les rôles, les autorisations et la vérification des contributions."
+  },
+  "Events": {
+    "cs": "Akce",
+    "fr": "Événements"
+  },
+  "How library events reach the site, how to find and follow them, and how libraries connect and look after their event feeds.": {
+    "cs": "Jak se knihovní akce dostávají na web, jak je hledat a sledovat a jak knihovny připojují a spravují své zdroje akcí.",
+    "fr": "Comment les événements des bibliothèques arrivent sur le site, comment les trouver et les suivre, et comment les bibliothèques connectent et gèrent leurs flux d’événements."
+  },
+  "Feature": {
+    "cs": "Funkce",
+    "fr": "Fonctionnalité"
+  },
+  "This describes development of a platform feature": {
+    "cs": "Vývoj funkce platformy.",
+    "fr": "Le développement d’une fonctionnalité de la plateforme."
+  },
+  "Library profiles": {
+    "cs": "Profily knihoven",
+    "fr": "Portraits de bibliothèques"
+  },
+  "Portraits of individual libraries.": {
+    "cs": "Představení jednotlivých knihoven.",
+    "fr": "Portraits de bibliothèques individuelles."
+  },
+  "Collections": {
+    "cs": "Sbírky",
+    "fr": "Collections"
+  },
+  "Remarkable holdings and how they're kept.": {
+    "cs": "Pozoruhodné fondy a péče o ně.",
+    "fr": "Des fonds remarquables et leur conservation."
+  },
+  "History": {
+    "cs": "Historie",
+    "fr": "Histoire"
+  },
+  "How libraries came to be.": {
+    "cs": "Jak knihovny vznikaly.",
+    "fr": "Comment les bibliothèques sont nées."
+  },
+  "Interviews": {
+    "cs": "Rozhovory",
+    "fr": "Entretiens"
+  },
+  "Conversations with the people inside.": {
+    "cs": "Rozhovory s lidmi z knihoven.",
+    "fr": "Des conversations avec celles et ceux qui y travaillent."
+  },
+  "Field notes": {
+    "cs": "Zápisky z návštěv",
+    "fr": "Notes de terrain"
+  },
+  "Short dispatches from visits.": {
+    "cs": "Krátké zprávy z návštěv.",
+    "fr": "De courts récits de visites."
+  },
+  "From the index": {
+    "cs": "Z rejstříku",
+    "fr": "Du répertoire"
+  },
+  "Updates on the data and how it's made.": {
+    "cs": "Novinky o datech a jejich vzniku.",
+    "fr": "Des nouvelles des données et de leur constitution."
+  },
+  "Data": {
+    "cs": "Data",
+    "fr": "Données"
+  },
+  "Where our records come from, and how each dataset was imported.": {
+    "cs": "Odkud pocházejí naše záznamy a jak byly jednotlivé datové sady importovány.",
+    "fr": "L’origine de nos fiches et la façon dont chaque jeu de données a été importé."
+  },
+  "Rare Books": {
+    "cs": "Vzácné knihy",
+    "fr": "Livres rares"
+  },
+  "Manuscripts": {
+    "cs": "Rukopisy",
+    "fr": "Manuscrits"
+  },
+  "Digital Libraries": {
+    "cs": "Digitální knihovny",
+    "fr": "Bibliothèques numériques"
+  },
+  "Open Access": {
+    "cs": "Otevřený přístup",
+    "fr": "Libre accès"
+  },
+  "Archival Science": {
+    "cs": "Archivnictví",
+    "fr": "Archivistique"
+  },
+  "Cataloguing": {
+    "cs": "Katalogizace",
+    "fr": "Catalogage"
+  },
+  "Library History": {
+    "cs": "Dějiny knihoven",
+    "fr": "Histoire des bibliothèques"
+  },
+  "Conservation": {
+    "cs": "Konzervace",
+    "fr": "Conservation"
+  },
+  "Information Science": {
+    "cs": "Informační věda",
+    "fr": "Sciences de l’information"
+  },
+  "Academic Libraries": {
+    "cs": "Akademické knihovny",
+    "fr": "Bibliothèques universitaires"
+  },
+  "Public Libraries": {
+    "cs": "Veřejné knihovny",
+    "fr": "Bibliothèques publiques"
+  },
+  "National Libraries": {
+    "cs": "Národní knihovny",
+    "fr": "Bibliothèques nationales"
+  },
+  "Special Collections": {
+    "cs": "Speciální sbírky",
+    "fr": "Collections spécialisées"
+  },
+  "Interlibrary Loan": {
+    "cs": "Meziknihovní výpůjční služby",
+    "fr": "Prêt entre bibliothèques"
+  },
+  "Reference Services": {
+    "cs": "Referenční služby",
+    "fr": "Services de référence"
+  },
+  "Library Architecture": {
+    "cs": "Architektura knihoven",
+    "fr": "Architecture des bibliothèques"
+  },
+  "Metadata": {
+    "cs": "Metadata",
+    "fr": "Métadonnées"
+  },
+  "Linked Data": {
+    "cs": "Propojená data",
+    "fr": "Données liées"
+  },
+  "Library Law": {
+    "cs": "Knihovnické právo",
+    "fr": "Droit des bibliothèques"
+  },
+  "Accessibility": {
+    "cs": "Přístupnost",
+    "fr": "Accessibilité"
+  },
+  "Indigenous Knowledge": {
+    "cs": "Znalosti původních obyvatel",
+    "fr": "Savoirs autochtones"
+  },
+  "Children's Libraries": {
+    "cs": "Dětské knihovny",
+    "fr": "Bibliothèques pour enfants"
+  },
+  "Mobile Libraries": {
+    "cs": "Mobilní knihovny",
+    "fr": "Bibliothèques itinérantes"
+  },
+  "Prison Libraries": {
+    "cs": "Vězeňské knihovny",
+    "fr": "Bibliothèques pénitentiaires"
+  },
+  "Hospital Libraries": {
+    "cs": "Nemocniční knihovny",
+    "fr": "Bibliothèques hospitalières"
+  },
+  "Code": {
+    "cs": "Kód",
+    "fr": "Code"
+  },
+  "Lorem ipsum sit dolar amet": {
+    "cs": "Lorem ipsum sit dolar amet",
+    "fr": "Lorem ipsum sit dolar amet"
+  },
+  "Alex Bennett": {
+    "cs": "Alex Bennett",
+    "fr": "Alex Bennett"
+  },
+  "Founder, Libraries Global": {
+    "cs": "Zakladatel, Libraries Global",
+    "fr": "Fondateur de Libraries Global"
+  },
+  "Alex Bennett is a web developer in Yorkshire and the person behind Libraries Global.": {
+    "cs": "Alex Bennett je webový vývojář z Yorkshiru a tvůrce projektu Libraries Global.",
+    "fr": "Alex Bennett est développeur web dans le Yorkshire et le créateur de Libraries Global."
+  },
+  "Build, contribute, extend the index.": {
+    "cs": "Tvořte, přispívejte a rozšiřujte rejstřík.",
+    "fr": "Construisez, contribuez et enrichissez le répertoire."
+  },
+  "These docs will help you explore the platform, contribute or update library records, and claim and manage your organisation’s data.": {
+    "cs": "Tato dokumentace vám pomůže poznat platformu, přispívat do záznamů knihoven nebo je aktualizovat a převzít správu dat vaší organizace.",
+    "fr": "Cette documentation vous aide à découvrir la plateforme, à contribuer aux fiches des bibliothèques ou à les mettre à jour, et à revendiquer et gérer les données de votre organisation."
+  },
+  "Documentation": {
+    "cs": "Dokumentace",
+    "fr": "Documentation"
+  },
+  "Field notes *from the stacks.*": {
+    "cs": "Zápisky *z knihovních regálů.*",
+    "fr": "Notes de terrain *entre les rayonnages.*"
+  },
+  "Dispatches, histories, and curator's annotations from the hands doing the catalog work — written by librarians, archivists, and researchers at work inside the world's houses of memory.": {
+    "cs": "Zprávy, příběhy a kurátorské poznámky od lidí, kteří se věnují katalogizaci — od knihovníků, archivářů a badatelů pracujících v institucích uchovávajících paměť světa.",
+    "fr": "Récits, histoires et annotations de conservateurs par celles et ceux qui font le travail de catalogage — bibliothécaires, archivistes et chercheurs œuvrant dans les institutions qui préservent la mémoire du monde."
+  },
+  "The Library Journal · since 2024": {
+    "cs": "Knihovnický časopis · od roku 2024",
+    "fr": "Le journal des bibliothèques · depuis 2024"
+  },
+  "Before you start": {
+    "cs": "Než začnete",
+    "fr": "Avant de commencer"
+  },
+  "You need an approved claim on the library, and the details your platform asks for. Event feeds explained lists them for each platform.": {
+    "cs": "Potřebujete schválené převzetí správy knihovny a údaje vyžadované vaší platformou. Článek Vysvětlení zdrojů akcí je uvádí pro každou platformu.",
+    "fr": "Vous devez disposer d’une revendication approuvée pour la bibliothèque et des informations demandées par votre plateforme. L’article Comprendre les flux d’événements les répertorie pour chaque plateforme."
+  },
+  "Plans and staff access": {
+    "cs": "Tarify a přístup zaměstnanců",
+    "fr": "Formules et accès du personnel"
+  },
+  "Going live from your phone": {
+    "cs": "Sdílení aktuální polohy z telefonu",
+    "fr": "Partager votre position en direct depuis votre téléphone"
+  },
+  "Go live": {
+    "cs": "Sdílet aktuální polohu",
+    "fr": "Partager la position en direct"
+  },
+  "Before you can go live": {
+    "cs": "Než začnete sdílet aktuální polohu",
+    "fr": "Avant de partager votre position en direct"
+  },
+  "Suggesting a correction": {
+    "cs": "Navrhování opravy",
+    "fr": "Suggérer une correction"
+  },
+  "The editorial board explained": {
+    "cs": "Jak funguje redakční rada",
+    "fr": "Comprendre le comité éditorial"
+  },
+  "Event feeds: questions and fixes": {
+    "cs": "Zdroje akcí: otázky a řešení problémů",
+    "fr": "Flux d’événements : questions et solutions"
+  },
+  "Reviewing event feed submissions": {
+    "cs": "Kontrola návrhů zdrojů akcí",
+    "fr": "Examiner les propositions de flux d’événements"
+  },
+  "Connecting your library's event feed": {
+    "cs": "Připojení zdroje akcí vaší knihovny",
+    "fr": "Connecter le flux d’événements de votre bibliothèque"
+  },
+  "Event feeds explained": {
+    "cs": "Vysvětlení zdrojů akcí",
+    "fr": "Comprendre les flux d’événements"
+  },
+  "Looking after your event feed": {
+    "cs": "Správa zdroje akcí",
+    "fr": "Gérer votre flux d’événements"
+  },
+  "Claiming a library you work for": {
+    "cs": "Převzetí správy knihovny, ve které pracujete",
+    "fr": "Revendiquer une bibliothèque où vous travaillez"
+  },
+  "17,584 US public libraries, from one survey": {
+    "cs": "17 584 veřejných knihoven v USA z jednoho průzkumu",
+    "fr": "17 584 bibliothèques publiques américaines issues d’une enquête"
+  },
+  "Public Libraries Survey": {
+    "cs": "Public Libraries Survey",
+    "fr": "Public Libraries Survey"
+  }
+}

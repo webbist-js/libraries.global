@@ -1,10 +1,11 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { StepHeading } from "@/components/library-editor/WizardFields"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import {
   buildLibraryPath,
@@ -12,8 +13,6 @@ import {
   searchLibraryNames,
 } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
-
-import { StepHeading } from "./WizardFields"
 
 export const INDEX_EDITOR_PATH = "/contribute/index"
 
@@ -173,6 +172,8 @@ export function FindLibraryFirst({
   /** "claim": results open the library's page, where Claim lives. */
   readonly intent?: "edit" | "claim"
 }) {
+  const tUi = useUiTranslations("ui")
+
   const claiming = intent === "claim"
   const locale = useLocale()
   const [query, setQuery] = useState("")
@@ -245,7 +246,7 @@ export function FindLibraryFirst({
     <div>
       <StepHeading
         eyebrow="Start here"
-        title="Find the library first."
+        title={tUi("find_the_library_first")}
         lead="If it’s already in the index, improve that record. If it isn’t, you can add it as a new library. It’s the same form either way."
       />
 
@@ -311,7 +312,7 @@ export function FindLibraryFirst({
       <div className="mt-5 mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <p style={groupLabelStyle}>
           {hasSearched
-            ? "Results"
+            ? tUi("results")
             : claiming
               ? "Your library"
               : "Records that need help"}

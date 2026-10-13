@@ -8,6 +8,7 @@ export { ChoiceCard } from "./ChoiceCard"
 export { CtaBannerSection } from "./CtaBannerSection"
 export { DismissiblePrompt, PromptDismissButton } from "./DismissiblePrompt"
 export { Drawer } from "./Drawer"
+export { DRAWER_CARD, DrawerLinkCard, DrawerTile } from "./DrawerCards"
 export { EditorialSection } from "./EditorialSection"
 export { EmptyState } from "./EmptyState"
 export {

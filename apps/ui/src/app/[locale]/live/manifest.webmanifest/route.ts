@@ -1,9 +1,11 @@
+import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ locale: string }> }
 ) {
   const { locale } = await params
-  const lang = locale === "cs" ? "cs" : "en"
+  const lang = isSupportedLocale(locale) ? locale : DEFAULT_LOCALE
 
   return Response.json(
     {

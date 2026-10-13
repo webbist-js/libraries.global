@@ -1,11 +1,15 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
-import { Badge } from "@/components/ds/Badge"
 import { Drawer } from "@/components/ds/Drawer"
+import {
+  DRAWER_CARD as CARD,
+  DrawerLinkCard,
+  DrawerTile as Tile,
+} from "@/components/ds/DrawerCards"
 import { TONES as NOTICE_TONES } from "@/components/ds/Notice"
 import { useFeaturedDrive } from "@/hooks/useContributeMenu"
 import { useEntitlements, useStaff } from "@/lib/access-client"
@@ -84,89 +88,6 @@ async function lookupPageLibrary(
   }
 }
 
-const CARD = "rounded-[20px] border"
-const TILE =
-  "flex min-h-[104px] flex-col justify-between gap-6 rounded-[20px] border p-3.5 text-[16px] font-semibold leading-snug no-underline transition-colors hover:bg-(--t-bg-surface)"
-
-function Tile({
-  href,
-  icon,
-  label,
-  tag,
-}: {
-  readonly href: string
-  readonly icon: string
-  readonly label: string
-  /** "Mobile": a green tag. "Team": a lock and an indigo tag (not covered). */
-  readonly tag?: "Mobile" | "Team"
-}) {
-  return (
-    <Link
-      aria-label={tag ? `${label} (${tag})` : label}
-      href={href}
-      className={TILE}
-      style={{
-        background: T.bg.deep,
-        borderColor: T.border.line,
-        color: T.ink.base,
-      }}
-    >
-      <span className="flex w-full items-start justify-between gap-2">
-        <Icon
-          aria-hidden="true"
-          className="shrink-0"
-          height={20}
-          icon={tag === "Team" ? "mdi:lock-outline" : icon}
-          style={{ color: T.accent.primary }}
-          width={20}
-        />
-        {tag ? (
-          <Badge label={tag} color={tag === "Mobile" ? "ok" : "aurora"} />
-        ) : null}
-      </span>
-      <span className="w-full">{label}</span>
-    </Link>
-  )
-}
-
-function DriveCard({
-  href,
-  title,
-  need,
-}: {
-  readonly href: string
-  readonly title: string
-  readonly need?: string | null
-}) {
-  return (
-    <Link
-      href={href}
-      className={`${CARD} flex flex-col gap-2 px-3.5 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface)`}
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      <span
-        className="flex items-start gap-3 text-[16px] leading-snug font-semibold"
-        style={{ color: T.ink.base }}
-      >
-        <Icon
-          aria-hidden="true"
-          className="mt-0.5 shrink-0"
-          height={20}
-          icon="mdi:pin-outline"
-          style={{ color: T.accent.primary }}
-          width={20}
-        />
-        <span>{title}</span>
-      </span>
-      {need ? (
-        <span className="text-[14px]" style={{ color: T.ink.dim }}>
-          Your library needs: {need}
-        </span>
-      ) : null}
-    </Link>
-  )
-}
-
 /**
  * The staff drawer: one library at a time, with its live state (Mobile),
  * what's waiting for review, the staff area's pages, and the drives that
@@ -174,6 +95,8 @@ function DriveCard({
  * Contribute dropdown; the page's own library is the default choice.
  */
 export function StaffDrawer() {
+  const tUi = useUiTranslations("ui")
+
   const staff = useStaff()
   const { libraries } = staff
   const teams = staff.teams ?? []
@@ -280,7 +203,7 @@ export function StaffDrawer() {
             style={{ color: T.accent.ok }}
             width={16}
           />
-          Verified staff
+          {tUi("verified_staff")}
         </span>
       }
       headerContent={
@@ -293,7 +216,7 @@ export function StaffDrawer() {
               icon="mdi:swap-vertical"
               width={18}
             />
-            <span className="sr-only">Library</span>
+            <span className="sr-only">{tUi("library")}</span>
             <select
               className="min-h-12 w-full min-w-0 appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-[15px] font-semibold"
               onChange={(event) => setSelected(event.target.value)}
@@ -321,7 +244,7 @@ export function StaffDrawer() {
 
           {mobile ? (
             <section
-              aria-label="Live sharing"
+              aria-label={tUi("live_sharing")}
               className={`${CARD} flex min-h-16 items-center gap-3 px-3.5 py-3`}
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
@@ -337,7 +260,7 @@ export function StaffDrawer() {
                   className="m-0 text-[15px] font-semibold"
                   style={{ color: isLive ? T.accent.ok : T.ink.base }}
                 >
-                  {isLive ? "Live now" : "Not live"}
+                  {isLive ? tUi("live_now") : "Not live"}
                 </p>
                 <p
                   aria-live="polite"
@@ -360,7 +283,7 @@ export function StaffDrawer() {
                   href={`/live/${id}`}
                   className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
                 >
-                  Go live
+                  {tUi("go_live")}
                 </Link>
               ) : (
                 <p
@@ -508,7 +431,7 @@ export function StaffDrawer() {
                 width={15}
               />
               {data
-                ? "Nothing waiting for review"
+                ? tUi("nothing_waiting_for_review")
                 : "Checking for suggestions…"}
             </p>
           )}
@@ -526,25 +449,25 @@ export function StaffDrawer() {
             <Tile
               href={base}
               icon="mdi:view-dashboard-outline"
-              label="Staff area"
+              label={tUi("staff_area")}
             />
             <Tile
               href={`${base}/edit`}
               icon="mdi:pencil-outline"
-              label="Edit record"
+              label={tUi("edit_record")}
             />
             {mobile ? (
               <>
                 <Tile
-                  href={`${base}/timetable`}
+                  href={`${base}/edit?step=timetable`}
                   icon="mdi:calendar-blank-outline"
-                  label="Timetable"
+                  label={tUi("timetable")}
                   tag="Mobile"
                 />
                 <Tile
                   href={`${base}/live`}
                   icon="mdi:broadcast"
-                  label="Go live"
+                  label={tUi("go_live")}
                   tag="Mobile"
                 />
               </>
@@ -552,12 +475,12 @@ export function StaffDrawer() {
             <Tile
               href={`${base}/notices`}
               icon="mdi:bell-outline"
-              label="Notices"
+              label={tUi("notices")}
             />
             <Tile
               href={`${base}/events`}
               icon="mdi:calendar-check-outline"
-              label="Event feeds"
+              label={tUi("event_feeds")}
             />
             <Tile
               href={
@@ -565,30 +488,30 @@ export function StaffDrawer() {
                 `/libraries?q=${encodeURIComponent(library.slug)}`
               }
               icon="mdi:eye-outline"
-              label="Public page"
+              label={tUi("public_page")}
             />
             <Tile
               href="/contribute/index/new"
               icon="mdi:map-marker-plus-outline"
-              label="Add a library"
+              label={tUi("add_a_library")}
             />
             <Tile
               href={`${base}/traffic`}
               icon="mdi:chart-bar"
-              label="Traffic"
+              label={tUi("traffic")}
               tag={trafficCovered ? undefined : "Team"}
             />
             <Tile
               href={`${base}/team`}
               icon="mdi:account-group-outline"
-              label="Team"
+              label={tUi("team")}
               tag={teamCovered ? undefined : "Team"}
             />
             {organises ? (
               <Tile
                 href="/staff/team"
                 icon="mdi:account-multiple-plus-outline"
-                label="Team organiser"
+                label={tUi("team_organiser")}
               />
             ) : null}
           </div>
@@ -603,7 +526,7 @@ export function StaffDrawer() {
             >
               Featured drive
             </h3>
-            <DriveCard
+            <DrawerLinkCard
               href={driveHref(featuredDrive.slug)}
               title={featuredDrive.title}
             />
@@ -623,10 +546,14 @@ export function StaffDrawer() {
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {data.drives.map((drive) => (
                   <li key={drive.slug}>
-                    <DriveCard
+                    <DrawerLinkCard
                       href={`/community/drives/${drive.slug}`}
                       title={drive.title}
-                      need={drive.need}
+                      description={
+                        drive.need
+                          ? `Your library needs: ${drive.need}`
+                          : undefined
+                      }
                     />
                   </li>
                 ))}
@@ -644,7 +571,7 @@ export function StaffDrawer() {
             className="mt-2 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            All drives
+            {tUi("all_drives")}
           </Link>
         </section>
       </div>

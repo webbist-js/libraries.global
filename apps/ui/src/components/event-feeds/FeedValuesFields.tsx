@@ -1,13 +1,14 @@
 "use client"
 
 import { EVENT_PROVIDERS, type EventProviderKey } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "@/app/[locale]/contribute/index/_components/wizard.constants"
+} from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 
 /** One provider's fields from the registry. Secrets are write-only inputs. */
@@ -24,6 +25,8 @@ export function FeedValuesFields({
   readonly currentHints?: Record<string, string>
   readonly errorField?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const [shown, setShown] = useState<Record<string, boolean>>({})
 
@@ -42,7 +45,7 @@ export function FeedValuesFields({
               {f.required ? null : (
                 <span style={{ color: T.ink.dim, fontWeight: 400 }}>
                   {" "}
-                  (optional)
+                  {tUi("optional")}{" "}
                 </span>
               )}
             </label>
@@ -81,13 +84,13 @@ export function FeedValuesFields({
                     color: T.ink.base,
                     background: T.bg.deep,
                   }}
-                  aria-label={`${shown[f.key] ? "Hide" : "Show"} ${f.label}`}
+                  aria-label={`${shown[f.key] ? tUi("hide") : tUi("show")} ${f.label}`}
                   aria-pressed={!!shown[f.key]}
                   onClick={() =>
                     setShown((s) => ({ ...s, [f.key]: !s[f.key] }))
                   }
                 >
-                  {shown[f.key] ? "Hide" : "Show"}
+                  {shown[f.key] ? tUi("hide") : tUi("show")}
                 </button>
               ) : null}
             </div>

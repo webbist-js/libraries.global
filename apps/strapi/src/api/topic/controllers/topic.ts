@@ -1,17 +1,23 @@
 import { factories } from "@strapi/strapi"
 
+import { readLocale } from "../../../utils/read-status"
+
 export default factories.createCoreController(
   "api::topic.topic" as any,
   () => ({
     // GET /api/topics/approved — public
     async findApproved(ctx: any) {
-      const topics = await strapi.service("api::topic.topic").findApproved()
+      const topics = await strapi
+        .service("api::topic.topic")
+        .findApproved(readLocale(ctx))
       ctx.body = { data: topics }
     },
 
     // GET /api/topics — admin only
     async findAll(ctx: any) {
-      const topics = await strapi.service("api::topic.topic").findAll()
+      const topics = await strapi
+        .service("api::topic.topic")
+        .findAll(readLocale(ctx))
       ctx.body = { data: topics }
     },
 

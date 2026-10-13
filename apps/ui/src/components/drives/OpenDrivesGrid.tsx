@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -41,6 +42,8 @@ export function OpenDrivesGrid({
   readonly followed: string[] | null
   readonly now?: Date
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [followOn, setFollowOn] = useState(false)
   const [near, setNear] = useState(false)
   const [locating, setLocating] = useState(false)
@@ -114,7 +117,7 @@ export function OpenDrivesGrid({
     <div className="flex flex-col gap-3.5">
       <div
         role="group"
-        aria-label="Order drives"
+        aria-label={tUi("order_drives")}
         className="flex flex-wrap gap-2"
       >
         <button

@@ -1,12 +1,8 @@
-/**
- * Plain emails for the moderation notifications (spec §6.3): short
- * sentences, the moderator's note quoted when there is one, one link, no
- * marketing. Every email has a plain-text body and a minimal HTML twin.
- */
+import { emailTemplate } from "@repo/shared-data"
+
+/** Review and access emails share the application shell; notes stay recipient-only. */
 
 type Email = { subject: string; text: string; html: string }
-
-const SIGN_OFF = "Libraries Global"
 
 /** Words for a submission type, as a contributor would say them. */
 const TYPE_LABELS: Record<string, string> = {
@@ -52,19 +48,7 @@ export function languagesLabel(locales: string[]): string {
   return locales.length === 0 ? "all languages" : locales.join(", ")
 }
 
-function escapeHtml(s: string): string {
-  return s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;")
-}
-
-/**
- * Builds the email from paragraphs: `note` becomes a quote under "Their
- * note:", and `link` the closing line.
- */
+/** Review notes are rendered as a distinct panel, never interpolated as HTML. */
 function compose(
   subject: string,
   parts: {
@@ -75,39 +59,29 @@ function compose(
     footer?: string
   }
 ): Email {
-  const note = parts.note?.trim() || null
-  const text = [
-    parts.greeting,
-    ...parts.lines,
-    ...(note
+  return emailTemplate({
+    title: subject,
+    eyebrow: "Your contributions & access",
+    body: [parts.greeting, ...parts.lines].join("\n\n"),
+    sections: parts.note?.trim()
       ? [
-          `Their note:\n${note
-            .split("\n")
-            .map((l) => `> ${l}`)
-            .join("\n")}`,
+          {
+            kind: "note",
+            title: "Their note",
+            body: parts.note
+              .trim()
+              .split("\n")
+              .map((line) => `> ${line}`)
+              .join("\n"),
+          },
         ]
-      : []),
-    `${parts.link.label}: ${parts.link.url}`,
-    ...(parts.footer ? [parts.footer] : []),
-    SIGN_OFF,
-  ].join("\n\n")
-
-  const p = (s: string) => `<p>${escapeHtml(s)}</p>`
-  const html = [
-    p(parts.greeting),
-    ...parts.lines.map(p),
-    ...(note
-      ? [
-          p("Their note:"),
-          `<blockquote>${escapeHtml(note).replaceAll("\n", "<br>")}</blockquote>`,
-        ]
-      : []),
-    `<p><a href="${escapeHtml(parts.link.url)}">${escapeHtml(parts.link.label)}</a></p>`,
-    ...(parts.footer ? [p(parts.footer)] : []),
-    p(SIGN_OFF),
-  ].join("\n")
-
-  return { subject, text, html }
+      : [],
+    url: parts.link.url,
+    action: parts.link.label,
+    footer: parts.footer,
+    postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
+    siteUrl: process.env.APP_PUBLIC_URL,
+  })
 }
 
 const greeting = (name: string | null) =>

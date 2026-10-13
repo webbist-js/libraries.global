@@ -2,12 +2,13 @@
 
 // Small presentational pieces shared by the Atlas Explorer panels.
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
-import { RAMP, TYPE_SHAPE } from "./atlas-map.style"
+import { BUS_ICON_PATH, RAMP, TYPE_SHAPE } from "./atlas-map.style"
 import { TYPE_GROUPS, type TypeGroupKey } from "./atlas.logic"
 
 // ── Icons (stroke paths from the Atlas Explorer design) ─────────────────────
@@ -15,6 +16,8 @@ import { TYPE_GROUPS, type TypeGroupKey } from "./atlas.logic"
 const PATHS = {
   search: "M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4",
   filter: "M4 5h16M7 12h10M10 19h4",
+  settings:
+    "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z",
   layers: "M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5",
   info: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v6M12 7.5v.5",
   lock: "M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 017 0v3",
@@ -30,6 +33,7 @@ const PATHS = {
   list: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
   map: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14",
   book: "M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 5v16",
+  bus: BUS_ICON_PATH,
   route:
     "M6 19a2 2 0 100-4 2 2 0 000 4zM18 9a2 2 0 100-4 2 2 0 000 4zM8 17h7a3 3 0 000-6H9a3 3 0 010-6h7",
   chev: "M9 6l6 6-6 6",
@@ -98,6 +102,21 @@ export function PinGlyph({
   const shape = TYPE_SHAPE[group]
   const fg = tintOfGroup(group).fg
 
+  if (group === "mobile")
+    return (
+      <span
+        className="inline-flex shrink-0 items-center justify-center rounded border-2"
+        style={{
+          width: size + 8,
+          height: size + 8,
+          color: fg,
+          borderColor: fg,
+        }}
+      >
+        <Icon name="bus" size={size + 2} />
+      </span>
+    )
+
   return (
     <i
       aria-hidden="true"
@@ -135,11 +154,21 @@ export function TypeBadge({ group }: { readonly group: TypeGroupKey }) {
   )
 }
 
-export function ProChip({ locked = true }: { readonly locked?: boolean }) {
+export function ProChip({
+  locked = true,
+  soft = false,
+}: {
+  readonly locked?: boolean
+  readonly soft?: boolean
+}) {
   return (
     <span
       className="inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 text-[12px] font-bold whitespace-nowrap text-white"
-      style={{ background: T.ink.base }}
+      style={
+        soft
+          ? { background: T.accent.chip, color: T.accent.primary }
+          : { background: T.ink.base }
+      }
     >
       {locked ? <Icon name="lock" size={11} stroke={2.4} /> : null}
       Pro
@@ -169,12 +198,14 @@ export function Chip({
   children,
   tint,
   count,
+  preserveGlyph = false,
 }: {
   readonly on: boolean
   readonly onClick: () => void
   readonly children: React.ReactNode
   readonly tint?: { bg: string; fg: string }
   readonly count?: number
+  readonly preserveGlyph?: boolean
 }) {
   const style: React.CSSProperties = on
     ? tint
@@ -191,10 +222,12 @@ export function Chip({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className="inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[14px] font-semibold whitespace-nowrap"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-[14px] font-semibold whitespace-nowrap"
       style={style}
     >
-      {on ? <Icon name="check" size={14} stroke={2.4} /> : null}
+      {on && !preserveGlyph ? (
+        <Icon name="check" size={14} stroke={2.4} />
+      ) : null}
       {children}
       {count !== undefined ? (
         <span
@@ -215,12 +248,16 @@ export function Switch({
   label,
   locked = false,
   disabled = false,
+  descriptionId,
+  variant = "default",
 }: {
   readonly checked: boolean
   readonly onChange: () => void
   readonly label: string
   readonly locked?: boolean
   readonly disabled?: boolean
+  readonly descriptionId?: string
+  readonly variant?: "default" | "layer"
 }) {
   return (
     <button
@@ -228,23 +265,34 @@ export function Switch({
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      aria-describedby={descriptionId}
       disabled={disabled}
       onClick={onChange}
       className="relative h-6 w-10 shrink-0 rounded-full disabled:cursor-not-allowed"
       style={{
-        background: checked
-          ? T.accent.primary
-          : locked || disabled
-            ? T.bg.surface
-            : "#fff",
-        border: `1.5px ${locked || disabled ? "dashed" : "solid"} ${checked ? T.accent.primary : "#8A8799"}`,
+        background:
+          variant === "layer"
+            ? disabled
+              ? T.bg.muted
+              : checked
+                ? T.accent.primary
+                : T.border.hi
+            : checked
+              ? T.accent.primary
+              : locked || disabled
+                ? T.bg.surface
+                : "#fff",
+        border:
+          variant === "layer"
+            ? "1.5px solid transparent"
+            : `1.5px ${locked || disabled ? "dashed" : "solid"} ${checked ? T.accent.primary : "#8A8799"}`,
       }}
     >
       <i
         className="absolute top-[3px] h-[15px] w-[15px] rounded-full transition-[left] motion-reduce:transition-none"
         style={{
           left: checked ? 19 : 3,
-          background: checked ? "#fff" : "#8A8799",
+          background: variant === "layer" || checked ? "#fff" : "#8A8799",
         }}
       />
     </button>
@@ -260,7 +308,7 @@ export function Segmented<V extends string>({
   className,
 }: {
   readonly value: V
-  readonly options: { value: V; label: string; icon?: IconName }[]
+  readonly options: { value: V; label: React.ReactNode; icon?: IconName }[]
   readonly onChange: (v: V) => void
   readonly label: string
   readonly className?: string
@@ -322,16 +370,24 @@ export function RampLegend({
       <span className="text-[13px] font-bold whitespace-nowrap">{title}</span>
       <span
         className="flex h-2.5 overflow-hidden rounded-[3px]"
-        style={{ width }}
+        style={{
+          width,
+          background:
+            ramp === "heat"
+              ? `linear-gradient(to right, ${RAMP[ramp].join(", ")})`
+              : undefined,
+        }}
         aria-hidden="true"
       >
-        {RAMP[ramp].map((c) => (
-          <span key={c} className="flex-1" style={{ background: c }} />
-        ))}
+        {ramp === "seq"
+          ? RAMP[ramp].map((c) => (
+              <span key={c} className="flex-1" style={{ background: c }} />
+            ))
+          : null}
       </span>
       <span
         className="flex justify-between text-[12px]"
-        style={{ width, color: "#45435A" }}
+        style={{ width, color: T.ink.dim }}
       >
         {ticks.map((t, i) => (
           <span key={`${t}-${i}`}>{t}</span>
@@ -370,10 +426,7 @@ export function KeyLegend({
           </span>
         ))}
       </span>
-      <span
-        className="text-[12px] whitespace-nowrap"
-        style={{ color: T.ink.dim }}
-      >
+      <span className="max-w-[320px] text-[12px]" style={{ color: T.ink.dim }}>
         {source}
       </span>
     </div>
@@ -394,6 +447,8 @@ export function YearRange({
   readonly value: [number, number]
   readonly onChange: (v: [number, number]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pct = (v: number) => ((v - min) / Math.max(1, max - min)) * 100
   const thumb =
     "pointer-events-none absolute inset-0 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-(--t-accent-primary) [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-(--t-accent-primary) [&::-moz-range-thumb]:bg-white"
@@ -416,7 +471,7 @@ export function YearRange({
       />
       <input
         type="range"
-        aria-label="Founded from"
+        aria-label={tUi("founded_from")}
         min={min}
         max={max}
         value={value[0]}
@@ -427,7 +482,7 @@ export function YearRange({
       />
       <input
         type="range"
-        aria-label="Founded until"
+        aria-label={tUi("founded_until")}
         min={min}
         max={max}
         value={value[1]}

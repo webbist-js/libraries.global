@@ -1,5 +1,5 @@
 import Image from "next/image"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { ArticleShareButtons } from "@/components/blog/ArticleShareButtons"
@@ -16,13 +16,34 @@ import {
   extractHeadings,
   formatDate,
 } from "@/lib/article-helpers"
+import { avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
+import { isFounder } from "@/lib/founder"
 import { routing } from "@/lib/navigation"
+import { absoluteUrl } from "@/lib/seo/metadata"
 import type {
   BlogArticleDetail,
   BlogArticleSummary,
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+
+/** "Founder" pill beside the author's name (`lib/founder.ts`). */
+function FounderTag() {
+  const tUi = useUiTranslations("ui")
+
+  return (
+    <span
+      className="ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 align-middle text-[12px] font-semibold"
+      style={{
+        fontFamily: T.font.sans,
+        background: "var(--tint-special-bg)",
+        color: "var(--tint-special-fg)",
+      }}
+    >
+      {tUi("founder")}
+    </span>
+  )
+}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -38,6 +59,9 @@ export function BlogArticlePage({
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+  const tArticle = useUiTranslations("editorial")
+
   if (!article) {
     return (
       <div
@@ -46,7 +70,7 @@ export function BlogArticlePage({
       >
         <GlobalHeader locale={locale} />
         <main className="flex flex-1 items-center justify-center">
-          <p style={{ color: T.ink.dim }}>Article not found.</p>
+          <p style={{ color: T.ink.dim }}>{tArticle("articleNotFound")}</p>
         </main>
       </div>
     )
@@ -58,10 +82,15 @@ export function BlogArticlePage({
 
   const readingTime = estimateReadingTime(article.body)
   const wordCount = countWords(article.body)
-  const publishedDate = formatDate(article.publishedAt ?? article.updatedAt)
+  const publishedDate = formatDate(
+    article.publishedAt ?? article.updatedAt,
+    "long",
+    locale
+  )
   const shortDate = formatDate(
     article.publishedAt ?? article.updatedAt,
-    "short"
+    "short",
+    locale
   )
   const headings = extractHeadings(article.body)
 
@@ -72,20 +101,33 @@ export function BlogArticlePage({
     []
   ).slice(0, 3)
 
-  const authorInitial = (article.author ?? "?").charAt(0).toUpperCase()
+  const authorProfile = article.authorProfile ?? null
+  const authorName =
+    article.author ??
+    (authorProfile
+      ? [authorProfile.firstName, authorProfile.lastName]
+          .filter(Boolean)
+          .join(" ") || authorProfile.username
+      : null)
+  const authorHref = authorProfile
+    ? `/profile/${encodeURIComponent(authorProfile.username)}`
+    : null
+  const authorPhoto = avatarSrc(authorProfile?.avatar, "sm")
+  const authorIsFounder = isFounder(authorProfile?.username)
+  const authorInitial = (authorName ?? "?").charAt(0).toUpperCase()
 
   const metaRows = [
-    { label: "Published", value: publishedDate },
+    { label: tUi("published"), value: publishedDate },
     {
-      label: "Reading time",
-      value: readingTime ? `${readingTime} min` : null,
+      label: tArticle("readingTimeLabel"),
+      value: readingTime ? tArticle("minutes", { minutes: readingTime }) : null,
     },
     {
-      label: "Words",
-      value: wordCount > 0 ? wordCount.toLocaleString("en-GB") : null,
+      label: tArticle("words"),
+      value: wordCount > 0 ? wordCount.toLocaleString(locale) : null,
     },
-    { label: "Section", value: article.section?.name },
-    { label: "Category", value: article.category?.name },
+    { label: tArticle("section"), value: article.section?.name },
+    { label: tArticle("category"), value: article.category?.name },
   ].filter((row): row is { label: string; value: string } => !!row.value)
 
   return (
@@ -99,8 +141,8 @@ export function BlogArticlePage({
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
-            { label: "Home", href: "/" },
-            { label: "Journal", href: "/journal" },
+            { label: tUi("home"), href: "/" },
+            { label: tUi("journal"), href: "/journal" },
             ...(article.section?.slug
               ? [
                   {
@@ -130,7 +172,12 @@ export function BlogArticlePage({
                   />
                 ) : null}
                 <span className="text-[15px]" style={{ color: T.ink.dim }}>
-                  {[shortDate, readingTime ? `${readingTime} min read` : null]
+                  {[
+                    shortDate,
+                    readingTime
+                      ? tArticle("readingTime", { minutes: readingTime })
+                      : null,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
@@ -160,20 +207,40 @@ export function BlogArticlePage({
                 <div className="flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex size-10 flex-none items-center justify-center rounded-full text-[15px] font-semibold"
+                    className="flex size-10 flex-none items-center justify-center overflow-hidden rounded-full text-[15px] font-semibold"
                     style={{
                       background: "var(--tint-national-bg)",
                       color: "var(--tint-national-fg)",
                     }}
                   >
-                    {authorInitial}
+                    {authorPhoto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={authorPhoto}
+                        alt=""
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      authorInitial
+                    )}
                   </span>
                   <div>
                     <p
                       className="m-0 text-[15px] font-semibold"
                       style={{ color: T.ink.base }}
                     >
-                      {article.author ?? "The Journal"}
+                      {authorName && authorHref ? (
+                        <GlobalLink
+                          href={authorHref}
+                          className="underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                          style={{ color: T.ink.base }}
+                        >
+                          {authorName}
+                        </GlobalLink>
+                      ) : (
+                        (authorName ?? "The Journal")
+                      )}
+                      {authorIsFounder ? <FounderTag /> : null}
                     </p>
                     {article.authorTitle ? (
                       <p
@@ -188,7 +255,10 @@ export function BlogArticlePage({
 
                 <ArticleShareButtons
                   title={article.title}
-                  slug={article.slug}
+                  url={absoluteUrl(
+                    `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                    locale
+                  )}
                 />
               </div>
             </header>
@@ -233,20 +303,29 @@ export function BlogArticlePage({
             />
 
             {/* Author bio */}
-            {article.author ? (
+            {authorName ? (
               <div
                 className="flex items-start gap-5 rounded-3xl border p-6 sm:p-7"
                 style={{ background: T.bg.deep, borderColor: T.border.line }}
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-14 flex-none items-center justify-center rounded-full text-[20px] font-semibold"
+                  className="flex size-14 flex-none items-center justify-center overflow-hidden rounded-full text-[20px] font-semibold"
                   style={{
                     background: "var(--tint-national-bg)",
                     color: "var(--tint-national-fg)",
                   }}
                 >
-                  {authorInitial}
+                  {authorPhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={authorPhoto}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    authorInitial
+                  )}
                 </span>
                 <div className="min-w-0">
                   <p
@@ -263,7 +342,18 @@ export function BlogArticlePage({
                       color: T.ink.base,
                     }}
                   >
-                    {article.author}
+                    {authorHref ? (
+                      <GlobalLink
+                        href={authorHref}
+                        className="underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                        style={{ color: T.ink.base }}
+                      >
+                        {authorName}
+                      </GlobalLink>
+                    ) : (
+                      authorName
+                    )}
+                    {authorIsFounder ? <FounderTag /> : null}
                   </p>
                   {article.authorTitle ? (
                     <p
@@ -280,6 +370,15 @@ export function BlogArticlePage({
                     >
                       {article.authorBio}
                     </p>
+                  ) : null}
+                  {authorHref ? (
+                    <GlobalLink
+                      href={authorHref}
+                      className="mt-3 inline-flex text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                      style={{ color: T.accent.primary }}
+                    >
+                      {tArticle("viewProfile")}
+                    </GlobalLink>
                   ) : null}
                 </div>
               </div>
@@ -305,7 +404,7 @@ export function BlogArticlePage({
                   strokeLinejoin="round"
                 />
               </svg>
-              Back to the journal
+              {tArticle("backToJournal")}
             </GlobalLink>
           </div>
 
@@ -320,7 +419,7 @@ export function BlogArticlePage({
                   className="m-0 mb-2 text-[15px] font-semibold"
                   style={{ color: T.ink.base }}
                 >
-                  About this article
+                  {tArticle("aboutArticle")}
                 </p>
                 <dl className="m-0">
                   {metaRows.map((row) => (
@@ -346,7 +445,7 @@ export function BlogArticlePage({
 
             {headings.length > 0 ? (
               <nav
-                aria-label="In this article"
+                aria-label={tUi("in_this_article")}
                 className="hidden rounded-[20px] border p-5 lg:block"
                 style={{ background: T.bg.deep, borderColor: T.border.line }}
               >
@@ -354,7 +453,7 @@ export function BlogArticlePage({
                   className="m-0 mb-2 text-[15px] font-semibold"
                   style={{ color: T.ink.base }}
                 >
-                  In this article
+                  {tUi("in_this_article")}
                 </p>
                 <ul
                   className="m-0 flex list-none flex-col gap-1 border-l p-0 pl-3"

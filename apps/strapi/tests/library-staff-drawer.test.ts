@@ -1,10 +1,31 @@
 import type { MobileTimetable } from "@repo/shared-data"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
-import {
+import drawerService, {
   driveNeed,
   nextRouteOf,
 } from "../src/plugins/library-staff/server/drawer-service"
+
+it("matches dataset-scoped drives using the retained origin, rather than a supporting reference", async () => {
+  const listPublic = vi.fn().mockResolvedValue([
+    { slug: "origin", title: "Origin drive", scope: { source: "libraryon" } },
+    {
+      slug: "reference",
+      title: "Reference drive",
+      scope: { source: "wikidata" },
+    },
+  ])
+  const drawer = drawerService({ strapi: { service: () => ({ listPublic }) } })
+  expect(
+    await drawer.drives({
+      documentId: "library",
+      sourceRecords: [
+        { dataset: "wikidata", role: "reference" },
+        { dataset: "libraryon", role: "origin" },
+      ],
+    })
+  ).toEqual([{ slug: "origin", title: "Origin drive", need: null }])
+})
 
 /**
  * The staff drawer's "next route" for a Mobile library: the first visit

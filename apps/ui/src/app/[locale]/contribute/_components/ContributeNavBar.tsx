@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { type SectionTab, SectionTabs } from "@/components/ds"
 import { useCapabilities } from "@/lib/access-client"
@@ -71,6 +72,8 @@ export function activeContributeTab(pathname: string): string | null {
 
 /** The Contribute section's tabs, on the bottom edge of its hero band. */
 export function ContributeNavBar() {
+  const tUi = useUiTranslations("ui")
+
   const pathname = usePathname()
   const { has, ready } = useCapabilities()
   // The Knowledge editor is for editors; everyone else gets the role
@@ -90,7 +93,7 @@ export function ContributeNavBar() {
   return (
     <SectionTabs
       activeId={activeContributeTab(pathname)}
-      label="Contribute"
+      label={tUi("contribute")}
       tabs={tabs}
     />
   )

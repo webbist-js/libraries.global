@@ -1,5 +1,10 @@
 import {
+  validateOpeningSchedule,
   FACILITY_CHECKLIST,
+  submittedSourceRecords,
+  appendSourceRecords,
+  publicSourceUrl,
+  type LibrarySourceRecord,
   LOCALIZED_LIBRARY_FIELDS,
   MOBILE_FACILITY_CHECKLIST,
 } from "@repo/shared-data"
@@ -69,8 +74,6 @@ const STRING_FIELDS = new Set([
   "foundedYear",
   "openedYear",
   "closedYear",
-  "source",
-  "sourceUrl",
   "operatorName",
   "timetableUrl",
 ])
@@ -153,7 +156,7 @@ const RELATION_SETS = new Set(["services", "amenities", "accessibility"])
 /** Where each relation's options live, for new options a contributor names. */
 export const OPTION_COLLECTIONS: Record<string, string> = OPTION_UIDS
 
-const MAX_TIMEFRAMES_PER_DAY = 6
+const MAX_TIMEFRAMES_PER_DAY = 10
 const MAX_SUGGESTED_OPTIONS = 5
 const MAX_OPTION_NAME = 80
 
@@ -166,6 +169,7 @@ const MAX_OPTION_NAME = 80
 export function sanitizeOpeningTimes(raw: unknown): OpeningTimesValue | null {
   if (!raw || typeof raw !== "object") return null
   if (!Array.isArray((raw as { days?: unknown }).days)) return null
+  if (validateOpeningSchedule(raw).length) return null
   const value = normalizeOpeningTimesValue(raw)
   for (const day of value.days) {
     if (day.timeframes.length > MAX_TIMEFRAMES_PER_DAY) return null
@@ -292,6 +296,7 @@ export const RECORD_FIELD_KEYS: ReadonlySet<string> = new Set([
   "mobileTimetable",
   "homeLibrary",
   "socialLinks",
+  "sourceRecords",
   "uploadedImages",
   "absentFacilities",
   "lat",
@@ -372,6 +377,16 @@ export function buildLibraryRecordData(
   const f = fields as Record<string, unknown>
 
   for (const [key, raw] of Object.entries(f)) {
+    if (key === "sourceRecords") {
+      const records = submittedSourceRecords(raw).map((r) => ({
+        ...r,
+        fields: r.fields?.filter(
+          (field) => RECORD_FIELD_KEYS.has(field) && field !== "sourceRecords"
+        ),
+      }))
+      if (records.length) data.sourceRecords = records
+      continue
+    }
     if (STRING_FIELDS.has(key)) {
       if (typeof raw !== "string") continue
       const v = raw.trim().slice(0, MAX_STRING)
@@ -543,7 +558,7 @@ export function localizedOnly(data: LibraryRecordData): {
   kept: LibraryRecordData
   dropped: string[]
 } {
-  const allowed = new Set(LOCALIZED_LIBRARY_FIELDS)
+  const allowed = new Set([...LOCALIZED_LIBRARY_FIELDS, "sourceRecords"])
   const kept: LibraryRecordData = {}
   const dropped: string[] = []
   for (const [k, v] of Object.entries(data)) {
@@ -593,7 +608,10 @@ const DOCUMENT_RELATIONS: ReadonlySet<string> = new Set([
 /** Media a record edit changes by upload id. */
 const MEDIA_RELATIONS: ReadonlySet<string> = new Set(["heroImage", "gallery"])
 /** Components, read whole. */
-const COMPONENTS: ReadonlySet<string> = new Set(["socialLinks"])
+const COMPONENTS: ReadonlySet<string> = new Set([
+  "socialLinks",
+  "sourceRecords",
+])
 
 /** A value without its row ids or empty keys, so stored and sent copies compare. */
 function withoutIds(v: unknown): unknown {
@@ -615,17 +633,7 @@ function hoursKey(v: unknown): string {
   if (!v || typeof v !== "object" || !Array.isArray((v as any).days))
     return canonical(null)
 
-  return canonical(
-    normalizeOpeningTimesValue(v).days.map((d) => ({
-      day: d.day,
-      enabled: d.enabled,
-      timeframes: d.timeframes.map(({ startTime, endTime, staffing }) => ({
-        startTime,
-        endTime,
-        staffing,
-      })),
-    }))
-  )
+  return canonical(withoutIds(normalizeOpeningTimesValue(v)))
 }
 
 function locationKey(v: unknown): string {
@@ -686,6 +694,15 @@ export function changedFields(
   return Object.keys(data).filter((k) => {
     const next = data[k]
     const now = current[k]
+    if (k === "sourceRecords")
+      return (
+        canonical(
+          appendSourceRecords(
+            now as LibrarySourceRecord[],
+            next as LibrarySourceRecord[]
+          )
+        ) !== canonical(appendSourceRecords(now as LibrarySourceRecord[], []))
+      )
     if (k === "openingTimes") return hoursKey(next) !== hoursKey(now)
     if (k === "location") return locationKey(next) !== locationKey(now)
     if (DOCUMENT_RELATIONS.has(k))
@@ -771,6 +788,11 @@ export async function applyLibraryRecord(
   })
   // Option suggestions are shared relations: they belong to the default
   // locale, so a translation never raises one.
+  const raw = submission.fields as Record<string, unknown> | null
+  if (raw?.kind === "source" && !data.sourceRecords) {
+    const url = publicSourceUrl(raw.sourceUrl)
+    if (url) data.sourceRecords = submittedSourceRecords([{ url }])
+  }
   const suggested = localized ? {} : parseSuggestedOptions(submission.fields)
   if (localized) {
     const { kept, dropped } = localizedOnly(data)
@@ -845,12 +867,28 @@ export async function applyLibraryRecord(
   // Only new names were suggested: they're logged, the record is unchanged.
   if (Object.keys(data).length === 0) return "applied"
 
+  if (Array.isArray(data.sourceRecords))
+    data.sourceRecords = data.sourceRecords.map((r) => ({
+      ...r,
+      submissionDocumentId: submission.documentId,
+      retrievedAt: new Date().toISOString().slice(0, 10),
+    }))
+
   // Read before the write: which fields differ from what readers see now.
   if (report)
     report.changed = changedFields(
       data,
       await currentValues(strapi, library.documentId, locale, data)
     )
+
+  if (
+    Object.keys(data).every((k) => k === "sourceRecords") &&
+    changedFields(
+      data,
+      await currentValues(strapi, library.documentId, locale, data)
+    ).length === 0
+  )
+    return "noop"
 
   // The timestamps are shared by every locale version: a translation leaves
   // them to the default locale's own changes. Setting a verifiable section

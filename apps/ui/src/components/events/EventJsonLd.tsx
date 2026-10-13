@@ -24,9 +24,6 @@ export function EventJsonLd({
   endTime,
   url,
   imageUrl,
-  isFree,
-  priceMin,
-  priceMax,
   libraryName,
 }: EventJsonLdProps) {
   const schema: Record<string, unknown> = {
@@ -44,14 +41,8 @@ export function EventJsonLd({
     // Google requires `location` for Event rich results; the host library is
     // the best we have until events carry a structured venue/address.
     location: libraryName ? { "@type": "Place", name: libraryName } : undefined,
-    offers: {
-      "@type": "Offer",
-      price: isFree ? 0 : (priceMin ?? undefined),
-      priceCurrency: "GBP",
-      availability: "https://schema.org/InStock",
-      url,
-      ...(priceMax ? { maxPrice: priceMax } : {}),
-    },
+    // The feeds don't store currency or ticket availability. Don't assert GBP
+    // or InStock for worldwide events; add offers when that data is available.
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
   }

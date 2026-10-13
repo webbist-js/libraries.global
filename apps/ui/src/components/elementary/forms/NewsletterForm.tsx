@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { MoveRight } from "lucide-react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -17,6 +18,8 @@ type Status =
   | { kind: "error"; message: string }
 
 export function NewsletterForm() {
+  const tUi = useUiTranslations("ui")
+
   const [status, setStatus] = useState<Status>({ kind: "idle" })
   const form = useForm<z.infer<FormSchemaType>>({
     resolver: zodResolver(NewsletterFormSchema),
@@ -89,7 +92,7 @@ export function NewsletterForm() {
             type="submit"
             className="absolute top-1/2 right-3 -translate-y-1/2 md:w-fit"
             form={newsletterForm}
-            aria-label="Submit form"
+            aria-label={tUi("submit_form")}
             disabled={form.formState.isSubmitting}
           >
             <MoveRight className="size-4" />
@@ -105,7 +108,8 @@ export function NewsletterForm() {
           color: status.kind === "error" ? T.accent.danger : T.accent.ok,
         }}
       >
-        {status.kind === "sent" && "Thanks — you're on the list."}
+        {status.kind === "sent" &&
+          "Thanks. If confirmation is needed, check your inbox to finish subscribing."}
         {status.kind === "error" && status.message}
       </p>
     </div>

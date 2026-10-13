@@ -3,22 +3,34 @@
   "info": {
     "displayName": "Source Record",
     "icon": "database",
-    "description": "The record this library matches in an imported dataset, so a re-run updates it and other datasets can find it."
+    "description": "An imported dataset record or a public reference supporting library facts."
   },
   "options": {},
   "attributes": {
     "dataset": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "recordId": {
-      "type": "string",
-      "required": true
+      "type": "string"
     },
     "retrievedAt": {
       "type": "date"
     },
     "url": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "role": {
+      "type": "enumeration",
+      "enum": ["origin", "reference"],
+      "default": "reference"
+    },
+    "fields": {
+      "type": "json"
+    },
+    "submissionDocumentId": {
       "type": "string"
     }
   }

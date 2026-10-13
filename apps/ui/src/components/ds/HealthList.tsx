@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -28,16 +29,18 @@ export function HealthList({
   readonly score?: { done: number; total: number }
   readonly renderAction?: (row: HealthRow) => ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
-      className="rounded-[20px] border p-6"
+      className="rounded-[28px] border p-5 sm:p-6"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="record-health-heading"
     >
       <div className="flex items-baseline justify-between gap-4">
         <h2
           id="record-health-heading"
-          className="m-0 text-[16px] font-semibold"
+          className="m-0 text-[18px] font-semibold"
           style={{ color: T.ink.base }}
         >
           {title}
@@ -65,24 +68,24 @@ export function HealthList({
               style={{ borderColor: T.border.divider }}
             >
               <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-full"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full"
                 style={{
                   background: ok ? TONES.ok.bg : TONES.warn.bg,
                   color: ok ? TONES.ok.fg : TONES.warn.fg,
                 }}
-                title={ok ? "Done" : "To do"}
+                title={ok ? tUi("done") : "To do"}
               >
                 <Icon
                   aria-hidden="true"
-                  icon={ok ? "mdi:check" : "mdi:circle-medium"}
+                  icon={ok ? "mdi:check" : "mdi:exclamation"}
                   width={18}
                   height={18}
                 />
-                <span className="sr-only">{ok ? "Done" : "To do"}</span>
+                <span className="sr-only">{ok ? tUi("done") : "To do"}</span>
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span
-                  className="text-[15px] font-semibold"
+                  className="text-[16px] font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {row.label}

@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { Map as MapLibreMap } from "maplibre-gl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -45,6 +46,8 @@ export function LibraryHeroMap({
   readonly directionsUrl: string
   readonly atlasHref: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [ready, setReady] = useState(false)
@@ -234,7 +237,7 @@ export function LibraryHeroMap({
             width={15}
           />
           Get directions
-          <span className="sr-only"> (opens in a new tab)</span>
+          <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
         </a>
         <Link
           className={PILL}

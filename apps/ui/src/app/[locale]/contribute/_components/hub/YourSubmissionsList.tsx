@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -88,6 +89,8 @@ export function YourSubmissionsList({
   readonly submissions: HubSubmission[]
   readonly username?: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const inReview = submissions.filter(
     (s) => s.status === "pending" || s.status === "needs_info"
   ).length
@@ -99,7 +102,9 @@ export function YourSubmissionsList({
         style={{ borderColor: T.border.divider }}
       >
         <div>
-          <CardHeading id="your-submissions">Your submissions</CardHeading>
+          <CardHeading id="your-submissions">
+            {tUi("your_submissions")}
+          </CardHeading>
           <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
             {submissions.length === 0
               ? "Your changes and their review status"

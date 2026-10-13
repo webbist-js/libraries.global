@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { useMounted } from "@/hooks/useMounted"
 import { useStaff } from "@/lib/access-client"
@@ -33,6 +34,8 @@ export function StaffLibraryEntry(props: {
   /** Whether the library has an active event feed (the record's flag). */
   readonly hasActiveFeed?: boolean | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const staff = useStaff()
   const mounted = useMounted()
   if (!mounted || !staff.ready)
@@ -113,7 +116,7 @@ export function StaffLibraryEntry(props: {
               width={12}
               style={{ color: T.accent.ok }}
             />
-            Go live
+            {tUi("go_live")}
           </Link>
         ) : null}
         <Link
@@ -121,7 +124,7 @@ export function StaffLibraryEntry(props: {
           style={{ color: T.bg.deep }}
           href={base}
         >
-          Open the Staff area
+          {tUi("open_the_staff_area")}
           <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
         </Link>
         {props.hasActiveFeed ? null : (

@@ -17,6 +17,107 @@ export type ActivitySource = {
   weight: number
 }
 
+type MaskPixels = {
+  width: number
+  height: number
+  source: string
+  data: Uint8ClampedArray
+}
+
+const maskPixelsCache = new WeakMap<HTMLImageElement, MaskPixels>()
+
+function readMaskPixels(image: HTMLImageElement): MaskPixels | null {
+  const width = image.naturalWidth || image.width
+  const height = image.naturalHeight || image.height
+  if (width === 0 || height === 0) return null
+  const source = image.currentSrc || image.src
+  const cached = maskPixelsCache.get(image)
+  if (
+    cached?.width === width &&
+    cached.height === height &&
+    cached.source === source
+  )
+    return cached
+
+  const canvas = document.createElement("canvas")
+  const context = canvas.getContext("2d", { willReadFrequently: true })
+  if (!context) return null
+  canvas.width = width
+  canvas.height = height
+  context.drawImage(image, 0, 0, width, height)
+  const pixels = {
+    width,
+    height,
+    source,
+    data: context.getImageData(0, 0, width, height).data,
+  }
+  maskPixelsCache.set(image, pixels)
+
+  return pixels
+}
+
+function activityScore(
+  point: THREE.Vector3,
+  sources: readonly ActivitySource[]
+) {
+  let score = 0
+  for (const source of sources) {
+    const distanceSq = point.distanceToSquared(source.position)
+    if (distanceSq >= source.radius * source.radius) continue
+    const influence = Math.max(0, 1 - Math.sqrt(distanceSq) / source.radius)
+    score += influence * influence * source.weight
+  }
+
+  return score
+}
+
+/** A sparse spatial index, retaining source order and the original falloff.
+ * Each source only enters cells intersecting its influence bounding box. */
+export function createActivitySampler(sources: readonly ActivitySource[]) {
+  const cellSize = sources.reduce(
+    (size, source) => Math.max(size, source.radius),
+    0
+  )
+  if (sources.length <= 16 || cellSize <= 0 || !Number.isFinite(cellSize))
+    return (point: THREE.Vector3) => activityScore(point, sources)
+
+  const cells = new Map<string, ActivitySource[]>()
+  for (const source of sources) {
+    indexActivitySource(source, cellSize, cells)
+  }
+
+  return (point: THREE.Vector3) => {
+    const key = `${Math.floor(point.x / cellSize)},${Math.floor(point.y / cellSize)},${Math.floor(point.z / cellSize)}`
+    const candidates = cells.get(key)
+
+    return candidates ? activityScore(point, candidates) : 0
+  }
+}
+
+function indexActivitySource(
+  source: ActivitySource,
+  cellSize: number,
+  cells: Map<string, ActivitySource[]>
+) {
+  const { position, radius } = source
+  const minX = Math.floor((position.x - radius) / cellSize)
+  const maxX = Math.floor((position.x + radius) / cellSize)
+  const minY = Math.floor((position.y - radius) / cellSize)
+  const maxY = Math.floor((position.y + radius) / cellSize)
+  const minZ = Math.floor((position.z - radius) / cellSize)
+  const maxZ = Math.floor((position.z + radius) / cellSize)
+  for (let x = minX; x <= maxX; x++) {
+    for (let y = minY; y <= maxY; y++) {
+      for (let z = minZ; z <= maxZ; z++) {
+        const key = `${x},${y},${z}`
+        const bucket = cells.get(key)
+        if (bucket) bucket.push(source)
+        else cells.set(key, [source])
+      }
+    }
+  }
+}
+
 export function createLandDotsGeometry({
   maskImage,
   radius,
@@ -39,30 +140,16 @@ export function createLandDotsGeometry({
     return new THREE.BufferGeometry()
   }
 
-  const maskCanvas = document.createElement("canvas")
-  const maskContext = maskCanvas.getContext("2d", { willReadFrequently: true })
-
-  if (maskContext == null) {
-    return new THREE.BufferGeometry()
-  }
-
-  const width = maskImage.naturalWidth || maskImage.width
-  const height = maskImage.naturalHeight || maskImage.height
-
-  if (width === 0 || height === 0) {
-    return new THREE.BufferGeometry()
-  }
-
-  maskCanvas.width = width
-  maskCanvas.height = height
-  maskContext.drawImage(maskImage, 0, 0, width, height)
-
-  const pixelData = maskContext.getImageData(0, 0, width, height).data
+  const pixels = readMaskPixels(maskImage)
+  if (!pixels) return new THREE.BufferGeometry()
+  const { width, height, data: pixelData } = pixels
+  const sampleActivity = createActivitySampler(activitySources)
   const positions: number[] = []
   const sizes: number[] = []
   const intensities: number[] = []
   const phases: number[] = []
   const activities: number[] = []
+  const point = new THREE.Vector3()
 
   const latitudeStep = 0.5 / density
   const random = createSeededRandom(37)
@@ -102,21 +189,15 @@ export function createLandDotsGeometry({
       const cosJitterLat = Math.cos(latRad)
       const r = radius + 0.0055 + random() * 0.0075
 
-      const pt = new THREE.Vector3(
+      point.set(
         cosJitterLat * Math.sin(lngRad) * r,
         Math.sin(latRad) * r,
         cosJitterLat * Math.cos(lngRad) * r
       )
 
-      let activityScore = 0
-      activitySources.forEach((source) => {
-        const distance = pt.distanceTo(source.position)
-        const influence = Math.max(0, 1 - distance / source.radius)
-        activityScore += influence * influence * source.weight
-      })
-      const activity = 1 - Math.exp(-activityScore * 0.65)
+      const activity = 1 - Math.exp(-sampleActivity(point) * 0.65)
 
-      positions.push(pt.x, pt.y, pt.z)
+      positions.push(point.x, point.y, point.z)
       sizes.push(0.78 + random() * 0.42)
       intensities.push(0.5 + random() * 0.5)
       phases.push(random() * Math.PI * 2)

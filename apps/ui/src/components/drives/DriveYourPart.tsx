@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { StatCard } from "@/components/ds/StatCard"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -27,6 +28,8 @@ export function DriveYourPart({
   /** Points to Archivist, or null at it or above (or unknown). */
   readonly toArchivist: number | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const line = quotaLine(quota)
 
   return (
@@ -57,21 +60,21 @@ export function DriveYourPart({
           <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3">
             <StatCard
               icon="mdi:send-outline"
-              label="Sent"
+              label={tUi("sent")}
               value={fmt(mine.sent)}
               bg={TYPE_TINT.neutral.bg}
               fg={TYPE_TINT.neutral.fg}
             />
             <StatCard
               icon="mdi:clock-outline"
-              label="In review"
+              label={tUi("in_review")}
               value={fmt(mine.inReview)}
               bg={TYPE_TINT.academic.bg}
               fg={TYPE_TINT.academic.fg}
             />
             <StatCard
               icon="mdi:check-circle-outline"
-              label="Accepted"
+              label={tUi("accepted")}
               value={fmt(mine.accepted)}
               bg={TYPE_TINT.public.bg}
               fg={TYPE_TINT.public.fg}

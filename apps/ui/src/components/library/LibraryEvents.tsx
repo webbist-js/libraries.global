@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import Link from "next/link"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeButton"
@@ -262,6 +263,8 @@ export function LibraryEvents({
   entityRef,
   hasActiveFeed,
 }: LibraryEventsProps) {
+  const tUi = useUiTranslations("ui")
+
   const [events, setEvents] = useState<LibraryEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -376,7 +379,7 @@ export function LibraryEvents({
           <div className="ml-auto">
             <CalendarSubscribeButton
               icsUrl={`/api/public-proxy/api/events/ics/library/${encodeURIComponent(entityRef)}.ics`}
-              label="Subscribe"
+              label={tUi("subscribe")}
             />
           </div>
         ) : null}

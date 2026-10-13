@@ -1,8 +1,10 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
+import { CheckoutButton } from "@/components/billing/CheckoutButton"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { splitPrice, yearlySavingMonths } from "@/lib/plan-compare"
@@ -38,6 +40,8 @@ function BillingToggle({
   readonly onChange: (b: Billing) => void
   readonly savingMonths: number | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const options: [Billing, string][] = [
     ["monthly", "Monthly"],
     ["yearly", "Yearly"],
@@ -45,7 +49,7 @@ function BillingToggle({
 
   return (
     <div
-      aria-label="Billing period"
+      aria-label={tUi("billing_period")}
       className="inline-flex rounded-full border p-1"
       role="radiogroup"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
@@ -57,7 +61,7 @@ function BillingToggle({
           <button
             key={value}
             aria-checked={on}
-            className="inline-flex h-9 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors"
             onClick={() => onChange(value)}
             onKeyDown={(e) => {
               if (
@@ -149,10 +153,13 @@ function Price({
 function Cta({
   plan,
   current,
+  purchase,
 }: {
   readonly plan: PlanCard
   readonly current: boolean
+  readonly purchase?: React.ReactNode
 }) {
+  if (!current && purchase) return purchase
   if (current)
     return (
       <GlobalLink
@@ -269,10 +276,12 @@ function PlanColumn({
   plan,
   billing,
   current,
+  purchase,
 }: {
   readonly plan: PlanCard
   readonly billing: Billing
   readonly current: boolean
+  readonly purchase?: React.ReactNode
 }) {
   const live = plan.includes.filter((i) => i.kind === "feature")
   const notes = plan.includes.filter((i) => i.kind === "note")
@@ -332,7 +341,7 @@ function PlanColumn({
         For {plan.who.charAt(0).toLowerCase() + plan.who.slice(1)}.
       </p>
 
-      <Cta current={current} plan={plan} />
+      <Cta current={current} plan={plan} purchase={purchase} />
 
       <div
         className="flex flex-col gap-3 border-t pt-5"
@@ -364,9 +373,22 @@ function PlanColumn({
 /** Supporter, Pro and Team, with a monthly / yearly switch. */
 export function MembershipPlans({
   currentPlan,
+  billingAvailable = false,
+  supporterApproved = false,
+  checkoutUser = null,
 }: {
   readonly currentPlan: string
+  readonly billingAvailable?: boolean
+  readonly supporterApproved?: boolean
+  readonly checkoutUser?: {
+    email: string
+    verified: boolean
+    complimentaryPro: boolean
+    hasPaidMembership?: boolean
+  } | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [billing, setBilling] = useState<Billing>("monthly")
   const plans = MEMBERSHIP.map(planCard)
   // The toggle's chip claims a saving only if every monthly plan has it.
@@ -390,7 +412,7 @@ export function MembershipPlans({
         }
         id="membership-h"
         sub="Support the project, or add analysis and export on top of the free index."
-        title="Membership"
+        title={tUi("membership")}
       />
       <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
         {plans.map((plan) => (
@@ -399,6 +421,24 @@ export function MembershipPlans({
             billing={billing}
             current={plan.key === currentPlan}
             plan={plan}
+            purchase={
+              plan.key !== "team" && checkoutUser?.hasPaidMembership ? (
+                <GlobalLink
+                  href="/profile/settings#membership"
+                  className={PILL}
+                >
+                  Manage membership
+                </GlobalLink>
+              ) : billingAvailable &&
+                (plan.key === "pro" ||
+                  (plan.key === "supporter" && supporterApproved)) ? (
+                <CheckoutButton
+                  plan={plan.key === "pro" ? "pro" : "supporter"}
+                  interval={billing === "yearly" ? "year" : "month"}
+                  user={checkoutUser}
+                />
+              ) : undefined
+            }
           />
         ))}
       </ul>

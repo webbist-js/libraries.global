@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import { EventTypeChip } from "@/components/events/EventTypeChip"
@@ -245,6 +246,8 @@ interface EventTimelineProps {
 }
 
 export function EventTimeline({ filters }: EventTimelineProps) {
+  const tUi = useUiTranslations("ui")
+
   const [manualDate, setManualDate] = useState<Date>(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -395,7 +398,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
               color: T.ink.faint,
             }}
           >
-            Loading…
+            {tUi("loading")}{" "}
           </span>
         </div>
       ) : visible.length === 0 ? (

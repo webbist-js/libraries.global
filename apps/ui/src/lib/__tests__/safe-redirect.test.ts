@@ -18,7 +18,7 @@ describe("safeRedirectPath", () => {
     String.raw`\\evil.example.com`,
     // eslint-disable-next-line sonarjs/code-eval -- asserting it is rejected
     "javascript:alert(1)",
-    "/%09/evil.example.com".replace("%09", "\t"),
+    "/\t/evil.example.com",
     "profile",
     "",
   ])("rejects %s", (input) => {

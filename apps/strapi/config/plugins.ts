@@ -185,6 +185,7 @@ export default ({ env }) => {
               "completeness",
               "id",
               "documentId",
+              "entityRef",
               "source",
               ...LIBRARY_SEARCH_FIELDS,
             ],
@@ -207,6 +208,7 @@ export default ({ env }) => {
             fields: LIBRARY_FIELDS,
             locale: ALL_LOCALES,
             populate: {
+              sourceRecords: { fields: ["dataset", "role"] },
               continent: { fields: ["slug", "name"] },
               country: {
                 fields: [
@@ -215,9 +217,13 @@ export default ({ env }) => {
                   "name",
                   "regionTypeLabel",
                   "regionsSectionLabel",
+                  "areaTypeLabel",
+                  "areasSectionLabel",
                 ],
               },
-              region: { fields: ["slug", "name"] },
+              region: {
+                fields: ["slug", "name", "areaTypeLabel", "areasSectionLabel"],
+              },
               area: { fields: ["slug", "name"] },
               accessibility: { fields: ["name"] },
               services: { fields: ["name"] },
@@ -262,8 +268,12 @@ export default ({ env }) => {
               // What the country calls its Regions, for Find libraries' filter.
               country_region_label: str(country?.regionTypeLabel),
               country_regions_label: str(country?.regionsSectionLabel),
+              country_area_label: str(country?.areaTypeLabel),
+              country_areas_label: str(country?.areasSectionLabel),
               region_slug: region?.slug ?? null,
               region_name: region?.name ?? null,
+              region_area_label: str(region?.areaTypeLabel),
+              region_areas_label: str(region?.areasSectionLabel),
               area_slug: area?.slug ?? null,
               area_name: area?.name ?? null,
               // Flat arrays for checkbox filters in the UI
@@ -353,7 +363,6 @@ type Rec = Record<string, unknown>
  * straight through, and its Strapi 4 spelling `"all"` matches no rows.
  */
 const ALL_LOCALES = "*"
-
 const MEDIA_FIELDS = ["url", "alternativeText", "formats"]
 
 const ARTICLE_FIELDS = [
@@ -439,7 +448,6 @@ const LIBRARY_FIELDS = [
   "completeness",
   "location",
   "gaps",
-  "source",
   "createdAt",
   "lastVerifiedAt",
   "verifiedSections",
@@ -458,12 +466,17 @@ const DERIVE_ONLY = new Set([
 ])
 const LIBRARY_DOC_KEYS = [
   "id",
+  "source",
   ...LIBRARY_FIELDS.filter((f) => !DERIVE_ONLY.has(f)),
 ]
 /** Derived by librarySearchFields; completeness is a document key and is filterable too. */
 const LIBRARY_SEARCH_FIELDS = [
   "has_hours",
   "has_staff",
+  "has_effective_hours",
+  "effective_week_start",
+  "clock_valid_until",
+  "late_sunday",
   "closed_dates",
   "notice_active",
   "stop_count",
@@ -473,6 +486,9 @@ const LIBRARY_SEARCH_FIELDS = [
   "open_tz",
   "geo_cell",
   ...OPEN_FIELD_NAMES,
+  ...OPEN_FIELD_NAMES.map((field) => field.replace("open_", "regular_open_")),
+  ...OPEN_FIELD_NAMES.map((field) => field.replace("open_", "staff_open_")),
+  "clock_valid_until_ts",
   ...TIMESTAMP_FIELD_NAMES,
 ]
 const LIBRARY_DISPLAYED = [
@@ -485,8 +501,12 @@ const LIBRARY_DISPLAYED = [
   "country_code",
   "country_region_label",
   "country_regions_label",
+  "country_area_label",
+  "country_areas_label",
   "region_slug",
   "region_name",
+  "region_area_label",
+  "region_areas_label",
   "area_slug",
   "area_name",
   "accessibility_names",
@@ -578,6 +598,8 @@ const prepareAwsS3Config = (env) => {
         baseUrl: env("CDN_URL"),
         rootPath: env("CDN_ROOT_PATH"),
         s3Options: {
+          endpoint: env("AWS_ENDPOINT"),
+          forcePathStyle: env.bool("AWS_FORCE_PATH_STYLE", false),
           credentials: {
             accessKeyId: awsAccessKeyId,
             secretAccessKey: awsAccessSecret,
@@ -600,10 +622,29 @@ const prepareAwsS3Config = (env) => {
 }
 
 const prepareEmailConfig = (env) => {
+  if (env("SMTP_HOST") && env("SMTP_USER") && env("SMTP_PASS")) {
+    return {
+      provider: "nodemailer",
+      providerOptions: {
+        host: env("SMTP_HOST"),
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
+        port: Number.parseInt(env("SMTP_PORT", "587"), 10),
+        secure: env("SMTP_SECURE", "false") === "true",
+        requireTLS: env("SMTP_SECURE", "false") !== "true",
+        auth: { user: env("SMTP_USER"), pass: env("SMTP_PASS") },
+      },
+      settings: {
+        defaultFrom: env("EMAIL_FROM", "noreply@libraries.global"),
+        defaultReplyTo: env("EMAIL_REPLY_TO", "info@libraries.global"),
+      },
+    }
+  }
   const hasMailgunCreds = env("MAILGUN_API_KEY") && env("MAILGUN_DOMAIN")
   const hasMailtrapCreds = env("MAILTRAP_USER") && env("MAILTRAP_PASS")
 
-  // Mailgun has bigger priority
+  // Mailgun takes priority over the development Mailtrap sandbox.
   // Mailtrap is only for development/testing purposes
 
   if (hasMailgunCreds) {
@@ -626,6 +667,10 @@ const prepareEmailConfig = (env) => {
       provider: "nodemailer",
       providerOptions: {
         host: env("MAILTRAP_HOST", "sandbox.smtp.mailtrap.io"),
+        requireTLS: true,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
         port: Number.parseInt(env("MAILTRAP_PORT", "2525"), 10),
         auth: {
           user: env("MAILTRAP_USER"),
@@ -633,8 +678,14 @@ const prepareEmailConfig = (env) => {
         },
       },
       settings: {
-        defaultFrom: env("MAILTRAP_EMAIL") || "noreply@libraries.global",
-        defaultReplyTo: env("MAILTRAP_EMAIL") || "info@libraries.global",
+        defaultFrom:
+          env("EMAIL_FROM") ||
+          env("MAILTRAP_EMAIL") ||
+          "noreply@libraries.global",
+        defaultReplyTo:
+          env("EMAIL_REPLY_TO") ||
+          env("MAILTRAP_EMAIL") ||
+          "info@libraries.global",
       },
     }
   }

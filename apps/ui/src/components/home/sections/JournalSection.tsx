@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import Image from "next/image"
-import type { Locale } from "next-intl"
+import { useTranslations, type Locale } from "next-intl"
 
 import {
   articleMeta,
@@ -27,6 +27,7 @@ function LeadStory({
   readonly editorsPick: boolean
   readonly locale: Locale
 }) {
+  const t = useTranslations("editorial")
   const imgUrl = formatStrapiMediaUrl(article.heroImage?.url)
   const visual = sectionVisual(article.section)
 
@@ -51,7 +52,7 @@ function LeadStory({
           style={{ color: visual.fg }}
         >
           <Icon aria-hidden="true" height={24} icon={visual.icon} width={24} />
-          No cover photo yet
+          {t("noCover")}
         </span>
       )}
 
@@ -65,7 +66,7 @@ function LeadStory({
                 color: T.accent.primaryHover,
               }}
             >
-              Editor&rsquo;s pick
+              {t("editorPick")}
             </span>
           ) : null}
           <SectionTag section={article.section} />
@@ -82,7 +83,10 @@ function LeadStory({
           {article.title}
         </h3>
         <span className="text-[14px]" style={{ color: T.ink.dim }}>
-          {articleMeta(article)}
+          {articleMeta(article, {
+            locale,
+            readingTime: t("readingTime", { minutes: article.readMinutes }),
+          })}
         </span>
       </span>
     </Link>
@@ -106,7 +110,8 @@ export function JournalSection({
   return (
     <section
       aria-labelledby="journal-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
+      data-homepage-surface="paper"
+      className="mx-auto w-full max-w-[1360px] px-4 sm:px-8"
     >
       <SectionHeader
         id="journal-title"

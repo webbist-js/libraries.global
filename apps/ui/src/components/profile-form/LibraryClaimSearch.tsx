@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -60,6 +61,8 @@ function CountrySlugCombobox({
    */
   labelledBy: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const containerRef = useRef<HTMLDivElement>(null)
@@ -149,8 +152,8 @@ function CountrySlugCombobox({
           <input
             ref={inputRef}
             type="text"
-            aria-label="Search countries"
-            placeholder="Search countries…"
+            aria-label={tUi("search_countries")}
+            placeholder={tUi("search_countries_2")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{
@@ -183,7 +186,7 @@ function CountrySlugCombobox({
                   fontSize: "15px",
                 }}
               >
-                No results
+                {tUi("no_results")}{" "}
               </div>
             )}
             {filtered.map((c) => (
@@ -283,6 +286,8 @@ export function LibraryClaimSearch({
     result: ClaimResult & { libraryName: string; entityRef: string }
   ) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [continentSlug, setContinentSlug] = useState("")
   const [countrySlug, setCountrySlug] = useState("")
   const [query, setQuery] = useState("")
@@ -389,7 +394,7 @@ export function LibraryClaimSearch({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor={ids.continent} style={fieldLabel}>
-            Continent
+            {tUi("continent")}{" "}
           </label>
           <Select
             id={ids.continent}
@@ -407,7 +412,7 @@ export function LibraryClaimSearch({
 
         <div>
           <label id={ids.countryLabel} htmlFor={ids.country} style={fieldLabel}>
-            Country
+            {tUi("country")}{" "}
           </label>
           <CountrySlugCombobox
             id={ids.country}
@@ -422,8 +427,8 @@ export function LibraryClaimSearch({
       {/* Library search */}
       <SearchField
         id={`${uid}-search`}
-        label="Search for your library"
-        placeholder="Search for your library — e.g. British Library"
+        label={tUi("search_for_your_library")}
+        placeholder={tUi("search_for_your_library_eg_british_library")}
         onClear={() => void search("")}
         inputProps={{
           value: query,
@@ -507,7 +512,7 @@ export function LibraryClaimSearch({
 
             <div>
               <label htmlFor={ids.department} style={fieldLabel}>
-                Department<Tag>Optional</Tag>
+                Department<Tag>{tUi("optional_59be71")}</Tag>
               </label>
               <input
                 id={ids.department}
@@ -527,7 +532,7 @@ export function LibraryClaimSearch({
             className="inline-flex items-center gap-1.5 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
             style={{ border: "none", fontFamily: T.font.sans }}
           >
-            {claiming ? "Sending…" : "Claim affiliation"}
+            {claiming ? tUi("sending") : "Claim affiliation"}
           </button>
         </div>
       ) : null}

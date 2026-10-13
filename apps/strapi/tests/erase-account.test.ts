@@ -64,6 +64,8 @@ function seed() {
         submittedByName: "Alice Smith",
         fields: { kind: "photo", photoId: 10, credit: "Alice" },
         note: "approved note",
+        evidenceType: "personal_communication",
+        evidenceUrl: "https://private.example/person",
       },
       {
         documentId: "s2",
@@ -105,6 +107,24 @@ function seed() {
         submittedByUserId: "u1",
         submittedByEmail: "alice@example.org",
         fields: { kind: "replace", credentialDocumentId: "cred-active" },
+      },
+    ],
+    ["api::library-change.library-change"]: [
+      {
+        documentId: "change",
+        actorId: "ba:u1",
+        actorName: "Alice",
+        reviewerId: "u1",
+        next: {
+          sourceRecords: [{ url: "https://public.example", role: "reference" }],
+        },
+      },
+      {
+        documentId: "staff-change",
+        actorId: "ba:u1",
+        actorName: "Alice",
+        reviewerId: "ba:u1",
+        next: "Retained public fact",
       },
     ],
     [CRED]: [
@@ -248,6 +268,22 @@ describe("eraseAccount", () => {
     expect(store[UP_USER]).toEqual([])
   })
 
+  it("erases owned notifications and guest newsletter delivery records for the deleted address", async () => {
+    const { strapi, store } = seed()
+    const notifications = "api::notification.notification"
+    store[notifications] = [
+      { documentId: "owned", baUserId: "u1" },
+      { documentId: "confirmation", recipientEmail: "alice@example.org" },
+      {
+        documentId: "other",
+        baUserId: "u2",
+        recipientEmail: "bob@example.org",
+      },
+    ]
+    await eraseAccount(strapi, { baUserId: "u1", email: "Alice@Example.org" })
+    expect(store[notifications].map((n) => n.documentId)).toEqual(["other"])
+  })
+
   it("deletes every role grant the user holds, and only theirs", async () => {
     const { strapi, store } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
@@ -273,13 +309,31 @@ describe("eraseAccount", () => {
       photoId: 10,
       credit: "Alice",
     })
-    expect(by("s1").note).toBe("approved note")
+    expect(by("s1")).toMatchObject({
+      note: null,
+      evidenceType: null,
+      evidenceUrl: null,
+    })
     // Draft, pending, needs_info: emptied.
     for (const id of ["s2", "s3", "s4"]) {
       expect(by(id).fields).toBeNull()
       expect(by(id).draftData).toBeNull()
       expect(by(id).note).toBeNull()
     }
+    expect(store["api::library-change.library-change"][0]).toMatchObject({
+      actorId: null,
+      actorName: null,
+      reviewerId: null,
+      next: {
+        sourceRecords: [{ url: "https://public.example", role: "reference" }],
+      },
+    })
+    expect(store["api::library-change.library-change"][1]).toMatchObject({
+      actorId: null,
+      actorName: null,
+      reviewerId: null,
+      next: "Retained public fact",
+    })
     // Other people's rows are untouched.
     expect(by("s5")).toMatchObject({
       submittedByUserId: "u2",

@@ -3,7 +3,7 @@
  * session capabilities, staff affiliations and Teams, so what a person sees
  * matches what the servers will let them do. Cards combine for people with
  * several roles: their own work first, then the cards everyone gets. The
- * header menu, the mobile menu and the footer all read this model. UI only:
+ * header menu and the mobile menu read this model. UI only:
  * every route behind these links re-checks access.
  */
 import type { DriveUnit } from "@repo/shared-data"

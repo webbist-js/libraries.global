@@ -14,6 +14,10 @@ import { useField } from "@strapi/strapi/admin"
 import * as React from "react"
 
 import {
+  OpeningBlockDetails,
+  OpeningScheduleOverrides,
+} from "./OpeningScheduleOverrides"
+import {
   cloneTimeframe,
   compareTimes,
   createDefaultTimeframe,
@@ -21,8 +25,6 @@ import {
   normalizeOpeningTimesValue,
   OPENING_TIMES_DAY_LABELS,
   OPENING_TIMES_DAY_ORDER,
-  OPENING_TIMES_STAFFING_LABELS,
-  OPENING_TIMES_STAFFING_OPTIONS,
   sortTimeframes,
   START_TIME_OPTIONS,
   END_TIME_OPTIONS,
@@ -604,47 +606,6 @@ const OpeningTimesInput = React.forwardRef<
                                         </SingleSelect>
                                       </Field.Root>
 
-                                      {/* Staffing */}
-                                      <Field.Root
-                                        name={`${name}.${day.day}.${timeframe.id}.staffing`}
-                                        style={{ flex: 1, minWidth: "130px" }}
-                                      >
-                                        <Field.Label>Staffing</Field.Label>
-                                        <SingleSelect
-                                          disabled={disabled}
-                                          onChange={(value) => {
-                                            if (typeof value !== "string")
-                                              return
-                                            updateTimeframe(
-                                              day.day,
-                                              timeframe.id,
-                                              (tf) => ({
-                                                ...tf,
-                                                staffing:
-                                                  value as OpeningTimeframe["staffing"],
-                                              })
-                                            )
-                                          }}
-                                          placeholder="Staffing"
-                                          value={timeframe.staffing}
-                                        >
-                                          {OPENING_TIMES_STAFFING_OPTIONS.map(
-                                            (o) => (
-                                              <SingleSelectOption
-                                                key={o}
-                                                value={o}
-                                              >
-                                                {
-                                                  OPENING_TIMES_STAFFING_LABELS[
-                                                    o
-                                                  ]
-                                                }
-                                              </SingleSelectOption>
-                                            )
-                                          )}
-                                        </SingleSelect>
-                                      </Field.Root>
-
                                       {/* Overlap badge */}
                                       {hasOverlap ? (
                                         <Box style={{ paddingBottom: "10px" }}>
@@ -721,6 +682,21 @@ const OpeningTimesInput = React.forwardRef<
                                         >
                                           Delete
                                         </Button>
+                                        <OpeningBlockDetails
+                                          frame={timeframe}
+                                          onChange={(next) =>
+                                            updateDay(day.day, (current) => ({
+                                              ...current,
+                                              timeframes:
+                                                current.timeframes.map(
+                                                  (frame) =>
+                                                    frame.id === timeframe.id
+                                                      ? next
+                                                      : frame
+                                                ),
+                                            }))
+                                          }
+                                        />
                                       </Flex>
                                     </Flex>
                                   </Box>
@@ -765,6 +741,11 @@ const OpeningTimesInput = React.forwardRef<
             </Flex>
           </Box>
 
+          <OpeningScheduleOverrides
+            value={openingTimes}
+            onChange={updateValue}
+            disabled={disabled}
+          />
           <Field.Hint />
           <Field.Error />
         </Flex>

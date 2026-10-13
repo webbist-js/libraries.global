@@ -1,6 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { NOTICE_TONES } from "@/components/ds"
@@ -85,6 +85,8 @@ export function ClaimPanel({
   /** @deprecated The review page's old prop name; read as `review`. */
   readonly invite?: unknown
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const locale = useLocale()
   const date = (iso: string) => formatDate(iso, locale)
@@ -181,7 +183,7 @@ export function ClaimPanel({
       )}
       <KeyValueList
         rows={[
-          { label: "Library", value: f.name ?? targetSlug ?? "" },
+          { label: tUi("library"), value: f.name ?? targetSlug ?? "" },
           { label: "Entity ref", value: f.entityRef ?? "" },
           {
             label: "Role",

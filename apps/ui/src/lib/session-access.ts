@@ -10,6 +10,7 @@ import {
   resolveCapabilities,
   resolveEntitlements,
   toSessionCapabilities,
+  paidMembershipInput,
 } from "@repo/access"
 import type { DismissiblePrompt } from "@repo/shared-data"
 
@@ -63,6 +64,7 @@ export function buildSessionAccess(
   const ent = resolveEntitlements({
     signedIn: true,
     now,
+    subscription: paidMembershipInput(profile?.paidMembership),
     grants: profile?.grants ?? [],
     verifications: profile?.verifications ?? [],
     rewardsTier: profile?.tier ?? null,

@@ -1,16 +1,18 @@
 import { factories } from "@strapi/strapi"
 
 export default factories.createCoreService("api::topic.topic" as any, () => ({
-  async findApproved() {
+  async findApproved(locale?: string) {
     return strapi.documents("api::topic.topic" as any).findMany({
+      locale,
       filters: { status: "approved" } as any,
       sort: { name: "asc" } as any,
       limit: 500,
     })
   },
 
-  async findAll() {
+  async findAll(locale?: string) {
     return strapi.documents("api::topic.topic" as any).findMany({
+      locale,
       sort: [{ status: "asc" }, { name: "asc" }] as any,
       limit: 500,
     })

@@ -1,6 +1,8 @@
 // apps/ui/src/components/index-page/FindMapPanel.tsx
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 import type { LibrarySearchHitV2 } from "@/lib/find-search"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
@@ -18,6 +20,8 @@ export function FindMapPanel({
   hits: LibrarySearchHitV2[]
   stops?: MobileStopHit[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const withGeo = hits.filter((h) => h._geo)
   const pinnedStops = stops.filter((stop) => stop._geo).slice(0, 1000)
   const positions = [
@@ -57,7 +61,7 @@ export function FindMapPanel({
         borderRadius: 20,
         color: "var(--tint-academic-fg)",
       }}
-      aria-label="Map of results"
+      aria-label={tUi("map_of_results")}
     >
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
         {pinnedStops.length > 0 && (

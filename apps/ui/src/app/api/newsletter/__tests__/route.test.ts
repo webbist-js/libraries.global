@@ -57,6 +57,9 @@ describe("POST /api/newsletter", () => {
     })
     expect(JSON.parse(init.body as string)).toEqual({
       email: "reader@example.org",
+      type: "newsletter",
+      source: "footer",
+      locale: "en",
     })
   })
 
@@ -136,7 +139,7 @@ describe("POST /api/newsletter", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("treats an already-subscribed address as success", async () => {
+  it("does not mask an upstream conflict as a successful write", async () => {
     fetchMock.mockResolvedValue(
       Response.json({ error: "exists" }, { status: 409 })
     )
@@ -146,7 +149,7 @@ describe("POST /api/newsletter", () => {
       { "x-forwarded-for": ip() }
     )
 
-    expect(res.status).toBe(200)
+    expect(res.status).toBe(502)
   })
 
   it("returns 502 without echoing Strapi's body on any other failure", async () => {

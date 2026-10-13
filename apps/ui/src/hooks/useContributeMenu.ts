@@ -42,8 +42,9 @@ export function useFeaturedDrive(enabled: boolean) {
 
 type ModerationStat = { queue: string; status: string; count: number }
 
-/** Submissions pending in the Moderator's scope, from the queue's stats. */
-function useModerationWaiting(enabled: boolean) {
+/** Submissions pending in the Moderator's scope, from the queue's stats: the
+ * Contribute menu and the editorial drawer. */
+export function useModerationWaiting(enabled: boolean) {
   return useQuery({
     queryKey: ["contribute-menu", "moderation"],
     enabled,

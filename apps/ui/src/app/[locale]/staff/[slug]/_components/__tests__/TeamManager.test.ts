@@ -1,16 +1,11 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
+import type * as NextIntl from "next-intl"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { StaffTeam } from "@/lib/staff/types"
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -24,7 +19,10 @@ const ID = "mob000000000000000000001"
 vi.mock("@/lib/staff/client", () => ({ staffRequest: mocks.request }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
-vi.mock("next-intl", () => ({ useLocale: () => "en-GB" }))
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof NextIntl>()),
+  useLocale: () => "en-GB",
+}))
 vi.mock("next/navigation", () => ({ usePathname: () => `/staff/${ID}/team` }))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
@@ -225,7 +223,12 @@ describe("TeamManager with Team cover", () => {
     expect(screen.getAllByRole("switch", { name: "Can go live" }).length).toBe(
       2
     )
-    expect(screen.getByRole("heading", { name: "Send invite" })).toBeTruthy()
+    const staffCard = screen
+      .getByRole("heading", { name: "Staff (2)" })
+      .closest("section")
+    expect(
+      staffCard?.contains(screen.getByRole("button", { name: "Send invite" }))
+    ).toBe(true)
     // Invitees are listed under the staff, with the seat they hold.
     const invitees = screen.getByRole("list", {
       name: "Invited, not yet accepted",

@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { SupportersResponse } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState, useTransition, type FormEvent } from "react"
 
 import { Avatar } from "@/components/ds/Avatar"
@@ -52,6 +53,8 @@ export function SupportersDirectory({
   readonly query: SupportersQuery
   readonly locale: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [directory, setDirectory] = useState(data)
@@ -143,7 +146,7 @@ export function SupportersDirectory({
           >
             <SearchField
               id="supporters-search"
-              placeholder="Search by name or place"
+              placeholder={tUi("search_by_name_or_place")}
               size="sm"
               className="min-h-11 min-w-56 flex-1 rounded-xl md:w-60"
               inputProps={{
@@ -175,7 +178,7 @@ export function SupportersDirectory({
       </div>
       {directory ? (
         <nav
-          aria-label="Supporters by continent"
+          aria-label={tUi("supporters_by_continent")}
           className="mt-5 flex flex-wrap gap-2"
         >
           {REGIONS.map(([region, label]) => {
@@ -284,7 +287,7 @@ export function SupportersDirectory({
                   >
                     {entry.since
                       ? `Supporter since ${new Date(entry.since).getUTCFullYear()}`
-                      : "Supporter"}
+                      : tUi("supporter")}
                   </span>
                 </span>
               </GlobalLink>
@@ -319,7 +322,7 @@ export function SupportersDirectory({
                 color: T.ink.base,
               }}
             >
-              {loadingMore ? "Loading…" : "Show more"}
+              {loadingMore ? tUi("loading") : "Show more"}
             </button>
           ) : null}
           {loadError ? (

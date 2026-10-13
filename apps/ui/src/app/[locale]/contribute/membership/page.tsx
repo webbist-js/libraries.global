@@ -1,11 +1,15 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { staffLibrariesOf } from "@/lib/access-server"
+import { authDbPool } from "@/lib/auth"
 import { getSessionSSR } from "@/lib/auth-server"
+import { billingConfig } from "@/lib/billing/config"
+import { hasManagedMembership } from "@/lib/billing/current-membership"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -13,6 +17,7 @@ import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 import { FreePlansCard } from "../_components/membership/FreePlansCard"
 import { LibraryStaffSection } from "../_components/membership/LibraryStaffSection"
 import { MembershipPlans } from "../_components/membership/MembershipPlans"
+import { MembershipPolicies } from "../_components/membership/MembershipPolicies"
 import { PlanCompareTable } from "../_components/membership/PlanCompareTable"
 import { PlanStatusBanner } from "../_components/membership/PlanStatusBanner"
 import { ProFaq } from "../_components/membership/ProFaq"
@@ -29,7 +34,7 @@ export async function generateMetadata({
   return buildMetadata({
     title: "Plans and Pro",
     description:
-      "Library facts are free, always. Membership keeps the index running; Pro adds analysis on top. See the plans and the ways to get Pro free.",
+      "Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools. See the plans and the ways to get Pro free.",
     path: "contribute/membership",
     locale,
   })
@@ -42,6 +47,8 @@ const PROMISES = [
 ]
 
 export default async function MembershipPage() {
+  const tUi = await getUiTranslations("ui")
+
   const session = await getSessionSSR(await headers())
   const user = session?.user
   // A signed-in session missing its plan counts as free (missing means deny).
@@ -49,13 +56,17 @@ export default async function MembershipPage() {
   // Staff of at least one library go to the staff area; anyone else to the
   // claim flow (signed out, the claim page asks them to sign in).
   const isStaff = staffLibrariesOf(user).length > 0
+  const hasPaidMembership =
+    user && billingConfig().configured
+      ? await hasManagedMembership(authDbPool, user.id)
+      : false
 
   return (
-    <div style={{ background: T.bg.void, color: T.ink.base }}>
+    <main style={{ background: T.bg.void, color: T.ink.base }}>
       <ContributeSectionHeader
-        section="Membership"
+        section={tUi("membership")}
         title="Plans and *Pro*"
-        lead="Library facts are free, always. Membership keeps the index running; Pro adds analysis on top."
+        lead="Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools."
       >
         <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
           {PROMISES.map((text) => (
@@ -81,7 +92,24 @@ export default async function MembershipPage() {
         <PlanStatusBanner plan={user?.plan} planSource={user?.planSource} />
         <FreePlansCard signedIn={Boolean(user)} />
         <LibraryStaffSection isStaff={isStaff} />
-        <MembershipPlans currentPlan={currentPlan} />
+        <MembershipPlans
+          currentPlan={currentPlan}
+          billingAvailable={billingConfig().enabled}
+          supporterApproved={billingConfig().supporterApproved}
+          checkoutUser={
+            user
+              ? {
+                  email: user.email,
+                  verified: user.emailVerified,
+                  hasPaidMembership,
+                  complimentaryPro:
+                    ["pro", "team"].includes(user.plan ?? "") &&
+                    user.planSource !== "paid",
+                }
+              : null
+          }
+        />
+        <MembershipPolicies />
         <p
           className="m-0 text-[16px] leading-relaxed"
           style={{ color: T.ink.dim }}
@@ -101,6 +129,6 @@ export default async function MembershipPage() {
         <ProFreeRoutes />
         <ProFaq />
       </Container>
-    </div>
+    </main>
   )
 }

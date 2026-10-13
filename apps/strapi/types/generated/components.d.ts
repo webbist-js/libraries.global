@@ -273,14 +273,19 @@ export interface LibraryLibraryStat extends Struct.ComponentSchema {
 export interface LibrarySourceRecord extends Struct.ComponentSchema {
   collectionName: "components_library_source_records"
   info: {
-    description: "The record this library matches in an imported dataset, so a re-run updates it and other datasets can find it."
+    description: "An imported dataset record or a public reference supporting library facts."
     displayName: "Source Record"
     icon: "database"
   }
   attributes: {
-    dataset: Schema.Attribute.String & Schema.Attribute.Required
-    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    dataset: Schema.Attribute.String
+    fields: Schema.Attribute.JSON
+    label: Schema.Attribute.String
+    recordId: Schema.Attribute.String
     retrievedAt: Schema.Attribute.Date
+    role: Schema.Attribute.Enumeration<["origin", "reference"]> &
+      Schema.Attribute.DefaultTo<"reference">
+    submissionDocumentId: Schema.Attribute.String
     url: Schema.Attribute.String
   }
 }

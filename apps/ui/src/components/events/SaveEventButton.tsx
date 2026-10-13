@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -14,6 +15,8 @@ export function SaveEventButton({
   documentId,
   size = "sm",
 }: SaveEventButtonProps) {
+  const tUi = useUiTranslations("ui")
+
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedDocId, setSavedDocId] = useState<string | null>(null)
@@ -79,7 +82,7 @@ export function SaveEventButton({
         icon={saved ? "mdi:bookmark" : "mdi:bookmark-outline"}
         className={iconSize}
       />
-      {saved ? "Saved" : "Save"}
+      {saved ? tUi("saved") : tUi("save")}
     </button>
   )
 }

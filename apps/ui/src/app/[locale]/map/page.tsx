@@ -5,7 +5,9 @@ import { setRequestLocale } from "next-intl/server"
 
 import { AtlasContributeCard } from "@/components/atlas/AtlasContributeCard"
 import { AtlasExplorer } from "@/components/atlas/AtlasExplorer"
+import { AtlasFeedbackButton } from "@/components/atlas/AtlasFeedbackButton"
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
+import { scalableAtlasEnabled, ATLAS_COHORT_COOKIE } from "@/lib/atlas-rollout"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isPromptHidden } from "@/lib/dismissed-prompts"
 import { buildMetadata } from "@/lib/seo/metadata"
@@ -40,14 +42,21 @@ export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
   )
 
   return (
-    <AtlasExplorer
-      contributePrompt={
-        showContribute ? (
-          <DismissiblePrompt prompt="atlas-contribute" signedIn={signedIn}>
-            <AtlasContributeCard signedIn={signedIn} />
-          </DismissiblePrompt>
-        ) : null
-      }
-    />
+    <>
+      <h1 className="sr-only">Atlas: map of the world&apos;s libraries</h1>
+      <AtlasExplorer
+        feedbackPrompt={<AtlasFeedbackButton />}
+        scalable={scalableAtlasEnabled(
+          cookieStore.get(ATLAS_COHORT_COOKIE)?.value
+        )}
+        contributePrompt={
+          showContribute ? (
+            <DismissiblePrompt prompt="atlas-contribute" signedIn={signedIn}>
+              <AtlasContributeCard signedIn={signedIn} />
+            </DismissiblePrompt>
+          ) : null
+        }
+      />
+    </>
   )
 }

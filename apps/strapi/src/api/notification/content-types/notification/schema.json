@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notifications",
+  "info": {
+    "singularName": "notification",
+    "pluralName": "notifications",
+    "displayName": "Notification"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "baUserId": { "type": "string", "private": true },
+    "eventKey": {
+      "type": "string",
+      "unique": true,
+      "required": true,
+      "private": true
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": [
+        "new_follower",
+        "library_update",
+        "submission_review",
+        "drive_closed",
+        "weekly_digest",
+        "weekly_report",
+        "recognition",
+        "announcement",
+        "newsletter_confirmation",
+        "staff_update",
+        "feed_update"
+        ,"billing_update"
+      ],
+      "required": true
+    },
+    "title": { "type": "string", "required": true },
+    "body": { "type": "text", "required": true },
+    "href": { "type": "string" },
+    "inApp": { "type": "boolean", "default": true },
+    "readAt": { "type": "datetime" },
+    "emailState": {
+      "type": "enumeration",
+      "enum": ["none", "pending", "sent", "skipped", "failed"],
+      "default": "none"
+    },
+    "emailPreference": { "type": "string", "private": true },
+    "recipientEmail": { "type": "email", "private": true },
+    "emailPayload": { "type": "json", "private": true },
+    "attempts": { "type": "integer", "default": 0 },
+    "nextAttemptAt": { "type": "datetime", "private": true },
+    "sentAt": { "type": "datetime" },
+    "lastError": { "type": "string", "private": true }
+  }
+}

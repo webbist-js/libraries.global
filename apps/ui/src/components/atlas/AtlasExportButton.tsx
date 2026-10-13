@@ -1,5 +1,7 @@
 "use client"
 
+import type { AtlasExportRequest } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import {
@@ -59,8 +61,11 @@ export function useAtlasExport(onUpgrade: () => void) {
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
-  const run = async (format: ExportFormat, ids: string[]) => {
-    if (ids.length > MAX_EXPORT_IDS) {
+  const run = async (
+    format: ExportFormat,
+    selection: string[] | AtlasExportRequest
+  ) => {
+    if (Array.isArray(selection) && selection.length > MAX_EXPORT_IDS) {
       setOutcome({
         tone: "error",
         text: `One export holds up to ${MAX_EXPORT_IDS.toLocaleString()} libraries. ${narrow}`,
@@ -74,7 +79,11 @@ export function useAtlasExport(onUpgrade: () => void) {
       const res = await fetch("/api/export/atlas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ format, ids }),
+        body: JSON.stringify(
+          Array.isArray(selection)
+            ? { format, ids: selection }
+            : { ...selection, format }
+        ),
       })
       if (res.status === 402) {
         onUpgrade()
@@ -112,10 +121,16 @@ export function useAtlasExport(onUpgrade: () => void) {
 export function AtlasExportButton({
   libraries,
   onSeePlans,
+  request,
+  total,
 }: {
   readonly libraries: AtlasLibrary[]
   readonly onSeePlans: () => void
+  readonly request?: AtlasExportRequest
+  readonly total?: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { can, ready } = useEntitlements()
   const { busy, outcome, run } = useAtlasExport(onSeePlans)
   const [open, setOpen] = useState(false)
@@ -127,7 +142,7 @@ export function AtlasExportButton({
     return (
       <button type="button" disabled className={BUTTON} style={style}>
         <Icon name="download" size={16} />
-        Export
+        {tUi("export")}{" "}
       </button>
     )
 
@@ -142,14 +157,15 @@ export function AtlasExportButton({
           style={style}
         >
           <Icon name="lock" size={16} />
-          Export · Pro
+          Export · Membership
         </button>
         <p
           id={noteId}
           className="order-last m-0 basis-full text-[14px]"
           style={{ color: T.ink.dim }}
         >
-          Export is a Pro feature.
+          Supporter exports up to 500 libraries per download; Pro exports up to
+          10,000.
         </p>
       </>
     )
@@ -163,12 +179,12 @@ export function AtlasExportButton({
           <button
             type="button"
             aria-busy={busy}
-            disabled={libraries.length === 0}
+            disabled={(total ?? libraries.length) === 0}
             className={BUTTON}
             style={style}
           >
             <Icon name="download" size={16} />
-            {busy ? "Exporting…" : "Export"}
+            {busy ? "Exporting…" : tUi("export")}
             <Icon name="chevD" size={14} />
           </button>
         </DropdownMenuTrigger>
@@ -186,10 +202,7 @@ export function AtlasExportButton({
             <DropdownMenuItem
               key={f.value}
               onSelect={() =>
-                void run(
-                  f.value,
-                  libraries.map((l) => l.id)
-                )
+                void run(f.value, request ?? libraries.map((l) => l.id))
               }
               className="cursor-pointer flex-col items-start gap-0 rounded-[12px] px-2.5 py-2 focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
             >

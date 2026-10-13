@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Notice } from "@/components/ds/Notice"
@@ -71,6 +72,8 @@ function LiveValue({
   readonly section: VerifySection
   readonly current: Record<string, unknown>
 }) {
+  const tUi = useUiTranslations("ui")
+
   switch (section) {
     case "hours": {
       const lines = hoursLines(current.openingTimes)
@@ -105,8 +108,8 @@ function LiveValue({
     case "contact": {
       const rows = [
         { label: "Website", value: text(current.website) },
-        { label: "Phone", value: text(current.phone) },
-        { label: "Email", value: text(current.email) },
+        { label: tUi("phone"), value: text(current.phone) },
+        { label: tUi("email"), value: text(current.email) },
       ].filter((r) => r.value)
 
       return rows.length ? (
@@ -160,6 +163,8 @@ export function VerificationPanel({
   readonly evidenceType?: string | null
   readonly evidenceUrl?: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const sections = toSections(
     (fields as { sections?: unknown } | null)?.sections
   )
@@ -196,7 +201,7 @@ export function VerificationPanel({
       {missing ? (
         <Notice
           icon="mdi:alert-circle-outline"
-          title="The library could not be found"
+          title={tUi("the_library_could_not_be_found")}
           tone="warn"
         >
           It may have been deleted or renamed, so approving changes nothing.

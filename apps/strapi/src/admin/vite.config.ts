@@ -1,8 +1,14 @@
+import { createRequire } from "node:module"
 import path from "node:path"
 
 // @ts-expect-error vite is provided by Strapi internally
-// eslint-disable-next-line import-x/no-unresolved
-import { mergeConfig, type UserConfig } from "vite"
+import type { UserConfig } from "vite"
+
+// Resolve Strapi's bundled Vite under pnpm's strict dependency isolation.
+const strapiRequire = createRequire(
+  require.resolve("@strapi/strapi/package.json")
+)
+const { mergeConfig } = strapiRequire("vite")
 
 // Third-party admin plugins (config-sync) list @strapi/icons as a peer that
 // pnpm never links for them, which breaks the admin's dependency
@@ -16,6 +22,9 @@ export default (config: UserConfig) => {
     // CommonJS for Strapi's server, so Vite must convert it for the admin too.
     optimizeDeps: {
       include: ["@repo/shared-data"],
+      // Linked workspace builds can change without a lockfile change. Vite's
+      // cached bundle would otherwise keep old exports across Strapi restarts.
+      force: true,
     },
     build: {
       commonjsOptions: {

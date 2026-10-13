@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { useEntitlements } from "@/lib/access-client"
@@ -28,6 +29,8 @@ const PREVIEW: Record<Mode, number[]> = {
  * Pro members see a "coming soon" note instead of the upsell.
  */
 export function LibraryReachTeaser() {
+  const tUi = useUiTranslations("ui")
+
   const { can, ready } = useEntitlements()
   const [mode, setMode] = useState<Mode>("walk")
   const isPro = ready && can("atlas.analysis")
@@ -62,7 +65,7 @@ export function LibraryReachTeaser() {
         </h3>
         <div
           role="group"
-          aria-label="Travel mode for the preview"
+          aria-label={tUi("travel_mode_for_the_preview")}
           className="mt-3 flex flex-wrap gap-1.5"
         >
           {MODES.map((m) => {
@@ -107,7 +110,7 @@ export function LibraryReachTeaser() {
               className="rounded-full border bg-white px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
             >
-              Get Pro free
+              {tUi("get_pro_free")}
             </Link>
           </div>
         )}
@@ -128,7 +131,7 @@ export function LibraryReachTeaser() {
               icon="mdi:lock-outline"
               width={12}
             />
-            Preview
+            {tUi("preview")}{" "}
           </span>
         </div>
         <div

@@ -1,5 +1,11 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { Badge } from "@/components/ds/Badge"
 
 export function SupporterBadge() {
-  return <Badge label="Supporter" color="aurora" icon="mdi:heart-outline" />
+  const tUi = useUiTranslations("ui")
+
+  return (
+    <Badge label={tUi("supporter")} color="aurora" icon="mdi:heart-outline" />
+  )
 }

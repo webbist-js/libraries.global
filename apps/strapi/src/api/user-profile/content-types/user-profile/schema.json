@@ -102,7 +102,7 @@
     "notifPrefs": {
       "type": "json",
       "default": {
-        "weeklyDigest": true,
+        "weeklyDigest": false,
         "editsReviewed": true,
         "newFollowers": false,
         "editorialMessages": true,

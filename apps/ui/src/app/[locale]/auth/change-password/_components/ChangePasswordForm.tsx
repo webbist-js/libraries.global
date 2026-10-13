@@ -9,6 +9,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
@@ -77,6 +78,8 @@ export function ChangePasswordForm({
   hasPassword: boolean
   email: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   usePreloadedIcons(LATER_ICONS)
   const [stage, setStage] = useState<Stage>({
     kind: hasPassword ? "change" : "add",
@@ -88,7 +91,7 @@ export function ChangePasswordForm({
         <AuthHeading
           icon="mdi:check-circle-outline"
           iconTone="ok"
-          title="Password"
+          title={tUi("password")}
           italic="changed."
           subtitle={
             stage.signedOutOthers
@@ -96,7 +99,9 @@ export function ChangePasswordForm({
               : "You're still signed in here and on your other devices."
           }
         />
-        <AuthPrimaryLink href={SETTINGS_HREF}>Back to settings</AuthPrimaryLink>
+        <AuthPrimaryLink href={SETTINGS_HREF}>
+          {tUi("back_to_settings")}
+        </AuthPrimaryLink>
       </>
     )
   }
@@ -120,6 +125,8 @@ function ChangeForm({
   onChanged: (signedOutOthers: boolean) => void
   onNoPassword: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { changePasswordMutation } = useUserMutations()
   const form = useForm<z.infer<typeof ChangePasswordSchema>>({
     resolver: zodResolver(ChangePasswordSchema),
@@ -184,7 +191,7 @@ function ChangeForm({
   return (
     <>
       <AuthHeading
-        title="Change your"
+        title={tUi("change_your")}
         italic="password."
         subtitle="You'll use the new one the next time you sign in."
       />
@@ -200,7 +207,7 @@ function ChangeForm({
       >
         <AuthField
           id="currentPassword"
-          label="Current password"
+          label={tUi("current_password")}
           error={errors.currentPassword?.message}
           aside={
             <AuthInlineLink href="/auth/forgot-password">
@@ -218,7 +225,7 @@ function ChangeForm({
 
         <AuthField
           id="newPassword"
-          label="New password"
+          label={tUi("new_password")}
           error={errors.newPassword?.message}
         >
           <PasswordInput
@@ -235,7 +242,7 @@ function ChangeForm({
         </AuthField>
 
         <AuthCheckbox
-          label="Sign out on my other devices"
+          label={tUi("sign_out_on_my_other_devices")}
           hint="Do this if you think someone else knows your old password."
           {...form.register("signOutOthers")}
         />
@@ -253,6 +260,8 @@ function ChangeForm({
 }
 
 function AddPassword({ email }: { email: string }) {
+  const tUi = useUiTranslations("ui")
+
   const { forgotPasswordMutation } = useUserMutations()
   const [sent, setSent] = useState(false)
   const [status, setStatus] = useState<AuthStatus>(null)
@@ -300,7 +309,7 @@ function AddPassword({ email }: { email: string }) {
             sign in again afterwards, with Google or the new password.
           </AuthNote>
           <AuthPrimaryLink href={SETTINGS_HREF}>
-            Back to settings
+            {tUi("back_to_settings")}{" "}
           </AuthPrimaryLink>
         </div>
       </>
@@ -330,7 +339,9 @@ function AddPassword({ email }: { email: string }) {
       >
         <AuthPrimaryButton disabled={forgotPasswordMutation.isPending}>
           <Icon icon="mdi:email-outline" width={20} aria-hidden="true" />
-          {forgotPasswordMutation.isPending ? "Sending…" : "Email me a link"}
+          {forgotPasswordMutation.isPending
+            ? tUi("sending")
+            : "Email me a link"}
         </AuthPrimaryButton>
         <AuthStatusMessage status={status} />
       </form>

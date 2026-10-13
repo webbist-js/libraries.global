@@ -99,6 +99,10 @@
               "type": "contentType"
             },
             {
+              "uid": "api::library-notice.library-notice",
+              "type": "contentType"
+            },
+            {
               "uid": "api::service.service",
               "type": "contentType"
             },

@@ -1,11 +1,16 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Drawer } from "@/components/ds/Drawer"
 import { useCapabilities } from "@/lib/access-client"
 import { authClient } from "@/lib/auth-client"
+import {
+  contributionPlaceParams,
+  type ContributionPlace,
+} from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
 import { plainDriveTitle } from "@/lib/drives/drive-view"
 import type { Drive, DriveTask } from "@/lib/drives/types"
@@ -64,7 +69,18 @@ const nameOf = (panel: HTMLElement) =>
  * browser session. Every list and count is one page or one grouped count
  * (ADR-0004).
  */
-export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
+export function DriveTaskArea({
+  drive,
+  initialPlace,
+}: {
+  readonly drive: Drive
+  readonly initialPlace?: ContributionPlace
+}) {
+  const tUi = useUiTranslations("ui")
+  const placeQuery = new URLSearchParams(
+    contributionPlaceParams(initialPlace ?? {})
+  ).toString()
+
   const { data: session, isPending } = authClient.useSession()
   const signedIn = Boolean(session?.user)
   const { claimedLibraryIds } = useCapabilities()
@@ -104,7 +120,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
       const ask = ++request.current
       setLoading(true)
       setListError(null)
-      const params = new URLSearchParams()
+      const params = new URLSearchParams(placeQuery)
       if (q) params.set("q", q)
       if (point) params.set("near", `${point.lat},${point.lng}`)
       params.set("page", String(p))
@@ -135,7 +151,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
         if (ask === request.current) setLoading(false)
       }
     },
-    [drive.slug, drive.locale]
+    [drive.slug, drive.locale, placeQuery]
   )
 
   useEffect(() => {
@@ -248,6 +264,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
             q: query,
             near: near ? `${near.lat},${near.lng}` : undefined,
             locale: drive.locale,
+            place: Object.fromEntries(new URLSearchParams(placeQuery)),
           }),
         }
       )
@@ -340,6 +357,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
       onSent={onSent}
       onSkip={onSkip}
       quota={quota}
+      returnTo={`${drive.locale === "en" ? "" : `/${drive.locale}`}/community/drives/${drive.slug}${placeQuery ? `?${placeQuery}` : ""}`}
       signedIn={signedIn}
       task={selected}
     />
@@ -375,7 +393,7 @@ export function DriveTaskArea({ drive }: { readonly drive: Drive }) {
         </div>
 
         <div
-          aria-label="Drive updates"
+          aria-label={tUi("drive_updates")}
           className="min-h-0"
           role="status"
           style={{ color: T.accent.ok }}

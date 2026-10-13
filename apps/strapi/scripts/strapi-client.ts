@@ -1,3 +1,9 @@
+import {
+  appendSourceRecords,
+  type LibrarySourceRecord,
+} from "@repo/shared-data"
+
+import { withLibrarySources } from "./library-source-data"
 /**
  * Authenticated Strapi REST API client for libraries.global data operations.
  *
@@ -129,12 +135,7 @@ export interface AmenityCreateData {
 }
 
 /** The record a library matches in an imported dataset (library.source-record). */
-export interface SourceRecordData {
-  dataset: string
-  recordId: string
-  retrievedAt?: string
-  url?: string
-}
+export interface SourceRecordData extends LibrarySourceRecord {}
 
 export interface LibraryCreateData {
   name: string
@@ -211,6 +212,7 @@ export class StrapiClient {
       "Content-Type": "application/json",
       Authorization: `Bearer ${STRAPI_API_TOKEN}`,
       "X-Service-Secret": STRAPI_BRIDGE_SECRET,
+      "X-Library-Ingest": "true",
     }
   }
 
@@ -222,7 +224,10 @@ export class StrapiClient {
   ): Promise<T> {
     const url = new URL(`${this.baseUrl}${path}`)
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-    const res = await fetch(url.toString(), { headers: this.headers })
+    const res = await fetch(url.toString(), {
+      headers: this.headers,
+      signal: AbortSignal.timeout(30000),
+    })
     if (!res.ok)
       throw new Error(`GET ${path} → ${res.status}: ${await res.text()}`)
 
@@ -232,6 +237,7 @@ export class StrapiClient {
   async post<T = unknown>(path: string, body: unknown): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: this.headers,
       body: JSON.stringify(body),
     })
@@ -244,6 +250,7 @@ export class StrapiClient {
   async put<T = unknown>(path: string, body: unknown): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "PUT",
+      signal: AbortSignal.timeout(30000),
       headers: this.headers,
       body: JSON.stringify(body),
     })
@@ -549,7 +556,7 @@ export class StrapiClient {
   async createLibrary(data: LibraryCreateData): Promise<StrapiEntity> {
     const res = await this.post<{ data: StrapiEntity }>(
       "/libraries?status=draft",
-      { data }
+      { data: withLibrarySources(data) }
     )
 
     return res.data
@@ -559,9 +566,26 @@ export class StrapiClient {
     documentId: string,
     data: Partial<LibraryCreateData>
   ): Promise<StrapiEntity> {
+    let canonical = withLibrarySources(data)
+    if (data.sourceRecords || data.source || data.sourceUrl) {
+      const existing = await this.get<{
+        data: StrapiEntity & { sourceRecords?: SourceRecordData[] }
+      }>(`/libraries/${documentId}`, {
+        status: "draft",
+        populate: "sourceRecords",
+        "fields[0]": "documentId",
+      })
+      canonical = {
+        ...canonical,
+        sourceRecords: appendSourceRecords(
+          existing.data.sourceRecords,
+          canonical.sourceRecords ?? []
+        ),
+      }
+    }
     const res = await this.put<{ data: StrapiEntity }>(
       `/libraries/${documentId}`,
-      { data }
+      { data: canonical }
     )
 
     return res.data
@@ -595,8 +619,16 @@ export class StrapiClient {
     const byRecordId = new Map<string, string>()
     for (const lib of libraries) {
       for (const record of lib.sourceRecords ?? []) {
-        if (record.dataset === dataset)
+        if (record.dataset === dataset && record.recordId) {
+          if (
+            byRecordId.has(record.recordId) &&
+            byRecordId.get(record.recordId) !== lib.documentId
+          )
+            throw new Error(
+              `Source Record ${dataset}/${record.recordId} belongs to multiple Libraries`
+            )
           byRecordId.set(record.recordId, lib.documentId)
+        }
       }
     }
 
@@ -791,7 +823,7 @@ function flattenFilters(
   const result: Record<string, string> = {}
   for (const [k, v] of Object.entries(filters)) {
     const key = `${prefix}[${k}]`
-    if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+    if (typeof v === "object" && v !== null) {
       Object.assign(result, flattenFilters(v as Record<string, unknown>, key))
     } else {
       result[key] = String(v)

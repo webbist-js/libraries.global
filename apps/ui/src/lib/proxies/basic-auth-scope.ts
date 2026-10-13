@@ -19,4 +19,5 @@ export const isApiPath = (pathname: string): boolean =>
   startsWithSegment(pathname, "/api")
 
 export const needsBasicAuth = (pathname: string): boolean =>
+  pathname !== "/api/billing/webhook" &&
   !EXEMPT_PREFIXES.some((prefix) => startsWithSegment(pathname, prefix))

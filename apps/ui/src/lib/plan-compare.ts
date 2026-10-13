@@ -8,7 +8,9 @@
 import { type Feature, FEATURES } from "@repo/access"
 
 import {
+  ATLAS_PER_CAPITA_LABEL,
   featuresOf,
+  exportLimitOf,
   type PlanCardKey,
   type PlanPrice,
   PLANS,
@@ -21,6 +23,7 @@ export type CompareRow = {
   id: string
   label: string
   cells: Record<PlanCardKey, CompareCell>
+  cellLabels?: Partial<Record<PlanCardKey, string>>
 }
 
 export type CompareGroup = { id: string; title: string; rows: CompareRow[] }
@@ -34,9 +37,10 @@ const SOON_SUFFIX = " (coming soon)"
 const IS_POINTER = /^(Everything in |Pro for every seat)/
 
 /** Pro features get their own rows, so their include lines are skipped. */
-const FEATURE_LABELS = new Set(
-  Object.values(PRO_FEATURE_COPY).map((c) => c.label)
-)
+const FEATURE_LABELS = new Set([
+  ATLAS_PER_CAPITA_LABEL,
+  ...Object.values(PRO_FEATURE_COPY).map((c) => c.label),
+])
 
 const GROUP_FOR_PLAN: Partial<Record<PlanCardKey, string>> = {
   public: "facts",
@@ -114,7 +118,12 @@ function includeRows(): { group: string; row: CompareRow }[] {
         const label = item.text.endsWith(SOON_SUFFIX)
           ? item.text.slice(0, -SOON_SUFFIX.length)
           : item.text
-        if (FEATURE_LABELS.has(label)) return []
+        if (
+          [...FEATURE_LABELS].some(
+            (feature) => label === feature || label.startsWith(`${feature} (`)
+          )
+        )
+          return []
 
         return [
           {
@@ -134,6 +143,7 @@ function featureRow(feature: Feature): CompareRow {
   const copy = PRO_FEATURE_COPY[feature]
   const status: CompareCell = copy.status === "live" ? "yes" : "soon"
   const pro = featuresOf("pro").includes(feature)
+  const supporter = featuresOf("supporter").includes(feature)
   const team = featuresOf("team").includes(feature)
 
   return {
@@ -142,10 +152,20 @@ function featureRow(feature: Feature): CompareRow {
     cells: {
       public: "no",
       free: "no",
-      supporter: "no",
+      supporter: supporter ? status : "no",
       pro: pro ? status : "no",
       team: team ? status : "no",
     },
+    ...(feature === "atlas.export"
+      ? {
+          cellLabels: Object.fromEntries(
+            (["supporter", "pro", "team"] as const).map((plan) => [
+              plan,
+              `${exportLimitOf(plan).toLocaleString("en-GB")}`,
+            ])
+          ),
+        }
+      : {}),
   }
 }
 
@@ -160,6 +180,19 @@ export function compareGroups(): CompareGroup[] {
     for (const f of features) byGroup.get(group)!.push(featureRow(f))
   for (const f of FEATURES)
     if (!grouped.has(f)) byGroup.get("more")!.push(featureRow(f))
+
+  // This delivered tool shares the analysis entitlement with future Reach tools.
+  byGroup.get("atlas")!.splice(1, 0, {
+    id: "atlas.libraryAccess",
+    label: ATLAS_PER_CAPITA_LABEL,
+    cells: {
+      public: "no",
+      free: "no",
+      supporter: "no",
+      pro: featuresOf("pro").includes("atlas.analysis") ? "yes" : "no",
+      team: featuresOf("team").includes("atlas.analysis") ? "yes" : "no",
+    },
+  })
 
   return GROUP_TITLES.map(([id, title]) => ({
     id,
@@ -212,6 +245,7 @@ export const ATLAS_SHEET_ROW_IDS = [
   "search-the-map-and-lists",
   "follow-libraries-and-save-events",
   "atlas.export",
+  "atlas.libraryAccess",
   "atlas.contextLayers",
   "atlas.analysis",
   "atlas.compare",

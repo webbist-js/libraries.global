@@ -78,7 +78,7 @@
       "inversedBy": "articles",
       "pluginOptions": {
         "i18n": {
-          "localized": false
+          "localized": true
         }
       }
     },
@@ -89,7 +89,7 @@
       "inversedBy": "wikiArticles",
       "pluginOptions": {
         "i18n": {
-          "localized": false
+          "localized": true
         }
       }
     },
@@ -124,7 +124,7 @@
       "target": "api::wiki-article.wiki-article",
       "pluginOptions": {
         "i18n": {
-          "localized": false
+          "localized": true
         }
       }
     },
@@ -178,7 +178,7 @@
       "target": "api::topic.topic",
       "pluginOptions": {
         "i18n": {
-          "localized": false
+          "localized": true
         }
       }
     },

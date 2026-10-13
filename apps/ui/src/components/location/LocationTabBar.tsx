@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -11,6 +12,8 @@ export interface LocationTabBarProps {
 
 /** v2 sticky on-this-page pill nav (matches the library page anchor nav). */
 export function LocationTabBar({ tabs, activeTabId }: LocationTabBarProps) {
+  const tUi = useUiTranslations("ui")
+
   const [active, setActive] = useState(activeTabId ?? tabs[0]?.id ?? "")
 
   const handleScrollTo = (id: string) => {
@@ -24,7 +27,7 @@ export function LocationTabBar({ tabs, activeTabId }: LocationTabBarProps) {
 
   return (
     <nav
-      aria-label="On this page"
+      aria-label={tUi("on_this_page")}
       className="sticky top-14 z-[5] mt-8 border-y"
       style={{ background: T.bg.void, borderColor: T.border.line }}
     >

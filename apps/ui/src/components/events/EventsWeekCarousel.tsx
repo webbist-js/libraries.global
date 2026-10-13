@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import {
@@ -40,6 +41,8 @@ function KeyValueTile({
 }
 
 function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
+  const tUi = useUiTranslations("ui")
+
   const start = new Date(event.startTime)
   const month = start.toLocaleDateString("en-GB", { month: "short" })
   const weekday = start.toLocaleDateString("en-GB", { weekday: "short" })
@@ -146,9 +149,9 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
         ) : null}
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-          <KeyValueTile label="When" value={when} />
+          <KeyValueTile label={tUi("when")} value={when} />
           <KeyValueTile
-            label="Price"
+            label={tUi("price")}
             value={
               event.isFree
                 ? "Free"
@@ -157,7 +160,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
                   : "See website"
             }
           />
-          <KeyValueTile label="Format" value="In person" />
+          <KeyValueTile label={tUi("format")} value="In person" />
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-3">
@@ -191,7 +194,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
               className="size-4"
               aria-hidden="true"
             />
-            Add to calendar
+            {tUi("add_to_calendar")}
           </a>
           <span className="text-[14px]" style={{ color: T.ink.low }}>
             Listing from {provider}
@@ -207,6 +210,8 @@ export function EventsWeekCarousel({
 }: {
   readonly events: EventSearchHit[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [index, setIndex] = useState(0)
   if (events.length === 0) return null
   const current = events[Math.min(index, events.length - 1)]!
@@ -232,7 +237,7 @@ export function EventsWeekCarousel({
             </span>
             <button
               type="button"
-              aria-label="Previous event"
+              aria-label={tUi("previous_event")}
               disabled={index === 0}
               onClick={() => setIndex((i) => Math.max(0, i - 1))}
               className="flex size-9 items-center justify-center rounded-full border transition-colors hover:bg-(--t-bg-muted) disabled:opacity-40"
@@ -246,7 +251,7 @@ export function EventsWeekCarousel({
             </button>
             <button
               type="button"
-              aria-label="Next event"
+              aria-label={tUi("next_event")}
               disabled={index >= events.length - 1}
               onClick={() =>
                 setIndex((i) => Math.min(events.length - 1, i + 1))

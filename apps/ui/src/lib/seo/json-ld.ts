@@ -15,12 +15,13 @@ export function buildOrganizationSchema(siteUrl: string) {
     "@type": "Organization",
     name: SITE_NAME,
     url: siteUrl,
+    logo: `${siteUrl.replace(/\/$/, "")}/apple-touch-icon.png`,
     description:
       "A comprehensive global index of libraries — every significant public, national, academic, and cultural library in the world.",
   }
 }
 
-/** Homepage: WebSite + sitelinks SearchAction pointing at /index?q= */
+/** Homepage: WebSite + SearchAction pointing at the public Library search. */
 export function buildWebSiteSchema(opts: {
   siteUrl: string
   searchUrlTemplate: string

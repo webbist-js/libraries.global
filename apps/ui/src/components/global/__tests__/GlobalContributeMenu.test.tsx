@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import type React from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import {
   cleanup,
   fireEvent,
@@ -7,9 +10,7 @@ import {
   screen,
   waitFor,
   within,
-} from "@testing-library/react"
-import type React from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+} from "@/test/render"
 
 const session = vi.hoisted(() => ({
   data: null as null | { user: Record<string, unknown> },

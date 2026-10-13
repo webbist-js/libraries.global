@@ -1,6 +1,8 @@
 // apps/ui/src/components/index-page/FindControls.tsx
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import {
   FilterShowButton,
   type FilterSidebarState,
@@ -30,6 +32,8 @@ export function FindFilterChips({
   onChange: (patch: Partial<FindState>) => void
   onClearAll: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const chips: { label: string; onRemove: () => void }[] = []
 
   if (state.place) {
@@ -39,6 +43,15 @@ export function FindFilterChips({
     })
   }
 
+  for (const type of state.rawTypes ?? [])
+    chips.push({
+      label: `${type} libraries`,
+      onRemove: () =>
+        onChange({
+          rawTypes: state.rawTypes?.filter((item) => item !== type),
+          page: 0,
+        }),
+    })
   for (const key of state.groups) {
     const group = TYPE_GROUPS.find((g) => g.key === key)
     if (group) {
@@ -69,9 +82,19 @@ export function FindFilterChips({
         }),
     })
   }
+  if (state.includeInactive)
+    chips.push({
+      label: "Closed and planned included",
+      onRemove: () => onChange({ includeInactive: false, page: 0 }),
+    })
+  if (state.staffNow)
+    chips.push({
+      label: "Staff on hand now",
+      onRemove: () => onChange({ staffNow: false, page: 0 }),
+    })
   if (state.openNow) {
     chips.push({
-      label: "Open now",
+      label: tUi("open_now"),
       onRemove: () => onChange({ openNow: false, page: 0 }),
     })
   }
@@ -113,7 +136,7 @@ export function FindFilterChips({
   return (
     <div
       className="flex flex-wrap items-center gap-2"
-      aria-label="Active filters"
+      aria-label={tUi("active_filters")}
     >
       {chips.map((chip) => (
         <span
@@ -188,15 +211,19 @@ export function FindResultsControls({
   onOpenFilters,
   activeFilterCount,
   sidebar,
+  availableViews = ["grid", "list", "map"],
 }: {
   state: FindState
-  total: number
+  total: number | null
   loading: boolean
   onChange: (patch: Partial<FindState>) => void
   onOpenFilters: () => void
   activeFilterCount: number
   sidebar: FilterSidebarState
+  availableViews?: readonly ViewMode[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div className="flex min-h-11 flex-wrap items-center gap-3">
       <FilterToggleButton
@@ -212,7 +239,9 @@ export function FindResultsControls({
       >
         {loading
           ? "Searching…"
-          : `${total.toLocaleString("en-GB")} ${total === 1 ? "library" : "libraries"}`}
+          : total === null
+            ? "Library results"
+            : `${total.toLocaleString("en-GB")} ${total === 1 ? "library" : "libraries"}`}
       </p>
 
       <label className="flex items-center gap-2 text-[15px] font-semibold">
@@ -238,11 +267,11 @@ export function FindResultsControls({
 
       <div
         role="radiogroup"
-        aria-label="Results view"
+        aria-label={tUi("results_view")}
         className="flex gap-1 rounded-[12px] p-1"
         style={{ background: T.bg.muted2 }}
       >
-        {VIEWS.map((v) => {
+        {VIEWS.filter((view) => availableViews.includes(view.key)).map((v) => {
           const active = state.view === v.key
 
           return (

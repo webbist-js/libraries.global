@@ -1,3 +1,4 @@
+import { gapsOf } from "@repo/shared-data"
 import { describe, expect, it } from "vitest"
 
 import {
@@ -102,7 +103,8 @@ describe("librarySearchFields", () => {
         51.53,
         -0.127
       )
-    ).toEqual({
+    ).toMatchObject({
+      source: null,
       completeness: 63,
       has_hours: true,
       has_staff: false,
@@ -111,7 +113,10 @@ describe("librarySearchFields", () => {
       closed_dates: [],
       notice_active: false,
       has_iiif: true,
-      needs: ["photo"],
+      needs: gapsOf({
+        openingTimes: hours,
+        accessibility: [{ name: "Step-free access" }],
+      }),
       open_tz: "Europe/London",
       open_mon_0_from: 570,
       open_mon_0_to: 780,
@@ -122,7 +127,8 @@ describe("librarySearchFields", () => {
   })
 
   it("marks a bare record with every gap", () => {
-    expect(librarySearchFields({}, null, null)).toEqual({
+    expect(librarySearchFields({}, null, null)).toMatchObject({
+      source: null,
       completeness: 0,
       has_hours: false,
       has_staff: false,
@@ -131,7 +137,7 @@ describe("librarySearchFields", () => {
       closed_dates: [],
       notice_active: false,
       has_iiif: false,
-      needs: ["hours", "photo", "facilities"],
+      needs: gapsOf({}),
       open_tz: "UTC",
     })
     expect(geoCell(null, 1)).toBeNull()
@@ -139,22 +145,25 @@ describe("librarySearchFields", () => {
 })
 
 describe("drive fields", () => {
-  it("uses the stored gaps as needs", () => {
+  it("recomputes needs with the current type-aware registry", () => {
     expect(
       librarySearchFields(
         { gaps: ["hours", "contact", "bogus"], openingTimes: null },
         null,
         null
       ).needs
-    ).toEqual(["hours", "contact"])
+    ).toEqual(gapsOf({}))
   })
 
-  it("falls back to the three legacy needs before gaps are stored", () => {
-    expect(librarySearchFields({}, null, null).needs).toEqual([
-      "hours",
-      "photo",
-      "facilities",
-    ])
+  it("does not ask Digital libraries for physical hours or visitor access", () => {
+    const needs = librarySearchFields(
+      { libraryType: "Digital" },
+      null,
+      null
+    ).needs
+    expect(needs).not.toContain("hours")
+    expect(needs).not.toContain("accessibility")
+    expect(needs).toContain("contact")
   })
 
   it("adds created and verified timestamps in seconds", () => {

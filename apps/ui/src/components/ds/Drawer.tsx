@@ -1,12 +1,11 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { type ReactNode, useEffect, useRef } from "react"
+import * as Dialog from "@radix-ui/react-dialog"
+import { useTranslations as useUiTranslations } from "next-intl"
+import { type ReactNode, useRef } from "react"
 
 import { T } from "@/lib/design-tokens"
-
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])'
 
 /**
  * Where focus starts when a drawer opens: the chosen radio card, else the
@@ -14,8 +13,12 @@ const FOCUSABLE =
  */
 function firstControl(panel: HTMLElement): HTMLElement | null {
   return (
-    panel.querySelector<HTMLElement>("input[type=radio]:checked") ??
-    panel.querySelector<HTMLElement>("select, textarea, input") ??
+    panel.querySelector<HTMLElement>(
+      "input[type=radio]:checked:not(:disabled)"
+    ) ??
+    panel.querySelector<HTMLElement>(
+      "select:not(:disabled), textarea:not(:disabled), input:not(:disabled):not([type=hidden])"
+    ) ??
     panel.querySelector<HTMLElement>("button")
   )
 }
@@ -28,9 +31,12 @@ function firstControl(panel: HTMLElement): HTMLElement | null {
  * gives focus back to whatever had it when it opened. `children` fill the
  * panel below the header, as flex children of a column.
  * `size="md"` is an inset, rounded paper panel (the staff drawer); the
- * default is the wider full-height paper sheet.
+ * default is a wider panel with the same paper treatment. Radix handles
+ * focus trapping, page scroll locking, background isolation and nesting.
  */
 export function Drawer({
+  open = true,
+  side = "right",
   titleId,
   title,
   subtitle,
@@ -43,6 +49,8 @@ export function Drawer({
   size = "lg",
   children,
 }: {
+  readonly open?: boolean
+  readonly side?: "right" | "left" | "bottom"
   /** The header title's id: the dialog's accessible name. */
   readonly titleId: string
   readonly title: ReactNode
@@ -63,75 +71,33 @@ export function Drawer({
   readonly onClose: () => void
   /** Picks the element focused on open; the first control by default. */
   readonly initialFocus?: (panel: HTMLElement) => HTMLElement | null
-  /** `lg`: full-height 760 px sheet. `md`: inset 440 px paper panel. */
-  readonly size?: "lg" | "md"
+  /** Inset paper panels: `md` 440 px, `lg` 760 px, `xl` 1120 px. */
+  readonly size?: "lg" | "md" | "xl"
   readonly children?: ReactNode
 }) {
-  const panel = useRef<HTMLDivElement>(null)
-  // Read through refs, so a new callback each render never re-runs the
-  // open/close effect (which would restore and re-take focus).
-  const close = useRef(onClose)
-  const start = useRef(initialFocus)
-  useEffect(() => {
-    close.current = onClose
-    start.current = initialFocus
-  })
+  const tUi = useUiTranslations("ui")
 
-  useEffect(() => {
-    const returnFocus = document.activeElement as HTMLElement | null
-    const root = document.documentElement
-    const overflow = root.style.overflow
-    root.style.overflow = "hidden"
-    if (panel.current) start.current(panel.current)?.focus()
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        close.current()
-
-        return
-      }
-      if (e.key !== "Tab" || !panel.current) return
-      // Keep Tab inside the dialog.
-      const items = [
-        ...panel.current.querySelectorAll<HTMLElement>(FOCUSABLE),
-      ].filter((el) => el.offsetParent !== null)
-      if (items.length === 0) return
-      const first = items[0]!
-      const last = items.at(-1)!
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener("keydown", onKey)
-
-    return () => {
-      document.removeEventListener("keydown", onKey)
-      root.style.overflow = overflow
-      returnFocus?.focus?.()
-    }
-  }, [])
-
+  const returnFocus = useRef<HTMLElement | null>(null)
   const heading = (
     <div className="min-w-0">
-      <h2
-        id={titleId}
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize:
-            size === "md" ? "clamp(26px,4vw,34px)" : "clamp(22px,3vw,28px)",
-          fontWeight: 500,
-          lineHeight: size === "md" ? 1.1 : 1.15,
-          letterSpacing: "-0.01em",
-          color: T.ink.base,
-        }}
-      >
-        {title}
-      </h2>
+      <div id={titleId}>
+        <Dialog.Title asChild>
+          <h2
+            className="m-0"
+            style={{
+              fontFamily: T.font.serif,
+              fontSize:
+                size === "md" ? "clamp(26px,4vw,34px)" : "clamp(22px,3vw,28px)",
+              fontWeight: 500,
+              lineHeight: size === "md" ? 1.1 : 1.15,
+              letterSpacing: "-0.01em",
+              color: T.ink.base,
+            }}
+          >
+            {title}
+          </h2>
+        </Dialog.Title>
+      </div>
       {subtitle ? (
         <p
           className="m-0 mt-0.5 truncate text-[15px]"
@@ -144,9 +110,9 @@ export function Drawer({
   )
   const closeButton = (
     <button
-      aria-label="Close"
+      aria-label={tUi("close")}
       className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
-      onClick={() => close.current()}
+      onClick={onClose}
       style={{ borderColor: T.border.line, color: T.ink.base }}
       type="button"
     >
@@ -158,7 +124,7 @@ export function Drawer({
     <div
       className={`shrink-0 border-b px-5 ${size === "md" ? "py-5" : "py-4 sm:px-6"}`}
       style={{
-        background: size === "md" ? T.bg.space : T.bg.deep,
+        background: T.bg.space,
         borderColor: T.border.line,
       }}
     >
@@ -191,45 +157,65 @@ export function Drawer({
     </div>
   )
 
-  return (
-    <div className="fixed inset-0 z-[80]">
-      <button
-        aria-hidden="true"
-        className="absolute inset-0 cursor-default border-0"
-        onClick={() => close.current()}
-        style={{ background: T.overlay.scrim }}
-        tabIndex={-1}
-        type="button"
-      />
-      <div
-        ref={panel}
-        aria-labelledby={titleId}
-        aria-modal="true"
-        className={[
-          "absolute flex flex-col overscroll-contain",
+  const panelClass =
+    side === "bottom"
+      ? "inset-x-0 bottom-0 max-h-[95dvh] rounded-t-[28px] border"
+      : [
+          "inset-y-2 w-[calc(100%-1rem)] rounded-[28px] border sm:inset-y-4 sm:w-[calc(100%-2rem)]",
+          side === "left" ? "left-2 sm:left-4" : "right-2 sm:right-4",
           size === "md"
-            ? "inset-y-2 right-4 w-[calc(100%-2rem)] max-w-[440px] overflow-hidden rounded-[28px] border"
-            : "inset-y-0 right-0 w-full border-l sm:w-[min(760px,100vw)]",
-        ].join(" ")}
-        role="dialog"
-        style={{
-          background: T.bg.void,
-          borderColor: T.border.hi,
-        }}
-      >
-        {size === "md" ? (
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            {header}
-            {children}
-          </div>
-        ) : (
-          <>
-            {header}
-            {children}
-          </>
-        )}
-        {footer}
-      </div>
-    </div>
+            ? "max-w-[440px]"
+            : size === "xl"
+              ? "max-w-[1120px]"
+              : "max-w-[760px]",
+        ].join(" ")
+
+  return (
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose()
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay
+          aria-hidden="true"
+          data-drawer-backdrop=""
+          className="fixed inset-0 z-[80]"
+          onClick={onClose}
+          style={{ background: T.overlay.scrim }}
+        />
+        <Dialog.Content
+          aria-describedby={undefined}
+          aria-labelledby={titleId}
+          aria-modal="true"
+          className={`fixed z-[81] flex flex-col overflow-hidden overscroll-contain ${panelClass}`}
+          onOpenAutoFocus={(event) => {
+            returnFocus.current = document.activeElement as HTMLElement | null
+            event.preventDefault()
+            const panel = event.currentTarget as HTMLElement
+            ;(initialFocus(panel) ?? panel).focus()
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            returnFocus.current?.focus()
+          }}
+          style={{ background: T.bg.void, borderColor: T.border.hi }}
+        >
+          {size === "md" ? (
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {header}
+              {children}
+            </div>
+          ) : (
+            <>
+              {header}
+              {children}
+            </>
+          )}
+          {footer}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

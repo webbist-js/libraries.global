@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import {
+  getTranslations as getUiTranslations,
+  setRequestLocale,
+} from "next-intl/server"
 
 import {
   docsArticlePath,
@@ -9,10 +13,13 @@ import {
 } from "@/components/docs/docs.config"
 import DocsArticlePage from "@/components/docs/DocsArticlePage"
 import { JsonLd } from "@/components/seo/JsonLd"
-import { isDevelopment } from "@/lib/general-helpers"
-import { redirect } from "@/lib/navigation"
 import { buildArticleSchema, buildBreadcrumbSchema } from "@/lib/seo/json-ld"
-import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
+import {
+  absoluteUrl,
+  buildMetadata,
+  localizedPath,
+  SITE_NAME,
+} from "@/lib/seo/metadata"
 import {
   fetchDocsWikiArticles,
   fetchWikiArticle,
@@ -24,25 +31,9 @@ export const dynamic = "force-static"
 export const revalidate = 300
 export const dynamicParams = true
 
-export async function generateStaticParams({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  if (isDevelopment()) return []
-  const [result, sectionsRes] = await Promise.all([
-    fetchDocsWikiArticles(locale as Locale),
-    fetchWikiSections(),
-  ])
-  const sections = toDocsSections(sectionsRes.data)
-
-  return (result?.data ?? []).flatMap((article) => {
-    const home = homeSectionOf(article, sections)
-
-    return article.slug && home
-      ? [{ section: home.slug, slug: article.slug }]
-      : []
-  })
+/** Cache articles on demand, including those beyond the Knowledge hub's first page. */
+export function generateStaticParams() {
+  return []
 }
 
 export async function generateMetadata({
@@ -51,20 +42,27 @@ export async function generateMetadata({
   params: Promise<{ locale: string; section: string; slug: string }>
 }): Promise<Metadata> {
   const { slug, locale } = await params
-  const res = await fetchWikiArticle(slug, locale as Locale)
+  const [res, sectionsRes, tUi, tArticle] = await Promise.all([
+    fetchWikiArticle(slug, locale as Locale),
+    fetchWikiSections(locale as Locale),
+    getUiTranslations({ locale: locale as Locale, namespace: "ui" }),
+    getUiTranslations({ locale: locale as Locale, namespace: "editorial" }),
+  ])
   const article = res?.data
-  if (!article) return { title: "Page not found", robots: { index: false } }
+  if (!article)
+    return { title: tArticle("pageNotFound"), robots: { index: false } }
 
-  const title = article.seo?.metaTitle ?? article.title ?? "Knowledge"
+  const title = article.title ?? tUi("knowledge")
 
   return buildMetadata({
-    title: `${title} / Knowledge`,
+    seo: article.seo,
+    alternateLocales: [locale],
+    title: `${title} / ${tUi("knowledge")}`,
     description:
-      article.seo?.metaDescription ??
       article.summary ??
-      `${article.title ?? "Documentation"} — ${SITE_NAME} documentation.`,
+      tArticle("documentationDescription", { title, site: SITE_NAME }),
     // Canonical lives under the article's home section.
-    path: docsArticlePath(article),
+    path: docsArticlePath(article, toDocsSections(sectionsRes.data)),
     locale,
     type: "article",
     image: formatStrapiMediaUrl(
@@ -84,11 +82,13 @@ export default async function DocsArticleRoute({
 }) {
   const { locale: rawLocale, section, slug } = await params
   const locale = rawLocale as Locale
+  setRequestLocale(locale)
+  const tUi = await getUiTranslations("ui")
 
   const [articleRes, allRes, sectionsRes] = await Promise.all([
     fetchWikiArticle(slug, locale),
     fetchDocsWikiArticles(locale),
-    fetchWikiSections(),
+    fetchWikiSections(locale as Locale),
   ])
   const article = articleRes?.data
   if (!article) notFound()
@@ -99,7 +99,7 @@ export default async function DocsArticleRoute({
   const home = homeSectionOf(article, sections)
   if (!home) notFound()
   if (home.slug !== section) {
-    redirect({ href: `/knowledge/${home.slug}/${slug}`, locale })
+    permanentRedirect(localizedPath(`/knowledge/${home.slug}/${slug}`, locale))
   }
 
   const url = absoluteUrl(docsArticlePath(article, sections), locale)
@@ -119,8 +119,8 @@ export default async function DocsArticleRoute({
             sectionName: home.title,
           }),
           buildBreadcrumbSchema([
-            { name: "Home", url: absoluteUrl("", locale) },
-            { name: "Knowledge", url: absoluteUrl("knowledge", locale) },
+            { name: tUi("home"), url: absoluteUrl("", locale) },
+            { name: tUi("knowledge"), url: absoluteUrl("knowledge", locale) },
             { name: article.title ?? slug, url },
           ]),
         ]}

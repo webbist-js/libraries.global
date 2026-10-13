@@ -1,0 +1,1433 @@
+{
+  "key": "plugin_content_manager_configuration_content_types::api::library.library",
+  "type": "object",
+  "environment": null,
+  "tag": null,
+  "value": {
+    "settings": {
+      "bulkable": true,
+      "filterable": true,
+      "searchable": true,
+      "pageSize": 25,
+      "mainField": "name",
+      "defaultSortBy": "name",
+      "defaultSortOrder": "ASC"
+    },
+    "metadatas": {
+      "id": {
+        "edit": {},
+        "list": {
+          "label": "id",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "name": {
+        "edit": {
+          "label": "Library name",
+          "description": "Use the library’s official name in this language.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Library name",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "slug": {
+        "edit": {
+          "label": "URL slug",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "URL slug",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "entityRef": {
+        "edit": {
+          "label": "Entity reference",
+          "description": "Derived from the library’s place hierarchy and URL slug. Usually leave unchanged.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Entity reference",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "shortName": {
+        "edit": {
+          "label": "Short name",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Short name",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "alternateNames": {
+        "edit": {
+          "label": "Other names",
+          "description": "JSON array of alternative names, for example [\"British Library\", \"BL\"].",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Other names",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "summary": {
+        "edit": {
+          "label": "Short summary",
+          "description": "A brief introduction for search results and the library page.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Short summary",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "description": {
+        "edit": {
+          "label": "About the library",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "About the library",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "libraryType": {
+        "edit": {
+          "label": "Library type",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Library type",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "operatorType": {
+        "edit": {
+          "label": "Operator type",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Operator type",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "foundedYear": {
+        "edit": {
+          "label": "Founded year",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Founded year",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "openedYear": {
+        "edit": {
+          "label": "Building opened year",
+          "description": "Year the current library building opened; this may differ from its founding year.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Building opened year",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "closedYear": {
+        "edit": {
+          "label": "Closed year",
+          "description": "Complete only for a permanently closed library.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Closed year",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "continent": {
+        "edit": {
+          "label": "Continent",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Continent",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "country": {
+        "edit": {
+          "label": "Country",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Country",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "region": {
+        "edit": {
+          "label": "Region",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Region",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "area": {
+        "edit": {
+          "label": "Area (optional)",
+          "description": "Choose an Area within the selected Region when applicable.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Area (optional)",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "city": {
+        "edit": {
+          "label": "City / town",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "City / town",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "district": {
+        "edit": {
+          "label": "District / neighbourhood",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "District / neighbourhood",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "streetAddress": {
+        "edit": {
+          "label": "Street address",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Street address",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "postalCode": {
+        "edit": {
+          "label": "Postal code",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Postal code",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "location": {
+        "edit": {
+          "label": "Map location",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Map location",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "timezone": {
+        "edit": {
+          "label": "Time zone",
+          "description": "Use the library’s local time zone. Opening hours and dated exceptions depend on it.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Time zone",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "openingTimes": {
+        "edit": {
+          "label": "Opening hours",
+          "description": "Record regular public opening hours here; use exceptions for holidays and seasonal changes.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Opening hours",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "website": {
+        "edit": {
+          "label": "Website",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Website",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "catalogueUrl": {
+        "edit": {
+          "label": "Online catalogue",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Online catalogue",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "membershipUrl": {
+        "edit": {
+          "label": "Join / reader registration URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Join / reader registration URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "bookingUrl": {
+        "edit": {
+          "label": "Booking URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Booking URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "planVisitUrl": {
+        "edit": {
+          "label": "Plan a visit URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Plan a visit URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "virtualTourUrl": {
+        "edit": {
+          "label": "Virtual tour URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Virtual tour URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "donationUrl": {
+        "edit": {
+          "label": "Donation URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Donation URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "email": {
+        "edit": {
+          "label": "Contact email",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Contact email",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "phone": {
+        "edit": {
+          "label": "Contact phone",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Contact phone",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "socialLinks": {
+        "edit": {
+          "label": "Social profiles",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Social profiles",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "operationalStatus": {
+        "edit": {
+          "label": "Operational status",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Operational status",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "closureReason": {
+        "edit": {
+          "label": "Closure details",
+          "description": "Explain temporary or permanent closure when applicable.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Closure details",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "visitNotes": {
+        "edit": {
+          "label": "Visitor information",
+          "description": "Practical information visitors need before arriving, including any restricted services.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Visitor information",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "admissionInfo": {
+        "edit": {
+          "label": "Admission and membership",
+          "description": "Include entry fees, membership, reader passes and booking requirements.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Admission and membership",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "accessibilityNotes": {
+        "edit": {
+          "label": "Accessibility information",
+          "description": "Describe step-free access, equipment, assistance and any access restrictions.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Accessibility information",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "absentFacilities": {
+        "edit": {
+          "label": "Facilities confirmed unavailable",
+          "description": "JSON array of facility keys confirmed unavailable. An empty array means no confirmed absences; do not infer absence from missing information.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Facilities confirmed unavailable",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "heroImage": {
+        "edit": {
+          "label": "Main photo",
+          "description": "Main image used on the library’s public page. Add useful alternative text in the Media Library.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Main photo",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "gallery": {
+        "edit": {
+          "label": "Photo gallery",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Photo gallery",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "virtualTourEmbed": {
+        "edit": {
+          "label": "Virtual tour embed URL",
+          "description": "Use a supported embed URL, rather than pasted HTML.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Virtual tour embed URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "architect": {
+        "edit": {
+          "label": "Architect",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Architect",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "buildingInfo": {
+        "edit": {
+          "label": "Building and architecture",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Building and architecture",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "languagesServed": {
+        "edit": {
+          "label": "Languages served",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Languages served",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "classificationSystem": {
+        "edit": {
+          "label": "Classification system",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Classification system",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "iiifEndpoint": {
+        "edit": {
+          "label": "IIIF endpoint URL",
+          "description": "IIIF service endpoint for digitised collections, when available.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "IIIF endpoint URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "collectionStats": {
+        "edit": {
+          "label": "Collection figures",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Collection figures",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "libraryStats": {
+        "edit": {
+          "label": "Library statistics",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Library statistics",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "transitInfo": {
+        "edit": {
+          "label": "Getting here",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Getting here",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "nearestStation": {
+        "edit": {
+          "label": "Nearest station",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Nearest station",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "wikidataId": {
+        "edit": {
+          "label": "Wikidata ID",
+          "description": "Wikidata item identifier, for example Q23308.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Wikidata ID",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "featured": {
+        "edit": {
+          "label": "Pillar institution",
+          "description": "Editorial designation for a Library of exceptional cultural, historical or national significance.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Pillar institution",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "sourceRecords": {
+        "edit": {
+          "label": "Sources and references",
+          "description": "Record the sources supporting the information above. Imported Dataset provenance should be preserved.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Sources and references",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "lastVerifiedAt": {
+        "edit": {
+          "label": "lastVerifiedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "lastVerifiedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "contentUpdatedAt": {
+        "edit": {
+          "label": "contentUpdatedAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "contentUpdatedAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "verifiedSections": {
+        "edit": {
+          "label": "verifiedSections",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "verifiedSections",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "services": {
+        "edit": {
+          "label": "Services",
+          "description": "What the library offers to visitors and readers.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Services",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "amenities": {
+        "edit": {
+          "label": "Amenities",
+          "description": "Facilities available on site.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Amenities",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "accessibility": {
+        "edit": {
+          "label": "Accessibility features",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Accessibility features",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "hasActiveFeed": {
+        "edit": {
+          "label": "hasActiveFeed",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "hasActiveFeed",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "completeness": {
+        "edit": {
+          "label": "completeness",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "completeness",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "gaps": {
+        "edit": {
+          "label": "gaps",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "gaps",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "seo": {
+        "edit": {
+          "label": "Search engine metadata",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Search engine metadata",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "mobileTimetable": {
+        "edit": {
+          "label": "Mobile library timetable",
+          "description": "For Mobile libraries only: stops, visits and the vehicle’s repeating cycle.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Mobile library timetable",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "homeLibrary": {
+        "edit": {
+          "label": "Home library / base",
+          "description": "For a Mobile library: choose its fixed home library or base.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Home library / base",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "mobileLibraries": {
+        "edit": {
+          "label": "Mobile libraries based here",
+          "description": "Mobile libraries based at this fixed library.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true,
+          "mainField": "name"
+        },
+        "list": {
+          "label": "Mobile libraries based here",
+          "searchable": false,
+          "sortable": false
+        }
+      },
+      "operatorName": {
+        "edit": {
+          "label": "Operator name",
+          "description": "Name of the organisation running the library or mobile service.",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Operator name",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "timetableUrl": {
+        "edit": {
+          "label": "Published timetable URL",
+          "description": "",
+          "placeholder": "",
+          "visible": true,
+          "editable": true
+        },
+        "list": {
+          "label": "Published timetable URL",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "hasStaff": {
+        "edit": {
+          "label": "hasStaff",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": false
+        },
+        "list": {
+          "label": "hasStaff",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdAt": {
+        "edit": {
+          "label": "createdAt",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "createdAt",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedAt": {
+        "edit": {
+          "label": "Last updated",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true
+        },
+        "list": {
+          "label": "Last updated",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "createdBy": {
+        "edit": {
+          "label": "createdBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "createdBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "updatedBy": {
+        "edit": {
+          "label": "updatedBy",
+          "description": "",
+          "placeholder": "",
+          "visible": false,
+          "editable": true,
+          "mainField": "firstname"
+        },
+        "list": {
+          "label": "updatedBy",
+          "searchable": true,
+          "sortable": true
+        }
+      },
+      "documentId": {
+        "edit": {},
+        "list": {
+          "label": "documentId",
+          "searchable": true,
+          "sortable": true
+        }
+      }
+    },
+    "layouts": {
+      "list": [
+        "name",
+        "libraryType",
+        "operationalStatus",
+        "country",
+        "region",
+        "updatedAt"
+      ],
+      "edit": [
+        [
+          {
+            "name": "name",
+            "size": 8
+          },
+          {
+            "name": "shortName",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "libraryType",
+            "size": 6
+          },
+          {
+            "name": "operationalStatus",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "operatorType",
+            "size": 6
+          },
+          {
+            "name": "featured",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "summary",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "continent",
+            "size": 6
+          },
+          {
+            "name": "country",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "region",
+            "size": 6
+          },
+          {
+            "name": "area",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "city",
+            "size": 6
+          },
+          {
+            "name": "district",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "streetAddress",
+            "size": 8
+          },
+          {
+            "name": "postalCode",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "location",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "timezone",
+            "size": 6
+          },
+          {
+            "name": "nearestStation",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "transitInfo",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "website",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "email",
+            "size": 6
+          },
+          {
+            "name": "phone",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "openingTimes",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "closureReason",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "admissionInfo",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "planVisitUrl",
+            "size": 6
+          },
+          {
+            "name": "bookingUrl",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "membershipUrl",
+            "size": 6
+          },
+          {
+            "name": "catalogueUrl",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "visitNotes",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "services",
+            "size": 6
+          },
+          {
+            "name": "amenities",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "accessibility",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "accessibilityNotes",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "description",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "foundedYear",
+            "size": 4
+          },
+          {
+            "name": "openedYear",
+            "size": 4
+          },
+          {
+            "name": "closedYear",
+            "size": 4
+          }
+        ],
+        [
+          {
+            "name": "architect",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "buildingInfo",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "languagesServed",
+            "size": 6
+          },
+          {
+            "name": "classificationSystem",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "collectionStats",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "libraryStats",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "iiifEndpoint",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "heroImage",
+            "size": 6
+          },
+          {
+            "name": "gallery",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "virtualTourUrl",
+            "size": 6
+          },
+          {
+            "name": "virtualTourEmbed",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "socialLinks",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "donationUrl",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "sourceRecords",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "wikidataId",
+            "size": 6
+          },
+          {
+            "name": "slug",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "entityRef",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "alternateNames",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "absentFacilities",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "seo",
+            "size": 12
+          }
+        ],
+        [
+          {
+            "name": "operatorName",
+            "size": 6
+          },
+          {
+            "name": "timetableUrl",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "homeLibrary",
+            "size": 6
+          },
+          {
+            "name": "mobileLibraries",
+            "size": 6
+          }
+        ],
+        [
+          {
+            "name": "mobileTimetable",
+            "size": 12
+          }
+        ]
+      ]
+    },
+    "uid": "api::library.library"
+  }
+}

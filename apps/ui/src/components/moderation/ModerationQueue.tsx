@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { Badge, EmptyState, Pager } from "@/components/ds"
@@ -79,6 +80,8 @@ export function ModerationQueue({
   readonly locales: readonly { code: string; name: string }[]
   readonly localeNames: Record<string, string>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [result, setResult] = useState<ModerationListResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -248,7 +251,7 @@ export function ModerationQueue({
                   className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
-                  Clear filters
+                  {tUi("clear_filters")}{" "}
                 </Link>
               ) : undefined
             }
@@ -270,12 +273,12 @@ export function ModerationQueue({
             <thead>
               <tr style={{ background: T.bg.surface }}>
                 {[
-                  "Type",
+                  tUi("type"),
                   "Submission",
                   "Contributor",
-                  "Language",
+                  tUi("language"),
                   "Submitted",
-                  "Status",
+                  tUi("status"),
                 ].map((h) => (
                   <th
                     key={h}
@@ -338,7 +341,7 @@ export function ModerationQueue({
       ) : null}
 
       {pages > 1 ? (
-        <nav aria-label="Queue pages">
+        <nav aria-label={tUi("queue_pages")}>
           <Pager
             prev={
               state.page > 1

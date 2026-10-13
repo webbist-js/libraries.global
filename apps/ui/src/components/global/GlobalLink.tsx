@@ -27,6 +27,14 @@ export function GlobalLink({
     return <FallbackTag className={className}>{children}</FallbackTag>
   }
 
+  if (formattedHref.startsWith("#")) {
+    return (
+      <a href={formattedHref} className={className} {...props}>
+        {children}
+      </a>
+    )
+  }
+
   if (isAppLink(formattedHref)) {
     return (
       <Link href={formattedHref} className={className} {...props}>

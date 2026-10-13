@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+import type * as NextIntl from "next-intl"
+import * as React from "react"
+import { createElement, Fragment } from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
 import {
   cleanup,
   fireEvent,
@@ -6,10 +11,7 @@ import {
   screen,
   waitFor,
   within,
-} from "@testing-library/react"
-import * as React from "react"
-import { createElement, Fragment } from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+} from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -64,7 +66,10 @@ vi.mock("@/lib/meilisearch", () => ({
     hits: state.pageHit ? [state.pageHit] : [],
   }),
 }))
-vi.mock("next-intl", () => ({ useLocale: () => "en" }))
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof NextIntl>()),
+  useLocale: () => "en",
+}))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 // The icon's id is kept, so a lock can be told from the tile's own icon.
 vi.mock("@iconify/react", async () => {
@@ -230,7 +235,7 @@ describe("StaffDrawer", () => {
     expect(tiles).toContain(`/staff/${MOBILE.slug}/live`)
     expect(
       screen.getByRole("link", { name: /^Timetable/ }).getAttribute("href")
-    ).toBe(`/staff/${MOBILE.slug}/timetable`)
+    ).toBe(`/staff/${MOBILE.slug}/edit?step=timetable`)
     expect(screen.getAllByText("Mobile").length).toBe(2)
   })
 

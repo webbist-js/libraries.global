@@ -17,7 +17,8 @@ export function KnowledgeSection({
   return (
     <section
       aria-labelledby="knowledge-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(64px,8vw,96px)] sm:px-8"
+      data-homepage-surface="paper"
+      className="mx-auto w-full max-w-[1360px] px-4 sm:px-8"
     >
       <div
         className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-y py-7"

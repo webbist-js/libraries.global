@@ -74,7 +74,8 @@ function reviewKeys(fields: Record<string, unknown>) {
         !(k in REVIEW_COLLECTIONS) &&
         /^[a-zA-Z]+$/.test(k) &&
         k !== "lat" &&
-        k !== "lng"
+        k !== "lng" &&
+        k !== "sourceRecords"
     ),
   }
 }
@@ -117,9 +118,12 @@ export async function preloadRecordReviews(
   const query = {
     fields: ["documentId", "slug", ...scalars],
     status: "published",
-    populate: Object.fromEntries(
-      [...relations].map((k) => [k, { fields: ["documentId", "name"] }])
-    ),
+    populate: {
+      ...Object.fromEntries(
+        [...relations].map((k) => [k, { fields: ["documentId", "name"] }])
+      ),
+      sourceRecords: true,
+    },
   }
   const or = [
     ...(ids.size ? [{ documentId: { $in: [...ids] } }] : []),
@@ -185,9 +189,12 @@ export async function recordReview(
     const query = {
       fields: ["documentId", ...scalars],
       status: "published",
-      populate: Object.fromEntries(
-        relations.map((k) => [k, { fields: ["documentId", "name"] }])
-      ),
+      populate: {
+        ...Object.fromEntries(
+          relations.map((k) => [k, { fields: ["documentId", "name"] }])
+        ),
+        sourceRecords: true,
+      },
     }
     try {
       if (submission.targetDocumentId)
@@ -207,6 +214,8 @@ export async function recordReview(
 
   const names: Record<string, string> = {}
   const current: Record<string, unknown> = {}
+  if ("sourceRecords" in fields)
+    current.sourceRecords = library?.sourceRecords ?? []
   for (const key of scalars)
     if (library && key in library) current[key] = library[key]
   for (const key of relations) {

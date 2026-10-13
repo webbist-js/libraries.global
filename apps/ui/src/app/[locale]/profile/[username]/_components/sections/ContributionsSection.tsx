@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
@@ -72,6 +73,8 @@ export function ContributionsSection({
   username: string
   isOwner?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [submissions, setSubmissions] = useState<PublicSubmission[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -103,7 +106,10 @@ export function ContributionsSection({
   const ownerNote = isOwner ? (
     <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
       Only accepted changes appear here. Drafts and changes in review are in{" "}
-      <TextLink href="/contribute/submissions">My submissions</TextLink>.
+      <TextLink href="/contribute/submissions">
+        {tUi("my_submissions")}
+      </TextLink>
+      .
     </p>
   ) : null
 
@@ -111,7 +117,7 @@ export function ContributionsSection({
     return (
       <div
         aria-busy="true"
-        aria-label="Loading contributions"
+        aria-label={tUi("loading_contributions")}
         style={{ ...CARD, overflow: "hidden" }}
       >
         {[0, 1, 2].map((i) => (
@@ -168,28 +174,28 @@ export function ContributionsSection({
       <h2 className="sr-only">Contribution summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Accepted"
+          label={tUi("accepted")}
           value={String(submissions.length)}
           bg="var(--tint-public-bg)"
           fg="var(--tint-public-fg)"
           icon="mdi:check-circle-outline"
         />
         <StatCard
-          label="Libraries added"
+          label={tUi("libraries_added")}
           value={String(counts.added)}
           bg="var(--tint-neutral-bg)"
           fg="var(--tint-neutral-fg)"
           icon="mdi:book-plus-outline"
         />
         <StatCard
-          label="Records improved"
+          label={tUi("records_improved")}
           value={String(counts.edited)}
           bg="var(--tint-academic-bg)"
           fg="var(--tint-academic-fg)"
           icon="mdi:pencil-outline"
         />
         <StatCard
-          label="Points earned"
+          label={tUi("points_earned")}
           value={totalPts.toLocaleString()}
           bg="var(--tint-national-bg)"
           fg="var(--tint-national-fg)"
@@ -198,7 +204,7 @@ export function ContributionsSection({
       </div>
 
       <ContributionList
-        title="Accepted contributions"
+        title={tUi("accepted_contributions")}
         items={submissions}
         filters={FILTERS}
         matches={matchesFilter}

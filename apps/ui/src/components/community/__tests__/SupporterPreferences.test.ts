@@ -1,13 +1,8 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
 import * as React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 Object.assign(globalThis, { React })
 const mocks = vi.hoisted(() => ({

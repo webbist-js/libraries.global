@@ -11,12 +11,28 @@ vi.mock("@/lib/library-helpers", () => ({
 vi.mock("@/lib/seo/metadata", () => ({
   absoluteUrl: (path: string) => `https://libraries.global/${path}`,
 }))
+vi.mock("@/lib/strapi-api/content/datasets", () => ({
+  fetchDataset: vi.fn().mockResolvedValue({
+    key: "example",
+    publisher: "Publisher",
+    licence: "CC0",
+    attribution: "Dataset credit",
+  }),
+}))
 const { GET } = await import("../[slug]/record/route")
 const library = {
   slug: "test-library",
   name: 'Library, "Central"',
   entityRef: "LIB:GB:TST:01",
-  source: "Original catalogue",
+  sourceRecords: [
+    {
+      dataset: "example",
+      label: "Original catalogue",
+      recordId: "KEEP",
+      url: "https://source.example",
+      role: "origin",
+    },
+  ],
   updatedAt: "2026-10-08",
   country: { name: "United Kingdom", iso2: "GB" },
 }
@@ -38,7 +54,15 @@ describe("public library record downloads", () => {
     )
     expect(await res.json()).toMatchObject({
       name: library.name,
-      source: library.source,
+      sourceRecords: [
+        expect.objectContaining({
+          recordId: "KEEP",
+          label: "Original catalogue",
+          publisher: "Publisher",
+          licence: "CC0",
+          attribution: "Dataset credit",
+        }),
+      ],
       licence: "CC BY-SA 4.0",
       attribution: expect.stringContaining("contributors"),
     })

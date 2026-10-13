@@ -1,0 +1,10 @@
+[Unit]
+Description=Libraries Global billing processing each minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00 UTC
+Persistent=true
+Unit=libraries-global-maintenance@billing.service
+
+[Install]
+WantedBy=timers.target

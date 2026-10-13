@@ -121,6 +121,8 @@ export const auth = betterAuth({
       // Refusing here keeps the sign-in record until the profile is gone, so
       // nothing is orphaned.
       beforeDelete: async (user) => {
+        const { stopBillingBeforeDeletion } = await import("./billing/deletion")
+        await stopBillingBeforeDeletion(pool, user.id)
         const result = await deleteStrapiProfile({
           baUserId: user.id,
           email: user.email,
@@ -265,8 +267,11 @@ export const auth = betterAuth({
         await sendMagicLinkEmail(email, url)
       },
     }),
-    customSession(async ({ user, session }) => {
-      const profile = await fetchSessionProfile(user.id)
+    customSession(async ({ user, session }, context) => {
+      const profile = await fetchSessionProfile(
+        user.id,
+        context.query?.disableCookieCache === true
+      )
 
       return { user: { ...user, ...buildSessionAccess(profile) }, session }
     }),

@@ -1,8 +1,10 @@
 "use client"
 
 import { useLocale } from "next-intl"
-import { useEffect, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 
+import { FeaturedContribution } from "@/components/contribute/FeaturedContribution"
+import { hubHref } from "@/components/contribute/wizard.logic"
 import { DriveTaskPanel } from "@/components/drives/DriveTaskPanel"
 import { DriveTitle } from "@/components/drives/DriveTitle"
 import { focusChipOf } from "@/components/drives/focus-meta"
@@ -26,6 +28,7 @@ export type LibraryDriveRef = {
   city?: string | null
   regionName?: string | null
   website?: string | null
+  libraryType?: string | null
   href: string
 }
 
@@ -50,7 +53,11 @@ const fmt = (n: number) => n.toLocaleString("en-GB")
  */
 export function LibraryDriveNote({
   library,
+  featured = false,
+  fallback = null,
 }: {
+  readonly featured?: boolean
+  readonly fallback?: ReactNode
   readonly library: LibraryDriveRef
 }) {
   const locale = useLocale()
@@ -102,10 +109,13 @@ export function LibraryDriveNote({
     return () => controller.abort()
   }, [open])
 
-  if (!drive || hidden) return null
+  if (!drive || hidden) return fallback
 
   const chip = focusChipOf(drive.focus)
-  const verb = taskVerb(drive.focus)
+  const verb =
+    library.libraryType === "Mobile" && taskVerb(drive.focus) === "Add hours"
+      ? "Add stops and times"
+      : taskVerb(drive.focus)
   const actionName = taskActionName(verb, "this library")
 
   const task: DriveTask = {
@@ -121,30 +131,64 @@ export function LibraryDriveNote({
 
   return (
     <>
-      <div
-        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
-        style={{ background: T.accent.chip }}
-      >
-        <p className="m-0 min-w-0 text-[14px]" style={{ color: T.ink.base }}>
-          Part of{" "}
-          <Link
-            href={driveHref(drive.slug)}
-            className="font-semibold underline underline-offset-2"
-            style={{ color: T.accent.primaryHover, fontFamily: T.font.serif }}
-          >
-            <DriveTitle title={drive.title} />
-          </Link>{" "}
-          · {fmt(drive.done)} of {fmt(drive.total)} done
-        </p>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border bg-white px-4 text-[13.5px] font-semibold"
-          style={{ borderColor: T.border.hi, color: T.ink.base }}
+      {featured ? (
+        <FeaturedContribution
+          title={plainDriveTitle(drive.title)}
+          description={`Help with this library's task. ${fmt(drive.done)} of ${fmt(drive.total)} tasks have been accepted across the drive.`}
+          action={
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="min-h-12 rounded-full px-5 text-sm font-semibold text-white"
+              style={{ background: T.accent.primary }}
+            >
+              {actionName}
+            </button>
+          }
+          alternatives={[
+            {
+              title: "View the drive",
+              href: driveHref(drive.slug),
+              description: "See the goal and accepted progress.",
+            },
+            {
+              title: "Suggest a correction",
+              href: hubHref("correction", library),
+              description: "Send another changed detail with a source.",
+            },
+            {
+              title: "Share a photo",
+              href: hubHref("photo", library),
+              description: "Use your own or an openly licensed photo.",
+            },
+          ]}
+        />
+      ) : (
+        <div
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
+          style={{ background: T.accent.chip }}
         >
-          {actionName}
-        </button>
-      </div>
+          <p className="m-0 min-w-0 text-[14px]" style={{ color: T.ink.base }}>
+            Part of{" "}
+            <Link
+              href={driveHref(drive.slug)}
+              className="font-semibold underline underline-offset-2"
+              style={{ color: T.accent.primaryHover, fontFamily: T.font.serif }}
+            >
+              <DriveTitle title={drive.title} />
+            </Link>{" "}
+            · {fmt(drive.done)} of {fmt(drive.total)} done
+          </p>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border bg-white px-4 text-[13.5px] font-semibold"
+            style={{ borderColor: T.border.hi, color: T.ink.base }}
+          >
+            {actionName}
+          </button>
+        </div>
+      )}
 
       <div aria-live="polite" className="sr-only">
         {announcement}

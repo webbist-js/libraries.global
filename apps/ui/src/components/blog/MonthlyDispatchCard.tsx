@@ -1,15 +1,18 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-import { PublicStrapiClient } from "@/lib/strapi-api"
 
 const CARD = "rounded-[20px] border p-5"
 
 /** "The monthly dispatch": the Journal newsletter sign-up. */
 export function MonthlyDispatchCard() {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">(
     "idle"
@@ -20,26 +23,12 @@ export function MonthlyDispatchCard() {
     if (!email.trim() || status === "saving") return
     setStatus("saving")
     try {
-      const path = PublicStrapiClient.getStrapiApiPathByUId(
-        "api::subscriber.subscriber"
-      )
-      await PublicStrapiClient.fetchAPI(
-        path,
-        undefined,
-        {
-          method: "POST",
-          // `message` plus the entry's createdAt is the consent record: what
-          // the person agreed to, and when.
-          body: JSON.stringify({
-            data: {
-              email: email.trim(),
-              message:
-                "Journal newsletter: agreed to receive new Journal articles by email, at most monthly",
-            },
-          }),
-        },
-        { useProxy: true }
-      )
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), source: "journal" }),
+      })
+      if (!response.ok) throw new Error("Subscription could not be saved")
       setStatus("done")
     } catch {
       setStatus("error")
@@ -57,13 +46,13 @@ export function MonthlyDispatchCard() {
         id="journal-dispatch"
         style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
       >
-        The monthly dispatch
+        {t("dispatchTitle")}
       </h2>
       <p
         className="mt-1.5 mb-4 text-[14px] leading-[1.5]"
         style={{ color: T.ink.dim }}
       >
-        New Journal articles in your inbox, at most once a month.
+        {t("dispatchIntro")}
       </p>
 
       {status === "done" ? (
@@ -72,7 +61,7 @@ export function MonthlyDispatchCard() {
           role="status"
           style={{ color: T.accent.ok }}
         >
-          You&rsquo;re on the list — thank you.
+          {t("dispatchDone")}
         </p>
       ) : (
         <form onSubmit={subscribe}>
@@ -81,7 +70,7 @@ export function MonthlyDispatchCard() {
             htmlFor="journal-subscribe"
             style={{ color: T.ink.base }}
           >
-            Email address
+            {tUi("email_address")}{" "}
           </label>
           <input
             aria-describedby="journal-subscribe-note"
@@ -105,7 +94,7 @@ export function MonthlyDispatchCard() {
             style={{ background: T.accent.primary }}
             type="submit"
           >
-            {status === "saving" ? "Subscribing…" : "Subscribe"}
+            {status === "saving" ? t("subscribing") : tUi("subscribe")}
           </button>
           {status === "error" ? (
             <p
@@ -113,7 +102,7 @@ export function MonthlyDispatchCard() {
               role="alert"
               style={{ color: T.accent.danger }}
             >
-              Couldn&rsquo;t subscribe — please try again.
+              {t("subscribeError")}
             </p>
           ) : null}
         </form>
@@ -124,17 +113,18 @@ export function MonthlyDispatchCard() {
         id="journal-subscribe-note"
         style={{ color: T.ink.dim }}
       >
-        Monthly at most. We only use your email to send new Journal articles.
-        Unsubscribe at any time by replying to an email or writing to
-        legal@libraries.global. See our{" "}
-        <GlobalLink
-          className="underline underline-offset-[3px]"
-          href="/legal/privacy"
-          style={{ color: T.accent.primary }}
-        >
-          privacy notice
-        </GlobalLink>
-        .
+        {t.rich("dispatchNote", {
+          email: "legal@libraries.global",
+          privacy: (chunks) => (
+            <GlobalLink
+              className="underline underline-offset-[3px]"
+              href="/legal/privacy"
+              style={{ color: T.accent.primary }}
+            >
+              {chunks}
+            </GlobalLink>
+          ),
+        })}
       </p>
     </section>
   )

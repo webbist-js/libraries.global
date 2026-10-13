@@ -141,6 +141,43 @@ afterEach(() => {
 })
 
 describe("POST /api/export/atlas: access", () => {
+  it.each(["csv", "geojson"])(
+    "allows Supporter's exact 500-row cap for %s and refuses 501",
+    async (format) => {
+      getSession.mockResolvedValue(
+        proUser({ plan: "supporter", limits: { exportRows: 500 } })
+      )
+      const ids = many(500)
+      fetchMock.mockImplementation(
+        bridge(
+          Object.fromEntries(
+            ids.map((id, i) => [
+              id,
+              row(`fixture${i}`, `Library ${i}`, -1.5, 53.7),
+            ])
+          )
+        )
+      )
+      const allowed = await post({ format, ids })
+      expect(allowed.status).toBe(200)
+      expect(allowed.headers.get("X-Exported-Rows")).toBe("500")
+      await allowed.text()
+      fetchMock.mockClear()
+      const denied = await post({ format, ids: many(501) })
+      expect(denied.status).toBe(413)
+      expect(await denied.json()).toMatchObject({ limit: 500 })
+      expect(fetchMock).not.toHaveBeenCalled()
+    }
+  )
+
+  it("refuses a browser-supplied export cap or plan", async () => {
+    getSession.mockResolvedValue(proUser({ limits: { exportRows: 500 } }))
+    expect(
+      (await post({ format: "csv", ids: [A], limit: 50000, plan: "pro" }))
+        .status
+    ).toBe(400)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
   it("returns 401 when signed out", async () => {
     getSession.mockResolvedValue(null)
 
@@ -480,9 +517,9 @@ describe("POST /api/export/atlas: the file", () => {
       "libraries.global contributors; see /knowledge for licences"
     )
     expect(await csvLines(res)).toEqual([
-      "name,slug,libraryType,operationalStatus,streetAddress,city,region,country,lat,lng,website,phone,email,url",
-      "'=Gamma,c-library,Public,open,,Leeds,West Yorkshire,England,53.6,-1.4,,,,https://libraries.global/europe/england/west-yorkshire/c-library",
-      "Alpha,a-library,Public,open,,Leeds,West Yorkshire,England,53.8,-1.55,,,,https://libraries.global/europe/england/west-yorkshire/a-library",
+      "name,slug,libraryType,operationalStatus,streetAddress,city,region,country,lat,lng,website,phone,email,url,sourceRecords",
+      "'=Gamma,c-library,Public,open,,Leeds,West Yorkshire,England,53.6,-1.4,,,,https://libraries.global/europe/england/west-yorkshire/c-library,[]",
+      "Alpha,a-library,Public,open,,Leeds,West Yorkshire,England,53.8,-1.55,,,,https://libraries.global/europe/england/west-yorkshire/a-library,[]",
     ])
   })
 

@@ -2,6 +2,7 @@ import "server-only"
 
 import { z } from "zod"
 
+import { readJsonCapped } from "@/lib/bridge-params"
 import { getEnvVar } from "@/lib/env-vars"
 import type { LibraryExportSource } from "@/lib/export-format"
 
@@ -65,7 +66,8 @@ function validRows(json: unknown): [string, LibraryExportSource][] | null {
 /** One bridge call's valid rows, or null when it fails in any way. */
 async function fetchChunk(
   ids: readonly string[],
-  secret: string
+  secret: string,
+  signal?: AbortSignal
 ): Promise<[string, LibraryExportSource][] | null> {
   try {
     const strapiUrl = getEnvVar("STRAPI_URL", true)!.replace(/\/$/, "")
@@ -77,10 +79,15 @@ async function fetchChunk(
       },
       body: JSON.stringify({ ids }),
       cache: "no-store",
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(15000)])
+        : AbortSignal.timeout(15000),
     })
     if (!res.ok) return null
 
-    return validRows(await res.json())
+    const body = await readJsonCapped(res, 8 * 1024 * 1024)
+
+    return body.ok ? validRows(body.body) : null
   } catch {
     return null
   }
@@ -94,7 +101,8 @@ async function fetchChunk(
  */
 export async function fetchExportRows(
   ids: readonly string[],
-  secret: string
+  secret: string,
+  options?: { signal?: AbortSignal }
 ): Promise<ExportRows | null> {
   const pending: (readonly string[])[] = []
   for (let i = 0; i < ids.length; i += BRIDGE_CHUNK_SIZE)
@@ -106,7 +114,7 @@ export async function fetchExportRows(
     while (!failed) {
       const chunk = pending.shift()
       if (!chunk) return
-      const found = await fetchChunk(chunk, secret)
+      const found = await fetchChunk(chunk, secret, options?.signal)
       if (found) for (const [id, row] of found) rows.set(id, row)
       else failed = true
     }

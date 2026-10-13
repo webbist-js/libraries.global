@@ -18,6 +18,9 @@ import {
   type TimetableNotice,
   noticeMatches,
   checkText,
+  emailTemplate,
+  isSupportedLocale,
+  DEFAULT_LOCALE,
 } from "@repo/shared-data"
 
 import {
@@ -33,6 +36,7 @@ import {
   noticesForLibrary,
 } from "../../../utils/library-notices"
 import { requireStaffMember } from "../../../utils/staff"
+import { emailConfigured } from "../../content-moderation/server/utils/email-config"
 
 export const SETTING = "plugin::mobile-libraries.live-setting"
 export const SESSION = "plugin::mobile-libraries.live-session"
@@ -1026,14 +1030,22 @@ export default ({ strapi }: { strapi: any }) => {
       await authorise(userId, id, "seeTeam")
       const base = process.env.APP_PUBLIC_URL
       if (!base) throw new LiveError(503, "public_url_missing")
-      const url = `${base}/${locale === "cs" ? "cs" : "en"}/live/${id}`
+      if (!emailConfigured()) throw new LiveError(503, "email_unavailable")
+      const language = isSupportedLocale(locale) ? locale : DEFAULT_LOCALE
+      const url = `${base}/${language}/live/${id}`
       await strapi
         .plugin("email")
         .service("email")
         .send({
           to: email,
-          subject: "Your mobile library live console",
-          text: `Open your live console: ${url}\n\nSign in on your phone, then confirm it is you before starting. This link does not sign you in.`,
+          ...emailTemplate({
+            postalAddress: process.env.EMAIL_POSTAL_ADDRESS,
+            siteUrl: process.env.APP_PUBLIC_URL,
+            title: "Your mobile library live console",
+            body: "Sign in on your phone, then confirm it is you before starting. This link does not sign you in.",
+            url,
+            action: "Open live console",
+          }),
         })
 
       return { ok: true }

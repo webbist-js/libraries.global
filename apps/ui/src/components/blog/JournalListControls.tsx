@@ -1,13 +1,14 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useTransition } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { languageName } from "@/lib/locale-fallback"
 import { Link, useRouter } from "@/lib/navigation"
 
 import {
-  JOURNAL_SORT_LABELS,
   JOURNAL_SORTS,
   journalHref,
   type JournalQuery,
@@ -27,6 +28,10 @@ export function JournalListControls({
   readonly lang: string
   readonly languages: { code: string; name: string }[]
 }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+  const locale = useLocale()
+
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
@@ -48,7 +53,7 @@ export function JournalListControls({
       className="flex flex-wrap items-center gap-x-4 gap-y-2"
     >
       <label className="flex items-center gap-2 text-[14px]">
-        <span style={{ color: T.ink.dim }}>Language</span>
+        <span style={{ color: T.ink.dim }}>{tUi("language")}</span>
         <select
           className={SELECT_CLASS}
           onChange={(e) => go({ lang: e.target.value })}
@@ -60,7 +65,7 @@ export function JournalListControls({
           ) : (
             languages.map((l) => (
               <option key={l.code} value={l.code}>
-                {l.name}
+                {languageName(l.code, languages, locale)}
               </option>
             ))
           )}
@@ -68,7 +73,7 @@ export function JournalListControls({
       </label>
 
       <label className="flex items-center gap-2 text-[14px]">
-        <span style={{ color: T.ink.dim }}>Sort</span>
+        <span style={{ color: T.ink.dim }}>{t("sort")}</span>
         <select
           className={SELECT_CLASS}
           onChange={(e) => go({ sort: e.target.value as JournalSort })}
@@ -77,22 +82,22 @@ export function JournalListControls({
         >
           {JOURNAL_SORTS.map((sort) => (
             <option key={sort} value={sort}>
-              {JOURNAL_SORT_LABELS[sort]}
+              {t(sort === "title" ? "titleSort" : sort)}
             </option>
           ))}
         </select>
       </label>
 
       <div
-        aria-label="Layout"
+        aria-label={tUi("layout")}
         className="flex items-center gap-1 rounded-full border p-1"
         role="group"
         style={{ background: T.bg.deep, borderColor: T.border.hi }}
       >
         {(
           [
-            ["grid", "Grid view", "mdi:view-grid-outline"],
-            ["list", "List view", "mdi:format-list-bulleted"],
+            ["grid", t("gridView"), "mdi:view-grid-outline"],
+            ["list", t("listView"), "mdi:format-list-bulleted"],
           ] as const
         ).map(([view, label, icon]) => {
           const active = query.view === view

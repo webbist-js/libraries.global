@@ -14,6 +14,17 @@ export const env = createEnv({
    * require them to be present at build time, which is not always desired or possible (see README).
    */
   server: {
+    PRO_ENABLED: optionalZodBoolean(),
+    BILLING_ENV: z.enum(["sandbox", "live"]).optional(),
+    STRIPE_MANAGED_PAYMENTS_ENABLED: optionalZodBoolean(),
+    STRIPE_SUPPORTER_APPROVED: optionalZodBoolean(),
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_PRO_ANNUAL: z.string().optional(),
+    STRIPE_PRICE_SUPPORTER_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_SUPPORTER_ANNUAL: z.string().optional(),
+    STRIPE_PORTAL_CONFIGURATION: z.string().optional(),
     APP_PUBLIC_URL: z.string().url().optional(),
     DEBUG_STATIC_PARAMS_GENERATION: optionalZodBoolean(),
     SHOW_NON_BLOCKING_ERRORS: optionalZodBoolean(),
@@ -37,6 +48,14 @@ export const env = createEnv({
     BASIC_AUTH_ENABLED: optionalZodBoolean(),
     BASIC_AUTH_USERNAME: z.string().optional(),
     BASIC_AUTH_PASSWORD: z.string().optional(),
+    BETA_GATE_ENABLED: optionalZodBoolean(),
+    BETA_PASSWORD: z.string().optional(),
+    BETA_ACCESS_SECRET: z.string().optional(),
+    BETA_ACCESS_VERSION: z.string().optional(),
+    BETA_CONTACT_EMAIL: z.string().email().optional(),
+    BETA_SOURCE_URL: z.string().url().optional(),
+    MEILISEARCH_HOST: z.string().url().optional(),
+    MEILISEARCH_SEARCH_API_KEY: z.string().optional(),
   },
 
   /*
@@ -51,8 +70,6 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS: optionalZodBoolean(),
-    NEXT_PUBLIC_MEILISEARCH_HOST: z.string().optional(),
-    NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY: z.string().optional(),
     NEXT_PUBLIC_STRAPI_URL: z.string().url().optional(),
   },
 
@@ -69,6 +86,18 @@ export const env = createEnv({
    * You'll get type errors if not all variables from `server` & `client` are included here.
    */
   runtimeEnv: {
+    PRO_ENABLED: process.env.PRO_ENABLED,
+    BILLING_ENV: process.env.BILLING_ENV,
+    STRIPE_MANAGED_PAYMENTS_ENABLED:
+      process.env.STRIPE_MANAGED_PAYMENTS_ENABLED,
+    STRIPE_SUPPORTER_APPROVED: process.env.STRIPE_SUPPORTER_APPROVED,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
+    STRIPE_PRICE_PRO_ANNUAL: process.env.STRIPE_PRICE_PRO_ANNUAL,
+    STRIPE_PRICE_SUPPORTER_MONTHLY: process.env.STRIPE_PRICE_SUPPORTER_MONTHLY,
+    STRIPE_PRICE_SUPPORTER_ANNUAL: process.env.STRIPE_PRICE_SUPPORTER_ANNUAL,
+    STRIPE_PORTAL_CONFIGURATION: process.env.STRIPE_PORTAL_CONFIGURATION,
     // server
     APP_PUBLIC_URL: process.env.APP_PUBLIC_URL,
     DEBUG_STATIC_PARAMS_GENERATION: process.env.DEBUG_STATIC_PARAMS_GENERATION,
@@ -93,6 +122,14 @@ export const env = createEnv({
     BASIC_AUTH_ENABLED: process.env.BASIC_AUTH_ENABLED,
     BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
     BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
+    BETA_GATE_ENABLED: process.env.BETA_GATE_ENABLED,
+    BETA_PASSWORD: process.env.BETA_PASSWORD,
+    BETA_ACCESS_SECRET: process.env.BETA_ACCESS_SECRET,
+    BETA_ACCESS_VERSION: process.env.BETA_ACCESS_VERSION,
+    BETA_CONTACT_EMAIL: process.env.BETA_CONTACT_EMAIL,
+    BETA_SOURCE_URL: process.env.BETA_SOURCE_URL,
+    MEILISEARCH_HOST: process.env.MEILISEARCH_HOST,
+    MEILISEARCH_SEARCH_API_KEY: process.env.MEILISEARCH_SEARCH_API_KEY,
 
     // client
     // @dominik-juriga - find out if these are specific per environment
@@ -100,9 +137,6 @@ export const env = createEnv({
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS:
       process.env.NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS,
-    NEXT_PUBLIC_MEILISEARCH_HOST: process.env.NEXT_PUBLIC_MEILISEARCH_HOST,
-    NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY:
-      process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY,
     NEXT_PUBLIC_STRAPI_URL: process.env.NEXT_PUBLIC_STRAPI_URL,
 
     // shared

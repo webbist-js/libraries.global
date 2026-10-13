@@ -1,0 +1,20 @@
+{
+	admin off
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+	servers {
+		protocols h1 h2
+	}
+}
+
+http://127.0.0.1:8080 {
+	bind 127.0.0.1
+	respond /healthz "ok" 200
+}
+
+libraries.global {
+	reverse_proxy 127.0.0.1:3000
+}
+
+www.libraries.global {
+	redir https://libraries.global{uri} 308
+}

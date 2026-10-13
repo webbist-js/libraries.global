@@ -9,6 +9,30 @@
 export default {
   routes: [
     {
+      method: "GET",
+      path: "/subscribers/account",
+      handler: "subscriber.account",
+      config: { auth: false },
+    },
+    {
+      method: "PUT",
+      path: "/subscribers/account",
+      handler: "subscriber.accountUpdate",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/subscribers/email-action",
+      handler: "subscriber.emailAction",
+      config: { auth: false },
+    },
+    {
+      method: "GET",
+      path: "/subscribers/export",
+      handler: "subscriber.export",
+      config: { auth: false, policies: [], middlewares: [] },
+    },
+    {
       method: "POST",
       path: "/subscribers",
       handler: "subscriber.subscribe",

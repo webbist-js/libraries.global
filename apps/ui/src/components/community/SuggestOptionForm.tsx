@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type FormEvent, useId, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -120,6 +121,8 @@ export function SuggestOptionForm({
   readonly suggestions: readonly PublicSuggestion[]
   readonly onPosted: (s: PublicSuggestion) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const ids = useId()
   const headingId = `${ids}-heading`
   const listId = `${ids}-list`
@@ -155,7 +158,7 @@ export function SuggestOptionForm({
           href={`/auth/signin?callbackUrl=${encodeURIComponent(RETURN_TO)}`}
           className="inline-flex min-h-11 items-center self-start rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
         >
-          Sign in
+          {tUi("sign_in")}{" "}
         </GlobalLink>
       </section>
     )
@@ -255,7 +258,7 @@ export function SuggestOptionForm({
           className="text-[15px] font-bold"
           style={{ color: T.ink.base }}
         >
-          Option name <Hint>Required</Hint>
+          Option name <Hint>{tUi("required")}</Hint>
         </label>
         <input
           ref={nameRef}
@@ -298,7 +301,7 @@ export function SuggestOptionForm({
           className="text-[15px] font-bold"
           style={{ color: T.ink.base }}
         >
-          Why it matters <Hint>Optional</Hint>
+          Why it matters <Hint>{tUi("optional_59be71")}</Hint>
         </label>
         <textarea
           id={whyId}

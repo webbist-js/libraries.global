@@ -8,8 +8,15 @@ import { LIVE_LOCALES } from "@/lib/live-locales"
 import { routing } from "@/lib/navigation"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-const host = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? "http://localhost:7700"
-const searchKey = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ""
+// Browsers use the gated, search-only proxy. Credentials are server-only.
+const host =
+  typeof window === "undefined"
+    ? (process.env.MEILISEARCH_HOST ?? "http://localhost:7700")
+    : `${window.location.origin}/api/search`
+const searchKey =
+  typeof window === "undefined"
+    ? (process.env.MEILISEARCH_SEARCH_API_KEY ?? "")
+    : ""
 
 export const meiliClient = new Meilisearch({ host, apiKey: searchKey })
 
@@ -400,7 +407,12 @@ export async function searchWikiArticles(
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-export function buildLibraryPath(hit: LibrarySearchHit): string | null {
+export function buildLibraryPath(
+  hit: Pick<
+    LibrarySearchHit,
+    "continent_slug" | "country_slug" | "region_slug" | "slug"
+  >
+): string | null {
   const { continent_slug, country_slug, region_slug, slug } = hit
   if (continent_slug && country_slug && region_slug && slug) {
     return `/${continent_slug}/${country_slug}/${region_slug}/${slug}`

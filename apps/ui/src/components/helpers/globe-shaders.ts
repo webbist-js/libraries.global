@@ -452,7 +452,13 @@ export const DUST_VERTEX_SHADER = `
   varying float vTwinkle;
 
   void main() {
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    // Each mote drifts by a small fraction of the radius over tens of seconds.
+    vec3 drift = vec3(
+      sin(uTime * 0.14 + aPhase) - sin(aPhase),
+      cos(uTime * 0.12 + aPhase) - cos(aPhase),
+      sin(uTime * 0.10 + aPhase * 1.7) - sin(aPhase * 1.7)
+    ) * uPlanetRadius * 0.006;
+    vec4 mvPosition = modelViewMatrix * vec4(position + drift, 1.0);
 
     // Hide motes whose line of sight crosses the planet's disc, in front or
     // behind — otherwise they read as specks seen through a solid globe.

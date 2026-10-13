@@ -84,6 +84,8 @@ export type UserProfile = {
   supporterListed?: boolean
   supporterBadgeVisible?: boolean
   isVerifiedLibrarian: boolean
+  /** Derived display label: the highest unexpired Role Grant. Never for access. */
+  contributorRole?: string | null
   contributorNumber?: number | null
   languages?: LanguageEntry[]
   interests?: InterestTopic[]
@@ -95,6 +97,8 @@ export type UserProfile = {
   /** Drives past draft, when `publicPrefs.showFollows` lets the viewer see them. */
   followedDrives?: FollowedDrive[]
   followedProfiles?: FollowedUser[]
+  /** Number of incoming follows; follower identities are not returned. */
+  followerCount?: number
   claimedLibraries?: ClaimedLibrary[]
   points?: number | null
   pointsThisMonth?: number | null
@@ -112,7 +116,12 @@ export type LanguageEntry = {
 }
 
 export type NotifPrefs = {
+  digestConsentedAt?: string | null
+  reportConsentedAt?: string | null
+  productConsentedAt?: string | null
   weeklyDigest: boolean
+  weeklyReport?: boolean
+  recognition?: boolean
   editsReviewed: boolean
   drives?: boolean
   newFollowers: boolean

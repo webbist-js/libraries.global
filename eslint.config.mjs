@@ -10,6 +10,7 @@ export default [
     files: [
       "scripts/**/*.{ts,mjs,js}",
       "apps/strapi/scripts/**/*.{ts,mjs,js}",
+      "qa/benchmarks/atlas/**/*.ts",
     ],
     rules: {
       "no-console": "off",

@@ -11,12 +11,8 @@ export function getDefaultMetadata(siteUrl: string, t: TranslateFn) {
     title: t("metaTitle"),
     description: t("metaDescription"),
     keywords: t("keywords"),
-    robots: t("metaRobots"),
-    applicationName: t("applicationName"),
-
-    icons: {
-      icon: "favicon.ico",
-    },
+    robots: "index, follow",
+    applicationName: "Libraries Global",
 
     metadataBase: new URL(siteUrl),
   } as Metadata
@@ -30,10 +26,10 @@ export function getDefaultOgMeta(
   return {
     type: "website",
     locale: locale,
-    siteName: t("og.siteName"),
-    title: t("og.title"),
-    description: t("og.description"),
-    images: [t("og.image")],
+    siteName: "Libraries Global",
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    images: ["/images/social-card.png"],
     url: [routing.defaultLocale !== locale ? locale : null, slug ?? ""]
       .filter(Boolean)
       .join("/"),
@@ -42,12 +38,9 @@ export function getDefaultOgMeta(
 
 export function getDefaultTwitterMeta(t: TranslateFn): Metadata["twitter"] {
   return {
-    card: t("twitter.card"),
-    title: t("twitter.title"),
-    description: t("twitter.description"),
-    siteId: t("twitter.siteId"),
-    creator: t("twitter.creator"),
-    creatorId: t("twitter.creatorId"),
-    images: [t("twitter.imageUrl")],
+    card: "summary_large_image",
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    images: ["/images/social-card.png"],
   } as Metadata["twitter"]
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -91,6 +92,8 @@ function GroupHeader({
 
 /** Every plan against every feature, in collapsible groups, with a "built only" filter. */
 export function PlanCompareTable() {
+  const tUi = useUiTranslations("ui")
+
   const [nowOnly, setNowOnly] = useState(false)
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set(OPEN_BY_DEFAULT)
@@ -115,7 +118,7 @@ export function PlanCompareTable() {
       <PlanSectionHeader
         control={
           <label
-            className="inline-flex cursor-pointer items-center gap-2.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold"
             style={{ borderColor: T.border.hi }}
           >
             <input
@@ -146,13 +149,16 @@ export function PlanCompareTable() {
             </button>
           </>
         }
-        title="Compare every plan"
+        title={tUi("compare_every_plan")}
       />
       <p aria-live="polite" className="sr-only">
         Showing {rowCount} features
       </p>
       <div
-        className="overflow-x-auto rounded-[22px] border bg-white"
+        className="overflow-x-auto rounded-[22px] border bg-white [contain:paint]"
+        role="region"
+        aria-label="What each plan includes"
+        tabIndex={0}
         style={{ borderColor: T.border.line }}
       >
         <table className="w-full min-w-[720px] border-collapse text-[15px]">
@@ -231,7 +237,10 @@ export function PlanCompareTable() {
                           background: key === "pro" ? PRO_TINT : undefined,
                         }}
                       >
-                        <PlanCompareCell cell={row.cells[key]} />
+                        <PlanCompareCell
+                          cell={row.cells[key]}
+                          label={row.cellLabels?.[key]}
+                        />
                       </td>
                     ))}
                   </tr>

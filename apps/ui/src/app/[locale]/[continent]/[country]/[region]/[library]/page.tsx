@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import {
@@ -13,7 +14,12 @@ import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { fetchPublicLibraryNotices } from "@/lib/library-notices"
 import { buildBreadcrumbSchema, buildLibrarySchema } from "@/lib/seo/json-ld"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
+import {
+  absoluteUrl,
+  buildMetadata,
+  libraryTitle,
+  localizedPath,
+} from "@/lib/seo/metadata"
 import { fetchDataset } from "@/lib/strapi-api/content/datasets"
 import { fetchLibraryArea } from "@/lib/strapi-api/content/library-area"
 import {
@@ -101,9 +107,7 @@ export async function generateMetadata({
   const seo = library.seo
   const name = library.name ?? "Library"
   const place = [library.city, library.country?.name].filter(Boolean).join(", ")
-  const title = seo?.metaTitle ?? (place ? `${name}, ${place}` : name)
   const description =
-    seo?.metaDescription ??
     library.summary ??
     `${name}${place ? ` in ${place}` : ""} — opening hours, collections, location, services and accessibility.`
   const image = formatStrapiMediaUrl(
@@ -114,18 +118,16 @@ export async function generateMetadata({
   const { path } = libraryPath(library, { continent, country, region })
 
   return buildMetadata({
-    title,
+    seo,
+    alternateLocales: [locale],
+    ...libraryTitle(name, library.city, library.country?.name),
     description,
     path,
     locale,
     image,
     imageAlt: library.heroImage?.alternativeText ?? name,
     // A default-locale stand-in for a missing translation isn't indexed.
-    robots: seo?.metaRobots?.replaceAll(" ", "").startsWith("noindex")
-      ? "noindex"
-      : res?.localeFallback
-        ? "noindex-follow"
-        : "index",
+    robots: res?.localeFallback ? "noindex-follow" : "index",
   })
 }
 
@@ -140,6 +142,7 @@ export default function LibraryRoutePage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const librarySlug = params.library
 
   const libraryRes = use(fetchLibrary(librarySlug, locale))
@@ -149,11 +152,23 @@ export default function LibraryRoutePage(props: {
     notFound()
   }
 
+  const canonicalPath = libraryPath(library, {
+    continent: params.continent,
+    country: params.country,
+    region: params.region,
+  }).path
+  const requestedPath = `${params.continent}/${params.country}/${params.region}/${librarySlug}`
+  if (canonicalPath.replace(/^\//, "") !== requestedPath) {
+    permanentRedirect(localizedPath(canonicalPath, locale))
+  }
+
   // Start every dependent fetch before suspending on any of them, so they
   // run in parallel instead of one per render pass.
   const noticesPromise = fetchPublicLibraryNotices(library.documentId)
   const areaPromise = fetchLibraryArea({
     slug: librarySlug,
+    documentId: library.documentId,
+    entityRef: library.entityRef,
     regionSlug: library.region?.slug,
     location: toLatLng(library.location),
     openingTimes: library.openingTimes as OpeningTimesValue | null,
@@ -165,7 +180,15 @@ export default function LibraryRoutePage(props: {
     values: false,
   })
   const historyStatsPromise = fetchLibraryHistoryStats(library.documentId)
-  const datasetPromise = fetchDataset(library.source)
+  const datasetPromise = Promise.all(
+    [
+      ...new Set(
+        (library.sourceRecords ?? []).flatMap((r) =>
+          r.dataset ? [r.dataset] : []
+        )
+      ),
+    ].map(fetchDataset)
+  )
   const followersPromise = fetchLibraryFollowerCount(library.documentId)
   const localesPromise = fetchArticleLocales()
 
@@ -173,7 +196,7 @@ export default function LibraryRoutePage(props: {
   const area = use(areaPromise)
   const history = use(historyPromise)
   const historyStats = use(historyStatsPromise)
-  const dataset = use(datasetPromise)
+  const datasets = use(datasetPromise).filter((d) => d != null)
   const followers = use(followersPromise)
   const locales = use(localesPromise)
 
@@ -237,7 +260,7 @@ export default function LibraryRoutePage(props: {
         area={area}
         history={history}
         historyStats={historyStats}
-        dataset={dataset}
+        datasets={datasets}
         canonicalUrl={url}
         followers={followers}
         untranslatedLocale={libraryRes?.localeFallback ? locale : null}

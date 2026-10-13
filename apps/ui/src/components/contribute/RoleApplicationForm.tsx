@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { findUnsafeContent } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { Badge, ChoiceCard, Notice } from "@/components/ds"
@@ -217,6 +218,8 @@ function EligibilityCard({
 }: {
   readonly acceptedCount: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   const eligible = acceptedCount >= ROLE_APPLICATION_MIN_ACCEPTED
   const shown = Math.min(acceptedCount, ROLE_APPLICATION_MIN_ACCEPTED)
   const percent = (shown / ROLE_APPLICATION_MIN_ACCEPTED) * 100
@@ -234,7 +237,7 @@ function EligibilityCard({
         {eligible ? (
           <Badge label="You can apply" color="ok" icon="mdi:check" />
         ) : (
-          <Badge label="Not yet" color="dim" icon="mdi:progress-clock" />
+          <Badge label={tUi("not_yet")} color="dim" icon="mdi:progress-clock" />
         )}
       </div>
       <p
@@ -255,7 +258,7 @@ function EligibilityCard({
       </div>
       <div
         role="progressbar"
-        aria-label="Accepted changes"
+        aria-label={tUi("accepted_changes")}
         aria-valuemin={0}
         aria-valuemax={ROLE_APPLICATION_MIN_ACCEPTED}
         aria-valuenow={shown}
@@ -297,6 +300,8 @@ function OpenApplication({
   readonly app: RoleApplicationSummary
   readonly locales: readonly LocaleOption[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const status = STATUS_META[app.status] ?? PENDING_META
 
   return (
@@ -347,7 +352,7 @@ function OpenApplication({
           className={linkClass}
           style={linkStyle}
         >
-          My submissions
+          {tUi("my_submissions")}{" "}
         </Link>
         .
       </p>
@@ -466,6 +471,8 @@ export function RoleApplicationForm({
   readonly held: HeldRoles
   readonly guidelines: { editor: string; moderator: string }
 }) {
+  const tUi = useUiTranslations("ui")
+
   const ids = useId()
   const [role, setRole] = useState<ApplicationRole>(initialRole)
   const [queue, setQueue] = useState<ApplicationQueue | null>(null)
@@ -625,7 +632,7 @@ export function RoleApplicationForm({
             <Notice
               icon="mdi:check-circle-outline"
               tone="ok"
-              title="Application sent"
+              title={tUi("application_sent")}
             />
             <h2
               id={`${ids}-sent`}
@@ -647,7 +654,7 @@ export function RoleApplicationForm({
                 className={linkClass}
                 style={linkStyle}
               >
-                My submissions
+                {tUi("my_submissions")}{" "}
               </Link>
               .
             </p>
@@ -686,7 +693,7 @@ export function RoleApplicationForm({
                   className={`${legendClass} mb-3`}
                   style={{ color: T.ink.base }}
                 >
-                  Role<Tag>Required</Tag>
+                  Role<Tag>{tUi("required")}</Tag>
                 </legend>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {APPLICATION_ROLES.map((r) => {
@@ -712,7 +719,7 @@ export function RoleApplicationForm({
               {isModerator ? (
                 <fieldset className="m-0 min-w-0 border-0 p-0">
                   <legend className={legendClass} style={{ color: T.ink.base }}>
-                    Queue you’d review<Tag>Required</Tag>
+                    Queue you’d review<Tag>{tUi("required")}</Tag>
                   </legend>
                   <p className={hintClass} style={{ color: T.ink.dim }}>
                     You can ask for another queue later.
@@ -792,7 +799,7 @@ export function RoleApplicationForm({
                         {sectionKind === "knowledge"
                           ? "Knowledge sections you’d work on"
                           : "Journal sections you’d work on"}
-                        <Tag>Optional</Tag>
+                        <Tag>{tUi("optional_59be71")}</Tag>
                       </legend>
                       <p className={hintClass} style={{ color: T.ink.dim }}>
                         Helps{" "}
@@ -860,7 +867,8 @@ export function RoleApplicationForm({
                         className={legendClass}
                         style={{ color: T.ink.base }}
                       >
-                        Why you’re applying<Tag>Required</Tag>
+                        Why you’re applying
+                        <Tag>{tUi("required")}</Tag>
                       </label>
                       <span
                         id={`${ids}-statement-count`}
@@ -1011,7 +1019,7 @@ export function RoleApplicationForm({
                     className="inline-flex items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ border: "none", fontFamily: T.font.sans }}
                   >
-                    {state === "sending" ? "Sending…" : "Send application"}
+                    {state === "sending" ? tUi("sending") : "Send application"}
                     {state === "sending" ? null : (
                       <Icon
                         aria-hidden="true"
@@ -1031,7 +1039,7 @@ export function RoleApplicationForm({
       </div>
 
       <aside
-        aria-label="About this role"
+        aria-label={tUi("about_this_role")}
         className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
       >
         <RoleApplicationAside role={role} />

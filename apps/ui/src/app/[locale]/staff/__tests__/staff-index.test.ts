@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen, within } from "@testing-library/react"
 import * as React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render, screen, within } from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -150,7 +151,7 @@ describe("/staff", () => {
     ).toBe(`/live/${MOBILE.id}`)
     expect(
       mobile.getByRole("link", { name: "Edit timetable" }).getAttribute("href")
-    ).toBe(`/staff/${MOBILE.slug}/timetable`)
+    ).toBe(`/staff/${MOBILE.slug}/edit?step=timetable`)
     expect(
       mobile.getByRole("link", { name: "Event feeds" }).getAttribute("href")
     ).toBe(`/staff/${MOBILE.slug}/events`)
@@ -174,4 +175,20 @@ describe("/staff", () => {
     ).toBe("/contribute/claim")
     expect(mocks.fetchStaff).not.toHaveBeenCalled()
   })
+})
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const messages = (await import("../../../../../locales/en.json")).default
+
+  return {
+    getTranslations: async (config: string | { namespace?: string }) =>
+      createTranslator({
+        locale: "en",
+        messages,
+        namespace: (typeof config === "string" ? config : config.namespace) as
+          | keyof typeof messages
+          | undefined,
+      }),
+  }
 })

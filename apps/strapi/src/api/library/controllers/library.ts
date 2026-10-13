@@ -1,3 +1,11 @@
+import {
+  normalizeOpeningSchedule,
+  atlasWeeklyIntervals,
+  effectiveLibraryWeekHours,
+  noticeLocalDate,
+  noticeAddDays,
+  type LibraryNotice,
+} from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
 import {
@@ -6,11 +14,9 @@ import {
   setAtlasCache,
 } from "../../../utils/atlas-cache"
 import { BUILDING_LIBRARY_FILTER } from "../../../utils/library-building-filter"
-import {
-  compactHours,
-  type OpeningTimes,
-} from "../../../utils/library-completeness"
+import type { OpeningTimes } from "../../../utils/library-completeness"
 import { countLibrariesByLocationPath } from "../../../utils/library-location-counts"
+import { noticesForLibraries } from "../../../utils/library-notices"
 import { readStatus } from "../../../utils/read-status"
 
 // ── Atlas helpers ──────────────────────────────────────────────────────────
@@ -50,7 +56,15 @@ function year(v?: string | null): number | null {
 const names = (xs?: { name?: string }[] | null) =>
   (xs ?? []).map((x) => x.name).filter(Boolean)
 
-function toAtlasProperties(l: AtlasSource) {
+function toAtlasProperties(l: AtlasSource, notices: LibraryNotice[] = []) {
+  const date = noticeLocalDate(new Date(), l.timezone)
+  const day = (new Date(`${date}T12:00Z`).getUTCDay() + 6) % 7
+  const effective = effectiveLibraryWeekHours(
+    l.openingTimes,
+    notices,
+    noticeAddDays(date, -day)
+  )
+
   return {
     id: l.documentId,
     name: l.name ?? "",
@@ -66,7 +80,16 @@ function toAtlasProperties(l: AtlasSource) {
         ? `/${l.continent.slug}/${l.country.slug}/${l.region.slug}/${l.slug}`
         : null,
     tz: l.timezone ?? null,
-    hours: compactHours(l.openingTimes),
+    hours: atlasWeeklyIntervals(effective),
+    staffHours: atlasWeeklyIntervals({
+      days: normalizeOpeningSchedule(effective).days.map((day) => ({
+        ...day,
+        timeframes: day.timeframes.filter(
+          (frame) =>
+            frame.staffing === "staffed" || frame.staffing === "volunteer"
+        ),
+      })),
+    }),
     founded: year(l.foundedYear) ?? year(l.openedYear),
     closed: year(l.closedYear),
     events: Boolean(l.hasActiveFeed),
@@ -153,6 +176,12 @@ export default factories.createCoreController(
      * for five minutes per locale (cleared by any library write).
      */
     async atlas(ctx) {
+      if (process.env.ATLAS_LEGACY_SOURCE_ENABLED === "false") {
+        ctx.status = 410
+        ctx.body = { error: "The bulk Atlas source has been retired" }
+
+        return
+      }
       const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
       if (!q) return ctx.badRequest("Query parameters must be single strings")
       const locale = q.locale
@@ -205,6 +234,14 @@ export default factories.createCoreController(
           lastId = last.id
         }
 
+        const notices = new Map<string, LibraryNotice[]>()
+        for (let start = 0; start < rows.length; start += 100) {
+          const chunk = await noticesForLibraries(
+            strapi,
+            rows.slice(start, start + 100).map((row) => row.documentId)
+          )
+          for (const [id, values] of chunk) notices.set(id, values)
+        }
         const features = rows.flatMap((lib): AtlasFeature[] => {
           const loc = lib.location as { lat?: unknown; lng?: unknown } | null
           if (typeof loc?.lat !== "number" || typeof loc?.lng !== "number")
@@ -214,7 +251,10 @@ export default factories.createCoreController(
             {
               type: "Feature",
               geometry: { type: "Point", coordinates: [loc.lng, loc.lat] },
-              properties: toAtlasProperties(lib),
+              properties: toAtlasProperties(
+                lib,
+                notices.get(lib.documentId) ?? []
+              ),
             },
           ]
         })

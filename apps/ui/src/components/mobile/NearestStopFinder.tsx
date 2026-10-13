@@ -2,7 +2,7 @@
 import type { MobileStop } from "@repo/shared-data"
 import { useEffect, useState } from "react"
 
-import { fieldInputStyle } from "@/app/[locale]/contribute/index/_components/wizard.constants"
+import { fieldInputStyle } from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 import type { Place } from "@/lib/geocode/place"
 

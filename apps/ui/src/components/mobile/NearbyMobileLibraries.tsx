@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Card } from "@/components/ds"
@@ -23,6 +24,8 @@ export function NearbyMobileLibraries({
   radiusKm: number
   onStops?: (hits: MobileStopHit[]) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [hits, setHits] = useState<MobileStopHit[]>([]),
     [error, setError] = useState(false)
   useEffect(() => {
@@ -52,7 +55,7 @@ export function NearbyMobileLibraries({
   return (
     <section
       className="mb-6 rounded-[20px] border p-5"
-      aria-label="Mobile libraries near you"
+      aria-label={tUi("mobile_libraries_near_you")}
       style={{ borderColor: T.edge.ok, background: TYPE_TINT.public.bg }}
     >
       <h2

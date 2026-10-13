@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/ProfileHero"
 import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
@@ -24,6 +25,8 @@ export default async function ProfileSettingsPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, hdrs] = await Promise.all([params, headers()])
 
   const session = await getSessionSSR(hdrs)
@@ -58,7 +61,10 @@ export default async function ProfileSettingsPage({
         ) : (
           <PageHero
             compact
-            breadcrumb={[{ label: "Home", href: "/" }, { label: "Settings" }]}
+            breadcrumb={[
+              { label: tUi("home"), href: "/" },
+              { label: tUi("settings") },
+            ]}
             eyebrow="Account settings"
             eyebrowIcon="mdi:cog-outline"
             title={`Welcome back, *${name}.*`}

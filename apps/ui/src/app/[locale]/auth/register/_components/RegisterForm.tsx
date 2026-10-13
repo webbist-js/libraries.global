@@ -1,6 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
@@ -50,6 +51,8 @@ const RegisterFormSchema = z.object({
 type RegisterFormValues = z.infer<typeof RegisterFormSchema>
 
 export function RegisterForm() {
+  const tUi = useUiTranslations("ui")
+
   const { registerMutation } = useUserMutations()
 
   const {
@@ -119,7 +122,7 @@ export function RegisterForm() {
       >
         <AuthField
           id="displayName"
-          label="Display name"
+          label={tUi("display_name")}
           hint="(shown on your profile)"
           error={errors.displayName?.message}
         >
@@ -137,7 +140,7 @@ export function RegisterForm() {
 
         <AuthField
           id="email"
-          label="Email address"
+          label={tUi("email_address")}
           error={errors.email?.message}
         >
           <input
@@ -154,7 +157,7 @@ export function RegisterForm() {
 
         <AuthField
           id="password"
-          label="Create a password"
+          label={tUi("create_a_password")}
           error={errors.password?.message}
         >
           <PasswordInput
@@ -199,7 +202,7 @@ export function RegisterForm() {
         <AuthPrimaryButton
           disabled={registerMutation.isPending || isSubmitting}
         >
-          {registerMutation.isPending ? "Creating account…" : "Continue"}
+          {registerMutation.isPending ? "Creating account…" : tUi("continue")}
         </AuthPrimaryButton>
       </form>
 

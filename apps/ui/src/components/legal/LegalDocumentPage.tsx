@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { parseHeroText } from "@/components/ds/PageHero"
@@ -7,6 +7,7 @@ import { SectionTabs } from "@/components/ds/SectionTabs"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type {
@@ -37,10 +38,12 @@ function LegalTabs({
   readonly documents: LegalDocumentNavItem[]
   readonly activeSlug: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <SectionTabs
       activeId={activeSlug}
-      label="Legal documents"
+      label={tUi("legal_documents")}
       tabs={documents.map((doc) => ({
         id: doc.slug ?? doc.documentId,
         label: doc.navLabel || doc.title,
@@ -55,12 +58,24 @@ export function LegalDocumentPage({
   document: doc,
   documents,
   locale,
+  untranslatedLocale = null,
 }: {
   readonly document: LegalDocumentDetail
   readonly documents: LegalDocumentNavItem[]
   readonly locale: Locale
+  readonly untranslatedLocale?: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const title = doc.title ?? "Legal"
+  const membershipPolicy = [
+    "membership",
+    "cancellation-refunds",
+    "beta",
+  ].includes(doc.slug ?? "")
+  const contactEmail = membershipPolicy
+    ? "info@libraries.global"
+    : LEGAL_CONTACT_EMAIL
   const sections = doc.sections ?? []
   const anchors = sectionAnchors(sections)
   const summaryPoints = doc.summaryPoints ?? []
@@ -100,7 +115,7 @@ export function LegalDocumentPage({
           <Container className="pt-6 sm:pt-10">
             <Breadcrumb
               items={[
-                { label: "Home", href: "/" },
+                { label: tUi("home"), href: "/" },
                 { label: "Legal" },
                 { label: title },
               ]}
@@ -119,6 +134,10 @@ export function LegalDocumentPage({
             >
               {parseHeroText(doc.heroTitle || title)}
             </h1>
+
+            {untranslatedLocale ? (
+              <NotTranslatedNote locale={untranslatedLocale} />
+            ) : null}
 
             <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               {doc.lead ? (
@@ -170,7 +189,7 @@ export function LegalDocumentPage({
               <div className="flex flex-col items-start gap-3 lg:sticky lg:top-[80px]">
                 {sections.length > 0 ? (
                   <nav
-                    aria-label="On this page"
+                    aria-label={tUi("on_this_page")}
                     className="w-full rounded-[20px] border p-5"
                     style={{
                       background: T.bg.deep,
@@ -181,7 +200,7 @@ export function LegalDocumentPage({
                       className="m-0 mb-2 text-[14px] font-semibold"
                       style={{ color: T.ink.base }}
                     >
-                      On this page
+                      {tUi("on_this_page")}
                     </p>
                     <ol className="m-0 flex list-none flex-col p-0">
                       {sections.map((section, index) => (
@@ -380,7 +399,7 @@ export function LegalDocumentPage({
                         <tr>
                           <th scope="col">Version</th>
                           <th scope="col">Date</th>
-                          <th scope="col">What changed</th>
+                          <th scope="col">{tUi("what_changed")}</th>
                           <th scope="col">Details</th>
                         </tr>
                       </thead>
@@ -467,9 +486,12 @@ export function LegalDocumentPage({
                 <div className="mt-5 flex flex-wrap gap-2">
                   <a
                     className="inline-flex items-center rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-                    href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+                    href={`mailto:${contactEmail}`}
+                    data-contact-type={
+                      membershipPolicy ? "membership" : "privacy"
+                    }
                   >
-                    Email {LEGAL_CONTACT_EMAIL}
+                    {tUi("email")} {contactEmail}
                   </a>
                   <GlobalLink
                     className="inline-flex items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[14px] font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"

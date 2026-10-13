@@ -1,4 +1,8 @@
-import { normalizePageFullPath } from "@repo/shared-data"
+import {
+  DEFAULT_LOCALE,
+  normalizePageFullPath,
+  SUPPORTED_LOCALES,
+} from "@repo/shared-data"
 import { createNavigation } from "next-intl/navigation"
 import { defineRouting } from "next-intl/routing"
 
@@ -6,10 +10,10 @@ import { getEnvVar } from "@/lib/env-vars"
 
 export const routing = defineRouting({
   // A list of all locales that are supported
-  locales: ["cs", "en"],
+  locales: SUPPORTED_LOCALES,
 
   // Used when no locale matches
-  defaultLocale: "en",
+  defaultLocale: DEFAULT_LOCALE,
 
   localePrefix: "as-needed",
 })
@@ -58,7 +62,9 @@ export const createPublicFullPath = (slug: string, locale: string): string => {
 }
 
 export const formatHref = (href: string | undefined | null): string => {
-  if (!href || href === "#") {
+  if (href?.startsWith("#")) return href
+
+  if (!href) {
     // Empty path -> return hash to prevent unwanted issues
     return "#"
   }

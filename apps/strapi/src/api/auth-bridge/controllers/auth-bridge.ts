@@ -1,5 +1,8 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
-import { isDismissiblePrompt } from "@repo/shared-data"
+import {
+  isDismissiblePrompt,
+  mergeNotificationPreferences,
+} from "@repo/shared-data"
 import freeEmailDomains from "free-email-domains"
 
 import {
@@ -187,7 +190,6 @@ export default {
       "mastodon",
       "linkedin",
       "profileVisibility",
-      "notifPrefs",
       "publicPrefs",
       "theme",
     ]
@@ -195,6 +197,16 @@ export default {
     const data: Record<string, unknown> = {}
     for (const key of scalarFields) {
       if (key in fields) data[key] = fields[key] === "" ? null : fields[key]
+    }
+    if ("notifPrefs" in fields) {
+      try {
+        data.notifPrefs = mergeNotificationPreferences(
+          existing?.notifPrefs,
+          fields.notifPrefs
+        )
+      } catch {
+        return ctx.badRequest("Invalid notification preferences")
+      }
     }
 
     // Recognition preferences are independent, and never grant a plan.
@@ -573,12 +585,19 @@ export default {
       targetUsername?: string
       action?: "follow" | "unfollow"
     }
-    if (!baUserId || !targetUsername || !action)
+    if (
+      typeof baUserId !== "string" ||
+      !baUserId ||
+      baUserId.length > 200 ||
+      typeof targetUsername !== "string" ||
+      !isValidUsername(targetUsername) ||
+      !["follow", "unfollow"].includes(action ?? "")
+    )
       return ctx.badRequest("Missing baUserId, targetUsername, or action")
 
     const followerProfile = await strapi.db
       .query("api::user-profile.user-profile")
-      .findOne({ where: { baUserId } })
+      .findOne({ where: { baUserId }, populate: { followedProfiles: true } })
     if (!followerProfile) return ctx.notFound("Follower profile not found")
 
     const targetResults = await strapi.db
@@ -592,15 +611,47 @@ export default {
       return ctx.forbidden("This profile cannot be followed")
     }
 
-    await strapi.db.query("api::user-profile.user-profile").update({
-      where: { id: followerProfile.id },
-      data: {
-        followedProfiles: {
-          [action === "follow" ? "connect" : "disconnect"]: [
-            { id: targetProfile.id },
-          ],
+    if (targetProfile.id === followerProfile.id)
+      return ctx.badRequest("You cannot follow yourself")
+    await strapi.db.transaction(async ({ trx }: any) => {
+      // Serialise simultaneous follow/unfollow requests before checking the edge.
+      // Otherwise a duplicate queue insert could abort the relation transaction.
+      if (typeof trx?.raw === "function")
+        await trx.raw("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", [
+          `profile-follow:${baUserId}`,
+        ])
+      const current = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({
+          where: { id: followerProfile.id },
+          populate: { followedProfiles: true },
+        })
+      const alreadyFollowing = (current?.followedProfiles ?? []).some(
+        (p: any) => p.id === targetProfile.id
+      )
+      if (alreadyFollowing === (action === "follow")) return
+      await strapi.db.query("api::user-profile.user-profile").update({
+        where: { id: followerProfile.id },
+        data: {
+          followedProfiles: {
+            [action === "follow" ? "connect" : "disconnect"]: [
+              { id: targetProfile.id },
+            ],
+          },
         },
-      },
+      })
+      if (action === "follow") {
+        // Incoming follower identities stay private; the notification reveals no name.
+        await strapi.service("api::notification.notification").enqueue({
+          baUserId: targetProfile.baUserId,
+          eventKey: `follower:${targetProfile.baUserId}:${baUserId}`,
+          kind: "new_follower",
+          title: "You have a new follower",
+          body: "Another contributor is following your profile.",
+          href: `/profile/${encodeURIComponent(targetUsername)}`,
+          emailPreference: "newFollowers",
+        })
+      }
     })
 
     return ctx.send({ following: action === "follow" })
@@ -742,6 +793,9 @@ export default {
         .map((a) => a.library?.documentId)
         .filter((id): id is string => !!id),
       grants: planRows.grants,
+      ...(planRows.paidMembership
+        ? { paidMembership: planRows.paidMembership }
+        : {}),
       roleGrants,
       verifications: planRows.verifications,
       teams: teams.map((t) => ({

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import type { Locale } from "next-intl"
+import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { EditorOnly } from "@/components/contribute/EditorOnly"
@@ -34,14 +34,6 @@ function initialsOf(name: string): string {
       .map((part) => part[0]?.toUpperCase() ?? "")
       .join("") || "?"
   )
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  stable: "Stable",
-  beta: "Beta",
-  experimental: "Experimental",
-  draft: "Draft",
-  deprecated: "Deprecated",
 }
 
 /** Ordered flat page list: section order first, then title. Drives prev/next. */
@@ -81,14 +73,16 @@ export function DocsArticlePage({
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
-  const title = article.title ?? article.slug ?? "Untitled"
+  const tUi = useUiTranslations("ui")
+  const tArticle = useUiTranslations("editorial")
+
+  const title = article.title ?? article.slug ?? tArticle("untitled")
   const body: ArticleBodyBlock[] = article.body ?? []
   const headings = extractHeadings(body).filter((h) => h.level <= 3)
   const words = countWords(body)
   const readMinutes = readingTimeMinutes(body)
-  const updated = formatDate(article.updatedAt)
-  const status =
-    STATUS_LABEL[(article.articleStatus ?? "stable") as string] ?? "Stable"
+  const updated = formatDate(article.updatedAt, "long", locale)
+  const status = tArticle(article.articleStatus ?? "stable")
 
   const tree: DocsTree = Object.fromEntries(
     sections.map((s) => [s.slug, [] as DocsTree[string]])
@@ -98,7 +92,7 @@ export function DocsArticlePage({
     if (!home) return
     tree[home.slug]?.push({
       documentId: entry.documentId,
-      title: entry.title ?? entry.slug ?? "Untitled",
+      title: entry.title ?? entry.slug ?? tArticle("untitled"),
       href: docsArticlePath(entry, sections),
       active: entry.slug === article.slug,
     })
@@ -132,8 +126,8 @@ export function DocsArticlePage({
           <article className="max-w-[720px] min-w-0">
             <Breadcrumb
               items={[
-                { label: "Home", href: "/" },
-                { label: "Knowledge", href: "/knowledge" },
+                { label: tUi("home"), href: "/" },
+                { label: tUi("knowledge"), href: "/knowledge" },
                 {
                   label: section.title,
                   href: `/knowledge?section=${section.slug}`,
@@ -166,7 +160,7 @@ export function DocsArticlePage({
               </span>
               {readMinutes != null ? (
                 <span className="text-[13px]" style={{ color: T.ink.dim }}>
-                  {readMinutes} min read
+                  {tArticle("readingTime", { minutes: readMinutes })}
                 </span>
               ) : null}
             </div>
@@ -208,18 +202,18 @@ export function DocsArticlePage({
                     color: "var(--tint-national-fg)",
                   }}
                 >
-                  {initialsOf(article.author ?? "Contributor")}
+                  {initialsOf(article.author ?? tArticle("contributor"))}
                 </span>
                 <span className="flex flex-col">
                   <span
                     className="text-[15px] font-semibold"
                     style={{ color: T.ink.base }}
                   >
-                    {article.author ?? "Community contributors"}
+                    {article.author ?? tArticle("communityContributors")}
                   </span>
                   {updated ? (
                     <span className="text-[13px]" style={{ color: T.ink.dim }}>
-                      Updated {updated}
+                      {tArticle("updatedOn", { date: updated })}
                     </span>
                   ) : null}
                 </span>
@@ -243,7 +237,7 @@ export function DocsArticlePage({
                       icon="mdi:pencil-outline"
                       width={14}
                     />
-                    Edit this page
+                    {tArticle("editPage")}
                   </GlobalLink>
                 </EditorOnly>
                 <GlobalLink
@@ -261,7 +255,7 @@ export function DocsArticlePage({
                     icon="mdi:alert-outline"
                     width={14}
                   />
-                  Report an issue
+                  {tArticle("reportIssue")}
                 </GlobalLink>
               </div>
             </div>
@@ -280,7 +274,7 @@ export function DocsArticlePage({
               </div>
             ) : (
               <p className="mt-8 text-[16px]" style={{ color: T.ink.dim }}>
-                This page has no content yet.
+                {tArticle("noContent")}
               </p>
             )}
 
@@ -307,7 +301,7 @@ export function DocsArticlePage({
                       className="block text-[13px]"
                       style={{ color: T.ink.dim }}
                     >
-                      ← Previous
+                      ← {tArticle("previous")}
                     </span>
                     <span
                       className="mt-1 block text-[19px] font-medium"
@@ -332,7 +326,7 @@ export function DocsArticlePage({
                       className="block text-[13px]"
                       style={{ color: T.ink.dim }}
                     >
-                      Next →
+                      {tArticle("next")} →
                     </span>
                     <span
                       className="mt-1 block text-[19px] font-medium"
@@ -351,7 +345,7 @@ export function DocsArticlePage({
             <div className="sticky top-[76px] flex flex-col gap-5">
               {headings.length > 0 ? (
                 <nav
-                  aria-label="On this page"
+                  aria-label={tUi("on_this_page")}
                   className="rounded-[20px] border p-5"
                   style={{ background: T.bg.deep, borderColor: T.border.line }}
                 >
@@ -359,7 +353,7 @@ export function DocsArticlePage({
                     className="m-0 mb-2 text-[15px] font-semibold"
                     style={{ color: T.ink.base }}
                   >
-                    On this page
+                    {tUi("on_this_page")}
                   </p>
                   <ul
                     className="m-0 flex list-none flex-col gap-1 border-l p-0 pl-3"
@@ -395,17 +389,17 @@ export function DocsArticlePage({
                   className="m-0 mb-2 text-[15px] font-semibold"
                   style={{ color: T.ink.base }}
                 >
-                  About this page
+                  {tArticle("aboutPage")}
                 </p>
                 <dl className="m-0">
                   {[
-                    { label: "Status", value: status },
-                    { label: "Updated", value: updated ?? "—" },
+                    { label: tUi("status"), value: status },
+                    { label: tArticle("updated"), value: updated ?? "—" },
                     {
-                      label: "Words",
-                      value: words > 0 ? words.toLocaleString("en-GB") : "—",
+                      label: tArticle("words"),
+                      value: words > 0 ? words.toLocaleString(locale) : "—",
                     },
-                    { label: "Licence", value: "CC BY-SA 4.0" },
+                    { label: tArticle("licence"), value: "CC BY-SA 4.0" },
                   ].map((row) => (
                     <div
                       key={row.label}

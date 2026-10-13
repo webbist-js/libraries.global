@@ -1,7 +1,9 @@
 import { factories } from "@strapi/strapi"
 
+import { countChildCoverage } from "../../../utils/library-child-coverage"
 import { centerFor, tallyLibrariesByChild } from "../../../utils/library-tally"
 import { countLibrariesByType } from "../../../utils/library-type-counts"
+import { countPlaceLibraries } from "../../../utils/place-library-scope"
 import {
   FEATURED_LIBRARY_POPULATE,
   MAP_CONFIG_POPULATE,
@@ -23,7 +25,14 @@ export default factories.createCoreController(
       const basePopulate: Record<string, unknown> = {
         continent: { fields: ["name", "slug", "code"] },
         regions: {
-          fields: ["name", "slug", "summary", "typeLabel"],
+          fields: [
+            "name",
+            "slug",
+            "summary",
+            "typeLabel",
+            "areaTypeLabel",
+            "areasSectionLabel",
+          ],
           populate: { mapConfig: MAP_CONFIG_POPULATE },
         },
       }
@@ -70,6 +79,7 @@ export default factories.createCoreController(
       const country = results[0] ?? null
 
       // ── Computed aggregates ─────────────────────────────────────────────────
+      const statistics = { libraries: true, children: true, types: true }
       let libraryCount = 0
       let libraryTypeCounts: { type: string; count: number }[] = []
       let regionCount = 0
@@ -78,37 +88,63 @@ export default factories.createCoreController(
       if (country?.id) {
         const scope = scopedWhere(status, locale)
         ;[libraryCount, regionCount] = await Promise.all([
-          strapi.db
-            .query("api::library.library")
-            .count({
-              where: { country: { id: { $eq: country.id } }, ...scope },
-            })
-            .catch(() => 0),
+          countPlaceLibraries(strapi, "country", country.documentId, {
+            locale,
+            status,
+          }).catch(() => {
+            statistics.libraries = false
+
+            return 0
+          }),
           strapi.db
             .query("api::region.region")
             .count({
               where: { country: { id: { $eq: country.id } }, ...scope },
             })
-            .catch(() => 0),
+            .catch(() => {
+              statistics.children = false
+
+              return 0
+            }),
         ])
 
-        if (libraryCount > 0 && country.documentId) {
+        if ((libraryCount > 0 || !statistics.libraries) && country.documentId) {
           // Per-type counts and per-region tallies / map centres.
           ;[libraryTypeCounts, tallies] = await Promise.all([
             countLibrariesByType(strapi, "country", country.documentId, {
               locale,
               status,
-            }).catch(() => []),
+            }).catch(() => {
+              statistics.types = false
+
+              return []
+            }),
             tallyLibrariesByChild(strapi, {
               parent: "country",
               parentDocumentId: country.documentId,
               child: "region",
               locale,
               status,
-            }).catch(() => new Map()),
+            }).catch(() => {
+              statistics.children = false
+
+              return new Map()
+            }),
           ])
         }
       }
+
+      const coverage =
+        country?.documentId && statistics.libraries && statistics.children
+          ? await countChildCoverage(strapi, {
+              parent: "country",
+              parentDocumentId: country.documentId,
+              child: "region",
+              descendant: "area",
+              locale,
+              status,
+            }).catch(() => null)
+          : null
 
       type RegionRow = {
         documentId: string
@@ -119,12 +155,25 @@ export default factories.createCoreController(
         (country as { regions?: RegionRow[] } | null)?.regions ?? []
       ).map(({ mapConfig, ...region }) => {
         const tally = tallies.get(region.documentId) as
-          | { count: number; center: { lat: number; lng: number } | null }
+          | {
+              count: number
+              placeBasedCount: number
+              center: { lat: number; lng: number } | null
+            }
           | undefined
 
         return {
           ...region,
           libraryCount: tally?.count ?? 0,
+          descendantWithRecords: coverage
+            ? (coverage.withRecords.get(region.documentId) ?? 0)
+            : null,
+          descendantTotal: coverage
+            ? (coverage.total.get(region.documentId) ?? 0)
+            : null,
+          placeBasedCount:
+            (tally as { placeBasedCount?: number } | undefined)
+              ?.placeBasedCount ?? 0,
           center: centerFor(mapConfig, tally),
         }
       })
@@ -135,6 +184,7 @@ export default factories.createCoreController(
               ...country,
               regions,
               libraryCount,
+              statistics,
               regionCount,
               libraryTypeCounts,
             }

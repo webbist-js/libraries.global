@@ -1,5 +1,6 @@
 "use client"
 
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -16,16 +17,26 @@ export function InterestsChips({
   /** Overrides for the "Suggest a topic" input, e.g. a page's field style. */
   inputStyle?: React.CSSProperties
 }) {
+  const tUi = useUiTranslations("ui")
+  const locale = useLocale()
+
   const [topics, setTopics] = useState<Topic[]>([])
   const [suggestInput, setSuggestInput] = useState("")
   const [suggesting, setSuggesting] = useState(false)
 
   useEffect(() => {
-    fetch("/api/topics")
+    let cancelled = false
+    fetch(`/api/topics?locale=${encodeURIComponent(locale)}`)
       .then((r) => r.json())
-      .then((json) => setTopics(json.data ?? []))
+      .then((json) => {
+        if (!cancelled) setTopics(json.data ?? [])
+      })
       .catch(() => {})
-  }, [])
+
+    return () => {
+      cancelled = true
+    }
+  }, [locale])
 
   const toggle = (id: string) => {
     if (selected.includes(id)) {
@@ -46,13 +57,13 @@ export function InterestsChips({
         body: JSON.stringify({ name }),
       })
       if (res.ok) {
-        toast.success(`"${name}" submitted for review`)
+        toast.success(tUi("topic_suggestion_submitted", { name }))
         setSuggestInput("")
       } else {
-        toast.error("Failed to submit suggestion")
+        toast.error(tUi("topic_suggestion_failed"))
       }
     } catch {
-      toast.error("Failed to submit suggestion")
+      toast.error(tUi("topic_suggestion_failed"))
     } finally {
       setSuggesting(false)
     }
@@ -104,8 +115,8 @@ export function InterestsChips({
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         <input
           type="text"
-          aria-label="Suggest a topic"
-          placeholder="Suggest a topic…"
+          aria-label={tUi("suggest_a_topic")}
+          placeholder={tUi("suggest_a_topic_2")}
           value={suggestInput}
           onChange={(e) => setSuggestInput(e.target.value)}
           onKeyDown={(e) => {
@@ -143,7 +154,7 @@ export function InterestsChips({
             opacity: suggesting ? 0.6 : 1,
           }}
         >
-          {suggesting ? "…" : "Suggest"}
+          {suggesting ? "…" : tUi("suggest")}
         </button>
       </div>
     </div>

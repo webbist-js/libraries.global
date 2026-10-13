@@ -1,15 +1,27 @@
 // Pure logic for the Atlas Explorer map: filtering, facet counts, layer
 // registry and URL state. No React or MapLibre imports — unit-testable.
 import {
+  ATLAS_TYPE_GROUPS,
+  ATLAS_OPERATOR_GROUPS,
+  atlasTypeGroup,
+  atlasOperatorGroup,
+  type AtlasTypeGroup,
   effectiveLibraryHours,
   noticeLocalDate,
   type LibraryNotice,
+  type MobileFrequency,
 } from "@repo/shared-data"
 
 // ── Data ────────────────────────────────────────────────────────────────────
 
 /** Properties of one library feature from GET /api/libraries/atlas. */
 export interface AtlasLibrary {
+  /** Compact server geometry has an ordinary-hours late classification. */
+  atlasLate?: boolean
+  /** Server evaluated effective hours, including Notices, for a bounded row. */
+  atlasOpenNow?: OpenNow
+  /** Independent published selection may have no building point to draw. */
+  mapped?: boolean
   id: string
   name: string
   slug: string
@@ -23,6 +35,7 @@ export interface AtlasLibrary {
   path: string | null
   tz: string | null
   /** 7 arrays (Mon–Sun) of [startMinute, endMinute]; null when hours unknown. */
+  staffHours?: number[][][] | null
   hours: number[][][] | null
   notices?: LibraryNotice[]
   closedDates?: string[]
@@ -55,13 +68,7 @@ export function fromFeatureCollection(fc: {
 
 // ── Library type groups (filter chips, pin shapes, tints) ───────────────────
 
-export type TypeGroupKey =
-  | "public"
-  | "academic"
-  | "national"
-  | "special"
-  | "monastic"
-  | "other"
+export type TypeGroupKey = AtlasTypeGroup
 
 /** Pin shape and tint key per group; tint keys match TYPE_TINT. */
 export const TYPE_GROUPS: {
@@ -74,37 +81,48 @@ export const TYPE_GROUPS: {
     key: "public",
     label: "Public",
     tint: "public",
-    types: ["Public", "Municipal", "Mobile"],
+    types: [...ATLAS_TYPE_GROUPS.public],
   },
   {
     key: "academic",
     label: "Academic",
     tint: "academic",
-    types: ["Academic", "University"],
+    types: [...ATLAS_TYPE_GROUPS.academic],
   },
   {
     key: "national",
     label: "National",
     tint: "national",
-    types: ["National", "Parliamentary", "State"],
+    types: [...ATLAS_TYPE_GROUPS.national],
   },
   {
     key: "special",
     label: "Special & archive",
     tint: "special",
-    types: ["Special", "Archive", "Private", "Cultural"],
+    types: [...ATLAS_TYPE_GROUPS.special],
   },
-  { key: "monastic", label: "Monastic", tint: "special", types: ["Monastic"] },
+  {
+    key: "mobile",
+    label: "Mobile",
+    tint: "public",
+    types: [...ATLAS_TYPE_GROUPS.mobile],
+  },
+  {
+    key: "monastic",
+    label: "Monastic",
+    tint: "special",
+    types: [...ATLAS_TYPE_GROUPS.monastic],
+  },
   {
     key: "other",
     label: "Other",
     tint: "neutral",
-    types: ["Digital", "Other"],
+    types: [...ATLAS_TYPE_GROUPS.other],
   },
 ]
 
 export function typeGroupOf(type: string): TypeGroupKey {
-  return TYPE_GROUPS.find((g) => g.types.includes(type))?.key ?? "other"
+  return atlasTypeGroup(type)
 }
 
 // ── Operator groups ─────────────────────────────────────────────────────────
@@ -117,28 +135,42 @@ export const OPERATOR_GROUPS: {
   {
     key: "council",
     label: "Council",
-    values: ["Municipality", "Regional Government"],
+    values: [...ATLAS_OPERATOR_GROUPS.council],
   },
-  { key: "government", label: "Government", values: ["National Government"] },
+  {
+    key: "government",
+    label: "Government",
+    values: [...ATLAS_OPERATOR_GROUPS.government],
+  },
   {
     key: "community",
     label: "Community-run",
-    values: ["Community Managed", "Volunteer Managed"],
+    values: [...ATLAS_OPERATOR_GROUPS.community],
   },
-  { key: "university", label: "University", values: ["University"] },
-  { key: "religious", label: "Religious", values: ["Religious Institution"] },
+  {
+    key: "university",
+    label: "University",
+    values: [...ATLAS_OPERATOR_GROUPS.university],
+  },
+  {
+    key: "religious",
+    label: "Religious",
+    values: [...ATLAS_OPERATOR_GROUPS.religious],
+  },
   {
     key: "charity",
     label: "Charity or foundation",
-    values: ["Private Foundation"],
+    values: [...ATLAS_OPERATOR_GROUPS.charity],
   },
-  { key: "independent", label: "Independent", values: ["Independent"] },
+  {
+    key: "independent",
+    label: "Independent",
+    values: [...ATLAS_OPERATOR_GROUPS.independent],
+  },
 ]
 
 function operatorGroupOf(operator: string | null): string | null {
-  if (!operator) return null
-
-  return OPERATOR_GROUPS.find((g) => g.values.includes(operator))?.key ?? null
+  return atlasOperatorGroup(operator)
 }
 
 // ── Opening hours ───────────────────────────────────────────────────────────
@@ -222,6 +254,7 @@ export function todayHoursLabel(lib: AtlasLibrary, now: Date): string {
 export type OpenNow = "open" | "closed" | "unknown"
 
 export function openNow(lib: AtlasLibrary, now: Date): OpenNow {
+  if (lib.atlasOpenNow !== undefined) return lib.atlasOpenNow
   const date = noticeLocalDate(now, lib.tz)
   const effective = effectiveLibraryHours(null, lib.notices ?? [], date)
   if (effective.closed || lib.closedDates?.includes(date)) return "closed"
@@ -261,17 +294,73 @@ export function openNow(lib: AtlasLibrary, now: Date): OpenNow {
 
 // ── Accessibility ───────────────────────────────────────────────────────────
 
-const STEP_FREE = /wheelchair|step[- ]free|level access|ramp|lift/i
+export type AccessibilityView = "matches" | "compare" | "gaps"
 
-export function hasStepFree(lib: AtlasLibrary): boolean {
-  return lib.access.some((a) => STEP_FREE.test(a))
+/** Highlight recorded accessibility features; an empty selection means any. */
+export function hasAccessibility(
+  lib: AtlasLibrary,
+  selected: string[] = []
+): boolean {
+  return selected.length
+    ? selected.every((name) => lib.access.includes(name))
+    : lib.access.length > 0
+}
+
+/** Missing positive records do not establish that a feature is absent. */
+export function accessibilitySummary(
+  libs: AtlasLibrary[],
+  selected: string[] = []
+) {
+  let matches = 0
+  let partial = 0
+  for (const lib of libs) {
+    if (hasAccessibility(lib, selected)) matches += 1
+    else if (selected.some((name) => lib.access.includes(name))) partial += 1
+  }
+
+  return {
+    total: libs.length,
+    matches,
+    partial,
+    unconfirmed: libs.length - matches,
+  }
+}
+
+/** Shared by map, list and export, so every view has the same population. */
+export function accessibilityLibraries(
+  libs: AtlasLibrary[],
+  selected: string[],
+  view: AccessibilityView
+): AtlasLibrary[] {
+  if (view === "compare") return libs
+
+  return libs.filter(
+    (lib) => hasAccessibility(lib, selected) === (view === "matches")
+  )
+}
+
+export function accessibilityOptions(
+  libs: AtlasLibrary[],
+  selected: string[] = [],
+  catalogue: string[] = []
+) {
+  const counts = new Map<string, number>(
+    [...catalogue, ...selected].map((name) => [name, 0])
+  )
+  for (const lib of libs.filter(isListed))
+    for (const name of new Set(lib.access))
+      counts.set(name, (counts.get(name) ?? 0) + 1)
+
+  return [...counts]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 // ── Filters ─────────────────────────────────────────────────────────────────
 
 export interface AtlasFilters {
   types: TypeGroupKey[]
-  opening: "any" | "now" | "at"
+  opening: "any" | "now" | "staff_now" | "at"
   /** Used when opening is "at": day 0–6 (Mon–Sun) and minutes since midnight. */
   atDay: number
   atMinutes: number
@@ -282,6 +371,8 @@ export interface AtlasFilters {
   catalogue: boolean
   /** Inclusive founded-year range, or null for any. */
   founded: [number, number] | null
+  mobileFrequency?: MobileFrequency[]
+  mobileSharesLive?: boolean
 }
 
 export const EMPTY_FILTERS: AtlasFilters = {
@@ -294,6 +385,8 @@ export const EMPTY_FILTERS: AtlasFilters = {
   events: false,
   catalogue: false,
   founded: null,
+  mobileFrequency: [],
+  mobileSharesLive: false,
 }
 
 export function activeFilterCount(f: AtlasFilters): number {
@@ -304,7 +397,9 @@ export function activeFilterCount(f: AtlasFilters): number {
     f.facilities.length +
     (f.events ? 1 : 0) +
     (f.catalogue ? 1 : 0) +
-    (f.founded ? 1 : 0)
+    (f.founded ? 1 : 0) +
+    (f.mobileFrequency?.length ? 1 : 0) +
+    (f.mobileSharesLive ? 1 : 0)
   )
 }
 
@@ -320,7 +415,31 @@ export function matches(
 ): boolean {
   if (f.types.length > 0 && !f.types.includes(typeGroupOf(lib.type)))
     return false
+  if (f.opening === "staff_now") {
+    if (
+      !lib.tz ||
+      [
+        "permanently_closed",
+        "temporarily_closed",
+        "planned",
+        "appointment_only",
+      ].includes(lib.status)
+    )
+      return false
+    const { day, minutes } = nowIn(lib.tz, now)
+    if (!isOpenAt(lib.staffHours ?? null, day, minutes)) return false
+  }
   if (f.opening === "now") {
+    if (
+      !lib.tz ||
+      [
+        "permanently_closed",
+        "temporarily_closed",
+        "planned",
+        "appointment_only",
+      ].includes(lib.status)
+    )
+      return false
     const { day, minutes } = nowIn(lib.tz, now)
     if (!isOpenAt(lib.hours, day, minutes)) return false
   }
@@ -450,6 +569,7 @@ export function tierForPlan(plan: string | null | undefined): Tier {
 }
 
 export type LayerId =
+  | "pins"
   | "density"
   | "openLate"
   | "closures"
@@ -463,60 +583,98 @@ export type LayerId =
   | "deprivation"
   | "transit"
   | "schools"
+  | "reach"
+  | "coverageGaps"
+  | "serviceCoverage"
+
+export type LayerGroup =
+  | "locations"
+  | "characteristics"
+  | "patterns"
+  | "coverage"
+  | "reference"
+
+export const LAYER_GROUPS: { id: LayerGroup; name: string }[] = [
+  { id: "locations", name: "Locations" },
+  { id: "characteristics", name: "Library characteristics" },
+  { id: "patterns", name: "Patterns and distribution" },
+  { id: "coverage", name: "Access and coverage" },
+  { id: "reference", name: "Reference geography" },
+]
 
 export interface LayerDef {
   id: LayerId
   name: string
   sub: string
-  group: "libraries" | "context"
+  group: LayerGroup
   /** Lowest tier that can switch it on. */
   tier: Tier
   /** False until the data or backend exists; shown as "Coming soon". */
   ready: boolean
   /** Layers in the same exclusive group replace each other. */
-  exclusive?: "heat" | "pinStyle"
+  exclusive?: "heat" | "pinStyle" | "area"
+  /** Changes the location markers, so their base layer must stay on. */
+  requiresPins?: boolean
 }
 
 export const LAYERS: LayerDef[] = [
   {
+    id: "pins",
+    name: "Library locations",
+    sub: "Pins and clusters for every record",
+    group: "locations",
+    tier: "public",
+    ready: true,
+  },
+  {
+    id: "mobile",
+    name: "Mobile library routes",
+    sub: "Lines, stops and live vehicles",
+    group: "locations",
+    tier: "public",
+    ready: true,
+  },
+  {
     id: "density",
     name: "Library density",
     sub: "Heatmap · all records",
-    group: "libraries",
+    group: "patterns",
     tier: "public",
     ready: true,
     exclusive: "heat",
   },
   {
     id: "openLate",
-    name: "Open late or on Sundays",
-    sub: "After 19:00, or any Sunday hours",
-    group: "libraries",
+    name: "Opening hours",
+    sub: "Open after 19:00 or on Sundays",
+    group: "characteristics",
     tier: "public",
     ready: true,
+    requiresPins: true,
   },
   {
     id: "closures",
-    name: "Closures",
-    sub: "Permanently closed libraries",
-    group: "libraries",
+    name: "Closed libraries",
+    sub: "Recorded permanent closures",
+    group: "locations",
     tier: "public",
     ready: true,
   },
   {
     id: "access",
-    name: "Step-free access",
-    sub: "Where step-free entry is recorded",
-    group: "libraries",
+    name: "Accessibility",
+    sub: "Choose recorded accessibility features",
+    group: "characteristics",
     tier: "free",
     ready: true,
     exclusive: "pinStyle",
+    requiresPins: true,
   },
   {
     id: "events",
     name: "Events density",
     sub: "Libraries with an events feed",
-    group: "libraries",
+    group: "patterns",
     tier: "free",
     ready: true,
     exclusive: "heat",
@@ -525,56 +683,80 @@ export const LAYERS: LayerDef[] = [
     id: "complete",
     name: "Record completeness",
     sub: "How much we know",
-    group: "libraries",
+    group: "characteristics",
     tier: "free",
     ready: true,
     exclusive: "pinStyle",
+    requiresPins: true,
   },
   {
     id: "perCapita",
-    name: "Libraries per 100k people",
-    sub: "By council area",
-    group: "libraries",
+    name: "Library access",
+    sub: "Recorded libraries relative to population",
+    group: "coverage",
     tier: "pro",
-    ready: false,
+    ready: true,
+    exclusive: "area",
   },
   {
     id: "founded",
     name: "Founded year",
     sub: "With time slider",
-    group: "libraries",
+    group: "characteristics",
     tier: "pro",
     ready: false,
+    requiresPins: true,
   },
   {
-    id: "mobile",
-    name: "Mobile library routes",
-    sub: "Lines and stops",
-    group: "libraries",
-    tier: "public",
-    ready: true,
+    id: "reach",
+    name: "Travel-time reach",
+    sub: "Walking and cycling to a library",
+    group: "coverage",
+    tier: "pro",
+    ready: false,
+    exclusive: "area",
+  },
+  {
+    id: "coverageGaps",
+    name: "Underserved communities",
+    sub: "Population outside a chosen travel time",
+    group: "coverage",
+    tier: "pro",
+    ready: false,
+    exclusive: "area",
+  },
+  {
+    id: "serviceCoverage",
+    name: "Service coverage by area",
+    sub: "Recorded facilities and accessibility",
+    group: "coverage",
+    tier: "pro",
+    ready: false,
+    exclusive: "area",
   },
   {
     id: "population",
     name: "Population density",
     sub: "GHSL",
-    group: "context",
+    group: "reference",
     tier: "free",
     ready: false,
+    exclusive: "area",
   },
   {
     id: "deprivation",
     name: "Deprivation",
     sub: "IMD · SIMD · WIMD",
-    group: "context",
+    group: "reference",
     tier: "pro",
     ready: false,
+    exclusive: "area",
   },
   {
     id: "transit",
     name: "Transit stops and lines",
     sub: "OSM · GTFS",
-    group: "context",
+    group: "reference",
     tier: "pro",
     ready: false,
   },
@@ -582,7 +764,7 @@ export const LAYERS: LayerDef[] = [
     id: "schools",
     name: "Schools",
     sub: "Government registers",
-    group: "context",
+    group: "reference",
     tier: "free",
     ready: false,
   },
@@ -597,13 +779,23 @@ const RANK: Record<Tier, number> = { public: 0, free: 1, pro: 2 }
 export type LayerAccess = "available" | "signin" | "pro" | "soon"
 
 export function layerAccess(def: LayerDef, tier: Tier): LayerAccess {
-  // Don't ask people to sign in for something that doesn't exist yet. Pro
-  // layers keep their Pro state; the upsell says Pro isn't available yet.
-  if (!def.ready && def.tier !== "pro") return "soon"
-  if (RANK[tier] < RANK[def.tier]) return def.tier === "pro" ? "pro" : "signin"
+  // Readiness takes priority for every plan: upgrades cannot unlock a feature
+  // until its data and renderer exist.
   if (!def.ready) return "soon"
+  if (RANK[tier] < RANK[def.tier]) return def.tier === "pro" ? "pro" : "signin"
 
   return "available"
+}
+
+export function pinDependentLayers(active: readonly LayerId[]): LayerDef[] {
+  return active.map(layerDef).filter((def) => def.requiresPins)
+}
+
+/** Apply after entitlement filtering so unavailable layers cannot force pins on. */
+export function withRequiredLibraryLocations(active: LayerId[]): LayerId[] {
+  return !active.includes("pins") && pinDependentLayers(active).length
+    ? ["pins", ...active]
+    : active
 }
 
 /** Turns a layer on, returning the new set and any layer it replaced. */
@@ -611,15 +803,21 @@ export function toggleLayer(
   active: LayerId[],
   id: LayerId
 ): { layers: LayerId[]; replaced: LayerId | null } {
-  if (active.includes(id))
-    return { layers: active.filter((x) => x !== id), replaced: null }
+  const current = withRequiredLibraryLocations(active)
+  if (id === "pins" && pinDependentLayers(current).length)
+    return { layers: current, replaced: null }
+  if (current.includes(id))
+    return { layers: current.filter((x) => x !== id), replaced: null }
   const group = layerDef(id).exclusive
   const replaced = group
-    ? (active.find((x) => layerDef(x).exclusive === group) ?? null)
+    ? (current.find((x) => layerDef(x).exclusive === group) ?? null)
     : null
 
   return {
-    layers: [...active.filter((x) => x !== replaced), id],
+    layers: withRequiredLibraryLocations([
+      ...current.filter((x) => x !== replaced),
+      id,
+    ]),
     replaced,
   }
 }
@@ -660,6 +858,8 @@ export interface AtlasUrlState {
   view: { lat: number; lng: number; zoom: number } | null
   filters: AtlasFilters
   layers: LayerId[]
+  accessibility?: string[]
+  accessibilityView?: AccessibilityView
   library: string | null
   list: boolean
   projection: "globe" | "flat"
@@ -686,7 +886,10 @@ export function parseUrlState(params: URLSearchParams): AtlasUrlState {
       types: csv(params.get("type")).filter((t): t is TypeGroupKey =>
         GROUP_KEYS.has(t as TypeGroupKey)
       ),
-      opening: opening === "now" || opening === "at" ? opening : "any",
+      opening:
+        opening === "now" || opening === "staff_now" || opening === "at"
+          ? opening
+          : "any",
       atDay: at.length === 2 && at[0]! >= 0 && at[0]! <= 6 ? at[0]! : 6,
       atMinutes:
         at.length === 2 && at[1]! >= 0 && at[1]! < 1440 ? at[1]! : 12 * 60,
@@ -698,10 +901,23 @@ export function parseUrlState(params: URLSearchParams): AtlasUrlState {
         founded.length === 2 && founded.every(Number.isFinite)
           ? [founded[0]!, founded[1]!]
           : null,
+      mobileFrequency: csv(params.get("frequency")).filter(
+        (value): value is MobileFrequency =>
+          ["weekly", "fortnightly", "monthly"].includes(value)
+      ),
+      mobileSharesLive: params.get("sharesLive") === "1",
     },
-    layers: csv(params.get("layers")).filter((l): l is LayerId =>
-      LAYER_IDS.has(l as LayerId)
-    ),
+    layers: csv(params.has("layers") ? params.get("layers") : "pins")
+      .map((layer) => (layer === "libraryAccess" ? "perCapita" : layer))
+      .filter((l): l is LayerId => LAYER_IDS.has(l as LayerId)),
+    accessibility: [...new Set(params.getAll("access"))]
+      .filter((name) => name.length <= 150)
+      .slice(0, 100),
+    accessibilityView:
+      params.get("accessView") === "compare" ||
+      params.get("accessView") === "gaps"
+        ? (params.get("accessView") as AccessibilityView)
+        : "matches",
     library: params.get("lib"),
     list: params.get("list") === "1",
     projection: params.get("proj") === "flat" ? "flat" : "globe",
@@ -728,7 +944,12 @@ export function toUrlParams(s: AtlasUrlState): URLSearchParams {
   if (f.events) p.set("ev", "1")
   if (f.catalogue) p.set("cat", "1")
   if (f.founded) p.set("fy", f.founded.join(","))
-  if (s.layers.length) p.set("layers", s.layers.join(","))
+  if (f.mobileFrequency?.length) p.set("frequency", f.mobileFrequency.join(","))
+  if (f.mobileSharesLive) p.set("sharesLive", "1")
+  p.set("layers", s.layers.join(","))
+  for (const name of s.accessibility ?? []) p.append("access", name)
+  if (s.accessibilityView && s.accessibilityView !== "matches")
+    p.set("accessView", s.accessibilityView)
   if (s.library) p.set("lib", s.library)
   if (s.list) p.set("list", "1")
   if (s.projection === "flat") p.set("proj", "flat")

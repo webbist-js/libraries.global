@@ -367,7 +367,7 @@ export type LibraryMarker = {
  * Build globe lights from real library records. Featured records become
  * prominent hub markers; the rest are smaller knowledge lights.
  */
-export function buildLibraryLights(markers: LibraryMarker[]): {
+export function buildLibraryLights(markers: readonly LibraryMarker[]): {
   hubs: GlobeLight[]
   lights: GlobeLight[]
 } {
@@ -405,7 +405,9 @@ const ARC_MIN_ANGLE = 0.005
  * are connected — each to its nearest featured peers. Purely visual for now;
  * one day this could reflect real inter-library loan relationships.
  */
-export function buildLibraryArcs(markers: LibraryMarker[]): ArcRoute[] {
+export function buildLibraryArcs(
+  markers: readonly LibraryMarker[]
+): ArcRoute[] {
   const featured = markers.filter((m) => m.featured)
   if (featured.length < 2) return []
 
@@ -434,7 +436,7 @@ export function buildLibraryArcs(markers: LibraryMarker[]): ArcRoute[] {
 }
 
 /** Centroid of the plotted records — used to face the data toward the camera. */
-export function markersCentroid(markers: LibraryMarker[]): {
+export function markersCentroid(markers: readonly LibraryMarker[]): {
   lat: number
   lng: number
 } | null {

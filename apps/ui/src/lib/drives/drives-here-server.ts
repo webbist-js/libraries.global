@@ -30,14 +30,17 @@ const MAX_DRIVES_HERE = 3
  * country and region pages: `fetchDrives("open")`, then one `multiSearch`
  * with one `limit: 0` query per drive (its "to do" filter plus this place's
  * slug), keeping the drives with work here, at most three, in list order
- * (pinned first), with `loadDriveViews` numbers. `[]` on any failure.
+ * (pinned first), with `loadDriveViews` numbers. `null` on failure; an empty list is a successful query.
  */
 export async function drivesHere(
   level: DrivesHereLevel,
   slug: string,
   locale: string
-): Promise<{ view: DriveView; here: number }[]> {
-  const drives = await fetchDrives("open", locale)
+): Promise<{ view: DriveView; here: number }[] | null> {
+  const drives = await fetchDrives("open", locale, undefined, true).catch(
+    () => null
+  )
+  if (!drives) return null
   if (drives.length === 0) return []
 
   const localeClause = searchLocaleFilter(locale)
@@ -55,7 +58,7 @@ export async function drivesHere(
 
         return {
           indexUid: "library",
-          filter: `${todo} AND ${placeClause} AND ${localeClause}`,
+          filter: `${todo} AND ${placeClause} AND ${localeClause} AND operationalStatus NOT IN ["permanently_closed","planned"]`,
           limit: 0,
           facets: ["locale"],
         }
@@ -63,7 +66,7 @@ export async function drivesHere(
     })
     heres = results.map((r) => localeCount(r as unknown as FacetCounts))
   } catch {
-    return []
+    return null
   }
 
   const withHere = drives
@@ -76,7 +79,8 @@ export async function drivesHere(
   const views = await loadDriveViews(
     withHere.map((d) => d.drive),
     locale
-  )
+  ).catch(() => null)
+  if (!views) return null
 
   return withHere.map((d, i) => ({ view: views[i]!, here: d.here }))
 }

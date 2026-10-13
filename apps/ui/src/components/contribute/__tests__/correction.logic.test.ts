@@ -143,7 +143,7 @@ describe("contact details", () => {
 })
 
 describe("buildSubmission for a structured correction", () => {
-  it("sends a record correction with the source as evidence, not a field", () => {
+  it("sends a public reference alongside the changed fields", () => {
     const library = { slug: "nailsea-library", name: "Nailsea Library" }
     const changes = recordChanges("Website or catalogue", record, {
       website: "https://new.example.org",
@@ -164,6 +164,13 @@ describe("buildSubmission for a structured correction", () => {
       category: "Website or catalogue",
       libraryName: "Nailsea Library",
       website: "https://new.example.org",
+      sourceRecords: [
+        {
+          url: "https://council.example.gov.uk/libraries",
+          role: "reference",
+          fields: ["website"],
+        },
+      ],
       previous: { website: "https://old.example.org" },
     })
     expect(body.fields).not.toHaveProperty("sourceUrl")

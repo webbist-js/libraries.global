@@ -44,7 +44,8 @@ export function CoverageSection({
   return (
     <section
       aria-labelledby="coverage-title"
-      className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8"
+      data-homepage-surface="paper"
+      className="mx-auto w-full max-w-[1360px] px-4 sm:px-8"
     >
       <SectionHeader id="coverage-title" intro={intro} textBeside />
 

@@ -237,8 +237,8 @@ export function blockerFor(
     )
   if (action === "correction" && !draft.text.trim())
     return "Describe what’s correct to continue."
-  if (action === "source" && step === 3 && !draft.source.trim())
-    return "Add a link or reference to send."
+  if (action === "source" && step === 3 && !isUrl(draft.source.trim()))
+    return "Add a public http or https source link to send."
 
   return null
 }
@@ -261,8 +261,8 @@ export function buildSubmission(
   /**
    * A structured correction's changes. They travel as `fields.kind:
    * "record"`, which the moderation plugin writes to the library on
-   * approval, so the source goes in the evidence and note, never in
-   * `fields` (where `sourceUrl` would overwrite the library's own).
+   * approval. Public links append to `fields.sourceRecords`; existing
+   * dataset origins are retained.
    */
   record?: RecordChanges
 ): SubmissionBody {
@@ -278,7 +278,7 @@ export function buildSubmission(
     : {}
   const sourceField = source
     ? isUrl(source)
-      ? { sourceUrl: source }
+      ? { sourceRecords: [{ url: source, role: "reference" }] }
       : { sourceReference: source }
     : {}
 
@@ -296,6 +296,17 @@ export function buildSubmission(
         category: draft.category,
         libraryName: library.name,
         ...record.changes,
+        ...(source && isUrl(source)
+          ? {
+              sourceRecords: [
+                {
+                  url: source,
+                  role: "reference",
+                  fields: Object.keys(record.changes),
+                },
+              ],
+            }
+          : {}),
         previous: record.previous,
         ...(record.previousHash ? { previousHash: record.previousHash } : {}),
         ...(Object.keys(suggestedOptions).length ? { suggestedOptions } : {}),

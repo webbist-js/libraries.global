@@ -1,0 +1,3984 @@
+{
+  "version": "f0d95424c806d259",
+  "geometryUrl": "/atlas/local-areas-30b18da5fa5e47bb.geojson",
+  "boundarySource": "ONS Local Authority Districts, December 2023 (BGC for assignment; BUC for display)",
+  "boundaryUrl": "https://www.data.gov.uk/dataset/31c78354-168f-4457-b8f3-80e86adcd0f4/local-authority-districts-december-2023-boundaries-uk-bgc",
+  "boundaryLicence": "Open Government Licence v3.0; contains OS and ONS intellectual property",
+  "boundaryYear": 2023,
+  "countries": [
+    "GBR"
+  ],
+  "areas": [
+    {
+      "code": "E06000001",
+      "name": "Hartlepool",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.38376,
+        "east": -1.15764,
+        "south": 54.6219,
+        "north": 54.72717
+      }
+    },
+    {
+      "code": "E06000002",
+      "name": "Middlesbrough",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.28543,
+        "east": -1.13737,
+        "south": 54.50113,
+        "north": 54.5907
+      }
+    },
+    {
+      "code": "E06000003",
+      "name": "Redcar and Cleveland",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.20174,
+        "east": -0.78863,
+        "south": 54.48785,
+        "north": 54.64755
+      }
+    },
+    {
+      "code": "E06000004",
+      "name": "Stockton-on-Tees",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.45264,
+        "east": -1.15875,
+        "south": 54.46416,
+        "north": 54.64525
+      }
+    },
+    {
+      "code": "E06000005",
+      "name": "Darlington",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.70967,
+        "east": -1.40729,
+        "south": 54.45115,
+        "north": 54.61937
+      }
+    },
+    {
+      "code": "E06000006",
+      "name": "Halton",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.83234,
+        "east": -2.59522,
+        "south": 53.30503,
+        "north": 53.40255
+      }
+    },
+    {
+      "code": "E06000007",
+      "name": "Warrington",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.69772,
+        "east": -2.42538,
+        "south": 53.32245,
+        "north": 53.48093
+      }
+    },
+    {
+      "code": "E06000008",
+      "name": "Blackburn with Darwen",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.56466,
+        "east": -2.36265,
+        "south": 53.61663,
+        "north": 53.78179
+      }
+    },
+    {
+      "code": "E06000009",
+      "name": "Blackpool",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.05903,
+        "east": -2.98336,
+        "south": 53.77312,
+        "north": 53.87558
+      }
+    },
+    {
+      "code": "E06000010",
+      "name": "Kingston upon Hull, City of",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.42258,
+        "east": -0.24145,
+        "south": 53.71958,
+        "north": 53.81327
+      }
+    },
+    {
+      "code": "E06000011",
+      "name": "East Riding of Yorkshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.10336,
+        "east": 0.14688,
+        "south": 53.57135,
+        "north": 54.17652
+      }
+    },
+    {
+      "code": "E06000012",
+      "name": "North East Lincolnshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.29212,
+        "east": 0.01762,
+        "south": 53.43356,
+        "north": 53.63997
+      }
+    },
+    {
+      "code": "E06000013",
+      "name": "North Lincolnshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.95001,
+        "east": -0.20073,
+        "south": 53.45523,
+        "north": 53.7146
+      }
+    },
+    {
+      "code": "E06000014",
+      "name": "York",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.22371,
+        "east": -0.91968,
+        "south": 53.87459,
+        "north": 54.05688
+      }
+    },
+    {
+      "code": "E06000015",
+      "name": "Derby",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.55683,
+        "east": -1.38307,
+        "south": 52.86106,
+        "north": 52.96815
+      }
+    },
+    {
+      "code": "E06000016",
+      "name": "Leicester",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.21598,
+        "east": -1.0462,
+        "south": 52.58067,
+        "north": 52.69152
+      }
+    },
+    {
+      "code": "E06000017",
+      "name": "Rutland",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.82175,
+        "east": -0.42837,
+        "south": 52.52489,
+        "north": 52.75982
+      }
+    },
+    {
+      "code": "E06000018",
+      "name": "Nottingham",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.24689,
+        "east": -1.08612,
+        "south": 52.88902,
+        "north": 53.01873
+      }
+    },
+    {
+      "code": "E06000019",
+      "name": "Herefordshire, County of",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.14192,
+        "east": -2.33796,
+        "south": 51.82608,
+        "north": 52.39549
+      }
+    },
+    {
+      "code": "E06000020",
+      "name": "Telford and Wrekin",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.66736,
+        "east": -2.31221,
+        "south": 52.61457,
+        "north": 52.82838
+      }
+    },
+    {
+      "code": "E06000021",
+      "name": "Stoke-on-Trent",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.23876,
+        "east": -2.07924,
+        "south": 52.94616,
+        "north": 53.09272
+      }
+    },
+    {
+      "code": "E06000022",
+      "name": "Bath and North East Somerset",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.70789,
+        "east": -2.27855,
+        "south": 51.2731,
+        "north": 51.43953
+      }
+    },
+    {
+      "code": "E06000023",
+      "name": "Bristol, City of",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.77362,
+        "east": -2.51046,
+        "south": 51.39725,
+        "north": 51.54443
+      }
+    },
+    {
+      "code": "E06000024",
+      "name": "North Somerset",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.11506,
+        "east": -2.5872,
+        "south": 51.29061,
+        "north": 51.50249
+      }
+    },
+    {
+      "code": "E06000025",
+      "name": "South Gloucestershire",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.69539,
+        "east": -2.25213,
+        "south": 51.41593,
+        "north": 51.6773
+      }
+    },
+    {
+      "code": "E06000026",
+      "name": "Plymouth",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.20534,
+        "east": -4.01963,
+        "south": 50.33307,
+        "north": 50.44415
+      }
+    },
+    {
+      "code": "E06000027",
+      "name": "Torbay",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.62841,
+        "east": -3.48067,
+        "south": 50.37344,
+        "north": 50.51849
+      }
+    },
+    {
+      "code": "E06000030",
+      "name": "Swindon",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.86513,
+        "east": -1.60282,
+        "south": 51.48245,
+        "north": 51.69271
+      }
+    },
+    {
+      "code": "E06000031",
+      "name": "Peterborough",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.49765,
+        "east": -0.01284,
+        "south": 52.50611,
+        "north": 52.67522
+      }
+    },
+    {
+      "code": "E06000032",
+      "name": "Luton",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.50592,
+        "east": -0.34984,
+        "south": 51.85448,
+        "north": 51.92775
+      }
+    },
+    {
+      "code": "E06000033",
+      "name": "Southend-on-Sea",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.62296,
+        "east": 0.82083,
+        "south": 51.52134,
+        "north": 51.5768
+      }
+    },
+    {
+      "code": "E06000034",
+      "name": "Thurrock",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.21069,
+        "east": 0.54125,
+        "south": 51.45112,
+        "north": 51.56782
+      }
+    },
+    {
+      "code": "E06000035",
+      "name": "Medway",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.39735,
+        "east": 0.72351,
+        "south": 51.3279,
+        "north": 51.48725
+      }
+    },
+    {
+      "code": "E06000036",
+      "name": "Bracknell Forest",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.83737,
+        "east": -0.63055,
+        "south": 51.33196,
+        "north": 51.46872
+      }
+    },
+    {
+      "code": "E06000037",
+      "name": "West Berkshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.58806,
+        "east": -0.9817,
+        "south": 51.32896,
+        "north": 51.56371
+      }
+    },
+    {
+      "code": "E06000038",
+      "name": "Reading",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.05297,
+        "east": -0.92856,
+        "south": 51.40975,
+        "north": 51.49309
+      }
+    },
+    {
+      "code": "E06000039",
+      "name": "Slough",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.66014,
+        "east": -0.49002,
+        "south": 51.46798,
+        "north": 51.5389
+      }
+    },
+    {
+      "code": "E06000040",
+      "name": "Windsor and Maidenhead",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.85391,
+        "east": -0.52278,
+        "south": 51.38287,
+        "north": 51.57783
+      }
+    },
+    {
+      "code": "E06000041",
+      "name": "Wokingham",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.01188,
+        "east": -0.78884,
+        "south": 51.35208,
+        "north": 51.56213
+      }
+    },
+    {
+      "code": "E06000042",
+      "name": "Milton Keynes",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.88732,
+        "east": -0.59181,
+        "south": 51.96925,
+        "north": 52.19636
+      }
+    },
+    {
+      "code": "E06000043",
+      "name": "Brighton and Hove",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.24497,
+        "east": -0.016,
+        "south": 50.79908,
+        "north": 50.89238
+      }
+    },
+    {
+      "code": "E06000044",
+      "name": "Portsmouth",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.17202,
+        "east": -1.02064,
+        "south": 50.75016,
+        "north": 50.8593
+      }
+    },
+    {
+      "code": "E06000045",
+      "name": "Southampton",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.47733,
+        "east": -1.32198,
+        "south": 50.87992,
+        "north": 50.95613
+      }
+    },
+    {
+      "code": "E06000046",
+      "name": "Isle of Wight",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.58654,
+        "east": -1.0696,
+        "south": 50.57493,
+        "north": 50.76733
+      }
+    },
+    {
+      "code": "E06000047",
+      "name": "County Durham",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.35548,
+        "east": -1.24097,
+        "south": 54.45152,
+        "north": 54.91869
+      }
+    },
+    {
+      "code": "E06000049",
+      "name": "Cheshire East",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.75293,
+        "east": -1.97483,
+        "south": 52.94716,
+        "north": 53.38746
+      }
+    },
+    {
+      "code": "E06000050",
+      "name": "Cheshire West and Chester",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.12303,
+        "east": -2.34635,
+        "south": 52.98294,
+        "north": 53.3447
+      }
+    },
+    {
+      "code": "E06000051",
+      "name": "Shropshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.23555,
+        "east": -2.23289,
+        "south": 52.30628,
+        "north": 52.99841
+      }
+    },
+    {
+      "code": "E06000052",
+      "name": "Cornwall",
+      "country": "GBR",
+      "bounds": {
+        "west": -5.71702,
+        "east": -4.16639,
+        "south": 49.9587,
+        "north": 50.93127
+      }
+    },
+    {
+      "code": "E06000053",
+      "name": "Isles of Scilly",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.41867,
+        "east": -6.24461,
+        "south": 49.86479,
+        "north": 49.98065
+      }
+    },
+    {
+      "code": "E06000054",
+      "name": "Wiltshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.36559,
+        "east": -1.48571,
+        "south": 50.94499,
+        "north": 51.70315
+      }
+    },
+    {
+      "code": "E06000055",
+      "name": "Bedford",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.66866,
+        "east": -0.24072,
+        "south": 52.05454,
+        "north": 52.32295
+      }
+    },
+    {
+      "code": "E06000056",
+      "name": "Central Bedfordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.70216,
+        "east": -0.14393,
+        "south": 51.8051,
+        "north": 52.19093
+      }
+    },
+    {
+      "code": "E06000057",
+      "name": "Northumberland",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.68979,
+        "east": -1.46179,
+        "south": 54.78238,
+        "north": 55.81112
+      }
+    },
+    {
+      "code": "E06000058",
+      "name": "Bournemouth, Christchurch and Poole",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.04075,
+        "east": -1.68167,
+        "south": 50.68267,
+        "north": 50.80964
+      }
+    },
+    {
+      "code": "E06000059",
+      "name": "Dorset",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.9616,
+        "east": -1.79061,
+        "south": 50.51311,
+        "north": 51.08099
+      }
+    },
+    {
+      "code": "E06000060",
+      "name": "Buckinghamshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.14075,
+        "east": -0.4766,
+        "south": 51.48547,
+        "north": 52.08153
+      }
+    },
+    {
+      "code": "E06000061",
+      "name": "North Northamptonshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.90625,
+        "east": -0.34159,
+        "south": 52.19157,
+        "north": 52.64359
+      }
+    },
+    {
+      "code": "E06000062",
+      "name": "West Northamptonshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.33233,
+        "east": -0.70504,
+        "south": 51.97729,
+        "north": 52.47746
+      }
+    },
+    {
+      "code": "E06000063",
+      "name": "Cumberland",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.63979,
+        "east": -2.48234,
+        "south": 54.18823,
+        "north": 55.18898
+      }
+    },
+    {
+      "code": "E06000064",
+      "name": "Westmorland and Furness",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.27665,
+        "east": -2.159,
+        "south": 54.04427,
+        "north": 54.85645
+      }
+    },
+    {
+      "code": "E06000065",
+      "name": "North Yorkshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.56473,
+        "east": -0.21251,
+        "south": 53.62111,
+        "north": 54.56019
+      }
+    },
+    {
+      "code": "E06000066",
+      "name": "Somerset",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.83982,
+        "east": -2.24443,
+        "south": 50.82085,
+        "north": 51.32868
+      }
+    },
+    {
+      "code": "E07000008",
+      "name": "Cambridge",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.06864,
+        "east": 0.18455,
+        "south": 52.15794,
+        "north": 52.23723
+      }
+    },
+    {
+      "code": "E07000009",
+      "name": "East Cambridgeshire",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.03442,
+        "east": 0.51448,
+        "south": 52.15642,
+        "north": 52.51362
+      }
+    },
+    {
+      "code": "E07000010",
+      "name": "Fenland",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.19787,
+        "east": 0.23632,
+        "south": 52.38575,
+        "north": 52.74
+      }
+    },
+    {
+      "code": "E07000011",
+      "name": "Huntingdonshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.49989,
+        "east": 0.05121,
+        "south": 52.15874,
+        "north": 52.5833
+      }
+    },
+    {
+      "code": "E07000012",
+      "name": "South Cambridgeshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.2348,
+        "east": 0.42089,
+        "south": 52.00576,
+        "north": 52.35332
+      }
+    },
+    {
+      "code": "E07000032",
+      "name": "Amber Valley",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.61009,
+        "east": -1.30743,
+        "south": 52.92421,
+        "north": 53.13396
+      }
+    },
+    {
+      "code": "E07000033",
+      "name": "Bolsover",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.37825,
+        "east": -1.16649,
+        "south": 53.08099,
+        "north": 53.31295
+      }
+    },
+    {
+      "code": "E07000034",
+      "name": "Chesterfield",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.48417,
+        "east": -1.3013,
+        "south": 53.21247,
+        "north": 53.299
+      }
+    },
+    {
+      "code": "E07000035",
+      "name": "Derbyshire Dales",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.9185,
+        "east": -1.49537,
+        "south": 52.86869,
+        "north": 53.39191
+      }
+    },
+    {
+      "code": "E07000036",
+      "name": "Erewash",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.47985,
+        "east": -1.23845,
+        "south": 52.87236,
+        "north": 53.00362
+      }
+    },
+    {
+      "code": "E07000037",
+      "name": "High Peak",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.03411,
+        "east": -1.65382,
+        "south": 53.19472,
+        "north": 53.54043
+      }
+    },
+    {
+      "code": "E07000038",
+      "name": "North East Derbyshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.5993,
+        "east": -1.28201,
+        "south": 53.10336,
+        "north": 53.34199
+      }
+    },
+    {
+      "code": "E07000039",
+      "name": "South Derbyshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.74956,
+        "east": -1.31905,
+        "south": 52.6965,
+        "north": 52.94816
+      }
+    },
+    {
+      "code": "E07000040",
+      "name": "East Devon",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.58552,
+        "east": -2.88668,
+        "south": 50.60662,
+        "north": 50.90874
+      }
+    },
+    {
+      "code": "E07000041",
+      "name": "Exeter",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.57013,
+        "east": -3.45152,
+        "south": 50.67494,
+        "north": 50.76146
+      }
+    },
+    {
+      "code": "E07000042",
+      "name": "Mid Devon",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.92593,
+        "east": -3.14243,
+        "south": 50.70318,
+        "north": 51.03384
+      }
+    },
+    {
+      "code": "E07000043",
+      "name": "North Devon",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.26189,
+        "east": -3.59447,
+        "south": 50.87638,
+        "north": 51.24641
+      }
+    },
+    {
+      "code": "E07000044",
+      "name": "South Hams",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.18981,
+        "east": -3.50766,
+        "south": 50.2019,
+        "north": 50.54262
+      }
+    },
+    {
+      "code": "E07000045",
+      "name": "Teignbridge",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.88282,
+        "east": -3.42252,
+        "south": 50.46116,
+        "north": 50.76399
+      }
+    },
+    {
+      "code": "E07000046",
+      "name": "Torridge",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.68063,
+        "east": -3.88387,
+        "south": 50.64654,
+        "north": 51.20248
+      }
+    },
+    {
+      "code": "E07000047",
+      "name": "West Devon",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.33523,
+        "east": -3.73225,
+        "south": 50.43421,
+        "north": 50.87461
+      }
+    },
+    {
+      "code": "E07000061",
+      "name": "Eastbourne",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.20938,
+        "east": 0.33931,
+        "south": 50.73443,
+        "north": 50.81303
+      }
+    },
+    {
+      "code": "E07000062",
+      "name": "Hastings",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.50088,
+        "east": 0.65854,
+        "south": 50.8423,
+        "north": 50.89482
+      }
+    },
+    {
+      "code": "E07000063",
+      "name": "Lewes",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.13586,
+        "east": 0.15454,
+        "south": 50.75585,
+        "north": 51.0025
+      }
+    },
+    {
+      "code": "E07000064",
+      "name": "Rother",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.32159,
+        "east": 0.86789,
+        "south": 50.82035,
+        "north": 51.08365
+      }
+    },
+    {
+      "code": "E07000065",
+      "name": "Wealden",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.0362,
+        "east": 0.45016,
+        "south": 50.73849,
+        "north": 51.14745
+      }
+    },
+    {
+      "code": "E07000066",
+      "name": "Basildon",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.37513,
+        "east": 0.56879,
+        "south": 51.53002,
+        "north": 51.65121
+      }
+    },
+    {
+      "code": "E07000067",
+      "name": "Braintree",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.37961,
+        "east": 0.78229,
+        "south": 51.75042,
+        "north": 52.08704
+      }
+    },
+    {
+      "code": "E07000068",
+      "name": "Brentwood",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.1757,
+        "east": 0.41256,
+        "south": 51.5643,
+        "north": 51.71701
+      }
+    },
+    {
+      "code": "E07000069",
+      "name": "Castle Point",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.51808,
+        "east": 0.63686,
+        "south": 51.5078,
+        "north": 51.58825
+      }
+    },
+    {
+      "code": "E07000070",
+      "name": "Chelmsford",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.3322,
+        "east": 0.64674,
+        "south": 51.61668,
+        "north": 51.85748
+      }
+    },
+    {
+      "code": "E07000071",
+      "name": "Colchester",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.69953,
+        "east": 1.02683,
+        "south": 51.77012,
+        "north": 51.97717
+      }
+    },
+    {
+      "code": "E07000072",
+      "name": "Epping Forest",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.01973,
+        "east": 0.34751,
+        "south": 51.60442,
+        "north": 51.82215
+      }
+    },
+    {
+      "code": "E07000073",
+      "name": "Harlow",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.05407,
+        "east": 0.16802,
+        "south": 51.73469,
+        "north": 51.79721
+      }
+    },
+    {
+      "code": "E07000074",
+      "name": "Maldon",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.58913,
+        "east": 0.9491,
+        "south": 51.62133,
+        "north": 51.82913
+      }
+    },
+    {
+      "code": "E07000075",
+      "name": "Rochford",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.54903,
+        "east": 0.95839,
+        "south": 51.54013,
+        "north": 51.63682
+      }
+    },
+    {
+      "code": "E07000076",
+      "name": "Tendring",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.93113,
+        "east": 1.29605,
+        "south": 51.76951,
+        "north": 51.95965
+      }
+    },
+    {
+      "code": "E07000077",
+      "name": "Uttlesford",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.06816,
+        "east": 0.51926,
+        "south": 51.76732,
+        "north": 52.09267
+      }
+    },
+    {
+      "code": "E07000078",
+      "name": "Cheltenham",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.143,
+        "east": -2.01022,
+        "south": 51.85834,
+        "north": 51.93888
+      }
+    },
+    {
+      "code": "E07000079",
+      "name": "Cotswold",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.32357,
+        "east": -1.61519,
+        "south": 51.57759,
+        "north": 52.11258
+      }
+    },
+    {
+      "code": "E07000080",
+      "name": "Forest of Dean",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.68715,
+        "east": -2.26755,
+        "south": 51.60935,
+        "north": 52.02382
+      }
+    },
+    {
+      "code": "E07000081",
+      "name": "Gloucester",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.30135,
+        "east": -2.17726,
+        "south": 51.80758,
+        "north": 51.88522
+      }
+    },
+    {
+      "code": "E07000082",
+      "name": "Stroud",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.53475,
+        "east": -2.06862,
+        "south": 51.58983,
+        "north": 51.8501
+      }
+    },
+    {
+      "code": "E07000083",
+      "name": "Tewkesbury",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.35273,
+        "east": -1.80168,
+        "south": 51.81937,
+        "north": 52.05059
+      }
+    },
+    {
+      "code": "E07000084",
+      "name": "Basingstoke and Deane",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.46015,
+        "east": -0.9748,
+        "south": 51.13354,
+        "north": 51.38391
+      }
+    },
+    {
+      "code": "E07000085",
+      "name": "East Hampshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.13179,
+        "east": -0.74459,
+        "south": 50.86725,
+        "north": 51.21274
+      }
+    },
+    {
+      "code": "E07000086",
+      "name": "Eastleigh",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.39964,
+        "east": -1.25815,
+        "south": 50.84885,
+        "north": 51.00436
+      }
+    },
+    {
+      "code": "E07000087",
+      "name": "Fareham",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.30854,
+        "east": -1.11229,
+        "south": 50.80928,
+        "north": 50.89855
+      }
+    },
+    {
+      "code": "E07000088",
+      "name": "Gosport",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.21418,
+        "east": -1.11195,
+        "south": 50.77328,
+        "north": 50.83932
+      }
+    },
+    {
+      "code": "E07000089",
+      "name": "Hart",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.00228,
+        "east": -0.7629,
+        "south": 51.18601,
+        "north": 51.36632
+      }
+    },
+    {
+      "code": "E07000090",
+      "name": "Havant",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.05477,
+        "east": -0.92645,
+        "south": 50.77653,
+        "north": 50.90965
+      }
+    },
+    {
+      "code": "E07000091",
+      "name": "New Forest",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.95722,
+        "east": -1.30702,
+        "south": 50.70608,
+        "north": 51.00942
+      }
+    },
+    {
+      "code": "E07000092",
+      "name": "Rushmoor",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.80752,
+        "east": -0.7294,
+        "south": 51.23046,
+        "north": 51.32008
+      }
+    },
+    {
+      "code": "E07000093",
+      "name": "Test Valley",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.6941,
+        "east": -1.30882,
+        "south": 50.92822,
+        "north": 51.33936
+      }
+    },
+    {
+      "code": "E07000094",
+      "name": "Winchester",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.4565,
+        "east": -1.03389,
+        "south": 50.85509,
+        "north": 51.19703
+      }
+    },
+    {
+      "code": "E07000095",
+      "name": "Broxbourne",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.11408,
+        "east": 0.01451,
+        "south": 51.68088,
+        "north": 51.78052
+      }
+    },
+    {
+      "code": "E07000096",
+      "name": "Dacorum",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.74574,
+        "east": -0.40486,
+        "south": 51.67983,
+        "north": 51.85816
+      }
+    },
+    {
+      "code": "E07000098",
+      "name": "Hertsmere",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.38683,
+        "east": -0.16312,
+        "south": 51.6235,
+        "north": 51.73815
+      }
+    },
+    {
+      "code": "E07000099",
+      "name": "North Hertfordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.4063,
+        "east": 0.07432,
+        "south": 51.83323,
+        "north": 52.08044
+      }
+    },
+    {
+      "code": "E07000102",
+      "name": "Three Rivers",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.53926,
+        "east": -0.36262,
+        "south": 51.5996,
+        "north": 51.74084
+      }
+    },
+    {
+      "code": "E07000103",
+      "name": "Watford",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.43954,
+        "east": -0.36877,
+        "south": 51.63712,
+        "north": 51.70194
+      }
+    },
+    {
+      "code": "E07000105",
+      "name": "Ashford",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.59033,
+        "east": 1.02924,
+        "south": 50.98949,
+        "north": 51.27025
+      }
+    },
+    {
+      "code": "E07000106",
+      "name": "Canterbury",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.95042,
+        "east": 1.24983,
+        "south": 51.17717,
+        "north": 51.38017
+      }
+    },
+    {
+      "code": "E07000107",
+      "name": "Dartford",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.14916,
+        "east": 0.34457,
+        "south": 51.38654,
+        "north": 51.47966
+      }
+    },
+    {
+      "code": "E07000108",
+      "name": "Dover",
+      "country": "GBR",
+      "bounds": {
+        "west": 1.14278,
+        "east": 1.40555,
+        "south": 51.09719,
+        "north": 51.33228
+      }
+    },
+    {
+      "code": "E07000109",
+      "name": "Gravesham",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.31069,
+        "east": 0.4912,
+        "south": 51.32501,
+        "north": 51.46489
+      }
+    },
+    {
+      "code": "E07000110",
+      "name": "Maidstone",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.37818,
+        "east": 0.79647,
+        "south": 51.13394,
+        "north": 51.33874
+      }
+    },
+    {
+      "code": "E07000111",
+      "name": "Sevenoaks",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.03359,
+        "east": 0.34473,
+        "south": 51.1318,
+        "north": 51.41798
+      }
+    },
+    {
+      "code": "E07000112",
+      "name": "Folkestone and Hythe",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.77703,
+        "east": 1.22114,
+        "south": 50.91092,
+        "north": 51.205
+      }
+    },
+    {
+      "code": "E07000113",
+      "name": "Swale",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.60098,
+        "east": 1.0171,
+        "south": 51.22435,
+        "north": 51.44779
+      }
+    },
+    {
+      "code": "E07000114",
+      "name": "Thanet",
+      "country": "GBR",
+      "bounds": {
+        "west": 1.21078,
+        "east": 1.44955,
+        "south": 51.30799,
+        "north": 51.39378
+      }
+    },
+    {
+      "code": "E07000115",
+      "name": "Tonbridge and Malling",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.20054,
+        "east": 0.52677,
+        "south": 51.17469,
+        "north": 51.36808
+      }
+    },
+    {
+      "code": "E07000116",
+      "name": "Tunbridge Wells",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.15003,
+        "east": 0.64667,
+        "south": 51.00345,
+        "north": 51.2016
+      }
+    },
+    {
+      "code": "E07000117",
+      "name": "Burnley",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.34231,
+        "east": -2.11228,
+        "south": 53.72301,
+        "north": 53.8252
+      }
+    },
+    {
+      "code": "E07000118",
+      "name": "Chorley",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.82423,
+        "east": -2.51132,
+        "south": 53.5936,
+        "north": 53.75141
+      }
+    },
+    {
+      "code": "E07000119",
+      "name": "Fylde",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.05741,
+        "east": -2.78049,
+        "south": 53.73145,
+        "north": 53.8645
+      }
+    },
+    {
+      "code": "E07000120",
+      "name": "Hyndburn",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.46581,
+        "east": -2.31372,
+        "south": 53.70473,
+        "north": 53.81662
+      }
+    },
+    {
+      "code": "E07000121",
+      "name": "Lancaster",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.92443,
+        "east": -2.45878,
+        "south": 53.91808,
+        "north": 54.23957
+      }
+    },
+    {
+      "code": "E07000122",
+      "name": "Pendle",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.33364,
+        "east": -2.04508,
+        "south": 53.80571,
+        "north": 53.95221
+      }
+    },
+    {
+      "code": "E07000123",
+      "name": "Preston",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.82599,
+        "east": -2.59549,
+        "south": 53.74839,
+        "north": 53.89615
+      }
+    },
+    {
+      "code": "E07000124",
+      "name": "Ribble Valley",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.65083,
+        "east": -2.18446,
+        "south": 53.7562,
+        "north": 54.04909
+      }
+    },
+    {
+      "code": "E07000125",
+      "name": "Rossendale",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.411,
+        "east": -2.14525,
+        "south": 53.61448,
+        "north": 53.75504
+      }
+    },
+    {
+      "code": "E07000126",
+      "name": "South Ribble",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.85539,
+        "east": -2.54558,
+        "south": 53.67142,
+        "north": 53.78279
+      }
+    },
+    {
+      "code": "E07000127",
+      "name": "West Lancashire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.0467,
+        "east": -2.68946,
+        "south": 53.48278,
+        "north": 53.73397
+      }
+    },
+    {
+      "code": "E07000128",
+      "name": "Wyre",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.05094,
+        "east": -2.61346,
+        "south": 53.81999,
+        "north": 53.98024
+      }
+    },
+    {
+      "code": "E07000129",
+      "name": "Blaby",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.33911,
+        "east": -1.05939,
+        "south": 52.49321,
+        "north": 52.6644
+      }
+    },
+    {
+      "code": "E07000130",
+      "name": "Charnwood",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.33507,
+        "east": -0.94724,
+        "south": 52.65387,
+        "north": 52.82473
+      }
+    },
+    {
+      "code": "E07000131",
+      "name": "Harborough",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.30595,
+        "east": -0.71337,
+        "south": 52.39217,
+        "north": 52.68494
+      }
+    },
+    {
+      "code": "E07000132",
+      "name": "Hinckley and Bosworth",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.57136,
+        "east": -1.19968,
+        "south": 52.50105,
+        "north": 52.71529
+      }
+    },
+    {
+      "code": "E07000133",
+      "name": "Melton",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.04662,
+        "east": -0.6641,
+        "south": 52.64597,
+        "north": 52.97768
+      }
+    },
+    {
+      "code": "E07000134",
+      "name": "North West Leicestershire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.59754,
+        "east": -1.24714,
+        "south": 52.66396,
+        "north": 52.87708
+      }
+    },
+    {
+      "code": "E07000135",
+      "name": "Oadby and Wigston",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.14451,
+        "east": -1.04136,
+        "south": 52.55621,
+        "north": 52.61807
+      }
+    },
+    {
+      "code": "E07000136",
+      "name": "Boston",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.2467,
+        "east": 0.19957,
+        "south": 52.8629,
+        "north": 53.08674
+      }
+    },
+    {
+      "code": "E07000137",
+      "name": "East Lindsey",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.31746,
+        "east": 0.35563,
+        "south": 53.00112,
+        "north": 53.52971
+      }
+    },
+    {
+      "code": "E07000138",
+      "name": "Lincoln",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.62262,
+        "east": -0.49391,
+        "south": 53.18633,
+        "north": 53.25456
+      }
+    },
+    {
+      "code": "E07000139",
+      "name": "North Kesteven",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.76414,
+        "east": -0.18978,
+        "south": 52.887,
+        "north": 53.25801
+      }
+    },
+    {
+      "code": "E07000140",
+      "name": "South Holland",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.30681,
+        "east": 0.27223,
+        "south": 52.65151,
+        "north": 52.92885
+      }
+    },
+    {
+      "code": "E07000141",
+      "name": "South Kesteven",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.80427,
+        "east": -0.2125,
+        "south": 52.64024,
+        "north": 53.05992
+      }
+    },
+    {
+      "code": "E07000142",
+      "name": "West Lindsey",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.81997,
+        "east": -0.13184,
+        "south": 53.17889,
+        "north": 53.61639
+      }
+    },
+    {
+      "code": "E07000143",
+      "name": "Breckland",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.53052,
+        "east": 1.10832,
+        "south": 52.36952,
+        "north": 52.81113
+      }
+    },
+    {
+      "code": "E07000144",
+      "name": "Broadland",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.99037,
+        "east": 1.67799,
+        "south": 52.55548,
+        "north": 52.83061
+      }
+    },
+    {
+      "code": "E07000145",
+      "name": "Great Yarmouth",
+      "country": "GBR",
+      "bounds": {
+        "west": 1.54493,
+        "east": 1.74578,
+        "south": 52.52613,
+        "north": 52.74259
+      }
+    },
+    {
+      "code": "E07000146",
+      "name": "King's Lynn and West Norfolk",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.15406,
+        "east": 0.82157,
+        "south": 52.43645,
+        "north": 52.98786
+      }
+    },
+    {
+      "code": "E07000147",
+      "name": "North Norfolk",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.70794,
+        "east": 1.67485,
+        "south": 52.67987,
+        "north": 52.98037
+      }
+    },
+    {
+      "code": "E07000148",
+      "name": "Norwich",
+      "country": "GBR",
+      "bounds": {
+        "west": 1.20389,
+        "east": 1.5406,
+        "south": 52.55542,
+        "north": 52.68494
+      }
+    },
+    {
+      "code": "E07000149",
+      "name": "South Norfolk",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.94703,
+        "east": 1.68222,
+        "south": 52.35539,
+        "north": 52.67853
+      }
+    },
+    {
+      "code": "E07000170",
+      "name": "Ashfield",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.34459,
+        "east": -1.16425,
+        "south": 53.00814,
+        "north": 53.17146
+      }
+    },
+    {
+      "code": "E07000171",
+      "name": "Bassetlaw",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.21303,
+        "east": -0.74787,
+        "south": 53.19668,
+        "north": 53.50252
+      }
+    },
+    {
+      "code": "E07000172",
+      "name": "Broxtowe",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.33639,
+        "east": -1.1823,
+        "south": 52.89229,
+        "north": 53.05448
+      }
+    },
+    {
+      "code": "E07000173",
+      "name": "Gedling",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.23129,
+        "east": -1.00709,
+        "south": 52.94818,
+        "north": 53.10396
+      }
+    },
+    {
+      "code": "E07000174",
+      "name": "Mansfield",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.26007,
+        "east": -1.09476,
+        "south": 53.11481,
+        "north": 53.23562
+      }
+    },
+    {
+      "code": "E07000175",
+      "name": "Newark and Sherwood",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.17789,
+        "east": -0.66641,
+        "south": 52.95699,
+        "north": 53.26104
+      }
+    },
+    {
+      "code": "E07000176",
+      "name": "Rushcliffe",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.27528,
+        "east": -0.81516,
+        "south": 52.78946,
+        "north": 53.03593
+      }
+    },
+    {
+      "code": "E07000177",
+      "name": "Cherwell",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.52283,
+        "east": -1.04712,
+        "south": 51.78097,
+        "north": 52.16849
+      }
+    },
+    {
+      "code": "E07000178",
+      "name": "Oxford",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.3042,
+        "east": -1.17579,
+        "south": 51.71098,
+        "north": 51.79627
+      }
+    },
+    {
+      "code": "E07000179",
+      "name": "South Oxfordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.29022,
+        "east": -0.87003,
+        "south": 51.4595,
+        "north": 51.81378
+      }
+    },
+    {
+      "code": "E07000180",
+      "name": "Vale of White Horse",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.70019,
+        "east": -1.20227,
+        "south": 51.51829,
+        "north": 51.79013
+      }
+    },
+    {
+      "code": "E07000181",
+      "name": "West Oxfordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.71949,
+        "east": -1.28614,
+        "south": 51.68385,
+        "north": 51.99684
+      }
+    },
+    {
+      "code": "E07000192",
+      "name": "Cannock Chase",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.05463,
+        "east": -1.91081,
+        "south": 52.6397,
+        "north": 52.7742
+      }
+    },
+    {
+      "code": "E07000193",
+      "name": "East Staffordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.04354,
+        "east": -1.58538,
+        "south": 52.72986,
+        "north": 53.046
+      }
+    },
+    {
+      "code": "E07000194",
+      "name": "Lichfield",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.96323,
+        "east": -1.58629,
+        "south": 52.58491,
+        "north": 52.80781
+      }
+    },
+    {
+      "code": "E07000195",
+      "name": "Newcastle-under-Lyme",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.47078,
+        "east": -2.18115,
+        "south": 52.874,
+        "north": 53.11582
+      }
+    },
+    {
+      "code": "E07000196",
+      "name": "South Staffordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.32548,
+        "east": -1.98377,
+        "south": 52.42326,
+        "north": 52.78643
+      }
+    },
+    {
+      "code": "E07000197",
+      "name": "Stafford",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.41635,
+        "east": -1.9333,
+        "south": 52.71506,
+        "north": 52.98058
+      }
+    },
+    {
+      "code": "E07000198",
+      "name": "Staffordshire Moorlands",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.21131,
+        "east": -1.77565,
+        "south": 52.91665,
+        "north": 53.22624
+      }
+    },
+    {
+      "code": "E07000199",
+      "name": "Tamworth",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.73584,
+        "east": -1.63294,
+        "south": 52.58865,
+        "north": 52.65752
+      }
+    },
+    {
+      "code": "E07000200",
+      "name": "Babergh",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.62689,
+        "east": 1.27906,
+        "south": 51.94902,
+        "north": 52.18131
+      }
+    },
+    {
+      "code": "E07000202",
+      "name": "Ipswich",
+      "country": "GBR",
+      "bounds": {
+        "west": 1.10728,
+        "east": 1.22361,
+        "south": 52.02077,
+        "north": 52.09447
+      }
+    },
+    {
+      "code": "E07000203",
+      "name": "Mid Suffolk",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.79758,
+        "east": 1.40951,
+        "south": 52.06514,
+        "north": 52.40441
+      }
+    },
+    {
+      "code": "E07000207",
+      "name": "Elmbridge",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.48119,
+        "east": -0.30737,
+        "south": 51.29488,
+        "north": 51.41204
+      }
+    },
+    {
+      "code": "E07000208",
+      "name": "Epsom and Ewell",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.30619,
+        "east": -0.21726,
+        "south": 51.29233,
+        "north": 51.38017
+      }
+    },
+    {
+      "code": "E07000209",
+      "name": "Guildford",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.74834,
+        "east": -0.38719,
+        "south": 51.17318,
+        "north": 51.33151
+      }
+    },
+    {
+      "code": "E07000210",
+      "name": "Mole Valley",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.43844,
+        "east": -0.17654,
+        "south": 51.1052,
+        "north": 51.33508
+      }
+    },
+    {
+      "code": "E07000211",
+      "name": "Reigate and Banstead",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.27223,
+        "east": -0.1243,
+        "south": 51.1596,
+        "north": 51.3436
+      }
+    },
+    {
+      "code": "E07000212",
+      "name": "Runnymede",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.61963,
+        "east": -0.45799,
+        "south": 51.33886,
+        "north": 51.45099
+      }
+    },
+    {
+      "code": "E07000213",
+      "name": "Spelthorne",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.54061,
+        "east": -0.38335,
+        "south": 51.37844,
+        "north": 51.47153
+      }
+    },
+    {
+      "code": "E07000214",
+      "name": "Surrey Heath",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.77547,
+        "east": -0.54849,
+        "south": 51.27928,
+        "north": 51.39241
+      }
+    },
+    {
+      "code": "E07000215",
+      "name": "Tandridge",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.15496,
+        "east": 0.05824,
+        "south": 51.13677,
+        "north": 51.33872
+      }
+    },
+    {
+      "code": "E07000216",
+      "name": "Waverley",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.84893,
+        "east": -0.41324,
+        "south": 51.07149,
+        "north": 51.24506
+      }
+    },
+    {
+      "code": "E07000217",
+      "name": "Woking",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.64996,
+        "east": -0.46098,
+        "south": 51.2655,
+        "north": 51.34963
+      }
+    },
+    {
+      "code": "E07000218",
+      "name": "North Warwickshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.78846,
+        "east": -1.45999,
+        "south": 52.43547,
+        "north": 52.68726
+      }
+    },
+    {
+      "code": "E07000219",
+      "name": "Nuneaton and Bedworth",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.55614,
+        "east": -1.40281,
+        "south": 52.45009,
+        "north": 52.55198
+      }
+    },
+    {
+      "code": "E07000220",
+      "name": "Rugby",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.46499,
+        "east": -1.17213,
+        "south": 52.25273,
+        "north": 52.53448
+      }
+    },
+    {
+      "code": "E07000221",
+      "name": "Stratford-on-Avon",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.96197,
+        "east": -1.2317,
+        "south": 51.9554,
+        "north": 52.36809
+      }
+    },
+    {
+      "code": "E07000222",
+      "name": "Warwick",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.78013,
+        "east": -1.40608,
+        "south": 52.21372,
+        "north": 52.3893
+      }
+    },
+    {
+      "code": "E07000223",
+      "name": "Adur",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.37151,
+        "east": -0.21529,
+        "south": 50.81742,
+        "north": 50.87474
+      }
+    },
+    {
+      "code": "E07000224",
+      "name": "Arun",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.76479,
+        "east": -0.36353,
+        "south": 50.75665,
+        "north": 50.90586
+      }
+    },
+    {
+      "code": "E07000225",
+      "name": "Chichester",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.95759,
+        "east": -0.47319,
+        "south": 50.72244,
+        "north": 51.09444
+      }
+    },
+    {
+      "code": "E07000226",
+      "name": "Crawley",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.2555,
+        "east": -0.13296,
+        "south": 51.08481,
+        "north": 51.1673
+      }
+    },
+    {
+      "code": "E07000227",
+      "name": "Horsham",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.56902,
+        "east": -0.2,
+        "south": 50.86216,
+        "north": 51.14311
+      }
+    },
+    {
+      "code": "E07000228",
+      "name": "Mid Sussex",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.24908,
+        "east": 0.04454,
+        "south": 50.86789,
+        "north": 51.14275
+      }
+    },
+    {
+      "code": "E07000229",
+      "name": "Worthing",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.44653,
+        "east": -0.33266,
+        "south": 50.80314,
+        "north": 50.86322
+      }
+    },
+    {
+      "code": "E07000234",
+      "name": "Bromsgrove",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.16771,
+        "east": -1.84547,
+        "south": 52.27806,
+        "north": 52.44528
+      }
+    },
+    {
+      "code": "E07000235",
+      "name": "Malvern Hills",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.66321,
+        "east": -2.14875,
+        "south": 51.96656,
+        "north": 52.36855
+      }
+    },
+    {
+      "code": "E07000236",
+      "name": "Redditch",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.01891,
+        "east": -1.87521,
+        "south": 52.23527,
+        "north": 52.32418
+      }
+    },
+    {
+      "code": "E07000237",
+      "name": "Worcester",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.2632,
+        "east": -2.15678,
+        "south": 52.16165,
+        "north": 52.23141
+      }
+    },
+    {
+      "code": "E07000238",
+      "name": "Wychavon",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.27605,
+        "east": -1.7574,
+        "south": 51.99942,
+        "north": 52.36116
+      }
+    },
+    {
+      "code": "E07000239",
+      "name": "Wyre Forest",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.43651,
+        "east": -2.11921,
+        "south": 52.31485,
+        "north": 52.45532
+      }
+    },
+    {
+      "code": "E07000240",
+      "name": "St Albans",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.44058,
+        "east": -0.24158,
+        "south": 51.68759,
+        "north": 51.84961
+      }
+    },
+    {
+      "code": "E07000241",
+      "name": "Welwyn Hatfield",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.27754,
+        "east": -0.09214,
+        "south": 51.68551,
+        "north": 51.86044
+      }
+    },
+    {
+      "code": "E07000242",
+      "name": "East Hertfordshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.1836,
+        "east": 0.19561,
+        "south": 51.73427,
+        "north": 51.99717
+      }
+    },
+    {
+      "code": "E07000243",
+      "name": "Stevenage",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.23437,
+        "east": -0.14682,
+        "south": 51.86927,
+        "north": 51.93241
+      }
+    },
+    {
+      "code": "E07000244",
+      "name": "East Suffolk",
+      "country": "GBR",
+      "bounds": {
+        "west": 1.15784,
+        "east": 1.76371,
+        "south": 51.93237,
+        "north": 52.55026
+      }
+    },
+    {
+      "code": "E07000245",
+      "name": "West Suffolk",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.33994,
+        "east": 0.96747,
+        "south": 52.05385,
+        "north": 52.46254
+      }
+    },
+    {
+      "code": "E08000001",
+      "name": "Bolton",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.62861,
+        "east": -2.33699,
+        "south": 53.52288,
+        "north": 53.64605
+      }
+    },
+    {
+      "code": "E08000002",
+      "name": "Bury",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.38346,
+        "east": -2.23416,
+        "south": 53.51202,
+        "north": 53.66708
+      }
+    },
+    {
+      "code": "E08000003",
+      "name": "Manchester",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.31992,
+        "east": -2.14686,
+        "south": 53.34012,
+        "north": 53.54461
+      }
+    },
+    {
+      "code": "E08000004",
+      "name": "Oldham",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.18601,
+        "east": -1.90962,
+        "south": 53.49113,
+        "north": 53.62417
+      }
+    },
+    {
+      "code": "E08000005",
+      "name": "Rochdale",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.28244,
+        "east": -2.02682,
+        "south": 53.52906,
+        "north": 53.68573
+      }
+    },
+    {
+      "code": "E08000006",
+      "name": "Salford",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.48971,
+        "east": -2.24523,
+        "south": 53.41589,
+        "north": 53.54225
+      }
+    },
+    {
+      "code": "E08000007",
+      "name": "Stockport",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.24683,
+        "east": -1.99233,
+        "south": 53.3272,
+        "north": 53.45494
+      }
+    },
+    {
+      "code": "E08000008",
+      "name": "Tameside",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.16966,
+        "east": -1.96339,
+        "south": 53.42597,
+        "north": 53.53139
+      }
+    },
+    {
+      "code": "E08000009",
+      "name": "Trafford",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.47844,
+        "east": -2.25302,
+        "south": 53.35743,
+        "north": 53.48036
+      }
+    },
+    {
+      "code": "E08000010",
+      "name": "Wigan",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.73042,
+        "east": -2.41454,
+        "south": 53.44609,
+        "north": 53.60829
+      }
+    },
+    {
+      "code": "E08000011",
+      "name": "Knowsley",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.92262,
+        "east": -2.7434,
+        "south": 53.34666,
+        "north": 53.50385
+      }
+    },
+    {
+      "code": "E08000012",
+      "name": "Liverpool",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.00875,
+        "east": -2.81806,
+        "south": 53.3268,
+        "north": 53.47498
+      }
+    },
+    {
+      "code": "E08000013",
+      "name": "St. Helens",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.82496,
+        "east": -2.57666,
+        "south": 53.38539,
+        "north": 53.53137
+      }
+    },
+    {
+      "code": "E08000014",
+      "name": "Sefton",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.10479,
+        "east": -2.88123,
+        "south": 53.43837,
+        "north": 53.69832
+      }
+    },
+    {
+      "code": "E08000015",
+      "name": "Wirral",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.22902,
+        "east": -2.9288,
+        "south": 53.28931,
+        "north": 53.4429
+      }
+    },
+    {
+      "code": "E08000016",
+      "name": "Barnsley",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.82259,
+        "east": -1.27573,
+        "south": 53.43832,
+        "north": 53.61274
+      }
+    },
+    {
+      "code": "E08000017",
+      "name": "Doncaster",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.34873,
+        "east": -0.86534,
+        "south": 53.40588,
+        "north": 53.66106
+      }
+    },
+    {
+      "code": "E08000018",
+      "name": "Rotherham",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.45679,
+        "east": -1.11514,
+        "south": 53.30165,
+        "north": 53.51522
+      }
+    },
+    {
+      "code": "E08000019",
+      "name": "Sheffield",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.80147,
+        "east": -1.32467,
+        "south": 53.30453,
+        "north": 53.50312
+      }
+    },
+    {
+      "code": "E08000021",
+      "name": "Newcastle upon Tyne",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.77569,
+        "east": -1.53084,
+        "south": 54.96001,
+        "north": 55.07939
+      }
+    },
+    {
+      "code": "E08000022",
+      "name": "North Tyneside",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.63971,
+        "east": -1.40397,
+        "south": 54.98296,
+        "north": 55.07494
+      }
+    },
+    {
+      "code": "E08000023",
+      "name": "South Tyneside",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.53421,
+        "east": -1.35328,
+        "south": 54.92837,
+        "north": 55.0113
+      }
+    },
+    {
+      "code": "E08000024",
+      "name": "Sunderland",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.56889,
+        "east": -1.34747,
+        "south": 54.79906,
+        "north": 54.94418
+      }
+    },
+    {
+      "code": "E08000025",
+      "name": "Birmingham",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.03364,
+        "east": -1.72885,
+        "south": 52.38108,
+        "north": 52.60872
+      }
+    },
+    {
+      "code": "E08000026",
+      "name": "Coventry",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.61445,
+        "east": -1.42394,
+        "south": 52.36389,
+        "north": 52.4648
+      }
+    },
+    {
+      "code": "E08000027",
+      "name": "Dudley",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.19175,
+        "east": -2.0115,
+        "south": 52.42605,
+        "north": 52.55821
+      }
+    },
+    {
+      "code": "E08000028",
+      "name": "Sandwell",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.09707,
+        "east": -1.91816,
+        "south": 52.46074,
+        "north": 52.56909
+      }
+    },
+    {
+      "code": "E08000029",
+      "name": "Solihull",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.87202,
+        "east": -1.59285,
+        "south": 52.34774,
+        "north": 52.51449
+      }
+    },
+    {
+      "code": "E08000030",
+      "name": "Walsall",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.07779,
+        "east": -1.87256,
+        "south": 52.54731,
+        "north": 52.66273
+      }
+    },
+    {
+      "code": "E08000031",
+      "name": "Wolverhampton",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.20688,
+        "east": -2.04802,
+        "south": 52.54394,
+        "north": 52.63791
+      }
+    },
+    {
+      "code": "E08000032",
+      "name": "Bradford",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.06122,
+        "east": -1.64033,
+        "south": 53.72436,
+        "north": 53.96314
+      }
+    },
+    {
+      "code": "E08000033",
+      "name": "Calderdale",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.17329,
+        "east": -1.72722,
+        "south": 53.61535,
+        "north": 53.82562
+      }
+    },
+    {
+      "code": "E08000034",
+      "name": "Kirklees",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.00947,
+        "east": -1.57102,
+        "south": 53.51982,
+        "north": 53.76485
+      }
+    },
+    {
+      "code": "E08000035",
+      "name": "Leeds",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.80042,
+        "east": -1.2904,
+        "south": 53.69898,
+        "north": 53.94589
+      }
+    },
+    {
+      "code": "E08000036",
+      "name": "Wakefield",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.62488,
+        "east": -1.19877,
+        "south": 53.57537,
+        "north": 53.74167
+      }
+    },
+    {
+      "code": "E08000037",
+      "name": "Gateshead",
+      "country": "GBR",
+      "bounds": {
+        "west": -1.85272,
+        "east": -1.51036,
+        "south": 54.87777,
+        "north": 54.98427
+      }
+    },
+    {
+      "code": "E09000001",
+      "name": "City of London",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.1138,
+        "east": -0.07281,
+        "south": 51.50783,
+        "north": 51.52331
+      }
+    },
+    {
+      "code": "E09000002",
+      "name": "Barking and Dagenham",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.06668,
+        "east": 0.19017,
+        "south": 51.51201,
+        "north": 51.59944
+      }
+    },
+    {
+      "code": "E09000003",
+      "name": "Barnet",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.30557,
+        "east": -0.12909,
+        "south": 51.55519,
+        "north": 51.67017
+      }
+    },
+    {
+      "code": "E09000004",
+      "name": "Bexley",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.07467,
+        "east": 0.21767,
+        "south": 51.40843,
+        "north": 51.51322
+      }
+    },
+    {
+      "code": "E09000005",
+      "name": "Brent",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.33556,
+        "east": -0.19147,
+        "south": 51.52764,
+        "north": 51.60037
+      }
+    },
+    {
+      "code": "E09000006",
+      "name": "Bromley",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.08108,
+        "east": 0.16238,
+        "south": 51.28935,
+        "north": 51.44433
+      }
+    },
+    {
+      "code": "E09000007",
+      "name": "Camden",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.21349,
+        "east": -0.10529,
+        "south": 51.51268,
+        "north": 51.57296
+      }
+    },
+    {
+      "code": "E09000008",
+      "name": "Croydon",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.16188,
+        "east": 0.00331,
+        "south": 51.28679,
+        "north": 51.42324
+      }
+    },
+    {
+      "code": "E09000009",
+      "name": "Ealing",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.41955,
+        "east": -0.24513,
+        "south": 51.49048,
+        "north": 51.55966
+      }
+    },
+    {
+      "code": "E09000010",
+      "name": "Enfield",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.18587,
+        "east": -0.00894,
+        "south": 51.60565,
+        "north": 51.69188
+      }
+    },
+    {
+      "code": "E09000011",
+      "name": "Greenwich",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.02637,
+        "east": 0.12419,
+        "south": 51.4237,
+        "north": 51.51145
+      }
+    },
+    {
+      "code": "E09000012",
+      "name": "Hackney",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.10437,
+        "east": -0.01655,
+        "south": 51.51985,
+        "north": 51.57779
+      }
+    },
+    {
+      "code": "E09000013",
+      "name": "Hammersmith and Fulham",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.25506,
+        "east": -0.17936,
+        "south": 51.46484,
+        "north": 51.53274
+      }
+    },
+    {
+      "code": "E09000014",
+      "name": "Haringey",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.17123,
+        "east": -0.04139,
+        "south": 51.56467,
+        "north": 51.61122
+      }
+    },
+    {
+      "code": "E09000015",
+      "name": "Harrow",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.404,
+        "east": -0.26711,
+        "south": 51.55308,
+        "north": 51.64054
+      }
+    },
+    {
+      "code": "E09000016",
+      "name": "Havering",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.13818,
+        "east": 0.33402,
+        "south": 51.48771,
+        "north": 51.63174
+      }
+    },
+    {
+      "code": "E09000017",
+      "name": "Hillingdon",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.51024,
+        "east": -0.37615,
+        "south": 51.45329,
+        "north": 51.63174
+      }
+    },
+    {
+      "code": "E09000018",
+      "name": "Hounslow",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.46148,
+        "east": -0.24442,
+        "south": 51.42063,
+        "north": 51.50285
+      }
+    },
+    {
+      "code": "E09000019",
+      "name": "Islington",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.1424,
+        "east": -0.07633,
+        "south": 51.51855,
+        "north": 51.57551
+      }
+    },
+    {
+      "code": "E09000020",
+      "name": "Kensington and Chelsea",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.22873,
+        "east": -0.15002,
+        "south": 51.47739,
+        "north": 51.53032
+      }
+    },
+    {
+      "code": "E09000021",
+      "name": "Kingston upon Thames",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.33066,
+        "east": -0.23873,
+        "south": 51.32629,
+        "north": 51.43729
+      }
+    },
+    {
+      "code": "E09000022",
+      "name": "Lambeth",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.15121,
+        "east": -0.07829,
+        "south": 51.41099,
+        "north": 51.50849
+      }
+    },
+    {
+      "code": "E09000023",
+      "name": "Lewisham",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.07508,
+        "east": 0.03906,
+        "south": 51.41358,
+        "north": 51.49309
+      }
+    },
+    {
+      "code": "E09000024",
+      "name": "Merton",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.25424,
+        "east": -0.12414,
+        "south": 51.38018,
+        "north": 51.44146
+      }
+    },
+    {
+      "code": "E09000025",
+      "name": "Newham",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.02127,
+        "east": 0.0969,
+        "south": 51.49836,
+        "north": 51.56402
+      }
+    },
+    {
+      "code": "E09000026",
+      "name": "Redbridge",
+      "country": "GBR",
+      "bounds": {
+        "west": 0.00869,
+        "east": 0.14951,
+        "south": 51.54356,
+        "north": 51.62892
+      }
+    },
+    {
+      "code": "E09000027",
+      "name": "Richmond upon Thames",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.39291,
+        "east": -0.22292,
+        "south": 51.39144,
+        "north": 51.489
+      }
+    },
+    {
+      "code": "E09000028",
+      "name": "Southwark",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.11147,
+        "east": -0.03232,
+        "south": 51.4206,
+        "north": 51.50862
+      }
+    },
+    {
+      "code": "E09000029",
+      "name": "Sutton",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.2454,
+        "east": -0.11684,
+        "south": 51.32149,
+        "north": 51.39341
+      }
+    },
+    {
+      "code": "E09000030",
+      "name": "Tower Hamlets",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.07947,
+        "east": 0.00896,
+        "south": 51.48614,
+        "north": 51.54469
+      }
+    },
+    {
+      "code": "E09000031",
+      "name": "Waltham Forest",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.06218,
+        "east": 0.02574,
+        "south": 51.54992,
+        "north": 51.64653
+      }
+    },
+    {
+      "code": "E09000032",
+      "name": "Wandsworth",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.25911,
+        "east": -0.12631,
+        "south": 51.41775,
+        "north": 51.48504
+      }
+    },
+    {
+      "code": "E09000033",
+      "name": "Westminster",
+      "country": "GBR",
+      "bounds": {
+        "west": -0.21602,
+        "east": -0.11106,
+        "south": 51.48481,
+        "north": 51.53981
+      }
+    },
+    {
+      "code": "N09000001",
+      "name": "Antrim and Newtownabbey",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.49593,
+        "east": -5.86825,
+        "south": 54.56822,
+        "north": 54.81187
+      }
+    },
+    {
+      "code": "N09000002",
+      "name": "Armagh City, Banbridge and Craigavon",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.878,
+        "east": -6.01854,
+        "south": 54.17912,
+        "north": 54.59128
+      }
+    },
+    {
+      "code": "N09000003",
+      "name": "Belfast",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.0602,
+        "east": -5.80738,
+        "south": 54.53072,
+        "north": 54.665
+      }
+    },
+    {
+      "code": "N09000004",
+      "name": "Causeway Coast and Glens",
+      "country": "GBR",
+      "bounds": {
+        "west": -7.16588,
+        "east": -5.97693,
+        "south": 54.82027,
+        "north": 55.31295
+      }
+    },
+    {
+      "code": "N09000005",
+      "name": "Derry City and Strabane",
+      "country": "GBR",
+      "bounds": {
+        "west": -7.92101,
+        "east": -6.90215,
+        "south": 54.60758,
+        "north": 55.06724
+      }
+    },
+    {
+      "code": "N09000006",
+      "name": "Fermanagh and Omagh",
+      "country": "GBR",
+      "bounds": {
+        "west": -8.17748,
+        "east": -6.93597,
+        "south": 54.11333,
+        "north": 54.7805
+      }
+    },
+    {
+      "code": "N09000007",
+      "name": "Lisburn and Castlereagh",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.30463,
+        "east": -5.75747,
+        "south": 54.37048,
+        "north": 54.62437
+      }
+    },
+    {
+      "code": "N09000008",
+      "name": "Mid and East Antrim",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.50629,
+        "east": -5.68805,
+        "south": 54.68887,
+        "north": 55.0563
+      }
+    },
+    {
+      "code": "N09000009",
+      "name": "Mid Ulster",
+      "country": "GBR",
+      "bounds": {
+        "west": -7.36702,
+        "east": -6.4071,
+        "south": 54.3252,
+        "north": 54.95202
+      }
+    },
+    {
+      "code": "N09000010",
+      "name": "Newry, Mourne and Down",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.66898,
+        "east": -5.51597,
+        "south": 54.02276,
+        "north": 54.49567
+      }
+    },
+    {
+      "code": "N09000011",
+      "name": "Ards and North Down",
+      "country": "GBR",
+      "bounds": {
+        "west": -5.85851,
+        "east": -5.43279,
+        "south": 54.32434,
+        "north": 54.69906
+      }
+    },
+    {
+      "code": "S12000005",
+      "name": "Clackmannanshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.88396,
+        "east": -3.57141,
+        "south": 56.07836,
+        "north": 56.21723
+      }
+    },
+    {
+      "code": "S12000006",
+      "name": "Dumfries and Galloway",
+      "country": "GBR",
+      "bounds": {
+        "west": -5.18738,
+        "east": -2.85735,
+        "south": 54.63326,
+        "north": 55.46405
+      }
+    },
+    {
+      "code": "S12000008",
+      "name": "East Ayrshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.63859,
+        "east": -3.95705,
+        "south": 55.13788,
+        "north": 55.76378
+      }
+    },
+    {
+      "code": "S12000010",
+      "name": "East Lothian",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.08928,
+        "east": -2.36592,
+        "south": 55.81736,
+        "north": 56.07927
+      }
+    },
+    {
+      "code": "S12000011",
+      "name": "East Renfrewshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.55092,
+        "east": -4.21868,
+        "south": 55.6758,
+        "north": 55.82315
+      }
+    },
+    {
+      "code": "S12000013",
+      "name": "Na h-Eileanan Siar",
+      "country": "GBR",
+      "bounds": {
+        "west": -8.65,
+        "east": -5.81038,
+        "south": 56.77815,
+        "north": 59.13414
+      }
+    },
+    {
+      "code": "S12000014",
+      "name": "Falkirk",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.03034,
+        "east": -3.51153,
+        "south": 55.89542,
+        "north": 56.10678
+      }
+    },
+    {
+      "code": "S12000017",
+      "name": "Highland",
+      "country": "GBR",
+      "bounds": {
+        "west": -6.78965,
+        "east": -3.02429,
+        "south": 56.49714,
+        "north": 58.69689
+      }
+    },
+    {
+      "code": "S12000018",
+      "name": "Inverclyde",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.89869,
+        "east": -4.5973,
+        "south": 55.83797,
+        "north": 55.96342
+      }
+    },
+    {
+      "code": "S12000019",
+      "name": "Midlothian",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.36904,
+        "east": -2.84624,
+        "south": 55.71035,
+        "north": 55.93202
+      }
+    },
+    {
+      "code": "S12000020",
+      "name": "Moray",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.76269,
+        "east": -2.64982,
+        "south": 57.06844,
+        "north": 57.73066
+      }
+    },
+    {
+      "code": "S12000021",
+      "name": "North Ayrshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -5.39705,
+        "east": -4.49246,
+        "south": 55.42435,
+        "north": 55.89261
+      }
+    },
+    {
+      "code": "S12000023",
+      "name": "Orkney Islands",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.50721,
+        "east": -2.37047,
+        "south": 58.67371,
+        "north": 59.3986
+      }
+    },
+    {
+      "code": "S12000026",
+      "name": "Scottish Borders",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.5398,
+        "east": -2.03442,
+        "south": 55.10835,
+        "north": 55.94583
+      }
+    },
+    {
+      "code": "S12000027",
+      "name": "Shetland Islands",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.11735,
+        "east": -0.72462,
+        "south": 59.50689,
+        "north": 60.86077
+      }
+    },
+    {
+      "code": "S12000028",
+      "name": "South Ayrshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -5.12421,
+        "east": -4.39886,
+        "south": 54.99777,
+        "north": 55.60187
+      }
+    },
+    {
+      "code": "S12000029",
+      "name": "South Lanarkshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.28256,
+        "east": -3.39644,
+        "south": 55.29077,
+        "north": 55.84426
+      }
+    },
+    {
+      "code": "S12000030",
+      "name": "Stirling",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.85436,
+        "east": -3.7979,
+        "south": 55.95722,
+        "north": 56.54709
+      }
+    },
+    {
+      "code": "S12000033",
+      "name": "Aberdeen City",
+      "country": "GBR",
+      "bounds": {
+        "west": -2.36088,
+        "east": -2.04647,
+        "south": 57.07617,
+        "north": 57.23534
+      }
+    },
+    {
+      "code": "S12000034",
+      "name": "Aberdeenshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.80165,
+        "east": -1.76637,
+        "south": 56.74713,
+        "north": 57.70111
+      }
+    },
+    {
+      "code": "S12000035",
+      "name": "Argyll and Bute",
+      "country": "GBR",
+      "bounds": {
+        "west": -7.11337,
+        "east": -4.55984,
+        "south": 55.27455,
+        "north": 56.70456
+      }
+    },
+    {
+      "code": "S12000036",
+      "name": "City of Edinburgh",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.44953,
+        "east": -3.07773,
+        "south": 55.81879,
+        "north": 56.01217
+      }
+    },
+    {
+      "code": "S12000038",
+      "name": "Renfrewshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.78399,
+        "east": -4.35309,
+        "south": 55.75952,
+        "north": 55.93022
+      }
+    },
+    {
+      "code": "S12000039",
+      "name": "West Dunbartonshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.65989,
+        "east": -4.37547,
+        "south": 55.88959,
+        "north": 56.08423
+      }
+    },
+    {
+      "code": "S12000040",
+      "name": "West Lothian",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.83125,
+        "east": -3.38663,
+        "south": 55.77071,
+        "north": 56.00208
+      }
+    },
+    {
+      "code": "S12000041",
+      "name": "Angus",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.40702,
+        "east": -2.42694,
+        "south": 56.46454,
+        "north": 56.9868
+      }
+    },
+    {
+      "code": "S12000042",
+      "name": "Dundee City",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.09804,
+        "east": -2.83565,
+        "south": 56.45097,
+        "north": 56.50398
+      }
+    },
+    {
+      "code": "S12000045",
+      "name": "East Dunbartonshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.40204,
+        "east": -4.04686,
+        "south": 55.89608,
+        "north": 56.03029
+      }
+    },
+    {
+      "code": "S12000047",
+      "name": "Fife",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.73858,
+        "east": -2.54467,
+        "south": 56.00582,
+        "north": 56.45326
+      }
+    },
+    {
+      "code": "S12000048",
+      "name": "Perth and Kinross",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.72043,
+        "east": -3.05169,
+        "south": 56.13246,
+        "north": 56.94862
+      }
+    },
+    {
+      "code": "S12000049",
+      "name": "Glasgow City",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.39242,
+        "east": -4.07171,
+        "south": 55.78127,
+        "north": 55.92964
+      }
+    },
+    {
+      "code": "S12000050",
+      "name": "North Lanarkshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.19447,
+        "east": -3.71113,
+        "south": 55.73472,
+        "north": 56.03136
+      }
+    },
+    {
+      "code": "W06000001",
+      "name": "Isle of Anglesey",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.69661,
+        "east": -4.0202,
+        "south": 53.12639,
+        "north": 53.43571
+      }
+    },
+    {
+      "code": "W06000002",
+      "name": "Gwynedd",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.80418,
+        "east": -3.43679,
+        "south": 52.54119,
+        "north": 53.24839
+      }
+    },
+    {
+      "code": "W06000003",
+      "name": "Conwy",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.03126,
+        "east": -3.45459,
+        "south": 52.94937,
+        "north": 53.34274
+      }
+    },
+    {
+      "code": "W06000004",
+      "name": "Denbighshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.60199,
+        "east": -3.0903,
+        "south": 52.86194,
+        "north": 53.35352
+      }
+    },
+    {
+      "code": "W06000005",
+      "name": "Flintshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.4006,
+        "east": -2.92032,
+        "south": 53.07215,
+        "north": 53.35644
+      }
+    },
+    {
+      "code": "W06000006",
+      "name": "Wrexham",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.37552,
+        "east": -2.72418,
+        "south": 52.86661,
+        "north": 53.13432
+      }
+    },
+    {
+      "code": "W06000008",
+      "name": "Ceredigion",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.696,
+        "east": -3.65817,
+        "south": 52.02677,
+        "north": 52.56242
+      }
+    },
+    {
+      "code": "W06000009",
+      "name": "Pembrokeshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -5.66909,
+        "east": -4.48561,
+        "south": 51.59611,
+        "north": 52.11792
+      }
+    },
+    {
+      "code": "W06000010",
+      "name": "Carmarthenshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.7231,
+        "east": -3.64714,
+        "south": 51.65473,
+        "north": 52.14241
+      }
+    },
+    {
+      "code": "W06000011",
+      "name": "Swansea",
+      "country": "GBR",
+      "bounds": {
+        "west": -4.33359,
+        "east": -3.84275,
+        "south": 51.53577,
+        "north": 51.77418
+      }
+    },
+    {
+      "code": "W06000012",
+      "name": "Neath Port Talbot",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.9365,
+        "east": -3.56177,
+        "south": 51.52717,
+        "north": 51.81036
+      }
+    },
+    {
+      "code": "W06000013",
+      "name": "Bridgend",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.76301,
+        "east": -3.46302,
+        "south": 51.46993,
+        "north": 51.64584
+      }
+    },
+    {
+      "code": "W06000014",
+      "name": "Vale of Glamorgan",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.64192,
+        "east": -3.16401,
+        "south": 51.381,
+        "north": 51.51532
+      }
+    },
+    {
+      "code": "W06000015",
+      "name": "Cardiff",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.34378,
+        "east": -3.06891,
+        "south": 51.37497,
+        "north": 51.56051
+      }
+    },
+    {
+      "code": "W06000016",
+      "name": "Rhondda Cynon Taf",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.59372,
+        "east": -3.23634,
+        "south": 51.49896,
+        "north": 51.83013
+      }
+    },
+    {
+      "code": "W06000018",
+      "name": "Caerphilly",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.33447,
+        "east": -3.0637,
+        "south": 51.54564,
+        "north": 51.79898
+      }
+    },
+    {
+      "code": "W06000019",
+      "name": "Blaenau Gwent",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.31009,
+        "east": -3.10602,
+        "south": 51.6813,
+        "north": 51.82549
+      }
+    },
+    {
+      "code": "W06000020",
+      "name": "Torfaen",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.14392,
+        "east": -2.95889,
+        "south": 51.60667,
+        "north": 51.79623
+      }
+    },
+    {
+      "code": "W06000021",
+      "name": "Monmouthshire",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.15735,
+        "east": -2.64987,
+        "south": 51.5253,
+        "north": 51.98314
+      }
+    },
+    {
+      "code": "W06000022",
+      "name": "Newport",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.12419,
+        "east": -2.80301,
+        "south": 51.50093,
+        "north": 51.64947
+      }
+    },
+    {
+      "code": "W06000023",
+      "name": "Powys",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.92886,
+        "east": -2.94962,
+        "south": 51.75275,
+        "north": 52.90158
+      }
+    },
+    {
+      "code": "W06000024",
+      "name": "Merthyr Tydfil",
+      "country": "GBR",
+      "bounds": {
+        "west": -3.45315,
+        "east": -3.27393,
+        "south": 51.64468,
+        "north": 51.83506
+      }
+    }
+  ]
+}

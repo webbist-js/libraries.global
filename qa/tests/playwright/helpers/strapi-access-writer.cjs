@@ -501,9 +501,8 @@ async function applyAffiliations(strapi, item, wanted) {
 // ---------------------------------------------------------------------------
 
 /**
- * The continent, country and region of the first published library that
- * has all three (the fixtures' own excluded), so the fixture libraries get
- * a public path and can be published.
+ * Falmouth fixtures belong to Cornwall. Never inherit an unrelated
+ * library's hierarchy merely because it was imported first.
  */
 async function basePlaces(strapi, fixtureSlugs) {
   const rows = await strapi.documents(LIBRARY).findMany({
@@ -511,6 +510,7 @@ async function basePlaces(strapi, fixtureSlugs) {
     filters: {
       libraryType: { $ne: "Mobile" },
       slug: { $notIn: fixtureSlugs },
+      region: { slug: { $eq: "cornwall" } },
     },
     fields: ["documentId", "slug"],
     populate: {
@@ -527,7 +527,7 @@ async function basePlaces(strapi, fixtureSlugs) {
   )
   if (!base)
     throw new Error(
-      "Refusing: no published library with a continent, country and region to place the fixture libraries under"
+      "Refusing: no published Cornwall library to place the Falmouth fixtures under"
     )
 
   return {
@@ -543,7 +543,12 @@ async function libraryBySlug(strapi, slug) {
     const [row] = await strapi.documents(LIBRARY).findMany({
       filters: { slug: { $eq: slug } },
       status,
-      populate: { homeLibrary: { fields: ["documentId"] } },
+      populate: {
+        homeLibrary: { fields: ["documentId"] },
+        continent: { fields: ["documentId"] },
+        country: { fields: ["documentId"] },
+        region: { fields: ["documentId"] },
+      },
       limit: 1,
     })
     if (row) return { row, published: status === "published" }
@@ -566,6 +571,9 @@ async function ensureLibrary(strapi, spec, options, places, shared) {
     operationalStatus: "open",
     summary: spec.summary,
     timezone: options.timezone,
+    continent: { set: [{ documentId: places.continent }] },
+    country: { set: [{ documentId: places.country }] },
+    region: { set: [{ documentId: places.region }] },
     ...(mobile
       ? {
           operatorName: "Access Fixture Library Service",
@@ -599,6 +607,9 @@ async function ensureLibrary(strapi, spec, options, places, shared) {
   const { normalizeMobileTimetable, timetableHash } = shared.timetable
   const differs =
     !published ||
+    ["continent", "country", "region"].some(
+      (key) => row[key]?.documentId !== places[key]
+    ) ||
     ["name", "libraryType", "operationalStatus", "summary", "timezone"].some(
       (k) => row[k] !== data[k]
     ) ||

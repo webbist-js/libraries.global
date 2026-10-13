@@ -5,6 +5,7 @@ import type { Locale } from "next-intl"
 import { DriveBoardActions } from "@/components/drives/DriveBoardActions"
 import { isVotable } from "@/lib/community/suggestions"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
+import { contributionPlaceParams } from "@/lib/contribution-place"
 import { plainDriveTitle } from "@/lib/drives/drive-view"
 import { loadDriveViews, openDriveCount } from "@/lib/drives/drive-view-server"
 import { fetchDrive, fetchDriveLeaderboard } from "@/lib/drives/drives-server"
@@ -35,12 +36,21 @@ export async function generateMetadata({
     description: drive.summary,
     path: `community/drives/${drive.slug}`,
     locale,
-    // Open and finished drives are indexable (D15); a cancelled one isn't.
-    robots: drive.status === "cancelled" ? "noindex" : "index",
+    // Match sitemap discovery: a Drive is indexed once it opens, including after it closes.
+    robots:
+      drive.status === "open" || drive.status === "closed"
+        ? "index"
+        : "noindex-follow",
   })
 }
 
-export default async function DrivePage({ params }: { params: Params }) {
+export default async function DrivePage({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { locale, slug } = await params
   const drive = await fetchDrive(slug, locale)
   if (!drive) notFound()
@@ -65,6 +75,7 @@ export default async function DrivePage({ params }: { params: Params }) {
   return (
     <DriveDetailPage
       drive={drive}
+      initialPlace={contributionPlaceParams(await searchParams)}
       view={view ?? null}
       week={week}
       all={all}

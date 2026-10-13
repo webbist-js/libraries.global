@@ -6,6 +6,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./atlas-local": {
+      "types": "./dist/atlas/local-boundaries.d.ts",
+      "import": "./dist/atlas/local-boundaries.js",
+      "require": "./dist/atlas/local-boundaries.js"
     }
   },
   "main": "dist/index.js",
@@ -24,5 +29,12 @@
   },
   "dependencies": {
     "obscenity": "^0.4.6"
+  },
+  "typesVersions": {
+    "*": {
+      "atlas-local": [
+        "dist/atlas/local-boundaries.d.ts"
+      ]
+    }
   }
 }

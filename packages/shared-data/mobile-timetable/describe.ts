@@ -16,6 +16,32 @@ const DAYS = [
   "Sunday",
 ]
 
+export type MobileFrequency = "weekly" | "fortnightly" | "monthly"
+
+/** All recurrence frequencies represented at a stop, independent of its weekdays. */
+export function stopFrequencies(
+  visits: MobileVisit[],
+  cycle: MobileTimetable["cycle"]
+): MobileFrequency[] {
+  const frequencies = new Set<MobileFrequency>()
+  for (const visit of visits) {
+    if (visit.repeat.kind === "monthly") frequencies.add("monthly")
+    if (visit.repeat.kind !== "cycle") continue
+    const weeks = [...new Set(visit.repeat.weeks)].sort((a, b) => a - b)
+    if (weeks.length === cycle.weeks) frequencies.add("weekly")
+    else if (
+      weeks.length > 0 &&
+      cycle.weeks === weeks.length * 2 &&
+      weeks.every(
+        (week, i) => (weeks[i + 1] ?? weeks[0]! + cycle.weeks) - week === 2
+      )
+    )
+      frequencies.add("fortnightly")
+  }
+
+  return [...frequencies]
+}
+
 /** "1, 2 and 3": commas between, "and" before the last. */
 function listWeeks(weeks: number[]): string {
   if (weeks.length <= 1) return weeks.join("")

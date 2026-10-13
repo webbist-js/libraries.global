@@ -1,3 +1,8 @@
+import {
+  appendSourceRecords,
+  type LibrarySourceRecord,
+} from "@repo/shared-data"
+
 /**
  * Guards every apply-on-approval write to a draft-and-publish record.
  *
@@ -138,8 +143,6 @@ export const LIBRARY_COMPARE_FIELDS: readonly string[] = [
   "nearestStation",
   "wikidataId",
   "featured",
-  "source",
-  "sourceUrl",
 ]
 
 /** Scalar attributes shared by wiki-article and blog-article. */
@@ -220,6 +223,9 @@ export async function loadPublishedTarget(
     status: "published",
     ...(locale ? { locale } : {}),
     fields: ["documentId", ...compare],
+    ...(uid === "api::library.library"
+      ? { populate: { sourceRecords: true } }
+      : {}),
   })
 
   return row ?? null
@@ -237,11 +243,45 @@ export async function applyToPublished(
   data: Record<string, unknown>,
   { locale, fields }: PublishGuardOptions = {}
 ): Promise<ApplyMode> {
+  // Serialise read/append/publish across approvals on the same library.
+  // Strapi's transaction context also covers the Document Service writes.
+  if (
+    uid === "api::library.library" &&
+    ["pg", "postgres", "postgresql"].includes(strapi.db?.dialect?.client)
+  ) {
+    return strapi.db.transaction(async ({ trx }: { trx: any }) => {
+      await trx.raw("select pg_advisory_xact_lock(hashtextextended(?, 0))", [
+        `staff-library:${documentId}`,
+      ])
+
+      return applyToPublishedUnlocked(strapi, uid, documentId, data, {
+        locale,
+        fields,
+      })
+    })
+  }
+
+  return applyToPublishedUnlocked(strapi, uid, documentId, data, {
+    locale,
+    fields,
+  })
+}
+
+async function applyToPublishedUnlocked(
+  strapi: any,
+  uid: string,
+  documentId: string,
+  data: Record<string, unknown>,
+  { locale, fields }: PublishGuardOptions = {}
+): Promise<ApplyMode> {
   const compare = compareFields(uid, data, fields)
   const query = {
     documentId,
     ...(locale ? { locale } : {}),
     fields: ["documentId", ...compare],
+    ...(uid === "api::library.library"
+      ? { populate: { sourceRecords: true } }
+      : {}),
   }
   const published = await strapi
     .documents(uid)
@@ -254,6 +294,29 @@ export async function applyToPublished(
   const divergentKeys = draft
     ? compare.filter((k) => canonical(draft[k]) !== canonical(published[k]))
     : []
+  if (
+    uid === "api::library.library" &&
+    draft &&
+    canonical(
+      appendSourceRecords(draft.sourceRecords as LibrarySourceRecord[], [])
+    ) !==
+      canonical(
+        appendSourceRecords(
+          published.sourceRecords as LibrarySourceRecord[],
+          []
+        )
+      )
+  )
+    divergentKeys.push("sourceRecords")
+  if (uid === "api::library.library" && Array.isArray(data.sourceRecords))
+    data = {
+      ...data,
+      sourceRecords: appendSourceRecords(
+        (draft?.sourceRecords ??
+          published.sourceRecords) as LibrarySourceRecord[],
+        data.sourceRecords as LibrarySourceRecord[]
+      ),
+    }
 
   if (divergentKeys.length > 0) {
     await strapi.documents(uid).update({

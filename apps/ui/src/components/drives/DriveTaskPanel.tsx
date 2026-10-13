@@ -7,6 +7,7 @@ import {
   gapDefinition,
   type VerifySection,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type ReactNode, type Ref, useEffect, useId, useState } from "react"
 
 import {
@@ -252,6 +253,8 @@ function PanelHeader({
   readonly heldUntil?: string | null
   readonly nameRef?: Ref<HTMLHeadingElement>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const place = taskPlace(task)
   const held = heldUntilLabel(heldUntil)
 
@@ -293,7 +296,7 @@ function PanelHeader({
         target="_blank"
       >
         {website ? "Open the library’s website" : "Search for this library"}
-        <span className="sr-only"> (opens in a new tab)</span>
+        <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
         <Icon
           aria-hidden="true"
           height={16}
@@ -387,6 +390,8 @@ function PhotoFields({
   readonly value: PhotoState
   readonly onChange: (next: Partial<PhotoState>) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div className="flex flex-col gap-5">
       <PhotoUpload
@@ -394,7 +399,7 @@ function PhotoFields({
         onChange={(photo) => onChange({ photo })}
       />
       <div>
-        <Label htmlFor={`${id}-caption`} hint="Optional">
+        <Label htmlFor={`${id}-caption`} hint={tUi("optional_59be71")}>
           What does it show?
         </Label>
         <input
@@ -493,6 +498,8 @@ function LacksAction({
   readonly onToggle: () => void
   readonly onPhoto: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const style = { borderColor: T.border.hi, color: T.ink.base }
 
   if (RECORD_EDITORS[gap])
@@ -512,7 +519,7 @@ function LacksAction({
           icon={open ? "mdi:chevron-up" : "mdi:plus"}
           width={16}
         />
-        Add
+        {tUi("add")}{" "}
       </button>
     )
 
@@ -673,10 +680,12 @@ export function DriveTaskPanel({
   onSent,
   onSkip,
   nameRef,
+  returnTo,
 }: {
   readonly drive: Pick<Drive, "documentId" | "slug" | "focus">
   readonly task: DriveTask
   readonly signedIn: boolean
+  readonly returnTo?: string
   /** The reader holds a Library Claim on it: record changes are edits. */
   readonly claimed: boolean
   readonly quota: PendingQuota | null
@@ -687,6 +696,8 @@ export function DriveTaskPanel({
   /** The library's name: where focus goes when a new library opens. */
   readonly nameRef?: Ref<HTMLHeadingElement>
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const gaps = panelGapsOf(drive.focus)
   const focusMode = panelModeOf(drive.focus)
@@ -729,7 +740,7 @@ export function DriveTaskPanel({
     body: Body
   } | null>(null)
 
-  const drivePath = `/community/drives/${drive.slug}`
+  const drivePath = returnTo ?? `/community/drives/${drive.slug}`
   const website = task.website || record?.website || ""
   const recordMode = isRecordMode(mode) ? mode : null
   const evidenceMode: EvidenceMode | null =
@@ -1023,7 +1034,10 @@ export function DriveTaskPanel({
   const showEvidence =
     record !== null &&
     (recordMode !== null || (mode === "record" && openCategories.length > 0))
-  const evidenceHint = evidenceHintOf(recordMode, evidenceNeeded)
+  const evidenceHint =
+    recordMode === "hours" && record?.libraryType === "Mobile"
+      ? "Required. The timetable or official page showing these stops and times."
+      : evidenceHintOf(recordMode, evidenceNeeded)
 
   return (
     <div className="flex flex-col gap-5">
@@ -1118,7 +1132,7 @@ export function DriveTaskPanel({
                 : undefined
             }
           >
-            {sending ? "Sending…" : "Send and get the next one"}
+            {sending ? tUi("sending") : "Send and get the next one"}
           </button>
         ) : null}
         <button

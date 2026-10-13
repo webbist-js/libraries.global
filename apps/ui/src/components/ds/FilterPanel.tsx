@@ -8,11 +8,14 @@
 // a left slide-in drawer + toggle button for mobile.
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import {
   Children,
+  createContext,
   isValidElement,
   type ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useRef,
@@ -20,6 +23,10 @@ import {
 } from "react"
 
 import { T } from "@/lib/design-tokens"
+
+import { Drawer } from "./Drawer"
+
+const FilterDrawerContext = createContext(false)
 
 const LEGEND_ICON_PROPS = {
   width: 18,
@@ -50,9 +57,15 @@ export function FilterPanelHeader({
   /** From useFilterSidebar: adds the desktop Hide control. */
   readonly sidebar?: FilterSidebarState
 }) {
+  const tUi = useUiTranslations("ui")
+
+  const inDrawer = useContext(FilterDrawerContext)
+
   return (
-    <div className="flex min-h-11 items-center justify-between gap-2">
-      <h2 className="m-0 text-[20px] font-bold">{title}</h2>
+    <div
+      className={`flex min-h-11 items-center gap-2 ${inDrawer ? "justify-end" : "justify-between"}`}
+    >
+      {inDrawer ? null : <h2 className="m-0 text-[20px] font-bold">{title}</h2>}
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -73,7 +86,7 @@ export function FilterPanelHeader({
             style={{ color: T.ink.dim }}
           >
             <PanelIcon />
-            Hide
+            {tUi("hide")}{" "}
           </button>
         ) : null}
       </div>
@@ -315,6 +328,8 @@ export function FilterShowButton({
   readonly sidebar: FilterSidebarState
   readonly activeCount?: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!sidebar.collapsed) return null
 
   return (
@@ -324,7 +339,7 @@ export function FilterShowButton({
       activeCount={activeCount}
       expanded={false}
       controls={sidebar.sidebarId}
-      label="Filters"
+      label={tUi("filters")}
       icon
       className="hidden lg:flex"
     />
@@ -453,10 +468,12 @@ export function FilterSidebar({
   readonly sidebar: FilterSidebarState
   readonly children: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <aside
       id={sidebar.sidebarId}
-      aria-label="Filters"
+      aria-label={tUi("filters")}
       className={[
         "scrollbar-thin sticky top-[90px] w-[290px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain",
         // Inner padding keeps focus rings clear of the scroll box's edge.
@@ -484,44 +501,49 @@ export function FilterDrawer({
   readonly children: React.ReactNode
   readonly showLabel?: string
 }) {
-  if (!open) return null
+  const tUi = useUiTranslations("ui")
+
+  const titleId = useId()
+  useEffect(() => {
+    if (!open) return
+    const desktop = window.matchMedia("(min-width: 1024px)")
+    const closeOnDesktop = () => {
+      if (desktop.matches) onClose()
+    }
+    closeOnDesktop()
+    desktop.addEventListener("change", closeOnDesktop)
+
+    return () => desktop.removeEventListener("change", closeOnDesktop)
+  }, [open, onClose])
 
   return (
-    <div className="fixed inset-0 z-[70] lg:hidden">
-      <button
-        type="button"
-        aria-label="Close filters"
-        onClick={onClose}
-        className="absolute inset-0 border-0"
-        style={{ background: T.overlay.scrim }}
-      />
-      <div
-        className="scrollbar-thin absolute inset-y-0 left-0 w-[min(340px,88vw)] overflow-y-auto p-5"
-        style={{ background: T.bg.void }}
-      >
-        <div className="mb-2 flex justify-end">
-          <button
-            type="button"
-            aria-label="Close filters"
-            onClick={onClose}
-            className="flex size-9 cursor-pointer items-center justify-center rounded-full border-0 text-[18px]"
-            style={{ background: T.bg.muted2, color: T.ink.base }}
+    <Drawer
+      open={open}
+      onClose={onClose}
+      side="left"
+      size="md"
+      title={tUi("filters")}
+      titleId={titleId}
+      footer={
+        showLabel ? (
+          <div
+            className="shrink-0 border-t p-4"
+            style={{ borderColor: T.border.line }}
           >
-            ×
-          </button>
-        </div>
-        {children}
-        {showLabel ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-4 w-full cursor-pointer rounded-full border-0 px-5 py-3 text-[16px] font-semibold text-white"
-            style={{ background: T.accent.primary }}
-          >
-            {showLabel}
-          </button>
-        ) : null}
-      </div>
-    </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-11 w-full rounded-full border-0 bg-(--t-accent-primary) px-5 py-3 text-[16px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+            >
+              {showLabel}
+            </button>
+          </div>
+        ) : undefined
+      }
+    >
+      <FilterDrawerContext.Provider value>
+        <div className="px-5 py-4">{children}</div>
+      </FilterDrawerContext.Provider>
+    </Drawer>
   )
 }

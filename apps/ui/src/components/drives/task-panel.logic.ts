@@ -152,6 +152,7 @@ export function categoryChanges(
     Object.assign(merged.changes, c.changes)
     Object.assign(merged.previous, c.previous)
     Object.assign(merged.suggestedOptions, c.suggestedOptions)
+    if (c.previousHash) merged.previousHash = c.previousHash
   }
 
   return merged
@@ -226,9 +227,11 @@ export function recordPayload(
   const changes = panelChanges(mode, record, edit)
   const [first, second] = MODE_CATEGORIES[mode]
   const category =
-    mode === "closed" && !("operationalStatus" in changes.changes) && second
-      ? second
-      : first!
+    mode === "hours" && record.libraryType === "Mobile"
+      ? "Stops & times"
+      : mode === "closed" && !("operationalStatus" in changes.changes) && second
+        ? second
+        : first!
   const body = buildSubmission(
     "correction",
     { slug: target.slug, name: target.name },
@@ -319,6 +322,7 @@ const EVIDENCE_REQUIRED: ReadonlySet<PanelMode> = new Set(["hours", "contact"])
 /** Checklist categories whose details need the page they came from. */
 const EVIDENCE_CATEGORIES: ReadonlySet<string> = new Set([
   "Opening hours",
+  "Stops & times",
   "Address or location",
   "Website or catalogue",
 ])

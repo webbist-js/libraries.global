@@ -1,3 +1,4 @@
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { PageHero } from "@/components/ds"
@@ -33,6 +34,8 @@ export function ContributeSectionHeader({
   /** Rendered under the lead in the right column. */
   readonly children?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <PageHero
       breadcrumb={
@@ -40,18 +43,20 @@ export function ContributeSectionHeader({
           ? undefined
           : section
             ? [
-                { label: "Home", href: "/" },
-                { label: "Contribute", href: "/contribute" },
+                { label: tUi("home"), href: "/" },
+                { label: tUi("contribute"), href: "/contribute" },
                 { label: section },
               ]
-            : [{ label: "Home", href: "/" }, { label: "Contribute" }]
+            : [{ label: tUi("home"), href: "/" }, { label: tUi("contribute") }]
       }
       eyebrow="Contribute"
       eyebrowIcon="mdi:account-group-outline"
       title={title}
       lead={lead}
       compact={compact}
-      back={back ? { href: "/contribute", label: "Contribute" } : undefined}
+      back={
+        back ? { href: "/contribute", label: tUi("contribute") } : undefined
+      }
       tabs={<ContributeNavBar />}
     >
       {children}

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 
+import { betaEnabled } from "@/lib/beta/access"
 import { isProduction } from "@/lib/general-helpers"
 import { routing } from "@/lib/navigation"
 import { getSiteUrl } from "@/lib/seo/metadata"
@@ -27,7 +28,7 @@ const PRIVATE_PATHS = [
 ]
 
 export default function robots(): MetadataRoute.Robots {
-  if (!isProduction()) {
+  if (betaEnabled() || !isProduction()) {
     return { rules: { userAgent: "*", disallow: "/" } }
   }
 

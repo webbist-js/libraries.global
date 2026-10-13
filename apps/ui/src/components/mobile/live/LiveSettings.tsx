@@ -124,7 +124,7 @@ export function LiveSettings({
             {note.text}
           </p>
         ) : null}
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
           <div className="flex min-w-0 flex-col gap-5">
             <LiveSharingSettings
               initial={initial}

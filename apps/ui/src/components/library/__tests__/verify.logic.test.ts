@@ -100,7 +100,18 @@ describe("verify logic", () => {
       submissionType: "correction",
       targetEntityType: "library",
       targetSlug: "lib",
-      fields: { kind: "verify", sections: ["hours"], libraryName: "Library" },
+      fields: {
+        kind: "verify",
+        sections: ["hours"],
+        libraryName: "Library",
+        sourceRecords: [
+          {
+            url: "https://lib.example/hours",
+            role: "reference",
+            fields: ["hours"],
+          },
+        ],
+      },
       evidenceType: "other",
       evidenceUrl: "https://lib.example/hours",
     })

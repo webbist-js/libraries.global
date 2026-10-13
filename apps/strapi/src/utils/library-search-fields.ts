@@ -7,10 +7,15 @@
 
 import {
   addDays,
+  librarySourceKey,
+  type LibrarySourceRecord,
+  ATLAS_OPEN_FRAMES_PER_DAY as OPEN_FRAMES_PER_DAY,
+  atlasHoursProjection,
   closedNoticeDates,
   effectiveLibraryWeekHours,
-  isGapKey,
+  gapsOf,
   localDateTime,
+  atlasTimezone,
   normalizeMobileTimetable,
   sectionCheckedAt,
   summarizeTimetable,
@@ -20,32 +25,16 @@ import {
   type LibraryNotice,
 } from "@repo/shared-data"
 
-export const OPEN_DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const
-
-/** The opening-times normaliser allows six timeframes a day. */
-export const OPEN_FRAMES_PER_DAY = 10
-
-/** `open_mon_0_from`: minutes after local midnight on that weekday. */
-export const openField = (day: string, frame: number, edge: "from" | "to") =>
-  `open_${day.slice(0, 3)}_${frame}_${edge}`
-
-export const OPEN_FIELD_NAMES = OPEN_DAYS.flatMap((day) =>
-  Array.from({ length: OPEN_FRAMES_PER_DAY }, (_, n) => [
-    openField(day, n, "from"),
-    openField(day, n, "to"),
-  ]).flat()
-)
+export {
+  ATLAS_OPEN_DAYS as OPEN_DAYS,
+  ATLAS_OPEN_FRAMES_PER_DAY as OPEN_FRAMES_PER_DAY,
+  ATLAS_OPEN_FIELD_NAMES as OPEN_FIELD_NAMES,
+  atlasOpenField as openField,
+  atlasOpenFields as openFields,
+  atlasHoursProjection,
+} from "@repo/shared-data"
 
 type Day = { day?: unknown; enabled?: unknown; timeframes?: unknown }
-type Timeframe = { startTime?: unknown; endTime?: unknown }
 
 function days(openingTimes: unknown): Day[] {
   const list = (openingTimes as { days?: unknown } | null | undefined)?.days
@@ -53,47 +42,8 @@ function days(openingTimes: unknown): Day[] {
   return Array.isArray(list) ? (list as Day[]) : []
 }
 
-function minutes(hm: unknown): number | null {
-  if (typeof hm !== "string") return null
-  const m = /^(\d{1,2}):(\d{2})$/.exec(hm.trim())
-  if (!m) return null
-  const value = Number(m[1]) * 60 + Number(m[2])
-
-  return value <= 1440 ? value : null
-}
-
 const optionCount = (value: unknown) =>
   Array.isArray(value) ? value.length : 0
-
-/**
- * Each enabled day's timeframes as minute ranges. Mirrors the Find page's
- * `openStatus`: open when `from <= now < to` on today's weekday; a timeframe
- * that ends before it starts never matches there, so it's left out.
- */
-export function openFields(openingTimes: unknown): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const day of days(openingTimes)) {
-    const key = typeof day.day === "string" ? day.day.toLowerCase() : ""
-    if (
-      !day.enabled ||
-      !(OPEN_DAYS as readonly string[]).includes(key) ||
-      !Array.isArray(day.timeframes)
-    )
-      continue
-    let n = 0
-    for (const tf of day.timeframes as Timeframe[]) {
-      const from = minutes(tf?.startTime)
-      const to = minutes(tf?.endTime)
-      if (from == null || to == null || to <= from) continue
-      if (n >= OPEN_FRAMES_PER_DAY) break
-      out[openField(key, n, "from")] = from
-      out[openField(key, n, "to")] = to
-      n++
-    }
-  }
-
-  return out
-}
 
 /**
  * Legacy fallback for a row not yet backfilled with stored `gaps` (Task 2):
@@ -130,9 +80,7 @@ const seconds = (v: unknown): number | null => {
 
 /** The stored gaps, or the legacy derivation for a row not yet backfilled. */
 function needsOf(entry: Record<string, unknown>): string[] {
-  return Array.isArray(entry.gaps)
-    ? entry.gaps.filter(isGapKey)
-    : libraryNeeds(entry)
+  return gapsOf(entry)
 }
 
 /**
@@ -181,10 +129,23 @@ export function librarySearchFields(
     entry.libraryType === "Mobile"
       ? normalizeMobileTimetable(entry.mobileTimetable)
       : null
-  const tz =
-    typeof entry.timezone === "string" && entry.timezone !== ""
-      ? entry.timezone
-      : "UTC"
+  const tz = atlasTimezone(
+    typeof entry.timezone === "string" ? entry.timezone : null
+  )
+  let validZone = typeof entry.timezone === "string" && entry.timezone !== ""
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: String(entry.timezone) })
+  } catch {
+    validZone = false
+  }
+  const scheduleEligible =
+    validZone &&
+    ![
+      "permanently_closed",
+      "temporarily_closed",
+      "planned",
+      "appointment_only",
+    ].includes(String(entry.operationalStatus))
   const local = localDateTime(opts.now ?? new Date(), tz)
   const weekStart = addDays(local.date, -WEEKDAYS.indexOf(local.weekday))
   const branchNotices = (opts.notices ?? []).some((notice) =>
@@ -192,19 +153,26 @@ export function librarySearchFields(
   )
   const openingTimes = tt
     ? weekFrames(tt, opts.notices ?? [], weekStart, OPEN_FRAMES_PER_DAY)
-    : branchNotices
-      ? effectiveLibraryWeekHours(
-          entry.openingTimes,
-          opts.notices ?? [],
-          weekStart
-        )
-      : entry.openingTimes
+    : effectiveLibraryWeekHours(
+        entry.openingTimes,
+        opts.notices ?? [],
+        weekStart
+      )
+  const projection = atlasHoursProjection(
+    scheduleEligible ? (tt ? openingTimes : entry.openingTimes) : null,
+    scheduleEligible ? (opts.notices ?? []) : [],
+    tz,
+    opts.now ?? new Date()
+  )
+
   const summary = summarizeTimetable(tt)
 
   return {
+    source: librarySourceKey(
+      entry.sourceRecords as LibrarySourceRecord[] | undefined
+    ),
     completeness:
       typeof entry.completeness === "number" ? entry.completeness : 0,
-    has_hours: tt ? tt.visits.length > 0 : days(entry.openingTimes).length > 0,
     has_staff: entry.hasStaff === true,
     ...(tt || branchNotices ? { openingTimes } : {}),
     closed_dates: closedNoticeDates(opts.notices ?? [], local.date),
@@ -220,11 +188,16 @@ export function librarySearchFields(
       typeof entry.iiifEndpoint === "string" &&
       entry.iiifEndpoint.trim() !== "",
     needs: needsOf(entry),
-    open_tz:
-      typeof entry.timezone === "string" && entry.timezone !== ""
-        ? entry.timezone
-        : "UTC",
-    ...openFields(openingTimes),
+    open_tz: tz,
+    ...projection,
+    has_hours: tt
+      ? tt.visits.length > 0
+      : days(entry.openingTimes).some(
+          (day) => day.enabled && optionCount(day.timeframes) > 0
+        ),
+    clock_valid_until_ts: projection.clock_valid_until
+      ? Date.parse(projection.clock_valid_until) / 1000
+      : null,
     ...(cell ? { geo_cell: cell } : {}),
     ...timestampFields(entry),
   }

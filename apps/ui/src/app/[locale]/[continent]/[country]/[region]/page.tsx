@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import { placeLabels } from "@/components/location/location-page.helpers"
@@ -8,7 +9,7 @@ import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { placeGapCounts } from "@/lib/find-search"
-import { isDevelopment } from "@/lib/general-helpers"
+import { placeGapInsights } from "@/lib/place-insights-server"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
   buildLibraryItemListSchema,
@@ -16,8 +17,8 @@ import {
   locationRobots,
   locationTitle,
 } from "@/lib/seo/location"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
-import { fetchAllRegions, fetchRegion } from "@/lib/strapi-api/content/server"
+import { absoluteUrl, buildMetadata, localizedPath } from "@/lib/seo/metadata"
+import { fetchRegion } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 export const dynamic = "force-static"
@@ -40,7 +41,8 @@ export async function generateMetadata({
     country: countrySlug,
     region: slug,
   } = await params
-  const data = (await fetchRegion(slug, locale as Locale))?.data
+  const res = await fetchRegion(slug, locale as Locale)
+  const data = res?.data
   if (!data) return { title: "Region not found", robots: { index: false } }
 
   const name = data.name ?? "Region"
@@ -50,6 +52,8 @@ export async function generateMetadata({
   const parentCountry = data.country?.slug ?? countrySlug
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title: locationTitle(
       data.seo,
       countryName
@@ -57,7 +61,6 @@ export async function generateMetadata({
         : `Libraries in ${name}`
     ),
     description:
-      data.seo?.metaDescription ??
       data.summary ??
       buildLocationDescription({
         name: countryName ? `${name}, ${countryName}` : name,
@@ -74,29 +77,15 @@ export async function generateMetadata({
       data.seo?.metaImage?.url ?? data.heroImage?.url
     ),
     imageAlt: data.heroImage?.alternativeText,
-    robots: locationRobots(data.libraryCount),
+    robots: res?.localeFallback
+      ? "noindex-follow"
+      : locationRobots(data.libraryCount),
   })
 }
 
-export async function generateStaticParams({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  if (isDevelopment()) {
-    return [
-      { continent: "europe", country: "england", region: "greater-london" },
-    ]
-  }
-  const results = await fetchAllRegions(locale as Locale)
-
-  return results.data
-    .filter((r) => r.continent?.slug && r.country?.slug && r.slug)
-    .map((r) => ({
-      continent: r.continent!.slug,
-      country: r.country!.slug,
-      region: r.slug,
-    }))
+/** Regions are cached on demand, so build cost doesn't grow with global coverage. */
+export function generateStaticParams() {
+  return []
 }
 
 export default function RegionPage(props: {
@@ -109,6 +98,7 @@ export default function RegionPage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const continentSlug = params.continent
   const countrySlug = params.country
   const slug = params.region
@@ -117,11 +107,25 @@ export default function RegionPage(props: {
   const gapCountsPromise = placeGapCounts("region", slug, locale)
   const drivesPromise = drivesHere("region", slug, locale)
 
-  const regionData = use(regionPromise)?.data
+  const regionRes = use(regionPromise)
+  const regionData = regionRes?.data
 
   if (!regionData) notFound()
+  const realContinent =
+    regionData.continent?.slug ??
+    regionData.country?.continent?.slug ??
+    continentSlug
+  const realCountry = regionData.country?.slug ?? countrySlug
+  if (continentSlug !== realContinent || countrySlug !== realCountry) {
+    permanentRedirect(
+      localizedPath(`${realContinent}/${realCountry}/${slug}`, locale)
+    )
+  }
   const gapCounts = use(gapCountsPromise)
   const drives = use(drivesPromise)
+  const gapRows = use(
+    placeGapInsights("region", slug, regionData.libraryTypeCounts ?? [], locale)
+  )
   const parentContinent =
     regionData.continent?.slug ??
     regionData.country?.continent?.slug ??
@@ -163,11 +167,13 @@ export default function RegionPage(props: {
       />
       <RegionDetailPage
         region={regionData}
+        untranslatedLocale={regionRes?.localeFallback ? locale : null}
         locale={locale}
         slug={slug}
         countrySlug={countrySlug}
         continentSlug={continentSlug}
         gapCounts={gapCounts}
+        gapRows={gapRows}
         drives={drives}
       />
     </>

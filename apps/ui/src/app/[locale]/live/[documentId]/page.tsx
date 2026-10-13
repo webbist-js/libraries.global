@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
 import { LiveConsole } from "@/components/mobile/live/LiveConsole"
@@ -16,6 +17,8 @@ export default async function ConsolePage({
 }: {
   params: Promise<{ locale: string; documentId: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { locale, documentId } = await params
   if (!isDocumentIdParam(documentId)) notFound()
   const session = await getSessionSSR(await headers())
@@ -57,7 +60,7 @@ export default async function ConsolePage({
               className="live-button live-primary rounded-full"
               type="submit"
             >
-              Try again
+              {tUi("try_again")}{" "}
             </button>
           </form>
           <Link className="live-button rounded-full" href="/live">

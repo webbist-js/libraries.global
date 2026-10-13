@@ -691,6 +691,14 @@ export function mapLibraryOnRecord(record: LibraryOnRecord): MappedLibrary {
         : "https://libraryon.org",
   }
 
+  data.sourceRecords = [
+    {
+      dataset: "libraryon",
+      recordId: String(record.id),
+      url: data.sourceUrl,
+    },
+  ]
+
   if (nation?.countrySlug) {
     const tz = COUNTRY_TIMEZONE[nation.countrySlug]
     if (tz) data.timezone = tz

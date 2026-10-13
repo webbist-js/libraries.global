@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { SITE_NAME } from "@/lib/constants"
 import { getEnvVar } from "@/lib/env-vars"
+import { isProduction } from "@/lib/general-helpers"
 import { LIVE_LOCALES } from "@/lib/live-locales"
 import { routing } from "@/lib/navigation"
 
@@ -11,10 +12,9 @@ export { SITE_NAME }
 export const DEFAULT_TITLE = `${SITE_NAME} — Index of the World's Libraries`
 
 export const DEFAULT_DESCRIPTION =
-  "A complete, searchable atlas of every significant library on earth. Browse by continent, country, region, type and status."
+  "Discover libraries around the world. Search the open atlas by place and type, check opening hours and services, and help improve library records."
 
-/** X/Twitter handle — unverified; remove if the account does not exist. */
-export const TWITTER_SITE = "@LibrariesGlobal"
+export const DEFAULT_SOCIAL_IMAGE = "/images/social-card.png"
 
 export { LIVE_LOCALES }
 
@@ -28,6 +28,20 @@ export function getSiteUrl(): string {
     FALLBACK_SITE_URL
 
   return raw.replace(/\/+$/, "")
+}
+
+/** Reuse/citation links always point to the public site, including during local preview. */
+export function publicCanonicalUrl(value: string): string {
+  const configured = process.env.PUBLIC_CANONICAL_ORIGIN ?? FALLBACK_SITE_URL
+  const url = new URL(value, configured)
+  if (["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname)) {
+    const publicUrl = new URL(configured)
+    url.protocol = publicUrl.protocol
+    url.hostname = publicUrl.hostname
+    url.port = publicUrl.port
+  }
+
+  return url.toString()
 }
 
 /**
@@ -55,8 +69,8 @@ export function clampDescription(
   text: string | null | undefined,
   max = 160
 ): string | undefined {
-  if (!text) return undefined
-  const flat = text.replaceAll(/\s+/g, " ").trim()
+  const flat = plainMetadataText(text)
+  if (!flat) return undefined
   if (flat.length <= max) return flat
   const cut = flat.slice(0, max - 1)
   const lastSpace = cut.lastIndexOf(" ")
@@ -66,7 +80,83 @@ export function clampDescription(
 
 type RobotsMode = "index" | "noindex" | "noindex-follow"
 
+/** Event descriptions and CMS summaries can contain rich text. */
+export function plainMetadataText(
+  text: string | null | undefined
+): string | undefined {
+  if (!text) return undefined
+  const entities: Record<string, string> = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " ",
+  }
+  const flat = text
+    .slice(0, 20_000)
+    .replaceAll(/<[^>]*>/g, " ")
+    .replaceAll(
+      /&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi,
+      (match, entity: string) => {
+        if (!entity.startsWith("#"))
+          return entities[entity.toLowerCase()] ?? match
+        const n = entity.toLowerCase().startsWith("#x")
+          ? Number.parseInt(entity.slice(2), 16)
+          : Number(entity.slice(1))
+
+        return n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : match
+      }
+    )
+    .replaceAll(/\s+/g, " ")
+    .trim()
+
+  return flat || undefined
+}
+
+/** CMS directives can restrict indexing, including `none` and mixed lists. */
+export function cmsRobots(value?: string | null): {
+  index: boolean
+  follow: boolean
+} {
+  const tokens = value?.toLowerCase().split(/[\s,]+/) ?? []
+
+  return {
+    index: !tokens.includes("noindex") && !tokens.includes("none"),
+    follow: !tokens.includes("nofollow") && !tokens.includes("none"),
+  }
+}
+
+/** Keep institution names intact; omit repeated places and the brand when space is tight. */
+export function libraryTitle(
+  name: string,
+  city?: string | null,
+  country?: string | null
+): { title: string } | { absoluteTitle: string } {
+  const places = [city, country].filter((place): place is string =>
+    Boolean(
+      place?.trim() && !name.toLowerCase().includes(place.trim().toLowerCase())
+    )
+  )
+  const candidates = [
+    [name, ...places].join(", "),
+    [name, ...(places[0] ? [places[0]] : [])].join(", "),
+    name,
+  ]
+  for (const candidate of candidates) {
+    if (`${candidate} / ${SITE_NAME}`.length <= 60) return { title: candidate }
+    if (candidate.length <= 60) return { absoluteTitle: candidate }
+  }
+
+  return { absoluteTitle: name }
+}
+
 export interface BuildMetadataOptions {
+  seo?: {
+    metaTitle?: string | null
+    metaDescription?: string | null
+    metaRobots?: string | null
+  } | null
   /** Page title — the root layout template appends the brand. */
   title?: string
   /** Use this exact <title> (bypasses the template, e.g. homepage). */
@@ -75,6 +165,8 @@ export interface BuildMetadataOptions {
   /** Unlocalised path, e.g. "europe/france" or "/journal/news/foo". */
   path?: string
   locale: string
+  /** Only verified translations should be declared as alternates. */
+  alternateLocales?: readonly string[]
   /** Absolute (or metadataBase-relative) image URL. */
   image?: string | null
   imageAlt?: string | null
@@ -89,7 +181,7 @@ export interface BuildMetadataOptions {
  * One place to build page metadata: title, description, locale-aware
  * canonical (+ hreflang only when more than one locale is live), robots,
  * Open Graph and Twitter card. Child `openGraph`/`twitter` objects replace the
- * root layout's wholesale, so siteName / twitter:site are re-applied here.
+ * root layout's wholesale, so the brand and default share image are applied here.
  */
 export function buildMetadata(opts: BuildMetadataOptions): Metadata {
   const {
@@ -105,35 +197,54 @@ export function buildMetadata(opts: BuildMetadataOptions): Metadata {
     modifiedTime,
     authors,
   } = opts
-  const description = clampDescription(opts.description) ?? DEFAULT_DESCRIPTION
-  const socialTitle = absoluteTitle ?? title ?? DEFAULT_TITLE
+  const cmsTitle = plainMetadataText(opts.seo?.metaTitle)
+  const pageTitle = cmsTitle ?? plainMetadataText(absoluteTitle ?? title)
+  const description =
+    clampDescription(opts.seo?.metaDescription) ??
+    clampDescription(opts.description) ??
+    DEFAULT_DESCRIPTION
+  const socialTitle = pageTitle ?? DEFAULT_TITLE
   const canonical = path === undefined ? undefined : localizedPath(path, locale)
+  const alternates = (opts.alternateLocales ?? LIVE_LOCALES).filter((l) =>
+    LIVE_LOCALES.includes(l)
+  )
 
   const languages =
-    path !== undefined && LIVE_LOCALES.length > 1
+    path !== undefined && alternates.includes(locale) && alternates.length > 1
       ? {
           ...Object.fromEntries(
-            LIVE_LOCALES.map((l) => [l, localizedPath(path, l)])
+            alternates.map((l) => [l, localizedPath(path, l)])
           ),
-          "x-default": localizedPath(path, routing.defaultLocale),
+          ...(alternates.includes(routing.defaultLocale)
+            ? { "x-default": localizedPath(path, routing.defaultLocale) }
+            : {}),
         }
       : undefined
 
-  const images = image
-    ? [{ url: image, ...(imageAlt ? { alt: imageAlt } : {}) }]
-    : undefined
+  const socialImage = image || DEFAULT_SOCIAL_IMAGE
+  const images = [
+    {
+      url: socialImage,
+      alt: imageAlt || SITE_NAME,
+      ...(!image ? { width: 1200, height: 630 } : {}),
+    },
+  ]
+  const cms = cmsRobots(opts.seo?.metaRobots)
+  const index =
+    robots === "index" &&
+    cms.index &&
+    LIVE_LOCALES.includes(locale) &&
+    isProduction()
+  const follow = robots !== "noindex" && cms.follow
 
   return {
-    ...(absoluteTitle
-      ? { title: { absolute: absoluteTitle } }
-      : title
-        ? { title }
+    ...(absoluteTitle && pageTitle
+      ? { title: { absolute: pageTitle } }
+      : pageTitle
+        ? { title: pageTitle }
         : {}),
     description,
-    robots:
-      robots === "index"
-        ? { index: true, follow: true }
-        : { index: false, follow: robots === "noindex-follow" },
+    robots: { index, follow },
     ...(canonical
       ? { alternates: { canonical, ...(languages ? { languages } : {}) } }
       : {}),
@@ -143,17 +254,16 @@ export function buildMetadata(opts: BuildMetadataOptions): Metadata {
       description,
       type,
       ...(canonical ? { url: canonical } : {}),
-      ...(images ? { images } : {}),
+      images,
       ...(type === "article" && publishedTime ? { publishedTime } : {}),
       ...(type === "article" && modifiedTime ? { modifiedTime } : {}),
       ...(type === "article" && authors?.length ? { authors } : {}),
     },
     twitter: {
-      card: image ? "summary_large_image" : "summary",
-      site: TWITTER_SITE,
+      card: "summary_large_image",
       title: socialTitle,
       description,
-      ...(image ? { images: [image] } : {}),
+      images: [socialImage],
     },
   }
 }

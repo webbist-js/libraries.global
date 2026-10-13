@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import { CountryDetailPage } from "@/components/country/CountryDetailPage"
@@ -8,6 +9,7 @@ import { placeLabels } from "@/components/location/location-page.helpers"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { isDevelopment } from "@/lib/general-helpers"
+import { placeGapInsights } from "@/lib/place-insights-server"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
   buildLibraryItemListSchema,
@@ -15,7 +17,7 @@ import {
   locationRobots,
   locationTitle,
 } from "@/lib/seo/location"
-import { absoluteUrl, buildMetadata } from "@/lib/seo/metadata"
+import { absoluteUrl, buildMetadata, localizedPath } from "@/lib/seo/metadata"
 import {
   fetchAllCountries,
   fetchCountry,
@@ -32,15 +34,17 @@ export async function generateMetadata({
   params: Promise<{ locale: string; continent: string; country: string }>
 }): Promise<Metadata> {
   const { locale, continent: continentSlug, country: slug } = await params
-  const data = (await fetchCountry(slug, locale as Locale))?.data
+  const res = await fetchCountry(slug, locale as Locale)
+  const data = res?.data
   if (!data) return { title: "Country not found", robots: { index: false } }
 
   const name = data.name ?? "Country"
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title: locationTitle(data.seo, `Libraries in ${name}`),
     description:
-      data.seo?.metaDescription ??
       data.summary ??
       buildLocationDescription({
         name,
@@ -57,7 +61,9 @@ export async function generateMetadata({
       data.seo?.metaImage?.url ?? data.heroImage?.url
     ),
     imageAlt: data.heroImage?.alternativeText,
-    robots: locationRobots(data.libraryCount),
+    robots: res?.localeFallback
+      ? "noindex-follow"
+      : locationRobots(data.libraryCount),
   })
 }
 
@@ -82,16 +88,34 @@ export default function CountryPage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const continentSlug = params.continent
   const slug = params.country
 
   const countryPromise = fetchCountry(slug, locale)
   const drivesPromise = drivesHere("country", slug, locale)
 
-  const countryData = use(countryPromise)?.data
+  const countryRes = use(countryPromise)
+  const countryData = countryRes?.data
 
   if (!countryData) notFound()
+  if (
+    countryData.continent?.slug &&
+    countryData.continent.slug !== continentSlug
+  ) {
+    permanentRedirect(
+      localizedPath(`${countryData.continent.slug}/${slug}`, locale)
+    )
+  }
   const drives = use(drivesPromise)
+  const gapRows = use(
+    placeGapInsights(
+      "country",
+      slug,
+      countryData.libraryTypeCounts ?? [],
+      locale
+    )
+  )
   const parentSlug = countryData.continent?.slug ?? continentSlug
 
   return (
@@ -119,9 +143,11 @@ export default function CountryPage(props: {
       />
       <CountryDetailPage
         country={countryData}
+        untranslatedLocale={countryRes?.localeFallback ? locale : null}
         locale={locale}
         slug={slug}
         continentSlug={continentSlug}
+        gapRows={gapRows}
         drives={drives}
       />
     </>

@@ -1,6 +1,8 @@
 // apps/ui/src/components/events/EventDetailPage.tsx
+
 import { Icon } from "@iconify/react"
 import Link from "next/link"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { Container } from "@/components/elementary/Container"
@@ -104,6 +106,8 @@ export function EventDetailPage({
   related,
   libraryName,
 }: EventDetailPageProps) {
+  const tUi = useUiTranslations("ui")
+
   const { date, time } = formatDate(event.startTime)
   const endFormatted = event.endTime ? formatDate(event.endTime) : null
   const linkUrl = event.registrationUrl ?? event.url
@@ -150,8 +154,8 @@ export function EventDetailPage({
             <Breadcrumb
               className="mb-6"
               items={[
-                { label: "Home", href: "/" },
-                { label: "Events", href: "/events" },
+                { label: tUi("home"), href: "/" },
+                { label: tUi("events"), href: "/events" },
                 { label: event.title },
               ]}
             />
@@ -296,7 +300,7 @@ export function EventDetailPage({
               </a>
               <CalendarSubscribeButton
                 icsUrl="/api/public-proxy/api/events/ics/global.ics"
-                label="Add to calendar"
+                label={tUi("add_to_calendar")}
               />
             </div>
           </div>

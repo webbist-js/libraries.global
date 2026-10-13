@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { parseHeroText } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -42,6 +43,8 @@ export function ProposeBand({
   readonly signedIn: boolean
   readonly howHref: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       aria-labelledby="propose-heading"
@@ -68,7 +71,7 @@ export function ProposeBand({
       </h2>
 
       <ul
-        aria-label="Rules for a drive"
+        aria-label={tUi("rules_for_a_drive")}
         className="m-0 grid list-none gap-3 p-0"
         style={{
           gridTemplateColumns:
@@ -118,7 +121,7 @@ export function ProposeBand({
             icon={board ? "mdi:plus" : "mdi:pin-outline"}
             width={18}
           />
-          {board ? "New drive" : "Propose a drive"}
+          {board ? tUi("new_drive") : "Propose a drive"}
         </GlobalLink>
         {howHref ? (
           <GlobalLink

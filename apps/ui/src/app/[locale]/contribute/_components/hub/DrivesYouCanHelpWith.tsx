@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { DriveCard } from "@/components/drives/DriveCard"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -13,6 +15,8 @@ export function DrivesYouCanHelpWith({
 }: {
   readonly views: readonly DriveView[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section className="mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
@@ -39,7 +43,7 @@ export function DrivesYouCanHelpWith({
           className="text-[14px] font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
-          All drives
+          {tUi("all_drives")}
         </GlobalLink>
       </div>
 

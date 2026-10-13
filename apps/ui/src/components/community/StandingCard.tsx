@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -181,6 +182,8 @@ export function StandingCard({
   /** Where "Sign in" comes back to. */
   readonly signInReturnTo: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!signedIn) {
     return (
       <Shell>
@@ -195,7 +198,7 @@ export function StandingCard({
           href={`/auth/signin?callbackUrl=${encodeURIComponent(signInReturnTo)}`}
           className="inline-flex min-h-11 items-center self-start rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
         >
-          Sign in
+          {tUi("sign_in")}{" "}
         </GlobalLink>
       </Shell>
     )
@@ -222,13 +225,13 @@ export function StandingCard({
         standing.monthRank != null ? `#${fmt(standing.monthRank)}` : NOT_RANKED,
     },
     {
-      label: "All time",
+      label: tUi("all_time"),
       value:
         standing.globalRank != null && standing.totalPoints > 0
           ? `#${fmt(standing.globalRank)}`
           : NOT_RANKED,
     },
-    { label: "Total points", value: fmt(standing.totalPoints) },
+    { label: tUi("total_points"), value: fmt(standing.totalPoints) },
     {
       label: "Streak",
       value: `${fmt(standing.streak)} ${standing.streak === 1 ? "day" : "days"}`,

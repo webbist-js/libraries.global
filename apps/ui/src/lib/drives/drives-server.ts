@@ -52,7 +52,8 @@ function logDriveError(message: string, e: unknown): void {
 export async function fetchDrives(
   status: PublicDriveStatus,
   locale?: string,
-  limit?: number
+  limit?: number,
+  failOnUnavailable = false
 ): Promise<Drive[]> {
   try {
     const res = (await PublicStrapiClient.fetchAPI(
@@ -64,6 +65,7 @@ export async function fetchDrives(
     return res.data ?? []
   } catch (e: unknown) {
     logDriveError(`Error fetching drives (state: ${status})`, e)
+    if (failOnUnavailable) throw e
 
     return []
   }

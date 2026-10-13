@@ -6,6 +6,7 @@ import type React from "react"
 import { z } from "zod"
 
 import { NavigationProgress } from "@/components/global/NavigationProgress"
+import { NotificationProvider } from "@/components/notifications/NotificationProvider"
 import { useTranslatedZod } from "@/hooks/useTranslatedZod"
 import { setupLibraries } from "@/lib/general-helpers"
 
@@ -38,7 +39,7 @@ export function ClientProviders({
         nonce={nonce}
       >
         <QueryClientProvider client={queryClient}>
-          {children}
+          <NotificationProvider>{children}</NotificationProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </>

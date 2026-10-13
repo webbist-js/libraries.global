@@ -1,0 +1,256 @@
+{
+  "evaluatedAt": "2026-10-08T10:15:00.000Z",
+  "canonicalLocale": "en",
+  "dictionary": {
+    "version": "fixture-v1",
+    "entries": [
+      {
+        "code": "access:wheelchair",
+        "kind": "access",
+        "name": "Wheelchair access",
+        "aliases": ["Step-free access"]
+      },
+      {
+        "code": "access:hearing",
+        "kind": "access",
+        "name": "Hearing loop",
+        "aliases": []
+      },
+      {
+        "code": "service:wifi",
+        "kind": "service",
+        "name": "Wi-Fi",
+        "aliases": []
+      },
+      {
+        "code": "amenity:wifi",
+        "kind": "amenity",
+        "name": "Wi-Fi",
+        "aliases": []
+      },
+      {
+        "code": "amenity:toilet",
+        "kind": "amenity",
+        "name": "Toilet",
+        "aliases": []
+      }
+    ]
+  },
+  "defaults": {
+    "locale": "en",
+    "published": true,
+    "libraryType": "Public",
+    "operationalStatus": "open",
+    "timezone": "Europe/London",
+    "location": { "lat": 52.6, "lng": 1.3 },
+    "city": "Norwich",
+    "continent": { "documentId": "europe", "slug": "europe", "name": "Europe" },
+    "country": {
+      "documentId": "england",
+      "slug": "england",
+      "name": "England"
+    },
+    "region": { "documentId": "norfolk", "slug": "norfolk", "name": "Norfolk" },
+    "openingTimes": {
+      "days": [
+        {
+          "day": "thursday",
+          "enabled": true,
+          "timeframes": [{ "startTime": "11:15", "endTime": "12:30" }]
+        },
+        {
+          "day": "sunday",
+          "enabled": true,
+          "timeframes": [{ "startTime": "09:00", "endTime": "10:00" }]
+        }
+      ]
+    }
+  },
+  "records": [
+    {
+      "documentId": "all",
+      "slug": "all",
+      "name": "École",
+      "operatorType": "Municipality",
+      "foundedYear": "c. 1901",
+      "hasActiveFeed": true,
+      "catalogueUrl": "https://example.test/catalogue",
+      "completeness": 95,
+      "accessibility": [
+        { "documentId": "wheelchair", "name": "Wheelchair access" },
+        { "documentId": "hearing", "name": "Hearing loop" }
+      ],
+      "services": [{ "documentId": "wifi", "name": "Wi-Fi" }],
+      "amenities": [{ "documentId": "toilet", "name": "Toilet" }]
+    },
+    {
+      "documentId": "partial",
+      "slug": "partial",
+      "name": "Ecole",
+      "libraryType": "University",
+      "operatorType": "University",
+      "hasActiveFeed": true,
+      "accessibility": [
+        { "documentId": "wheelchair", "name": "Wheelchair access" }
+      ],
+      "amenities": [{ "documentId": "wifi", "name": "Wi-Fi" }]
+    },
+    {
+      "documentId": "unknown",
+      "slug": "unknown",
+      "name": "東京",
+      "libraryType": "Unexpected",
+      "city": null,
+      "openingTimes": null,
+      "timezone": "Invalid/Timezone",
+      "location": { "lat": 0, "lng": 180 }
+    },
+    {
+      "documentId": "closed",
+      "slug": "closed",
+      "name": "Closed archive",
+      "libraryType": "Archive",
+      "operationalStatus": "permanently_closed",
+      "hasActiveFeed": true
+    },
+    {
+      "documentId": "depot",
+      "slug": "depot",
+      "name": "Depot",
+      "libraryType": "Mobile",
+      "mobileTimetable": {}
+    },
+    {
+      "documentId": "mobile-building",
+      "slug": "mobile-building",
+      "name": "Mobile building",
+      "libraryType": "Mobile",
+      "mobileTimetable": null
+    },
+    {
+      "documentId": "all",
+      "slug": "ecole-fr",
+      "name": "École française",
+      "locale": "fr"
+    },
+    {
+      "documentId": "draft",
+      "slug": "draft",
+      "name": "Draft",
+      "published": false
+    },
+    {
+      "documentId": "unmapped",
+      "slug": "unmapped",
+      "name": "Unmapped",
+      "location": null
+    },
+    {
+      "documentId": "polar",
+      "slug": "polar",
+      "name": "Polar",
+      "location": { "lat": 89, "lng": -179.9 },
+      "timezone": null,
+      "openingTimes": null
+    },
+    {
+      "documentId": "notice",
+      "slug": "notice",
+      "name": "Notice closure",
+      "notices": [
+        {
+          "id": "closure",
+          "type": "closure",
+          "scope": "library",
+          "scopeWeek": null,
+          "scopeDay": null,
+          "stopId": null,
+          "from": "2026-10-08",
+          "to": "2026-10-08",
+          "endedAt": null,
+          "message": "Closed today",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "documentId": "changed",
+      "slug": "changed",
+      "name": "Changed hours",
+      "notices": [
+        {
+          "id": "changed",
+          "type": "changed_hours",
+          "scope": "library",
+          "scopeWeek": null,
+          "scopeDay": null,
+          "stopId": null,
+          "from": "2026-10-08",
+          "to": "2026-10-08",
+          "endedAt": null,
+          "message": "Shorter hours",
+          "reason": null,
+          "hours": {
+            "days": [
+              {
+                "day": "thursday",
+                "enabled": true,
+                "timeframes": [{ "startTime": "13:15", "endTime": "14:30" }]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "documentId": "east",
+      "slug": "east",
+      "name": "East date line",
+      "location": { "lat": 0, "lng": 179.9 },
+      "timezone": "Pacific/Auckland",
+      "openingTimes": null,
+      "region": null
+    },
+    {
+      "documentId": "west",
+      "slug": "west",
+      "name": "West date line",
+      "location": { "lat": 0, "lng": -179.9 },
+      "timezone": "Pacific/Honolulu",
+      "openingTimes": null,
+      "region": null
+    }
+  ],
+  "expected": {
+    "listed": [
+      "all",
+      "partial",
+      "unknown",
+      "mobile-building",
+      "polar",
+      "notice",
+      "changed",
+      "east",
+      "west"
+    ],
+    "closures": ["closed"],
+    "events": ["all", "partial"],
+    "wifi": ["all", "partial"],
+    "toilet": ["all"],
+    "allAccess": ["all"],
+    "anyAccess": ["all", "partial"],
+    "gaps": [
+      "partial",
+      "unknown",
+      "mobile-building",
+      "polar",
+      "notice",
+      "changed",
+      "east",
+      "west"
+    ],
+    "openAt": ["all", "partial", "mobile-building", "notice", "changed"],
+    "openNow": ["all", "partial", "mobile-building"],
+    "late": ["all", "partial", "mobile-building", "notice", "changed"]
+  }
+}

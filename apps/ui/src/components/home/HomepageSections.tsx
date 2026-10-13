@@ -6,6 +6,7 @@ import type {
   HomepageContinentSummary,
   HomepageStats,
 } from "@/components/home/homepage.types"
+import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import AtlasSection from "@/components/home/sections/AtlasSection"
 import ClosingSection from "@/components/home/sections/ClosingSection"
 import ContributeSection from "@/components/home/sections/ContributeSection"
@@ -18,19 +19,15 @@ import JournalSection from "@/components/home/sections/JournalSection"
 import JourneysSection from "@/components/home/sections/JourneysSection"
 import KnowledgeSection from "@/components/home/sections/KnowledgeSection"
 import PlansSection from "@/components/home/sections/PlansSection"
-import StatsStrip from "@/components/home/sections/StatsStrip"
 import type { DriveView } from "@/lib/drives/drive-view"
 import type { JournalTopStories } from "@/lib/journal-landing"
 import type { EventSearchHit } from "@/lib/meilisearch"
-import type {
-  MediaItem,
-  PopulatedFeaturedLibraryData,
-} from "@/lib/strapi-api/content/server"
+import type { PopulatedFeaturedLibraryData } from "@/lib/strapi-api/content/server"
 
 /**
- * Homepage narrative, below the hero: prove the index is real and offer the
- * three journeys. Then what the atlas shows, something small to do, a moment
- * of discovery, how far we've got and what's free. Last, what's on, what to
+ * Homepage narrative, below the hero: offer the three journeys, something
+ * small to do, a moment of discovery, then what the atlas shows,
+ * how far we've got and what's free. Last, what's on, what to
  * read and learn, and the ask.
  */
 export function HomepageSections({
@@ -38,7 +35,7 @@ export function HomepageSections({
   stats,
   tasks,
   featuredDrive,
-  atlasImage,
+  globeMarkers,
   featuredLibraries,
   continents,
   countryBreakdown,
@@ -52,7 +49,7 @@ export function HomepageSections({
   readonly tasks: readonly ContributionTask[]
   /** A pinned or featured open drive; replaces the task rows when set. */
   readonly featuredDrive?: DriveView | null
-  readonly atlasImage?: MediaItem | null
+  readonly globeMarkers: readonly LibraryMarker[]
   readonly featuredLibraries?: PopulatedFeaturedLibraryData[] | null
   readonly continents: HomepageContinentSummary[]
   readonly countryBreakdown?: CountryBreakdown
@@ -65,12 +62,10 @@ export function HomepageSections({
 }) {
   return (
     <div id="homepage-content">
-      <StatsStrip stats={stats} />
       <JourneysSection
         intro={content.journeysIntro}
         journeys={content.journeys}
       />
-      <AtlasSection band={content.atlasBand} image={atlasImage} />
       <ContributeSection
         band={content.communityBand}
         steps={content.communitySteps}
@@ -83,6 +78,7 @@ export function HomepageSections({
         intro={content.featuredIntro}
         total={stats?.libraries}
       />
+      <AtlasSection band={content.atlasBand} markers={globeMarkers} />
       <CoverageSection
         intro={content.coverageIntro}
         continents={continents}

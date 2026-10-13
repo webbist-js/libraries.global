@@ -70,8 +70,9 @@ describe("resolveChangeContext", () => {
       )
     expect(token("ingest-uk")).toMatchObject({
       source: "import",
-      actorKind: "token",
-      actorId: "ingest-uk",
+      actorKind: "system",
+      actorId: "libraries-global-bot",
+      actorName: "Libraries Global bot",
     })
     expect(token("import-libraryon")).toMatchObject({ source: "import" })
     expect(token("ci-bot")).toMatchObject({
@@ -92,8 +93,9 @@ describe("resolveChangeContext", () => {
     // "content-api-token" (@strapi/admin server/src/strategies).
     expect(withStrategy({ name: "content-api-token" })).toMatchObject({
       source: "import",
-      actorKind: "token",
-      actorId: "ingest-uk",
+      actorKind: "system",
+      actorId: "libraries-global-bot",
+      actorName: "Libraries Global bot",
     })
     // Any other strategy (or none) carrying a `name` is not a token.
     expect(withStrategy({ name: "users-permissions" })).toMatchObject({
@@ -101,6 +103,37 @@ describe("resolveChangeContext", () => {
       actorKind: "system",
     })
     expect(withStrategy(undefined)).toMatchObject({ source: "system" })
+  })
+
+  it("attributes the shared ingest client to the bot only with token auth and the bridge secret", () => {
+    const request = (strategy: string, secret: string) =>
+      resolveChangeContext(
+        withRequest({
+          state: {
+            auth: {
+              strategy: { name: strategy },
+              credentials: { name: "development-token" },
+            },
+          },
+          request: {
+            headers: { "x-library-ingest": "true", "x-service-secret": secret },
+          },
+        })
+      )
+    expect(request("content-api-token", "s3cret")).toMatchObject({
+      actorId: "libraries-global-bot",
+      actorKind: "system",
+      source: "import",
+    })
+    expect(request("content-api-token", "wrong")).toMatchObject({
+      actorKind: "token",
+      source: "api_token",
+    })
+    expect(request("users-permissions", "s3cret")).toMatchObject({
+      actorKind: "system",
+      source: "system",
+      actorId: "system",
+    })
   })
 
   it("shares one store across module copies (the plugin bundle and the app)", async () => {
@@ -142,7 +175,7 @@ describe("resolveChangeContext", () => {
           },
         })
       )
-    ).toMatchObject({ source: "import", actorKind: "token" })
+    ).toMatchObject({ source: "import", actorKind: "system" })
   })
 
   it("decodes a percent-encoded bridge name and keeps a raw one", () => {

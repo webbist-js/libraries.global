@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
@@ -23,6 +24,8 @@ export function OverviewSection({
   profile: UserProfile
   isOwner?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [allContribs, setAllContribs] = useState<PublicSubmission[]>([])
   const [now] = useState<number>(() => Date.now())
   const prefs = resolvePublicPrefs(profile.publicPrefs)
@@ -58,12 +61,12 @@ export function OverviewSection({
   const facts: { label: string; value: string }[] = [
     (profile.city || profile.country) && canSee(prefs.showLocation)
       ? {
-          label: "Location",
+          label: tUi("location"),
           value: [profile.city, profile.country].filter(Boolean).join(", "),
         }
       : null,
     profile.affiliation && canSee(prefs.showAffiliation)
-      ? { label: "Affiliation", value: profile.affiliation }
+      ? { label: tUi("affiliation"), value: profile.affiliation }
       : null,
     profile.jobTitle ? { label: "Role", value: profile.jobTitle } : null,
     profile.languages?.length
@@ -110,28 +113,28 @@ export function OverviewSection({
       <h2 className="sr-only">Contribution summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Changes accepted"
+          label={tUi("changes_accepted")}
           value={String(stats.accepted)}
           bg="var(--tint-public-bg)"
           fg="var(--tint-public-fg)"
           icon="mdi:check-circle-outline"
         />
         <StatCard
-          label="In review"
+          label={tUi("in_review")}
           value={String(stats.inReview)}
           bg="var(--tint-academic-bg)"
           fg="var(--tint-academic-fg)"
           icon="mdi:clock-outline"
         />
         <StatCard
-          label="Libraries stewarded"
+          label={tUi("libraries_stewarded")}
           value={String(profile.claimedLibraries?.length ?? 0)}
           bg="var(--tint-national-bg)"
           fg="var(--tint-national-fg)"
           icon="mdi:shield-check-outline"
         />
         <StatCard
-          label="Libraries added"
+          label={tUi("libraries_added")}
           value={String(stats.added)}
           bg="#F5EEDC"
           fg="#6B5420"
@@ -217,7 +220,7 @@ export function OverviewSection({
               className="m-0 mb-3 text-[14px] font-semibold"
               style={{ color: T.ink.base }}
             >
-              Libraries
+              {tUi("libraries")}{" "}
             </h3>
             {(profile.claimedLibraries?.length ?? 0) > 0 ? (
               <div className="mb-3">

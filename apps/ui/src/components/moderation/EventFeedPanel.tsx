@@ -6,6 +6,7 @@ import {
   FEED_TEST_LABEL,
   type FeedTestCode,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Notice } from "@/components/ds/Notice"
 import { T } from "@/lib/design-tokens"
@@ -85,6 +86,8 @@ export function EventFeedPanel({
   readonly status: string
   readonly review: EventFeedReview | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (!review)
     return (
       <p className="m-0" style={{ color: T.ink.dim }}>
@@ -99,13 +102,17 @@ export function EventFeedPanel({
   return (
     <div className="flex flex-col gap-4">
       {!review.submitterHoldsClaim ? (
-        <Notice icon="mdi:account-alert-outline" tone="warn" title="Claim lost">
+        <Notice
+          icon="mdi:account-alert-outline"
+          tone="warn"
+          title={tUi("claim_lost")}
+        >
           The submitter no longer holds a claim on this library. Reject this
           submission.
         </Notice>
       ) : null}
       {!review.exists ? (
-        <Notice icon="mdi:link-off" tone="warn" title="Feed withdrawn">
+        <Notice icon="mdi:link-off" tone="warn" title={tUi("feed_withdrawn")}>
           The library withdrew or disconnected this feed. Reject this
           submission.
         </Notice>
@@ -113,8 +120,8 @@ export function EventFeedPanel({
       <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[14px]">
         <dt style={{ color: T.ink.dim }}>Platform</dt>
         <dd className="m-0">{def?.label ?? review.provider}</dd>
-        <dt style={{ color: T.ink.dim }}>Library</dt>
-        <dd className="m-0">{review.library?.name ?? "Unknown"}</dd>
+        <dt style={{ color: T.ink.dim }}>{tUi("library")}</dt>
+        <dd className="m-0">{review.library?.name ?? tUi("unknown")}</dd>
         <dt style={{ color: T.ink.dim }}>Kind</dt>
         <dd className="m-0">
           {review.kind === "replace"
@@ -150,8 +157,8 @@ export function EventFeedPanel({
           : null}
       </dl>
       <div className="flex flex-col gap-2" aria-live="polite">
-        <TestLine label="Test when sent" test={review.submittedTest} />
-        <TestLine label="Latest test" test={review.latestTest} />
+        <TestLine label={tUi("test_when_sent")} test={review.submittedTest} />
+        <TestLine label={tUi("latest_test")} test={review.latestTest} />
       </div>
       {open && review.exists ? (
         <FeedTestButton documentId={documentId} />

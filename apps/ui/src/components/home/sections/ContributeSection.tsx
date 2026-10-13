@@ -10,6 +10,7 @@ import {
   Plus,
   Star,
 } from "lucide-react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
@@ -138,11 +139,14 @@ export function ContributeSection({
   /** A pinned or featured open drive; replaces the task rows when set. */
   readonly featuredDrive?: DriveView | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       id="contribute"
       aria-labelledby="contribute-title"
-      className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-[clamp(40px,7vw,120px)] px-4 pt-[clamp(80px,10vw,140px)] sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+      data-homepage-surface="paper"
+      className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-[clamp(40px,7vw,120px)] px-4 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
     >
       <div>
         <h2
@@ -228,7 +232,7 @@ export function ContributeSection({
               className="text-[15px] font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              All drives
+              {tUi("all_drives")}
             </GlobalLink>
           ) : tasks.length > 0 ? (
             <GlobalLink

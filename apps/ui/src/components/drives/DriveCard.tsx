@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
@@ -23,11 +25,15 @@ export function DriveCard({
   view,
   now,
   preview = false,
+  showHelpers = true,
 }: {
+  readonly showHelpers?: boolean
   readonly view: DriveView
   readonly now?: Date
   readonly preview?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { drive, progress, helpers, href, place, source } = view
   const { tint } = focusChipOf(drive.focus)
   const opens = preview ? longDate(drive.startsAt) : ""
@@ -44,7 +50,7 @@ export function DriveCard({
               className="text-[14px] font-semibold whitespace-nowrap"
               style={{ color: T.ink.dim }}
             >
-              Opens {opens}
+              {tUi("opens")} {opens}
             </span>
           ) : null
         ) : (
@@ -84,7 +90,7 @@ export function DriveCard({
           ) : null}
           {source ? (
             <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-              Records from {source}
+              {tUi("records_from")} {source}
             </p>
           ) : null}
         </div>
@@ -118,7 +124,7 @@ export function DriveCard({
                 </strong>{" "}
                 of {fmt(progress.total)} {unitNoun(drive.unit, progress.total)}
               </span>
-              {helpers != null ? (
+              {showHelpers && helpers != null ? (
                 <span style={{ color: T.ink.dim }}>{fmt(helpers)} helping</span>
               ) : null}
             </span>

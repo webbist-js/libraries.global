@@ -1,8 +1,8 @@
 /**
  * The one source of plan copy and prices for the Membership page
  * (/contribute/membership), the Atlas plans sheet and the account menu.
- * Amounts are display strings only and are placeholders until the owner
- * confirms them (pricing spec, 2026-09-27); P-D swaps them for Stripe prices.
+ * Individual amounts are the agreed tax-inclusive GBP base prices. Checkout
+ * reads the owned Stripe catalogue and confirms the actual recurring charge.
  * No other code may hard-code an amount.
  */
 import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
@@ -10,6 +10,7 @@ import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
 import { CONTACT_EMAIL } from "./constants"
 
 export type PlanCardKey = "public" | "free" | "supporter" | "pro" | "team"
+export type DigitalPlanKey = "supporter" | "pro" | "team"
 
 export type PlanPrice =
   | { monthly?: string; yearly?: string; note?: string }
@@ -37,11 +38,14 @@ export type PlanCard = {
   cta: PlanCta
 }
 
-export const PRICES_ARE_PLACEHOLDERS = true
+export const PRICES_ARE_PLACEHOLDERS = false
+
+export const ATLAS_PER_CAPITA_LABEL =
+  "Library access: population comparisons for countries and supported local areas"
 
 /** Pro's price after the founding offer, for the placeholders footnote. */
 export const PRO_STANDARD_PRICE_NOTE =
-  "Pro’s standard price will be £8/month or £80/year once per-capita layers and Reach ship; founding members keep £5."
+  "Pro’s standard price will be £8/month or £80/year once Reach ships; founding members keep £5."
 
 /** What each feature does, and whether it's built. Only built ones are "live". */
 export const PRO_FEATURE_COPY: Record<
@@ -61,11 +65,12 @@ export const PRO_FEATURE_COPY: Record<
     status: "live",
   },
   "atlas.contextLayers": {
-    label: "Per-capita, deprivation and transit layers",
+    label: "Deprivation and transit layers",
     status: "soon",
   },
   "atlas.analysis": {
-    label: "Reach, draw-to-analyse and coverage gaps",
+    label:
+      "Travel-time reach, draw-to-analyse, coverage gaps and service coverage",
     status: "soon",
   },
   "atlas.compare": { label: "Compare two areas", status: "soon" },
@@ -110,12 +115,12 @@ export const PRO_FEATURE_COPY: Record<
  * field names are public, previous → next is Pro (`library.history`).
  */
 export const LIBRARY_HISTORY_UPGRADE = {
-  text: "See what changed, field by field, with Pro.",
+  text: "See what changed, field by field, with Supporter or Pro.",
   href: "/contribute/membership",
 } as const
 
 /** A plan's features, read from the resolver so the copy can't drift from it. */
-export function featuresOf(plan: "pro" | "team"): Feature[] {
+export function featuresOf(plan: DigitalPlanKey): Feature[] {
   const { features } = resolveEntitlements({
     signedIn: true,
     now: new Date(0),
@@ -126,6 +131,14 @@ export function featuresOf(plan: "pro" | "team"): Feature[] {
 }
 
 const feature = (text: string): PlanInclude => ({ text, kind: "feature" })
+
+export function exportLimitOf(plan: "supporter" | "pro" | "team") {
+  return resolveEntitlements({
+    signedIn: true,
+    now: new Date(0),
+    grants: [{ plan, expiresAt: null }],
+  }).limits.exportRows
+}
 const soon = (text: string): PlanInclude => ({
   text: `${text} (coming soon)`,
   kind: "soon",
@@ -133,16 +146,29 @@ const soon = (text: string): PlanInclude => ({
 const note = (text: string): PlanInclude => ({ text, kind: "note" })
 
 /** Live features first, listed plainly; the rest flagged "(coming soon)". */
-function featureItems(features: readonly Feature[]): PlanInclude[] {
-  const copy = features.map((f) => PRO_FEATURE_COPY[f])
+function featureItems(
+  features: readonly Feature[],
+  plan?: "supporter" | "pro" | "team"
+): PlanInclude[] {
+  const copy = features.map((f) => ({
+    ...PRO_FEATURE_COPY[f],
+    label:
+      f === "atlas.export" && plan
+        ? `${PRO_FEATURE_COPY[f].label} (up to ${exportLimitOf(plan).toLocaleString("en-GB")} libraries per download)`
+        : PRO_FEATURE_COPY[f].label,
+  }))
 
   return [
     ...copy.filter((c) => c.status === "live").map((c) => feature(c.label)),
+    ...(features.includes("atlas.analysis")
+      ? [feature(ATLAS_PER_CAPITA_LABEL)]
+      : []),
     ...copy.filter((c) => c.status === "soon").map((c) => soon(c.label)),
   ]
 }
 
 const PRO_ONLY = featuresOf("pro")
+const SUPPORTER_ONLY = featuresOf("supporter")
 const TEAM_ONLY = featuresOf("team").filter((f) => !PRO_ONLY.includes(f))
 const TEAM_FEATURES = featureItems(TEAM_ONLY)
 
@@ -198,7 +224,7 @@ export const PLANS: readonly PlanCard[] = [
       feature("Apply for Knowledge or Journal editing roles"),
       feature("Claim your library and use the free staff tools"),
       soon("3 saved views and 3 saved searches"),
-      soon("A weekly digest of followed libraries"),
+      feature("An opt-in weekly digest of followed libraries"),
     ],
     cta: {
       kind: "signup",
@@ -215,7 +241,10 @@ export const PLANS: readonly PlanCard[] = [
       feature("Everything in Free account"),
       feature("An optional Supporter mark you can hide"),
       feature("Optional credit on the supporters page"),
-      note("No extra features and no extra trust: it’s patronage."),
+      ...featureItems(SUPPORTER_ONLY, "supporter"),
+      note(
+        "Payment never changes your community role or how edits are reviewed."
+      ),
     ],
     cta: { kind: "soon", label: "Coming soon" },
   },
@@ -228,7 +257,10 @@ export const PLANS: readonly PlanCard[] = [
       note: "Founding price, held while you stay a member.",
     },
     who: "Researchers, journalists, consultants, enthusiasts",
-    includes: [feature("Everything in Supporter"), ...featureItems(PRO_ONLY)],
+    includes: [
+      feature("Everything in Supporter"),
+      ...featureItems(PRO_ONLY, "pro"),
+    ],
     cta: { kind: "soon", label: "Coming soon" },
   },
   {
@@ -289,8 +321,9 @@ export const FREE_FEATURE_SUMMARIES = [
   {
     title: "Weekly digest",
     icon: "mdi:email-outline",
-    description: "A weekly email about the libraries you follow.",
-    include: "A weekly digest",
+    description:
+      "An opt-in weekly email when libraries you follow have changed.",
+    include: "An opt-in weekly digest",
   },
 ].map(({ include, ...copy }) => ({
   ...copy,
@@ -323,13 +356,14 @@ export const PLAN_TEASERS: readonly {
   {
     key: "pro",
     tagline: "Free for regular contributors",
-    summary: "Atlas export today, with reach and coverage analysis on the way.",
+    summary:
+      "Library access compares libraries per resident across countries and UK local areas. Atlas export is included; Reach is on the way.",
   },
   {
     key: "team",
     tagline: "For library services",
     summary:
-      "Pro for every seat and a team organiser who assigns staff to your libraries, with traffic reports to come.",
+      "Library access and the other Pro tools for every seat, plus a team organiser who assigns staff to your libraries.",
   },
 ]
 

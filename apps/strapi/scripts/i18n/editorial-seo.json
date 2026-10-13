@@ -1,0 +1,86 @@
+{
+  "wiki-article": {
+    "how-we-count": {
+      "cs": {
+        "metaTitle": "Jak počítáme | Znalosti | Libraries Global",
+        "metaDescription": "Co zahrnují počty knihoven, zemí, přispěvatelů a změn za tento měsíc na úvodní stránce Libraries Global a které údaje v nich nejsou."
+      },
+      "fr": {
+        "metaTitle": "Notre méthode de comptage | Libraries Global",
+        "metaDescription": "Ce que comprennent les nombres de bibliothèques, de pays, de contributeurs et de changements ce mois-ci sur Libraries Global, et leurs limites."
+      }
+    }
+  },
+  "blog-article": {
+    "who-is-building-libraries-global": {
+      "cs": {
+        "metaTitle": "Kdo vytváří Libraries Global",
+        "metaDescription": "Alex Bennett je webový vývojář z Yorkshiru. Webům se věnuje deset let a rok pracoval pro British Library. Seznamte se s tvůrcem Libraries Global."
+      },
+      "fr": {
+        "metaTitle": "Qui développe Libraries Global",
+        "metaDescription": "Alex Bennett est développeur web dans le Yorkshire. Il crée des sites depuis dix ans et a travaillé un an à la British Library."
+      }
+    },
+    "launch-and-whats-next": {
+      "cs": {
+        "metaTitle": "Co Libraries Global nabízí při spuštění",
+        "metaDescription": "Atlas, vyhledávání, stránky knihoven a komunitní úpravy už fungují. Zjistěte, co můžete dělat dnes a které funkce připravujeme dál."
+      },
+      "fr": {
+        "metaTitle": "Libraries Global au lancement : les prochaines étapes",
+        "metaDescription": "L’Atlas, la recherche, les pages des bibliothèques et l’édition communautaire sont disponibles. Découvrez les fonctions actuelles et à venir."
+      }
+    },
+    "countries-and-places-from-open-data": {
+      "cs": {
+        "metaTitle": "233 zemí a 50 198 míst z otevřených dat",
+        "metaDescription": "Z dat Natural Earth, GeoNames a ONS jsme přidali všechny země, 3 687 regionů a 46 511 menších oblastí, aby každá knihovna měla své místo."
+      },
+      "fr": {
+        "metaTitle": "233 pays et 50 198 lieux issus de données ouvertes",
+        "metaDescription": "Toutes les nations, 3 687 régions et 46 511 zones locales de Natural Earth, GeoNames et ONS ont été ajoutées pour situer chaque bibliothèque."
+      }
+    },
+    "us-public-libraries-from-one-survey": {
+      "cs": {
+        "metaTitle": "17 584 veřejných knihoven v USA z jednoho průzkumu",
+        "metaDescription": "Přidali jsme 17 584 veřejných knihoven v USA z federálního průzkumu Public Libraries Survey. Odkud data pocházejí a jak jsme knihovny umístili."
+      },
+      "fr": {
+        "metaTitle": "17 584 bibliothèques publiques aux États-Unis",
+        "metaDescription": "17 584 bibliothèques publiques américaines ajoutées grâce au Public Libraries Survey : l’origine des données et la localisation de chaque fiche."
+      }
+    },
+    "more-than-a-pin-on-a-map": {
+      "cs": {
+        "metaTitle": "Knihovna je víc než bod na mapě",
+        "metaDescription": "Knihovny pomáhají lidem najít práci, připojit se k internetu i pěstovat potraviny. Proč tvoříme otevřený rejstřík, který překračuje běžné seznamy."
+      },
+      "fr": {
+        "metaTitle": "Une bibliothèque est plus qu’un point sur une carte",
+        "metaDescription": "Les bibliothèques aident à trouver un emploi, accéder à Internet et cultiver des aliments. Pourquoi créer un répertoire ouvert plus complet ?"
+      }
+    },
+    "uk-public-libraries-from-libraryon": {
+      "cs": {
+        "metaTitle": "3 795 britských knihoven z LibraryOn",
+        "metaDescription": "Z LibraryOn jsme importovali 3 795 veřejných knihoven v Anglii, Skotsku, Walesu a Severním Irsku a zařadili je podle jejich umístění."
+      },
+      "fr": {
+        "metaTitle": "3 795 bibliothèques britanniques issues de LibraryOn",
+        "metaDescription": "3 795 bibliothèques publiques d’Angleterre, d’Écosse, du pays de Galles et d’Irlande du Nord, importées de LibraryOn et classées par lieu."
+      }
+    },
+    "no-list-of-every-library": {
+      "cs": {
+        "metaTitle": "Chyběl seznam všech knihoven na světě",
+        "metaDescription": "Libraries Global je otevřený atlas světových knihoven se stránkou pro každou z nich. Představujeme projekt a iniciativy, které mu předcházely."
+      },
+      "fr": {
+        "metaTitle": "Il manquait un répertoire mondial des bibliothèques",
+        "metaDescription": "Libraries Global est un atlas ouvert des bibliothèques du monde, avec une page pour chacune. Le projet et les initiatives qui l’ont précédé."
+      }
+    }
+  }
+}

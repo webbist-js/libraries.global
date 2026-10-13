@@ -3,6 +3,7 @@
 // apps/ui/src/app/[locale]/auth/_components/AuthTipCarousel.tsx
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -16,6 +17,8 @@ const navButtonClassName =
   "flex size-11 cursor-pointer items-center justify-center transition-colors hover:bg-(--t-bg-surface)"
 
 export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
+  const tUi = useUiTranslations("ui")
+
   const [index, setIndex] = useState(0)
   const step = (delta: number) =>
     setIndex((i) => (i + delta + tips.length) % tips.length)
@@ -23,7 +26,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
   return (
     <section
       aria-roledescription="carousel"
-      aria-label="Tips"
+      aria-label={tUi("tips")}
       className="flex flex-col p-6"
       style={{
         background: T.bg.deep,
@@ -43,7 +46,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
           }}
         >
           <Icon icon="mdi:lightbulb-outline" width={16} aria-hidden="true" />
-          Tip
+          {tUi("tip")}
         </span>
         <span style={{ fontSize: "14px", color: T.ink.dim }}>
           {index + 1} of {tips.length}
@@ -103,7 +106,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
         <div className="flex gap-2">
           <button
             type="button"
-            aria-label="Previous tip"
+            aria-label={tUi("previous_tip")}
             onClick={() => step(-1)}
             className={navButtonClassName}
             style={{
@@ -116,7 +119,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
           </button>
           <button
             type="button"
-            aria-label="Next tip"
+            aria-label={tUi("next_tip")}
             onClick={() => step(1)}
             className={navButtonClassName}
             style={{

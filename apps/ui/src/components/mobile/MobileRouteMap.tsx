@@ -1,4 +1,5 @@
 "use client"
+
 import {
   addDays,
   dayRoute,
@@ -8,6 +9,7 @@ import {
   type PublicLiveState,
 } from "@repo/shared-data"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { coarseRing } from "@/components/atlas/mobile-map-data"
@@ -62,6 +64,8 @@ export function MobileRouteMap({
   /** Replaces the figure caption (the editor names the day itself). */
   readonly caption?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const element = useRef<HTMLDivElement>(null),
     mapRef = useRef<MapLibreMap | null>(null),
     vehicle = useRef<Marker | null>(null),
@@ -377,7 +381,7 @@ export function MobileRouteMap({
         <EmptyState
           compact
           icon="mdi:map-outline"
-          lead="The map can’t load here"
+          lead={tUi("the_map_cant_load_here")}
           detail="Use the stops and timetable instead. Nothing about the route is lost."
         />
       ) : null}

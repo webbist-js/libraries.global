@@ -1,7 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { StaffRole } from "@repo/access"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, SegmentedControl, Sheet } from "@/components/ds"
@@ -98,6 +99,8 @@ export function TeamOrganiser({
   readonly team: TeamDetail
   readonly others: { id: string; name: string }[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const locale = useLocale()
   const date = (iso: string) => formatDate(iso, locale)
@@ -193,7 +196,7 @@ export function TeamOrganiser({
         <Notice
           icon="mdi:email-alert-outline"
           tone="warn"
-          title="Invite created, but email isn’t configured"
+          title={tUi("invite_created_but_email_isnt_configured")}
         >
           <span style={{ color: T.ink.base }}>
             The seat is held and the invite shows below. Nobody was emailed: the
@@ -202,7 +205,11 @@ export function TeamOrganiser({
         </Notice>
       ) : null}
       {error ? (
-        <Notice icon="mdi:alert-circle-outline" tone="warn" title="Not saved">
+        <Notice
+          icon="mdi:alert-circle-outline"
+          tone="warn"
+          title={tUi("not_saved")}
+        >
           <span role="alert">{error}</span>
         </Notice>
       ) : null}
@@ -210,7 +217,7 @@ export function TeamOrganiser({
         <Notice
           icon="mdi:pause-circle-outline"
           tone="warn"
-          title="This team isn't active"
+          title={tUi("this_team_isnt_active")}
         >
           {team.status === "lapsed"
             ? "It has lapsed: members keep their seats but Pro and Team features are off until it’s renewed."
@@ -418,7 +425,9 @@ export function TeamOrganiser({
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge
-                      label={member.status === "active" ? "Active" : "Invited"}
+                      label={
+                        member.status === "active" ? "Active" : tUi("invited")
+                      }
                       color={member.status === "active" ? "ok" : "warn"}
                       dot
                     />
@@ -514,7 +523,7 @@ export function TeamOrganiser({
                           })
                         }
                       >
-                        Remove
+                        {tUi("remove")}{" "}
                         <span className="sr-only">
                           {" "}
                           {memberName(member)} from the team
@@ -589,7 +598,7 @@ export function TeamOrganiser({
 
       {organiser ? (
         <Card
-          title="Invite a colleague"
+          title={tUi("invite_a_colleague")}
           aside={
             <span className="text-[14px]" style={{ color: T.ink.dim }}>
               {seatsLeft} {seatsLeft === 1 ? "seat" : "seats"} left
@@ -643,7 +652,7 @@ export function TeamOrganiser({
               }}
             >
               <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                Email
+                {tUi("email")}{" "}
                 <input
                   type="email"
                   required
@@ -696,7 +705,7 @@ export function TeamOrganiser({
                 <div className="flex flex-col gap-2 text-[14px] font-semibold">
                   Level
                   <SegmentedControl
-                    label="Level at the library"
+                    label={tUi("level_at_the_library")}
                     options={LEVELS}
                     value={inviteLevel}
                     onChange={setInviteLevel}
@@ -735,7 +744,9 @@ export function TeamOrganiser({
         onClose={() => !busy && setAssigning(null)}
         side="right"
         title={
-          assigning ? `Libraries for ${memberName(assigning)}` : "Libraries"
+          assigning
+            ? `Libraries for ${memberName(assigning)}`
+            : tUi("libraries")
         }
         footer={
           <div className="flex flex-wrap gap-3">
@@ -750,7 +761,7 @@ export function TeamOrganiser({
                 })
               }}
             >
-              Save changes
+              {tUi("save_changes")}{" "}
             </button>
             <button
               type="button"
@@ -759,7 +770,7 @@ export function TeamOrganiser({
               disabled={busy}
               onClick={() => setAssigning(null)}
             >
-              Cancel
+              {tUi("cancel")}{" "}
             </button>
           </div>
         }
@@ -810,7 +821,7 @@ export function TeamOrganiser({
                     )
                   }
                 >
-                  Remove
+                  {tUi("remove")}{" "}
                   <span className="sr-only">
                     {" "}
                     {libraryName(a.libraryDocumentId)}
@@ -830,7 +841,7 @@ export function TeamOrganiser({
             style={{ borderColor: T.border.hi }}
           >
             <label className="flex flex-col gap-2 text-[14px] font-semibold">
-              Add a library
+              {tUi("add_a_library")}
               <select
                 value={addLibrary}
                 className={INPUT}
@@ -847,7 +858,7 @@ export function TeamOrganiser({
             </label>
             <div className="flex flex-wrap items-center gap-3">
               <SegmentedControl
-                label="Level at the library"
+                label={tUi("level_at_the_library")}
                 options={LEVELS}
                 value={addLevel}
                 onChange={setAddLevel}
@@ -873,7 +884,7 @@ export function TeamOrganiser({
                   width={14}
                   height={14}
                 />
-                Add
+                {tUi("add")}{" "}
               </button>
             </div>
           </div>
@@ -910,7 +921,7 @@ export function TeamOrganiser({
             style={{ borderColor: T.border.hi }}
             onClick={() => setConfirm(null)}
           >
-            Cancel
+            {tUi("cancel")}{" "}
           </button>
         </div>
         {error ? (

@@ -1,13 +1,13 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 
-import { translateTargets } from "@/app/[locale]/contribute/index/_components/translation-mode"
 import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LibraryDriveNote } from "@/components/library/LibraryDriveNote"
+import { translateTargets } from "@/components/library-editor/translation-mode"
 import { T } from "@/lib/design-tokens"
 import { Link, usePathname } from "@/lib/navigation"
 
@@ -38,13 +38,14 @@ const INDIGO = { bg: T.accent.chip, fg: T.accent.primary }
 function tasksFor(
   gaps: readonly ChecklistKey[],
   library: { slug: string; name: string },
-  questions: number
+  questions: number,
+  mobile = false
 ): Task[] {
   const all: Task[] = [
     {
       key: "facilities",
       title: "Add accessibility details",
-      meta: `About 2 minutes · ${questions} ${questions === 1 ? "question" : "questions"}`,
+      meta: `${questions} ${questions === 1 ? "question" : "questions"}`,
       icon: "mdi:human",
       tint: ACADEMIC,
       href: "#access",
@@ -52,7 +53,7 @@ function tasksFor(
     {
       key: "about",
       title: "Describe the collections",
-      meta: "About 5 minutes",
+      meta: "Add a source with what you know",
       icon: "mdi:bookshelf",
       tint: SPECIAL,
       category: "Collections",
@@ -67,16 +68,16 @@ function tasksFor(
     },
     {
       key: "hours",
-      title: "Add the opening hours",
-      meta: "About 3 minutes",
+      title: mobile ? "Add stops and times" : "Add the opening hours",
+      meta: "Add a source with what you know",
       icon: "mdi:clock-outline",
       tint: INDIGO,
-      category: "Opening hours",
+      category: mobile ? "Stops & times" : "Opening hours",
     },
     {
       key: "address",
       title: "Add the address",
-      meta: "About 1 minute",
+      meta: "Add a source with what you know",
       icon: "mdi:map-marker-outline",
       tint: INDIGO,
       category: "Address or location",
@@ -84,7 +85,7 @@ function tasksFor(
     {
       key: "location",
       title: "Put it on the map",
-      meta: "About 1 minute",
+      meta: "Add a source with what you know",
       icon: "mdi:map-marker-radius-outline",
       tint: INDIGO,
       category: "Address or location",
@@ -92,7 +93,7 @@ function tasksFor(
     {
       key: "history",
       title: "Add a date from its history",
-      meta: "About 2 minutes",
+      meta: "Add a source with what you know",
       icon: "mdi:history",
       tint: SPECIAL,
       category: "Something else",
@@ -100,7 +101,7 @@ function tasksFor(
     {
       key: "contact",
       title: "Add the official website",
-      meta: "About 1 minute",
+      meta: "Add a source with what you know",
       icon: "mdi:web",
       tint: INDIGO,
       category: "Something else",
@@ -169,6 +170,8 @@ function TranslateRecord({
   /** Rule it off from tasks above it. */
   readonly divided: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [first, ...rest] = locales
   if (!first) return null
 
@@ -188,7 +191,7 @@ function TranslateRecord({
       >
         <TaskBody
           task={{
-            title: "Translate this record",
+            title: tUi("translate_this_record"),
             meta: rest.length > 0 ? `Into ${first.name}` : first.name,
             icon: "mdi:translate",
             tint: INDIGO,
@@ -196,7 +199,7 @@ function TranslateRecord({
         />
       </Link>
       {rest.length > 0 ? (
-        <nav aria-label="Translate into another language">
+        <nav aria-label={tUi("translate_into_another_language")}>
           <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
             {rest.map((l) => (
               <li key={l.code}>
@@ -231,6 +234,8 @@ export function LibraryHelpPanel({
   translateLocales = [],
   libraryPlace,
   libraryWebsite,
+  libraryType,
+  showDrive = true,
 }: {
   readonly gaps: readonly ChecklistKey[]
   readonly librarySlug: string
@@ -248,6 +253,8 @@ export function LibraryHelpPanel({
     city?: string | null
     regionName?: string | null
   } | null
+  readonly showDrive?: boolean
+  readonly libraryType?: string | null
   readonly libraryWebsite?: string | null
 }) {
   const routeLocale = useLocale()
@@ -256,12 +263,13 @@ export function LibraryHelpPanel({
   const tasks = tasksFor(
     gaps,
     { slug: librarySlug, name: libraryName },
-    facilityQuestions
+    facilityQuestions,
+    libraryType === "Mobile"
   )
 
   const targets = translateTargets(translateLocales, routeLocale)
 
-  const driveNote = (
+  const driveNote = showDrive ? (
     <LibraryDriveNote
       library={{
         documentId: libraryDocumentId,
@@ -273,7 +281,7 @@ export function LibraryHelpPanel({
         href: pathname,
       }}
     />
-  )
+  ) : null
 
   if (tasks.length === 0 && targets.length === 0) return driveNote
 

@@ -7,6 +7,7 @@ import {
   type MobileTimetable,
   type TimetableNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Sheet } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -36,6 +37,8 @@ export function StopDrawer({
   /** Where "Suggest a correction for this stop" goes. */
   readonly correctionHref?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const now = useMobileClock(),
     stop = tt.stops.find((row) => row.id === stopId),
     date = now ? localDateTime(now, timezone).date : null
@@ -87,7 +90,7 @@ export function StopDrawer({
                 <tr>
                   <th scope="col">Date</th>
                   <th scope="col">Time</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">{tUi("status")}</th>
                 </tr>
               </thead>
               <tbody>

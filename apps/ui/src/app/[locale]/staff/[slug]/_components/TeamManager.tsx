@@ -1,7 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { StaffRole } from "@repo/access"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, Sheet, Switch } from "@/components/ds"
@@ -25,8 +26,7 @@ const PILL =
   "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
 const PRIMARY =
   "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
-const INPUT =
-  "min-h-11 rounded-[14px] border bg-(--t-bg-surface) px-3 text-[15px]"
+const INPUT = "min-h-14 min-w-0 rounded-[16px] border bg-white px-4 text-[16px]"
 const QUIET_LINK =
   "inline-flex min-h-11 items-center text-[13.5px] font-semibold underline underline-offset-[3px] disabled:cursor-not-allowed disabled:opacity-50"
 
@@ -67,12 +67,12 @@ function Card({
 }) {
   return (
     <section
-      className="rounded-[20px] border p-6 sm:p-8"
+      className="rounded-[28px] border p-5 sm:p-8"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h2
-          className="m-0 text-[24px]"
+          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
           style={{ fontFamily: T.font.serif, color: T.ink.base }}
         >
           {title}
@@ -115,6 +115,8 @@ export function TeamManager({
   readonly full: boolean
   readonly mobile: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const locale = useLocale()
   const date = (iso: string) => formatDate(iso, locale)
@@ -170,7 +172,11 @@ export function TeamManager({
         {status}
       </div>
       {error ? (
-        <Notice icon="mdi:alert-circle-outline" tone="warn" title="Not saved">
+        <Notice
+          icon="mdi:alert-circle-outline"
+          tone="warn"
+          title={tUi("not_saved")}
+        >
           <span role="alert">{error}</span>
         </Notice>
       ) : null}
@@ -234,16 +240,16 @@ export function TeamManager({
         }
       >
         <ul
-          className="m-0 list-none divide-y p-0"
+          className="m-0 list-none divide-y border-t p-0"
           style={{ borderColor: T.border.divider }}
         >
           {data.members.map((member, index) => (
             <li
               key={member.affiliationDocumentId}
-              className="flex flex-wrap items-center justify-between gap-4 py-4"
+              className="flex flex-wrap items-center justify-between gap-4 py-5"
               style={{ borderColor: T.border.divider }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-4">
                 <Avatar
                   initials={member.initials || "?"}
                   index={index}
@@ -253,7 +259,7 @@ export function TeamManager({
                 />
                 <div>
                   <p
-                    className="m-0 font-semibold"
+                    className="m-0 text-[18px] font-semibold wrap-break-word"
                     style={{ color: T.ink.base }}
                   >
                     {member.name}
@@ -262,7 +268,7 @@ export function TeamManager({
                     ) : null}
                   </p>
                   {full ? (
-                    <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
                       {member.approvedAt
                         ? `Verified ${date(member.approvedAt)}`
                         : "Verified"}
@@ -311,7 +317,7 @@ export function TeamManager({
                   )}
                   {mobile ? (
                     <Switch
-                      label="Can go live"
+                      label={tUi("can_go_live")}
                       checked={member.canGoLive === true}
                       disabled={!owner || busy}
                       onChange={(canGoLive) => {
@@ -341,7 +347,7 @@ export function TeamManager({
                         })
                       }
                     >
-                      Remove
+                      {tUi("remove")}
                       <span className="sr-only">
                         {" "}
                         {member.name} from the staff
@@ -357,7 +363,7 @@ export function TeamManager({
           <ul
             className="m-0 list-none divide-y border-t p-0"
             style={{ borderColor: T.border.divider }}
-            aria-label="Invited, not yet accepted"
+            aria-label={tUi("invited_not_yet_accepted")}
           >
             {pendingInvites.map((invite) => (
               <li
@@ -380,14 +386,18 @@ export function TeamManager({
                     >
                       {invite.emailMasked}
                     </p>
-                    <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
                       {invite.staffRole === "owner" ? "Owner" : "Editor"} ·
                       holds a seat until {date(invite.expiresAt)}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <Badge label="Invited" color="dim" icon="mdi:clock-outline" />
+                  <Badge
+                    label={tUi("invited")}
+                    color="dim"
+                    icon="mdi:clock-outline"
+                  />
                   {organiser && team ? (
                     <button
                       type="button"
@@ -416,6 +426,108 @@ export function TeamManager({
             ))}
           </ul>
         ) : null}
+        {full && organiser && team ? (
+          <div
+            className="mt-6 border-t pt-6"
+            style={{ borderColor: T.border.divider }}
+          >
+            {organiser && team ? (
+              <form
+                className="flex flex-wrap items-end gap-3"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  request(
+                    `/api/staff/team/${team.documentId}/invites`,
+                    "POST",
+                    {
+                      email: inviteEmail,
+                      teamRole: "member",
+                      preassign: {
+                        libraryDocumentId: id,
+                        staffRole: inviteRole,
+                      },
+                    }
+                  ).then((saved) => {
+                    if (saved) setInviteEmail("")
+                  })
+                }}
+              >
+                <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-2 text-[15px] font-semibold">
+                  {tUi("email")}{" "}
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={inviteEmail}
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                    className={INPUT}
+                    style={{ borderColor: T.border.hi }}
+                    maxLength={254}
+                    placeholder="colleague@library.example"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-[14px] font-semibold">
+                  Level
+                  <select
+                    name="staffRole"
+                    value={inviteRole}
+                    onChange={(event) =>
+                      setInviteRole(
+                        event.target.value === "owner" ? "owner" : "editor"
+                      )
+                    }
+                    className={INPUT}
+                    style={{ borderColor: T.border.hi }}
+                  >
+                    <option value="editor">Editor</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                </label>
+                <button
+                  className={PRIMARY}
+                  disabled={busy || !inviteEmail}
+                  type="submit"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    icon="mdi:email-fast-outline"
+                    width={16}
+                    height={16}
+                  />
+                  Send invite
+                </button>
+                <p
+                  className="m-0 basis-full text-[13px]"
+                  style={{ color: T.ink.dim }}
+                >
+                  They join {team.name} and get {inviteRole} access to{" "}
+                  {libraryName} as soon as they accept
+                  {team.verified ? "" : " (a moderator checks it first)"}.
+                  Manage every library’s staff in the{" "}
+                  <Link
+                    href="/staff/team"
+                    className="font-semibold underline"
+                    style={{ color: T.accent.primary }}
+                  >
+                    {tUi("team_organiser")}
+                  </Link>
+                  .
+                </p>
+              </form>
+            ) : null}
+            {data.invites.some((i) => i.status === "expired") ? (
+              <p className="mt-4 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
+                {data.invites.filter((i) => i.status === "expired").length}{" "}
+                earlier invite
+                {data.invites.filter((i) => i.status === "expired").length === 1
+                  ? ""
+                  : "s"}{" "}
+                expired unaccepted. Send a new one to try again.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {!full ? (
           <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
             Each person claimed access on their own and a moderator checked it.
@@ -427,7 +539,7 @@ export function TeamManager({
             <Notice
               icon="mdi:account-plus-outline"
               tone="info"
-              title="Need to add a colleague?"
+              title={tUi("need_to_add_a_colleague")}
             >
               <p className="m-0" style={{ color: T.ink.base }}>
                 Ask your team organiser
@@ -441,101 +553,8 @@ export function TeamManager({
         ) : null}
       </Card>
 
-      {full && organiser && team ? (
-        <Card title="Send invite">
-          {organiser && team ? (
-            <form
-              className="flex flex-wrap items-end gap-3"
-              onSubmit={(event) => {
-                event.preventDefault()
-                request(`/api/staff/team/${team.documentId}/invites`, "POST", {
-                  email: inviteEmail,
-                  teamRole: "member",
-                  preassign: { libraryDocumentId: id, staffRole: inviteRole },
-                }).then((saved) => {
-                  if (saved) setInviteEmail("")
-                })
-              }}
-            >
-              <label className="flex min-w-[16rem] flex-1 flex-col gap-2 text-[14px] font-semibold">
-                Email
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={inviteEmail}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  className={INPUT}
-                  style={{ borderColor: T.border.hi }}
-                  maxLength={254}
-                  placeholder="colleague@library.example"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                Level
-                <select
-                  name="staffRole"
-                  value={inviteRole}
-                  onChange={(event) =>
-                    setInviteRole(
-                      event.target.value === "owner" ? "owner" : "editor"
-                    )
-                  }
-                  className={INPUT}
-                  style={{ borderColor: T.border.hi }}
-                >
-                  <option value="editor">Editor</option>
-                  <option value="owner">Owner</option>
-                </select>
-              </label>
-              <button
-                className={PRIMARY}
-                disabled={busy || !inviteEmail}
-                type="submit"
-              >
-                <Icon
-                  aria-hidden="true"
-                  icon="mdi:email-fast-outline"
-                  width={16}
-                  height={16}
-                />
-                Send invite
-              </button>
-              <p
-                className="m-0 basis-full text-[13px]"
-                style={{ color: T.ink.dim }}
-              >
-                They join {team.name} and get {inviteRole} access to{" "}
-                {libraryName} as soon as they accept
-                {team.verified ? "" : " (a moderator checks it first)"}. Manage
-                every library’s staff in the{" "}
-                <Link
-                  href="/staff/team"
-                  className="font-semibold underline"
-                  style={{ color: T.accent.primary }}
-                >
-                  Team organiser
-                </Link>
-                .
-              </p>
-            </form>
-          ) : null}
-          {data.invites.some((i) => i.status === "expired") ? (
-            <p className="mt-4 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
-              {data.invites.filter((i) => i.status === "expired").length}{" "}
-              earlier invite
-              {data.invites.filter((i) => i.status === "expired").length === 1
-                ? ""
-                : "s"}{" "}
-              expired unaccepted. Send a new one to try again.
-            </p>
-          ) : null}
-        </Card>
-      ) : null}
-
       {full && data.audit.length ? (
-        <Card title="Recent changes">
+        <Card title={tUi("recent_changes")}>
           <ul
             className="m-0 list-none divide-y p-0"
             style={{ borderColor: T.border.divider }}
@@ -604,7 +623,7 @@ export function TeamManager({
             style={{ borderColor: T.border.hi }}
             onClick={() => setConfirm(null)}
           >
-            Cancel
+            {tUi("cancel")}{" "}
           </button>
         </div>
         {error ? (
@@ -617,7 +636,7 @@ export function TeamManager({
         open={report}
         onClose={() => setReport(false)}
         side="bottom"
-        title="Report a problem with staff access"
+        title={tUi("report_a_problem_with_staff_access")}
       >
         <form
           onSubmit={(event) => {

@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import { isStaleTimetableSuggestion } from "@repo/shared-data"
 import { notFound } from "next/navigation"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 import type { ReactNode } from "react"
 
 import {
@@ -246,6 +247,8 @@ export default async function ReviewSubmissionPage({
 }: {
   params: Promise<{ locale: string; documentId: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const { documentId } = await params
   const { user, accessUnknown } = await requireModerator(
     `/contribute/moderation/${encodeURIComponent(documentId)}`
@@ -307,17 +310,17 @@ export default async function ReviewSubmissionPage({
 
       <div className="mx-auto grid w-full max-w-[1360px] gap-8 px-4 pt-8 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <Section title="About this submission">
+          <Section title={tUi("about_this_submission")}>
             <KeyValueList
               rows={[
-                { label: "Type", value: moderationRowLabel(d) },
+                { label: tUi("type"), value: moderationRowLabel(d) },
                 { label: "Change", value: detailOf(d) ?? "" },
                 {
                   label: "Contributor",
                   value: d.submittedByName ?? "Anonymous",
                 },
                 { label: "Submitted", value: formatDateTime(d.createdAt) },
-                { label: "Language", value: language },
+                { label: tUi("language"), value: language },
                 { label: "Record", value: d.targetSlug ?? "" },
                 {
                   label: "Reviewed",
@@ -335,7 +338,7 @@ export default async function ReviewSubmissionPage({
           </Section>
 
           {contributorNote ? (
-            <Section title="The contributor’s note">
+            <Section title={tUi("the_contributors_note")}>
               <p
                 className="m-0 text-[15px] leading-[1.6] whitespace-pre-wrap"
                 style={{ color: T.ink.base }}
@@ -357,10 +360,10 @@ export default async function ReviewSubmissionPage({
         </div>
 
         <aside
-          aria-label="Decision"
+          aria-label={tUi("decision")}
           className="flex flex-col gap-6 self-start lg:sticky lg:top-24"
         >
-          <Section title="Your decision">
+          <Section title={tUi("your_decision")}>
             <ReviewDecisionForm
               canApprove={
                 !isStaleTimetableSuggestion(
@@ -381,7 +384,7 @@ export default async function ReviewSubmissionPage({
               driveDocumentId={d.drive?.documentId ?? null}
             />
           </Section>
-          <Section title="History">
+          <Section title={tUi("history")}>
             {d.reviewNote && events.every((e) => !e.note) ? (
               <p className="m-0 text-[14px]" style={{ color: T.ink.base }}>
                 <strong>Moderator note: </strong>
@@ -391,7 +394,7 @@ export default async function ReviewSubmissionPage({
             <ReviewThread events={events} />
           </Section>
           <nav
-            aria-label="Related pages"
+            aria-label={tUi("related_pages")}
             className="flex flex-col gap-2 text-[15px]"
           >
             {created?.link?.href ? (

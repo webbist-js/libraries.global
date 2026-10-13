@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useId, useRef, useState } from "react"
 
@@ -28,6 +29,8 @@ export function GlobalMobileMenu({
   /** Server-rendered actions (locale switcher, auth, Contribute). */
   readonly actions: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pathname = normalizePathname(usePathname() ?? "/")
   // Open "for" the page it was opened on, so any navigation closes it.
   const [openOn, setOpenOn] = useState<string | null>(null)
@@ -70,7 +73,7 @@ export function GlobalMobileMenu({
           color: T.ink.base,
         }}
       >
-        <span className="sr-only">{open ? "Close menu" : "Menu"}</span>
+        <span className="sr-only">{open ? tUi("close_menu") : "Menu"}</span>
         <svg
           aria-hidden="true"
           width="20"
@@ -93,7 +96,7 @@ export function GlobalMobileMenu({
         <>
           <button
             type="button"
-            aria-label="Close menu"
+            aria-label={tUi("close_menu")}
             tabIndex={-1}
             onClick={() => setOpen(false)}
             className="fixed inset-x-0 top-14 bottom-0 z-[59] cursor-default"
@@ -105,7 +108,7 @@ export function GlobalMobileMenu({
             className="absolute inset-x-0 top-full z-[61] max-h-[calc(100dvh-56px)] overflow-auto border-b px-4 pt-3 pb-5 sm:px-8"
             style={{ background: T.bg.void, borderColor: T.border.line }}
           >
-            <nav aria-label="Main">
+            <nav aria-label={tUi("main")}>
               <ul className="m-0 flex list-none flex-col gap-1 p-0">
                 {links.map((link) => {
                   const active =

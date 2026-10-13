@@ -43,12 +43,11 @@ describe("BeforeYouStartScreen", () => {
     expect(card.className).toMatch(/\bflex-wrap\b/)
     expect(summary.textContent).toContain("Thursday, Week 2 · 4 stops")
     expect(summary.className).toMatch(/\bmin-w-0\b/)
-    // `.live-button` carries the 56 px target and is full width by default;
-    // only the important override lets it sit beside the text from `sm`.
+    // The shared button style is layered so normal width utilities work.
     expect(button.className).toMatch(/\blive-button\b/)
     expect(button.className).toMatch(/\bw-full\b/)
     expect(button.className).toMatch(/\bshrink-0\b/)
-    expect(button.className).toMatch(/\bsm:!w-auto\b/)
+    expect(button.className).toMatch(/\bsm:w-auto\b/)
     expect(button.className.split(" ")).not.toContain("w-auto")
   })
 })

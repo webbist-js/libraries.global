@@ -4,6 +4,7 @@
 // without values; a viewer with `library.history` gets page 1 again from
 // the history route, with previous → next, once their session has loaded.
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -175,6 +176,25 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
         </time>,
       ]}
     >
+      {batch.references?.length ? (
+        <ul className="mt-2 pl-5">
+          {batch.references.map((reference, index) => (
+            <li key={index}>
+              <a
+                href={reference.url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {reference.label || reference.url}
+              </a>
+              {reference.fields?.length ? (
+                <span> · {reference.fields.map(fieldLabel).join(", ")}</span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {row.count ? (
         <DetailsDisclosure label={row.count}>
           {shown.length > 0 ? (
@@ -224,14 +244,13 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
 export function LibraryChangeTimeline({
   documentId,
   initial,
-  created = null,
 }: {
   readonly documentId: string
   /** Page 1, as the static page fetched it (without values). */
   readonly initial: LibraryHistoryPage
-  /** The "Record created" row, shown last once every batch is listed. */
-  readonly created?: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { can, ready } = useEntitlements()
   const pro = ready && can("library.history")
   const [batches, setBatches] = useState(initial.data)
@@ -245,7 +264,10 @@ export function LibraryChangeTimeline({
   // A Pro viewer of the static page: fetch page 1 again, with values.
   useEffect(() => {
     if (!pro || upgraded.current) return
-    if (!initial.data.some(withheld)) return
+    if (
+      !initial.data.some((batch) => !isImportCreate(batch) && withheld(batch))
+    )
+      return
     upgraded.current = true
     let live = true
     loadPage(documentId, 1).then((res) => {
@@ -286,15 +308,14 @@ export function LibraryChangeTimeline({
     })
   }
 
-  // The import that created the record is the `created` row.
-  const rows = created ? batches.filter((b) => !isImportCreate(b)) : batches
-  const entries = total - (batches.length - rows.length) + (created ? 1 : 0)
+  // Origin credits and the import date are shown once in the source list.
+  const rows = batches.filter((b) => !isImportCreate(b))
+  const entries = total - (batches.length - rows.length)
   const more = batches.length < total && page < 100
   const visible = expanded ? rows : rows.slice(0, FIRST_ROWS)
-  const showCreated = created && !more && visible.length === rows.length
-  const hidden = ready && !pro && batches.some(withheld)
+  const hidden = ready && !pro && rows.some(withheld)
 
-  if (rows.length === 0 && !created)
+  if (rows.length === 0 && !more)
     return (
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
         No changes recorded yet.
@@ -317,7 +338,6 @@ export function LibraryChangeTimeline({
         {visible.map((b) => (
           <BatchRow key={b.batchId} batch={b} />
         ))}
-        {showCreated ? created : null}
       </ul>
 
       {hidden ? (
@@ -333,7 +353,7 @@ export function LibraryChangeTimeline({
       ) : null}
 
       <p aria-live="polite" className="sr-only">
-        Showing {visible.length + (showCreated ? 1 : 0)} of {entries}{" "}
+        Showing {visible.length} of {entries}{" "}
         {entries === 1 ? "entry" : "entries"}.
       </p>
       {failed ? (
@@ -354,7 +374,7 @@ export function LibraryChangeTimeline({
           onClick={showMore}
         >
           {loading
-            ? "Loading…"
+            ? tUi("loading")
             : collapsed || entries - rows.length <= initial.meta.pageSize
               ? `Show all ${entries} entries`
               : "Show older entries"}

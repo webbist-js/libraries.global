@@ -38,7 +38,9 @@ function knexOver(store: Record<string, any[]>) {
             a.length === 3
               ? a[1] === ">="
                 ? String(r[camel(a[0])]) >= String(a[2])
-                : false
+                : a[1] === "<>"
+                  ? r[camel(a[0])] !== a[2]
+                  : false
               : r[camel(a[0])] === a[1]
           )
       )
@@ -354,6 +356,13 @@ describe("libraryHistoryStats", () => {
         batchId: "b0",
         field: "name",
         changedAt: "2025-01-01T10:00:00.000Z",
+      }),
+      row({
+        batchId: "initial-import",
+        field: "*",
+        action: "create",
+        source: "import",
+        changedAt: "2026-01-01T10:00:00.000Z",
       }),
     ])
     const out = await history.libraryHistoryStats(LIB, 3)

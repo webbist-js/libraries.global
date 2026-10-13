@@ -12,7 +12,9 @@ export default {
       path: "/libraries/by-slug/:slug",
       handler: "library.findBySlug",
       config: {
-        auth: false,
+        // Use the core list permission to load the reader's relation
+        // permissions; disabling auth makes sanitization drop them.
+        auth: { scope: ["api::library.library.find"] },
         middlewares: [
           { name: "api::library.library-populate", config: { view: "detail" } },
         ],

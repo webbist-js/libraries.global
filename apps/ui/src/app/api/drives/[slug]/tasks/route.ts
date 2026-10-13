@@ -11,6 +11,7 @@ import {
   PAGE_SIZE,
   TASK_ATTRIBUTES,
   taskOf,
+  taskPlaceFilter,
   taskSort,
   type DriveTaskHit,
 } from "@/lib/drives/drive-tasks"
@@ -78,7 +79,7 @@ export async function GET(
   })
 
   const result = await meiliClient.index("library").search<DriveTaskHit>(q, {
-    filter: `${filters.todo} AND ${searchLocaleFilter(locale)}${exclusionClause(inReview)}`,
+    filter: `${filters.todo} AND ${searchLocaleFilter(locale)}${taskPlaceFilter(Object.fromEntries(searchParams))}${exclusionClause(inReview)}`,
     sort: taskSort(near),
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,

@@ -1,5 +1,4 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -8,6 +7,7 @@ import type {
   LibraryHistoryBatch,
   LibraryHistoryPage,
 } from "@/lib/strapi-api/content/server"
+import { cleanup, fireEvent, render, waitFor } from "@/test/render"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
@@ -114,9 +114,9 @@ describe("LibraryChangeTimeline", () => {
     expect(container.querySelector("[data-previous]")!.textContent).toBe(
       "http://old.example"
     )
-    expect(queryByText("See what changed, field by field, with Pro.")).toBe(
-      null
-    )
+    expect(
+      queryByText("See what changed, field by field, with Supporter or Pro.")
+    ).toBe(null)
   })
 
   it("offers Pro, once, when values are absent and the viewer lacks the feature", () => {
@@ -126,7 +126,9 @@ describe("LibraryChangeTimeline", () => {
         initial: page([batch(), batch({ batchId: "b2" })]),
       })
     )
-    const lines = getAllByText("See what changed, field by field, with Pro.")
+    const lines = getAllByText(
+      "See what changed, field by field, with Supporter or Pro."
+    )
     expect(lines).toHaveLength(1)
     expect(lines[0]!.closest("a")!.getAttribute("href")).toBe(
       "/contribute/membership"
@@ -176,6 +178,25 @@ describe("LibraryChangeTimeline", () => {
     expect(fetchMock.mock.calls[0]![0]).toBe(
       `/api/libraries/${DOC}/history?page=2`
     )
+  })
+
+  it("does not repeat the source list's initial import or offer Pro for it", () => {
+    const { queryByText } = render(
+      createElement(LibraryChangeTimeline, {
+        documentId: DOC,
+        initial: page([
+          batch({
+            action: "create",
+            source: "import",
+            fields: [{ field: "*" }],
+          }),
+        ]),
+      })
+    )
+    expect(queryByText("Record created")).toBeNull()
+    expect(
+      queryByText("See what changed, field by field, with Supporter or Pro.")
+    ).toBeNull()
   })
 
   it("says so honestly when nothing has been recorded", () => {
@@ -250,9 +271,9 @@ describe("values that were never recorded (backfilled batches)", () => {
     expect(container.textContent).toContain(
       "Earlier change: values weren't recorded."
     )
-    expect(queryByText("See what changed, field by field, with Pro.")).toBe(
-      null
-    )
+    expect(
+      queryByText("See what changed, field by field, with Supporter or Pro.")
+    ).toBe(null)
     // Unrecorded is not "missing": no reload for values that don't exist.
     expect(fetchMock).not.toHaveBeenCalled()
   })
@@ -264,9 +285,9 @@ describe("values that were never recorded (backfilled batches)", () => {
         initial: page([unrecorded()]),
       })
     )
-    expect(queryByText("See what changed, field by field, with Pro.")).toBe(
-      null
-    )
+    expect(
+      queryByText("See what changed, field by field, with Supporter or Pro.")
+    ).toBe(null)
     expect(container.textContent).not.toContain("Empty")
   })
 

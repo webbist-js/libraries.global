@@ -4,6 +4,7 @@
  * shape of a search hit as a `DriveTask`, and the "exclude these ids"
  * filter clause both routes build the same way.
  */
+import { contributionPlaceParams } from "@/lib/contribution-place"
 import type { DriveTask } from "@/lib/drives/types"
 
 export const PAGE_SIZE = 10
@@ -116,4 +117,11 @@ const quotedIds = (ids: readonly string[]) =>
  */
 export function exclusionClause(ids: readonly string[]): string {
   return ids.length > 0 ? ` AND documentId NOT IN ${quotedIds(ids)}` : ""
+}
+
+/** Narrow a drive’s existing scope; user input can never widen it. */
+export function taskPlaceFilter(input: Record<string, unknown>): string {
+  return Object.entries(contributionPlaceParams(input))
+    .map(([level, slug]) => ` AND ${level}_slug = ${JSON.stringify(slug)}`)
+    .join("")
 }

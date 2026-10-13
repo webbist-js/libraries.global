@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { ProfileProgress } from "@/components/profile-form/ProfileProgress"
@@ -10,6 +11,7 @@ import {
   LinksSection,
 } from "@/components/profile-form/ProfileSections"
 import { useProfileForm } from "@/components/profile-form/useProfileForm"
+import { Button } from "@/components/ui/button"
 import { useMounted } from "@/hooks/useMounted"
 import { useProfile } from "@/hooks/useProfile"
 import type { BetterAuthUser } from "@/lib/auth-server"
@@ -18,12 +20,18 @@ import { useRouter } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { DataAccountSection } from "./DataAccountSection"
+import { MembershipBillingSection } from "./MembershipBillingSection"
 import { NotificationsSection } from "./NotificationsSection"
 import { PrivacySection } from "./PrivacySection"
 import { SignInSecuritySection } from "./SignInSecuritySection"
 
 /** The account cards under the profile ones, listed in the side card. */
 const ACCOUNT_LINKS = [
+  {
+    id: "membership",
+    label: "Membership & billing",
+    icon: "mdi:credit-card-outline",
+  },
   { id: "notifications", label: "Notifications", icon: "mdi:bell-outline" },
   { id: "security", label: "Sign-in & security", icon: "mdi:lock-outline" },
   { id: "data", label: "Your data & account", icon: "mdi:tray-arrow-down" },
@@ -45,6 +53,8 @@ export function SettingsShell({
   /** The browser-safe avatar URL (`avatarSrc`), or null. */
   avatarUrl: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const mounted = useMounted()
   const { saving, updateProfile } = useProfile()
@@ -81,6 +91,7 @@ export function SettingsShell({
           />
           <InterestsSection form={form} />
           <LinksSection form={form} />
+          <MembershipBillingSection />
           <PrivacySection
             profile={profile}
             visibility={form.visibility}
@@ -93,23 +104,25 @@ export function SettingsShell({
 
         {/* ── Aside: progress, save, other sections (sticky) ── */}
         <aside
-          aria-label="Your profile"
+          aria-label={tUi("your_profile")}
           className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
         >
           <ProfileProgress
-            title="Your profile"
+            title={tUi("your_profile")}
             steps={form.steps("privacy")}
             links={ACCOUNT_LINKS}
           >
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="pill"
               disabled={!mounted || saving || form.usernameStatus === "taken"}
               onClick={() => void handleSave()}
-              className="inline-flex w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
-              style={{ border: "none", fontFamily: T.font.sans }}
+              className="w-full border-0 disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ fontFamily: T.font.sans }}
             >
-              {saving ? "Saving…" : "Save profile"}
-            </button>
+              {saving ? tUi("saving") : "Save profile"}
+            </Button>
             <p
               className="m-0 text-[13.5px] leading-[1.55]"
               style={{ color: T.ink.dim }}

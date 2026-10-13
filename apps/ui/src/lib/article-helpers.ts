@@ -2,11 +2,12 @@
 
 export function formatDate(
   dateStr?: string | null,
-  monthFormat: "long" | "short" = "long"
+  monthFormat: "long" | "short" = "long",
+  locale = "en-GB"
 ): string | null {
   if (!dateStr) return null
 
-  return new Date(dateStr).toLocaleDateString("en-GB", {
+  return new Date(dateStr).toLocaleDateString(locale, {
     day: "numeric",
     month: monthFormat,
     year: "numeric",

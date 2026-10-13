@@ -273,7 +273,7 @@ export const FIXTURE_LIBRARIES: Record<FixtureLibraryKey, FixtureLibrary> = {
     name: "Access Fixture Mobile Library",
     libraryType: "Mobile",
     summary:
-      "A test mobile library for the access E2E, based at the Public one.",
+      "A fictional test mobile library based in Falmouth. Demo stops use real roads; this is not a public service timetable.",
     location: { lat: 50.1548, lng: -5.0712 },
     streetAddress: "1 Fixture Street",
     city: "Falmouth",
@@ -328,49 +328,50 @@ export const FIXTURE_OPENING_TIMES = {
   })),
 }
 
-/** The Mobile library's stops, around Falmouth. Ids are 10 lowercase alphanumerics. */
+/** Fictional Falmouth stops, snapped to OpenStreetMap driving roads (8 Oct 2026).
+ * Labels are demo landmarks, not claims about a real library service. */
 export const FIXTURE_STOPS = [
   {
     id: "stopfx0001",
     name: "Harbour Car Park",
-    where: "By the slipway",
-    lat: 50.154,
-    lng: -5.068,
+    where: "Clare Terrace demo stop",
+    lat: 50.153944,
+    lng: -5.070423,
   },
   {
     id: "stopfx0002",
     name: "Village Hall",
-    where: "Front car park",
-    lat: 50.161,
-    lng: -5.081,
+    where: "Meadowbank Road demo stop",
+    lat: 50.16096,
+    lng: -5.080908,
   },
   {
     id: "stopfx0003",
     name: "Primary School",
-    where: "Lay-by on School Road",
-    lat: 50.148,
-    lng: -5.092,
+    where: "Demo school collection point",
+    lat: 50.148025,
+    lng: -5.092492,
   },
   {
     id: "stopfx0004",
     name: "Health Centre",
-    where: "Visitor bays",
-    lat: 50.17,
-    lng: -5.06,
+    where: "Dracaena Avenue demo stop",
+    lat: 50.156004,
+    lng: -5.08199,
   },
   {
     id: "stopfx0005",
     name: "Market Square",
-    where: "Outside the post office",
-    lat: 50.158,
-    lng: -5.055,
+    where: "Berkeley Cottages demo stop",
+    lat: 50.154345,
+    lng: -5.077968,
   },
   {
     id: "stopfx0006",
     name: "Depot Lay-by",
-    where: "Late return stop by the depot",
-    lat: 50.152,
-    lng: -5.076,
+    where: "Killigrew Street demo return stop",
+    lat: 50.151915,
+    lng: -5.076207,
   },
 ] as const
 

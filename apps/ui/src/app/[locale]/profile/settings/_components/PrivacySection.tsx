@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -43,6 +44,8 @@ export function PrivacySection({
   visibility: Visibility
   onVisibilityChange: (v: Visibility) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [prefs, setPrefs] = useState<PublicPrefs>(() =>
     resolvePublicPrefs(profile?.publicPrefs)
   )
@@ -80,7 +83,7 @@ export function PrivacySection({
   }[] = [
     {
       key: "showLocation",
-      label: "Location",
+      label: tUi("location"),
       desc: location || "Not set",
     },
     {
@@ -103,7 +106,7 @@ export function PrivacySection({
   return (
     <SectionCard
       id="privacy"
-      title="Privacy"
+      title={tUi("privacy")}
       lead="Your contributions stay attributed to your username either way. Changes here save straight away."
     >
       <div>

@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import {
   ARTICLE_KIND_META,
@@ -38,6 +39,8 @@ export default async function EditKnowledgeArticlePage({
   params: Promise<{ locale: string; slug: string }>
   searchParams: Promise<{ mode?: string; locale?: string | string[] }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale, slug }, { mode, locale: requested }, session] =
     await Promise.all([params, searchParams, getSessionSSR(await headers())])
   const report = mode === "report"
@@ -61,7 +64,7 @@ export default async function EditKnowledgeArticlePage({
     >
       <ContributeSectionHeader
         compact
-        section="Knowledge editor"
+        section={tUi("knowledge_editor")}
         title={
           report
             ? `Something wrong in *${article.title}?*`

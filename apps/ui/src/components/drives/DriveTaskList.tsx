@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds/SearchField"
@@ -64,6 +65,8 @@ export function DriveTaskList({
   readonly onRandom: () => void
   readonly onSelect: (task: DriveTask) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const [text, setText] = useState("")
   const [locating, setLocating] = useState(false)
@@ -122,8 +125,8 @@ export function DriveTaskList({
       <div className="flex flex-col gap-3">
         <SearchField
           id={`${id}-q`}
-          label="Town or county"
-          placeholder="Town or county"
+          label={tUi("town_or_county")}
+          placeholder={tUi("town_or_county")}
           onClear={() => type("")}
           inputProps={{
             value: text,
@@ -200,7 +203,7 @@ export function DriveTaskList({
 
       {tasks.length > 0 ? (
         <ul
-          aria-label="Libraries to do"
+          aria-label={tUi("libraries_to_do")}
           className="m-0 flex list-none flex-col gap-2 p-0"
         >
           {tasks.map((task) => (
@@ -225,7 +228,7 @@ export function DriveTaskList({
           className={`${PILL} self-start bg-white hover:bg-(--t-bg-surface) disabled:opacity-70`}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          {loading ? "Loading…" : "Show more"}
+          {loading ? tUi("loading") : "Show more"}
         </button>
       ) : null}
     </div>

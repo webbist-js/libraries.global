@@ -29,8 +29,8 @@ describe("PLANS", () => {
     ])
   })
 
-  it("marks prices as placeholders", () => {
-    expect(PRICES_ARE_PLACEHOLDERS).toBe(true)
+  it("uses the agreed launch membership prices", () => {
+    expect(PRICES_ARE_PLACEHOLDERS).toBe(false)
   })
 
   it("uses the pricing spec's amounts", () => {
@@ -47,16 +47,19 @@ describe("PLANS", () => {
     expect(plan("team").price).toMatchObject({ yearly: "£480/year ex VAT" })
   })
 
-  it("gives Supporter no Pro feature: patronage buys nothing", () => {
-    const labels = Object.values(PRO_FEATURE_COPY).map((c) => c.label)
-    for (const item of plan("supporter").includes)
-      for (const label of labels) expect(item.text).not.toContain(label)
+  it("gives Supporter delivered history and capped exports, preserving Pro analysis", () => {
+    const text = plan("supporter")
+      .includes.map((i) => i.text)
+      .join("\n")
+    expect(text).toContain(PRO_FEATURE_COPY["library.history"].label)
+    expect(text).toContain("500 libraries per download")
+    expect(text).not.toContain(PRO_FEATURE_COPY["atlas.analysis"].label)
   })
 
-  it("keeps Supporter's patronage line a note, not an include", () => {
+  it("keeps payment separate from community authority", () => {
     const notes = plan("supporter").includes.filter((i) => i.kind === "note")
     expect(notes).toHaveLength(1)
-    expect(notes[0]?.text).toContain("patronage")
+    expect(notes[0]?.text).toContain("community role")
   })
 
   it("tags exactly the unbuilt items as coming soon", () => {
@@ -88,7 +91,7 @@ describe("PLANS", () => {
   it("builds Pro's list from the feature copy, flagging what isn't built", () => {
     const includes = plan("pro").includes
     expect(includes).toContainEqual({
-      text: PRO_FEATURE_COPY["atlas.export"].label,
+      text: `${PRO_FEATURE_COPY["atlas.export"].label} (up to 10,000 libraries per download)`,
       kind: "feature",
     })
     expect(includes).toContainEqual({

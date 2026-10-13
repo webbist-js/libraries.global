@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -33,24 +34,30 @@ export function PlanGatePanel({
   readonly contactHref: string
   readonly freeNote?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       className={[
-        "grid gap-8 rounded-[20px] border p-6 sm:p-8",
-        preview ? "lg:grid-cols-2 lg:gap-12" : "",
+        "grid gap-8 rounded-[28px] border p-5 sm:p-10",
+        preview ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10" : "",
       ].join(" ")}
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="flex flex-col gap-5 lg:self-center">
         <p className="m-0 flex flex-wrap items-center gap-2">
-          <Badge label="Team plan" color="aurora" icon="mdi:lock-outline" />
-          {comingSoon ? <Badge label="Coming soon" color="dim" /> : null}
+          <Badge
+            label={tUi("team_plan")}
+            color="aurora"
+            icon="mdi:lock-outline"
+          />
+          {comingSoon ? <Badge label={tUi("coming_soon")} color="dim" /> : null}
         </p>
         <h2
           className="m-0 text-balance"
           style={{
             fontFamily: T.font.serif,
-            fontSize: "clamp(32px,3vw,40px)",
+            fontSize: "clamp(32px,3.5vw,48px)",
             fontWeight: 500,
             lineHeight: 1.08,
             letterSpacing: "-0.015em",
@@ -60,12 +67,12 @@ export function PlanGatePanel({
           {title}
         </h2>
         <p
-          className="m-0 text-[16px] leading-[1.55]"
+          className="m-0 text-[17px] leading-[1.65]"
           style={{ color: T.ink.dim }}
         >
           {lead}
         </p>
-        <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+        <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[17px]">
           {points.map((point) => (
             <li key={point} className="flex items-start gap-2.5">
               <Icon
@@ -80,20 +87,20 @@ export function PlanGatePanel({
             </li>
           ))}
         </ul>
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
           {freeNote}
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
             href={compareHref}
-            className="inline-flex min-h-11 items-center rounded-full px-5 font-semibold no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            className="inline-flex min-h-12 items-center justify-center rounded-full px-6 text-center font-semibold no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
             style={{ background: T.accent.primary, color: T.bg.deep }}
           >
             Compare plans
           </Link>
           <a
             href={contactHref}
-            className="inline-flex min-h-11 items-center rounded-full border bg-white px-5 font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border bg-white px-6 py-2 text-center font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             Ask about Team for your service
@@ -102,16 +109,16 @@ export function PlanGatePanel({
       </div>
       {preview ? (
         <div className="min-w-0 lg:self-center">
-          <p
-            className="m-0 mb-3 flex items-center gap-1.5 text-[13.5px]"
-            style={{ color: T.ink.dim }}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none rounded-[24px] border bg-(--t-bg-surface) p-4 opacity-50 select-none"
+            style={{ borderColor: T.border.line }}
           >
-            <Icon aria-hidden="true" icon="mdi:flask-outline" width={16} />
-            Sample data
-          </p>
-          <div aria-hidden="true" className="pointer-events-none select-none">
             {preview}
           </div>
+          <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
+            Illustration of the Team feature
+          </p>
         </div>
       ) : null}
     </section>

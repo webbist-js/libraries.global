@@ -1,5 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, ChoiceCard, Sheet, Switch } from "@/components/ds"
@@ -12,7 +13,7 @@ import { useStaffLibraryHref } from "@/lib/staff/use-library-href"
 import { liveRequest } from "./ConfirmIdentity"
 import { registerLiveIcons } from "./icons"
 
-const card = "rounded-[20px] border p-6"
+const card = "rounded-[24px] border p-5 sm:p-6"
 const cardStyle = { background: T.bg.deep, borderColor: T.border.line }
 
 /**
@@ -35,6 +36,8 @@ export function LiveSharingSettings({
   readonly members: StaffTeam
   readonly onNote: (note: { tone: "ok" | "danger"; text: string }) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const id = initial.library.id,
     name = initial.library.name,
@@ -104,7 +107,7 @@ export function LiveSharingSettings({
             <p className="my-2 text-[14.5px]" style={{ color: T.ink.dim }}>
               Owners choose who can go live, person by person.{" "}
               <Badge
-                label="Team"
+                label={tUi("team")}
                 color="aurora"
                 icon="mdi:account-group-outline"
               />
@@ -217,7 +220,7 @@ export function LiveSharingSettings({
               tint={{ bg: T.accent.chip, fg: T.accent.primary }}
               title={
                 <span className="flex flex-wrap items-center gap-2">
-                  Stops only <Badge label="Default" color="dim" />
+                  Stops only <Badge label={tUi("default")} color="dim" />
                 </span>
               }
               hint="The public sees which stop the vehicle is at, and “On the road” between stops."
@@ -229,7 +232,7 @@ export function LiveSharingSettings({
               onChange={() => save({ precision: "approximate" })}
               icon="mdi:crosshairs-gps"
               tint={{ bg: T.accent.chip, fg: T.accent.primary }}
-              title="Approximate position between stops"
+              title={tUi("approximate_position_between_stops")}
               hint="Shown as a circle about 250 m wide, a minute behind. Only when a crew member shares position."
             />
           </div>
@@ -237,7 +240,7 @@ export function LiveSharingSettings({
         <label className="mt-5 flex flex-wrap items-center gap-3 text-[15px]">
           Stop sharing automatically
           <select
-            aria-label="Minutes after the last stop"
+            aria-label={tUi("minutes_after_the_last_stop")}
             className="min-h-11 rounded-[14px] border px-3"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}
             value={settings.autoStopMinutes}
@@ -258,7 +261,7 @@ export function LiveSharingSettings({
         open={privacy}
         onClose={() => setPrivacy(false)}
         side="right"
-        title="Allow live updates"
+        title={tUi("allow_live_updates")}
       >
         <p>
           Staff can share check-ins from the vehicle. Approximate position, when
@@ -281,7 +284,7 @@ export function LiveSharingSettings({
           className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-5 font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
           onClick={() => save({ enabled: true, privacyAccepted: true })}
         >
-          Allow live updates
+          {tUi("allow_live_updates")}
         </button>
       </Sheet>
     </div>

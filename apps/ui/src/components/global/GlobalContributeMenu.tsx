@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { usePathname } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -80,12 +81,14 @@ function FeaturedDrive({
   readonly featured: NonNullable<ContributorCard["featured"]>
   readonly onNavigate: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   if (featured === "loading") {
     return (
       <div
         role="status"
         aria-busy="true"
-        aria-label="Loading featured drive"
+        aria-label={tUi("loading_featured_drive")}
         className="flex flex-col gap-1.5 rounded-[12px] border px-3 py-2.5"
         style={{ background: T.bg.surface, borderColor: T.border.divider }}
       >
@@ -230,6 +233,8 @@ function CardGrid({
 }
 
 function SignInCard({ onNavigate }: { readonly onNavigate: () => void }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[18px] border px-4 py-3.5"
@@ -239,8 +244,8 @@ function SignInCard({ onNavigate }: { readonly onNavigate: () => void }) {
         className="m-0 flex-1 basis-[260px] text-[15px] leading-normal"
         style={{ color: T.ink.base }}
       >
-        <strong>Contributing is free.</strong> Sign in to suggest edits, add
-        libraries and join drives.
+        <strong>{tUi("contributing_is_free")}</strong>{" "}
+        {tUi("sign_in_to_suggest_edits_add_libraries_and_join_drives")}{" "}
       </p>
       <span className="flex gap-1.5">
         <GlobalLink
@@ -248,14 +253,14 @@ function SignInCard({ onNavigate }: { readonly onNavigate: () => void }) {
           onClick={onNavigate}
           className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
         >
-          Sign in
+          {tUi("sign_in")}{" "}
         </GlobalLink>
         <GlobalLink
           href="/auth/register"
           onClick={onNavigate}
           className="rounded-full border border-(--t-border-hi) bg-white px-3.5 py-2 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)"
         >
-          Create account
+          {tUi("create_account")}{" "}
         </GlobalLink>
       </span>
     </div>
@@ -299,6 +304,8 @@ function MembershipRow({
   readonly plan: ContributeMenu["plan"]
   readonly onNavigate: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <GlobalLink
       href="/contribute/membership"
@@ -308,9 +315,9 @@ function MembershipRow({
     >
       <CardMonogram icon="mdi:heart-outline" tint="accent" />
       <span className="flex min-w-0 flex-1 flex-col">
-        <strong className="text-[15px]">Membership</strong>
+        <strong className="text-[15px]">{tUi("membership")}</strong>
         <span className="text-[13px]" style={{ color: T.ink.dim }}>
-          Support the index and explore Pro.
+          {tUi("support_the_index_and_explore_pro")}{" "}
         </span>
       </span>
       {plan ? <PlanPill plan={plan} /> : null}
@@ -332,12 +339,14 @@ export function ContributeMenuPanel({
   readonly menu: ContributeMenu
   readonly onNavigate: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const workId = useId()
   const everyoneId = useId()
   const hasWork = menu.work.length > 0
 
   return (
-    <nav aria-label="Contribute menu" className="flex flex-col gap-3">
+    <nav aria-label={tUi("contribute_menu")} className="flex flex-col gap-3">
       {menu.status === "signedOut" ? (
         <SignInCard onNavigate={onNavigate} />
       ) : null}
@@ -350,7 +359,7 @@ export function ContributeMenuPanel({
           className="flex flex-col gap-2"
         >
           <p id={workId} className={GROUP_LABEL} style={{ color: T.ink.dim }}>
-            Your work
+            {tUi("your_work")}{" "}
           </p>
           <CardGrid
             cards={menu.work}
@@ -370,7 +379,7 @@ export function ContributeMenuPanel({
           className={hasWork ? GROUP_LABEL : "sr-only"}
           style={{ color: T.ink.dim }}
         >
-          Everyone
+          {tUi("everyone")}{" "}
         </p>
         <CardGrid
           cards={menu.common}
@@ -395,6 +404,8 @@ export function GlobalContributeMenu({
 }: {
   readonly className?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const pathname = usePathname() ?? "/"
   // Open "for" the page it was opened on, so any navigation closes it.
   const [openOn, setOpenOn] = useState<string | null>(null)
@@ -410,7 +421,7 @@ export function GlobalContributeMenu({
           type="button"
           className={`inline-flex cursor-pointer items-center gap-1 ${PILL} pr-3 ${className}`}
         >
-          Contribute
+          {tUi("contribute")}{" "}
           <Icon
             icon="mdi:chevron-down"
             width={18}
@@ -424,7 +435,7 @@ export function GlobalContributeMenu({
       <PopoverContent
         ref={contentRef}
         align="end"
-        sideOffset={8}
+        sideOffset={20}
         collisionPadding={16}
         onOpenAutoFocus={(event) => {
           // Land on the first link rather than on the panel itself.

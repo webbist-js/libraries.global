@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -27,6 +28,8 @@ export function DataAccountSection({
 }: {
   sessionUser: BetterAuthUser
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [deactivateConfirm, setDeactivateConfirm] = useState(false)
   const [deactivating, setDeactivating] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -42,11 +45,11 @@ export function DataAccountSection({
         body: JSON.stringify({ profileVisibility: "private" }),
       })
       if (!res.ok) {
-        toast.error("Failed to deactivate — please try again")
+        toast.error("Failed to hide your profile — please try again")
 
         return
       }
-      toast.success("Account deactivated — signing you out")
+      toast.success("Profile hidden — signing you out")
       await authClient.signOut()
       globalThis.location.href = "/"
     } catch {
@@ -84,7 +87,7 @@ export function DataAccountSection({
   return (
     <SectionCard
       id="data"
-      title="Your data & account"
+      title={tUi("your_data_account")}
       lead="Download everything we hold about you, or delete your account."
     >
       <div>
@@ -129,14 +132,14 @@ export function DataAccountSection({
                   className="m-0 text-[15px] font-semibold"
                   style={{ color: T.accent.danger }}
                 >
-                  Deactivate account
+                  Hide profile and sign out
                 </p>
                 <p
                   className="m-0 mt-0.5 text-[14px]"
                   style={{ color: T.ink.dim }}
                 >
-                  Hides your profile and pauses notifications. Sign in again to
-                  come back.
+                  Makes your profile private and signs you out. Change your
+                  email preferences above before signing out.
                 </p>
               </div>
               <button
@@ -147,7 +150,7 @@ export function DataAccountSection({
                 }}
                 style={pillButton}
               >
-                Deactivate
+                Hide profile
               </button>
             </div>
             {deactivateConfirm ? (
@@ -157,8 +160,8 @@ export function DataAccountSection({
                   style={{ color: T.ink.dim }}
                 >
                   Your profile will be set to private and you&rsquo;ll be signed
-                  out. Reactivate any time by signing back in and updating your
-                  visibility.
+                  out. Sign back in any time to update your visibility. Your
+                  email preferences stay as you set them.
                 </p>
                 <div className="flex shrink-0 gap-2.5">
                   <button
@@ -166,7 +169,7 @@ export function DataAccountSection({
                     onClick={() => setDeactivateConfirm(false)}
                     style={pillButton}
                   >
-                    Cancel
+                    {tUi("cancel")}{" "}
                   </button>
                   <button
                     type="button"
@@ -180,7 +183,7 @@ export function DataAccountSection({
                       opacity: deactivating ? 0.6 : 1,
                     }}
                   >
-                    {deactivating ? "Deactivating…" : "Confirm deactivation"}
+                    {deactivating ? tUi("saving") : "Hide profile and sign out"}
                   </button>
                 </div>
               </div>
@@ -251,7 +254,7 @@ export function DataAccountSection({
                     onClick={() => setDeleteConfirm(false)}
                     style={pillButton}
                   >
-                    Cancel
+                    {tUi("cancel")}{" "}
                   </button>
                   <button
                     type="button"

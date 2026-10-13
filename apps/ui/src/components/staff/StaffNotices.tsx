@@ -1,4 +1,5 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   LIBRARY_NOTICE_LABELS,
@@ -6,6 +7,7 @@ import {
   noticeEndDate,
   type LibraryNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, Sheet } from "@/components/ds"
@@ -70,19 +72,21 @@ function NoticeRow({
   readonly onEdit?: () => void
   readonly onEnd?: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const ended = !!notice.endedAt || noticeEndDate(notice) < today
   const closure = ["closure", "not_running"].includes(notice.type)
   const active = noticeIsActive(notice, today)
 
   return (
     <li
-      className="flex flex-col gap-3 rounded-[16px] border p-4 sm:flex-row sm:items-start"
+      className="flex flex-wrap items-start gap-3 rounded-[20px] border p-4"
       style={{
         borderColor: T.border.line,
         background: ended ? T.bg.surface : T.bg.deep,
       }}
     >
-      <div className="shrink-0 sm:w-36">
+      <div className="shrink-0">
         <Badge
           label={LIBRARY_NOTICE_LABELS[notice.type]}
           color={ended ? "dim" : closure ? "warn" : "aurora"}
@@ -95,8 +99,8 @@ function NoticeRow({
           }
         />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+      <div className="min-w-0 flex-[1_1_220px]">
+        <p className="m-0 text-[16px]" style={{ color: T.ink.base }}>
           {notice.message}
         </p>
         <p className="m-0 mt-1 text-[13.5px]" style={{ color: T.ink.dim }}>
@@ -120,14 +124,14 @@ function NoticeRow({
               style={{ borderColor: T.border.hi, color: T.ink.base }}
               onClick={onEdit}
             >
-              Edit
+              {tUi("edit")}{" "}
             </button>
           ) : null}
           {onEnd ? (
             <button
               type="button"
               className={OUTLINED}
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
+              style={{ borderColor: T.border.hi, color: T.accent.danger }}
               disabled={busy}
               onClick={onEnd}
             >
@@ -152,6 +156,8 @@ export function StaffNotices({
   /** The route locale, for dates. */
   locale?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter(),
     [error, setError] = useState<{ message: string; retry: string } | null>(
       null
@@ -204,20 +210,20 @@ export function StaffNotices({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,1fr)] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
       <section
-        className="rounded-[20px] border p-6"
+        className="min-w-0 rounded-[28px] border p-5 sm:p-8"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
         aria-labelledby="notices-heading"
       >
         <h2
           id="notices-heading"
-          className="m-0 text-[26px]"
+          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
-          Notices
+          {tUi("notices")}
         </h2>
-        <p className="m-0 mt-1 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-4 text-[16px]" style={{ color: T.ink.dim }}>
           Shown at the top of your library page, and in search while they apply.
         </p>
         <p role="status" aria-live="polite" className="sr-only">
@@ -244,7 +250,7 @@ export function StaffNotices({
               disabled={busy !== null}
               onClick={() => void end(error.retry)}
             >
-              Try again
+              {tUi("try_again")}{" "}
             </button>
           </div>
         )}
@@ -315,7 +321,7 @@ export function StaffNotices({
         open={!!ending}
         onClose={() => busy === null && setEnding(null)}
         side="bottom"
-        title="End this notice now?"
+        title={tUi("end_this_notice_now")}
       >
         {ending ? (
           <>
@@ -363,7 +369,7 @@ export function StaffNotices({
         open={!!editing}
         onClose={() => setEditing(null)}
         side="right"
-        title="Edit notice"
+        title={tUi("edit_notice")}
       >
         {editing && (
           <LibraryNoticeForm

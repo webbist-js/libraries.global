@@ -534,7 +534,7 @@ describe("role-grant lifecycle", () => {
 describe("resyncExpiredRoleGrants", () => {
   it("re-derives the role for users whose grants expired in the last 48 hours", async () => {
     const now = new Date("2026-09-30T04:00:00.000Z")
-    const { strapi, store } = makeFakeStrapi({
+    const { strapi, store, services } = makeFakeStrapi({
       [PROFILE]: [
         { documentId: "p1", baUserId: "u1", contributorRole: "moderator" },
         { documentId: "p2", baUserId: "u2", contributorRole: "moderator" },
@@ -551,7 +551,20 @@ describe("resyncExpiredRoleGrants", () => {
       ],
     })
 
+    const enqueue = vi.fn().mockResolvedValue({})
+    services["api::notification.notification"] = { enqueue }
     expect(await resyncExpiredRoleGrants(strapi, now)).toEqual({ users: 1 })
+    expect(enqueue.mock.calls.map(([event]) => event.eventKey)).toEqual([
+      "role-expiry:g1",
+      "role-expiry:g2",
+    ])
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baUserId: "u1",
+        kind: "staff_update",
+        emailPreference: "transactional",
+      })
+    )
     expect(store[PROFILE].map((p) => p.contributorRole)).toEqual([
       "reader",
       "moderator",

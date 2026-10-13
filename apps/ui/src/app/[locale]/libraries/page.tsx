@@ -18,6 +18,7 @@ import { T } from "@/lib/design-tokens"
 import { isPromptHidden } from "@/lib/dismissed-prompts"
 import { fetchDrives } from "@/lib/drives/drives-server"
 import type { FindDrive } from "@/lib/drives/find-match"
+import { findPlaceCatalogue } from "@/lib/find-place-catalogue-server"
 import { libraryTotal, searchFind } from "@/lib/find-search"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -70,7 +71,14 @@ export default async function FindLibraryRoute(props: {
   )
   const [initial, statsTotal, session, cookieStore, openDrives] =
     await Promise.all([
-      searchFind(findQueryOf(state, locale)).catch(() => null),
+      (async () => {
+        const query = findQueryOf(state, locale)
+        const chain = query.place
+          ? await findPlaceCatalogue(query.place, locale)
+          : undefined
+
+        return searchFind({ ...query, locale }, chain)
+      })().catch(() => null),
       libraryTotal(locale).catch(() => strapiLibraryTotal()),
       headers().then(getSessionSSR),
       cookies(),

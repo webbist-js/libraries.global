@@ -1,11 +1,20 @@
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 
 import BlogLandingPage from "@/components/blog/BlogLandingPage"
-import { parseJournalQuery } from "@/components/blog/journalLanding.helpers"
+import {
+  journalHref,
+  JOURNAL_PAGE_SIZE,
+  parseJournalQuery,
+} from "@/components/blog/journalLanding.helpers"
 import { loadJournalLanding } from "@/lib/journal-landing"
-import { buildMetadata } from "@/lib/seo/metadata"
-import { fetchBlogLanding } from "@/lib/strapi-api/content/server"
+import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
+import {
+  countJournalArticles,
+  fetchBlogLanding,
+  fetchBlogSections,
+} from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 // Section, sort, page, view and language live in the URL, so the page renders
@@ -14,19 +23,59 @@ export const revalidate = 300
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const { locale } = await params
-  const data = (await fetchBlogLanding(locale as Locale))?.data
+  const query = parseJournalQuery(await searchParams)
+  const [landing, total, sections, tUi, t] = await Promise.all([
+    fetchBlogLanding(locale as Locale),
+    query.page > 1 || query.section
+      ? countJournalArticles(locale, query.section)
+      : Promise.resolve(null),
+    query.section
+      ? fetchBlogSections(locale as Locale)
+      : Promise.resolve({ data: [] }),
+    getTranslations({ locale: locale as Locale, namespace: "ui" }),
+    getTranslations({ locale: locale as Locale, namespace: "editorial" }),
+  ])
+  const data = landing?.data
+  const emptyPage =
+    total !== null &&
+    (total === 0 || query.page > Math.ceil(total / JOURNAL_PAGE_SIZE))
+  const canonical = journalHref({ ...query, sort: "newest", view: "grid" })
+  const pageLabel =
+    query.page > 1 ? ` / ${t("pageLabel", { page: query.page })}` : ""
+  const sectionLabel =
+    sections.data.find((section) => section.slug === query.section)?.name ??
+    query.section?.replaceAll("-", " ")
+  const cmsTitle = data?.seo?.metaTitle?.trim()
 
   return buildMetadata({
-    title: data?.seo?.metaTitle ?? "Journal",
+    seo: {
+      ...data?.seo,
+      metaTitle: !sectionLabel && cmsTitle ? `${cmsTitle}${pageLabel}` : null,
+      metaDescription:
+        query.page > 1 || sectionLabel ? null : data?.seo?.metaDescription,
+    },
+    title: `${sectionLabel ? `${sectionLabel} / ${tUi("journal")}` : t("journalTitle")}${pageLabel}`,
     description:
-      data?.seo?.metaDescription ??
-      "Stories, research and editorial from the global libraries community — library history, collections and the people who run them.",
-    path: "journal",
+      query.page > 1 || sectionLabel
+        ? t("journalBrowseDescription", {
+            section: sectionLabel ?? t("journalStories"),
+            page: query.page,
+            site: SITE_NAME,
+          })
+        : t("journalLead"),
+    path: canonical,
     locale,
+    // Alternate list orders and language selections aren't separate landing pages.
+    robots:
+      query.sort !== "newest" || query.lang || emptyPage
+        ? "noindex-follow"
+        : "index",
     image: formatStrapiMediaUrl(data?.seo?.metaImage?.url),
   })
 }
@@ -39,6 +88,7 @@ export default async function BlogPage(props: {
     props.params,
     props.searchParams,
   ])
+  setRequestLocale(locale as Locale)
   const data = await loadJournalLanding(
     locale as Locale,
     parseJournalQuery(searchParams)

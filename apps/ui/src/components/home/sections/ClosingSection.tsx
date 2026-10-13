@@ -12,13 +12,12 @@ import { T } from "@/lib/design-tokens"
 
 // Indigo band palette: white at falling strengths over #4338CA.
 const SOFT = "#E2E0FB"
-const NUMBER = "#C9C5F5"
 const RULE = "rgba(255,255,255,.3)"
 const DIVIDER = "rgba(255,255,255,.18)"
 
 /**
  * The homepage's closing ask on a full-width indigo band: the title, then one
- * numbered step per column, the band's primary call to action under the
+ * action per column, the band's primary call to action under the
  * first (join) and the secondary under the second (contribute). Members get
  * `CLOSING_MEMBER_STEP` as the first step instead. The open-by-design links
  * close the band. The band's `text` isn't shown here; the steps carry the
@@ -52,17 +51,16 @@ export function ClosingSection({
   ]
   const columns = steps.slice(0, 2).map((step, i) => ({
     step: signedIn && i === 0 ? CLOSING_MEMBER_STEP : step,
-    number: i + 1,
     cta: ctas[i] ?? null,
   }))
 
   return (
     <section
       aria-labelledby="closing-title"
-      className="mt-[clamp(80px,10vw,140px)] w-full text-white"
+      className="w-full text-white"
       style={{ background: T.accent.primary }}
     >
-      <div className="mx-auto w-full max-w-[1360px] px-4 pt-[clamp(72px,9vw,120px)] pb-[clamp(40px,5vw,64px)] sm:px-8">
+      <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-8">
         <h2
           id="closing-title"
           className="m-0 text-balance"
@@ -75,13 +73,13 @@ export function ClosingSection({
         </h2>
 
         {columns.length > 0 ? (
-          <ol
+          <ul
             className={`m-0 mt-[clamp(40px,5vw,72px)] grid list-none border-t p-0 ${
               columns.length > 1 ? "md:grid-cols-2" : ""
             }`}
             style={{ borderColor: RULE }}
           >
-            {columns.map(({ step, number, cta }, i) => (
+            {columns.map(({ step, cta }, i) => (
               <li
                 key={step.title}
                 className={`flex flex-col items-start py-10 ${
@@ -91,15 +89,8 @@ export function ClosingSection({
                 }`}
                 style={{ borderColor: DIVIDER }}
               >
-                <span
-                  aria-hidden="true"
-                  className="text-[15px]"
-                  style={{ fontFamily: T.font.mono, color: NUMBER }}
-                >
-                  {String(number).padStart(2, "0")}
-                </span>
                 <h3
-                  className="m-0 mt-[12px]"
+                  className="m-0"
                   style={{
                     fontFamily: T.font.serif,
                     fontWeight: 500,
@@ -133,7 +124,7 @@ export function ClosingSection({
                 ) : null}
               </li>
             ))}
-          </ol>
+          </ul>
         ) : null}
 
         {openLinks.length > 0 ? (

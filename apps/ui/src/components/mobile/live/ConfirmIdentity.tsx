@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Sheet } from "@/components/ds/Sheet"
@@ -37,6 +38,8 @@ export function ConfirmIdentity({
   readonly onClose: () => void
   readonly onConfirmed: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [password, setPassword] = useState(""),
     [code, setCode] = useState(""),
     [sent, setSent] = useState(false),
@@ -77,7 +80,12 @@ export function ConfirmIdentity({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Confirm it’s you" side="bottom">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={tUi("confirm_its_you")}
+      side="bottom"
+    >
       <ConfirmIdentityLook showTitle={false}>
         {error && (
           <p role="alert" style={{ color: T.accent.danger }}>
@@ -92,7 +100,7 @@ export function ConfirmIdentity({
           }}
         >
           <label className="block text-[15px] font-semibold">
-            Password
+            {tUi("password")}{" "}
             <input
               className="live-input mt-2 font-normal"
               type="password"
@@ -171,7 +179,7 @@ export function ConfirmIdentity({
           style={{ color: T.ink.dim }}
           onClick={onClose}
         >
-          Cancel
+          {tUi("cancel")}{" "}
         </button>
         <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
           Confirmation lasts 12 hours on this sign-in. After confirming, you can

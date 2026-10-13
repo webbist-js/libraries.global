@@ -1,4 +1,5 @@
 import { fromMinutes, localDateTime } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Badge, type BadgeColor } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -60,13 +61,15 @@ export function LiveSessionsTable({
   readonly logs: SessionLog[]
   readonly timezone: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   /** "10:14" in the library's zone, the same on the server and the client. */
   const time = (iso: string) =>
     fromMinutes(localDateTime(new Date(iso), timezone).minute)
 
   return (
     <section
-      className="rounded-[20px] border p-6"
+      className="rounded-[24px] border p-5 sm:p-6"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="live-sessions-heading"
     >
@@ -154,7 +157,11 @@ export function LiveSessionsTable({
                           icon={end.icon}
                         />
                       ) : (
-                        <Badge label="Live now" color="ok" icon="mdi:circle" />
+                        <Badge
+                          label={tUi("live_now")}
+                          color="ok"
+                          icon="mdi:circle"
+                        />
                       )}
                     </td>
                   </tr>

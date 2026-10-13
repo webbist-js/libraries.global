@@ -1,0 +1,13 @@
+{
+  "kind": "collectionType",
+  "collectionName": "paid_memberships",
+  "info": { "singularName": "paid-membership", "pluralName": "paid-memberships", "displayName": "Paid membership", "description": "Read-only Stripe Managed Payments projection. Updated by the private billing bridge." },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": { "content-manager": { "visible": false }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "baUserId": { "type": "string", "required": true, "private": true },
+    "subscriptionId": { "type": "string", "required": true, "unique": true, "private": true },
+    "revision": { "type": "integer", "required": true, "private": true },
+    "membership": { "type": "json", "required": true, "private": true }
+  }
+}

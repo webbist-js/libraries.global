@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useTranslations } from "next-intl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -38,8 +38,10 @@ const ForgotPasswordFormSchema = z.object({
 const SENT_ICONS = ["mdi:email-fast-outline", "mdi:email-outline"] as const
 
 export function ForgotPasswordForm() {
+  const tUi = useUiTranslations("ui")
+
   usePreloadedIcons(SENT_ICONS)
-  const t = useTranslations("auth.forgotPassword")
+  const t = useUiTranslations("auth.forgotPassword")
   const { forgotPasswordMutation } = useUserMutations()
   // The address the link went to, once sent.
   const [sentTo, setSentTo] = useState<string | null>(null)
@@ -68,6 +70,7 @@ export function ForgotPasswordForm() {
     return (
       <>
         <AuthHeading
+          layout="utility"
           icon="mdi:email-fast-outline"
           title="Check your"
           italic="inbox."
@@ -103,6 +106,7 @@ export function ForgotPasswordForm() {
   return (
     <>
       <AuthHeading
+        layout="utility"
         title="Reset your"
         italic="password."
         subtitle="Enter the email you signed up with and we'll send a reset link."
@@ -119,7 +123,7 @@ export function ForgotPasswordForm() {
       >
         <AuthField
           id="email"
-          label="Email address"
+          label={tUi("email_address")}
           error={errors.email?.message}
         >
           <input
@@ -135,7 +139,9 @@ export function ForgotPasswordForm() {
         </AuthField>
 
         <AuthPrimaryButton disabled={forgotPasswordMutation.isPending}>
-          {forgotPasswordMutation.isPending ? "Sending…" : "Send reset link"}
+          {forgotPasswordMutation.isPending
+            ? tUi("sending")
+            : "Send reset link"}
         </AuthPrimaryButton>
       </form>
 

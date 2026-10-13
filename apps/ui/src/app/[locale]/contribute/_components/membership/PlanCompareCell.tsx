@@ -1,10 +1,27 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import type { CompareCell } from "@/lib/plan-compare"
 
 /** One plan × feature cell: a tick, a "Soon" chip, or a dash (all labelled). */
-export function PlanCompareCell({ cell }: { readonly cell: CompareCell }) {
+export function PlanCompareCell({
+  cell,
+  label,
+}: {
+  readonly cell: CompareCell
+  readonly label?: string
+}) {
+  const tUi = useUiTranslations("ui")
+
+  if (cell === "yes" && label)
+    return (
+      <span className="font-semibold">
+        {label}
+        <span className="sr-only"> libraries per download</span>
+      </span>
+    )
+
   if (cell === "yes")
     return (
       <span className="inline-flex" style={{ color: T.accent.ok }}>
@@ -25,7 +42,7 @@ export function PlanCompareCell({ cell }: { readonly cell: CompareCell }) {
           icon="mdi:clock-outline"
           width={12}
         />
-        Soon
+        {tUi("soon")}
         <span className="sr-only">: coming soon</span>
       </span>
     )

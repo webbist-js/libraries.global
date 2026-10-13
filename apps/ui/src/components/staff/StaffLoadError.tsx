@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useTransition } from "react"
 
 import { Notice } from "@/components/ds"
@@ -24,6 +25,8 @@ export function StaffLoadError({
   /** Replaces the default `router.refresh()`. */
   readonly onRetry?: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const limited = status === 429
@@ -51,7 +54,7 @@ export function StaffLoadError({
             })
           }
         >
-          {pending ? "Trying again…" : "Try again"}
+          {pending ? "Trying again…" : tUi("try_again")}
         </button>
       </p>
     </Notice>

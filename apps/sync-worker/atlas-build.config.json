@@ -1,0 +1,30 @@
+{
+  "status": "current-corpus-estimation",
+  "canonicalLocale": "en",
+  "detailZoom": null,
+  "candidateDetailZooms": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "maxZoom": 16,
+  "layer": "libraries",
+  "maxCompressedTileBytes": 512000,
+  "maxDecodedTileBytes": 4194304,
+  "maxTileFeatures": 200000,
+  "pointDropRate": 1,
+  "tippecanoe": {
+    "version": "2.79.0",
+    "commit": "68ab8dcc229f95b8b25877697d5e8d66783af503"
+  },
+  "pmtiles": {
+    "version": "1.31.2"
+  },
+  "linuxImage": null,
+  "sourceBatch": 1000,
+  "sourceConcurrency": 1
+}

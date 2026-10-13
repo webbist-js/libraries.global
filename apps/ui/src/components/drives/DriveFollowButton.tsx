@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
@@ -29,6 +30,8 @@ export function DriveFollowButton({
   /** The plain title, for the button's description. */
   readonly driveTitle: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: session, isPending } = authClient.useSession()
   const signedIn = !!session?.user
   const [following, setFollowing] = useState<boolean | null>(null)
@@ -131,7 +134,7 @@ export function DriveFollowButton({
           icon={isFollowing ? "mdi:bell" : "mdi:bell-outline"}
           width={17}
         />
-        {isFollowing ? "Following" : "Follow drive"}
+        {isFollowing ? tUi("following") : "Follow drive"}
       </button>
       <span
         role="status"

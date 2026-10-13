@@ -19,13 +19,13 @@ export function QuickActions({
 }) {
   return (
     <section
-      className="rounded-[20px] border p-6"
+      className="rounded-[28px] border p-5 sm:p-6"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="quick-actions-heading"
     >
       <h2
         id="quick-actions-heading"
-        className="m-0 text-[16px] font-semibold"
+        className="m-0 text-[18px] font-semibold"
         style={{ color: T.ink.base }}
       >
         Quick actions
@@ -35,15 +35,19 @@ export function QuickActions({
           <li key={action.href + action.label}>
             <Link
               href={action.href}
-              className="group flex min-h-12 items-center gap-3 rounded-[14px] border px-3.5 py-2 no-underline transition-colors hover:bg-(--t-bg-surface)"
-              style={{ borderColor: T.border.line, color: T.ink.base }}
+              className="flex min-h-14 items-center gap-3 rounded-[16px] border px-4 py-3 no-underline transition-colors hover:bg-(--t-bg-muted)"
+              style={{
+                background: T.bg.surface,
+                borderColor: T.border.line,
+                color: T.ink.base,
+              }}
             >
               <span
                 aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full"
-                style={{ background: T.accent.chip, color: T.accent.primary }}
+                className="flex shrink-0 items-center justify-center"
+                style={{ color: T.accent.primary }}
               >
-                <Icon icon={action.icon} width={17} height={17} />
+                <Icon icon={action.icon} width={20} height={20} />
               </span>
               <span className="flex-1 text-[15px] font-semibold">
                 {action.label}
@@ -59,14 +63,6 @@ export function QuickActions({
                   </span>
                 ) : null}
               </span>
-              <Icon
-                aria-hidden="true"
-                icon="mdi:arrow-right"
-                width={16}
-                height={16}
-                className="shrink-0 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-                style={{ color: T.ink.dim }}
-              />
             </Link>
           </li>
         ))}

@@ -6,6 +6,7 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 
+import { withAtlasLibraryWrite } from "../../../../utils/atlas-outbox"
 import { openValues, sealValues, type Slot } from "../utils/credential-crypto"
 import { recordCredentialEvent } from "../utils/credential-events"
 
@@ -125,10 +126,12 @@ export default ({ strapi, testFeed = realTestFeed }: Deps) => {
         [false, off],
       ] as const) {
         if (subset.length === 0) continue
-        await strapi.db.query(LIBRARY_UID).updateMany({
-          where: { documentId: { $in: subset } },
-          data: { hasActiveFeed: value },
-        })
+        await withAtlasLibraryWrite(strapi, [...subset], () =>
+          strapi.db.query(LIBRARY_UID).updateMany({
+            where: { documentId: { $in: subset } },
+            data: { hasActiveFeed: value },
+          })
+        )
       }
     }
   }

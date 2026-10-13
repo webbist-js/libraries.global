@@ -1,11 +1,10 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { UtilityPage } from "@/components/utility/UtilityPage"
 import { parseVerifyEmailState } from "@/lib/auth-redirects"
 import { privateMetadata } from "@/lib/seo/metadata"
 
-import { AuthLeftPanel } from "../_components/AuthLeftPanel"
-import { AuthShell } from "../_components/AuthShell"
 import { VerifyEmailContent } from "./_components/VerifyEmailContent"
 
 export const metadata = privateMetadata("Confirm your email")
@@ -19,12 +18,8 @@ export default async function VerifyEmailSentPage({
   const { state } = await searchParams
 
   return (
-    <AuthShell
-      locale={locale}
-      aside={<AuthLeftPanel mode="verify" />}
-      footnote="We never share your email."
-    >
+    <UtilityPage>
       <VerifyEmailContent state={parseVerifyEmailState(state)} />
-    </AuthShell>
+    </UtilityPage>
   )
 }

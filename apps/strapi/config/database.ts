@@ -1,7 +1,9 @@
+import { readFileSync } from "node:fs"
 import path from "node:path"
 
 export default ({ env }) => {
   const client = env("DATABASE_CLIENT", "postgres")
+  const caFile = env("DATABASE_SSL_CA_FILE")
 
   const connections = {
     postgres: {
@@ -12,10 +14,12 @@ export default ({ env }) => {
         database: env("DATABASE_NAME", "strapi"),
         user: env("DATABASE_USERNAME", "strapi"),
         password: env("DATABASE_PASSWORD", "strapi"),
-        ssl: env.bool("DATABASE_SSL", false) && {
+        ssl: env.bool("DATABASE_SSL", env("NODE_ENV") === "production") && {
           key: env("DATABASE_SSL_KEY", undefined),
           cert: env("DATABASE_SSL_CERT", undefined),
-          ca: env("DATABASE_SSL_CA", undefined),
+          ca: caFile
+            ? readFileSync(caFile, "utf8")
+            : env("DATABASE_SSL_CA", undefined),
           capath: env("DATABASE_SSL_CAPATH", undefined),
           cipher: env("DATABASE_SSL_CIPHER", undefined),
           rejectUnauthorized: env.bool(

@@ -64,12 +64,15 @@ export function FinalCtaSection({
   signedIn,
   compact = false,
   dismissLabel,
+  contained = false,
 }: {
   readonly band: CtaBand
   readonly benefits: readonly Step[]
   readonly signedIn: boolean
   readonly compact?: boolean
   readonly dismissLabel?: string
+  /** Use the caller’s existing page container and spacing. */
+  readonly contained?: boolean
 }) {
   if (!band.title) return null
 
@@ -87,7 +90,11 @@ export function FinalCtaSection({
   return (
     <section
       aria-labelledby="final-cta-title"
-      className={`mx-auto w-full max-w-[1360px] px-4 sm:px-8 ${size.section}`}
+      className={
+        contained
+          ? "w-full"
+          : `mx-auto w-full max-w-[1360px] px-4 sm:px-8 ${size.section}`
+      }
     >
       <div
         className={`relative grid items-center text-white ${size.band}`}
@@ -123,7 +130,7 @@ export function FinalCtaSection({
             {primary ? (
               <GlobalLink
                 href={primary.href}
-                className={`rounded-full font-semibold no-underline transition-colors hover:bg-(--t-accent-chip) ${size.button}`}
+                className={`inline-flex min-h-11 items-center justify-center rounded-full font-semibold no-underline transition-colors hover:bg-(--t-accent-chip) ${size.button}`}
                 style={{ background: "#fff", color: "#17162B" }}
               >
                 {primary.label}
@@ -132,7 +139,7 @@ export function FinalCtaSection({
             {secondary ? (
               <GlobalLink
                 href={secondary.href}
-                className={`rounded-full border font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48] ${size.button}`}
+                className={`inline-flex min-h-11 items-center justify-center rounded-full border font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48] ${size.button}`}
                 style={{ borderColor: "#6E6B8C" }}
               >
                 {secondary.label}

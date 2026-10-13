@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
@@ -80,6 +82,8 @@ const COLUMNS: { title: string; sub: string; apply?: string }[] = [
 ]
 
 function CellValue({ cell }: { cell: Cell }) {
+  const tUi = useUiTranslations("ui")
+
   if (cell.kind === "claim")
     return (
       <span className="text-[14px]" style={{ color: T.ink.dim }}>
@@ -89,7 +93,7 @@ function CellValue({ cell }: { cell: Cell }) {
   if (cell.kind === "no") {
     return (
       <span className="text-[14px]" style={{ color: T.ink.faint }}>
-        — {cell.note ?? "No"}
+        — {cell.note ?? tUi("no")}
       </span>
     )
   }
@@ -99,7 +103,7 @@ function CellValue({ cell }: { cell: Cell }) {
       className="text-[14px] font-semibold"
       style={{ color: "var(--tint-public-fg)" }}
     >
-      ✓ {cell.note ?? "Yes"}
+      ✓ {cell.note ?? tUi("yes")}
     </span>
   )
 }

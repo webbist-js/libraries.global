@@ -183,7 +183,7 @@ Describe added or changed environment variables in the pull request so maintaine
 
 ## Deployment
 
-The UI will deploy to Vercel and Strapi to Strapi Cloud. The production Meilisearch host and the sync worker's host aren't set up yet. `apps/ui/vercel.json` schedules a daily `/api/cron/retention` job, which needs `CRON_SECRET`, to delete expired sessions and old rate-limit rows. Sections 4 to 6 of the [pre-golive checklist](./docs/pre-golive-checklist.md) cover production env vars, OAuth callbacks and launch checks.
+The closed beta runs on DigitalOcean in London, with Next.js, Strapi, independent workers, Managed PostgreSQL with a standby, Spaces and persistent Meilisearch storage. The approved baseline is $164.50/month before tax and usage overages. The [infrastructure record](./infra/digitalocean/README.md) documents the running services, verified migration, private CMS access, release images and recovery steps. Authenticated systemd jobs handle daily retention and every-minute sandbox billing processing. GitHub Actions production deployment remains to connect. The [DigitalOcean launch checklist](./docs/operations/digitalocean-launch-checklist.md) and [pre-golive checklist](./docs/pre-golive-checklist.md) track the remaining public-launch work.
 
 ## Documentation
 

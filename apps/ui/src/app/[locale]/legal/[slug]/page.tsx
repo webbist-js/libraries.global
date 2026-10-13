@@ -1,10 +1,12 @@
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { BetaFooter } from "@/components/beta/BetaFooter"
 import LegalDocumentPage from "@/components/legal/LegalDocumentPage"
 import { JsonLd } from "@/components/seo/JsonLd"
-import { isDevelopment } from "@/lib/general-helpers"
+import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
@@ -13,20 +15,9 @@ import {
 } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-export const dynamic = "force-static"
-export const revalidate = 300
-export const dynamicParams = true
-
-export async function generateStaticParams({
-  params: { locale },
-}: {
-  params: { locale: string }
-}) {
-  if (isDevelopment()) return []
-  const result = await fetchLegalDocuments(locale as Locale)
-
-  return result.data.flatMap((doc) => (doc.slug ? [{ slug: doc.slug }] : []))
-}
+// Draft mode and the beta legal shell depend on this request's cookies/headers.
+// These pages must also work when the image is built without CMS credentials.
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({
   params,
@@ -34,19 +25,23 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>
 }): Promise<Metadata> {
   const { slug, locale } = await params
-  const doc = (await fetchLegalDocument(slug, locale as Locale))?.data
+  const res = await fetchLegalDocument(slug, locale as Locale)
+  const doc = res?.data
   if (!doc) return { title: "Page not found", robots: { index: false } }
 
   return buildMetadata({
-    title: doc.seo?.metaTitle ?? doc.title ?? "Legal",
-    description:
-      doc.seo?.metaDescription ??
-      doc.lead ??
-      `${doc.title ?? "Legal"} — ${SITE_NAME}.`,
+    seo: doc.seo,
+    alternateLocales: [locale],
+    title: doc.title ?? "Legal",
+    description: doc.lead ?? `${doc.title ?? "Legal"} — ${SITE_NAME}.`,
     path: `legal/${slug}`,
     locale,
     image: formatStrapiMediaUrl(doc.seo?.metaImage?.url),
     modifiedTime: doc.updatedAt,
+    robots:
+      slug === BETA_LEGAL_SLUG || res?.localeFallback
+        ? "noindex-follow"
+        : "index",
   })
 }
 
@@ -64,6 +59,7 @@ export default async function LegalDocumentRoute({
   ])
   const doc = docRes?.data
   if (!doc) notFound()
+  const publicShell = (await headers()).get("x-beta-public-shell") === "true"
 
   return (
     <>
@@ -78,9 +74,11 @@ export default async function LegalDocumentRoute({
       />
       <LegalDocumentPage
         document={doc}
-        documents={navRes.data}
+        untranslatedLocale={docRes?.localeFallback ? locale : null}
+        documents={slug === BETA_LEGAL_SLUG ? [doc] : navRes.data}
         locale={locale}
       />
+      {publicShell && <BetaFooter locale={locale} />}
     </>
   )
 }

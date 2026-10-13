@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { PlanKey } from "@repo/access"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -79,6 +80,8 @@ export function LibrarySelect({
 }: {
   readonly library: ContributeMenu["library"]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
 
   return (
@@ -91,7 +94,7 @@ export function LibrarySelect({
         className="text-[13px] font-semibold whitespace-nowrap"
         style={{ color: T.ink.dim }}
       >
-        Library
+        {tUi("library")}{" "}
       </label>
       <select
         id={id}

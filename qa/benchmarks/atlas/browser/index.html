@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas bounded-source benchmark</title>
+  <link href="/vendor/maplibre-gl.css" rel="stylesheet" />
+  <style>html,body,#map{margin:0;width:100%;height:100%}#status{position:absolute;top:10px;left:10px;background:white;padding:12px;font:14px sans-serif;z-index:1;max-width:320px}</style>
+</head>
+<body>
+  <div id="map"></div><div id="status">Loading a bounded viewport…</div>
+  <script src="/vendor/maplibre-gl.js"></script>
+  <script src="/vendor/pmtiles.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const mode = params.get("mode") || "current";
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+    const map = new maplibregl.Map({container:"map",style:{version:8,sources:{},layers:[{id:"background",type:"background",paint:{"background-color":"#edf3f4"}}]},center:[-0.12,51.5],zoom:mode==="tiles"?10:4,attributionControl:false});
+    const frames = []; let previous = performance.now(), measuring = false;
+    function frame(time) {if (measuring) frames.push(time-previous); previous=time; requestAnimationFrame(frame);}
+    requestAnimationFrame(frame);
+    let controller, epoch=0, loaded=false;
+    window.atlasBenchmark = {map,frames,ready:false,firstLayerMs:null,requests:0,maxGeometryBytes:0,modes:[],startFrames:()=>{frames.length=0;measuring=true},stopFrames:()=>{measuring=false},query:()=>update()};
+    async function update() {
+      if (!loaded) return;
+      controller?.abort(); controller=new AbortController(); const generation=++epoch;
+      const b=map.getBounds(), c=map.getCenter();
+      const scope={bbox:{west:b.getWest(),east:b.getEast(),south:Math.max(-90,b.getSouth()),north:Math.min(90,b.getNorth())},filters:{types:[],opening:params.get("opening")||"any",atDay:3,atMinutes:555,operators:[],facilities:[],events:false,catalogue:false,founded:null},accessibility:{enabled:false,selected:[],view:"matches"}};
+      try {
+        const response=await fetch("/geometry",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({schemaVersion:1,purpose:"viewport",scope,zoom:map.getZoom(),width:map.getCanvas().clientWidth,height:map.getCanvas().clientHeight,centre:{lat:c.lat,lng:c.lng},populations:["listed"],drawingPreference:"current"}),signal:controller.signal});
+        if(!response.ok) throw Error(await response.text());
+        const data=await response.json();
+        if(generation!==epoch) return;
+        atlasBenchmark.maxGeometryBytes=Math.max(atlasBenchmark.maxGeometryBytes,JSON.stringify(data).length);atlasBenchmark.modes.push(data.mode);
+        const features=data.mode==="points"?data.points:data.cells.map(cell=>({type:"Feature",geometry:{type:"Point",coordinates:[cell.centre.lng,cell.centre.lat]},properties:{count:cell.total}}));
+        map.getSource("current").setData({type:"FeatureCollection",features});
+        const tilesEligible=mode==="tiles" && data.mode==="aggregate" && scope.filters.opening==="any" && map.getZoom()>=10;
+        if(map.getLayer("archive")) map.setLayoutProperty("archive","visibility",tilesEligible?"visible":"none");
+        map.setLayoutProperty("current","visibility",tilesEligible?"none":"visible");
+        document.getElementById("status").textContent=`${data.exactTotal.toLocaleString()} libraries · ${tilesEligible?"archive":data.mode}`;
+        await new Promise(resolve=>map.once("idle",resolve));
+        atlasBenchmark.requests++;
+        if(atlasBenchmark.firstLayerMs===null) atlasBenchmark.firstLayerMs=performance.now();
+        atlasBenchmark.ready=true;
+      } catch(error) {if(error.name!=="AbortError"){document.getElementById("status").textContent=error.message;atlasBenchmark.error=error.message;}}
+    }
+    map.on("load",()=>{
+      map.addSource("current",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
+      map.addLayer({id:"current",type:"circle",source:"current",paint:{"circle-radius":["case",["has","count"],7,3],"circle-color":"#005a80","circle-opacity":0.8}});
+      if(mode==="tiles"){
+        map.addSource("archive",{type:"vector",url:`pmtiles://${location.origin}/archive.pmtiles`,minzoom:10,maxzoom:16});
+        map.addLayer({id:"archive",type:"circle",source:"archive","source-layer":"libraries",filter:["!=",["get","st"],"permanently_closed"],layout:{visibility:"none"},paint:{"circle-radius":3,"circle-color":"#007d5a"}});
+      }
+      loaded=true;update();
+    });
+    map.on("moveend",()=>{clearTimeout(window.panTimer);window.panTimer=setTimeout(update,150)});
+    map.on("error",event=>{atlasBenchmark.error=event.error.message});
+  </script>
+</body>
+</html>

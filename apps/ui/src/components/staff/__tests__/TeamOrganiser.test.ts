@@ -1,4 +1,10 @@
 // @vitest-environment happy-dom
+import type * as NextIntl from "next-intl"
+import * as React from "react"
+import { createElement } from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import type { TeamDetail, TeamMemberRow } from "@/lib/staff/types"
 import {
   cleanup,
   fireEvent,
@@ -6,12 +12,7 @@ import {
   screen,
   waitFor,
   within,
-} from "@testing-library/react"
-import * as React from "react"
-import { createElement } from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-
-import type { TeamDetail, TeamMemberRow } from "@/lib/staff/types"
+} from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -25,7 +26,10 @@ vi.mock("@/lib/access-client", () => ({
 vi.mock("@/lib/staff/client", () => ({ staffRequest: mocks.request }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
-vi.mock("next-intl", () => ({ useLocale: () => "en-GB" }))
+vi.mock("next-intl", async (importOriginal) => ({
+  ...(await importOriginal<typeof NextIntl>()),
+  useLocale: () => "en-GB",
+}))
 vi.mock("next/navigation", () => ({ usePathname: () => "/staff/team" }))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")

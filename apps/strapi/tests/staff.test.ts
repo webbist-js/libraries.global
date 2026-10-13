@@ -94,6 +94,27 @@ afterEach(() => {
 })
 
 describe("library staff authority", () => {
+  it("notifies the affected member after a permission change, but skips an unchanged value", async () => {
+    const { staff, services } = setup()
+    const enqueue = vi.fn().mockResolvedValue({})
+    services["api::notification.notification"] = { enqueue }
+    await staff.changeMember("owner", library.documentId, memberId("editor"), {
+      canGoLive: false,
+    })
+    await vi.waitFor(() => expect(enqueue).toHaveBeenCalledOnce())
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baUserId: "editor",
+        kind: "staff_update",
+        emailPreference: "transactional",
+        href: "/staff/central/team",
+      })
+    )
+    await staff.changeMember("owner", library.documentId, memberId("editor"), {
+      canGoLive: false,
+    })
+    expect(enqueue).toHaveBeenCalledOnce()
+  })
   it("derives the earliest approved claimant as owner only when no row carries a level", () => {
     const rows = [
       { staffRole: null, approvedAt: "2026-03-01" },

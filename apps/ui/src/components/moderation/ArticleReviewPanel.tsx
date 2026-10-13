@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { Badge } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
 
@@ -85,6 +87,8 @@ export function ArticleReviewPanel({
     | "targetSlug"
   >
 }) {
+  const tUi = useUiTranslations("ui")
+
   const draft = detail.draftData ?? {}
   const fields = detail.fields ?? {}
   const isJournal = detail.submissionType === "blog_submission"
@@ -116,7 +120,7 @@ export function ArticleReviewPanel({
   const live: Side | null =
     isTranslation && source
       ? {
-          heading: "Source",
+          heading: tUi("source"),
           locale: source.locale,
           title: str(source.title),
           summary: str(source.summary),
@@ -151,7 +155,7 @@ export function ArticleReviewPanel({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <Badge
-          label={isJournal ? "Journal" : "Knowledge"}
+          label={isJournal ? tUi("journal") : tUi("knowledge")}
           color={isJournal ? "ember" : "violet"}
         />
         <Badge label={kindLabel} color="dim" />

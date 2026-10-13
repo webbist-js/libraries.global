@@ -1,0 +1,21 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notification_announcements",
+  "info": {
+    "singularName": "announcement",
+    "pluralName": "announcements",
+    "displayName": "Notification announcement",
+    "description": "Publish an operational project notice or an opt-in product update. Publication queues notifications; unpublish before delivery to cancel unsent emails."
+  },
+  "options": { "draftAndPublish": true },
+  "attributes": {
+    "title": { "type": "string", "required": true, "maxLength": 180 },
+    "body": { "type": "text", "required": true, "maxLength": 3000 },
+    "href": { "type": "string", "maxLength": 500 },
+    "channel": {
+      "type": "enumeration",
+      "enum": ["editorialMessages", "marketing", "transactional"],
+      "required": true
+    }
+  }
+}

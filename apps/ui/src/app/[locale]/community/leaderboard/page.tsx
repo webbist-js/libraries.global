@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { PointsTableCard } from "@/components/community/PointsTableCard"
 import { StandingCard } from "@/components/community/StandingCard"
@@ -62,6 +63,8 @@ export default async function LeaderboardPage({
   params: Promise<{ locale: string }>
   searchParams: Promise<{ period?: string }>
 }) {
+  const tUi = await getUiTranslations("ui")
+
   const [{ locale }, { period: periodParam }] = await Promise.all([
     params,
     searchParams,
@@ -94,7 +97,7 @@ export default async function LeaderboardPage({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <CommunitySectionHeader
-        section="Leaderboard"
+        section={tUi("leaderboard")}
         title="The community, *in numbers.*"
         lead="The people keeping the atlas accurate and growing. Points are earned only for approved contributions."
         counts={{ noticeboard: openDrives, suggestions: votableCount }}
@@ -151,7 +154,7 @@ export default async function LeaderboardPage({
         </section>
 
         <aside
-          aria-label="Sidebar"
+          aria-label={tUi("sidebar")}
           className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
           style={{ flex: "1 1 290px" }}
         >

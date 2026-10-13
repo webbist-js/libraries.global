@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -97,6 +98,8 @@ export function RoleApplicationAside({
 }: {
   readonly role: ApplicationRole
 }) {
+  const tUi = useUiTranslations("ui")
+
   const reviewer = role === "moderator" ? "The editorial board" : "A moderator"
 
   return (
@@ -160,7 +163,7 @@ export function RoleApplicationAside({
               className="underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              My submissions
+              {tUi("my_submissions")}{" "}
             </Link>
             .
           </li>

@@ -7,6 +7,7 @@ import {
   type FeedTestCode,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useRef, useState } from "react"
 
@@ -66,6 +67,8 @@ export function FeedRow({
   readonly librarySlug: string | null
   readonly libraryName: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const providerDef = EVENT_PROVIDERS[feed.provider]
   const [busy, setBusy] = useState<string | null>(null)
@@ -313,7 +316,7 @@ export function FeedRow({
             <Notice
               icon="mdi:alert-circle-outline"
               tone="warn"
-              title="Sync issue"
+              title={tUi("sync_issue")}
             >
               <p className="m-0">{FEED_TEST_COPY[feed.lastErrorCode]}</p>
             </Notice>
@@ -333,7 +336,7 @@ export function FeedRow({
             <Notice
               icon="mdi:clock-outline"
               tone="info"
-              title="New details waiting for review"
+              title={tUi("new_details_waiting_for_review")}
             >
               <button
                 type="button"
@@ -358,7 +361,7 @@ export function FeedRow({
                   : "mdi:alert-circle-outline"
               }
               tone={testResult === "ok" ? "ok" : "warn"}
-              title="Test result"
+              title={tUi("test_result")}
             >
               <p className="m-0">{FEED_TEST_COPY[testResult]}</p>
             </Notice>
@@ -402,7 +405,7 @@ export function FeedRow({
                   style={secondaryPillStyle}
                   onClick={() => dialogRef.current?.close()}
                 >
-                  Cancel
+                  {tUi("cancel")}{" "}
                 </button>
                 <button
                   type="button"

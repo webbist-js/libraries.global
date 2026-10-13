@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 
 import type {
@@ -33,6 +34,8 @@ export function SuggestionsWorkspace({
   /** The rail's cards under the form. */
   readonly children?: ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const { items, setItems, vote, busyId, error } = useSuggestions(initial)
   const [filter, setFilter] = useState<BoardFilter>("all")
 
@@ -71,7 +74,7 @@ export function SuggestionsWorkspace({
       </div>
 
       <aside
-        aria-label="Sidebar"
+        aria-label={tUi("sidebar")}
         className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
         style={{ flex: "1 1 290px" }}
       >

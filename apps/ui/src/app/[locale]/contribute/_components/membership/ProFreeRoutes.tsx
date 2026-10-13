@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { EARNED_PRO_HOLD_DAYS } from "@repo/access"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { CONTACT_EMAIL } from "@/lib/constants"
@@ -75,6 +76,8 @@ const LINK_PILL =
 
 /** The three ways to hold Pro without paying. */
 export function ProFreeRoutes() {
+  const tUi = useUiTranslations("ui")
+
   return (
     <section
       aria-labelledby="get-pro-free-h"
@@ -84,7 +87,7 @@ export function ProFreeRoutes() {
       <PlanSectionHeader
         id="get-pro-free-h"
         sub="If you qualify for complimentary Pro, you’re never asked to pay."
-        title="Get Pro free"
+        title={tUi("get_pro_free")}
       />
       <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
         {ROUTES.map((route) => {

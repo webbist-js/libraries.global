@@ -56,6 +56,20 @@ const library = {
   updatedAt: "",
   timetable: tt,
   notices: [],
+  roadRoutes: [
+    {
+      stopIds: ["aaaaaaaaaa", "bbbbbbbbbb"],
+      geometry: {
+        type: "LineString" as const,
+        coordinates: [
+          [0, 51],
+          [0.02, 51],
+          [0.02, 51.08],
+          [0.1, 51.1],
+        ],
+      },
+    },
+  ],
 }
 const state: PublicLiveState = {
   libraryDocumentId: "lib",
@@ -75,13 +89,38 @@ const state: PublicLiveState = {
 }
 const now = new Date("2026-10-06T09:20:00Z")
 describe("mobile map presentation", () => {
-  it("bounds route loading and renders check-ins between stops without a location history", () => {
+  it("keeps another day's routes dashed while the vehicle is live today", () => {
+    const otherDay = {
+      ...library.roadRoutes[0]!,
+      stopIds: ["other-stop", "bbbbbbbbbb"],
+    }
+    const data = mobileMapData(
+      [],
+      [],
+      [{ ...library, roadRoutes: [...library.roadRoutes, otherDay] }],
+      { lib: state },
+      now
+    )
+    expect(data.routes.features.map((route) => route.properties?.live)).toEqual(
+      [true, false]
+    )
+    expect(
+      mobileMapData([], [], [library], {}, now).routes.features[0]?.properties
+        ?.live
+    ).toBe(true)
+  })
+  it("bounds route loading and renders road geometry and check-ins at the last known stop without a location history", () => {
     const data = mobileMapData([], [], [library], { lib: state }, now)
     expect(data.routes.features[0]?.properties?.live).toBe(true)
-    expect(data.vehicles.features[0]?.geometry.coordinates[0]).toBeCloseTo(0.05)
-    expect(data.vehicles.features[0]?.geometry.coordinates[1]).toBeCloseTo(
-      51.05
+    expect(data.routes.features[0]?.geometry.coordinates).toEqual(
+      library.roadRoutes[0]!.geometry.coordinates
     )
+    expect(
+      mobileMapData([], [], [{ ...library, roadRoutes: [] }], {}, now).routes
+        .features
+    ).toHaveLength(0)
+    expect(data.vehicles.features[0]?.geometry.coordinates[0]).toBeCloseTo(0)
+    expect(data.vehicles.features[0]?.geometry.coordinates[1]).toBeCloseTo(51)
     expect(data.rings.features).toHaveLength(0)
     expect(
       mobileMapData(

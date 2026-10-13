@@ -1,4 +1,5 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   DECLINE_REASONS,
@@ -7,7 +8,7 @@ import {
   type DeclineReason,
   type MobileTimetable,
 } from "@repo/shared-data"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { DiffCard, EmptyState, Sheet } from "@/components/ds"
@@ -64,6 +65,8 @@ export function StaffSuggestions({
   /** The library's public page, linked after a change is published. */
   publicPath?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const locale = useLocale()
   const [data, setData] = useState<Suggestion[]>([]),
     [page, setPage] = useState(1),
@@ -153,13 +156,13 @@ export function StaffSuggestions({
     <section
       id="suggestions"
       aria-labelledby="staff-suggestions-heading"
-      className="rounded-[20px] border p-6"
+      className="rounded-[28px] border p-5 sm:p-8"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="mb-5">
         <h2
           id="staff-suggestions-heading"
-          className="m-0 text-[26px]"
+          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
           Suggested changes
@@ -173,7 +176,7 @@ export function StaffSuggestions({
             </span>
           ) : null}
         </h2>
-        <p className="m-0 mt-1 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-2 text-[16px]" style={{ color: T.ink.dim }}>
           From the community. As staff, your decision publishes straight away.
         </p>
       </div>
@@ -215,7 +218,7 @@ export function StaffSuggestions({
             style={{ borderColor: T.border.hi, color: T.ink.base }}
             onClick={() => setAttempt((n) => n + 1)}
           >
-            Try again
+            {tUi("try_again")}{" "}
           </button>
         </div>
       )}
@@ -319,7 +322,7 @@ export function StaffSuggestions({
         {loaded && !data.length && !listError && (
           <EmptyState
             icon="mdi:check-decagram-outline"
-            lead="Nothing waiting for review"
+            lead={tUi("nothing_waiting_for_review")}
             detail="Suggestions from visitors land here. You decide, and it publishes."
             action={
               publicPath ? (
@@ -328,7 +331,7 @@ export function StaffSuggestions({
                   className={`${OUTLINED} gap-1 no-underline`}
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
-                  View public page
+                  {tUi("view_public_page")}{" "}
                   <Icon
                     aria-hidden="true"
                     icon="mdi:arrow-top-right"
@@ -352,7 +355,7 @@ export function StaffSuggestions({
       {total > PAGE_SIZE && (
         <nav
           className="mt-5 flex items-center gap-4"
-          aria-label="Suggestions pages"
+          aria-label={tUi("suggestions_pages")}
         >
           <button
             type="button"
@@ -361,7 +364,7 @@ export function StaffSuggestions({
             disabled={page === 1}
             onClick={() => setPage((n) => n - 1)}
           >
-            Previous
+            {tUi("previous")}{" "}
           </button>
           <span className="text-[14px]" style={{ color: T.ink.dim }}>
             Page {page} of {pages}
@@ -373,7 +376,7 @@ export function StaffSuggestions({
             disabled={page * PAGE_SIZE >= total}
             onClick={() => setPage((n) => n + 1)}
           >
-            Next
+            {tUi("next")}{" "}
           </button>
         </nav>
       )}
@@ -381,7 +384,7 @@ export function StaffSuggestions({
         open={!!declining}
         onClose={() => !busy && setDeclining(null)}
         side="right"
-        title="Decline this suggestion"
+        title={tUi("decline_this_suggestion")}
         footer={
           <button
             type="button"
@@ -409,7 +412,7 @@ export function StaffSuggestions({
           </select>
         </label>
         <label className="block text-[15px] font-semibold">
-          Note {reason === "other" ? "(required)" : "(optional)"}
+          Note {reason === "other" ? "(required)" : tUi("optional")}
           <textarea
             className="mt-2 w-full rounded-[14px] border p-3 font-normal"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}

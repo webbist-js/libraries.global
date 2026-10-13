@@ -13,13 +13,21 @@ export type FacilityState = "yes" | "no" | "unknown"
 
 export type FacilityRow = {
   label: string
+  question?: string
+  category?: FacilityKind
   icon: string
   /** yes: on the record; no: confirmed absent; unknown: ask the reader. */
   state: FacilityState
+  summary?: string | null
+  description?: unknown
+  detailCategory?: string | null
 }
 
 type TagItem = {
   name?: string | null
+  summary?: string | null
+  description?: unknown
+  category?: string | null
   icon?: { iconName?: string | null } | null
 }
 
@@ -36,14 +44,24 @@ export function facilityRows(library: {
   amenities?: unknown
   absentFacilities?: unknown
 }): FacilityRow[] {
+  const checklist = facilityChecklistFor(library.libraryType)
   const tagged = (items: unknown, kind: FacilityKind): FacilityRow[] =>
     ((items ?? []) as TagItem[]).flatMap((item) =>
       item.name
         ? [
             {
+              question: checklist.find(
+                (question) =>
+                  question.collection === kind &&
+                  sameFacility(question.name, item.name!)
+              )?.label,
               label: item.name,
+              category: kind,
               icon: facilityIcon(item.name, kind, item.icon?.iconName),
               state: "yes" as const,
+              summary: item.summary,
+              description: item.description,
+              detailCategory: item.category,
             },
           ]
         : []
@@ -53,7 +71,10 @@ export function facilityRows(library: {
     ...tagged(library.services, "service"),
     ...tagged(library.amenities, "amenity"),
   ]
-  const names = documented.map((d) => d.label.toLowerCase())
+  const names = (collection: FacilityKind) =>
+    documented
+      .filter((d) => d.category === collection)
+      .map((d) => d.label.toLowerCase())
   const absent = new Set(
     Array.isArray(library.absentFacilities)
       ? library.absentFacilities.filter(
@@ -63,10 +84,10 @@ export function facilityRows(library: {
   )
 
   const open = facilityChecklistFor(library.libraryType)
-    .filter(({ label, name }) => {
+    .filter(({ label, name, collection }) => {
       const lower = label.toLowerCase()
 
-      return !names.some(
+      return !names(collection).some(
         (doc) =>
           doc === name.toLowerCase() ||
           doc.includes(lower) ||
@@ -74,7 +95,9 @@ export function facilityRows(library: {
           sameFacility(label, doc)
       )
     })
-    .map(({ label }) => ({
+    .map(({ label, collection }) => ({
+      category: collection,
+      question: label,
       label,
       icon: facilityIcon(label, "accessibility"),
       state: absent.has(label) ? ("no" as const) : ("unknown" as const),

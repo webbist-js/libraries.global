@@ -8,6 +8,7 @@ import type {
   ArticleTag,
   ExistingArticle,
 } from "@/components/contribute/article-editor/article.types"
+import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
 import {
   type ArticleForEditing,
   fetchArticleForEditing,
@@ -19,6 +20,7 @@ const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 export async function fetchArticleLocales(): Promise<ArticleLocale[]> {
   try {
     const res = await fetch(`${STRAPI}/api/content-moderation/locales`, {
+      headers: strapiServiceHeaders(),
       next: { revalidate: 3600 },
     })
     if (!res.ok) throw new Error(String(res.status))

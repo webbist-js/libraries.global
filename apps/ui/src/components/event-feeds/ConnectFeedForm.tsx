@@ -9,14 +9,15 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
+import { ChoiceCard } from "@/components/ds/ChoiceCard"
+import { Notice } from "@/components/ds/Notice"
 import {
   fieldInputStyle,
   fieldLabelStyle,
-} from "@/app/[locale]/contribute/index/_components/wizard.constants"
-import { ChoiceCard } from "@/components/ds/ChoiceCard"
-import { Notice } from "@/components/ds/Notice"
+} from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
@@ -50,6 +51,8 @@ export function ConnectFeedForm({
   readonly initialLibrary?: string
   readonly oauth: { eventbrite: boolean }
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const initialLibraryIsClaimed =
     initialLibrary !== undefined &&
@@ -173,7 +176,7 @@ export function ConnectFeedForm({
             color: T.ink.base,
           }}
         >
-          Library
+          {tUi("library")}{" "}
         </h2>
         {libraries.length <= 1 ? (
           <p
@@ -245,7 +248,7 @@ export function ConnectFeedForm({
         {provider === "eventbrite" && oauth.eventbrite && !manualToken ? (
           <div className="flex flex-col items-start gap-2">
             <a
-              href={`/api/contribute/event-feeds/eventbrite/start?library=${libraryDocumentId}`}
+              href={`/api/contribute/event-feeds/eventbrite/start?library=${encodeURIComponent(libraryDocumentId)}`}
               className={PRIMARY_PILL}
             >
               Connect with Eventbrite
@@ -309,7 +312,7 @@ export function ConnectFeedForm({
                     : "mdi:alert-circle-outline"
                 }
                 tone={test.result === "ok" ? "ok" : "warn"}
-                title="Test result"
+                title={tUi("test_result")}
               >
                 <p className="m-0">{FEED_TEST_COPY[test.result]}</p>
               </Notice>

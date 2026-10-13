@@ -1,4 +1,6 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
+import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -16,7 +18,7 @@ export function JournalHeading({
   italic,
 }: {
   readonly id: string
-  readonly children: string
+  readonly children: ReactNode
   readonly italic?: string
 }) {
   return (
@@ -51,17 +53,26 @@ export function JournalSectionBrowser({
   readonly total: number
   readonly query: JournalQuery
 }) {
+  const t = useTranslations("editorial")
   if (sections.length === 0) return null
 
   return (
     <section aria-labelledby="journal-sections" className="mt-14">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
-        <JournalHeading id="journal-sections" italic="section">
-          Browse by
+        <JournalHeading id="journal-sections">
+          {t.rich("browseSections", {
+            em: (chunks) => (
+              <em style={{ fontWeight: 400, color: T.accent.primary }}>
+                {chunks}
+              </em>
+            ),
+          })}
         </JournalHeading>
         <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-          {total} {total === 1 ? "article" : "articles"} in {sections.length}{" "}
-          {sections.length === 1 ? "section" : "sections"}
+          {t("articlesInSections", {
+            articles: t("articleCount", { count: total }),
+            sections: t("sectionCount", { count: sections.length }),
+          })}
         </p>
       </div>
 
@@ -100,9 +111,9 @@ export function JournalSectionBrowser({
                       color: T.ink.base,
                     }}
                   >
-                    {section.count}
+                    <span aria-hidden="true">{section.count}</span>
                     <span className="sr-only">
-                      {section.count === 1 ? " article" : " articles"}
+                      {t("articleCount", { count: section.count })}
                     </span>
                   </span>
                 </span>

@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -20,9 +21,6 @@ import {
   LibrarySelect,
   PlanPill,
 } from "./ContributeMenuParts"
-
-/** The footer carries the editor cards only. */
-const FOOTER_CARDS = new Set<ContributorCard["key"]>(["knowledge", "journal"])
 
 function MobileLink({ link }: { readonly link: ContributorLink }) {
   return (
@@ -104,6 +102,8 @@ function MobileTile({
  * panel, one accordion each with the first open, then the Membership row.
  */
 function MobileShortcuts() {
+  const tUi = useUiTranslations("ui")
+
   const menu = useContributeMenu(true)
   const titleId = useId()
   const cards = [...menu.work, ...menu.common]
@@ -119,14 +119,14 @@ function MobileShortcuts() {
         className="m-0 mx-1 text-[24px] font-medium"
         style={{ fontFamily: T.font.serif, color: T.ink.base }}
       >
-        Contribute
+        {tUi("contribute")}{" "}
       </h2>
       {menu.status === "signedOut" ? (
         <GlobalLink
           href="/auth/signin"
           className="mx-1 mb-1 self-start rounded-full bg-(--t-accent-primary) px-4 py-2.5 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
         >
-          Sign in to contribute
+          {tUi("sign_in_to_contribute")}{" "}
         </GlobalLink>
       ) : null}
       {menu.status === "loading" ? (
@@ -152,7 +152,7 @@ function MobileShortcuts() {
         className="flex min-h-[52px] items-center gap-2.5 rounded-[16px] border px-3 text-[16px] font-bold text-(--t-ink-base) no-underline"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
-        Membership
+        {tUi("membership")}{" "}
         {menu.plan ? (
           <span className="ml-auto">
             <PlanPill plan={menu.plan} />
@@ -163,64 +163,12 @@ function MobileShortcuts() {
   )
 }
 
-/** The footer's editor pills: Knowledge and Journal, for editors only. */
-function FooterShortcuts() {
-  const menu = useContributeMenu(false)
-  const baseId = useId()
-  const cards = menu.work.filter((card) => FOOTER_CARDS.has(card.key))
-  if (cards.length === 0) return null
-
-  return (
-    <div
-      className="flex flex-col gap-8 border-t pt-8 md:flex-row"
-      style={{ borderColor: T.border.line }}
-    >
-      {cards.map((card) => {
-        const titleId = `${baseId}-${card.key}`
-
-        return (
-          <nav
-            key={card.key}
-            aria-labelledby={titleId}
-            className="flex flex-col gap-4 md:flex-1"
-          >
-            <p
-              id={titleId}
-              className="m-0 text-[18px] font-bold"
-              style={{ color: T.ink.dim }}
-            >
-              {card.title}
-            </p>
-            <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-              {card.links.map((link) => (
-                <li key={`${link.href}:${link.label}`}>
-                  <GlobalLink
-                    href={link.href}
-                    className="inline-flex items-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-3.5 py-2 text-[15px] font-medium text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
-                  >
-                    {link.label}
-                  </GlobalLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )
-      })}
-    </div>
-  )
-}
-
 /**
  * The Contribute cards outside the header panel: a section in the mobile
- * menu, or a row of editor pills under the footer's link columns (nothing
- * when the viewer holds no editor role).
+ * menu. Editors reach their tools from the editorial drawer.
  */
-export function GlobalContributorShortcuts({
-  variant,
-}: {
-  readonly variant: "mobile" | "footer"
-}) {
-  return variant === "mobile" ? <MobileShortcuts /> : <FooterShortcuts />
+export function GlobalContributorShortcuts() {
+  return <MobileShortcuts />
 }
 
 GlobalContributorShortcuts.displayName = "GlobalContributorShortcuts"

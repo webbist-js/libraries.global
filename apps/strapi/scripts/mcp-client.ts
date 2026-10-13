@@ -50,6 +50,7 @@ export class StrapiMcpClient {
 
     const res = await fetch(this.url, {
       method: "POST",
+      signal: AbortSignal.timeout(60_000),
       headers,
       body: JSON.stringify({
         jsonrpc: "2.0",
@@ -87,6 +88,23 @@ export class StrapiMcpClient {
       capabilities: {},
       clientInfo: { name: "libraryon-import", version: "1.0.0" },
     })
+  }
+
+  /** Discover the current session's tools, including its locale permissions. */
+  async listTools(): Promise<
+    {
+      name: string
+      inputSchema: { properties?: Record<string, { enum?: string[] }> }
+    }[]
+  > {
+    const result = (await this.rpc("tools/list", {})) as {
+      tools: {
+        name: string
+        inputSchema: { properties?: Record<string, { enum?: string[] }> }
+      }[]
+    }
+
+    return result.tools
   }
 
   /** Calls a tool and returns its parsed JSON payload. */

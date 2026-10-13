@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { Badge, EmptyState } from "@/components/ds"
@@ -83,6 +84,8 @@ function SuggestionCard({
   s: OptionSuggestion
   onDecided: (id: string, text: string, newStatus?: SuggestionStatus) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const nameId = useId()
   const noteId = useId()
   const [name, setName] = useState(s.name)
@@ -287,7 +290,7 @@ function SuggestionCard({
                 className={SECONDARY}
                 onClick={() => setConfirmingRemove(false)}
               >
-                Cancel
+                {tUi("cancel")}{" "}
               </button>
             </span>
           ) : (
@@ -297,7 +300,7 @@ function SuggestionCard({
               style={{ color: T.accent.danger }}
               onClick={() => setConfirmingRemove(true)}
             >
-              Remove
+              {tUi("remove")}{" "}
             </button>
           )}
         </div>
@@ -317,6 +320,8 @@ export function OptionSuggestionsBoard({
 }: {
   readonly initial: OptionSuggestion[]
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [items, setItems] = useState(() =>
     initial.filter((s) => UNDECIDED_STATUSES.has(s.status))
   )
@@ -346,7 +351,7 @@ export function OptionSuggestionsBoard({
     <div className="flex flex-col gap-4">
       <div
         role="group"
-        aria-label="Filter by status"
+        aria-label={tUi("filter_by_status")}
         className="inline-flex w-fit flex-wrap gap-1 rounded-full p-1"
         style={{ background: T.bg.muted2 }}
       >

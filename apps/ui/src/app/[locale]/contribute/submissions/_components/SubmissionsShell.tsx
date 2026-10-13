@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useQuery } from "@tanstack/react-query"
-import { useLocale } from "next-intl"
+import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect } from "react"
 
 import { ContributionList } from "@/components/contributions/ContributionList"
@@ -57,6 +57,11 @@ function continueHref(submission: Submission): string {
     targetSlug
   )
     return `/contribute/index/${encodeURIComponent(targetSlug)}`
+
+  if (submissionType === "new_library")
+    return draftData?.staffCreation
+      ? "/staff/new"
+      : "/contribute/index/new?draft=contribute"
 
   return "/contribute/index/new"
 }
@@ -228,13 +233,15 @@ function ViewLink({
   href: string
   kind: "library" | "article"
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <Link
       href={href}
       className="inline-flex items-center gap-1 rounded-full border bg-white px-4 py-1.5 text-[14px] font-semibold whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-surface)"
       style={{ borderColor: T.border.hi, color: T.ink.base }}
     >
-      View {kind}
+      {tUi("view")} {kind}
       <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
     </Link>
   )
@@ -263,6 +270,8 @@ function SkeletonList() {
  * drafts and the moderator's note on a decision.
  */
 export function SubmissionsShell({ username }: { username: string | null }) {
+  const tUi = useUiTranslations("ui")
+
   const { data: submissions = [], isLoading, refetch } = useMySubmissions()
   const { has, ready } = useCapabilities()
   const targetHrefs = useTargetHrefs(submissions)
@@ -338,7 +347,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
     <>
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <ContributeSectionHeader
-        section="My submissions"
+        section={tUi("my_submissions")}
         title="Your contributions, *in flight.*"
         lead="Drafts, changes in review and decisions, with the moderator’s note where there is one."
       >
@@ -389,31 +398,31 @@ export function SubmissionsShell({ username }: { username: string | null }) {
           </section>
         ) : (
           <div className="flex flex-col gap-6">
-            <h2 className="sr-only">Submission summary</h2>
+            <h2 className="sr-only">{tUi("submission_summary")}</h2>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard
-                label="Drafts"
+                label={tUi("drafts")}
                 value={String(count("draft"))}
                 bg="var(--tint-neutral-bg)"
                 fg="var(--tint-neutral-fg)"
                 icon="mdi:file-document-edit-outline"
               />
               <StatCard
-                label="In review"
+                label={tUi("in_review")}
                 value={String(count("pending"))}
                 bg="var(--tint-academic-bg)"
                 fg="var(--tint-academic-fg)"
                 icon="mdi:clock-outline"
               />
               <StatCard
-                label="Changes requested"
+                label={tUi("changes_requested")}
                 value={String(count("needs_info"))}
                 bg="#F5EEDC"
                 fg="#6B5420"
                 icon="mdi:alert-circle-outline"
               />
               <StatCard
-                label="Accepted"
+                label={tUi("accepted")}
                 value={String(count("approved"))}
                 bg="var(--tint-public-bg)"
                 fg="var(--tint-public-fg)"
@@ -422,7 +431,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
             </div>
 
             <ContributionList
-              title="Your submissions"
+              title={tUi("your_submissions")}
               items={submissions}
               filters={STATUS_FILTERS}
               matches={matchesStatus}

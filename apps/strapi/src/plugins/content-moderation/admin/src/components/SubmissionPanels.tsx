@@ -2,6 +2,7 @@ import {
   EVENT_PROVIDERS,
   FEED_TEST_COPY,
   FEED_TEST_LABEL,
+  submittedSourceRecords,
 } from "@repo/shared-data"
 import {
   Alert,
@@ -296,6 +297,10 @@ export function SourcesPanel({ sub }: { sub: Submission }) {
       : []),
     ...(f.source ? [{ label: "Source", value: f.source }] : []),
     ...(f.sourceUrl ? [{ label: "Source URL", value: f.sourceUrl }] : []),
+    ...submittedSourceRecords(f.sourceRecords).map((record, index) => ({
+      label: record.label || `Public reference ${index + 1}`,
+      value: record.url,
+    })),
     ...(f.sourceReference
       ? [{ label: "Reference", value: f.sourceReference }]
       : []),

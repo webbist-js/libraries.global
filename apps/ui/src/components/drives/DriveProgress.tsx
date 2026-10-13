@@ -1,3 +1,4 @@
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -112,6 +113,8 @@ export function DriveProgress({
   /** The bar's colour: the Focus tint's ink. */
   readonly color?: string
 }) {
+  const tUi = useUiTranslations("ui")
+
   const textId = useId()
   const { total, done, inReview } = progress
   const noun = unitNoun(unit, total)
@@ -188,7 +191,11 @@ export function DriveProgress({
               {fmt(inReview)} in review
             </li>
           ) : null}
-          {showGoal ? <li>Goal {goalPercent}%</li> : null}
+          {showGoal ? (
+            <li>
+              {tUi("goal")} {goalPercent}%
+            </li>
+          ) : null}
         </ul>
       ) : null}
 

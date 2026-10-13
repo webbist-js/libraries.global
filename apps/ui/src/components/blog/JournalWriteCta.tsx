@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
@@ -8,6 +10,8 @@ const JOURNAL_EDITOR_APPLY_HREF =
 
 /** Journal counterpart of the Knowledge page's "Help write these articles". */
 export function JournalWriteCta() {
+  const t = useTranslations("editorial")
+
   return (
     <section
       aria-labelledby="journal-write-with-us"
@@ -19,15 +23,13 @@ export function JournalWriteCta() {
         id="journal-write-with-us"
         style={{ fontFamily: T.font.serif, fontWeight: 500 }}
       >
-        Write for the Journal
+        {t("pitchTitle")}
       </h2>
       <p
         className="mt-2 mb-0 text-[14px] leading-[1.55]"
         style={{ color: "rgba(255,255,255,.75)" }}
       >
-        Have a story about a library, its collections or its people? Anyone with
-        an account can pitch. An editor reads every piece before it&rsquo;s
-        published.
+        {t("pitchIntro")}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <GlobalLink
@@ -35,7 +37,7 @@ export function JournalWriteCta() {
           href={JOURNAL_PITCH_HREF}
           style={{ background: "#fff", color: T.ink.base }}
         >
-          Pitch a story
+          {t("pitchStory")}
         </GlobalLink>
         <GlobalLink
           className="inline-flex items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
@@ -45,7 +47,7 @@ export function JournalWriteCta() {
             color: "#fff",
           }}
         >
-          Apply to be an editor
+          {t("applyEditor")}
         </GlobalLink>
       </div>
     </section>

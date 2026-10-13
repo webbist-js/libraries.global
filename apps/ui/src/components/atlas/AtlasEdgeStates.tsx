@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 
 import { Icon } from "./atlas-ui"
@@ -165,6 +167,8 @@ export function AtlasToast({
   readonly onDismiss: () => void
   readonly action?: { label: string; onClick: () => void }
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
       className="flex items-center gap-3 rounded-full border bg-white py-2 pr-2.5 pl-4 text-[14px] font-semibold"
@@ -184,7 +188,7 @@ export function AtlasToast({
       ) : null}
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={tUi("dismiss")}
         onClick={onDismiss}
         className="flex size-8 items-center justify-center rounded-full"
         style={{ color: T.ink.dim }}

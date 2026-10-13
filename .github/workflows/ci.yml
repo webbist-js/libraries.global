@@ -58,5 +58,8 @@ jobs:
           rm -rf apps/ui/.next
           pnpm build:ui
 
+      - name: Typecheck UI including tests
+        run: pnpm --filter @repo/ui typecheck
+
       - name: Build Strapi
         run: pnpm build:strapi

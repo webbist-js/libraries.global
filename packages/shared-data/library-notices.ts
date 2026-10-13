@@ -1,3 +1,8 @@
+import {
+  openingScheduleForDate,
+  normalizeOpeningSchedule,
+} from "./opening-schedule"
+
 export type LibraryNoticeType =
   | "closure"
   | "changed_hours"
@@ -74,7 +79,16 @@ export function effectiveLibraryHours(
     .filter((n) => n.type === "changed_hours" && n.hours)
     .sort((a, b) => b.from.localeCompare(a.from) || b.id.localeCompare(a.id))[0]
 
-  return { closed: false, hours: changed?.hours ?? hours }
+  const exception = (
+    hours as { exceptions?: { date: string; timeframes: unknown[] }[] } | null
+  )?.exceptions?.find((row) => row.date === date)
+  if (!changed && exception?.timeframes.length === 0)
+    return { closed: true, hours: null }
+
+  return {
+    closed: false,
+    hours: changed?.hours ?? openingScheduleForDate(hours, date),
+  }
 }
 /** A displayed/indexed week keeps each notice confined to its actual dates. */
 export function effectiveLibraryWeekHours(
@@ -94,26 +108,47 @@ export function effectiveLibraryWeekHours(
   const original =
     hours && typeof hours === "object" ? (hours as Record<string, unknown>) : {}
 
+  const dayAt = (date: string, day: string) => {
+    const effective = effectiveLibraryHours(hours, notices, date)
+    const row = normalizeOpeningSchedule(effective.hours).days.find(
+      (entry) => entry.day === day
+    )!
+
+    return { row, closed: effective.closed }
+  }
+
   return {
     ...original,
-    version: 1,
+    version: 2,
     days: week.map((day, offset) => {
-      const effective = effectiveLibraryHours(
-        hours,
-        notices,
-        noticeAddDays(monday, offset)
-      )
-      const source = effective.hours as {
-        days?: { day?: string; [key: string]: unknown }[]
-      } | null
+      const date = noticeAddDays(monday, offset),
+        current = dayAt(date, day)
+      if (current.closed) return { day, enabled: false, timeframes: [] }
+      const previous = dayAt(noticeAddDays(date, -1), week[(offset + 6) % 7]!)
+      const carry =
+        previous.closed || !previous.row.enabled
+          ? []
+          : previous.row.timeframes
+              .filter((frame) => frame.overnight)
+              .map((frame) => ({
+                ...frame,
+                id: `carry-${frame.id}`,
+                startTime: "00:00",
+                overnight: false,
+              }))
 
-      return (
-        source?.days?.find((entry) => entry.day === day) ?? {
-          day,
-          enabled: false,
-          timeframes: [],
-        }
-      )
+      return {
+        ...current.row,
+        enabled: current.row.enabled || carry.length > 0,
+        timeframes: [
+          ...carry,
+          ...current.row.timeframes.map((frame) =>
+            frame.overnight
+              ? { ...frame, endTime: "24:00", overnight: false }
+              : frame
+          ),
+        ],
+      }
     }),
   }
 }

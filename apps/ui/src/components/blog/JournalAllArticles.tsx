@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 
 import { EmptyState } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -26,16 +27,19 @@ function SectionChips({
   readonly sections: JournalLandingData["sections"]
   readonly total: number
 }) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
   if (sections.length === 0) return null
 
   return (
     <nav
-      aria-label="Filter by section"
+      aria-label={tUi("filter_by_section")}
       className="mt-5 border-b pb-4"
       style={{ borderColor: T.border.line }}
     >
       <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-        {[{ slug: null, name: "All", count: total }, ...sections].map(
+        {[{ slug: null, name: t("all"), count: total }, ...sections].map(
           (chip) => {
             const active = query.section === chip.slug
 
@@ -93,11 +97,12 @@ function ArticleResults({
   total,
   linkLocale,
 }: Pick<JournalLandingData, "list" | "query" | "total" | "linkLocale">) {
+  const t = useUiTranslations("editorial")
   if (list.items.length === 0) {
     const pastTheEnd = list.total > 0
-    let message = "No articles in this section yet."
-    if (pastTheEnd) message = "There are no articles on this page."
-    else if (total === 0) message = "No Journal articles yet."
+    let message = t("emptySection")
+    if (pastTheEnd) message = t("emptyPage")
+    else if (total === 0) message = t("emptyJournal")
 
     return (
       <div>
@@ -109,7 +114,7 @@ function ArticleResults({
               href={journalHref(query, { page: 1 })}
               style={{ color: T.accent.primary }}
             >
-              Go to the first page
+              {t("firstPage")}
             </GlobalLink>
           </p>
         ) : null}
@@ -161,6 +166,10 @@ export function JournalAllArticles({
   | "linkLocale"
   | "fallbackFrom"
 >) {
+  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("editorial")
+
+  const locale = useLocale()
   const activeSection = sections.find((s) => s.slug === query.section)
 
   return (
@@ -171,14 +180,20 @@ export function JournalAllArticles({
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <JournalHeading id="journal-all">All articles</JournalHeading>
+          <JournalHeading id="journal-all">
+            {tUi("all_articles")}
+          </JournalHeading>
           <p
             aria-live="polite"
             className="m-0 mt-1 text-[14px]"
             style={{ color: T.ink.dim }}
           >
-            {list.total} {list.total === 1 ? "article" : "articles"}
-            {activeSection ? ` in ${activeSection.name}` : ""}
+            {activeSection
+              ? t("articlesInSection", {
+                  articles: t("articleCount", { count: list.total }),
+                  section: activeSection.name,
+                })
+              : t("articleCount", { count: list.total })}
           </p>
         </div>
         <JournalListControls lang={lang} languages={languages} query={query} />
@@ -186,8 +201,10 @@ export function JournalAllArticles({
 
       {fallbackFrom ? (
         <p className="m-0 mt-3 text-[14px]" style={{ color: T.ink.dim }}>
-          No Journal articles in {languageName(fallbackFrom)} yet, so these are
-          in {languageName(lang)}.
+          {t("journalFallback", {
+            requested: languageName(fallbackFrom, languages, locale),
+            language: languageName(lang, languages, locale),
+          })}
         </p>
       ) : null}
 

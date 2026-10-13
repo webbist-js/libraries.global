@@ -3,12 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "atlas:backfill": "tsx src/atlas/index.ts --backfill",
+    "atlas:build": "tsx src/atlas/build.ts",
+    "atlas:population": "tsx src/atlas/prepare-population.ts",
+    "atlas:rebuild": "tsx src/atlas/index.ts --rebuild",
+    "atlas:reconcile": "tsx src/atlas/index.ts --reconcile",
     "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "dev:atlas": "tsx src/atlas/index.ts",
     "start": "node dist/index.js",
+    "start:atlas": "node dist/atlas/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "atlas:population:ingest": "tsx src/atlas/ingest-population.ts",
+    "atlas:local-geography": "tsx src/atlas/prepare-local-geography.ts",
+    "atlas:population:local": "tsx src/atlas/ingest-population.ts --local"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^3.3.0",

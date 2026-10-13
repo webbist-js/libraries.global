@@ -44,39 +44,19 @@ export function mobileMapData(
     route.forEach((visit, i) =>
       numbers.set(`${library.documentId}_${visit.stopId}`, String(i + 1))
     )
-    const coords = route.flatMap((visit) => {
-      const stop = library.timetable!.stops.find(
-        (row) => row.id === visit.stopId
+    for (const road of library.roadRoutes ?? []) {
+      const today = route.some((_, i) =>
+        road.stopIds.every((id, j) => route[i + j]?.stopId === id)
       )
-
-      return stop?.location ? [[stop.location.lng, stop.location.lat]] : []
-    })
-    if (coords.length > 1)
       lines.push({
         type: "Feature",
-        geometry: { type: "LineString", coordinates: coords },
-        properties: { library: library.documentId, live: fresh },
+        geometry: road.geometry,
+        properties: { library: library.documentId, live: today },
       })
+    }
     if (!fresh) continue
     const stop = library.timetable.stops.find((row) => row.id === state.stopId)
-    const next = library.timetable.stops.find(
-      (row) => row.id === state.nextStopId
-    )
-    const between = !state.until && state.nextStopId
-    const midpoint =
-      between && stop?.location && next?.location
-        ? {
-            lat: (stop.location.lat + next.location.lat) / 2,
-            lng:
-              ((stop.location.lng +
-                (((next.location.lng - stop.location.lng + 540) % 360) - 180) /
-                  2 +
-                540) %
-                360) -
-              180,
-          }
-        : null
-    const position = state.position ?? (between ? midpoint : stop?.location)
+    const position = state.position ?? stop?.location
     if (!position) continue
     vehicles.push({
       type: "Feature",

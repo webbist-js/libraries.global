@@ -30,6 +30,17 @@ export default factories.createCoreController(
           populate: {
             heroImage: true,
             authorAvatar: true,
+            // Public profile fields only: the Document Service doesn't strip
+            // private attributes, so name them.
+            authorProfile: {
+              fields: [
+                "username",
+                "firstName",
+                "lastName",
+                "profileVisibility",
+              ],
+              populate: { avatar: true },
+            } as Record<string, unknown>,
             section: { fields: ["name", "slug"] },
             category: { fields: ["name", "slug"] },
             relatedArticles: {
@@ -58,6 +69,17 @@ export default factories.createCoreController(
         })
 
       const article = results[0] ?? null
+
+      // A private profile isn't linked from a byline; the text author stays.
+      const authorProfile = (article as Record<string, unknown> | null)
+        ?.authorProfile as { profileVisibility?: string } | null | undefined
+      if (authorProfile) {
+        if (authorProfile.profileVisibility === "private") {
+          ;(article as Record<string, unknown>).authorProfile = null
+        } else {
+          delete authorProfile.profileVisibility
+        }
+      }
 
       // If no curated related articles, fall back to 3 recent posts
       if (

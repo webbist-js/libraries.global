@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url"
+
 import { withSentryConfig } from "@sentry/nextjs"
 import plugin from "next-intl/plugin"
 
@@ -11,7 +13,18 @@ const withNextIntl = plugin("./src/lib/i18n.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Separate build output for a concurrent local beta/E2E preview.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   output: env.NEXT_OUTPUT,
+  // Docker pruning omits QA fixtures; CI separately checks the full test project.
+  typescript: {
+    tsconfigPath:
+      env.NEXT_OUTPUT === "standalone"
+        ? "tsconfig.production.json"
+        : "tsconfig.json",
+  },
+  // Include shared workspace dependencies in the standalone Docker output.
+  outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)),
   reactStrictMode: true,
   devIndicators: {
     position: "bottom-right",

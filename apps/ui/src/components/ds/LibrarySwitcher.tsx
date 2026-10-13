@@ -34,7 +34,7 @@ export function LibrarySwitcher({
   const mobile = current?.libraryType === "Mobile"
 
   return (
-    <label className="flex w-full flex-col gap-1.5 text-[14px] font-semibold">
+    <label className="flex w-full flex-col gap-2 text-[15px] font-semibold">
       Your libraries ({libraries.length})
       <span className="relative block w-full">
         <Icon
@@ -43,10 +43,10 @@ export function LibrarySwitcher({
           width={18}
           height={18}
           className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
-          style={{ color: T.accent.primary }}
+          style={{ color: T.accent.ok }}
         />
         <select
-          className="min-h-11 w-full appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-[15px] font-normal"
+          className="min-h-14 w-full appearance-none truncate rounded-[16px] border py-3 pr-10 pl-10 text-[16px] font-semibold"
           style={{
             borderColor: T.border.hi,
             background: T.bg.deep,

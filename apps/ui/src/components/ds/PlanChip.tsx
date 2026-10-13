@@ -1,4 +1,5 @@
 import type { PlanKey } from "@repo/access"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Badge } from "./Badge"
 
@@ -15,11 +16,13 @@ export function PlanChip({
   readonly plan: PlanKey
   readonly covered?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const team = covered ?? plan === "team"
 
   return (
     <Badge
-      label={team ? "Team plan" : "Staff access · free"}
+      label={team ? tUi("team_plan") : "Staff access · free"}
       color={team ? "aurora" : "dim"}
     />
   )

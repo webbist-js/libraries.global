@@ -2,18 +2,19 @@
 
 import { Icon } from "@iconify/react"
 import { checkText } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useMemo, useState } from "react"
 
-import { ChangedFieldsContext } from "@/app/[locale]/contribute/index/_components/ChangedFieldsContext"
-import { OpeningTimesEditor } from "@/app/[locale]/contribute/index/_components/OpeningTimesEditor"
-import { OPERATIONAL_STATUSES } from "@/app/[locale]/contribute/index/_components/wizard.constants"
-import type { FormData } from "@/app/[locale]/contribute/index/_components/wizard.types"
+import { ChangedFieldsContext } from "@/components/library-editor/ChangedFieldsContext"
+import { OpeningTimesEditor } from "@/components/library-editor/OpeningTimesEditor"
+import { OPERATIONAL_STATUSES } from "@/components/library-editor/wizard.constants"
+import type { FormData } from "@/components/library-editor/wizard.types"
 import {
   Field,
   TagSelector,
   TextareaField,
   WizardSelect,
-} from "@/app/[locale]/contribute/index/_components/WizardFields"
+} from "@/components/library-editor/WizardFields"
 import { TimetableEditor } from "@/components/mobile/TimetableEditor"
 import { T } from "@/lib/design-tokens"
 
@@ -74,6 +75,8 @@ function SuggestOption({
   readonly onSuggest: (names: string[]) => void
   readonly onNames: (names: Record<string, string>) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const id = useId()
   const [options, setOptions] = useState<OptionRef[]>([])
   const [draft, setDraft] = useState("")
@@ -174,7 +177,7 @@ function SuggestOption({
           style={{ borderColor: T.border.hi, color: T.ink.base }}
           type="button"
         >
-          Add
+          {tUi("add")}{" "}
         </button>
       </div>
       {message ? (
@@ -234,7 +237,7 @@ export function CorrectionEditor({
   /** Record fields that differ from the library, marked "Changed". */
   readonly changedKeys: readonly string[]
 }) {
-  const kind = editorFor(category)
+  const kind = editorFor(category, current.libraryType)
   const [stopId, setStopId] = useState("")
   const changed = useMemo(
     () => new Set(changedKeys as (keyof FormData)[]),

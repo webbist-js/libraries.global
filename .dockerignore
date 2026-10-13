@@ -4,3 +4,22 @@
 **/.tmp
 **/dist
 **/out
+
+# Keep local credentials and working data out of every build stage.
+.git
+.scratch
+.codex
+.agents
+.aws
+.pnpm-store
+docs
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+apps/strapi/public/uploads
+apps/strapi/data
+apps/strapi/backup
+**/.cache
+**/.turbo
+**/coverage

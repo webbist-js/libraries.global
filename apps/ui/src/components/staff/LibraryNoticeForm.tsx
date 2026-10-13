@@ -1,22 +1,24 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import {
   LIBRARY_NOTICE_LABELS,
   type LibraryNoticeType,
   type LibraryNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useRef, useState } from "react"
 
 import {
   OpeningTimesEditor,
   emptyOpeningTimes,
   type OpeningTimesData,
-} from "@/app/[locale]/contribute/index/_components/OpeningTimesEditor"
+} from "@/components/library-editor/OpeningTimesEditor"
 import {
   fieldHintStyle,
   fieldInputStyle,
   fieldLabelStyle,
-} from "@/app/[locale]/contribute/index/_components/wizard.constants"
+} from "@/components/library-editor/wizard.constants"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { primaryCtaSm } from "@/lib/styles"
 
@@ -31,13 +33,25 @@ const DAY_LABELS: Record<string, string> = {
   sun: "Sunday",
 }
 
+const noticeInputStyle = {
+  ...fieldInputStyle,
+  minWidth: 0,
+  minHeight: "54px",
+  padding: "12px 16px",
+  background: T.bg.deep,
+  borderRadius: "16px",
+  fontSize: "16px",
+}
+
 function RequiredTag() {
+  const tUi = useUiTranslations("ui")
+
   return (
     <span
       className="text-[13px] font-medium"
       style={{ color: TYPE_TINT.special.fg }}
     >
-      required
+      {tUi("required_d0a363")}{" "}
     </span>
   )
 }
@@ -66,6 +80,8 @@ export function LibraryNoticeForm({
   onSaved?: () => void
   embedded?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const uid = useId()
   const messageRef = useRef<HTMLTextAreaElement>(null)
   const [type, setType] = useState<LibraryNoticeType>(
@@ -145,7 +161,7 @@ export function LibraryNoticeForm({
       className={
         embedded
           ? "flex flex-col gap-5"
-          : "flex flex-col gap-5 self-start rounded-[20px] border p-6"
+          : "flex min-w-0 flex-col gap-5 self-start rounded-[28px] border p-5 sm:p-8"
       }
       style={
         embedded
@@ -158,10 +174,10 @@ export function LibraryNoticeForm({
         <div>
           <h2
             id={field("heading")}
-            className="m-0 text-[26px]"
+            className="m-0 text-[28px] leading-[1.1] sm:text-[32px]"
             style={{ fontFamily: T.font.serif, fontWeight: 500 }}
           >
-            {initial ? "Edit notice" : "Post a notice"}
+            {initial ? tUi("edit_notice") : tUi("post_a_notice")}
           </h2>
           <p className="m-0 mt-1 text-[14px]" style={{ color: T.ink.dim }}>
             Publishes straight away. Dates use the library’s timezone.
@@ -170,11 +186,11 @@ export function LibraryNoticeForm({
       )}
       <div className="flex flex-col gap-1.5">
         <label htmlFor={field("type")} style={fieldLabelStyle}>
-          Type
+          {tUi("type")}
         </label>
         <select
           id={field("type")}
-          style={fieldInputStyle}
+          style={noticeInputStyle}
           value={type}
           onChange={(e) => {
             const next = e.target.value as LibraryNoticeType
@@ -198,7 +214,7 @@ export function LibraryNoticeForm({
             </label>
             <select
               id={field("scope")}
-              style={fieldInputStyle}
+              style={noticeInputStyle}
               value={scope}
               onChange={(e) =>
                 setScope(e.target.value as LibraryNotice["scope"])
@@ -220,7 +236,7 @@ export function LibraryNoticeForm({
                 </label>
                 <select
                   id={field("week")}
-                  style={fieldInputStyle}
+                  style={noticeInputStyle}
                   value={week}
                   onChange={(e) => setWeek(Number(e.target.value))}
                 >
@@ -237,7 +253,7 @@ export function LibraryNoticeForm({
                 </label>
                 <select
                   id={field("day")}
-                  style={fieldInputStyle}
+                  style={noticeInputStyle}
                   value={day}
                   onChange={(e) => setDay(e.target.value as typeof day)}
                 >
@@ -257,7 +273,7 @@ export function LibraryNoticeForm({
               </label>
               <select
                 id={field("stop")}
-                style={fieldInputStyle}
+                style={noticeInputStyle}
                 required
                 value={stopId}
                 onChange={(e) => setStopId(e.target.value)}
@@ -276,7 +292,7 @@ export function LibraryNoticeForm({
             </label>
             <select
               id={field("reason")}
-              style={fieldInputStyle}
+              style={noticeInputStyle}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             >
@@ -306,7 +322,7 @@ export function LibraryNoticeForm({
           <input
             id={field("from")}
             type="date"
-            style={fieldInputStyle}
+            style={noticeInputStyle}
             required
             value={from}
             onChange={(e) => setFrom(e.target.value)}
@@ -316,13 +332,13 @@ export function LibraryNoticeForm({
           <label htmlFor={field("to")} style={fieldLabelStyle}>
             Until{" "}
             <span style={{ color: T.ink.dim, fontWeight: 400 }}>
-              (optional)
+              {tUi("optional")}{" "}
             </span>
           </label>
           <input
             id={field("to")}
             type="date"
-            style={fieldInputStyle}
+            style={noticeInputStyle}
             min={from}
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -344,8 +360,8 @@ export function LibraryNoticeForm({
           ref={messageRef}
           id={field("message")}
           style={{
-            ...fieldInputStyle,
-            minHeight: "112px",
+            ...noticeInputStyle,
+            minHeight: "120px",
             resize: "vertical",
             ...(messageMissing ? { borderColor: T.accent.danger } : {}),
           }}
@@ -399,7 +415,7 @@ export function LibraryNoticeForm({
         </p>
       )}
       <button
-        className={`${primaryCtaSm} min-h-12 w-full justify-center`}
+        className={`${primaryCtaSm} min-h-14 w-full justify-center text-[16px]`}
         disabled={busy}
         type="submit"
       >

@@ -1,105 +1,147 @@
 import "server-only"
 
-import type { Locale } from "next-intl"
-
-import { docsArticlePath, toDocsSections } from "@/components/docs/docs.config"
-import { fetchDrives } from "@/lib/drives/drives-server"
-import type { Drive } from "@/lib/drives/types"
+import { docsArticlePath } from "@/components/docs/docs.config"
+import { betaEnabled } from "@/lib/beta/access"
 import { getEnvVar } from "@/lib/env-vars"
 import { isDevelopment, isProduction } from "@/lib/general-helpers"
-import { isIndexableLocation } from "@/lib/seo/location"
 import { absoluteUrl, LIVE_LOCALES } from "@/lib/seo/metadata"
-import {
-  fetchLibraryLocationCounts,
-  fetchLibrarySlugCount,
-  fetchLibrarySlugRange,
-  type LibrarySlugRow,
-} from "@/lib/strapi-api/content/library-slugs"
-import {
-  fetchAllBlogArticleSlugs,
-  fetchAllContinents,
-  fetchAllCountries,
-  fetchAllRegions,
-  fetchDocsWikiArticles,
-  fetchLegalDocuments,
-  fetchWikiSections,
-} from "@/lib/strapi-api/content/server"
 
-import { filesFor, pageOf, type SitemapFile, URLS_PER_FILE } from "./files"
+import {
+  filesFor,
+  SITEMAP_SEGMENTS,
+  type SitemapFile,
+  URLS_PER_FILE,
+} from "./files"
+import {
+  knowledgeSections,
+  sitemapJson,
+  sourceCount,
+  sourceRows,
+  type SitemapRow,
+  type Source,
+} from "./source"
 import type { SitemapEntry } from "./xml"
 
-/** Sitemaps are served in production and local dev, once the site URL is set. */
 export function sitemapEnabled(): boolean {
-  if (!isProduction() && !isDevelopment()) return false
-
-  return Boolean(getEnvVar("APP_PUBLIC_URL"))
+  return (
+    !betaEnabled() &&
+    (isProduction() || isDevelopment()) &&
+    Boolean(getEnvVar("APP_PUBLIC_URL"))
+  )
 }
 
-/** Every file the index lists, per live locale. */
+/** Counts only: even a three-million-Library index never loads the records. */
 export async function sitemapFiles(): Promise<SitemapFile[]> {
   const perLocale = await Promise.all(
     LIVE_LOCALES.map(async (locale) => {
-      const [locations, events, drives, libraries] = await Promise.all([
-        locationEntries(locale as Locale),
-        fetchUpcomingEventTotal(),
-        driveEntries(locale as Locale),
-        fetchLibrarySlugCount(locale as Locale),
-      ])
-      const files = (segment: SitemapFile["segment"], count: number) =>
-        Array.from({ length: count }, (_, i) => ({
+      const counts = await Promise.all(
+        SITEMAP_SEGMENTS.map(async (segment) => ({
+          segment,
+          total:
+            segment === "pages"
+              ? STATIC_ROUTES.length
+              : await sourceCount(segment, locale),
+        }))
+      )
+
+      return counts.flatMap(({ segment, total }) =>
+        Array.from({ length: filesFor(total) }, (_, i) => ({
           segment,
           locale,
           page: i + 1,
         }))
-
-      return [
-        ...files("pages", 1),
-        ...files("locations", filesFor(locations.length)),
-        ...files("events", filesFor(events)),
-        ...files("drives", filesFor(drives.length)),
-        ...files("libraries", filesFor(libraries)),
-      ]
+      )
     })
   )
 
   return perLocale.flat()
 }
 
-/** The URLs in one file, or null when the file doesn't exist. */
+/** Only this file's window is read; every growing content type is paginated. */
 export async function sitemapEntries(
   file: SitemapFile
 ): Promise<SitemapEntry[] | null> {
-  if (!LIVE_LOCALES.includes(file.locale)) return null
-  const locale = file.locale as Locale
+  if (
+    !LIVE_LOCALES.includes(file.locale) ||
+    !Number.isSafeInteger(file.page) ||
+    file.page < 1
+  )
+    return null
+  if (file.segment === "pages") {
+    if (file.page !== 1) return null
 
-  let entries: SitemapEntry[]
-  switch (file.segment) {
-    case "pages":
-      if (file.page !== 1) return null
-      entries = await pageEntries(locale)
-      break
+    const { data } = await sitemapJson<{ data: Record<string, boolean> }>(
+      "/sitemap/pages",
+      { locale: file.locale }
+    )
+    if (typeof data?.[""] !== "boolean" || typeof data?.journal !== "boolean")
+      throw new Error("Invalid static-page visibility")
 
-    case "locations":
-      entries = pageOf(await locationEntries(locale), file.page)
-      break
-
-    case "events":
-      entries = await eventEntries(locale, file.page)
-      break
-
-    case "drives":
-      entries = pageOf(await driveEntries(locale), file.page)
-      break
-
-    case "libraries":
-      entries = await libraryEntries(locale, file.page)
-      break
+    return STATIC_ROUTES.filter((r) => data[r.path] !== false).map((r) => ({
+      url: absoluteUrl(r.path, file.locale),
+      changeFrequency: r.changeFrequency,
+      priority: r.priority,
+    }))
   }
+  const [rows, sections] = await Promise.all([
+    sourceRows(
+      file.segment,
+      file.locale,
+      (file.page - 1) * URLS_PER_FILE,
+      URLS_PER_FILE
+    ),
+    file.segment === "knowledge" ? knowledgeSections() : Promise.resolve([]),
+  ])
+  if (!rows.length) return null
 
-  return entries.length > 0 || file.page === 1 ? entries : null
+  return rows.map((row) => {
+    const path = pathFor(file.segment as Source, row, sections)
+    if (!path) throw new Error(`Invalid ${file.segment} sitemap path`)
+
+    return {
+      url: absoluteUrl(path, file.locale),
+      ...(row.updatedAt ? { lastModified: row.updatedAt } : {}),
+    }
+  })
 }
 
-// ── Pages ───────────────────────────────────────────────────────────────────
+/** Canonical paths match the public route builders, including unfiled Knowledge. */
+export function pathFor(
+  source: Source,
+  row: SitemapRow,
+  sections: { slug: string }[] = []
+): string | null {
+  const continent = row.continent?.slug ?? row.country?.continent?.slug
+  const country = row.country?.slug
+  switch (source) {
+    case "libraries":
+      return continent && country && row.region?.slug && row.slug
+        ? `${continent}/${country}/${row.region.slug}/${row.slug}`
+        : null
+    case "continents":
+      return row.slug ?? null
+    case "countries":
+      return continent && row.slug ? `${continent}/${row.slug}` : null
+    case "regions":
+      return continent && country && row.slug
+        ? `${continent}/${country}/${row.slug}`
+        : null
+    case "journal":
+      return row.slug
+        ? `journal/${row.section?.slug ?? "general"}/${row.slug}`
+        : null
+    case "knowledge":
+      return row.slug && sections.length ? docsArticlePath(row, sections) : null
+    case "legal":
+      return row.slug ? `legal/${row.slug}` : null
+    case "drives":
+      return row.slug ? `community/drives/${row.slug}` : null
+    case "events":
+      return row.documentId ? `events/${row.documentId}` : null
+    case "profiles":
+      return row.username ? `profile/${encodeURIComponent(row.username)}` : null
+  }
+}
 
 /** Public, indexable static routes (private/transactional ones are excluded). */
 const STATIC_ROUTES: {
@@ -108,6 +150,7 @@ const STATIC_ROUTES: {
   priority: number
 }[] = [
   { path: "", changeFrequency: "daily", priority: 1 },
+  { path: "about", changeFrequency: "monthly", priority: 0.6 },
   { path: "libraries", changeFrequency: "daily", priority: 0.9 },
   { path: "map", changeFrequency: "weekly", priority: 0.7 },
   { path: "events", changeFrequency: "daily", priority: 0.7 },
@@ -132,229 +175,3 @@ const STATIC_ROUTES: {
     priority: 0.5,
   },
 ]
-
-async function settle<T>(p: Promise<T>, fallback: T): Promise<T> {
-  try {
-    return await p
-  } catch {
-    return fallback
-  }
-}
-
-/** Static routes, Journal, Knowledge and legal pages. */
-async function pageEntries(locale: Locale): Promise<SitemapEntry[]> {
-  const url = (path: string) => absoluteUrl(path, locale)
-  const [journal, knowledge, sections, legal] = await Promise.all([
-    settle(fetchAllBlogArticleSlugs(locale), { data: [] }),
-    settle(fetchDocsWikiArticles(locale), undefined),
-    settle(fetchWikiSections(), { data: [] }),
-    settle(fetchLegalDocuments(locale), { data: [] }),
-  ])
-  const docsSections = toDocsSections(sections.data)
-
-  const entries: SitemapEntry[] = STATIC_ROUTES.map((r) => ({
-    url: url(r.path),
-    changeFrequency: r.changeFrequency,
-    priority: r.priority,
-  }))
-
-  for (const a of journal.data) {
-    if (!a.slug) continue
-    entries.push({
-      url: url(`journal/${a.section?.slug ?? "general"}/${a.slug}`),
-      changeFrequency: "monthly",
-      priority: 0.6,
-    })
-  }
-
-  for (const a of knowledge?.data ?? []) {
-    if (!a.slug) continue
-    entries.push({
-      url: url(docsArticlePath(a, docsSections)),
-      ...(a.updatedAt ? { lastModified: a.updatedAt } : {}),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    })
-  }
-
-  for (const d of legal.data) {
-    if (!d.slug) continue
-    entries.push({
-      url: url(`legal/${d.slug}`),
-      changeFrequency: "yearly",
-      priority: 0.3,
-    })
-  }
-
-  return entries
-}
-
-// ── Locations ───────────────────────────────────────────────────────────────
-
-/**
- * Continent, country and region pages. A location is listed only once it has
- * published records: empty templates are noindex (see lib/seo/location).
- */
-async function locationEntries(locale: Locale): Promise<SitemapEntry[]> {
-  const url = (path: string) => absoluteUrl(path, locale)
-  const [counts, continents, countries, regions] = await Promise.all([
-    fetchLibraryLocationCounts(locale),
-    settle(fetchAllContinents(locale), { data: [] }),
-    settle(fetchAllCountries(locale), { data: [] }),
-    settle(fetchAllRegions(locale), { data: [] }),
-  ])
-  const indexable = (key: string) => isIndexableLocation(counts.get(key))
-  const entries: SitemapEntry[] = []
-
-  for (const c of continents.data) {
-    if (!c.slug || !indexable(c.slug)) continue
-    entries.push({
-      url: url(c.slug),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    })
-  }
-
-  for (const c of countries.data) {
-    if (!c.slug || !c.continent?.slug) continue
-    const path = `${c.continent.slug}/${c.slug}`
-    if (!indexable(path)) continue
-    entries.push({ url: url(path), changeFrequency: "monthly", priority: 0.7 })
-  }
-
-  for (const r of regions.data) {
-    if (!r.slug || !r.continent?.slug || !r.country?.slug) continue
-    const path = `${r.continent.slug}/${r.country.slug}/${r.slug}`
-    if (!indexable(path)) continue
-    entries.push({ url: url(path), changeFrequency: "monthly", priority: 0.6 })
-  }
-
-  return entries
-}
-
-// ── Events ──────────────────────────────────────────────────────────────────
-
-/** The events plugin's `limit` cap on `/events/global`. */
-const EVENTS_PAGE_SIZE = 100
-
-type EventsPage = { events?: { documentId?: string | null }[]; total?: number }
-
-async function fetchEventsPage(page: number, limit: number) {
-  const strapi = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-  const token = process.env.STRAPI_REST_READONLY_API_KEY
-  const res = await fetch(
-    `${strapi}/api/events/global?limit=${limit}&page=${page}`,
-    {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      next: { revalidate: 3600 },
-    }
-  )
-  if (!res.ok) throw new Error(`GET /events/global answered ${res.status}`)
-
-  return (await res.json()) as EventsPage
-}
-
-async function fetchUpcomingEventTotal(): Promise<number> {
-  return (await fetchEventsPage(1, 1)).total ?? 0
-}
-
-/** Upcoming and ongoing events for one file, read 100 at a time. */
-async function eventEntries(
-  locale: Locale,
-  page: number
-): Promise<SitemapEntry[]> {
-  const perFile = URLS_PER_FILE / EVENTS_PAGE_SIZE
-  const first = (page - 1) * perFile + 1
-  const entries: SitemapEntry[] = []
-
-  for (let p = first; p < first + perFile; p++) {
-    const batch = (await fetchEventsPage(p, EVENTS_PAGE_SIZE)).events ?? []
-    for (const e of batch) {
-      if (!e.documentId) continue
-      entries.push({
-        url: absoluteUrl(`events/${e.documentId}`, locale),
-        changeFrequency: "weekly",
-        priority: 0.4,
-      })
-    }
-    if (batch.length < EVENTS_PAGE_SIZE) break
-  }
-
-  return entries
-}
-
-// ── Drives ──────────────────────────────────────────────────────────────────
-
-/**
- * The most drives of one state the sitemap lists. Drives are board-run
- * campaigns, a handful at a time, so one capped read of each public state
- * is the whole list; `/drives?state=` never serves a draft or a scheduled
- * one's page before it opens.
- */
-const DRIVES_PER_STATE = 1000
-
-/** Open and closed drives: a drive's page is public from the day it opens. */
-async function driveEntries(locale: Locale): Promise<SitemapEntry[]> {
-  const [open, closed] = await Promise.all([
-    fetchDrives("open", locale, DRIVES_PER_STATE),
-    fetchDrives("closed", locale, DRIVES_PER_STATE),
-  ])
-  const seen = new Set<string>()
-  const entries: SitemapEntry[] = []
-  const add = (d: Drive, priority: number) => {
-    if (!d.slug || seen.has(d.slug)) return
-    seen.add(d.slug)
-    entries.push({
-      url: absoluteUrl(`community/drives/${d.slug}`, locale),
-      ...(d.updatedAt ? { lastModified: d.updatedAt } : {}),
-      changeFrequency: d.status === "open" ? "daily" : "monthly",
-      priority,
-    })
-  }
-  for (const d of open) add(d, 0.6)
-  for (const d of closed) add(d, 0.3)
-
-  return entries
-}
-
-// ── Libraries ───────────────────────────────────────────────────────────────
-
-async function libraryEntries(
-  locale: Locale,
-  page: number
-): Promise<SitemapEntry[]> {
-  const rows = await fetchLibrarySlugRange(
-    locale,
-    (page - 1) * URLS_PER_FILE,
-    URLS_PER_FILE
-  )
-
-  return rows.flatMap((row) => {
-    const entry = libraryEntry(locale, row)
-
-    return entry ? [entry] : []
-  })
-}
-
-function libraryEntry(
-  locale: Locale,
-  row: LibrarySlugRow
-): SitemapEntry | null {
-  if (
-    !row.slug ||
-    !row.continent?.slug ||
-    !row.country?.slug ||
-    !row.region?.slug
-  )
-    return null
-
-  return {
-    url: absoluteUrl(
-      `${row.continent.slug}/${row.country.slug}/${row.region.slug}/${row.slug}`,
-      locale
-    ),
-    ...(row.updatedAt ? { lastModified: row.updatedAt } : {}),
-    changeFrequency: "weekly",
-    priority: 0.9,
-  }
-}

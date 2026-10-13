@@ -1,3 +1,6 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
+import { Button } from "@/components/ui/button"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
@@ -187,22 +190,23 @@ export function FollowedLibrariesGrid({
   /** Replaces the default "Not following any libraries yet." message. */
   emptyState?: React.ReactNode
 }) {
+  const tUi = useUiTranslations("ui")
+
   const compact = variant === "compact"
   const items = max ? libraries.slice(0, max) : libraries
 
   if (libraries.length === 0) {
     return (
       emptyState ?? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-          Not following any libraries yet.{" "}
-          <Link
-            href="/libraries"
-            className="font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
-            style={{ color: T.accent.primary }}
-          >
-            Find libraries
-          </Link>
-        </p>
+        <div className="flex flex-col items-start gap-4">
+          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            Not following any libraries yet. Find a library and follow its page
+            to keep up with changes.
+          </p>
+          <Button asChild className="rounded-full">
+            <Link href="/libraries">{tUi("find_libraries")}</Link>
+          </Button>
+        </div>
       )
     )
   }

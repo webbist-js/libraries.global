@@ -1,5 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -53,11 +54,11 @@ export function LiveStatusStrip({
   return (
     <p
       role="status"
-      className="m-0 mb-4 flex items-center gap-2 rounded-[14px] px-4 py-2.5 text-[15px] font-semibold"
+      className="m-0 mb-3.5 flex items-center gap-2 rounded-[16px] border px-3 py-2.5 text-[14px] font-semibold"
       style={{ background: tint.bg, color: tint.fg }}
     >
-      <Icon aria-hidden="true" icon={icon} width={18} />
-      {children}
+      <Icon aria-hidden="true" icon={icon} width={18} className="shrink-0" />
+      <span>{children}</span>
     </p>
   )
 }
@@ -115,22 +116,19 @@ export function CurrentStopCard({
 }) {
   return (
     <div
-      className="rounded-[20px] border-2 p-5"
+      className="rounded-[24px] border-2 p-[18px]"
       style={{ background: T.bg.deep, borderColor: T.ink.base }}
     >
-      <p
-        className="m-0 text-[13px] font-semibold tracking-wide uppercase"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-[14px] font-semibold" style={{ color: T.ink.dim }}>
         {eyebrow}
       </p>
       <Heading
-        className="my-1.5 text-[34px] leading-[1.05]"
+        className="my-3 text-[34px] leading-[1.05] break-words"
         style={{ fontFamily: T.font.serif, fontWeight: 500 }}
       >
         {name}
       </Heading>
-      <p className="mb-4 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="mt-0 mb-3 text-[16px]" style={{ color: T.ink.dim }}>
         {meta}
       </p>
       <button
@@ -160,19 +158,21 @@ export function NextStopCard({
   readonly onAction: () => void
   readonly busy?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
-      className="my-4 flex items-center justify-between gap-4 rounded-[16px] border p-4"
+      className="my-3.5 flex items-center justify-between gap-3 rounded-[20px] border px-4 py-3.5"
       style={panel}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p
-          className="m-0 text-[12.5px] font-semibold tracking-wide uppercase"
+          className="m-0 text-[13px] font-semibold"
           style={{ color: T.ink.dim }}
         >
-          Next
+          {tUi("next")}{" "}
         </p>
-        <p className="m-0 text-[17px] font-semibold">{name}</p>
+        <p className="m-0 text-[18px] font-semibold break-words">{name}</p>
         <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
           {time}
         </p>
@@ -202,12 +202,12 @@ export function DelayButtons({
   return (
     <fieldset className="m-0 my-5 border-0 p-0">
       <legend className="mb-2 text-[15px] font-semibold">Running late?</legend>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-1.5">
         {[5, 10, 15, 30].map((delay) => (
           <button
             key={delay}
             type="button"
-            className="live-button rounded-full"
+            className="live-button rounded-[16px] text-[17px]"
             style={
               delayMin === delay
                 ? {
@@ -242,18 +242,18 @@ export function ExceptionButtons({
   readonly onBreakdown: () => void
 }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-2">
       <button
         type="button"
-        className="live-button rounded-full"
+        className="live-button rounded-[18px] py-0 text-[15px]"
         aria-label="Skip stop: skip this stop"
         onClick={onSkip}
       >
-        Skip stop
+        Skip this stop
       </button>
       <button
         type="button"
-        className="live-button rounded-full"
+        className="live-button rounded-[18px] border-2 py-0 text-[15px]"
         style={{
           background: TYPE_TINT.special.bg,
           borderColor: T.accent.danger,
@@ -262,7 +262,7 @@ export function ExceptionButtons({
         aria-label="Not running: breakdown or not running for the rest of today"
         onClick={onBreakdown}
       >
-        Not running
+        Not running / breakdown
       </button>
     </div>
   )
@@ -278,21 +278,26 @@ export function StopList({
   readonly title?: string
   readonly heading?: HeadingTag
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <>
       <Heading className="mt-6 mb-3 text-[17px] font-semibold">{title}</Heading>
-      <ol className="m-0 flex list-none flex-col gap-2 p-0">
+      <ol
+        className="m-0 overflow-hidden rounded-[20px] border p-0"
+        style={panel}
+      >
         {stops.map((s, i) => {
           const here = s.state === "here"
 
           return (
             <li
               key={s.visitId}
-              className="flex items-center gap-3 rounded-[14px] border px-3.5 py-3"
+              className="flex list-none items-center gap-3 border-t px-3.5 py-3 first:border-t-0"
               style={{
                 ...panel,
                 background: here ? T.accent.chip : T.bg.deep,
-                borderColor: here ? T.accent.primary : T.border.line,
+                borderColor: T.border.divider,
               }}
             >
               <span
@@ -314,7 +319,7 @@ export function StopList({
               >
                 <span className="sr-only">
                   {s.state === "done"
-                    ? "Done"
+                    ? tUi("done")
                     : s.state === "skipped"
                       ? "Skipped"
                       : `Stop ${i + 1}`}
@@ -331,23 +336,27 @@ export function StopList({
               </span>
               <span className="min-w-0 flex-1">
                 <strong
-                  className={`block text-[15.5px] ${s.state === "skipped" ? "line-through" : ""}`}
+                  className={`block text-[16px] break-words ${s.state === "skipped" ? "line-through" : ""}`}
                 >
                   {s.name}
                 </strong>
-                <span
-                  className="block text-[13.5px]"
-                  style={{ color: here ? T.accent.primary : T.ink.dim }}
-                >
+              </span>
+              <span
+                className="shrink-0 text-right text-[13px] tabular-nums"
+                style={{ color: here ? T.accent.primary : T.ink.dim }}
+              >
+                <span className="block whitespace-nowrap">
                   {s.arrive}–{s.depart}
+                </span>
+                <span className="block font-semibold">
                   {s.state === "skipped"
-                    ? " · Not stopping today"
+                    ? "Not stopping today"
                     : s.state === "done"
-                      ? " · Done"
+                      ? tUi("done")
                       : here
-                        ? " · Here now"
+                        ? "Here now"
                         : s.expected && s.expected !== s.arrive
-                          ? ` · expected ${s.expected}`
+                          ? `Expected ${s.expected}`
                           : ""}
                 </span>
               </span>
@@ -405,6 +414,8 @@ export function ConfirmIdentityLook({
   /** False when the sheet around it already carries the title. */
   readonly showTitle?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div className="live-controls space-y-4">
       {showTitle ? (
@@ -412,7 +423,7 @@ export function ConfirmIdentityLook({
           className="m-0 text-[26px]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
-          Confirm it’s you
+          {tUi("confirm_its_you")}
         </Heading>
       ) : null}
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
@@ -528,13 +539,10 @@ export function BeforeYouStartScreen({
             {routeTimes}
           </p>
         </div>
-        {/* `.live-button` is full width (unlayered CSS, so a plain `w-auto`
-            loses to it): at phone width the button takes its own row under
-            the summary, 56px tall; from `sm` the important override sits it
-            beside the text at its own width. */}
+        {/* Keep the route summary readable at phone width. */}
         <button
           type="button"
-          className="live-button w-full shrink-0 rounded-full px-4 sm:!w-auto"
+          className="live-button w-full shrink-0 rounded-full px-4 sm:w-auto"
           onClick={onChangeRoute}
         >
           Change route

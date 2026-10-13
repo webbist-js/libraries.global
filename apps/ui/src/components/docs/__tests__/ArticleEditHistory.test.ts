@@ -1,8 +1,14 @@
 // @vitest-environment happy-dom
-import { cleanup, render } from "@testing-library/react"
+import { createTranslator, NextIntlClientProvider } from "next-intl"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render } from "@/test/render"
+
+import czech from "../../../../locales/cs.json"
+import english from "../../../../locales/en.json"
+import french from "../../../../locales/fr.json"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
@@ -39,6 +45,32 @@ const item = (over: Record<string, unknown> = {}) =>
 afterEach(cleanup)
 
 describe("ArticleEditHistory", () => {
+  it.each([
+    ["cs", czech, "Historie úprav", "září", "francouzština"],
+    ["fr", french, "Historique des modifications", "septembre", "français"],
+  ] as const)(
+    "renders controls, dates and language names in %s",
+    (displayLocale, messages, title, month, language) => {
+      const { container } = render(
+        createElement(NextIntlClientProvider, {
+          locale: displayLocale,
+          messages,
+          timeZone: "Europe/Prague",
+          children: createElement(ArticleEditHistory, {
+            items: [item({ kind: "translated", locale: "fr" })],
+            total: 3,
+            locale: "en",
+          }),
+        })
+      )
+      expect(container.textContent).toContain(title)
+      expect(container.textContent).toContain(month)
+      expect(container.textContent).toContain(language)
+      expect(container.textContent).not.toContain("Showing the latest")
+      expect(container.querySelector("[data-locale]")!.textContent).toBe("FR")
+    }
+  )
+
   it("is a collapsible Edit history listing who, what and when", () => {
     const { container, getByText } = render(
       createElement(ArticleEditHistory, {
@@ -104,6 +136,11 @@ describe("articleChangeText", () => {
     ["unpublished", "en", "Unpublished"],
     ["deleted", "en", "Deleted"],
   ])("%s (%s) reads %s", (kind, locale, text) => {
-    expect(articleChangeText(kind, locale)).toBe(text)
+    const translate = createTranslator({
+      locale: "en",
+      messages: english,
+      namespace: "editorial",
+    })
+    expect(articleChangeText(kind, locale, translate, "en")).toBe(text)
   })
 })

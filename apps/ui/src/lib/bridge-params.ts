@@ -16,8 +16,8 @@ export const isDocumentIdParam = (v: string) => DOCUMENT_ID_PATTERN.test(v)
  * The body as text, counting bytes as they arrive. Null once more than
  * `maxBytes` have been read; the rest of the body is never read.
  */
-async function readTextCapped(
-  req: Request,
+export async function readTextCapped(
+  req: Pick<Request, "body" | "headers">,
   maxBytes: number
 ): Promise<string | null> {
   if (!req.body) return ""
@@ -44,7 +44,7 @@ async function readTextCapped(
  * it isn't JSON.
  */
 export async function readJsonCapped(
-  req: Request,
+  req: Pick<Request, "body" | "headers">,
   maxBytes: number
 ): Promise<{ ok: true; body: unknown } | { ok: false; status: 400 | 413 }> {
   if (Number(req.headers.get("content-length") ?? 0) > maxBytes)

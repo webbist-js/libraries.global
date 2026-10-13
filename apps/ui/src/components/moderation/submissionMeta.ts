@@ -360,8 +360,7 @@ export const EXCLUDE_FROM_OTHER = new Set([
   "amenities",
   "accessibility",
   "openingTimes",
-  "source",
-  "sourceUrl",
+  "sourceRecords",
   "photoId",
   "photoUrl",
 ])
@@ -390,7 +389,28 @@ export function renderValue(v: unknown): { text: string; isUrl: boolean } {
   if (Array.isArray(v)) {
     if (v.length === 0) return { text: "—", isUrl: false }
 
-    return { text: v.join(", "), isUrl: false }
+    return {
+      text: v
+        .map((item) => {
+          if (item && typeof item === "object") {
+            const source = item as {
+              url?: string
+              label?: string
+              fields?: string[]
+            }
+            if (source.url)
+              return [source.label, source.url, source.fields?.join(", ")]
+                .filter(Boolean)
+                .join(" · ")
+
+            return JSON.stringify(item)
+          }
+
+          return String(item)
+        })
+        .join(", "),
+      isUrl: false,
+    }
   }
   if (typeof v === "object") {
     const o = v as Record<string, unknown>
@@ -547,7 +567,11 @@ export function detailOf(sub: SubmissionLike): string | null {
       return fieldCount(f)
     case "new_library":
       return (
-        [f.libraryType, f.city]
+        [
+          f.libraryType,
+          f.city,
+          sub.draftData?.staffCreation ? "Staff ownership requested" : null,
+        ]
           .filter((x) => typeof x === "string" && x)
           .join(" · ") || null
       )

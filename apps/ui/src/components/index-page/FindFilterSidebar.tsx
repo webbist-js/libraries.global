@@ -1,6 +1,8 @@
 // apps/ui/src/components/index-page/FindFilterSidebar.tsx
 "use client"
 
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import {
   FilterGroup,
   FilterHelper,
@@ -44,6 +46,7 @@ export function FindFilterSidebar({
   onChange,
   onReset,
   sidebar,
+  showLocation = true,
 }: {
   state: FindState
   facets: FindFacets
@@ -51,7 +54,11 @@ export function FindFilterSidebar({
   onReset: () => void
   /** Adds the desktop Hide control to the header. */
   sidebar?: FilterSidebarState
+  /** Place pages keep their scope fixed while reusing the index filters. */
+  showLocation?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const groupCount = (key: TypeGroupKey) => {
     const group = TYPE_GROUPS.find((g) => g.key === key)
     if (!group) return 0
@@ -81,9 +88,29 @@ export function FindFilterSidebar({
   return (
     <div>
       <FilterPanelHeader onReset={onReset} sidebar={sidebar} />
+      <label className="mb-4 flex min-h-11 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={Boolean(state.includeInactive)}
+          onChange={(event) =>
+            onChange({ includeInactive: event.target.checked, page: 0 })
+          }
+        />
+        Include permanently closed and planned records
+      </label>
+      <label className="mb-4 flex min-h-11 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={state.staffNow ?? false}
+          onChange={(event) =>
+            onChange({ staffNow: event.target.checked, page: 0 })
+          }
+        />
+        Staff on hand now
+      </label>
 
       <FilterGroup
-        title="Opening status"
+        title={tUi("opening_status")}
         icon={
           <>
             <circle cx="12" cy="12" r="9" />
@@ -92,21 +119,21 @@ export function FindFilterSidebar({
         }
         helper={
           facets.hoursKnownCount != null
-            ? `${facets.hoursKnownCount} records have checked hours`
-            : "Only records with checked hours"
+            ? `${facets.hoursKnownCount} ${facets.hoursKnownCount === 1 ? "record has" : "records have"} opening hours`
+            : "Only records with recorded opening hours"
         }
       >
         <FilterOption
           type="radio"
           name="open-status"
-          label="Any time"
+          label={tUi("any_time")}
           checked={!state.openNow}
           onChange={() => onChange({ openNow: false, page: 0 })}
         />
         <FilterOption
           type="radio"
           name="open-status"
-          label="Open now"
+          label={tUi("open_now")}
           checked={state.openNow}
           count={facets.openNowCount}
           onChange={() => onChange({ openNow: true, page: 0 })}
@@ -114,7 +141,7 @@ export function FindFilterSidebar({
       </FilterGroup>
 
       <FilterGroup
-        title="Library type"
+        title={tUi("library_type")}
         icon={
           <>
             <path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z" />
@@ -138,7 +165,7 @@ export function FindFilterSidebar({
 
       {accessOptions.length > 0 ? (
         <FilterGroup
-          title="Accessibility"
+          title={tUi("accessibility")}
           icon={
             <>
               <circle cx="12" cy="5" r="2" />
@@ -165,7 +192,7 @@ export function FindFilterSidebar({
 
       {serviceOptions.length > 0 ? (
         <FilterGroup
-          title="Facilities & services"
+          title={tUi("facilities_services")}
           defaultOpen={false}
           icon={
             <>
@@ -192,7 +219,7 @@ export function FindFilterSidebar({
       ) : null}
 
       <FilterGroup
-        title="Collections"
+        title={tUi("collections")}
         defaultOpen={false}
         icon={
           <>
@@ -205,7 +232,7 @@ export function FindFilterSidebar({
         <FilterOption
           type="checkbox"
           name="digital"
-          label="Has digital collections"
+          label={tUi("has_digital_collections")}
           checked={state.digital}
           count={facets.digitalCount}
           onChange={() => onChange({ digital: !state.digital, page: 0 })}
@@ -213,7 +240,7 @@ export function FindFilterSidebar({
       </FilterGroup>
 
       <FilterGroup
-        title="Needs contributions"
+        title={tUi("needs_contributions")}
         defaultOpen={false}
         icon={
           <>
@@ -243,65 +270,69 @@ export function FindFilterSidebar({
         ))}
       </FilterGroup>
 
-      <FilterGroup
-        title="Location"
-        defaultOpen={false}
-        activeCount={
-          (state.place ? 1 : 0) +
-          (state.nearLat != null && state.radiusKm > 0 ? 1 : 0)
-        }
-        icon={
-          <>
-            <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" />
-            <circle cx="12" cy="10" r="2.5" />
-          </>
-        }
-      >
-        <PlaceSelects
-          place={state.place}
-          location={facets.location}
-          onChange={(place) => onChange({ place, page: 0 })}
-        />
-        <fieldset
-          disabled={state.nearLat == null}
-          className="m-0 mt-3 min-w-0 border-0 p-0"
+      {showLocation ? (
+        <FilterGroup
+          title={tUi("location")}
+          defaultOpen={false}
+          activeCount={
+            (state.place ? 1 : 0) +
+            (state.nearLat != null && state.radiusKm > 0 ? 1 : 0)
+          }
+          icon={
+            <>
+              <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </>
+          }
         >
-          <legend
-            className="p-0 text-[14px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            Distance
-          </legend>
-          <div
-            className="mt-1 flex flex-col"
-            style={{ opacity: state.nearLat == null ? 0.55 : 1 }}
-          >
-            {DISTANCES.map((o) => (
-              <FilterOption
-                key={o.km}
-                type="radio"
-                name="distance"
-                label={o.label}
-                disabled={state.nearLat == null}
-                checked={state.radiusKm === o.km}
-                onChange={() => onChange({ radiusKm: o.km, page: 0 })}
-              />
-            ))}
-          </div>
-          {state.nearLat == null ? (
-            <FilterHelper>Turn on “Use my location” to enable</FilterHelper>
-          ) : null}
-        </fieldset>
-        <label className="mt-3 flex min-h-11 items-center gap-3">
-          <input
-            type="checkbox"
-            checked={state.nearIncludeMobile !== false}
-            disabled={state.nearLat == null}
-            onChange={(e) => onChange({ nearIncludeMobile: e.target.checked })}
+          <PlaceSelects
+            place={state.place}
+            location={facets.location}
+            onChange={(place) => onChange({ place, page: 0 })}
           />
-          Include mobile library stops
-        </label>
-      </FilterGroup>
+          <fieldset
+            disabled={state.nearLat == null}
+            className="m-0 mt-3 min-w-0 border-0 p-0"
+          >
+            <legend
+              className="p-0 text-[14px] font-semibold"
+              style={{ color: T.ink.dim }}
+            >
+              Distance
+            </legend>
+            <div
+              className="mt-1 flex flex-col"
+              style={{ opacity: state.nearLat == null ? 0.55 : 1 }}
+            >
+              {DISTANCES.map((o) => (
+                <FilterOption
+                  key={o.km}
+                  type="radio"
+                  name="distance"
+                  label={o.label}
+                  disabled={state.nearLat == null}
+                  checked={state.radiusKm === o.km}
+                  onChange={() => onChange({ radiusKm: o.km, page: 0 })}
+                />
+              ))}
+            </div>
+            {state.nearLat == null ? (
+              <FilterHelper>Turn on “Use my location” to enable</FilterHelper>
+            ) : null}
+          </fieldset>
+          <label className="mt-3 flex min-h-11 items-center gap-3">
+            <input
+              type="checkbox"
+              checked={state.nearIncludeMobile !== false}
+              disabled={state.nearLat == null}
+              onChange={(e) =>
+                onChange({ nearIncludeMobile: e.target.checked })
+              }
+            />
+            Include mobile library stops
+          </label>
+        </FilterGroup>
+      ) : null}
     </div>
   )
 }

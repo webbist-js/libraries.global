@@ -5,8 +5,8 @@
 
 import {
   type GapKey,
+  openingScheduleStatus,
   effectiveLibraryHours,
-  noticeLocalDate,
   type LibraryNotice,
 } from "@repo/shared-data"
 
@@ -16,7 +16,6 @@ import {
   nameFromSlug,
 } from "@/lib/find-places"
 import type { FindLocation, FindQuery } from "@/lib/find-search"
-import { localDayMinute } from "@/lib/local-time"
 
 // ── Broad type groups (POC sidebar) ─────────────────────────────────────────
 
@@ -79,12 +78,6 @@ export interface OpenStatus {
   until?: string
 }
 
-const minutesOf = (hm: string) => {
-  const [h, m] = hm.split(":").map(Number)
-
-  return (h ?? 0) * 60 + (m ?? 0)
-}
-
 /**
  * Whether a library is open right now in its own timezone. Reads the clock
  * the way the "Open now" filter does (`localDayMinute`), so a card's badge
@@ -96,40 +89,15 @@ export function openStatus(
   now: Date = new Date(),
   notices: readonly LibraryNotice[] = []
 ): OpenStatus {
-  const effective = effectiveLibraryHours(
-    openingTimes,
-    notices,
-    noticeLocalDate(now, timezone)
+  const result = openingScheduleStatus(openingTimes, timezone, now, (date) =>
+    effectiveLibraryHours(openingTimes, notices, date)
   )
-  if (effective.closed) return { known: true, open: false }
-  openingTimes = effective.hours
-  const days = (openingTimes as OpeningTimes | null | undefined)?.days
-  if (!Array.isArray(days) || days.length === 0) {
-    return { known: false, open: false }
+
+  return {
+    known: result.state !== "unknown",
+    open: result.state === "open",
+    ...(result.state === "open" ? { until: result.until } : {}),
   }
-
-  const local = localDayMinute(timezone || "UTC", now)
-  if (!local) return { known: false, open: false }
-
-  const today = days.find(
-    (d) => (d.day ?? "").toLowerCase().slice(0, 3) === local.day
-  )
-  if (!today?.enabled || !Array.isArray(today.timeframes)) {
-    return { known: true, open: false }
-  }
-
-  for (const tf of today.timeframes) {
-    if (
-      tf.startTime &&
-      tf.endTime &&
-      minutesOf(tf.startTime) <= local.minute &&
-      local.minute < minutesOf(tf.endTime)
-    ) {
-      return { known: true, open: true, until: tf.endTime }
-    }
-  }
-
-  return { known: true, open: false }
 }
 
 // ── Record gaps ─────────────────────────────────────────────────────────────
@@ -171,11 +139,14 @@ const PLACE_LEVELS = [...FIND_PLACE_LEVELS].reverse()
 export interface FindState {
   q: string
   place: FindPlace | null
+  includeInactive?: boolean
+  rawTypes?: string[]
   groups: TypeGroupKey[]
   access: string[]
   services: string[]
   digital: boolean
   openNow: boolean
+  staffNow?: boolean
   /** records missing any of these (OR) */
   needs: NeedKey[]
   nearLat?: number
@@ -224,14 +195,27 @@ export function findStateFromParams(params: URLSearchParams): FindState {
 
   return {
     q: params.get("q") ?? "",
+    ...(params.get("status") === "all" ? { includeInactive: true } : {}),
     place: placeLevel
       ? { level: placeLevel, slug: params.get(placeLevel)! }
       : null,
     groups,
+    ...(params.get("type")
+      ? {
+          rawTypes: (params.get("type") ?? "")
+            .split(",")
+            .filter((type) =>
+              TYPE_GROUPS.some((group) =>
+                (group.types as readonly string[]).includes(type)
+              )
+            ),
+        }
+      : {}),
     access: (params.get("access") ?? "").split(",").filter(Boolean),
     services: (params.get("service") ?? "").split(",").filter(Boolean),
     digital: params.get("digital") === "1",
     openNow: params.get("open") === "1",
+    ...(params.get("staff") === "now" ? { staffNow: true } : {}),
     needs,
     nearLat: params.get("nlat") ? Number(params.get("nlat")) : undefined,
     nearLng: params.get("nlng") ? Number(params.get("nlng")) : undefined,
@@ -252,13 +236,16 @@ export function findStateFromParams(params: URLSearchParams): FindState {
 
 export function findStateToParams(s: FindState): URLSearchParams {
   const p = new URLSearchParams()
+  if (s.includeInactive) p.set("status", "all")
   if (s.q) p.set("q", s.q)
   if (s.place) p.set(s.place.level, s.place.slug)
+  if (s.rawTypes?.length) p.set("type", s.rawTypes.join(","))
   if (s.groups.length > 0) p.set("tg", s.groups.join(","))
   if (s.access.length > 0) p.set("access", s.access.join(","))
   if (s.services.length > 0) p.set("service", s.services.join(","))
   if (s.digital) p.set("digital", "1")
   if (s.openNow) p.set("open", "1")
+  if (s.staffNow) p.set("staff", "now")
   if (s.needs.length > 0) p.set("needs", s.needs.join(","))
   if (s.nearLat != null) p.set("nlat", s.nearLat.toFixed(4))
   if (s.nearLng != null) p.set("nlng", s.nearLng.toFixed(4))
@@ -276,11 +263,14 @@ export function hasActiveFindFilters(s: FindState): boolean {
   return (
     s.q !== "" ||
     s.place !== null ||
+    Boolean(s.rawTypes?.length) ||
     s.groups.length > 0 ||
     s.access.length > 0 ||
     s.services.length > 0 ||
     s.digital ||
     s.openNow ||
+    s.staffNow ||
+    s.includeInactive ||
     s.needs.length > 0 ||
     s.nearLat != null ||
     s.source != null
@@ -290,10 +280,13 @@ export function hasActiveFindFilters(s: FindState): boolean {
 /** How many filter chips/badges this state should show (excludes `q`). */
 export function activeFilterCount(s: FindState): number {
   return (
+    (s.rawTypes?.length ?? 0) +
     s.groups.length +
     s.access.length +
     s.services.length +
     (s.openNow ? 1 : 0) +
+    (s.staffNow ? 1 : 0) +
+    (s.includeInactive ? 1 : 0) +
     (s.digital ? 1 : 0) +
     s.needs.length +
     (s.nearLat != null ? 1 : 0) +
@@ -399,16 +392,23 @@ export function placeChoices(
 export function findQueryOf(state: FindState, locale: string): FindQuery {
   return {
     query: state.q,
+    includeInactive: state.includeInactive,
     place: state.place
       ? { level: state.place.level, slug: state.place.slug }
       : undefined,
-    libraryTypes: state.groups.flatMap(
-      (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
-    ),
+    libraryTypes: [
+      ...new Set([
+        ...(state.rawTypes ?? []),
+        ...state.groups.flatMap(
+          (key) => TYPE_GROUPS.find((g) => g.key === key)?.types ?? []
+        ),
+      ]),
+    ],
     accessibilityNames: state.access,
     serviceNames: state.services,
     digital: state.digital,
     openNow: state.openNow,
+    staffNow: state.staffNow,
     needs: state.needs,
     nearLat: state.nearLat,
     nearLng: state.nearLng,

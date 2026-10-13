@@ -140,7 +140,10 @@ export const GAPS: readonly GapDefinition[] = [
     phrase: "facilities",
     completeness: true,
     filled: (r) =>
-      some(r.accessibility) || some(r.services) || some(r.amenities),
+      some(r.accessibility) ||
+      some(r.services) ||
+      some(r.amenities) ||
+      answeredAccessibility(r.absentFacilities),
   },
   {
     key: "about",
@@ -201,9 +204,28 @@ export const gapDefinition = (
     : definition
 }
 
+export function applicableGap(
+  key: GapKey,
+  libraryType?: string | null
+): boolean {
+  return (
+    libraryType !== "Digital" ||
+    ![
+      "hours",
+      "address",
+      "location",
+      "facilities",
+      "accessibility",
+      "services",
+    ].includes(key)
+  )
+}
+
 /** The record's gaps, in registry order. */
 export function gapsOf(r: GapRecord): GapKey[] {
-  return GAPS.filter((g) => !g.filled(r)).map((g) => g.key)
+  return GAPS.filter(
+    (g) => applicableGap(g.key, r.libraryType) && !g.filled(r)
+  ).map((g) => g.key)
 }
 
 export interface CompletenessSection {
@@ -219,7 +241,9 @@ export function completenessOf(r: GapRecord): {
   percent: number
   sections: CompletenessSection[]
 } {
-  const sections = GAPS.filter((g) => g.completeness).map((g) => ({
+  const sections = GAPS.filter(
+    (g) => g.completeness && applicableGap(g.key, r.libraryType)
+  ).map((g) => ({
     key: g.key,
     label: gapDefinition(g.key, r.libraryType).label,
     filled: g.filled(r),

@@ -4,7 +4,7 @@ _Last audited: 2026-10-03_
 
 Built and on `dev`: the v2 light UI on every route; the access model (Role Grants, capabilities, entitlements, Pro from grants, verification and earned Archivist); the Index and Knowledge editors; structured corrections; community moderation on the site with Role Applications and Location Requests; Change Records and the library Changes section; locale-aware submissions and record translations; the Strapi security review fixes; and the first scale work (keyset slug paging, SQL location counts, a split sitemap). CLAUDE.md describes how it all works.
 
-This file lists what's left. Deploy, environment, legal and licensing steps live in `docs/pre-golive-checklist.md`, which isn't repeated here.
+This file lists what's left. Deployment starts with the [DigitalOcean launch checklist](docs/operations/digitalocean-launch-checklist.md). Wider environment, legal and licensing steps live in `docs/pre-golive-checklist.md`.
 
 ---
 
@@ -13,7 +13,7 @@ This file lists what's left. Deploy, environment, legal and licensing steps live
 1. **LibraryOn full ingest (~3,800 UK records).** Not run yet. Local Strapi has 107 published libraries. The last attempt (26 Sept) stopped after about 100 records, with 19 `fetch failed`/`terminated` errors (`.scratch/libraryon-import/log.json`). The source goes away when the British Library shuts LibraryOn down on 15 Oct, so **run this first**: `libraryon-ingest.ts --resume`, then publish the drafts (checklist §2a–2b). Use a token whose name starts with `ingest` or `import`, so Change Records log the writes as `source: import`.
 2. **World countries import.** Do a dry run, then the real run of `populate-world-countries.ts` (checklist §1e). In the dry run, check that France's `mapConfig` doesn't span its overseas territories. On the real run, check that `PUT ?status=published` actually publishes.
 3. **Reindex Meilisearch** after 1 and 2 (checklist §3a).
-4. **Production deploy:** Vercel, Strapi Cloud and production Meilisearch (checklist §4–6). The Strapi review's operator steps aren't in the checklist yet:
+4. **Production deploy:** DigitalOcean for Next.js, Strapi, workers, PostgreSQL, object storage and Meilisearch ([launch checklist](docs/operations/digitalocean-launch-checklist.md)). The Strapi review's operator steps aren't in the checklist yet:
    - grant the events admin permissions (`manage-credentials`, `review`) to moderator admin roles
    - re-save each provider credential once, because the blobs are now bound to the credential id
    - set `REVALIDATE_SECRET`, `IMAGE_REMOTE_HOSTS` and `TRUST_PROXY`, and add the Strapi → `/api/revalidate` webhook
@@ -56,7 +56,8 @@ Tasks 13–17 of `docs/superpowers/plans/2026-09-30-community-moderation-and-aud
 
 - **Needs-changes thread (P-C, C-M1/C-M2):** contributors see the moderator's note but can't reply or edit and resubmit.
 - **Free-text corrections** still only award points. Nothing applies them.
-- **Atlas at scale:** `GET /libraries/atlas` downloads every library, and location maps stop at 500 pins. Both are replaced by `docs/superpowers/plans/2026-09-30-atlas-vector-tiles.md` (not started).
+- **Atlas at scale:** `GET /libraries/atlas` downloads every library; region hero maps use only the first 100 list records. The [execution spec](docs/superpowers/specs/2026-10-08-atlas-vector-tiles-design.md) and [implementation plan](docs/superpowers/plans/2026-09-30-atlas-vector-tiles.md) define bounded queries, live aggregates, reconciled PMTiles and capped server-selected exports. The gated provider, transactional capture, independent projection/index worker, archive job, reconciliation, scoped exports and region renderer are implemented and checked locally. Flags remain off; [deployment/readiness, CDN, canary and retirement gates](docs/atlas-operations.md) remain open. By user direction, millions-scale performance is estimated locally and verified as production grows; no large local synthetic run is required.
+- **General Meilisearch rebuild at scale:** `apps/strapi/scripts/seed-meilisearch.ts` loads the corpus into memory and deletes the live index before replacement. The Atlas plan adds a separate safe rebuild for its dedicated index; the general library reseed still needs streamed staging/reconciliation/swap before full-scale ingestion or reseeding.
 - **Search facets:** `/libraries` works out "Open now", "Has digital collections" and "Most complete first" in the browser, which hits Meilisearch's fetch ceiling after the ingest. Index a completeness score and an open-now encoding, and make them real facets.
 - **History for free viewers:** backfilled batches have no values, but free viewers still see the Pro upgrade line on them. Strapi needs to send a `valuesRecorded` flag.
 - **Index editor fields with nowhere to go:** `officialName`, `collectionSize`, `collectionTypes`, `specialCollections`, `architecturalStyle`, `imageCredit` and `imageNote` reach the reviewer but aren't applied, because the library schema has no field for them.

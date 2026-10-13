@@ -165,6 +165,13 @@ function publicProfile<T extends Record<string, any>>(
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 const PROFILE = "api::user-profile.user-profile"
 
+/** Incoming follows as a count only, including people with private profiles. */
+async function loadFollowerCount(documentId: string): Promise<number> {
+  return strapi.db.query(PROFILE).count({
+    where: { followedProfiles: { documentId: { $eq: documentId } } },
+  })
+}
+
 /**
  * Who is asking, as far as the bridge secret vouches for it. The owner and
  * viewer ids are only trusted alongside the secret, which only the UI
@@ -449,16 +456,18 @@ export default factories.createCoreController(
 
       // Published libraries, drives past draft and public profiles only
       // (see loadFollows).
-      const { followedLibraries, followedDrives, followedProfiles } =
-        await loadFollows(profile.baUserId)
+      const [follows, followerCount, mark] = await Promise.all([
+        loadFollows(profile.baUserId),
+        loadFollowerCount(profile.documentId),
+        supporterMark(strapi, profile),
+      ])
 
       // Fields always stripped from public responses
       const safe = publicProfile({
         ...profile,
-        supporterMark: await supporterMark(strapi, profile),
-        followedLibraries,
-        followedDrives,
-        followedProfiles,
+        supporterMark: mark,
+        ...follows,
+        followerCount,
       } as any)
 
       // Limited profiles hide contact/location details unless the requester is the
@@ -510,17 +519,19 @@ export default factories.createCoreController(
       })
       if (!profile) return ctx.notFound("Profile not found")
 
-      const [affiliations, follows, earnedBadges, entitlements] =
+      const [affiliations, follows, earnedBadges, entitlements, followerCount] =
         await Promise.all([
           loadAffiliations(baUserId),
           loadFollows(baUserId),
           loadEarnedBadges(baUserId),
           resolveUserEntitlements(strapi, baUserId),
+          loadFollowerCount(profile.documentId),
         ])
 
       const owner: Record<string, unknown> = {
         ...profile,
         ...follows,
+        followerCount,
         isSupporter: isSupporterPlan(entitlements.plan),
         supporterMark:
           isSupporterPlan(entitlements.plan) &&
@@ -609,10 +620,15 @@ export default factories.createCoreController(
         profileWithFollows2?.followedLibraries
       )
 
+      const [mark, followerCount] = await Promise.all([
+        supporterMark(strapi, profile),
+        loadFollowerCount(profile.documentId),
+      ])
       const safe = publicProfile({
         ...profile,
         followedLibraries,
-        supporterMark: await supporterMark(strapi, profile),
+        supporterMark: mark,
+        followerCount,
       } as any)
 
       if (profile.profileVisibility === "limited") {

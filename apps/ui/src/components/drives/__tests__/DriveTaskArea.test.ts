@@ -1,4 +1,9 @@
 // @vitest-environment happy-dom
+import * as React from "react"
+import { createElement as h } from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import type { Drive } from "@/lib/drives/types"
 import {
   cleanup,
   fireEvent,
@@ -6,12 +11,7 @@ import {
   screen,
   waitFor,
   within,
-} from "@testing-library/react"
-import * as React from "react"
-import { createElement as h } from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-
-import type { Drive } from "@/lib/drives/types"
+} from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -121,6 +121,10 @@ function respond(url: string, init?: RequestInit) {
   if (url.startsWith("/api/drives/ohio-hours/tasks"))
     return Promise.resolve(
       Response.json({ data: TASKS, page: 0, hasMore: false })
+    )
+  if (url.startsWith("/api/drives/ohio-hours/holds"))
+    return Promise.resolve(
+      Response.json({ data: { expiresAt: "2026-10-12T00:00:00Z" } })
     )
   if (url.startsWith("/api/drives/ohio-hours/mine"))
     return Promise.resolve(
@@ -275,4 +279,35 @@ describe("DriveTaskArea", () => {
     expect(urls.some((u) => u.includes("/mine"))).toBe(false)
     expect(urls).not.toContain("/api/contribute/standing")
   })
+})
+
+it("keeps the selected place in task searches", async () => {
+  render(
+    h(DriveTaskArea, {
+      drive: DRIVE,
+      initialPlace: { country: "united-states", region: "ohio" },
+    })
+  )
+  await screen.findByText("Alpha Library")
+  const urls = fetchMock.mock.calls.map(([url]) => String(url))
+  expect(urls).toContain(
+    "/api/drives/ohio-hours/tasks?country=united-states&region=ohio&page=0&locale=en"
+  )
+})
+
+it("preserves the selected place through sign-in", async () => {
+  session.value = { data: null, isPending: false }
+  render(
+    h(DriveTaskArea, {
+      drive: DRIVE,
+      initialPlace: { country: "united-states", region: "ohio" },
+    })
+  )
+  await screen.findByText("Alpha Library")
+  fireEvent.click(row("Alpha Library"))
+  const link = await screen.findByRole("link", { name: "Sign in to help" })
+  const href = new URL(link.getAttribute("href")!, "http://localhost")
+  expect(href.searchParams.get("callbackUrl")).toBe(
+    "/community/drives/ohio-hours?country=united-states&region=ohio"
+  )
 })

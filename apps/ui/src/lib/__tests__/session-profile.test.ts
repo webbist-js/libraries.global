@@ -66,6 +66,23 @@ describe("fetchSessionProfile", () => {
     await fetchSessionProfile("u1")
     expect(f).toHaveBeenCalledTimes(2)
   })
+  it("refreshes changed entitlements before the cache expires without a new login", async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(body))
+      .mockResolvedValueOnce(
+        Response.json({ ...body, grants: [{ plan: "pro", expiresAt: null }] })
+      )
+    vi.stubGlobal("fetch", f)
+    expect(buildSessionAccess(await fetchSessionProfile("u1")).plan).toBe(
+      "free"
+    )
+    const fresh = await fetchSessionProfile("u1", true)
+    expect(buildSessionAccess(fresh).plan).toBe("pro")
+    expect(f).toHaveBeenCalledTimes(2)
+    expect(await fetchSessionProfile("u1")).toEqual(fresh)
+    expect(f).toHaveBeenCalledTimes(2)
+  })
 
   it("does not cache a fetch that an invalidate overtook", async () => {
     let release!: (r: Response) => void
@@ -203,7 +220,9 @@ describe("fetchSessionProfile", () => {
     const profile = await fetchSessionProfile("u1")
     const access = buildSessionAccess(profile)
     expect(access.plan).toBe("supporter")
-    expect(access.features).toEqual([])
+    expect(access.features).toEqual(["atlas.export", "library.history"])
+    expect(access.features).not.toContain("atlas.compare")
+    expect(access.limits.exportRows).toBe(500)
     expect(access.limits.savedViews).toBe(3)
     expect(access.capabilities).not.toContain("moderate.queue")
   })
@@ -259,6 +278,21 @@ describe("fetchSessionProfile", () => {
     expect(f).toHaveBeenCalledTimes(2)
     expect(warn).toHaveBeenCalledTimes(2)
     expect(String(warn.mock.calls[0]?.[0])).toMatch(/^\[session-profile\]/)
+  })
+  it("does not reuse previously granted Pro when a forced refresh fails", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ ...body, grants: [{ plan: "pro", expiresAt: null }] })
+      )
+      .mockResolvedValueOnce(new Response("unavailable", { status: 503 }))
+    vi.stubGlobal("fetch", f)
+    expect(buildSessionAccess(await fetchSessionProfile("u1")).plan).toBe("pro")
+    const fresh = await fetchSessionProfile("u1", true)
+    expect(fresh).toBeNull()
+    expect(buildSessionAccess(fresh).plan).toBe("free")
+    expect(f).toHaveBeenCalledTimes(2)
   })
 
   it("returns null and warns when fetch throws", async () => {

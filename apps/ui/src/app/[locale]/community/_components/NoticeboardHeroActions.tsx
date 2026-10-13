@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -34,6 +35,8 @@ export function NoticeboardHeroActions({
   readonly openCount: number
   readonly helping: number
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-2.5">
@@ -47,7 +50,7 @@ export function NoticeboardHeroActions({
             icon={board ? "mdi:plus" : "mdi:pin-outline"}
             width={18}
           />
-          {board ? "New drive" : "Propose a drive"}
+          {board ? tUi("new_drive") : "Propose a drive"}
         </GlobalLink>
       </div>
       {openCount > 0 ? (

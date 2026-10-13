@@ -6,6 +6,7 @@ import {
   noticeLocalDate,
   type LibraryNotice,
 } from "@repo/shared-data"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Notice, StatusBadge } from "@/components/ds"
@@ -19,6 +20,8 @@ export function LibraryNoticeBanners({
   notices: readonly LibraryNotice[]
   timezone: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [today, setToday] = useState<string | null>(null)
   useEffect(() => {
     const update = () => setToday(noticeLocalDate(new Date(), timezone))
@@ -33,7 +36,7 @@ export function LibraryNoticeBanners({
   if (!active.length && !upcoming.length) return null
 
   return (
-    <section aria-label="Library notices" className="my-6 space-y-4">
+    <section aria-label={tUi("library_notices")} className="my-6 space-y-4">
       {active.map((n) => (
         <Notice
           key={n.id}

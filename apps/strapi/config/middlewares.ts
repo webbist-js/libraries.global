@@ -48,6 +48,7 @@ export default ({ env }: { env: any }) => [
             "'self'",
             "blob:",
             "data:",
+            ...env.array("MEDIA_CSP_ORIGINS", []),
             "https://maps.gstatic.com",
             "https://maps.googleapis.com",
             "https://*.basemaps.cartocdn.com",
@@ -60,6 +61,7 @@ export default ({ env }: { env: any }) => [
             "'self'",
             "blob:",
             "data:",
+            ...env.array("MEDIA_CSP_ORIGINS", []),
             "https://maps.gstatic.com",
             "https://maps.googleapis.com",
             "https://*.basemaps.cartocdn.com",
@@ -112,6 +114,7 @@ export default ({ env }: { env: any }) => [
   "strapi::poweredBy",
   "strapi::logger",
   "strapi::query",
+  "global::beta-gate",
   // C1: drop ?status (drafts) on /api/* unless the bridge secret is present.
   // Must run after strapi::query, which installs the querystring parser.
   "global::strip-draft-status",

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/lib/auth"
+import { sameOriginRequest } from "@/lib/beta/access"
 import { readJsonCapped } from "@/lib/bridge-params"
 import { readOwnProfile } from "@/lib/own-profile-server"
 
@@ -20,10 +21,15 @@ export async function GET() {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   const prefs = lookup.profile.notifPrefs ?? {}
 
-  return NextResponse.json({ data: prefs })
+  return NextResponse.json(
+    { data: prefs },
+    { headers: { "Cache-Control": "private, no-store" } }
+  )
 }
 
 export async function PUT(req: Request) {
+  if (!sameOriginRequest(req))
+    return NextResponse.json({ error: "Invalid origin" }, { status: 403 })
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -37,6 +43,8 @@ export async function PUT(req: Request) {
   const NotifPrefs = z
     .object({
       soundOn: z.boolean(),
+      weeklyReport: z.boolean(),
+      recognition: z.boolean(),
       marketing: z.boolean(),
       newFollowers: z.boolean(),
       weeklyDigest: z.boolean(),
@@ -58,13 +66,28 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Invalid preferences" }, { status: 400 })
   const body = result.data
 
-  const res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Service-Secret": SECRET },
-    body: JSON.stringify({ baUserId: session.user.id, notifPrefs: body }),
-  })
-  if (!res.ok)
-    return NextResponse.json({ error: "Failed to save" }, { status: 500 })
+  try {
+    const res = await fetch(`${STRAPI}/api/auth-bridge/upsert-profile`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Service-Secret": SECRET,
+      },
+      body: JSON.stringify({ baUserId: session.user.id, notifPrefs: body }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+    })
+    if (!res.ok)
+      return NextResponse.json({ error: "Failed to save" }, { status: 500 })
 
-  return NextResponse.json({ ok: true })
+    return NextResponse.json(
+      { ok: true },
+      { headers: { "Cache-Control": "private, no-store" } }
+    )
+  } catch {
+    return NextResponse.json(
+      { error: "Could not save notifications" },
+      { status: 503 }
+    )
+  }
 }

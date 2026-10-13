@@ -1,3 +1,5 @@
+import { useTranslations as useUiTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { DriveLeaderboardEntry } from "@/lib/drives/types"
@@ -114,6 +116,8 @@ export function DriveHelpers({
   readonly all: readonly DriveLeaderboardEntry[]
   readonly publicOnly?: boolean
 }) {
+  const tUi = useUiTranslations("ui")
+
   const shownAll = publicOnly ? all.filter((e) => e.username) : all
   const hidden = all.length - shownAll.length
 
@@ -137,13 +141,13 @@ export function DriveHelpers({
       </h2>
       {publicOnly ? null : (
         <HelperList
-          label="This week"
+          label={tUi("this_week")}
           entries={week}
           empty="No accepted work yet this week."
         />
       )}
       <HelperList
-        label="All time"
+        label={tUi("all_time")}
         entries={shownAll}
         empty="No accepted work yet."
       />

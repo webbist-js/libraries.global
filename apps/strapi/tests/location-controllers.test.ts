@@ -66,40 +66,35 @@ function expectFieldLimitedMedia(populate: any) {
 
 describe("continent.detail (E5)", () => {
   it("field-limits media, counts with the locale, and keeps the aggregates", async () => {
-    const { controller, paramsOf, countWheres } = build(
-      CONTINENT,
-      continentFactory,
-      {
-        [CONTINENT]: [
-          {
-            id: 1,
-            documentId: "eu",
-            slug: "europe",
-            countries: [{ documentId: "gb", mapConfig: null }],
-          },
-        ],
-        [LIBRARY]: [
-          {
-            ...published,
-            documentId: "l1",
-            libraryType: "Public",
-            continent: { id: 1, documentId: "eu" },
-            country: { documentId: "gb" },
-            location: { lat: 1, lng: 2 },
-          },
-        ],
-      }
-    )
+    const { controller, paramsOf } = build(CONTINENT, continentFactory, {
+      [CONTINENT]: [
+        {
+          id: 1,
+          documentId: "eu",
+          slug: "europe",
+          countries: [{ documentId: "gb", mapConfig: null }],
+        },
+      ],
+      [LIBRARY]: [
+        {
+          ...published,
+          documentId: "l1",
+          libraryType: "Public",
+          continent: { id: 1, documentId: "eu" },
+          country: { documentId: "gb" },
+          location: { lat: 1, lng: 2 },
+        },
+      ],
+    })
     const c: any = ctx("europe")
     await controller.detail(c)
 
     const [params] = paramsOf(CONTINENT)
     expectFieldLimitedMedia(params.populate)
-    for (const where of countWheres(LIBRARY)) {
-      expect(where.locale).toBe("en")
-      expect(where.publishedAt).toEqual({ $notNull: true })
-    }
-    expect(countWheres(LIBRARY)).toHaveLength(1)
+    const [count] = paramsOf(LIBRARY, "count")
+    expect(count.locale).toBe("en")
+    expect(count.status).toBe("published")
+    expect(count.filters.continent.documentId).toEqual({ $eq: "eu" })
     expect(c.body.data.libraryCount).toBe(1)
     expect(c.body.data.countries[0].libraryCount).toBe(1)
     expect(c.body.data.libraryTypeCounts).toEqual([
@@ -110,22 +105,18 @@ describe("continent.detail (E5)", () => {
 
 describe("country.detail (E5)", () => {
   it("field-limits media and counts with the locale", async () => {
-    const { controller, paramsOf, countWheres } = build(
-      COUNTRY,
-      countryFactory,
-      {
-        [COUNTRY]: [
-          { id: 1, documentId: "gb", slug: "united-kingdom", regions: [] },
-        ],
-      }
-    )
+    const { controller, paramsOf } = build(COUNTRY, countryFactory, {
+      [COUNTRY]: [
+        { id: 1, documentId: "gb", slug: "united-kingdom", regions: [] },
+      ],
+    })
     const c: any = ctx("united-kingdom")
     await controller.detail(c)
 
     const [params] = paramsOf(COUNTRY)
     expectFieldLimitedMedia(params.populate)
     expect(params.populate.heroImage).toEqual({ fields: MEDIA_FIELDS })
-    expect(countWheres(LIBRARY)[0].locale).toBe("en")
+    expect(paramsOf(LIBRARY, "count")[0].locale).toBe("en")
     expect(c.body.data.libraryCount).toBe(0)
   })
 })
@@ -160,9 +151,11 @@ describe("region.detail (E5)", () => {
     // Every Area of the region used to be populated here just so the UI
     // could read `.length`; it now reads the counted `areaCount` instead.
     expect(params.populate.areas).toBeUndefined()
-    expect(countWheres(LIBRARY)[0].locale).toBe("en")
+    expect(paramsOf(LIBRARY, "count")[0].locale).toBe("en")
     expect(countWheres(AREA)[0].locale).toBe("en")
-    const list = paramsOf(LIBRARY).find((p) => p.filters?.region)
+    const list = paramsOf(LIBRARY).find(
+      (p) => p.filters?.region && p.limit === 100
+    )
     expect(list.limit).toBe(100)
     expect(list.populate.heroImage.fields).toEqual(MEDIA_FIELDS)
     expect(c.body.data.libraries).toHaveLength(1)
@@ -171,6 +164,14 @@ describe("region.detail (E5)", () => {
 })
 
 describe("category.nav and wiki-section.nav (E5)", () => {
+  it.each(["cs", "fr"])("reads Knowledge navigation in %s", async (locale) => {
+    const ws = build("api::wiki-section.wiki-section", wikiSectionFactory, {
+      "api::wiki-section.wiki-section": [],
+    })
+    await ws.controller.nav({ query: { locale } })
+    expect(ws.paramsOf("api::wiki-section.wiki-section")[0].locale).toBe(locale)
+  })
+
   it("read published entries only", async () => {
     const cat = build("api::category.category", categoryFactory, {
       "api::category.category": [{ documentId: "c1", name: "A", slug: "a" }],

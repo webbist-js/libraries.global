@@ -76,6 +76,16 @@ export async function eraseAccount(
   const filesToRemove: unknown[] = []
 
   await strapi.db.transaction(async () => {
+    await strapi.db
+      .query("api::paid-membership.paid-membership")
+      .deleteMany({ where: { baUserId } })
+    await strapi.db.query("api::notification.notification").deleteMany({
+      where: email
+        ? {
+            $or: [{ baUserId }, { recipientEmail: email.trim().toLowerCase() }],
+          }
+        : { baUserId },
+    })
     await strapi.plugin("mobile-libraries")?.service("live")?.eraseFor(baUserId)
     await strapi.db.query("api::library-notice.library-notice").updateMany({
       where: { createdByBaUserId: baUserId },
@@ -172,7 +182,7 @@ export async function eraseAccount(
           submittedByUserId: baUserId,
           status: { $in: UNFINISHED_STATUSES },
         },
-        data: { fields: null, draftData: null, note: null },
+        data: { fields: null, draftData: null, note: null, editSummary: null },
       })
     }
 
@@ -181,11 +191,29 @@ export async function eraseAccount(
     await strapi.db.query(SUBMISSION).updateMany({
       where: { submittedByUserId: baUserId },
       data: {
+        evidenceType: null,
+        evidenceUrl: null,
+        note: null,
+        draftData: null,
         submittedByEmail: "deleted@invalid",
         submittedByName: null,
         submittedByUserId: erasedId,
       },
     })
+    // Public facts and references remain; the change history forgets account identity.
+    for (const uid of [
+      "api::library-change.library-change",
+      "api::article-change.article-change",
+    ]) {
+      await strapi.db.query(uid).updateMany({
+        where: { actorId: `ba:${baUserId}` },
+        data: { actorId: null, actorName: null },
+      })
+      await strapi.db.query(uid).updateMany({
+        where: { reviewerId: { $in: [baUserId, `ba:${baUserId}`] } },
+        data: { reviewerId: null },
+      })
+    }
     await strapi.db.query(POINT_EVENT).updateMany({
       where: { baUserId },
       data: { baUserId: erasedId },

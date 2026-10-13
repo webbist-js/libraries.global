@@ -1,12 +1,14 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
+import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
 import ContinentDetailPage from "@/components/continent/ContinentDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { isDevelopment } from "@/lib/general-helpers"
+import { placeGapInsights } from "@/lib/place-insights-server"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import {
   buildLibraryItemListSchema,
@@ -31,15 +33,17 @@ export async function generateMetadata({
   params: Promise<{ locale: string; continent: string }>
 }): Promise<Metadata> {
   const { locale, continent: slug } = await params
-  const data = (await fetchContinent(slug, locale as Locale))?.data
+  const res = await fetchContinent(slug, locale as Locale)
+  const data = res?.data
   if (!data) return { title: "Continent not found", robots: { index: false } }
 
   const name = data.name ?? "Continent"
 
   return buildMetadata({
+    seo: data.seo,
+    alternateLocales: [locale],
     title: locationTitle(data.seo, `Libraries in ${name}`),
     description:
-      data.seo?.metaDescription ??
       data.summary ??
       buildLocationDescription({
         name,
@@ -50,7 +54,9 @@ export async function generateMetadata({
     path: slug,
     locale,
     image: formatStrapiMediaUrl(data.seo?.metaImage?.url),
-    robots: locationRobots(data.libraryCount),
+    robots: res?.localeFallback
+      ? "noindex-follow"
+      : locationRobots(data.libraryCount),
   })
 }
 
@@ -72,14 +78,24 @@ export default function ContinentPage(props: {
 }) {
   const params = use(props.params)
   const locale = params.locale as Locale
+  setRequestLocale(locale)
   const slug = params.continent
 
   const continentPromise = fetchContinent(slug, locale)
   const drivesPromise = drivesHere("continent", slug, locale)
 
-  const continentData = use(continentPromise)?.data
+  const continentRes = use(continentPromise)
+  const continentData = continentRes?.data
   if (!continentData) notFound()
   const drives = use(drivesPromise)
+  const gapRows = use(
+    placeGapInsights(
+      "continent",
+      slug,
+      continentData.libraryTypeCounts ?? [],
+      locale
+    )
+  )
 
   return (
     <>
@@ -99,8 +115,10 @@ export default function ContinentPage(props: {
       />
       <ContinentDetailPage
         continent={continentData}
+        untranslatedLocale={continentRes?.localeFallback ? locale : null}
         locale={locale}
         slug={slug}
+        gapRows={gapRows}
         drives={drives}
       />
     </>

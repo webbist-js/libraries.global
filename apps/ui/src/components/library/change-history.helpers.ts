@@ -80,6 +80,7 @@ export const FIELD_LABELS: Record<string, string> = {
   imageCredit: "Photo credit",
   source: "Source",
   sourceUrl: "Source link",
+  sourceRecords: "Sources",
   lastVerifiedAt: "Last checked",
   featured: "Pillar institution",
   wikidataId: "Wikidata ID",
@@ -299,7 +300,7 @@ export function batchRow(
   }
 }
 
-/** The import that created the record: shown as the "Record created" row. */
+/** Initial import; its origin and date are already shown in the source list. */
 export const isImportCreate = (
   b: Pick<LibraryHistoryBatch, "action" | "source">
 ) => b.source === "import" && b.action === "create"

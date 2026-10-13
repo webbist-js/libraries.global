@@ -1,7 +1,8 @@
 "use client"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
-import { fieldInputStyle } from "@/app/[locale]/contribute/index/_components/wizard.constants"
+import { fieldInputStyle } from "@/components/library-editor/wizard.constants"
 import { T } from "@/lib/design-tokens"
 
 export type HomeLibraryHit = {
@@ -26,6 +27,8 @@ export function HomeLibraryPicker({
   readonly value: string
   readonly onChange: (id: string, home?: HomeLibraryHit) => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   const [query, setQuery] = useState(""),
     [hits, setHits] = useState<Hit[]>([]),
     [selected, setSelected] = useState<Hit | null>(null),
@@ -104,7 +107,7 @@ export function HomeLibraryPicker({
               setQuery(e.target.value)
               setHits([])
             }}
-            placeholder="Find the branch where this vehicle is based"
+            placeholder={tUi("find_the_branch_where_this_vehicle_is_based")}
           />
           <ul className="m-0 list-none p-0">
             {query.trim().length >= 2 &&

@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -51,6 +52,8 @@ export function ReviewDecisionForm({
   /** The Drive this submission is tagged with, when there is one. */
   readonly driveDocumentId?: string | null
 }) {
+  const tUi = useUiTranslations("ui")
+
   const router = useRouter()
   const noteId = useId()
   const hintId = useId()
@@ -199,7 +202,7 @@ export function ReviewDecisionForm({
   return (
     <form
       className="flex flex-col gap-4"
-      aria-label="Decision"
+      aria-label={tUi("decision")}
       onSubmit={(e) => e.preventDefault()}
     >
       <div className="flex flex-col gap-1.5">
@@ -292,7 +295,7 @@ export function ReviewDecisionForm({
               disabled={disabled}
               onClick={() => setConfirming(false)}
             >
-              Cancel
+              {tUi("cancel")}{" "}
             </button>
           </div>
         </div>
@@ -342,7 +345,7 @@ export function ReviewDecisionForm({
             width={18}
             height={18}
           />
-          {busy === "needs_info" ? "Sending…" : "Needs changes"}
+          {busy === "needs_info" ? tUi("sending") : "Needs changes"}
         </button>
         <button
           type="button"

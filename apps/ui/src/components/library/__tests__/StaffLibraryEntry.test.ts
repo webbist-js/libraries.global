@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render, screen } from "@/test/render"
 
 Object.assign(globalThis, { React })
 
