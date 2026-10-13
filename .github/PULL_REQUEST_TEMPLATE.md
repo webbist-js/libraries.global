@@ -1,47 +1,18 @@
-### Task Link
-[Task #](https://github.com/webbist-js/libraries.global/issues)
+## Changes
 
-### Description
-What are the changes and **why** have they been made.
+Describe the problem and the resulting behavior. Link the related GitHub issue where applicable.
 
-**For FE components/blocks:** Please directly link the Figma design you are referencing.
+## Validation
 
-#### TL;DR
-What's the TLDR?
+List the checks you ran and their results. Include screenshots for visible UI changes.
 
-### Screenshots/Videos
-Include images or videos to show the feature you've implemented. (if applicable, mostly for frontend components)
+## Configuration or data changes
 
-**For FE blocks:** Please attach screenshots of the FE component being implemented through the CMS.
+Describe new environment variables, migrations or manual deployment steps. Use placeholders for secret values.
 
-### New environmental variables
-If your PR introduces new environment variables, please list them here along with a description of their use and apply the `requires-env-vars` label.
+## Checklist
 
-### Checklist - author
-
-- [ ] **Assignee** is set (the active developer of this PR).
-- [ ] **Reviewers** are set (team members who will review the code).
-- [ ] **PR is linked** I have linked the PR to an issue in Jira.
-- [ ] **Description** I have described the changes proposed in the PR clearly and concisely (more important than what is why).
-- [ ] **Screenshots/Videos** I have added screenshots/videos or they were not needed.
-- [ ] **Environmental variables** are listed or they were not needed.
-- [ ] **Unit/Integration tests** are added for all utilities and business important logic
-- [ ] **Labels** I have added labels to the PR.
-  - Use `requires-env-vars` when PR requires environmental variables
-  - Use `ready-for-review` when PR is ready to be looked at
-  - Use `ready-to-merge` when PR has a passing review
-  - Use `needs-revisions` when PR has comments that block merge
-  - Use `do-not-review` when PR is daft only and you don't want to get a review
-- [ ] [OPTIONAL] Conversation/documentation is started in places where the code is not self-explanatory
-
-#### Before merging
-
-- [ ] **PR is approved**
-- [ ] **All conversations are resolved**
-- [ ] Pipelines are not failing
-
-### Checklist - reviewer
-
-- [ ] I **understand** all proposed changes.
-- [ ] Necessary **after deploy steps** are handled by someone (adding new env var, syncing config, running migration...)
-
+- [ ] CI passes and review conversations are resolved.
+- [ ] Relevant documentation and environment examples are updated.
+- [ ] Strapi types were regenerated if schemas changed.
+- [ ] No credentials or private user data are included.

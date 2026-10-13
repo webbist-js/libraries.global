@@ -106,9 +106,17 @@ Enhancement suggestions are tracked as [Feature request GitHub issues](https://g
 
 - Set up your environment — check the [Getting started](./README.md#-getting-started) section for prerequisites and setup instructions.
 - Pick an issue — look for [issues labeled `good first issue` or `help-required`](https://github.com/webbist-js/libraries.global/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22%20label%3Ahelp-required).
-- Fork and branch — [fork the repository](https://github.com/webbist-js/libraries.global/fork) and create a branch from `main` branch (not `dev`).
+- Fork and branch — [fork the repository](https://github.com/webbist-js/libraries.global/fork) and create a branch from `dev`, the current default branch, and target `dev` with your pull request.
 - Follow conventions — check the for [commit message format](https://github.com/webbist-js/libraries.global?tab=readme-ov-file#commit-message-hook) and coding standards.
 - Open a PR — push your branch and open a pull request. Fill in the PR description based on the template and link the related issue (using `#ISSUE_NUMBER` format).
+
+## Code review and releases
+
+The repository owner, @webbist-js, reviews contributions. CI runs linting, formatting, unit tests and production builds with a read-only token. Pull requests from outside contributors need maintainer approval before their workflows run; they receive no production credentials.
+
+`dev` is the default integration branch. A reviewed `main` branch will hold production releases when it is created. Merges must pass CI and resolve review conversations. Force pushes and deletion are blocked on both branches. The owner can merge their own pull request without a second maintainer's approval, but still needs passing CI.
+
+GitHub releases use conventional commit messages and immutable version tags. GitHub Actions does not have administration access to the production servers. Production deployment is configured separately after the deployed source is recorded in GitHub and dedicated deployment permissions are approved. Documentation publishing requires the explicit `DOCS_PUBLISH_ENABLED` repository variable.
 
 ## Attribution
 

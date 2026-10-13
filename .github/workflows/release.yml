@@ -8,20 +8,23 @@ on:
 permissions:
   contents: read # for checkout
 
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
 jobs:
   release:
-    runs-on: ubuntu-latest
+    if: github.repository == 'webbist-js/libraries.global'
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for trusted publishing and npm provenance
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Setup pnpm with cache
         uses: ./.github/actions/setup-pnpm

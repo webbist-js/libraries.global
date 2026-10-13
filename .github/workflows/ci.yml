@@ -1,13 +1,16 @@
 name: CI
 
 on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
   pull_request:
     branches:
       - main
       - dev
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -16,15 +19,19 @@ permissions:
 env:
   CI: true
   NPM_CONFIG_IGNORE_SCRIPTS: "true"
+  # Build/test fixture only; deployment supplies its own runtime secret.
+  BETTER_AUTH_SECRET: dummy-ci-secret-not-for-runtime-only
 
 jobs:
   build_and_verify:
     name: Install, Lint, Test and Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup pnpm with cache
         uses: ./.github/actions/setup-pnpm
@@ -50,12 +57,6 @@ jobs:
         run: |
           rm -rf apps/ui/.next
           pnpm build:ui
-
-      # Only enable this if you plan to deploy a static export of the UI
-      # - name: Build UI (output=export)
-      #   run: |
-      #     rm -rf .next
-      #     pnpm build:ui:static
 
       - name: Build Strapi
         run: pnpm build:strapi

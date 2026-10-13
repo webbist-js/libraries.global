@@ -241,7 +241,7 @@ describe("DriveTaskArea", () => {
     render(h(DriveTaskArea, { drive: DRIVE }))
     await screen.findByText("Alpha Library")
     fireEvent.click(row("Alpha Library"))
-    fireEvent.click(screen.getByRole("button", { name: "Skip" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Skip" }))
     expect(document.activeElement).toBe(
       screen.getByRole("heading", { name: "Beta Library" })
     )
@@ -256,7 +256,7 @@ describe("DriveTaskArea", () => {
     await screen.findByText("Alpha Library")
     expect(screen.queryByRole("dialog")).toBeNull()
     fireEvent.click(row("Alpha Library"))
-    const dialog = screen.getByRole("dialog")
+    const dialog = await screen.findByRole("dialog")
     expect(within(dialog).getByRole("heading", { name: "Alpha Library" })).toBe(
       document.activeElement
     )
