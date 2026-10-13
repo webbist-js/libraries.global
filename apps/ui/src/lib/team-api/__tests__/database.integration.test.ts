@@ -116,6 +116,8 @@ describe.skipIf(!enabled)("Team API database concurrency and billing", () => {
     const stored = (
       await pool.query("select * from team_api_keys where team_id=$1", [team])
     ).rows[0]
+    expect(key.value.secret).toMatch(/^lg_api_[A-Za-z0-9_-]{43}$/)
+    expect(Buffer.from(key.value.secret.slice(7), "base64url")).toHaveLength(32)
     expect(stored.digest).toBe(keyDigest(key.value.secret))
     expect(JSON.stringify(stored)).not.toContain(key.value.secret)
     await pool.query(

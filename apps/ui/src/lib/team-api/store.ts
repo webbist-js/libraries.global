@@ -9,6 +9,9 @@ import { BillingError } from "@/lib/billing/config"
 import { apiAccessActive, apiMonth } from "./config"
 import type { ApiMembership, ApiScope, ApiKeyView } from "./types"
 
+// API credentials are generated below from 32 CSPRNG bytes; callers cannot
+// choose their value. SHA-256 gives indexed lookup of these high-entropy tokens.
+// User passwords use Better Auth's password-hashing scheme instead.
 export const keyDigest = (secret: string) =>
   createHash("sha256").update(secret).digest("hex")
 const token = () => `lg_api_${randomBytes(32).toString("base64url")}`
