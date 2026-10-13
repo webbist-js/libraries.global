@@ -1,5 +1,7 @@
 import { SUPPORTED_LOCALES } from "@repo/shared-data"
 
+import { isTeamApiPath } from "@/lib/team-api/paths"
+
 const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
 
 export const BETA_LEGAL_SLUG = "beta"
@@ -47,6 +49,10 @@ export function betaPublicShell(pathname: string): boolean {
 }
 
 export function betaPublicRequest(pathname: string, method: string): boolean {
+  if (isTeamApiPath(pathname))
+    return pathname === "/api/v1/search/libraries"
+      ? method === "POST"
+      : method === "GET"
   if (pathname === "/api/billing/webhook") return method === "POST"
   const path = betaPath(pathname)
   if (pathname.startsWith("/_next/static/") || ASSETS.has(pathname))

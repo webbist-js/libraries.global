@@ -46,7 +46,7 @@ describe("checkout purchase contract", () => {
           plan: "pro",
           interval: "month",
           locale: "en",
-          termsVersion: "1.0",
+          termsVersion: "1.1",
           [key]: "attacker",
         })
       )
@@ -62,7 +62,7 @@ describe("checkout purchase contract", () => {
             plan: "pro",
             interval: "month",
             locale: "en",
-            termsVersion: "1.0",
+            termsVersion: "1.1",
           })
         )
       ).status
@@ -79,7 +79,7 @@ describe("checkout purchase contract", () => {
             plan: "pro",
             interval: "month",
             locale: "en",
-            termsVersion: "1.0",
+            termsVersion: "1.1",
           })
         )
       ).status

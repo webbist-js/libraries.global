@@ -189,6 +189,11 @@ export function TeamOrganiser({
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Link href={`/staff/team/api?team=${team.documentId}`} className={PILL}>
+          API access and usage
+        </Link>
+      </div>
       <div role="status" aria-live="polite" className="sr-only">
         {status}
       </div>

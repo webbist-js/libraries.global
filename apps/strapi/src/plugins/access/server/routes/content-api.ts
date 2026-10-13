@@ -8,6 +8,24 @@ const route = (method: string, path: string, action: string) => ({
 })
 
 export default [
+  {
+    method: "GET",
+    path: "/api/teams/:id/status",
+    handler: "api-data.status",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/api/libraries",
+    handler: "api-data.libraries",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/api/libraries/:entityRef",
+    handler: "api-data.libraries",
+    config: { auth: false },
+  },
   route("GET", "/teams/mine", "mine"),
   route("GET", "/teams/join/:token", "preview"),
   route("POST", "/teams/join/:token/accept", "accept"),

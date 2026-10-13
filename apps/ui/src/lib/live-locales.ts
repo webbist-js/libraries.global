@@ -1,4 +1,4 @@
-import { routing } from "@/lib/navigation"
+import { DEFAULT_LOCALE } from "@repo/shared-data"
 
 /**
  * Locales whose content is actually published. `routing.locales` also lists
@@ -10,4 +10,4 @@ import { routing } from "@/lib/navigation"
  * Kept apart from lib/seo/metadata.ts so client code can import it without
  * the metadata builders.
  */
-export const LIVE_LOCALES: readonly string[] = [routing.defaultLocale]
+export const LIVE_LOCALES: readonly string[] = [DEFAULT_LOCALE]

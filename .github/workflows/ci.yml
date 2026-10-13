@@ -47,10 +47,13 @@ jobs:
       - name: Check css/md formatting
         run: pnpm format:check
 
+      - name: Reject private operational files
+        run: node scripts/release/check-public-files.mjs
+
       - name: Verify release source guards
         run: |
-          pnpm exec eslint infra/digitalocean/verify-release-source.mjs infra/digitalocean/verify-release-source.test.mjs
-          node --test infra/digitalocean/verify-release-source.test.mjs
+          pnpm exec eslint scripts/release/verify-release-source.mjs scripts/release/verify-release-source.test.mjs
+          node --test scripts/release/verify-release-source.test.mjs
 
       # Includes the @repo/access type-level invariants and the Strapi unit
       # suite (test:unit). Strapi's tests/app.test.ts boots a real Strapi on

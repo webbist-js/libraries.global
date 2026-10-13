@@ -2,6 +2,8 @@
 
 This is a [Strapi v5](https://strapi.io/) project.
 
+For routine production content changes, local feature work and the separate operator credentials, see [CMS content operations](CONTENT-OPERATIONS.md). Pricing content is generated from the shared membership catalogue; see [Pricing](../ui/PRICING.md).
+
 ## 🥞 Tech stack
 
 - Strapi 5
@@ -103,15 +105,15 @@ To build and run Strapi in Docker container use [Dockerfile](Dockerfile) prepare
 
 ### Build
 
-```bash
-# from monorepo root
+Build from the monorepo root for the x86-64 DigitalOcean hosts:
 
-# build image, name and tag it
-docker build -t starter-strapi:latest -f apps/strapi/Dockerfile .
-
-# or build image and set APP_URL build arg to override localhost:1337 (default public URL of Admin panel)
-docker build -t starter-strapi:latest -f apps/strapi/Dockerfile --build-arg APP_URL=https://cms.strapi-domain.dev .
+```sh
+docker build --platform linux/amd64 -f apps/strapi/Dockerfile -t libraries-global-strapi:local .
 ```
+
+The multi-stage Dockerfile prunes the workspace, builds the CMS and local plugins, deploys production dependencies and runs as the non-root Node user. Credentials and uploads are runtime inputs. Production uses Managed PostgreSQL with verified TLS and Spaces media storage; the CMS/admin listener stays private. The Dockerfile does not use the old starter `APP_URL` build argument.
+
+Update official Strapi core/plugins/providers/type generation together. Test upgrades against an isolated production-data copy before promotion. See the [DigitalOcean deployment runbook](../../infra/digitalocean/deployment.md); the local `docker run` example below does not reproduce the production gateway or credential boundaries.
 
 ### Run
 
@@ -124,7 +126,7 @@ To change port, set `PORT` env variable in `.env` file and in `docker run` comma
 
 ### Connect to Postgres in Docker
 
-Strapi requires Postgres database to run before it starts. There is no production `docker-compose.yml` file prepared with both services connected. Usually they are run separately (database in one container or in cloud servise, Strapi in another container).
+Strapi requires PostgreSQL before it starts. Local development uses Docker PostgreSQL; production uses DigitalOcean Managed PostgreSQL 17 with a standby. [app.compose.yml](../../infra/digitalocean/app.compose.yml) defines the production CMS alongside the UI and independent workers, with runtime env files and read-only CA mounts. It deliberately does not start a local production database container.
 
 A) If you have Postgres connection string or credentials, set them in `.env` file before running Strapi container. Example:
 
@@ -264,7 +266,7 @@ async find(ctx) {
 
 #### Emails
 
-To send emails from Strapi (e.g., registration confirmation, password reset, etc.), this starter preconfigures 2 email providers: Mailgun and Mailtrap. It is supposed that Mailtrap is used during development and Mailgun in production, but you can change this easily in [config/plugins.ts](config/plugins.ts) file - the selection is based on provided ENV variables.
+Production uses Brevo SMTP through the official Nodemailer provider, selected when `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS` are present. Set `SMTP_PORT=2525` and `SMTP_SECURE=false`; the provider requires STARTTLS on that connection. Transport authentication passed; actual mailbox delivery still needs acceptance. The credentials belong in the private runtime env file. [config/plugins.ts](config/plugins.ts) also retains Mailgun and Mailtrap options described below; those are alternatives, not the selected production provider.
 
 ##### `@strapi/provider-email-mailgun` (Mailgun)
 

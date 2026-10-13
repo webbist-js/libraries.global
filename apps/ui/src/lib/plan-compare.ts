@@ -211,7 +211,7 @@ export function availableNow(groups: CompareGroup[]): CompareGroup[] {
     .filter((g) => g.rows.length > 0)
 }
 
-/** "Free", "£3/mo", "£480/yr": the compact price for a column header. */
+/** "Free", "£3/mo", "£600/yr": the compact price for a column header. */
 export function shortPrice(price: PlanPrice): string {
   if (price === "free") return "Free"
   if (price.monthly) return price.monthly.replace("/month", "/mo")

@@ -100,6 +100,14 @@ _Avoid_: admin, team owner, manager
 One place in a Team's capacity (`seats`, default 5). Active and invited members together never exceed it; an invite past the cap is refused. Each occupied seat gives its holder Pro.
 _Avoid_: licence, user slot
 
+**Team API Add-on**:
+A separate recurring API purchase owned by an active Team. Its organisers manage named API Keys and billing in `/staff/team/api`; members can inspect usage. Settled payment gives versioned access to published public Library search and records, with a shared monthly request and response-data allowance. It gives no Staff access, Capability, user session or protected data. Limits are recorded with the purchase; creating or regenerating keys never resets usage.
+_Avoid_: personal API subscription, paid staff permission
+
+**API Key**:
+A Team-owned machine credential for selected public API operations. The full value is shown once; only its digest and display prefix are retained. An organiser can regenerate or revoke it. Each key shares the Team API Add-on's allowances; its creator is an audit actor, not the identity of API requests.
+_Avoid_: user token, Strapi token, Meilisearch key (those are separate upstream credentials)
+
 **Library Notice**:
 A dated, immediately published message from a Library’s staff about a temporary closure, changed hours or a Mobile service disruption. Mobile notices may cover a service, a Cycle day or a Stop, and a `not_running` notice cancels the Visits in its scope on its dates. Dates are inclusive in the Library’s timezone; an open-ended notice covers 30 days. Its `source` is `staff` (the Notices tab), `live` (the console's "Not running", which posts one for the rest of today and ends the Live Session) or `admin`. Notices affect visitor information, search and timetable cancellations, and never change the permanent record status.
 _Avoid_: permanent closure, Event, alert
@@ -318,3 +326,9 @@ _Avoid_: drive request
 - Library `entityRef` auto-generation is not yet implemented (lifecycle hook exists for Country/Region/Area but not Library). The current format (`GB-BL-001`) in the CLAUDE.md is a relic of manual entry; the intended scheme is hierarchically composed from parent entityRefs + the Library's short name.
 
 - "public library" was used colloquially to mean _any library institution_ (not "open to the general public" or "publicly funded"). Resolved: **Library** covers all institutional types regardless of access model or funding source.
+
+## Pricing and content operations
+
+The agreed amounts are in `apps/ui/src/lib/membership-pricing.json`: Supporter £3/£30, founding Pro £5/£50, future standard Pro £8/£80 after Reach ships, Team £600/year for five seats and £120 per additional seat (ex VAT), with a 20% public-library-service discount. Team API is a separate £15/month add-on. Existing subscriptions keep their original Price IDs. See `apps/ui/PRICING.md`.
+
+Routine content work targets production; feature work uses local explicitly. Local and production CMS Admin Tokens have server-specific permissions. Local MCP is enabled; production uses the existing private Content Manager API while MCP remains disabled. Connections and credential names are documented in `apps/strapi/CONTENT-OPERATIONS.md`; credentials are never committed.

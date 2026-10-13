@@ -44,7 +44,7 @@ describe("PLANS", () => {
       monthly: "£5/month",
       yearly: "£50/year",
     })
-    expect(plan("team").price).toMatchObject({ yearly: "£480/year ex VAT" })
+    expect(plan("team").price).toMatchObject({ yearly: "£600/year ex VAT" })
   })
 
   it("gives Supporter delivered history and capped exports, preserving Pro analysis", () => {
@@ -112,7 +112,7 @@ describe("priceHeadline", () => {
   it("shows Free, else the monthly price, else the yearly one", () => {
     expect(priceHeadline(planCard("free").price)).toBe("Free")
     expect(priceHeadline(planCard("pro").price)).toBe("£5/month")
-    expect(priceHeadline(planCard("team").price)).toBe("£480/year ex VAT")
+    expect(priceHeadline(planCard("team").price)).toBe("£600/year ex VAT")
   })
 })
 

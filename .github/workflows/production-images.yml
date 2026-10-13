@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 60
     env:
       DOCKER_CONFIG: /tmp/libraries-global-registry
-      REGISTRY: registry.digitalocean.com/libraries-global-production
+      REGISTRY: ${{ vars.DO_CONTAINER_REGISTRY }}
     steps:
       - name: Checkout the selected commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,7 +30,7 @@ jobs:
       - name: Verify the protected source and successful checks
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node infra/digitalocean/verify-release-source.mjs
+        run: node scripts/release/verify-release-source.mjs
 
       - name: Install the scoped registry configuration
         env:

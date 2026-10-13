@@ -20,6 +20,8 @@
     "lint:fix": "pnpm lint --fix",
     "preview": "next build && next start",
     "start": "next start",
+    "team-api:check": "node scripts/team-api-setup.mjs",
+    "team-api:setup": "node scripts/team-api-setup.mjs --apply",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
