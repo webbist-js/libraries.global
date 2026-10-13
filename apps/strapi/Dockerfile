@@ -18,6 +18,8 @@ RUN test ! -d .scratch && test ! -d .git && test ! -d node_modules
 RUN turbo prune ${WORKSPACE} --docker
 
 FROM base AS builder
+# The admin/editor bundle exceeds Node's default 2 GiB build heap.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 ARG APP
 ARG WORKSPACE
 COPY --from=prepare /app/out/json/ .
