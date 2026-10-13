@@ -45,3 +45,10 @@ describe("redactUrlsInText", () => {
     )
   })
 })
+
+it("redacts credentials after a long punctuation run without losing path text", () => {
+  const path = ")".repeat(10000) + "tail"
+  expect(
+    redactUrlsInText(`Failed: https://feeds.example.org/${path}?token=fixture`)
+  ).toBe(`Failed: https://feeds.example.org/${path}`)
+})

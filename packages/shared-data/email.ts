@@ -223,17 +223,24 @@ export function withEmailPreferences(
   input: Parameters<typeof emailFooter>[0]
 ): RenderedEmail {
   const footer = emailFooter(input)
-  const marker = /<!-- email-footer-start -->[\s\S]*?<!-- email-footer-end -->/
+  const startMarker = "<!-- email-footer-start -->"
+  const endMarker = "<!-- email-footer-end -->"
+  const start = message.html.indexOf(startMarker)
+  const end =
+    start === -1
+      ? -1
+      : message.html.indexOf(endMarker, start + startMarker.length)
+  const replacement = `${startMarker}${footer.html}${endMarker}`
 
   return {
     ...message,
     text: `${message.text.split("\n\n--\n")[0]}\n\n--\n${footer.text}`,
-    html: marker.test(message.html)
-      ? message.html.replace(
-          marker,
-          `<!-- email-footer-start -->${footer.html}<!-- email-footer-end -->`
-        )
-      : `${message.html}<div style="padding:16px;background:#1c1a25">${footer.html}</div>`,
+    html:
+      end >= 0
+        ? message.html.slice(0, start) +
+          replacement +
+          message.html.slice(end + endMarker.length)
+        : `${message.html}<div style="padding:16px;background:#1c1a25">${footer.html}</div>`,
   }
 }
 export function emailWeekLabel(start: string, end: string) {

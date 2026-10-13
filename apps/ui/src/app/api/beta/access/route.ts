@@ -46,7 +46,13 @@ export async function POST(req: Request) {
   } catch {
     return response("unavailable", 503)
   }
-  if (!matchesBetaPassword(body.data.password)) return response("password", 401)
+  let matches: boolean
+  try {
+    matches = await matchesBetaPassword(body.data.password)
+  } catch {
+    return response("unavailable", 503)
+  }
+  if (!matches) return response("password", 401)
   const accepted = NextResponse.json(
     { ok: true, next: betaDestination(body.data.next) },
     { headers: { "Cache-Control": "no-store" } }

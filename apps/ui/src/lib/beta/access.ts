@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto"
+import { createHmac, scrypt, scryptSync, timingSafeEqual } from "node:crypto"
 
 import { betaPath } from "@/lib/beta/scope"
 
@@ -13,21 +13,40 @@ export function betaConfigured(): boolean {
   )
 }
 
+const KEY_OPTIONS = { N: 2 ** 16, r: 8, p: 2, maxmem: 128 * 1024 * 1024 }
+let cachedKey: { password: string; secret: string; key: Buffer } | undefined
+
 function signingKey() {
   if (!betaConfigured()) throw new Error("Beta access is unavailable")
+  const password = process.env.BETA_PASSWORD!
+  const secret = process.env.BETA_ACCESS_SECRET!
+  // Cache only server configuration, never request credentials. Password or
+  // signing-secret rotation derives a new key and revokes earlier passes.
+  if (cachedKey?.password !== password || cachedKey.secret !== secret)
+    cachedKey = {
+      password,
+      secret,
+      key: scryptSync(password, secret, 32, KEY_OPTIONS),
+    }
 
-  // Password rotation revokes every pass, even if the operator forgets to bump version.
-  return createHmac("sha256", process.env.BETA_ACCESS_SECRET!)
-    .update(process.env.BETA_PASSWORD!)
-    .digest()
+  return cachedKey.key
 }
 
-export function matchesBetaPassword(password: string): boolean {
-  if (!betaConfigured()) return false
-  const expected = createHmac("sha256", signingKey())
-    .update(process.env.BETA_PASSWORD!)
-    .digest()
-  const actual = createHmac("sha256", signingKey()).update(password).digest()
+export async function matchesBetaPassword(password: string): Promise<boolean> {
+  if (!betaConfigured() || password.length > 512) return false
+  const expected = signingKey()
+  const actual = await new Promise<Buffer>((resolve, reject) => {
+    scrypt(
+      password,
+      process.env.BETA_ACCESS_SECRET!,
+      32,
+      KEY_OPTIONS,
+      (error, key) => {
+        if (error) reject(error)
+        else resolve(key)
+      }
+    )
+  })
 
   return timingSafeEqual(expected, actual)
 }

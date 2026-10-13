@@ -20,7 +20,7 @@ export function redactUrl(raw: string): string {
 // A URL runs to the next whitespace; closing punctuation that commonly
 // follows a URL in prose (`.`, `,`, `)`, `]`, `;`, `:`) is left in place.
 const URL_IN_TEXT = /https?:\/\/[^\s<>"']+/gi
-const TRAILING_PUNCT = /[),.;:\]!?]+$/
+const TRAILING_PUNCT = "),.;:]!?"
 
 export function redactUrlsInText<T extends string | null | undefined>(
   text: T
@@ -28,8 +28,10 @@ export function redactUrlsInText<T extends string | null | undefined>(
   if (typeof text !== "string") return text
 
   return text.replaceAll(URL_IN_TEXT, (match) => {
-    const trailing = TRAILING_PUNCT.exec(match)?.[0] ?? ""
-    const core = trailing ? match.slice(0, -trailing.length) : match
+    let end = match.length
+    while (end > 0 && TRAILING_PUNCT.includes(match[end - 1]!)) end--
+    const trailing = match.slice(end)
+    const core = match.slice(0, end)
 
     return `${redactUrl(core)}${trailing}`
   }) as T

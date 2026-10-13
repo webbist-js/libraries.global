@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/code-eval -- Verifies that executable URLs are rejected; no code is evaluated. */
 import { describe, expect, it } from "vitest"
 
-import { emailTemplate } from "../email"
+import { emailTemplate, withEmailPreferences } from "../email"
 import { mergeNotificationPreferences } from "../notification-preferences"
 
 describe("email templates", () => {
@@ -128,4 +128,37 @@ it("rejects malformed and credential-bearing URLs and hides long credentials fro
   expect(result.html).not.toContain(">https://example.org/verify?token=")
   expect(result.text).toContain("token=long-secret")
   expect(result.html).toContain("<br>") // Footer uses real line breaks without white-space CSS.
+})
+
+it("replaces the first complete footer while retaining surrounding HTML", () => {
+  const message = {
+    subject: "Notice",
+    text: "Body",
+    html: "<p>Before</p><!-- email-footer-start -->Old footer<!-- email-footer-end --><p>After</p>",
+  }
+  const result = withEmailPreferences(message, {
+    unsubscribeUrl: "https://libraries.global/email/preferences?token=fixture",
+  })
+  expect(
+    result.html.startsWith("<p>Before</p><!-- email-footer-start -->")
+  ).toBe(true)
+  expect(result.html.endsWith("<!-- email-footer-end --><p>After</p>")).toBe(
+    true
+  )
+  expect(result.html).not.toContain("Old footer")
+  expect(result.html).toContain(">Unsubscribe<")
+})
+
+it("preserves a queued message containing many unmatched footer markers", () => {
+  const html =
+    "<!-- email-footer-start -->".repeat(3000) + "Body without a closing marker"
+  const result = withEmailPreferences(
+    { subject: "Notice", text: "Body", html },
+    {
+      unsubscribeUrl:
+        "https://libraries.global/email/preferences?token=fixture",
+    }
+  )
+  expect(result.html.startsWith(html)).toBe(true)
+  expect(result.html).toContain(">Unsubscribe<")
 })

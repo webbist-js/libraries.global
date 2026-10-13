@@ -17,10 +17,11 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe("independent beta pass", () => {
-  it("accepts the configured password and rejects near matches", () => {
-    expect(matchesBetaPassword("invitation:password")).toBe(true)
-    expect(matchesBetaPassword("invitation:password ")).toBe(false)
-    expect(matchesBetaPassword("wrong")).toBe(false)
+  it("accepts the configured password and rejects near matches", async () => {
+    expect(await matchesBetaPassword("invitation:password")).toBe(true)
+    expect(await matchesBetaPassword("invitation:password ")).toBe(false)
+    expect(await matchesBetaPassword("wrong")).toBe(false)
+    expect(await matchesBetaPassword("x".repeat(513))).toBe(false)
   })
   it("verifies a signed pass and rejects tampering and expiry", () => {
     const pass = createBetaPass(1000)
@@ -43,14 +44,14 @@ describe("independent beta pass", () => {
     vi.stubEnv("BETA_ACCESS_SECRET", "t".repeat(32))
     expect(validBetaPass(pass)).toBe(false)
   })
-  it("fails closed with missing configuration and contains no user or password", () => {
+  it("fails closed with missing configuration and contains no user or password", async () => {
     const payload = JSON.parse(
       Buffer.from(createBetaPass().split(".")[0]!, "base64url").toString()
     )
     expect(Object.keys(payload).sort()).toEqual(["expiresAt", "version"])
     vi.stubEnv("BETA_ACCESS_SECRET", "short")
     expect(betaConfigured()).toBe(false)
-    expect(matchesBetaPassword("invitation:password")).toBe(false)
+    expect(await matchesBetaPassword("invitation:password")).toBe(false)
     expect(validBetaPass("anything")).toBe(false)
   })
 })
