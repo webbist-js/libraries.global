@@ -27,3 +27,5 @@ apps/strapi/backup
 infra
 
 .motion-site/log.json
+
+.claude/context

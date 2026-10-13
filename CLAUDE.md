@@ -4,15 +4,14 @@ Read [AGENTS.md](AGENTS.md) for repository commands and conventions, and [CONTEX
 
 ## Project references
 
-- [Product, stack and data model](.claude/context/product-and-data.md)
-- [Scale and query rules](.claude/context/scale.md)
-- [Frontend routes and conventions](.claude/context/frontend.md)
-- [Roles, memberships, Teams and staff access](.claude/context/access.md)
-- [Design tokens and shared UI components](.claude/context/design-system.md)
-- [Feature status and contribution workflows](.claude/context/feature-status.md)
-- [Development and local access tests](.claude/context/development.md)
+- [Architecture](apps/docs/docs/architecture.md)
+- [Frontend and authentication](apps/ui/README.md)
+- [CMS and page builder](apps/strapi/README.md)
 - [Pricing, Stripe catalogue and release requirements](apps/ui/PRICING.md)
+- [Team API access](apps/ui/TEAM-API.md)
 - [Local and production CMS content operations](apps/strapi/CONTENT-OPERATIONS.md)
+
+Detailed agent context is local under the gitignored `.claude/context/` directory.
 
 ## Rules to keep in view
 

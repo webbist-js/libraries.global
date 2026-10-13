@@ -6,6 +6,7 @@ const paths = execFileSync("/usr/bin/git", ["ls-files", "-z"], {
   .split("\0")
   .filter(Boolean)
 const privatePaths = [
+  /^\.claude\/context\//,
   /^(?:infra|docs|\.scratch)\//,
   /^\.motion-site\/log\.json$/,
   /^apps\/ui\/scripts\/[^/]*-catalogue\.json$/,
