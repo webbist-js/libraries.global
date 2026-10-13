@@ -56,7 +56,7 @@
     "@strapi/strapi": "5.57.0",
     "@strapi/utils": "5.57.0",
     "axios": "^1.16.1",
-    "ckeditor5": "45.2.2",
+    "ckeditor5": "47.6.0",
     "diff": "^9.0.0",
     "free-email-domains": "1.12.13",
     "jsonwebtoken": "9.0.3",
