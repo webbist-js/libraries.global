@@ -545,6 +545,16 @@ The Next.js [middleware](src/proxy.ts) is composed of standalone proxy functions
 | Auth Guard      | [authGuard.ts](src/lib/proxies/authGuard.ts)           | Protects private pages by requiring an active session                           |
 | Dynamic Rewrite | [dynamicRewrite.ts](src/lib/proxies/dynamicRewrite.ts) | Rewrites requests with search params to the `/dynamic/` route for SSR rendering |
 
+### Google Analytics
+
+The production integration uses GA4 measurement ID `G-N6DLE0CK0Y`. It runs only with `NODE_ENV=production`, `APP_ENV=production` and `APP_PUBLIC_URL=https://libraries.global`; the browser must also be on that exact origin. Local and preview deployments do not load the tag.
+
+Collection starts denied. No Google script or measurement request is sent until a consent provider grants analytics consent. Civic or another provider should call `window.librariesGlobalAnalytics?.setConsent(true)` on consent, and `setConsent(false)` on refusal or withdrawal. The provider owns saved choices and analytics-cookie cleanup. Restore saved consent after the controller mounts; do not call the grant callback merely to detect installation.
+
+Page views follow Next.js navigation, exclude private/auth/Staff/contribution/live routes and omit query strings and fragments. Before enabling collection, turn off Enhanced Measurement for this web stream: browser-history page views, automatic form/outbound tracking and other automatic events would bypass the application's manual route/event controls. [Google's page-view guidance](https://developers.google.com/analytics/devguides/collection/ga4/views) explains why `send_page_view: false` alone does not disable history-based events.
+
+This installs the direct `gtag.js` integration supplied by the owner. A later GTM integration must replace this loader to avoid installing GA twice. The consent banner, library action events and server-side Team traffic reports remain separate follow-ups. Code releases use the production deployment runbook.
+
 ### Sentry logging
 
 Errors passed through `<ErrorBoundary />` or `error.tsx` are automatically logged to Sentry. To turn Sentry on, set `NEXT_PUBLIC_SENTRY_DSN` to environment variables. `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` and `SENTRY_PROJECT` are optional and serve for uploading source maps to Sentry during deployment. Uncaught errors are logged automatically.
