@@ -1,3 +1,12 @@
+import pricing from "../../ui/src/lib/membership-pricing.json" with { type: "json" }
+
+const pounds = (pence) => `£${pence / 100}`
+const discounted = (pence) =>
+  pence * (1 - pricing.team.publicServiceDiscountPercent / 100)
+
+export const teamPricingText = `Team costs ${pounds(pricing.team.year)}/year for ${pricing.team.includedSeats} seats, with additional seats at ${pounds(pricing.team.extraSeatYear)}/year each, excluding VAT. Public library services receive ${pricing.team.publicServiceDiscountPercent}% off: ${pounds(discounted(pricing.team.year))}/year for ${pricing.team.includedSeats} seats and ${pounds(discounted(pricing.team.extraSeatYear))}/year per additional seat, excluding VAT. Teams are quoted and invoiced yearly; we set up the Team and its seats after payment is confirmed. Payment never verifies a Team or grants library staff authority.`
+export const proPricingText = `Pro's founding price remains ${pounds(pricing.pro.founding.month)}/month or ${pounds(pricing.pro.founding.year)}/year while the membership continues. The standard price will be ${pounds(pricing.pro.standard.month)}/month or ${pounds(pricing.pro.standard.year)}/year once Reach ships; it is not offered before those tools are available.`
+
 const paragraph = (text) => ({
   type: "paragraph",
   children: [{ type: "text", text }],
@@ -40,7 +49,7 @@ export function membershipLegalContent(
       heroTitle: "Membership *terms.*",
       slug: "membership",
       navLabel: "Membership",
-      lead: "Terms for Supporter and Pro digital tools, recurring payments and access.",
+      lead: "Terms for Supporter, Pro and Team API digital tools, recurring payments and access.",
       order: 3,
       summaryPoints: [
         { text: "Library facts and community participation remain free." },
@@ -52,6 +61,13 @@ export function membershipLegalContent(
         },
       ],
       sections: [
+        section(
+          "Team API add-on",
+          "API access is a separate recurring purchase for an active Team, with shared usage limits.",
+          `When API purchases are available, a Team Organiser can buy and manage the ${pounds(pricing.teamApi.month)}/month API add-on from Staff area → Team → API access. The add-on supplies versioned access to published public Library search and records. It does not grant staff authority, access to user accounts or protected content. Keys belong to the Team; every key shares its monthly request and response-data allowances. The allowance, rate, concurrency, response-size and key limits shown before purchase are recorded with that purchase. Monthly allowances reset at 00:00 UTC on the first day of each calendar month and do not roll over. A purchase partway through a month receives the full current calendar-month allowance.`,
+          "Successful responses, including cache hits, count towards the monthly request allowance. Response data means the uncompressed JSON payload produced by the API, not the hosting provider's network-traffic figure; separately downloaded media is excluded. Failed responses do not consume the monthly allowance, but attempts are subject to rate limits. Reaching a limit stops further requests until capacity or the next monthly allowance becomes available. There are no automatic usage overage charges.",
+          "Team Organisers can create, regenerate and revoke keys. Regeneration invalidates the previous key immediately and does not reset usage. Keys cannot make requests when the Team or paid API access is inactive. Cancel the API subscription through Manage API billing; normal access continues through the settled paid period while the Team remains active. Renewing Team membership and renewing the API add-on are separate transactions. The cancellation, refund and payment-reversal provisions below also apply to the add-on. Preserve the dataset licences and source credits included in responses."
+        ),
         section(
           "The service and operator",
           "Libraries Global sells the membership service; Stripe handles the payment transaction.",
@@ -78,7 +94,8 @@ export function membershipLegalContent(
         section(
           "Prices, taxes and renewal",
           "The total and recurring interval are confirmed before payment.",
-          "Current base prices are Supporter £3 monthly or £30 yearly, and founding Pro £5 monthly or £50 yearly. These GBP prices include applicable tax. Stripe confirms the final tax, any localized currency and recurring total before you pay; the invoice shows the actual charge. A monthly membership renews monthly and a yearly membership renews yearly until renewal is stopped. Team plans are quoted and invoiced separately.",
+          `Current base prices are Supporter ${pounds(pricing.supporter.month)} monthly or ${pounds(pricing.supporter.year)} yearly, and founding Pro ${pounds(pricing.pro.founding.month)} monthly or ${pounds(pricing.pro.founding.year)} yearly. These GBP prices include applicable tax. Stripe confirms the final tax, any localized currency and recurring total before you pay; the invoice shows the actual charge. A monthly membership renews monthly and a yearly membership renews yearly until renewal is stopped. ${teamPricingText}`,
+          proPricingText,
           "A founding subscription keeps its existing recurring Price while that subscription continues. A plan or interval change uses the Price and effective date in the confirmed Stripe review. We do not replace an existing Price silently or sell a promised future feature as delivered. Any future price change will be explained before it affects a renewal."
         ),
         section(
@@ -150,6 +167,7 @@ export function membershipLegalContent(
           "Use Membership & billing in Settings.",
           "Sign in to the account that bought the membership, open Settings → Membership & billing → Manage membership, and use Stripe's cancellation controls. You can also manage renewal through Link using your financial confirmation if you cannot enter our app. You do not need to delete your account or contact us just to stop renewal. Check the effective date and retain the confirmation. Settled tools normally remain available to the paid period end."
         ),
+        teamApiCancellationSection,
         section(
           "Request a refund or exercise statutory cancellation rights",
           "Use the transaction support route shown on the Stripe confirmation.",
@@ -182,7 +200,7 @@ export function membershipLegalContent(
           "Optional example for statutory cancellation; no form is needed to stop renewal in Settings.",
           "You do not need to fill in this form to stop future renewals. Use Settings → Membership & billing → Manage membership for that. The example below is an optional way to tell us that you are exercising a statutory cancellation right for the membership purchase. You can instead email a clear statement in your own words. Stopping renewal through the billing controls does not automatically request a refund of a payment already made.",
           `To ${operator}, postal contact: ${contact}; email: ${contactEmail}.`,
-          "I give notice that I cancel my contract for the following membership service: [Supporter or Pro].",
+          "I give notice that I cancel my contract for the following membership service: [Supporter, Pro or Team API add-on].",
           "Ordered on: [date]. Name: [your name]. Address: [your address]. Account email and order reference: [details]. Date: [date]. Signature: [only if sent on paper]."
         ),
         section(
@@ -221,6 +239,19 @@ export const billingPrivacySection = section(
   "Stripe's merchant-of-record service is independently responsible for its transaction, fraud, tax and financial-record processing. Account erasure stops billing first. Completed event references are removed after 90 days. Minimal account/payment reference bindings are removed six years after account erasure by daily housekeeping. Unresolved retry work is retained until reconciled. These references cannot sign you in or recreate paid access. Essential access notices do not enrol you in marketing."
 )
 
+export const teamApiPrivacySection = section(
+  "Team API keys and usage",
+  "Private key records and usage counters support the Team API add-on.",
+  "When Team API access is available, we store the Team reference, key hash and display prefix, scopes, expiry, creation/regeneration/revocation audit and last use. The full key is shown once and is not retained. Team billing uses the Team name, organiser's verified email and private Team/payment references; the API subscription belongs to the Team separately from a person's membership.",
+  "Usage records contain the Team/key reference, endpoint category, time, outcome and uncompressed JSON response-byte count. They support shared allowances and the staff usage dashboard. Detailed request records are retained for 90 days; monthly totals and key audit events are retained longer. Raw keys, search text, request bodies and IP addresses are not retained in these usage records. Usage is private to the Team and does not change community roles, points or staff authority."
+)
+
+export const teamApiCancellationSection = section(
+  "Team API renewal",
+  "The API add-on has separate renewal controls in the Staff area.",
+  "When Team API purchases are available, stop renewal through Staff area → Team → Manage API billing. Settled API access continues through the paid period while the Team remains active. Lapsing a Team stops requests but does not automatically cancel its API subscription. The refund and statutory cancellation provisions in this policy also apply to the Team API add-on; stopping renewal and requesting a refund are separate actions."
+)
+
 export const billingCookiesSection = section(
   "Stripe checkout and billing",
   "The payment page has its own essential payment and fraud controls.",
@@ -230,7 +261,7 @@ export const billingCookiesSection = section(
 export const billingKnowledgeSections = [
   heading("Supporter and Pro digital tools"),
   paragraph(
-    "Supporter costs £3/month or £30/year and includes detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download. Pro costs the current founding price of £5/month or £50/year, includes those tools, raises the export cap to 10,000 and adds delivered population comparisons. Unfinished tools are labelled Coming soon. Team is quoted separately."
+    `Supporter costs ${pounds(pricing.supporter.month)}/month or ${pounds(pricing.supporter.year)}/year and includes detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download. Pro costs the current founding price of ${pounds(pricing.pro.founding.month)}/month or ${pounds(pricing.pro.founding.year)}/year, includes those tools, raises the export cap to 10,000 and adds delivered population comparisons. Unfinished tools are labelled Coming soon. ${teamPricingText} ${proPricingText}`
   ),
   heading("Checkout and your account"),
   paragraph(

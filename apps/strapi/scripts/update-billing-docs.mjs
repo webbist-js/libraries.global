@@ -10,6 +10,7 @@ import {
   membershipLegalContent,
 } from "./billing-content.mjs"
 import { StrapiMcpClient } from "./mcp-client.ts"
+import { pricingGuideBody } from "./team-pricing-content.mjs"
 
 const source = parseEnv(
   readFileSync(new URL("../.env", import.meta.url), "utf8")
@@ -38,10 +39,10 @@ const paragraph = (text) => ({
   children: [{ type: "text", text }],
 })
 const revision = {
-  version: "1.0",
-  date: "2026-10-12",
+  version: "1.1",
+  date: "2026-10-13",
   summary:
-    "Membership digital tools, recurring billing, cancellation and payment records; clarified service-seller responsibilities, Stripe merchant-of-record role and Link refund-policy precedence.",
+    "Team pricing and the separate API add-on, usage limits and billing; personal founding prices and service-seller responsibilities remain unchanged.",
 }
 const legal = await client.listAll("legal-document", {
   locale: "en",
@@ -279,7 +280,7 @@ for (const [locale, docs] of Object.entries(knowledge)) {
     await publishExisting("wiki-article", doc, locale, {
       title: doc.title,
       slug: doc.slug,
-      body,
+      body: pricingGuideBody({ ...doc, body }, locale) ?? body,
     })
   }
 }

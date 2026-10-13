@@ -21,6 +21,9 @@ if (migrate) {
     await client.query(
       await readFile(new URL("./billing-schema.sql", import.meta.url), "utf8")
     )
+    await client.query(
+      await readFile(new URL("./team-api-schema.sql", import.meta.url), "utf8")
+    )
     await client.query("COMMIT")
     console.log("Billing schema is ready.")
   } catch {

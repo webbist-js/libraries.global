@@ -1,0 +1,17 @@
+{
+  "version": "2026-10-13",
+  "currency": "gbp",
+  "supporter": { "month": 300, "year": 3000 },
+  "pro": {
+    "founding": { "month": 500, "year": 5000 },
+    "standard": { "month": 800, "year": 8000 },
+    "standardAvailable": false
+  },
+  "team": {
+    "includedSeats": 5,
+    "year": 60000,
+    "extraSeatYear": 12000,
+    "publicServiceDiscountPercent": 20
+  },
+  "teamApi": { "month": 1500 }
+}

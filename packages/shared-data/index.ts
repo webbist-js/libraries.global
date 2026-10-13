@@ -183,5 +183,6 @@ export * from "./email"
 export * from "./notification-preferences"
 
 export * from "./library-sources"
+export * from "./library-entity-ref"
 
 export * from "./opening-schedule"

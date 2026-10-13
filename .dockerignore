@@ -23,3 +23,5 @@ apps/strapi/backup
 **/.cache
 **/.turbo
 **/coverage
+
+infra

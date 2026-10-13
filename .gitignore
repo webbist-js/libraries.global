@@ -65,3 +65,9 @@ apps/strapi/scripts/ingests/**/.runs/
 
 # pnpm content-addressable store
 /.pnpm-store/
+
+# Operator infrastructure is private; generic image build checks live in scripts/release.
+/infra/
+
+# Account-specific Stripe setup results are private operator artefacts.
+/apps/ui/scripts/*-catalogue.json

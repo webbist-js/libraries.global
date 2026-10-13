@@ -124,7 +124,7 @@ describe("shortPrice", () => {
     expect(shortPrice(planCard("public").price)).toBe("Free")
     expect(shortPrice(planCard("supporter").price)).toBe("£3/mo")
     expect(shortPrice(planCard("pro").price)).toBe("£5/mo")
-    expect(shortPrice(planCard("team").price)).toBe("£480/yr")
+    expect(shortPrice(planCard("team").price)).toBe("£600/yr")
   })
 })
 

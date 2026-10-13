@@ -30,6 +30,7 @@ const result = spawnSync(
     "vitest",
     "run",
     "src/lib/billing/__tests__/database.integration.test.ts",
+    "src/lib/team-api/__tests__/database.integration.test.ts",
   ],
   { stdio: "inherit", env: { ...process.env, BILLING_DB_TEST: "true" } }
 )

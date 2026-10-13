@@ -13,6 +13,8 @@ import Stripe from "stripe"
 
 import { StripeMcpClient } from "./stripe-mcp.mjs"
 
+import pricing from "../src/lib/membership-pricing.json" with { type: "json" }
+
 const args = process.argv.slice(2)
 const apply = args.includes("--apply")
 const value = (flag) => args[args.indexOf(flag) + 1]
@@ -78,7 +80,7 @@ const productChoices = [
     name: "Libraries Global Supporter",
     description:
       "Detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download, with optional profile recognition. Membership never grants community authority.",
-    amounts: { month: 300, year: 3000 },
+    amounts: pricing.supporter,
   },
   {
     plan: "pro",
@@ -86,7 +88,7 @@ const productChoices = [
     name: "Libraries Global Pro",
     description:
       "Supporter digital tools, Atlas exports of up to 10,000 libraries and delivered population comparisons. Unfinished tools remain coming soon. Membership never grants community authority.",
-    amounts: { month: 500, year: 5000 },
+    amounts: pricing.pro.founding,
   },
 ]
 const products = await listAll("GetProducts")

@@ -5,14 +5,21 @@ import { runBillingWorker } from "@/lib/billing/events"
 import { billingFailure, billingJson } from "@/lib/billing/http"
 import { finishPlanChanges } from "@/lib/billing/plan-schedule"
 import { billingStripe } from "@/lib/billing/provider"
+import { maintainApiUsage } from "@/lib/team-api/store"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 export async function GET(req: Request) {
   if (!isCronRequest(req.headers.get("authorization"), process.env.CRON_SECRET))
     return billingJson({ error: "unauthorized" }, 401)
-  if (!billingConfig().configured) return billingJson({ configured: false })
   try {
+    // Recovery of quota reservations continues if checkout/provider credentials
+    // are temporarily disabled. Deploy the Team API migration with this release.
+    if (!billingConfig().configured) {
+      await maintainApiUsage(authDbPool)
+
+      return billingJson({ configured: false })
+    }
     const stripe = billingStripe({ timeout: 2000, maxNetworkRetries: 0 })
     const result = await runBillingWorker(authDbPool, stripe)
     let finishedChanges = 0

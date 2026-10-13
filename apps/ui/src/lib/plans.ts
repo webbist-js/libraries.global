@@ -9,6 +9,11 @@ import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
 
 import { CONTACT_EMAIL } from "./constants"
 
+import pricing from "./membership-pricing.json"
+
+const pounds = (pence: number) => `£${pence / 100}`
+const publicServiceRate = 1 - pricing.team.publicServiceDiscountPercent / 100
+
 export type PlanCardKey = "public" | "free" | "supporter" | "pro" | "team"
 export type DigitalPlanKey = "supporter" | "pro" | "team"
 
@@ -44,8 +49,7 @@ export const ATLAS_PER_CAPITA_LABEL =
   "Library access: population comparisons for countries and supported local areas"
 
 /** Pro's price after the founding offer, for the placeholders footnote. */
-export const PRO_STANDARD_PRICE_NOTE =
-  "Pro’s standard price will be £8/month or £80/year once Reach ships; founding members keep £5."
+export const PRO_STANDARD_PRICE_NOTE = `Pro’s standard price will be ${pounds(pricing.pro.standard.month)}/month or ${pounds(pricing.pro.standard.year)}/year once Reach ships; founding members keep ${pounds(pricing.pro.founding.month)}.`
 
 /** What each feature does, and whether it's built. Only built ones are "live". */
 export const PRO_FEATURE_COPY: Record<
@@ -107,7 +111,7 @@ export const PRO_FEATURE_COPY: Record<
     status: "soon",
   },
   "team.embed": { label: "An embeddable library finder", status: "soon" },
-  "api.key": { label: "Higher API quotas", status: "soon" },
+  "api.key": { label: "Higher allowances for the API add-on", status: "soon" },
 }
 
 /**
@@ -183,6 +187,9 @@ const TEAM_INCLUDES: PlanInclude[] = [
   feature("Pro for every seat"),
   ...TEAM_FEATURES.filter((i) => i.kind === "feature"),
   feature("Choose who can go live for a mobile library"),
+  feature(
+    `Optional paid API add-on (${pounds(pricing.teamApi.month)}/month) with managed keys and usage reporting`
+  ),
   TEAM_TRAFFIC,
   ...TEAM_FEATURES.filter(
     (i) => i.kind === "soon" && i.text !== TEAM_TRAFFIC.text
@@ -235,7 +242,10 @@ export const PLANS: readonly PlanCard[] = [
   {
     key: "supporter",
     name: "Supporter",
-    price: { monthly: "£3/month", yearly: "£30/year" },
+    price: {
+      monthly: `${pounds(pricing.supporter.month)}/month`,
+      yearly: `${pounds(pricing.supporter.year)}/year`,
+    },
     who: "People who value the index and want to keep it running",
     includes: [
       feature("Everything in Free account"),
@@ -252,8 +262,8 @@ export const PLANS: readonly PlanCard[] = [
     key: "pro",
     name: "Pro",
     price: {
-      monthly: "£5/month",
-      yearly: "£50/year",
+      monthly: `${pounds(pricing.pro.founding.month)}/month`,
+      yearly: `${pounds(pricing.pro.founding.year)}/year`,
       note: "Founding price, held while you stay a member.",
     },
     who: "Researchers, journalists, consultants, enthusiasts",
@@ -267,8 +277,8 @@ export const PLANS: readonly PlanCard[] = [
     key: "team",
     name: "Team",
     price: {
-      yearly: "£480/year ex VAT",
-      note: "Includes 5 seats; £96 per extra seat. Public library services get 20% off.",
+      yearly: `${pounds(pricing.team.year)}/year ex VAT`,
+      note: `Includes ${pricing.team.includedSeats} seats; ${pounds(pricing.team.extraSeatYear)}/year per extra seat. Public library services get ${pricing.team.publicServiceDiscountPercent}% off: ${pounds(pricing.team.year * publicServiceRate)}/year and ${pounds(pricing.team.extraSeatYear * publicServiceRate)}/year per extra seat, ex VAT.`,
     },
     who: "Library services, councils, universities, consultancies",
     includes: TEAM_INCLUDES,

@@ -58,7 +58,7 @@ const choice = {
   plan: "pro" as const,
   interval: "month" as const,
   locale: "en" as const,
-  termsVersion: "1.0",
+  termsVersion: "1.1",
 }
 
 describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
@@ -74,6 +74,12 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
     await pool.query(
       await readFile(
         new URL("../../../../scripts/billing-schema.sql", import.meta.url),
+        "utf8"
+      )
+    )
+    await pool.query(
+      await readFile(
+        new URL("../../../../scripts/team-api-schema.sql", import.meta.url),
         "utf8"
       )
     )

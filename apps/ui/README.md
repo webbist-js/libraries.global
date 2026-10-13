@@ -87,34 +87,17 @@ To build and run Next.js in Docker container use [Dockerfile](Dockerfile) prepar
 
 ### Build
 
-Next.js requires `standalone` output mode to run in Docker container. In this mode, only the necessary files and dependencies are included in the final image, so the image size is smaller and more efficient. This is hardcoded in Dockerfile using `NEXT_OUTPUT=standalone` env variable that is then read by [next.config.mjs](next.config.mjs). Based on your needs, you can build Docker image in two ways:
+The production image uses Next.js `standalone` output and is built from the monorepo root for the DigitalOcean hosts:
 
-- **build once, deploy many times** - build Docker image without env variables required at build time. This will opt-out pre-rendering of pages that require `STRAPI_URL` at build time (i.e. pages using `generateStaticParams()` function). These pages will be generated entirely at runtime (with runtime configuration) using ISR (or SSR). This approach is more flexible, as the same image can be deployed to different environments (e.g. staging, production) without rebuilding. However, the first (or every) request to these pages may be slower due to on-demand generation.
-
-```bash
-# from monorepo root
-
-# Build image without providing Strapi information.
-# Those pages won't be pre-rendered at build time.
-docker build -t starter-ui:latest -f apps/ui/Dockerfile .
+```sh
+docker build --platform linux/amd64 -f apps/ui/Dockerfile -t libraries-global-ui:local .
 ```
 
-- **build per environment** - build Docker image with `STRAPI_URL` and other required env variables passed as build-time arguments. This will pre-render pages that depend on `STRAPI_URL` during the build process, resulting in faster initial load times for these pages. However, the image will be tied to a specific Strapi instance and need to be rebuilt for different environments. **This will bake the Strapi READONLY API key into the image, so make sure you are okay with that.**
+The multi-stage Dockerfile prunes the workspace, uses a frozen install and copies only standalone output/static assets into a non-root runtime image. `.dockerignore` excludes local env files, Git, dependencies and `.scratch`. Runtime credentials are supplied by `ui.production.env` through the production Compose file. Do not pass Strapi API tokens, OAuth/Stripe/SMTP keys or database credentials as build arguments.
 
-```bash
-# from monorepo root
+Build arguments are public configuration: `APP_PUBLIC_URL`, `NEXT_PUBLIC_STRAPI_URL` and `IMAGE_REMOTE_HOSTS`. Treat browser-bundled `NEXT_PUBLIC_*` values as build-time inputs and review them when changing domains. The default public CMS URL is a build value, not evidence of a public CMS route; server requests use the private runtime `STRAPI_URL`. The dummy auth secret in the builder is a fixture; a real `BETTER_AUTH_SECRET` is required at runtime.
 
-# Build image with Strapi information passed as a build-time arguments.
-# Pages depending on it will be pre-rendered during build.
-# These vars will be baked into the image.
-# You can set STRAPI_URL to your local Strapi instance or remote one - "https://strapi-next-starter-api-dev-c6c718c7e60e.herokuapp.com"
-docker build -t starter-ui:latest -f apps/ui/Dockerfile \
-  --build-arg STRAPI_URL="http://host.docker.internal:1337" \
-  --build-arg STRAPI_REST_READONLY_API_KEY="your-readonly-api-key" \
-  --build-arg APP_PUBLIC_URL="http://localhost:3000" \
-  --progress=plain \
-  .
-```
+The production Compose file supplies a stable loopback hostname and proxy headers so Next.js/next-intl and OAuth use the public origin correctly. Production host configuration and the deployment runbook are maintained privately by the operator. The generic `docker run` example below is for local image inspection, not the production gateway/network setup.
 
 ### Run
 
@@ -137,7 +120,7 @@ Next.js has three `output` modes:
 > There is an additional script included in this repository:
 > `pnpm run build:ui:static` which triggers the `output: "export"` build, however, this one is not working out of the box, as it's necessary to remove usage of dynamic functions (see [docs](https://nextjs.org/docs/app/guides/static-exports#unsupported-features) for more info). This includes BetterAuth, etc. You would also need to adjust `const revalidate` and `const dynamic` attributes for your dynamic segments and layouts.
 >
-> If you're using this variant, you should also enable the CI check for static export builds in the [GitHub Actions workflow](../../.github/workflows/ci.yml) by uncommenting the relevant step. Building the app with `output: "export"` will help identify any unsupported features that need to be addressed.
+> If you intentionally introduce this variant, add its build to the [CI workflow](../../.github/workflows/ci.yml) and define its deployment separately; the deployed application uses standalone output. Building the app with `output: "export"` will help identify any unsupported features that need to be addressed.
 
 ### Data revalidation (ISR)
 

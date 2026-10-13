@@ -7,6 +7,11 @@ import type { Pool, PoolClient } from "pg"
 import type Stripe from "stripe"
 
 import { invalidateSessionProfile } from "@/lib/session-profile"
+import {
+  refreshApiSubscription,
+  reconcileApiBilling,
+} from "@/lib/team-api/billing"
+import { maintainApiUsage } from "@/lib/team-api/store"
 
 import { BillingError, billingConfig } from "./config"
 import { withBillingLock } from "./database"
@@ -176,6 +181,11 @@ export async function refreshSubscription(
     })
     if (subscription.livemode !== (billingConfig().mode === "live"))
       throw new BillingError("subscription_environment_mismatch")
+    if (subscription.metadata.lg_api_team_id) {
+      await refreshApiSubscription(pool, stripe, id, reversal)
+
+      return
+    }
     const userId = await trustedOwner(client, stripe, subscription)
     if (!userId) return
     const existing = await client.query<MembershipRow>(
@@ -378,6 +388,8 @@ export async function runBillingWorker(pool: Pool, stripe: Stripe) {
     )
     failed += fresh.failed
     synced += fresh.synced
+    failed += await reconcileApiBilling(pool, stripe, () => withinBudget(45))
+    await maintainApiUsage(pool)
     await client.query(
       "delete from billing_rate_limits where resets_at<now()-interval '1 day'"
     )
