@@ -1,11 +1,13 @@
 "use client"
 
 import type { PublicLiveState } from "@repo/shared-data"
+import type { Point } from "geojson"
 import type * as MapLibre from "maplibre-gl"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { MAP_WORKER_URL } from "@/lib/maplibre"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
@@ -221,6 +223,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       let observer: ResizeObserver | null = null
 
       import("maplibre-gl").then((maplibregl) => {
+        maplibregl.setWorkerUrl(MAP_WORKER_URL)
         if (!alive || !containerRef.current) return
         libRef.current = maplibregl
         const v = latest.current.initialView
@@ -550,7 +553,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 latest.current.onStopSelect?.(String(mobile.properties.id))
               else
                 map.easeTo({
-                  center: (mobile.geometry as GeoJSON.Point).coordinates as [
+                  center: (mobile.geometry as Point).coordinates as [
                     number,
                     number,
                   ],
