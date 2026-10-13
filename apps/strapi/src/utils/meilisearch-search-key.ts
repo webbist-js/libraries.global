@@ -13,7 +13,8 @@ export const PUBLIC_SEARCH_INDEXES = [
   "event",
   "mobile-stop",
 ] as const
-export const PUBLIC_SEARCH_KEY_UID = "5d2f7a0c-3b84-4e6f-9a1d-6c0e8b2f4a71"
+// Public identifier only; Meilisearch derives the secret key from its master key.
+export const PUBLIC_SEARCH_KEY_UID = "5d2f7a0c-3b84-4e6f-9a1d-6c0e8b2f4a71" // gitleaks:allow
 export const PUBLIC_SEARCH_KEY_NAME = "libraries.global public search"
 
 type MeiliKey = {

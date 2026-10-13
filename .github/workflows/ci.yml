@@ -47,6 +47,9 @@ jobs:
       - name: Check css/md formatting
         run: pnpm format:check
 
+      - name: Reject private operational files
+        run: node scripts/release/check-public-files.mjs
+
       - name: Verify release source guards
         run: |
           pnpm exec eslint scripts/release/verify-release-source.mjs scripts/release/verify-release-source.test.mjs

@@ -25,3 +25,5 @@ apps/strapi/backup
 **/coverage
 
 infra
+
+.motion-site/log.json

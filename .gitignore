@@ -71,3 +71,6 @@ apps/strapi/scripts/ingests/**/.runs/
 
 # Account-specific Stripe setup results are private operator artefacts.
 /apps/ui/scripts/*-catalogue.json
+
+# Local design audit logs.
+/.motion-site/log.json
