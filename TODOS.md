@@ -1,10 +1,10 @@
 # libraries.global — Open TODOs
 
-_Last audited: 2026-10-03_
+_Last product audit: 2026-10-03; deployment status updated: 2026-10-13_
 
 Built and on `dev`: the v2 light UI on every route; the access model (Role Grants, capabilities, entitlements, Pro from grants, verification and earned Archivist); the Index and Knowledge editors; structured corrections; community moderation on the site with Role Applications and Location Requests; Change Records and the library Changes section; locale-aware submissions and record translations; the Strapi security review fixes; and the first scale work (keyset slug paging, SQL location counts, a split sitemap). CLAUDE.md describes how it all works.
 
-This file lists what's left. Deployment starts with the [DigitalOcean launch checklist](docs/operations/digitalocean-launch-checklist.md). Wider environment, legal and licensing steps live in `docs/pre-golive-checklist.md`.
+This file lists what's left. The DigitalOcean closed beta is deployed. The [deployment runbook](infra/digitalocean/deployment.md) describes CI, images, manual promotion and recovery; the local [launch checklist](docs/operations/digitalocean-launch-checklist.md) tracks remaining acceptance. Wider environment, legal and licensing steps live in `docs/pre-golive-checklist.md`.
 
 ---
 
@@ -13,7 +13,7 @@ This file lists what's left. Deployment starts with the [DigitalOcean launch che
 1. **LibraryOn full ingest (~3,800 UK records).** Not run yet. Local Strapi has 107 published libraries. The last attempt (26 Sept) stopped after about 100 records, with 19 `fetch failed`/`terminated` errors (`.scratch/libraryon-import/log.json`). The source goes away when the British Library shuts LibraryOn down on 15 Oct, so **run this first**: `libraryon-ingest.ts --resume`, then publish the drafts (checklist §2a–2b). Use a token whose name starts with `ingest` or `import`, so Change Records log the writes as `source: import`.
 2. **World countries import.** Do a dry run, then the real run of `populate-world-countries.ts` (checklist §1e). In the dry run, check that France's `mapConfig` doesn't span its overseas territories. On the real run, check that `PUT ?status=published` actually publishes.
 3. **Reindex Meilisearch** after 1 and 2 (checklist §3a).
-4. **Production deploy:** DigitalOcean for Next.js, Strapi, workers, PostgreSQL, object storage and Meilisearch ([launch checklist](docs/operations/digitalocean-launch-checklist.md)). The Strapi review's operator steps aren't in the checklist yet:
+4. **Delivery and launch acceptance:** The DigitalOcean beta, migration/media, Google signup/deletion, search/Atlas reconciliation and backup restore are verified. Framework upgrades and the protected image publisher are merged, but GitHub publishing and promotion have not run. Complete isolated data-upgrade acceptance, rollback/Droplet restore, alerts, mailbox delivery and fresh-account sandbox billing before public launch ([runbook](infra/digitalocean/deployment.md), [launch checklist](docs/operations/digitalocean-launch-checklist.md)). Preserve these Strapi operator checks:
    - grant the events admin permissions (`manage-credentials`, `review`) to moderator admin roles
    - re-save each provider credential once, because the blobs are now bound to the credential id
    - set `REVALIDATE_SECRET`, `IMAGE_REMOTE_HOSTS` and `TRUST_PROXY`, and add the Strapi → `/api/revalidate` webhook
@@ -37,7 +37,7 @@ Tasks 13–17 of `docs/superpowers/plans/2026-09-30-community-moderation-and-aud
 - [ ] P-A: Super Admin has the content-moderation "Update submission status" and rewards award permissions, and an Author gets 403
 - [ ] P-A: two-browser session revoke; Next preview-mode draft render; create an upload-only Strapi token and untick upload on the read-only token
 - [ ] P-D0: the whole-branch review (stopped on 28 Sept and never re-run)
-- [ ] P-D0: one large Atlas export on a Vercel preview (4.5 MB response limit)
+- [ ] P-D0: verify a bounded Atlas export against the deployed DigitalOcean beta, including request limits and memory use
 - [ ] Real-browser WebGL: map tiles and pins, the drill-down shelf, the globe canvases (consider a lighter globe on the paper background)
 
 ---

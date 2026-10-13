@@ -1,6 +1,8 @@
 # DigitalOcean production
 
-Provisioned on 12 October 2026 in London (`lon1`), in the `libraries-global-production` project. The approved baseline is **$164.50/month**, before tax and usage overages.
+Provisioned on 12 October 2026 in London (`lon1`), in the `libraries-global-production` project. The closed beta is deployed; the approved baseline is **$164.50/month**, before tax and usage overages.
+
+Last checked: 13 October 2026. The [deployment runbook](deployment.md) describes protected GitHub source, image publishing, manual promotion and recovery. Production currently runs `release-20261013-google-auth`; merged framework updates are awaiting promotion.
 
 | Resource              | Configuration                                                | Monthly baseline |
 | --------------------- | ------------------------------------------------------------ | ---------------: |
@@ -17,7 +19,7 @@ PostgreSQL has automatic failover. The app and search servers each have one inst
 - VPC `libraries-global-production-lon1`, `10.106.0.0/20`.
 - App server `178.62.44.94`, private `10.106.0.3`; search server `139.59.191.47`, private `10.106.0.4`.
 - Ubuntu 24.04, Docker Engine 29.9.0 and Compose 5.6.0 on both servers. Docker logs rotate at 10 MiB, retaining three files.
-- SSH accepts the dedicated deployment key and is restricted to the operator's current IP, the operator’s approved `/32` address. Update both Cloud Firewalls if that IP changes.
+- SSH accepts the dedicated deployment key and is restricted to the operator's approved `/32` address. Update both Cloud Firewalls if that address changes.
 - PostgreSQL trusts only the app Droplet. The `libraries_global` database belongs to `libraries_global_app`. Separate `atlas_worker` and `atlas_builder` logins have grants limited to the Atlas tables and required sequences.
 - App-to-database connections use the private DNS endpoint and verified TLS. The production Strapi configuration was tested against the real database, including rejection of a wrong CA.
 - Meilisearch 1.42.1 runs as UID 1000 with a 3 GiB memory limit and 1.5 GiB indexing limit. Data persists at `/opt/libraries-global/meili_data` on the search server. Both search images are pinned by digest in that server's `.env`.
@@ -29,9 +31,9 @@ PostgreSQL has automatic failover. The app and search servers each have one inst
 
 ## Access and deployment
 
-The SSH private key, database administrator credential and scoped service credentials are held in the gitignored `.scratch/digitalocean` directory on the provisioning Mac. Do not copy that directory into a build context. The administrator credential was used locally through an SSH tunnel and was never copied to either server. Only the limited app database credential is installed on the app server.
+The SSH private key, database administrator credential and scoped service credentials are held in the gitignored `.scratch/digitalocean` directory on the provisioning Mac. Do not copy that directory into a build context. The administrator credential was used locally through an SSH tunnel and was never copied to either server. Only the scoped credentials required by the running services are installed on the servers.
 
-The six official DigitalOcean MCP servers are configured, OAuth-connected and now available in this chat. Initial provisioning used the browser and SSH. Registry upload subsequently used MCP to request the approved read/write credential with `ExpirySeconds=86400`; its private Mac/server copies were removed after upload. The London Basic registry contains the current UI, Strapi and worker images, with manifest digests verified through MCP. GitHub Actions production deployment still needs wiring up.
+Initial provisioning used the DigitalOcean browser and SSH; the official DigitalOcean MCP tools were subsequently used for registry access and verification. The approved upload credential used `ExpirySeconds=86400`, and its private Mac/server copies were removed after upload. The London Basic registry contains the UI, CMS and worker release copies. GitHub validates source; image publishing is prepared and production promotion remains manual. See [deployment.md](deployment.md) for the activation and promotion procedure.
 
 `bootstrap-host.sh` installs Docker from its official Ubuntu repository. `search.compose.yml` and `search.Caddyfile` are the running search configuration. Copy them to `/opt/libraries-global` on the search server alongside a private `search.env` containing `MEILI_MASTER_KEY` and `.env` containing the pinned `MEILI_IMAGE` and `CADDY_IMAGE` digests. Create `meili_data` owned by UID/GID 1000 before starting:
 
@@ -56,21 +58,21 @@ Production Strapi now includes the matching S3 upload provider and supports `AWS
 
 ## Dependency maintenance
 
-Update Strapi core, its official plugins/providers and the type-generation package together on one published stable version. Keep the CMS framework dependencies at the versions selected by Strapi; do not force a replacement dependency graph with repository-wide security overrides. Review third-party CMS plugins separately. The release candidate moves the official packages from 5.55.1 to [5.57.0](https://github.com/strapi/strapi/releases/tag/v5.57.0); deployment follows the build, migration and plugin checks.
+Update Strapi core, its official plugins/providers and type generation together on one published stable version. Keep CMS framework dependencies at the versions selected by Strapi; do not force a replacement dependency graph with repository-wide security overrides. Review third-party CMS plugins separately and regenerate schema types after schema changes.
+
+[PR #16](https://github.com/webbist-js/libraries.global/pull/16) merged the official 5.55.1 to 5.57.0 update on 13 October as `0432ed0b`, after five PR checks passed. Local installation, 4,360 unit/component tests, six source-guard tests, all three production builds, the official upgrade dry run and type generation passed. This is merged source, not the running CMS version. Isolated production-data acceptance and promotion remain. Dependency advisories still require reachability review and upstream updates.
 
 ## GitHub Actions image publishing
 
-[production-images.yml](../../.github/workflows/production-images.yml) prepares x86-64 UI, CMS and worker images from the protected `dev` branch. It runs only on manual dispatch when `DO_IMAGE_PUBLISH_ENABLED=true`. The default is disabled. A source guard verifies the repository, current branch head and successful CI/CodeQL analysis checks on that exact commit before obtaining the registry configuration. PRs and forks cannot publish.
+[Production images](https://github.com/webbist-js/libraries.global/blob/dev/.github/workflows/production-images.yml) is merged and manually dispatched from the protected `dev` branch. Its guard requires the current merged SHA, successful CI and all three CodeQL analyses. It builds x86-64 UI/CMS/worker images, records full registry digest references and removes its temporary authentication configuration. Publishing does not deploy.
 
-Before enabling it, configure the `production-images` environment with owner review and deployment limited to `dev`. Its `DO_REGISTRY_DOCKER_CONFIG` secret must contain an explicitly approved, time-limited DigitalOcean registry writer credential. Previous Mac/server credential approval does not authorize sending that credential to GitHub. Registry authentication stays outside the build context and is removed when the job ends. Runtime database, Google, billing, bucket and SSH credentials remain on their existing hosts.
-
-The job labels each image with its source commit and saves a credential-free `release-manifest.json` containing full registry digest references. Image publishing does not promote a production release. Controlled promotion uses the operator's existing SSH access after reviewing the manifest, making a fresh backup and checking the candidate against an isolated database copy. Validate image revision labels, stage the previous `release.env`, select digest references, then start Compose with health checks. If startup fails, restore the previous image selection and verify recovery. Database changes require a reviewed migration and recovery plan; changing image tags does not undo them. Account MFA, environment setup, approved registry access and an actual build/promotion rehearsal remain pending.
+On 13 October there are zero workflow runs and no registry secret in `production-images`. That environment requires owner review and permits `dev` only; administrator bypass is currently allowed and should be disabled before activation. The repository switch `DO_IMAGE_PUBLISH_ENABLED` and an explicitly approved 24-hour `DO_REGISTRY_DOCKER_CONFIG` environment secret are required. Runtime and SSH credentials stay outside GitHub. Follow the [activation, promotion and rollback runbook](deployment.md).
 
 ## Running beta and billing
 
 The existing closed-beta entrance is live at `https://libraries.global/beta`, using `WEB_MODE=beta`. Its EN/CS/FR entrance hides the feedback button and uses `info@libraries.global`; deployed checks and a fresh-visitor browser preview passed. Valid invitation access opens the real application, including the migrated home page and membership catalogue. Trusted HTTPS and the www redirect work; beta access and noindex controls remain enabled. Waitlist consent persistence, CMS image processing, Spaces upload and CDN delivery passed using owned disposable fixtures, which were removed. The frontend upload credential was verified to refuse media deletion.
 
-The CMS stays private. MCP is disabled with `MCP_ENABLED=false`. The full database restore included an unexpired MCP-labelled Admin Token record; its bearer value is absent from all deployed runtime files, verified privately against the stored hash. The owner will revoke this copied token in the production CMS and replace it with an Admin Token limited to the chosen content types/actions. Leave MCP disabled until that replacement is ready. Admin Token permissions control MCP access; Content API tokens are separate. See [Strapi's MCP documentation](https://docs.strapi.io/cms/features/strapi-mcp-server).
+The CMS stays private and MCP is disabled with `MCP_ENABLED=false`. On 13 October the owner confirmed revocation of the migrated broad MCP Admin Token and creation of a replacement limited to selected content types/actions. Keep MCP disabled until an explicit access decision. Admin Token permissions control MCP access; Content API tokens are separate. See [Strapi's MCP documentation](https://docs.strapi.io/cms/features/strapi-mcp-server).
 
 Open the existing CMS login through SSH rather than publishing an administration hostname:
 
@@ -84,7 +86,7 @@ ssh -N -L 127.0.0.1:18013:127.0.0.1:1337 \
 # In the browser: http://127.0.0.1:18013/admin
 ```
 
-Brevo SMTP uses port 2525 with required STARTTLS; authenticated transport verification passed without sending mail. DigitalOcean blocks the standard SMTP ports. The private runtime files contain the existing sender credentials. Mailbox delivery and Google OAuth sign-in still need acceptance.
+Brevo SMTP uses port 2525 with required STARTTLS; authenticated transport verification passed without sending mail. The private runtime files contain the sender credentials. Actual mailbox delivery remains to test. Google sign-in and subsequent account deletion passed an owned-account test, including read-only auth/CMS cleanup checks.
 
 Stripe sandbox billing is configured with the existing four GBP prices and three restricted Portal configurations. The endpoint is `https://libraries.global/api/billing/webhook`, pinned to `2026-03-25.dahlia` and the application's 24 allowed event types. Its secret was retrieved privately from Stripe because MCP redacted it. Signed correct-mode, wrong-mode and invalid-signature probes returned 200, 400 and 400 respectively. These probes do not create payments or prove settlement.
 
@@ -92,27 +94,26 @@ Authenticated systemd jobs replace Vercel scheduling: `libraries-global-billing.
 
 ## Release and recovery
 
-The current release is `/opt/libraries-global/release-20261013-google-auth`, holding the exact credential-free deployed source archive, file checksums and image IDs. Earlier releases and their images remain available for rollback. These releases include uncommitted source, recorded explicitly in their manifests. Immutable local tags are selected by `/opt/libraries-global/release.env`:
+The verified running release is `/opt/libraries-global/release-20261013-google-auth`. Its credential-free source archive and manifest record file checksums, image IDs and source head `dccb379b`, with `includes_uncommitted_source=true`. Its archive SHA-256 is `01bc12fce16989e5bfebdc078d82f2ddd7ab27b56db051156d854376c5a29034`. Reproduce it from the archive/manifest, not that Git SHA alone. The running UI is Next.js 16.1.5 and the CMS is Strapi 5.55.1. Later framework updates are merged source awaiting promotion.
 
-```sh
-cd /opt/libraries-global
-docker compose --env-file release.env -f app.compose.yml --profile workers up -d --wait
-```
+`/opt/libraries-global/release.env` selects `CMS_IMAGE`, `UI_IMAGE` and `WORKER_IMAGE`. Earlier release archives and images remain for recovery. Runtime environment files stay outside images/source archives and need a separately protected copy. The deployed source and manifest also have verified private copies on the provisioning Mac and in versioned Spaces.
 
-Private copies of the source and manifest are also held on the provisioning Mac and in the versioned backup bucket; recovery and checksum verification passed. The current images also have verified immutable registry tags:
+| Service | Recorded registry tag                      | Digest prefix         |
+| ------- | ------------------------------------------ | --------------------- |
+| UI      | `ui:20261013-google-auth-80a8d0775595`     | `sha256:80a8d0775595` |
+| CMS     | `strapi:20261013-google-auth-69d51b338e7d` | `sha256:69d51b338e7d` |
+| Workers | `worker:20261013-google-auth-4a829f98b21c` | `sha256:4a829f98b21c` |
 
-| Service | Registry tag                               | Manifest digest prefix |
-| ------- | ------------------------------------------ | ---------------------- |
-| UI      | `ui:20261013-google-auth-80a8d0775595`     | `sha256:80a8d0775595`  |
-| CMS     | `strapi:20261013-google-auth-69d51b338e7d` | `sha256:69d51b338e7d`  |
-| Workers | `worker:20261013-google-auth-4a829f98b21c` | `sha256:4a829f98b21c`  |
+Registry prefix: `registry.digitalocean.com/libraries-global-production/`. Prefixes identify records; use the full registry manifest digest for recovery/promotion. Keep Docker image IDs and registry manifest digests as distinct fields. Some running containers retain earlier tag aliases for unchanged images; tag text alone does not establish which source is running. Future releases should use the image publisher's checked Git revision labels and full digest manifest.
 
-Registry prefix: `registry.digitalocean.com/libraries-global-production/`. Use the full digest from the private release manifest or registry API for recovery; the prefixes above are for identification. Runtime environment files stay outside the images and source archive. Preserve them separately when replacing a server. Build UI and CMS images sequentially on the 8 GB app server: their combined native build memory can approach the host limit.
+Build UI and CMS sequentially on the 8 GB app host when a manual build is needed. The prepared hosted publisher avoids consuming serving-host memory. Promotion uses Compose health checks and deployed acceptance; it is a single-instance update with possible interruption. See [the runbook](deployment.md#promotion).
 
-For an app outage during deployment, `WEB_MODE=public` restores the temporary static page; it returns 503 and prevents indexing. Restoring a previous application release requires its matching immutable images and runtime configuration. A full application rollback rehearsal is still outstanding; do not treat a saved manifest as a completed rehearsal.
+`WEB_MODE=public` serves the temporary static 503/noindex fallback. It does not remove the application's beta gate. Application rollback needs the previous matching image, runtime and Compose selection; database changes require a separate recovery plan. A full application rollback and Droplet restore rehearsal remain outstanding.
 
-When restoring Atlas to a fresh Meilisearch server, persisted rebuild checkpoints may reference a staging index from the old server. Verify that exact index is absent before clearing only its completed `oldIndexToDelete` reference. Rebuild and reconcile must finish before starting the normal Atlas worker, which uses the same health port.
+When restoring Atlas to a fresh search server, persisted rebuild checkpoints may reference a staging index from the old server. Verify that exact index is absent before clearing only its completed `oldIndexToDelete` reference. Finish rebuild/reconciliation before restarting the normal Atlas worker, which uses the same health port.
 
 ## Remaining launch work
 
-Owned sandbox checkout acceptance, live billing preparation, GitHub Actions deployment, production dependency patches, the separate Atlas archive runner, operational alerts, account MFA verification, a Droplet restore and application rollback rehearsal remain. The replacement Google secret is installed privately. A browser-origin regression was reproduced, tested and fixed; the owner completed Google sign-in with a new account, then deleted it. Read-only database checks confirm the auth user and CMS sign-in user are absent, provider/session orphan counts are zero, and the recent CMS profile is anonymized. GitHub branch rules and repository security scanning are enabled; the auth/workflow PR passed CI and CodeQL and was squash-merged by the owner as `66077f2b`. Actions now require full commit-SHA references. Track these in the local [launch checklist](../../docs/operations/digitalocean-launch-checklist.md).
+The deployment is serving the closed beta. Public launch still requires fresh-account sandbox checkout and live billing preparation, actual mailbox delivery, promotion of the accepted dependency updates, reachable-advisory review, operational alerts, a separate Atlas archive runner, scheduled CMS maintenance acceptance and recovery rehearsals. Catalogue/legal/provider checks remain separate from infrastructure readiness.
+
+DigitalOcean 2FA and the migrated CMS MCP token cleanup/scoped replacement were owner-confirmed complete on 13 October. Google signup/deletion, migration/media, search/Atlas reconciliation and the isolated backup restore have passed. The image publisher is merged but has not run or promoted a release. Follow the local launch checklist in `docs/operations/digitalocean-launch-checklist.md` and [deployment.md](deployment.md) for delivery activation.

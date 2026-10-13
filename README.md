@@ -2,7 +2,7 @@
 
 Libraries Global is an atlas of the world's libraries: public, national, academic, monastic, parliamentary and cultural. Every library sits in a place hierarchy (continent → country → region → area → library) and has its own page with opening hours, status, collections, services and sources. The site lives at [libraries.global](https://www.libraries.global).
 
-The site isn't public yet. Pre-launch work is tracked in [TODOS.md](./TODOS.md) and [docs/pre-golive-checklist.md](./docs/pre-golive-checklist.md).
+The closed beta is deployed on DigitalOcean in London. Public-launch acceptance is tracked in [TODOS.md](./TODOS.md) and the local `docs/pre-golive-checklist.md`.
 
 ## What the site does
 
@@ -36,7 +36,7 @@ This is a pnpm workspace run with Turborepo.
 
 - Next.js server components fetch content from the Strapi REST API with a read-only token. Client components get data as props and never call Strapi directly.
 - Better Auth runs in the Next.js app and keeps its tables in the same Postgres database as Strapi. When a user signs up, Next.js creates the matching Strapi user through the `auth-bridge` API, signed with `STRAPI_BRIDGE_SECRET`.
-- Strapi indexes libraries into Meilisearch when they're published. The browser queries Meilisearch directly with a search-only key.
+- Strapi indexes published content into Meilisearch. Browsers use the gated Next.js `/api/search` proxy; the private search host and search-only credential are server inputs.
 - The sync worker reads provider credentials from Postgres, decrypts them with `@repo/events-crypto`, and upserts events on a cron schedule. Strapi calls it to test credentials (`WORKER_URL`, `WORKER_SECRET`).
 
 The domain language (Library, Area, Operational Status, Event and so on) is defined in [CONTEXT.md](./CONTEXT.md), and design decisions are recorded in [docs/adr](./docs/adr).
@@ -73,7 +73,7 @@ docker run -d --name librariesglobal-meilisearch \
   getmeili/meilisearch:latest
 ```
 
-List its keys with `curl -H "Authorization: Bearer <master key>" http://localhost:7701/keys`. You need the "Default Search API Key" for the UI.
+List its keys with `curl -H "Authorization: Bearer <master key>" http://localhost:7701/keys`. Use a search-only key as the server-side UI credential (`MEILISEARCH_SEARCH_API_KEY`); browsers use the application proxy.
 
 ### 3. Fill in the env files
 
@@ -93,20 +93,19 @@ The example files don't list everything the apps read yet. On top of what's in t
 
 **`apps/ui/.env.local`**
 
-| Variable                                                             | Value                                                                     |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `STRAPI_URL`, `NEXT_PUBLIC_STRAPI_URL`                               | `http://127.0.0.1:1337`                                                   |
-| `STRAPI_REST_READONLY_API_KEY`                                       | A read-only Strapi API token (create it after step 4)                     |
-| `STRAPI_REST_CUSTOM_API_KEY`, `STRAPI_UPLOAD_API_KEY`                | Custom tokens; the upload one needs only `upload.create`                  |
-| `DATABASE_URL`                                                       | The Strapi database: `postgres://<user>:<password>@localhost:5433/<name>` |
-| `BETTER_AUTH_SECRET`                                                 | `openssl rand -hex 32`                                                    |
-| `STRAPI_BRIDGE_SECRET`                                               | Same value as in Strapi                                                   |
-| `APP_PUBLIC_URL`, `NEXT_PUBLIC_APP_URL`                              | `http://localhost:3000`                                                   |
-| `NEXT_PUBLIC_MEILISEARCH_HOST`, `NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY` | `http://localhost:7701` and the search key                                |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                           | Optional; Google sign-in                                                  |
-| `NEXT_PUBLIC_MAPBOX_TOKEN`                                           | Optional; the static map on library pages                                 |
+| Variable                                              | Value                                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| `STRAPI_URL`, `NEXT_PUBLIC_STRAPI_URL`                | `http://127.0.0.1:1337`                                                   |
+| `STRAPI_REST_READONLY_API_KEY`                        | A read-only Strapi API token (create it after step 4)                     |
+| `STRAPI_REST_CUSTOM_API_KEY`, `STRAPI_UPLOAD_API_KEY` | Custom tokens; the upload one needs only `upload.create`                  |
+| `DATABASE_URL`                                        | The Strapi database: `postgres://<user>:<password>@localhost:5433/<name>` |
+| `BETTER_AUTH_SECRET`                                  | `openssl rand -hex 32`                                                    |
+| `STRAPI_BRIDGE_SECRET`                                | Same value as in Strapi                                                   |
+| `APP_PUBLIC_URL`, `NEXT_PUBLIC_APP_URL`               | `http://localhost:3000`                                                   |
+| `MEILISEARCH_HOST`, `MEILISEARCH_SEARCH_API_KEY`      | `http://localhost:7701` and the search key                                |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`            | Optional; Google sign-in                                                  |
 
-In development, sign-in and verification emails are logged to the console instead of sent, so Mailgun isn't needed.
+Without a configured transport, development logs email to the console; production refuses delivery. Generic SMTP is selected through `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS`. Brevo is the selected deployed provider; Mailgun/Mailtrap remain alternative configurations.
 
 ### 4. Run Strapi
 
@@ -175,15 +174,17 @@ Describe added or changed environment variables in the pull request so maintaine
 
 ## CI and releases
 
-- `dev` is the working branch. [ci.yml](.github/workflows/ci.yml) runs lint, format check, unit tests and both builds on every pull request to `dev` or `main`.
-- Protected branches require a pull request, passing CI and resolved review conversations. Contributions target `dev`; the owner reviews contributor changes.
-- Merging to `main` runs [semantic-release](.github/workflows/release.yml), which tags and publishes a GitHub release.
-- [qa.yml](.github/workflows/qa.yml) runs the Playwright suites on demand against a deployed `BASE_URL`.
-- [docs.yml](.github/workflows/docs.yml) publishes `apps/docs` to GitHub Pages only when `DOCS_PUBLISH_ENABLED` is explicitly enabled.
+`dev` is the protected default branch and the source branch for production images. [CI](.github/workflows/ci.yml) runs on PRs and pushes to `dev`/`main`, plus manual dispatch: frozen install, lint, formatting, release-source guard tests, unit/component tests, UI build/typecheck and CMS build. GitHub CodeQL analyzes JavaScript/TypeScript, Python and Actions. Contributor changes require maintainer/code-owner review and passing checks; merges use squash commits.
+
+[Production images](https://github.com/webbist-js/libraries.global/blob/dev/.github/workflows/production-images.yml) is a prepared manual publisher for x86-64 UI, CMS and worker images. It verifies the current protected `dev` SHA and its checks, then records full registry digests in a release manifest. Activation requires the repository switch, protected environment review and an approved expiring registry writer. It has not run yet. Production promotion is an operator action over SSH; merging or publishing does not deploy.
+
+[QA](.github/workflows/qa.yml) runs deployed browser/accessibility/SEO/performance checks on demand. The [Atlas archive workflow](.github/workflows/atlas-tiles.yml) awaits a separate private runner. [Docusaurus Pages](.github/workflows/docs.yml) is behind its own publishing switch. [Semantic release](.github/workflows/release.yml) retains a `main` trigger, but `main` has not been established and the former automatic `dev` to `main` PR workflow was removed. Neither workflow promotes the application.
 
 ## Deployment
 
-The closed beta runs on DigitalOcean in London, with Next.js, Strapi, independent workers, Managed PostgreSQL with a standby, Spaces and persistent Meilisearch storage. The approved baseline is $164.50/month before tax and usage overages. The [infrastructure record](./infra/digitalocean/README.md) documents the running services, verified migration, private CMS access, release images and recovery steps. Authenticated systemd jobs handle daily retention and every-minute sandbox billing processing. GitHub Actions production deployment remains to connect. The [DigitalOcean launch checklist](./docs/operations/digitalocean-launch-checklist.md) and [pre-golive checklist](./docs/pre-golive-checklist.md) track the remaining public-launch work.
+The closed beta is deployed on DigitalOcean in London: Next.js, Strapi, independent event/Atlas workers, Managed PostgreSQL with a standby, Spaces and persistent Meilisearch storage. The approved baseline is $164.50/month before tax and overages. Caddy handles HTTPS, the CMS stays private through SSH and authenticated systemd jobs handle daily retention and per-minute billing processing.
+
+The [infrastructure record](./infra/digitalocean/README.md) describes the running services. The [deployment runbook](./infra/digitalocean/deployment.md) covers CI, image publishing, manual promotion, secrets and recovery. The verified running release is `release-20261013-google-auth`; the merged framework upgrades still need data acceptance and promotion. The invitation gate is on and live purchases are off. Local public-launch acceptance is tracked in `docs/operations/digitalocean-launch-checklist.md` and `docs/pre-golive-checklist.md`.
 
 ## Documentation
 

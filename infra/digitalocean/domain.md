@@ -11,25 +11,25 @@ Namecheap remains the DNS provider, using `dns1.registrar-servers.com` and `dns2
 
 ## Launch preparation gateway
 
-`web.compose.yml` runs a pinned Caddy image with persistent certificate storage. The running `WEB_MODE=beta` configuration proxies to Next.js on the app server's loopback interface. Strapi remains private.
+`web.compose.yml` runs a pinned Caddy image with persistent certificate storage. The running `WEB_MODE=beta` configuration proxies to Next.js on loopback. Strapi has no public DNS/admin route. TCP 80 and 443 serve the site; the loopback health/preview listener stays private.
 
-The initial private preview listens on `127.0.0.1:8080` on the app server:
+The modes are operational gateway choices:
+
+| Mode      | Behaviour                                                                                                   |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| `beta`    | HTTPS reverse proxy to Next.js; the application controls invitations and indexing                           |
+| `public`  | Temporary static fallback, HTTP 503, `Retry-After: 3600`, `Cache-Control: no-store` and `noindex, nofollow` |
+| `preview` | Private loopback preview on port 8080                                                                       |
+
+Do not select `public` to open the application. Full public launch requires a reviewed change to its beta and indexing controls. To apply a chosen mode, update the private `/opt/libraries-global/web.env` and run on the app server:
 
 ```sh
-WEB_MODE=preview docker compose -f web.compose.yml up -d --wait
+cd /opt/libraries-global
+docker compose --env-file web.env -f web.compose.yml config --quiet
+docker compose --env-file web.env -f web.compose.yml up -d --wait
 ```
 
-Once the DNS records and public firewall rules are approved and saved, enable the public configuration:
-
-```sh
-WEB_MODE=public docker compose -f web.compose.yml up -d --wait
-```
-
-The public configuration obtains and renews Let's Encrypt certificates for both hostnames. TCP 80 and 443 are required on the app server. HTTP redirects to HTTPS; HTTPS on `www` redirects to the primary hostname. The loopback preview/health listener remains private. Other application and database ports retain their existing firewall restrictions.
-
-The temporary page returns HTTP 503, `Retry-After: 3600`, `Cache-Control: no-store` and `X-Robots-Tag: noindex, nofollow`. Its robots file disallows crawling. These controls and the public Caddy configuration passed validation on the app server before publication.
-
-The beta configuration uses the Next.js reverse proxy, with the application's invitation and noindex controls. At full public launch, remove the beta gate and apply the intended indexing policy. The static 503 handler is retained as an operational fallback.
+Caddy renews Let's Encrypt certificates for the apex and www hostnames. HTTP redirects to HTTPS and www redirects to the apex. Preserve the certificate volumes during updates and restores. [The deployment runbook](deployment.md) covers application promotion and the static fallback.
 
 ## Current status
 

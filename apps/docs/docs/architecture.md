@@ -7,7 +7,7 @@
 │                              Strapi CMS (apps/strapi)                       │
 │  - Content management                                                       │
 │  - REST API with document middleware                                        │
-│  - PostgreSQL (Docker)                                                      │
+│  - PostgreSQL (Docker locally; managed in production)                       │
 └────────────────────────────────────┬────────────────────────────────────────┘
                                      │ REST API
                                      ▼
@@ -18,6 +18,16 @@
 │  - Page builder component registry                                          │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+## Production infrastructure and delivery
+
+The closed beta runs on DigitalOcean in London. An app Droplet hosts Caddy HTTPS, Next.js/Better Auth, private Strapi and independent event/Atlas workers. A separate search Droplet holds persistent Meilisearch data behind a private TLS proxy. PostgreSQL 17 has a managed standby. Spaces holds CDN-backed media/Atlas objects and private versioned backups. The app/search servers each have one instance.
+
+Production uses Compose host networking with loopback/private listeners and Cloud Firewalls. CMS administration is through an SSH tunnel, and runtime credentials/CA files stay outside images. Billing and retention are authenticated systemd jobs, not Vercel cron jobs. The deployed application still has invitation access and live purchases disabled.
+
+GitHub validates protected `dev` commits through CI and CodeQL. The prepared manual publisher builds UI/CMS/worker images and records full digest references; the operator promotes accepted images over SSH using Compose health checks. PR merge, image publication and deployment are separate operations. The publisher has not run yet, and data upgrades/rollback require acceptance beyond CI.
+
+The maintained [infrastructure record](https://github.com/webbist-js/libraries.global/blob/dev/infra/digitalocean/README.md) and [delivery runbook](https://github.com/webbist-js/libraries.global/blob/dev/infra/digitalocean/deployment.md) describe the production setup. Root `docs/` contains local plans and acceptance records; it is gitignored and is separate from this Docusaurus documentation.
 
 ## Page Builder
 
