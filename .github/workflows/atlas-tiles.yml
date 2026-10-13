@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 360
     environment: atlas-production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: corepack pnpm install --frozen-lockfile --ignore-scripts
       - run: corepack pnpm --filter @repo/shared-data build
       - run: corepack pnpm --filter @repo/sync-worker atlas:build
