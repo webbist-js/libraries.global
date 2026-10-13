@@ -81,7 +81,7 @@
     },
     "patchedDependencies": {
       "strapi-plugin-meilisearch@0.16.5": "patches/strapi-plugin-meilisearch@0.16.5.patch",
-      "better-auth@1.4.18": "patches/better-auth@1.4.18.patch"
+      "better-auth@1.7.7": "patches/better-auth@1.7.7.patch"
     }
   }
 }

@@ -28,7 +28,8 @@ describe("oauth state", () => {
       JSON.stringify({ ...payload(), userId: "u2" })
     ).toString("base64url")
     expect(verifyState(`${forged}.${sig}`)).toBeNull()
-    expect(verifyState(`${body}.x${sig!.slice(1)}`)).toBeNull()
+    const differentPrefix = sig!.startsWith("x") ? "y" : "x"
+    expect(verifyState(`${body}.${differentPrefix}${sig!.slice(1)}`)).toBeNull()
     expect(
       verifyState(signState({ ...payload(), exp: Date.now() - 1 }))
     ).toBeNull()

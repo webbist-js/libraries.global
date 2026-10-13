@@ -90,11 +90,10 @@ const fake = vi.hoisted(() => {
 })
 
 vi.mock("maplibre-gl", () => ({
-  default: {
-    Map: fake.FakeMap,
-    Marker: fake.FakeMarker,
-    NavigationControl: class {},
-  },
+  Map: fake.FakeMap,
+  Marker: fake.FakeMarker,
+  NavigationControl: class {},
+  setWorkerUrl: vi.fn(),
 }))
 
 const { LocationPinMap } = await import("../LocationPinMap")

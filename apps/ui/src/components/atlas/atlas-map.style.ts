@@ -2,6 +2,8 @@
 // layer paint. Canvas and MapLibre paint can't read CSS variables, so the hex
 // values below mirror the design tokens in styles/globals.css.
 
+import type { ExpressionSpecification } from "maplibre-gl"
+
 import type { TypeGroupKey } from "./atlas.logic"
 
 export const INK = "#17162B"
@@ -34,7 +36,14 @@ export const TYPE_SHAPE: Record<
 
 /** Colour-blind-safe ramps from the design's data-viz sheet. */
 export const RAMP = {
-  seq: ["#F1EEF8", "#D6D0EE", "#ADA2DC", "#7E6EC4", "#4F3DA3", "#2E2170"],
+  seq: [
+    "#F1EEF8",
+    "#D6D0EE",
+    "#ADA2DC",
+    "#7E6EC4",
+    "#4F3DA3",
+    "#2E2170",
+  ] as const,
   heat: ["#FDF0C2", "#F9CB85", "#EF9355", "#D25F34", "#9E3719"],
 }
 
@@ -161,7 +170,7 @@ export function heatColor(ramp: string[]): unknown[] {
 }
 
 /** Step ramp for completeness 0–100. */
-export function completenessColor(): unknown[] {
+export function completenessColor(): ExpressionSpecification {
   const s = RAMP.seq
 
   return [
