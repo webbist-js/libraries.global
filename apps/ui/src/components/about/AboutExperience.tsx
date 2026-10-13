@@ -1,3 +1,4 @@
+import type { AboutGlobeCountry } from "@/components/about/about-globe.types"
 import type { AboutLibrary } from "@/components/about/about.types"
 import { AboutHero } from "@/components/about/AboutHero"
 import { AboutStory } from "@/components/about/AboutStory"
@@ -12,18 +13,20 @@ import "@/components/about/about.css"
 /** An ordinary document, with the shared globe confined to its opening hero. */
 export function AboutExperience({
   markers,
+  countries,
   stats,
   continents,
   libraries,
 }: {
   readonly markers: readonly LibraryMarker[]
+  readonly countries: readonly AboutGlobeCountry[]
   readonly stats: HomepageStats | null
   readonly continents: HomepageContinentSummary[]
   readonly libraries: readonly AboutLibrary[]
 }) {
   return (
     <main className="about-page">
-      <AboutHero markers={markers} />
+      <AboutHero markers={markers} countries={countries} />
       <AboutStory stats={stats} continents={continents} libraries={libraries} />
     </main>
   )

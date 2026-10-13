@@ -12,6 +12,9 @@ import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 
+import { globeInteractionReady } from "@/components/about/about-globe-geography"
+import type { AboutGlobeCountry } from "@/components/about/about-globe.types"
+import { AboutGlobeExplorer } from "@/components/about/AboutGlobeExplorer"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
@@ -51,8 +54,10 @@ const PINNED_SCROLL = 0.9
  * shared renderer and the rest of the document have no narrative timeline. */
 export function AboutHero({
   markers,
+  countries,
 }: {
   readonly markers: readonly LibraryMarker[]
+  readonly countries: readonly AboutGlobeCountry[]
 }) {
   const heroRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -63,6 +68,7 @@ export function AboutHero({
   const [coarsePointer, setCoarsePointer] = useState(false)
   const [touchRotation, setTouchRotation] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [interactionReady, setInteractionReady] = useState(false)
   const [scrollStory, setScrollStory] = useState(false)
   const [resetKey, setResetKey] = useState(0)
   const settings = useMemo(
@@ -87,6 +93,7 @@ export function AboutHero({
     let frame = 0
     let story = false
     let lastExpanded = false
+    let lastReady = false
     let openingOffset = 0
 
     const syncActivity = () => setActive(visible && !document.hidden)
@@ -116,6 +123,23 @@ export function AboutHero({
         "--about-guide-opacity",
         String(Math.min(1, Math.max(0, (progress - 0.55) / 0.3)))
       )
+      const globeFrame = hero
+        .querySelector(".about-hero-globe")
+        ?.getBoundingClientRect()
+      const ready = Boolean(
+        globeFrame &&
+        globeInteractionReady(
+          progress,
+          story,
+          globeFrame.top,
+          globeFrame.bottom,
+          window.innerHeight
+        )
+      )
+      if (ready !== lastReady) {
+        lastReady = ready
+        setInteractionReady(ready)
+      }
       const nextExpanded = !story || progress > 0.62
       if (lastExpanded !== nextExpanded) {
         lastExpanded = nextExpanded
@@ -249,13 +273,24 @@ export function AboutHero({
         <div className="about-hero-globe">
           <div className="about-hero-globe-canvas">
             <ErrorBoundary fallback={<GlobePlaceholder />}>
-              <GlobeCanvas
+              <AboutGlobeExplorer
+                enabled={interactionReady && active}
+                allowRotation={!coarsePointer || touchRotation}
+                countries={countries}
                 markers={markers}
-                overrides={settings}
-                active={active}
-                motionPaused={paused || reducedMotion}
-                resetKey={resetKey}
-              />
+              >
+                {({ layer, inspecting, view }) => (
+                  <GlobeCanvas
+                    markers={markers}
+                    overrides={settings}
+                    active={active}
+                    motionPaused={paused || reducedMotion || inspecting}
+                    resetKey={resetKey}
+                    view={view}
+                    interactionLayer={layer}
+                  />
+                )}
+              </AboutGlobeExplorer>
             </ErrorBoundary>
           </div>
         </div>
@@ -298,7 +333,9 @@ export function AboutHero({
               ? touchRotation
                 ? "Drag to rotate · Tap Done to continue scrolling"
                 : "Scroll to continue · Tap Rotate to explore"
-              : "Drag to rotate · Arrow keys when focused"}
+              : interactionReady
+                ? "Hover a country or connection · Click to pin · Esc to close"
+                : "Drag to rotate · Arrow keys when focused"}
           </p>
           <div>
             {coarsePointer ? (

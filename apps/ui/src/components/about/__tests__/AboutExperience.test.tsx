@@ -18,6 +18,8 @@ const canvas = vi.hoisted(() => ({
   render: vi.fn(),
 }))
 
+vi.mock("next-intl", () => ({ useLocale: () => "en" }))
+
 vi.mock("next/dynamic", () => ({
   default: () =>
     function MockCanvas(props: CanvasProps) {
@@ -208,6 +210,7 @@ function latestCanvasProps(): CanvasProps {
 function renderStory() {
   const result = render(
     <AboutExperience
+      countries={[]}
       markers={markers}
       stats={null}
       continents={[]}

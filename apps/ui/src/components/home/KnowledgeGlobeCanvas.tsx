@@ -11,6 +11,7 @@ import {
   useContext,
   type ComponentRef,
   type RefObject,
+  type ReactNode,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -1781,6 +1782,7 @@ function GlobeScene({
   resetKey,
   narrative,
   surfaceRef,
+  interactionLayer,
 }: {
   readonly markers?: readonly LibraryMarker[]
   readonly overrides?: GlobeOverrides
@@ -1791,6 +1793,7 @@ function GlobeScene({
   readonly resetKey?: number
   readonly narrative?: GlobeNarrativeController
   readonly surfaceRef: RefObject<HTMLDivElement | null>
+  readonly interactionLayer?: ReactNode
 }) {
   const pinned = overrides?.pin !== undefined
   const pinScale = useCornerPin(overrides?.pin)
@@ -1957,6 +1960,7 @@ function GlobeScene({
             >
               <PolarSpin speed={pinned && autoRotate ? autoRotateSpeed : 0}>
                 <group rotation={[0, THREE.MathUtils.degToRad(globeYaw), 0]}>
+                  {interactionLayer}
                   <NarrativeDecoration>
                     <GlobeShell />
                     {showGraticule ? <Graticule /> : null}
@@ -2054,6 +2058,7 @@ export function KnowledgeGlobeCanvas({
   view,
   resetKey,
   narrative,
+  interactionLayer,
 }: {
   readonly className?: string
   readonly markers?: readonly LibraryMarker[]
@@ -2067,6 +2072,8 @@ export function KnowledgeGlobeCanvas({
   readonly resetKey?: number
   /** Scroll and chapter controls update the same mounted particle scene. */
   readonly narrative?: GlobeNarrativeController
+  /** Optional picking layer, mounted in the globe's geographic coordinates. */
+  readonly interactionLayer?: ReactNode
 }) {
   const reducedMotion = useGlobeReducedMotion()
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null)
@@ -2144,7 +2151,11 @@ export function KnowledgeGlobeCanvas({
         }}
         className={cn("h-full w-full", interactive && "touch-none")}
         // A decorative globe must never swallow clicks or touch-scrolling
-        style={interactive ? undefined : { pointerEvents: "none" }}
+        style={
+          interactive || interactionLayer
+            ? undefined
+            : { pointerEvents: "none" }
+        }
         dpr={[1, overrides?.dprMax ?? GLOBE_QUALITY.dprMax]}
         gl={{
           alpha: true,
@@ -2168,6 +2179,7 @@ export function KnowledgeGlobeCanvas({
             resetKey={resetKey}
             narrative={narrative}
             surfaceRef={surfaceRef}
+            interactionLayer={interactionLayer}
           />
         </Suspense>
       </Canvas>
