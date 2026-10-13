@@ -76,6 +76,8 @@ function build(seed: Record<string, unknown[]> = {}) {
   service.countInReview = vi.fn(async () => 0)
   service.countHelpers = vi.fn(async () => 0)
   service.countCredits = vi.fn(async () => 0)
+  // Keep raw-SQL recognition separate from these lifecycle-state assertions.
+  service.recogniseClosedDrives = vi.fn(async () => [])
   fake.services[DRIVE] = service
   const controller = controllerFactory({ strapi: strapiStub } as any)
 

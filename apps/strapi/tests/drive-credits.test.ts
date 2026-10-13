@@ -68,6 +68,7 @@ describe("creditApproval", () => {
   it("credits a tagged approval once, even across two calls", async () => {
     const { strapi, service } = build({
       [LIBRARY]: [library(OHIO_LIB, "ohio")],
+      [DRIVE]: [drive(DRIVE_HOURS, "hours")],
     })
     const submission = {
       documentId: "sub1",

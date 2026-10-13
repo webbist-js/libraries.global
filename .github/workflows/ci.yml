@@ -19,6 +19,8 @@ permissions:
 env:
   CI: true
   NPM_CONFIG_IGNORE_SCRIPTS: "true"
+  # Build/test fixture only; deployment supplies its own runtime secret.
+  BETTER_AUTH_SECRET: dummy-ci-secret-not-for-runtime-only
 
 jobs:
   build_and_verify:
