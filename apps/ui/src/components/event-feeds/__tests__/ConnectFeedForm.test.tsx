@@ -75,6 +75,32 @@ describe("ConnectFeedForm", () => {
     ).toBe(TWO_LIBS[0]!.documentId)
   })
 
+  it("keeps the selected library inside one encoded OAuth query parameter", () => {
+    const documentId =
+      'branch&redirect=https://example.invalid/#<svg onload="alert(1)">'
+    render(
+      <ConnectFeedForm
+        libraries={[
+          ...LIBS,
+          { documentId, name: "Unusual library", slug: "unusual" },
+        ]}
+        oauth={{ eventbrite: true }}
+      />
+    )
+    fireEvent.change(screen.getByLabelText(/Choose a library/), {
+      target: { value: documentId },
+    })
+    fireEvent.click(screen.getByRole("radio", { name: /Eventbrite/ }))
+    const link = screen.getByRole("link", {
+      name: "Connect with Eventbrite",
+    }) as HTMLAnchorElement
+    const url = new URL(link.href)
+    expect(url.pathname).toBe("/api/contribute/event-feeds/eventbrite/start")
+    expect([...url.searchParams]).toEqual([["library", documentId]])
+    expect(url.hash).toBe("")
+    expect(link.querySelector("svg")).toBeNull()
+  })
+
   it("resets the test result when the chosen library changes", async () => {
     render(
       <ConnectFeedForm libraries={TWO_LIBS} oauth={{ eventbrite: false }} />

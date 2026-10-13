@@ -248,7 +248,7 @@ export function ConnectFeedForm({
         {provider === "eventbrite" && oauth.eventbrite && !manualToken ? (
           <div className="flex flex-col items-start gap-2">
             <a
-              href={`/api/contribute/event-feeds/eventbrite/start?library=${libraryDocumentId}`}
+              href={`/api/contribute/event-feeds/eventbrite/start?library=${encodeURIComponent(libraryDocumentId)}`}
               className={PRIMARY_PILL}
             >
               Connect with Eventbrite
