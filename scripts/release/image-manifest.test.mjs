@@ -25,11 +25,7 @@ test("public artifact contains only the source and service digests", () => {
     strapi: `strapi@${digest}`,
     worker: `worker@${digest}`,
   })
-  assert.equal(JSON.stringify(manifest).includes("example-registry"), false)
-  assert.equal(
-    JSON.stringify(manifest).includes("registry.digitalocean.com"),
-    false
-  )
+  assert.doesNotMatch(JSON.stringify(manifest), /registry/)
   assert.deepEqual(resolvePrivateReferences(manifest, registry), references())
 })
 
