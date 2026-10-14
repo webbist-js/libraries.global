@@ -12,6 +12,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
 import { useCapabilities } from "@/lib/access-client"
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -576,6 +577,15 @@ export function ContributionWizard({
 
   const send = async () => {
     if (!library || isHandoff(action)) return
+    const measured = captureAnalyticsEvent("submission_success", {
+      interaction_source: "library_correction",
+      submission_type:
+        action === "photo"
+          ? "photo"
+          : action === "source"
+            ? "source"
+            : "correction",
+    })
     setSending(true)
     setError(null)
     try {
@@ -587,6 +597,7 @@ export function ContributionWizard({
         ),
       })
       if (res.ok) {
+        measured()
         if (key) writeDraft(key, null)
         setSent(true)
       } else {

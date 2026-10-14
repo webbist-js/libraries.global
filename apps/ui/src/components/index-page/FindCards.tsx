@@ -5,6 +5,7 @@ import { noticeLocalDate } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { LibrarySearchHitV2 } from "@/lib/find-search"
 import { buildLibraryPath } from "@/lib/meilisearch"
@@ -180,6 +181,12 @@ export function LibraryResultCard({
         {href ? (
           <Link
             href={href}
+            {...analyticsAttributes("select_content", {
+              interaction_source: "find_grid",
+              content_type: "library",
+              library_document_id: hit.documentId,
+              view_mode: "grid",
+            })}
             className="text-(--t-ink-base) no-underline hover:underline"
             style={{ textUnderlineOffset: 3 }}
           >
@@ -230,6 +237,7 @@ export function LibraryResultCard({
 
 export function LibraryResultRow({
   hit,
+  analyticsView = "list",
   distanceKmValue,
   now,
   href: hrefOverride,
@@ -237,6 +245,7 @@ export function LibraryResultRow({
   children,
 }: {
   hit: LibraryTileHit
+  analyticsView?: "list" | "map"
   distanceKmValue?: number
   now?: Date
   href?: string | null
@@ -276,6 +285,13 @@ export function LibraryResultRow({
         {href ? (
           <Link
             href={href}
+            {...analyticsAttributes("select_content", {
+              interaction_source:
+                analyticsView === "map" ? "find_map" : "find_list",
+              content_type: "library",
+              library_document_id: hit.documentId,
+              view_mode: analyticsView,
+            })}
             className="no-underline hover:underline"
             style={{ textUnderlineOffset: 3 }}
           >

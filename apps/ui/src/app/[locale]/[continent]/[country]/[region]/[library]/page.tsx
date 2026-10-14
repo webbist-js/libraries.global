@@ -210,6 +210,12 @@ export default function LibraryRoutePage(props: {
 
   return (
     <>
+      <span
+        hidden
+        data-analytics-page="library"
+        data-analytics-path={new URL(url).pathname}
+        data-analytics-library-id={library.documentId}
+      />
       <JsonLd
         data={[
           buildLibrarySchema({

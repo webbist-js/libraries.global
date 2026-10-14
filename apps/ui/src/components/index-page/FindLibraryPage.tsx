@@ -21,6 +21,12 @@ import {
 import { Container } from "@/components/elementary/Container"
 import { MobilePlaceStops } from "@/components/mobile/MobilePlaceStops"
 import { NearbyMobileLibraries } from "@/components/mobile/NearbyMobileLibraries"
+import {
+  captureAnalyticsEvent,
+  pushAnalyticsEvent,
+  resultBucket,
+  type AnalyticsParameters,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { FindDrive } from "@/lib/drives/find-match"
 import {
@@ -83,6 +89,11 @@ export function FindLibraryPage({
   const filterSidebar = useFilterSidebar("find")
   const fetchSeq = useRef(0)
   const didMount = useRef(false)
+  const searchIntent = useRef<{
+    query: string
+    success: (additional?: Partial<AnalyticsParameters>) => boolean
+    failure: () => boolean
+  } | null>(null)
 
   const patch = useCallback((p: Partial<FindState>) => {
     setState((s) => ({ ...s, ...p }))
@@ -110,6 +121,7 @@ export function FindLibraryPage({
   const runFetch = useCallback(
     async (s: FindState) => {
       const seq = ++fetchSeq.current
+      const intent = searchIntent.current
       setLoading(true)
       setError(false)
       try {
@@ -119,9 +131,17 @@ export function FindLibraryPage({
         })
         if (seq !== fetchSeq.current) return
         setResult(res)
+        if (intent && intent.query === s.q && searchIntent.current === intent) {
+          intent.success({ result_bucket: resultBucket(res.total) })
+          searchIntent.current = null
+        }
       } catch {
         if (seq !== fetchSeq.current) return
         setError(true)
+        if (intent && intent.query === s.q && searchIntent.current === intent) {
+          intent.failure()
+          searchIntent.current = null
+        }
       } finally {
         if (seq === fetchSeq.current) setLoading(false)
       }
@@ -129,15 +149,31 @@ export function FindLibraryPage({
     [locale]
   )
 
+  const invalidatePendingFetch = useCallback(() => {
+    fetchSeq.current++
+  }, [])
+
   useEffect(() => {
     if (!didMount.current) {
       didMount.current = true
       // The server already searched this URL's state.
-      if (result) return
+      if (result) {
+        if (state.q.trim())
+          pushAnalyticsEvent("search_results", {
+            interaction_source: "find",
+            search_type: "libraries",
+            result_bucket: resultBucket(result.total),
+          })
+
+        return
+      }
     }
     const t = setTimeout(() => runFetch(state), 250)
 
-    return () => clearTimeout(t)
+    return () => {
+      clearTimeout(t)
+      invalidatePendingFetch()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKey])
 
@@ -166,6 +202,10 @@ export function FindLibraryPage({
 
   const handleNearMe = useCallback(() => {
     if (state.nearLat != null) {
+      pushAnalyticsEvent("near_me", {
+        interaction_source: "find",
+        action_type: "clear",
+      })
       patch({
         nearLat: undefined,
         nearLng: undefined,
@@ -176,12 +216,33 @@ export function FindLibraryPage({
 
       return
     }
-    if (!navigator.geolocation) return
+    pushAnalyticsEvent("near_me", {
+      interaction_source: "find",
+      action_type: "request",
+    })
+    const success = captureAnalyticsEvent("near_me", {
+      interaction_source: "find",
+      action_type: "success",
+    })
+    const denied = captureAnalyticsEvent("near_me", {
+      interaction_source: "find",
+      action_type: "denied",
+    })
+    const unavailable = captureAnalyticsEvent("near_me", {
+      interaction_source: "find",
+      action_type: "unavailable",
+    })
+    if (!navigator.geolocation) {
+      unavailable()
+
+      return
+    }
     setLocating(true)
     // Only requested on an explicit "Use my location" click.
     // eslint-disable-next-line sonarjs/no-intrusive-permissions
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        success()
         setLocating(false)
         patch({
           nearLat: pos.coords.latitude,
@@ -191,7 +252,11 @@ export function FindLibraryPage({
           page: 0,
         })
       },
-      () => setLocating(false),
+      (error) => {
+        if (error.code === 1) denied()
+        else unavailable()
+        setLocating(false)
+      },
       { timeout: 8000 }
     )
   }, [state.nearLat, state.sort, patch])
@@ -225,8 +290,27 @@ export function FindLibraryPage({
           id="find-q"
           placeholder={tUi("library_town_or_country")}
           defaultQuery={state.q}
-          onSubmit={(q) => patch({ q, page: 0 })}
-          onClear={() => patch({ q: "", page: 0 })}
+          onSubmit={(q) => {
+            searchIntent.current = q
+              ? {
+                  query: q,
+                  success: captureAnalyticsEvent("search_results", {
+                    interaction_source: "find",
+                    search_type: "libraries",
+                  }),
+                  failure: captureAnalyticsEvent("search_error", {
+                    interaction_source: "find",
+                    search_type: "libraries",
+                  }),
+                }
+              : null
+            patch({ q, page: 0 })
+            if (q === state.q) void runFetch({ ...state, q, page: 0 })
+          }}
+          onClear={() => {
+            searchIntent.current = null
+            patch({ q: "", page: 0 })
+          }}
           onNearMe={handleNearMe}
           nearActive={state.nearLat != null}
           locating={locating}
@@ -344,6 +428,7 @@ export function FindLibraryPage({
                     <LibraryResultRow
                       key={hit.documentId}
                       hit={hit}
+                      analyticsView="map"
                       now={now}
                       distanceKmValue={hitDistance(hit, state)}
                     />

@@ -4,6 +4,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Drawer } from "@/components/ds/Drawer"
 import GlobalLink from "@/components/global/GlobalLink"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
   ATLAS_SHEET_ROW_IDS,
@@ -144,6 +145,10 @@ function SeeAllPlansLink() {
   return (
     <GlobalLink
       href="/contribute/membership"
+      {...analyticsAttributes("membership_interest", {
+        interaction_source: "upgrade_prompt",
+        action_type: "compare",
+      })}
       className="text-[14px] font-semibold underline underline-offset-[3px]"
       style={{ color: T.accent.primary }}
     >

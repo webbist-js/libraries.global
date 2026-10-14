@@ -4,6 +4,8 @@ import { Check } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
+
 import styles from "./beta.module.css"
 
 type FormStatus = "idle" | "saving" | "error" | "done"
@@ -102,6 +104,10 @@ export function BetaForms({
     const submittedEmail = email.trim()
     setWaitlistStatus("saving")
     setWaitlistError("")
+    const measured = captureAnalyticsEvent("generate_lead", {
+      interaction_source: "beta",
+      submission_type: "beta_request",
+    })
     try {
       const res = await fetch("/api/beta/waitlist", {
         method: "POST",
@@ -127,6 +133,7 @@ export function BetaForms({
         return
       }
       setAcceptedEmail(submittedEmail)
+      if (!data.get("website")) measured()
       setWaitlistStatus("done")
     } catch {
       setWaitlistError(t("waitlistUnavailable"))

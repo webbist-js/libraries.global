@@ -20,6 +20,7 @@ import {
   type VerifyRecord,
   type VerifySection,
 } from "@/components/library/verify.logic"
+import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 /** Added to the library URL so sign-in brings the user back into the drawer. */
@@ -142,15 +143,20 @@ export function LibraryCorrectionProvider({
     )
   }, [])
 
-  const open = useCallback(
-    (category?: string) => setState({ category: category ?? null }),
-    []
-  )
-  const verify = useCallback(
-    (sections: readonly VerifySection[]) =>
-      setState({ verify: toSections(sections) }),
-    []
-  )
+  const open = useCallback((category?: string) => {
+    pushAnalyticsEvent("correction_open", {
+      interaction_source: "library_correction",
+      action_type: "open",
+    })
+    setState({ category: category ?? null })
+  }, [])
+  const verify = useCallback((sections: readonly VerifySection[]) => {
+    pushAnalyticsEvent("correction_open", {
+      interaction_source: "library_correction",
+      action_type: "open",
+    })
+    setState({ verify: toSections(sections) })
+  }, [])
   const close = useCallback(() => setState(null), [])
   const value = useMemo(() => ({ open, verify }), [open, verify])
 

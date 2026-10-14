@@ -1,6 +1,7 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
 
@@ -73,6 +74,11 @@ export function DriveCard({
         ) : (
           <GlobalLink
             href={href}
+            {...analyticsAttributes("select_content", {
+              interaction_source: "drive",
+              content_type: "drive",
+              content_id: drive.documentId,
+            })}
             className="no-underline hover:underline"
             style={{ color: T.ink.base }}
           >

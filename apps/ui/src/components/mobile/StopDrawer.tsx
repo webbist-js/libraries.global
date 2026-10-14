@@ -10,6 +10,7 @@ import {
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Sheet } from "@/components/ds"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { weekdayCopy } from "@/lib/staff/format"
@@ -148,6 +149,11 @@ export function StopDrawer({
                 className="inline-flex min-h-11 items-center font-semibold underline"
                 style={{ color: T.accent.primary }}
                 href={directions}
+                {...analyticsAttributes("library_action", {
+                  interaction_source: "mobile_timetable",
+                  action_type: "directions",
+                  library_document_id: id,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -158,6 +164,12 @@ export function StopDrawer({
               className="inline-flex min-h-11 items-center font-semibold underline"
               style={{ color: T.accent.primary }}
               href={`/api/mobile/${id}/calendar.ics?stop=${stop.id}`}
+              {...analyticsAttributes("mobile_service_action", {
+                interaction_source: "mobile_timetable",
+                action_type: "ics_handoff",
+                library_document_id: id,
+                content_id: stop.id,
+              })}
             >
               Download six months of visits (.ics)
             </a>

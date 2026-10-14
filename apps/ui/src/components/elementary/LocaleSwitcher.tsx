@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { routing, usePathname, useRouter } from "@/lib/navigation"
 
 const localeTranslation = { cs: "Čeština", en: "English", fr: "Français" }
@@ -49,6 +50,11 @@ function SuspensedLocaleSwitcher({
   const searchParams = useSearchParams()
 
   const handleLocaleChange = (locale: Locale) => {
+    pushAnalyticsEvent("navigation_action", {
+      interaction_source: "navigation",
+      action_type: "locale",
+      target_locale: locale,
+    })
     const queryParams = searchParams.toString()
 
     // next-intl router.replace does not persist query params
