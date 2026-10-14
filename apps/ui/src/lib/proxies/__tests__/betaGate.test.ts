@@ -42,7 +42,10 @@ describe("beta routing", () => {
   it("allows valid passes and restores public browsing when disabled", () => {
     expect(
       betaGate(
-        request("/map", { cookie: `${BETA_COOKIE}=${createBetaPass()}` })
+        request("/map", {
+          cookie: `${BETA_COOKIE}=${createBetaPass({ invitationId: "i".repeat(24), expiresAt: Date.now() + 30 * 86400000 })}`,
+        }),
+        true
       )
     ).toBeNull()
     vi.stubEnv("BETA_GATE_ENABLED", "false")
@@ -97,11 +100,13 @@ describe("beta routing", () => {
     "/email/preferences",
   ])("uses the full site shell after beta entry on %s", (path) => {
     const req = request(path, {
-      cookie: `${BETA_COOKIE}=${createBetaPass()}`,
+      cookie: `${BETA_COOKIE}=${createBetaPass({ invitationId: "i".repeat(24), expiresAt: Date.now() + 30 * 86400000 })}`,
       "x-beta-public-shell": "true",
     })
     expect(betaGate(req)).toBeNull()
-    expect(betaShellRequest(req).headers.has("x-beta-public-shell")).toBe(false)
+    expect(betaShellRequest(req, true).headers.has("x-beta-public-shell")).toBe(
+      false
+    )
   })
   it("keeps the entrance independent and makes the temporary notice public", () => {
     for (const path of [
@@ -111,12 +116,14 @@ describe("beta routing", () => {
       "/fr/legal/beta",
     ])
       for (const accepted of [false, true]) {
-        const cookie = accepted ? `${BETA_COOKIE}=${createBetaPass()}` : ""
+        const cookie = accepted
+          ? `${BETA_COOKIE}=${createBetaPass({ invitationId: "i".repeat(24), expiresAt: Date.now() + 30 * 86400000 })}`
+          : ""
         const req = request(path, { cookie })
         expect(betaGate(req)).toBeNull()
-        expect(betaShellRequest(req).headers.has("x-beta-public-shell")).toBe(
-          path === "/beta" || !accepted
-        )
+        expect(
+          betaShellRequest(req, accepted).headers.has("x-beta-public-shell")
+        ).toBe(path === "/beta" || !accepted)
       }
     expect(betaPublicRequest("/legal/beta", "HEAD")).toBe(true)
     expect(betaPublicRequest("/legal/beta", "POST")).toBe(false)
@@ -125,7 +132,10 @@ describe("beta routing", () => {
   it("keeps invalid and expired passes in the public legal shell", () => {
     for (const pass of [
       "forged",
-      createBetaPass(Date.now() - (BETA_MAX_AGE + 1) * 1000),
+      createBetaPass({
+        invitationId: "i".repeat(24),
+        expiresAt: Date.now() - (BETA_MAX_AGE + 1) * 1000,
+      }),
     ]) {
       const req = request("/legal/membership", {
         cookie: `${BETA_COOKIE}=${pass}`,

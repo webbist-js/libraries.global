@@ -1,96 +1,72 @@
-import { createHmac, scrypt, scryptSync, timingSafeEqual } from "node:crypto"
+import { createHmac, timingSafeEqual } from "node:crypto"
 
 import { betaPath } from "@/lib/beta/scope"
 
 export const BETA_COOKIE = "lg-beta-access"
 export const BETA_MAX_AGE = 30 * 24 * 60 * 60
 export const betaEnabled = () => process.env.BETA_GATE_ENABLED === "true"
+export const betaConfigured = () =>
+  (process.env.BETA_ACCESS_SECRET?.length ?? 0) >= 32
+export type BetaPass = { invitationId: string; expiresAt: number }
 
-export function betaConfigured(): boolean {
-  return (
-    !!process.env.BETA_PASSWORD &&
-    (process.env.BETA_ACCESS_SECRET?.length ?? 0) >= 32
-  )
-}
-
-const KEY_OPTIONS = { N: 2 ** 16, r: 8, p: 2, maxmem: 128 * 1024 * 1024 }
-let cachedKey: { password: string; secret: string; key: Buffer } | undefined
-
-function signingKey() {
+function signature(payload: string) {
   if (!betaConfigured()) throw new Error("Beta access is unavailable")
-  const password = process.env.BETA_PASSWORD!
-  const secret = process.env.BETA_ACCESS_SECRET!
-  // Cache only server configuration, never request credentials. Password or
-  // signing-secret rotation derives a new key and revokes earlier passes.
-  if (cachedKey?.password !== password || cachedKey.secret !== secret)
-    cachedKey = {
-      password,
-      secret,
-      key: scryptSync(password, secret, 32, KEY_OPTIONS),
-    }
 
-  return cachedKey.key
+  return createHmac("sha256", process.env.BETA_ACCESS_SECRET!)
+    .update(`individual-beta:${payload}`)
+    .digest()
 }
 
-export async function matchesBetaPassword(password: string): Promise<boolean> {
-  if (!betaConfigured() || password.length > 512) return false
-  const expected = signingKey()
-  const actual = await new Promise<Buffer>((resolve, reject) => {
-    scrypt(
-      password,
-      process.env.BETA_ACCESS_SECRET!,
-      32,
-      KEY_OPTIONS,
-      (error, key) => {
-        if (error) reject(error)
-        else resolve(key)
-      }
-    )
-  })
-
-  return timingSafeEqual(expected, actual)
-}
-
-export function createBetaPass(now = Date.now()): string {
+export function createBetaPass(grant: BetaPass): string {
   const payload = Buffer.from(
     JSON.stringify({
-      expiresAt: now + BETA_MAX_AGE * 1000,
+      ...grant,
       version: process.env.BETA_ACCESS_VERSION ?? "1",
     })
   ).toString("base64url")
 
-  return `${payload}.${createHmac("sha256", signingKey()).update(payload).digest("base64url")}`
+  return `${payload}.${signature(payload).toString("base64url")}`
 }
 
-export function validBetaPass(
+/** A valid signature is only the first check; the CMS must also confirm the grant is active. */
+export function readBetaPass(
   pass: string | undefined,
   now = Date.now()
-): boolean {
-  if (!pass || pass.length > 1024 || !betaConfigured()) return false
-  const [payload, signature, extra] = pass.split(".")
-  if (!payload || !signature || extra !== undefined) return false
-  if (!/^[\w-]{43}$/.test(signature)) return false
-  const expected = createHmac("sha256", signingKey())
-    .update(payload)
-    .digest("base64url")
-  if (
-    signature.length !== expected.length ||
-    !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
-  )
-    return false
+): BetaPass | null {
+  if (!pass || pass.length > 1024 || !betaConfigured()) return null
   try {
-    const data = JSON.parse(Buffer.from(payload, "base64url").toString())
-
-    return (
-      data.version === (process.env.BETA_ACCESS_VERSION ?? "1") &&
-      Number.isSafeInteger(data.expiresAt) &&
-      data.expiresAt > now &&
-      data.expiresAt <= now + BETA_MAX_AGE * 1000
+    const [payload, supplied, extra] = pass.split(".")
+    if (
+      !payload ||
+      !supplied ||
+      extra !== undefined ||
+      !/^[\w-]{43}$/.test(supplied)
     )
+      return null
+    const expected = signature(payload)
+    const given = Buffer.from(supplied, "base64url")
+    if (given.length !== expected.length || !timingSafeEqual(given, expected))
+      return null
+    const value = JSON.parse(Buffer.from(payload, "base64url").toString())
+    if (
+      value.version !== (process.env.BETA_ACCESS_VERSION ?? "1") ||
+      typeof value.invitationId !== "string" ||
+      !/^[a-z0-9]{20,32}$/.test(value.invitationId) ||
+      !Number.isSafeInteger(value.expiresAt) ||
+      value.expiresAt <= now ||
+      value.expiresAt > now + BETA_MAX_AGE * 1000
+    )
+      return null
+
+    return { invitationId: value.invitationId, expiresAt: value.expiresAt }
   } catch {
-    return false
+    return null
   }
 }
+
+/** Signature/expiry only. Protected requests use hasBetaAccess for CMS revocation checks. */
+export const validBetaPass = (pass: string | undefined, now = Date.now()) =>
+  readBetaPass(pass, now) !== null
 
 /** Never let a supplied continuation escape this origin or re-enter the gate. */
 export function betaDestination(value: unknown, fallback = "/"): string {

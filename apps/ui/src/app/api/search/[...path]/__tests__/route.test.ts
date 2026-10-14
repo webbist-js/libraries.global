@@ -5,13 +5,20 @@ import { BETA_COOKIE, createBetaPass } from "@/lib/beta/access"
 import { POST } from "../route"
 
 const fetchMock = vi.fn()
+vi.mock("@/lib/beta/invitations", () => ({
+  hasBetaAccess: async (cookie: string | undefined) => !!cookie,
+}))
 const search = (path: string[], body: unknown, unlocked = true) =>
   POST(
     new Request("https://beta.test/api/search", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(unlocked ? { cookie: `${BETA_COOKIE}=${createBetaPass()}` } : {}),
+        ...(unlocked
+          ? {
+              cookie: `${BETA_COOKIE}=${createBetaPass({ invitationId: "i".repeat(24), expiresAt: Date.now() + 30 * 86400000 })}`,
+            }
+          : {}),
       },
       body: JSON.stringify(body),
     }),

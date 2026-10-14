@@ -168,8 +168,11 @@ describe("legal layout after beta entry", () => {
     requestHeaders.mockResolvedValue(
       betaShellRequest(
         new NextRequest("https://libraries.global/legal/membership", {
-          headers: { cookie: `${BETA_COOKIE}=${createBetaPass()}` },
-        })
+          headers: {
+            cookie: `${BETA_COOKIE}=${createBetaPass({ invitationId: "i".repeat(24), expiresAt: Date.now() + 30 * 86400000 })}`,
+          },
+        }),
+        true
       ).headers
     )
     const html = renderToStaticMarkup(

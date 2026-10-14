@@ -28,8 +28,9 @@
         "announcement",
         "newsletter_confirmation",
         "staff_update",
-        "feed_update"
-        ,"billing_update"
+        "feed_update",
+        "billing_update",
+        "beta_invitation"
       ],
       "required": true
     },

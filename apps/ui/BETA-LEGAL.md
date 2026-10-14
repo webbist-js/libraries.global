@@ -45,3 +45,5 @@ pnpm --filter @repo/ui typecheck
 The frontend dev server was intentionally left stopped at the user's request. Source/render tests and the production build can run without restarting it.
 
 Verified on 12 October 2026: all 44 focused checks passed, frontend typechecking passed, scoped lint had no errors, and the isolated production build completed all 259 pages. The published English CMS detail matched the notice text and approved contact details through the read-only endpoint.
+
+Individual beta invitations store issuance, delivery and redemption records against the access request. The beta cookie references the accepted invitation, so operators can revoke that browser pass. See `../strapi/BETA-INVITES.md` for the current access and correspondence workflow.

@@ -3314,6 +3314,7 @@ export interface ApiNotificationNotification
         "staff_update",
         "feed_update",
         "billing_update",
+        "beta_invitation",
       ]
     > &
       Schema.Attribute.Required
@@ -4604,6 +4605,57 @@ export interface PluginAccessTeamMember extends Struct.CollectionTypeSchema {
     teamRole: Schema.Attribute.Enumeration<["organiser", "member"]> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"member">
+    tokenHash: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginBetaInvitesInvitation
+  extends Struct.CollectionTypeSchema {
+  collectionName: "beta_invitations"
+  info: {
+    displayName: "Beta invitation"
+    pluralName: "invitations"
+    singularName: "invitation"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    acceptedAt: Schema.Attribute.DateTime
+    accessExpiresAt: Schema.Attribute.DateTime
+    consentedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    issuedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    issuedBy: Schema.Attribute.String & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::beta-invites.invitation"
+    > &
+      Schema.Attribute.Private
+    notificationId: Schema.Attribute.String & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    revokedAt: Schema.Attribute.DateTime
+    revokedBy: Schema.Attribute.String & Schema.Attribute.Private
+    sentAt: Schema.Attribute.DateTime
+    subscriberDocumentId: Schema.Attribute.String & Schema.Attribute.Required
+    tokenCiphertext: Schema.Attribute.Text & Schema.Attribute.Private
     tokenHash: Schema.Attribute.String &
       Schema.Attribute.Private &
       Schema.Attribute.Unique
@@ -6215,6 +6267,7 @@ declare module "@strapi/strapi" {
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
       "plugin::access.team": PluginAccessTeam
       "plugin::access.team-member": PluginAccessTeamMember
+      "plugin::beta-invites.invitation": PluginBetaInvitesInvitation
       "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
       "plugin::content-moderation.option-vote": PluginContentModerationOptionVote
       "plugin::content-moderation.review-event": PluginContentModerationReviewEvent

@@ -4,7 +4,6 @@ import {
   betaConfigured,
   betaDestination,
   createBetaPass,
-  matchesBetaPassword,
   sameOriginRequest,
   validBetaPass,
 } from "../access"
@@ -17,14 +16,11 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe("independent beta pass", () => {
-  it("accepts the configured password and rejects near matches", async () => {
-    expect(await matchesBetaPassword("invitation:password")).toBe(true)
-    expect(await matchesBetaPassword("invitation:password ")).toBe(false)
-    expect(await matchesBetaPassword("wrong")).toBe(false)
-    expect(await matchesBetaPassword("x".repeat(513))).toBe(false)
-  })
   it("verifies a signed pass and rejects tampering and expiry", () => {
-    const pass = createBetaPass(1000)
+    const pass = createBetaPass({
+      invitationId: "i".repeat(24),
+      expiresAt: 1000 + 30 * 86400000,
+    })
     expect(validBetaPass(pass, 2000)).toBe(true)
     expect(validBetaPass(`${pass.slice(0, -1)}!`, 2000)).toBe(false)
     expect(validBetaPass(pass, 1000 + 30 * 86400000)).toBe(false)
@@ -33,11 +29,11 @@ describe("independent beta pass", () => {
       false
     )
   })
-  it("revokes passes on either password, version or signing-secret rotation", () => {
-    const pass = createBetaPass()
-    vi.stubEnv("BETA_PASSWORD", "new-password")
-    expect(validBetaPass(pass)).toBe(false)
-    vi.stubEnv("BETA_PASSWORD", "invitation:password")
+  it("revokes passes on version or signing-secret rotation", () => {
+    const pass = createBetaPass({
+      invitationId: "i".repeat(24),
+      expiresAt: Date.now() + 30 * 86400000,
+    })
     vi.stubEnv("BETA_ACCESS_VERSION", "2")
     expect(validBetaPass(pass)).toBe(false)
     vi.stubEnv("BETA_ACCESS_VERSION", "1")
@@ -46,12 +42,21 @@ describe("independent beta pass", () => {
   })
   it("fails closed with missing configuration and contains no user or password", async () => {
     const payload = JSON.parse(
-      Buffer.from(createBetaPass().split(".")[0]!, "base64url").toString()
+      Buffer.from(
+        createBetaPass({
+          invitationId: "i".repeat(24),
+          expiresAt: Date.now() + 30 * 86400000,
+        }).split(".")[0]!,
+        "base64url"
+      ).toString()
     )
-    expect(Object.keys(payload).sort()).toEqual(["expiresAt", "version"])
+    expect(Object.keys(payload).sort()).toEqual([
+      "expiresAt",
+      "invitationId",
+      "version",
+    ])
     vi.stubEnv("BETA_ACCESS_SECRET", "short")
     expect(betaConfigured()).toBe(false)
-    expect(await matchesBetaPassword("invitation:password")).toBe(false)
     expect(validBetaPass("anything")).toBe(false)
   })
 })

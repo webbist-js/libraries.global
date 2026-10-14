@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import createMiddleware from "next-intl/middleware"
 
+import { BETA_COOKIE, betaEnabled } from "@/lib/beta/access"
+import { hasBetaAccess } from "@/lib/beta/invitations"
 import {
   liveSecurityRequest,
   liveSecurityResponse,
@@ -31,8 +33,12 @@ export default async function proxy(originalReq: NextRequest) {
   // Staff pages get their own locale-stripped path as `x-pathname`, for the
   // sign-in callback; `liveSecurityResponse` forwards the request headers.
   const cohort = atlasCohortRequest(originalReq)
+  const hasAccess =
+    betaEnabled() &&
+    (await hasBetaAccess(originalReq.cookies.get(BETA_COOKIE)?.value))
   const req = betaShellRequest(
-    staffPathnameRequest(liveSecurityRequest(cohort.request))
+    staffPathnameRequest(liveSecurityRequest(cohort.request)),
+    hasAccess
   )
   const { pathname } = req.nextUrl
   const respond = (response: NextResponse) =>
@@ -51,7 +57,7 @@ export default async function proxy(originalReq: NextRequest) {
   const httpsResponse = httpsRedirect(req)
   if (httpsResponse) return respond(httpsResponse)
 
-  const gateResponse = betaGate(req)
+  const gateResponse = betaGate(req, hasAccess)
   if (gateResponse) return respond(gateResponse)
 
   // Metadata and public files must retain their original, non-localised path.
