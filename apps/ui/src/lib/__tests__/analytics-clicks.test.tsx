@@ -3,9 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   analyticsAttributes,
+  analyticsConsentGranted,
+  analyticsConsentVersion,
+  captureAnalyticsEvent,
   installAnalyticsClickTracking,
 } from "@/lib/analytics-events"
-import { installGoogleAnalytics } from "@/lib/google-analytics"
+import {
+  installGoogleAnalytics,
+  type AnalyticsConsentController,
+} from "@/lib/google-analytics"
 
 let remove: (() => void) | undefined
 afterEach(() => {
@@ -32,6 +38,27 @@ function setup() {
 }
 
 describe("explicit semantic interactions", () => {
+  it("does not fail an accepted async action when its analytics completion throws", () => {
+    window.librariesGlobalAnalytics = {
+      prepare: () => () => {
+        throw new Error("analytics script failed")
+      },
+    } as unknown as AnalyticsConsentController
+    const complete = captureAnalyticsEvent("generate_lead", {
+      interaction_source: "beta",
+      submission_type: "beta_request",
+    })
+    expect(complete()).toBe(false)
+  })
+  it("keeps new consent readers safe in a tab with the earlier page-view-only controller", () => {
+    window.librariesGlobalAnalytics = {
+      setConsent: vi.fn(),
+      pageView: vi.fn(),
+      pause: vi.fn(),
+    } as unknown as AnalyticsConsentController
+    expect(analyticsConsentGranted()).toBe(false)
+    expect(analyticsConsentVersion()).toBe(0)
+  })
   it("tracks nested link activation once, without reading its URL or text, and cleans up listeners", () => {
     const { controller, named } = setup()
     const link = document.createElement("a")

@@ -9,6 +9,7 @@ const SOURCES = [
   "library_sidebar",
   "library_correction",
   "atlas_map",
+  "atlas_panel",
   "atlas_search",
   "atlas_list",
   "atlas_recent",
@@ -354,10 +355,19 @@ export function captureAnalyticsEvent(
   parameters: AnalyticsParameters
 ): (additional?: Partial<AnalyticsParameters>) => boolean {
   try {
-    return typeof window !== "undefined"
-      ? (window.librariesGlobalAnalytics?.prepare(name, parameters) ??
-          droppedEvent)
-      : droppedEvent
+    const complete =
+      typeof window !== "undefined"
+        ? window.librariesGlobalAnalytics?.prepare(name, parameters)
+        : undefined
+    if (!complete) return droppedEvent
+
+    return (additional) => {
+      try {
+        return complete(additional)
+      } catch {
+        return false
+      }
+    }
   } catch {
     return droppedEvent
   }
@@ -439,12 +449,12 @@ export function subscribeAnalyticsConsent(listener: () => void) {
 export function analyticsConsentGranted(): boolean {
   return (
     typeof window !== "undefined" &&
-    (window.librariesGlobalAnalytics?.hasConsent() ?? false)
+    (window.librariesGlobalAnalytics?.hasConsent?.() ?? false)
   )
 }
 export function analyticsConsentVersion(): number {
   return typeof window !== "undefined"
-    ? (window.librariesGlobalAnalytics?.consentVersion() ?? 0)
+    ? (window.librariesGlobalAnalytics?.consentVersion?.() ?? 0)
     : 0
 }
 export function notifyAnalyticsConsent() {

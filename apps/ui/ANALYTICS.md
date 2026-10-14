@@ -12,7 +12,7 @@ Page views and events share the same route policy. Auth, API, profile, Staff, co
 
 Payloads use a runtime allowlist of names, fixed categorical values and public content/library IDs. Link targets/text, form values, visitor coordinates, search terms, private record IDs, email addresses and user IDs stay out of event fields. Marked search forms check only whether the query is nonempty; no query value is sent. Page location contains only origin and pathname; page titles are categorical and external referrers contain only origin. Public entity context is accepted only when its server-rendered marker matches the current route.
 
-Async actions capture consent and route at request start. Only a confirmed successful response can count; failures, stale search responses, navigation, withdrawal/regrant and requests started before consent are discarded. A request cannot replay its completion. Geolocation records request/success/denied/unavailable without position data. Honeypot submissions do not count as conversions.
+Async actions capture consent and route at request start. Only a confirmed successful response can count; failures, stale search responses, navigation, withdrawal/regrant and requests started before consent are discarded. A request cannot replay its completion. Measurement failures cannot change an accepted application outcome; existing tabs without the new controller methods skip measurement. Geolocation records request/success/denied/unavailable without position data. Honeypot submissions do not count as conversions.
 
 ## Event catalogue
 

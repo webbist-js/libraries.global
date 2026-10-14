@@ -18,6 +18,7 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { publicLiveCopy } from "@/components/mobile/live-copy"
 import { stopDirections } from "@/components/mobile/mobile-helpers"
 import { StopDrawer } from "@/components/mobile/StopDrawer"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import { loadStopTimetable, type MobileStopHit } from "@/lib/mobile-stop-search"
@@ -130,6 +131,12 @@ export function AtlasStopPanel({
         {stop.library_path ? (
           <GlobalLink
             href={stop.library_path}
+            {...analyticsAttributes("select_content", {
+              interaction_source: "atlas_panel",
+              content_type: "library",
+              library_document_id: stop.library_document_id,
+              view_mode: "map",
+            })}
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
@@ -297,12 +304,23 @@ export function AtlasStopPanel({
               type="button"
               className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
               onClick={() => setDrawer(true)}
+              {...analyticsAttributes("mobile_service_action", {
+                interaction_source: "atlas_panel",
+                action_type: "open",
+                library_document_id: stop.library_document_id,
+                content_id: stop.id,
+              })}
             >
               View timetable
             </button>
             {directions ? (
               <a
                 href={directions}
+                {...analyticsAttributes("library_action", {
+                  interaction_source: "atlas_panel",
+                  action_type: "directions",
+                  library_document_id: stop.library_document_id,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-[15px] font-semibold hover:bg-(--t-bg-surface)"
@@ -331,6 +349,12 @@ export function AtlasStopPanel({
           {stop.library_path ? (
             <GlobalLink
               href={`${stop.library_path}#stops`}
+              {...analyticsAttributes("mobile_service_action", {
+                interaction_source: "atlas_panel",
+                action_type: "open",
+                library_document_id: stop.library_document_id,
+                content_id: stop.id,
+              })}
               className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
