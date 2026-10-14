@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react"
 import { useEffect, useRef, useState } from "react"
 
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 const COPIED = "Link copied"
@@ -24,8 +25,14 @@ export function DriveShareButton({ title }: { readonly title: string }) {
   )
 
   const share = async () => {
+    const measured = captureAnalyticsEvent("share", {
+      interaction_source: "drive_share",
+      content_type: "drive",
+      method: "copy",
+    })
     try {
       await navigator.clipboard.writeText(window.location.href)
+      measured()
       setMessage(COPIED)
     } catch {
       setMessage(FAILED)

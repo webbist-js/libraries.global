@@ -3,16 +3,19 @@
 import { Icon } from "@iconify/react"
 import { useState } from "react"
 
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 interface CalendarSubscribeButtonProps {
   icsUrl: string
   label?: string
+  eventDocumentId?: string
 }
 
 export function CalendarSubscribeButton({
   icsUrl,
   label = "Subscribe",
+  eventDocumentId,
 }: CalendarSubscribeButtonProps) {
   const [open, setOpen] = useState(false)
 
@@ -44,6 +47,11 @@ export function CalendarSubscribeButton({
         >
           <a
             href={webcalUrl}
+            {...analyticsAttributes("event_action", {
+              interaction_source: "event_calendar",
+              action_type: "subscribe_handoff",
+              content_id: eventDocumentId,
+            })}
             className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-[var(--t-bg-muted-2)]"
             style={{ color: T.ink.dim, textDecoration: "none" }}
           >
@@ -64,6 +72,11 @@ export function CalendarSubscribeButton({
           </a>
           <a
             href={icsUrl}
+            {...analyticsAttributes("event_action", {
+              interaction_source: "event_calendar",
+              action_type: "ics_handoff",
+              content_id: eventDocumentId,
+            })}
             download
             className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors duration-150 hover:bg-[var(--t-bg-muted-2)]"
             style={{ color: T.ink.dim, textDecoration: "none" }}

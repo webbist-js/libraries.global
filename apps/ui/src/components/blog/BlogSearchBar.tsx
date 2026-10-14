@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
+import { analyticsAttributes, pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
   searchBlogArticles,
@@ -65,6 +66,10 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && query.trim()) {
+      pushAnalyticsEvent("search", {
+        interaction_source: "article",
+        search_type: "journal",
+      })
       router.push(`/journal/search?q=${encodeURIComponent(query.trim())}`)
       setOpen(false)
     }
@@ -111,6 +116,11 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
             <GlobalLink
               key={hit.documentId}
               href={`/journal/${hit.section_slug ?? "general"}/${hit.slug}`}
+              {...analyticsAttributes("select_content", {
+                interaction_source: "article",
+                content_type: "journal",
+                content_id: hit.documentId,
+              })}
               onClick={() => setOpen(false)}
               style={{
                 display: "flex",
@@ -145,6 +155,10 @@ export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
           {query.trim() && (
             <GlobalLink
               href={`/journal/search?q=${encodeURIComponent(query.trim())}`}
+              {...analyticsAttributes("search", {
+                interaction_source: "article",
+                search_type: "journal",
+              })}
               onClick={() => setOpen(false)}
               style={{
                 display: "flex",

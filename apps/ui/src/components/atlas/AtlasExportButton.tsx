@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useEntitlements } from "@/lib/access-client"
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { MAX_EXPORT_IDS } from "@/lib/export-format"
 
@@ -74,6 +75,19 @@ export function useAtlasExport(onUpgrade: () => void) {
       return
     }
     setBusy(true)
+    const selectionMode = Array.isArray(selection)
+      ? ("selected" as const)
+      : ("all" as const)
+    const measured = captureAnalyticsEvent("atlas_export", {
+      interaction_source: "atlas_export",
+      format,
+      selection_mode: selectionMode,
+    })
+    const blocked = captureAnalyticsEvent("export_blocked", {
+      interaction_source: "atlas_export",
+      format,
+      selection_mode: selectionMode,
+    })
     setOutcome(null)
     try {
       const res = await fetch("/api/export/atlas", {
@@ -86,6 +100,7 @@ export function useAtlasExport(onUpgrade: () => void) {
         ),
       })
       if (res.status === 402) {
+        blocked()
         onUpgrade()
 
         return
@@ -99,6 +114,7 @@ export function useAtlasExport(onUpgrade: () => void) {
         res.headers.get("content-disposition") ?? ""
       )?.[1]
       saveFile(await res.blob(), name ?? `libraries-global-atlas.${format}`)
+      measured()
       setOutcome({ tone: "ok", text: "Your export is downloading." })
     } catch {
       setOutcome({

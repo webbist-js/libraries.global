@@ -1,6 +1,7 @@
 import GlobalLink from "@/components/global/GlobalLink"
 import type { SectionIntro } from "@/components/home/homepage.types"
 import SectionHeader from "@/components/home/sections/SectionHeader"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { PLAN_TEASERS, planCard, TEAM_CONTACT_HREF } from "@/lib/plans"
 
@@ -51,6 +52,10 @@ export function PlansSection({
           <SectionHeader id="plans-title" intro={intro} size="band" />
           <GlobalLink
             href="/contribute/membership"
+            {...analyticsAttributes("membership_interest", {
+              interaction_source: "home_plans",
+              action_type: "compare",
+            })}
             className="-mt-4 inline-block font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
@@ -120,6 +125,12 @@ export function PlansSection({
                   <span className="mt-auto pt-3">
                     <GlobalLink
                       href={cta.href}
+                      {...(teaser.key === "pro" || teaser.key === "team"
+                        ? analyticsAttributes("membership_interest", {
+                            interaction_source: "home_plans",
+                            action_type: "compare",
+                          })
+                        : {})}
                       className={
                         highlight
                           ? "inline-block rounded-full px-4 py-2 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"

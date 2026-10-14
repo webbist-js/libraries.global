@@ -8,9 +8,11 @@ import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
+import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
 import { countWords, extractHeadings, formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import { routing } from "@/lib/navigation"
+import { absoluteUrl } from "@/lib/seo/metadata"
 import type {
   ArticleBodyBlock,
   DocsWikiArticle,
@@ -113,7 +115,15 @@ export function DocsArticlePage({
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
+      <main
+        className="relative z-10 flex-1"
+        data-analytics-page="knowledge"
+        data-analytics-content-id={article.documentId}
+        data-analytics-path={
+          new URL(absoluteUrl(docsArticlePath(article, sections), locale))
+            .pathname
+        }
+      >
         <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 gap-10 px-4 py-8 sm:px-8 lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)_240px]">
           {/* ── Left: docs tree ── */}
           <aside className="hidden lg:block">
@@ -263,9 +273,20 @@ export function DocsArticlePage({
             {/* Body — white section card on paper, serif headings, 17px prose */}
             {body.length > 0 ? (
               <div
+                id={`analytics-knowledge-${article.documentId}`}
                 className="mt-7 rounded-3xl border px-6 py-8 sm:px-10 sm:py-10"
                 style={{ background: T.bg.deep, borderColor: T.border.line }}
               >
+                <ArticleEngagement
+                  bodyId={`analytics-knowledge-${article.documentId}`}
+                  contentId={article.documentId}
+                  contentType="knowledge"
+                  path={
+                    new URL(
+                      absoluteUrl(docsArticlePath(article, sections), locale)
+                    ).pathname
+                  }
+                />
                 {/* Heading margins are in rem: the spacing scale is em-based,
                     so mt-* on a 26px heading would scale with it. */}
                 <div className="[&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[26px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[20px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">

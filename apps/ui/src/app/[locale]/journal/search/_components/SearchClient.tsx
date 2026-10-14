@@ -7,6 +7,11 @@ import { Suspense, useEffect, useRef, useState } from "react"
 import { PageHero, SearchField } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import {
+  analyticsAttributes,
+  captureAnalyticsEvent,
+  resultBucket,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
   searchBlogArticles,
@@ -17,6 +22,11 @@ function SearchResult({ hit }: { hit: BlogArticleSearchHit }) {
   return (
     <GlobalLink
       href={`/journal/${hit.section_slug ?? "general"}/${hit.slug}`}
+      {...analyticsAttributes("select_content", {
+        interaction_source: "article",
+        content_type: "journal",
+        content_id: hit.documentId,
+      })}
       style={{
         display: "block",
         padding: "20px 24px",
@@ -68,20 +78,35 @@ function BlogSearchResults({ query }: { query: string }) {
     if (!query.trim()) return
 
     const id = ++pendingRef.current
+    let cancelled = false
+    const measured = captureAnalyticsEvent("search_results", {
+      interaction_source: "article",
+      search_type: "journal",
+    })
+    const failed = captureAnalyticsEvent("search_error", {
+      interaction_source: "article",
+      search_type: "journal",
+    })
 
     searchBlogArticles(query, 40, locale)
       .then((res) => {
-        if (id === pendingRef.current) {
+        if (!cancelled && id === pendingRef.current) {
           setResults(res.hits)
+          measured({ result_bucket: resultBucket(res.hits.length) })
           setResolvedQuery(query)
         }
       })
       .catch(() => {
-        if (id === pendingRef.current) {
+        if (!cancelled && id === pendingRef.current) {
           setResults([])
+          failed()
           setResolvedQuery(query)
         }
       })
+
+    return () => {
+      cancelled = true
+    }
   }, [query, locale])
 
   if (!query.trim()) return null
@@ -162,7 +187,13 @@ function SearchPageInner() {
             : "Search the *journal*"
         }
       >
-        <form method="get">
+        <form
+          method="get"
+          {...analyticsAttributes("search", {
+            interaction_source: "article",
+            search_type: "journal",
+          })}
+        >
           <SearchField
             id="journal-search"
             placeholder={tUi("search_articles_authors_or_topics")}

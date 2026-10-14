@@ -8,7 +8,12 @@ import {
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
+
 import { BetaForms } from "../BetaForms"
+
+vi.mock("@/lib/analytics-events", () => ({ captureAnalyticsEvent: vi.fn() }))
+const measured = vi.fn(() => true)
 
 vi.mock("next-intl", () => ({
   useTranslations: () =>
@@ -18,6 +23,7 @@ const fetchMock = vi.fn()
 const code = "a".repeat(43)
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.mocked(captureAnalyticsEvent).mockReturnValue(measured)
   vi.stubGlobal("fetch", fetchMock)
   window.location.hash = ""
 })
@@ -64,5 +70,27 @@ describe("beta invitation entrance", () => {
       code,
       next: "/libraries",
     })
+    expect(captureAnalyticsEvent).not.toHaveBeenCalled()
+  })
+
+  it("counts an accepted beta request without sending the email, and ignores rejections", async () => {
+    render(<BetaForms next="/libraries" locale="en" available />)
+    fireEvent.change(screen.getByRole("textbox", { name: "emailLabel" }), {
+      target: { value: "reader@example.org" },
+    })
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 503 }))
+    fireEvent.click(screen.getByRole("button", { name: "requestAccess" }))
+    await screen.findByText("waitlistUnavailable")
+    expect(measured).not.toHaveBeenCalled()
+    fetchMock.mockResolvedValueOnce(Response.json({ ok: true }))
+    fireEvent.click(screen.getByRole("button", { name: "requestAccess" }))
+    await waitFor(() => expect(measured).toHaveBeenCalledOnce())
+    expect(captureAnalyticsEvent).toHaveBeenLastCalledWith("generate_lead", {
+      interaction_source: "beta",
+      submission_type: "beta_request",
+    })
+    expect(
+      JSON.stringify(vi.mocked(captureAnalyticsEvent).mock.calls)
+    ).not.toContain("reader@example.org")
   })
 })
