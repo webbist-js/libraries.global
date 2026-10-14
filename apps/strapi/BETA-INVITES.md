@@ -4,6 +4,8 @@ Open **Beta invites** in the Strapi sidebar. The dashboard reads the existing Su
 
 Choose **Send invite** beside a waiting request. This queues an individual email using the application's shared HTML/text template and existing email worker. Nothing is sent automatically when someone joins the waitlist. The newsletter remains a separate consent record.
 
+The regular CMS cron delivery job processes the queue when `CRON_ENABLED=true`. Hosts that keep general CMS cron disabled must schedule the existing private `/api/notifications/operations` endpoint with action `betaInvites` and the service bridge secret. This runs invitation cleanup and the same delivery worker restricted to beta mail, preserving unrelated pending email. Never expose this operator call to the browser.
+
 The dashboard shows Waiting, Queued, Sent, Accepted, Failed, Expired, Revoked and Unavailable. Search by email and filter by language or status. Counts reflect the email and language filters, before the status filter. History shows issuance, sending, acceptance, expiry, revocation and failed delivery attempts. **Sent** means the email provider accepted the message; it does not confirm inbox delivery.
 
 - **Retry** requeues a failed delivery with the same code, if the invitation is still usable.
