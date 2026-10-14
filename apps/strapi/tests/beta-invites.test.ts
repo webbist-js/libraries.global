@@ -174,6 +174,20 @@ describe("individual beta invitations", () => {
     expect(rows[INVITATION]).toHaveLength(2)
     expect(openCode(rows[INVITATION][1].tokenCiphertext)).not.toBe(code)
   })
+  it("allows a new request after consent changes and ends the previous pass", async () => {
+    await issue()
+    const code = openCode(rows[INVITATION][0].tokenCiphertext)
+    await deliver()
+    const grant = await service.redeem(code)
+    rows[SUBSCRIBER][0].consentedAt = new Date(Date.now() + 1000).toISOString()
+    expect(await service.validate(grant!.invitationId)).toBe(false)
+    expect(await issue()).toEqual({ queued: true })
+    expect(rows[INVITATION]).toHaveLength(2)
+    expect(rows[INVITATION][0].revokedAt).toBeTruthy()
+    expect(rows[INVITATION][1].consentedAt).toBe(
+      rows[SUBSCRIBER][0].consentedAt
+    )
+  })
   it("retries the same failed credential rather than creating another invitation", async () => {
     await issue()
     const ciphertext = rows[INVITATION][0].tokenCiphertext
