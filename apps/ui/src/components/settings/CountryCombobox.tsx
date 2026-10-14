@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useState, useRef, useEffect, useId } from "react"
+import { useState, useRef, useEffect, useId, type RefObject } from "react"
 
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
@@ -27,12 +27,20 @@ const triggerStyle: React.CSSProperties = {
   gap: "8px",
 }
 
+const searchText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replaceAll(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+
 export function CountryCombobox({
   value,
   onChange,
   id,
   labelledBy,
   triggerStyle: triggerOverrides,
+  countries = COUNTRIES,
+  triggerRef,
 }: {
   value: string
   onChange: (code: string) => void
@@ -45,25 +53,46 @@ export function CountryCombobox({
   labelledBy?: string
   /** Overrides for the trigger button, e.g. a page's own field style. */
   triggerStyle?: React.CSSProperties
+  /** CMS-backed selectors can provide their own country names and identifiers. */
+  countries?: readonly { code: string; name: string; searchTerms?: string }[]
+  triggerRef?: RefObject<HTMLButtonElement | null>
 }) {
   const tUi = useUiTranslations("ui")
 
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [activeIndex, setActiveIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const valueId = useId()
+  const listId = useId()
 
-  const selected = COUNTRIES.find((c) => c.code === value)
+  const selected = countries.find((c) => c.code === value)
   const filtered = query
-    ? COUNTRIES.filter((c) =>
-        c.name.toLowerCase().includes(query.toLowerCase())
+    ? countries.filter((c) =>
+        searchText(`${c.name} ${c.code} ${c.searchTerms ?? ""}`).includes(
+          searchText(query.trim())
+        )
       )
-    : COUNTRIES
+    : countries
 
   useEffect(() => {
-    if (open) inputRef.current?.focus()
+    if (open) inputRef.current?.focus({ preventScroll: true })
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const list = listRef.current
+    const option = list?.children[activeIndex] as HTMLElement | undefined
+    if (list && option) {
+      const top = option.offsetTop - list.offsetTop
+      if (top < list.scrollTop) list.scrollTop = top
+      else if (top + option.offsetHeight > list.scrollTop + list.clientHeight)
+        list.scrollTop = top + option.offsetHeight - list.clientHeight
+    }
+  }, [activeIndex, open, query])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -80,14 +109,46 @@ export function CountryCombobox({
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
+  const choose = (code: string) => {
+    onChange(code)
+    setOpen(false)
+    setQuery("")
+    setActiveIndex(0)
+    ;(triggerRef ?? buttonRef).current?.focus({ preventScroll: true })
+  }
+
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
+    <div
+      ref={containerRef}
+      style={{ position: "relative" }}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false)
+          setQuery("")
+          setActiveIndex(0)
+        }
+      }}
+    >
       <button
+        ref={triggerRef ?? buttonRef}
         id={id}
         type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
         aria-labelledby={labelledBy ? `${labelledBy} ${valueId}` : undefined}
         style={{ ...triggerStyle, ...triggerOverrides }}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setOpen((o) => !o)
+          setQuery("")
+          setActiveIndex(0)
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault()
+            setOpen(true)
+          }
+        }}
       >
         <span id={valueId} style={{ color: selected ? T.ink.base : T.ink.dim }}>
           {selected ? selected.name : "Select country…"}
@@ -119,10 +180,44 @@ export function CountryCombobox({
           <input
             ref={inputRef}
             type="text"
+            className="focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-(--t-accent-primary)"
             aria-label={tUi("search_countries")}
             placeholder={tUi("search_countries_2")}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            role="combobox"
+            aria-expanded="true"
+            aria-controls={listId}
+            aria-autocomplete="list"
+            aria-activedescendant={
+              filtered[activeIndex] ? `${listId}-${activeIndex}` : undefined
+            }
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setActiveIndex(0)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.stopPropagation()
+                setOpen(false)
+                setQuery("")
+                ;(triggerRef ?? buttonRef).current?.focus({
+                  preventScroll: true,
+                })
+              } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault()
+                setActiveIndex((index) =>
+                  filtered.length
+                    ? (index +
+                        (event.key === "ArrowDown" ? 1 : -1) +
+                        filtered.length) %
+                      filtered.length
+                    : 0
+                )
+              } else if (event.key === "Enter" && filtered[activeIndex]) {
+                event.preventDefault()
+                choose(filtered[activeIndex]!.code)
+              }
+            }}
             style={{
               width: "100%",
               padding: "10px 14px",
@@ -132,11 +227,20 @@ export function CountryCombobox({
               color: T.ink.base,
               fontSize: "15px",
               fontFamily: T.font.sans,
-              outline: "none",
               boxSizing: "border-box",
             }}
           />
-          <div style={{ maxHeight: "240px", overflowY: "auto" }}>
+          <div
+            id={listId}
+            ref={listRef}
+            role="listbox"
+            aria-label={tUi("search_countries")}
+            style={{
+              maxHeight: "240px",
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+            }}
+          >
             {filtered.length === 0 && (
               <div
                 style={{
@@ -148,20 +252,25 @@ export function CountryCombobox({
                 {tUi("no_results")}{" "}
               </div>
             )}
-            {filtered.map((c) => (
+            {filtered.map((c, index) => (
               <button
                 key={c.code}
+                id={`${listId}-${index}`}
                 type="button"
-                onClick={() => {
-                  onChange(c.code)
-                  setOpen(false)
-                  setQuery("")
-                }}
+                role="option"
+                aria-selected={c.code === value}
+                tabIndex={-1}
+                onClick={() => choose(c.code)}
                 style={{
                   display: "block",
                   width: "100%",
                   padding: "9px 14px",
-                  background: c.code === value ? T.accent.chip : "transparent",
+                  background:
+                    c.code === value
+                      ? T.accent.chip
+                      : index === activeIndex
+                        ? T.bg.surface
+                        : "transparent",
                   border: "none",
                   color: c.code === value ? T.accent.primaryHover : T.ink.dim,
                   fontSize: "14px",
