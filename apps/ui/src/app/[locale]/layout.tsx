@@ -125,6 +125,7 @@ export default async function RootLayout({
           <a href="#main" className="skip-link">
             {tUi("skip_to_main_content")}
           </a>
+          <TrackingScripts nonce={nonce} />
           <ServerProviders>
             <ContactModalProvider aliases={contactAliases}>
               <div id="main">{children}</div>
@@ -151,7 +152,7 @@ export default async function RootLayout({
         <a href="#main" className="skip-link">
           {tUi("skip_to_main_content")}{" "}
         </a>
-        {!liveConsole && <TrackingScripts />}
+        {!liveConsole && <TrackingScripts nonce={nonce} />}
         <ServerProviders>
           <ContactModalProvider aliases={contactAliases}>
             {!liveConsole && <StrapiPreviewListener />}
