@@ -17,7 +17,7 @@ export function GlobalFooter({
 }: {
   readonly locale: Locale
   readonly footer: FooterData
-  /** Published legal documents — always listed in the bottom bar. */
+  /** Published documents determine the direct links; the index lists them all. */
   readonly legalDocuments?: LegalDocumentNavItem[]
 }) {
   const tUi = useUiTranslations("ui")
@@ -25,11 +25,10 @@ export function GlobalFooter({
   const sections = Array.isArray(footer?.sections) ? footer.sections : []
   const year = new Date().getFullYear()
 
-  // The bottom bar lists every published legal document, so it never points
-  // at an unpublished one. Extra CMS links follow, minus any with nowhere to
-  // go and any /legal/ link (those come from the documents themselves).
+  // Keep frequent destinations direct. The legal index lists every published
+  // policy, including documents added later, without growing the bottom bar.
   const legalLinks = legalDocuments.flatMap((doc) =>
-    doc.slug
+    doc.slug && ["privacy", "accessibility"].includes(doc.slug)
       ? [
           {
             key: doc.documentId,
@@ -42,12 +41,24 @@ export function GlobalFooter({
   const cmsLinks = (Array.isArray(footer?.links) ? footer.links : []).flatMap(
     (link, index) => {
       const href = getStrapiLinkHref(link)
-      if (!href || href === "#" || href.startsWith("/legal/")) return []
+      if (
+        !href ||
+        href === "#" ||
+        href === "/legal" ||
+        href.startsWith("/legal/")
+      )
+        return []
 
       return [{ key: String(link.id ?? index), label: link.label, href }]
     }
   )
-  const links = [...legalLinks, ...cmsLinks]
+  const links = [
+    ...(legalDocuments.some((doc) => doc.slug)
+      ? [{ key: "legal-index", label: tUi("legal_policies"), href: "/legal" }]
+      : []),
+    ...legalLinks,
+    ...cmsLinks,
+  ]
 
   return (
     <footer
@@ -124,25 +135,31 @@ export function GlobalFooter({
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-x-8 gap-y-3 pt-5 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: copyright + tagline */}
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p
+            className="m-0 text-[13px] leading-relaxed"
+            style={{ color: T.ink.dim }}
+          >
             © {year} {SITE_NAME} · Indexing the world&rsquo;s libraries
           </p>
 
           {/* Right: legal links */}
           {links.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <nav
+              aria-label={tUi("legal_documents")}
+              className="flex flex-wrap items-center gap-x-5 gap-y-1"
+            >
               {links.map((link) => (
                 <GlobalLink
                   key={link.key}
                   href={link.href}
-                  className="text-[13px] text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
+                  className="inline-flex min-h-11 items-center text-[13px] text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4"
                 >
                   {link.label}
                 </GlobalLink>
               ))}
-            </div>
+            </nav>
           ) : null}
         </div>
       </Container>

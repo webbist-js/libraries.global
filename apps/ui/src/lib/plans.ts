@@ -173,6 +173,11 @@ function featureItems(
 
 const PRO_ONLY = featuresOf("pro")
 const SUPPORTER_ONLY = featuresOf("supporter")
+// Inherited features are covered by "Everything in Supporter". Export stays
+// explicit because Pro raises the per-download limit.
+const PRO_UPGRADES = PRO_ONLY.filter(
+  (feature) => feature === "atlas.export" || !SUPPORTER_ONLY.includes(feature)
+)
 const TEAM_ONLY = featuresOf("team").filter((f) => !PRO_ONLY.includes(f))
 const TEAM_FEATURES = featureItems(TEAM_ONLY)
 
@@ -187,15 +192,13 @@ const TEAM_INCLUDES: PlanInclude[] = [
   feature("Pro for every seat"),
   ...TEAM_FEATURES.filter((i) => i.kind === "feature"),
   feature("Choose who can go live for a mobile library"),
-  feature(
-    `Optional paid API add-on (${pounds(pricing.teamApi.month)}/month) with managed keys and usage reporting`
-  ),
+  feature("Optional API add-on with managed keys and usage reporting"),
   TEAM_TRAFFIC,
   ...TEAM_FEATURES.filter(
     (i) => i.kind === "soon" && i.text !== TEAM_TRAFFIC.text
   ),
   note(
-    "Bought per library service, not per person, and invoiced yearly. We set up the Team, its libraries and its seats; the team organiser invites colleagues and assigns them to your libraries."
+    "We set up the Team, its libraries and its seats. Your team organiser then invites colleagues and assigns them to your libraries."
   ),
 ]
 
@@ -266,10 +269,10 @@ export const PLANS: readonly PlanCard[] = [
       yearly: `${pounds(pricing.pro.founding.year)}/year`,
       note: "Founding price, held while you stay a member.",
     },
-    who: "Researchers, journalists, consultants, enthusiasts",
+    who: "Researchers, journalists, consultants and enthusiasts",
     includes: [
       feature("Everything in Supporter"),
-      ...featureItems(PRO_ONLY, "pro"),
+      ...featureItems(PRO_UPGRADES, "pro"),
     ],
     cta: { kind: "soon", label: "Coming soon" },
   },
@@ -280,7 +283,7 @@ export const PLANS: readonly PlanCard[] = [
       yearly: `${pounds(pricing.team.year)}/year ex VAT`,
       note: `Includes ${pricing.team.includedSeats} seats; ${pounds(pricing.team.extraSeatYear)}/year per extra seat. Public library services get ${pricing.team.publicServiceDiscountPercent}% off: ${pounds(pricing.team.year * publicServiceRate)}/year and ${pounds(pricing.team.extraSeatYear * publicServiceRate)}/year per extra seat, ex VAT.`,
     },
-    who: "Library services, councils, universities, consultancies",
+    who: "Library services, councils, universities and consultancies",
     includes: TEAM_INCLUDES,
     cta: { kind: "contact", label: "Talk to us", href: TEAM_CONTACT_HREF },
   },

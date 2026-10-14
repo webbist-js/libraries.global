@@ -116,7 +116,10 @@ export function LegalDocumentPage({
             <Breadcrumb
               items={[
                 { label: tUi("home"), href: "/" },
-                { label: "Legal" },
+                {
+                  label: tUi("legal_policies"),
+                  href: doc.slug === "beta" ? undefined : "/legal",
+                },
                 { label: title },
               ]}
             />

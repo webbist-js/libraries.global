@@ -62,6 +62,19 @@ describe("PLANS", () => {
     expect(notes[0]?.text).toContain("community role")
   })
 
+  it("summarises inherited Supporter features while keeping Pro's higher export limit explicit", () => {
+    expect(plan("pro").includes).toContainEqual({
+      text: "Everything in Supporter",
+      kind: "feature",
+    })
+    expect(plan("pro").includes.map((item) => item.text)).not.toContain(
+      PRO_FEATURE_COPY["library.history"].label
+    )
+    expect(plan("pro").includes.map((item) => item.text)).toContain(
+      `${PRO_FEATURE_COPY["atlas.export"].label} (up to 10,000 libraries per download)`
+    )
+  })
+
   it("tags exactly the unbuilt items as coming soon", () => {
     for (const card of PLANS)
       for (const item of card.includes)
