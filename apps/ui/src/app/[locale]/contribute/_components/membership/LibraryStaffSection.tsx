@@ -34,30 +34,15 @@ const STAFF_BENEFITS: readonly StaffBenefit[] = [
   { label: "Pro, free while you’re verified" },
 ]
 
-const TEAM_BENEFITS: readonly StaffBenefit[] = [
-  { label: "Invite colleagues and give them roles" },
-  { label: "Choose who can go live on mobile libraries" },
-  { label: "Pro for every seat" },
-  { label: "Traffic reports for your libraries", badge: "soon" },
-]
-
-const CARD_HEADING_STYLE = {
-  fontFamily: T.font.serif,
-  fontSize: "clamp(26px,2.6vw,30px)",
-  fontWeight: 500,
-  letterSpacing: "-0.015em",
-  lineHeight: 1.1,
-} as const
-
 function Benefits({ items }: { readonly items: readonly StaffBenefit[] }) {
   const tUi = useUiTranslations("ui")
 
   return (
-    <ul className="m-0 flex list-none flex-col gap-3 p-0">
+    <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
       {items.map((item) => (
         <li
           key={item.label}
-          className="flex items-start gap-3 text-[16px] leading-[1.45]"
+          className="flex items-start gap-3 text-[14.5px] leading-[1.5]"
         >
           <Icon
             aria-hidden="true"
@@ -100,181 +85,73 @@ export function LibraryStaffSection({
   return (
     <section
       aria-labelledby="library-staff-h"
-      className="flex flex-col gap-8 rounded-[28px] border p-5 sm:rounded-[32px] sm:p-8 lg:p-10"
+      className="grid gap-6 rounded-[26px] border p-5 sm:p-7 lg:grid-cols-2 lg:gap-8"
       style={{ background: T.bg.space, borderColor: T.border.line }}
     >
-      <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
-        <div className="min-w-0">
-          <p
-            className="m-0 inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[14px] font-semibold"
-            style={{ background: T.bg.deep, borderColor: T.border.line }}
-          >
-            <Icon
-              aria-hidden="true"
-              height={16}
-              icon="mdi:bank-outline"
-              style={{ color: TYPE_TINT.national.fg }}
-              width={16}
-            />
-            For library staff
-          </p>
-          <h2
-            id="library-staff-h"
-            className="mt-[16px] mb-[24px] text-[clamp(36px,4.5vw,60px)] leading-[0.98] tracking-[-0.035em]"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            Look after your
-            <br />
-            library&rsquo;s record,{" "}
-            <em style={{ color: T.accent.primary }}>free.</em>
-          </h2>
-          <p
-            className="m-0 max-w-[68ch] text-[17px] leading-[1.6]"
-            style={{ color: T.ink.dim }}
-          >
-            Staff tools come from verification, not from a plan. Paying never
-            makes you a verified librarian, and verified librarians never have
-            to pay.
-          </p>
-        </div>
-        <GlobalLink
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-[16px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-          href={isStaff ? "/staff" : "/contribute/claim"}
+      <div className="flex flex-col items-start gap-4">
+        <span className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold">
+          For library staff
+        </span>
+        <h2
+          id="library-staff-h"
+          className="m-0 text-[clamp(28px,3vw,36px)] leading-[1.1] tracking-[-0.015em]"
+          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
-          {isStaff ? "Open the staff area" : "Claim your library"}
-        </GlobalLink>
-      </div>
-
-      <ol className="m-0 grid list-none grid-cols-1 gap-3 p-0 lg:grid-cols-3">
-        {CLAIM_STEPS.map((step, index) => (
-          <li
-            key={step.title}
-            className="flex items-start gap-3 rounded-[20px] border p-4 sm:p-5"
-            style={{ background: T.bg.deep, borderColor: T.border.line }}
-          >
-            <span
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-[14px] font-semibold"
-              style={{
-                background: T.accent.chip,
-                color: T.accent.primaryHover,
-              }}
+          Look after your library’s record,{" "}
+          <em className="text-(--t-accent-primary)">free.</em>
+        </h2>
+        <p className="m-0 text-[14.5px] leading-[1.6] text-(--t-ink-dim)">
+          Staff tools come from verification. Paying never makes you a verified
+          librarian, and verified librarians never have to pay.
+        </p>
+        <ol className="m-0 flex list-none flex-col gap-2 p-0">
+          {CLAIM_STEPS.map((step, index) => (
+            <li
+              key={step.title}
+              className="flex gap-2 text-[13.5px] leading-[1.5]"
             >
-              {index + 1}
-            </span>
-            <div className="min-w-0">
-              <h3 className="m-0 text-[16px] leading-[1.4] font-bold">
-                {step.title}
-              </h3>
-              <p
-                className="m-0 mt-1 text-[15px] leading-[1.45]"
-                style={{ color: T.ink.dim }}
+              <span
+                aria-hidden="true"
+                className="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-white text-[11px] font-bold text-(--t-accent-primary)"
               >
-                {step.body}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div
-          className="flex min-w-0 flex-col gap-5 rounded-[24px] border p-5 sm:p-7"
-          style={{ background: T.bg.deep, borderColor: T.border.line }}
-        >
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="m-0" style={CARD_HEADING_STYLE}>
-              {tUi("verified_staff")}
-            </h3>
-            <span
-              className="text-[14px] font-bold"
-              style={{ color: T.accent.ok }}
-            >
-              {tUi("free")}
-            </span>
-          </div>
-          <p
-            className="m-0 text-[15px] leading-[1.5]"
-            style={{ color: T.ink.dim }}
+                {index + 1}
+              </span>
+              <span>
+                <strong>{step.title}.</strong>{" "}
+                <span className="text-(--t-ink-dim)">{step.body}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+          <GlobalLink
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[14px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4"
+            href={isStaff ? "/staff" : "/contribute/claim"}
           >
-            Every verified member of staff, for each library they&rsquo;re
-            approved for.
-          </p>
-          <Benefits items={STAFF_BENEFITS} />
-          <p
-            className="m-0 mt-auto flex items-start gap-2 pt-3 text-[14px] leading-[1.5]"
-            style={{ color: T.ink.dim }}
+            {isStaff ? "Open the staff area" : "Claim your library"}
+          </GlobalLink>
+          <a
+            href="#plan-team"
+            className="inline-flex min-h-11 items-center text-[13px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
           >
-            <Icon
-              aria-hidden="true"
-              className="mt-0.5 shrink-0"
-              height={16}
-              icon="mdi:shield-check-outline"
-              style={{ color: T.accent.primary }}
-              width={16}
-            />
-            <span>
-              Verified staff can also get Pro free.{" "}
-              <a
-                className="font-semibold underline underline-offset-[3px]"
-                href="#get-pro-free"
-                style={{ color: T.accent.primary }}
-              >
-                See below
-              </a>
-            </span>
-          </p>
-        </div>
-
-        <div
-          className="flex min-w-0 flex-col gap-5 rounded-[24px] border p-5 sm:p-7"
-          style={{ background: T.bg.deep, borderColor: T.border.line }}
-        >
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="m-0" style={CARD_HEADING_STYLE}>
-              Your whole service
-            </h3>
-            <span
-              className="shrink-0 text-[14px] font-bold"
-              style={{ color: T.accent.primaryHover }}
-            >
-              {tUi("team_plan")}
-            </span>
-          </div>
-          <p
-            className="m-0 text-[15px] leading-[1.5]"
-            style={{ color: T.ink.dim }}
-          >
-            For library services that want one place to organise their staff.
-            Bought per service, not per person.
-          </p>
-          <Benefits items={TEAM_BENEFITS} />
-          <div className="mt-auto flex flex-wrap items-center gap-3 pt-1">
-            <a
-              className="inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2.5 text-[14.5px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
-              href="#plan-team"
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
-            >
-              See the Team plan
-            </a>
-            <p
-              className="m-0 text-[14px] leading-[1.5]"
-              style={{ color: T.ink.dim }}
-            >
-              Public library services get 20% off.
-            </p>
-          </div>
+            Running a whole service? See Team
+          </a>
         </div>
       </div>
-
-      <p
-        className="m-0 max-w-[95ch] text-[15px] leading-[1.6]"
-        style={{ color: T.ink.dim }}
-      >
-        Whichever you use, a verified record never means the library endorses
-        Libraries Global. It means a member of its staff looks after the
-        details.
-      </p>
+      <div className="flex flex-col gap-4 rounded-[20px] border border-(--t-border-line) bg-white p-5">
+        <div className="flex justify-between gap-3 text-[14px] font-bold">
+          <h3 className="m-0 text-[14px]">{tUi("verified_staff")}</h3>
+          <span className="text-(--t-accent-ok)">{tUi("free")}</span>
+        </div>
+        <p className="m-0 text-[13.5px] leading-relaxed text-(--t-ink-dim)">
+          For each library you’re approved for.
+        </p>
+        <Benefits items={STAFF_BENEFITS} />
+        <p className="m-0 mt-auto border-t border-(--t-divider) pt-3 text-[12.5px] leading-[1.6] text-(--t-ink-dim)">
+          A verified record means a member of staff looks after its details; it
+          never means the library endorses Libraries Global.
+        </p>
+      </div>
     </section>
   )
 }

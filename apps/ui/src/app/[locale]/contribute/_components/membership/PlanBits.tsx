@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
-import type { PlanInclude } from "@/lib/plans"
+import type { PlanCard, PlanInclude } from "@/lib/plans"
 
 const SOON_SUFFIX = " (coming soon)"
 
@@ -54,6 +54,57 @@ export function IncludeItem({ item }: { readonly item: PlanInclude }) {
   )
 }
 
+export function CurrentPlanBadge() {
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-semibold text-white"
+      style={{ background: T.accent.primary }}
+    >
+      <Icon aria-hidden="true" height={14} icon="mdi:check" width={14} />
+      Your plan
+    </span>
+  )
+}
+
+export function PlanFeatures({
+  plan,
+  children,
+}: {
+  readonly plan: PlanCard
+  readonly children?: ReactNode
+}) {
+  const live = plan.includes.filter((item) => item.kind === "feature")
+  const notes = plan.includes.filter((item) => item.kind === "note")
+
+  return (
+    <div
+      className="flex flex-col gap-3 border-t pt-5"
+      style={{ borderColor: T.border.divider }}
+    >
+      <p className="m-0 text-[13.5px] font-bold">Included now</p>
+      <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+        {live.map((item) => (
+          <IncludeItem key={item.text} item={item} />
+        ))}
+      </ul>
+      {notes.map((item) => (
+        <p
+          key={item.text}
+          className="m-0 rounded-[14px] border px-3.5 py-2.5 text-[13.5px] leading-[1.5]"
+          style={{
+            background: T.bg.surface,
+            borderColor: T.border.line,
+            color: T.ink.dim,
+          }}
+        >
+          {item.text}
+        </p>
+      ))}
+      {children}
+    </div>
+  )
+}
+
 export const H2_STYLE = {
   fontFamily: T.font.serif,
   fontSize: "clamp(28px,3.2vw,36px)",
@@ -78,7 +129,7 @@ export function PlanSectionHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h2 id={id} className="m-0" style={H2_STYLE}>
+        <h2 id={id} className="m-0 scroll-mt-24" style={H2_STYLE}>
           {title}
         </h2>
         <p

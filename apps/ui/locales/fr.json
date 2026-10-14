@@ -1212,7 +1212,15 @@
     "history_most_updated": "Informations les plus souvent mises à jour",
     "history_recent_changes": "Modifications récentes",
     "history_changes_unavailable": "L’historique des modifications est temporairement indisponible.",
-    "history_no_changes_since_import": "Aucune modification depuis l’import."
+    "history_no_changes_since_import": "Aucune modification depuis l’import.",
+    "legal_policies": "Informations légales et politiques",
+    "legal_policies_intro": "Nos politiques concernant l’utilisation de Libraries Global, les abonnements, les données ouvertes et la responsabilité.",
+    "legal_site": "Utilisation du site",
+    "legal_membership": "Abonnements et facturation",
+    "legal_data": "Données et responsabilité",
+    "legal_other": "Autres politiques",
+    "legal_unavailable": "Les politiques sont actuellement indisponibles. Veuillez réessayer plus tard.",
+    "choose_your_membership": "Choisissez votre abonnement"
   },
   "translation": {
     "language": "Langue",

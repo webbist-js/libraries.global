@@ -9,18 +9,6 @@ import { H2_STYLE } from "./PlanBits"
 
 const FAQ: { q: string; a: string }[] = [
   {
-    q: "What stays free?",
-    a: "Everything factual. Every library record, with its hours and services, search, the map and lists stay free for everyone, signed in or not. Contributing is free too.",
-  },
-  {
-    q: "Does membership change my role or how my edits are reviewed?",
-    a: "No. Money never buys trust. Supporter and Pro do not award points, raise your tier, change your contributor role or skip review.",
-  },
-  {
-    q: "How does Team work?",
-    a: "Team is bought per library service, not per person. It comes with a number of seats, the libraries it covers and a Team organiser, who invites colleagues by email and assigns them to those libraries as owners or editors. Each seat gives its holder Pro. On a team we have verified, an assignment gives staff access at once; otherwise a moderator checks it first. Ask about Team for your service from the Team card.",
-  },
-  {
     q: "Is VAT added at checkout?",
     a: "Supporter and Pro use tax-inclusive GBP base prices. Stripe confirms the applicable tax, local currency and final recurring total before you pay; your invoice shows the actual charge. Team is quoted and invoiced separately, excluding VAT where stated.",
   },
@@ -29,12 +17,24 @@ const FAQ: { q: string; a: string }[] = [
     a: "Cancel renewal at any time through Membership & billing in Settings. Your settled membership remains available until the paid period ends. Refund requests are handled under the cancellation and refund policy and Stripe’s order terms; your statutory rights remain unchanged.",
   },
   {
+    q: "How does Team work?",
+    a: "Team is bought per library service, not per person. It comes with a number of seats, the libraries it covers and a Team organiser, who invites colleagues by email and assigns them to those libraries as owners or editors. Each seat gives its holder Pro. On a team we have verified, an assignment gives staff access at once; otherwise a moderator checks it first. Ask about Team for your service from the Team card.",
+  },
+  {
     q: "What does Supporter include?",
     a: "Detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download. Pro includes those tools, raises the export cap to 10,000 and adds population comparisons. Unfinished analysis tools are marked Coming soon.",
   },
   {
     q: "Can I use Apple Pay or Google Pay?",
     a: "Stripe’s secure checkout shows supported payment methods for your device and location, including Apple Pay and Google Pay when available. Card payment remains available. Libraries Global does not receive your full card details.",
+  },
+  {
+    q: "Does membership change my role or how my edits are reviewed?",
+    a: "No. Money never buys trust. Supporter and Pro do not award points, raise your tier, change your contributor role or skip review.",
+  },
+  {
+    q: "What stays free?",
+    a: "Everything factual. Every library record, with its hours and services, search, the map and lists stay free for everyone, signed in or not. Contributing is free too.",
   },
 ]
 

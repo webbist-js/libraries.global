@@ -1212,7 +1212,15 @@
     "history_most_updated": "Nejčastěji aktualizované údaje",
     "history_recent_changes": "Nedávné změny",
     "history_changes_unavailable": "Historie změn je dočasně nedostupná.",
-    "history_no_changes_since_import": "Od importu nebyly provedeny žádné změny."
+    "history_no_changes_since_import": "Od importu nebyly provedeny žádné změny.",
+    "legal_policies": "Právní informace a zásady",
+    "legal_policies_intro": "Naše zásady pro používání Libraries Global, členství, otevřená data a odpovědnost.",
+    "legal_site": "Používání webu",
+    "legal_membership": "Členství a platby",
+    "legal_data": "Data a odpovědnost",
+    "legal_other": "Další zásady",
+    "legal_unavailable": "Zásady jsou momentálně nedostupné. Zkuste to prosím později.",
+    "choose_your_membership": "Vyberte si členství"
   },
   "translation": {
     "language": "Jazyk",
