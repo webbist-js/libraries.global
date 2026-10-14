@@ -1,8 +1,8 @@
 import { SUPPORTED_LOCALES } from "@repo/shared-data"
 
-export const GOOGLE_ANALYTICS_ID = "G-N6DLE0CK0Y"
+export const GOOGLE_ANALYTICS_ID = "G-8M465CHXJ6"
 export const ANALYTICS_ORIGIN = "https://libraries.global"
-const DISABLE_KEY = "ga-disable-G-N6DLE0CK0Y"
+const DISABLE_KEY = "ga-disable-G-8M465CHXJ6"
 const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
 const PRIVATE_PATH =
   /^\/(?:auth|api|profile|staff|contribute|live|dev|email)(?:\/|$)/
@@ -30,7 +30,7 @@ declare global {
     dataLayer?: unknown[]
     gtag?: (...args: unknown[]) => void
     librariesGlobalAnalytics?: AnalyticsConsentController
-    "ga-disable-G-N6DLE0CK0Y"?: boolean
+    "ga-disable-G-8M465CHXJ6"?: boolean
   }
 }
 
