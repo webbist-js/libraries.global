@@ -8,16 +8,19 @@ import {
   betaDestination,
   betaEnabled,
   createBetaPass,
-  matchesBetaPassword,
   sameOriginRequest,
 } from "@/lib/beta/access"
 import { betaAttemptLimit } from "@/lib/beta/attempts"
+import { redeemBetaInvitation } from "@/lib/beta/invitations"
 import { readJsonCapped } from "@/lib/bridge-params"
 import { rateLimitResponse } from "@/lib/rate-limit"
 
 const bodySchema = z
   .object({
-    password: z.string().min(1).max(512),
+    code: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z0-9_-]{43}$/),
     next: z.string().max(2048).optional(),
   })
   .strict()
@@ -46,18 +49,18 @@ export async function POST(req: Request) {
   } catch {
     return response("unavailable", 503)
   }
-  let matches: boolean
+  let grant
   try {
-    matches = await matchesBetaPassword(body.data.password)
+    grant = await redeemBetaInvitation(body.data.code)
   } catch {
     return response("unavailable", 503)
   }
-  if (!matches) return response("password", 401)
+  if (!grant) return response("invitation", 401)
   const accepted = NextResponse.json(
     { ok: true, next: betaDestination(body.data.next) },
     { headers: { "Cache-Control": "no-store" } }
   )
-  accepted.cookies.set(BETA_COOKIE, createBetaPass(), {
+  accepted.cookies.set(BETA_COOKIE, createBetaPass(grant), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

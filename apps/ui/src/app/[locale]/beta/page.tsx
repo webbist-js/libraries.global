@@ -15,12 +15,13 @@ import {
   betaConfigured,
   betaDestination,
   betaEnabled,
-  validBetaPass,
 } from "@/lib/beta/access"
+import { hasBetaAccess } from "@/lib/beta/invitations"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
   title: "Closed beta",
+  referrer: "no-referrer",
   robots: { index: false, follow: false },
 }
 
@@ -40,7 +41,7 @@ export default async function BetaPage({
   const next = betaDestination((await searchParams).next, fallback)
   if (
     !betaEnabled() ||
-    validBetaPass((await cookies()).get(BETA_COOKIE)?.value)
+    (await hasBetaAccess((await cookies()).get(BETA_COOKIE)?.value))
   )
     redirect(next)
   const t = await getUiTranslations("beta")

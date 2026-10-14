@@ -162,3 +162,21 @@ it("preserves a queued message containing many unmatched footer markers", () => 
   expect(result.html.startsWith(html)).toBe(true)
   expect(result.html).toContain(">Unsubscribe<")
 })
+
+describe("beta invitation emails", () => {
+  it("uses a localized fragment link and a copyable code without enrolling anyone", async () => {
+    const { betaInvitationEmail } = await import("../beta-email")
+    for (const locale of ["en", "cs", "fr"]) {
+      const code = "a".repeat(43)
+      const message = betaInvitationEmail({
+        code,
+        locale,
+        siteUrl: "https://libraries.global",
+      })
+      expect(message.html).toContain(`/beta#invite=${code}`)
+      expect(message.text).toContain(code)
+      expect(message.html).not.toContain("?token=")
+      expect(message.html).not.toContain("List-Unsubscribe")
+    }
+  })
+})

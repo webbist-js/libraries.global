@@ -65,6 +65,34 @@ beforeEach(() => {
 })
 
 describe("notification preference trigger matrix", () => {
+  it("routes anonymous beta invitations through their service and retries failed delivery", async () => {
+    const { service, services, store, send } = setup()
+    const deliver = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("SMTP offline"))
+      .mockResolvedValueOnce("sent")
+    services["beta-invites.invites"] = { deliver }
+    await service.enqueue({
+      eventKey: "beta-test",
+      kind: "beta_invitation",
+      title: "Beta invite",
+      body: "Requested access",
+      inApp: false,
+      emailPreference: "transactional",
+      emailPayload: { invitationId: "invite1" },
+    })
+    const failed = await service.deliver(new Date(Date.now() + 1000))
+    expect(failed.failed).toBe(1)
+    expect(store[UID]![0]!).toMatchObject({
+      attempts: 1,
+      emailState: "pending",
+      inApp: false,
+    })
+    const retried = await service.deliver(new Date(Date.now() + 600000))
+    expect(retried.sent).toBe(1)
+    expect(deliver).toHaveBeenCalledTimes(2)
+    expect(send).not.toHaveBeenCalled()
+  })
   it("refuses operator actions without the private service secret", async () => {
     const ctx: any = {
       request: { headers: {}, body: { action: "report" } },

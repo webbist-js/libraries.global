@@ -330,6 +330,7 @@ export default ({ env }) => {
     "library-staff": { enabled: true, resolve: "./src/plugins/library-staff" },
     // People (Role Grants), Teams and Plans.
     access: { enabled: true, resolve: "./src/plugins/access" },
+    "beta-invites": { enabled: true, resolve: "./src/plugins/beta-invites" },
 
     "mobile-libraries": {
       enabled: true,

@@ -4,11 +4,8 @@ import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
 
 // Run against an isolated beta-enabled preview. Waitlist writes are intercepted.
-// BASE_URL=http://localhost:3010 BETA_E2E_PASSWORD=<local test password>
-test.skip(
-  !process.env.BETA_E2E_PASSWORD,
-  "Requires a beta-enabled test preview"
-)
+// BASE_URL=http://localhost:3010 BETA_E2E_CODE=<single-use local invitation code>
+test.skip(!process.env.BETA_E2E_CODE, "Requires a beta-enabled test preview")
 test.use({ trace: "off", video: "off" })
 
 const preview = (name: string) =>
@@ -38,7 +35,7 @@ test("locks deep links, dotted slugs, exports, feeds and account APIs", async ({
   expect(signUp.status()).toBe(401)
 })
 
-test("shows the desktop layout, password visibility and invalid-password state", async ({
+test("shows the desktop layout, invite visibility and invalid-invitation state", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1682, height: 1472 })
@@ -50,7 +47,7 @@ test("shows the desktop layout, password visibility and invalid-password state",
     path: preview("desktop"),
     fullPage: true,
   })
-  const password = page.getByLabel("Beta password", { exact: true })
+  const password = page.getByLabel("Invite code", { exact: true })
   await password.fill("incorrect-test-password")
   await page.getByRole("button", { name: "Show", exact: true }).click()
   await expect(password).toHaveAttribute("type", "text")
@@ -58,7 +55,7 @@ test("shows the desktop layout, password visibility and invalid-password state",
   await expect(password).toHaveAttribute("type", "password")
   await page.getByRole("button", { name: "Enter", exact: true }).click()
   await expect(page.locator("#beta-password-error")).toContainText(
-    "That password didn't work"
+    "This invitation is invalid"
   )
   await expect(password).toHaveAttribute("aria-invalid", "true")
   await expect(password).toHaveValue("incorrect-test-password")
@@ -123,7 +120,7 @@ test("renders on mobile and in Czech without horizontal overflow", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto("/beta")
-  await expect(page.getByLabel("Beta password", { exact: true })).toBeVisible()
+  await expect(page.getByLabel("Invite code", { exact: true })).toBeVisible()
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth)
   ).toBeLessThanOrEqual(390)
@@ -154,10 +151,18 @@ test("shows success and grants a browser pass without an account session", async
         body: "<h1>Test destination</h1>",
       })
   )
-  await page.goto("/beta?next=/beta-test-destination")
+  await page.goto(
+    `/beta?next=/beta-test-destination#invite=${process.env.BETA_E2E_CODE!}`
+  )
+  await expect(page.getByLabel("Invite code", { exact: true })).toHaveValue(
+    process.env.BETA_E2E_CODE!
+  )
+  expect(
+    (await context.cookies()).some((cookie) => cookie.name === "lg-beta-access")
+  ).toBe(false)
   await page
-    .getByLabel("Beta password", { exact: true })
-    .fill(process.env.BETA_E2E_PASSWORD!)
+    .getByLabel("Invite code", { exact: true })
+    .fill(process.env.BETA_E2E_CODE!)
   await page.getByRole("button", { name: "Enter", exact: true }).click()
   await expect(page.getByRole("heading", { name: "You're in." })).toBeVisible()
   await expect(

@@ -8,7 +8,10 @@ import { getEnvVar } from "@/lib/env-vars"
 import { isLivePagePath } from "@/lib/live-path"
 
 // The live console carries location and confirmation codes: no replay there.
-if (!isLivePagePath(window.location.pathname))
+if (
+  !isLivePagePath(window.location.pathname) &&
+  !/^\/(?:(?:en|cs|fr)\/)?beta\/?$/.test(window.location.pathname)
+)
   Sentry.init({
     dsn: getEnvVar("NEXT_PUBLIC_SENTRY_DSN"),
 
