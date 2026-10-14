@@ -53,7 +53,7 @@ describe("beta invitation entrance", () => {
       json: async () => ({ next: "/libraries" }),
     })
     render(<BetaForms next="/libraries" locale="en" available />)
-    fireEvent.click(screen.getByRole("button", { name: "enter", exact: true }))
+    fireEvent.click(screen.getByRole("button", { name: "enter" }))
     await waitFor(() =>
       expect(
         screen.getByRole("heading", { name: "acceptedTitle" })
