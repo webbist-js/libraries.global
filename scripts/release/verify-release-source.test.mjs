@@ -4,6 +4,7 @@ import test from "node:test"
 import {
   assertPassingChecks,
   assertProtectedSource,
+  releaseChecksState,
 } from "./verify-release-source.mjs"
 
 const sha = "1234567890abcdef1234567890abcdef12345678"
@@ -25,10 +26,10 @@ const checks = () =>
 
 test("accepts only the intended repository and protected branch", () => {
   assert.doesNotThrow(() =>
-    assertProtectedSource("webbist-js/libraries.global", "refs/heads/dev", sha)
+    assertProtectedSource("webbist-js/libraries.global", "refs/heads/main", sha)
   )
   assert.throws(() =>
-    assertProtectedSource("other/libraries.global", "refs/heads/dev", sha)
+    assertProtectedSource("other/libraries.global", "refs/heads/main", sha)
   )
   assert.throws(() =>
     assertProtectedSource(
@@ -47,7 +48,7 @@ test("accepts only the intended repository and protected branch", () => {
   assert.throws(() =>
     assertProtectedSource(
       "webbist-js/libraries.global",
-      "refs/heads/dev",
+      "refs/heads/main",
       "HEAD"
     )
   )
@@ -96,5 +97,22 @@ test("waits for the configured Python security analysis", () => {
       result.filter((check) => check !== python),
       sha
     )
+  )
+})
+
+test("waits for missing checks but fails completed unsuccessful checks", () => {
+  assert.equal(releaseChecksState([], sha), "pending")
+  assert.equal(releaseChecksState(checks(), sha), "success")
+  const pending = checks()
+  pending[0].status = "in_progress"
+  pending[0].conclusion = null
+  assert.equal(releaseChecksState(pending, sha), "pending")
+  pending[1].conclusion = "failure"
+  assert.equal(releaseChecksState(pending, sha), "failure")
+})
+
+test("dev remains an integration branch and cannot publish production", () => {
+  assert.throws(() =>
+    assertProtectedSource("webbist-js/libraries.global", "refs/heads/dev", sha)
   )
 })

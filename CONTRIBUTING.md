@@ -114,7 +114,7 @@ Enhancement suggestions are tracked as [Feature request GitHub issues](https://g
 
 The repository owner, @webbist-js, reviews contributions. CI runs linting, formatting, unit tests and production builds with a read-only token. Pull requests from outside contributors need maintainer approval before their workflows run; they receive no production credentials.
 
-`dev` is the default integration branch. A reviewed `main` branch will hold production releases when it is created. Merges must pass CI and resolve review conversations. Force pushes and deletion are blocked on both branches. The owner can merge their own pull request without a second maintainer's approval, but still needs passing CI.
+`dev` is the default integration branch. `main` holds reviewed production releases; changes reach it through a release PR from `dev` or a release branch. Merges must pass CI and resolve review conversations. Force pushes and deletion are blocked on both branches. The owner can merge their own pull request without a second maintainer's approval, but still needs passing CI.
 
 GitHub releases use conventional commit messages and immutable version tags. GitHub Actions does not have administration access to the production servers. Production deployment is configured separately after the deployed source is recorded in GitHub and dedicated deployment permissions are approved. Documentation publishing requires the explicit `DOCS_PUBLISH_ENABLED` repository variable.
 
