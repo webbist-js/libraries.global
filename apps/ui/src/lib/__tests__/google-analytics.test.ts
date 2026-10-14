@@ -61,7 +61,7 @@ describe("production analytics", () => {
     expect(append).not.toHaveBeenCalled()
     expect(views()).toEqual([])
     expect(commands().some((entry) => entry[0] === "config")).toBe(false)
-    expect(browser["ga-disable-G-N6DLE0CK0Y"]).toBe(true)
+    expect(browser["ga-disable-G-8M465CHXJ6"]).toBe(true)
   })
 
   it("loads once after consent, strips query/hash/referrer data and deduplicates route views", () => {
@@ -93,7 +93,7 @@ describe("production analytics", () => {
     analytics.setConsent(true)
     browser.location.pathname = "/fr/auth/reset-password"
     analytics.pageView()
-    expect(browser["ga-disable-G-N6DLE0CK0Y"]).toBe(true)
+    expect(browser["ga-disable-G-8M465CHXJ6"]).toBe(true)
     expect(views()).toHaveLength(1)
     browser.location.pathname = "/libraries"
     analytics.pageView()
@@ -102,7 +102,7 @@ describe("production analytics", () => {
     browser.location.pathname = "/map"
     analytics.pageView()
     expect(views()).toHaveLength(2)
-    expect(browser["ga-disable-G-N6DLE0CK0Y"]).toBe(true)
+    expect(browser["ga-disable-G-8M465CHXJ6"]).toBe(true)
   })
 
   it("does not load a tag when consent is granted on a private page", () => {

@@ -547,7 +547,7 @@ The Next.js [middleware](src/proxy.ts) is composed of standalone proxy functions
 
 ### Google Analytics
 
-The production integration uses GA4 measurement ID `G-N6DLE0CK0Y`. It runs only with `NODE_ENV=production`, `APP_ENV=production` and `APP_PUBLIC_URL=https://libraries.global`; the browser must also be on that exact origin. Local and preview deployments do not load the tag.
+The production integration uses GA4 measurement ID `G-8M465CHXJ6`, hardcoded in `src/lib/google-analytics.ts`. It runs only with `NODE_ENV=production`, `APP_ENV=production` and `APP_PUBLIC_URL=https://libraries.global`; the browser must also be on that exact origin. Local and preview deployments do not load the tag.
 
 Collection starts denied. No Google script or measurement request is sent until a consent provider grants analytics consent. Civic or another provider should call `window.librariesGlobalAnalytics?.setConsent(true)` on consent, and `setConsent(false)` on refusal or withdrawal. The provider owns saved choices and analytics-cookie cleanup. Restore saved consent after the controller mounts; do not call the grant callback merely to detect installation.
 
