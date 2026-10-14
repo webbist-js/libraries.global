@@ -107,6 +107,7 @@ export default ({ strapi }: { strapi: any }) => {
         // Send is idempotent. An explicit resend replaces previous credentials and browser passes.
         if (
           current &&
+          eligible(person, current) &&
           !["revoked", "expired"].includes(state) &&
           (!resend || Date.now() - new Date(current.issuedAt).getTime() < 60000)
         )
@@ -344,7 +345,7 @@ export default ({ strapi }: { strapi: any }) => {
     }) {
       const db = strapi.db.connection
       const status = `CASE WHEN s.state <> 'active' OR s.consented_at IS NULL THEN 'unavailable'
-        WHEN i.id IS NULL THEN 'waiting' WHEN i.revoked_at IS NOT NULL THEN 'revoked'
+        WHEN i.id IS NULL OR i.consented_at <> s.consented_at THEN 'waiting' WHEN i.revoked_at IS NOT NULL THEN 'revoked'
         WHEN i.accepted_at IS NOT NULL THEN CASE WHEN i.access_expires_at > CURRENT_TIMESTAMP THEN 'accepted' ELSE 'expired' END
         WHEN i.expires_at <= CURRENT_TIMESTAMP THEN 'expired' WHEN n.email_state = 'failed' THEN 'failed'
         WHEN n.email_state = 'skipped' THEN 'unavailable' WHEN i.sent_at IS NOT NULL THEN 'sent' ELSE 'queued' END`
