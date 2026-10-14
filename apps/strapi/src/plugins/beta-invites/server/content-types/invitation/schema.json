@@ -1,0 +1,29 @@
+{
+  "kind": "collectionType",
+  "collectionName": "beta_invitations",
+  "info": {
+    "singularName": "invitation",
+    "pluralName": "invitations",
+    "displayName": "Beta invitation"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "subscriberDocumentId": { "type": "string", "required": true },
+    "consentedAt": { "type": "datetime", "required": true },
+    "tokenHash": { "type": "string", "unique": true, "private": true },
+    "tokenCiphertext": { "type": "text", "private": true },
+    "notificationId": { "type": "string", "private": true },
+    "issuedBy": { "type": "string", "private": true },
+    "issuedAt": { "type": "datetime", "required": true },
+    "expiresAt": { "type": "datetime", "required": true },
+    "sentAt": { "type": "datetime" },
+    "acceptedAt": { "type": "datetime" },
+    "accessExpiresAt": { "type": "datetime" },
+    "revokedAt": { "type": "datetime" },
+    "revokedBy": { "type": "string", "private": true }
+  }
+}

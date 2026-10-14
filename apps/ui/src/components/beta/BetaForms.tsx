@@ -29,6 +29,28 @@ export function BetaForms({
   const [waitlistError, setWaitlistError] = useState("")
 
   useEffect(() => {
+    const loadInvitation = () => {
+      const code = new URLSearchParams(window.location.hash.slice(1)).get(
+        "invite"
+      )
+      if (code && /^[A-Za-z0-9_-]{43}$/.test(code)) {
+        setPassword(code)
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}`
+        )
+      }
+    }
+    // The email fragment exists only in the browser, after server rendering.
+
+    loadInvitation()
+    window.addEventListener("hashchange", loadInvitation)
+
+    return () => window.removeEventListener("hashchange", loadInvitation)
+  }, [])
+
+  useEffect(() => {
     if (accessStatus !== "done") return
     const timer = window.setTimeout(
       () => window.location.assign(destination),
@@ -47,12 +69,12 @@ export function BetaForms({
       const res = await fetch("/api/beta/access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, next }),
+        body: JSON.stringify({ code: password.trim(), next }),
       })
       if (!res.ok) {
         setAccessError(
           t(
-            res.status === 401
+            res.status === 401 || res.status === 400
               ? "wrongPassword"
               : res.status === 429
                 ? "rateLimited"
@@ -143,8 +165,8 @@ export function BetaForms({
               id="beta-password"
               name="password"
               type={visible ? "text" : "password"}
-              autoComplete="current-password"
-              maxLength={512}
+              autoComplete="off"
+              maxLength={43}
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}

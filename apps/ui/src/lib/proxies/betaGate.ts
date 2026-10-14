@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import {
-  BETA_COOKIE,
-  betaDestination,
-  betaEnabled,
-  validBetaPass,
-} from "@/lib/beta/access"
+import { betaDestination, betaEnabled } from "@/lib/beta/access"
 import { betaPath, betaPublicRequest, betaPublicShell } from "@/lib/beta/scope"
 
-export function betaShellRequest(req: NextRequest): NextRequest {
+export function betaShellRequest(
+  req: NextRequest,
+  hasAccess = false
+): NextRequest {
   const headers = new Headers(req.headers)
   headers.delete("x-beta-public-shell")
   const path = betaPath(req.nextUrl.pathname)
@@ -18,18 +16,21 @@ export function betaShellRequest(req: NextRequest): NextRequest {
   if (
     betaEnabled() &&
     betaPublicShell(req.nextUrl.pathname) &&
-    (entrance || !validBetaPass(req.cookies.get(BETA_COOKIE)?.value))
+    (entrance || !hasAccess)
   )
     headers.set("x-beta-public-shell", "true")
 
   return new NextRequest(req, { headers })
 }
 
-export function betaGate(req: NextRequest): NextResponse | null {
+export function betaGate(
+  req: NextRequest,
+  hasAccess = false
+): NextResponse | null {
   if (
     !betaEnabled() ||
     betaPublicRequest(req.nextUrl.pathname, req.method) ||
-    validBetaPass(req.cookies.get(BETA_COOKIE)?.value)
+    hasAccess
   )
     return null
   const path = req.nextUrl.pathname
@@ -49,7 +50,7 @@ export function betaGate(req: NextRequest): NextResponse | null {
     )
   }
   const entry = new URL(
-    path.startsWith("/cs/") || path === "/cs" ? "/cs/beta" : "/beta",
+    /^\/(cs|fr)(?:\/|$)/.test(path) ? `/${path.split("/")[1]}/beta` : "/beta",
     req.url
   )
   const destination = betaDestination(`${path}${req.nextUrl.search}`)

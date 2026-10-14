@@ -43,6 +43,7 @@ export type EmailInput = {
   period?: string
   preview?: string
   code?: string
+  codeLabel?: string
   sections?: EmailSection[]
   footer?: string
   unsubscribeUrl?: string
@@ -197,6 +198,9 @@ export function emailTemplate(input: EmailInput): RenderedEmail {
   const footer = emailFooter(input)
   const displayUrl = url ? new URL(url).host + new URL(url).pathname : ""
   const sections = input.sections ?? []
+  const codeBlock = input.code
+    ? `<div style="margin:24px 0;padding:22px;background:#ece8f6;border-radius:14px;text-align:center;${input.code.length > 12 ? "font:700 16px/1.6 monospace;letter-spacing:0;word-break:break-all;overflow-wrap:anywhere" : "font:700 32px/1.3 monospace;letter-spacing:5px"};color:#19172b">${input.codeLabel ? `<p style="margin:0 0 10px;font:600 12px Arial,sans-serif">${e(input.codeLabel)}</p>` : ""}${e(input.code)}</div>`
+    : ""
 
   return {
     subject: input.title.replaceAll(/[\r\n]/g, " "),
@@ -206,7 +210,9 @@ export function emailTemplate(input: EmailInput): RenderedEmail {
         input.period,
         input.eyebrow,
         input.body,
-        input.code ? `Confirmation code: ${input.code}` : "",
+        input.code
+          ? `${input.codeLabel ?? "Confirmation code"}: ${input.code}`
+          : "",
         ...sections.map(sectionText),
         url ? `${input.action ?? "Continue"}: ${url}` : "",
       ]
@@ -214,7 +220,7 @@ export function emailTemplate(input: EmailInput): RenderedEmail {
         .join("\n\n") +
       "\n\n--\n" +
       footer.text,
-    html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${e(input.title)}</title></head><body bgcolor="#1c1a25" style="margin:0;padding:0;background:#1c1a25;color:${ink};font-family:Arial,sans-serif"><div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all">${e(input.preview ?? input.body.slice(0, 160))}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#1c1a25"><tr><td align="center" style="padding:28px 12px"><!--[if mso]><table role="presentation" width="640" cellpadding="0" cellspacing="0"><tr><td><![endif]--><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;table-layout:fixed"><tr><td style="padding:4px 20px 26px"><p style="margin:0;font:30px/1.2 Georgia,serif;color:${ink}">Libraries <i>Global</i></p>${input.period ? `<p style="margin:12px 0 0;font:13px Arial,sans-serif;color:${muted}">${e(input.period)}</p>` : ""}</td></tr><tr><td bgcolor="#272430" style="padding:30px 24px;border:1px solid ${line};border-radius:22px;overflow-wrap:break-word;word-wrap:break-word">${input.eyebrow ? `<p style="margin:0 0 20px;font:700 11px/1.5 Arial,sans-serif;letter-spacing:1px;color:#cabaff;text-transform:uppercase">${e(input.eyebrow)}</p>` : ""}<h1 style="margin:0 0 20px;font:38px/1.15 Georgia,serif;color:${ink}">${e(input.title)}</h1>${paragraph(input.body)}${input.code ? `<div style="margin:24px 0;padding:22px;background:#ece8f6;border-radius:14px;text-align:center;font:700 32px/1.3 monospace;letter-spacing:5px;color:#19172b">${e(input.code)}</div>` : ""}${sections.map(sectionHtml).join("")}${url ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px"><tr><td bgcolor="#4936cb" style="border-radius:28px;text-align:center;mso-padding-alt:16px 26px"><a href="${e(url)}" style="display:inline-block;padding:16px 26px;font:700 16px/1.4 Arial,sans-serif;color:#ffffff;text-decoration:none;border:1px solid #4936cb;border-radius:28px">${e(input.action ?? "Continue")} &rarr;</a></td></tr></table><p style="margin:18px 0 0;font:12px/1.6 Arial,sans-serif;color:${muted};word-break:break-all">Button not working? Open ${link(url, displayUrl.length > 80 ? displayUrl.slice(0, 77) + "…" : displayUrl)}</p>` : ""}</td></tr><tr><td><!-- email-footer-start -->${footer.html}<!-- email-footer-end --></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`,
+    html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${e(input.title)}</title></head><body bgcolor="#1c1a25" style="margin:0;padding:0;background:#1c1a25;color:${ink};font-family:Arial,sans-serif"><div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all">${e(input.preview ?? input.body.slice(0, 160))}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#1c1a25"><tr><td align="center" style="padding:28px 12px"><!--[if mso]><table role="presentation" width="640" cellpadding="0" cellspacing="0"><tr><td><![endif]--><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;table-layout:fixed"><tr><td style="padding:4px 20px 26px"><p style="margin:0;font:30px/1.2 Georgia,serif;color:${ink}">Libraries <i>Global</i></p>${input.period ? `<p style="margin:12px 0 0;font:13px Arial,sans-serif;color:${muted}">${e(input.period)}</p>` : ""}</td></tr><tr><td bgcolor="#272430" style="padding:30px 24px;border:1px solid ${line};border-radius:22px;overflow-wrap:break-word;word-wrap:break-word">${input.eyebrow ? `<p style="margin:0 0 20px;font:700 11px/1.5 Arial,sans-serif;letter-spacing:1px;color:#cabaff;text-transform:uppercase">${e(input.eyebrow)}</p>` : ""}<h1 style="margin:0 0 20px;font:38px/1.15 Georgia,serif;color:${ink}">${e(input.title)}</h1>${paragraph(input.body)}${codeBlock}${sections.map(sectionHtml).join("")}${url ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:28px"><tr><td bgcolor="#4936cb" style="border-radius:28px;text-align:center;mso-padding-alt:16px 26px"><a href="${e(url)}" style="display:inline-block;padding:16px 26px;font:700 16px/1.4 Arial,sans-serif;color:#ffffff;text-decoration:none;border:1px solid #4936cb;border-radius:28px">${e(input.action ?? "Continue")} &rarr;</a></td></tr></table><p style="margin:18px 0 0;font:12px/1.6 Arial,sans-serif;color:${muted};word-break:break-all">Button not working? Open ${link(url, displayUrl.length > 80 ? displayUrl.slice(0, 77) + "…" : displayUrl)}</p>` : ""}</td></tr><tr><td><!-- email-footer-start -->${footer.html}<!-- email-footer-end --></td></tr></table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>`,
   }
 }
 /** The worker adds fresh category controls at delivery, including to queued rendered emails. */

@@ -1,3 +1,5 @@
+import { betaInvitationNotice } from "./beta-invitation-notice.mjs"
+
 const paragraph = (...parts) => ({
   type: "paragraph",
   children: parts.map((part) =>
@@ -15,7 +17,7 @@ const section = (heading, inShort, ...body) => ({ heading, inShort, body })
 
 /** Temporary entrance notice. It supplements, rather than replaces, site policies. */
 export function betaLegalContent(operator, postalAddress, email) {
-  return {
+  const document = {
     slug: "beta",
     title: "Beta terms & privacy",
     heroTitle: "Beta terms *& privacy.*",
@@ -107,4 +109,6 @@ export function betaLegalContent(operator, postalAddress, email) {
       ),
     ],
   }
+
+  return { ...document, sections: betaInvitationNotice(document) }
 }
