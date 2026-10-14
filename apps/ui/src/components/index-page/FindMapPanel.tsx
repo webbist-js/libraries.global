@@ -3,6 +3,7 @@
 
 import { useTranslations as useUiTranslations } from "next-intl"
 
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { LibrarySearchHitV2 } from "@/lib/find-search"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
@@ -129,6 +130,11 @@ export function FindMapPanel({
         </p>
         <Link
           href="/map"
+          {...analyticsAttributes("navigation_action", {
+            interaction_source: "find_map",
+            action_type: "open",
+            destination: "atlas",
+          })}
           className="rounded-full px-5 py-2.5 text-[15px] font-semibold text-white no-underline"
           style={{ background: T.accent.primary }}
         >
@@ -172,7 +178,15 @@ export function FindMapPanel({
             {pinnedStops.slice(0, 50).map((stop) => (
               <li key={stop.id}>
                 {stop.library_path ? (
-                  <Link href={stop.library_path}>
+                  <Link
+                    href={stop.library_path}
+                    {...analyticsAttributes("select_content", {
+                      interaction_source: "find_map",
+                      content_type: "library",
+                      library_document_id: stop.library_document_id,
+                      view_mode: "map",
+                    })}
+                  >
                     {stop.name} · {stop.library_name}
                   </Link>
                 ) : (

@@ -237,6 +237,7 @@ export function LibraryResultCard({
 
 export function LibraryResultRow({
   hit,
+  analyticsView = "list",
   distanceKmValue,
   now,
   href: hrefOverride,
@@ -244,6 +245,7 @@ export function LibraryResultRow({
   children,
 }: {
   hit: LibraryTileHit
+  analyticsView?: "list" | "map"
   distanceKmValue?: number
   now?: Date
   href?: string | null
@@ -284,10 +286,11 @@ export function LibraryResultRow({
           <Link
             href={href}
             {...analyticsAttributes("select_content", {
-              interaction_source: "find_list",
+              interaction_source:
+                analyticsView === "map" ? "find_map" : "find_list",
               content_type: "library",
               library_document_id: hit.documentId,
-              view_mode: "list",
+              view_mode: analyticsView,
             })}
             className="no-underline hover:underline"
             style={{ textUnderlineOffset: 3 }}

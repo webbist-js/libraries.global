@@ -428,6 +428,7 @@ export function FindLibraryPage({
                     <LibraryResultRow
                       key={hit.documentId}
                       hit={hit}
+                      analyticsView="map"
                       now={now}
                       distanceKmValue={hitDistance(hit, state)}
                     />

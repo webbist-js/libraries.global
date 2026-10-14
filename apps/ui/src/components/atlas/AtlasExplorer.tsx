@@ -652,9 +652,10 @@ export function AtlasExplorer({
   const pickStop = useCallback(
     (stop: MobileStopHit, fly = true) => {
       pushAnalyticsEvent("mobile_service_action", {
-        interaction_source: "atlas_search",
+        interaction_source: fly ? "atlas_search" : "atlas_map",
         action_type: "select_stop",
         content_id: stop.id,
+        library_document_id: stop.library_document_id,
       })
       setSelectedId(null)
       setSelectedStop(stop)
