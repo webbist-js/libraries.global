@@ -65,6 +65,81 @@ beforeEach(() => {
 })
 
 describe("notification preference trigger matrix", () => {
+  it("limits the beta-only worker to invitations and leaves other queued mail pending", async () => {
+    const { service, services, store, send } = setup()
+    const deliver = vi.fn().mockResolvedValue("sent")
+    services["beta-invites.invites"] = { deliver }
+    await service.enqueue(event)
+    await service.enqueue({
+      eventKey: "beta-only",
+      kind: "beta_invitation",
+      title: "Beta invite",
+      body: "Requested access",
+      inApp: false,
+      emailPreference: "transactional",
+      emailPayload: { invitationId: "invite1" },
+    })
+    const result = await service.deliver(
+      new Date(Date.now() + 1000),
+      "beta_invitation"
+    )
+    expect(result.sent).toBe(1)
+    expect(deliver).toHaveBeenCalledOnce()
+    expect(send).not.toHaveBeenCalled()
+    expect(store[UID]![0]!.emailState).toBe("pending")
+  })
+  it("runs invitation delivery and cleanup through the authenticated operator action", async () => {
+    const { strapi, services, service } = setup()
+    const prune = vi.fn().mockResolvedValue(undefined)
+    services["beta-invites.invites"] = { prune }
+    const deliver = vi
+      .spyOn(service, "deliver")
+      .mockResolvedValue({ sent: 0, failed: 0, skipped: 0 })
+    vi.stubGlobal("strapi", strapi)
+    try {
+      const ctx: any = {
+        request: {
+          headers: { "x-service-secret": "bridge-fixture" },
+          body: { action: "betaInvites" },
+        },
+        set: vi.fn(),
+        send: vi.fn(),
+      }
+      await inbox.operations(ctx)
+      expect(prune).toHaveBeenCalledOnce()
+      expect(deliver).toHaveBeenCalledWith(expect.any(Date), "beta_invitation")
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+  it("routes anonymous beta invitations through their service and retries failed delivery", async () => {
+    const { service, services, store, send } = setup()
+    const deliver = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("SMTP offline"))
+      .mockResolvedValueOnce("sent")
+    services["beta-invites.invites"] = { deliver }
+    await service.enqueue({
+      eventKey: "beta-test",
+      kind: "beta_invitation",
+      title: "Beta invite",
+      body: "Requested access",
+      inApp: false,
+      emailPreference: "transactional",
+      emailPayload: { invitationId: "invite1" },
+    })
+    const failed = await service.deliver(new Date(Date.now() + 1000))
+    expect(failed.failed).toBe(1)
+    expect(store[UID]![0]!).toMatchObject({
+      attempts: 1,
+      emailState: "pending",
+      inApp: false,
+    })
+    const retried = await service.deliver(new Date(Date.now() + 600000))
+    expect(retried.sent).toBe(1)
+    expect(deliver).toHaveBeenCalledTimes(2)
+    expect(send).not.toHaveBeenCalled()
+  })
   it("refuses operator actions without the private service secret", async () => {
     const ctx: any = {
       request: { headers: {}, body: { action: "report" } },

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { BETA_COOKIE, betaEnabled, validBetaPass } from "@/lib/beta/access"
+import { BETA_COOKIE, betaEnabled } from "@/lib/beta/access"
+import { hasBetaAccess } from "@/lib/beta/invitations"
 import { readJsonCapped } from "@/lib/bridge-params"
 import {
   clientIp,
@@ -42,7 +43,7 @@ export async function POST(
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${BETA_COOKIE}=`))
     ?.slice(BETA_COOKIE.length + 1)
-  if (betaEnabled() && !validBetaPass(pass))
+  if (betaEnabled() && !(await hasBetaAccess(pass)))
     return json("Beta access required", 401)
   const path = (await params).path
   const single =

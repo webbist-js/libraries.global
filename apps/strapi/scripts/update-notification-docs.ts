@@ -122,7 +122,7 @@ async function main() {
           "We store private inbox updates, whether you have read them, your email preferences and delivery attempts. These support the account features you use. Essential account, security, role and staff-access messages are service communications; turning off optional emails does not stop them.",
           "Weekly digest covers public updates to libraries you follow. Weekly community report covers community totals, new public articles and your own contributions. Both are optional and have separate recorded opt-ins. Quiet weeks produce no email. Other users' private notes and identities are not included in either email.",
           "Product updates and the newsletter are separate optional subscriptions. We rely on your consent for these and for the two weekly emails. We record when you opt in and when you withdraw. Guest newsletter subscriptions require an email confirmation; a verified account holder can explicitly subscribe in Settings. You can withdraw each choice in Settings or through its email unsubscribe link.",
-          "The beta waitlist records your email address only so we can contact you about requested beta access. It does not create an account or enrol you in any newsletter. Passing the shared beta password does not identify you or sign you in.",
+          "The beta waitlist records your email address only so we can contact you about requested beta access. It does not create an account or enrol you in any newsletter. Redeeming an individual invitation records its acceptance and grants browser access without creating or signing in to an account.",
           "Brevo handles email delivery and may route links through our branded email subdomain. Provider requests and delivery logs can include the recipient address, message, delivery time and technical information. Email engagement tracking is controlled separately in the provider account; it is not used to build advertising profiles.",
           "If an address has been exported into a newsletter mailing list, removal and suppression on that provider must also be applied separately. There is no automatic two-way mailing-list sync yet. Contact info@libraries.global if you need help withdrawing or deleting a provider-held subscription."
         )
@@ -149,7 +149,7 @@ async function main() {
       if (cookies && !JSON.stringify(cookies).includes("lg-beta-access"))
         cookies.body.push(
           paragraph(
-            "lg-beta-access stores signed beta access for up to 30 days after the shared beta password is accepted. It grants access to the closed beta and does not create or sign in to an account."
+            "lg-beta-access stores a signed invitation reference, expiry and access version for up to 30 days after an individual invitation is redeemed. Its reference lets us check and revoke the browser pass. It grants access to the closed beta and does not create or sign in to an account."
           )
         )
       replaceSection(
@@ -168,7 +168,7 @@ async function main() {
           "Emails and account updates",
           "Optional subscriptions are separate from essential account messages.",
           "Creating an account does not subscribe you to a newsletter, product updates or weekly emails. Choose those separately in Settings. You can stop each optional email through its unsubscribe link. Essential sign-in, security, role and staff-access communications remain part of the service.",
-          "During the closed beta, visitors need the shared invitation password to enter. Passing it does not create an account or subscribe you to emails. The beta waitlist is used only for requested access."
+          "During the closed beta, visitors need an individual invitation to enter. Redeeming it does not create an account or subscribe you to emails. The beta waitlist is used only for requested access."
         )
       )
     if (doc.slug === "accessibility")

@@ -180,6 +180,7 @@ export * from "./population"
 export * from "./atlas/library-access"
 export * from "./local-population"
 export * from "./email"
+export * from "./beta-email"
 export * from "./notification-preferences"
 
 export * from "./library-sources"

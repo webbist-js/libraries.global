@@ -39,6 +39,7 @@ type Kind =
   | "staff_update"
   | "feed_update"
   | "billing_update"
+  | "beta_invitation"
 type Input = {
   baUserId?: string
   eventKey: string
@@ -105,7 +106,7 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   /** At most 50 messages each minute; preferences and verified address checked at send time. */
-  async deliver(now = new Date()) {
+  async deliver(now = new Date(), kind?: "beta_invitation") {
     if (!emailConfigured()) return { sent: 0, skipped: 0, failed: 0 }
     const locked = await withLeaderLock(strapi, LOCK, async () => {
       const report = { sent: 0, skipped: 0, failed: 0 }
@@ -113,6 +114,7 @@ export default ({ strapi }: { strapi: any }) => ({
         where: {
           emailState: "pending",
           nextAttemptAt: { $lte: now.toISOString() },
+          ...(kind ? { kind } : {}),
         },
         orderBy: { id: "asc" },
         limit: 50,
@@ -121,6 +123,22 @@ export default ({ strapi }: { strapi: any }) => ({
         const save = (data: Record<string, unknown>) =>
           strapi.db.query(UID).update({ where: { id: row.id }, data })
         try {
+          if (row.kind === "beta_invitation") {
+            const state = await strapi
+              .plugin("beta-invites")
+              .service("invites")
+              .deliver(row, now)
+            report[state]++
+            const interval = Math.max(
+              0,
+              Math.min(
+                Number(process.env.EMAIL_SEND_INTERVAL_MS ?? "1000"),
+                30000
+              )
+            )
+            if (state === "sent" && interval > 0) await setTimeout(interval)
+            continue
+          }
           const profile = row.baUserId
             ? await strapi.db
                 .query(PROFILE)

@@ -2,6 +2,7 @@ import { createRequire } from "node:module"
 
 import {
   adminResetEmailTemplate,
+  betaInvitationEmail,
   communityReportEmail,
   digestEmail,
   emailTemplate,
@@ -180,6 +181,14 @@ export function emailSamples() {
       "/profile",
       "View invitation"
     ),
+    ...["en", "cs", "fr"].map((locale) => ({
+      id: `beta-invitation-${locale}`,
+      ...betaInvitationEmail({
+        code: "EXAMPLE-CODE-FOR-PREVIEW-ONLY",
+        locale,
+        siteUrl: base,
+      }),
+    })),
     ...["approved", "rejected", "needs_info"].map((status) => ({
       id: "review-" + status,
       ...withEmailPreferences(
