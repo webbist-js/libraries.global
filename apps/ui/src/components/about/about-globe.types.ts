@@ -13,6 +13,21 @@ export type AboutGlobeCountry = {
 export type AboutGlobeRecord = {
   summary: string | null
   capitalCity: string | null
+  updatedAt: string | null
+  languages: string | null
+  systemDescription: string | null
+  population: {
+    count: number
+    year: number | null
+    source: string | null
+  } | null
+  regionCoverage: {
+    total: number
+    recorded: number
+    label: string
+    leading: { name: string; count: number; slug: string } | null
+  } | null
+  facts: { label: string; value: string }[]
   libraryCount: number | null
   libraryTypeCounts: LibraryTypeCount[] | null
   featuredLibraries: {

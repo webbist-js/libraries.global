@@ -279,12 +279,16 @@ export function AboutHero({
                 countries={countries}
                 markers={markers}
               >
-                {({ layer, inspecting, view }) => (
+                {({ layer, rotationScale, view }) => (
                   <GlobeCanvas
                     markers={markers}
-                    overrides={settings}
+                    overrides={{
+                      ...settings,
+                      autoRotateSpeed:
+                        ABOUT_GLOBE.autoRotateSpeed! * rotationScale,
+                    }}
                     active={active}
-                    motionPaused={paused || reducedMotion || inspecting}
+                    motionPaused={paused || reducedMotion}
                     resetKey={resetKey}
                     view={view}
                     interactionLayer={layer}

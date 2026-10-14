@@ -41,6 +41,17 @@ const countries: AboutGlobeCountry[] = [
 const record: AboutGlobeRecord = {
   summary: "Published country context.",
   capitalCity: "Paris",
+  updatedAt: "2026-10-04T12:00:00Z",
+  languages: "French",
+  systemDescription: "A national network of libraries.",
+  population: { count: 68000000, year: 2024, source: "World Bank" },
+  regionCoverage: {
+    total: 13,
+    recorded: 4,
+    label: "Regions",
+    leading: { name: "Île-de-France", count: 40, slug: "ile-de-france" },
+  },
+  facts: [{ label: "Annual library visits", value: "2 million" }],
   libraryCount: 96,
   libraryTypeCounts: [
     { type: "Public", count: 90 },
@@ -55,7 +66,16 @@ const record: AboutGlobeRecord = {
     },
   ],
 }
-vi.mock("next-intl", () => ({ useLocale: () => "en" }))
+vi.mock("next-intl", () => ({
+  useLocale: () => "en",
+  useTranslations: () => (key: string) =>
+    ({
+      search_countries: "Search countries",
+      search_countries_2: "Search countries…",
+      no_results: "No results",
+    })[key],
+}))
+vi.mock("@iconify/react", () => ({ Icon: () => <span aria-hidden="true" /> }))
 vi.mock("@/components/global/GlobalLink", () => ({
   default: ({
     children,
@@ -145,8 +165,20 @@ function Globe({ enabled = true }: { enabled?: boolean }) {
       countries={countries}
       markers={[]}
     >
-      {({ layer, inspecting }: { layer: ReactNode; inspecting: boolean }) => (
-        <div data-testid="globe" data-inspecting={inspecting}>
+      {({
+        layer,
+        inspecting,
+        rotationScale,
+      }: {
+        layer: ReactNode
+        inspecting: boolean
+        rotationScale: number
+      }) => (
+        <div
+          data-testid="globe"
+          data-inspecting={inspecting}
+          data-rotation-scale={rotationScale}
+        >
           {layer}
         </div>
       )}
@@ -157,6 +189,12 @@ function Globe({ enabled = true }: { enabled?: boolean }) {
 async function ready() {
   render(<Globe />)
   await screen.findByRole("button", { name: "France surface" })
+}
+
+function chooseCountry(name: string) {
+  fireEvent.click(screen.getByLabelText(/^Explore a country/))
+  fireEvent.change(screen.getByRole("combobox"), { target: { value: name } })
+  fireEvent.click(screen.getByRole("option", { name }))
 }
 
 describe("About country inspector", () => {
@@ -180,6 +218,100 @@ describe("About country inspector", () => {
     expect(screen.getByRole("complementary")).toBeTruthy()
     expect(screen.queryByText(/estimated|verified by/i)).toBeNull()
   })
+  it("keeps hover motion normal and slows only while a country is pinned", async () => {
+    await ready()
+    const globe = screen.getByTestId("globe")
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "France surface" }))
+    expect(globe.dataset.rotationScale).toBe("1")
+    fireEvent.click(screen.getByRole("button", { name: "Pin this country" }))
+    expect(globe.dataset.rotationScale).toBe("0.25")
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "Connection" }))
+    expect(globe.dataset.rotationScale).toBe("0.25")
+    fireEvent.keyDown(window, { key: "Escape" })
+    expect(globe.dataset.rotationScale).toBe("1")
+  })
+  it("shows recorded regional coverage, type counts and sourced country context", async () => {
+    await ready()
+    chooseCountry("France")
+    await screen.findByText("Published country context.")
+    const coverage = screen.getByRole("progressbar")
+    expect(coverage.getAttribute("aria-valuenow")).toBe("4")
+    expect(coverage.getAttribute("aria-valuemax")).toBe("13")
+    expect(coverage.getAttribute("aria-valuetext")).toBe(
+      "4 of 13 listed regions have records"
+    )
+    expect(screen.getByText("Île-de-France")).toBeTruthy()
+    expect(screen.getByText("Updated").querySelector("time")?.dateTime).toBe(
+      record.updatedAt
+    )
+    fireEvent.click(screen.getByText("Country context"))
+    expect(screen.getByText("French")).toBeTruthy()
+    expect(screen.getByText("68,000,000")).toBeTruthy()
+    expect(screen.getByText("World Bank")).toBeTruthy()
+    expect(screen.getByText("2 million")).toBeTruthy()
+  })
+  it("offers three country-specific ways to contribute when no libraries are recorded", async () => {
+    await ready()
+    fetcher.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          ...record,
+          libraryCount: 0,
+          libraryTypeCounts: [],
+          featuredLibraries: [],
+        },
+      }),
+    })
+    chooseCountry("Germany")
+    const add = await screen.findByRole("link", {
+      name: "Add the first library",
+    })
+    expect(add.getAttribute("href")).toBe(
+      "/contribute/index/new?continent=europe&country=germany"
+    )
+    expect(
+      screen.getByRole("link", { name: "Propose a drive" }).getAttribute("href")
+    ).toBe("/community/propose?country=germany")
+    expect(
+      screen
+        .getByRole("link", { name: "See ways to contribute" })
+        .getAttribute("href")
+    ).toBe("/contribute")
+    expect(screen.getByText(/gap in the index/)).toBeTruthy()
+    expect(screen.queryByText("By type")).toBeNull()
+    expect(screen.queryByText("Featured libraries")).toBeNull()
+  })
+  it("does not turn an unavailable count into an empty record", async () => {
+    await ready()
+    fetcher.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { ...record, libraryCount: null } }),
+    })
+    chooseCountry("Germany")
+    await screen.findByText("Library count unavailable")
+    expect(
+      screen.queryByRole("link", { name: "Add the first library" })
+    ).toBeNull()
+    expect(screen.getByRole("link", { name: "Country page" })).toBeTruthy()
+  })
+  it("searches the CMS countries by code and closes the search without unpinning", async () => {
+    await ready()
+    chooseCountry("France")
+    fireEvent.click(screen.getByLabelText(/^Explore a country/))
+    const search = screen.getByRole("combobox")
+    fireEvent.change(search, { target: { value: "DE" } })
+    expect(screen.queryByRole("option", { name: "France" })).toBeNull()
+    expect(screen.getByRole("option", { name: "Germany" })).toBeTruthy()
+    fireEvent.keyDown(search, { key: "Escape" })
+    expect(screen.queryByRole("combobox")).toBeNull()
+    expect(
+      screen.getByRole("complementary", { name: "France library record" })
+    ).toBeTruthy()
+    expect(document.activeElement).toBe(
+      screen.getByLabelText(/^Explore a country/)
+    )
+  })
   it("keeps pinned details while another country is previewed and closes with Escape", async () => {
     await ready()
     fireEvent.click(screen.getByRole("button", { name: "France surface" }))
@@ -193,7 +325,7 @@ describe("About country inspector", () => {
     fireEvent.keyDown(window, { key: "Escape" })
     expect(screen.queryByRole("complementary")).toBeNull()
     expect(document.activeElement).toBe(
-      screen.getByLabelText("Explore a country")
+      screen.getByLabelText(/^Explore a country/)
     )
   })
   it("provides country navigation for keyboard and touch and discards stale responses", async () => {
@@ -218,9 +350,7 @@ describe("About country inspector", () => {
             })
     )
     await ready()
-    fireEvent.change(screen.getByLabelText("Explore a country"), {
-      target: { value: "france" },
-    })
+    chooseCountry("France")
     await waitFor(() => expect(finishFirst).toBeTypeOf("function"))
     fireEvent.click(screen.getByRole("button", { name: "Next country" }))
     await screen.findByText("Germany's record")
@@ -268,7 +398,7 @@ describe("About country inspector", () => {
     fireEvent.click(screen.getByRole("button", { name: "France surface" }))
     rerender(<Globe enabled={false} />)
     expect(screen.queryByRole("complementary")).toBeNull()
-    expect(screen.queryByLabelText("Explore a country")).toBeNull()
+    expect(screen.queryByLabelText(/^Explore a country/)).toBeNull()
     rerender(<Globe />)
     expect(screen.queryByRole("complementary")).toBeNull()
   })

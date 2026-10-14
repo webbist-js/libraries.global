@@ -4,7 +4,14 @@ import { atlasLocalGeography, atlasPopulationBaseline } from "@repo/shared-data"
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pin, X } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useLocale } from "next-intl"
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 
 import {
   withUkCountries,
@@ -20,7 +27,10 @@ import type { GlobeProjectionRefs } from "@/components/about/AboutGlobePickingLa
 import GlobalLink from "@/components/global/GlobalLink"
 import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import type { GlobeView } from "@/components/home/KnowledgeGlobeCanvas"
+import { CountryCombobox } from "@/components/settings/CountryCombobox"
+import { placeAddHref } from "@/lib/contribution-place"
 import { tintForLibraryType } from "@/lib/design-tokens"
+import { proposeHref } from "@/lib/drives/propose-link"
 
 const AboutGlobePickingLayer = dynamic(
   () =>
@@ -47,6 +57,7 @@ export function AboutGlobeExplorer({
   readonly children: (props: {
     layer: ReactNode
     inspecting: boolean
+    rotationScale: number
     view?: GlobeView
   }) => ReactNode
 }) {
@@ -63,7 +74,7 @@ export function AboutGlobeExplorer({
   const endpointA = useRef<HTMLDivElement>(null)
   const endpointB = useRef<HTMLDivElement>(null)
   const connector = useRef<SVGPathElement>(null)
-  const select = useRef<HTMLSelectElement>(null)
+  const countryTrigger = useRef<HTMLButtonElement>(null)
   const projections: GlobeProjectionRefs = {
     ring,
     tooltip,
@@ -138,7 +149,7 @@ export function AboutGlobeExplorer({
       })
 
     return () => controller.abort()
-  }, [enabled, boundaries, countries.length])
+  }, [enabled, boundaries, countries])
 
   useEffect(() => {
     if (!enabled || !shown || !country || result) return
@@ -188,7 +199,7 @@ export function AboutGlobeExplorer({
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape" && (pinned || hover)) {
         close()
-        select.current?.focus({ preventScroll: true })
+        countryTrigger.current?.focus({ preventScroll: true })
       }
     }
     window.addEventListener("keydown", escape)
@@ -221,7 +232,31 @@ export function AboutGlobeExplorer({
       countries[(index + direction + countries.length) % countries.length]
     if (next) choose(next)
   }
+  const pickerCountries = useMemo(
+    () =>
+      countries.map((entry) => ({
+        code: entry.slug,
+        name: entry.name,
+        searchTerms: entry.iso2 ?? entry.iso3,
+      })),
+    [countries]
+  )
   const count = data?.libraryCount ?? null
+  const empty = count === 0
+  const hasRecords = count !== null && count > 0
+  const updated =
+    data?.updatedAt && !Number.isNaN(Date.parse(data.updatedAt))
+      ? new Intl.DateTimeFormat(locale, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }).format(new Date(data.updatedAt))
+      : null
+  const coverage = data?.regionCoverage
+  const types = data?.libraryTypeCounts?.filter((entry) => entry.count > 0)
+  const addHref = country
+    ? placeAddHref({ continent: country.continent, country: country.slug })
+    : "/contribute/index/new"
   const typeTotal =
     data?.libraryTypeCounts?.reduce((sum, entry) => sum + entry.count, 0) ?? 0
   const preview =
@@ -254,31 +289,39 @@ export function AboutGlobeExplorer({
             />
           ) : null,
         inspecting: enabled && Boolean(shown || hover?.kind === "connection"),
+        rotationScale: enabled && pinned ? 0.25 : 1,
         view,
       })}
       {enabled ? (
         <>
           <div className="about-country-picker">
-            <label htmlFor="about-country-picker">Explore a country</label>
-            <select
+            <label
+              id="about-country-picker-label"
+              htmlFor="about-country-picker"
+            >
+              Explore a country
+            </label>
+            <CountryCombobox
               id="about-country-picker"
-              ref={select}
+              labelledBy="about-country-picker-label"
+              triggerRef={countryTrigger}
               value={pinned?.country.slug ?? ""}
-              onChange={(event) => {
-                const next = countries.find(
-                  (entry) => entry.slug === event.target.value
-                )
+              countries={pickerCountries}
+              triggerStyle={{
+                padding: 0,
+                border: 0,
+                background: "transparent",
+                borderRadius: 0,
+                fontSize: "13px",
+                fontWeight: 600,
+                minHeight: "32px",
+              }}
+              onChange={(value) => {
+                const next = countries.find((entry) => entry.slug === value)
                 if (next) choose(next)
                 else close()
               }}
-            >
-              <option value="">Choose a country</option>
-              {countries.map((entry) => (
-                <option key={entry.slug} value={entry.slug}>
-                  {entry.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <p className="sr-only" role="status">
             {hover?.kind === "connection" ? hover.names.join(" · ") : ""}
@@ -309,7 +352,7 @@ export function AboutGlobeExplorer({
             {hover?.kind === "connection"
               ? hover.names.map((name, index) => (
                   <div
-                    key={`${hover.index}-${index}`}
+                    key={`${hover.index}-${name}`}
                     ref={index === 0 ? endpointA : endpointB}
                     className="about-connection-label"
                   >
@@ -325,6 +368,7 @@ export function AboutGlobeExplorer({
               aria-hidden={!shown}
               inert={!shown ? true : undefined}
               data-open={Boolean(shown)}
+              data-empty={empty}
               onPointerEnter={keepOpen}
               onPointerLeave={() => {
                 if (!pinned) updateHover(null)
@@ -338,187 +382,325 @@ export function AboutGlobeExplorer({
                   updateHover(null)
               }}
             >
-              <div className="about-country-heading">
-                <p className="about-eyebrow">
-                  Country{country.iso2 ? ` · ${country.iso2}` : ""}
-                </p>
-                <div className="about-country-actions">
-                  <button
-                    type="button"
-                    aria-label="Previous country"
-                    onClick={() => step(-1)}
-                  >
-                    <ChevronLeft size={16} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next country"
-                    onClick={() => step(1)}
-                  >
-                    <ChevronRight size={16} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Close country details"
-                    onClick={() => {
-                      close()
-                      select.current?.focus({ preventScroll: true })
-                    }}
-                  >
-                    <X size={16} aria-hidden="true" />
-                  </button>
+              <div className="about-country-card-heading">
+                <div className="about-country-heading">
+                  <p className="about-eyebrow">
+                    Country{country.iso2 ? ` · ${country.iso2}` : ""}
+                  </p>
+                  <div className="about-country-actions">
+                    <button
+                      type="button"
+                      aria-label="Previous country"
+                      onClick={() => step(-1)}
+                    >
+                      <ChevronLeft size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Next country"
+                      onClick={() => step(1)}
+                    >
+                      <ChevronRight size={16} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Close country details"
+                      onClick={() => {
+                        close()
+                        countryTrigger.current?.focus({ preventScroll: true })
+                      }}
+                    >
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+                <h2>{country.name}</h2>
+                <div className="about-country-status">
+                  {pinned ? (
+                    <>
+                      <Pin size={12} aria-hidden="true" /> Pinned to the globe
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (shown) setPinned(shown)
+                      }}
+                    >
+                      <Pin size={12} aria-hidden="true" /> Pin this country
+                    </button>
+                  )}
                 </div>
               </div>
-              <h2>{country.name}</h2>
-              <div className="about-country-status">
-                {pinned ? (
-                  <>
-                    <Pin size={12} aria-hidden="true" /> Pinned to the globe
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (shown) setPinned(shown)
-                    }}
-                  >
-                    <Pin size={12} aria-hidden="true" /> Pin this country
-                  </button>
-                )}
-              </div>
-              <p className="about-country-count">
-                {count === null || count === undefined ? (
-                  <span>—</span>
-                ) : (
-                  <span>{count.toLocaleString(locale)}</span>
-                )}
-                <small>
-                  {count === null || count === undefined
-                    ? !result
-                      ? "Loading library count…"
-                      : "Library count unavailable"
-                    : "libraries recorded"}
-                </small>
-              </p>
-              {data?.summary ? (
-                <p className="about-country-summary">{data.summary}</p>
-              ) : null}
-              {data?.capitalCity ? (
-                <p className="about-country-capital">
-                  Capital · {data.capitalCity}
+              <div className="about-country-body">
+                {updated && data?.updatedAt ? (
+                  <p className="about-country-updated">
+                    Updated <time dateTime={data.updatedAt}>{updated}</time>
+                  </p>
+                ) : null}
+                <p className="about-country-count">
+                  {count === null || count === undefined ? (
+                    <span>—</span>
+                  ) : (
+                    <span>{count.toLocaleString(locale)}</span>
+                  )}
+                  <small>
+                    {count === null || count === undefined
+                      ? !result
+                        ? "Loading library count…"
+                        : "Library count unavailable"
+                      : "libraries recorded"}
+                  </small>
                 </p>
-              ) : null}
-              {!result ? (
-                <p className="about-country-message" role="status">
-                  Loading the country’s record…
-                </p>
-              ) : "error" in result ? (
-                <div className="about-country-message" role="status">
-                  Details are temporarily unavailable.{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRecords((previous) => {
-                        const next = { ...previous }
-                        delete next[recordKey]
-
-                        return next
-                      })
-                      setRetry((value) => value + 1)
-                    }}
-                  >
-                    Try again
-                  </button>
-                </div>
-              ) : null}
-              {data?.libraryTypeCounts?.length ? (
-                <div className="about-country-types">
-                  <h3>By type</h3>
-                  <div className="about-country-type-bar" aria-hidden="true">
-                    {data.libraryTypeCounts.map((entry) => (
+                {hasRecords && coverage && coverage.total > 0 ? (
+                  <div className="about-country-coverage">
+                    <div
+                      className="about-country-coverage-track"
+                      role="progressbar"
+                      aria-label={`${coverage.label} in the index with library records`}
+                      aria-valuemin={0}
+                      aria-valuemax={coverage.total}
+                      aria-valuenow={coverage.recorded}
+                      aria-valuetext={`${coverage.recorded} of ${coverage.total} listed ${coverage.label.toLowerCase()} have records`}
+                    >
                       <span
-                        key={entry.type}
                         style={{
-                          flexGrow: entry.count,
-                          background: tintForLibraryType(entry.type).fg,
+                          transform: `scaleX(${Math.min(1, coverage.recorded / coverage.total)})`,
                         }}
                       />
-                    ))}
+                    </div>
+                    <p>
+                      <strong>
+                        {coverage.recorded.toLocaleString(locale)} of{" "}
+                        {coverage.total.toLocaleString(locale)}
+                      </strong>{" "}
+                      listed {coverage.label.toLowerCase()} have records
+                    </p>
                   </div>
-                  <ul>
-                    {data.libraryTypeCounts.map((entry) => (
-                      <li key={entry.type}>
-                        <i
+                ) : null}
+                {empty ? (
+                  <div className="about-country-empty">
+                    <h3>Help start the record.</h3>
+                    <p>Local knowledge can help fill this gap in the index.</p>
+                  </div>
+                ) : null}
+                {!result ? (
+                  <p className="about-country-message" role="status">
+                    Loading the country’s record…
+                  </p>
+                ) : "error" in result ? (
+                  <div className="about-country-message" role="status">
+                    Details are temporarily unavailable.{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecords((previous) => {
+                          const next = { ...previous }
+                          delete next[recordKey]
+
+                          return next
+                        })
+                        setRetry((value) => value + 1)
+                      }}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                ) : null}
+                {hasRecords && types?.length ? (
+                  <div className="about-country-types">
+                    <h3>By type</h3>
+                    <div className="about-country-type-bar" aria-hidden="true">
+                      {types.map((entry) => (
+                        <span
+                          key={entry.type}
                           style={{
+                            flexGrow: entry.count,
                             background: tintForLibraryType(entry.type).fg,
                           }}
-                          aria-hidden="true"
                         />
-                        <span>{entry.type}</span>
-                        <strong>{entry.count.toLocaleString(locale)}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                  {typeTotal && count !== null && typeTotal !== count ? (
-                    <p className="about-country-message">
-                      Type totals cover records with a recorded library type.
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-              {data?.featuredLibraries.length ? (
-                <div className="about-country-featured">
-                  <h3>Featured libraries</h3>
-                  <ul>
-                    {data.featuredLibraries.map((library) => (
-                      <li key={library.href ?? library.name}>
-                        {library.href ? (
-                          <GlobalLink href={library.href}>
-                            <i aria-hidden="true" />
-                            <span>
-                              <strong>{library.name}</strong>
-                              <small>
-                                {[library.place, library.type]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              </small>
-                            </span>
-                            <ArrowUpRight size={14} aria-hidden="true" />
-                          </GlobalLink>
-                        ) : (
-                          <span>{library.name}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              <div className="about-country-links">
-                <GlobalLink
-                  href={
-                    country.center
-                      ? `/map?v=${country.center.lat},${country.center.lng},5`
-                      : `/map?q=${encodeURIComponent(country.name)}`
-                  }
-                  className="about-button"
-                >
-                  Open in the atlas
-                </GlobalLink>
-                <GlobalLink
-                  href={`/${country.continent}/${country.slug}`}
-                  className="about-button about-button-secondary"
-                >
-                  Country page
-                </GlobalLink>
+                      ))}
+                    </div>
+                    <ul>
+                      {types.map((entry) => (
+                        <li key={entry.type}>
+                          <i
+                            style={{
+                              background: tintForLibraryType(entry.type).fg,
+                            }}
+                            aria-hidden="true"
+                          />
+                          <span>{entry.type}</span>
+                          <strong>{entry.count.toLocaleString(locale)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                    {typeTotal && count !== null && typeTotal !== count ? (
+                      <p className="about-country-message">
+                        Type totals cover records with a recorded library type.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                {hasRecords && data?.featuredLibraries.length ? (
+                  <div className="about-country-featured">
+                    <h3>Featured libraries</h3>
+                    <ul>
+                      {data.featuredLibraries.map((library) => (
+                        <li key={library.href ?? library.name}>
+                          {library.href ? (
+                            <GlobalLink href={library.href}>
+                              <i aria-hidden="true" />
+                              <span>
+                                <strong>{library.name}</strong>
+                                <small>
+                                  {[library.place, library.type]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </small>
+                              </span>
+                              <ArrowUpRight size={14} aria-hidden="true" />
+                            </GlobalLink>
+                          ) : (
+                            <span>{library.name}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {data &&
+                (data.summary ||
+                  data.capitalCity ||
+                  data.languages ||
+                  data.population ||
+                  data.systemDescription ||
+                  data.facts?.length) ? (
+                  <details className="about-country-context">
+                    <summary>Country context</summary>
+                    {hasRecords && data?.summary ? (
+                      <p className="about-country-summary">{data.summary}</p>
+                    ) : null}
+                    {hasRecords && (types?.length || coverage?.leading) ? (
+                      <dl className="about-country-stats">
+                        {types?.length ? (
+                          <div>
+                            <dt>Library types</dt>
+                            <dd>{types.length.toLocaleString(locale)}</dd>
+                          </div>
+                        ) : null}
+                        {coverage?.leading ? (
+                          <div>
+                            <dt>Most records</dt>
+                            <dd>
+                              {coverage.leading.count.toLocaleString(locale)}
+                              <small>{coverage.leading.name}</small>
+                            </dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                    ) : null}
+
+                    {data.systemDescription ? (
+                      <p>{data.systemDescription}</p>
+                    ) : null}
+                    <dl>
+                      {data.capitalCity ? (
+                        <div>
+                          <dt>Capital</dt>
+                          <dd>{data.capitalCity}</dd>
+                        </div>
+                      ) : null}
+                      {data.languages ? (
+                        <div>
+                          <dt>Languages</dt>
+                          <dd>{data.languages}</dd>
+                        </div>
+                      ) : null}
+                      {data.population ? (
+                        <div>
+                          <dt>
+                            Population
+                            {data.population.year
+                              ? ` · ${data.population.year}`
+                              : ""}
+                          </dt>
+                          <dd>
+                            {data.population.count.toLocaleString(locale)}
+                            {data.population.source ? (
+                              <small>{data.population.source}</small>
+                            ) : null}
+                          </dd>
+                        </div>
+                      ) : null}
+                      {data.facts?.map((fact) => (
+                        <div key={fact.label}>
+                          <dt>{fact.label}</dt>
+                          <dd>{fact.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
+                ) : null}
               </div>
-              <p className="about-country-footer">
-                Published records from the index.{" "}
-                <GlobalLink
-                  href={`/contribute?country=${encodeURIComponent(country.slug)}`}
-                >
-                  Add local knowledge
-                </GlobalLink>
-              </p>
+              <div className="about-country-card-footer">
+                {empty ? (
+                  <GlobalLink
+                    href={addHref}
+                    className="about-button about-country-first-library"
+                  >
+                    Add the first library{" "}
+                    <ArrowUpRight size={14} aria-hidden="true" />
+                  </GlobalLink>
+                ) : null}
+                <div className="about-country-links" data-empty={empty}>
+                  <GlobalLink
+                    href={
+                      empty
+                        ? proposeHref({ places: { country: [country.slug] } })
+                        : country.center
+                          ? `/map?v=${country.center.lat},${country.center.lng},5`
+                          : `/map?q=${encodeURIComponent(country.name)}`
+                    }
+                    className={
+                      empty
+                        ? "about-button about-button-secondary"
+                        : "about-button"
+                    }
+                  >
+                    {empty ? "Propose a drive" : "Open in the atlas"}
+                  </GlobalLink>
+                  <GlobalLink
+                    href={`/${country.continent}/${country.slug}`}
+                    className="about-button about-button-secondary"
+                  >
+                    Country page
+                  </GlobalLink>
+                </div>
+                <p className="about-country-footer" data-empty={empty}>
+                  {empty ? (
+                    <>
+                      <GlobalLink
+                        href={
+                          country.center
+                            ? `/map?v=${country.center.lat},${country.center.lng},5`
+                            : `/map?q=${encodeURIComponent(country.name)}`
+                        }
+                      >
+                        Open in the atlas
+                      </GlobalLink>
+                      <GlobalLink href="/contribute">
+                        See ways to contribute
+                      </GlobalLink>
+                    </>
+                  ) : (
+                    <>
+                      Help complete the record.{" "}
+                      <GlobalLink href={addHref}>Add a library</GlobalLink>
+                    </>
+                  )}
+                </p>
+              </div>
             </aside>
           ) : null}
         </>

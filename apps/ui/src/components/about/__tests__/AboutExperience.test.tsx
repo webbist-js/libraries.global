@@ -18,7 +18,11 @@ const canvas = vi.hoisted(() => ({
   render: vi.fn(),
 }))
 
-vi.mock("next-intl", () => ({ useLocale: () => "en" }))
+vi.mock("next-intl", () => ({
+  useLocale: () => "en",
+  useTranslations: () => (key: string) => key,
+}))
+vi.mock("@iconify/react", () => ({ Icon: () => <span aria-hidden="true" /> }))
 
 vi.mock("next/dynamic", () => ({
   default: () =>

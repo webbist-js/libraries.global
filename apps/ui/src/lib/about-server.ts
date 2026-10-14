@@ -9,6 +9,7 @@ import type {
 } from "@/components/about/about-globe.types"
 import type { AboutLibrary } from "@/components/about/about.types"
 import type { HomepageContinentSummary } from "@/components/home/homepage.types"
+import { placeLabels } from "@/components/location/location-page.helpers"
 import { buildLibraryPath } from "@/lib/library-helpers"
 import { logNonBlockingError } from "@/lib/logging"
 import { routing } from "@/lib/navigation"
@@ -175,14 +176,83 @@ export async function fetchAboutGlobeRecord(
 
     return response.data
   }
-  let country = await read(locale)
-  if (!country && locale !== routing.defaultLocale)
-    country = await read(routing.defaultLocale)
+  let recordLocale = locale
+  let country = await read(recordLocale)
+  if (!country && locale !== routing.defaultLocale) {
+    recordLocale = routing.defaultLocale
+    country = await read(recordLocale)
+  }
   if (!country) return null
+
+  // Some countries use the curated relation; others feature individual library
+  // records. Respect the curated list first, then read the published flag.
+  let featured = country.featuredLibraries ?? []
+  if (!featured.length && (country.libraryCount ?? 0) > 0) {
+    const response = (await PublicStrapiClient.fetchAPI("/libraries", {
+      locale: recordLocale,
+      status: "published",
+      filters: { country: { slug: { $eq: slug } }, featured: { $eq: true } },
+      fields: ["name", "slug", "city", "libraryType"],
+      populate: {
+        continent: { fields: ["slug"] },
+        country: { fields: ["slug"] },
+        region: { fields: ["name", "slug"] },
+      },
+      sort: ["name:asc", "slug:asc"],
+      pagination: { pageSize: 3 },
+    }).catch(() => null)) as { data?: PopulatedFeaturedLibraryData[] } | null
+    if (Array.isArray(response?.data)) featured = response.data
+  }
+  const regions = country.regions ?? []
+  const withRecords = regions.filter((region) => (region.libraryCount ?? 0) > 0)
+  const leading = withRecords.reduce<(typeof regions)[number] | null>(
+    (top, region) =>
+      (region.libraryCount ?? 0) > (top?.libraryCount ?? 0) ? region : top,
+    null
+  )
+  const population = Number(country.populationCount)
+  const facts = [
+    { label: "Annual library visits", value: country.visitsPerYear },
+    { label: "Library employees", value: country.employees },
+    { label: "Library volunteers", value: country.volunteers },
+    { label: "Library budget", value: country.budget },
+  ].flatMap(({ label, value }) =>
+    value?.trim() ? [{ label, value: value.trim() }] : []
+  )
 
   return {
     summary: country.summary ?? null,
     capitalCity: country.capitalCity ?? null,
+    updatedAt:
+      country.updatedAt instanceof Date
+        ? country.updatedAt.toISOString()
+        : (country.updatedAt ?? null),
+    languages: country.languages ?? null,
+    systemDescription: country.systemDescription ?? null,
+    population:
+      Number.isSafeInteger(population) && population > 0
+        ? {
+            count: population,
+            year: country.populationYear ?? null,
+            source: country.populationSource ?? null,
+          }
+        : null,
+    regionCoverage:
+      country.statistics?.children === false
+        ? null
+        : {
+            total: country.regionCount ?? regions.length,
+            recorded: withRecords.length,
+            label: placeLabels(country).region.plural,
+            leading: leading
+              ? {
+                  name: leading.name,
+                  slug: leading.slug,
+                  count: leading.libraryCount ?? 0,
+                }
+              : null,
+          },
+    facts,
     libraryCount:
       country.statistics?.libraries === false
         ? null
@@ -191,13 +261,11 @@ export async function fetchAboutGlobeRecord(
       country.statistics?.types === false
         ? null
         : (country.libraryTypeCounts ?? null),
-    featuredLibraries: (country.featuredLibraries ?? [])
-      .slice(0, 3)
-      .map((library) => ({
-        name: library.name ?? "Library",
-        place: library.city ?? library.region?.name ?? country!.name ?? "",
-        type: library.libraryType ?? null,
-        href: buildLibraryPath(library),
-      })),
+    featuredLibraries: featured.slice(0, 3).map((library) => ({
+      name: library.name ?? "Library",
+      place: library.city ?? library.region?.name ?? country!.name ?? "",
+      type: library.libraryType ?? null,
+      href: buildLibraryPath(library),
+    })),
   }
 }
