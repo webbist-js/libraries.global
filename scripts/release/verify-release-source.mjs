@@ -1,7 +1,7 @@
 import { pathToFileURL } from "node:url"
 
-const REPOSITORY = "webbist-js/libraries.global"
-const REQUIRED_CHECKS = [
+export const REPOSITORY = "webbist-js/libraries.global"
+export const REQUIRED_CHECKS = [
   "Install, Lint, Test and Build",
   "Analyze (javascript-typescript)",
   "Analyze (python)",
@@ -9,8 +9,8 @@ const REQUIRED_CHECKS = [
 ]
 
 export function assertProtectedSource(repository, ref, sha) {
-  if (repository !== REPOSITORY || ref !== "refs/heads/dev") {
-    throw new Error("Image publishing requires the protected dev branch.")
+  if (repository !== REPOSITORY || ref !== "refs/heads/main") {
+    throw new Error("Production releases require the protected main branch.")
   }
   if (!/^[a-f0-9]{40}$/.test(sha ?? "")) {
     throw new Error("Invalid release commit.")
@@ -35,16 +35,18 @@ export function assertPassingChecks(checks, sha) {
   }
 }
 
-async function githubJson(path) {
+export async function githubJson(path, options = {}) {
   const response = await fetch(
     `https://api.github.com/repos/${REPOSITORY}/${path}`,
     {
+      ...options,
       headers: {
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
         ...(process.env.GITHUB_TOKEN
           ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
           : {}),
+        ...options.headers,
       },
       signal: AbortSignal.timeout(15000),
     }
@@ -62,12 +64,46 @@ async function main() {
     process.env.GITHUB_REF,
     sha
   )
-  const branch = await githubJson("git/ref/heads/dev")
-  if (branch.object?.sha !== sha)
-    throw new Error("The release commit is no longer the dev branch head.")
-  const checks = await githubJson(`commits/${sha}/check-runs?per_page=100`)
-  assertPassingChecks(checks.check_runs, sha)
+  const deadline =
+    Date.now() + (process.argv.includes("--wait") ? 55 * 60_000 : 0)
+  for (;;) {
+    const branch = await githubJson("git/ref/heads/main")
+    if (branch.object?.sha !== sha)
+      throw new Error("The release commit is no longer the main branch head.")
+    const checks = await githubJson(
+      `commits/${sha}/check-runs?per_page=100&filter=all`
+    )
+    if (checks.total_count > checks.check_runs.length)
+      throw new Error(
+        "Release checks are truncated; operator verification is required."
+      )
+    const state = releaseChecksState(checks.check_runs, sha)
+    if (state === "success") break
+    if (state === "failure" || Date.now() >= deadline)
+      assertPassingChecks(checks.check_runs, sha)
+    console.log("Waiting for CI and CodeQL on the merged main commit.")
+    await new Promise((resolve) => setTimeout(resolve, 30_000))
+  }
   console.log("Protected release source and required commit checks verified.")
+}
+
+export function releaseChecksState(checks, sha) {
+  if (!Array.isArray(checks)) throw new Error("Missing release checks.")
+  let pending = false
+  for (const name of REQUIRED_CHECKS) {
+    const latest = checks
+      .filter(
+        (check) =>
+          check.name === name &&
+          check.head_sha === sha &&
+          check.app?.id === 15368
+      )
+      .sort((a, b) => b.id - a.id)[0]
+    if (!latest || latest.status !== "completed") pending = true
+    else if (latest.conclusion !== "success") return "failure"
+  }
+
+  return pending ? "pending" : "success"
 }
 
 if (

@@ -28,6 +28,20 @@ export type CompareRow = {
 
 export type CompareGroup = { id: string; title: string; rows: CompareRow[] }
 
+export function compareGroupSummary(group: CompareGroup): string {
+  const now = group.rows.filter((row) =>
+    Object.values(row.cells).includes("yes")
+  ).length
+  const soon = group.rows.length - now
+
+  return [
+    now > 0 ? `${now} available now` : null,
+    soon > 0 ? `${soon} on the roadmap` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+}
+
 /** Column order: each plan includes everything to its left. */
 export const COMPARE_PLANS: readonly PlanCardKey[] = PLANS.map((p) => p.key)
 

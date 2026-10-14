@@ -43,7 +43,7 @@ export async function generateMetadata({
 const PROMISES = [
   "No ads, ever",
   "Money never buys trust",
-  "Pro is free for contributors",
+  "Open data stays open",
 ]
 
 export default async function MembershipPage() {
@@ -66,7 +66,7 @@ export default async function MembershipPage() {
       <ContributeSectionHeader
         section={tUi("membership")}
         title="Plans and *Pro*"
-        lead="Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools."
+        lead="Libraries Global is free to use. Optional memberships support open library data and add history, export and analysis tools."
       >
         <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
           {PROMISES.map((text) => (
@@ -88,46 +88,66 @@ export default async function MembershipPage() {
         </ul>
       </ContributeSectionHeader>
 
-      <Container className="flex flex-col gap-16 py-12 sm:gap-20 sm:py-16">
-        <PlanStatusBanner plan={user?.plan} planSource={user?.planSource} />
+      <Container className="flex flex-col gap-12 py-10 sm:gap-16 sm:py-14">
         <FreePlansCard signedIn={Boolean(user)} />
         <LibraryStaffSection isStaff={isStaff} />
-        <MembershipPlans
-          currentPlan={currentPlan}
-          billingAvailable={billingConfig().enabled}
-          supporterApproved={billingConfig().supporterApproved}
-          checkoutUser={
-            user
-              ? {
-                  email: user.email,
-                  verified: user.emailVerified,
-                  hasPaidMembership,
-                  complimentaryPro:
-                    ["pro", "team"].includes(user.plan ?? "") &&
-                    user.planSource !== "paid",
-                }
-              : null
-          }
-        />
-        <MembershipPolicies />
-        <p
-          className="m-0 text-[16px] leading-relaxed"
-          style={{ color: T.ink.dim }}
-        >
-          Supporter, Pro and Team members can choose an optional profile mark
-          and public credit.{" "}
-          <GlobalLink
-            href="/community/supporters"
-            className="font-semibold underline underline-offset-4"
-            style={{ color: T.accent.primary }}
+        <div className="flex flex-col gap-5">
+          <PlanStatusBanner plan={user?.plan} planSource={user?.planSource} />
+          <MembershipPlans
+            currentPlan={currentPlan}
+            billingAvailable={billingConfig().enabled}
+            supporterApproved={billingConfig().supporterApproved}
+            checkoutUser={
+              user
+                ? {
+                    email: user.email,
+                    verified: user.emailVerified,
+                    hasPaidMembership,
+                    complimentaryPro:
+                      ["pro", "team"].includes(user.plan ?? "") &&
+                      user.planSource !== "paid",
+                  }
+                : null
+            }
+          />
+        </div>
+        <PlanCompareTable currentPlan={currentPlan} />
+        <div className="flex flex-col gap-6">
+          <ProFreeRoutes />
+          <section
+            aria-labelledby="member-recognition-h"
+            className="rounded-[22px] border border-(--t-border-line) bg-(--t-bg-space) p-5 sm:p-6"
           >
-            Meet the supporters
-          </GlobalLink>
-          . Both visibility choices are in your profile settings.
-        </p>
-        <PlanCompareTable />
-        <ProFreeRoutes />
+            <h2
+              id="member-recognition-h"
+              className="m-0 mb-2 text-[26px] font-medium"
+              style={{ fontFamily: T.font.serif }}
+            >
+              Choose public recognition
+            </h2>
+            <p
+              className="m-0 text-[16px] leading-relaxed"
+              style={{ color: T.ink.dim }}
+            >
+              Supporter, Pro and Team members can choose an optional profile
+              mark and public credit.{" "}
+              <GlobalLink
+                href="/community/supporters"
+                className="font-semibold underline underline-offset-4"
+                style={{ color: T.accent.primary }}
+              >
+                Meet the supporters
+              </GlobalLink>
+              . Both visibility choices are in your profile settings.
+            </p>
+            <p className="m-0 mt-3 text-[14px] text-(--t-ink-dim)">
+              Profile marks and supporters-page credit are optional and chosen
+              separately. They never show what you pay.
+            </p>
+          </section>
+        </div>
         <ProFaq />
+        <MembershipPolicies />
       </Container>
     </main>
   )

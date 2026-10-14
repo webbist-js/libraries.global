@@ -1,0 +1,11 @@
+[Unit]
+Description=Check protected main for a production image release
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+RandomizedDelaySec=15s
+Unit=libraries-global-release.service
+
+[Install]
+WantedBy=timers.target

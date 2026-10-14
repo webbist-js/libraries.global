@@ -1,6 +1,8 @@
 import Script from "next/script"
 
+import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics"
 import { isDevelopment } from "@/lib/general-helpers"
+import { productionAnalyticsEnabled } from "@/lib/google-analytics"
 
 export function TrackingScriptWrapper({
   id,
@@ -29,8 +31,10 @@ export function TrackingScriptWrapper({
   )
 }
 
-function TrackingScripts() {
-  return <>{/* Tracking Scrips here */}</>
+function TrackingScripts({ nonce }: { readonly nonce?: string }) {
+  if (!productionAnalyticsEnabled()) return null
+
+  return <GoogleAnalytics nonce={nonce} />
 }
 
 export default TrackingScripts

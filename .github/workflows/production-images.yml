@@ -1,6 +1,8 @@
 name: Production images
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -12,15 +14,17 @@ concurrency:
 
 jobs:
   build:
-    # Configure the protected environment and its scoped registry credential
-    # before enabling this variable. PRs and forks never publish images.
-    if: github.repository == 'webbist-js/libraries.global' && github.ref == 'refs/heads/dev' && vars.DO_IMAGE_PUBLISH_ENABLED == 'true'
+    # Only merges into main release production. dev has CI but no deployed
+    # environment yet. PRs, forks and release branches cannot publish.
+    if: github.repository == 'webbist-js/libraries.global' && github.ref == 'refs/heads/main' && vars.DO_IMAGE_PUBLISH_ENABLED == 'true'
+    permissions:
+      contents: read
+      checks: write
     environment: production-images
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
-      DOCKER_CONFIG: /tmp/libraries-global-registry
-      REGISTRY: ${{ vars.DO_CONTAINER_REGISTRY }}
+      REGISTRY: ${{ secrets.DO_CONTAINER_REGISTRY }}
     steps:
       - name: Checkout the selected commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,49 +34,45 @@ jobs:
       - name: Verify the protected source and successful checks
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/release/verify-release-source.mjs
+        run: node scripts/release/verify-release-source.mjs --wait
 
-      - name: Install the scoped registry configuration
+      - name: Install the scoped registry login
         env:
-          REGISTRY_CONFIG: ${{ secrets.DO_REGISTRY_DOCKER_CONFIG }}
-        run: |
-          set -euo pipefail
-          test -n "$REGISTRY_CONFIG"
-          mkdir -m 700 "$DOCKER_CONFIG"
-          printf '%s' "$REGISTRY_CONFIG" > "$DOCKER_CONFIG/config.json"
-          chmod 600 "$DOCKER_CONFIG/config.json"
+          DO_REGISTRY_USERNAME: ${{ secrets.DO_REGISTRY_USERNAME }}
+          DO_REGISTRY_TOKEN: ${{ secrets.DO_REGISTRY_TOKEN }}
+        run: node scripts/release/registry-auth.mjs
 
       - name: Build and publish immutable image references
         run: |
           set -euo pipefail
+          node scripts/release/worker-context.mjs
           for service in ui strapi worker; do
             app="$service"
-            if [ "$service" = worker ]; then app=sync-worker; fi
+            context=.
+            if [ "$service" = worker ]; then
+              app=sync-worker
+              context="$RUNNER_TEMP/worker-context"
+            fi
             image="$REGISTRY/$service:git-$GITHUB_SHA"
-            docker build --platform linux/amd64 \
-              --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-              --label "org.opencontainers.image.source=https://github.com/webbist-js/libraries.global" \
-              --file "apps/$app/Dockerfile" --tag "$image" .
-            docker push "$image"
+            if manifest_result=$(docker manifest inspect "$image" 2>&1); then
+              docker pull --platform linux/amd64 "$image"
+              test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = "$GITHUB_SHA"
+            else
+              # Authentication/network failures do not prove a tag is absent.
+              # Refuse to overwrite an existing release during a failed retry.
+              if [[ "$manifest_result" != *"manifest unknown"* && "$manifest_result" != *"no such manifest"* ]]; then
+                echo "Cannot verify whether this release image already exists."
+                exit 1
+              fi
+              docker build --platform linux/amd64 \
+                --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+                --label "org.opencontainers.image.source=https://github.com/webbist-js/libraries.global" \
+                --file "apps/$app/Dockerfile" --tag "$image" "$context"
+              docker push "$image"
+            fi
             docker image inspect --format '{{index .RepoDigests 0}}' "$image" > "$RUNNER_TEMP/$service.image"
           done
-          node --input-type=module <<'JS'
-          import { readFileSync, writeFileSync } from 'node:fs'
-          const images = Object.fromEntries(['ui', 'strapi', 'worker'].map(service => {
-            const image = readFileSync(`${process.env.RUNNER_TEMP}/${service}.image`, 'utf8').trim()
-            const prefix = `${process.env.REGISTRY}/${service}@sha256:`
-            if (!image.startsWith(prefix) || !/^[a-f0-9]{64}$/.test(image.slice(prefix.length))) {
-              throw new Error('Invalid published image digest')
-            }
-            return [service, image]
-          }))
-          writeFileSync(`${process.env.RUNNER_TEMP}/release-manifest.json`, JSON.stringify({
-            schema: 1,
-            repository: 'webbist-js/libraries.global',
-            commit: process.env.GITHUB_SHA,
-            images,
-          }, null, 2) + '\n')
-          JS
+          node scripts/release/image-manifest.mjs
 
       - name: Save the credential-free release manifest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -82,6 +82,19 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Recheck the merged source before making it deployable
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/verify-release-source.mjs
+
+      - name: Publish the server-readable image manifest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/publish-manifest-check.mjs
+
       - name: Remove registry credentials
         if: always()
-        run: rm -rf "$DOCKER_CONFIG"
+        run: |
+          if [ -n "${DOCKER_CONFIG:-}" ]; then
+            rm -rf -- "$DOCKER_CONFIG"
+          fi

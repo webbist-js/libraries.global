@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useId, useState } from "react"
+import { useState } from "react"
 
 import { CheckoutButton } from "@/components/billing/CheckoutButton"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -16,90 +16,17 @@ import {
   PRO_STANDARD_PRICE_NOTE,
 } from "@/lib/plans"
 
-import { IncludeItem, includeLabel, PlanSectionHeader } from "./PlanBits"
+import { CurrentPlanBadge, PlanFeatures, PlanSectionHeader } from "./PlanBits"
+import { PlanRoadmap } from "./PlanRoadmap"
+import { PlanToggle } from "./PlanToggle"
+import { TeamPlan } from "./TeamPlan"
 
 type Billing = "monthly" | "yearly"
 
-const MEMBERSHIP: readonly PlanCardKey[] = ["supporter", "pro", "team"]
-
-/** One line on what the unbuilt features add up to, per plan. */
-const ROADMAP_SUMMARY: Partial<Record<PlanCardKey, string>> = {
-  pro: "Analysis layers, reach tools, library watching and side-by-side comparison.",
-  team: "Traffic reports, a shared workspace, bulk updates, an embeddable finder and higher API quotas.",
-}
+const MEMBERSHIP: readonly PlanCardKey[] = ["supporter", "pro"]
 
 const PILL =
-  "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full px-4 text-[15px] font-semibold no-underline"
-
-function BillingToggle({
-  billing,
-  onChange,
-  savingMonths,
-}: {
-  readonly billing: Billing
-  readonly onChange: (b: Billing) => void
-  readonly savingMonths: number | null
-}) {
-  const tUi = useUiTranslations("ui")
-
-  const options: [Billing, string][] = [
-    ["monthly", "Monthly"],
-    ["yearly", "Yearly"],
-  ]
-
-  return (
-    <div
-      aria-label={tUi("billing_period")}
-      className="inline-flex rounded-full border p-1"
-      role="radiogroup"
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      {options.map(([value, label]) => {
-        const on = billing === value
-
-        return (
-          <button
-            key={value}
-            aria-checked={on}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-colors"
-            onClick={() => onChange(value)}
-            onKeyDown={(e) => {
-              if (
-                ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
-                  e.key
-                )
-              ) {
-                e.preventDefault()
-                onChange(value === "monthly" ? "yearly" : "monthly")
-              }
-            }}
-            role="radio"
-            style={
-              on
-                ? { background: T.ink.base, color: "#fff" }
-                : { color: T.ink.base }
-            }
-            tabIndex={on ? 0 : -1}
-            type="button"
-          >
-            {label}
-            {value === "yearly" && savingMonths ? (
-              <span
-                className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
-                style={{
-                  background: TYPE_TINT.public.bg,
-                  color: TYPE_TINT.public.fg,
-                }}
-              >
-                {savingMonths} months free
-              </span>
-            ) : null}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-[15px] font-semibold no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
 
 function Price({
   plan,
@@ -109,8 +36,7 @@ function Price({
   readonly billing: Billing
 }) {
   if (plan.price === "free") return null
-  const { monthly, yearly } = plan.price
-  // Team is yearly only, so it shows its yearly price in both modes.
+  const { monthly, yearly, note } = plan.price
   const shown = billing === "yearly" ? (yearly ?? monthly) : (monthly ?? yearly)
   const other = shown === monthly ? yearly : monthly
   const parts = splitPrice(shown)
@@ -141,9 +67,12 @@ function Price({
           </span>
         )}
       </p>
-      {otherParts ? (
+      {otherParts || note ? (
         <p className="m-0 mt-2 text-[14px]" style={{ color: T.ink.dim }}>
-          Or {otherParts.amount} a {otherParts.period}.
+          {otherParts
+            ? `Or ${otherParts.amount} a ${otherParts.period}.`
+            : null}
+          {note ? ` ${note}` : null}
         </p>
       ) : null}
     </div>
@@ -176,23 +105,6 @@ function Cta({
       </GlobalLink>
     )
 
-  if (plan.cta.kind === "contact" && plan.cta.href)
-    return (
-      <a
-        className={`${PILL} border bg-white transition-colors hover:bg-(--t-bg-surface)`}
-        href={plan.cta.href}
-        style={{ borderColor: T.border.hi, color: T.ink.base }}
-      >
-        <Icon
-          aria-hidden="true"
-          height={17}
-          icon="mdi:email-outline"
-          width={17}
-        />
-        {plan.cta.label}
-      </a>
-    )
-
   return (
     <button
       className={`${PILL} cursor-not-allowed`}
@@ -211,126 +123,48 @@ function Cta({
   )
 }
 
-function Roadmap({ plan }: { readonly plan: PlanCard }) {
-  const [open, setOpen] = useState(false)
-  const listId = useId()
-  const soon = plan.includes.filter((i) => i.kind === "soon")
-  if (soon.length === 0) return null
-
-  return (
-    <div
-      className="rounded-[14px] border p-4"
-      style={{ background: T.bg.surface, borderColor: T.border.line }}
-    >
-      <div className="flex items-center gap-2">
-        <Icon
-          aria-hidden="true"
-          height={16}
-          icon="mdi:clock-outline"
-          style={{ color: T.accent.primary }}
-          width={16}
-        />
-        <p className="m-0 flex-1 text-[14px] font-semibold">
-          On the roadmap{" "}
-          <span className="font-medium" style={{ color: T.ink.dim }}>
-            {soon.length}
-          </span>
-        </p>
-        <button
-          aria-controls={listId}
-          aria-expanded={open}
-          className="text-[13.5px] font-semibold underline underline-offset-[3px]"
-          onClick={() => setOpen((o) => !o)}
-          style={{ color: T.accent.primary }}
-          type="button"
-        >
-          {open ? "Show less" : "Show all"}
-        </button>
-      </div>
-      {ROADMAP_SUMMARY[plan.key] ? (
-        <p
-          className="m-0 mt-1.5 text-[13.5px] leading-[1.5]"
-          style={{ color: T.ink.dim }}
-        >
-          {ROADMAP_SUMMARY[plan.key]}
-        </p>
-      ) : null}
-      <ul
-        className="m-0 mt-3 flex list-none flex-col gap-1.5 p-0 text-[13.5px]"
-        hidden={!open}
-        id={listId}
-        style={{ color: T.ink.dim }}
-      >
-        {soon.map((item) => (
-          <li key={item.text} className="flex gap-2">
-            <span aria-hidden="true">·</span>
-            {includeLabel(item)}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
 function PlanColumn({
   plan,
   billing,
   current,
   purchase,
+  complimentary = false,
 }: {
   readonly plan: PlanCard
   readonly billing: Billing
   readonly current: boolean
   readonly purchase?: React.ReactNode
+  readonly complimentary?: boolean
 }) {
-  const live = plan.includes.filter((i) => i.kind === "feature")
-  const notes = plan.includes.filter((i) => i.kind === "note")
-  const note = plan.price === "free" ? undefined : plan.price.note
-
   return (
     <li
       id={`plan-${plan.key}`}
-      // From md up the cards share row tracks (subgrid), so each price,
-      // blurb, button and list starts at the same height in all three.
-      className="flex min-w-0 scroll-mt-28 flex-col gap-5 rounded-[22px] bg-white md:row-span-4 md:grid md:grid-rows-subgrid"
+      className="flex min-w-0 scroll-mt-28 flex-col gap-5 rounded-[26px] bg-white md:row-span-4 md:grid md:grid-rows-subgrid"
       style={{
         border: current
           ? `2px solid ${T.accent.primary}`
           : `1px solid ${T.border.line}`,
-        // Keep content aligned whichever border width applies.
-        padding: current ? 23 : 24,
+        padding: current ? 19 : 20,
+        background:
+          plan.key === "pro"
+            ? "color-mix(in srgb, var(--t-accent-primary) 2%, white)"
+            : T.bg.deep,
       }}
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-2">
           <h3
-            className="m-0 text-[26px] leading-tight"
+            className="m-0 text-[30px] leading-tight"
             style={{ fontFamily: T.font.serif, fontWeight: 500 }}
           >
             {plan.name}
           </h3>
-          {current ? (
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-semibold text-white"
-              style={{ background: T.accent.primary }}
-            >
-              <Icon
-                aria-hidden="true"
-                height={14}
-                icon="mdi:check"
-                width={14}
-              />
-              Your plan
-            </span>
-          ) : null}
+          {current ? <CurrentPlanBadge /> : null}
         </div>
         <Price billing={billing} plan={plan} />
-        {note ? (
-          <p
-            className="m-0 text-[13.5px] leading-[1.5]"
-            style={{ color: T.ink.dim }}
-          >
-            {note}
+        {complimentary ? (
+          <p className="m-0 text-[13.5px] font-semibold text-(--t-accent-primary)">
+            Your Pro is complimentary. There’s nothing to pay.
           </p>
         ) : null}
       </div>
@@ -340,37 +174,17 @@ function PlanColumn({
       >
         For {plan.who.charAt(0).toLowerCase() + plan.who.slice(1)}.
       </p>
-
       <Cta current={current} plan={plan} purchase={purchase} />
-
-      <div
-        className="flex flex-col gap-3 border-t pt-5"
-        style={{ borderColor: T.border.divider }}
-      >
-        <p className="m-0 text-[13.5px] font-bold">Included now</p>
-        <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {live.map((item) => (
-            <IncludeItem key={item.text} item={item} />
-          ))}
-        </ul>
-        {notes.map((item) => (
-          <p
-            key={item.text}
-            className="m-0 rounded-[12px] px-3.5 py-2.5 text-[13.5px] leading-[1.5]"
-            style={{ background: T.bg.muted, color: T.ink.dim }}
-          >
-            {item.text}
-          </p>
-        ))}
-        <div className="mt-auto pt-2 empty:hidden">
-          <Roadmap plan={plan} />
+      <PlanFeatures plan={plan}>
+        <div className="mt-auto pt-5 empty:hidden">
+          <PlanRoadmap plan={plan} />
         </div>
-      </div>
+      </PlanFeatures>
     </li>
   )
 }
 
-/** Supporter, Pro and Team, with a monthly / yearly switch. */
+/** Personal memberships share a billing period; Team is an annual enquiry. */
 export function MembershipPlans({
   currentPlan,
   billingAvailable = false,
@@ -404,25 +218,59 @@ export function MembershipPlans({
     <section aria-labelledby="membership-h">
       <PlanSectionHeader
         control={
-          <BillingToggle
-            billing={billing}
+          <PlanToggle
+            label={tUi("billing_period")}
+            value={billing}
             onChange={setBilling}
-            savingMonths={savingMonths}
+            options={[
+              { value: "monthly", label: "Monthly" },
+              {
+                value: "yearly",
+                label: "Yearly",
+                badge: savingMonths ? (
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
+                    style={{
+                      background: TYPE_TINT.public.bg,
+                      color: TYPE_TINT.public.fg,
+                    }}
+                  >
+                    {savingMonths} months free
+                  </span>
+                ) : undefined,
+              },
+            ]}
           />
         }
         id="membership-h"
-        sub="Support the project, or add analysis and export on top of the free index."
-        title={tUi("membership")}
+        sub="Membership keeps the open index running. Supporter adds history and export; Pro adds analysis; Team brings those tools to your service."
+        title={tUi("choose_your_membership")}
       />
-      <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
+      <p className="m-0 mb-5 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        Monthly and yearly billing apply to Supporter and Pro. Team is invoiced
+        yearly.{" "}
+        <a
+          href="#get-pro-free"
+          className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
+        >
+          You may qualify for Pro free — check eligibility
+        </a>
+        .
+      </p>
+      <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
           <PlanColumn
             key={plan.key}
             billing={billing}
             current={plan.key === currentPlan}
             plan={plan}
+            complimentary={
+              plan.key === currentPlan &&
+              plan.key === "pro" &&
+              checkoutUser?.complimentaryPro
+            }
             purchase={
-              plan.key !== "team" && checkoutUser?.hasPaidMembership ? (
+              checkoutUser?.hasPaidMembership ? (
                 <GlobalLink
                   href="/profile/settings#membership"
                   className={PILL}
@@ -436,12 +284,44 @@ export function MembershipPlans({
                   plan={plan.key === "pro" ? "pro" : "supporter"}
                   interval={billing === "yearly" ? "year" : "month"}
                   user={checkoutUser}
+                  variant={plan.key === "supporter" ? "surface" : "primary"}
                 />
               ) : undefined
             }
           />
         ))}
+        <TeamPlan current={currentPlan === "team"} />
       </ul>
+      <p
+        className="m-0 mt-4 flex items-start gap-2 text-[13.5px] leading-[1.6]"
+        style={{ color: T.ink.dim }}
+      >
+        <Icon
+          aria-hidden="true"
+          className="mt-0.5 shrink-0"
+          height={16}
+          icon="mdi:lock-outline"
+          style={{ color: T.accent.ok }}
+          width={16}
+        />
+        <span>
+          Supporter and Pro payments are processed securely by Stripe, which
+          confirms the final total and tax. Cancel renewal at any time. See our{" "}
+          <GlobalLink
+            className="underline underline-offset-2"
+            href="/legal/cancellation-refunds"
+          >
+            cancellation and refund policy
+          </GlobalLink>
+          .{" "}
+          <a
+            href="#compare-plans"
+            className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
+          >
+            Compare every feature
+          </a>
+        </span>
+      </p>
       {PRICES_ARE_PLACEHOLDERS ? (
         <p
           className="m-0 mt-4 flex items-start gap-2 text-[14px] leading-[1.5]"

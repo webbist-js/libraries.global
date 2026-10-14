@@ -22,9 +22,11 @@ export function CheckoutButton({
   plan,
   interval,
   user,
+  variant = "primary",
 }: {
   readonly plan: "supporter" | "pro"
   readonly interval: "month" | "year"
+  readonly variant?: "primary" | "surface"
   readonly user: {
     email: string
     verified: boolean
@@ -39,7 +41,7 @@ export function CheckoutButton({
       <DialogTrigger asChild>
         <Button
           type="button"
-          variant="primary"
+          variant={variant}
           size="pill"
           className="w-full text-base"
         >

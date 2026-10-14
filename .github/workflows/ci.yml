@@ -52,8 +52,9 @@ jobs:
 
       - name: Verify release source guards
         run: |
-          pnpm exec eslint scripts/release/verify-release-source.mjs scripts/release/verify-release-source.test.mjs
-          node --test scripts/release/verify-release-source.test.mjs
+          pnpm exec eslint scripts/release/*.mjs
+          node --test scripts/release/*.test.mjs
+          python3 -m unittest discover -s scripts/release -p 'test_*.py'
 
       # Includes the @repo/access type-level invariants and the Strapi unit
       # suite (test:unit). Strapi's tests/app.test.ts boots a real Strapi on

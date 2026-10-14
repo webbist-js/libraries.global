@@ -1,4 +1,4 @@
-/* motion-site · profile: editorial · archetype: About reading flow · patterns: short-globe-handoff · paper-white-bands · critique: P4 T4 C4 R4 A4 V4 */
+/* motion-site · profile: editorial · archetype: globe country inspector · patterns: geographic-hover · pinned-country-card · endpoint-labels · critique: P5 T5 C5 R5 A5 V4 */
 .about-page {
   background: var(--t-bg-void);
   color: var(--t-ink-base);
@@ -612,5 +612,576 @@
   }
   .about-photo-track {
     transform: none !important;
+  }
+}
+
+/* About-only interaction UI. Geographic annotations track the canvas via transforms. */
+.about-globe-explorer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.about-globe-explorer[data-inspecting="true"] canvas {
+  cursor: pointer;
+}
+.about-country-picker {
+  position: absolute;
+  z-index: 20;
+  top: 20px;
+  right: clamp(24px, 3vw, 120px);
+  display: grid;
+  gap: 6px;
+  width: 224px;
+  padding: 12px 16px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 16px;
+  background: var(--t-bg-deep);
+  font-size: 12px;
+}
+.about-country-picker label {
+  color: var(--t-ink-dim);
+}
+.about-country-picker button:focus-visible {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 4px;
+}
+.about-globe-annotations {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+}
+.about-country-anchor,
+.about-country-preview,
+.about-connection-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+.about-country-anchor {
+  width: 0;
+  height: 0;
+}
+.about-country-anchor span {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin: -18px;
+  border: 1px solid #c9c2ff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 6px rgb(201 194 255 / 15%),
+    0 0 20px rgb(201 194 255 / 25%);
+}
+.about-country-connector {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.about-country-connector path {
+  fill: none;
+  stroke: var(--t-accent-primary);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+}
+.about-country-preview {
+  width: 204px;
+  padding: 16px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 14px;
+  background: var(--t-bg-deep);
+  box-shadow: 0 8px 32px rgb(23 22 43 / 12%);
+}
+.about-country-preview > span {
+  float: right;
+  font-size: 10px;
+  color: var(--t-ink-dim);
+}
+.about-country-preview h3 {
+  margin: 0 0 6px;
+  font:
+    500 21px/1.1 var(--font-newsreader),
+    Georgia,
+    serif;
+}
+.about-country-preview p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--t-ink-dim);
+}
+.about-country-preview small {
+  display: block;
+  margin-top: 12px;
+  color: var(--t-accent-primary);
+  font-size: 11px;
+}
+.about-connection-label {
+  max-width: 224px;
+}
+.about-connection-label span {
+  display: block;
+  width: max-content;
+  max-width: 224px;
+  transform: translate(-50%, -100%);
+  padding: 8px 12px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 10px;
+  background: var(--t-bg-deep);
+  color: var(--t-ink-base);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgb(23 22 43 / 16%);
+}
+.about-country-panel {
+  position: absolute;
+  z-index: 10;
+  top: calc(50% + 32px);
+  right: clamp(24px, 3vw, 120px);
+  width: 324px;
+  max-height: calc(100% - 180px);
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+  transform: translateY(-50%);
+  padding: 22px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 24px;
+  background: var(--t-bg-deep);
+  box-shadow: 0 20px 64px rgb(23 22 43 / 14%);
+  color: var(--t-ink-base);
+  transform-origin: right center;
+  opacity: 1;
+  transition:
+    opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@starting-style {
+  .about-country-panel {
+    opacity: 0;
+    transform: translateY(-50%) translateX(8px);
+  }
+}
+.about-country-panel[data-open="false"] {
+  opacity: 0;
+  transform: translateY(-50%) translateX(8px);
+  pointer-events: none;
+  transition-duration: 120ms;
+}
+.about-country-card-heading,
+.about-country-card-footer {
+  flex-shrink: 0;
+}
+.about-country-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-border-hi) transparent;
+  margin-right: -10px;
+  padding-right: 10px;
+}
+.about-country-card-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--t-border-line);
+  margin-top: 12px;
+}
+.about-country-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.about-country-heading .about-eyebrow {
+  margin: 0;
+  font-size: 10px;
+}
+.about-country-actions {
+  display: flex;
+  gap: 4px;
+}
+.about-country-actions button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 50%;
+  color: var(--t-ink-dim);
+  background: var(--t-bg-deep);
+  cursor: pointer;
+}
+.about-country-actions button:last-child {
+  color: white;
+  background: var(--t-ink-base);
+  border-color: var(--t-ink-base);
+}
+.about-country-panel h2 {
+  margin: 18px 0 8px;
+  font:
+    500 34px/1.05 var(--font-newsreader),
+    Georgia,
+    serif;
+  letter-spacing: -0.02em;
+}
+.about-country-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--t-ink-dim);
+  font-size: 11px;
+}
+.about-country-status button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--t-accent-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.about-country-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 12px 0;
+}
+.about-country-count > span {
+  font:
+    500 42px/1 var(--font-newsreader),
+    Georgia,
+    serif;
+}
+.about-country-count small {
+  color: var(--t-ink-dim);
+  font-size: 12px;
+}
+.about-country-summary {
+  margin: 14px 0;
+  color: var(--t-ink-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.about-country-capital,
+.about-country-message {
+  color: var(--t-ink-dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.about-country-message button {
+  color: var(--t-accent-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.about-country-panel h3 {
+  margin: 14px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.about-country-type-bar {
+  display: flex;
+  height: 8px;
+  gap: 1px;
+  overflow: clip;
+  border-radius: 999px;
+  background: var(--t-bg-muted);
+}
+.about-country-type-bar span {
+  min-width: 2px;
+}
+.about-country-types ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.about-country-types li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--t-ink-dim);
+}
+.about-country-types i {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+}
+.about-country-types strong {
+  margin-left: auto;
+  font-weight: 600;
+}
+.about-country-featured ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.about-country-featured a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  margin-inline: -8px;
+  padding: 8px;
+  border-radius: 12px;
+  color: var(--t-ink-base);
+  text-decoration: none;
+}
+.about-country-featured i {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--t-accent-gold);
+  box-shadow: 0 0 0 3px rgb(242 200 121 / 20%);
+}
+.about-country-featured a > span {
+  flex: 1;
+  min-width: 0;
+}
+.about-country-featured strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+.about-country-featured small {
+  display: block;
+  margin-top: 2px;
+  color: var(--t-ink-dim);
+  font-size: 11px;
+}
+.about-country-featured svg {
+  flex: 0 0 auto;
+  color: var(--t-accent-primary);
+}
+.about-country-links {
+  display: flex;
+  gap: 6px;
+  margin-top: 0;
+}
+.about-country-links .about-button {
+  flex: 1;
+  min-height: 40px;
+  padding: 10px 8px;
+  font-size: 11px;
+}
+.about-country-first-library {
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 8px;
+  padding: 10px;
+  font-size: 12px;
+}
+.about-country-footer[data-empty="true"] {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.about-country-footer {
+  margin: 14px 0 0;
+  color: var(--t-ink-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.about-country-footer a {
+  color: var(--t-accent-primary);
+  text-underline-offset: 3px;
+}
+.about-country-updated {
+  margin: 8px 0 0;
+  color: var(--t-ink-dim);
+  font-size: 11px;
+}
+.about-country-coverage {
+  margin: 10px 0;
+}
+.about-country-coverage-track {
+  height: 7px;
+  overflow: clip;
+  border-radius: 999px;
+  background: var(--t-bg-muted);
+}
+.about-country-coverage-track span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left;
+  background: var(--t-accent-primary);
+}
+.about-country-coverage p {
+  margin: 7px 0 0;
+  color: var(--t-ink-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.about-country-coverage strong {
+  font-weight: 600;
+}
+.about-country-stats {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 12px 0;
+  border-block: 1px solid var(--t-border-line);
+}
+.about-country-stats dt {
+  color: var(--t-ink-dim);
+  font-size: 10px;
+}
+.about-country-stats dd {
+  margin: 5px 0 0;
+  font:
+    500 24px/1.1 var(--font-newsreader),
+    Georgia,
+    serif;
+}
+.about-country-stats small {
+  display: block;
+  margin-top: 4px;
+  color: var(--t-ink-dim);
+  font:
+    11px/1.4 var(--font-figtree),
+    system-ui,
+    sans-serif;
+}
+.about-country-panel[data-empty="true"] .about-country-count {
+  margin-block: 10px;
+}
+.about-country-panel[data-empty="true"] .about-country-count > span {
+  font-size: 32px;
+}
+.about-country-empty {
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px dashed var(--t-border-hi);
+  border-radius: 16px;
+  background: var(--t-bg-void);
+}
+.about-country-empty h3 {
+  margin: 0 0 10px;
+  font:
+    500 23px/1.1 var(--font-newsreader),
+    Georgia,
+    serif;
+}
+.about-country-empty p {
+  margin: 0;
+  color: var(--t-ink-dim);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.about-country-context {
+  margin-top: 14px;
+  border-top: 1px solid var(--t-border-line);
+}
+.about-country-context summary {
+  min-height: 40px;
+  padding: 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.about-country-context summary:active {
+  transform: scale(0.98);
+}
+.about-country-context summary:focus-visible {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 4px;
+}
+.about-country-context p {
+  color: var(--t-ink-dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.about-country-context dl {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 12px;
+}
+.about-country-context dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.about-country-context dt {
+  flex-shrink: 0;
+  color: var(--t-ink-dim);
+  font-size: 11px;
+}
+.about-country-context dd {
+  margin: 0;
+  text-align: right;
+  font-size: 12px;
+}
+.about-country-context small {
+  display: block;
+  margin-top: 3px;
+  color: var(--t-ink-dim);
+  font-size: 10px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .about-country-featured a:hover,
+  .about-country-actions button:not(:last-child):hover {
+    background: var(--t-bg-surface);
+  }
+}
+@media (max-width: 1023px) {
+  .about-country-connector {
+    display: none;
+  }
+  .about-country-picker {
+    top: 12px;
+    right: 16px;
+    width: 200px;
+  }
+  .about-country-panel {
+    right: 16px;
+    width: min(324px, calc(100% - 32px));
+    padding: 18px;
+    max-height: calc(100% - 160px);
+  }
+  .about-country-preview {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-country-panel {
+    transition: none;
+  }
+  .about-country-anchor,
+  .about-country-preview,
+  .about-connection-label {
+    will-change: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .about-hero[data-story="true"] .about-globe-guide {
+    width: 260px;
+    padding: 20px;
+    bottom: 76px;
+    border-radius: 20px;
+  }
+  .about-hero[data-story="true"] .about-globe-guide h2 {
+    font-size: 26px;
+  }
+  .about-hero[data-story="true"] .about-globe-guide p:not(.about-eyebrow) {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .about-hero[data-story="true"] .about-globe-guide .about-eyebrow {
+    font-size: 10px;
+    margin-bottom: 12px;
+  }
+  .about-hero[data-story="true"] .about-globe-guide .about-text-link {
+    font-size: 12px;
+    min-height: 32px;
   }
 }

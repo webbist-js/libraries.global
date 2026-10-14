@@ -315,8 +315,9 @@ export async function searchLibraryNames(
  * library at its own position.
  */
 export async function fetchGlobeMarkers(
-  locale?: string
-): Promise<{ lat: number; lng: number; featured: boolean }[]> {
+  locale?: string,
+  includeNames = false
+): Promise<{ lat: number; lng: number; featured: boolean; name?: string }[]> {
   const index = meiliClient.index("library")
   const [cells, featured] = await Promise.all([
     index.search("", {
@@ -327,7 +328,7 @@ export async function fetchGlobeMarkers(
     index.search<LibrarySearchHit>("", {
       filter: withSearchLocale(["featured = true"], locale),
       limit: 200,
-      attributesToRetrieve: ["_geo"],
+      attributesToRetrieve: includeNames ? ["_geo", "name"] : ["_geo"],
     }),
   ])
   const cellMarkers = Object.keys(
@@ -340,7 +341,16 @@ export async function fetchGlobeMarkers(
       : []
   })
   const featuredMarkers = featured.hits.flatMap((hit) =>
-    hit._geo ? [{ lat: hit._geo.lat, lng: hit._geo.lng, featured: true }] : []
+    hit._geo
+      ? [
+          {
+            lat: hit._geo.lat,
+            lng: hit._geo.lng,
+            featured: true,
+            ...(includeNames && hit.name ? { name: hit.name } : {}),
+          },
+        ]
+      : []
   )
 
   return [...cellMarkers, ...featuredMarkers]

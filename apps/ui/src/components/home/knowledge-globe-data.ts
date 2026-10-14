@@ -215,6 +215,7 @@ export type ArcRoute = {
   curve: THREE.Curve<THREE.Vector3>
   linePoints: THREE.Vector3[]
   phase: number
+  endpoints?: readonly [LibraryMarker, LibraryMarker]
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -361,6 +362,8 @@ export type LibraryMarker = {
   lat: number
   lng: number
   featured?: boolean
+  /** About requests names for the existing illustrative connections. */
+  name?: string
 }
 
 /**
@@ -426,9 +429,13 @@ export function buildLibraryArcs(
       const key = i < j ? `${i}-${j}` : `${j}-${i}`
       if (seen.has(key)) return
       seen.add(key)
-      routes.push(
-        toArcRoute(createArcCurve(featured[i]!, featured[j]!), routes.length)
-      )
+      routes.push({
+        ...toArcRoute(
+          createArcCurve(featured[i]!, featured[j]!),
+          routes.length
+        ),
+        endpoints: [featured[i]!, featured[j]!],
+      })
     })
   })
 

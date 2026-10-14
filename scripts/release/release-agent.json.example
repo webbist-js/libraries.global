@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "root": "/opt/libraries-global",
+  "initial_commit": "SET_TO_THE_VERIFIED_RUNNING_FULL_COMMIT",
+  "registry": "registry.digitalocean.com/example-registry",
+  "docker_config": "/etc/libraries-global/registry-reader",
+  "smoke": [
+    { "url": "https://libraries.global/beta", "status": 200, "noindex": true },
+    { "url": "http://127.0.0.1:1337/_health", "status": 204 },
+    { "url": "http://127.0.0.1:3100/health", "status": 200 },
+    { "url": "http://127.0.0.1:3101/health", "status": 200 }
+  ]
+}

@@ -11,7 +11,7 @@ import { PlanSectionHeader } from "./PlanBits"
 const mailto = (subject: string) =>
   `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`
 
-type RouteStatus = "live" | "soon" | "request"
+type RouteStatus = "live" | "proRequest" | "request"
 
 const STATUS: Record<
   RouteStatus,
@@ -23,11 +23,11 @@ const STATUS: Record<
     fg: TYPE_TINT.public.fg,
     label: "Live",
   },
-  soon: {
-    icon: "mdi:clock-outline",
+  proRequest: {
+    icon: "mdi:email-outline",
     bg: TYPE_TINT.neutral.bg,
     fg: TYPE_TINT.neutral.fg,
-    label: "Self-serve coming soon",
+    label: "Free Pro on request",
   },
   request: {
     icon: "mdi:email-outline",
@@ -47,10 +47,10 @@ const ROUTES: {
 }[] = [
   {
     title: "Verified library staff, students and charities",
-    status: "soon",
+    status: "proRequest",
     icon: "mdi:bank-outline",
     tint: TYPE_TINT.academic,
-    body: "Pro is free for people who work in libraries, for students and for charities, renewed each year. Self-serve verification is coming soon; until then, write to us from your work, student or charity address.",
+    body: "Library staff, students and charity staff can request complimentary Pro. Write to us from your work, student or charity address. Self-service Pro verification is coming soon.",
     link: { label: "Write to us", href: mailto("Pro verification") },
   },
   {
