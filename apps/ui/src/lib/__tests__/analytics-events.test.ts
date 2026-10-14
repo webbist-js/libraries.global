@@ -83,7 +83,12 @@ describe("public analytics events", () => {
     )
     expect(envelope).toMatchObject({
       event: "lg_analytics",
-      analytics: { ...action, event_name: "library_action", schema_version: 1 },
+      analytics: {
+        ...action,
+        event_name: "library_action",
+        schema_version: 1,
+        transport: "direct",
+      },
     })
     expect(JSON.stringify(browser.dataLayer)).not.toMatch(
       /PRIVATE_|51\.2345|nlat|latitude/

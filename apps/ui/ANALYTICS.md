@@ -63,12 +63,15 @@ window.dataLayer.push(
       page_type: "library",
       content_locale: "en",
       schema_version: 1,
+      transport: "direct",
     },
   }
 )
 ```
 
-The unpublished GTM container `GTM-M8GLG9F2` is reserved for the consent-provider migration. Its base tag expects `lg_analytics_ready`, which this implementation does not emit. Before publishing GTM event tags, replace the direct loader and sends in one reviewed change, add supported Consent Initialization defaults/updates, supply sanitized base context, then emit `lg_analytics_ready` before the first manual page view. A parallel GTM installation would double collection.
+The unpublished GTM container `GTM-M8GLG9F2` is reserved for the consent-provider migration. Its base tag expects `lg_analytics_ready`, which this implementation does not emit. Both draft triggers additionally require `analytics.transport=gtm`, schema version 1 and the exact production hostname. The event trigger allowlists the catalogue's event names and the native tag maps explicit data-layer fields; both tags require `analytics_storage`. The current `transport=direct` envelope cannot fire those draft tags.
+
+Before publishing GTM event tags, replace the direct loader and sends in one reviewed change, add supported Consent Initialization defaults/updates, supply sanitized base context, switch the envelope transport to `gtm`, then emit `lg_analytics_ready` with that context before the first manual page view. Preserve route suppression and sanitized SDK context, including for automatic SDK engagement. A parallel GTM installation would double collection.
 
 Keep Enhanced Measurement history, scroll, outbound, site search, form, video and download events disabled for this stream. `send_page_view:false` does not suppress history-based Enhanced Measurement. Disable Google signals and ad personalization. All GTM collection tags must require `analytics_storage` and use the exact production hostname.
 

@@ -162,7 +162,12 @@ export function installGoogleAnalytics(
       { analytics: null },
       {
         event: "lg_analytics",
-        analytics: { event_name: name, ...context, schema_version: 1 },
+        analytics: {
+          event_name: name,
+          ...context,
+          schema_version: 1,
+          transport: "direct",
+        },
       }
     )
     gtag("event", name, { ...context, send_to: GOOGLE_ANALYTICS_ID })
