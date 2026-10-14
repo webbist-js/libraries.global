@@ -19,6 +19,11 @@ export default {
     ctx.set("Cache-Control", "private, no-store")
     const { action, baUserId } = ctx.request.body ?? {}
     const service = strapi.service(UID)
+    if (action === "betaInvites") {
+      await strapi.plugin("beta-invites").service("invites").prune()
+
+      return ctx.send(await service.deliver(new Date(), "beta_invitation"))
+    }
     if (action === "status") {
       const counts: Record<string, number> = {}
       for (const state of ["pending", "sent", "skipped", "failed"])

@@ -106,7 +106,7 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   /** At most 50 messages each minute; preferences and verified address checked at send time. */
-  async deliver(now = new Date()) {
+  async deliver(now = new Date(), kind?: "beta_invitation") {
     if (!emailConfigured()) return { sent: 0, skipped: 0, failed: 0 }
     const locked = await withLeaderLock(strapi, LOCK, async () => {
       const report = { sent: 0, skipped: 0, failed: 0 }
@@ -114,6 +114,7 @@ export default ({ strapi }: { strapi: any }) => ({
         where: {
           emailState: "pending",
           nextAttemptAt: { $lte: now.toISOString() },
+          ...(kind ? { kind } : {}),
         },
         orderBy: { id: "asc" },
         limit: 50,
