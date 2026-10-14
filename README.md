@@ -174,17 +174,21 @@ Describe added or changed environment variables in the pull request so maintaine
 
 ## CI and releases
 
-`dev` is the protected default branch and the source branch for production images. [CI](.github/workflows/ci.yml) runs on PRs and pushes to `dev`/`main`, plus manual dispatch: frozen install, lint, formatting, release-source guard tests, unit/component tests, UI build/typecheck and CMS build. GitHub CodeQL analyzes JavaScript/TypeScript, Python and Actions. Contributor changes require maintainer/code-owner review and passing checks; merges use squash commits.
+`dev` is the protected default integration branch. `main` holds production releases. Merge reviewed feature branches into `dev`, then release through a PR from `dev` or a release branch into `main`. Both branches require CI and CodeQL; force pushes and deletion are blocked.
 
-[Production images](https://github.com/webbist-js/libraries.global/blob/dev/.github/workflows/production-images.yml) is a prepared manual publisher for x86-64 UI, CMS and worker images. It verifies the current protected `dev` SHA and its checks, then records full registry digests in a release manifest. Activation requires the repository switch, protected environment review and an approved expiring registry writer. It has not run yet. Production promotion is an operator action over SSH; merging or publishing does not deploy.
+[Production images](.github/workflows/production-images.yml) runs on pushes to `main` when `DO_IMAGE_PUBLISH_ENABLED=true`. It waits for CI and all three CodeQL analyses on that exact merged commit before building x86-64 UI, CMS and worker images. Retries reuse existing release tags. The artifact and public check record the commit and relative image digests without private registry details.
 
-[QA](.github/workflows/qa.yml) runs deployed browser/accessibility/SEO/performance checks on demand. The [Atlas archive workflow](.github/workflows/atlas-tiles.yml) awaits a separate private runner. [Docusaurus Pages](.github/workflows/docs.yml) is behind its own publishing switch. [Semantic release](.github/workflows/release.yml) retains a `main` trigger, but `main` has not been established and the former automatic `dev` to `main` PR workflow was removed. Neither workflow promotes the application.
+The [server pull agent](scripts/release/pull-release.py) checks the current `main` SHA, passing checks and the successful publisher run. It pulls those digests, preserves the previous image/runtime selection, applies Compose health checks and tests deployed HTTP endpoints. A failed promotion restores the previous images and stops retrying that candidate. CMS, auth, billing, worker or dependency changes require an operator's backup, isolated data and rollback acceptance record before promotion.
+
+Activation needs owner approval for the registry credentials and automatic publishing environment, plus installation of the disabled-by-default host agent. See [release helpers](scripts/release/README.md). `dev` runs checks without deploying; its separate environment will be configured after beta.
+
+[Semantic release](.github/workflows/release.yml) publishes version notes from checked `main` commits. [QA](.github/workflows/qa.yml) runs deployed browser/accessibility/SEO/performance checks on demand. The [Atlas archive workflow](.github/workflows/atlas-tiles.yml) awaits a separate private runner. [Docusaurus Pages](.github/workflows/docs.yml) is behind its own publishing switch.
 
 ## Deployment
 
-The closed beta runs Next.js, Strapi, event/Atlas workers, PostgreSQL, object storage and Meilisearch. The application's Dockerfiles are public and build from the monorepo root. Runtime secrets, host addresses, Compose/gateway configuration and operator runbooks are maintained privately; `infra/` is excluded from Git and image build contexts.
+The closed beta runs Next.js, Strapi, event/Atlas workers, PostgreSQL, object storage and Meilisearch. Dockerfiles and generic release helpers are public. Runtime secrets, host addresses, Compose/gateway configuration, credentials and acceptance records stay in private operator storage and outside build contexts.
 
-Generic release-source checks live in `scripts/release/`. The prepared image publisher accepts its registry through the `DO_CONTAINER_REGISTRY` repository variable. Production promotion is manual and separate from merging. The invitation gate and sandbox billing remain enabled for acceptance; live payments require their own launch decision.
+GitHub receives a scoped registry writer through the `production-images` environment; the app server keeps a separate reader. The server polls outbound, so GitHub needs no SSH key or access through the operator firewall. Image releases preserve the invitation gate and sandbox billing settings. Public access and live payments require their own launch decision.
 
 ## Documentation
 

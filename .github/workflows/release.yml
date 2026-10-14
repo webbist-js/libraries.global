@@ -15,10 +15,11 @@ concurrency:
 jobs:
   release:
     if: github.repository == 'webbist-js/libraries.global'
-    timeout-minutes: 20
+    timeout-minutes: 75
     runs-on: ubuntu-24.04
     permissions:
       contents: write # to be able to publish a GitHub release
+      checks: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -28,6 +29,11 @@ jobs:
 
       - name: Setup pnpm with cache
         uses: ./.github/actions/setup-pnpm
+
+      - name: Wait for checks on the merged production commit
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/verify-release-source.mjs --wait
 
       - name: Run semantic-release
         env:

@@ -1,0 +1,18 @@
+[Unit]
+Description=Pull verified production images from protected main
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/python3 /usr/local/lib/libraries-global/pull-release.py --config /etc/libraries-global/release-agent.json
+TimeoutStartSec=30min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/libraries-global
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
