@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { navigationAttributes } from "@/lib/analytics-events"
 
 export type NavLink = { label: string; href: string }
 
@@ -41,6 +42,7 @@ export function GlobalNavLinks({
           <GlobalLink
             key={link.href}
             href={link.href}
+            {...navigationAttributes(link.href)}
             aria-current={active ? "page" : undefined}
             className={
               active

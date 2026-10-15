@@ -9,6 +9,10 @@ import { useEventModal } from "@/components/events/EventModalContext"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
 import { SaveEventButton } from "@/components/events/SaveEventButton"
+import {
+  analyticsAttributes,
+  captureAnalyticsEvent,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 interface ModalEvent {
@@ -72,12 +76,23 @@ export function EventModal() {
       return
     }
     const controller = new AbortController()
+    const measured = captureAnalyticsEvent("select_content", {
+      interaction_source: "event_modal",
+      content_type: "event",
+      content_id: activeDocumentId,
+    })
     setLoading(true)
     fetch(
       `/api/public-proxy/api/events/event/${encodeURIComponent(activeDocumentId)}`,
       { signal: controller.signal }
     )
-      .then((r) => (r.ok ? (r.json() as Promise<ModalEvent>) : null))
+      .then(async (r) => {
+        if (!r.ok) return null
+        const item = (await r.json()) as ModalEvent
+        if (!controller.signal.aborted) measured()
+
+        return item
+      })
       .then((data) => {
         setEvent(data)
         setLoading(false)
@@ -219,6 +234,11 @@ export function EventModal() {
               {linkUrl && (
                 <a
                   href={linkUrl}
+                  {...analyticsAttributes("event_action", {
+                    interaction_source: "event_modal",
+                    action_type: "registration_handoff",
+                    content_id: event.documentId,
+                  })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-accent-primary-hover)"
@@ -234,6 +254,11 @@ export function EventModal() {
               )}
               <a
                 href={`/events/${event.documentId}`}
+                {...analyticsAttributes("select_content", {
+                  interaction_source: "event_modal",
+                  content_type: "event",
+                  content_id: event.documentId,
+                })}
                 className="inline-flex min-h-11 items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
                 style={{
                   borderColor: T.border.line,

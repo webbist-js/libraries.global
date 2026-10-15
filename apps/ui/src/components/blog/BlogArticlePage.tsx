@@ -10,6 +10,7 @@ import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
+import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
 import {
   countWords,
   estimateReadingTime,
@@ -137,7 +138,19 @@ export function BlogArticlePage({
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10">
+      <main
+        className="relative z-10 mx-auto w-full max-w-[1360px] flex-1 px-4 pt-6 pb-22 sm:px-8 sm:pt-10"
+        data-analytics-page="journal"
+        data-analytics-content-id={article.documentId}
+        data-analytics-path={
+          new URL(
+            absoluteUrl(
+              `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+              locale
+            )
+          ).pathname
+        }
+      >
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -254,6 +267,7 @@ export function BlogArticlePage({
                 </div>
 
                 <ArticleShareButtons
+                  contentId={article.documentId}
                   title={article.title}
                   url={absoluteUrl(
                     `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
@@ -286,9 +300,23 @@ export function BlogArticlePage({
 
             {/* Prose — white section card on paper */}
             <article
+              id={`analytics-journal-${article.documentId}`}
               className="rounded-3xl border px-6 py-8 sm:px-12 sm:py-11"
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
+              <ArticleEngagement
+                bodyId={`analytics-journal-${article.documentId}`}
+                contentId={article.documentId}
+                contentType="journal"
+                path={
+                  new URL(
+                    absoluteUrl(
+                      `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                      locale
+                    )
+                  ).pathname
+                }
+              />
               {/* Heading margins are in rem: the spacing scale is em-based,
                   so mt-* on a 28px heading would scale with it. */}
               <div className="article-drop-cap [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[28px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[21px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">

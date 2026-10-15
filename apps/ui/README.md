@@ -93,7 +93,7 @@ The production image uses Next.js `standalone` output and is built from the mono
 docker build --platform linux/amd64 -f apps/ui/Dockerfile -t libraries-global-ui:local .
 ```
 
-The multi-stage Dockerfile prunes the workspace, uses a frozen install and copies only standalone output/static assets into a non-root runtime image. `.dockerignore` excludes local env files, Git, dependencies and `.scratch`. Runtime credentials are supplied by `ui.production.env` through the production Compose file. Do not pass Strapi API tokens, OAuth/Stripe/SMTP keys or database credentials as build arguments.
+The multi-stage Dockerfile prunes the workspace, uses a frozen install and copies only standalone output/static assets into a non-root runtime image. `.dockerignore` excludes local env files, Git, dependencies and `.scratch`. Runtime credentials are supplied through the private operator configuration. Do not pass Strapi API tokens, OAuth/Stripe/SMTP keys or database credentials as build arguments.
 
 Build arguments are public configuration: `APP_PUBLIC_URL`, `NEXT_PUBLIC_STRAPI_URL` and `IMAGE_REMOTE_HOSTS`. Treat browser-bundled `NEXT_PUBLIC_*` values as build-time inputs and review them when changing domains. The default public CMS URL is a build value, not evidence of a public CMS route; server requests use the private runtime `STRAPI_URL`. The dummy auth secret in the builder is a fixture; a real `BETTER_AUTH_SECRET` is required at runtime.
 
@@ -547,13 +547,13 @@ The Next.js [middleware](src/proxy.ts) is composed of standalone proxy functions
 
 ### Google Analytics
 
-The production integration uses GA4 measurement ID `G-N6DLE0CK0Y`. It runs only with `NODE_ENV=production`, `APP_ENV=production` and `APP_PUBLIC_URL=https://libraries.global`; the browser must also be on that exact origin. Local and preview deployments do not load the tag.
+The [analytics contract](ANALYTICS.md) documents the implemented public events, consent/privacy rules, reporting limits and beta release acceptance.
 
-Collection starts denied. No Google script or measurement request is sent until a consent provider grants analytics consent. Civic or another provider should call `window.librariesGlobalAnalytics?.setConsent(true)` on consent, and `setConsent(false)` on refusal or withdrawal. The provider owns saved choices and analytics-cookie cleanup. Restore saved consent after the controller mounts; do not call the grant callback merely to detect installation.
+The production-only integration uses GTM container `GTM-M8GLG9F2` and GA4 measurement ID `G-8M465CHXJ6`. The IDs are public configuration constants in `src/lib/google-analytics.ts`. The server requires `NODE_ENV=production`, `APP_ENV=production` and canonical `APP_PUBLIC_URL`; the browser must be exactly on `https://libraries.global`.
 
-Page views follow Next.js navigation, exclude private/auth/Staff/contribution/live routes and omit query strings and fragments. Before enabling collection, turn off Enhanced Measurement for this web stream: browser-history page views, automatic form/outbound tracking and other automatic events would bypass the application's manual route/event controls. [Google's page-view guidance](https://developers.google.com/analytics/devguides/collection/ga4/views) explains why `send_page_view: false` alone does not disable history-based events.
+An EN/CS/FR first-party consent banner keeps all Google code unloaded before an analytics grant. It saves the choice for 180 days and keeps a Cookie choices control available for withdrawal. Rejection preserves essential beta/account storage. Withdrawal clears analytics cookies and reloads to unload the SDK. GTM owns collection; there are no parallel direct Google event sends. Keep Enhanced Measurement and advertising disabled, and publish accurate CMS notices before activation.
 
-This installs the direct `gtag.js` integration supplied by the owner. A later GTM integration must replace this loader to avoid installing GA twice. The consent banner, library action events and server-side Team traffic reports remain separate follow-ups. Code releases use the production deployment runbook.
+Public events are implemented. Library-scoped Team Staff traffic reporting remains separate server-side work. A code merge alone does not prove live collection; follow the deployed-browser and GA acceptance sequence.
 
 ### Sentry logging
 

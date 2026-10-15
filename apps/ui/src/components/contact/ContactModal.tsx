@@ -18,6 +18,7 @@ import {
   ContactDetails,
   FeedbackQuestions,
 } from "@/components/contact/ContactFields"
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import type {
   AtlasFeedbackFeature,
   ContactContext,
@@ -122,6 +123,10 @@ export default function ContactModal({
       return
     }
     setSending(true)
+    const measured = captureAnalyticsEvent("submission_success", {
+      interaction_source: "contact",
+      submission_type: feedback ? "feedback" : "contact",
+    })
     setError("")
     try {
       const response = await fetch("/api/contact", {
@@ -137,6 +142,7 @@ export default function ContactModal({
       }
       const result = await response.json()
       if (result.ok !== true) throw new Error("Submission was not accepted")
+      if (!parsed.data.website) measured()
       setReference(
         typeof result.reference === "string"
           ? result.reference.slice(0, 8).toUpperCase()

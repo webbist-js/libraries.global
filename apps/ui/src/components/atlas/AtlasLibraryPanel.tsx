@@ -10,6 +10,7 @@ import {
   getOpenStatus,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
@@ -316,11 +317,22 @@ export function AtlasLibraryPanel({
         {library.path ? (
           <div className="flex gap-2">
             {catalogueHref ? (
-              <SecondaryLink href={catalogueHref} external icon="ext">
+              <SecondaryLink
+                href={catalogueHref}
+                external
+                icon="ext"
+                action="catalogue"
+                libraryId={library.id}
+              >
                 {compact ? "Catalogue" : "Check the catalogue"}
               </SecondaryLink>
             ) : null}
-            <SecondaryLink href={`${library.path}#visit`} icon="route">
+            <SecondaryLink
+              href={`${library.path}#visit`}
+              icon="route"
+              action="plan_visit"
+              libraryId={library.id}
+            >
               Plan a visit
             </SecondaryLink>
           </div>
@@ -330,6 +342,12 @@ export function AtlasLibraryPanel({
           {library.path ? (
             <GlobalLink
               href={library.path}
+              {...analyticsAttributes("select_content", {
+                interaction_source: "atlas_panel",
+                content_type: "library",
+                library_document_id: library.id,
+                view_mode: "map",
+              })}
               className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
             >
               Open full record
@@ -353,11 +371,15 @@ export function AtlasLibraryPanel({
 
 function SecondaryLink({
   href,
+  action,
+  libraryId,
   external = false,
   icon,
   children,
 }: {
   readonly href: string
+  readonly action: "catalogue" | "plan_visit"
+  readonly libraryId: string
   readonly external?: boolean
   readonly icon: "ext" | "route"
   readonly children: React.ReactNode
@@ -367,10 +389,16 @@ function SecondaryLink({
   const cls =
     "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-white px-3.5 text-[14px] font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
   const style = { borderColor: T.border.hi, color: T.ink.base }
+  const analytics = analyticsAttributes("library_action", {
+    interaction_source: "atlas_panel",
+    action_type: action,
+    library_document_id: libraryId,
+  })
 
   return external ? (
     <a
       href={href}
+      {...analytics}
       target="_blank"
       rel="noopener noreferrer"
       className={cls}
@@ -381,7 +409,7 @@ function SecondaryLink({
       <span className="sr-only">{tUi("opens_in_a_new_tab")}</span>
     </a>
   ) : (
-    <GlobalLink href={href} className={cls} style={style}>
+    <GlobalLink href={href} {...analytics} className={cls} style={style}>
       <Icon name={icon} size={15} />
       {children}
     </GlobalLink>

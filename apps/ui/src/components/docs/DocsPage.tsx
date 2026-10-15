@@ -23,6 +23,7 @@ import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import { editorApplyHref } from "@/lib/editor-gate"
@@ -172,7 +173,14 @@ export function DocsPage({
           title={landing?.heroTitle ?? t("knowledgeHeroTitle")}
           tabs={<DocsSectionTabs counts={counts} sections={sections} />}
         >
-          <form action={`/${locale}/knowledge/search`} method="get">
+          <form
+            action={`/${locale}/knowledge/search`}
+            method="get"
+            {...analyticsAttributes("search", {
+              interaction_source: "article",
+              search_type: "knowledge",
+            })}
+          >
             <SearchField
               id="docs-search"
               label={tUi("search_the_knowledge_base")}

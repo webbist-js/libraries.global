@@ -6,6 +6,7 @@ import * as Sentry from "@sentry/nextjs"
 
 import { getEnvVar } from "@/lib/env-vars"
 import { isLivePagePath } from "@/lib/live-path"
+import { scrubSentryEvent } from "@/lib/sentry-scrub"
 
 // The live console carries location and confirmation codes: no replay there.
 if (
@@ -15,14 +16,11 @@ if (
   Sentry.init({
     dsn: getEnvVar("NEXT_PUBLIC_SENTRY_DSN"),
 
-    // Add optional integrations for additional features
-    integrations: [
-      Sentry.replayIntegration({
-        // Additional SDK configuration goes in here, for example:
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
+    // Fault reporting is separate from optional analytics. No session replay.
+    integrations: [],
+    sendDefaultPii: false,
+    beforeSend: scrubSentryEvent,
+    beforeSendTransaction: scrubSentryEvent,
 
     // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
     tracesSampleRate: 0.3,
@@ -33,7 +31,7 @@ if (
     replaysSessionSampleRate: 0,
 
     // Define how likely Replay events are sampled when an error occurs.
-    replaysOnErrorSampleRate: 1,
+    replaysOnErrorSampleRate: 0,
 
     // Setting this option to true will print useful information to the console while you're setting up Sentry.
     debug: false,

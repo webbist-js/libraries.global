@@ -11,6 +11,11 @@ import {
 import { PageHero, SearchField } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import {
+  analyticsAttributes,
+  captureAnalyticsEvent,
+  resultBucket,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
   searchWikiArticles,
@@ -21,6 +26,11 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
   return (
     <GlobalLink
       href={docsPathForSearchHit(hit)}
+      {...analyticsAttributes("select_content", {
+        interaction_source: "article",
+        content_type: "knowledge",
+        content_id: hit.documentId,
+      })}
       style={{
         display: "block",
         padding: "20px 24px",
@@ -110,20 +120,35 @@ function DocsSearchResults({ query }: { query: string }) {
     if (!query.trim()) return
 
     const id = ++pendingRef.current
+    let cancelled = false
+    const measured = captureAnalyticsEvent("search_results", {
+      interaction_source: "article",
+      search_type: "knowledge",
+    })
+    const failed = captureAnalyticsEvent("search_error", {
+      interaction_source: "article",
+      search_type: "knowledge",
+    })
 
     searchWikiArticles(query, null, 40, locale)
       .then((res) => {
-        if (id === pendingRef.current) {
+        if (!cancelled && id === pendingRef.current) {
           setResults(res.hits)
+          measured({ result_bucket: resultBucket(res.hits.length) })
           setResolvedQuery(query)
         }
       })
       .catch(() => {
-        if (id === pendingRef.current) {
+        if (!cancelled && id === pendingRef.current) {
           setResults([])
+          failed()
           setResolvedQuery(query)
         }
       })
+
+    return () => {
+      cancelled = true
+    }
   }, [query, locale])
 
   if (!query.trim()) return null
@@ -198,7 +223,13 @@ function SearchPageInner() {
             : "Search the *docs*"
         }
       >
-        <form method="get">
+        <form
+          method="get"
+          {...analyticsAttributes("search", {
+            interaction_source: "article",
+            search_type: "knowledge",
+          })}
+        >
           <SearchField
             id="docs-search"
             label={tUi("search_the_knowledge_base")}

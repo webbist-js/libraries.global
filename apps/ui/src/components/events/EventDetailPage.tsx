@@ -10,6 +10,7 @@ import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeBu
 import { EventJsonLd } from "@/components/events/EventJsonLd"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 interface DetailEvent {
@@ -285,6 +286,11 @@ export function EventDetailPage({
               {/* External ticket/registration link — must be <a> with target="_blank" */}
               <a
                 href={linkUrl}
+                {...analyticsAttributes("event_action", {
+                  interaction_source: "event_detail",
+                  action_type: "registration_handoff",
+                  content_id: event.documentId,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all duration-150 hover:bg-[var(--t-aurora-soft)]"
@@ -299,6 +305,7 @@ export function EventDetailPage({
                 {event.isFree ? "Register free" : "Get tickets"}
               </a>
               <CalendarSubscribeButton
+                eventDocumentId={event.documentId}
                 icsUrl="/api/public-proxy/api/events/ics/global.ics"
                 label={tUi("add_to_calendar")}
               />

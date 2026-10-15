@@ -22,7 +22,7 @@ Detailed agent context is local under the gitignored `.claude/context/` director
 - Regenerate `@repo/strapi-types` after Strapi schema changes. Rebuild shared packages after changing their source.
 - Use the warm-paper design and existing `components/ds` primitives. Keep status accessible, honour reduced motion and preserve visible keyboard focus. Avoid `overflow: hidden` on page wrappers.
 - Protect existing subscriptions and founding prices. New catalogue entries never silently move an existing subscriber.
-- Production promotion is manual and follows the private `docs/operations/infrastructure/digitalocean/deployment.md`; preparing a catalogue or publishing CMS text does not deploy code.
+- Production promotion follows protected-main publishing and the private operator acceptance runbook; preparing a catalogue or publishing CMS text does not deploy code.
 
 ## Agent skills
 

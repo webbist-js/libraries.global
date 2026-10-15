@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 interface SaveEventButtonProps {
@@ -36,28 +37,43 @@ export function SaveEventButton({
   }, [documentId])
 
   async function toggle() {
+    if (saving) return
+    const measured = captureAnalyticsEvent("event_action", {
+      interaction_source: "event_save",
+      action_type: saved ? "unsave" : "save",
+      content_id: documentId,
+    })
     setSaving(true)
-    if (saved && savedDocId) {
-      await fetch(`/api/saved-events/${savedDocId}`, {
-        method: "DELETE",
-        credentials: "include",
-      })
-      setSaved(false)
-      setSavedDocId(null)
-    } else {
-      const res = await fetch("/api/saved-events", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventDocumentId: documentId }),
-      })
-      if (res.ok) {
-        const data = (await res.json()) as { documentId: string }
-        setSaved(true)
-        setSavedDocId(data.documentId)
+    try {
+      if (saved && savedDocId) {
+        const res = await fetch(`/api/saved-events/${savedDocId}`, {
+          method: "DELETE",
+          credentials: "include",
+        })
+        if (!res.ok) return
+        measured()
+        setSaved(false)
+        setSavedDocId(null)
+      } else {
+        const res = await fetch("/api/saved-events", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eventDocumentId: documentId }),
+        })
+        if (res.ok) {
+          const data = (await res.json()) as { documentId: string }
+          if (!data.documentId) return
+          measured()
+          setSaved(true)
+          setSavedDocId(data.documentId)
+        }
       }
+    } catch {
+      // Leave the confirmed save state intact when the request fails.
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   const iconSize = size === "sm" ? "size-3.5" : "size-4"

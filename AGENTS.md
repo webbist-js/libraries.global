@@ -1,6 +1,6 @@
 # Strapi + Next.js Monorepo
 
-Monorepo starter with Strapi v5 CMS and Next.js 16 frontend. Uses pnpm workspaces with Turborepo.
+Libraries Global uses a Strapi v5 CMS, Next.js 16 frontend and independent sync workers. Uses pnpm workspaces with Turborepo.
 
 ## Workspaces
 
@@ -19,10 +19,10 @@ Monorepo starter with Strapi v5 CMS and Next.js 16 frontend. Uses pnpm workspace
 pnpm dev              # Start both apps (Docker required for DB)
 pnpm build            # Build all
 pnpm lint             # ESLint all packages
-pnpm typecheck        # Typecheck (run from apps/ui)
+pnpm typecheck        # Typecheck all workspaces
 ```
 
-See [docs/commands.md](docs/commands.md) for full command reference.
+See [Commands reference](apps/docs/docs/commands.md) for full command reference.
 
 ## Type Generation (Critical)
 
@@ -36,20 +36,20 @@ This updates `@repo/strapi-types`. Forgetting causes silent type mismatches betw
 
 ## Documentation
 
-- [Commands Reference](docs/commands.md) — All pnpm commands
-- [Architecture](docs/architecture.md) — System design and patterns
-- [Page Builder](docs/page-builder.md) — Component registry and rendering
-- [Strapi API Client](docs/strapi-api-client.md) — Fetching content from Strapi
-- [Pages Hierarchy](docs/pages-hierarchy.md) — URL structure and redirects
-- [Authentication](docs/authentication.md) — Better Auth + Strapi JWT integration
-- [Strapi Schemas](docs/strapi-schemas.md) — Schema attributes, localization, lifecycle hooks
-- [Strapi Types](docs/strapi-types-usage.md) — Type utilities and usage patterns
+- [Commands Reference](apps/docs/docs/commands.md) — All pnpm commands
+- [Architecture](apps/docs/docs/architecture.md) — System design and patterns
+- [Page Builder](apps/docs/docs/page-builder.md) — Component registry and rendering
+- [Strapi API Client](apps/docs/docs/strapi-api-client.md) — Fetching content from Strapi
+- [Pages Hierarchy](apps/docs/docs/pages-hierarchy.md) — URL structure and redirects
+- [Authentication](apps/docs/docs/authentication.md) — Better Auth + Strapi JWT integration
+- [Strapi Schemas](apps/docs/docs/strapi-schemas.md) — Schema attributes, localization, lifecycle hooks
+- [Strapi Types](apps/docs/docs/strapi-types-usage.md) — Type utilities and usage patterns
 
 ## Production deployment
 
-Routine editorial/content changes target production; feature development and fixtures use local explicitly. Local and production CMS credentials have server-specific permissions. See [CMS content operations](apps/strapi/CONTENT-OPERATIONS.md) for the private connections and current MCP/API transport, and [Pricing](apps/ui/PRICING.md) for catalogue and publication requirements.
+Routine editorial/content changes target production; feature development and fixtures use local explicitly. Local and production CMS credentials have server-specific permissions. See [CMS content operations](apps/strapi/CONTENT-OPERATIONS.md) for environment selection and content-change rules, and [Pricing](apps/ui/PRICING.md) for catalogue and publication requirements.
 
-The closed beta runs on DigitalOcean in London. Host-specific infrastructure and operator runbooks are private. In maintainer workspaces, read `docs/operations/infrastructure/digitalocean/README.md` and `deployment.md` before changing production setup. `dev` is the protected integration branch; `main` is the production release branch. The prepared automatic publisher and server pull agent release checked `main` commits after owner activation. Until activated, promotion remains manual. See `scripts/release/README.md` for trigger and acceptance rules. Runtime secrets and SSH keys stay outside images and Git. Update official Strapi packages together rather than forcing CMS transitive security overrides. Local operational acceptance and the deployment retrospective are under gitignored `docs/operations/`.
+The closed beta runs on DigitalOcean in London. Host-specific infrastructure and operator runbooks are private. In maintainer workspaces, read `docs/operations/infrastructure/digitalocean/README.md` and `deployment.md` before changing production setup. `dev` is the protected integration branch; `main` is the production release branch. The active image publisher and operator-installed pull agent release checked `main` commits. Check the private release record before promotion; preserve the beta gate and sandbox billing. See `scripts/release/README.md` for trigger and acceptance rules. Runtime secrets and SSH keys stay outside images and Git. Update official Strapi packages together rather than forcing CMS transitive security overrides. Local operational acceptance and the deployment retrospective are under gitignored `docs/operations/`.
 
 ## Commits
 
@@ -60,3 +60,7 @@ pnpm commit    # Interactive Commitizen flow
 ```
 
 Or write manually: `type(scope): subject`
+
+## Public repository boundary
+
+Keep contributor commands, architecture, placeholder environment examples and generic release checks public. Keep host/network inventories, connection instructions, token arrangements, operator approvals, customer records, backups and recovery evidence in private operator storage. Never copy a retired documentation branch wholesale into a release. A secret scanner does not identify all sensitive operational details.

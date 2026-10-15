@@ -18,6 +18,7 @@ import { SegmentedControl } from "@/components/ds"
 import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryNoticeBanners } from "@/components/library/LibraryNoticeBanners"
 import { useStaff } from "@/lib/access-client"
+import { analyticsAttributes, pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { shortDate, weekdayCopy } from "@/lib/staff/format"
@@ -159,6 +160,11 @@ export function StopsTimesSection({
         {timetableUrl ? (
           <a
             href={timetableUrl}
+            {...analyticsAttributes("mobile_service_action", {
+              interaction_source: "mobile_timetable",
+              action_type: "open",
+              library_document_id: id,
+            })}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center font-semibold underline"
@@ -263,7 +269,15 @@ export function StopsTimesSection({
                         type="button"
                         className="min-h-11 text-left font-semibold underline underline-offset-2"
                         style={{ color: T.accent.primary }}
-                        onClick={() => setStopId(visit.stopId)}
+                        onClick={() => {
+                          pushAnalyticsEvent("mobile_service_action", {
+                            interaction_source: "mobile_timetable",
+                            action_type: "select_stop",
+                            library_document_id: id,
+                            content_id: visit.stopId,
+                          })
+                          setStopId(visit.stopId)
+                        }}
                       >
                         {stop?.name ?? "Stop"}
                       </button>

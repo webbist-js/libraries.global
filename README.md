@@ -1,8 +1,8 @@
 # Libraries Global
 
-Libraries Global is an atlas of the world's libraries: public, national, academic, monastic, parliamentary and cultural. Every library sits in a place hierarchy (continent → country → region → area → library) and has its own page with opening hours, status, collections, services and sources. The site lives at [libraries.global](https://www.libraries.global).
+Libraries Global is an atlas of the world's libraries: public, national, academic, monastic, parliamentary and cultural. Every library sits in a place hierarchy (continent → country → region → area → library) and has its own page with opening hours, status, collections, services and sources. The site lives at [libraries.global](https://libraries.global).
 
-The closed beta is deployed on DigitalOcean in London. Public-launch acceptance is tracked in [TODOS.md](./TODOS.md) and the local `docs/pre-golive-checklist.md`.
+The closed beta is deployed on DigitalOcean in London. The invitation gate and sandbox billing remain enabled. Public launch is a separate decision.
 
 ## What the site does
 
@@ -39,7 +39,7 @@ This is a pnpm workspace run with Turborepo.
 - Strapi indexes published content into Meilisearch. Browsers use the gated Next.js `/api/search` proxy; the private search host and search-only credential are server inputs.
 - The sync worker reads provider credentials from Postgres, decrypts them with `@repo/events-crypto`, and upserts events on a cron schedule. Strapi calls it to test credentials (`WORKER_URL`, `WORKER_SECRET`).
 
-The domain language (Library, Area, Operational Status, Event and so on) is defined in [CONTEXT.md](./CONTEXT.md), and design decisions are recorded in [docs/adr](./docs/adr).
+The domain language (Library, Area, Operational Status, Event and so on) is defined in [CONTEXT.md](./CONTEXT.md), and contributor-facing architecture is documented in [the developer docs](./apps/docs/docs/architecture.md). Maintainer plans and release acceptance records are private.
 
 ## Local development
 
@@ -66,11 +66,12 @@ pnpm install
 Meilisearch isn't in the compose file. Run it on port 7701:
 
 ```sh
+export LG_LOCAL_MEILI_KEY="$(openssl rand -hex 32)"
 docker run -d --name librariesglobal-meilisearch \
   -p 7701:7700 \
-  -e MEILI_MASTER_KEY=<a long random string> \
+  -e MEILI_MASTER_KEY="$LG_LOCAL_MEILI_KEY" \
   -v librariesglobal-meili:/meili_data \
-  getmeili/meilisearch:latest
+  getmeili/meilisearch:v1.42.1
 ```
 
 List its keys with `curl -H "Authorization: Bearer <master key>" http://localhost:7701/keys`. Use a search-only key as the server-side UI credential (`MEILISEARCH_SEARCH_API_KEY`); browsers use the application proxy.
@@ -101,7 +102,7 @@ The example files don't list everything the apps read yet. On top of what's in t
 | `DATABASE_URL`                                        | The Strapi database: `postgres://<user>:<password>@localhost:5433/<name>` |
 | `BETTER_AUTH_SECRET`                                  | `openssl rand -hex 32`                                                    |
 | `STRAPI_BRIDGE_SECRET`                                | Same value as in Strapi                                                   |
-| `APP_PUBLIC_URL`, `NEXT_PUBLIC_APP_URL`               | `http://localhost:3000`                                                   |
+| `APP_PUBLIC_URL`                                      | `http://localhost:3000`                                                   |
 | `MEILISEARCH_HOST`, `MEILISEARCH_SEARCH_API_KEY`      | `http://localhost:7701` and the search key                                |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`            | Optional; Google sign-in                                                  |
 
@@ -129,13 +130,13 @@ Better Auth keeps its data in the `user`, `session`, `account`, `verification` a
 
 ```sh
 # UK public libraries from libraryOn (resumable; try --dry-run first)
-cd apps/strapi && npx tsx scripts/libraryon-ingest.ts --dry-run --limit=10
+(cd apps/strapi && npx tsx scripts/libraryon-ingest.ts --dry-run --limit=10)
 
 # Build the Meilisearch `library` index from Strapi
 node apps/strapi/scripts/seed-meilisearch.mjs
 ```
 
-`apps/strapi/scripts/` also has scripts for European countries and boundaries. The order to run them in is in [docs/pre-golive-checklist.md](./docs/pre-golive-checklist.md).
+`apps/strapi/scripts/ingests/` has dataset-specific import instructions. See the [ingest guide](./apps/strapi/scripts/ingests/README.md); run fixtures and import experiments against your local database.
 
 ## Commands
 
@@ -180,7 +181,7 @@ Describe added or changed environment variables in the pull request so maintaine
 
 The [server pull agent](scripts/release/pull-release.py) checks the current `main` SHA, passing checks and the successful publisher run. It pulls those digests, preserves the previous image/runtime selection, applies Compose health checks and tests deployed HTTP endpoints. A failed promotion restores the previous images and stops retrying that candidate. CMS, auth, billing, worker or dependency changes require an operator's backup, isolated data and rollback acceptance record before promotion.
 
-Activation needs owner approval for the registry credentials and automatic publishing environment, plus installation of the disabled-by-default host agent. See [release helpers](scripts/release/README.md). `dev` runs checks without deploying; its separate environment will be configured after beta.
+Automatic publishing and host promotion are active for the closed beta. The [release helpers](scripts/release/README.md) document their guards and acceptance requirements. Host configuration, credentials and recovery evidence remain private. `dev` runs checks without deploying; its separate environment will be configured after beta.
 
 [Semantic release](.github/workflows/release.yml) publishes version notes from checked `main` commits. [QA](.github/workflows/qa.yml) runs deployed browser/accessibility/SEO/performance checks on demand. The [Atlas archive workflow](.github/workflows/atlas-tiles.yml) awaits a separate private runner. [Docusaurus Pages](.github/workflows/docs.yml) is behind its own publishing switch.
 
@@ -192,17 +193,20 @@ GitHub receives a scoped registry writer through the `production-images` environ
 
 ## Documentation
 
-| Where                                                                        | What                                  |
-| ---------------------------------------------------------------------------- | ------------------------------------- |
-| [CONTEXT.md](./CONTEXT.md)                                                   | Domain glossary                       |
-| [docs/adr](./docs/adr)                                                       | Architecture decision records         |
-| [docs/events-system-spec.md](./docs/events-system-spec.md)                   | Events, providers and the sync worker |
-| [docs/strapi-role-permissions.md](./docs/strapi-role-permissions.md)         | Strapi roles and what each can do     |
-| [docs/community-and-points-system.md](./docs/community-and-points-system.md) | Contributor roles and rewards         |
-| [docs/search-assessment.md](./docs/search-assessment.md)                     | Search design and Meilisearch setup   |
-| [docs/user-touchpoints.md](./docs/user-touchpoints.md)                       | Every place the site talks to users   |
-| [TODOS.md](./TODOS.md)                                                       | Open work, by priority                |
-| [CLAUDE.md](./CLAUDE.md), [AGENTS.md](./AGENTS.md)                           | Notes for coding agents               |
+| Where                                                | What                                       |
+| ---------------------------------------------------- | ------------------------------------------ |
+| [CONTEXT.md](./CONTEXT.md)                           | Domain glossary                            |
+| [Architecture](./apps/docs/docs/architecture.md)     | Application design and delivery boundaries |
+| [Commands](./apps/docs/docs/commands.md)             | Workspace command reference                |
+| [Authentication](./apps/docs/docs/authentication.md) | Session and CMS integration                |
+| [Page builder](./apps/docs/docs/page-builder.md)     | Content component workflow                 |
+| [Analytics](./apps/ui/ANALYTICS.md)                  | Consented events and beta acceptance       |
+| [Team API](./apps/ui/TEAM-API.md)                    | Scoped API tools                           |
+| [Release helpers](./scripts/release/README.md)       | Generic publishing and promotion guards    |
+| [TODOS.md](./TODOS.md)                               | Remaining release and product work         |
+| [CLAUDE.md](./CLAUDE.md), [AGENTS.md](./AGENTS.md)   | Contributor and agent conventions          |
+
+Private plans, host runbooks and operational acceptance records are kept by maintainers.
 
 ## Contributing
 
@@ -214,7 +218,7 @@ The code is MIT licensed; see [LICENSE](./LICENSE). Library data and Knowledge d
 
 Every imported dataset is registered as a `Dataset` in Strapi with its publisher, licence, attribution and import details (seeded from `apps/strapi/src/seeds/datasets.ts`), and records point at it through their `source` field. The site's independence and provenance statement is at `/legal/independence`.
 
-The legal documents in Strapi are pre-launch drafts (version 0.x). The first-publication review in [docs/pre-golive-checklist.md](./docs/pre-golive-checklist.md) §7f assigns v1.0 and the effective date at launch.
+Legal documents are versioned and published through Strapi. Provider, cookie and privacy disclosures must match the enabled services before collection starts. See [beta legal pages](./apps/ui/BETA-LEGAL.md) and [analytics acceptance](./apps/ui/ANALYTICS.md).
 
 ## Acknowledgements
 

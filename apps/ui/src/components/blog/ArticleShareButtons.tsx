@@ -3,22 +3,43 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
+import {
+  analyticsAttributes,
+  captureAnalyticsEvent,
+} from "@/lib/analytics-events"
+
 export function ArticleShareButtons({
   title,
   url,
+  contentId,
+  contentType = "journal",
 }: {
   readonly title?: string | null
   readonly url: string
+  readonly contentId?: string
+  readonly contentType?: "journal" | "knowledge"
 }) {
   const tUi = useUiTranslations("ui")
 
   const [copied, setCopied] = useState(false)
 
   function copyLink() {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+    const measured = captureAnalyticsEvent("share", {
+      interaction_source: "article_share",
+      content_type: contentType,
+      content_id: contentId,
+      method: "copy",
     })
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        measured()
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+      .catch(() => {
+        setCopied(false)
+      })
   }
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title ?? "")}&url=${encodeURIComponent(url)}`
@@ -27,6 +48,12 @@ export function ArticleShareButtons({
     <div className="flex items-center gap-2">
       <a
         href={twitterUrl}
+        {...analyticsAttributes("share", {
+          interaction_source: "article_share",
+          content_type: contentType,
+          content_id: contentId,
+          method: "x",
+        })}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={tUi("share_on_x_twitter")}

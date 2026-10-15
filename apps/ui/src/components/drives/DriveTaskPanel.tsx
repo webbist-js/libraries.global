@@ -40,6 +40,7 @@ import {
   verifyProblemField,
 } from "@/components/library/verify.logic"
 import { VerifyFields } from "@/components/library/VerifyFields"
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { Drive, DriveTask } from "@/lib/drives/types"
 import { Link } from "@/lib/navigation"
@@ -788,6 +789,11 @@ export function DriveTaskPanel({
     )
 
   const submit = async (body: Body) => {
+    const measured = captureAnalyticsEvent("drive_action", {
+      interaction_source: "drive",
+      action_type: "submit",
+      content_id: drive.documentId,
+    })
     setSending(true)
     setError(null)
     setRefusal(null)
@@ -798,6 +804,7 @@ export function DriveTaskPanel({
         body: JSON.stringify(body),
       })
       if (res.ok) {
+        measured()
         onSent(task)
 
         return

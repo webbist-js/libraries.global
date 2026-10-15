@@ -31,10 +31,16 @@ export function TrackingScriptWrapper({
   )
 }
 
-function TrackingScripts({ nonce }: { readonly nonce?: string }) {
+function TrackingScripts({
+  nonce,
+  locale = "en",
+}: {
+  readonly nonce?: string
+  readonly locale?: string
+}) {
   if (!productionAnalyticsEnabled()) return null
 
-  return <GoogleAnalytics nonce={nonce} />
+  return <GoogleAnalytics nonce={nonce} locale={locale} />
 }
 
 export default TrackingScripts

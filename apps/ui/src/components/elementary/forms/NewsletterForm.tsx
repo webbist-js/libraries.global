@@ -10,6 +10,7 @@ import * as z from "zod"
 import { AppField } from "@/components/forms/AppField"
 import { AppForm } from "@/components/forms/AppForm"
 import { Button } from "@/components/ui/button"
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 type Status =
@@ -29,6 +30,10 @@ export function NewsletterForm() {
   })
 
   async function onSubmit(values: z.infer<FormSchemaType>) {
+    const measured = captureAnalyticsEvent("generate_lead", {
+      interaction_source: "newsletter",
+      submission_type: "newsletter",
+    })
     setStatus({ kind: "idle" })
     try {
       const res = await fetch("/api/newsletter", {
@@ -37,6 +42,7 @@ export function NewsletterForm() {
         body: JSON.stringify(values),
       })
       if (res.ok) {
+        if (!values.website) measured()
         setStatus({ kind: "sent" })
         form.reset()
 

@@ -3,6 +3,10 @@ import type { MobileStop } from "@repo/shared-data"
 import { useEffect, useState } from "react"
 
 import { fieldInputStyle } from "@/components/library-editor/wizard.constants"
+import {
+  captureAnalyticsEvent,
+  pushAnalyticsEvent,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { Place } from "@/lib/geocode/place"
 
@@ -52,7 +56,24 @@ export function NearestStopFinder({
     }
   }, [query])
   const locate = () => {
+    pushAnalyticsEvent("near_me", {
+      interaction_source: "mobile_timetable",
+      action_type: "request",
+    })
+    const success = captureAnalyticsEvent("near_me", {
+      interaction_source: "mobile_timetable",
+      action_type: "success",
+    })
+    const denied = captureAnalyticsEvent("near_me", {
+      interaction_source: "mobile_timetable",
+      action_type: "denied",
+    })
+    const unavailable = captureAnalyticsEvent("near_me", {
+      interaction_source: "mobile_timetable",
+      action_type: "unavailable",
+    })
     if (!navigator.geolocation) {
+      unavailable()
       setError(
         "This browser cannot find your location. Search for a place instead."
       )
@@ -64,13 +85,16 @@ export function NearestStopFinder({
     // eslint-disable-next-line sonarjs/no-intrusive-permissions
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        success()
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         })
         setBusy(false)
       },
-      () => {
+      (error) => {
+        if (error.code === 1) denied()
+        else unavailable()
         setError("Location was unavailable. Search for a place instead.")
         setBusy(false)
       },
@@ -149,7 +173,14 @@ export function NearestStopFinder({
             <li key={stop.id}>
               <button
                 type="button"
-                onClick={() => onSelect(stop.id)}
+                onClick={() => {
+                  pushAnalyticsEvent("mobile_service_action", {
+                    interaction_source: "mobile_timetable",
+                    action_type: "select_stop",
+                    content_id: stop.id,
+                  })
+                  onSelect(stop.id)
+                }}
                 className="min-h-11 py-2 text-left font-semibold"
                 style={{ color: T.accent.primary }}
               >

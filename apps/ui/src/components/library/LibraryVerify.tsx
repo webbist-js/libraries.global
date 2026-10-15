@@ -14,6 +14,7 @@ import {
   verifyProblemField,
 } from "@/components/library/verify.logic"
 import { VerifyFields } from "@/components/library/VerifyFields"
+import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -86,6 +87,10 @@ export function LibraryVerify({
     setProblemOn(why ? verifyProblemField(input) : null)
     if (why) return
     setSending(true)
+    const measured = captureAnalyticsEvent("submission_success", {
+      interaction_source: "library_correction",
+      submission_type: "verification",
+    })
     try {
       const res = await fetch("/api/submissions", {
         method: "POST",
@@ -95,6 +100,7 @@ export function LibraryVerify({
         ),
       })
       if (res.ok) {
+        measured()
         setSent(true)
 
         return

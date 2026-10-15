@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { NavLink } from "@/components/global/GlobalNavLinks"
+import { navigationAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 function normalizePathname(pathname: string): string {
@@ -119,6 +120,7 @@ export function GlobalMobileMenu({
                     <li key={link.href}>
                       <GlobalLink
                         href={link.href}
+                        {...navigationAttributes(link.href)}
                         aria-current={active ? "page" : undefined}
                         className="flex min-h-12 items-center rounded-2xl px-4 text-[17px] font-medium"
                         style={
