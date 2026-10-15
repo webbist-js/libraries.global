@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { DEFAULT_FILTERS } from "@/components/library-index/types"
+import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
   buildLibraryPath,
@@ -21,6 +22,7 @@ import { Link, useRouter } from "@/lib/navigation"
  */
 export function LibrarySearchBox({
   id,
+  analyticsSource = "find",
   defaultQuery = "",
   onSubmit,
   onClear,
@@ -32,6 +34,7 @@ export function LibrarySearchBox({
   className,
 }: {
   readonly id: string
+  readonly analyticsSource?: "home" | "find"
   readonly defaultQuery?: string
   /** The trimmed text, from Enter (no suggestion highlighted) or Search. */
   readonly onSubmit: (query: string) => void
@@ -96,12 +99,23 @@ export function LibrarySearchBox({
 
   function submit() {
     setOpen(false)
+    if (query.trim())
+      pushAnalyticsEvent("search", {
+        interaction_source: analyticsSource,
+        search_type: "libraries",
+      })
     onSubmit(query.trim())
   }
 
   function pickHit(hit: LibrarySearchHit) {
     setOpen(false)
     const path = buildLibraryPath(hit)
+    if (path)
+      pushAnalyticsEvent("select_content", {
+        interaction_source: analyticsSource,
+        content_type: "library",
+        library_document_id: hit.documentId,
+      })
     router.push(path ?? `/libraries?q=${encodeURIComponent(hit.name)}`)
   }
 

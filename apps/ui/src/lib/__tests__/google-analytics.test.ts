@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   analyticsPageAllowed,
-  GOOGLE_ANALYTICS_ID,
+  GOOGLE_TAG_MANAGER_ID,
   installGoogleAnalytics,
   productionAnalyticsEnabled,
 } from "../google-analytics"
@@ -20,7 +20,14 @@ function fixture(origin = "https://libraries.global", pathname = "/beta") {
   } as unknown as Window
   const commands = () =>
     (browser.dataLayer ?? []).map((entry) => Array.from(entry as IArguments))
-  const views = () => commands().filter((entry) => entry[1] === "page_view")
+  const views = () =>
+    (browser.dataLayer ?? [])
+      .filter((entry) => (entry as { event?: string }).event === "lg_analytics")
+      .map((entry) => [
+        "event",
+        "page_view",
+        (entry as { analytics: unknown }).analytics,
+      ])
 
   return { browser, append, commands, views }
 }
@@ -61,7 +68,7 @@ describe("production analytics", () => {
     expect(append).not.toHaveBeenCalled()
     expect(views()).toEqual([])
     expect(commands().some((entry) => entry[0] === "config")).toBe(false)
-    expect(browser["ga-disable-G-N6DLE0CK0Y"]).toBe(true)
+    expect(browser["ga-disable-G-8M465CHXJ6"]).toBe(true)
   })
 
   it("loads once after consent, strips query/hash/referrer data and deduplicates route views", () => {
@@ -73,7 +80,7 @@ describe("production analytics", () => {
     expect(append).toHaveBeenCalledTimes(1)
     expect(append.mock.calls[0]?.[0]).toMatchObject({
       async: true,
-      src: `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`,
+      src: `https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_MANAGER_ID}`,
       nonce: "test-nonce",
     })
     expect(views()).toHaveLength(1)
@@ -93,7 +100,7 @@ describe("production analytics", () => {
     analytics.setConsent(true)
     browser.location.pathname = "/fr/auth/reset-password"
     analytics.pageView()
-    expect(browser["ga-disable-G-N6DLE0CK0Y"]).toBe(true)
+    expect(browser["ga-disable-G-8M465CHXJ6"]).toBe(true)
     expect(views()).toHaveLength(1)
     browser.location.pathname = "/libraries"
     analytics.pageView()
@@ -102,7 +109,7 @@ describe("production analytics", () => {
     browser.location.pathname = "/map"
     analytics.pageView()
     expect(views()).toHaveLength(2)
-    expect(browser["ga-disable-G-N6DLE0CK0Y"]).toBe(true)
+    expect(browser["ga-disable-G-8M465CHXJ6"]).toBe(true)
   })
 
   it("does not load a tag when consent is granted on a private page", () => {

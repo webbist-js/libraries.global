@@ -24,6 +24,10 @@ import {
   availableSections,
   verifyRecordOf,
 } from "@/components/library/verify.logic"
+import {
+  analyticsAttributes,
+  type AnalyticsParameters,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
@@ -273,20 +277,28 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
   const hasContact = availableSections(verifyRecordOf(library)).includes(
     "contact"
   )
-  const others: { href: string | null; label: string; icon: string }[] = [
+  const others: {
+    href: string | null
+    label: string
+    icon: string
+    action?: AnalyticsParameters["action_type"]
+  }[] = [
     {
       href: (rec.membershipUrl as string | null) ?? null,
       label: "Join the library",
+      action: "join",
       icon: LIB_ICONS.people,
     },
     {
       href: (rec.bookingUrl as string | null) ?? null,
       label: "Book a visit",
+      action: "booking",
       icon: LIB_ICONS.calendar,
     },
     {
       href: (rec.planVisitUrl as string | null) ?? null,
       label: "Plan your visit",
+      action: "plan_visit",
       icon: LIB_ICONS.pin,
     },
     {
@@ -313,13 +325,25 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
     </li>
   )
 
-  const link = (href: string, label: string, icon: string) => (
+  const link = (
+    href: string,
+    label: string,
+    icon: string,
+    action?: AnalyticsParameters["action_type"]
+  ) => (
     <li key={label} className="flex items-center gap-2">
       <span style={{ color: T.accent.primary }}>
         <LibIcon d={icon} size={16} />
       </span>
       <a
         href={href}
+        {...(action
+          ? analyticsAttributes("library_action", {
+              interaction_source: "library_sidebar",
+              action_type: action,
+              library_document_id: library.documentId,
+            })
+          : {})}
         target="_blank"
         rel="noopener noreferrer"
         className="min-w-0 truncate font-semibold underline underline-offset-2"
@@ -341,12 +365,19 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
       </h2>
       <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[14px]">
         {website
-          ? link(website, hostname(website), LIB_ICONS.globe)
+          ? link(website, hostname(website), LIB_ICONS.globe, "website")
           : missing("Website", LIB_ICONS.globe)}
         {catalogueUrl
-          ? link(catalogueUrl, "Search the catalogue", LIB_ICONS.book)
+          ? link(
+              catalogueUrl,
+              "Search the catalogue",
+              LIB_ICONS.book,
+              "catalogue"
+            )
           : missing("Catalogue link", LIB_ICONS.book)}
-        {others.flatMap((l) => (l.href ? [link(l.href, l.label, l.icon)] : []))}
+        {others.flatMap((l) =>
+          l.href ? [link(l.href, l.label, l.icon, l.action)] : []
+        )}
       </ul>
       {hasContact ? (
         <p

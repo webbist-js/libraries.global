@@ -19,6 +19,7 @@ import {
 
 import type { AnalysisTab } from "@/components/atlas/AtlasAnalysisWorkspace"
 import { useEntitlements } from "@/lib/access-client"
+import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
 import { cn } from "@/lib/styles"
@@ -595,6 +596,11 @@ export function AtlasExplorer({
 
   const selectLibrary = useCallback(
     (lib: AtlasLibrary, fly = true) => {
+      pushAnalyticsEvent("select_content", {
+        interaction_source: "atlas_search",
+        content_type: "library",
+        library_document_id: lib.id,
+      })
       setSelectedId(lib.id)
       setSelectedStop(null)
       setList(false)
@@ -616,6 +622,10 @@ export function AtlasExplorer({
 
   const pickPlace = useCallback(
     (p: Place) => {
+      pushAnalyticsEvent("atlas_action", {
+        interaction_source: "atlas_search",
+        action_type: "filter",
+      })
       if (scalable && p.scope) void fitResults(p.scope)
       else mapRef.current?.fitTo(p.libraries)
       setQuery("")
@@ -627,6 +637,12 @@ export function AtlasExplorer({
 
   const onMapSelect = useCallback(
     (id: string | null) => {
+      if (id)
+        pushAnalyticsEvent("select_content", {
+          interaction_source: "atlas_map",
+          content_type: "library",
+          library_document_id: id,
+        })
       setSelectedId(id)
       setSelectedStop(null)
       if (id && isMobile) setSheet("half")
@@ -635,6 +651,12 @@ export function AtlasExplorer({
   )
   const pickStop = useCallback(
     (stop: MobileStopHit, fly = true) => {
+      pushAnalyticsEvent("mobile_service_action", {
+        interaction_source: fly ? "atlas_search" : "atlas_map",
+        action_type: "select_stop",
+        content_id: stop.id,
+        library_document_id: stop.library_document_id,
+      })
       setSelectedId(null)
       setSelectedStop(stop)
       setList(false)
@@ -671,6 +693,11 @@ export function AtlasExplorer({
   const onToggleLayer = useCallback(
     (id: LayerId) => {
       const { layers: next, replaced: removed } = toggleLayer(usableLayers, id)
+      pushAnalyticsEvent("atlas_action", {
+        interaction_source: "atlas_layers",
+        action_type: next.includes(id) ? "layer_on" : "layer_off",
+        layer_name: id,
+      })
       setLayers(next)
       if ((id === "perCapita" || id === "access") && next.includes(id)) {
         setAnalysisMode(id === "access" ? "accessibility" : "libraryAccess")
@@ -782,6 +809,11 @@ export function AtlasExplorer({
             scalable
               ? (item) => {
                   if (item.kind === "library") {
+                    pushAnalyticsEvent("select_content", {
+                      interaction_source: "atlas_recent",
+                      content_type: "library",
+                      library_document_id: item.key,
+                    })
                     recentCameraId.current = item.key
                     setSelectedId(item.key)
                     setList(false)
@@ -807,6 +839,10 @@ export function AtlasExplorer({
         <AtlasFiltersTab
           filters={filters}
           onChange={(next) => {
+            pushAnalyticsEvent("atlas_action", {
+              interaction_source: "atlas_filters",
+              action_type: "filter",
+            })
             setFilters(next)
             if (
               next.types.includes("mobile") ||
@@ -897,7 +933,13 @@ export function AtlasExplorer({
           mobileOpacity={mobileOpacity}
           onMobileOpacity={setMobileOpacity}
           onSignIn={signIn}
-          onSeePlans={() => setPlansOpen(true)}
+          onSeePlans={() => {
+            pushAnalyticsEvent("upgrade_prompt", {
+              interaction_source: "upgrade_prompt",
+              action_type: "open",
+            })
+            setPlansOpen(true)
+          }}
           perCapita={{
             metric: accessMetric,
             onMetric: setAccessMetric,
@@ -1199,7 +1241,13 @@ export function AtlasExplorer({
           setList(true)
           if (isMobile) setSheet("full")
         }}
-        onSeePlans={() => setPlansOpen(true)}
+        onSeePlans={() => {
+          pushAnalyticsEvent("upgrade_prompt", {
+            interaction_source: "upgrade_prompt",
+            action_type: "open",
+          })
+          setPlansOpen(true)
+        }}
         optionsLoading={scalable && !data.counts}
         exportRequest={
           scalable
@@ -1350,8 +1398,21 @@ export function AtlasExplorer({
                 center={center}
                 now={now}
                 onHover={setHovered}
-                onShowMap={() => setList(false)}
-                onSeePlans={() => setPlansOpen(true)}
+                onShowMap={() => {
+                  pushAnalyticsEvent("atlas_action", {
+                    interaction_source: "atlas_toolbar",
+                    action_type: "view",
+                    view_mode: "map",
+                  })
+                  setList(false)
+                }}
+                onSeePlans={() => {
+                  pushAnalyticsEvent("upgrade_prompt", {
+                    interaction_source: "upgrade_prompt",
+                    action_type: "open",
+                  })
+                  setPlansOpen(true)
+                }}
               />
             ) : selectedStop ? (
               <AtlasStopPanel
@@ -1394,7 +1455,18 @@ export function AtlasExplorer({
                     count={resultCount ?? inView.length}
                     sub={countSub}
                   />
-                  <ViewToggle list={list} onChange={setList} />
+                  <ViewToggle
+                    list={list}
+                    onChange={(next) => {
+                      if (next !== list)
+                        pushAnalyticsEvent("atlas_action", {
+                          interaction_source: "atlas_toolbar",
+                          action_type: "view",
+                          view_mode: next ? "list" : "map",
+                        })
+                      setList(next)
+                    }}
+                  />
                 </div>
                 {usableLayers.includes("access") ? <div>{legends}</div> : null}
               </div>
@@ -1581,7 +1653,15 @@ export function AtlasExplorer({
                 type="button"
                 role="radio"
                 aria-checked={projection === v}
-                onClick={() => setProjection(v)}
+                onClick={() => {
+                  if (projection !== v)
+                    pushAnalyticsEvent("atlas_action", {
+                      interaction_source: "atlas_toolbar",
+                      action_type: "projection",
+                      view_mode: v,
+                    })
+                  setProjection(v)
+                }}
                 className="flex h-9 w-[62px] items-center justify-center rounded-[10px] text-[13px] font-bold"
                 style={
                   projection === v
@@ -1605,7 +1685,14 @@ export function AtlasExplorer({
           {!mapReady && !mapError ? (
             <AtlasLoading
               listReady={Boolean(all)}
-              onOpenList={() => setList(true)}
+              onOpenList={() => {
+                pushAnalyticsEvent("atlas_action", {
+                  interaction_source: "atlas_toolbar",
+                  action_type: "view",
+                  view_mode: "list",
+                })
+                setList(true)
+              }}
             />
           ) : null}
         </div>
@@ -1645,8 +1732,21 @@ export function AtlasExplorer({
               center={center}
               now={now}
               onHover={setHovered}
-              onShowMap={() => setList(false)}
-              onSeePlans={() => setPlansOpen(true)}
+              onShowMap={() => {
+                pushAnalyticsEvent("atlas_action", {
+                  interaction_source: "atlas_toolbar",
+                  action_type: "view",
+                  view_mode: "map",
+                })
+                setList(false)
+              }}
+              onSeePlans={() => {
+                pushAnalyticsEvent("upgrade_prompt", {
+                  interaction_source: "upgrade_prompt",
+                  action_type: "open",
+                })
+                setPlansOpen(true)
+              }}
             />
           </div>
           {feedbackPrompt ? (
@@ -1677,7 +1777,18 @@ export function AtlasExplorer({
           <AtlasCount count={resultCount ?? inView.length} sub={countSub} />
           <span className="flex-1" />
           {feedbackPrompt}
-          <ViewToggle list={list} onChange={setList} />
+          <ViewToggle
+            list={list}
+            onChange={(next) => {
+              if (next !== list)
+                pushAnalyticsEvent("atlas_action", {
+                  interaction_source: "atlas_toolbar",
+                  action_type: "view",
+                  view_mode: next ? "list" : "map",
+                })
+              setList(next)
+            }}
+          />
         </div>
       )}
 

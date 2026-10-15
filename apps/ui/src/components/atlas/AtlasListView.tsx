@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
 import { atlasListLibrary } from "./atlas-data-adapter"
@@ -299,6 +300,11 @@ export function AtlasListView({
                       {l.path ? (
                         <GlobalLink
                           href={l.path}
+                          {...analyticsAttributes("select_content", {
+                            interaction_source: "atlas_list",
+                            content_type: "library",
+                            library_document_id: l.id,
+                          })}
                           className="no-underline hover:underline"
                           style={{ color: T.ink.base }}
                         >

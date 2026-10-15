@@ -2,18 +2,11 @@
 
 Routine editorial and content changes target production unless the user specifies otherwise. Feature development, schema changes, test fixtures and import experiments target local explicitly. Publishing CMS text does not deploy application code.
 
-## Connections and credentials
+## Environment selection and credentials
 
-| Target     | Connection                                             | Operator credential                                                                                                   |
-| ---------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Local      | `http://127.0.0.1:1337/mcp`                            | `STRAPI_MCP_TOKEN` in private `apps/strapi/.env`                                                                      |
-| Production | Private SSH tunnel, currently `http://127.0.0.1:18013` | Same current token value, with different server-side permissions; optional `STRAPI_PRODUCTION_MCP_TOKEN` overrides it |
+Use the operator-approved connection and a token scoped to the requested content actions. Local and production permissions are independent; a successful local request does not prove production access. Connection addresses, tunnel commands, credential arrangements and transport status belong in the private operator runbook.
 
-These are two separate CMS environments. A successful local tool call does not prove production permissions. Discover MCP tools at the selected endpoint when MCP is enabled. Keep the existing SSH tunnel, scoped Admin Token and private listener; there is no public CMS hostname.
-
-On 13 October 2026, both credentials were checked. Local MCP works. Production has `MCP_ENABLED=false`; its scoped Admin Token works with the existing `/content-manager` API. The pricing update used that API, including its authentication and content permissions. Automatic approval review rejected enabling production MCP and restarting the CMS, so that setting remains unchanged. The token is configured for production content work; enabling the MCP transport is a separate security-setting decision.
-
-Use `STRAPI_PRODUCTION_URL` to override the production tunnel origin. Never fall back to local when production is unavailable. Tokens stay in private environment files, out of source, logs, browser URLs and release images.
+Content helpers use private environment inputs such as `STRAPI_MCP_TOKEN`, `STRAPI_PRODUCTION_MCP_TOKEN` and `STRAPI_PRODUCTION_URL`. Never print values, put tokens in browser URLs or commit environment files. Do not enable a disabled transport, restart the CMS or expand permissions merely to complete a content update. Never silently fall back to local when production is unavailable.
 
 ## Updating pricing content
 

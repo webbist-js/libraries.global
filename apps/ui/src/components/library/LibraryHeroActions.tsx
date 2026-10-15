@@ -7,6 +7,10 @@ import { announceFollow } from "@/components/library/follow-events"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { useMounted } from "@/hooks/useMounted"
+import {
+  analyticsAttributes,
+  captureAnalyticsEvent,
+} from "@/lib/analytics-events"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -49,9 +53,17 @@ export function LibraryHeroActions({
   return (
     <div className="flex flex-wrap gap-2">
       {[
-        { href: directionsUrl, title: "Get directions" },
-        { href: website, title: "Website" },
-        { href: catalogueUrl, title: "Catalogue" },
+        {
+          href: directionsUrl,
+          title: "Get directions",
+          action: "directions" as const,
+        },
+        { href: website, title: "Website", action: "website" as const },
+        {
+          href: catalogueUrl,
+          title: "Catalogue",
+          action: "catalogue" as const,
+        },
       ]
         .filter((item) => item.href)
         .slice(0, 3)
@@ -59,6 +71,11 @@ export function LibraryHeroActions({
           <a
             key={item.title}
             href={item.href!}
+            {...analyticsAttributes("library_action", {
+              action_type: item.action,
+              interaction_source: "library_hero",
+              library_document_id: libraryDocumentId,
+            })}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold"
@@ -126,6 +143,11 @@ function FollowPill({
   const toggle = async () => {
     if (!session?.user || following === null || loading) return
     setLoading(true)
+    const measured = captureAnalyticsEvent("library_follow", {
+      interaction_source: "library_hero",
+      library_document_id: libraryDocumentId,
+      action_type: following ? "unfollow" : "follow",
+    })
     try {
       const res = await fetch("/api/profile/me/follow", {
         method: "POST",
@@ -137,8 +159,10 @@ function FollowPill({
       })
       if (res.ok) {
         const json = (await res.json()) as { following: boolean }
-        if (json.following !== following)
+        if (json.following !== following) {
+          measured()
           announceFollow({ libraryDocumentId, following: json.following })
+        }
         setFollowing(json.following)
       }
     } finally {

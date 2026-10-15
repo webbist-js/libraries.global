@@ -3,6 +3,11 @@
 import { useState } from "react"
 
 import { LibrarySearchBox } from "@/components/index-page/LibrarySearchBox"
+import {
+  analyticsAttributes,
+  captureAnalyticsEvent,
+  pushAnalyticsEvent,
+} from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 
@@ -23,7 +28,24 @@ export default function HomeSearch() {
   }
 
   function nearMe() {
+    pushAnalyticsEvent("near_me", {
+      interaction_source: "home",
+      action_type: "request",
+    })
+    const success = captureAnalyticsEvent("near_me", {
+      interaction_source: "home",
+      action_type: "success",
+    })
+    const denied = captureAnalyticsEvent("near_me", {
+      interaction_source: "home",
+      action_type: "denied",
+    })
+    const unavailable = captureAnalyticsEvent("near_me", {
+      interaction_source: "home",
+      action_type: "unavailable",
+    })
     if (!navigator.geolocation) {
+      unavailable()
       router.push("/libraries")
 
       return
@@ -33,12 +55,15 @@ export default function HomeSearch() {
     // eslint-disable-next-line sonarjs/no-intrusive-permissions
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        success()
         setLocating(false)
         router.push(
           `/libraries?nlat=${pos.coords.latitude.toFixed(4)}&nlng=${pos.coords.longitude.toFixed(4)}&sort=near`
         )
       },
-      () => {
+      (error) => {
+        if (error.code === 1) denied()
+        else unavailable()
         setLocating(false)
         router.push("/libraries")
       },
@@ -50,6 +75,7 @@ export default function HomeSearch() {
     <div>
       <LibrarySearchBox
         id="home-search"
+        analyticsSource="home"
         className="mt-9 max-w-[750px]"
         strong
         onSubmit={goToIndex}
@@ -65,6 +91,11 @@ export default function HomeSearch() {
           <Link
             key={label}
             href={href}
+            {...analyticsAttributes("navigation_action", {
+              interaction_source: "home",
+              content_type: "library",
+              action_type: "open",
+            })}
             className="rounded-full border bg-white px-3.5 py-2 text-[14px] font-medium no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
