@@ -121,3 +121,13 @@ All test commands are run from the **project root**, not from inside the `qa/` f
 3. **Comparison run**  
    Run the visual tests again.  
    Playwright will generate new screenshots and **compare them against the previously created baseline** to detect visual changes or regressions.
+
+# Analytics acceptance on the released beta
+
+After the reviewed code is deployed and the accepted GTM container is published:
+
+```sh
+ANALYTICS_ACCEPTANCE=1 BASE_URL=https://libraries.global pnpm -F @repo/tests-playwright exec playwright test e2e/analytics.spec.ts --project=chromium --workers=1
+```
+
+This opt-in suite uses fresh anonymous beta visits, verifies the real tag output, and intercepts collection requests so automated test visits are not recorded in GA. It checks rejection persistence, one sanitized consented page view, cookie lifetime, withdrawal, cookie cleanup and locale navigation. It does not open accounts, redeem invitations or submit email forms. Repeat on Firefox/WebKit and complete the private-route, sampled-action and GA DebugView checks with the operator's owned beta session. See [analytics acceptance](../../apps/ui/ANALYTICS.md).

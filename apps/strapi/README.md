@@ -113,7 +113,7 @@ docker build --platform linux/amd64 -f apps/strapi/Dockerfile -t libraries-globa
 
 The multi-stage Dockerfile prunes the workspace, builds the CMS and local plugins, deploys production dependencies and runs as the non-root Node user. Credentials and uploads are runtime inputs. Production uses Managed PostgreSQL with verified TLS and Spaces media storage; the CMS/admin listener stays private. The Dockerfile does not use the old starter `APP_URL` build argument.
 
-Update official Strapi core/plugins/providers/type generation together. Test upgrades against an isolated production-data copy before promotion. See the [DigitalOcean deployment runbook](../../infra/digitalocean/deployment.md); the local `docker run` example below does not reproduce the production gateway or credential boundaries.
+Update official Strapi core/plugins/providers/type generation together. Test upgrades against an isolated production-data copy before promotion. See the [generic release requirements](../../scripts/release/README.md); the local `docker run` example below does not reproduce the production gateway or credential boundaries.
 
 ### Run
 
@@ -126,7 +126,7 @@ To change port, set `PORT` env variable in `.env` file and in `docker run` comma
 
 ### Connect to Postgres in Docker
 
-Strapi requires PostgreSQL before it starts. Local development uses Docker PostgreSQL; production uses DigitalOcean Managed PostgreSQL 17 with a standby. [app.compose.yml](../../infra/digitalocean/app.compose.yml) defines the production CMS alongside the UI and independent workers, with runtime env files and read-only CA mounts. It deliberately does not start a local production database container.
+Strapi requires PostgreSQL before it starts. Local development uses Docker PostgreSQL; production uses DigitalOcean Managed PostgreSQL 17 with a standby. The private operator Compose configuration defines the production CMS alongside the UI and independent workers, with runtime env files and read-only CA mounts. It deliberately does not start a local production database container.
 
 A) If you have Postgres connection string or credentials, set them in `.env` file before running Strapi container. Example:
 
@@ -154,7 +154,7 @@ docker run -it --rm --name starter-strapi -p 1337:1337 --env-file apps/strapi/.e
 
 ### Pages hierarchy
 
-Documentation is in [/docs/pages-hierarchy.md](../../docs/pages-hierarchy.md)
+Documentation is in [/docs/pages-hierarchy.md](../docs/docs/pages-hierarchy.md)
 
 #### Link
 

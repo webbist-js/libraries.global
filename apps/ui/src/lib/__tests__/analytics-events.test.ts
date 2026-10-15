@@ -28,8 +28,12 @@ function fixture(pathname = "/libraries") {
   const controller = installGoogleAnalytics(browser)!
   const events = () =>
     (browser.dataLayer ?? [])
-      .map((entry) => Array.from(entry as IArguments))
-      .filter((entry) => entry[0] === "event")
+      .filter((entry) => (entry as { event?: string }).event === "lg_analytics")
+      .map((entry) => [
+        "event",
+        (entry as { analytics: { event_name: string } }).analytics.event_name,
+        (entry as { analytics: unknown }).analytics,
+      ])
   const named = (name: string) => events().filter((entry) => entry[1] === name)
 
   return { browser, controller, named, append, marker }
@@ -57,7 +61,7 @@ describe("public analytics events", () => {
     expect(named("library_action")).toHaveLength(0)
   })
 
-  it("sends one Google event and one GTM envelope with only allowed public context", () => {
+  it("sends one GTM envelope and no direct Google event with only allowed public context", () => {
     const { controller, browser, named } = fixture()
     controller.setConsent(true)
     expect(
@@ -87,7 +91,7 @@ describe("public analytics events", () => {
         ...action,
         event_name: "library_action",
         schema_version: 1,
-        transport: "direct",
+        transport: "gtm",
       },
     })
     expect(JSON.stringify(browser.dataLayer)).not.toMatch(
@@ -183,7 +187,7 @@ describe("public analytics events", () => {
       browser.dataLayer!.filter(
         (entry) => (entry as { analytics?: unknown }).analytics === null
       )
-    ).toHaveLength(messages.length)
+    ).toHaveLength(messages.length + 1)
     const persistent = browser
       .dataLayer!.map((entry) => Array.from(entry as IArguments))
       .filter((entry) => entry[0] === "set" || entry[0] === "config")

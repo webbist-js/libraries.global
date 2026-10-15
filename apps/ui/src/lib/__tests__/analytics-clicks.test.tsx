@@ -31,8 +31,15 @@ function setup() {
   remove = installAnalyticsClickTracking(window)
   const named = (name: string) =>
     window
-      .dataLayer!.map((entry) => Array.from(entry as IArguments))
-      .filter((entry) => entry[0] === "event" && entry[1] === name)
+      .dataLayer!.filter(
+        (entry) => (entry as { event?: string }).event === "lg_analytics"
+      )
+      .map((entry) => [
+        "event",
+        (entry as { analytics: { event_name: string } }).analytics.event_name,
+        (entry as { analytics: unknown }).analytics,
+      ])
+      .filter((entry) => entry[1] === name)
 
   return { controller, named }
 }
