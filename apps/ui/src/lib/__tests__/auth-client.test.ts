@@ -8,6 +8,21 @@ afterEach(() => {
 })
 
 describe("browser authentication origin", () => {
+  it("keeps mobile session requests on the mobile host even with a main-site build URL", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://libraries.global")
+    vi.stubGlobal("window", {
+      location: { origin: "https://mobile.libraries.global" },
+    })
+    const fetchMock = vi.fn(async () => Response.json({ success: true }))
+    vi.stubGlobal("fetch", fetchMock)
+    const { authClient } = await import("../auth-client")
+    await authClient.signOut()
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const [url] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(String(url)).toBe(
+      "https://mobile.libraries.global/api/auth/sign-out"
+    )
+  })
   it("starts Google sign-in on the current site when the build has no public URL", async () => {
     for (const key of [
       "NEXT_PUBLIC_APP_URL",

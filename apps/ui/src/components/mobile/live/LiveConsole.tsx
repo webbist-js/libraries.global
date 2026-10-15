@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Sheet } from "@/components/ds/Sheet"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
+import { mobileAppConfig, mobilePath } from "@/lib/mobile-app"
 import { applyQueuedCheckin } from "@/lib/mobile-live/optimistic"
 import {
   clearLiveQueue,
@@ -56,17 +57,23 @@ export function LiveConsole({
   locale,
   role,
   canGoLive,
+  mobileApp = false,
 }: {
   readonly initial: LiveSettingsResponse
   readonly locale: string
   readonly role: string
   readonly canGoLive: boolean
+  readonly mobileApp?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
   const id = initial.library.id,
     tt = initial.library.timetable
-  const staffHref = useStaffLibraryHref(id)
+  const localStaffHref = useStaffLibraryHref(id)
+  const site = mobileApp
+    ? `${mobileAppConfig()!.site.origin}${locale === "en" ? "" : `/${locale}`}`
+    : ""
+  const staffHref = (suffix = "") => `${site}${localStaffHref(suffix)}`
   const [live, setLive] = useState<ConsoleSession | null>(null),
     [token, setToken] = useState<string | null>(null)
   const [startedElsewhere, setStartedElsewhere] = useState(
@@ -573,7 +580,7 @@ export function LiveConsole({
               <li>
                 <Link
                   className="flex min-h-11 items-center rounded-[10px] px-3 py-2 no-underline hover:bg-(--t-bg-surface)"
-                  href="/live"
+                  href={mobileApp ? "/" : "/live"}
                 >
                   Switch library
                 </Link>
@@ -604,7 +611,9 @@ export function LiveConsole({
                     sessionStorage.removeItem(storageKey(id))
                     clearLiveQueue().catch(() => {})
                     authClient.signOut().then(() => {
-                      window.location.href = `/${locale}/live`
+                      window.location.href = mobileApp
+                        ? mobilePath(undefined, locale)
+                        : `/${locale}/live`
                     })
                   }}
                 >

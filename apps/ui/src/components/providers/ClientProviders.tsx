@@ -18,6 +18,7 @@ const queryClient = new QueryClient()
 export function ClientProviders({
   children,
   nonce,
+  liveConsole = false,
 }: {
   readonly children: React.ReactNode
   /**
@@ -25,6 +26,7 @@ export function ClientProviders({
    * bootstrap script, and without the nonce `script-src` blocks it.
    */
   readonly nonce?: string
+  readonly liveConsole?: boolean
 }) {
   useTranslatedZod(z)
 
@@ -39,7 +41,11 @@ export function ClientProviders({
         nonce={nonce}
       >
         <QueryClientProvider client={queryClient}>
-          <NotificationProvider>{children}</NotificationProvider>
+          {liveConsole ? (
+            children
+          ) : (
+            <NotificationProvider>{children}</NotificationProvider>
+          )}
         </QueryClientProvider>
       </ThemeProvider>
     </>

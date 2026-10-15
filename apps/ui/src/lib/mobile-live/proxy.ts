@@ -8,6 +8,7 @@ import { auth, authDbPool } from "@/lib/auth"
 import { isDocumentIdParam, readJsonCapped } from "@/lib/bridge-params"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { readLiveProof } from "@/lib/live-proof"
+import { mobileRequestOrigin } from "@/lib/mobile-app"
 import { isSameOrigin } from "@/lib/same-origin"
 
 export const LIVE_HEADERS = {
@@ -36,7 +37,7 @@ export async function liveRateLimit(
 }
 
 export async function liveIdentity(req: Request, mutation = true) {
-  if (mutation && !isSameOrigin(req, process.env.APP_PUBLIC_URL))
+  if (mutation && !isSameOrigin(req, mobileRequestOrigin(req)))
     return { error: errorResponse("cross_site_request", 403) }
   const session = await auth.api
     .getSession({ headers: req.headers })

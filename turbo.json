@@ -3,6 +3,7 @@
   "globalDependencies": ["**/.env", "**/.env.*local"],
   "globalEnv": [
     "APP_PUBLIC_URL",
+    "MOBILE_APP_URL",
     "PUBLIC_CANONICAL_ORIGIN",
     "STRAPI_URL",
     "STRAPI_REST_READONLY_API_KEY",

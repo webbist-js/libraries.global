@@ -1,11 +1,13 @@
 import { fromMinutes, localDateTime, scheduleState } from "@repo/shared-data"
 import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { mobileAppConfig, mobilePath, mobileSignInHref } from "@/lib/mobile-app"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { Link } from "@/lib/navigation"
 import { greetingFor, weekdayCopy } from "@/lib/staff/format"
@@ -20,7 +22,14 @@ export default async function LiveEntry({
   const tUi = await getUiTranslations("ui")
 
   const { locale } = await params
-  const session = await getSessionSSR(await headers())
+  const requestHeaders = await headers()
+  const mobile = requestHeaders.get("x-mobile-app") === "true"
+  const site = mobile
+    ? `${mobileAppConfig()!.site.origin}${locale === "en" ? "" : `/${locale}`}`
+    : ""
+  const session = await getSessionSSR(requestHeaders)
+  if (mobile && !session?.user)
+    redirect(mobileSignInHref(mobilePath(undefined, locale)))
   if (!session?.user)
     return (
       <div className="live-controls">
@@ -96,7 +105,7 @@ export default async function LiveEntry({
             Claim your mobile library first. Once a Moderator approves the
             claim, an owner of the library can allow live updates.
           </p>
-          <Link className="live-button rounded-full" href="/staff">
+          <Link className="live-button rounded-full" href={`${site}/staff`}>
             Go to the Staff area
           </Link>
         </section>
@@ -140,8 +149,10 @@ export default async function LiveEntry({
                 className={`live-button rounded-full ${l.canGoLive && result.body?.settings.enabled && !result.body.activeSession ? "live-primary" : ""}`}
                 href={
                   l.canGoLive && result.body?.settings.enabled
-                    ? `/live/${l.id}`
-                    : staffLibraryHref(l.slug, "/live")
+                    ? mobile
+                      ? `/${l.id}`
+                      : `/live/${l.id}`
+                    : `${site}${staffLibraryHref(l.slug, "/live")}`
                 }
               >
                 {result.body?.activeSession
@@ -157,7 +168,7 @@ export default async function LiveEntry({
       <p className="mt-4 text-[13px]" style={{ color: T.ink.dim }}>
         Also on the library page, in the “You run this mobile library” card.
       </p>
-      <Link className="live-button mt-4 rounded-full" href="/staff">
+      <Link className="live-button mt-4 rounded-full" href={`${site}/staff`}>
         {tUi("staff_area")}
       </Link>
     </>

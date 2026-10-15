@@ -94,6 +94,7 @@ export default async function RootLayout({
 
   const requestHeaders = await headers()
   const liveConsole = requestHeaders.get("x-live-console") === "true"
+  const mobileApp = requestHeaders.get("x-mobile-app") === "true"
   const betaShell = requestHeaders.get("x-beta-public-shell") === "true"
   const nonce = requestHeaders.get("x-nonce") ?? undefined
   const contactAliases = [
@@ -137,7 +138,11 @@ export default async function RootLayout({
     )
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      data-mobile-app={mobileApp ? "true" : undefined}
+    >
       <head>
         <PublicRuntimeConfig nonce={nonce} />
       </head>
@@ -156,7 +161,7 @@ export default async function RootLayout({
         <ServerProviders>
           <ContactModalProvider aliases={contactAliases}>
             {!liveConsole && <StrapiPreviewListener />}
-            <ClientProviders nonce={nonce}>
+            <ClientProviders nonce={nonce} liveConsole={liveConsole}>
               <EventModalProvider>
                 <div className="relative flex min-h-screen flex-col">
                   <div
@@ -185,7 +190,9 @@ export default async function RootLayout({
                 {!liveConsole && <EventModal />}
                 {!liveConsole && <StaffDrawerMount />}
                 {!liveConsole && <EditorialDrawerMount />}
-                {betaEnabled() && <BetaFeedback label={tUi("feedback")} />}
+                {betaEnabled() && !liveConsole && (
+                  <BetaFeedback label={tUi("feedback")} />
+                )}
               </EventModalProvider>
             </ClientProviders>
           </ContactModalProvider>
@@ -214,6 +221,7 @@ function PublicRuntimeConfig({ nonce }: { nonce?: string }) {
     "DEBUG_STRAPI_CLIENT_API_CALLS",
     "SHOW_NON_BLOCKING_ERRORS",
     "APP_PUBLIC_URL",
+    "MOBILE_APP_URL",
   ]
 
   return (

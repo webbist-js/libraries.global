@@ -1,20 +1,29 @@
 "use client"
 import { useEffect } from "react"
 
+import { isLivePagePath } from "@/lib/live-path"
+
 import { registerLiveIcons } from "./icons"
 
 // The live layout renders this on every console page, so the icons are in
 // memory before anything under it mounts.
 registerLiveIcons()
 
-export function LiveInstall({ locale }: { readonly locale: string }) {
+export function LiveInstall({
+  locale,
+  mobileApp = false,
+}: {
+  readonly locale: string
+  readonly mobileApp?: boolean
+}) {
   useEffect(() => {
     const navigation = performance.getEntriesByType("navigation")[0] as
       | PerformanceNavigationTiming
       | undefined
     if (
       navigation &&
-      !/^\/(?:en\/|cs\/)?live(?:\/|$)/.test(new URL(navigation.name).pathname)
+      !mobileApp &&
+      !isLivePagePath(new URL(navigation.name).pathname)
     ) {
       window.location.replace(window.location.href)
 
@@ -22,9 +31,11 @@ export function LiveInstall({ locale }: { readonly locale: string }) {
     }
     if ("serviceWorker" in navigator)
       navigator.serviceWorker
-        .register(`/live-sw.js?locale=${locale}`, { scope: `/${locale}/live` })
+        .register(`/live-sw.js?locale=${locale}`, {
+          scope: mobileApp ? "/" : `/${locale}/live`,
+        })
         .catch(() => {})
-  }, [locale])
+  }, [locale, mobileApp])
 
   return null
 }

@@ -1,11 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 
 import { useMounted } from "@/hooks/useMounted"
 import { useStaff } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
+import { mobileConsoleHref } from "@/lib/mobile-app"
 import { Link } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
@@ -35,6 +36,7 @@ export function StaffLibraryEntry(props: {
   readonly hasActiveFeed?: boolean | null
 }) {
   const tUi = useUiTranslations("ui")
+  const locale = useLocale()
 
   const staff = useStaff()
   const mounted = useMounted()
@@ -107,7 +109,7 @@ export function StaffLibraryEntry(props: {
           <Link
             className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base }}
-            href={`/live/${props.libraryDocumentId}`}
+            href={mobileConsoleHref(props.libraryDocumentId, locale)}
           >
             <Icon
               aria-hidden="true"
