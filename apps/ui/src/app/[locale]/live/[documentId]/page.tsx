@@ -1,5 +1,5 @@
 import { headers } from "next/headers"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
@@ -8,6 +8,7 @@ import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
+import { mobilePath, mobileSignInHref } from "@/lib/mobile-app"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { Link } from "@/lib/navigation"
 import { fetchStaff } from "@/lib/staff-proxy"
@@ -21,7 +22,11 @@ export default async function ConsolePage({
 
   const { locale, documentId } = await params
   if (!isDocumentIdParam(documentId)) notFound()
-  const session = await getSessionSSR(await headers())
+  const requestHeaders = await headers()
+  const mobile = requestHeaders.get("x-mobile-app") === "true"
+  const session = await getSessionSSR(requestHeaders)
+  if (mobile && !session?.user)
+    redirect(mobileSignInHref(mobilePath(documentId, locale)))
   if (!session?.user)
     return (
       <div className="live-controls">
@@ -55,7 +60,14 @@ export default async function ConsolePage({
         </p>
         <div className="flex flex-wrap gap-3">
           {/* A plain GET form, so the retry works before the console's scripts load. */}
-          <form action={`/${locale}/live/${documentId}`} method="get">
+          <form
+            action={
+              mobile
+                ? mobilePath(documentId, locale)
+                : `/${locale}/live/${documentId}`
+            }
+            method="get"
+          >
             <button
               className="live-button live-primary rounded-full"
               type="submit"
@@ -63,7 +75,10 @@ export default async function ConsolePage({
               {tUi("try_again")}{" "}
             </button>
           </form>
-          <Link className="live-button rounded-full" href="/live">
+          <Link
+            className="live-button rounded-full"
+            href={mobile ? "/" : "/live"}
+          >
             Back to your libraries
           </Link>
         </div>
@@ -76,6 +91,7 @@ export default async function ConsolePage({
       locale={locale}
       role={library.role}
       canGoLive={library.canGoLive}
+      mobileApp={mobile}
     />
   )
 }

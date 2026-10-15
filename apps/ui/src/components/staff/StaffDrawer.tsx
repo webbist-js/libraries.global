@@ -16,6 +16,7 @@ import { useEntitlements, useStaff } from "@/lib/access-client"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
 import { searchLibraryNames } from "@/lib/meilisearch"
+import { mobileConsoleHref } from "@/lib/mobile-app"
 import { Link } from "@/lib/navigation"
 import { useCurrentLibrary } from "@/lib/staff/current-library"
 import {
@@ -280,7 +281,7 @@ export function StaffDrawer() {
               </div>
               {canGoLive ? (
                 <Link
-                  href={`/live/${id}`}
+                  href={mobileConsoleHref(id, locale)}
                   className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
                 >
                   {tUi("go_live")}

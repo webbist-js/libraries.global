@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { fireEvent, render, screen, waitFor } from "@/test/render"
 
+// Form behavior does not depend on Iconify's remote icon requests.
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }))

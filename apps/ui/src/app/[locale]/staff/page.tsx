@@ -1,7 +1,10 @@
 import { Icon } from "@iconify/react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import {
+  getLocale,
+  getTranslations as getUiTranslations,
+} from "next-intl/server"
 
 import { Badge, Notice, PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
@@ -10,6 +13,7 @@ import { YourTeamCard } from "@/components/staff/YourTeamCard"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
+import { mobileConsoleHref } from "@/lib/mobile-app"
 import { Link } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import { isActiveTeam } from "@/lib/staff/team-status"
@@ -46,6 +50,7 @@ export default async function StaffLibrariesPage({
   readonly searchParams: Promise<{ oauth?: string | string[] }>
 }) {
   const tUi = await getUiTranslations("ui")
+  const locale = await getLocale()
 
   const [session, query] = await Promise.all([
     getSessionSSR(await headers()),
@@ -245,7 +250,7 @@ export default async function StaffLibrariesPage({
                     </Link>
                     {mobile && lib.canGoLive ? (
                       <Link
-                        href={`/live/${lib.id}`}
+                        href={mobileConsoleHref(lib.id, locale)}
                         className={QUICK_LINK}
                         style={{ borderColor: T.border.hi, color: T.ink.base }}
                       >

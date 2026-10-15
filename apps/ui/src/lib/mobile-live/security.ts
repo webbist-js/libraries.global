@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { isLivePath } from "@/lib/live-path"
+import { mobileAppConfig } from "@/lib/mobile-app"
 
 export { isLivePath }
+const consoleRequest = (req: NextRequest) =>
+  isLivePath(req.nextUrl.pathname) ||
+  req.headers.get("host") === mobileAppConfig()?.mobile.host
+
 export function liveSecurityRequest(req: NextRequest): NextRequest {
   const requestHeaders = new Headers(req.headers)
   requestHeaders.delete("x-live-console")
   requestHeaders.delete("x-nonce")
   requestHeaders.delete("Content-Security-Policy")
-  if (!isLivePath(req.nextUrl.pathname))
+  if (!consoleRequest(req))
     return new NextRequest(req, { headers: requestHeaders })
   const nonce = btoa(
     String.fromCodePoint(...crypto.getRandomValues(new Uint8Array(18)))
@@ -44,8 +49,9 @@ export function liveSecurityResponse(
     "x-middleware-override-headers",
     [...names].filter(Boolean).join(",")
   )
-  if (!isLivePath(req.nextUrl.pathname)) return response
+  if (!consoleRequest(req)) return response
   response.headers.set("Content-Security-Policy", liveCsp(nonce))
+  response.headers.set("X-Robots-Tag", "noindex, nofollow")
   response.headers.set("Referrer-Policy", "no-referrer")
   response.headers.set("X-Frame-Options", "DENY")
   response.headers.set("Permissions-Policy", "geolocation=(self)")
