@@ -8,6 +8,7 @@ import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { requireEntitlementForLibrary } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
+import { mobileConsoleHref } from "@/lib/mobile-app"
 import { Link } from "@/lib/navigation"
 import { healthNote } from "@/lib/staff/format"
 import { staffLibraryHref } from "@/lib/staff/paths"
@@ -74,7 +75,7 @@ export default async function StaffOverviewPage({
                 {
                   icon: "mdi:broadcast",
                   label: tUi("go_live"),
-                  href: `/live/${documentId}`,
+                  href: mobileConsoleHref(documentId, locale),
                   tag: "Mobile",
                 },
               ]

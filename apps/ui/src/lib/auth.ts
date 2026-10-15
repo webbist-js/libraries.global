@@ -25,6 +25,7 @@ import {
 } from "./email"
 import { TERMS_VERSION } from "./legal-consent"
 import { liveCookieOptions, signLiveProof } from "./live-proof"
+import { MOBILE_SESSION_COOKIE, mobileAppConfig } from "./mobile-app"
 import {
   confirmationLocked,
   recordFailure,
@@ -109,10 +110,27 @@ async function syncUserToStrapi(user: {
   }
 }
 
+const mobile = mobileAppConfig()
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
-  trustedOrigins: [process.env.APP_PUBLIC_URL ?? "http://localhost:3000"],
+  trustedOrigins: [
+    process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
+    ...(mobile ? [mobile.mobile.origin] : []),
+  ],
+  ...(mobile
+    ? {
+        advanced: {
+          cookies: {
+            session_token: {
+              name: MOBILE_SESSION_COOKIE,
+              attributes: { domain: mobile.cookieDomain },
+            },
+          },
+        },
+      }
+    : {}),
   database: pool,
   user: {
     deleteUser: {
@@ -256,7 +274,9 @@ export const auth = betterAuth({
   plugins: [
     passkey({
       rpName: "Libraries Global",
-      origin: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
+      origin: mobile
+        ? [mobile.site.origin, mobile.mobile.origin]
+        : (process.env.APP_PUBLIC_URL ?? "http://localhost:3000"),
     }),
     magicLink({
       // Sign-in only: new accounts must come through a flow that shows the

@@ -1032,7 +1032,10 @@ export default ({ strapi }: { strapi: any }) => {
       if (!base) throw new LiveError(503, "public_url_missing")
       if (!emailConfigured()) throw new LiveError(503, "email_unavailable")
       const language = isSupportedLocale(locale) ? locale : DEFAULT_LOCALE
-      const url = `${base}/${language}/live/${id}`
+      const mobile = process.env.MOBILE_APP_URL
+      const url = mobile
+        ? `${mobile.replace(/\/$/, "")}${language === DEFAULT_LOCALE ? "" : `/${language}`}/${id}`
+        : `${base}/${language}/live/${id}`
       await strapi
         .plugin("email")
         .service("email")

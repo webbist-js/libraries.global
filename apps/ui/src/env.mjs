@@ -26,6 +26,7 @@ export const env = createEnv({
     STRIPE_PRICE_SUPPORTER_ANNUAL: z.string().optional(),
     STRIPE_PORTAL_CONFIGURATION: z.string().optional(),
     APP_PUBLIC_URL: z.string().url().optional(),
+    MOBILE_APP_URL: z.string().url().optional(),
     DEBUG_STATIC_PARAMS_GENERATION: optionalZodBoolean(),
     SHOW_NON_BLOCKING_ERRORS: optionalZodBoolean(),
     DEBUG_STRAPI_CLIENT_API_CALLS: optionalZodBoolean(),
@@ -100,6 +101,7 @@ export const env = createEnv({
     STRIPE_PORTAL_CONFIGURATION: process.env.STRIPE_PORTAL_CONFIGURATION,
     // server
     APP_PUBLIC_URL: process.env.APP_PUBLIC_URL,
+    MOBILE_APP_URL: process.env.MOBILE_APP_URL,
     DEBUG_STATIC_PARAMS_GENERATION: process.env.DEBUG_STATIC_PARAMS_GENERATION,
     DEBUG_STRAPI_CLIENT_API_CALLS: process.env.DEBUG_STRAPI_CLIENT_API_CALLS,
     SHOW_NON_BLOCKING_ERRORS: process.env.SHOW_NON_BLOCKING_ERRORS,

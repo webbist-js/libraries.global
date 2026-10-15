@@ -10,6 +10,7 @@ import { scrubSentryEvent } from "@/lib/sentry-scrub"
 
 // The live console carries location and confirmation codes: no replay there.
 if (
+  document.documentElement.dataset.mobileApp !== "true" &&
   !isLivePagePath(window.location.pathname) &&
   !/^\/(?:(?:en|cs|fr)\/)?beta\/?$/.test(window.location.pathname)
 )
