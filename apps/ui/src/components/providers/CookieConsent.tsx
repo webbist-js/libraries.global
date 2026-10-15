@@ -123,7 +123,7 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
       <button
         ref={settingsButton}
         type="button"
-        className="fixed bottom-3 left-3 z-[70] min-h-11 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-4 text-xs text-(--t-ink-base) shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+        className="fixed bottom-3 left-3 z-[70] min-h-[44px] rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-4 text-xs text-(--t-ink-base) shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4"
         onClick={() => setOpen(true)}
         aria-expanded={visible}
         aria-controls={visible ? "cookie-choices" : undefined}
