@@ -12,6 +12,7 @@ import {
 } from "@/components/staff/knowledge-links"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { mobileConsoleHref } from "@/lib/mobile-app"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { loadStaffPage } from "@/lib/staff/server"
 import type { StaffTeam } from "@/lib/staff/types"
@@ -50,7 +51,10 @@ export default async function LiveSettingsPage({
         status={settings.body ? team.status : settings.status}
       />
     )
-  const consoleUrl = `${process.env.APP_PUBLIC_URL ?? "http://localhost:3000"}/${locale}/live/${documentId}`
+  const consoleUrl = new URL(
+    mobileConsoleHref(documentId, locale),
+    process.env.APP_PUBLIC_URL ?? "http://localhost:3000"
+  ).href
 
   return (
     <LiveSettings

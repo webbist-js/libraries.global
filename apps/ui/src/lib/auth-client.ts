@@ -9,8 +9,11 @@ import { createAuthClient } from "better-auth/react"
 import type { auth } from "./auth"
 
 export const authClient = createAuthClient({
-  // Better Auth uses the browser's current origin when no public URL is built in.
-  baseURL: process.env.NEXT_PUBLIC_APP_URL,
+  // Each app host calls its own endpoints, including when an older build URL is set.
+  baseURL:
+    typeof window === "undefined"
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : window.location.origin,
   plugins: [
     passkeyClient(),
     magicLinkClient(),

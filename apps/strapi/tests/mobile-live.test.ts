@@ -177,6 +177,24 @@ const start = (
 
 describe("live identity and library gates", () => {
   it.each(["en", "cs", "fr"])(
+    "uses the dedicated mobile origin for %s console emails",
+    async (locale) => {
+      const { live, services } = setup()
+      const send = vi.fn().mockResolvedValue({})
+      services["email.email"] = { send }
+      vi.stubEnv("APP_PUBLIC_URL", "https://libraries.global")
+      vi.stubEnv("MOBILE_APP_URL", "https://mobile.libraries.global")
+      vi.stubEnv("SMTP_HOST", "smtp.fixture.test")
+      vi.stubEnv("SMTP_USER", "fixture")
+      vi.stubEnv("SMTP_PASS", "fixture")
+      await live.emailLink("owner", id, "owner@example.org", locale)
+      expect(send.mock.calls[0]![0].html).toContain(
+        `https://mobile.libraries.global${locale === "en" ? "" : `/${locale}`}/${id}`
+      )
+      expect(send.mock.calls[0]![0].html).not.toContain(`/live/${id}`)
+    }
+  )
+  it.each(["en", "cs", "fr"])(
     "sends the requested %s console link with branded HTML and requires a provider",
     async (locale) => {
       const { live, services } = setup()
