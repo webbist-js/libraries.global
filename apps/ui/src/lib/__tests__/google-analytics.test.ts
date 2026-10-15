@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   analyticsPageAllowed,
-  GOOGLE_ANALYTICS_ID,
+  GOOGLE_TAG_MANAGER_ID,
   installGoogleAnalytics,
   productionAnalyticsEnabled,
 } from "../google-analytics"
@@ -20,7 +20,14 @@ function fixture(origin = "https://libraries.global", pathname = "/beta") {
   } as unknown as Window
   const commands = () =>
     (browser.dataLayer ?? []).map((entry) => Array.from(entry as IArguments))
-  const views = () => commands().filter((entry) => entry[1] === "page_view")
+  const views = () =>
+    (browser.dataLayer ?? [])
+      .filter((entry) => (entry as { event?: string }).event === "lg_analytics")
+      .map((entry) => [
+        "event",
+        "page_view",
+        (entry as { analytics: unknown }).analytics,
+      ])
 
   return { browser, append, commands, views }
 }
@@ -73,7 +80,7 @@ describe("production analytics", () => {
     expect(append).toHaveBeenCalledTimes(1)
     expect(append.mock.calls[0]?.[0]).toMatchObject({
       async: true,
-      src: `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`,
+      src: `https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_MANAGER_ID}`,
       nonce: "test-nonce",
     })
     expect(views()).toHaveLength(1)

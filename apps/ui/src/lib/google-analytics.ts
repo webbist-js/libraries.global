@@ -6,6 +6,7 @@ import {
 } from "@/lib/analytics-events"
 
 export const GOOGLE_ANALYTICS_ID = "G-8M465CHXJ6"
+export const GOOGLE_TAG_MANAGER_ID = "GTM-M8GLG9F2"
 export const ANALYTICS_ORIGIN = "https://libraries.global"
 const DISABLE_KEY = "ga-disable-G-8M465CHXJ6"
 const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
@@ -61,12 +62,19 @@ function pageTypeFor(path: string): string {
   return "other"
 }
 
+type PublicPageContext = Record<string, string> & {
+  page_location: string
+  page_title: string
+  page_type: string
+  content_locale: string
+}
+
 function pageContext(browser: Window) {
   const { origin, pathname } = browser.location
   const path = analyticsPathKey(pathname)
   const pageType = pageTypeFor(path)
   const locale = pathname.match(LOCALE_PREFIX)?.[0].slice(1) ?? "en"
-  const context: Record<string, string> = {
+  const context: PublicPageContext = {
     page_location: `${origin}${pathname}`,
     page_title: pageType,
     page_type: pageType,
@@ -112,7 +120,7 @@ declare global {
   }
 }
 
-/** The consent provider owns persistence; this controller starts denied. */
+/** Basic consent mode: even the GTM container waits for an explicit grant. */
 export function installGoogleAnalytics(
   browser: Window,
   nonce?: string
@@ -140,6 +148,7 @@ export function installGoogleAnalytics(
     browser.dataLayer!.push(arguments)
   }
   const gtag = browser.gtag
+  // Queued before loading GTM, following Google's basic consent-mode sequence.
   gtag("consent", "default", denied)
 
   const pause = () => {
@@ -155,23 +164,26 @@ export function installGoogleAnalytics(
     !paused &&
     browser.location.origin === ANALYTICS_ORIGIN &&
     analyticsPageAllowed(browser.location.pathname)
-  const emit = (name: string, context: Record<string, string>) => {
-    // Mirror only consented, sanitized events for the later GTM takeover.
-    // The direct Google tag remains the single collection owner for now.
+  const envelope = (
+    event: string,
+    context: Record<string, string>,
+    name?: string
+  ) => {
     browser.dataLayer!.push(
       { analytics: null },
       {
-        event: "lg_analytics",
+        event,
         analytics: {
-          event_name: name,
+          ...(name ? { event_name: name } : {}),
           ...context,
           schema_version: 1,
-          transport: "direct",
+          transport: "gtm",
         },
       }
     )
-    gtag("event", name, { ...context, send_to: GOOGLE_ANALYTICS_ID })
   }
+  const emit = (name: string, context: Record<string, string>) =>
+    envelope("lg_analytics", context, name)
   const pageView = () => {
     const { origin, pathname } = browser.location
     if (
@@ -203,7 +215,7 @@ export function installGoogleAnalytics(
         // An invalid referrer provides no useful acquisition information.
       }
     }
-    const context: Record<string, string> = {
+    const context = {
       ...pageContext(browser),
       page_referrer: referrer,
     }
@@ -218,19 +230,17 @@ export function installGoogleAnalytics(
     }
     gtag("set", baseContext)
     if (!loaded) {
-      gtag("js", new Date())
-      gtag("config", GOOGLE_ANALYTICS_ID, {
-        ...baseContext,
-        send_page_view: false,
-        allow_google_signals: false,
-        allow_ad_personalization_signals: false,
+      browser.dataLayer!.push({
+        "gtm.start": Date.now(),
+        event: "gtm.js",
       })
       const script = browser.document.createElement("script")
       script.async = true
-      script.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_ID}`
+      script.src = `https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_MANAGER_ID}`
       if (nonce) script.nonce = nonce
       browser.document.head.append(script)
       loaded = true
+      envelope("lg_analytics_ready", baseContext)
     }
     emit("page_view", context)
     previousPage = page

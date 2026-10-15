@@ -21,13 +21,11 @@
 
 ## Production infrastructure and delivery
 
-The closed beta runs on DigitalOcean in London. An app Droplet hosts Caddy HTTPS, Next.js/Better Auth, private Strapi and independent event/Atlas workers. A separate search Droplet holds persistent Meilisearch data behind a private TLS proxy. PostgreSQL 17 has a managed standby. Spaces holds CDN-backed media/Atlas objects and private versioned backups. The app/search servers each have one instance.
+The closed beta runs on DigitalOcean with a Next.js frontend, Strapi CMS, event/Atlas workers, PostgreSQL, Meilisearch and object storage. Production secrets, host/network configuration and recovery evidence stay in private operator storage and outside images.
 
-Production uses Compose host networking with loopback/private listeners and Cloud Firewalls. CMS administration is through an SSH tunnel, and runtime credentials/CA files stay outside images. Billing and retention are authenticated systemd jobs, not Vercel cron jobs. The deployed application still has invitation access and live purchases disabled.
+Feature PRs target protected `dev`. A reviewed PR from `dev` or a release branch into protected `main` prepares production delivery. The active publisher waits for CI and all CodeQL analyses on the exact merged commit, builds immutable UI/CMS/worker images, and publishes relative digests. The operator-installed pull agent validates accepted candidates and deployed health; failed promotion restores the previous image selection. Data, dependency, authentication and billing changes need additional private acceptance. See [release helpers](../../../scripts/release/README.md).
 
-GitHub validates protected `dev` commits through CI and CodeQL. The prepared manual publisher builds UI/CMS/worker images and records full digest references; the operator promotes accepted images over SSH using Compose health checks. PR merge, image publication and deployment are separate operations. The publisher has not run yet, and data upgrades/rollback require acceptance beyond CI.
-
-Host-specific infrastructure and delivery runbooks are maintained privately by the operator. Root `docs/` contains local plans and acceptance records; it is gitignored and is separate from this Docusaurus documentation.
+The beta gate and sandbox billing remain enabled. Neither a code release nor an analytics configuration change opens public access or live payments. Root `docs/` is private maintainer material; the public developer documentation lives here.
 
 ## Page Builder
 

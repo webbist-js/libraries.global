@@ -26,7 +26,7 @@ await client.fetchOneByFullPath("api::page.page", fullPath, {
 })
 ```
 
-Population uses `on` pattern for dynamic zones — see [Page Builder docs](../../docs/page-builder.md#population-rules).
+Population uses `on` pattern for dynamic zones — see [Page Builder docs](../docs/docs/page-builder.md#population-rules).
 
 ## Localization
 
@@ -53,7 +53,7 @@ Or manually:
 4. Generate types: `pnpm generate:types`
 5. Create React component in `apps/ui` — see [apps/ui/AGENTS.md](../ui/AGENTS.md)
 
-Full workflow: [Page Builder docs](../../docs/page-builder.md#adding-new-components)
+Full workflow: [Page Builder docs](../docs/docs/page-builder.md#adding-new-components)
 
 ## Page Hierarchy
 
@@ -61,6 +61,6 @@ The original starter-kit hierarchy/fullpath job queue has been removed from this
 
 ## Related Documentation
 
-- [Strapi Schemas](../../docs/strapi-schemas.md) — Schema attributes, localization, lifecycle hooks
-- [Page Builder](../../docs/page-builder.md) — Component registry and rendering
-- [Pages Hierarchy](../../docs/pages-hierarchy.md) — URL structure and redirects
+- [Strapi Schemas](../docs/docs/strapi-schemas.md) — Schema attributes, localization, lifecycle hooks
+- [Page Builder](../docs/docs/page-builder.md) — Component registry and rendering
+- [Pages Hierarchy](../docs/docs/pages-hierarchy.md) — URL structure and redirects
