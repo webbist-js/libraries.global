@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation"
 import { type Locale, useTranslations } from "next-intl"
-import React, { useTransition } from "react"
+import React from "react"
 
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
 import {
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
-import { routing, usePathname, useRouter } from "@/lib/navigation"
+import { getPathname, routing, usePathname } from "@/lib/navigation"
 
 const localeTranslation = { cs: "Čeština", en: "English", fr: "Français" }
 
@@ -41,12 +41,9 @@ function SuspensedLocaleSwitcher({
   locale: Locale
   triggerClassName?: string
 }) {
-  // prevent the locale switch from blocking the UI thread
-  const [, startTransition] = useTransition()
   const t = useTranslations("translation")
 
   const pathname = usePathname()
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const handleLocaleChange = (locale: Locale) => {
@@ -57,13 +54,15 @@ function SuspensedLocaleSwitcher({
     })
     const queryParams = searchParams.toString()
 
-    // next-intl router.replace does not persist query params
-    startTransition(() => {
-      router.replace(
-        queryParams.length > 0 ? `${pathname}?${queryParams}` : pathname,
-        { locale }
-      )
+    // A document request clears cached locale redirects. Always include the
+    // prefix so middleware updates the language cookie before canonicalising
+    // English back to an unprefixed URL.
+    const target = getPathname({
+      href: queryParams.length > 0 ? `${pathname}?${queryParams}` : pathname,
+      locale,
+      forcePrefix: true,
     })
+    window.location.replace(`${target}${window.location.hash}`)
   }
 
   return (
