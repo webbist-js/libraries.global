@@ -24,6 +24,7 @@ export const {
   redirect: _redirect,
   usePathname,
   useRouter,
+  getPathname,
 } = createNavigation(routing)
 
 // Help TypeScript detect unreachable code
