@@ -122,9 +122,9 @@ export default ({ strapi }: { strapi: any }) => {
           ]
         : []
       if (query && ids.length === 0) return []
-      const rows = (await grants().findMany({
-        filters: ids.length ? { baUserId: { $in: ids } } : {},
-        fields: [
+      const rows = (await strapi.db.query(ENTITLEMENT_GRANT).findMany({
+        where: ids.length ? { baUserId: { $in: ids } } : {},
+        select: [
           "documentId",
           "baUserId",
           "plan",
@@ -134,7 +134,7 @@ export default ({ strapi }: { strapi: any }) => {
           "expiresAt",
           "createdAt",
         ],
-        sort: [{ createdAt: "desc" }, { id: "desc" }],
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         limit: LIST_MAX,
       })) as any[]
 
@@ -218,9 +218,9 @@ export default ({ strapi }: { strapi: any }) => {
       reason: string,
       adminId: string | number
     ): Promise<void> {
-      const row = (await grants().findOne({
-        documentId,
-        fields: ["documentId", "baUserId", "reason", "expiresAt"],
+      const row = (await strapi.db.query(ENTITLEMENT_GRANT).findOne({
+        where: { documentId },
+        select: ["documentId", "baUserId", "reason", "expiresAt"],
       })) as any
       if (!row) throw new AccessError(404, "not_found", "Grant not found.")
       const now = new Date()
@@ -251,15 +251,15 @@ export default ({ strapi }: { strapi: any }) => {
               : []),
           ]
         : []
-      const rows = (await verifications().findMany({
-        filters: ids.length
+      const rows = (await strapi.db.query(PRO_VERIFICATION).findMany({
+        where: ids.length
           ? { baUserId: { $in: ids } }
           : query && isEmail(query)
             ? { verifiedEmail: { $eqi: query } }
             : query
               ? { baUserId: { $eq: "__none__" } }
               : {},
-        fields: [
+        select: [
           "documentId",
           "baUserId",
           "kind",
@@ -268,7 +268,7 @@ export default ({ strapi }: { strapi: any }) => {
           "expiresAt",
           "createdAt",
         ],
-        sort: [{ createdAt: "desc" }, { id: "desc" }],
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         limit: LIST_MAX,
       })) as any[]
 
@@ -353,9 +353,9 @@ export default ({ strapi }: { strapi: any }) => {
       reason: string,
       adminId: string | number
     ): Promise<void> {
-      const row = (await verifications().findOne({
-        documentId,
-        fields: ["documentId", "baUserId", "expiresAt"],
+      const row = (await strapi.db.query(PRO_VERIFICATION).findOne({
+        where: { documentId },
+        select: ["documentId", "baUserId", "expiresAt"],
       })) as any
       if (!row)
         throw new AccessError(404, "not_found", "Verification not found.")

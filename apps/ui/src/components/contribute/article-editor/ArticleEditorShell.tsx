@@ -5,7 +5,7 @@ import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
-import { useCapabilities } from "@/lib/access-client"
+import { useCapabilities, useHydratedSession } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
@@ -16,19 +16,23 @@ import {
   ARTICLE_KIND_META,
   type ArticleDraft,
   type ArticleKind,
+  type ArticleTag,
+  type ArticleEventMention,
   type ArticleLocale,
   EMPTY_DOC,
   type ExistingArticle,
 } from "./article.types"
-import {
-  dynamicZoneToTiptap,
-  isEmptyDoc,
-  tiptapToDynamicZone,
-  wordCount,
-} from "./articleBlocks"
+import { dynamicZoneToTiptap, isEmptyDoc, wordCount } from "./articleBlocks"
+import { ArticleBylineCard } from "./ArticleBylineCard"
+import { articleDraftData, restoreArticleDraft } from "./articleDraft"
 import { ArticleEditor, type UploadedImage } from "./ArticleEditor"
 import { ArticlePreview } from "./ArticlePreview"
 import {
+  ArticleRevisionComparison,
+  type PublishedComparison,
+} from "./ArticleRevisionComparison"
+import {
+  ArticleEventsCard,
   EditSummaryCard,
   HowEditingWorks,
   LanguageCard,
@@ -51,30 +55,8 @@ type ServerDraft = {
 }
 
 const AUTOSAVE_MS = 1500
-
-/** A submission's draftData back into editor state. */
-function draftFromServer(d: Record<string, unknown>): Partial<ArticleDraft> & {
-  locale?: string
-} {
-  const body = Array.isArray(d.body)
-    ? d.body
-    : Array.isArray(d.proposedBody)
-      ? d.proposedBody
-      : null
-  const str = (v: unknown) => (typeof v === "string" ? v : undefined)
-
-  return {
-    title: str(d.title) ?? str(d.proposedTitle),
-    summary: str(d.summary) ?? str(d.proposedSummary),
-    doc: body ? dynamicZoneToTiptap(body, mediaUrl) : undefined,
-    sections: Array.isArray(d.sections)
-      ? d.sections.filter((s): s is string => typeof s === "string")
-      : undefined,
-    tags: Array.isArray(d.tags) ? (d.tags as ArticleDraft["tags"]) : undefined,
-    editSummary: str(d.editSummary),
-    locale: str(d.locale),
-  }
-}
+const NO_TAGS: ArticleTag[] = []
+const NO_EVENT_MENTIONS: ArticleEventMention[] = []
 
 function mediaUrl(url: string) {
   return formatStrapiMediaUrlForClient(url) ?? url
@@ -117,6 +99,9 @@ export function ArticleEditorShell({
   locales,
   uiLocale,
   initialLocale,
+  initialTags = NO_TAGS,
+  initialEventMentions = NO_EVENT_MENTIONS,
+  canOwnEdit = false,
 }: {
   readonly kind: ArticleKind
   readonly mode: "new" | "edit"
@@ -127,16 +112,25 @@ export function ArticleEditorShell({
   readonly uiLocale: string
   /** Language to open on load (from `?locale=`), a configured locale. */
   readonly initialLocale?: string
+  readonly initialTags?: ArticleTag[]
+  readonly initialEventMentions?: ArticleEventMention[]
+  /** Server-authorized ownership; own edits still require moderation. */
+  readonly canOwnEdit?: boolean
 }) {
   const tUi = useUiTranslations("ui")
   const tLanguage = useUiTranslations("translation")
   const tEditor = useUiTranslations("articleEditor")
+  const tConflict = useUiTranslations("articleConflict")
+  const { data: session } = useHydratedSession()
   const displayLocale = useLocale()
 
   const meta = ARTICLE_KIND_META[kind]
   const { canDirectEdit, ready } = useCapabilities()
   const sourceLocale =
-    article?.locale ?? locales.find((l) => l.isDefault)?.code ?? uiLocale
+    article?.locale ??
+    locales.find((l) => l.code === uiLocale)?.code ??
+    locales.find((l) => l.isDefault)?.code ??
+    uiLocale
 
   const initialDraft = useMemo<ArticleDraft>(
     () =>
@@ -148,23 +142,45 @@ export function ArticleEditorShell({
             sections: article.sections,
             tags: article.tags,
             editSummary: "",
+            eventMentions: article.eventMentions ?? [],
           }
         : {
             title: "",
             summary: "",
             doc: EMPTY_DOC,
             sections: [],
-            tags: [],
+            tags: initialTags,
             editSummary: "",
+            eventMentions: initialEventMentions,
+            byline: "",
+            origin: "community",
           },
-    [article]
+    [article, initialTags, initialEventMentions]
   )
 
   const [draft, setDraft] = useState<ArticleDraft>(initialDraft)
+  const draftRef = useRef(initialDraft)
+  const baseRevisionRef = useRef<string | null>(article?.baseRevision ?? null)
+  const rebaseRevisionRef = useRef<string | null>(null)
+  const [staleArticle, setStaleArticle] = useState(false)
+  const [comparison, setComparison] = useState<PublishedComparison | null>(null)
+  const [comparing, setComparing] = useState(false)
   const [docKey, setDocKey] = useState("initial")
   const [locale, setLocale] = useState(sourceLocale)
   const editorKind = kind === "knowledge" ? "docs" : "journal"
   const canDirect = ready && canDirectEdit(editorKind, locale)
+  const openJournalDraft = mode === "new" && kind === "journal"
+  const [loadedResumeId, setLoadedResumeId] = useState<string | null>(null)
+  const [resumeUnavailable, setResumeUnavailable] = useState(false)
+  const resuming = Boolean(resumeDraftId && loadedResumeId !== resumeDraftId)
+  const canWrite =
+    !resuming &&
+    !resumeUnavailable &&
+    (openJournalDraft || canOwnEdit || canDirect)
+  const allowIndexOrigin =
+    canDirect &&
+    (session?.user as { editorLocales?: { journal?: unknown } } | undefined)
+      ?.editorLocales?.journal === "all"
   const [view, setView] = useState<View>("write")
   const [submissionId, setSubmissionId] = useState<string | null>(null)
   const [saveState, setSaveState] = useState<SaveState>("idle")
@@ -183,6 +199,7 @@ export function ArticleEditorShell({
   localeRef.current = locale
   const translating = mode === "edit" && locale !== sourceLocale
   const submitted = submitState === "submitted"
+  const editorBusy = loadingLocale || comparing || submitState === "submitting"
   const localeName = languageName(locale, locales, displayLocale)
 
   useEffect(
@@ -193,90 +210,122 @@ export function ArticleEditorShell({
     []
   )
 
-  const hydrate = useCallback((d: ServerDraft) => {
-    const from = draftFromServer(d.draftData ?? {})
-    setDraft((prev) => ({
-      title: from.title ?? prev.title,
-      summary: from.summary ?? prev.summary,
-      doc: from.doc ?? prev.doc,
-      sections: from.sections ?? prev.sections,
-      tags: from.tags ?? prev.tags,
-      editSummary: from.editSummary ?? prev.editSummary,
-    }))
-    if (from.locale) setLocale(from.locale)
-    setDocKey(`draft:${d.documentId}`)
-    setSubmissionId(d.documentId)
-    submissionRef.current = d.documentId
-    setLastSavedAt(d.updatedAt ? new Date(d.updatedAt) : new Date())
-    setResumable(null)
-  }, [])
+  const hydrate = useCallback(
+    (d: ServerDraft) => {
+      const from = restoreArticleDraft(d.draftData ?? {}, mediaUrl)
+      const previous = draftRef.current
+      const next = {
+        title: from.title ?? previous.title,
+        summary: from.summary ?? previous.summary,
+        doc: from.doc ?? previous.doc,
+        sections: from.sections ?? previous.sections,
+        tags: from.tags ?? previous.tags,
+        editSummary: from.editSummary ?? previous.editSummary,
+        eventMentions: from.eventMentions ?? previous.eventMentions,
+        byline: from.byline ?? previous.byline,
+        origin: from.origin ?? previous.origin,
+      }
+      draftRef.current = next
+      setDraft(next)
+      baseRevisionRef.current = from.baseRevision ?? null
+      rebaseRevisionRef.current = null
+      setComparison(null)
+      setStaleArticle(
+        Boolean(
+          from.baseRevision &&
+          article?.baseRevision &&
+          (!from.locale || from.locale === article.locale) &&
+          from.baseRevision !== article.baseRevision
+        )
+      )
+      if (from.locale) setLocale(from.locale)
+      setDocKey(`draft:${d.documentId}`)
+      setSubmissionId(d.documentId)
+      submissionRef.current = d.documentId
+      setLastSavedAt(d.updatedAt ? new Date(d.updatedAt) : new Date())
+      setResumable(null)
+      setLoadedResumeId(d.documentId)
+      setResumeUnavailable(false)
+    },
+    [article?.baseRevision, article?.locale]
+  )
+
+  const lookupLocale = resumeDraftId ? null : locale
 
   // Find an unsent draft to continue: by id for a new article, by target
   // for an existing one.
   useEffect(() => {
     let cancelled = false
-    const url =
-      mode === "new"
-        ? resumeDraftId
-          ? "/api/submissions/my"
-          : null
-        : `/api/submissions/draft/${meta.submissionType}?targetSlug=${encodeURIComponent(article?.slug ?? "")}&locale=${encodeURIComponent(locale)}`
+    const url = resumeDraftId
+      ? `/api/submissions/my?documentId=${encodeURIComponent(resumeDraftId)}`
+      : mode === "new"
+        ? null
+        : `/api/submissions/draft/${meta.submissionType}?targetSlug=${encodeURIComponent(article?.slug ?? "")}&locale=${encodeURIComponent(lookupLocale ?? "")}`
     if (!url) return
     fetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((json: { data?: ServerDraft | ServerDraft[] | null } | null) => {
-        if (cancelled || !json?.data) return
-        const found = Array.isArray(json.data)
+        if (cancelled) return
+        const found = Array.isArray(json?.data)
           ? json.data.find(
-              (s) => s.documentId === resumeDraftId && s.status === "draft"
+              (s) =>
+                s.documentId === resumeDraftId &&
+                ["draft", "needs_info"].includes(s.status)
             )
-          : json.data
-        if (!found?.draftData) return
-        if (mode === "new") hydrate(found)
+          : json?.data
+        if (
+          !found?.draftData ||
+          found.submissionType !== meta.submissionType ||
+          (mode === "edit" && found.targetSlug !== article?.slug) ||
+          (mode === "new" && Boolean(found.targetSlug))
+        ) {
+          if (resumeDraftId) {
+            setLoadedResumeId(resumeDraftId)
+            setResumeUnavailable(true)
+            setSubmitError(tConflict("draftUnavailable"))
+            setSubmitState("error")
+          }
+
+          return
+        }
+        if (mode === "new" || resumeDraftId) hydrate(found)
         else setResumable(found)
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled && resumeDraftId) {
+          setLoadedResumeId(resumeDraftId)
+          setResumeUnavailable(true)
+          setSubmitError(tConflict("draftUnavailable"))
+          setSubmitState("error")
+        }
+      })
 
     return () => {
       cancelled = true
     }
-  }, [mode, resumeDraftId, article?.slug, meta.submissionType, hydrate, locale])
+  }, [
+    mode,
+    resumeDraftId,
+    article?.slug,
+    meta.submissionType,
+    hydrate,
+    lookupLocale,
+    tConflict,
+  ])
 
   const buildDraftData = useCallback(
-    (d: ArticleDraft) => {
-      const body = tiptapToDynamicZone(d.doc)
-      const direct = mode === "new" || canDirect
-      const common = {
+    (value: ArticleDraft) =>
+      articleDraftData(value, {
+        mode,
+        direct: canOwnEdit || canDirect,
         locale: localeRef.current,
-        sections: d.sections,
-        tags: d.tags,
-        editSummary: d.editSummary,
-        ...(mode === "edit"
-          ? {
-              targetSlug: article?.slug,
-              isTranslation: localeRef.current !== sourceLocale,
-              sourceLocale,
-            }
-          : {}),
-      }
-      if (mode === "new")
-        return {
-          kind: "new_article",
-          title: d.title,
-          summary: d.summary,
-          body,
-          ...common,
-        }
-      if (direct) return { title: d.title, summary: d.summary, body, ...common }
-
-      return {
-        proposedTitle: d.title,
-        proposedSummary: d.summary,
-        proposedBody: body,
-        ...common,
-      }
-    },
-    [mode, canDirect, article?.slug, sourceLocale]
+        targetSlug: article?.slug,
+        sourceLocale,
+        baseRevision: baseRevisionRef.current,
+        rebaseRevision: rebaseRevisionRef.current,
+        journal: kind === "journal",
+      }),
+    [mode, kind, canOwnEdit, canDirect, article?.slug, sourceLocale]
   )
 
   const persist = useCallback(
@@ -285,6 +334,7 @@ export function ArticleEditorShell({
       setSaveState("saving")
       try {
         const draftData = buildDraftData(d)
+        const requestedRebase = rebaseRevisionRef.current
         if (!submissionRef.current) {
           const res = await fetch("/api/submissions", {
             method: "POST",
@@ -298,8 +348,10 @@ export function ArticleEditorShell({
               asDraft: true,
             }),
           })
-          if (!res.ok)
+          if (!res.ok) {
+            if (res.status === 409) setStaleArticle(true)
             throw new Error(await readError(res, tUi("couldnt_save")))
+          }
           const json = (await res.json()) as { data?: { documentId?: string } }
           if (!json.data?.documentId) throw new Error(tUi("couldnt_save"))
           submissionRef.current = json.data.documentId
@@ -313,8 +365,16 @@ export function ArticleEditorShell({
               body: JSON.stringify({ draftData, stepCompleted: 1 }),
             }
           )
-          if (!res.ok)
+          if (!res.ok) {
+            if (res.status === 409) setStaleArticle(true)
             throw new Error(await readError(res, tUi("couldnt_save")))
+          }
+        }
+        if (requestedRebase && rebaseRevisionRef.current === requestedRebase) {
+          baseRevisionRef.current = requestedRebase
+          rebaseRevisionRef.current = null
+          setStaleArticle(false)
+          setComparison(null)
         }
         setSaveState("saved")
         setLastSavedAt(new Date())
@@ -326,7 +386,7 @@ export function ArticleEditorShell({
         return false
       }
     },
-    [buildDraftData, meta, mode, article?.slug, submitted]
+    [buildDraftData, meta, mode, article?.slug, submitted, tUi]
   )
 
   // Debounced autosave; one request at a time.
@@ -353,32 +413,31 @@ export function ArticleEditorShell({
 
   const update = useCallback(
     (patch: Partial<ArticleDraft>) => {
-      if (loadingLocale || submitted || !canDirect) return
-      setDraft((prev) => {
-        // TipTap reports its normalised document on mount; only a real
-        // change should touch the server.
-        if (
-          patch.doc &&
-          Object.keys(patch).length === 1 &&
-          JSON.stringify(patch.doc) === JSON.stringify(prev.doc)
-        )
-          return prev
-        const next = { ...prev, ...patch }
-        scheduleSave(next)
-
-        return next
-      })
+      if (editorBusy || submitted || !canWrite) return
+      const previous = draftRef.current
+      // A TipTap mount may report a normalized document without an edit.
+      if (
+        patch.doc &&
+        Object.keys(patch).length === 1 &&
+        JSON.stringify(patch.doc) === JSON.stringify(previous.doc)
+      )
+        return
+      const next = { ...previous, ...patch }
+      draftRef.current = next
+      setDraft(next)
+      scheduleSave(next)
     },
-    [scheduleSave, loadingLocale, submitted, canDirect]
+    [scheduleSave, editorBusy, submitted, canWrite]
   )
 
   // Switching language on an existing article loads that translation, or
   // starts an empty one with the original showing as the source.
   const changeLocale = async (code: string) => {
     if (
-      loadingLocale ||
+      editorBusy ||
+      submitted ||
       !locales.some((l) => l.code === code) ||
-      !canDirectEdit(editorKind, code)
+      !(openJournalDraft || canOwnEdit || canDirectEdit(editorKind, code))
     )
       return
     if (code === locale) return
@@ -390,6 +449,7 @@ export function ArticleEditorShell({
       if (inFlight.current) await inFlight.current
       if ((dirty.current || saveState === "error") && !(await persist(draft))) {
         setSubmitError(tLanguage("saveFailed"))
+        setSubmitState("error")
 
         return
       }
@@ -399,7 +459,9 @@ export function ArticleEditorShell({
         // available to adapt rather than changing a saved draft's locale.
         setDocKey(`locale:${code}`)
       } else if (code === sourceLocale) {
+        draftRef.current = initialDraft
         setDraft(initialDraft)
+        baseRevisionRef.current = article.baseRevision ?? null
         setDocKey(`locale:${code}`)
         setView("write")
       } else {
@@ -409,19 +471,34 @@ export function ArticleEditorShell({
         if (!res.ok && res.status !== 404) throw new Error("Locale read failed")
         const json = res.ok
           ? ((await res.json()) as {
-              data?: { title?: string; summary?: string; body?: unknown } | null
+              data?: {
+                title?: string
+                summary?: string
+                body?: unknown
+                contentRevision?: string
+                sections?: string[]
+                tags?: ArticleTag[]
+                eventMentions?: ArticleEventMention[]
+              } | null
             })
           : null
         const existing = json?.data
-        setDraft((prev) => ({
-          ...prev,
+        const next = {
+          ...draftRef.current,
           title: existing?.title ?? "",
           summary: existing?.summary ?? "",
           doc: existing?.body
             ? dynamicZoneToTiptap(existing.body, mediaUrl)
             : EMPTY_DOC,
           editSummary: "",
-        }))
+          sections: existing?.sections ?? draftRef.current.sections,
+          tags: existing?.tags ?? draftRef.current.tags,
+          eventMentions:
+            existing?.eventMentions ?? draftRef.current.eventMentions,
+        }
+        draftRef.current = next
+        setDraft(next)
+        baseRevisionRef.current = existing?.contentRevision ?? null
         setDocKey(`locale:${code}`)
         setView("source")
       }
@@ -430,12 +507,16 @@ export function ArticleEditorShell({
       setSaveState("idle")
       setLastSavedAt(null)
       setResumable(null)
+      rebaseRevisionRef.current = null
+      setComparison(null)
+      setStaleArticle(false)
       setSubmitState("idle")
       setSubmitError(null)
       localeRef.current = code
       setLocale(code)
     } catch {
       setSubmitError(tLanguage("switchFailed"))
+      setSubmitState("error")
     } finally {
       setLoadingLocale(false)
     }
@@ -447,7 +528,7 @@ export function ArticleEditorShell({
     if (!ready) return
     if (openedInitialLocale.current) return
     openedInitialLocale.current = true
-    if (initialLocale && initialLocale !== sourceLocale)
+    if (!resumeDraftId && initialLocale && initialLocale !== sourceLocale)
       void changeLocale(initialLocale)
   })
 
@@ -485,10 +566,10 @@ export function ArticleEditorShell({
         : mode === "edit" && !draft.editSummary.trim()
           ? tUi("say_what_changed")
           : null
-  const canSubmit = !validation && !loadingLocale && canDirect
+  const canSubmit = !validation && !editorBusy && !staleArticle && canWrite
 
   const submit = async () => {
-    if (!canDirect) return
+    if (!canWrite || staleArticle || editorBusy) return
     if (validation) {
       setSubmitError(validation)
       setSubmitState("error")
@@ -530,8 +611,10 @@ export function ArticleEditorShell({
           }),
         }
       )
-      if (!res.ok)
+      if (!res.ok) {
+        if (res.status === 409) setStaleArticle(true)
         throw new Error(await readError(res, tUi("couldnt_send_for_review")))
+      }
       setSubmitState("submitted")
     } catch (err) {
       setSubmitError(
@@ -539,6 +622,86 @@ export function ArticleEditorShell({
       )
       setSubmitState("error")
     }
+  }
+
+  const comparePublished = async () => {
+    if (!article || comparing) return
+    setComparing(true)
+    try {
+      const read = async (code: string) => {
+        const response = await fetch(
+          `/api/contribute/article?kind=${kind}&slug=${encodeURIComponent(article.slug)}&locale=${encodeURIComponent(code)}`
+        )
+        if (!response.ok) throw new Error(tConflict("loadFailed"))
+
+        return (await response.json()) as {
+          data?: {
+            title: string
+            summary?: string
+            body?: unknown
+            contentRevision?: string
+            sections?: string[]
+            tags?: ArticleTag[]
+            eventMentions?: ArticleEventMention[]
+          } | null
+        }
+      }
+      let comparisonLocale = localeRef.current
+      let result = await read(comparisonLocale)
+      if (!result.data && comparisonLocale !== sourceLocale) {
+        comparisonLocale = sourceLocale
+        result = await read(comparisonLocale)
+      }
+      if (!result.data?.contentRevision)
+        throw new Error(tConflict("loadFailed"))
+      setComparison({
+        title: result.data.title,
+        summary: result.data.summary ?? "",
+        doc: dynamicZoneToTiptap(result.data.body ?? [], mediaUrl),
+        revision: result.data.contentRevision,
+        locale: comparisonLocale,
+        sections: result.data.sections ?? [],
+        tags: result.data.tags ?? [],
+        eventMentions: result.data.eventMentions ?? [],
+      })
+      setSubmitError(null)
+    } catch (failure) {
+      setSubmitError(
+        failure instanceof Error ? failure.message : tConflict("loadFailed")
+      )
+      setSubmitState("error")
+    } finally {
+      setComparing(false)
+    }
+  }
+
+  const adoptComparedRevision = async () => {
+    if (!comparison || comparing || !canWrite) return
+    setComparing(true)
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveGeneration.current++
+    if (inFlight.current) await inFlight.current
+    // The audited adoption seam updates an existing private submission.
+    if (!submissionRef.current && !(await persist(draftRef.current))) {
+      setSubmitError(tLanguage("saveFailed"))
+      setSubmitState("error")
+      setComparing(false)
+
+      return
+    }
+    rebaseRevisionRef.current = comparison.revision
+    dirty.current = true
+    if (await persist(draftRef.current)) {
+      dirty.current = false
+      setSubmitState("idle")
+      setSubmitError(null)
+    } else {
+      rebaseRevisionRef.current = null
+      setStaleArticle(true)
+      setSubmitState("error")
+      setSubmitError(tConflict("changedAgain"))
+    }
+    setComparing(false)
   }
 
   const sourceBlocks = useMemo(
@@ -600,6 +763,7 @@ export function ArticleEditorShell({
             </div>
           </div>
 
+          {resuming && <p role="status">{tConflict("loadingDraft")}</p>}
           {resumable && (
             <div
               className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] px-5 py-3.5"
@@ -643,10 +807,44 @@ export function ArticleEditorShell({
             </div>
           )}
 
+          {mode === "edit" && !submitted && (
+            <div className="mb-4 grid gap-2">
+              {staleArticle && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-(--t-border-line) p-4"
+                >
+                  {tConflict("stale")}
+                </p>
+              )}
+              <button
+                type="button"
+                className="justify-self-start underline"
+                disabled={comparing || loadingLocale}
+                onClick={() => {
+                  comparePublished()
+                }}
+              >
+                {comparing ? tConflict("loading") : tConflict("compare")}
+              </button>
+            </div>
+          )}
+          {comparison && (
+            <ArticleRevisionComparison
+              kind={kind}
+              draft={draft}
+              published={comparison}
+              busy={comparing || loadingLocale}
+              onAdopt={() => {
+                adoptComparedRevision()
+              }}
+            />
+          )}
+
           {view === "write" && (
             <div
-              className={loadingLocale ? "opacity-60" : undefined}
-              aria-busy={loadingLocale}
+              className={editorBusy ? "opacity-60" : undefined}
+              aria-busy={editorBusy}
             >
               <ArticleEditor
                 kind={kind}
@@ -654,7 +852,7 @@ export function ArticleEditorShell({
                 summary={draft.summary}
                 doc={draft.doc}
                 docKey={docKey}
-                readOnly={submitted || loadingLocale || !canDirect}
+                readOnly={submitted || editorBusy || !canWrite}
                 onTitleChange={(title) => update({ title })}
                 onSummaryChange={(summary) => update({ summary })}
                 onDocChange={(doc) => update({ doc })}
@@ -739,7 +937,7 @@ export function ArticleEditorShell({
             <span>{tEditor("words", { count: words })}</span>
             <span>
               {tEditor("readingTime", {
-                count: Math.max(1, Math.round(words / 200)),
+                count: Math.max(1, Math.ceil(words / 200)),
               })}
             </span>
             <span>{tUi("select_text_to_format_it_with_the_toolbar")}</span>
@@ -760,11 +958,20 @@ export function ArticleEditorShell({
             publishesDirectly={canDirect}
             onSubmit={() => void submit()}
           />
+          {mode === "new" && kind === "journal" && (
+            <ArticleBylineCard
+              byline={draft.byline ?? ""}
+              origin={draft.origin ?? "community"}
+              allowIndex={allowIndexOrigin}
+              disabled={submitted || editorBusy || !canWrite}
+              onChange={update}
+            />
+          )}
           {mode === "edit" && (
             <EditSummaryCard
               value={draft.editSummary}
               onChange={(editSummary) => update({ editSummary })}
-              disabled={submitted || loadingLocale || !canDirect}
+              disabled={submitted || editorBusy || !canWrite}
             />
           )}
           <SectionsCard
@@ -772,13 +979,19 @@ export function ArticleEditorShell({
             locale={locale}
             sections={draft.sections}
             onChange={(sections) => update({ sections })}
-            disabled={submitted || loadingLocale || !canDirect}
+            disabled={submitted || editorBusy || !canWrite}
           />
           <TagsCard
             tags={draft.tags}
             locale={locale}
             onChange={(tags) => update({ tags })}
-            disabled={submitted || loadingLocale || !canDirect}
+            disabled={submitted || editorBusy || !canWrite}
+          />
+          <ArticleEventsCard
+            mentions={draft.eventMentions ?? []}
+            libraries={draft.tags}
+            onChange={(eventMentions) => update({ eventMentions })}
+            disabled={submitted || editorBusy || !canWrite}
           />
           <LanguageCard
             mode={mode}
@@ -789,12 +1002,17 @@ export function ArticleEditorShell({
             allowedLocales={
               ready
                 ? locales
-                    .filter((l) => canDirectEdit(editorKind, l.code))
+                    .filter(
+                      (l) =>
+                        openJournalDraft ||
+                        canOwnEdit ||
+                        canDirectEdit(editorKind, l.code)
+                    )
                     .map((l) => l.code)
                 : []
             }
             onChange={(code) => void changeLocale(code)}
-            disabled={submitted || loadingLocale}
+            disabled={submitted || editorBusy}
           />
           <HowEditingWorks publishesDirectly={canDirect} />
           {submissionId && (

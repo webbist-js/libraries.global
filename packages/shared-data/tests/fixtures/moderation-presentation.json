@@ -1,0 +1,1133 @@
+{
+  "cases": [
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "new_library",
+        "fields": {
+          "name": " Library ",
+          "libraryType": "Public",
+          "city": " York "
+        },
+        "draftData": {
+          "staffCreation": true
+        }
+      },
+      "ui": [
+        "Library",
+        "Public \u00b7  York  \u00b7 Staff ownership requested"
+      ],
+      "admin": [
+        "Library",
+        "Public \u00b7  York  \u00b7 Staff ownership requested"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "new_library",
+        "fields": {}
+      },
+      "ui": [
+        "Unnamed library",
+        null
+      ],
+      "admin": [
+        "Unnamed library",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "library_claim",
+        "targetSlug": "library",
+        "fields": {
+          "name": " Claimed ",
+          "role": "head_librarian"
+        }
+      },
+      "ui": [
+        "Claimed",
+        "head librarian"
+      ],
+      "admin": [
+        "Claimed",
+        "head librarian"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "library_claim",
+        "fields": {}
+      },
+      "ui": [
+        "Library claim",
+        null
+      ],
+      "admin": [
+        "Library claim",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "wiki_edit",
+        "targetSlug": "page",
+        "draftData": {
+          "title": " Title ",
+          "body": []
+        }
+      },
+      "ui": [
+        "Title",
+        "Direct edit"
+      ],
+      "admin": [
+        "Title",
+        "Direct edit"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "wiki_edit",
+        "draftData": {
+          "kind": "new_article",
+          "proposedTitle": " Proposed ",
+          "proposedBody": []
+        }
+      },
+      "ui": [
+        "Proposed",
+        "New article"
+      ],
+      "admin": [
+        "Proposed",
+        "New article"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "wiki_edit",
+        "draftData": {
+          "isTranslation": true,
+          "locale": "fr",
+          "body": []
+        }
+      },
+      "ui": [
+        "Untitled article",
+        "Translation (fr)"
+      ],
+      "admin": [
+        "Untitled article",
+        "Translation (fr)"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "blog_submission",
+        "fields": {
+          "title": " Fields ",
+          "category": "incorrect"
+        },
+        "draftData": {
+          "proposedBody": []
+        }
+      },
+      "ui": [
+        "Fields",
+        "Suggested edit"
+      ],
+      "admin": [
+        "Fields",
+        "Suggested edit"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "wiki_edit",
+        "fields": {
+          "category": "outdated"
+        }
+      },
+      "ui": [
+        "Untitled article",
+        "Report: outdated"
+      ],
+      "admin": [
+        "Untitled article",
+        "Report: outdated"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "blog_submission",
+        "targetSlug": "old"
+      },
+      "ui": [
+        "Edit: old",
+        null
+      ],
+      "admin": [
+        "Edit: old",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "topic_suggestion",
+        "fields": {
+          "name": " Maps "
+        }
+      },
+      "ui": [
+        "Maps",
+        null
+      ],
+      "admin": [
+        "Maps",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "topic_suggestion",
+        "fields": {}
+      },
+      "ui": [
+        "Topic",
+        null
+      ],
+      "admin": [
+        "Topic",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "correction",
+        "targetSlug": "library",
+        "fields": {
+          "kind": "record",
+          "website": "https://example.invalid",
+          "phone": "1",
+          "previous": {},
+          "uploadedImages": [
+            {}
+          ],
+          "photoId": 1,
+          "photoUrl": "/image",
+          "category": "incorrect"
+        }
+      },
+      "ui": [
+        "library",
+        "3 fields changed"
+      ],
+      "admin": [
+        "library",
+        "3 fields changed"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "correction",
+        "targetSlug": "library",
+        "fields": {
+          "kind": "facilities",
+          "website": "https://example.invalid",
+          "phone": "1",
+          "previous": {},
+          "uploadedImages": [
+            {}
+          ],
+          "photoId": 1,
+          "photoUrl": "/image",
+          "category": "incorrect"
+        }
+      },
+      "ui": [
+        "library",
+        "Facility answers"
+      ],
+      "admin": [
+        "library",
+        "Facility answers"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "correction",
+        "targetSlug": "library",
+        "fields": {
+          "kind": "photo",
+          "website": "https://example.invalid",
+          "phone": "1",
+          "previous": {},
+          "uploadedImages": [
+            {}
+          ],
+          "photoId": 1,
+          "photoUrl": "/image",
+          "category": "incorrect"
+        }
+      },
+      "ui": [
+        "library",
+        "Photo"
+      ],
+      "admin": [
+        "library",
+        "Photo"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "correction",
+        "targetSlug": "library",
+        "fields": {
+          "kind": "source",
+          "website": "https://example.invalid",
+          "phone": "1",
+          "previous": {},
+          "uploadedImages": [
+            {}
+          ],
+          "photoId": 1,
+          "photoUrl": "/image",
+          "category": "incorrect"
+        }
+      },
+      "ui": [
+        "library",
+        "Source"
+      ],
+      "admin": [
+        "library",
+        "Source"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "correction",
+        "targetSlug": "library",
+        "fields": {
+          "kind": "verify",
+          "website": "https://example.invalid",
+          "phone": "1",
+          "previous": {},
+          "uploadedImages": [
+            {}
+          ],
+          "photoId": 1,
+          "photoUrl": "/image",
+          "category": "incorrect"
+        }
+      },
+      "ui": [
+        "library",
+        "Still right?"
+      ],
+      "admin": [
+        "library",
+        "Still right?"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "correction",
+        "targetSlug": "library",
+        "fields": {
+          "kind": "unknown",
+          "website": "https://example.invalid",
+          "phone": "1",
+          "previous": {},
+          "uploadedImages": [
+            {}
+          ],
+          "photoId": 1,
+          "photoUrl": "/image",
+          "category": "incorrect"
+        }
+      },
+      "ui": [
+        "library",
+        "incorrect"
+      ],
+      "admin": [
+        "library",
+        "incorrect"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "library_edit",
+        "fields": {
+          "website": "x",
+          "previous": {},
+          "kind": "record",
+          "sourceRecords": [],
+          "socialLinks": [],
+          "services": [],
+          "openingTimes": {}
+        }
+      },
+      "ui": [
+        "Library",
+        "1 field changed"
+      ],
+      "admin": [
+        "Library",
+        "1 field changed"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "event_feed",
+        "targetSlug": "library-slug",
+        "fields": {
+          "provider": "ical",
+          "kind": "connect",
+          "libraryName": " Private library name "
+        }
+      },
+      "ui": [
+        "Calendar feed (.ics) feed",
+        "library-slug \u00b7 new connection"
+      ],
+      "admin": [
+        "Calendar feed (.ics) feed for Private library name",
+        "Private library name \u00b7 new connection"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "event_feed",
+        "fields": {
+          "provider": "eventbrite",
+          "kind": "replace"
+        }
+      },
+      "ui": [
+        "Eventbrite feed (new details)",
+        "Library \u00b7 new details"
+      ],
+      "admin": [
+        "Eventbrite feed for a library (new details)",
+        "Library \u00b7 new details"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "event_feed",
+        "fields": {
+          "provider": "unknown"
+        }
+      },
+      "ui": [
+        "Event feed",
+        "Library \u00b7 new connection"
+      ],
+      "admin": [
+        "Event feed for a library",
+        "Library \u00b7 new connection"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "wiki_editor",
+          "queue": "index",
+          "locales": []
+        }
+      },
+      "ui": [
+        "Knowledge editor application (all languages)",
+        null
+      ],
+      "admin": [
+        "Knowledge editor application (all languages)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "wiki_editor",
+          "queue": "index",
+          "locales": [
+            "fr",
+            " fr ",
+            "fr",
+            null,
+            ""
+          ]
+        }
+      },
+      "ui": [
+        "Knowledge editor application (fr,  fr )",
+        null
+      ],
+      "admin": [
+        "Knowledge editor application (fr)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "wiki_editor",
+          "queue": "index",
+          "locales": [
+            " en "
+          ]
+        }
+      },
+      "ui": [
+        "Knowledge editor application ( en )",
+        null
+      ],
+      "admin": [
+        "Knowledge editor application (en)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "journal_editor",
+          "queue": "index",
+          "locales": []
+        }
+      },
+      "ui": [
+        "Journal editor application (all languages)",
+        null
+      ],
+      "admin": [
+        "Journal editor application (all languages)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "journal_editor",
+          "queue": "index",
+          "locales": [
+            "fr",
+            " fr ",
+            "fr",
+            null,
+            ""
+          ]
+        }
+      },
+      "ui": [
+        "Journal editor application (fr,  fr )",
+        null
+      ],
+      "admin": [
+        "Journal editor application (fr)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "journal_editor",
+          "queue": "index",
+          "locales": [
+            " en "
+          ]
+        }
+      },
+      "ui": [
+        "Journal editor application ( en )",
+        null
+      ],
+      "admin": [
+        "Journal editor application (en)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "moderator",
+          "queue": "index",
+          "locales": []
+        }
+      },
+      "ui": [
+        "Moderator application: Index (all languages)",
+        null
+      ],
+      "admin": [
+        "Moderator application: Index (all languages)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "moderator",
+          "queue": "index",
+          "locales": [
+            "fr",
+            " fr ",
+            "fr",
+            null,
+            ""
+          ]
+        }
+      },
+      "ui": [
+        "Moderator application: Index (fr,  fr )",
+        null
+      ],
+      "admin": [
+        "Moderator application: Index (fr)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "moderator",
+          "queue": "index",
+          "locales": [
+            " en "
+          ]
+        }
+      },
+      "ui": [
+        "Moderator application: Index ( en )",
+        null
+      ],
+      "admin": [
+        "Moderator application: Index (en)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "unknown",
+          "queue": "index",
+          "locales": []
+        }
+      },
+      "ui": [
+        "Editor application (all languages)",
+        null
+      ],
+      "admin": [
+        "Editor application (all languages)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "unknown",
+          "queue": "index",
+          "locales": [
+            "fr",
+            " fr ",
+            "fr",
+            null,
+            ""
+          ]
+        }
+      },
+      "ui": [
+        "Editor application (fr,  fr )",
+        null
+      ],
+      "admin": [
+        "Editor application (fr)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "role_application",
+        "fields": {
+          "role": "unknown",
+          "queue": "index",
+          "locales": [
+            " en "
+          ]
+        }
+      },
+      "ui": [
+        "Editor application ( en )",
+        null
+      ],
+      "admin": [
+        "Editor application (en)",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "drive_proposal",
+        "draftData": {
+          "drive": {
+            "title": "*Check hours*",
+            "focus": {
+              "kind": "gaps",
+              "gaps": [
+                "hours",
+                "photo"
+              ]
+            },
+            "scope": {
+              "places": {
+                "country": [
+                  "uk"
+                ]
+              }
+            },
+            "startsAt": "2026-10-01T00:00:00Z",
+            "endsAt": "2026-10-31T00:00:00Z",
+            "goalPercent": 75
+          }
+        }
+      },
+      "ui": [
+        "Drive: Check hours",
+        null
+      ],
+      "admin": [
+        "Drive: Check hours",
+        "Title: Check hours \u00b7 Focus: Opening hours and Photo \u00b7 Places: country: uk \u00b7 Starts: 1 Oct 2026 \u00b7 Ends: 31 Oct 2026 \u00b7 Goal: 75%"
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "drive_proposal",
+        "draftData": {}
+      },
+      "ui": [
+        "Drive proposal",
+        null
+      ],
+      "admin": [
+        "Drive proposal",
+        null
+      ]
+    },
+    {
+      "submission": {
+        "documentId": "fixture-id",
+        "status": "pending",
+        "createdAt": "2026-10-16T12:00:00Z",
+        "submittedByEmail": "private@example.invalid",
+        "submittedByUserId": "private-user",
+        "submissionType": "unknown",
+        "targetSlug": "fallback"
+      },
+      "ui": [
+        "fallback",
+        null
+      ],
+      "admin": [
+        "fallback",
+        null
+      ]
+    }
+  ],
+  "values": [
+    {
+      "value": null,
+      "ui": {
+        "text": "\u2014",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "\u2014",
+        "isUrl": false
+      }
+    },
+    {
+      "value": "",
+      "ui": {
+        "text": "\u2014",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "\u2014",
+        "isUrl": false
+      }
+    },
+    {
+      "value": [],
+      "ui": {
+        "text": "\u2014",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "\u2014",
+        "isUrl": false
+      }
+    },
+    {
+      "value": [
+        "a",
+        "b"
+      ],
+      "ui": {
+        "text": "a, b",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "a, b",
+        "isUrl": false
+      }
+    },
+    {
+      "value": [
+        {
+          "url": "https://example.invalid",
+          "label": "Source",
+          "fields": [
+            "name",
+            "hours"
+          ]
+        }
+      ],
+      "ui": {
+        "text": "Source \u00b7 https://example.invalid \u00b7 name, hours",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "Source \u00b7 https://example.invalid \u00b7 name, hours",
+        "isUrl": false
+      }
+    },
+    {
+      "value": {
+        "days": [
+          {
+            "enabled": true
+          },
+          {
+            "enabled": false
+          },
+          null
+        ]
+      },
+      "ui": {
+        "text": "1 day(s) with hours",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "1 day(s) with hours",
+        "isUrl": false
+      }
+    },
+    {
+      "value": false,
+      "ui": {
+        "text": "false",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "false",
+        "isUrl": false
+      }
+    },
+    {
+      "value": 0,
+      "ui": {
+        "text": "0",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "0",
+        "isUrl": false
+      }
+    },
+    {
+      "value": 12,
+      "ui": {
+        "text": "12",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "12",
+        "isUrl": false
+      }
+    },
+    {
+      "value": {
+        "unknown": "object"
+      },
+      "ui": {
+        "text": "{\"unknown\":\"object\"}",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "{\"unknown\":\"object\"}",
+        "isUrl": false
+      }
+    },
+    {
+      "value": "https://example.invalid",
+      "ui": {
+        "text": "https://example.invalid",
+        "isUrl": true
+      },
+      "admin": {
+        "text": "https://example.invalid",
+        "isUrl": true
+      }
+    },
+    {
+      "value": " javascript:alert(1)",
+      "ui": {
+        "text": " javascript:alert(1)",
+        "isUrl": false
+      },
+      "admin": {
+        "text": " javascript:alert(1)",
+        "isUrl": false
+      }
+    },
+    {
+      "value": "//example.invalid",
+      "ui": {
+        "text": "//example.invalid",
+        "isUrl": false
+      },
+      "admin": {
+        "text": "//example.invalid",
+        "isUrl": false
+      }
+    },
+    {
+      "value": " https://example.invalid ",
+      "ui": {
+        "text": " https://example.invalid ",
+        "isUrl": true
+      },
+      "admin": {
+        "text": " https://example.invalid ",
+        "isUrl": true
+      }
+    }
+  ],
+  "keys": [
+    {
+      "key": "streetAddress",
+      "ui": "Street address",
+      "admin": "Street address"
+    },
+    {
+      "key": "regionDocumentId",
+      "ui": "Region",
+      "admin": "Region"
+    },
+    {
+      "key": "iiifEndpoint",
+      "ui": "Iiif endpoint",
+      "admin": "Iiif endpoint"
+    },
+    {
+      "key": "URL",
+      "ui": " u r l",
+      "admin": " u r l"
+    }
+  ]
+}

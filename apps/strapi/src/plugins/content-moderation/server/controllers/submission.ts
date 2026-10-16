@@ -1,5 +1,6 @@
 import { can } from "@repo/access"
 
+import { ownsJournalArticle } from "../../../../utils/article-relations"
 import { resolveUserEntitlements } from "../../../../utils/entitlement-inputs"
 import { decodeHeaderName } from "../../../../utils/header-name"
 import { AccessError } from "../../../access/server/utils/admin"
@@ -18,6 +19,10 @@ import {
 import { adminReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
 import { resolveStaffLibraryCreation } from "../utils/staff-library-creation"
+import {
+  completeUpload,
+  UploadReservationError,
+} from "../utils/upload-reservations"
 
 /** Parses a query value as an integer within [min, max]; anything else → def. */
 function clampInt(
@@ -74,6 +79,21 @@ export function resetStatsCache(): void {
 }
 
 export default ({ strapi }: { strapi: any }) => ({
+  async journalOwnership(ctx: any) {
+    const user = await resolveUser(strapi, ctx)
+    if (!user) return ctx.unauthorized("You must be signed in.")
+    const slug = ctx.params?.slug
+    if (typeof slug !== "string" || !/^[a-z0-9-]{1,120}$/.test(slug))
+      return ctx.badRequest("Invalid slug")
+    ctx.set?.("Cache-Control", "no-store")
+    ctx.body = {
+      data: {
+        isOwner: await ownsJournalArticle(strapi, user.id, {
+          targetSlug: slug,
+        }),
+      },
+    }
+  },
   // GET /content-moderation/submissions?status=pending  (admin route)
   async findAll(ctx: any) {
     // auth handled by admin::isAuthenticatedAdmin policy on the route
@@ -391,10 +411,14 @@ export default ({ strapi }: { strapi: any }) => ({
     if (!user) {
       return ctx.unauthorized("You must be signed in.")
     }
+    const documentId = ctx.query?.documentId
+    if (documentId !== undefined && !isDocumentId(documentId))
+      return ctx.badRequest("Invalid submission id")
     const submissions = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .findByUser(user.id)
+      .findByUser(user.id, documentId)
+    ctx.set("Cache-Control", "private, no-store")
     ctx.body = { data: submissions }
   },
 
@@ -652,7 +676,7 @@ export default ({ strapi }: { strapi: any }) => ({
       if (
         after &&
         after.submittedByUserId === user.id &&
-        after.status === "draft"
+        (after.status === "draft" || after.status === "needs_info")
       ) {
         ctx.status = 409
         ctx.body = {
@@ -717,14 +741,32 @@ export default ({ strapi }: { strapi: any }) => ({
 
   // POST /api/content-moderation/uploads  (content-api route, secret-gated)
   async recordUpload(ctx: any) {
+    if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
+      return ctx.unauthorized("Service secret required")
     const user = await resolveUser(strapi, ctx)
     if (!user) return ctx.unauthorized()
     const fileId = Number((ctx.request.body as any)?.fileId)
-    if (!Number.isInteger(fileId)) return ctx.badRequest("fileId required")
-    await strapi
-      .plugin("content-moderation")
-      .service("submission")
-      .recordUpload(fileId, user.id)
+    const reservationId = (ctx.request.body as any)?.reservationId
+    if (
+      !Number.isSafeInteger(fileId) ||
+      fileId < 1 ||
+      typeof reservationId !== "string" ||
+      !/^[0-9a-f-]{36}$/.test(reservationId)
+    )
+      return ctx.badRequest("fileId and reservationId required")
+    try {
+      await completeUpload(strapi, user.id, reservationId, fileId)
+    } catch (error) {
+      ctx.status = error instanceof UploadReservationError ? error.status : 503
+      ctx.body = {
+        error:
+          error instanceof UploadReservationError
+            ? error.code
+            : "upload_quota_unavailable",
+      }
+
+      return
+    }
     ctx.body = { ok: true }
   },
 

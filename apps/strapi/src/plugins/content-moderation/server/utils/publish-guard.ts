@@ -3,6 +3,13 @@ import {
   type LibrarySourceRecord,
 } from "@repo/shared-data"
 
+import {
+  ARTICLE_UIDS,
+  articleSnapshotPopulate,
+  articleSnapshotValue,
+  storedArticleComparisonRelations,
+} from "../../../../utils/article-content"
+
 /**
  * Guards every apply-on-approval write to a draft-and-publish record.
  *
@@ -34,6 +41,8 @@ export type ApplyRefusedReason =
   | "claim_lost"
   | "feed_mismatch"
   | "invalid_drive"
+  | "stale_article"
+  | "invalid_media"
 
 export class ApplyRefusedError extends Error {
   readonly reason: ApplyRefusedReason
@@ -55,6 +64,8 @@ const REFUSED_REASONS = new Set<string>([
   "claim_lost",
   "feed_mismatch",
   "invalid_drive",
+  "stale_article",
+  "invalid_media",
 ] satisfies ApplyRefusedReason[])
 
 /**
@@ -161,11 +172,16 @@ const DEFAULT_FIELDS: Record<string, readonly string[]> = {
     "priority",
     "articleStatus",
     "docsSections",
+    "geographyFacet",
+    "readingTimeMinutes",
   ],
   "api::blog-article.blog-article": [
     ...ARTICLE_COMPARE_FIELDS,
     "authorTitle",
     "authorBio",
+    "publicationOrigin",
+    "geographyFacet",
+    "readingTimeMinutes",
   ],
 }
 
@@ -246,12 +262,14 @@ export async function applyToPublished(
   // Serialise read/append/publish across approvals on the same library.
   // Strapi's transaction context also covers the Document Service writes.
   if (
-    uid === "api::library.library" &&
+    (uid === "api::library.library" || ARTICLE_UIDS.has(uid)) &&
     ["pg", "postgres", "postgresql"].includes(strapi.db?.dialect?.client)
   ) {
     return strapi.db.transaction(async ({ trx }: { trx: any }) => {
       await trx.raw("select pg_advisory_xact_lock(hashtextextended(?, 0))", [
-        `staff-library:${documentId}`,
+        uid === "api::library.library"
+          ? `staff-library:${documentId}`
+          : `article:${documentId}`,
       ])
 
       return applyToPublishedUnlocked(strapi, uid, documentId, data, {
@@ -281,7 +299,9 @@ async function applyToPublishedUnlocked(
     fields: ["documentId", ...compare],
     ...(uid === "api::library.library"
       ? { populate: { sourceRecords: true } }
-      : {}),
+      : ARTICLE_UIDS.has(uid)
+        ? { populate: articleSnapshotPopulate(uid) }
+        : {}),
   }
   const published = await strapi
     .documents(uid)
@@ -291,9 +311,50 @@ async function applyToPublishedUnlocked(
   const draft = await strapi
     .documents(uid)
     .findOne({ ...query, status: "draft" })
+  if (ARTICLE_UIDS.has(uid)) {
+    const [publishedRelations, draftRelations] = await Promise.all([
+      storedArticleComparisonRelations(
+        strapi,
+        uid,
+        documentId,
+        "published",
+        locale
+      ),
+      draft
+        ? storedArticleComparisonRelations(
+            strapi,
+            uid,
+            documentId,
+            "draft",
+            locale
+          )
+        : null,
+    ])
+    if (publishedRelations) Object.assign(published, publishedRelations)
+    if (draft && draftRelations) Object.assign(draft, draftRelations)
+  }
   const divergentKeys = draft
     ? compare.filter((k) => canonical(draft[k]) !== canonical(published[k]))
     : []
+  if (draft && ARTICLE_UIDS.has(uid)) {
+    for (const key of Object.keys(articleSnapshotPopulate(uid))) {
+      // A replacement intentionally reviewed by the moderator supersedes the
+      // field. An additive connect is not a replacement of other draft edits.
+      const supplied = data[key] as any
+      const replaces =
+        key in data &&
+        (!supplied ||
+          typeof supplied !== "object" ||
+          Array.isArray(supplied) ||
+          !supplied.connect)
+      if (
+        !replaces &&
+        canonical(articleSnapshotValue(key, draft[key])) !==
+          canonical(articleSnapshotValue(key, published[key]))
+      )
+        divergentKeys.push(key)
+    }
+  }
   if (
     uid === "api::library.library" &&
     draft &&

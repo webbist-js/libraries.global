@@ -62,7 +62,12 @@ describe("POST /api/revalidate", () => {
 
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({
-      revalidated: ["library", "library:british-library"],
+      revalidated: [
+        "library",
+        "blog-article",
+        "wiki-article",
+        "library:british-library",
+      ],
     })
     expect(revalidateTag).toHaveBeenCalledWith("library", "max")
     expect(revalidateTag).toHaveBeenCalledWith("library:british-library", "max")
@@ -80,13 +85,21 @@ describe("POST /api/revalidate", () => {
       SECRET
     )
 
-    expect(await res.json()).toEqual({ revalidated: ["library"] })
+    expect(await res.json()).toEqual({
+      revalidated: ["library", "blog-article", "wiki-article"],
+    })
   })
 
   it("returns 400 for an unknown model or a body that isn't JSON", async () => {
-    expect((await post({ model: "user-profile" }, SECRET)).status).toBe(400)
+    expect((await post({ model: "unknown-model" }, SECRET)).status).toBe(400)
     expect((await post({ entry: {} }, SECRET)).status).toBe(400)
     expect((await post("nope", SECRET)).status).toBe(400)
     expect(revalidateTag).not.toHaveBeenCalled()
+  })
+  it("expires article attribution immediately after a profile visibility change", async () => {
+    const response = await post({ model: "user-profile" }, SECRET)
+    expect(response.status).toBe(200)
+    expect(revalidateTag).toHaveBeenCalledWith("blog-article", { expire: 0 })
+    expect(revalidateTag).toHaveBeenCalledWith("wiki-article", { expire: 0 })
   })
 })

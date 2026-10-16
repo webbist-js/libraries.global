@@ -11,7 +11,7 @@ import { StatCard } from "@/components/ds"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
-import { editorApplyHref, isArticleEditor } from "@/lib/editor-gate"
+import { isArticleEditor } from "@/lib/editor-gate"
 import {
   buildLibraryPath,
   searchBlogArticles,
@@ -21,6 +21,7 @@ import {
 import { Link } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
+import { continueLink } from "./submissionContinue"
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
 const STATUS_FILTERS = [
@@ -36,54 +37,6 @@ type StatusFilter = (typeof STATUS_FILTERS)[number]["id"]
 
 const matchesStatus = (s: Submission, filter: StatusFilter) =>
   filter === "all" || s.status === filter
-
-/** Where an unsent draft continues: the record wizard or the article editor. */
-function continueHref(submission: Submission): string {
-  const { submissionType, targetSlug, documentId, draftData } = submission
-  if (submissionType === "wiki_edit" || submissionType === "blog_submission") {
-    const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
-    if (
-      (draftData as { kind?: unknown } | null)?.kind === "new_article" ||
-      !targetSlug
-    )
-      return `/contribute/knowledge/new?type=${kind}&draft=${encodeURIComponent(documentId)}`
-
-    return kind === "knowledge"
-      ? `/contribute/knowledge/${encodeURIComponent(targetSlug)}`
-      : `/contribute/knowledge/journal/${encodeURIComponent(targetSlug)}`
-  }
-  if (
-    (submissionType === "library_edit" || submissionType === "correction") &&
-    targetSlug
-  )
-    return `/contribute/index/${encodeURIComponent(targetSlug)}`
-
-  if (submissionType === "new_library")
-    return draftData?.staffCreation
-      ? "/staff/new"
-      : "/contribute/index/new?draft=contribute"
-
-  return "/contribute/index/new"
-}
-
-/**
- * A draft's next step. The article editor is for editors, so anyone else
- * is sent to the editor role application.
- */
-function continueLink(
-  submission: Submission,
-  isEditor: (kind: "knowledge" | "journal") => boolean
-): { href: string; label: string } {
-  const href = continueHref(submission)
-  const { submissionType } = submission
-  if (submissionType !== "wiki_edit" && submissionType !== "blog_submission")
-    return { href, label: "Continue" }
-  const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
-
-  return isEditor(kind)
-    ? { href, label: "Continue" }
-    : { href: editorApplyHref(kind), label: "Apply to edit" }
-}
 
 // ── "View" links ─────────────────────────────────────────────────────────────
 // A sent submission links to what it's about: the library's page or the
@@ -287,31 +240,35 @@ export function SubmissionsShell({ username }: { username: string | null }) {
     submissions.filter((s) => s.status === status).length
 
   const rowExtras = (s: Submission) => {
-    if (s.status === "draft") {
+    if (s.status === "draft" || s.status === "needs_info") {
       const next = continueLink(
         s,
         (kind) => !ready || isArticleEditor(has, kind)
       )
 
       return {
+        ...(s.status === "needs_info" && s.reviewNote
+          ? { note: { text: s.reviewNote, tone: "warn" as const } }
+          : {}),
         action: (
           <Link
             href={next.href}
             className="inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[14px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
             style={{ background: T.accent.primary }}
           >
-            {next.label}
+            {s.status === "needs_info"
+              ? tUi("revise_and_resubmit")
+              : next.label}
             <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
           </Link>
         ),
       }
     }
-    if ((s.status === "needs_info" || s.status === "rejected") && s.reviewNote)
+    if (s.status === "rejected" && s.reviewNote)
       return {
         note: {
           text: s.reviewNote,
-          tone:
-            s.status === "needs_info" ? ("warn" as const) : ("danger" as const),
+          tone: "danger" as const,
         },
       }
     const href = targetHrefs[s.documentId]

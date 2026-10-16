@@ -1,6 +1,14 @@
 import { factories } from "@strapi/strapi"
 
 import { isActivityPublic } from "../../../utils/activity-visibility"
+import {
+  ARTICLE_PROFILE_FIELDS,
+  projectArticleAttribution,
+} from "../../../utils/article-attribution"
+import {
+  articleRevision,
+  ARTICLE_CONTEXT_POPULATE,
+} from "../../../utils/article-content"
 import { readLocale, readStatus } from "../../../utils/read-status"
 
 const BODY_POPULATE = {
@@ -16,6 +24,19 @@ const BODY_POPULATE = {
 export default factories.createCoreController(
   "api::wiki-article.wiki-article",
   ({ strapi }) => ({
+    async find(ctx) {
+      const response = await super.find(ctx)
+      response.data = response.data.map(projectArticleAttribution)
+
+      return response
+    },
+    async findOne(ctx) {
+      const response = await super.findOne(ctx)
+      if (response.data)
+        response.data = projectArticleAttribution(response.data)
+
+      return response
+    },
     // ── /wiki-articles/detail/:slug ───────────────────────────────────────────
     async detail(ctx) {
       const { slug } = ctx.params as { slug: string }
@@ -37,16 +58,19 @@ export default factories.createCoreController(
             "updatedAt",
             "articleStatus",
             "docsSections",
+            "geographyFacet",
+            "readingTimeMinutes",
           ],
           locale,
           status,
           populate: {
+            ...ARTICLE_CONTEXT_POPULATE,
             heroImage: true,
             section: { fields: ["name", "slug"] },
             category: { fields: ["name", "slug"] },
             body: BODY_POPULATE,
             contributors: {
-              fields: ["username", "documentId"],
+              fields: ARTICLE_PROFILE_FIELDS,
               populate: { avatar: { fields: ["url"] } },
             },
             relatedArticles: {
@@ -66,7 +90,16 @@ export default factories.createCoreController(
           },
         })
 
-      ctx.body = { data: results[0] ?? null, meta: {} }
+      const article = results[0]
+      ctx.body = {
+        data: article
+          ? {
+              ...projectArticleAttribution(article as any),
+              contentRevision: articleRevision(article as any),
+            }
+          : null,
+        meta: {},
+      }
     },
 
     // ── /wiki-articles/top-contributors ──────────────────────────────────────
@@ -108,20 +141,20 @@ export default factories.createCoreController(
         return
       }
 
-      const profiles = await strapi
-        .documents("api::user-profile.user-profile")
+      const profiles = await strapi.db
+        .query("api::user-profile.user-profile")
         .findMany({
-          filters: {
+          where: {
             baUserId: { $in: topUserIds },
           } as Record<string, unknown>,
-          fields: [
+          select: [
             "documentId",
             "username",
             "baUserId",
             "profileVisibility",
             "publicPrefs",
           ],
-          populate: { avatar: { fields: ["url"] } },
+          populate: { avatar: { select: ["url"] } },
         })
 
       const sorted = topUserIds
@@ -135,14 +168,11 @@ export default factories.createCoreController(
         .filter((p) => isActivityPublic(p as Record<string, unknown>))
         // baUserId/profileVisibility/publicPrefs are only used above to sort
         // and gate by visibility; they're never returned to the client.
-        .map(
-          ({
-            baUserId: _baUserId,
-            profileVisibility: _profileVisibility,
-            publicPrefs: _publicPrefs,
-            ...rest
-          }) => rest
-        )
+        .map((profile) => ({
+          documentId: profile.documentId,
+          username: profile.username,
+          avatar: profile.avatar?.url ? { url: profile.avatar.url } : null,
+        }))
 
       ctx.body = { data: sorted, meta: {} }
     },

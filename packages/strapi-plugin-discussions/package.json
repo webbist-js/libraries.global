@@ -1,0 +1,78 @@
+{
+  "name": "strapi-plugin-discussions",
+  "version": "0.1.0",
+  "description": "Moderated subjects, threads and article discussions for Strapi 5",
+  "keywords": [
+    "strapi",
+    "strapi-plugin",
+    "discussions",
+    "forum",
+    "moderation"
+  ],
+  "homepage": "https://github.com/webbist-js/libraries.global/tree/dev/packages/strapi-plugin-discussions#readme",
+  "bugs": {
+    "url": "https://github.com/webbist-js/libraries.global/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webbist-js/libraries.global.git",
+    "directory": "packages/strapi-plugin-discussions"
+  },
+  "license": "MIT",
+  "author": "Libraries Global <info@libraries.global>",
+  "exports": {
+    "./package.json": "./package.json",
+    "./strapi-admin": {
+      "source": "./strapi-admin.tsx",
+      "import": "./dist/admin/index.mjs",
+      "require": "./dist/admin/index.js",
+      "default": "./dist/admin/index.js"
+    },
+    "./strapi-server": {
+      "source": "./strapi-server.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    },
+    "./types": "./types/index.d.ts"
+  },
+  "main": "./dist/server/index.js",
+  "types": "./types/index.d.ts",
+  "files": [
+    "dist",
+    "types",
+    "examples",
+    "README.md",
+    "LICENSE",
+    "strapi-admin.tsx",
+    "strapi-server.ts"
+  ],
+  "scripts": {
+    "build": "strapi-plugin build",
+    "test": "vitest run --config vitest.config.ts",
+    "test:acceptance": "node tests/acceptance.cjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "strapi-plugin verify"
+  },
+  "devDependencies": {
+    "@strapi/sdk-plugin": "5.4.0",
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "typescript": "^5",
+    "vitest": "4.1.11"
+  },
+  "peerDependencies": {
+    "@strapi/strapi": ">=5.57.0 <6",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "strapi": {
+    "kind": "plugin",
+    "name": "discussions",
+    "displayName": "Discussions",
+    "description": "Moderated subjects, threads, replies and revisions"
+  }
+}

@@ -78,6 +78,39 @@ describe("toSafeImageFile", () => {
     const file = new File([HTML], "x.png", { type: "image/png" })
     expect(await toSafeImageFile(file, ["image/png"])).toBeNull()
   })
+  it("does not accept a corrupt GIF merely because its signature matches", async () => {
+    const file = new File([GIF], "fake.gif", { type: "image/gif" })
+    expect(await toSafeImageFile(file, ["image/gif"])).toBeNull()
+  })
+  it("strips GIF comments while preserving animation frames, timing and loops", async () => {
+    const red = Array.from({ length: 4 }, () => [255, 0, 0]).flat()
+    const blue = Array.from({ length: 4 }, () => [0, 0, 255]).flat()
+    const gif = await sharp(new Uint8Array([...red, ...blue]), {
+      raw: { width: 2, height: 4, channels: 3, pageHeight: 2 },
+    })
+      .gif({ loop: 2, delay: [80, 160] })
+      .toBuffer()
+    const comment = Buffer.from("private-owner-comment")
+    const commented = Buffer.concat([
+      gif.subarray(0, -1),
+      Buffer.from([0x21, 0xfe, comment.length]),
+      comment,
+      Buffer.from([0, 0x3b]),
+    ])
+    const safe = await toSafeImageFile(
+      new File([new Uint8Array(commented)], "animated.gif", {
+        type: "image/gif",
+      }),
+      ["image/gif"]
+    )
+    expect(safe).not.toBeNull()
+    expect(Buffer.from(await safe!.arrayBuffer()).includes(comment)).toBe(false)
+    expect(await metadataOf(safe!)).toMatchObject({
+      pages: 2,
+      loop: 2,
+      delay: [80, 160],
+    })
+  })
 
   it("rejects allowed-format images outside the allowlist", async () => {
     const file = new File([GIF], "x.gif", { type: "image/gif" })

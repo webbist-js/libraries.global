@@ -1,9 +1,11 @@
 import Image from "next/image"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { ArticleContext } from "@/components/articles/ArticleContext"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { ArticleShareButtons } from "@/components/blog/ArticleShareButtons"
 import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
+import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Badge } from "@/components/ds/Badge"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
@@ -11,6 +13,7 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
+import { articleReaderPath } from "@/lib/article-content-language"
 import {
   countWords,
   estimateReadingTime,
@@ -53,12 +56,14 @@ export function BlogArticlePage({
   related,
   locale,
   untranslatedLocale = null,
+  contentLocale,
 }: {
   readonly article: BlogArticleDetail | null
   readonly related?: BlogArticleSummary[]
   readonly locale: Locale
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
+  readonly contentLocale?: string
 }) {
   const tUi = useUiTranslations("ui")
   const tArticle = useUiTranslations("editorial")
@@ -270,7 +275,12 @@ export function BlogArticlePage({
                   contentId={article.documentId}
                   title={article.title}
                   url={absoluteUrl(
-                    `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                    articleReaderPath(
+                      `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                      locale,
+                      contentLocale ??
+                        (untranslatedLocale ? routing.defaultLocale : locale)
+                    ),
                     locale
                   )}
                 />
@@ -324,10 +334,28 @@ export function BlogArticlePage({
               </div>
             </article>
 
+            <ArticleContext article={article} kind="journal" locale={locale} />
+
             <ArticleEditHistorySection
               kind="blog"
               documentId={article.documentId}
               locale={untranslatedLocale ? routing.defaultLocale : locale}
+            />
+
+            <AttachedDiscussion
+              target={{
+                uid: "api::blog-article.blog-article",
+                documentId: article.documentId,
+                locale:
+                  contentLocale ??
+                  (untranslatedLocale ? routing.defaultLocale : locale),
+              }}
+              subjectSlug="journal"
+              title={article.title ?? article.slug ?? ""}
+              language={
+                contentLocale ??
+                (untranslatedLocale ? routing.defaultLocale : locale)
+              }
             />
 
             {/* Author bio */}

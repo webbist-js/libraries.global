@@ -38,17 +38,29 @@ export function sniffImageType(bytes: Uint8Array): SniffedImageType | null {
 /**
  * Re-encode the image so EXIF and XMP metadata (GPS position, camera serial,
  * owner name) aren't published with it. The EXIF orientation is applied
- * first so the picture still displays the right way up. GIFs carry no EXIF
- * and pass through unchanged. Returns null if the bytes can't be decoded.
+ * first so the picture still displays the right way up. Animated GIFs retain
+ * their frames, loop count and timing. Returns null if the bytes can't be decoded.
  */
 async function stripMetadata(
   buffer: Uint8Array<ArrayBuffer>,
   type: SniffedImageType
 ): Promise<Uint8Array<ArrayBuffer> | null> {
-  if (type === "image/gif") return buffer
   try {
+    if (type === "image/gif") {
+      const image = sharp(buffer, {
+        animated: true,
+        limitInputPixels: 20_000_000,
+      })
+      const metadata = await image.metadata()
+
+      return new Uint8Array(
+        await image
+          .gif({ loop: metadata.loop, delay: metadata.delay })
+          .toBuffer()
+      )
+    }
     // sharp drops all metadata unless asked to keep it.
-    const image = sharp(buffer).rotate()
+    const image = sharp(buffer, { limitInputPixels: 20_000_000 }).rotate()
     const encoded =
       type === "image/jpeg"
         ? image.jpeg({ quality: 90, mozjpeg: true })

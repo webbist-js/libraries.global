@@ -55,6 +55,9 @@ vi.mock("@/lib/strapi-api/content/server", () => ({
 vi.mock("@/components/blog/BlogArticlePage", () => ({ default: () => null }))
 vi.mock("@/components/blog/BlogLandingPage", () => ({ default: () => null }))
 vi.mock("@/lib/journal-landing", () => ({ loadJournalLanding: vi.fn() }))
+vi.mock("@/lib/article-discovery", () => ({
+  fetchArticleBrowse: async () => ({ total: 20 }),
+}))
 vi.mock("@/components/docs/DocsArticlePage", () => ({ default: () => null }))
 vi.mock("@/lib/strapi-helpers", () => ({
   formatStrapiMediaUrl: (value: string) => value,

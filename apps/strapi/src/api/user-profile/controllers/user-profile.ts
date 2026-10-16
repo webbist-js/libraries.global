@@ -661,11 +661,11 @@ export default factories.createCoreController(
 
     async findBadgesByDocumentId(ctx: any) {
       const { documentId } = ctx.params as { documentId: string }
-      const profile = await strapi
-        .documents("api::user-profile.user-profile")
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
         .findOne({
-          documentId,
-          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
+          where: { documentId },
+          select: ["baUserId", "profileVisibility", "publicPrefs"],
         })
 
       // No owner bypass for a private profile on this endpoint.
@@ -681,14 +681,12 @@ export default factories.createCoreController(
 
     async findBadgesByUsername(ctx: any) {
       const { username } = ctx.params as { username: string }
-      const results = await strapi
-        .documents("api::user-profile.user-profile")
-        .findMany({
-          filters: { username: { $eq: username } } as any,
-          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
-          limit: 1,
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({
+          where: { username },
+          select: ["baUserId", "profileVisibility", "publicPrefs"],
         })
-      const profile = results[0] ?? null
       if (
         !profile ||
         !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: true }))
@@ -702,14 +700,12 @@ export default factories.createCoreController(
     /** The Drives ribbons for a profile (spec §8): follows the activity rule. */
     async findDrivesByUsername(ctx: any) {
       const { username } = ctx.params as { username: string }
-      const results = await strapi
-        .documents("api::user-profile.user-profile")
-        .findMany({
-          filters: { username: { $eq: username } } as any,
-          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
-          limit: 1,
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({
+          where: { username },
+          select: ["baUserId", "profileVisibility", "publicPrefs"],
         })
-      const profile = results[0] ?? null
       if (
         !profile ||
         !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: true }))

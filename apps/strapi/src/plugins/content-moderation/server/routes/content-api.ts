@@ -1,6 +1,12 @@
 export default [
   {
     method: "GET",
+    path: "/articles/blog/:slug/ownership",
+    handler: "submission.journalOwnership",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/locales",
     handler: "submission.locales",
     config: { auth: false, policies: [] },
@@ -88,6 +94,24 @@ export default [
     method: "GET",
     path: "/uploads/usage",
     handler: "submission.uploadUsage",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations",
+    handler: "upload.reserve",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations/complete",
+    handler: "upload.complete",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations/cancel",
+    handler: "upload.cancel",
     config: { auth: false, policies: [] },
   },
   {

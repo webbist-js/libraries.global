@@ -31,10 +31,10 @@ export const CONTRIBUTOR_NUMBER_SEQUENCE =
 
 /** The highest contributor number in use, plus one (1 when there is none). */
 async function maxPlusOne(strapi: any): Promise<number> {
-  const [top] = (await strapi.documents(PROFILE).findMany({
-    fields: ["contributorNumber"],
-    filters: { contributorNumber: { $notNull: true } },
-    sort: "contributorNumber:desc",
+  const [top] = (await strapi.db.query(PROFILE).findMany({
+    select: ["contributorNumber"],
+    where: { contributorNumber: { $notNull: true } },
+    orderBy: { contributorNumber: "desc" },
     limit: 1,
   })) as { contributorNumber?: number | null }[]
 

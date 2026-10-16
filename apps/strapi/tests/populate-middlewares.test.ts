@@ -69,6 +69,9 @@ describe.each(Object.entries(MIDDLEWARES))(
           assertExplicit(ctx.query.populate)
           expect(Array.isArray(ctx.query.fields)).toBe(true)
           expect(ctx.query.fields).toContain("slug")
+          // Editor taxonomy fallback chooses translated variants by document
+          // identity; the safe projection must keep their public language.
+          expect(ctx.query.fields).toContain("locale")
           expect(ctx.query.fields).not.toContain("createdBy")
           expect(ctx.query.filters).toEqual({ slug: { $eq: "x" } })
           expect(ctx.query.locale).toBe("en")

@@ -8,7 +8,7 @@ export type ModerationStatus =
 const ALLOWED: Record<ModerationStatus, readonly ModerationStatus[]> = {
   draft: ["pending"],
   pending: ["approved", "rejected", "needs_info"],
-  needs_info: ["pending", "approved", "rejected"],
+  needs_info: ["draft", "pending", "approved", "rejected"],
   approved: [],
   rejected: [],
 }

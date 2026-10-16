@@ -376,9 +376,9 @@ export default ({ strapi }: { strapi: any }) => {
           const names = new Map<string, string | null>()
           for (let i = 0; i < ids.length; i += ID_CHUNK) {
             const chunk = ids.slice(i, i + ID_CHUNK)
-            const profiles = (await strapi.documents(PROFILE).findMany({
-              filters: { baUserId: { $in: chunk } },
-              fields: ["baUserId", "notifPrefs", "firstName", "username"],
+            const profiles = (await strapi.db.query(PROFILE).findMany({
+              where: { baUserId: { $in: chunk } },
+              select: ["baUserId", "notifPrefs", "firstName", "username"],
               limit: chunk.length,
             })) as {
               baUserId: string

@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 
+import { ArticleDiscoveryFilters } from "@/components/articles/ArticleDiscoveryFilters"
 import { EmptyState } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -12,6 +13,7 @@ import { JournalArticleCard, JournalArticleRow } from "./JournalCards"
 import {
   JOURNAL_PAGE_SIZE,
   journalHref,
+  journalCollectionKey,
   type JournalQuery,
 } from "./journalLanding.helpers"
 import { JournalListControls } from "./JournalListControls"
@@ -126,7 +128,7 @@ function ArticleResults({
     return (
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
         {list.items.map((article) => (
-          <li key={article.documentId}>
+          <li key={`${article.documentId}:${article.locale}`}>
             <JournalArticleRow article={article} locale={linkLocale} />
           </li>
         ))}
@@ -137,7 +139,7 @@ function ArticleResults({
   return (
     <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
       {list.items.map((article) => (
-        <li key={article.documentId}>
+        <li key={`${article.documentId}:${article.locale}`}>
           <JournalArticleCard article={article} locale={linkLocale} />
         </li>
       ))}
@@ -155,6 +157,7 @@ export function JournalAllArticles({
   languages,
   linkLocale,
   fallbackFrom,
+  discovery,
 }: Pick<
   JournalLandingData,
   | "query"
@@ -165,11 +168,12 @@ export function JournalAllArticles({
   | "languages"
   | "linkLocale"
   | "fallbackFrom"
+  | "discovery"
 >) {
-  const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
 
   const locale = useLocale()
+  const tDiscovery = useUiTranslations("discovery")
   const activeSection = sections.find((s) => s.slug === query.section)
 
   return (
@@ -181,7 +185,7 @@ export function JournalAllArticles({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <JournalHeading id="journal-all">
-            {tUi("all_articles")}
+            {tDiscovery(journalCollectionKey(discovery.appliedFilters.origins))}
           </JournalHeading>
           <p
             aria-live="polite"
@@ -209,6 +213,7 @@ export function JournalAllArticles({
       ) : null}
 
       <SectionChips query={query} sections={sections} total={total} />
+      <ArticleDiscoveryFilters discovery={discovery} kind="journal" />
 
       <div className="mt-6">
         <ArticleResults

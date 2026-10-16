@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useTransition } from "react"
 
+import { articleLanguageOptions } from "@/lib/article-language-options"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { Link, useRouter } from "@/lib/navigation"
@@ -30,10 +31,15 @@ export function JournalListControls({
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
+  const tDiscovery = useUiTranslations("discovery")
   const locale = useLocale()
 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const languageOptions = articleLanguageOptions(
+    languages.map((language) => language.code),
+    [lang, ...(query.filters?.languages ?? [])]
+  )
 
   function go(changes: Partial<JournalQuery>) {
     startTransition(() => {
@@ -58,17 +64,23 @@ export function JournalListControls({
           className={SELECT_CLASS}
           onChange={(e) => go({ lang: e.target.value })}
           style={selectStyle}
-          value={lang}
+          value={
+            (query.filters?.languages?.length ?? 0) > 1 ? "selected" : lang
+          }
         >
-          {languages.length === 0 ? (
-            <option value={lang}>{lang}</option>
-          ) : (
-            languages.map((l) => (
-              <option key={l.code} value={l.code}>
-                {languageName(l.code, languages, locale)}
-              </option>
-            ))
-          )}
+          <option value="all">{tDiscovery("allLanguages")}</option>
+          {(query.filters?.languages?.length ?? 0) > 1 ? (
+            <option disabled value="selected">
+              {query.filters?.languages
+                ?.map((code) => languageName(code, languages, locale))
+                .join(", ")}
+            </option>
+          ) : null}
+          {languageOptions.map((code) => (
+            <option key={code} value={code}>
+              {languageName(code, languages, locale)}
+            </option>
+          ))}
         </select>
       </label>
 

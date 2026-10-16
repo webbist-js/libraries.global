@@ -1,0 +1,65 @@
+const publicRoute = (method: string, path: string, action: string) => ({
+  method,
+  path,
+  handler: `discussion.${action}`,
+  config: { auth: false, policies: [] },
+})
+const adminRoute = (
+  method: string,
+  path: string,
+  action: string,
+  permission: string
+) => ({
+  method,
+  path,
+  handler: `discussion.${action}`,
+  config: {
+    policies: [
+      "admin::isAuthenticatedAdmin",
+      {
+        name: "admin::hasPermissions",
+        config: { actions: [`plugin::discussions.${permission}`] },
+      },
+    ],
+  },
+})
+
+export default {
+  "content-api": {
+    type: "content-api",
+    routes: [
+      publicRoute("GET", "/my/records", "myRecords"),
+      publicRoute("GET", "/subjects", "subjects"),
+      publicRoute("GET", "/threads", "threads"),
+      publicRoute("POST", "/threads", "createThread"),
+      publicRoute("GET", "/threads/:id", "thread"),
+      publicRoute("GET", "/threads/:id/replies", "replies"),
+      publicRoute("POST", "/threads/:id/replies", "createReply"),
+      publicRoute("PUT", "/threads/:id/subscription", "subscribe"),
+      publicRoute("POST", "/records/:kind/:id/revisions", "edit"),
+      publicRoute("GET", "/records/:kind/:id/revisions", "revisions"),
+      publicRoute("POST", "/records/:kind/:id/reports", "report"),
+      publicRoute("GET", "/moderation/revisions", "queue"),
+      publicRoute("PUT", "/moderation/revisions/:id", "review"),
+      publicRoute("PUT", "/moderation/records/:kind/:id", "moderate"),
+      publicRoute("GET", "/moderation/reports", "reports"),
+      publicRoute("PUT", "/moderation/reports/:id", "decideReport"),
+      publicRoute("GET", "/moderation/threads/:id/audit", "audit"),
+    ],
+  },
+  admin: {
+    type: "admin",
+    routes: [
+      adminRoute("GET", "/threads", "adminThreads", "read"),
+      adminRoute("GET", "/subjects", "adminSubjects", "read"),
+      adminRoute("POST", "/subjects", "adminSaveSubject", "manage"),
+      adminRoute("PUT", "/subjects/:id", "adminSaveSubject", "manage"),
+      adminRoute("GET", "/revisions", "adminQueue", "read"),
+      adminRoute("PUT", "/revisions/:id", "adminReview", "review"),
+      adminRoute("PUT", "/records/:kind/:id", "adminModerate", "review"),
+      adminRoute("GET", "/reports", "adminReports", "read"),
+      adminRoute("PUT", "/reports/:id", "adminDecideReport", "review"),
+      adminRoute("GET", "/threads/:id/audit", "adminAudit", "read"),
+    ],
+  },
+}

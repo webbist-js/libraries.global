@@ -20,6 +20,7 @@ import {
 } from "@repo/shared-data"
 
 import { acceptedCount } from "./submission-policy"
+import { ownsJournalArticle } from "../../../../utils/article-relations"
 import { countLibraries } from "../../../../utils/meili-count"
 import { feedReview } from "../utils/feed-review"
 import { isVerification, verifyReview } from "../utils/library-verify"
@@ -677,6 +678,18 @@ export default ({ strapi }: { strapi: any }) => ({
     )
       return false
     if (isArticleSuggestion(s.draftData)) return true
+    if (
+      s.submissionType === "blog_submission" &&
+      !isNewArticleDraft(s.draftData) &&
+      (await ownsJournalArticle(strapi, s.submittedByUserId, s))
+    ) {
+      const { caps } = await strapi
+        .plugin("content-moderation")
+        .service("submission-policy")
+        .loadCapabilities(s.submittedByUserId)
+
+      return !canDirectEdit(caps, "journal", locale)
+    }
     if (!isNewArticleDraft(s.draftData)) return false
     const { caps } = await strapi
       .plugin("content-moderation")

@@ -5,13 +5,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import BlogLandingPage from "@/components/blog/BlogLandingPage"
 import {
   journalHref,
+  journalBrowseParams,
   JOURNAL_PAGE_SIZE,
   parseJournalQuery,
 } from "@/components/blog/journalLanding.helpers"
+import { fetchArticleBrowse } from "@/lib/article-discovery"
 import { loadJournalLanding } from "@/lib/journal-landing"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
-  countJournalArticles,
   fetchBlogLanding,
   fetchBlogSections,
 } from "@/lib/strapi-api/content/server"
@@ -33,7 +34,9 @@ export async function generateMetadata({
   const [landing, total, sections, tUi, t] = await Promise.all([
     fetchBlogLanding(locale as Locale),
     query.page > 1 || query.section
-      ? countJournalArticles(locale, query.section)
+      ? fetchArticleBrowse("blog", journalBrowseParams(locale, query)).then(
+          (result) => result.total
+        )
       : Promise.resolve(null),
     query.section
       ? fetchBlogSections(locale as Locale)
@@ -73,7 +76,11 @@ export async function generateMetadata({
     locale,
     // Alternate list orders and language selections aren't separate landing pages.
     robots:
-      query.sort !== "newest" || query.lang || emptyPage
+      query.sort !== "newest" ||
+      query.lang ||
+      query.filters ||
+      query.allOrigins ||
+      emptyPage
         ? "noindex-follow"
         : "index",
     image: formatStrapiMediaUrl(data?.seo?.metaImage?.url),

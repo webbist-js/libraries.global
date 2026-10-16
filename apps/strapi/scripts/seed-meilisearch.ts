@@ -12,7 +12,7 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
-import type { LibraryNotice } from "@repo/shared-data"
+import type { LibraryNotice, ArticleBrowseResult } from "@repo/shared-data"
 
 import pluginsConfig from "../config/plugins"
 
@@ -92,11 +92,42 @@ export function entriesQueryParams(
   if (entriesQuery.locale) params.set("locale", entriesQuery.locale)
   entriesQuery.fields.forEach((field, i) => params.set(`fields[${i}]`, field))
   for (const [relation, { fields }] of Object.entries(entriesQuery.populate))
-    fields.forEach((field, i) =>
-      params.set(`populate[${relation}][fields][${i}]`, field)
-    )
+    fields
+      .filter(
+        (field) => relation !== "authorProfile" || field !== "publicPrefs"
+      )
+      .forEach((field, i) =>
+        params.set(`populate[${relation}][fields][${i}]`, field)
+      )
 
   return params
+}
+
+/** REST attribution is already privacy-projected; browse supplies the permitted author facet. */
+export async function attachPublicArticleAuthors(
+  entries: Entry[],
+  apiPath: string,
+  get: (path: string) => Promise<ArticleBrowseResult>
+): Promise<void> {
+  const usernames = new Map<string, string | null>()
+  for (let page = 1; ; page++) {
+    const browse = await get(
+      `/api/${apiPath}/browse?lang=all&origin=all&pageSize=50&page=${page}`
+    )
+    for (const item of browse.items)
+      usernames.set(`${item.documentId}:${item.locale}`, item.authorUsername)
+    if (page >= browse.pageCount) break
+  }
+  for (const entry of entries) {
+    const username = usernames.get(`${entry.documentId}:${entry.locale}`)
+    entry.authorProfile = username
+      ? {
+          username,
+          profileVisibility: "public",
+          publicPrefs: { showActivity: true },
+        }
+      : null
+  }
 }
 
 /**
@@ -286,6 +317,22 @@ async function main() {
       `Fetched ${entries.length} published ${index.apiPath} (all locales)`
     )
     if (index.name === "library") await attachMobileTimetables(entries, getJson)
+    if (index.name === "blog-article")
+      await attachPublicArticleAuthors(
+        entries,
+        index.apiPath,
+        async (apiPath) => {
+          const response = await fetch(`${STRAPI}${apiPath}`, {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+          })
+          if (!response.ok)
+            throw new Error(
+              `Strapi public article attribution ${response.status}`
+            )
+
+          return response.json() as Promise<ArticleBrowseResult>
+        }
+      )
     // Every seeded type is localized and every search filters by `locale`,
     // so an entry without one would be indexed but never found.
     const unlocalized = entries.filter((e) => !e.locale).length

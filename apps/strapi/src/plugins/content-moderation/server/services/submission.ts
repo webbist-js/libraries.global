@@ -10,6 +10,12 @@ import {
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../../utils/affiliations"
+import { articleRevision } from "../../../../utils/article-content"
+import {
+  articleDraftMedia,
+  pinArticleBase,
+  submissionArticle,
+} from "../../../../utils/article-relations"
 import {
   type ChangeContext,
   runWithChangeContext,
@@ -129,6 +135,10 @@ const REFUSED_MARKERS: Record<ApplyRefusedReason, string> = {
   claim_lost: CLAIM_LOST_MARKER,
   feed_mismatch: FEED_MISMATCH_MARKER,
   invalid_drive: INVALID_DRIVE_MARKER,
+  stale_article:
+    " [Not applied: the article changed since this revision started. Ask the writer to reload and compare before resubmitting]",
+  invalid_media:
+    " [Not applied: an image does not belong to this writer or the existing published article]",
 }
 
 /** The dates a Moderator gives a `drive_proposal`'s drive. */
@@ -744,13 +754,14 @@ export default ({ strapi }: { strapi: any }) => ({
       contentLocale: await resolveSubmissionLocale(strapi, locale, fields),
     }
 
+    const pinned = await pinArticleBase(strapi, rest)
     const created = await strapi
       .documents("plugin::content-moderation.submission")
       .create({
         data: {
-          ...rest,
+          ...pinned,
           status,
-          ...(status === "pending" ? { payloadHash: payloadHash(rest) } : {}),
+          ...(status === "pending" ? { payloadHash: payloadHash(pinned) } : {}),
         },
       })
     if (status === "pending" && notify)
@@ -777,7 +788,7 @@ export default ({ strapi }: { strapi: any }) => ({
       }
     }
 
-    return toContributor(created)
+    return toContributor(await articleDraftMedia(strapi, created))
   },
 
   /**
@@ -850,13 +861,16 @@ export default ({ strapi }: { strapi: any }) => ({
     )
   },
 
-  async findByUser(userId: string) {
+  async findByUser(userId: string, documentId?: string) {
     const rows = await strapi
       .documents("plugin::content-moderation.submission")
       .findMany({
-        filters: { submittedByUserId: userId },
+        filters: {
+          submittedByUserId: userId,
+          ...(documentId ? { documentId } : {}),
+        },
         sort: { createdAt: "desc" },
-        limit: 100,
+        limit: documentId ? 1 : 100,
       })
 
     // Drive tags for the rows that carry one, one query for the page.
@@ -1905,11 +1919,38 @@ export default ({ strapi }: { strapi: any }) => ({
     if (!existing) return { error: "not_found" }
     if (existing.submittedByUserId !== userId) return { error: "forbidden" }
     // A1: once a submission is in review (or decided) its content is frozen.
-    if (existing.status !== "draft") return { error: "not_draft" }
+    if (existing.status !== "draft" && existing.status !== "needs_info")
+      return { error: "not_draft" }
 
     const safeDraft = withoutModeratorKeys(
       draftData && typeof draftData === "object" ? draftData : {}
     )
+    const rebaseRevision = safeDraft.rebaseRevision
+    delete safeDraft.rebaseRevision
+    if (rebaseRevision !== undefined) {
+      if (
+        typeof rebaseRevision !== "string" ||
+        !/^[a-f0-9]{64}$/.test(rebaseRevision) ||
+        !["wiki_edit", "blog_submission"].includes(existing.submissionType) ||
+        isNewArticleDraft(existing.draftData)
+      )
+        return { error: "invalid", message: "Invalid article revision" }
+      const current = await submissionArticle(
+        strapi,
+        existing,
+        typeof safeDraft.locale === "string"
+          ? safeDraft.locale
+          : existing.contentLocale
+      )
+      if (!current || articleRevision(current) !== rebaseRevision)
+        return {
+          error: "invalid",
+          message:
+            "The article changed again. Reload the published version and compare before retrying.",
+        }
+      safeDraft.baseRevision = rebaseRevision
+      safeDraft.sourceLocale = current.locale
+    }
     // Also sync the top-level submission fields from draftData so the
     // moderation queue always reflects the latest wizard state.
     const { fields: libraryFields, extras } = splitSubmissionBody(safeDraft)
@@ -1919,6 +1960,11 @@ export default ({ strapi }: { strapi: any }) => ({
     const updateData: Record<string, unknown> = {
       draftData: {
         ...safeDraft,
+        ...(rebaseRevision
+          ? { baseRevision: rebaseRevision }
+          : existing.draftData?.baseRevision
+            ? { baseRevision: existing.draftData.baseRevision }
+            : {}),
         ...(staffCreationOf(existing.draftData)
           ? { staffCreation: staffCreationOf(existing.draftData) }
           : {}),
@@ -1927,6 +1973,13 @@ export default ({ strapi }: { strapi: any }) => ({
       fields: libraryFields,
       draftRevision: (existing.draftRevision ?? 0) + 1,
       ...checked.extras,
+    }
+    const priorStatus = existing.status
+    if (priorStatus === "needs_info") {
+      // Reopen privately before accepting edits, so a moderator cannot approve
+      // a payload the contributor is still revising.
+      updateData.status = "draft"
+      updateData.payloadHash = null
     }
     // An article draft's language lives in `draftData.locale`; keep the
     // stored locale in step so `findDraft(…, locale)` finds it. Normalised
@@ -1950,19 +2003,44 @@ export default ({ strapi }: { strapi: any }) => ({
     // check and its write while both still see status:"draft". `submission`
     // has draftAndPublish:false, so constraints.md allows this
     // strapi.db.query CAS in place of the plain documents().update.
-    const { count } = await strapi.db
-      .query("plugin::content-moderation.submission")
-      .updateMany({
-        where: { documentId, status: "draft", ...revisionWhere(existing) },
-        data: updateData,
-      })
+    const count = await strapi.db.transaction(async () => {
+      const result = await strapi.db
+        .query("plugin::content-moderation.submission")
+        .updateMany({
+          where: {
+            documentId,
+            status: priorStatus,
+            ...revisionWhere(existing),
+          },
+          data: updateData,
+        })
+      if (result.count === 1 && priorStatus === "needs_info")
+        await writeReviewEvent(strapi, {
+          submissionDocumentId: documentId,
+          fromStatus: "needs_info",
+          toStatus: "draft",
+          reviewerId: `ba:${userId}`,
+          reviewerKind: "contributor",
+        })
+      if (result.count === 1 && rebaseRevision)
+        await writeReviewEvent(strapi, {
+          submissionDocumentId: documentId,
+          fromStatus: "draft",
+          toStatus: "draft",
+          reviewerId: `ba:${userId}`,
+          reviewerKind: "contributor",
+          note: "Writer explicitly compared and adopted the current published article revision.",
+        })
+
+      return result.count
+    })
     if (count !== 1) return { error: "not_draft" }
 
     const data = await strapi
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId })
 
-    return { data: toContributor(data) }
+    return { data: toContributor(await articleDraftMedia(strapi, data)) }
   },
 
   async finalizeDraft(
@@ -2005,7 +2083,8 @@ export default ({ strapi }: { strapi: any }) => ({
 
     if (!existing) return null
     if (existing.submittedByUserId !== userId) return null
-    if (existing.status !== "draft") return null
+    if (existing.status !== "draft" && existing.status !== "needs_info")
+      return null
 
     // Snapshot the revision selector now, before `beforeTransition` runs:
     // the compare-and-set below must pin to what this call actually read at
@@ -2013,6 +2092,7 @@ export default ({ strapi }: { strapi: any }) => ({
     // reach the write (a concurrent saveDraft can land, and bump
     // draftRevision, while `beforeTransition` is still running).
     const casRevision = revisionWhere(existing)
+    const priorStatus = existing.status
 
     // The body is the full form (the UI sends everything on finalize). A body
     // with no library fields keeps the saved draft's, so a bare finalize
@@ -2079,13 +2159,13 @@ export default ({ strapi }: { strapi: any }) => ({
       const { count } = await strapi.db
         .query("plugin::content-moderation.submission")
         .updateMany({
-          where: { documentId, status: "draft", ...casRevision },
+          where: { documentId, status: priorStatus, ...casRevision },
           data: updateData,
         })
       if (count !== 1) return false
       await writeReviewEvent(strapi, {
         submissionDocumentId: documentId,
-        fromStatus: "draft",
+        fromStatus: priorStatus,
         toStatus: "pending",
         reviewerId: `ba:${existing.submittedByUserId}`,
         reviewerKind: "contributor",
@@ -2125,12 +2205,12 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async findPublicByDocumentId(documentId: string) {
-    // Resolve the profile to get baUserId via Document Service
-    const profile = await strapi
-      .documents("api::user-profile.user-profile")
+    // Private identity is an internal Query Engine lookup, never a public field selection.
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
       .findOne({
-        documentId,
-        fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
+        where: { documentId },
+        select: ["baUserId", "profileVisibility", "publicPrefs"],
       })
     if (!profile?.baUserId || !isActivityPublic(profile)) return []
 
@@ -2168,14 +2248,12 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async findPublicByUsername(username: string) {
-    // Resolve the profile to get baUserId via Document Service
-    const [profile] = (await strapi
-      .documents("api::user-profile.user-profile")
-      .findMany({
-        filters: { username: { $eq: username } } as any,
-        fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
-        limit: 1,
-      })) as any[]
+    const profile = await strapi.db
+      .query("api::user-profile.user-profile")
+      .findOne({
+        where: { username },
+        select: ["baUserId", "profileVisibility", "publicPrefs"],
+      })
     if (!profile?.baUserId || !isActivityPublic(profile)) return []
 
     return (this as any).findPublicByBaUserId(profile.baUserId)
@@ -2234,7 +2312,7 @@ export default ({ strapi }: { strapi: any }) => ({
       })) as { id: number; size?: number | string | null }[]
       for (const f of files) {
         const kb = Number(f.size ?? 0)
-        if (Number.isFinite(kb) && kb > 0) bytes += Math.round(kb * 1024)
+        if (Number.isFinite(kb) && kb > 0) bytes += Math.round(kb * 1000)
       }
     }
 
@@ -2264,7 +2342,7 @@ export default ({ strapi }: { strapi: any }) => ({
     const filters: Record<string, unknown> = {
       submittedByUserId: userId,
       submissionType,
-      status: "draft",
+      status: { $in: ["draft", "needs_info"] },
       ...(wanted === base
         ? {
             $or: [
@@ -2290,7 +2368,7 @@ export default ({ strapi }: { strapi: any }) => ({
           )
         : results[0]
 
-    return toContributor(result ?? null)
+    return toContributor(await articleDraftMedia(strapi, result ?? null))
   },
 
   /**

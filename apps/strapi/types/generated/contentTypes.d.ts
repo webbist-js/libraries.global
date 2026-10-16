@@ -919,6 +919,51 @@ export interface ApiArticleChangeArticleChange
   }
 }
 
+export interface ApiArticleProjectionJobArticleProjectionJob
+  extends Struct.CollectionTypeSchema {
+  collectionName: "article_projection_jobs"
+  info: {
+    displayName: "Article projection retry"
+    pluralName: "article-projection-jobs"
+    singularName: "article-projection-job"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::article-projection-job.article-projection-job"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    targets: Schema.Attribute.JSON & Schema.Attribute.Private
+    tasks: Schema.Attribute.JSON & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
   collectionName: "blog_articles"
   info: {
@@ -936,6 +981,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    areas: Schema.Attribute.Relation<"manyToMany", "api::area.area"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     author: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -989,6 +1040,15 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    continents: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::continent.continent"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     contributors: Schema.Attribute.Relation<
       "manyToMany",
       "api::user-profile.user-profile"
@@ -998,9 +1058,21 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    countries: Schema.Attribute.Relation<"manyToMany", "api::country.country"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    eventMentions: Schema.Attribute.Component<"content.event-mention", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     featured: Schema.Attribute.Boolean &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1008,6 +1080,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<false>
+    geographyFacet: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     heroImage: Schema.Attribute.Media<"images"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1025,7 +1103,32 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       "oneToMany",
       "api::blog-article.blog-article"
     >
+    publicationOrigin: Schema.Attribute.Enumeration<["index", "community"]> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.DefaultTo<"index">
     publishedAt: Schema.Attribute.DateTime
+    readingTimeMinutes: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1
+        },
+        number
+      >
+    regions: Schema.Attribute.Relation<"manyToMany", "api::region.region"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     relatedArticles: Schema.Attribute.Relation<
       "manyToMany",
       "api::blog-article.blog-article"
@@ -3315,6 +3418,7 @@ export interface ApiNotificationNotification
         "feed_update",
         "billing_update",
         "beta_invitation",
+        "discussion_update",
       ]
     > &
       Schema.Attribute.Required
@@ -3771,7 +3875,7 @@ export interface ApiRoleGrantRoleGrant extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     queue: Schema.Attribute.Enumeration<
-      ["all", "index", "knowledge", "journal", "applications"]
+      ["all", "index", "knowledge", "journal", "applications", "discussions"]
     > &
       Schema.Attribute.DefaultTo<"all">
     reason: Schema.Attribute.Text
@@ -4214,6 +4318,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    areas: Schema.Attribute.Relation<"manyToMany", "api::area.area"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     articleStatus: Schema.Attribute.Enumeration<
       ["stable", "beta", "experimental", "draft", "deprecated"]
     > &
@@ -4249,10 +4359,25 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    continents: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::continent.continent"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     contributors: Schema.Attribute.Relation<
       "manyToMany",
       "api::user-profile.user-profile"
     > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
+    countries: Schema.Attribute.Relation<"manyToMany", "api::country.country"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
@@ -4274,6 +4399,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<false>
+    geographyFacet: Schema.Attribute.JSON &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     heroImage: Schema.Attribute.Media<"images"> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4298,6 +4429,24 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    readingTimeMinutes: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1
+        },
+        number
+      >
+    regions: Schema.Attribute.Relation<"manyToMany", "api::region.region"> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     relatedArticles: Schema.Attribute.Relation<
       "manyToMany",
       "api::wiki-article.wiki-article"
@@ -4966,6 +5115,66 @@ export interface PluginContentModerationSubmissionUpload
   }
 }
 
+export interface PluginContentModerationUploadReservation
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_upload_reservations"
+  info: {
+    displayName: "Upload Reservation"
+    pluralName: "upload-reservations"
+    singularName: "upload-reservation"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    bytes: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1
+        },
+        number
+      >
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    fileId: Schema.Attribute.Integer
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.upload-reservation"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    purpose: Schema.Attribute.Enumeration<["article", "submission", "avatar"]> &
+      Schema.Attribute.Required
+    quotaDate: Schema.Attribute.String & Schema.Attribute.Required
+    reservationId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    status: Schema.Attribute.Enumeration<
+      ["reserved", "completed", "cancelled"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"reserved">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: "strapi_releases"
@@ -5056,6 +5265,514 @@ export interface PluginContentReleasesReleaseAction
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsAuditEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_audit_events"
+  info: {
+    displayName: "Discussion audit-event"
+    pluralName: "audit-events"
+    singularName: "audit-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.String & Schema.Attribute.Required
+    actorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    detail: Schema.Attribute.JSON & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.audit-event"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    recordType: Schema.Attribute.Enumeration<["thread", "reply"]> &
+      Schema.Attribute.Required
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsErasedActor
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_erased_actors"
+  info: {
+    displayName: "Discussion erased-actor"
+    pluralName: "erased-actors"
+    singularName: "erased-actor"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actorHash: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.erased-actor"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsOutbox extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_outboxs"
+  info: {
+    displayName: "Discussion outbox"
+    pluralName: "outboxs"
+    singularName: "outbox"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actorKey: Schema.Attribute.String & Schema.Attribute.Private
+    attempts: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    claimedAt: Schema.Attribute.DateTime
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    dedupeKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    event: Schema.Attribute.JSON &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    hookDelivered: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    lastError: Schema.Attribute.Text & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.outbox"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    state: Schema.Attribute.Enumeration<["pending", "dispatching", "done"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    subscriptionCursor: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsRateWindow
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_rate_windows"
+  info: {
+    displayName: "Discussion rate-window"
+    pluralName: "rate-windows"
+    singularName: "rate-window"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actions: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    actorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.rate-window"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    windowStartedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+  }
+}
+
+export interface PluginDiscussionsReply extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_replys"
+  info: {
+    displayName: "Discussion reply"
+    pluralName: "replys"
+    singularName: "reply"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    authorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    authorName: Schema.Attribute.String & Schema.Attribute.Required
+    authorProfile: Schema.Attribute.JSON
+    body: Schema.Attribute.Text & Schema.Attribute.DefaultTo<"">
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    language: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.reply"
+    > &
+      Schema.Attribute.Private
+    parentId: Schema.Attribute.String
+    publishedAt: Schema.Attribute.DateTime
+    state: Schema.Attribute.Enumeration<
+      ["pending", "visible", "rejected", "removed"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+  }
+}
+
+export interface PluginDiscussionsReport extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_reports"
+  info: {
+    displayName: "Discussion report"
+    pluralName: "reports"
+    singularName: "report"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    dedupeKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.report"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    recordType: Schema.Attribute.Enumeration<["thread", "reply"]> &
+      Schema.Attribute.Required
+    recordVersion: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    reporterKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    reviewerKey: Schema.Attribute.String & Schema.Attribute.Private
+    reviewNote: Schema.Attribute.Text & Schema.Attribute.Private
+    snapshotBody: Schema.Attribute.Text & Schema.Attribute.Private
+    snapshotTitle: Schema.Attribute.String & Schema.Attribute.Private
+    state: Schema.Attribute.Enumeration<["open", "dismissed", "actioned"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"open">
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+  }
+}
+
+export interface PluginDiscussionsRevision extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_revisions"
+  info: {
+    displayName: "Discussion revision"
+    pluralName: "revisions"
+    singularName: "revision"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    authorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    authorName: Schema.Attribute.String & Schema.Attribute.Required
+    authorProfile: Schema.Attribute.JSON
+    baseVersion: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    body: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    decidedAt: Schema.Attribute.DateTime
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.revision"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    recordType: Schema.Attribute.Enumeration<["thread", "reply"]> &
+      Schema.Attribute.Required
+    reviewerKey: Schema.Attribute.String & Schema.Attribute.Private
+    reviewNote: Schema.Attribute.Text & Schema.Attribute.Private
+    state: Schema.Attribute.Enumeration<["pending", "approved", "rejected"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    title: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsSubject extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_subjects"
+  info: {
+    displayName: "Discussion subject"
+    pluralName: "subjects"
+    singularName: "subject"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    createPolicy: Schema.Attribute.Enumeration<["members", "moderators"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"members">
+    description: Schema.Attribute.Text
+    languages: Schema.Attribute.JSON
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.subject"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    slug: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    visibility: Schema.Attribute.Enumeration<["public", "members", "private"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"public">
+  }
+}
+
+export interface PluginDiscussionsSubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_subscriptions"
+  info: {
+    displayName: "Discussion subscription"
+    pluralName: "subscriptions"
+    singularName: "subscription"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    dedupeKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.subscription"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsThread extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_threads"
+  info: {
+    displayName: "Discussion thread"
+    pluralName: "threads"
+    singularName: "thread"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    activityAt: Schema.Attribute.DateTime
+    authorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    authorName: Schema.Attribute.String & Schema.Attribute.Required
+    authorProfile: Schema.Attribute.JSON
+    body: Schema.Attribute.Text & Schema.Attribute.DefaultTo<"">
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    language: Schema.Attribute.String & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.thread"
+    > &
+      Schema.Attribute.Private
+    locked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    pinned: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    publishedAt: Schema.Attribute.DateTime
+    state: Schema.Attribute.Enumeration<
+      ["pending", "visible", "rejected", "removed"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    subjectId: Schema.Attribute.String & Schema.Attribute.Required
+    target: Schema.Attribute.JSON & Schema.Attribute.Private
+    targetKey: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    title: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
   }
 }
 
@@ -6231,6 +6948,7 @@ declare module "@strapi/strapi" {
       "api::announcement.announcement": ApiAnnouncementAnnouncement
       "api::area.area": ApiAreaArea
       "api::article-change.article-change": ApiArticleChangeArticleChange
+      "api::article-projection-job.article-projection-job": ApiArticleProjectionJobArticleProjectionJob
       "api::blog-article.blog-article": ApiBlogArticleBlogArticle
       "api::blog-landing.blog-landing": ApiBlogLandingBlogLanding
       "api::blog-section.blog-section": ApiBlogSectionBlogSection
@@ -6273,8 +6991,19 @@ declare module "@strapi/strapi" {
       "plugin::content-moderation.review-event": PluginContentModerationReviewEvent
       "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
+      "plugin::content-moderation.upload-reservation": PluginContentModerationUploadReservation
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
+      "plugin::discussions.audit-event": PluginDiscussionsAuditEvent
+      "plugin::discussions.erased-actor": PluginDiscussionsErasedActor
+      "plugin::discussions.outbox": PluginDiscussionsOutbox
+      "plugin::discussions.rate-window": PluginDiscussionsRateWindow
+      "plugin::discussions.reply": PluginDiscussionsReply
+      "plugin::discussions.report": PluginDiscussionsReport
+      "plugin::discussions.revision": PluginDiscussionsRevision
+      "plugin::discussions.subject": PluginDiscussionsSubject
+      "plugin::discussions.subscription": PluginDiscussionsSubscription
+      "plugin::discussions.thread": PluginDiscussionsThread
       "plugin::events.credential-event": PluginEventsCredentialEvent
       "plugin::events.event": PluginEventsEvent
       "plugin::events.event-credential": PluginEventsEventCredential

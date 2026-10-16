@@ -6,7 +6,7 @@ import type { ReactNode } from "react"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import type { JournalCardData } from "@/lib/journal-landing"
-import { Link } from "@/lib/navigation"
+import { Link, routing } from "@/lib/navigation"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
@@ -34,8 +34,13 @@ function ArticleLink({
   return (
     <Link
       className={className}
-      href={articleHref(article)}
-      locale={locale}
+      href={`${articleHref(article)}${article.locale && !(routing.locales as readonly string[]).includes(article.locale) ? `?contentLang=${encodeURIComponent(article.locale)}` : ""}`}
+      locale={
+        article.locale &&
+        (routing.locales as readonly string[]).includes(article.locale)
+          ? (article.locale as Locale)
+          : locale
+      }
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       {children}
@@ -60,6 +65,7 @@ export function articleMeta(
     withAuthor ? article.author : null,
     formatDate(article.publishedAt ?? article.updatedAt, "short", locale),
     readingTime,
+    article.locale ? article.locale.toUpperCase() : null,
   ]
     .filter(Boolean)
     .join(" · ")

@@ -1,6 +1,8 @@
 import { Icon } from "@iconify/react"
+import type { ArticleBrowseResult } from "@repo/shared-data"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { KnowledgeDiscovery } from "@/components/articles/KnowledgeDiscovery"
 import { EditorOnly } from "@/components/contribute/EditorOnly"
 import {
   DEFAULT_SECTION_ICON,
@@ -78,7 +80,7 @@ function toRow(
     href: docsArticlePath(article, sections),
     summary: article.summary ?? null,
     updatedLabel: formatDate(article.updatedAt, "short", locale),
-    readMinutes: readingTimeMinutes(article.body),
+    readMinutes: article.readingTimeMinutes ?? readingTimeMinutes(article.body),
   }
 }
 
@@ -88,6 +90,7 @@ export function DocsPage({
   locale,
   quickStartCards,
   landing,
+  discovery,
 }: {
   readonly articles: DocsWikiArticle[]
   /** The Knowledge taxonomy from Strapi, in display order. */
@@ -95,6 +98,7 @@ export function DocsPage({
   readonly locale: Locale
   readonly quickStartCards?: readonly WikiArticleSummary[] | null
   readonly landing?: WikiLandingData | null
+  readonly discovery?: ArticleBrowseResult
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
@@ -193,6 +197,9 @@ export function DocsPage({
         </PageHero>
 
         <Container className="pt-8 pb-20">
+          {discovery ? (
+            <KnowledgeDiscovery discovery={discovery} locale={locale} />
+          ) : null}
           {/* Entry cards */}
           {entryCards.length > 0 ? (
             <nav

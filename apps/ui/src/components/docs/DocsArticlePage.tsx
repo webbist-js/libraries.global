@@ -1,8 +1,10 @@
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { ArticleContext } from "@/components/articles/ArticleContext"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { EditorOnly } from "@/components/contribute/EditorOnly"
+import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -64,6 +66,7 @@ export function DocsArticlePage({
   section,
   locale,
   untranslatedLocale = null,
+  contentLocale,
 }: {
   readonly article: WikiArticleDetail
   readonly articles: DocsWikiArticle[]
@@ -74,6 +77,7 @@ export function DocsArticlePage({
   readonly locale: Locale
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
+  readonly contentLocale?: string
 }) {
   const tUi = useUiTranslations("ui")
   const tArticle = useUiTranslations("editorial")
@@ -299,11 +303,33 @@ export function DocsArticlePage({
               </p>
             )}
 
+            <ArticleContext
+              article={article}
+              kind="knowledge"
+              locale={locale}
+            />
+
             <ArticleEditHistorySection
               className="mt-6"
               kind="wiki"
               documentId={article.documentId}
               locale={untranslatedLocale ? routing.defaultLocale : locale}
+            />
+
+            <AttachedDiscussion
+              target={{
+                uid: "api::wiki-article.wiki-article",
+                documentId: article.documentId,
+                locale:
+                  contentLocale ??
+                  (untranslatedLocale ? routing.defaultLocale : locale),
+              }}
+              subjectSlug="knowledge"
+              title={article.title ?? article.slug ?? ""}
+              language={
+                contentLocale ??
+                (untranslatedLocale ? routing.defaultLocale : locale)
+              }
             />
 
             {/* Previous / next */}

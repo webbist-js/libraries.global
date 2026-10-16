@@ -13,6 +13,7 @@ import {
   loadArticleForEditor,
 } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
 import { requireEditorOrApply, userIsArticleEditor } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -37,17 +38,28 @@ export default async function EditKnowledgeArticlePage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
-  searchParams: Promise<{ mode?: string; locale?: string | string[] }>
+  searchParams: Promise<{
+    mode?: string
+    locale?: string | string[]
+    draft?: string
+  }>
 }) {
   const tUi = await getUiTranslations("ui")
 
-  const [{ locale, slug }, { mode, locale: requested }, session] =
-    await Promise.all([params, searchParams, getSessionSSR(await headers())])
+  const [
+    { locale, slug },
+    { mode, locale: requested, draft: requestedDraft },
+    session,
+  ] = await Promise.all([params, searchParams, getSessionSSR(await headers())])
   const report = mode === "report"
+  const resumeQuery = new URLSearchParams()
+  if (report) resumeQuery.set("mode", "report")
+  if (typeof requested === "string") resumeQuery.set("locale", requested)
+  if (requestedDraft && isDocumentIdParam(requestedDraft))
+    resumeQuery.set("draft", requestedDraft)
+  const callbackPath = `/contribute/knowledge/${encodeURIComponent(slug)}${resumeQuery.size ? `?${resumeQuery}` : ""}`
   if (!session?.user)
-    redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/${slug}${report ? "?mode=report" : ""}`)}`
-    )
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callbackPath)}`)
   // Reporting a problem stays open to every signed-in user; the editor
   // itself needs the Knowledge editor role.
   if (!report) requireEditorOrApply(session.user, "knowledge")
@@ -93,6 +105,11 @@ export default async function EditKnowledgeArticlePage({
           locales={locales}
           uiLocale={locale}
           initialLocale={editingLocaleFrom(requested, locales)}
+          resumeDraftId={
+            requestedDraft && isDocumentIdParam(requestedDraft)
+              ? requestedDraft
+              : undefined
+          }
         />
       )}
     </div>

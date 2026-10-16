@@ -40,6 +40,7 @@ type Kind =
   | "feed_update"
   | "billing_update"
   | "beta_invitation"
+  | "discussion_update"
 type Input = {
   baUserId?: string
   eventKey: string

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
@@ -10,10 +9,10 @@ import {
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
 import { sessionCapabilities, staffLibrariesOf } from "@/lib/access-server"
-import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { KOFI_URL } from "@/lib/constants"
+import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
 import { followedRegionSlugs, type DriveView } from "@/lib/drives/drive-view"
 import { drivesInPlaces, loadDriveViews } from "@/lib/drives/drive-view-server"
@@ -237,7 +236,7 @@ export default async function ContributePage({
   const tUi = await getUiTranslations("ui")
 
   const { locale } = await params
-  const session = await getSessionSSR(await headers())
+  const session = await getContributionSession()
   // UI only; staff endpoints re-check the selected library's access.
   const caps = sessionCapabilities(session?.user)
   const staffLibraries = caps.set.has("staff.area")

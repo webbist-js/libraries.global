@@ -1,4 +1,5 @@
 import { canDirectEdit } from "@repo/access"
+import { articleReadingMinutes } from "@repo/shared-data"
 
 import {
   configuredLocales,
@@ -8,9 +9,22 @@ import {
   submissionLocale,
 } from "./locales"
 import { isDocumentId, isNewArticleDraft } from "./params"
-import { applyToLocale } from "./publish-guard"
+import { ApplyRefusedError, applyToLocale } from "./publish-guard"
 import { ownedUploadIds } from "./uploads"
 import { sanitizeWikiBody } from "./wiki-body"
+import { publicArticleProfile } from "../../../../utils/article-attribution"
+import { articleRevision } from "../../../../utils/article-content"
+import {
+  articleImageIds,
+  articleRelationRows,
+  articleRelationConnector,
+  articlePlaceRelations,
+  buildArticleGeography,
+  frozenArticleGeography,
+  ownsJournalArticle,
+  publicEventMentions,
+  submissionArticle,
+} from "../../../../utils/article-relations"
 
 /**
  * Applies an approved Knowledge (`wiki_edit`) or Journal (`blog_submission`)
@@ -80,10 +94,19 @@ export const MAX_TITLE = 200
 export const MAX_SUMMARY = 600
 const MAX_TAGS = 20
 const MAX_SECTIONS = 6
-const SECTION_KEY = /^[a-z0-9-]{1,40}$/
+const SECTION_KEY = /^[a-z0-9-]{1,255}$/
 
 export type ArticleTag = {
-  kind: "topic" | "library" | "place" | "free"
+  kind:
+    | "topic"
+    | "library"
+    | "place"
+    | "free"
+    | "continent"
+    | "country"
+    | "region"
+    | "area"
+    | "event"
   label: string
   slug?: string
   documentId?: string
@@ -116,15 +139,20 @@ export function cleanTags(v: unknown): ArticleTag[] {
     const t = raw as Record<string, unknown>
     const kind = t.kind
     if (
-      kind !== "topic" &&
-      kind !== "library" &&
-      kind !== "place" &&
-      kind !== "free"
+      ![
+        "topic",
+        "library",
+        "continent",
+        "country",
+        "region",
+        "area",
+        "event",
+      ].includes(String(kind))
     )
       continue
     const label = cleanString(t.label, 80)
     if (!label) continue
-    const tag: ArticleTag = { kind, label }
+    const tag: ArticleTag = { kind: kind as ArticleTag["kind"], label }
     if (typeof t.slug === "string" && SECTION_KEY.test(t.slug))
       tag.slug = t.slug
     if (isDocumentId(t.documentId)) tag.documentId = t.documentId
@@ -171,34 +199,45 @@ async function uniqueSlug(strapi: any, uid: string, base: string) {
 }
 
 /** Approved topics named by the tags, as connect targets. */
-async function topicTargets(strapi: any, tags: ArticleTag[]) {
+async function topicTargets(strapi: any, tags: ArticleTag[], locale: string) {
   const slugs = tags.flatMap((t) =>
     t.kind === "topic" && t.slug ? [t.slug] : []
   )
   if (slugs.length === 0) return []
-  const rows = (await strapi.documents(TOPIC).findMany({
-    filters: { slug: { $in: slugs }, status: { $eq: "approved" } },
-    fields: ["documentId"],
-    limit: slugs.length,
-  })) as { documentId: string }[]
+  const matched = await articleRelationRows(
+    strapi,
+    TOPIC,
+    { slug: { $in: slugs }, status: { $eq: "approved" } },
+    locale
+  )
+  if (!matched.length) return []
+  const rows = await articleRelationRows(
+    strapi,
+    TOPIC,
+    {
+      documentId: { $in: matched.map((row) => row.documentId) },
+      status: { $eq: "approved" },
+    },
+    locale
+  )
 
-  return rows.map((r) => ({ documentId: r.documentId }))
+  return rows.map((row) => articleRelationConnector(row, locale))
 }
 
 /** Libraries named by the tags that actually exist, as connect targets. */
-async function libraryTargets(strapi: any, tags: ArticleTag[]) {
+async function libraryTargets(strapi: any, tags: ArticleTag[], locale: string) {
   const ids = tags.flatMap((t) =>
     t.kind === "library" && t.documentId ? [t.documentId] : []
   )
   if (ids.length === 0) return []
-  const rows = (await strapi.documents(LIBRARY).findMany({
-    filters: { documentId: { $in: ids } },
-    status: "published",
-    fields: ["documentId"],
-    limit: ids.length,
-  })) as { documentId: string }[]
+  const rows = await articleRelationRows(
+    strapi,
+    LIBRARY,
+    { documentId: { $in: ids } },
+    locale
+  )
 
-  return rows.map((r) => ({ documentId: r.documentId }))
+  return rows.map((row) => articleRelationConnector(row, locale))
 }
 
 async function submitterProfileId(strapi: any, baUserId: unknown) {
@@ -213,16 +252,29 @@ async function submitterProfileId(strapi: any, baUserId: unknown) {
 }
 
 /** The section the first key names, by slug: the article's home section. */
-async function sectionTarget(strapi: any, uid: string, keys: string[]) {
+async function sectionTarget(
+  strapi: any,
+  uid: string,
+  keys: string[],
+  locale: string
+) {
   const slug = keys[0]
   if (!slug) return null
-  const [section] = (await strapi.documents(uid).findMany({
-    filters: { slug: { $eq: slug } },
-    fields: ["documentId"],
-    limit: 1,
-  })) as { documentId: string }[]
+  const [matched] = await articleRelationRows(
+    strapi,
+    uid,
+    { slug: { $eq: slug } },
+    locale
+  )
+  if (!matched) return null
+  const [section] = await articleRelationRows(
+    strapi,
+    uid,
+    { documentId: { $eq: matched.documentId } },
+    locale
+  )
 
-  return section ? { documentId: section.documentId } : null
+  return section ? articleRelationConnector(section, locale) : null
 }
 
 /**
@@ -274,19 +326,32 @@ async function relationData(
   strapi: any,
   kind: ArticleKind,
   source: Record<string, unknown>,
-  submitterBaUserId: unknown
+  submitterBaUserId: unknown,
+  locale: string
 ): Promise<Record<string, unknown>> {
   const target = TARGETS[kind]
   const data: Record<string, unknown> = {}
   const sections = cleanSectionKeys(source.sections)
   if (target.docsSections && sections.length > 0) data.docsSections = sections
-  const section = await sectionTarget(strapi, target.sectionUid, sections)
+  const section = await sectionTarget(
+    strapi,
+    target.sectionUid,
+    sections,
+    locale
+  )
   if (section) data.section = { set: [section] }
   if (Array.isArray(source.tags)) {
     const tags = cleanTags(source.tags)
-    data.topics = { set: await topicTargets(strapi, tags) }
-    data.libraries = { set: await libraryTargets(strapi, tags) }
+    data.topics = { set: await topicTargets(strapi, tags, locale) }
+    data.libraries = { set: await libraryTargets(strapi, tags, locale) }
+    Object.assign(data, await articlePlaceRelations(strapi, tags, locale))
   }
+  if (kind === "journal" && Array.isArray(source.eventMentions))
+    data.eventMentions = await publicEventMentions(
+      strapi,
+      source.eventMentions,
+      locale
+    )
   const profileId = await submitterProfileId(strapi, submitterBaUserId)
   if (profileId) data.contributors = { connect: [{ documentId: profileId }] }
 
@@ -405,14 +470,55 @@ export async function applyArticleSubmission(
   kind: ArticleKind,
   opts: ApplyArticleOptions = {}
 ): Promise<ApplyArticleOutcome> {
+  if (["pg", "postgres", "postgresql"].includes(strapi.db?.dialect?.client)) {
+    return strapi.db.transaction(async ({ trx }: { trx: any }) => {
+      await trx.raw("select pg_advisory_xact_lock(hashtextextended(?, 0))", [
+        `article-submit:${TARGETS[kind].uid}:${submission.targetSlug ?? `new:${slugify(String(submission.draftData?.title ?? "article"))}`}`,
+      ])
+
+      return applyArticleSubmissionUnlocked(strapi, submission, kind, opts)
+    })
+  }
+
+  return applyArticleSubmissionUnlocked(strapi, submission, kind, opts)
+}
+
+async function applyArticleSubmissionUnlocked(
+  strapi: any,
+  submission: any,
+  kind: ArticleKind,
+  opts: ApplyArticleOptions
+): Promise<ApplyArticleOutcome> {
   const target = TARGETS[kind]
   const draftData = (submission.draftData ?? {}) as Record<string, unknown>
   const fields = (submission.fields ?? {}) as Record<string, unknown>
+  const storedArticle = isNewArticleDraft(draftData)
+    ? null
+    : await submissionArticle(
+        strapi,
+        {
+          ...submission,
+          submissionType: kind === "wiki" ? "wiki_edit" : "blog_submission",
+        },
+        submissionLocale(submission)
+      )
   const owned = await ownedUploadIds(
     strapi,
     submission.submittedByUserId,
     claimedImageIds(draftData.body ?? draftData.proposedBody)
   )
+  for (const id of articleImageIds(storedArticle?.body)) owned.add(id)
+  if (
+    claimedImageIds(draftData.body ?? draftData.proposedBody).some(
+      (id) => !owned.has(id)
+    )
+  ) {
+    throw new ApplyRefusedError(
+      "invalid_media",
+      target.uid,
+      storedArticle?.documentId ?? submission.documentId
+    )
+  }
   const cleanBody = (raw: unknown) =>
     keepOwnedImages(sanitizeWikiBody(raw), owned)
 
@@ -425,6 +531,17 @@ export async function applyArticleSubmission(
   // Editors may be scoped to locales: the right is to publish in this one.
   const canPublish = canDirectEdit(caps, target.editor, locale)
   const publish = canPublish || opts.publish === true
+  if (
+    storedArticle &&
+    typeof draftData.baseRevision === "string" &&
+    draftData.baseRevision !== articleRevision(storedArticle)
+  ) {
+    throw new ApplyRefusedError(
+      "stale_article",
+      target.uid,
+      storedArticle.documentId
+    )
+  }
 
   // ── New article ──────────────────────────────────────────────────────
   // `draftData.kind` alone decides (never `fields.kind`, which the
@@ -443,8 +560,23 @@ export async function applyArticleSubmission(
       strapi,
       kind,
       { ...fields, ...draftData },
-      submission.submittedByUserId
+      submission.submittedByUserId,
+      locale
     )
+    const geographyFacet = await buildArticleGeography(strapi, relations)
+    const [writer] = await strapi
+      .documents("api::user-profile.user-profile")
+      .findMany({
+        filters: { baUserId: { $eq: submission.submittedByUserId } },
+        fields: ["username", "profileVisibility", "publicPrefs"],
+        limit: 1,
+      })
+    const publicWriter = publicArticleProfile(writer)
+    const byline =
+      cleanString(draftData.byline, 120) ??
+      (typeof publicWriter?.username === "string"
+        ? `@${publicWriter.username}`
+        : "Community member")
     const contributors = relations.contributors as
       | { connect: { documentId: string }[] }
       | undefined
@@ -458,11 +590,20 @@ export async function applyArticleSubmission(
         slug,
         summary: summary ?? undefined,
         body,
-        author:
-          typeof submission.submittedByName === "string" &&
-          submission.submittedByName.trim()
-            ? submission.submittedByName.trim().slice(0, 120)
-            : undefined,
+        author: byline,
+        ...(kind === "journal"
+          ? {
+              publicationOrigin:
+                canPublish && draftData.publicationOrigin === "index"
+                  ? "index"
+                  : "community",
+              ...(contributors?.connect[0]
+                ? { authorProfile: { connect: [contributors.connect[0]] } }
+                : {}),
+            }
+          : {}),
+        readingTimeMinutes: articleReadingMinutes(body),
+        geographyFacet,
         ...relations,
         ...(contributors ? { contributors } : {}),
       },
@@ -491,7 +632,14 @@ export async function applyArticleSubmission(
     typeof draftData.proposedSummary === "string"
 
   if (direct) {
-    if (!canPublish) {
+    const ownsArticle =
+      kind === "journal" &&
+      (await ownsJournalArticle(
+        strapi,
+        submission.submittedByUserId,
+        submission
+      ))
+    if (!canPublish && !ownsArticle) {
       // A reader's draft can be turned into a direct-edit body after the
       // create-time check; defence in depth alongside the finalize CAS.
       strapi.log.warn(
@@ -504,13 +652,36 @@ export async function applyArticleSubmission(
     const title = cleanString(draftData.title, MAX_TITLE)
     if (title) data.title = title
     const summary = cleanString(draftData.summary, MAX_SUMMARY)
-    if (summary) data.summary = summary
+    if (typeof draftData.summary === "string") data.summary = summary ?? ""
     const body = cleanBody(draftData.body)
     if (body) data.body = body
+    if (body) data.readingTimeMinutes = articleReadingMinutes(body)
     Object.assign(
       data,
-      await relationData(strapi, kind, draftData, submission.submittedByUserId)
+      await relationData(
+        strapi,
+        kind,
+        draftData,
+        submission.submittedByUserId,
+        locale
+      )
     )
+    if (Array.isArray(draftData.tags))
+      data.geographyFacet = await frozenArticleGeography(
+        strapi,
+        data,
+        storedArticle
+      )
+    if (!publish) {
+      await strapi.documents(target.uid).update({
+        documentId: article.documentId,
+        locale,
+        status: "draft",
+        data,
+      })
+
+      return "drafted"
+    }
     if (Object.keys(data).length === 0) return "noop"
     // A locale the article has no version in yet is created (published)
     // from this edit: a translation.
@@ -530,9 +701,27 @@ export async function applyArticleSubmission(
     const title = cleanString(draftData.proposedTitle, MAX_TITLE)
     if (title) data.title = title
     const summary = cleanString(draftData.proposedSummary, MAX_SUMMARY)
-    if (summary) data.summary = summary
+    if (typeof draftData.proposedSummary === "string")
+      data.summary = summary ?? ""
     const body = cleanBody(draftData.proposedBody)
     if (body) data.body = body
+    if (body) data.readingTimeMinutes = articleReadingMinutes(body)
+    Object.assign(
+      data,
+      await relationData(
+        strapi,
+        kind,
+        draftData,
+        submission.submittedByUserId,
+        locale
+      )
+    )
+    if (Array.isArray(draftData.tags))
+      data.geographyFacet = await frozenArticleGeography(
+        strapi,
+        data,
+        storedArticle
+      )
     if (Object.keys(data).length === 0) return "noop"
     const profileId = await submitterProfileId(
       strapi,

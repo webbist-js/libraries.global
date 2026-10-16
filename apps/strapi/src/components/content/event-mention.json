@@ -1,0 +1,39 @@
+{
+  "collectionName": "components_content_event_mentions",
+  "info": {
+    "displayName": "Event mention",
+    "description": "Durable public citation of an Event, retained after imported Events expire."
+  },
+  "attributes": {
+    "citationId": { "type": "string" },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "startTime": {
+      "type": "datetime"
+    },
+    "endTime": {
+      "type": "datetime"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "url": {
+      "type": "text"
+    },
+    "eventDocumentId": {
+      "type": "string"
+    },
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "event": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::events.event"
+    }
+  }
+}

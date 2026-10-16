@@ -20,7 +20,6 @@ const NAV_LINKS = [
   { label: "find_libraries", href: "/libraries" },
   { label: "community", href: "/community" },
   { label: "journal", href: "/journal" },
-  { label: "events", href: "/events" },
   { label: "knowledge", href: "/knowledge" },
 ] as const
 

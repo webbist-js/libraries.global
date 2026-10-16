@@ -10,6 +10,7 @@ import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeBu
 import { EventJsonLd } from "@/components/events/EventJsonLd"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
+import GlobalLink from "@/components/global/GlobalLink"
 import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
@@ -108,6 +109,7 @@ export function EventDetailPage({
   libraryName,
 }: EventDetailPageProps) {
   const tUi = useUiTranslations("ui")
+  const tDiscovery = useUiTranslations("discovery")
 
   const { date, time } = formatDate(event.startTime)
   const endFormatted = event.endTime ? formatDate(event.endTime) : null
@@ -309,6 +311,13 @@ export function EventDetailPage({
                 icsUrl="/api/public-proxy/api/events/ics/global.ics"
                 label={tUi("add_to_calendar")}
               />
+              <GlobalLink
+                className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold"
+                href={`/contribute/knowledge/new?type=journal&event=${encodeURIComponent(event.documentId)}`}
+                style={{ borderColor: T.border.line }}
+              >
+                {tDiscovery("writeEvent")}
+              </GlobalLink>
             </div>
           </div>
 

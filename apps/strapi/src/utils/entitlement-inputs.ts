@@ -92,9 +92,9 @@ export async function loadEntitlementInputs(
   now: number = Date.now()
 ): Promise<EntitlementInputs> {
   const [[profile], planRows, teams] = await Promise.all([
-    strapi.documents(PROFILE).findMany({
-      filters: { baUserId: { $eq: baUserId } },
-      fields: ["tier", "earnedProUntil"],
+    strapi.db.query(PROFILE).findMany({
+      where: { baUserId: { $eq: baUserId } },
+      select: ["tier", "earnedProUntil"],
       limit: 1,
     }) as Promise<{ tier?: string | null; earnedProUntil?: string | null }[]>,
     loadPlanRows(strapi, baUserId, now),
