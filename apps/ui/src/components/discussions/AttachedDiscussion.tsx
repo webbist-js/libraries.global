@@ -37,10 +37,12 @@ function AttachedDiscussionPanel({
   actor,
 }: AttachedDiscussionProps & { actor: ReturnType<typeof useDiscussionActor> }) {
   const t = useTranslations("discussions")
+  const common = useTranslations("ui")
   const [thread, setThread] = useState<DiscussionRecord | null>(null)
   const [subject, setSubject] = useState<Subject | null>(null)
   const [languages, setLanguages] = useState<DiscussionLanguage[]>([])
   const [error, setError] = useState("")
+  const [retryable, setRetryable] = useState(false)
   const [loadedScope, setLoadedScope] = useState("")
   const scope = `${target.uid}:${target.documentId}:${target.locale ?? language}:${subjectSlug}:${actor.scope}`
   const currentScope = useRef(scope)
@@ -59,7 +61,7 @@ function AttachedDiscussionPanel({
       discussionRequest<DiscussionList<Subject>>("subjects?limit=50"),
       actor.signedIn
         ? discussionRequest<DiscussionList<DiscussionRecord>>(
-            `my/records?${new URLSearchParams({ kind: "thread", targetUid: target.uid, targetId: target.documentId, language: target.locale ?? language, limit: "50" })}`
+            `my/records?${new URLSearchParams({ kind: "thread", targetUid: target.uid, targetId: target.documentId, targetLocale: target.locale ?? language, limit: "50" })}`
           )
         : { data: [] },
       fetch("/api/relations/locales", { cache: "no-store" })
@@ -84,6 +86,7 @@ function AttachedDiscussionPanel({
     )
     setSubject(subjects.data.find((item) => item.slug === subjectSlug) ?? null)
     setError("")
+    setRetryable(false)
     setLoadedScope(scope)
   }, [
     target.uid,
@@ -94,17 +97,20 @@ function AttachedDiscussionPanel({
     scope,
     actor.signedIn,
   ])
+  const handleLoadFailure = useCallback(
+    (failure: unknown) => {
+      if (currentScope.current !== scope) return
+      const errorKey = discussionErrorKey(failure)
+      setError(t(errorKey))
+      setRetryable(errorKey === "error")
+      setLoadedScope(scope)
+    },
+    [scope, t]
+  )
   useEffect(() => {
     if (!actor.ready) return
-    Promise.resolve()
-      .then(load)
-      .catch((failure) => {
-        if (currentScope.current === scope) {
-          setError(t(discussionErrorKey(failure)))
-          setLoadedScope(scope)
-        }
-      })
-  }, [load, actor.ready, scope, t])
+    Promise.resolve().then(load).catch(handleLoadFailure)
+  }, [load, actor.ready, handleLoadFailure])
 
   return (
     <section
@@ -116,7 +122,21 @@ function AttachedDiscussionPanel({
       {!actor.ready || loadedScope !== scope ? (
         <p role="status">{t("loading")}</p>
       ) : error ? (
-        <p role="alert">{error}</p>
+        <div className="grid justify-items-start gap-2">
+          <p role="alert">{error}</p>
+          {retryable && (
+            <button
+              type="button"
+              className="text-sm underline"
+              onClick={() => {
+                setLoadedScope("")
+                load().catch(handleLoadFailure)
+              }}
+            >
+              {common("retry")}
+            </button>
+          )}
+        </div>
       ) : thread ? (
         <DiscussionThread
           id={thread.id}
@@ -145,10 +165,7 @@ function AttachedDiscussionPanel({
             }
             onSubmitted={(record) => {
               if (record) setThread(record)
-              else
-                load().catch((failure) =>
-                  setError(t(discussionErrorKey(failure)))
-                )
+              else load().catch(handleLoadFailure)
             }}
           />
         </>

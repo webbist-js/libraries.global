@@ -3,6 +3,7 @@
 import { MessageCircle, Pin } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
+import { avatarInitials } from "@/lib/avatar"
 import { COMMUNITY_TINTS } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
@@ -90,14 +91,7 @@ export function DiscussionAvatar({
           height={40}
         />
       ) : (
-        safeAuthor.name
-          .replace(/^@+/, "")
-          .trim()
-          .split(/[\s_-]+/)
-          .slice(0, 2)
-          .map((word) => word[0])
-          .join("")
-          .toUpperCase()
+        avatarInitials(safeAuthor.name)
       )}
     </span>
   )

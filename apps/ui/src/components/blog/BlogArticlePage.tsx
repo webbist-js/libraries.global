@@ -21,7 +21,7 @@ import {
   extractHeadings,
   formatDate,
 } from "@/lib/article-helpers"
-import { avatarSrc } from "@/lib/avatar"
+import { avatarInitials, avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
 import { isFounder } from "@/lib/founder"
 import { languageName } from "@/lib/locale-fallback"
@@ -123,7 +123,7 @@ export function BlogArticlePage({
     : null
   const authorPhoto = avatarSrc(authorProfile?.avatar, "sm")
   const authorIsFounder = isFounder(authorProfile?.username)
-  const authorInitial = (authorName ?? "?").charAt(0).toUpperCase()
+  const authorInitial = avatarInitials(authorName)
 
   const metaRows = [
     { label: tUi("published"), value: publishedDate },

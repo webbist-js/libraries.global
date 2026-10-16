@@ -4,6 +4,7 @@ import { useTranslations, type Locale } from "next-intl"
 import type { ReactNode } from "react"
 
 import { formatDate } from "@/lib/article-helpers"
+import { avatarInitials } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
 import type { JournalCardData } from "@/lib/journal-landing"
 import { languageName } from "@/lib/locale-fallback"
@@ -143,15 +144,6 @@ function ArticleThumb({
   )
 }
 
-function initialsOf(name: string) {
-  return name
-    .split(/\s+/)
-    .map((word) => word.charAt(0))
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
-}
-
 /** The lead story: image left, badges, title, summary and byline right. */
 export function JournalFeatureCard({
   article,
@@ -257,7 +249,7 @@ export function JournalFeatureCard({
                   color: "var(--tint-national-fg)",
                 }}
               >
-                {initialsOf(article.author)}
+                {avatarInitials(article.author)}
               </span>
               <span className="font-semibold" style={{ color: T.ink.base }}>
                 {article.author}

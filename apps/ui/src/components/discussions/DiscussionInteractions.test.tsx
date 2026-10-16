@@ -370,6 +370,135 @@ describe("discussion interactions", () => {
 })
 
 describe("discussion recovery isolation", () => {
+  it.each([404, 500, "network"])(
+    "offers attached lookup retry only for a transient failure (%s)",
+    async (failure) => {
+      let failed = false
+      fetch.mockImplementation(async (url: string) => {
+        if (
+          url.includes("my/records") &&
+          url.includes("targetId=article") &&
+          !failed
+        ) {
+          failed = true
+          if (failure === "network") throw new TypeError("Network unavailable")
+
+          return Response.json(
+            { error: "Lookup failed" },
+            { status: failure as number }
+          )
+        }
+        if (url.includes("subjects"))
+          return Response.json({
+            data: [
+              {
+                id: "subject",
+                name: "Journal",
+                slug: "journal",
+                visibility: "public",
+                createPolicy: "members",
+              },
+            ],
+          })
+
+        return Response.json({ data: [] })
+      })
+      render(
+        <AttachedDiscussion
+          target={{
+            uid: "api::blog-article.blog-article",
+            documentId: "article",
+            locale: "es",
+          }}
+          subjectSlug="journal"
+          title="Artículo"
+          language="es"
+        />
+      )
+      await screen.findByRole("alert")
+      if (failure === 404) {
+        expect(screen.queryByRole("button", { name: "Retry" })).toBeNull()
+        expect(screen.queryByLabelText("Discussion title")).toBeNull()
+
+        return
+      }
+      fireEvent.click(screen.getByRole("button", { name: "Retry" }))
+      await screen.findByLabelText("Discussion title")
+      expect(screen.queryByRole("alert")).toBeNull()
+    }
+  )
+
+  it.each(["es", undefined])(
+    "recovers a different-language pending thread for a Spanish-only article in the English interface (target locale %s)",
+    async (targetLocale) => {
+      const pending = {
+        ...record,
+        state: "pending",
+        language: "fr",
+        body: "",
+        pendingRevision: {
+          id: "revision",
+          title: "Discussion en français",
+          body: "Mon brouillon sur cet article espagnol",
+          baseVersion: 0,
+        },
+      }
+      fetch.mockImplementation(async (url: string) => {
+        const query = new URL(url, "https://libraries.global").searchParams
+        if (url.includes("my/records") && query.has("targetId")) {
+          if (query.get("targetLocale") !== "es")
+            return Response.json({ error: "Not found" }, { status: 404 })
+
+          return Response.json({
+            data: query.has("language") ? [] : [pending],
+          })
+        }
+        if (url.includes("my/records") && query.get("recordId") === "thread")
+          return Response.json({ data: [pending] })
+        if (url === "/api/discussions/threads/thread")
+          return Response.json({ ...pending, pendingRevision: undefined })
+        if (url.includes("subjects"))
+          return Response.json({
+            data: [
+              {
+                id: "subject",
+                name: "Journal",
+                slug: "journal",
+                visibility: "public",
+                createPolicy: "members",
+              },
+            ],
+          })
+
+        return Response.json({ data: [] })
+      })
+      render(
+        <AttachedDiscussion
+          target={{
+            uid: "api::blog-article.blog-article",
+            documentId: "spanish-only-article",
+            locale: targetLocale,
+          }}
+          subjectSlug="journal"
+          title="Un artículo español"
+          language="es"
+        />
+      )
+      await screen.findByText("Mon brouillon sur cet article espagnol")
+      expect(screen.getByText("Discuss this article")).toBeTruthy()
+      expect(screen.queryByLabelText("Discussion title")).toBeNull()
+      const request = fetch.mock.calls.find(
+        ([url]) =>
+          String(url).includes("targetId=spanish-only-article") &&
+          String(url).includes("my/records")
+      )
+      const query = new URL(String(request?.[0]), "https://libraries.global")
+        .searchParams
+      expect(query.get("targetLocale")).toBe("es")
+      expect(query.has("language")).toBe(false)
+    }
+  )
+
   it("hides private thread and attached recovery text immediately when readiness changes in the same actor scope", async () => {
     fetch.mockImplementation(async (url: string) => {
       if (url.includes("subjects"))
