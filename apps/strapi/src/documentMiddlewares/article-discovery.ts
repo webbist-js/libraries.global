@@ -131,7 +131,8 @@ export function registerArticleDiscoveryMiddleware({
 
       const result = await next()
       const documentId = result?.documentId ?? params.documentId
-      if (publishing && documentId) {
+      const projectionIds = new Set<number>()
+      if (publishing && documentId && result) {
         const repaired = await preservePublishedArticleRelations(
           strapi,
           context.uid,
@@ -139,11 +140,15 @@ export function registerArticleDiscoveryMiddleware({
           params.locale ?? result?.locale,
           eventLibraries
         )
-        if (repaired.length)
-          await queueArticleProjection(
-            strapi,
-            repaired.map((id) => ({ uid: context.uid, id }))
-          )
+        const published = await strapi.db.query(context.uid).findMany({
+          where: { documentId, publishedAt: { $notNull: true } },
+          select: ["id"],
+        })
+        for (const id of [
+          ...repaired,
+          ...published.map((row: { id: number }) => row.id),
+        ])
+          projectionIds.add(id)
       }
       if (changingGeography && result?.id) {
         const current = await strapi.db
@@ -161,6 +166,14 @@ export function registerArticleDiscoveryMiddleware({
           result.geographyFacet = geographyFacet
         }
       }
+
+      // Every publication refreshes discovery, even when no relation needed repair.
+      // Enqueue after derived updates, in this transaction; the worker starts on commit.
+      if (projectionIds.size)
+        await queueArticleProjection(
+          strapi,
+          [...projectionIds].map((id) => ({ uid: context.uid, id }))
+        )
 
       return result
     }

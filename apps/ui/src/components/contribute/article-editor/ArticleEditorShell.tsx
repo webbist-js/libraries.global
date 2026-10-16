@@ -987,12 +987,14 @@ export function ArticleEditorShell({
             onChange={(tags) => update({ tags })}
             disabled={submitted || editorBusy || !canWrite}
           />
-          <ArticleEventsCard
-            mentions={draft.eventMentions ?? []}
-            libraries={draft.tags}
-            onChange={(eventMentions) => update({ eventMentions })}
-            disabled={submitted || editorBusy || !canWrite}
-          />
+          {kind === "journal" && (
+            <ArticleEventsCard
+              mentions={draft.eventMentions ?? []}
+              libraries={draft.tags}
+              onChange={(eventMentions) => update({ eventMentions })}
+              disabled={submitted || editorBusy || !canWrite}
+            />
+          )}
           <LanguageCard
             mode={mode}
             locale={locale}

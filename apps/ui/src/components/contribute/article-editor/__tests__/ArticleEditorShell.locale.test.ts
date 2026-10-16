@@ -8,6 +8,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import { ContributionAccountGuard } from "../../ContributionAccountGuard"
 import { editingLocaleFrom } from "../article.types"
+import type * as ArticleSidebarModule from "../ArticleSidebar"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
@@ -66,12 +67,16 @@ vi.mock("../ArticlePreview", () => ({ ArticlePreview: () => null }))
 vi.mock("@/components/blog/ArticleBodyBlocks", () => ({
   ArticleBodyBlocks: () => null,
 }))
-vi.mock("../ArticleSidebar", async () => {
+vi.mock("@/lib/meilisearch", () => ({
+  searchLibraryNames: vi.fn(async () => []),
+}))
+vi.mock("../ArticleSidebar", async (original) => {
+  const actual = await original<typeof ArticleSidebarModule>()
   const { createElement: h } = await import("react")
   const Null = () => null
 
   return {
-    ArticleEventsCard: Null,
+    ArticleEventsCard: actual.ArticleEventsCard,
     EditSummaryCard: Null,
     HowEditingWorks: Null,
     LanguageCard: ({
@@ -162,6 +167,41 @@ beforeEach(() => {
   grants.pending = false
   fetchMock.mockImplementation(async () => Response.json({ data: null }))
   vi.stubGlobal("fetch", fetchMock)
+})
+
+describe("article-type citation scope", () => {
+  it.each(["new", "edit"] as const)(
+    "offers actual Event citation controls only for Journal in %s mode",
+    (mode) => {
+      const props = {
+        mode,
+        locales: LOCALES,
+        uiLocale: "en",
+        ...(mode === "edit" ? { article: ARTICLE } : {}),
+      }
+      const view = render(
+        createElement(ArticleEditorShell, { ...props, kind: "knowledge" })
+      )
+      expect(
+        screen.queryByRole("region", { name: "Events mentioned" })
+      ).toBeNull()
+      expect(screen.queryByLabelText("Event name")).toBeNull()
+      view.unmount()
+      render(createElement(ArticleEditorShell, { ...props, kind: "journal" }))
+      expect(
+        screen.getByRole("region", { name: "Events mentioned" })
+      ).toBeTruthy()
+      expect(screen.getByLabelText("Event name")).toBeTruthy()
+      fireEvent.change(screen.getByLabelText("Event name"), {
+        target: { value: "Library workshop" },
+      })
+      fireEvent.change(screen.getByLabelText("Public source URL"), {
+        target: { value: "https://library.example/workshop" },
+      })
+      fireEvent.click(screen.getByRole("button", { name: "Add event mention" }))
+      expect(screen.getByText("Library workshop")).toBeTruthy()
+    }
+  )
 })
 
 describe("article translation draft isolation", () => {
