@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { AccountGuard } from "@/components/auth/AccountGuard"
 import { PageHero } from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -33,28 +34,31 @@ export default async function OnboardingPage({
   return (
     <>
       <GlobalHeader locale={locale as Locale} />
-      <div
-        className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.void, color: T.ink.base }}
-      >
-        <PageHero
-          compact
-          eyebrow="Profile setup"
-          eyebrowIcon="mdi:account-circle-outline"
-          title="One last thing — *introduce yourself.*"
-          lead="Every contributor on the atlas has a public profile. It’s how readers, editors and reviewers know who’s behind a record. Only the Required sections are needed now; the rest can wait."
-        />
-        <OnboardingShell
-          sessionUser={{
-            id: session.user.id,
-            name: session.user.name,
-            email: session.user.email,
-            image: session.user.image ?? null,
-          }}
-          initialProfile={profile}
-          avatarUrl={avatarSrc(profile?.avatar)}
-        />
-      </div>
+      <AccountGuard mode="identity" expectedScope={session.user.id}>
+        <div
+          className="relative isolate flex min-h-screen w-full flex-col"
+          style={{ background: T.bg.void, color: T.ink.base }}
+        >
+          <PageHero
+            compact
+            eyebrow="Profile setup"
+            eyebrowIcon="mdi:account-circle-outline"
+            title="One last thing — *introduce yourself.*"
+            lead="Every contributor on the atlas has a public profile. It’s how readers, editors and reviewers know who’s behind a record. Only the Required sections are needed now; the rest can wait."
+          />
+          <OnboardingShell
+            sessionUser={{
+              id: session.user.id,
+              name: session.user.name,
+              email: session.user.email,
+              image: session.user.image ?? null,
+            }}
+            initialProfile={profile}
+            avatarUrl={avatarSrc(profile?.avatar)}
+            imageUploadsEnabled={Boolean(process.env.STRAPI_UPLOAD_API_KEY)}
+          />
+        </div>
+      </AccountGuard>
     </>
   )
 }

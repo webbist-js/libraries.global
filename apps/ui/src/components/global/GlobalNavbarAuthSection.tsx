@@ -1,11 +1,12 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import { useEffect, useRef } from "react"
 
 import { GlobalLoggedUserMenu } from "@/components/global/GlobalLoggedUserMenu"
-import { authClient } from "@/lib/auth-client"
+import { useHydratedSession } from "@/lib/access-client"
 import type { AuthSessionResult } from "@/lib/auth-server"
-import { Link } from "@/lib/navigation"
+import { Link, useRouter } from "@/lib/navigation"
 
 export function GlobalNavbarAuthSection({
   sessionSSR,
@@ -20,15 +21,34 @@ export function GlobalNavbarAuthSection({
 }) {
   const t = useTranslations("navbar")
 
-  const { data, error } = authClient.useSession()
-  const session = error || data ? data : sessionSSR
+  const { data: session, isPending, error } = useHydratedSession()
+  const router = useRouter()
+  const lastRefresh = useRef<string | null>(null)
+  const actor = session?.user?.id ?? "guest"
+  const serverActor = sessionSSR?.user?.id ?? "guest"
+  useEffect(() => {
+    if (
+      isPending ||
+      error ||
+      actor === serverActor ||
+      lastRefresh.current === actor
+    )
+      return
+    lastRefresh.current = actor
+    router.refresh()
+  }, [actor, serverActor, isPending, error, router])
+  const currentSnippet = actor === serverActor ? profileSnippet : null
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      {session?.user ? (
+      {isPending || error ? (
+        <span aria-busy="true" className="px-3 py-2 text-sm text-(--t-ink-dim)">
+          …
+        </span>
+      ) : session?.user ? (
         <GlobalLoggedUserMenu
           user={session.user}
-          profileSnippet={profileSnippet}
+          profileSnippet={currentSnippet}
         />
       ) : (
         <Link

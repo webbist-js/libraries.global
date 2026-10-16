@@ -1,3 +1,5 @@
+import { COMMUNITY_PALETTE, type ProfileBackground } from "@repo/shared-data"
+
 // apps/ui/src/lib/design-tokens.ts
 //
 // v2 design system — light only. Warm paper, dark ink, indigo accent.
@@ -71,6 +73,11 @@ export const TYPE_TINT = {
   special: { bg: "var(--tint-special-bg)", fg: "var(--tint-special-fg)" },
   neutral: { bg: "var(--tint-neutral-bg)", fg: "var(--tint-neutral-fg)" },
 } as const
+
+/** Paired subject and profile colours from the shared palette. */
+export const COMMUNITY_TINTS = Object.fromEntries(
+  COMMUNITY_PALETTE.map(({ key, bg, fg, soft }) => [key, { bg, fg, soft }])
+) as Record<ProfileBackground, { bg: string; fg: string; soft: string }>
 
 export type TypeTintKey = keyof typeof TYPE_TINT
 

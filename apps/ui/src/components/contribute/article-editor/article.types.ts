@@ -5,10 +5,30 @@ import type { TiptapDoc } from "./articleBlocks"
 export type ArticleKind = "knowledge" | "journal"
 
 export type ArticleTag = {
-  kind: "topic" | "library" | "place" | "free"
+  kind:
+    | "topic"
+    | "library"
+    | "continent"
+    | "country"
+    | "region"
+    | "area"
+    | "event"
   label: string
   slug?: string
   documentId?: string
+}
+
+export type ArticleEventMention = {
+  citationId?: string
+  title: string
+  startTime?: string | null
+  endTime?: string | null
+  timezone?: string | null
+  url?: string | null
+  libraryDocumentId?: string | null
+  /** Display label only; the server always resolves libraryDocumentId itself. */
+  libraryName?: string | null
+  eventDocumentId?: string | null
 }
 
 export type ArticleLocale = { code: string; name: string; isDefault: boolean }
@@ -22,6 +42,10 @@ export type ArticleDraft = {
   sections: string[]
   tags: ArticleTag[]
   editSummary: string
+  eventMentions?: ArticleEventMention[]
+  /** New Journal stories only; author identity stays unchanged on edits. */
+  byline?: string
+  origin?: "community" | "index"
 }
 
 /** A published article the editor opens, in one locale. */
@@ -36,6 +60,10 @@ export type ExistingArticle = {
   tags: ArticleTag[]
   /** Locales this article already exists in (published). */
   availableLocales: string[]
+  baseRevision?: string
+  publishedAt?: string | null
+  updatedAt?: string | null
+  eventMentions?: ArticleEventMention[]
 }
 
 export const ARTICLE_KIND_META: Record<

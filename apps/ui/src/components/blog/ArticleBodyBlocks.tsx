@@ -73,7 +73,13 @@ export function ArticleBodyBlocks({
                 <div className="relative aspect-video w-full">
                   <Image
                     src={imgUrl}
-                    alt={block.image.alternativeText ?? block.caption ?? ""}
+                    alt={
+                      (block as { alternativeText?: string | null })
+                        .alternativeText ??
+                      block.image.alternativeText ??
+                      block.caption ??
+                      ""
+                    }
                     fill
                     className="object-cover"
                   />

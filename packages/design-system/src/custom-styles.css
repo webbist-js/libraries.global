@@ -3,9 +3,6 @@
   @apply mb-0!;
 }
 
-.ck-editor__main {
-  @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
-}
 .ck-editor__main,
 .ck-content {
   word-break: break-word;
@@ -18,7 +15,7 @@
 .ck-editor__main h5,
 .ck-editor__main h6,
 .ck-editor__main p {
-  font-family: "Roboto", sans-serif;
+  font-family: var(--font-figtree, system-ui), sans-serif;
   font-weight: unset;
 }
 

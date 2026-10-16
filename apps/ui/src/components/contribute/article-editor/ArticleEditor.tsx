@@ -452,11 +452,15 @@ export function ArticleEditor({
 }) {
   const tUi = useUiTranslations("ui")
   const tEditor = useUiTranslations("articleEditor")
+  const p = useUiTranslations("publishing")
 
   const meta = ARTICLE_KIND_META[kind]
   const fileInputId = useId()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imageAlt, setImageAlt] = useState("")
+  const [imageError, setImageError] = useState(false)
   const titleRef = useRef<HTMLTextAreaElement>(null)
 
   const editor = useEditor({
@@ -490,17 +494,23 @@ export function ArticleEditor({
   }, [title])
 
   async function handleFile(file: File | undefined) {
-    if (!file || !editor) return
+    if (!file || !editor || readOnly || !imageAlt.trim()) return
     setUploading(true)
     try {
       const uploaded = await uploadImage(file)
-      if (uploaded)
+      if (uploaded) {
         editor
           .chain()
           .focus()
-          .setImage({ src: uploaded.url, alt: uploaded.alt ?? file.name })
+          .setImage({ src: uploaded.url, alt: imageAlt.trim() })
           .updateAttributes("image", { imageId: uploaded.id })
           .run()
+        setImageFile(null)
+        setImageAlt("")
+        setImageError(false)
+      } else setImageError(true)
+    } catch {
+      setImageError(true)
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ""
@@ -522,25 +532,79 @@ export function ArticleEditor({
     >
       <style>{EDITOR_CSS}</style>
       {editor ? (
-        <>
+        <fieldset
+          disabled={readOnly || uploading}
+          className="m-0 min-w-0 border-0 p-0"
+        >
           <Toolbar
             editor={editor}
             uploading={uploading}
             onPickImage={() => fileRef.current?.click()}
           />
           <ContextRow editor={editor} />
-        </>
+        </fieldset>
       ) : null}
       <input
         ref={fileRef}
         id={fileInputId}
         type="file"
+        disabled={readOnly || uploading}
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
         aria-label={tUi("choose_an_image_to_insert")}
-        onChange={(e) => void handleFile(e.target.files?.[0])}
+        onChange={(e) => {
+          setImageFile(e.target.files?.[0] ?? null)
+          setImageAlt("")
+          setImageError(false)
+        }}
       />
 
+      {imageFile && (
+        <form
+          className="mx-6 mt-4 grid gap-3 rounded-xl border p-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleFile(imageFile)
+          }}
+        >
+          <p className="m-0 text-sm">{imageFile.name}</p>
+          <label className="grid gap-1 text-sm">
+            {tUi("alt_text")}
+            <input
+              value={imageAlt}
+              onChange={(event) => setImageAlt(event.target.value)}
+              required
+              maxLength={500}
+              disabled={uploading || readOnly}
+              className="rounded-lg border p-2"
+            />
+          </label>
+          <p className="m-0 text-xs text-(--t-ink-dim)">
+            {p("imageAltRequired")}
+          </p>
+          <div>
+            <button
+              type="submit"
+              disabled={!imageAlt.trim() || uploading || readOnly}
+              className="mr-3 underline"
+            >
+              {p("insertImage")}
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => {
+                setImageFile(null)
+                if (fileRef.current) fileRef.current.value = ""
+              }}
+              className="underline"
+            >
+              {tUi("cancel")}
+            </button>
+          </div>
+          {imageError && <p role="alert">{p("imageFailed")}</p>}
+        </form>
+      )}
       <div className="px-6 pt-8 pb-10 sm:px-10">
         <span
           className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"

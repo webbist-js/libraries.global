@@ -1,49 +1,37 @@
 import "server-only"
 
+import type { ArticleBrowseItem, ArticleBrowseResult } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import {
-  JOURNAL_PAGE_SIZE,
-  journalSortParam,
-  placeLabel,
-  resolveJournalLanguage,
+  journalBrowseParams,
   type JournalQuery,
 } from "@/components/blog/journalLanding.helpers"
-import { fetchArticleLocales } from "@/lib/article-editor-server"
-import { estimateReadingTime } from "@/lib/article-helpers"
+import { fetchArticleBrowse } from "@/lib/article-discovery"
 import { languageName } from "@/lib/locale-fallback"
 import { routing } from "@/lib/navigation"
 import {
-  countJournalArticles,
   fetchBlogLanding,
   fetchBlogSections,
-  fetchJournalArticles,
   type BlogLandingData,
   type BlogSection,
-  type JournalArticleItem,
 } from "@/lib/strapi-api/content/server"
 
-/** A Journal article as its cards need it. */
-export type JournalCardData = Omit<JournalArticleItem, "body" | "libraries"> & {
-  readMinutes: number
-  /** "Radlett, England", from the first linked library, or null. */
-  place: string | null
-}
-
+/** Cards carry public metadata and a reading-time scalar, never article bodies. */
+export type JournalCardData = ArticleBrowseItem & { readMinutes: number }
 export type JournalSectionWithCount = BlogSection & { count: number }
-
+export type JournalTopStories = {
+  featured: JournalCardData | null
+  editorsPick: boolean
+  sideStories: JournalCardData[]
+}
 export type JournalLandingData = JournalTopStories & {
   landing: BlogLandingData | null
-  /** The URL state, with an unknown section dropped. */
   query: JournalQuery
-  /** The language the articles are shown in. */
   lang: string
-  /** Locale for article links: `lang` when the site routes it, else the page's. */
   linkLocale: Locale
-  /** Set when the page's own locale has no articles and English stands in. */
   fallbackFrom: string | null
   languages: { code: string; name: string }[]
-  /** Sections with at least one article in `lang`, in Strapi's order. */
   sections: JournalSectionWithCount[]
   total: number
   list: {
@@ -53,94 +41,52 @@ export type JournalLandingData = JournalTopStories & {
     pageCount: number
   }
   mostRead: JournalCardData[]
+  discovery: ArticleBrowseResult
+  communityPick: JournalCardData | null
 }
+const toCard = (article: ArticleBrowseItem): JournalCardData => ({
+  ...article,
+  readMinutes: article.readingTimeMinutes,
+})
 
-function toCard(article: JournalArticleItem): JournalCardData {
-  const { body, libraries, ...rest } = article
-
-  return {
-    ...rest,
-    readMinutes: estimateReadingTime(body),
-    place: placeLabel(libraries),
-  }
-}
-
-/**
- * The month's most-read Journal articles. Nothing counts reads yet: this is
- * the placeholder for Vercel Web Analytics data (top /journal/* pages over
- * the last 30 days), see .scratch/journal-landing/issues/01-most-read.md.
- */
+/** No fabricated popularity metric until reads are measured. */
 export async function fetchMostReadJournalArticles(
   _lang: string
 ): Promise<JournalCardData[]> {
   return []
 }
 
-export type JournalTopStories = {
-  featured: JournalCardData | null
-  editorsPick: boolean
-  sideStories: JournalCardData[]
-}
-
-/** The newest Journal articles, enough for the lead story and two beside it. */
-function fetchNewestJournalArticles(locale: Locale) {
-  return fetchJournalArticles({
-    locale,
-    sort: journalSortParam("newest"),
-    page: 1,
-    pageSize: 3,
-  })
-}
-
-/** Editors pick the lead story on the landing single type; else the newest.
- * The side stories are the newest of the rest. */
-async function pickTopStories(
-  locale: Locale,
-  newest: JournalArticleItem[],
+function topStories(
+  items: ArticleBrowseItem[],
   pickId: string | null
-): Promise<JournalTopStories> {
-  let featuredItem: JournalArticleItem | null = null
-  if (pickId) {
-    featuredItem =
-      newest.find((a) => a.documentId === pickId) ??
-      (
-        await fetchJournalArticles({
-          locale,
-          documentIds: [pickId],
-          sort: journalSortParam("newest"),
-          page: 1,
-          pageSize: 1,
-        })
-      ).data[0] ??
-      null
-  }
-  featuredItem ??= newest[0] ?? null
-  const featured = featuredItem ? toCard(featuredItem) : null
+): JournalTopStories {
+  const chosen =
+    items.find((item) => item.documentId === pickId) ?? items[0] ?? null
 
   return {
-    featured,
-    editorsPick:
-      !!featured && (featured.documentId === pickId || !!featured.featured),
-    sideStories: newest
-      .filter((a) => a.documentId !== featured?.documentId)
+    featured: chosen ? toCard(chosen) : null,
+    editorsPick: !!chosen && (chosen.documentId === pickId || chosen.featured),
+    sideStories: items
+      .filter((item) => item !== chosen)
       .slice(0, 2)
       .map(toCard),
   }
 }
 
-/** The Journal landing's top stories in `locale`, for the homepage. */
 export async function loadJournalTopStories(
   locale: Locale
 ): Promise<JournalTopStories> {
-  const [landingRes, newest] = await Promise.all([
+  const [landing, browse] = await Promise.all([
     fetchBlogLanding(locale),
-    fetchNewestJournalArticles(locale),
+    fetchArticleBrowse(
+      "blog",
+      `preferredLocale=${encodeURIComponent(locale)}&origin=index&pageSize=3`
+    ),
   ])
 
-  return pickTopStories(
-    locale,
-    newest.data,
-    landingRes?.data?.featuredArticle?.documentId ?? null
+  return topStories(
+    browse.editorialItems,
+    landing?.data?.featuredArticle?.documentId ?? null
   )
 }
 
@@ -148,76 +94,72 @@ export async function loadJournalLanding(
   routeLocale: Locale,
   query: JournalQuery
 ): Promise<JournalLandingData> {
-  const [configuredLocales, sectionsRes] = await Promise.all([
-    fetchArticleLocales(),
+  const [initialDiscovery, sectionsRes, landingRes] = await Promise.all([
+    fetchArticleBrowse("blog", journalBrowseParams(routeLocale, query)),
     fetchBlogSections(routeLocale),
+    fetchBlogLanding(routeLocale),
   ])
-
-  // Languages with at least one article; a handful of locales at most.
-  const localeCounts = await Promise.all(
-    configuredLocales.map(
-      async (l) => [l.code, await countJournalArticles(l.code)] as const
-    )
+  const section = sectionsRes.data.some(
+    (section) => section.slug === query.section
   )
-  const languages = localeCounts
-    .filter(([, count]) => count > 0)
-    .map(([code]) => ({ code, name: languageName(code, configuredLocales) }))
-
-  const lang = resolveJournalLanguage({
-    requested: query.lang,
-    available: languages.map((l) => l.code),
-    routeLocale,
-    defaultLocale: routing.defaultLocale,
-  })
-  const total = localeCounts.find(([code]) => code === lang)?.[1] ?? 0
+    ? query.section
+    : null
+  const discovery =
+    query.section && !section
+      ? await fetchArticleBrowse(
+          "blog",
+          journalBrowseParams(routeLocale, { ...query, section: null })
+        )
+      : initialDiscovery
+  const lang = query.lang ?? discovery.appliedFilters.languages?.[0] ?? "all"
   const linkLocale = (routing.locales as readonly string[]).includes(lang)
     ? (lang as Locale)
     : routeLocale
-
-  const allSections = sectionsRes?.data ?? []
-  const section = allSections.some((s) => s.slug === query.section)
-    ? query.section
-    : null
-  const resolvedQuery: JournalQuery = { ...query, section }
-
-  const [landingRes, sectionCounts, top, list, mostRead] = await Promise.all([
-    fetchBlogLanding(lang as Locale),
-    Promise.all(allSections.map((s) => countJournalArticles(lang, s.slug))),
-    fetchNewestJournalArticles(lang as Locale),
-    fetchJournalArticles({
-      locale: lang as Locale,
-      section,
-      sort: journalSortParam(query.sort),
-      page: query.page,
-      pageSize: JOURNAL_PAGE_SIZE,
-    }),
-    fetchMostReadJournalArticles(lang),
-  ])
+  const sections = sectionsRes.data
+    .map((section) => ({
+      ...section,
+      count:
+        discovery.facets.sections.find((facet) => facet.value === section.slug)
+          ?.count ?? 0,
+    }))
+    .filter((section) => section.count > 0)
+  const total = discovery.facets.sections.reduce(
+    (sum, facet) => sum + facet.count,
+    0
+  )
   const landing = landingRes?.data ?? null
-  const topStories = await pickTopStories(
-    lang as Locale,
-    top.data,
+  const stories = topStories(
+    discovery.editorialItems,
     landing?.featuredArticle?.documentId ?? null
   )
 
   return {
     landing,
-    query: resolvedQuery,
+    query: { ...query, section },
     lang,
     linkLocale,
-    fallbackFrom: lang !== routeLocale && !query.lang ? routeLocale : null,
-    languages,
-    sections: allSections
-      .map((s, i) => ({ ...s, count: sectionCounts[i] ?? 0 }))
-      .filter((s) => s.count > 0),
+    fallbackFrom:
+      lang !== routeLocale && lang !== "all" && !query.lang
+        ? routeLocale
+        : null,
+    languages: discovery.facets.languages.map((facet) => ({
+      code: facet.value,
+      name: languageName(facet.value),
+    })),
+    sections,
     total,
-    ...topStories,
+    ...stories,
     list: {
-      items: list.data.map(toCard),
-      total: list.meta.pagination.total,
-      page: query.page,
-      pageCount: list.meta.pagination.pageCount,
+      items: discovery.items.map(toCard),
+      total: discovery.total,
+      page: discovery.page,
+      pageCount: discovery.pageCount,
     },
-    mostRead,
+    mostRead: [],
+    discovery,
+    communityPick:
+      discovery.editorPick?.publicationOrigin === "community"
+        ? toCard(discovery.editorPick)
+        : null,
   }
 }

@@ -1,3 +1,10 @@
+import {
+  ARTICLE_QUERY_KEYS,
+  articleBrowseSearchParams,
+  parseArticleBrowseQuery,
+  type ArticleBrowseQuery,
+} from "@repo/shared-data"
+
 import { TYPE_TINT } from "@/lib/design-tokens"
 
 /** Articles per page in the Journal's "All articles" list. */
@@ -16,6 +23,11 @@ export type JournalQuery = {
   view: JournalView
   /** Requested article language; null means the default choice. */
   lang: string | null
+  q?: string
+  filters?: ArticleBrowseQuery["filters"]
+  /** Explicit all-origin selection overrides the community default. */
+  allOrigins?: boolean
+  worldwide?: boolean
 }
 
 export const DEFAULT_JOURNAL_QUERY: JournalQuery = {
@@ -43,6 +55,9 @@ export function parseJournalQuery(params: SearchParams): JournalQuery {
   const page = Number.parseInt(first(params.page) ?? "", 10)
   const view = first(params.view)
   const lang = first(params.lang)
+  const filters = parseArticleBrowseQuery(params).filters
+  if ((filters.languages?.length ?? 0) <= 1) delete filters.languages
+  delete filters.sections
 
   return {
     section: section && SLUG.test(section) ? section : null,
@@ -51,7 +66,15 @@ export function parseJournalQuery(params: SearchParams): JournalQuery {
       : "newest",
     page: Number.isFinite(page) && page >= 1 ? Math.min(page, MAX_PAGE) : 1,
     view: view === "list" ? "list" : "grid",
-    lang: lang && LOCALE.test(lang) ? lang : null,
+    lang: lang && (LOCALE.test(lang) || lang === "all") ? lang : null,
+    ...(Object.keys(filters).length ? { filters } : {}),
+    ...(parseArticleBrowseQuery(params).q
+      ? { q: parseArticleBrowseQuery(params).q }
+      : {}),
+    ...(first(params.collection ?? params.origin) === "all"
+      ? { allOrigins: true }
+      : {}),
+    ...(first(params.country) === "all" ? { worldwide: true } : {}),
   }
 }
 
@@ -65,25 +88,85 @@ export function journalHref(
   hash?: string
 ): string {
   const resetsPage =
+    ("q" in changes && changes.q !== base.q) ||
     ("section" in changes && changes.section !== base.section) ||
     ("sort" in changes && changes.sort !== base.sort) ||
-    ("lang" in changes && changes.lang !== base.lang)
+    ("lang" in changes && changes.lang !== base.lang) ||
+    ("filters" in changes &&
+      JSON.stringify(changes.filters) !== JSON.stringify(base.filters)) ||
+    ("allOrigins" in changes && changes.allOrigins !== base.allOrigins)
   const next: JournalQuery = {
     ...base,
     ...changes,
     page: changes.page ?? (resetsPage ? 1 : base.page),
   }
+  if ("lang" in changes && next.filters?.languages) {
+    next.filters = { ...next.filters }
+    delete next.filters.languages
+  }
 
   const params = new URLSearchParams()
+  if (next.q) params.set("q", next.q)
   if (next.section) params.set("section", next.section)
   if (next.sort !== "newest") params.set("sort", next.sort)
   if (next.page > 1) params.set("page", String(next.page))
   if (next.view !== "grid") params.set("view", next.view)
   if (next.lang) params.set("lang", next.lang)
+  for (const [key, values] of Object.entries(next.filters ?? {})) {
+    if (values?.length)
+      params.set(
+        ARTICLE_QUERY_KEYS[key as keyof typeof ARTICLE_QUERY_KEYS],
+        values.join(",")
+      )
+  }
+  if (next.allOrigins) params.set("origin", "all")
+  if (next.worldwide && !next.filters?.countries?.length)
+    params.set("country", "all")
 
   const query = params.toString()
 
   return `/journal${query ? `?${query}` : ""}${hash ? `#${hash}` : ""}`
+}
+
+/** Metadata and visible results share exactly one CMS predicate and cache key. */
+export function journalBrowseParams(
+  routeLocale: string,
+  query: JournalQuery
+): string {
+  const filters = {
+    ...query.filters,
+    ...(query.section ? { sections: [query.section] } : {}),
+    ...(query.lang && query.lang !== "all" && !query.filters?.languages?.length
+      ? { languages: [query.lang] }
+      : {}),
+    ...(!query.allOrigins && !query.filters?.origins?.length
+      ? { origins: ["community"] }
+      : {}),
+  }
+  const params = new URLSearchParams(
+    articleBrowseSearchParams({
+      filters,
+      sort: query.sort,
+      page: query.page,
+      pageSize: JOURNAL_PAGE_SIZE,
+      ...(query.q ? { q: query.q } : {}),
+    })
+  )
+  params.set("preferredLocale", routeLocale)
+  if (query.lang === "all") params.set("lang", "all")
+
+  return params.toString()
+}
+
+/** Visible collection labels follow the same resolved predicate as the count and controls. */
+export function journalCollectionKey(
+  origins?: readonly string[]
+): "communityJournal" | "fromIndex" | "allStories" {
+  if (origins?.length === 1 && origins[0] === "community")
+    return "communityJournal"
+  if (origins?.length === 1 && origins[0] === "index") return "fromIndex"
+
+  return "allStories"
 }
 
 /** Strapi sort for a list order; `id` breaks ties so pages never overlap. */

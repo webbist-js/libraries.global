@@ -54,9 +54,12 @@ export async function requireModerator(callbackPath: string) {
 export function queuesOf(
   scopes: readonly ModerationScope[]
 ): ModerationQueueName[] {
-  if (scopes.some((s) => s.queue === "all")) return [...MODERATION_QUEUES]
+  const articleQueues = MODERATION_QUEUES.filter(
+    (queue): queue is ModerationQueueName => queue !== "discussions"
+  )
+  if (scopes.some((s) => s.queue === "all")) return [...articleQueues]
 
-  return MODERATION_QUEUES.filter((q) => scopes.some((s) => s.queue === q))
+  return articleQueues.filter((q) => scopes.some((s) => s.queue === q))
 }
 
 /** Whether the scopes include the editorial board's `{ all, any locale }`. */

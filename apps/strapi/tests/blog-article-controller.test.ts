@@ -36,8 +36,8 @@ describe("blog-article.detail related-articles fallback (E2)", () => {
             ].value.findMany.mock.calls.map((c: any[]) => c[0])
           : []
     )
-    expect(calls).toHaveLength(2)
-    const fallback = calls[1]
+    expect(calls).toHaveLength(3)
+    const fallback = calls[2]
     expect(fallback.pagination).toBeUndefined()
     expect(fallback.limit).toBe(3)
     expect(fallback.sort).toEqual(["publishedAt:desc", "id:asc"])

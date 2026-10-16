@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { toDocsSections } from "@/components/docs/docs.config"
 import { DocsPage } from "@/components/docs/DocsPage"
-import { cleanup, render, screen, within } from "@/test/render"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
@@ -119,5 +119,63 @@ describe("Knowledge landing quick-start cards", () => {
     const cards = within(screen.getByRole("navigation", { name: "Start here" }))
     expect(cards.getAllByRole("link")).toHaveLength(3)
     expect(cards.getByText("Improve library records")).toBeTruthy()
+  })
+})
+
+describe("Knowledge search discovery state", () => {
+  it("retains recognized country, language and section filters while replacing search and resetting pagination", () => {
+    render(
+      <DocsPage
+        {...props}
+        locale="fr"
+        searchQuery="old words"
+        currentQuery={{
+          q: "old words",
+          country: "CO",
+          lang: "es",
+          section: "getting-started",
+          page: "8",
+          pageSize: "999",
+          sort: "title",
+          topic: ["reading", "../private"],
+          unknown: "discard",
+          status: "draft",
+          populate: "*",
+          preferredLocale: "cs",
+        }}
+      />
+    )
+    const input = screen.getByRole("searchbox") as HTMLInputElement
+    fireEvent.change(input, { target: { value: "new search" } })
+    const form = input.closest("form")!
+    expect(form.getAttribute("action")).toBe("/fr/knowledge")
+    expect(form.getAttribute("method")).toBe("get")
+    const fields = new FormData(form)
+    expect(Object.fromEntries(fields)).toEqual({
+      q: "new search",
+      country: "CO",
+      lang: "es",
+      section: "getting-started",
+      sort: "title",
+      pageSize: "50",
+      topic: "reading",
+    })
+    expect(fields.getAll("q")).toEqual(["new search"])
+    expect(fields.has("page")).toBe(false)
+    expect(fields.has("unknown")).toBe(false)
+  })
+
+  it("preserves explicit all-language and worldwide choices in a native search submission", () => {
+    render(
+      <DocsPage
+        {...props}
+        currentQuery={{ lang: "all", country: "all", page: "3" }}
+      />
+    )
+    const form = screen.getByRole("searchbox").closest("form")!
+    const fields = new FormData(form)
+    expect(fields.get("lang")).toBe("all")
+    expect(fields.get("country")).toBe("all")
+    expect(fields.has("page")).toBe(false)
   })
 })

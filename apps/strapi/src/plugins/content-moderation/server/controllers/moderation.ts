@@ -236,12 +236,12 @@ export default ({ strapi }: { strapi: any }) => {
       }
       if (!isDocumentId(affiliationDocumentId))
         return fail(ctx, 400, "Invalid documentId")
-      const row = await strapi
-        .documents("api::library-affiliation.library-affiliation")
+      const row = await strapi.db
+        .query("api::library-affiliation.library-affiliation")
         .findOne({
-          documentId: affiliationDocumentId,
-          fields: ["documentId", "baUserId", "role"] as any,
-          populate: { library: { fields: ["documentId"] } } as any,
+          where: { documentId: affiliationDocumentId },
+          select: ["documentId", "baUserId", "role"],
+          populate: { library: { select: ["documentId"] } },
         })
       if (!row || row.role === "proposer" || !row.library?.documentId)
         return fail(ctx, 404, "Staff member not found.")
@@ -302,22 +302,22 @@ export default ({ strapi }: { strapi: any }) => {
       // alone drops every row whose role is NULL (a claim without a job
       // title), so the shared filter allows a null role explicitly.
       const { baUserId: _user, ...claimFilter } = claimAffiliationFilter("")
-      const rows = (await strapi
-        .documents("api::library-affiliation.library-affiliation")
+      const rows = (await strapi.db
+        .query("api::library-affiliation.library-affiliation")
         .findMany({
-          filters: {
+          where: {
             ...claimFilter,
             library: { documentId: { $eq: libraryDocumentId } },
           },
-          fields: [
+          select: [
             "documentId",
             "baUserId",
             "staffRole",
             "source",
             "approvedAt",
             "createdAt",
-          ] as any,
-          sort: ["createdAt:asc", "id:asc"],
+          ],
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
           limit: 500,
         })) as Record<string, any>[]
       const names: Map<string, string> =

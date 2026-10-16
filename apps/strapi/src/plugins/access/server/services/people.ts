@@ -244,7 +244,8 @@ export function parseRevokeReason(
 }
 
 export default ({ strapi }: { strapi: any }) => {
-  const profiles = () => strapi.documents(PROFILE)
+  // These admin-only identity lookups explicitly select private Better Auth IDs.
+  const profiles = () => strapi.db.query(PROFILE)
   const grants = () => strapi.documents(ROLE_GRANT as any)
   const submissions = () => strapi.documents(SUBMISSION)
 
@@ -273,10 +274,10 @@ export default ({ strapi }: { strapi: any }) => {
   ): Promise<Map<string, RoleGrant[]>> {
     const out = new Map<string, RoleGrant[]>()
     if (ids.length === 0) return out
-    const rows = (await grants().findMany({
-      filters: { baUserId: { $in: ids }, ...unexpiredFilter(new Date()) },
-      fields: ["baUserId", "role", "queue", "scopeLocale"],
-      sort: [{ createdAt: "asc" }, { id: "asc" }],
+    const rows = (await strapi.db.query(ROLE_GRANT).findMany({
+      where: { baUserId: { $in: ids }, ...unexpiredFilter(new Date()) },
+      select: ["baUserId", "role", "queue", "scopeLocale"],
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       limit: ids.length * MAX_ACTIVE_GRANTS,
     })) as StoredGrant[]
     for (const r of rows) {
@@ -316,8 +317,8 @@ export default ({ strapi }: { strapi: any }) => {
 
   async function profileOf(baUserId: string): Promise<ProfileRow | null> {
     const [p] = (await profiles().findMany({
-      filters: { baUserId: { $eq: baUserId } },
-      fields: [...PROFILE_FIELDS, "contributorRole", "isVerifiedLibrarian"],
+      where: { baUserId: { $eq: baUserId } },
+      select: [...PROFILE_FIELDS, "contributorRole", "isVerifiedLibrarian"],
       limit: 1,
     })) as ProfileRow[]
 
@@ -353,8 +354,8 @@ export default ({ strapi }: { strapi: any }) => {
       const unique = [...new Set(ids.filter(Boolean))]
       if (unique.length === 0) return out
       const rows = (await profiles().findMany({
-        filters: { baUserId: { $in: unique } },
-        fields: PROFILE_FIELDS,
+        where: { baUserId: { $in: unique } },
+        select: PROFILE_FIELDS,
         limit: unique.length,
       })) as ProfileRow[]
       for (const p of rows)
@@ -376,10 +377,10 @@ export default ({ strapi }: { strapi: any }) => {
       const query = q.trim().slice(0, Q_MAX)
       let found: ProfileRow[]
       if (!query) {
-        const recent = (await grants().findMany({
-          filters: unexpiredFilter(new Date()),
-          fields: ["baUserId"],
-          sort: [{ createdAt: "desc" }, { id: "desc" }],
+        const recent = (await strapi.db.query(ROLE_GRANT).findMany({
+          where: unexpiredFilter(new Date()),
+          select: ["baUserId"],
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           limit: PEOPLE_MAX * 8,
         })) as StoredGrant[]
         const ids = [
@@ -387,8 +388,8 @@ export default ({ strapi }: { strapi: any }) => {
         ].slice(0, PEOPLE_MAX)
         if (ids.length === 0) return []
         const rows = (await profiles().findMany({
-          filters: { baUserId: { $in: ids } },
-          fields: PROFILE_FIELDS,
+          where: { baUserId: { $in: ids } },
+          select: PROFILE_FIELDS,
           limit: PEOPLE_MAX,
         })) as ProfileRow[]
         const order = new Map(ids.map((id, i) => [id, i]))
@@ -400,15 +401,15 @@ export default ({ strapi }: { strapi: any }) => {
       } else {
         const words = query.split(/\s+/).filter(Boolean).slice(0, 5)
         const byName = (await profiles().findMany({
-          filters: {
+          where: {
             $and: words.map((w) => ({
               $or: ["username", "firstName", "lastName"].map((k) => ({
                 [k]: { $containsi: w },
               })),
             })),
           },
-          fields: PROFILE_FIELDS,
-          sort: [{ username: "asc" }, { id: "asc" }],
+          select: PROFILE_FIELDS,
+          orderBy: [{ username: "asc" }, { id: "asc" }],
           limit: PEOPLE_MAX,
         })) as ProfileRow[]
 
@@ -432,8 +433,8 @@ export default ({ strapi }: { strapi: any }) => {
           ].slice(0, PEOPLE_MAX - byName.length)
           if (ids.length > 0)
             byEmail = (await profiles().findMany({
-              filters: { baUserId: { $in: ids } },
-              fields: PROFILE_FIELDS,
+              where: { baUserId: { $in: ids } },
+              select: PROFILE_FIELDS,
               limit: ids.length,
             })) as ProfileRow[]
         }
@@ -573,9 +574,9 @@ export default ({ strapi }: { strapi: any }) => {
       | { ok: true; baUserId: string | null }
       | { ok: false; error: "not_found" | "ended" }
     > {
-      const g = (await grants().findOne({
-        documentId,
-        fields: ["documentId", "baUserId", "reason", "expiresAt"],
+      const g = (await strapi.db.query(ROLE_GRANT).findOne({
+        where: { documentId },
+        select: ["documentId", "baUserId", "reason", "expiresAt"],
       })) as StoredGrant | null
       if (!g) return { ok: false, error: "not_found" }
       const now = new Date()

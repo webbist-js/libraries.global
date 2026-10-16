@@ -1,5 +1,11 @@
 import type { LibraryNotice } from "@repo/shared-data"
 
+import {
+  articleSearchFacets,
+  ARTICLE_BROWSE_POPULATE,
+  JOURNAL_BROWSE_POPULATE,
+} from "../src/utils/article-browse"
+import { discussionsHostConfig } from "../src/utils/discussions-host"
 import { noticesForIndexing } from "../src/utils/library-notices"
 import {
   OPEN_FIELD_NAMES,
@@ -17,6 +23,10 @@ export default ({ env }) => {
   }
 
   return {
+    discussions: {
+      enabled: true,
+      config: discussionsHostConfig,
+    },
     upload: {
       config: {
         ...(awsS3Config ?? localUploadConfig),
@@ -59,16 +69,16 @@ export default ({ env }) => {
               "author",
               "section_name",
             ],
-            filterableAttributes: ["section_slug", "locale"],
+            filterableAttributes: ARTICLE_FILTERABLE,
             displayedAttributes: ARTICLE_DISPLAYED,
           },
           entriesQuery: {
-            fields: ARTICLE_FIELDS,
-            populate: ARTICLE_POPULATE,
+            fields: [...ARTICLE_FIELDS, "publicationOrigin"],
+            populate: JOURNAL_ARTICLE_POPULATE,
             locale: ALL_LOCALES,
           },
           transformEntry({ entry }: { entry: Record<string, unknown> }) {
-            return articleDocument(entry)
+            return articleDocument(entry, "blog")
           },
         },
 
@@ -80,16 +90,16 @@ export default ({ env }) => {
               "section_name",
               "category_name",
             ],
-            filterableAttributes: ["section_slug", "category_slug", "locale"],
+            filterableAttributes: [...ARTICLE_FILTERABLE, "category_slug"],
             displayedAttributes: ARTICLE_DISPLAYED,
           },
           entriesQuery: {
-            fields: ARTICLE_FIELDS,
+            fields: [...ARTICLE_FIELDS, "docsSections"],
             populate: ARTICLE_POPULATE,
             locale: ALL_LOCALES,
           },
           transformEntry({ entry }: { entry: Record<string, unknown> }) {
-            return articleDocument(entry)
+            return articleDocument(entry, "wiki")
           },
         },
 
@@ -375,13 +385,42 @@ const ARTICLE_FIELDS = [
   "author",
   "publishedAt",
   "updatedAt",
+  "readingTimeMinutes",
+  "geographyFacet",
 ]
 const ARTICLE_POPULATE = {
+  ...ARTICLE_BROWSE_POPULATE,
   section: { fields: ["slug", "name"] },
   category: { fields: ["slug", "name"] },
   heroImage: { fields: MEDIA_FIELDS },
 }
-const ARTICLE_DOC_KEYS = ["id", ...ARTICLE_FIELDS]
+const JOURNAL_ARTICLE_POPULATE = {
+  ...JOURNAL_BROWSE_POPULATE,
+  ...ARTICLE_POPULATE,
+}
+const ARTICLE_DOC_KEYS = [
+  "id",
+  ...ARTICLE_FIELDS.filter((field) => field !== "geographyFacet"),
+]
+const ARTICLE_FACET_FIELDS = [
+  "continents_ids",
+  "countries_ids",
+  "regions_ids",
+  "areas_ids",
+  "libraries_ids",
+  "topics_ids",
+  "authors_ids",
+  "events_ids",
+  "origins_ids",
+  "sections_ids",
+]
+const ARTICLE_FILTERABLE = [
+  "section_slug",
+  "locale",
+  "publicationOrigin",
+  "author_username",
+  ...ARTICLE_FACET_FIELDS,
+]
 const ARTICLE_DISPLAYED = [
   ...ARTICLE_DOC_KEYS,
   "heroImage",
@@ -389,6 +428,10 @@ const ARTICLE_DISPLAYED = [
   "section_name",
   "category_slug",
   "category_name",
+  "publicationOrigin",
+  "author_username",
+  "geographyFacet",
+  ...ARTICLE_FACET_FIELDS,
 ]
 
 const EVENT_FIELDS = [
@@ -557,7 +600,7 @@ const coordinate = (value: unknown): number | null => {
   return Number.isFinite(n) ? n : null
 }
 
-const articleDocument = (entry: Rec): Rec => {
+const articleDocument = (entry: Rec, kind: "blog" | "wiki"): Rec => {
   const section = asRecord(entry.section)
   const category = asRecord(entry.category)
 
@@ -568,6 +611,7 @@ const articleDocument = (entry: Rec): Rec => {
     section_name: section?.name ?? null,
     category_slug: category?.slug ?? null,
     category_name: category?.name ?? null,
+    ...articleSearchFacets(entry, kind),
   }
 }
 

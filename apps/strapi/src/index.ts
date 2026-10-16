@@ -3,17 +3,26 @@ import type { Core } from "@strapi/strapi"
 import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
 import { MOBILE_TIMETABLE_FIELD_NAME } from "./customFields/mobileTimetable/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
+import {
+  registerArticleDiscoveryMiddleware,
+  backfillArticleDiscovery,
+} from "./documentMiddlewares/article-discovery"
 import { registerAtlasOutboxMiddleware } from "./documentMiddlewares/atlas-outbox"
 import { registerChangeRecordsMiddleware } from "./documentMiddlewares/change-records"
 import { registerLibraryPublishPlacesMiddleware } from "./documentMiddlewares/library-publish-places"
 import { registerMobileTimetableMiddleware } from "./documentMiddlewares/mobile-timetable"
 import { registerOpeningScheduleMiddleware } from "./documentMiddlewares/opening-schedule"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
+import {
+  registerArticlePrivacySubscriber,
+  stopArticlePrivacyWorker,
+} from "./lifeCycles/articlePrivacy"
 import { registerEntityRefSubscriber } from "./lifeCycles/entityRef"
 import { registerRoleGrantSubscriber } from "./lifeCycles/roleGrant"
 import { seedDatasets } from "./seeds/datasets"
 import { seedLegalDocuments } from "./seeds/legal-documents"
 import { seedMobileFacilities } from "./seeds/mobile-facilities"
+import { seedDiscussionSubjects } from "./utils/discussions-host"
 import { ensureHotPathIndexes } from "./utils/ensure-hot-path-indexes"
 import { ensureNotificationIndexes } from "./utils/ensure-notification-indexes"
 import { ensureSubscriberIndex } from "./utils/ensure-subscriber-index"
@@ -100,9 +109,11 @@ export default {
     registerAdminUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
     registerRoleGrantSubscriber({ strapi })
+    await registerArticlePrivacySubscriber({ strapi })
     registerAtlasOutboxMiddleware({ strapi })
     // Change Records / Article Changes: audit every library and article write.
     registerChangeRecordsMiddleware({ strapi })
+    registerArticleDiscoveryMiddleware({ strapi })
     // Refuse to publish a library into a draft place (Strapi drops the link).
     registerLibraryPublishPlacesMiddleware({ strapi })
     registerOpeningScheduleMiddleware({ strapi })
@@ -110,6 +121,8 @@ export default {
 
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)
+    await seedDiscussionSubjects(strapi)
+    await backfillArticleDiscovery(strapi)
     await seedMobileFacilities(strapi)
 
     // Draft legal documents with placeholder copy on first boot (idempotent)
@@ -150,6 +163,9 @@ export default {
     ensurePublicSearchKey(strapi).catch((err) =>
       strapi.log.warn("[meilisearch] Public search key check failed:", err)
     )
+  },
+  async destroy({ strapi }: { strapi: Core.Strapi }) {
+    await stopArticlePrivacyWorker(strapi)
   },
 }
 

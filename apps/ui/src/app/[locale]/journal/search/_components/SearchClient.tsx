@@ -2,16 +2,13 @@
 
 import { useSearchParams } from "next/navigation"
 import { useTranslations as useUiTranslations, useLocale } from "next-intl"
-import { Suspense, useEffect, useRef, useState } from "react"
+import { Suspense } from "react"
 
 import { PageHero, SearchField } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
-import {
-  analyticsAttributes,
-  captureAnalyticsEvent,
-  resultBucket,
-} from "@/lib/analytics-events"
+import { useArticleSearch } from "@/hooks/useArticleSearch"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
   searchBlogArticles,
@@ -67,52 +64,18 @@ function SearchResult({ hit }: { hit: BlogArticleSearchHit }) {
   )
 }
 
+const searchJournal = (query: string, locale: string) =>
+  searchBlogArticles(query, 40, locale)
+
 function BlogSearchResults({ query }: { query: string }) {
   const locale = useLocale()
-  const [results, setResults] = useState<BlogArticleSearchHit[]>([])
-  // Track the last resolved query to derive loading/searched state without synchronous setState in effects
-  const [resolvedQuery, setResolvedQuery] = useState("")
-  const pendingRef = useRef(0)
-
-  useEffect(() => {
-    if (!query.trim()) return
-
-    const id = ++pendingRef.current
-    let cancelled = false
-    const measured = captureAnalyticsEvent("search_results", {
-      interaction_source: "article",
-      search_type: "journal",
-    })
-    const failed = captureAnalyticsEvent("search_error", {
-      interaction_source: "article",
-      search_type: "journal",
-    })
-
-    searchBlogArticles(query, 40, locale)
-      .then((res) => {
-        if (!cancelled && id === pendingRef.current) {
-          setResults(res.hits)
-          measured({ result_bucket: resultBucket(res.hits.length) })
-          setResolvedQuery(query)
-        }
-      })
-      .catch(() => {
-        if (!cancelled && id === pendingRef.current) {
-          setResults([])
-          failed()
-          setResolvedQuery(query)
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [query, locale])
-
-  if (!query.trim()) return null
-
-  const loading = resolvedQuery !== query
-  const searched = resolvedQuery === query
+  const { results, loading, searched, active } = useArticleSearch({
+    query,
+    locale,
+    kind: "journal",
+    search: searchJournal,
+  })
+  if (!active) return null
 
   return (
     <div style={{ marginTop: "32px" }}>

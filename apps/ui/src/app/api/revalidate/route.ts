@@ -37,14 +37,29 @@ export async function POST(req: Request) {
   }
 
   const model = typeof body.model === "string" ? body.model : ""
-  if (!isCacheModel(model))
+  if (!isCacheModel(model) && model !== "user-profile")
     return NextResponse.json({ error: "Unknown model" }, { status: 400 })
 
   const tags = [model]
+  if (
+    [
+      "user-profile",
+      "topic",
+      "country",
+      "continent",
+      "region",
+      "area",
+      "library",
+      "blog-section",
+      "wiki-section",
+    ].includes(model)
+  )
+    tags.push("blog-article", "wiki-article")
   const entry = entryKey(body.entry?.slug) ?? entryKey(body.entry?.documentId)
   if (entry) tags.push(`${model}:${entry}`)
 
-  for (const tag of tags) revalidateTag(tag, "max")
+  for (const tag of tags)
+    revalidateTag(tag, model === "user-profile" ? { expire: 0 } : "max")
 
   return NextResponse.json({ revalidated: tags })
 }

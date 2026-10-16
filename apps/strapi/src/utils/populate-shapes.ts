@@ -238,6 +238,7 @@ export const LIBRARY_SHAPES: ShapeSet = {
 // ── Continent ───────────────────────────────────────────────────────────────
 
 const CONTINENT_FIELDS = [
+  "locale",
   "name",
   "slug",
   "code",
@@ -269,6 +270,7 @@ export const CONTINENT_SHAPES: ShapeSet = {
 // ── Country ─────────────────────────────────────────────────────────────────
 
 const COUNTRY_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",
@@ -330,6 +332,7 @@ export const COUNTRY_SHAPES: ShapeSet = {
 // ── Region ──────────────────────────────────────────────────────────────────
 
 const REGION_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",
@@ -387,6 +390,7 @@ export const REGION_SHAPES: ShapeSet = {
 // ── Area ────────────────────────────────────────────────────────────────────
 
 const AREA_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",

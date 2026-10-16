@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 
+import { ContributionAccountGuard } from "@/components/contribute/ContributionAccountGuard"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
+import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
 
 // Default for every /contribute/* route: forms and auth-gated flows are not
@@ -17,12 +20,21 @@ export default async function ContributeLayout({
   children: React.ReactNode
   params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params
+  const [{ locale }, session] = await Promise.all([
+    params,
+    getContributionSession(),
+  ])
 
   return (
     <>
       <GlobalHeader locale={locale as Locale} />
-      <div style={{ background: T.bg.void }}>{children}</div>
+      <div style={{ background: T.bg.void }}>
+        <ContributionAccountGuard
+          expectedScope={contributionAccountScope(session?.user)}
+        >
+          {children}
+        </ContributionAccountGuard>
+      </div>
     </>
   )
 }

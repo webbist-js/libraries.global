@@ -1,4 +1,7 @@
 export default {
+  // CMS discovery aggregates lean published rows; fail explicitly beyond this
+  // bound so operators can choose a search adapter before counts become partial.
+  articleBrowseMaxEntries: 10_000,
   rest: {
     defaultLimit: 25,
     maxLimit: 100,

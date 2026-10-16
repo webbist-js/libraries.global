@@ -33,10 +33,12 @@ export type { SessionTeam } from "./access-server"
  * staff branch the server never did, and React would throw the tree away.
  */
 export function useHydratedSession() {
-  const { data, isPending } = authClient.useSession()
+  const { data, isPending, error } = authClient.useSession()
   const mounted = useMounted()
 
-  return mounted ? { data, isPending } : { data: null, isPending: true }
+  return mounted
+    ? { data, isPending, error }
+    : { data: null, isPending: true, error: null }
 }
 
 export function useStaff() {

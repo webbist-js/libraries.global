@@ -6,6 +6,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/ProfileHero"
 import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
+import { AccountGuard } from "@/components/auth/AccountGuard"
 import { PageHero } from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { NotificationInbox } from "@/components/notifications/NotificationInbox"
@@ -34,31 +35,33 @@ export default async function Page({
   return (
     <>
       <GlobalHeader locale={locale as Locale} />
-      <div className="relative isolate flex min-h-screen w-full flex-col bg-(--t-bg-void) text-(--t-ink-base)">
-        {profile?.username ? (
-          <ProfileHero
-            profile={profile}
-            isOwnProfile
-            isSignedIn
-            tabs={<ProfileTabNav username={profile.username} isOwnProfile />}
-          />
-        ) : (
-          <PageHero
-            compact
-            breadcrumb={[
-              { label: tUi("home"), href: "/" },
-              { label: tUi("notifications") },
-            ]}
-            eyebrow="Your account"
-            eyebrowIcon="mdi:bell-outline"
-            title="Your *notifications.*"
-            lead="Updates about your contributions, libraries and community."
-          />
-        )}
-        <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
-          <NotificationInbox />
-        </main>
-      </div>
+      <AccountGuard mode="identity" expectedScope={session.user.id}>
+        <div className="relative isolate flex min-h-screen w-full flex-col bg-(--t-bg-void) text-(--t-ink-base)">
+          {profile?.username ? (
+            <ProfileHero
+              profile={profile}
+              isOwnProfile
+              isSignedIn
+              tabs={<ProfileTabNav username={profile.username} isOwnProfile />}
+            />
+          ) : (
+            <PageHero
+              compact
+              breadcrumb={[
+                { label: tUi("home"), href: "/" },
+                { label: tUi("notifications") },
+              ]}
+              eyebrow="Your account"
+              eyebrowIcon="mdi:bell-outline"
+              title="Your *notifications.*"
+              lead="Updates about your contributions, libraries and community."
+            />
+          )}
+          <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+            <NotificationInbox />
+          </main>
+        </div>
+      </AccountGuard>
     </>
   )
 }

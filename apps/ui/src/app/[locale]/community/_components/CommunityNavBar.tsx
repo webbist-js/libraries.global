@@ -29,6 +29,12 @@ const COMMUNITY_TABS: readonly SectionTab[] = [
     icon: "mdi:thumb-up-outline",
   },
   {
+    id: "discussions",
+    href: "/community/discussions",
+    label: "Discussions",
+    icon: "mdi:forum-outline",
+  },
+  {
     id: "supporters",
     href: "/community/supporters",
     label: "Supporters",
@@ -43,6 +49,7 @@ const SEGMENT_TO_TAB: Record<string, string> = {
   leaderboard: "leaderboard",
   suggestions: "suggestions",
   supporters: "supporters",
+  discussions: "discussions",
 }
 
 export function activeCommunityTab(pathname: string): string | null {
@@ -70,6 +77,7 @@ export function CommunityNavBar({
   readonly counts?: CommunityTabCounts
 }) {
   const tUi = useUiTranslations("ui")
+  const tDiscussions = useUiTranslations("discussions")
 
   const pathname = usePathname() ?? ""
 
@@ -77,7 +85,11 @@ export function CommunityNavBar({
     <SectionTabs
       activeId={activeCommunityTab(pathname)}
       label={tUi("community")}
-      tabs={communityTabs(counts)}
+      tabs={communityTabs(counts).map((tab) =>
+        tab.id === "discussions"
+          ? { ...tab, label: tDiscussions("threads") }
+          : tab
+      )}
     />
   )
 }

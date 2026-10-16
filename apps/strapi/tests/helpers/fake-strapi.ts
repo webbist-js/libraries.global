@@ -52,7 +52,7 @@ export function makeFakeStrapi(
   const view = (d: Doc, status?: string): Doc | null =>
     status === "published" ? publishedView(d) : d
   const inLocale = (d: Doc, locale?: string) =>
-    !locale || d.locale === undefined || d.locale === locale
+    !locale || locale === "*" || d.locale === undefined || d.locale === locale
   const snapshot = (d: Doc): Doc => {
     const { __published: _p, ...rest } = d
 
@@ -583,8 +583,26 @@ export function makeFakeStrapi(
         return { count: data.length, ids }
       }),
       // `populate` is ignored: seed relations as nested objects instead.
-      findMany: vi.fn(async ({ where }: { where?: Record<string, any> } = {}) =>
-        table(uid).filter((d) => match(d, where))
+      findMany: vi.fn(
+        async ({
+          where,
+          orderBy,
+          offset,
+          limit,
+        }: {
+          where?: Record<string, any>
+          orderBy?: unknown
+          offset?: number
+          limit?: number
+        } = {}) =>
+          page(
+            sortRows(
+              table(uid).filter((d) => match(d, where)),
+              orderBy
+            ),
+            offset,
+            limit
+          )
       ),
       update: vi.fn(
         async ({

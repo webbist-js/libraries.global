@@ -13,6 +13,7 @@ import {
   loadArticleForEditor,
 } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
 import { requireEditorOrApply, userIsArticleEditor } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -37,25 +38,51 @@ export default async function EditKnowledgeArticlePage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
-  searchParams: Promise<{ mode?: string; locale?: string | string[] }>
+  searchParams: Promise<{
+    mode?: string
+    locale?: string | string[]
+    draft?: string
+    sourceLocale?: string | string[]
+  }>
 }) {
   const tUi = await getUiTranslations("ui")
 
-  const [{ locale, slug }, { mode, locale: requested }, session] =
-    await Promise.all([params, searchParams, getSessionSSR(await headers())])
+  const [
+    { locale, slug },
+    {
+      mode,
+      locale: requested,
+      draft: requestedDraft,
+      sourceLocale: requestedSource,
+    },
+    session,
+  ] = await Promise.all([params, searchParams, getSessionSSR(await headers())])
   const report = mode === "report"
+  const resumeQuery = new URLSearchParams()
+  if (report) resumeQuery.set("mode", "report")
+  if (typeof requested === "string") resumeQuery.set("locale", requested)
+  if (typeof requestedSource === "string")
+    resumeQuery.set("sourceLocale", requestedSource)
+  if (requestedDraft && isDocumentIdParam(requestedDraft))
+    resumeQuery.set("draft", requestedDraft)
+  const callbackPath = `/contribute/knowledge/${encodeURIComponent(slug)}${resumeQuery.size ? `?${resumeQuery}` : ""}`
   if (!session?.user)
-    redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/${slug}${report ? "?mode=report" : ""}`)}`
-    )
+    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callbackPath)}`)
   // Reporting a problem stays open to every signed-in user; the editor
   // itself needs the Knowledge editor role.
   if (!report) requireEditorOrApply(session.user, "knowledge")
 
-  const [article, locales] = await Promise.all([
-    loadArticleForEditor("knowledge", slug, locale as Locale),
-    fetchArticleLocales(),
-  ])
+  const locales = await fetchArticleLocales()
+  const requestedLocale = editingLocaleFrom(requested, locales)
+  const article = await loadArticleForEditor(
+    "knowledge",
+    slug,
+    locale as Locale,
+    {
+      targetLocale: requestedLocale,
+      sourceLocale: editingLocaleFrom(requestedSource, locales),
+    }
+  )
   if (!article) notFound()
 
   return (
@@ -80,6 +107,7 @@ export default async function EditKnowledgeArticlePage({
         <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
           <ReportProblemForm
             slug={slug}
+            contentLocale={article.locale}
             title={article.title}
             editHref={ARTICLE_KIND_META.knowledge.editPath(slug)}
             canEdit={userIsArticleEditor(session.user, "knowledge")}
@@ -87,12 +115,18 @@ export default async function EditKnowledgeArticlePage({
         </main>
       ) : (
         <ArticleEditorShell
+          key={`${article.documentId}:${article.locale}:${requestedDraft ?? "fresh"}`}
           kind="knowledge"
           mode="edit"
           article={article}
           locales={locales}
           uiLocale={locale}
           initialLocale={editingLocaleFrom(requested, locales)}
+          resumeDraftId={
+            requestedDraft && isDocumentIdParam(requestedDraft)
+              ? requestedDraft
+              : undefined
+          }
         />
       )}
     </div>

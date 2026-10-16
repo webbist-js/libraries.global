@@ -22,6 +22,7 @@ import {
   validateDrive,
 } from "@repo/shared-data"
 
+import { ownsJournalArticle } from "../../../../utils/article-relations"
 import { loadDriveLibrary } from "../../../../utils/drive-library"
 import { countLibraries } from "../../../../utils/meili-count"
 import { activeGrants } from "../../../../utils/role-grants"
@@ -540,6 +541,59 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     const { caps, tier, role } = await (this as any).loadCapabilities(baUserId)
+    const ownJournalArticle =
+      submissionType === "blog_submission" &&
+      input.directJournalEdit &&
+      (await ownsJournalArticle(strapi, baUserId, input))
+    const articleDraft =
+      input.draftData && typeof input.draftData === "object"
+        ? (input.draftData as Record<string, any>)
+        : null
+    if (
+      articleDraft &&
+      (submissionType === "wiki_edit" || submissionType === "blog_submission")
+    ) {
+      if (
+        Array.isArray(articleDraft.tags) &&
+        articleDraft.tags.some(
+          (tag: any) =>
+            !tag ||
+            ![
+              "topic",
+              "library",
+              "continent",
+              "country",
+              "region",
+              "area",
+              "event",
+            ].includes(tag.kind)
+        )
+      )
+        return {
+          ok: false,
+          status: 400,
+          message:
+            "Choose a published Topic, Library, place or Event from the list.",
+        }
+      if (
+        articleDraft.baseRevision != null &&
+        !/^[a-f0-9]{64}$/.test(String(articleDraft.baseRevision))
+      )
+        return { ok: false, status: 400, message: "Invalid article revision." }
+      if (
+        articleDraft.publicationOrigin === "index" &&
+        !(
+          caps.editorLocales.journal === "all" ||
+          caps.editorLocales.journal.has(input.locale ?? "en")
+        )
+      )
+        return {
+          ok: false,
+          status: 403,
+          message:
+            "Only Journal editors may designate From the Index articles.",
+        }
+    }
 
     if (
       !canSubmit(caps, submissionType, {
@@ -549,6 +603,7 @@ export default ({ strapi }: { strapi: any }) => ({
             : undefined,
         directWikiEdit: !!input.directWikiEdit,
         directJournalEdit: !!input.directJournalEdit,
+        ownJournalArticle: !!ownJournalArticle,
         ...(typeof input.locale === "string" ? { locale: input.locale } : {}),
       })
     )

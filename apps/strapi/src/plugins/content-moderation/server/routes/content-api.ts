@@ -1,6 +1,12 @@
 export default [
   {
     method: "GET",
+    path: "/articles/blog/:slug/ownership",
+    handler: "submission.journalOwnership",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/locales",
     handler: "submission.locales",
     config: { auth: false, policies: [] },
@@ -53,6 +59,12 @@ export default [
     handler: "submission.findMine",
     config: { auth: false, policies: [] },
   },
+  {
+    method: "POST",
+    path: "/submissions/:id/withdraw",
+    handler: "submission.withdraw",
+    config: { auth: false, policies: [] },
+  },
   // Bridge secret + X-Ba-User-Id (401 otherwise).
   {
     method: "GET",
@@ -88,6 +100,24 @@ export default [
     method: "GET",
     path: "/uploads/usage",
     handler: "submission.uploadUsage",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations",
+    handler: "upload.reserve",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations/complete",
+    handler: "upload.complete",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations/cancel",
+    handler: "upload.cancel",
     config: { auth: false, policies: [] },
   },
   {

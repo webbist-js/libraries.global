@@ -1,15 +1,14 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
-import { getSessionSSR } from "@/lib/auth-server"
 import { billingConfig } from "@/lib/billing/config"
 import { hasManagedMembership } from "@/lib/billing/current-membership"
+import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -49,7 +48,7 @@ const PROMISES = [
 export default async function MembershipPage() {
   const tUi = await getUiTranslations("ui")
 
-  const session = await getSessionSSR(await headers())
+  const session = await getContributionSession()
   const user = session?.user
   // A signed-in session missing its plan counts as free (missing means deny).
   const currentPlan = user ? (user.plan ?? "free") : "public"

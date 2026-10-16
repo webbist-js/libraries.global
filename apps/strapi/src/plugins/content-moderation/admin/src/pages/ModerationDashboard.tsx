@@ -27,6 +27,7 @@ import { useSearchParams } from "react-router-dom"
 
 import { ReviewModal, StatusPill, TypeBadge } from "../components/ReviewModal"
 import {
+  articleDecisionErrorMessage,
   detailOf,
   type ModerationStatus,
   relativeTime,
@@ -119,6 +120,9 @@ export function ModerationDashboard() {
         return true
       } catch (err) {
         const message =
+          articleDecisionErrorMessage(
+            (err as { response?: { data?: unknown } })?.response?.data
+          ) ??
           (err as { response?: { data?: { error?: { message?: string } } } })
             ?.response?.data?.error?.message ??
           "The decision couldn't be saved."

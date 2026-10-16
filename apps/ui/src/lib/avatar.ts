@@ -27,3 +27,18 @@ export function avatarSrc(
 
   return formatStrapiMediaUrlForClient(resized ?? avatar.url) ?? null
 }
+
+/** Readable fallback for names and handles, including legacy usernames. */
+export function avatarInitials(name?: string | null): string {
+  return (
+    (name ?? "")
+      .replace(/^@+/, "")
+      .trim()
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => Array.from(part)[0] ?? "")
+      .join("")
+      .toUpperCase() || "?"
+  )
+}

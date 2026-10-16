@@ -26,6 +26,7 @@ export const MODERATION_QUEUES = [
   "knowledge",
   "journal",
   "applications",
+  "discussions",
 ] as const
 export type ModerationQueue = (typeof MODERATION_QUEUES)[number]
 
@@ -276,6 +277,8 @@ export function canSubmit(
     libraryDocumentId?: string
     directWikiEdit?: boolean
     directJournalEdit?: boolean
+    /** Server-resolved ownership; never accepted from a request body. */
+    ownJournalArticle?: boolean
     locale?: string
   } = {}
 ): boolean {
@@ -306,6 +309,7 @@ export function canSubmit(
         : c.set.has("docs.directEdit")
     case "blog_submission":
       if (!opts.directJournalEdit) return c.set.has("submit.journalPitch")
+      if (opts.ownJournalArticle) return c.set.has("submit.journalPitch")
 
       return opts.locale !== undefined
         ? canDirectEdit(c, "journal", opts.locale)

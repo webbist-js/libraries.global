@@ -4,7 +4,10 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { isArticleKind } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
-import { fetchArticleLocales } from "@/lib/article-editor-server"
+import {
+  fetchArticleLocales,
+  loadArticleWriteContext,
+} from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
@@ -21,7 +24,14 @@ export default async function NewArticlePage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ type?: string; draft?: string; section?: string }>
+  searchParams: Promise<{
+    type?: string
+    kind?: string
+    draft?: string
+    section?: string
+    library?: string
+    event?: string
+  }>
 }) {
   const tUi = await getUiTranslations("ui")
 
@@ -30,13 +40,21 @@ export default async function NewArticlePage({
     searchParams,
     getSessionSSR(await headers()),
   ])
-  const kind = isArticleKind(query.type) ? query.type : "knowledge"
+  const requestedKind = query.type ?? query.kind
+  const kind = isArticleKind(requestedKind) ? requestedKind : "knowledge"
+  const callbackQuery = new URLSearchParams({ type: kind })
+  for (const key of ["draft", "library", "event"] as const)
+    if (query[key] && isDocumentIdParam(query[key]))
+      callbackQuery.set(key, query[key])
   if (!session?.user)
     redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/new?type=${kind}`)}`
+      `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/new?${callbackQuery}`)}`
     )
-  requireEditorOrApply(session.user, kind)
-  const locales = await fetchArticleLocales()
+  if (kind === "knowledge") requireEditorOrApply(session.user, kind)
+  const [locales, context] = await Promise.all([
+    fetchArticleLocales(),
+    loadArticleWriteContext(query, locale),
+  ])
   const resumeDraftId =
     query.draft && isDocumentIdParam(query.draft) ? query.draft : undefined
 
@@ -65,6 +83,8 @@ export default async function NewArticlePage({
         resumeDraftId={resumeDraftId}
         locales={locales}
         uiLocale={locale}
+        initialTags={context.tags}
+        initialEventMentions={context.eventMentions}
       />
     </div>
   )

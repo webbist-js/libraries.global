@@ -47,11 +47,13 @@ export function SettingsShell({
   profile,
   sessionUser,
   avatarUrl,
+  imageUploadsEnabled = true,
 }: {
   profile: UserProfile | null
   sessionUser: BetterAuthUser
   /** The browser-safe avatar URL (`avatarSrc`), or null. */
   avatarUrl: string | null
+  imageUploadsEnabled?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -62,6 +64,7 @@ export function SettingsShell({
     profile,
     sessionName: sessionUser.name ?? "",
     avatarUrl,
+    imageUploadsEnabled,
   })
 
   const handleSave = async () => {
