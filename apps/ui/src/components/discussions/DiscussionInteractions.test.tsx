@@ -157,12 +157,15 @@ describe("discussion interactions", () => {
     })
   })
 
-  it("escapes bodies and never follows unsafe author links", () => {
+  it.each([
+    "<script>bad()</script><img src=x onerror=bad()>",
+    "<SCRIPT>bad()</SCRIPT><IMG SRC=x onerror=bad()>",
+  ])("escapes bodies and never follows unsafe author links: %s", (body) => {
     const view = render(
       <DiscussionRecordCard
         record={{
           ...record,
-          body: "<script>bad()</script><img src=x onerror=bad()>",
+          body,
           author: { name: "Author", url: "data:text/html,bad" },
         }}
         kind="thread"
@@ -172,7 +175,7 @@ describe("discussion interactions", () => {
       />
     )
     expect(view.container.querySelector("script, img, a")).toBeNull()
-    expect(screen.getByText(/<script>/).textContent).toContain("onerror")
+    expect(screen.getByText(body, { exact: true }).textContent).toBe(body)
     expect(
       screen.queryByRole("button", { name: "Edit your message" })
     ).toBeNull()
