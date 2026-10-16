@@ -15,7 +15,7 @@ const POWERS: Record<ApplicationRole, Power[]> = {
     {
       can: true,
       lead: "Publish",
-      rest: "new and edited Knowledge pages without waiting for review.",
+      rest: "approved new and edited Knowledge pages in your permitted languages.",
     },
     {
       can: true,
@@ -37,7 +37,7 @@ const POWERS: Record<ApplicationRole, Power[]> = {
     {
       can: true,
       lead: "Publish",
-      rest: "new and edited Journal articles without waiting for review.",
+      rest: "approved new and edited Journal articles in your permitted languages.",
     },
     {
       can: true,
