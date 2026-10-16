@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { articleEventTime } from "@/lib/article-event-time"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { searchLibraryNames } from "@/lib/meilisearch"
@@ -103,6 +104,10 @@ export function StatusCard({
   canSubmit,
   publishesDirectly,
   onSubmit,
+  publishedAt,
+  isPublished,
+  onRetry,
+  offline = false,
 }: {
   mode: "new" | "edit"
   kind: ArticleKind
@@ -115,9 +120,15 @@ export function StatusCard({
   canSubmit: boolean
   publishesDirectly: boolean
   onSubmit: () => void
+  publishedAt?: string | null
+  isPublished?: boolean
+  onRetry?: () => void
+  offline?: boolean
 }) {
   const tUi = useUiTranslations("ui")
   const tLanguage = useUiTranslations("translation")
+  const p = useUiTranslations("publishing")
+  const displayLocale = useLocale()
 
   let saveLabel = tUi("not_saved_yet")
   let saveIcon = "mdi:circle-outline"
@@ -159,13 +170,37 @@ export function StatusCard({
       </div>
       <p style={cardHint}>
         {submitted
-          ? tUi("in_review_you_cant_edit_it_until_an_editor_replies")
-          : publishesDirectly
-            ? tUi(
-                "not_published_approved_changes_from_editors_publish_straight_away"
-              )
-            : tUi("not_published_only_you_and_the_editors_can_see_drafts")}
+          ? p("awaitingReview")
+          : mode === "edit"
+            ? p("privateProposal")
+            : p("privateDraft")}
       </p>
+      {mode === "edit" && (
+        <p className="mt-2 text-sm text-(--t-ink-dim)">
+          {publishedAt
+            ? p("livePublished", {
+                date: new Date(publishedAt).toLocaleDateString(displayLocale),
+              })
+            : isPublished
+              ? p("published")
+              : p("notPublishedLanguage")}
+        </p>
+      )}
+      {publishesDirectly && !submitted && (
+        <p className="mt-2 text-xs text-(--t-ink-dim)">
+          {p("approvedChanges")}
+        </p>
+      )}
+      {saveState === "error" && onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={offline}
+          className="mt-3 underline"
+        >
+          {p("retrySave")}
+        </button>
+      )}
       <button
         type="button"
         onClick={onSubmit}
@@ -746,6 +781,9 @@ export function ArticleEventsCard({
   const [title, setTitle] = useState("")
   const [url, setUrl] = useState("")
   const [date, setDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [zone, setZone] = useState("UTC")
+  const p = useUiTranslations("publishing")
   const [libraryId, setLibraryId] = useState("")
   const [error, setError] = useState("")
   const add = () => {
@@ -760,19 +798,32 @@ export function ArticleEventsCard({
 
       return
     }
+    let startTime: string | null, endTime: string | null
+    try {
+      startTime = articleEventTime(date, zone)
+      endTime = articleEventTime(endDate, zone)
+      if (startTime && endTime && endTime < startTime)
+        throw new Error("End before start")
+    } catch {
+      setError(p("invalidEventTime"))
+
+      return
+    }
     onChange([
       ...mentions,
       {
         title: title.trim(),
         url: citation.href,
-        startTime: date ? `${date}T00:00:00.000Z` : null,
-        timezone: "UTC",
+        startTime,
+        endTime,
+        timezone: zone,
         libraryDocumentId: libraryId || null,
       },
     ])
     setTitle("")
     setUrl("")
     setDate("")
+    setEndDate("")
     setError("")
   }
 
@@ -830,10 +881,29 @@ export function ArticleEventsCard({
           <label>
             {tRelations("eventDate")}
             <input
-              type="date"
+              type="datetime-local"
               className="mt-1 w-full rounded-lg border p-2"
               value={date}
               onChange={(event) => setDate(event.target.value)}
+            />
+          </label>
+          <label>
+            {p("eventEnd")}
+            <input
+              type="datetime-local"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="mt-1 w-full rounded-lg border p-2"
+            />
+          </label>
+          <label>
+            {p("eventTimezone")}
+            <input
+              value={zone}
+              onChange={(event) => setZone(event.target.value)}
+              placeholder="America/Bogota"
+              maxLength={80}
+              className="mt-1 w-full rounded-lg border p-2"
             />
           </label>
           <label>

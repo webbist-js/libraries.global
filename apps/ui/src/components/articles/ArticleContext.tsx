@@ -38,6 +38,7 @@ export function ArticleContext({
   locale: string
 }) {
   const t = useTranslations("articleContext")
+  const p = useTranslations("publishing")
   const topics = (article.topics ?? []).filter((item) => item.name)
   const libraries = (article.libraries ?? []).filter((item) => item.name)
   const places = articleContextPlaces(article)
@@ -50,10 +51,12 @@ export function ArticleContext({
 
   return (
     <section
-      aria-label={t("title")}
+      aria-label={p(kind === "journal" ? "contextStory" : "contextReference")}
       className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-6"
     >
-      <h2 className="mt-0 text-xl">{t("title")}</h2>
+      <h2 className="mt-0 text-xl">
+        {p(kind === "journal" ? "contextStory" : "contextReference")}
+      </h2>
       <dl className="mb-0 grid gap-3">
         {topics.length > 0 && (
           <div>
@@ -107,6 +110,9 @@ export function ArticleContext({
       {events.length > 0 && (
         <div className="mt-5">
           <h3 className="text-lg">{t("events")}</h3>
+          <p className="text-xs" style={{ color: "var(--t-ink-dim)" }}>
+            {p("citedByAuthor")}
+          </p>
           <ul className="mb-0 grid list-none gap-4 pl-0">
             {events.map((event, index) => {
               const timezone = articleCitationTimezone(event.timezone)
@@ -151,10 +157,11 @@ export function ArticleContext({
                     <a
                       href={source}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      // eslint-disable-next-line react/no-invalid-html-attribute -- Contributor citations use the standard ugc link qualification.
+                      rel="noopener noreferrer nofollow ugc"
                       className="underline"
                     >
-                      {t("source")}
+                      {new URL(source).hostname}
                     </a>
                   )}
                 </li>

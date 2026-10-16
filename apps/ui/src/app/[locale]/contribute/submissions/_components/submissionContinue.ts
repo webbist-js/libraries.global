@@ -13,6 +13,9 @@ export function continueHref(submission: Submission): string {
       return `/contribute/knowledge/new?type=${kind}&draft=${encodeURIComponent(documentId)}`
 
     const query = new URLSearchParams({ draft: documentId })
+    const sourceLocale = draftData?.sourceLocale
+    if (typeof sourceLocale === "string")
+      query.set("sourceLocale", sourceLocale)
     const contentLocale = draftData?.locale
     if (typeof contentLocale === "string") query.set("locale", contentLocale)
 

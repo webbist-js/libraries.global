@@ -2,8 +2,8 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { ArticleContext } from "@/components/articles/ArticleContext"
+import { ArticleReaderActions } from "@/components/articles/ArticleReaderActions"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
-import { EditorOnly } from "@/components/contribute/EditorOnly"
 import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
@@ -13,6 +13,7 @@ import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
 import { countWords, extractHeadings, formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
+import { languageName } from "@/lib/locale-fallback"
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
 import type {
@@ -81,6 +82,7 @@ export function DocsArticlePage({
 }) {
   const tUi = useUiTranslations("ui")
   const tArticle = useUiTranslations("editorial")
+  const p = useUiTranslations("publishing")
 
   const title = article.title ?? article.slug ?? tArticle("untitled")
   const body: ArticleBodyBlock[] = article.body ?? []
@@ -232,54 +234,44 @@ export function DocsArticlePage({
                   ) : null}
                 </span>
               </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {/* The editor is for Knowledge editors; reporting is for all. */}
-                <EditorOnly kind="knowledge">
-                  <GlobalLink
-                    className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
-                    href={`/contribute/knowledge/${article.slug}`}
-                    style={{
-                      background: T.bg.deep,
-                      borderColor: T.border.hi,
-                      color: T.ink.base,
-                    }}
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      height={14}
-                      icon="mdi:pencil-outline"
-                      width={14}
-                    />
-                    {tArticle("editPage")}
-                  </GlobalLink>
-                </EditorOnly>
-                <GlobalLink
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
-                  href={`/contribute/knowledge/${article.slug}?mode=report`}
-                  style={{
-                    background: T.bg.deep,
-                    borderColor: T.border.hi,
-                    color: T.ink.base,
-                  }}
-                >
-                  <Icon
-                    aria-hidden="true"
-                    height={14}
-                    icon="mdi:alert-outline"
-                    width={14}
-                  />
-                  {tArticle("reportIssue")}
-                </GlobalLink>
-              </div>
             </div>
 
+            <p className="mt-4 text-sm" style={{ color: T.ink.dim }}>
+              {p("maintainedBy")} ·{" "}
+              {languageName(contentLocale ?? locale, [], locale)} ·{" "}
+              <a href="#article-history" className="underline">
+                {tArticle("editHistory")}
+              </a>
+            </p>
+            <ArticleReaderActions
+              kind="knowledge"
+              slug={article.slug ?? ""}
+              path={docsArticlePath(article, sections)}
+              contentLocale={
+                contentLocale ??
+                (untranslatedLocale ? routing.defaultLocale : locale)
+              }
+              interfaceLocale={locale}
+              availableLocales={article.availableLocales}
+            />
+            <p className="text-xs" style={{ color: T.ink.dim }}>
+              {p("maintenanceHint")}
+            </p>
+            <details className="mt-4 xl:hidden">
+              <summary className="text-sm font-semibold">
+                {p("contextReference")}
+              </summary>
+              <ArticleContext
+                article={article}
+                kind="knowledge"
+                locale={locale}
+              />
+            </details>
             {/* Body — white section card on paper, serif headings, 17px prose */}
             {body.length > 0 ? (
               <div
                 id={`analytics-knowledge-${article.documentId}`}
-                className="mt-7 rounded-3xl border px-6 py-8 sm:px-10 sm:py-10"
-                style={{ background: T.bg.deep, borderColor: T.border.line }}
+                className="mt-7 max-w-[68ch] py-6"
               >
                 <ArticleEngagement
                   bodyId={`analytics-knowledge-${article.documentId}`}
@@ -303,12 +295,7 @@ export function DocsArticlePage({
               </p>
             )}
 
-            <ArticleContext
-              article={article}
-              kind="knowledge"
-              locale={locale}
-            />
-
+            <div id="article-history" />
             <ArticleEditHistorySection
               className="mt-6"
               kind="wiki"
@@ -316,6 +303,7 @@ export function DocsArticlePage({
               locale={untranslatedLocale ? routing.defaultLocale : locale}
             />
 
+            <div id="article-discussion" />
             <AttachedDiscussion
               target={{
                 uid: "api::wiki-article.wiki-article",
@@ -389,6 +377,11 @@ export function DocsArticlePage({
 
           {/* ── Right: on this page + meta ── */}
           <aside className="hidden xl:block">
+            <ArticleContext
+              article={article}
+              kind="knowledge"
+              locale={locale}
+            />
             <div className="sticky top-[76px] flex flex-col gap-5">
               {headings.length > 0 ? (
                 <nav

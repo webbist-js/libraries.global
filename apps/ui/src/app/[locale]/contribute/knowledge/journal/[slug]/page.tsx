@@ -35,17 +35,23 @@ export default async function EditJournalArticlePage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
-  searchParams: Promise<{ locale?: string | string[]; draft?: string }>
+  searchParams: Promise<{
+    locale?: string | string[]
+    draft?: string
+    sourceLocale?: string | string[]
+  }>
 }) {
   const tUi = await getUiTranslations("ui")
 
   const [
     { locale, slug },
-    { locale: requested, draft: requestedDraft },
+    { locale: requested, draft: requestedDraft, sourceLocale: requestedSource },
     session,
   ] = await Promise.all([params, searchParams, getSessionSSR(await headers())])
   const resumeQuery = new URLSearchParams()
   if (typeof requested === "string") resumeQuery.set("locale", requested)
+  if (typeof requestedSource === "string")
+    resumeQuery.set("sourceLocale", requestedSource)
   if (requestedDraft && isDocumentIdParam(requestedDraft))
     resumeQuery.set("draft", requestedDraft)
   const callbackPath = `/contribute/knowledge/journal/${encodeURIComponent(slug)}${resumeQuery.size ? `?${resumeQuery}` : ""}`
@@ -54,10 +60,16 @@ export default async function EditJournalArticlePage({
   const canOwnEdit = await ownsJournalArticle(session.user, slug)
   if (!canOwnEdit) requireEditorOrApply(session.user, "journal")
 
-  const [article, locales] = await Promise.all([
-    loadArticleForEditor("journal", slug, locale as Locale),
-    fetchArticleLocales(),
-  ])
+  const locales = await fetchArticleLocales()
+  const article = await loadArticleForEditor(
+    "journal",
+    slug,
+    locale as Locale,
+    {
+      targetLocale: editingLocaleFrom(requested, locales),
+      sourceLocale: editingLocaleFrom(requestedSource, locales),
+    }
+  )
   if (!article) notFound()
 
   return (
@@ -71,6 +83,7 @@ export default async function EditJournalArticlePage({
         lead="Edit the story, or add a translation. Journal editors review every change before it’s published, and each contributor is credited."
       />
       <ArticleEditorShell
+        key={`${article.documentId}:${article.locale}:${requestedDraft ?? "fresh"}`}
         kind="journal"
         mode="edit"
         canOwnEdit={canOwnEdit}

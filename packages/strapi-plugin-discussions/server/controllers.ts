@@ -1,3 +1,5 @@
+import { open, stat } from "node:fs/promises"
+
 import { defaults } from "./config"
 import { resolveActor } from "./identity"
 import { DiscussionError, fail, id, object } from "./validation"
@@ -61,7 +63,108 @@ export default function controllers({ strapi }: { strapi: any }) {
   const reportDecision = (ctx: any, actor: any) =>
     service().decideReport(actor, id(ctx.params.id), ctx.request.body)
 
+  const image = async (ctx: any, actor: any) => {
+    const media = await service().image(actor, id(ctx.params.id))
+    ctx.set("Content-Type", media.mime)
+    ctx.set("X-Content-Type-Options", "nosniff")
+    ctx.set("Content-Disposition", "inline")
+
+    return Buffer.from(media.bytes)
+  }
+
   return {
+    image: endpoint(image),
+    adminImage: endpoint(image, true),
+    uploadImage: endpoint(async (ctx, actor) => {
+      if (!actor) fail(401, "Authentication required")
+      if (ctx.state.discussionsUpload)
+        return service().uploadImage(
+          actor,
+          ctx.state.discussionsUpload.fields,
+          ctx.state.discussionsUpload.bytes
+        )
+      if (
+        Object.keys(ctx.request.body ?? {}).some(
+          (key) => !["subjectId", "altText", "caption"].includes(key)
+        )
+      )
+        fail(400, "Invalid image fields")
+      if (Object.keys(ctx.request.files ?? {}).some((key) => key !== "file"))
+        fail(400, "Use the file image field")
+      if (
+        !String(ctx.request.headers["content-type"] ?? "").startsWith(
+          "multipart/form-data"
+        )
+      )
+        fail(415, "Multipart image upload required")
+      const files = Object.values(ctx.request.files ?? {}).flat() as any[]
+      if (files.length !== 1) fail(400, "Upload one discussion image")
+      const file = files[0],
+        max = { ...defaults, ...strapi.config.get("plugin::discussions", {}) }
+          .maxImageBytes
+      if (
+        !(file?.filepath || file?.path) ||
+        (await stat(file.filepath ?? file.path)).size > max
+      )
+        fail(413, "Discussion image exceeds size limit")
+      const handle = await open(file.filepath ?? file.path, "r")
+      try {
+        const buffer = Buffer.alloc(max + 1),
+          { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
+        if (bytesRead > max) fail(413, "Discussion image exceeds size limit")
+
+        return service().uploadImage(
+          actor,
+          ctx.request.body,
+          buffer.subarray(0, bytesRead)
+        )
+      } finally {
+        await handle.close()
+      }
+    }),
+    sanctions: endpoint((ctx, actor) => service().sanctions(actor, ctx.query)),
+    liftSanction: endpoint((ctx, actor) =>
+      service().liftSanction(actor, id(ctx.params.id), ctx.request.body)
+    ),
+    adminSanctions: endpoint(
+      (ctx, actor) => service().sanctions(actor, ctx.query),
+      true
+    ),
+    adminLiftSanction: endpoint(
+      (ctx, actor) =>
+        service().liftSanction(actor, id(ctx.params.id), ctx.request.body),
+      true
+    ),
+    myStatus: endpoint((_ctx, actor) => service().myStatus(actor)),
+    appealSanction: endpoint((ctx, actor) =>
+      service().appealSanction(actor, id(ctx.params.id), ctx.request.body)
+    ),
+    react: endpoint((ctx, actor) =>
+      service().react(
+        actor,
+        kinds(ctx.params.kind),
+        id(ctx.params.id),
+        ctx.request.body
+      )
+    ),
+    sanctionRecord: endpoint((ctx, actor) =>
+      service().sanctionRecord(
+        actor,
+        kinds(ctx.params.kind),
+        id(ctx.params.id),
+        ctx.request.body
+      )
+    ),
+    adminSanctionRecord: endpoint(
+      (ctx, actor) =>
+        service().sanctionRecord(
+          actor,
+          kinds(ctx.params.kind),
+          id(ctx.params.id),
+          ctx.request.body
+        ),
+      true
+    ),
     subjects: endpoint((ctx, actor) =>
       service().listSubjects(actor, ctx.query)
     ),

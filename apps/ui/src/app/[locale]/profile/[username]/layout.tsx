@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { AccountGuard } from "@/components/auth/AccountGuard"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
@@ -165,30 +166,38 @@ export default async function ProfileLayout({
   return (
     <>
       <GlobalHeader locale={locale as Locale} />
-      <div
-        className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.void }}
+      <AccountGuard
+        mode="identity"
+        expectedScope={session?.user?.id ?? "guest"}
+        publicGuestPaths={
+          profile.profileVisibility === "public" ? [`/profile/${username}`] : []
+        }
       >
-        <ProfileHero
-          profile={profile}
-          isOwnProfile={isOwnProfile}
-          isSignedIn={!!session?.user}
-          tabs={
-            <ProfileTabNav
-              username={username}
-              isOwnProfile={isOwnProfile}
-              counts={{
-                contributions: contributionCount,
-                following: followingCount(profile),
-                recognition: profile.earnedBadges?.length ?? 0,
-              }}
-            />
-          }
-        />
-        <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
-          {children}
-        </main>
-      </div>
+        <div
+          className="relative isolate flex min-h-screen w-full flex-col"
+          style={{ background: T.bg.void }}
+        >
+          <ProfileHero
+            profile={profile}
+            isOwnProfile={isOwnProfile}
+            isSignedIn={!!session?.user}
+            tabs={
+              <ProfileTabNav
+                username={username}
+                isOwnProfile={isOwnProfile}
+                counts={{
+                  contributions: contributionCount,
+                  following: followingCount(profile),
+                  recognition: profile.earnedBadges?.length ?? 0,
+                }}
+              />
+            }
+          />
+          <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
+            {children}
+          </main>
+        </div>
+      </AccountGuard>
     </>
   )
 }

@@ -50,6 +50,9 @@ vi.mock("@/components/docs/ArticleEditHistory", () => ({
 vi.mock("@/components/discussions/AttachedDiscussion", () => ({
   AttachedDiscussion: () => null,
 }))
+vi.mock("@/components/articles/ArticleReaderActions", () => ({
+  ArticleReaderActions: () => null,
+}))
 vi.mock("@/lib/avatar", () => ({ avatarSrc: () => null }))
 vi.mock("@/lib/navigation", () => ({ routing: { defaultLocale: "en" } }))
 vi.mock("@/lib/env-vars", () => ({
@@ -119,7 +122,9 @@ describe("public article context", () => {
       "America/Bogota"
     )
     expect(
-      screen.getByRole("link", { name: "Public source" }).getAttribute("href")
+      screen
+        .getByRole("link", { name: "library.example.org" })
+        .getAttribute("href")
     ).toBe("https://library.example.org/workshop")
   })
   it("keeps a purged Event's stored citation and never renders extra source payloads", () => {
@@ -138,7 +143,9 @@ describe("public article context", () => {
     )
     expect(screen.getByText("Reading workshop")).toBeTruthy()
     expect(screen.getAllByText(/America\/Bogota/)).toHaveLength(2)
-    expect(screen.getByRole("link", { name: "Public source" })).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "library.example.org" })
+    ).toBeTruthy()
     expect(view.container.textContent).not.toContain("private source")
   })
   it("preserves empty frozen groups and shows incomplete Library links as text", () => {
@@ -213,9 +220,12 @@ describe("public article context", () => {
     ])
     const view = render(<BlogArticlePage article={article} locale="en" />)
     expect(
-      screen.getByRole("region", { name: "About this article" })
+      screen.getAllByRole("region", { name: "In this story" })
     ).toBeTruthy()
-    expect(screen.getByText("Reading workshop")).toBeTruthy()
+    expect(screen.getAllByText("Reading workshop")).toHaveLength(2)
+    expect(view.container.querySelector("details")?.hasAttribute("open")).toBe(
+      false
+    )
     view.unmount()
     render(
       <DocsArticlePage
@@ -227,10 +237,10 @@ describe("public article context", () => {
       />
     )
     expect(
-      screen.getByRole("region", { name: "About this article" })
+      screen.getAllByRole("region", { name: "Related to this reference" })
     ).toBeTruthy()
     expect(
-      screen.getByRole("link", { name: "Reading" }).getAttribute("href")
+      screen.getAllByRole("link", { name: "Reading" })[0]?.getAttribute("href")
     ).toContain("/knowledge?")
     expect(screen.queryByText("Reading workshop")).toBeNull()
   })
@@ -262,9 +272,9 @@ describe("public article context", () => {
   })
 
   it.each([
-    ["en", "About this article", "Public source"],
-    ["fr", "À propos de cet article", "Source publique"],
-    ["cs", "O tomto článku", "Veřejný zdroj"],
+    ["en", "In this story", "library.example.org"],
+    ["fr", "Dans ce récit", "library.example.org"],
+    ["cs", "V tomto příběhu", "library.example.org"],
   ] as const)(
     "localizes reader labels in %s",
     async (locale, title, source) => {

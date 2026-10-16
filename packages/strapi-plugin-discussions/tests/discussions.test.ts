@@ -446,7 +446,7 @@ describe("discussion workflows and access boundaries", () => {
     })
     expect(duplicate.id).toBe(report.id)
     expect(db.rows("report")).toHaveLength(1)
-    expect((await db.service.reports(member)).data).toEqual([])
+    await expect(db.service.reports(member)).rejects.toMatchObject({ status: 403 })
     expect(JSON.stringify(await db.service.reports(moderator))).not.toContain(
       other.key
     )
@@ -565,7 +565,7 @@ describe("discussion workflows and access boundaries", () => {
       baseVersion: 0,
     })
     expect(
-      (await db.service.getThread(null, attached.thread.id)).target.url
+      (await db.service.getThread(null, attached.thread.id)).target?.url
     ).toBe("/articles/one")
     await expect(
       db.service.createThread(other, {

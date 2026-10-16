@@ -134,7 +134,13 @@ describe("explicit article relations", () => {
       target: { value: "https://library.example/festival" },
     })
     fireEvent.change(screen.getByLabelText("Event date (optional)"), {
-      target: { value: "2025-10-10" },
+      target: { value: "2025-10-10T11:00" },
+    })
+    fireEvent.change(screen.getByLabelText("Event timezone (IANA name)"), {
+      target: { value: "America/Bogota" },
+    })
+    fireEvent.change(screen.getByLabelText("End time (optional)"), {
+      target: { value: "2025-10-10T13:00" },
     })
     fireEvent.change(screen.getByLabelText("Library (optional)"), {
       target: { value: "library" },
@@ -144,8 +150,9 @@ describe("explicit article relations", () => {
       {
         title: "Past festival",
         url: "https://library.example/festival",
-        startTime: "2025-10-10T00:00:00.000Z",
-        timezone: "UTC",
+        startTime: "2025-10-10T16:00:00.000Z",
+        endTime: "2025-10-10T18:00:00.000Z",
+        timezone: "America/Bogota",
         libraryDocumentId: "library",
       },
     ])

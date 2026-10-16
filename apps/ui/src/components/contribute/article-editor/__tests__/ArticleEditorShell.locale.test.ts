@@ -160,6 +160,7 @@ const articleFetches = () =>
     .filter((u) => u.startsWith("/api/contribute/article"))
 
 beforeEach(() => {
+  localStorage.clear()
   vi.clearAllMocks()
   grants.canDirectEdit.mockImplementation(() => true)
   grants.editorLocales.journal = "all"
@@ -1020,12 +1021,9 @@ it("keeps the compared snapshot immutable while its explicit adoption save is in
       fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")
     ).toBe(true)
   )
-  fireEvent.change(screen.getByLabelText("Test title"), {
-    target: { value: "Unsaved during adoption" },
-  })
-  expect((screen.getByLabelText("Test title") as HTMLInputElement).value).toBe(
-    "My article"
-  )
+  expect(screen.queryByLabelText("Test title")).toBeNull()
+  const sent = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH")
+  expect(JSON.parse(String(sent?.[1]?.body)).draftData.title).toBe("My article")
   expect(
     (screen.getByLabelText("Test language") as HTMLSelectElement).disabled
   ).toBe(true)
@@ -1119,4 +1117,121 @@ it("unmounts a real private article draft and cancels autosave when the signed-i
   } finally {
     vi.useRealTimers()
   }
+})
+
+it("restores an explicit local copy without silently adopting the latest published base", async () => {
+  const { articleCopyKey, saveArticleCopy } =
+    await import("@/lib/article-local-recovery")
+  const stored = {
+    title: "Offline writer text",
+    summary: "",
+    doc: { type: "doc" as const, content: [] },
+    sections: ["reports"],
+    tags: [],
+    editSummary: "Edited offline",
+  }
+  saveArticleCopy(articleCopyKey("writer", "knowledge:doc1", "en"), {
+    owner: "writer",
+    target: "knowledge:doc1",
+    locale: "en",
+    submissionId: null,
+    baseRevision: "old-base",
+    writtenAt: "2026-10-16T12:00:00Z",
+    draft: stored,
+  })
+  render(
+    createElement(ArticleEditorShell, {
+      kind: "knowledge",
+      mode: "edit",
+      article: { ...ARTICLE, baseRevision: "current-base" },
+      locales: LOCALES,
+      uiLocale: "en",
+    })
+  )
+  expect((screen.getByLabelText("Test title") as HTMLInputElement).value).toBe(
+    "My article"
+  )
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Restore this copy" })
+  )
+  expect((screen.getByLabelText("Test title") as HTMLInputElement).value).toBe(
+    "Offline writer text"
+  )
+  expect(
+    (screen.getByRole("button", { name: "Test send" }) as HTMLButtonElement)
+      .disabled
+  ).toBe(true)
+})
+
+it("resumes pending own work locked, confirms withdrawal with the captured token and retains text/submission identity", async () => {
+  const id = "pending-work",
+    updatedAt = "2026-10-16T12:00:00.000Z"
+  fetchMock.mockImplementation(async (url, init) => {
+    if (String(url).startsWith("/api/submissions/my"))
+      return Response.json({
+        data: [
+          {
+            documentId: id,
+            status: "pending",
+            submissionType: "blog_submission",
+            targetSlug: "my-article",
+            updatedAt,
+            draftData: {
+              title: "Awaiting review",
+              summary: "",
+              locale: "en",
+              tiptapDoc: { type: "doc", content: [] },
+              sections: ["reports"],
+              tags: [],
+            },
+          },
+        ],
+      })
+    if (String(url).endsWith("/withdraw"))
+      return Response.json({
+        data: {
+          documentId: id,
+          status: "draft",
+          updatedAt: "2026-10-16T12:01:00.000Z",
+        },
+      })
+
+    return Response.json({ data: null })
+  })
+  render(
+    createElement(ArticleEditorShell, {
+      kind: "journal",
+      mode: "edit",
+      article: ARTICLE,
+      resumeDraftId: id,
+      locales: LOCALES,
+      uiLocale: "en",
+    })
+  )
+  await waitFor(() =>
+    expect(
+      (screen.getByLabelText("Test title") as HTMLInputElement).value
+    ).toBe("Awaiting review")
+  )
+  fireEvent.click(screen.getByRole("button", { name: "Withdraw to edit" }))
+  expect(
+    fetchMock.mock.calls.some(([url]) => String(url).endsWith("/withdraw"))
+  ).toBe(false)
+  fireEvent.click(screen.getByRole("button", { name: "Withdraw to edit" }))
+  await waitFor(() =>
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).endsWith("/withdraw"))
+    ).toBe(true)
+  )
+  const call = fetchMock.mock.calls.find(([url]) =>
+    String(url).endsWith("/withdraw")
+  )!
+  expect(JSON.parse(String(call[1]?.body))).toEqual({
+    baseUpdatedAt: updatedAt,
+  })
+  expect(call[0]).toBe(`/api/submissions/${id}/withdraw`)
+  expect((screen.getByLabelText("Test title") as HTMLInputElement).value).toBe(
+    "Awaiting review"
+  )
+  expect(screen.queryByText(/Withdraw this submission/)).toBeNull()
 })

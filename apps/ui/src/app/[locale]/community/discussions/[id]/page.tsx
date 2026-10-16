@@ -1,11 +1,9 @@
 import { notFound } from "next/navigation"
-import { getTranslations } from "next-intl/server"
 
 import { DiscussionThread } from "@/components/discussions/DiscussionThread"
 import { Container } from "@/components/elementary/Container"
+import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { privateMetadata } from "@/lib/seo/metadata"
-
-import { CommunitySectionHeader } from "../../_components/CommunitySectionHeader"
 
 export const metadata = privateMetadata("Discussion")
 export default async function DiscussionPage({
@@ -20,18 +18,11 @@ export default async function DiscussionPage({
     )
   )
     notFound()
-  const t = await getTranslations("discussions")
+  const languages = await fetchArticleLocales()
 
   return (
-    <>
-      <CommunitySectionHeader
-        section={t("threads")}
-        title={t("title")}
-        lead={t("reviewLead")}
-      />
-      <Container className="max-w-[1000px] py-10">
-        <DiscussionThread id={id} />
-      </Container>
-    </>
+    <Container className="max-w-[1100px] py-10">
+      <DiscussionThread id={id} languages={languages} />
+    </Container>
   )
 }

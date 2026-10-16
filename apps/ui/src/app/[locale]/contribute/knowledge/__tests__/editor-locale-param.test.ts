@@ -23,6 +23,9 @@ vi.mock("@/lib/auth-server", () => ({
     },
   }),
 }))
+vi.mock("@/lib/journal-ownership-server", () => ({
+  ownsJournalArticle: async () => false,
+}))
 vi.mock("@/lib/seo/metadata", () => ({ privateMetadata: () => ({}) }))
 vi.mock("@/lib/article-editor-server", () => ({
   fetchArticleLocales: async () => [

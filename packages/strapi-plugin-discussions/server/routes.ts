@@ -29,6 +29,18 @@ export default {
     type: "content-api",
     routes: [
       publicRoute("GET", "/my/records", "myRecords"),
+      publicRoute("GET", "/my/status", "myStatus"),
+      publicRoute("POST", "/attachments", "uploadImage"),
+      publicRoute("GET", "/attachments/:id", "image"),
+      publicRoute("PUT", "/my/sanctions/:id/appeal", "appealSanction"),
+      publicRoute("PUT", "/records/:kind/:id/reaction", "react"),
+      publicRoute("GET", "/moderation/sanctions", "sanctions"),
+      publicRoute("PUT", "/moderation/sanctions/:id", "liftSanction"),
+      publicRoute(
+        "POST",
+        "/moderation/records/:kind/:id/sanctions",
+        "sanctionRecord"
+      ),
       publicRoute("GET", "/subjects", "subjects"),
       publicRoute("GET", "/threads", "threads"),
       publicRoute("POST", "/threads", "createThread"),
@@ -51,6 +63,15 @@ export default {
     type: "admin",
     routes: [
       adminRoute("GET", "/threads", "adminThreads", "read"),
+      adminRoute("GET", "/attachments/:id", "adminImage", "read"),
+      adminRoute("GET", "/sanctions", "adminSanctions", "read"),
+      adminRoute("PUT", "/sanctions/:id", "adminLiftSanction", "sanction"),
+      adminRoute(
+        "POST",
+        "/records/:kind/:id/sanctions",
+        "adminSanctionRecord",
+        "sanction"
+      ),
       adminRoute("GET", "/subjects", "adminSubjects", "read"),
       adminRoute("POST", "/subjects", "adminSaveSubject", "manage"),
       adminRoute("PUT", "/subjects/:id", "adminSaveSubject", "manage"),

@@ -73,20 +73,62 @@ export function ArticleRevisionComparison({
   published,
   busy,
   onAdopt,
+  onBack,
 }: {
   readonly kind: ArticleKind
   readonly draft: ArticleDraft
   readonly published: PublishedComparison
   readonly busy: boolean
   readonly onAdopt: () => void
+  readonly onBack?: () => void
 }) {
   const t = useTranslations("articleConflict")
+  const p = useTranslations("publishing")
 
   return (
     <section
       aria-label={t("compare")}
       className="mb-5 grid gap-4 rounded-2xl border border-(--t-border-line) p-5"
     >
+      <div className="flex flex-wrap justify-between gap-3">
+        <h2 className="font-serif text-2xl">{p("comparisonSummary")}</h2>
+        {onBack && (
+          <button type="button" onClick={onBack} className="underline">
+            {p("backDraft")}
+          </button>
+        )}
+      </div>
+      <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+        {(
+          [
+            ["title", draft.title, published.title],
+            ["summary", draft.summary, published.summary],
+            ["body", draft.doc, published.doc],
+            ["sections", draft.sections, published.sections],
+            ["relations", draft.tags, published.tags],
+            [
+              "events",
+              draft.eventMentions ?? [],
+              published.eventMentions ?? [],
+            ],
+          ] as const
+        )
+          .filter(([field]) => kind === "journal" || field !== "events")
+          .map(([field, local, current]) => (
+            <div key={field}>
+              <dt className="font-semibold">
+                {field === "title" || field === "summary" ? field : p(field)}
+              </dt>
+              <dd className="m-0">
+                {p(
+                  JSON.stringify(local) === JSON.stringify(current)
+                    ? "unchanged"
+                    : "changed"
+                )}
+              </dd>
+            </div>
+          ))}
+      </dl>
       <p>{t("instructions")}</p>
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="min-w-0">

@@ -19,6 +19,7 @@ export function ArticleBylineCard({
   }) => void
 }) {
   const t = useTranslations("articleAttribution")
+  const p = useTranslations("publishing")
 
   return (
     <section className="grid gap-3 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
@@ -34,6 +35,9 @@ export function ArticleBylineCard({
         />
       </label>
       <p className="m-0 text-sm text-(--t-ink-dim)">{t("bylineHelp")}</p>
+      <p className="m-0 text-sm font-semibold">
+        {p("bylinePreview", { name: byline.trim() || p("communityMember") })}
+      </p>
       {allowIndex && (
         <label className="grid gap-1">
           {t("origin")}

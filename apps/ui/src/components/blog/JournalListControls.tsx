@@ -1,12 +1,10 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useTransition } from "react"
 
-import { articleLanguageOptions } from "@/lib/article-language-options"
 import { T } from "@/lib/design-tokens"
-import { languageName } from "@/lib/locale-fallback"
 import { Link, useRouter } from "@/lib/navigation"
 
 import {
@@ -22,8 +20,6 @@ const SELECT_CLASS =
 /** Language and sort selects plus the grid/list switch for "All articles". */
 export function JournalListControls({
   query,
-  lang,
-  languages,
 }: {
   readonly query: JournalQuery
   readonly lang: string
@@ -31,15 +27,9 @@ export function JournalListControls({
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
-  const tDiscovery = useUiTranslations("discovery")
-  const locale = useLocale()
 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const languageOptions = articleLanguageOptions(
-    languages.map((language) => language.code),
-    [lang, ...(query.filters?.languages ?? [])]
-  )
 
   function go(changes: Partial<JournalQuery>) {
     startTransition(() => {
@@ -58,32 +48,6 @@ export function JournalListControls({
       aria-busy={pending}
       className="flex flex-wrap items-center gap-x-4 gap-y-2"
     >
-      <label className="flex items-center gap-2 text-[14px]">
-        <span style={{ color: T.ink.dim }}>{tUi("language")}</span>
-        <select
-          className={SELECT_CLASS}
-          onChange={(e) => go({ lang: e.target.value })}
-          style={selectStyle}
-          value={
-            (query.filters?.languages?.length ?? 0) > 1 ? "selected" : lang
-          }
-        >
-          <option value="all">{tDiscovery("allLanguages")}</option>
-          {(query.filters?.languages?.length ?? 0) > 1 ? (
-            <option disabled value="selected">
-              {query.filters?.languages
-                ?.map((code) => languageName(code, languages, locale))
-                .join(", ")}
-            </option>
-          ) : null}
-          {languageOptions.map((code) => (
-            <option key={code} value={code}>
-              {languageName(code, languages, locale)}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <label className="flex items-center gap-2 text-[14px]">
         <span style={{ color: T.ink.dim }}>{t("sort")}</span>
         <select

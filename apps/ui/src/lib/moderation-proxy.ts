@@ -3,12 +3,15 @@ import "server-only"
 import { isSubmissionType, MODERATION_QUEUES } from "@repo/access"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { requireCapability } from "./access-server"
 import { auth } from "./auth"
-import { isDocumentIdParam, readJsonCapped } from "./bridge-params"
+import { isDocumentIdParam } from "./bridge-params"
 import { bridgeUserHeaders } from "./bridge-user-headers"
 import { createRateLimiter, rateLimitResponse } from "./rate-limit"
+import { isSameOrigin, sameOriginResponse } from "./same-origin"
+import { readTypedJson } from "./typed-json"
 
 /**
  * The `/api/moderation/*` routes: a signed-in Moderator's requests to
@@ -149,6 +152,15 @@ export async function proxyModeration(
   req: Request,
   opts: ProxyOptions
 ): Promise<Response> {
+  const method = opts.method ?? "GET"
+  if (
+    method !== "GET" &&
+    !isSameOrigin(
+      req,
+      process.env.APP_PUBLIC_URL ?? process.env.NEXT_PUBLIC_APP_URL
+    )
+  )
+    return sameOriginResponse()
   const user = await sessionUser()
   const denied = requireCapability(user, "moderate.queue")
   if (denied || !user) return denied ?? new Response(null, { status: 401 })
@@ -159,7 +171,6 @@ export async function proxyModeration(
       { status: 500 }
     )
 
-  const method = opts.method ?? "GET"
   const limit = await limiters[method].check(user.id)
   if (!limit.ok) return rateLimitResponse(limit)
 
@@ -168,7 +179,11 @@ export async function proxyModeration(
 
   let body: string | undefined
   if (method !== "GET") {
-    const parsed = await readJsonCapped(req, MAX_BODY_BYTES)
+    const parsed = await readTypedJson(
+      req,
+      MAX_BODY_BYTES,
+      z.record(z.string(), z.unknown())
+    )
     if (!parsed.ok)
       return NextResponse.json(
         { error: "Invalid request body" },
@@ -189,6 +204,7 @@ export async function proxyModeration(
       },
       body,
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     })
 
     return await passThrough(res)
@@ -214,6 +230,7 @@ export async function fetchModeration<T>(
     const res = await fetch(`${STRAPI()}${BASE}/${path}`, {
       headers: bridgeUserHeaders(user),
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     })
     const body = (await res.json().catch(() => null)) as T | null
 

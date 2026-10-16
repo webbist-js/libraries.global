@@ -20,6 +20,16 @@ describe("article moderation recovery links", () => {
       label: "Continue",
     })
   })
+  it("keeps the pinned Spanish source when resuming a French translation", () => {
+    expect(
+      continueHref({
+        ...submission,
+        draftData: { locale: "fr", sourceLocale: "es" },
+      })
+    ).toBe(
+      "/contribute/knowledge/journal/my-visit?draft=saved-story&sourceLocale=es&locale=fr"
+    )
+  })
   it("keeps Knowledge eligibility and resumes new stories in their saved draft", () => {
     expect(
       continueLink({ ...submission, submissionType: "wiki_edit" }, () => false)

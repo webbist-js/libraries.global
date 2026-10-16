@@ -1,61 +1,126 @@
-export type DiscussionState = "pending" | "visible" | "rejected" | "removed"
-export type Subject = {
-  id: string
-  name: string
-  slug: string
-  description?: string
-  languages?: string[]
-  visibility: string
-  createPolicy: string
+import type {
+  DiscussionImage,
+  DiscussionRecord,
+  PublicAuthor,
+} from "strapi-plugin-discussions/types"
+
+export type {
+  DiscussionState,
+  DiscussionImage,
+  DiscussionRecord,
+  DiscussionList,
+  DiscussionRevision,
+  DiscussionReport,
+  DiscussionRestriction,
+  DiscussionQuote,
+  PublicAuthor,
+  DiscussionSubject as Subject,
+  Target as DiscussionTarget,
+} from "strapi-plugin-discussions/types"
+
+export type DiscussionLanguage = { code: string; name: string }
+
+export async function uploadDiscussionImage(
+  file: File,
+  subjectId: string,
+  altText: string,
+  caption: string
+): Promise<DiscussionImage> {
+  const form = new FormData()
+  form.set("file", file)
+  form.set("subjectId", subjectId)
+  form.set("altText", altText)
+  form.set("caption", caption)
+  const response = await fetch("/api/discussions/attachments", {
+    method: "POST",
+    body: form,
+    credentials: "same-origin",
+    cache: "no-store",
+  })
+  if (!response.ok) throw new DiscussionRequestError(response.status)
+
+  return response.json() as Promise<DiscussionImage>
 }
-export type DiscussionTarget = {
-  uid: string
-  documentId: string
-  locale?: string
+export function discussionAuthor(
+  author: DiscussionRecord["author"] | null | undefined,
+  name = "Community member"
+): PublicAuthor {
+  return author ?? { name }
 }
-export type DiscussionRecord = {
-  id: string
-  body: string
+export function discussionRecordState(record: DiscussionRecord) {
+  return record.state === "pending" &&
+    record.latestRevision?.state === "changes_requested"
+    ? ("changesRequested" as const)
+    : record.state
+}
+
+export type DiscussionFilters = {
+  subjectId: string
   language: string
-  state: DiscussionState
-  version: number
-  author: { name: string; slug?: string; url?: string }
-  title?: string
-  subjectId?: string
-  threadId?: string
-  parentId?: string | null
-  locked?: boolean
-  pinned?: boolean
-  createdAt?: string
-  target?: { title: string; url: string }
-  pendingRevision?: {
-    id: string
-    body: string
-    title?: string
-    baseVersion: number
+  view: "latest" | "unanswered" | "following"
+  q: string
+}
+export function discussionFilters(query: URLSearchParams): DiscussionFilters {
+  const view = query.get("view")
+
+  return {
+    subjectId: (query.get("subject") ?? "").slice(0, 64),
+    language: (query.get("lang") ?? "").slice(0, 35),
+    view: view === "unanswered" || view === "following" ? view : "latest",
+    q: (query.get("q") ?? "").slice(0, 180),
   }
 }
-export type DiscussionList<T> = { data: T[]; nextOffset?: number | null }
-export type DiscussionRevision = {
-  id: string
-  recordType: "thread" | "reply"
-  recordId: string
-  threadId: string
-  title?: string
-  body: string
-  previousBody?: string
-  previousTitle?: string
-  baseVersion: number
-  currentVersion: number
-  threadTitle?: string
+export function discussionThreadQuery(filters: DiscussionFilters, offset = 0) {
+  return new URLSearchParams({
+    limit: "20",
+    ...(offset ? { offset: String(offset) } : {}),
+    ...(filters.subjectId ? { subjectId: filters.subjectId } : {}),
+    ...(filters.language ? { language: filters.language } : {}),
+    ...(filters.view !== "latest" ? { view: filters.view } : {}),
+    ...(filters.q ? { q: filters.q } : {}),
+  }).toString()
 }
-export type DiscussionReport = {
-  id: string
-  recordType: "thread" | "reply"
-  recordId: string
-  threadId: string
-  reason: string
-  version: number
+
+/** Parent-first ordering is deterministic even when a child arrives on a later page. */
+export function orderedDiscussionReplies(
+  records: DiscussionRecord[]
+): { record: DiscussionRecord; depth: number; parent?: DiscussionRecord }[] {
+  const byId = new Map(records.map((record) => [record.id, record]))
+  const children = new Map<string, DiscussionRecord[]>()
+  for (const record of records)
+    if (
+      record.parentId &&
+      byId.has(record.parentId) &&
+      record.parentId !== record.id
+    )
+      children.set(record.parentId, [
+        ...(children.get(record.parentId) ?? []),
+        record,
+      ])
+  const result: {
+    record: DiscussionRecord
+    depth: number
+    parent?: DiscussionRecord
+  }[] = []
+  const seen = new Set<string>()
+  const visit = (record: DiscussionRecord, depth: number) => {
+    if (seen.has(record.id)) return
+    seen.add(record.id)
+    result.push({
+      record,
+      depth: Math.min(depth, 3),
+      ...(record.parentId && byId.has(record.parentId)
+        ? { parent: byId.get(record.parentId) }
+        : {}),
+    })
+    for (const child of children.get(record.id) ?? []) visit(child, depth + 1)
+  }
+  for (const record of records)
+    if (!record.parentId || !byId.has(record.parentId))
+      visit(record, record.parentId ? 1 : 0)
+  for (const record of records) visit(record, 0)
+
+  return result
 }
 
 export class DiscussionRequestError extends Error {

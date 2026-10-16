@@ -82,6 +82,36 @@ describe("Libraries Global discussion adapter", () => {
       expect(projection).toEqual({ name: "Community member" })
     }
   )
+  it("projects fresh avatars/backgrounds without querying grants or leaking private identifiers", async () => {
+    const documents = vi.fn(() => {
+      throw new Error("Public bylines must not query grants")
+    })
+    const profile = {
+      username: "writer",
+      profileVisibility: "public",
+      baUserId: "private-user",
+      documentId: "private-profile",
+      profileBackground: "mint",
+      avatar: {
+        url: "/uploads/owned.webp",
+        alternativeText: "Writer",
+        provider_metadata: { secret: "private" },
+      },
+    }
+    const strapi = { ...host(profile), documents }
+    expect(await publicDiscussionAuthor("ba:writer", { strapi })).toEqual({
+      name: "@writer",
+      slug: "writer",
+      url: "/profile/writer",
+      avatar: { url: "/uploads/owned.webp", alternativeText: "Writer" },
+      background: "mint",
+    })
+    profile.profileVisibility = "private"
+    expect(await publicDiscussionAuthor("ba:writer", { strapi })).toEqual({
+      name: "Community member",
+    })
+    expect(documents).not.toHaveBeenCalled()
+  })
   it("honours live activity opt-out and deleted accounts", async () => {
     expect(
       await publicDiscussionAuthor("ba:writer", {

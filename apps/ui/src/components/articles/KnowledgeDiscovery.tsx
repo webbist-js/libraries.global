@@ -16,6 +16,7 @@ export function KnowledgeDiscovery({
   readonly locale: Locale
 }) {
   const t = useTranslations("discovery")
+  const p = useTranslations("publishing")
 
   return (
     <section aria-labelledby="knowledge-discovery" className="mb-10">
@@ -65,6 +66,14 @@ export function KnowledgeDiscovery({
           )
         })}
       </ul>
+      {!discovery.items.length && (
+        <p>
+          {p("noResults")}{" "}
+          <Link href="/knowledge?lang=all&country=all" className="underline">
+            {p("resetSearch")}
+          </Link>
+        </p>
+      )}
       <KnowledgeBrowsePagination
         page={discovery.page}
         pageCount={discovery.pageCount}

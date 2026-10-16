@@ -8,6 +8,7 @@ const permissions = {
   read: permission("read"),
   review: permission("review"),
   manage: permission("manage"),
+  sanction: permission("sanction"),
 }
 const panel = {
   padding: "1.25rem",
@@ -37,6 +38,8 @@ type Revision = {
   threadVersion: number
   title?: string
   body: string
+  attachments?: { id: string; altText: string; caption?: string }[]
+  contentFlags?: { terms: string[]; covered: boolean }
   previousBody: string
   baseVersion: number
   currentVersion: number
@@ -52,6 +55,8 @@ type Report = {
   currentBody: string
   currentVersion: number
   recordVersion: number
+  reportedAttachments?: { id: string; altText: string; caption?: string }[]
+  currentAttachments?: { id: string; altText: string; caption?: string }[]
 }
 type Thread = {
   id: string
@@ -61,6 +66,41 @@ type Thread = {
   locked: boolean
   pinned: boolean
   state: string
+}
+
+function ProtectedImage({ id, altText }: { id: string; altText: string }) {
+  const { get } = useFetchClient()
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let active = true,
+      objectUrl: string | undefined
+    get(`/discussions/attachments/${encodeURIComponent(id)}`, {
+      responseType: "blob",
+    })
+      .then(({ data }) => {
+        if (
+          !active ||
+          !["image/jpeg", "image/png", "image/webp"].includes(data.type)
+        )
+          return
+        objectUrl = URL.createObjectURL(data)
+        setUrl(objectUrl)
+      })
+      .catch(() => {
+        if (active) setUrl(null)
+      })
+
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [get, id])
+
+  return url ? (
+    <img src={url} alt={altText} style={{ maxWidth: "100%", maxHeight: 300 }} />
+  ) : (
+    <p>Protected image unavailable.</p>
+  )
 }
 
 export default function Review() {
@@ -80,25 +120,37 @@ export default function Review() {
     [nextReportOffset, setNextReportOffset] = useState<number | null>(null)
   const [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
-    [note, setNote] = useState("")
+    [note, setNote] = useState(""),
+    [feedback, setFeedback] = useState(""),
+    [sanctions, setSanctions] = useState<any[]>([]),
+    [sanctionOffset, setSanctionOffset] = useState(0),
+    [nextSanctionOffset, setNextSanctionOffset] = useState<number | null>(null),
+    [profanityException, setProfanityException] = useState(false),
+    [exceptionReason, setExceptionReason] = useState("")
   const [subjectForm, setSubjectForm] = useState(initialSubject),
     [editingSubject, setEditingSubject] = useState<any>(null)
   const load = useCallback(async () => {
     if (!allowedActions.canRead) return
     setBusy(true)
     try {
-      const [queue, reportQueue, subjectList, threadList] = await Promise.all([
-        get<{ data: Revision[]; nextOffset: number | null }>(
-          `/discussions/revisions?limit=20&offset=${offset}`
-        ),
-        get<{ data: Report[]; nextOffset: number | null }>(
-          `/discussions/reports?limit=20&offset=${reportOffset}`
-        ),
-        get<{ data: any[] }>("/discussions/subjects?limit=50"),
-        get<{ data: Thread[]; nextOffset: number | null }>(
-          `/discussions/threads?state=${threadState}&limit=20&offset=${threadOffset}`
-        ),
-      ])
+      const [queue, reportQueue, subjectList, threadList, sanctionQueue] =
+        await Promise.all([
+          get<{ data: Revision[]; nextOffset: number | null }>(
+            `/discussions/revisions?limit=20&offset=${offset}`
+          ),
+          get<{ data: Report[]; nextOffset: number | null }>(
+            `/discussions/reports?limit=20&offset=${reportOffset}`
+          ),
+          get<{ data: any[] }>("/discussions/subjects?limit=50"),
+          get<{ data: Thread[]; nextOffset: number | null }>(
+            `/discussions/threads?state=${threadState}&limit=20&offset=${threadOffset}`
+          ),
+          get<{ data: any[]; nextOffset: number | null }>(
+            `/discussions/sanctions?limit=20&offset=${sanctionOffset}`
+          ),
+        ])
+      setSanctions(sanctionQueue.data.data)
+      setNextSanctionOffset(sanctionQueue.data.nextOffset)
       setRevisions(queue.data.data)
       setNextOffset(queue.data.nextOffset)
       setReports(reportQueue.data.data)
@@ -118,6 +170,7 @@ export default function Review() {
     reportOffset,
     threadOffset,
     threadState,
+    sanctionOffset,
   ])
   useEffect(() => {
     void load()
@@ -134,6 +187,45 @@ export default function Review() {
       setBusy(false)
     }
   }
+  const applySanction = async (
+    kind: string,
+    recordId: string,
+    mode: "mute" | "ban"
+  ) => {
+    if (!note.trim() || !feedback.trim()) {
+      setMessage("Supply private evidence and separate contributor feedback.")
+
+      return
+    }
+    if (
+      !window.confirm(
+        `Apply a discussion subject ${mode}? The member can appeal.`
+      )
+    )
+      return
+    setBusy(true)
+    try {
+      await post(`/discussions/records/${kind}/${recordId}/sanctions`, {
+        mode,
+        scope: "subject",
+        reason: note,
+        contributorFeedback: feedback,
+      })
+      await load()
+    } catch (error) {
+      setMessage(errorMessage(error))
+      setBusy(false)
+    }
+  }
+  const renderImages = (
+    images?: { id: string; altText: string; caption?: string }[]
+  ) =>
+    images?.map((image) => (
+      <figure key={image.id}>
+        <ProtectedImage id={image.id} altText={image.altText} />
+        {image.caption && <figcaption>{image.caption}</figcaption>}
+      </figure>
+    ))
   if (checkingPermissions)
     return <main style={{ padding: "2rem" }}>Checking permissions…</main>
   if (!allowedActions.canRead)
@@ -165,6 +257,33 @@ export default function Review() {
           style={{ width: "100%", minHeight: 70 }}
         />
       </label>
+      <label style={{ display: "block", marginBlock: "1rem" }}>
+        Feedback to the contributor
+        <textarea
+          maxLength={2000}
+          value={feedback}
+          onChange={(event) => setFeedback(event.target.value)}
+          style={{ width: "100%", minHeight: 70 }}
+        />
+      </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={profanityException}
+          onChange={(event) => setProfanityException(event.target.checked)}
+        />{" "}
+        Approve an explicit word-policy exception
+      </label>
+      {profanityException && (
+        <label style={{ display: "block" }}>
+          Private exception reason{" "}
+          <input
+            maxLength={1000}
+            value={exceptionReason}
+            onChange={(event) => setExceptionReason(event.target.value)}
+          />
+        </label>
+      )}
       <h2>Pending revisions</h2>
       {!revisions.length && <p>No pending proposals on this page.</p>}
       {revisions.map((revision) => (
@@ -201,16 +320,29 @@ export default function Review() {
               </pre>
             </div>
           </div>
+          {renderImages(revision.attachments)}
+          {revision.contentFlags && (
+            <p>
+              Configured word policy:{" "}
+              {revision.contentFlags.covered
+                ? revision.contentFlags.terms.join(", ") || "No matched terms"
+                : "No dictionary coverage for this language"}
+              .
+            </p>
+          )}
           <button
             style={button}
             disabled={
               busy ||
               !allowedActions.canReview ||
-              revision.baseVersion !== revision.currentVersion
+              revision.baseVersion !== revision.currentVersion ||
+              (profanityException && !exceptionReason.trim())
             }
             onClick={() =>
               void mutate(`revisions/${revision.id}`, {
                 decision: "approve",
+                profanityException,
+                ...(profanityException ? { exceptionReason } : {}),
                 baseVersion: revision.baseVersion,
                 note,
               })
@@ -225,12 +357,57 @@ export default function Review() {
               void mutate(`revisions/${revision.id}`, {
                 decision: "reject",
                 baseVersion: revision.baseVersion,
+                contributorFeedback: feedback,
                 note,
               })
             }
           >
             Reject
           </button>
+          <button
+            style={button}
+            disabled={busy || !allowedActions.canReview || !feedback.trim()}
+            onClick={() =>
+              void mutate(`revisions/${revision.id}`, {
+                decision: "request_changes",
+                baseVersion: revision.baseVersion,
+                contributorFeedback: feedback,
+                note,
+              })
+            }
+          >
+            Request changes
+          </button>
+          {allowedActions.canSanction && (
+            <>
+              <button
+                style={button}
+                disabled={busy}
+                onClick={() =>
+                  void applySanction(
+                    revision.recordType,
+                    revision.recordId,
+                    "mute"
+                  )
+                }
+              >
+                Mute writer in subject
+              </button>
+              <button
+                style={button}
+                disabled={busy}
+                onClick={() =>
+                  void applySanction(
+                    revision.recordType,
+                    revision.recordId,
+                    "ban"
+                  )
+                }
+              >
+                Ban writer from subject
+              </button>
+            </>
+          )}
           <button
             style={button}
             disabled={busy || !allowedActions.canReview}
@@ -250,7 +427,12 @@ export default function Review() {
             onClick={() =>
               void mutate(
                 `records/${revision.recordType}/${revision.recordId}`,
-                { action: "remove", baseVersion: revision.currentVersion, note }
+                {
+                  action: "remove",
+                  baseVersion: revision.currentVersion,
+                  note,
+                  contributorFeedback: feedback,
+                }
               )
             }
           >
@@ -284,10 +466,12 @@ export default function Review() {
           <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
             {report.reportedBody}
           </pre>
+          {renderImages(report.reportedAttachments)}
           <h4>Current text (version {report.currentVersion})</h4>
           <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
             {report.currentBody}
           </pre>
+          {renderImages(report.currentAttachments)}
           <button
             style={button}
             disabled={busy || !allowedActions.canReview}
@@ -309,6 +493,7 @@ export default function Review() {
                 decision: "remove",
                 baseVersion: report.version,
                 recordBaseVersion: report.currentVersion,
+                contributorFeedback: feedback,
                 note,
               })
             }
@@ -400,6 +585,7 @@ export default function Review() {
               void mutate(`records/thread/${thread.id}`, {
                 action: "remove",
                 baseVersion: thread.version,
+                contributorFeedback: feedback,
                 note,
               })
             }
@@ -421,6 +607,73 @@ export default function Review() {
           disabled={busy || nextThreadOffset === null}
           onClick={() =>
             nextThreadOffset !== null && setThreadOffset(nextThreadOffset)
+          }
+        >
+          Next
+        </button>
+      </nav>
+      <h2>Discussion restrictions and appeals</h2>
+      <p>
+        These restrictions apply to discussion participation/access. They do not
+        ban a host account from other services.
+      </p>
+      {!sanctions.length && (
+        <p>No active discussion restrictions on this page.</p>
+      )}
+      {sanctions.map((sanction) => (
+        <article key={sanction.id} style={panel}>
+          <h3>
+            {sanction.author?.name || "Community member"}: {sanction.mode}
+          </h3>
+          <p>
+            {sanction.subjectId
+              ? sanction.subjectName
+              : "All discussion subjects"}{" "}
+            · version {sanction.version} ·{" "}
+            {sanction.expiresAt
+              ? `Expires ${sanction.expiresAt}`
+              : "No automatic expiry"}
+          </p>
+          <p>Private evidence: {sanction.reason}</p>
+          <p>Contributor feedback: {sanction.contributorFeedback}</p>
+          {sanction.appeal && (
+            <p style={{ whiteSpace: "pre-wrap" }}>Appeal: {sanction.appeal}</p>
+          )}
+          <button
+            style={button}
+            disabled={
+              busy ||
+              !allowedActions.canSanction ||
+              !sanction.canLift ||
+              !note.trim() ||
+              !feedback.trim()
+            }
+            onClick={() => {
+              if (window.confirm("Lift this discussion restriction?"))
+                void mutate(`sanctions/${sanction.id}`, {
+                  baseVersion: sanction.version,
+                  reason: note,
+                  contributorFeedback: feedback,
+                })
+            }}
+          >
+            Lift restriction
+          </button>
+        </article>
+      ))}
+      <nav aria-label="Restriction pages">
+        <button
+          style={button}
+          disabled={busy || sanctionOffset === 0}
+          onClick={() => setSanctionOffset(Math.max(0, sanctionOffset - 20))}
+        >
+          Previous
+        </button>
+        <button
+          style={button}
+          disabled={busy || nextSanctionOffset === null}
+          onClick={() =>
+            nextSanctionOffset !== null && setSanctionOffset(nextSanctionOffset)
           }
         >
           Next

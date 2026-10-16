@@ -10,6 +10,7 @@ import {
   ARTICLE_PROFILE_FIELDS,
   publicArticleProfile,
 } from "./article-attribution"
+import { enrichArticleFacetAncestry } from "./article-facet-ancestry"
 
 type Rec = Record<string, unknown>
 const record = (value: unknown): Rec =>
@@ -33,6 +34,11 @@ function relationFacet(value: unknown): Facet | null {
     label,
     ...(slug ? { slug } : {}),
     ...(string(row.iso2) ? { code: String(row.iso2).toUpperCase() } : {}),
+    ...Object.fromEntries(
+      ["continentDocumentId", "countryDocumentId", "regionDocumentId"].flatMap(
+        (key) => (string(row[key]) ? [[key, row[key]]] : [])
+      )
+    ),
   }
 }
 const relationFacets = (value: unknown): Facet[] =>
@@ -244,6 +250,7 @@ export async function browseArticles(
     }
     if (rows.length < batchSize) break
   }
+  await enrichArticleFacetAncestry(strapi, items)
   let featuredDocumentId: string | null = null
   const preferred =
     typeof input.preferredLocale === "string" &&

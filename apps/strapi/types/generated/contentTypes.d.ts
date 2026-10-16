@@ -4229,6 +4229,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.DefaultTo<"reader">
     country: Schema.Attribute.String
+    coverImage: Schema.Attribute.Media<"images">
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4273,6 +4274,10 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     orcid: Schema.Attribute.String
     points: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     pointsThisMonth: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    profileBackground: Schema.Attribute.Enumeration<
+      ["violet", "coral", "mint", "amber", "blue", "rose"]
+    > &
+      Schema.Attribute.DefaultTo<"violet">
     profileVisibility: Schema.Attribute.Enumeration<
       ["public", "limited", "private"]
     > &
@@ -5158,7 +5163,9 @@ export interface PluginContentModerationUploadReservation
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
-    purpose: Schema.Attribute.Enumeration<["article", "submission", "avatar"]> &
+    purpose: Schema.Attribute.Enumeration<
+      ["article", "submission", "avatar", "cover"]
+    > &
       Schema.Attribute.Required
     quotaDate: Schema.Attribute.String & Schema.Attribute.Required
     reservationId: Schema.Attribute.String &
@@ -5265,6 +5272,63 @@ export interface PluginContentReleasesReleaseAction
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsAttachment
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_attachments"
+  info: {
+    displayName: "Discussion attachment"
+    pluralName: "attachments"
+    singularName: "attachment"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    altText: Schema.Attribute.String & Schema.Attribute.Required
+    bytes: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    caption: Schema.Attribute.Text
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    height: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.attachment"
+    > &
+      Schema.Attribute.Private
+    mime: Schema.Attribute.String & Schema.Attribute.Required
+    ownerKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    retired: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    storageKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    subjectId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    width: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
   }
 }
 
@@ -5452,6 +5516,54 @@ export interface PluginDiscussionsRateWindow
   }
 }
 
+export interface PluginDiscussionsReaction extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_reactions"
+  info: {
+    displayName: "Discussion reaction"
+    pluralName: "reactions"
+    singularName: "reaction"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    dedupeKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.reaction"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    recordType: Schema.Attribute.Enumeration<["thread", "reply"]> &
+      Schema.Attribute.Required
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    value: Schema.Attribute.Enumeration<["like", "love"]> &
+      Schema.Attribute.Required
+  }
+}
+
 export interface PluginDiscussionsReply extends Struct.CollectionTypeSchema {
   collectionName: "discussions_replys"
   info: {
@@ -5471,6 +5583,7 @@ export interface PluginDiscussionsReply extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    attachments: Schema.Attribute.JSON & Schema.Attribute.Private
     authorKey: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Private
@@ -5487,8 +5600,12 @@ export interface PluginDiscussionsReply extends Struct.CollectionTypeSchema {
       "plugin::discussions.reply"
     > &
       Schema.Attribute.Private
+    moderationFeedback: Schema.Attribute.Text & Schema.Attribute.Private
     parentId: Schema.Attribute.String
+    profanityException: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
+    quote: Schema.Attribute.JSON & Schema.Attribute.Private
     state: Schema.Attribute.Enumeration<
       ["pending", "visible", "rejected", "removed"]
     > &
@@ -5551,6 +5668,7 @@ export interface PluginDiscussionsReport extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private
     reviewerKey: Schema.Attribute.String & Schema.Attribute.Private
     reviewNote: Schema.Attribute.Text & Schema.Attribute.Private
+    snapshotAttachments: Schema.Attribute.JSON & Schema.Attribute.Private
     snapshotBody: Schema.Attribute.Text & Schema.Attribute.Private
     snapshotTitle: Schema.Attribute.String & Schema.Attribute.Private
     state: Schema.Attribute.Enumeration<["open", "dismissed", "actioned"]> &
@@ -5585,6 +5703,7 @@ export interface PluginDiscussionsRevision extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    attachments: Schema.Attribute.JSON & Schema.Attribute.Private
     authorKey: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Private
@@ -5596,6 +5715,8 @@ export interface PluginDiscussionsRevision extends Struct.CollectionTypeSchema {
     body: Schema.Attribute.Text &
       Schema.Attribute.Required &
       Schema.Attribute.Private
+    contentFlags: Schema.Attribute.JSON & Schema.Attribute.Private
+    contributorFeedback: Schema.Attribute.Text & Schema.Attribute.Private
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -5607,12 +5728,15 @@ export interface PluginDiscussionsRevision extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    quote: Schema.Attribute.JSON & Schema.Attribute.Private
     recordId: Schema.Attribute.String & Schema.Attribute.Required
     recordType: Schema.Attribute.Enumeration<["thread", "reply"]> &
       Schema.Attribute.Required
     reviewerKey: Schema.Attribute.String & Schema.Attribute.Private
     reviewNote: Schema.Attribute.Text & Schema.Attribute.Private
-    state: Schema.Attribute.Enumeration<["pending", "approved", "rejected"]> &
+    state: Schema.Attribute.Enumeration<
+      ["pending", "approved", "rejected", "changes_requested"]
+    > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"pending">
     threadId: Schema.Attribute.String & Schema.Attribute.Required
@@ -5620,6 +5744,68 @@ export interface PluginDiscussionsRevision extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsSanction extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_sanctions"
+  info: {
+    displayName: "Discussion sanction"
+    pluralName: "sanctions"
+    singularName: "sanction"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    actorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    appeal: Schema.Attribute.Text & Schema.Attribute.Private
+    contributorFeedback: Schema.Attribute.Text & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime
+    language: Schema.Attribute.String & Schema.Attribute.Required
+    lastAppealedAt: Schema.Attribute.DateTime
+    liftedBy: Schema.Attribute.String & Schema.Attribute.Private
+    liftReason: Schema.Attribute.Text & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.sanction"
+    > &
+      Schema.Attribute.Private
+    mode: Schema.Attribute.Enumeration<["mute", "ban"]> &
+      Schema.Attribute.Required
+    moderatorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    recordId: Schema.Attribute.String & Schema.Attribute.Required
+    recordType: Schema.Attribute.Enumeration<["thread", "reply"]> &
+      Schema.Attribute.Required
+    subjectId: Schema.Attribute.String & Schema.Attribute.Private
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<1>
   }
 }
 
@@ -5737,6 +5923,7 @@ export interface PluginDiscussionsThread extends Struct.CollectionTypeSchema {
   }
   attributes: {
     activityAt: Schema.Attribute.DateTime
+    attachments: Schema.Attribute.JSON & Schema.Attribute.Private
     authorKey: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Private
@@ -5754,8 +5941,12 @@ export interface PluginDiscussionsThread extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private
     locked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    moderationFeedback: Schema.Attribute.Text & Schema.Attribute.Private
     pinned: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    profanityException: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
+    quote: Schema.Attribute.JSON & Schema.Attribute.Private
     state: Schema.Attribute.Enumeration<
       ["pending", "visible", "rejected", "removed"]
     > &
@@ -6994,13 +7185,16 @@ declare module "@strapi/strapi" {
       "plugin::content-moderation.upload-reservation": PluginContentModerationUploadReservation
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
+      "plugin::discussions.attachment": PluginDiscussionsAttachment
       "plugin::discussions.audit-event": PluginDiscussionsAuditEvent
       "plugin::discussions.erased-actor": PluginDiscussionsErasedActor
       "plugin::discussions.outbox": PluginDiscussionsOutbox
       "plugin::discussions.rate-window": PluginDiscussionsRateWindow
+      "plugin::discussions.reaction": PluginDiscussionsReaction
       "plugin::discussions.reply": PluginDiscussionsReply
       "plugin::discussions.report": PluginDiscussionsReport
       "plugin::discussions.revision": PluginDiscussionsRevision
+      "plugin::discussions.sanction": PluginDiscussionsSanction
       "plugin::discussions.subject": PluginDiscussionsSubject
       "plugin::discussions.subscription": PluginDiscussionsSubscription
       "plugin::discussions.thread": PluginDiscussionsThread

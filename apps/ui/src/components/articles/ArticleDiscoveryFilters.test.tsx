@@ -62,7 +62,24 @@ const story: ArticleBrowseItem = {
     countries: [
       { value: "co", label: "Colombia", slug: "colombia", code: "CO" },
     ],
-    regions: [{ value: "bogota", label: "Bogotá" }],
+    regions: [
+      {
+        value: "bogota",
+        label: "Bogotá",
+        countryDocumentId: "co",
+        continentDocumentId: "sa",
+      },
+    ],
+    continents: [{ value: "sa", label: "South America" }],
+    areas: [
+      {
+        value: "centre",
+        label: "Centre",
+        regionDocumentId: "bogota",
+        countryDocumentId: "co",
+        continentDocumentId: "sa",
+      },
+    ],
     languages: [{ value: "es", label: "Spanish" }],
     origins: [{ value: "community", label: "Community Journal" }],
   },
@@ -92,6 +109,7 @@ describe("article reader preferences", () => {
         parseArticleBrowseQuery({ lang: "en" })
       )
       render(<ArticleDiscoveryFilters discovery={unavailable} kind={kind} />)
+      fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
       const choice = screen.getByRole("checkbox", {
         name: "English (0)",
         hidden: true,
@@ -104,18 +122,22 @@ describe("article reader preferences", () => {
     }
   )
 
-  it("restores a known saved country while preserving existing URL filters", async () => {
+  it("offers a saved country only after explicit selection and preserves unrelated filters", async () => {
     mocks.params = new URLSearchParams("lang=es&section=stories&page=3")
     localStorage.setItem(
       "libraries-global:article-country:v1",
       JSON.stringify({ version: 1, countries: ["colombia"] })
     )
     render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
-    await waitFor(() =>
-      expect(mocks.replace).toHaveBeenCalledWith(
-        "/journal?lang=es&section=stories&country=co",
-        { scroll: false }
-      )
+    const suggestion = await screen.findByRole("button", {
+      name: "Explore stories about Colombia",
+    })
+    expect(mocks.replace).not.toHaveBeenCalled()
+    expect(mocks.push).not.toHaveBeenCalled()
+    fireEvent.click(suggestion)
+    expect(mocks.push).toHaveBeenCalledWith(
+      "/journal?lang=es&section=stories&country=co",
+      { scroll: false }
     )
   })
 
@@ -134,9 +156,8 @@ describe("article reader preferences", () => {
       "lang=es&region=bogota&area=centre&topic=reading&page=3"
     )
     render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
-    fireEvent.click(
-      screen.getByRole("checkbox", { name: "Colombia (1)", hidden: true })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
+    fireEvent.click(screen.getByRole("checkbox", { name: "Colombia (1)" }))
     expect(mocks.push).toHaveBeenCalledWith(
       "/journal?lang=es&topic=reading&country=co",
       { scroll: false }
@@ -164,4 +185,28 @@ describe("article reader preferences", () => {
     expect(mocks.push).not.toHaveBeenCalled()
     expect(mocks.replace).not.toHaveBeenCalled()
   })
+})
+
+it("stages mobile filters, hides stale counts and only navigates on Show results", async () => {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: true,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }))
+  const fetcher = vi.fn().mockImplementation(() => new Promise(() => {}))
+  vi.stubGlobal("fetch", fetcher)
+  mocks.params = new URLSearchParams("lang=es")
+  render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
+  fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
+  fireEvent.click(screen.getByRole("checkbox", { name: "Centre (1)" }))
+  expect(mocks.push).not.toHaveBeenCalled()
+  await waitFor(() => expect(fetcher).toHaveBeenCalled())
+  expect(screen.getByRole("checkbox", { name: "Centre" })).toBeTruthy()
+  fireEvent.click(screen.getByRole("button", { name: "Show results" }))
+  expect(mocks.push).toHaveBeenCalledWith(
+    "/journal?lang=es&area=centre&continent=sa&country=co&region=bogota",
+    { scroll: false }
+  )
+  const init = fetcher.mock.calls[0]![1] as RequestInit
+  expect(init.signal?.aborted).toBe(true)
 })

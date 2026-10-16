@@ -61,6 +61,8 @@ export type ExistingArticle = {
   /** Locales this article already exists in (published). */
   availableLocales: string[]
   baseRevision?: string
+  publishedAt?: string | null
+  updatedAt?: string | null
   eventMentions?: ArticleEventMention[]
 }
 

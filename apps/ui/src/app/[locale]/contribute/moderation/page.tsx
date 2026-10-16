@@ -109,6 +109,16 @@ export default async function ModerationQueuePage({
         ) : null}
       </ModerationHero>
       <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-6 px-4 pt-8 pb-16 sm:px-8">
+        {scopes.some(
+          (scope) => scope.queue === "all" || scope.queue === "discussions"
+        ) && (
+          <Link
+            href="/contribute/moderation/discussions"
+            className="self-start rounded-full border px-4 py-2 font-semibold"
+          >
+            Review discussions →
+          </Link>
+        )}
         {!state.drive ? <DriveQueueStrip rows={driveStats} /> : null}
         <ModerationQueue
           state={state}

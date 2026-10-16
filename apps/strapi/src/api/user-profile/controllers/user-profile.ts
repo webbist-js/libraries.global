@@ -405,6 +405,7 @@ export default factories.createCoreController(
           filters: { username: { $eq: username } } as any,
           populate: {
             avatar: true,
+            coverImage: true,
             languages: true,
             followedLibraries: {
               populate: {
@@ -515,7 +516,7 @@ export default factories.createCoreController(
 
       const profile = await strapi.documents(PROFILE).findFirst({
         filters: { baUserId: { $eq: baUserId } },
-        populate: { avatar: true, languages: true },
+        populate: { avatar: true, coverImage: true, languages: true },
       })
       if (!profile) return ctx.notFound("Profile not found")
 
@@ -552,6 +553,7 @@ export default factories.createCoreController(
           documentId,
           populate: {
             avatar: true,
+            coverImage: true,
             languages: true,
             followedLibraries: {
               populate: {

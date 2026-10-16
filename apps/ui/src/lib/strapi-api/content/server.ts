@@ -1038,6 +1038,7 @@ export type BlogArticleSummary = {
 
 export type BlogArticleDetail = BlogArticleSummary &
   ArticleContextData & {
+    availableLocales?: string[]
     body?: ArticleBodyBlock[] | null
     /** The author's public profile, when the article is attributed to one. */
     authorProfile?: {
@@ -1391,6 +1392,7 @@ export type WikiContributor = {
 
 export type WikiArticleDetail = WikiArticleSummary &
   ArticleContextData & {
+    availableLocales?: string[]
     body?: ArticleBodyBlock[] | null
     contributors?: WikiContributor[] | null
     relatedArticles?: WikiArticleSummary[] | null
@@ -2208,6 +2210,8 @@ async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
 // ── Knowledge editor ───────────────────────────────────────────────────────
 
 export type ArticleForEditing = {
+  availableLocales?: string[]
+  publishedAt?: string | null
   documentId: string
   slug: string
   locale?: string | null
@@ -2297,7 +2301,13 @@ export async function fetchArticleForEditing(
       pagination: { pageSize: 1 } as any,
     })) as APIResponseCollection<ArticleForEditing>
 
-    return res.data?.[0] ?? null
+    const article = res.data?.[0]
+    if (!article) return null
+    const variants = (await PublicStrapiClient.fetchAPI(
+      `${path}/published-locales/${encodeURIComponent(article.documentId)}`
+    )) as { data?: string[] }
+
+    return { ...article, availableLocales: variants.data ?? [] }
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching ${kind} article '${slug}' for editing`,

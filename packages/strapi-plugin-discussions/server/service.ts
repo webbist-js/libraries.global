@@ -1,7 +1,14 @@
 import { createHash, randomUUID } from "node:crypto"
 
 import { defaults } from "./config"
-import type { Actor, CommittedEvent, DiscussionConfig } from "./contracts"
+import { maskContent, inspectContent } from "./content-policy"
+import type {
+  Actor,
+  CommittedEvent,
+  DiscussionConfig,
+  DiscussionRecord,
+} from "./contracts"
+import { mediaStore, sanitiseImage } from "./media"
 import { permitted, requirePermission, resolveTarget } from "./permissions"
 import {
   fail,
@@ -34,6 +41,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
     ...defaults,
     ...strapi.config.get("plugin::discussions", {}),
   }
+  const storage = mediaStore(strapi, config)
   const query = (kind: string) => strapi.db.query(uid(kind))
   const find = (kind: string, documentId: string) =>
     query(kind).findOne({ where: { documentId } })
@@ -218,18 +226,322 @@ export default function discussionService({ strapi }: { strapi: any }) {
 
     return {
       name: text(projection.name, "public author name", 120),
+      ...(projection.avatar
+        ? {
+            avatar: {
+              url: safeUrl(projection.avatar.url),
+              ...(projection.avatar.alternativeText
+                ? {
+                    alternativeText: text(
+                      projection.avatar.alternativeText,
+                      "avatar alt",
+                      250
+                    ),
+                  }
+                : {}),
+            },
+          }
+        : {}),
+      ...(["violet", "coral", "mint", "amber", "blue", "rose"].includes(
+        projection.background ?? ""
+      )
+        ? { background: projection.background }
+        : {}),
       ...(projection.slug
         ? { slug: text(projection.slug, "public author slug", 120) }
         : {}),
       ...(projection.url ? { url: safeUrl(projection.url) } : {}),
     }
   }
-  async function threadDto(thread: any, target?: any) {
+  async function scan(
+    kind: string,
+    where: any,
+    orderBy: any,
+    eligible: (row: any) => Promise<boolean>
+  ) {
+    const matches = []
+    for (let offset = 0; offset < config.maxScanEntries; offset += 100) {
+      const rows = await query(kind).findMany({
+        where,
+        orderBy,
+        offset,
+        limit: Math.min(100, config.maxScanEntries - offset),
+      })
+      for (const row of rows) if (await eligible(row)) matches.push(row)
+      if (rows.length < 100) return matches
+    }
+
+    return fail(
+      503,
+      "Discussion listing temporarily unavailable; narrow the filters"
+    )
+  }
+  function slice(rows: any[], params: any) {
+    const pagination = page(params, config.maxPageSize)
+
+    return {
+      data: rows.slice(pagination.offset, pagination.offset + pagination.limit),
+      nextOffset:
+        rows.length > pagination.offset + pagination.limit
+          ? pagination.offset + pagination.limit
+          : null,
+      total: rows.length,
+    }
+  }
+  function moderationGate(actor: Actor) {
+    if (!actor.admin && !actor.capabilities?.includes("moderate"))
+      fail(403, "Discussion moderator required")
+  }
+  async function visibleReplies(thread: any, actor: Actor | null) {
+    return scan(
+      "reply",
+      { threadId: thread.documentId, state: "visible" },
+      { id: "asc" },
+      (reply) => replyReadable(reply, thread, actor, false, true)
+    )
+  }
+  async function reactions(kind: string, row: any, actor: Actor | null) {
+    if (row.state !== "visible")
+      return { reactions: { like: 0, love: 0 }, myReaction: null }
+    const values = await query("reaction").findMany({
+      where: { recordType: kind, recordId: row.documentId },
+      limit: config.maxScanEntries + 1,
+    })
+    if (values.length > config.maxScanEntries)
+      fail(503, "Discussion reactions temporarily unavailable")
+
+    return {
+      reactions: {
+        like: values.filter((value: any) => value.value === "like").length,
+        love: values.filter((value: any) => value.value === "love").length,
+      },
+      myReaction:
+        values.find((value: any) => value.actorKey === actor?.key)?.value ??
+        null,
+    }
+  }
+  async function attachmentDtos(
+    values: any[] | undefined,
+    language?: string,
+    exception = false
+  ) {
+    const data = []
+    for (const value of values ?? []) {
+      const attachment = await find("attachment", value.id)
+      if (attachment && !attachment.retired)
+        data.push({
+          id: attachment.documentId,
+          altText:
+            language && !exception
+              ? maskContent(value.altText, language, config.profanityTerms)
+              : value.altText,
+          caption:
+            language && !exception
+              ? maskContent(
+                  value.caption ?? "",
+                  language,
+                  config.profanityTerms
+                )
+              : value.caption,
+          width: attachment.width,
+          height: attachment.height,
+          mime: attachment.mime,
+        })
+    }
+
+    return data
+  }
+  async function isPublishedImage(attachmentId: string, actor: Actor | null) {
+    for (const kind of ["thread", "reply"]) {
+      const records = await query(kind).findMany({
+        where: { state: "visible" },
+        limit: config.maxScanEntries + 1,
+      })
+      if (records.length > config.maxScanEntries)
+        fail(503, "Image references temporarily unavailable")
+      for (const record of records)
+        if (
+          record.attachments?.some((image: any) => image.id === attachmentId)
+        ) {
+          try {
+            const ctx = await context(
+              kind === "thread" ? record.documentId : record.threadId,
+              actor,
+              true
+            )
+            if (
+              kind === "thread" ||
+              (await replyReadable(
+                record,
+                ctx.thread,
+                actor,
+                ctx.moderator,
+                true
+              ))
+            )
+              return true
+          } catch (error: any) {
+            if (error.status !== 404) throw error
+          }
+        }
+    }
+
+    return false
+  }
+  async function hasApprovedImage(attachmentId: string) {
+    // Retention follows approval state, independently of today's target/audience visibility.
+    // A target may be temporarily unpublished and later restored; its approved media survives.
+    for (const kind of ["thread", "reply"]) {
+      const rows = await query(kind).findMany({
+        where: { state: "visible" },
+        limit: config.maxScanEntries + 1,
+      })
+      if (rows.length > config.maxScanEntries)
+        fail(503, "Image references temporarily unavailable")
+      if (
+        rows.some((row: any) =>
+          row.attachments?.some((image: any) => image.id === attachmentId)
+        )
+      )
+        return true
+    }
+
+    return false
+  }
+  async function canReviewImage(attachmentId: string, actor: Actor | null) {
+    if (actor?.admin) return true
+    if (!actor?.capabilities?.includes("moderate")) return false
+    const revisions = await query("revision").findMany({
+      where: { state: "pending" },
+      limit: config.maxScanEntries + 1,
+    })
+    if (revisions.length > config.maxScanEntries)
+      fail(503, "Image review temporarily unavailable")
+    for (const revision of revisions)
+      if (
+        revision.attachments?.some((image: any) => image.id === attachmentId)
+      ) {
+        const row = await required(revision.recordType, revision.recordId),
+          thread = await required("thread", revision.threadId),
+          subject = await required("subject", thread.subjectId)
+        if (await recordModerator(actor, subject, thread, row)) {
+          if (thread.target) {
+            try {
+              await resolveTarget(strapi, config, actor, thread.target)
+            } catch (error: any) {
+              if (error.status === 404) continue
+              throw error
+            }
+          }
+
+          return true
+        }
+      }
+    const reports = await query("report").findMany({
+      where: { state: "open" },
+      limit: config.maxScanEntries + 1,
+    })
+    if (reports.length > config.maxScanEntries)
+      fail(503, "Image review temporarily unavailable")
+    for (const report of reports)
+      if (
+        report.snapshotAttachments?.some(
+          (image: any) => image.id === attachmentId
+        )
+      ) {
+        const ctx = await context(report.threadId, actor),
+          row = await required(report.recordType, report.recordId)
+        if (await recordModerator(actor, ctx.subject, ctx.thread, row))
+          return true
+      }
+
+    return false
+  }
+  async function deleteRetiredImage(documentId: string, key: string) {
+    try {
+      await storage.delete(key)
+      await query("attachment").deleteMany({
+        where: { documentId, retired: true },
+      })
+    } catch {
+      strapi.log.warn(
+        "[discussions] Private image deletion deferred; durable retry pending"
+      )
+    }
+  }
+  async function quoteDto(row: any, actor: Actor | null) {
+    if (!row.quote) return null
+    const reference = {
+      kind: row.quote.kind,
+      id: row.quote.id,
+      version: row.quote.version,
+    }
+    const source = await find(reference.kind, reference.id)
+    if (
+      !source ||
+      source.state !== "visible" ||
+      source.version !== reference.version
+    )
+      return { ...reference, available: false }
+    try {
+      const ctx = await context(
+        reference.kind === "thread" ? source.documentId : source.threadId,
+        actor,
+        true
+      )
+      if (
+        reference.kind === "reply" &&
+        !(await replyReadable(source, ctx.thread, actor, ctx.moderator, true))
+      )
+        return { ...reference, available: false }
+
+      return {
+        ...reference,
+        available: true,
+        currentVersion: source.version,
+        excerpt: source.profanityException
+          ? row.quote.excerpt
+          : maskContent(
+              row.quote.excerpt,
+              source.language,
+              config.profanityTerms
+            ),
+        author: await projectedAuthor(source),
+      }
+    } catch (error: any) {
+      if (error.status === 404) return { ...reference, available: false }
+      throw error
+    }
+  }
+  async function threadDto(
+    thread: any,
+    target?: any,
+    actor: Actor | null = null
+  ): Promise<DiscussionRecord> {
+    const body = thread.profanityException
+      ? thread.body
+      : maskContent(thread.body, thread.language, config.profanityTerms)
+    const replies =
+      thread.state === "visible" ? await visibleReplies(thread, actor) : []
+    const subject = await required("subject", thread.subjectId)
+
     return {
       id: thread.documentId,
       subjectId: thread.subjectId,
-      title: thread.title,
-      body: thread.body,
+      subject: {
+        id: subject.documentId,
+        name: subject.name,
+        slug: subject.slug,
+        description: subject.description ?? "",
+        languages: subject.languages ?? [],
+        visibility: subject.visibility,
+        createPolicy: subject.createPolicy,
+      },
+      title: thread.profanityException
+        ? thread.title
+        : maskContent(thread.title, thread.language, config.profanityTerms),
+      body,
+      excerpt: body.replaceAll(/\s+/g, " ").slice(0, 280),
       language: thread.language,
       state: thread.state,
       version: thread.version,
@@ -238,20 +550,114 @@ export default function discussionService({ strapi }: { strapi: any }) {
       author: await projectedAuthor(thread),
       activityAt: thread.activityAt,
       createdAt: thread.createdAt,
+      replyCount: replies.length,
+      subscribed: Boolean(
+        actor &&
+        (await query("subscription").findOne({
+          where: { dedupeKey: fingerprint(thread.documentId, actor.key) },
+        }))
+      ),
+      viewer: {
+        canReply:
+          thread.state === "visible" &&
+          !thread.locked &&
+          (await permitted(strapi, config, actor, "reply", subject, thread)),
+        canReact:
+          thread.state === "visible" &&
+          (await permitted(strapi, config, actor, "react", subject, thread)),
+        canModerate: await recordModerator(actor, subject, thread, thread),
+        canSanction:
+          (await recordModerator(actor, subject, thread, thread)) &&
+          (await permitted(strapi, config, actor, "sanction", subject, thread)),
+      },
+      attachments: await attachmentDtos(
+        thread.attachments,
+        thread.language,
+        thread.profanityException
+      ),
+      ...(await reactions("thread", thread, actor)),
+      quote: await quoteDto(thread, actor),
       ...(target ? { target } : {}),
     }
   }
-  async function replyDto(reply: any) {
+  async function replyDto(
+    reply: any,
+    actor: Actor | null = null
+  ): Promise<DiscussionRecord> {
+    const parent = reply.parentId ? await find("reply", reply.parentId) : null
+    const thread = await required("thread", reply.threadId)
+    const subject = await required("subject", thread.subjectId)
+    const parentVisible =
+      parent && (await replyReadable(parent, thread, actor, false, true))
+
     return {
+      subjectId: thread.subjectId,
+      viewer: {
+        canReply:
+          reply.state === "visible" &&
+          !reply.parentId &&
+          !thread.locked &&
+          (await permitted(
+            strapi,
+            config,
+            actor,
+            "reply",
+            subject,
+            thread,
+            reply.language
+          )),
+        canReact:
+          reply.state === "visible" &&
+          (await permitted(
+            strapi,
+            config,
+            actor,
+            "react",
+            subject,
+            thread,
+            reply.language
+          )),
+        canModerate: await recordModerator(actor, subject, thread, reply),
+        canSanction:
+          (await recordModerator(actor, subject, thread, reply)) &&
+          (await permitted(
+            strapi,
+            config,
+            actor,
+            "sanction",
+            subject,
+            thread,
+            reply.language
+          )),
+      },
       id: reply.documentId,
       threadId: reply.threadId,
       parentId: reply.parentId || null,
-      body: reply.body,
+      parent: parentVisible
+        ? {
+            id: parent.documentId,
+            author: await projectedAuthor(parent),
+            excerpt: (parent.profanityException
+              ? parent.body
+              : maskContent(parent.body, parent.language, config.profanityTerms)
+            ).slice(0, 180),
+          }
+        : null,
+      body: reply.profanityException
+        ? reply.body
+        : maskContent(reply.body, reply.language, config.profanityTerms),
       language: reply.language,
       state: reply.state,
       version: reply.version,
       author: await projectedAuthor(reply),
       createdAt: reply.createdAt,
+      attachments: await attachmentDtos(
+        reply.attachments,
+        reply.language,
+        reply.profanityException
+      ),
+      ...(await reactions("reply", reply, actor)),
+      quote: await quoteDto(reply, actor),
     }
   }
   async function audit(
@@ -311,6 +717,87 @@ export default function discussionService({ strapi }: { strapi: any }) {
     row: any,
     input: any
   ) {
+    const pending = await query("revision").findMany({
+      where: { authorKey: actor.key, state: "pending" },
+      limit: config.maxPendingPerActor,
+    })
+    if (pending.length >= config.maxPendingPerActor)
+      fail(429, "Outstanding review limit reached; wait for a decision")
+    let quote = input.quote === undefined ? (row.quote ?? null) : null
+    if (input.quote) {
+      const reference = object(input.quote)
+      if (!["thread", "reply"].includes(reference.kind))
+        fail(400, "Invalid quote source")
+      const source = await required(reference.kind, id(reference.id))
+      const threadId = kind === "thread" ? row.documentId : row.threadId
+      if (
+        (reference.kind === "thread" ? source.documentId : source.threadId) !==
+        threadId
+      )
+        fail(400, "Quote must belong to this conversation")
+      const ctx = await context(threadId, actor, true)
+      if (
+        source.state !== "visible" ||
+        (reference.kind === "reply" &&
+          !(await replyReadable(
+            source,
+            ctx.thread,
+            actor,
+            ctx.moderator,
+            true
+          )))
+      )
+        fail(404, "Quote source unavailable")
+      if (version(reference.version) !== source.version)
+        fail(409, "Quote source changed")
+      quote = {
+        kind: reference.kind,
+        id: source.documentId,
+        version: source.version,
+        excerpt: source.body.slice(0, 500),
+      }
+    }
+    const attachments = []
+    const images =
+      input.attachments === undefined
+        ? (row.attachments ?? [])
+        : input.attachments
+    if (!Array.isArray(images) || images.length > config.maxImagesPerRevision)
+      fail(400, "Too many discussion images")
+    const seen = new Set<string>()
+    for (const image of images) {
+      const attachment = await required("attachment", id(object(image).id))
+      if (attachment.retired) fail(404, "Discussion image unavailable")
+      if (
+        attachment.ownerKey !== actor.key &&
+        !row.attachments?.some(
+          (existing: any) => existing.id === attachment.documentId
+        )
+      )
+        fail(403, "Discussion image is not owned by this writer")
+      const thread =
+        kind === "thread" ? row : await required("thread", row.threadId)
+      if (
+        attachment.subjectId !== thread.subjectId ||
+        seen.has(attachment.documentId)
+      )
+        fail(400, "Invalid discussion image context")
+      seen.add(attachment.documentId)
+      attachments.push({
+        id: attachment.documentId,
+        altText: text(
+          image.altText ?? attachment.altText,
+          "image alternative text",
+          250
+        ),
+        caption: text(
+          image.caption ?? attachment.caption,
+          "image caption",
+          500,
+          true
+        ),
+      })
+    }
     const revision = await create("revision", {
       ...author(actor),
       recordType: kind,
@@ -321,6 +808,13 @@ export default function discussionService({ strapi }: { strapi: any }) {
         ? { title: text(input.title ?? row.title, "title", 250) }
         : {}),
       baseVersion: row.version,
+      quote,
+      attachments,
+      contentFlags: inspectContent(
+        `${kind === "thread" ? (input.title ?? row.title) : ""}\n${input.body}\n${attachments.map((image) => `${image.altText} ${image.caption}`).join("\n")}`,
+        row.language,
+        config.profanityTerms
+      ),
       state: "pending",
     })
     await audit(
@@ -344,11 +838,13 @@ export default function discussionService({ strapi }: { strapi: any }) {
     kind: "thread" | "reply",
     row: any,
     note: string,
-    tx: any
+    tx: any,
+    feedback = "This message was removed by the moderators."
   ) {
     if (row.state === "removed") return row
     const result = await update(kind, row.documentId, {
       state: "removed",
+      moderationFeedback: feedback,
       version: row.version + 1,
     })
     const pendingWhere =
@@ -378,32 +874,41 @@ export default function discussionService({ strapi }: { strapi: any }) {
   }
   const service = {
     async listSubjects(actor: Actor | null, params: any = {}) {
-      const pagination = page(params, config.maxPageSize)
-      const rows = await query("subject").findMany({
-        ...pagination,
-        orderBy: { name: "asc" },
-      })
+      const rows = await scan("subject", {}, { name: "asc" }, (row) =>
+        permitted(strapi, config, actor, "read", row)
+      )
+      const result = slice(rows, params)
       const data = []
-      for (const row of rows)
-        if (await permitted(strapi, config, actor, "read", row))
-          data.push({
-            id: row.documentId,
-            name: row.name,
-            slug: row.slug,
-            description: row.description,
-            languages: row.languages,
-            visibility: row.visibility,
-            createPolicy: row.createPolicy,
-            version: row.version,
-          })
+      for (const row of result.data) {
+        const threads = await scan(
+          "thread",
+          { subjectId: row.documentId, state: "visible" },
+          { id: "asc" },
+          async (thread) => {
+            try {
+              await context(thread.documentId, actor, true)
 
-      return {
-        data,
-        nextOffset:
-          rows.length === pagination.limit
-            ? pagination.offset + rows.length
-            : null,
+              return true
+            } catch (error: any) {
+              if (error.status === 404) return false
+              throw error
+            }
+          }
+        )
+        data.push({
+          id: row.documentId,
+          name: row.name,
+          slug: row.slug,
+          description: row.description,
+          languages: row.languages,
+          visibility: row.visibility,
+          createPolicy: row.createPolicy,
+          version: row.version,
+          threadCount: threads.length,
+        })
       }
+
+      return { ...result, data }
     },
     async saveSubject(actor: Actor, value: unknown, subjectId?: string) {
       if (!actor.admin) return fail(403, "Administrator required")
@@ -439,13 +944,18 @@ export default function discussionService({ strapi }: { strapi: any }) {
       })
     },
     async listThreads(actor: Actor | null, params: any = {}) {
-      const pagination = page(params, config.maxPageSize)
+      page(params, config.maxPageSize)
+      const view = params.view ?? "latest"
+      if (!["latest", "unanswered", "following"].includes(view))
+        fail(400, "Invalid discussion view")
+      if (view === "following" && !actor)
+        fail(401, "Sign in to view followed discussions")
+      const search =
+        params.q === undefined
+          ? ""
+          : text(params.q, "search", 180, true).toLocaleLowerCase()
       const where: any = { state: "visible" }
-      if (params.subjectId) {
-        const subject = await required("subject", id(params.subjectId))
-        await requirePermission(strapi, config, actor, "read", subject)
-        where.subjectId = subject.documentId
-      }
+      if (params.subjectId) where.subjectId = id(params.subjectId)
       if (params.language) where.language = language(params.language)
       if (params.targetUid || params.targetId) {
         const { target } = await resolveTarget(strapi, config, actor, {
@@ -453,36 +963,63 @@ export default function discussionService({ strapi }: { strapi: any }) {
           documentId: params.targetId,
           ...(params.targetLocale ? { locale: params.targetLocale } : {}),
         })
-        // Locale deliberately does not enter the identity: one attached thread across translations.
         where.targetKey = `${target.uid}:${target.documentId}`
       }
-      const rows = await query("thread").findMany({
+      const contexts = new Map<string, any>()
+      const rows = await scan(
+        "thread",
         where,
-        ...pagination,
-        orderBy: [{ pinned: "desc" }, { activityAt: "desc" }, { id: "desc" }],
-      })
-      const data = []
-      for (const row of rows) {
-        try {
-          const current = await context(row.documentId, actor, true)
-          data.push(await threadDto(current.thread, current.target))
-        } catch (error: any) {
-          if (error.status !== 404) throw error
+        [{ pinned: "desc" }, { activityAt: "desc" }, { id: "desc" }],
+        async (row) => {
+          try {
+            const ctx = await context(row.documentId, actor, true)
+            const publicText = row.profanityException
+              ? `${row.title} ${row.body}`
+              : maskContent(
+                  `${row.title} ${row.body}`,
+                  row.language,
+                  config.profanityTerms
+                )
+            if (search && !publicText.toLocaleLowerCase().includes(search))
+              return false
+            if (
+              view === "unanswered" &&
+              (await visibleReplies(row, actor)).length
+            )
+              return false
+            if (
+              view === "following" &&
+              !(await query("subscription").findOne({
+                where: { dedupeKey: fingerprint(row.documentId, actor!.key) },
+              }))
+            )
+              return false
+            contexts.set(row.documentId, ctx)
+
+            return true
+          } catch (error: any) {
+            if (error.status === 404) return false
+            throw error
+          }
         }
-      }
+      )
+      const result = slice(rows, params)
 
       return {
-        data,
-        nextOffset:
-          rows.length === pagination.limit
-            ? pagination.offset + rows.length
-            : null,
+        ...result,
+        data: await Promise.all(
+          result.data.map((row: any) => {
+            const ctx = contexts.get(row.documentId)
+
+            return threadDto(ctx.thread, ctx.target, actor)
+          })
+        ),
       }
     },
     async getThread(actor: Actor | null, threadId: string) {
       const current = await context(id(threadId), actor)
 
-      return threadDto(current.thread, current.target)
+      return threadDto(current.thread, current.target, actor)
     },
     async createThread(actorInput: Actor | null, value: unknown) {
       const actor = authenticated(actorInput),
@@ -515,43 +1052,36 @@ export default function discussionService({ strapi }: { strapi: any }) {
         })
 
         return {
-          thread: await threadDto(row),
+          thread: await threadDto(row, undefined, actor),
           revision: await submitRevision(actor, "thread", row, input),
         }
       })
     },
     async listReplies(actor: Actor | null, threadId: string, params: any = {}) {
-      const current = await context(id(threadId), actor, true),
-        pagination = page(params, config.maxPageSize)
-      const where: any = {
-        threadId: current.thread.documentId,
-        state: "visible",
-      }
-      if (params.language) where.language = language(params.language)
-      const rows = await query("reply").findMany({
-        where,
-        ...pagination,
-        orderBy: { id: "asc" },
-      })
-      const data = []
-      for (const row of rows)
-        if (
-          await replyReadable(
-            row,
-            current.thread,
-            actor,
-            current.moderator,
-            true
+      const current = await context(id(threadId), actor, true)
+      const replies = await visibleReplies(current.thread, actor)
+      const selected = params.language
+        ? replies.filter(
+            (row: any) => row.language === language(params.language)
           )
+        : replies
+      const ordered: any[] = []
+      for (const row of selected.filter((row: any) => !row.parentId)) {
+        ordered.push(
+          row,
+          ...selected.filter((child: any) => child.parentId === row.documentId)
         )
-          data.push(await replyDto(row))
+      }
+      for (const row of selected)
+        if (!ordered.some((item) => item.documentId === row.documentId))
+          ordered.push(row)
+      const result = slice(ordered, params)
 
       return {
-        data,
-        nextOffset:
-          rows.length === pagination.limit
-            ? pagination.offset + rows.length
-            : null,
+        ...result,
+        data: await Promise.all(
+          result.data.map((row: any) => replyDto(row, actor))
+        ),
       }
     },
     async createReply(
@@ -592,7 +1122,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
         })
 
         return {
-          reply: await replyDto(row),
+          reply: await replyDto(row, actor),
           revision: await submitRevision(actor, "reply", row, input),
         }
       })
@@ -706,6 +1236,15 @@ export default function discussionService({ strapi }: { strapi: any }) {
         pagination = page(params, config.maxPageSize)
       const where: any = { authorKey: actor.key }
       if (params.recordId) where.documentId = id(params.recordId)
+      if (params.language) where.language = language(params.language)
+      if (kind === "thread" && (params.targetUid || params.targetId)) {
+        const { target } = await resolveTarget(strapi, config, actor, {
+          uid: params.targetUid,
+          documentId: params.targetId,
+          ...(params.targetLocale ? { locale: params.targetLocale } : {}),
+        })
+        where.targetKey = `${target.uid}:${target.documentId}`
+      }
       if (kind === "reply" && params.threadId)
         where.threadId = id(params.threadId)
       const rows = await query(kind).findMany({
@@ -741,16 +1280,40 @@ export default function discussionService({ strapi }: { strapi: any }) {
             orderBy: { id: "desc" },
           })
           const pending = proposals[0]
+          const latest = (
+            await query("revision").findMany({
+              where: {
+                recordType: kind,
+                recordId: row.documentId,
+                authorKey: actor.key,
+              },
+              orderBy: { id: "desc" },
+              limit: 1,
+            })
+          )[0]
           data.push({
+            moderationFeedback: row.moderationFeedback ?? null,
+            latestRevision: latest
+              ? {
+                  id: latest.documentId,
+                  state: latest.state,
+                  title: latest.title,
+                  body: latest.body,
+                  baseVersion: latest.baseVersion,
+                  feedback: latest.contributorFeedback ?? null,
+                  attachments: await attachmentDtos(latest.attachments),
+                }
+              : null,
             ...(await (kind === "thread"
-              ? threadDto(row, current.target)
-              : replyDto(row))),
+              ? threadDto(row, current.target, actor)
+              : replyDto(row, actor))),
             ...(pending
               ? {
                   pendingRevision: {
                     id: pending.documentId,
                     body: pending.body,
                     title: pending.title,
+                    attachments: await attachmentDtos(pending.attachments),
                     baseVersion: pending.baseVersion,
                   },
                 }
@@ -772,13 +1335,34 @@ export default function discussionService({ strapi }: { strapi: any }) {
     async reviewQueue(actorInput: Actor | null, params: any = {}) {
       const actor = authenticated(actorInput),
         pagination = page(params, config.maxPageSize)
-      const rows = await query("revision").findMany({
-        where: { state: "pending" },
-        ...pagination,
-        orderBy: { id: "asc" },
-      })
+      moderationGate(actor)
+      const rows = await scan(
+        "revision",
+        { state: "pending" },
+        { id: "asc" },
+        async (revision) => {
+          const thread = await required("thread", revision.threadId),
+            subject = await required("subject", thread.subjectId),
+            row = await required(revision.recordType, revision.recordId)
+          if (!(await recordModerator(actor, subject, thread, row)))
+            return false
+          if (!actor.admin && thread.target) {
+            try {
+              await resolveTarget(strapi, config, actor, thread.target)
+            } catch (error: any) {
+              if (error.status === 404) return false
+              throw error
+            }
+          }
+
+          return true
+        }
+      )
       const data = []
-      for (const revision of rows) {
+      for (const revision of rows.slice(
+        pagination.offset,
+        pagination.offset + pagination.limit
+      )) {
         const thread = await required("thread", revision.threadId),
           subject = await required("subject", thread.subjectId)
         const row = await required(revision.recordType, revision.recordId)
@@ -799,6 +1383,9 @@ export default function discussionService({ strapi }: { strapi: any }) {
           title: revision.title,
           body: revision.body,
           language: row.language,
+          quote: revision.quote,
+          contentFlags: revision.contentFlags,
+          attachments: await attachmentDtos(revision.attachments),
           previousBody: row.body,
           previousTitle: row.title,
           baseVersion: revision.baseVersion,
@@ -815,8 +1402,8 @@ export default function discussionService({ strapi }: { strapi: any }) {
       return {
         data,
         nextOffset:
-          rows.length === pagination.limit
-            ? pagination.offset + rows.length
+          rows.length > pagination.offset + pagination.limit
+            ? pagination.offset + pagination.limit
             : null,
       }
     },
@@ -824,9 +1411,21 @@ export default function discussionService({ strapi }: { strapi: any }) {
       const actor = authenticated(actorInput),
         input = object(value),
         initial = await required("revision", id(revisionId))
-      if (!["approve", "reject"].includes(input.decision))
+      if (!["approve", "reject", "request_changes"].includes(input.decision))
         fail(400, "Invalid decision")
       const note = text(input.note, "review note", 2000, true)
+      const feedback = text(
+        input.contributorFeedback ??
+          (input.decision === "reject"
+            ? "Your contribution was rejected. Contact the moderators if you need clarification."
+            : undefined),
+        "contributor feedback",
+        2000,
+        input.decision === "approve"
+      )
+      const exceptionReason = input.profanityException
+        ? text(input.exceptionReason, "content exception reason", 1000)
+        : ""
 
       return strapi.db.transaction(async (tx: any) => {
         await activeActor(tx.trx, actor)
@@ -840,7 +1439,12 @@ export default function discussionService({ strapi }: { strapi: any }) {
           await resolveTarget(strapi, config, actor, thread.target)
         if (!config.allowSelfReview && actor.key === revision.authorKey)
           fail(403, "Self review is disabled")
-        const desired = input.decision === "approve" ? "approved" : "rejected"
+        const desired =
+          input.decision === "approve"
+            ? "approved"
+            : input.decision === "request_changes"
+              ? "changes_requested"
+              : "rejected"
         if (revision.state !== "pending") {
           if (revision.state === desired && revision.reviewerKey === actor.key)
             return {
@@ -869,16 +1473,33 @@ export default function discussionService({ strapi }: { strapi: any }) {
           )
             fail(409, "Parent reply must be visible")
         }
+        if (
+          input.profanityException !== undefined &&
+          typeof input.profanityException !== "boolean"
+        )
+          fail(400, "Invalid content exception")
+        if (input.decision === "approve")
+          for (const attachment of revision.attachments ?? [])
+            if ((await required("attachment", attachment.id)).retired)
+              fail(
+                409,
+                "Discussion image expired; ask the writer to replace it"
+              )
         await update("revision", revision.documentId, {
           state: desired,
           reviewerKey: actor.key,
           reviewNote: note,
+          contributorFeedback: feedback,
           decidedAt: now(),
         })
         let recordVersion = row.version
         if (input.decision === "approve") {
           const result = await update(revision.recordType, row.documentId, {
             body: revision.body,
+            quote: revision.quote,
+            attachments: revision.attachments,
+            moderationFeedback: null,
+            profanityException: Boolean(exceptionReason),
             ...(revision.recordType === "thread"
               ? { title: revision.title }
               : {}),
@@ -888,7 +1509,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
           recordVersion = result.version
           await update("thread", thread.documentId, { activityAt: now() })
           await event(revision.recordType, result, "visible", tx)
-        } else if (row.state === "pending")
+        } else if (row.state === "pending" && input.decision === "reject")
           await update(revision.recordType, row.documentId, {
             state: "rejected",
           })
@@ -898,7 +1519,13 @@ export default function discussionService({ strapi }: { strapi: any }) {
           revision.recordType,
           row.documentId,
           revision.threadId,
-          { revisionId: revision.documentId, note, version: recordVersion }
+          {
+            revisionId: revision.documentId,
+            note,
+            contributorFeedback: feedback,
+            exceptionReason,
+            version: recordVersion,
+          }
         )
 
         return { id: revision.documentId, state: desired, recordVersion }
@@ -932,7 +1559,13 @@ export default function discussionService({ strapi }: { strapi: any }) {
             kind,
             row,
             text(input.note, "review note", 2000, true),
-            tx
+            tx,
+            text(
+              input.contributorFeedback,
+              "contributor feedback",
+              2000,
+              true
+            ) || "This message was removed by the moderators."
           )
 
           return {
@@ -1003,9 +1636,27 @@ export default function discussionService({ strapi }: { strapi: any }) {
         )
           fail(404, "Discussion record unavailable")
         const reason = text(input.reason, "report reason", 2000),
-          dedupeKey = fingerprint(kind, row.documentId, actor.key)
-        const existing = await query("report").findOne({ where: { dedupeKey } })
+          dedupeKey = fingerprint(
+            kind,
+            row.documentId,
+            actor.key,
+            String(row.version),
+            "open"
+          )
+        const existing = await query("report").findOne({
+          where: { dedupeKey, state: "open" },
+        })
         if (existing) return { id: existing.documentId, state: existing.state }
+        const historical = await query("report").findOne({
+          where: {
+            recordType: kind,
+            recordId: row.documentId,
+            reporterKey: actor.key,
+            recordVersion: row.version,
+          },
+        })
+        if (historical)
+          return { id: historical.documentId, state: historical.state }
         const result = await create("report", {
           recordType: kind,
           recordId: row.documentId,
@@ -1016,6 +1667,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
           recordVersion: row.version,
           snapshotBody: row.body,
           snapshotTitle: row.title ?? null,
+          snapshotAttachments: row.attachments ?? [],
           state: "open",
           version: 0,
         })
@@ -1029,13 +1681,34 @@ export default function discussionService({ strapi }: { strapi: any }) {
     async reports(actorInput: Actor | null, params: any = {}) {
       const actor = authenticated(actorInput),
         pagination = page(params, config.maxPageSize)
-      const rows = await query("report").findMany({
-        where: { state: "open" },
-        ...pagination,
-        orderBy: { id: "asc" },
-      })
+      moderationGate(actor)
+      const rows = await scan(
+        "report",
+        { state: "open" },
+        { id: "asc" },
+        async (report) => {
+          const thread = await required("thread", report.threadId),
+            subject = await required("subject", thread.subjectId),
+            record = await required(report.recordType, report.recordId)
+          if (!(await recordModerator(actor, subject, thread, record)))
+            return false
+          if (!actor.admin && thread.target) {
+            try {
+              await resolveTarget(strapi, config, actor, thread.target)
+            } catch (error: any) {
+              if (error.status === 404) return false
+              throw error
+            }
+          }
+
+          return true
+        }
+      )
       const data = []
-      for (const report of rows) {
+      for (const report of rows.slice(
+        pagination.offset,
+        pagination.offset + pagination.limit
+      )) {
         const thread = await required("thread", report.threadId),
           subject = await required("subject", thread.subjectId)
         const record = await required(report.recordType, report.recordId)
@@ -1052,10 +1725,13 @@ export default function discussionService({ strapi }: { strapi: any }) {
           language: record.language,
           reportedBody: report.snapshotBody,
           reportedTitle: report.snapshotTitle,
+          reportedAttachments: await attachmentDtos(report.snapshotAttachments),
+          currentAttachments: await attachmentDtos(record.attachments),
           recordVersion: report.recordVersion,
           currentBody: record.body,
           currentTitle: record.title,
           currentVersion: record.version,
+          currentState: record.state,
           id: report.documentId,
           recordType: report.recordType,
           recordId: report.recordId,
@@ -1069,8 +1745,8 @@ export default function discussionService({ strapi }: { strapi: any }) {
       return {
         data,
         nextOffset:
-          rows.length === pagination.limit
-            ? pagination.offset + rows.length
+          rows.length > pagination.offset + pagination.limit
+            ? pagination.offset + pagination.limit
             : null,
       }
     },
@@ -1104,10 +1780,23 @@ export default function discussionService({ strapi }: { strapi: any }) {
           const current = await required(report.recordType, report.recordId)
           if (version(input.recordBaseVersion) !== current.version)
             fail(409, "Reported content has changed; reload before removing")
-          await remove(actor, report.recordType, current, note, tx)
+          await remove(
+            actor,
+            report.recordType,
+            current,
+            note,
+            tx,
+            text(
+              input.contributorFeedback,
+              "contributor feedback",
+              2000,
+              true
+            ) || "This message was removed after a report."
+          )
         }
         await update("report", report.documentId, {
           state: input.decision === "dismiss" ? "dismissed" : "actioned",
+          dedupeKey: fingerprint("closed", report.documentId),
           version: report.version + 1,
           reviewerKey: actor.key,
           reviewNote: note,
@@ -1124,8 +1813,560 @@ export default function discussionService({ strapi }: { strapi: any }) {
         return {
           id: report.documentId,
           state: input.decision === "dismiss" ? "dismissed" : "actioned",
+          dedupeKey: fingerprint("closed", report.documentId),
           version: report.version + 1,
         }
+      })
+    },
+    async imageAdmission(actorInput: Actor | null) {
+      const actor = authenticated(actorInput)
+      if (!actor.capabilities?.includes("upload"))
+        fail(403, "Discussion upload permission denied")
+      if (
+        await query("erased-actor").findOne({
+          where: { actorHash: fingerprint("erased", actor.key) },
+        })
+      )
+        fail(401, "Discussion identity was erased")
+      const window = await query("rate-window").findOne({
+        where: { actorKey: actor.key },
+      })
+      if (
+        window &&
+        Date.now() - new Date(window.windowStartedAt).getTime() < 3600000 &&
+        window.actions >= config.maxWritesPerHour
+      )
+        fail(429, "Discussion write limit reached; try again later")
+      const owned = await query("attachment").findMany({
+        where: { ownerKey: actor.key },
+        limit: config.maxImagesPerActor,
+      })
+      if (owned.length >= config.maxImagesPerActor)
+        fail(429, "Discussion image quota reached")
+    },
+    async uploadImage(
+      actorInput: Actor | null,
+      value: unknown,
+      bytes: Uint8Array
+    ) {
+      const actor = authenticated(actorInput),
+        input = object(value),
+        subject = await required("subject", id(input.subjectId))
+      await requirePermission(strapi, config, actor, "upload", subject)
+      const altText = text(input.altText, "image alternative text", 250),
+        caption = text(input.caption, "image caption", 500, true)
+      if (!bytes.length || bytes.length > config.maxImageBytes)
+        fail(413, "Discussion image exceeds size limit")
+      const storageKey = randomUUID()
+      let written = false
+      try {
+        return await strapi.db.transaction(async ({ trx }: any) => {
+          await consume(trx, actor)
+          await requirePermission(strapi, config, actor, "upload", subject)
+          const owned = await query("attachment").findMany({
+            where: { ownerKey: actor.key },
+            limit: config.maxImagesPerActor,
+          })
+          if (owned.length >= config.maxImagesPerActor)
+            fail(429, "Discussion image quota reached")
+          const converted = await sanitiseImage(bytes, config.maxImageBytes)
+          await storage.put(storageKey, converted.bytes)
+          written = true
+          const row = await create("attachment", {
+            ownerKey: actor.key,
+            subjectId: subject.documentId,
+            storageKey,
+            mime: converted.mime,
+            bytes: converted.bytes.length,
+            width: converted.width,
+            height: converted.height,
+            altText,
+            caption,
+          })
+
+          return {
+            id: row.documentId,
+            altText,
+            caption,
+            width: row.width,
+            height: row.height,
+            mime: row.mime,
+          }
+        })
+      } catch (error) {
+        if (written) await storage.delete(storageKey)
+        throw error
+      }
+    },
+    async image(actor: Actor | null, attachmentId: string) {
+      const attachment = await required("attachment", id(attachmentId)),
+        subject = await required("subject", attachment.subjectId)
+      if (
+        attachment.retired ||
+        !(await permitted(strapi, config, actor, "read", subject))
+      )
+        fail(404, "Discussion image unavailable")
+      if (
+        attachment.ownerKey !== actor?.key &&
+        !(await isPublishedImage(attachment.documentId, actor)) &&
+        !(await canReviewImage(attachment.documentId, actor))
+      )
+        fail(404, "Discussion image unavailable")
+      const bytes = await storage.get(attachment.storageKey)
+      if (!bytes) return fail(404, "Discussion image unavailable")
+      if (bytes.length > config.maxImageBytes)
+        fail(413, "Discussion image exceeds limit")
+
+      return { bytes, mime: attachment.mime }
+    },
+    async cleanupImages() {
+      const cutoff = new Date(
+        Date.now() - config.stagingRetentionHours * 3600000
+      ).toISOString()
+      const assets = await query("attachment").findMany({
+        where: { $or: [{ retired: true }, { createdAt: { $lt: cutoff } }] },
+        limit: 100,
+        orderBy: { id: "asc" },
+      })
+      let removed = 0
+      for (const asset of assets)
+        await strapi.db.transaction(async (tx: any) => {
+          await lockActor(tx.trx, asset.ownerKey)
+          const current = await find("attachment", asset.documentId)
+          if (!current || (!current.retired && current.createdAt >= cutoff))
+            return
+          // Publication and proposal creation serialize on the actor/thread locks. Re-read references
+          // only after acquiring these locks; the initial cleanup scan is never deletion authority.
+          const [threads, replies, revisions, reports] = await Promise.all([
+            query("thread").findMany({ limit: config.maxScanEntries + 1 }),
+            query("reply").findMany({ limit: config.maxScanEntries + 1 }),
+            query("revision").findMany({
+              where: { state: "pending" },
+              limit: config.maxScanEntries + 1,
+            }),
+            query("report").findMany({
+              where: { state: "open" },
+              limit: config.maxScanEntries + 1,
+            }),
+          ])
+          if (
+            [threads, replies, revisions, reports].some(
+              (rows) => rows.length > config.maxScanEntries
+            )
+          )
+            return
+          const references = (row: any, field = "attachments") =>
+            row[field]?.some((image: any) => image.id === asset.documentId)
+          const ids = [
+            ...new Set<string>([
+              ...threads
+                .filter((row: any) => references(row))
+                .map((row: any) => row.documentId),
+              ...replies
+                .filter((row: any) => references(row))
+                .map((row: any) => row.threadId),
+              ...revisions
+                .filter((row: any) => references(row))
+                .map((row: any) => row.threadId),
+              ...reports
+                .filter((row: any) => references(row, "snapshotAttachments"))
+                .map((row: any) => row.threadId),
+            ]),
+          ].sort()
+          for (const threadId of ids)
+            if (await find("thread", threadId))
+              await lock(tx.trx, "thread", threadId)
+          if (!current.retired) {
+            const pending = await query("revision").findMany({
+              where: { state: "pending" },
+              limit: config.maxScanEntries + 1,
+            })
+            const openReports = await query("report").findMany({
+              where: { state: "open" },
+              limit: config.maxScanEntries + 1,
+            })
+            if (
+              [pending, openReports].some(
+                (rows) => rows.length > config.maxScanEntries
+              ) ||
+              pending.some((row: any) => references(row)) ||
+              openReports.some((row: any) =>
+                references(row, "snapshotAttachments")
+              ) ||
+              (await hasApprovedImage(asset.documentId))
+            )
+              return
+          }
+          await update("attachment", asset.documentId, { retired: true })
+          tx.onCommit(() =>
+            deleteRetiredImage(asset.documentId, asset.storageKey)
+          )
+          removed++
+        })
+      if (storage.prune) {
+        const retained = await query("attachment").findMany({
+          limit: config.maxScanEntries + 1,
+        })
+        if (retained.length <= config.maxScanEntries)
+          await storage.prune(
+            new Set(retained.map((row: any) => row.storageKey)),
+            new Date(cutoff),
+            100
+          )
+      }
+
+      return { removed }
+    },
+    async react(
+      actorInput: Actor | null,
+      kind: "thread" | "reply",
+      recordId: string,
+      value: unknown
+    ) {
+      const actor = authenticated(actorInput),
+        input = object(value),
+        initial = await required(kind, id(recordId))
+      if (!["like", "love", null].includes(input.reaction))
+        fail(400, "Invalid reaction")
+
+      return strapi.db.transaction(async ({ trx }: any) => {
+        await consume(trx, actor)
+        const threadId =
+          kind === "thread" ? initial.documentId : initial.threadId
+        await lock(trx, "thread", threadId)
+        const ctx = await context(threadId, actor, true),
+          row = await required(kind, initial.documentId)
+        if (
+          row.state !== "visible" ||
+          (kind === "reply" &&
+            !(await replyReadable(row, ctx.thread, actor, ctx.moderator, true)))
+        )
+          fail(404, "Discussion record unavailable")
+        await requirePermission(
+          strapi,
+          config,
+          actor,
+          "react",
+          ctx.subject,
+          ctx.thread,
+          row.language
+        )
+        const dedupeKey = fingerprint(kind, row.documentId, actor.key),
+          current = await query("reaction").findOne({ where: { dedupeKey } })
+        if (
+          current &&
+          (input.reaction === null || current.value === input.reaction)
+        )
+          await query("reaction").deleteMany({ where: { dedupeKey } })
+        else if (input.reaction) {
+          await (current
+            ? update("reaction", current.documentId, {
+                value: input.reaction,
+              })
+            : create("reaction", {
+                recordType: kind,
+                recordId: row.documentId,
+                threadId,
+                actorKey: actor.key,
+                value: input.reaction,
+                dedupeKey,
+              }))
+        }
+
+        return reactions(kind, row, actor)
+      })
+    },
+    async myStatus(actorInput: Actor | null) {
+      const actor = authenticated(actorInput)
+      const rows = await query("sanction").findMany({
+        where: {
+          actorKey: actor.key,
+          active: true,
+          $or: [{ expiresAt: null }, { expiresAt: { $gt: now() } }],
+        },
+        limit: 101,
+      })
+      if (rows.length > 100)
+        fail(503, "Discussion restrictions temporarily unavailable")
+
+      return {
+        data: rows.map((row: any) => ({
+          id: row.documentId,
+          mode: row.mode,
+          subjectId: row.subjectId ?? null,
+          reason: row.contributorFeedback,
+          expiresAt: row.expiresAt,
+          appeal: row.appeal ?? null,
+          version: row.version,
+          canAppeal:
+            !row.lastAppealedAt ||
+            Date.now() - new Date(row.lastAppealedAt).getTime() >= 3600000,
+        })),
+      }
+    },
+    async sanctions(actorInput: Actor | null, params: any = {}) {
+      const actor = authenticated(actorInput)
+      moderationGate(actor)
+      if (
+        params.state !== undefined &&
+        !["active", "lifted"].includes(params.state)
+      )
+        fail(400, "Invalid sanction state")
+      const rows = await scan(
+        "sanction",
+        { active: params.state !== "lifted" },
+        { id: "desc" },
+        async (sanction) => {
+          const thread = await find("thread", sanction.threadId),
+            subject = thread && (await find("subject", thread.subjectId))
+
+          return Boolean(
+            subject &&
+            (await permitted(strapi, config, actor, "read", subject, thread)) &&
+            (await permitted(
+              strapi,
+              config,
+              actor,
+              "moderate",
+              subject,
+              thread,
+              sanction.language
+            ))
+          )
+        }
+      )
+      const result = slice(rows, params),
+        data = []
+      for (const sanction of result.data) {
+        const thread = await required("thread", sanction.threadId),
+          subject = await required("subject", thread.subjectId),
+          row = await required(sanction.recordType, sanction.recordId)
+        data.push({
+          id: sanction.documentId,
+          version: sanction.version,
+          active: sanction.active,
+          mode: sanction.mode,
+          subjectId: sanction.subjectId ?? null,
+          subjectName: subject.name,
+          recordType: sanction.recordType,
+          recordId: sanction.recordId,
+          threadId: sanction.threadId,
+          language: sanction.language,
+          author: await projectedAuthor(row),
+          reason: sanction.reason,
+          contributorFeedback: sanction.contributorFeedback,
+          expiresAt: sanction.expiresAt,
+          appeal: sanction.appeal ?? null,
+          liftReason: sanction.liftReason ?? null,
+          canLift: await permitted(
+            strapi,
+            config,
+            actor,
+            "sanction",
+            subject,
+            thread,
+            sanction.language,
+            sanction.subjectId ? "subject" : "all"
+          ),
+        })
+      }
+
+      return { ...result, data }
+    },
+    async sanctionRecord(
+      actorInput: Actor | null,
+      kind: "thread" | "reply",
+      recordId: string,
+      value: unknown
+    ) {
+      const actor = authenticated(actorInput),
+        input = object(value),
+        initial = await required(kind, id(recordId))
+      if (
+        !["mute", "ban"].includes(input.mode) ||
+        !["subject", "all"].includes(input.scope)
+      )
+        fail(400, "Invalid sanction")
+      const reason = text(input.reason, "private sanction reason", 2000)
+      const contributorFeedback = text(
+        input.contributorFeedback ??
+          "Your discussion participation has been restricted. You may appeal this decision.",
+        "contributor feedback",
+        2000
+      )
+      const expiry = input.expiresAt ? new Date(input.expiresAt) : null
+      if (
+        expiry &&
+        (!Number.isFinite(expiry.getTime()) ||
+          expiry.getTime() <= Date.now() ||
+          expiry.getTime() > Date.now() + 366 * 86400000)
+      )
+        fail(400, "Invalid sanction expiry")
+
+      return strapi.db.transaction(async (tx: any) => {
+        for (const key of [...new Set([actor.key, initial.authorKey])].sort())
+          await lockActor(tx.trx, key)
+        await activeActor(tx.trx, actor)
+        const thread = await lock(
+            tx.trx,
+            "thread",
+            kind === "thread" ? initial.documentId : initial.threadId
+          ),
+          row = await required(kind, initial.documentId),
+          subject = await required("subject", thread.subjectId)
+        if (
+          row.authorKey !== initial.authorKey ||
+          row.authorKey === actor.key ||
+          row.authorKey === "erased"
+        )
+          fail(409, "Sanction target changed or unavailable")
+        await requireRecordModeration(actor, subject, thread, row)
+        await requirePermission(
+          strapi,
+          config,
+          actor,
+          "sanction",
+          subject,
+          thread,
+          row.language,
+          input.scope
+        )
+        if (!actor.admin && thread.target)
+          await resolveTarget(strapi, config, actor, thread.target)
+        const sanction = await create("sanction", {
+          actorKey: row.authorKey,
+          subjectId: input.scope === "subject" ? subject.documentId : null,
+          recordType: kind,
+          recordId: row.documentId,
+          threadId: thread.documentId,
+          language: row.language,
+          mode: input.mode,
+          reason,
+          contributorFeedback,
+          moderatorKey: actor.key,
+          expiresAt: expiry?.toISOString() ?? null,
+          active: true,
+          version: 1,
+        })
+        await audit(
+          actor,
+          "sanction_applied",
+          kind,
+          row.documentId,
+          thread.documentId,
+          {
+            sanctionId: sanction.documentId,
+            mode: input.mode,
+            scope: input.scope,
+            reason,
+            contributorFeedback,
+          }
+        )
+
+        return {
+          id: sanction.documentId,
+          mode: sanction.mode,
+          expiresAt: sanction.expiresAt,
+          version: sanction.version,
+        }
+      })
+    },
+    async liftSanction(
+      actorInput: Actor | null,
+      sanctionId: string,
+      value: unknown
+    ) {
+      const actor = authenticated(actorInput),
+        input = object(value),
+        initial = await required("sanction", id(sanctionId))
+      const reason = text(input.reason, "private lift reason", 2000),
+        contributorFeedback = text(
+          input.contributorFeedback,
+          "contributor feedback",
+          2000
+        )
+
+      return strapi.db.transaction(async (tx: any) => {
+        for (const key of [...new Set([actor.key, initial.actorKey])].sort())
+          await lockActor(tx.trx, key)
+        await activeActor(tx.trx, actor)
+        const thread = await lock(tx.trx, "thread", initial.threadId),
+          sanction = await required("sanction", initial.documentId),
+          subject = await required("subject", thread.subjectId)
+        await requirePermission(
+          strapi,
+          config,
+          actor,
+          "moderate",
+          subject,
+          thread,
+          sanction.language
+        )
+        await requirePermission(
+          strapi,
+          config,
+          actor,
+          "sanction",
+          subject,
+          thread,
+          sanction.language,
+          sanction.subjectId ? "subject" : "all"
+        )
+        if (!sanction.active || version(input.baseVersion) !== sanction.version)
+          fail(409, "Sanction changed; reload before lifting")
+        await update("sanction", sanction.documentId, {
+          active: false,
+          version: sanction.version + 1,
+          liftReason: reason,
+          contributorFeedback,
+          liftedBy: actor.key,
+        })
+        await audit(
+          actor,
+          "sanction_lifted",
+          sanction.recordType,
+          sanction.recordId,
+          sanction.threadId,
+          { sanctionId: sanction.documentId, reason, contributorFeedback }
+        )
+
+        return {
+          id: sanction.documentId,
+          active: false,
+          version: sanction.version + 1,
+        }
+      })
+    },
+    async appealSanction(
+      actorInput: Actor | null,
+      sanctionId: string,
+      value: unknown
+    ) {
+      const actor = authenticated(actorInput),
+        message = text(object(value).message, "appeal", 2000)
+
+      return strapi.db.transaction(async ({ trx }: any) => {
+        await consume(trx, actor)
+        const sanction = await required("sanction", id(sanctionId))
+        if (
+          sanction.actorKey !== actor.key ||
+          !sanction.active ||
+          (sanction.expiresAt &&
+            new Date(sanction.expiresAt).getTime() <= Date.now())
+        )
+          fail(404, "Sanction unavailable")
+        if (
+          sanction.lastAppealedAt &&
+          Date.now() - new Date(sanction.lastAppealedAt).getTime() < 3600000
+        )
+          fail(429, "Wait before sending another appeal")
+        await update("sanction", sanction.documentId, {
+          appeal: message,
+          lastAppealedAt: now(),
+          version: sanction.version + 1,
+        })
+
+        return { received: true, version: sanction.version + 1 }
       })
     },
     async subscribe(
@@ -1279,6 +2520,8 @@ export default function discussionService({ strapi }: { strapi: any }) {
                 ? {
                     state: "removed",
                     body: "",
+                    attachments: [],
+                    quote: null,
                     ...(kind === "thread"
                       ? {
                           title: "Removed discussion",
@@ -1311,13 +2554,26 @@ export default function discussionService({ strapi }: { strapi: any }) {
           }
         }
         await query("subscription").deleteMany({ where: { actorKey: key } })
+        await query("reaction").deleteMany({ where: { actorKey: key } })
+        await query("sanction").deleteMany({ where: { actorKey: key } })
+        await query("sanction").updateMany({
+          where: { moderatorKey: key },
+          data: { moderatorKey: "erased", reason: "", liftReason: "" },
+        })
+        await query("sanction").updateMany({
+          where: { liftedBy: key },
+          data: { liftedBy: "erased", liftReason: "" },
+        })
         await query("report").deleteMany({ where: { reporterKey: key } })
         await query("report").updateMany({
           where: { reviewerKey: key },
           data: { reviewerKey: "erased", reviewNote: null },
         })
         await query("revision").deleteMany({
-          where: { authorKey: key, state: { $in: ["pending", "rejected"] } },
+          where: {
+            authorKey: key,
+            state: { $in: ["pending", "rejected", "changes_requested"] },
+          },
         })
         await query("revision").updateMany({
           where: { authorKey: key },
@@ -1338,11 +2594,35 @@ export default function discussionService({ strapi }: { strapi: any }) {
               row.detail && typeof row.detail === "object"
                 ? Object.fromEntries(
                     Object.entries(row.detail).filter(
-                      ([field]) => field !== "note"
+                      ([field]) =>
+                        ![
+                          "note",
+                          "reason",
+                          "liftReason",
+                          "exceptionReason",
+                        ].includes(field)
                     )
                   )
                 : null,
           })
+        const images = await query("attachment").findMany({
+          where: { ownerKey: key },
+        })
+        for (const image of images) {
+          if (await hasApprovedImage(image.documentId))
+            await update("attachment", image.documentId, { ownerKey: "erased" })
+          else {
+            await update("attachment", image.documentId, {
+              ownerKey: "erased",
+              retired: true,
+              altText: "",
+              caption: "",
+            })
+            tx.onCommit(() =>
+              deleteRetiredImage(image.documentId, image.storageKey)
+            )
+          }
+        }
         await query("outbox").deleteMany({ where: { actorKey: key } })
         await query("rate-window").deleteMany({ where: { actorKey: key } })
 

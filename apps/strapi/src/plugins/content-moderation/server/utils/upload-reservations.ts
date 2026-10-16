@@ -150,7 +150,7 @@ export async function reserveUpload(
     !Number.isSafeInteger(bytes) ||
     bytes < 1 ||
     bytes > 10 * 1024 * 1024 ||
-    !["article", "avatar", "submission"].includes(purpose)
+    !["article", "avatar", "submission", "cover"].includes(purpose)
   )
     throw new UploadReservationError(400, "invalid_upload_reservation")
   const day = utcDate(now)

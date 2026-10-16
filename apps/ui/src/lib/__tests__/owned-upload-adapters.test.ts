@@ -19,6 +19,10 @@ vi.mock("@/lib/session-profile", () => ({
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => "http://strapi.test" }))
 
 import { POST as avatar } from "@/app/api/profile/me/avatar/route"
+import {
+  POST as cover,
+  DELETE as clearCover,
+} from "@/app/api/profile/me/cover/route"
 import { POST as article } from "@/app/api/upload/route"
 
 const reservationId = "a1234567-1234-1234-1234-123456789abc"
@@ -69,7 +73,34 @@ const request = (field: "file" | "files") => {
   })
 }
 
-describe("avatar and legacy article upload adapters", () => {
+describe("avatar, cover and legacy article upload adapters", () => {
+  it("reserves cover quota and binds only the just-uploaded owned image to the signed-in profile", async () => {
+    expect((await cover(request("file"))).status).toBe(200)
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).purpose).toBe("cover")
+    const write = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("upsert-profile")
+    )!
+    expect(JSON.parse(write[1].body)).toEqual({
+      baUserId: "writer",
+      coverImageFileId: 7,
+    })
+    expect(mocks.invalidate).toHaveBeenCalledWith("writer")
+  })
+  it("removes a cover relation but never calls media deletion, and blocks cross-origin removal", async () => {
+    const req = (origin: string) =>
+      new Request("http://localhost/api/profile/me/cover", {
+        method: "DELETE",
+        headers: { origin },
+      })
+    expect((await clearCover(req("http://foreign.test"))).status).toBe(403)
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect((await clearCover(req("http://localhost"))).status).toBe(200)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({
+      baUserId: "writer",
+      coverImageFileId: null,
+    })
+  })
   it("reserves avatar quota and records ownership before updating the profile", async () => {
     const response = await avatar(request("file"))
     expect(response.status).toBe(200)

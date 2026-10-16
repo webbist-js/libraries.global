@@ -4,6 +4,9 @@ export type ArticlePlace = {
   slug?: string
   name?: string
   iso2?: string
+  continentDocumentId?: string
+  countryDocumentId?: string
+  regionDocumentId?: string
 }
 export type ArticleGeography = Record<
   "continents" | "countries" | "regions" | "areas",

@@ -9,6 +9,7 @@ vi.mock("@/lib/bridge-user-headers", () => ({
 
 import {
   loadArticleWriteContext,
+  loadArticleForEditor,
   toExistingArticle,
 } from "./article-editor-server"
 
@@ -45,6 +46,21 @@ describe("article editor context", () => {
     ])
   })
 
+  it("uses published language metadata without presenting unpublished localization relations as available", () => {
+    expect(
+      toExistingArticle(
+        "knowledge",
+        {
+          documentId: "article",
+          slug: "article",
+          locale: "en",
+          availableLocales: ["en", "es"],
+          localizations: [{ locale: "fr" }],
+        },
+        "en"
+      ).availableLocales
+    ).toEqual(["en", "es"])
+  })
   it("retains the current home section before historical section tags and pins a revision", () => {
     const article = toExistingArticle(
       "knowledge",
@@ -112,4 +128,70 @@ describe("article editor context", () => {
     ).toEqual({ tags: [], eventMentions: [] })
     expect(fetch).not.toHaveBeenCalled()
   })
+})
+
+it("opens an explicit published Spanish source and never silently substitutes a fallback locale", async () => {
+  const { fetchArticleForEditing } =
+    await import("@/lib/strapi-api/content/server")
+  const fetch = vi.mocked(fetchArticleForEditing)
+  fetch.mockResolvedValueOnce({
+    documentId: "story",
+    slug: "story",
+    locale: "es",
+    title: "Una historia",
+    publishedAt: "2026-10-16",
+    availableLocales: ["es"],
+  })
+  expect(
+    (
+      await loadArticleForEditor("journal", "story", "en", {
+        sourceLocale: "es",
+        targetLocale: "es",
+      })
+    )?.locale
+  ).toBe("es")
+  expect(fetch).toHaveBeenLastCalledWith("journal", "story", "es")
+  fetch.mockResolvedValueOnce({
+    documentId: "story",
+    slug: "story",
+    locale: "en",
+    title: "Fallback",
+    availableLocales: ["en"],
+  })
+  expect(
+    await loadArticleForEditor("journal", "story", "en", { sourceLocale: "es" })
+  ).toBeNull()
+})
+it("opens an existing requested content variant or keeps the original source when adding a missing translation", async () => {
+  const { fetchArticleForEditing } =
+    await import("@/lib/strapi-api/content/server")
+  const fetch = vi.mocked(fetchArticleForEditing)
+  fetch.mockResolvedValueOnce({
+    documentId: "story",
+    slug: "story",
+    locale: "es",
+    title: "Una historia",
+    availableLocales: ["es"],
+  })
+  expect(
+    (
+      await loadArticleForEditor("journal", "story", "en", {
+        targetLocale: "es",
+      })
+    )?.locale
+  ).toBe("es")
+  fetch.mockResolvedValueOnce(null).mockResolvedValueOnce({
+    documentId: "story",
+    slug: "story",
+    locale: "en",
+    title: "Source",
+    availableLocales: ["en"],
+  })
+  expect(
+    (
+      await loadArticleForEditor("knowledge", "story", "en", {
+        targetLocale: "fr",
+      })
+    )?.locale
+  ).toBe("en")
 })

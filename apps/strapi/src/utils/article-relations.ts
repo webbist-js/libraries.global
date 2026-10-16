@@ -417,10 +417,25 @@ export async function ownsJournalArticle(
   userId: string,
   target: any
 ): Promise<boolean> {
-  const article = await submissionArticle(strapi, {
-    ...target,
-    submissionType: "blog_submission",
+  const documentId =
+    typeof target?.targetDocumentId === "string"
+      ? target.targetDocumentId
+      : null
+  const slug = typeof target?.targetSlug === "string" ? target.targetSlug : null
+  if (!documentId && !slug) return false
+  const filters = documentId
+    ? { documentId: { $eq: documentId } }
+    : { slug: { $eq: slug } }
+  // Provenance belongs to the logical story, including stories only published outside the default locale.
+  const articles = await strapi.documents(ARTICLE.blog_submission).findMany({
+    status: "published",
+    locale: "*",
+    fields: ["slug"],
+    filters,
+    populate: { authorProfile: { fields: ["documentId"] } },
+    limit: 1,
   })
+  const article = articles[0]
 
   if (!article?.authorProfile?.documentId) return false
   const owner = await strapi.db
@@ -539,6 +554,28 @@ function publicPlace(raw: unknown): ArticlePlace | null {
         ...(typeof p.slug === "string" ? { slug: p.slug } : {}),
         ...(typeof p.name === "string" ? { name: p.name } : {}),
         ...(typeof p.iso2 === "string" ? { iso2: p.iso2 } : {}),
+        ...(typeof (
+          p.continent?.documentId ??
+          p.country?.continent?.documentId ??
+          p.region?.country?.continent?.documentId
+        ) === "string"
+          ? {
+              continentDocumentId:
+                p.continent?.documentId ??
+                p.country?.continent?.documentId ??
+                p.region?.country?.continent?.documentId,
+            }
+          : {}),
+        ...(typeof (p.country?.documentId ?? p.region?.country?.documentId) ===
+        "string"
+          ? {
+              countryDocumentId:
+                p.country?.documentId ?? p.region?.country?.documentId,
+            }
+          : {}),
+        ...(typeof p.region?.documentId === "string"
+          ? { regionDocumentId: p.region.documentId }
+          : {}),
       }
     : null
 }

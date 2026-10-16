@@ -9,10 +9,12 @@ export function AvatarUpload({
   currentUrl,
   initials,
   onUpload,
+  uploadEnabled = true,
 }: {
   currentUrl?: string | null
   initials: string
   onUpload: (url: string) => void
+  uploadEnabled?: boolean
 }) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(currentUrl ?? null)
@@ -57,6 +59,7 @@ export function AvatarUpload({
 
         return
       }
+      setPreview(json.url)
       onUpload(json.url)
       URL.revokeObjectURL(localUrl)
       toast.success("Avatar updated")
@@ -78,7 +81,7 @@ export function AvatarUpload({
         tabIndex={-1}
         aria-hidden="true"
         onClick={() => inputRef.current?.click()}
-        disabled={uploading}
+        disabled={uploading || !uploadEnabled}
         style={{
           width: "56px",
           height: "56px",
@@ -105,6 +108,8 @@ export function AvatarUpload({
           <img
             src={preview}
             alt=""
+            width={56}
+            height={56}
             style={{
               width: "100%",
               height: "100%",
@@ -121,9 +126,10 @@ export function AvatarUpload({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || !uploadEnabled}
           style={{
-            padding: "7px 16px",
+            padding: "10px 18px",
+            minHeight: "44px",
             borderRadius: "999px",
             border: `1px solid ${T.border.hi}`,
             background: T.bg.deep,
@@ -145,7 +151,9 @@ export function AvatarUpload({
             fontFamily: T.font.sans,
           }}
         >
-          JPG, PNG, WebP or GIF, up to 5 MB
+          {uploadEnabled
+            ? "JPG, PNG, WebP or GIF, up to 5 MB"
+            : "Photo uploads are not configured on this server."}
         </p>
       </div>
 

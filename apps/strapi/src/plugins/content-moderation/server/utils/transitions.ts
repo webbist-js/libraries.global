@@ -16,8 +16,10 @@ const ALLOWED: Record<ModerationStatus, readonly ModerationStatus[]> = {
 export function canTransition(
   from: ModerationStatus,
   to: ModerationStatus,
-  opts: { staffPublish?: boolean } = {}
+  opts: { staffPublish?: boolean; contributorWithdraw?: boolean } = {}
 ): boolean {
+  if (from === "pending" && to === "draft")
+    return opts.contributorWithdraw === true
   if (from === "draft" && to === "approved") return opts.staffPublish === true
 
   return ALLOWED[from]?.includes(to) ?? false

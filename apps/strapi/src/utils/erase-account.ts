@@ -114,18 +114,20 @@ export async function eraseAccount(
     })
     const [profile] = (await strapi.documents(PROFILE).findMany({
       filters: { baUserId: { $eq: baUserId } },
-      populate: { avatar: true },
+      populate: { avatar: true, coverImage: true },
       limit: 1,
     })) as {
       documentId: string
       id?: number
       contributorNumber?: number | null
       avatar?: { id: number } | null
+      coverImage?: { id: number } | null
     }[]
 
     if (profile) {
       // Captured before the update nulls it on the record.
       if (profile.avatar) filesToRemove.push(profile.avatar)
+      if (profile.coverImage) filesToRemove.push(profile.coverImage)
       await strapi.documents(PROFILE).update({
         documentId: profile.documentId,
         data: {
@@ -146,6 +148,8 @@ export async function eraseAccount(
           mastodon: null,
           linkedin: null,
           avatar: null,
+          coverImage: null,
+          profileBackground: "violet",
           profileVisibility: "private",
           isVerifiedLibrarian: false,
           contributorRole: "reader",

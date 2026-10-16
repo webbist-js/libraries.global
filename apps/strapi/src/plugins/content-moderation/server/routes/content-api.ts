@@ -59,6 +59,12 @@ export default [
     handler: "submission.findMine",
     config: { auth: false, policies: [] },
   },
+  {
+    method: "POST",
+    path: "/submissions/:id/withdraw",
+    handler: "submission.withdraw",
+    config: { auth: false, policies: [] },
+  },
   // Bridge secret + X-Ba-User-Id (401 otherwise).
   {
     method: "GET",

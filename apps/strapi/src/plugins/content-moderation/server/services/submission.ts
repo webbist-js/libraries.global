@@ -1903,6 +1903,63 @@ export default ({ strapi }: { strapi: any }) => ({
     return { data: updated }
   },
 
+  /** A writer may reopen their own pending article; an accepted decision always wins a race. */
+  async withdrawArticle(
+    documentId: string,
+    userId: string,
+    baseUpdatedAt: string
+  ) {
+    const uid = "plugin::content-moderation.submission"
+    const existing = await strapi.documents(uid).findOne({ documentId })
+    // A missing or foreign record has the same response: no private existence oracle.
+    if (!existing || existing.submittedByUserId !== userId)
+      return { error: "not_found" as const }
+    if (!["wiki_edit", "blog_submission"].includes(existing.submissionType))
+      return { error: "invalid" as const }
+    if (existing.status !== "pending") return { error: "conflict" as const }
+    const baseTime = Date.parse(baseUpdatedAt)
+    if (
+      !Number.isFinite(baseTime) ||
+      baseTime !== new Date(existing.updatedAt).getTime()
+    )
+      return { error: "conflict" as const }
+    const count = await strapi.db.transaction(async () => {
+      const result = await strapi.db.query(uid).updateMany({
+        where: {
+          documentId,
+          submittedByUserId: userId,
+          status: "pending",
+          updatedAt: existing.updatedAt,
+          ...revisionWhere(existing),
+          payloadHash: existing.payloadHash ?? { $null: true },
+        },
+        data: {
+          status: "draft",
+          payloadHash: null,
+          draftRevision: (existing.draftRevision ?? 0) + 1,
+          reviewedByUserId: null,
+          reviewedAt: null,
+          updatedAt: new Date(),
+        },
+      })
+      if (result.count === 1)
+        await writeReviewEvent(strapi, {
+          submissionDocumentId: documentId,
+          fromStatus: "pending",
+          toStatus: "draft",
+          reviewerId: `ba:${userId}`,
+          reviewerKind: "contributor",
+          note: "Writer withdrew their pending article to edit it privately.",
+        })
+
+      return result.count
+    })
+    if (count !== 1) return { error: "conflict" as const }
+    const data = await strapi.documents(uid).findOne({ documentId })
+
+    return { data: toContributor(await articleDraftMedia(strapi, data)) }
+  },
+
   async saveDraft(
     documentId: string,
     userId: string,

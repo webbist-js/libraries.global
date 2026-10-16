@@ -80,6 +80,7 @@ export async function generateMetadata({
       query.lang ||
       query.filters ||
       query.allOrigins ||
+      query.q ||
       emptyPage
         ? "noindex-follow"
         : "index",

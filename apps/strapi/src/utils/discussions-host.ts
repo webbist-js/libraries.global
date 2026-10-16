@@ -18,6 +18,8 @@ const ACTIONS = [
   "editOwn",
   "report",
   "subscribe",
+  "react",
+  "upload",
 ] as const
 
 async function profileOf(strapi: any, userId: string) {
@@ -56,7 +58,19 @@ export async function discussionActor(
           },
         }
       : {}),
-    capabilities: [...ACTIONS, ...(moderator ? ["moderate" as const] : [])],
+    capabilities: [
+      ...ACTIONS,
+      ...(moderator ? ["moderate" as const] : []),
+      ...(grants.some(
+        (grant) =>
+          grant.role === "editorial_board" ||
+          (grant.role === "moderator" &&
+            ["all", "discussions"].includes(grant.queue) &&
+            grant.locale === null)
+      )
+        ? ["sanction" as const]
+        : []),
+    ],
   }
 }
 
@@ -64,11 +78,36 @@ export async function publicDiscussionAuthor(
   key: string,
   { strapi }: { strapi: any }
 ) {
-  const actor = key.startsWith(PREFIX)
-    ? await discussionActor(strapi, key.slice(PREFIX.length))
+  const profile = key.startsWith(PREFIX)
+    ? await profileOf(strapi, key.slice(PREFIX.length))
     : null
+  const visible = publicArticleProfile(profile)
+  const username =
+    typeof visible?.username === "string" ? visible.username : null
+  const avatar = visible?.avatar as
+    | { url?: string; alternativeText?: string }
+    | undefined
 
-  return { name: actor?.name ?? "Community member", ...actor?.profile }
+  return {
+    name: username ? `@${username}` : "Community member",
+    ...(username
+      ? { slug: username, url: `/profile/${encodeURIComponent(username)}` }
+      : {}),
+    ...(avatar?.url
+      ? {
+          avatar: {
+            url: avatar.url,
+            alternativeText: avatar.alternativeText ?? "",
+          },
+        }
+      : {}),
+    ...(visible &&
+    ["violet", "coral", "mint", "amber", "blue", "rose"].includes(
+      profile.profileBackground
+    )
+      ? { background: profile.profileBackground }
+      : {}),
+  }
 }
 
 const articleTarget: TargetResolver = async (target, { strapi }) => {
@@ -112,6 +151,10 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
     return typeof id === "string" ? discussionActor(strapi, id) : null
   },
   publicAuthor: publicDiscussionAuthor,
+  profanityTerms: {
+    en: ["fuck", "shit", "cunt", "motherfucker"],
+    es: ["mierda", "joder", "puta"],
+  },
   authorize: async ({
     strapi,
     actor,
@@ -122,7 +165,7 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
   }) => {
     if (actor?.admin) return true
     if (
-      action !== "moderate" &&
+      !["moderate", "sanction"].includes(action) &&
       subject.visibility !== "private" &&
       !(subject.createPolicy === "moderators" && action === "createThread")
     )
@@ -136,7 +179,8 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
         (grant.role === "moderator" &&
           ["all", "discussions"].includes(grant.queue) &&
           (grant.locale === null ||
-            grant.locale === (recordLanguage ?? thread?.language)))
+            (action !== "sanction" &&
+              grant.locale === (recordLanguage ?? thread?.language))))
     )
   },
   notificationActor: async (key, { strapi }) =>

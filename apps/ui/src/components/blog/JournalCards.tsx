@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import type { JournalCardData } from "@/lib/journal-landing"
+import { languageName } from "@/lib/locale-fallback"
 import { Link, routing } from "@/lib/navigation"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
@@ -65,7 +66,7 @@ export function articleMeta(
     withAuthor ? article.author : null,
     formatDate(article.publishedAt ?? article.updatedAt, "short", locale),
     readingTime,
-    article.locale ? article.locale.toUpperCase() : null,
+    article.locale ? languageName(article.locale, [], locale) : null,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -162,6 +163,7 @@ export function JournalFeatureCard({
   readonly locale: Locale
 }) {
   const t = useTranslations("editorial")
+  const visual = sectionVisual(article.section)
   const imgUrl = article.heroImage?.url
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
@@ -188,17 +190,17 @@ export function JournalFeatureCard({
         ) : (
           <div
             className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed"
-            style={{ background: T.bg.surface, borderColor: T.border.hi }}
+            style={{ background: visual.bg, borderColor: visual.fg }}
           >
             <Icon
               aria-hidden="true"
               height={26}
-              icon="mdi:image-outline"
+              icon={visual.icon}
               style={{ color: T.ink.faint }}
               width={26}
             />
             <span className="text-[13px]" style={{ color: T.ink.low }}>
-              {t("noCover")}
+              {article.section?.name ?? article.place ?? ""}
             </span>
           </div>
         )}

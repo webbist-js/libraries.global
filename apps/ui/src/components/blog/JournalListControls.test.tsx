@@ -27,8 +27,8 @@ vi.mock("next-intl", async (original) => {
 })
 afterEach(cleanup)
 
-describe("Journal content language selection", () => {
-  it("shows All languages as the actual default for a Spanish-only collection", () => {
+describe("Journal list presentation", () => {
+  it("keeps sorting separate from the single shared filter panel", () => {
     render(
       <JournalListControls
         query={DEFAULT_JOURNAL_QUERY}
@@ -36,23 +36,11 @@ describe("Journal content language selection", () => {
         languages={[{ code: "es", name: "Spanish" }]}
       />
     )
+    expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull()
     expect(
-      (screen.getByRole("combobox", { name: "Language" }) as HTMLSelectElement)
+      (screen.getByRole("combobox", { name: "Sort" }) as HTMLSelectElement)
         .value
-    ).toBe("all")
-  })
-  it("retains an explicit zero-result English language instead of visually selecting All languages", () => {
-    render(
-      <JournalListControls
-        query={{ ...DEFAULT_JOURNAL_QUERY, lang: "en" }}
-        lang="en"
-        languages={[{ code: "es", name: "Spanish" }]}
-      />
-    )
-    const select = screen.getByRole("combobox", {
-      name: "Language",
-    }) as HTMLSelectElement
-    expect(select.value).toBe("en")
-    expect(screen.getByRole("option", { name: "English" })).toBeTruthy()
+    ).toBe("newest")
+    expect(screen.getByRole("group", { name: "Layout" })).toBeTruthy()
   })
 })

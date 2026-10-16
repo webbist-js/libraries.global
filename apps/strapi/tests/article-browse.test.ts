@@ -6,8 +6,11 @@ import {
   publicArticleBrowseItem,
 } from "../src/utils/article-browse"
 
+import areaSchema from "../src/api/area/content-types/area/schema.json"
 import blogArticleSchema from "../src/api/blog-article/content-types/blog-article/schema.json"
 import blogSectionSchema from "../src/api/blog-section/content-types/blog-section/schema.json"
+import countrySchema from "../src/api/country/content-types/country/schema.json"
+import regionSchema from "../src/api/region/content-types/region/schema.json"
 import wikiArticleSchema from "../src/api/wiki-article/content-types/wiki-article/schema.json"
 import wikiSectionSchema from "../src/api/wiki-section/content-types/wiki-section/schema.json"
 
@@ -190,7 +193,36 @@ describe("CMS browse adapter", () => {
         }
       )
       const result = await browseArticles(
-        { documents: () => ({ findMany }) },
+        {
+          documents: (uid: string) =>
+            uid ===
+            `api::${kind === "blog" ? "blog-article.blog-article" : "wiki-article.wiki-article"}`
+              ? { findMany }
+              : {
+                  findMany: async (options: {
+                    fields: string[]
+                    populate: Record<string, unknown>
+                    status: string
+                  }) => {
+                    const schema = uid.includes("country.country")
+                      ? countrySchema
+                      : uid.includes("region.region")
+                        ? regionSchema
+                        : areaSchema
+                    expect(options.status).toBe("published")
+                    for (const field of [
+                      ...options.fields,
+                      ...Object.keys(options.populate),
+                    ])
+                      expect(
+                        Object.hasOwn(schema.attributes, field),
+                        `Invalid ${uid} key ${field}`
+                      ).toBe(true)
+
+                    return []
+                  },
+                },
+        },
         kind,
         {}
       )
@@ -199,9 +231,15 @@ describe("CMS browse adapter", () => {
     }
   )
 
-  it("uses one published all-locale read with no body and ignores injected CMS options", async () => {
+  it("uses one lean published article read plus bounded public ancestry and ignores injected CMS options", async () => {
     const findMany = vi.fn().mockResolvedValue([row])
-    const strapi = { documents: vi.fn(() => ({ findMany })) }
+    const ancestry = vi.fn().mockResolvedValue([])
+    const strapi = {
+      documents: vi.fn((uid: string) => ({
+        findMany:
+          uid === "api::blog-article.blog-article" ? findMany : ancestry,
+      })),
+    }
     const result = await browseArticles(strapi, "blog", {
       lang: "es",
       country: "colombia",
@@ -213,6 +251,13 @@ describe("CMS browse adapter", () => {
     expect(result.total).toBe(1)
     expect(result.items[0]?.locale).toBe("es")
     expect(findMany).toHaveBeenCalledTimes(1)
+    expect(ancestry).toHaveBeenCalledTimes(1)
+    expect(ancestry.mock.calls[0]?.[0]).toMatchObject({
+      status: "published",
+      locale: "*",
+      limit: 500,
+      filters: { documentId: { $in: ["co-id"] } },
+    })
     expect(findMany.mock.calls[0]?.[0]).toMatchObject({
       locale: "*",
       status: "published",

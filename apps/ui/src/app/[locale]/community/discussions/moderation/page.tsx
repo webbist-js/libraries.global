@@ -1,24 +1,16 @@
-import { getTranslations } from "next-intl/server"
+import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 
-import { DiscussionModeration } from "@/components/discussions/DiscussionModeration"
-import { Container } from "@/components/elementary/Container"
-import { privateMetadata } from "@/lib/seo/metadata"
+import { redirect } from "@/lib/navigation"
 
-import { CommunitySectionHeader } from "../../_components/CommunitySectionHeader"
-
-export const metadata = privateMetadata("Discussion moderation")
-export default async function DiscussionModerationPage() {
-  const t = await getTranslations("discussions")
-
-  return (
-    <>
-      <CommunitySectionHeader
-        section={t("moderation")}
-        title={t("moderation")}
-      />
-      <Container className="py-10">
-        <DiscussionModeration />
-      </Container>
-    </>
-  )
+/** Retain old bookmarks while moderation lives in the contribution workflow. */
+export default async function DiscussionModerationRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  redirect({
+    href: "/contribute/moderation/discussions",
+    locale: isSupportedLocale(locale) ? locale : DEFAULT_LOCALE,
+  })
 }

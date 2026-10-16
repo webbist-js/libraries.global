@@ -43,6 +43,7 @@ export async function generateMetadata({
     robots:
       Object.keys(query.filters).length ||
       query.page > 1 ||
+      query.q ||
       search.lang === "all"
         ? "noindex-follow"
         : "index",
@@ -79,6 +80,8 @@ export default async function DocsRoute(props: {
       quickStartCards={landingRes?.data?.quickStartCards}
       sections={toDocsSections(sectionsRes.data)}
       discovery={discovery}
+      queryActive={Boolean(query.q || Object.keys(query.filters).length)}
+      searchQuery={query.q ?? ""}
     />
   )
 }

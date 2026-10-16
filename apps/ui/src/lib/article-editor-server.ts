@@ -130,16 +130,13 @@ export function toExistingArticle(
     slug: article.slug,
     locale: article.locale ?? locale,
     title: article.title ?? "",
+    publishedAt: article.publishedAt ?? null,
+    updatedAt: article.updatedAt ?? null,
     summary: article.summary ?? "",
     body: Array.isArray(article.body) ? article.body : [],
     sections,
     tags,
-    availableLocales: [
-      article.locale ?? locale,
-      ...(article.localizations ?? []).flatMap((l) =>
-        l.locale ? [l.locale] : []
-      ),
-    ],
+    availableLocales: article.availableLocales ?? [article.locale ?? locale],
   }
 }
 
@@ -147,8 +144,29 @@ export function toExistingArticle(
 export async function loadArticleForEditor(
   kind: ArticleKind,
   slug: string,
-  locale: Locale
+  locale: Locale,
+  opening: { targetLocale?: string; sourceLocale?: string } = {}
 ): Promise<ExistingArticle | null> {
+  if (opening.sourceLocale) {
+    const source = await fetchArticleForEditing(
+      kind,
+      slug,
+      opening.sourceLocale as Locale
+    )
+
+    return source && source.locale === opening.sourceLocale
+      ? toExistingArticle(kind, source, opening.sourceLocale)
+      : null
+  }
+  if (opening.targetLocale && opening.targetLocale !== locale) {
+    const target = await fetchArticleForEditing(
+      kind,
+      slug,
+      opening.targetLocale as Locale
+    )
+    if (target && target.locale === opening.targetLocale)
+      return toExistingArticle(kind, target, opening.targetLocale)
+  }
   const article = await fetchArticleForEditing(kind, slug, locale)
 
   return article ? toExistingArticle(kind, article, locale) : null

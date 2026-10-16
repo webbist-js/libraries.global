@@ -20,6 +20,9 @@ export type ArticleFacetValue = {
   count: number
   slug?: string
   code?: string
+  continentDocumentId?: string
+  countryDocumentId?: string
+  regionDocumentId?: string
 }
 export type ArticleBrowseQuery = {
   filters: Partial<Record<ArticleFacetKey, string[]>>
@@ -27,6 +30,7 @@ export type ArticleBrowseQuery = {
   page: number
   pageSize: number
   documentIds?: string[]
+  q?: string
 }
 export type ArticleBrowseItem = {
   documentId: string
@@ -116,7 +120,11 @@ export function parseArticleBrowseQuery(
 ): ArticleBrowseQuery {
   const filters: ArticleBrowseQuery["filters"] = {}
   for (const key of ARTICLE_FACETS) {
-    let selected = values(input[ARTICLE_QUERY_KEYS[key]])
+    let selected = values(
+      key === "origins"
+        ? (input.collection ?? input.origin)
+        : input[ARTICLE_QUERY_KEYS[key]]
+    )
     if (key === "languages")
       selected = selected.filter(
         (value) => value !== "all" && LANGUAGE.test(value)
@@ -139,6 +147,9 @@ export function parseArticleBrowseQuery(
     page: boundedInteger(input.page, 1, 10_000),
     pageSize: boundedInteger(input.pageSize, 9, 50),
     ...(documentIds.length ? { documentIds } : {}),
+    ...(typeof input.q === "string" && input.q.trim()
+      ? { q: input.q.trim().replaceAll(/\s+/gu, " ").slice(0, 120) }
+      : {}),
   }
 }
 
@@ -152,6 +163,7 @@ export function articleBrowseSearchParams(query: ArticleBrowseQuery): string {
     const values = query.filters[key]
     if (values?.length) params.set(ARTICLE_QUERY_KEYS[key], values.join(","))
   }
+  if (query.q) params.set("q", query.q)
   if (query.documentIds?.length)
     params.set("documentId", query.documentIds.join(","))
 
@@ -182,6 +194,30 @@ export function articleMatches(
 ): boolean {
   if (query.documentIds?.length && !query.documentIds.includes(item.documentId))
     return false
+
+  if (query.q) {
+    const normalized = (value: string) =>
+      value.normalize("NFKD").replaceAll(/\p{M}/gu, "").toLowerCase()
+    const text = normalized(
+      [
+        item.title,
+        item.summary,
+        item.author,
+        item.place,
+        ...Object.values(item.facets).flatMap((facets) =>
+          (facets ?? []).map((facet) => facet.label)
+        ),
+      ]
+        .filter(Boolean)
+        .join(" ")
+    )
+    if (
+      !normalized(query.q)
+        .split(" ")
+        .every((word) => text.includes(word))
+    )
+      return false
+  }
 
   return ARTICLE_FACETS.every((key) => {
     const selected = query.filters[key]

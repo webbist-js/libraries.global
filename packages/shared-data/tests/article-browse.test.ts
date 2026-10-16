@@ -41,6 +41,27 @@ function article(
 }
 
 describe("article discovery predicates", () => {
+  it("searches bounded public text with accents and keeps filters/counts coherent", () => {
+    const stories = [
+      article("one", {
+        title: "Bibliothèque de Bogotá",
+        summary: "A reading workshop",
+      }),
+      article("two", { title: "Unrelated private keyword" }),
+    ]
+    const query = parseArticleBrowseQuery({
+      q: "  bibliotheque   BOGOTA  ",
+      collection: "community",
+      lang: "es",
+    })
+    expect(query.q).toBe("bibliotheque BOGOTA")
+    const result = aggregateArticleBrowse(stories, query)
+    expect(result.items.map((item) => item.documentId)).toEqual(["one"])
+    expect(result.total).toBe(1)
+    expect(result.facets.countries[0]?.count).toBe(1)
+    expect(parseArticleBrowseQuery({ q: "x".repeat(500) }).q).toHaveLength(120)
+  })
+
   it("chooses one preferred-language variant per editorial document without filtering the multilingual collection", () => {
     const official = (locale: string) =>
       article("official", {

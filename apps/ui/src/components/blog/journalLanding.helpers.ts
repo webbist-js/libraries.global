@@ -23,6 +23,7 @@ export type JournalQuery = {
   view: JournalView
   /** Requested article language; null means the default choice. */
   lang: string | null
+  q?: string
   filters?: ArticleBrowseQuery["filters"]
   /** Explicit all-origin selection overrides the community default. */
   allOrigins?: boolean
@@ -67,7 +68,12 @@ export function parseJournalQuery(params: SearchParams): JournalQuery {
     view: view === "list" ? "list" : "grid",
     lang: lang && (LOCALE.test(lang) || lang === "all") ? lang : null,
     ...(Object.keys(filters).length ? { filters } : {}),
-    ...(first(params.origin) === "all" ? { allOrigins: true } : {}),
+    ...(parseArticleBrowseQuery(params).q
+      ? { q: parseArticleBrowseQuery(params).q }
+      : {}),
+    ...(first(params.collection ?? params.origin) === "all"
+      ? { allOrigins: true }
+      : {}),
     ...(first(params.country) === "all" ? { worldwide: true } : {}),
   }
 }
@@ -82,6 +88,7 @@ export function journalHref(
   hash?: string
 ): string {
   const resetsPage =
+    ("q" in changes && changes.q !== base.q) ||
     ("section" in changes && changes.section !== base.section) ||
     ("sort" in changes && changes.sort !== base.sort) ||
     ("lang" in changes && changes.lang !== base.lang) ||
@@ -99,6 +106,7 @@ export function journalHref(
   }
 
   const params = new URLSearchParams()
+  if (next.q) params.set("q", next.q)
   if (next.section) params.set("section", next.section)
   if (next.sort !== "newest") params.set("sort", next.sort)
   if (next.page > 1) params.set("page", String(next.page))
@@ -141,6 +149,7 @@ export function journalBrowseParams(
       sort: query.sort,
       page: query.page,
       pageSize: JOURNAL_PAGE_SIZE,
+      ...(query.q ? { q: query.q } : {}),
     })
   )
   params.set("preferredLocale", routeLocale)

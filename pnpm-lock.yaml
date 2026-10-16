@@ -547,6 +547,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      strapi-plugin-discussions:
+        specifier: workspace:*
+        version: link:../../packages/strapi-plugin-discussions
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -777,6 +780,9 @@ importers:
       react-dom:
         specifier: ^18.0.0
         version: 18.3.1(react@18.3.1)
+      sharp:
+        specifier: 0.35.4
+        version: 0.35.4(@types/node@22.19.11)
     devDependencies:
       '@strapi/sdk-plugin':
         specifier: 5.4.0

@@ -8,6 +8,8 @@ const memberActions = [
   "editOwn",
   "report",
   "subscribe",
+  "react",
+  "upload",
 ] as const
 
 export async function resolveActor(
@@ -25,7 +27,7 @@ export async function resolveActor(
       key: text(actor.key, "identity key", 180),
       name: text(actor.name, "identity name", 120),
       capabilities: actor.capabilities?.filter((action) =>
-        [...memberActions, "moderate"].includes(action as any)
+        [...memberActions, "moderate", "sanction"].includes(action as any)
       ) ?? [...memberActions],
       profile: actor.profile
         ? {
@@ -59,6 +61,9 @@ export async function resolveActor(
       ...memberActions,
       ...(config.moderatorRoleIds.includes(user.role?.id)
         ? ["moderate" as const]
+        : []),
+      ...(config.sanctionRoleIds.includes(user.role?.id)
+        ? ["sanction" as const]
         : []),
     ],
   }

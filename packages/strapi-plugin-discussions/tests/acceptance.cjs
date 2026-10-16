@@ -3,6 +3,7 @@ const assert = require("node:assert/strict")
 const cp = require("node:child_process")
 const crypto = require("node:crypto")
 const fs = require("node:fs")
+const { Readable } = require("node:stream")
 const { createRequire } = require("node:module")
 const os = require("node:os")
 const path = require("node:path")
@@ -58,6 +59,7 @@ function prepare(mode, database) {
     )
   for (const pkg of [
     "pg",
+    "sharp",
     "react",
     "react-dom",
     "react-router-dom",
@@ -93,16 +95,16 @@ function prepare(mode, database) {
   write(
     dir,
     "config/middlewares.js",
-    `module.exports=['strapi::logger','strapi::errors','strapi::security','strapi::cors','strapi::poweredBy','strapi::query','strapi::body','strapi::session','strapi::favicon','strapi::public']`
+    `module.exports=['strapi::logger','strapi::errors','strapi::security','strapi::cors','strapi::poweredBy','strapi::query',{name:'strapi::body',config:{formidable:{uploadDir:${JSON.stringify(path.join(dir, "formidable-temp"))},maxFileSize:10*1024*1024}}},'strapi::session','strapi::favicon','strapi::public']`
   )
   let custom =
     mode === "custom"
-      ? `identity:async(ctx,{strapi})=>{const p=await strapi.plugin('users-permissions').service('jwt').getToken(ctx);if(!p?.id)return null;const u=await strapi.db.query('plugin::users-permissions.user').findOne({where:{id:p.id},populate:['role']});if(!u||u.blocked||!u.confirmed)return null;return {key:'custom:'+u.id,name:u.username,capabilities:['read','createThread','reply','editOwn','report','subscribe',...(u.role.type==='discussions-moderator'?['moderate']:[])]}},publicAuthor:async(key,{strapi})=>{if(!/^custom:[0-9]+$/.test(key))return {name:'Community member'};const u=await strapi.db.query('plugin::users-permissions.user').findOne({where:{id:Number(key.split(':')[1])}});return {name:!u||u.blocked?'Community member':u.username}},`
+      ? `identity:async(ctx,{strapi})=>{const p=await strapi.plugin('users-permissions').service('jwt').getToken(ctx);if(!p?.id)return null;const u=await strapi.db.query('plugin::users-permissions.user').findOne({where:{id:p.id},populate:['role']});if(!u||u.blocked||!u.confirmed)return null;return {key:'custom:'+u.id,name:u.username,capabilities:['read','createThread','reply','editOwn','report','subscribe','react','upload',...(u.role.type==='discussions-moderator'?['moderate','sanction']:[])]}},publicAuthor:async(key,{strapi})=>{if(!/^custom:[0-9]+$/.test(key))return {name:'Community member'};const u=await strapi.db.query('plugin::users-permissions.user').findOne({where:{id:Number(key.split(':')[1])}});return {name:!u||u.blocked?'Community member':u.username}},`
       : ""
   write(
     dir,
     "config/plugins.js",
-    `module.exports={discussions:{enabled:true,resolve:'./node_modules/strapi-plugin-discussions',config:{${custom}moderatorRoleIds:[],targets:{'api::article.article':async(target,{strapi})=>{const a=await strapi.documents('api::article.article').findOne({documentId:target.documentId,status:'published',fields:['title','slug']});return a?{title:a.title,url:'/articles/'+encodeURIComponent(a.slug)}:null}}}},'users-permissions':{config:{jwtSecret:'${crypto.randomBytes(24).toString("hex")}'}}}`
+    `module.exports={discussions:{enabled:true,resolve:'./node_modules/strapi-plugin-discussions',config:{${custom}moderatorRoleIds:[],maxPendingPerActor:2,targets:{'api::article.article':async(target,{strapi})=>{const a=await strapi.documents('api::article.article').findOne({documentId:target.documentId,status:'published',fields:['title','slug']});return a?{title:a.title,url:'/articles/'+encodeURIComponent(a.slug)}:null}}}},'users-permissions':{config:{jwtSecret:'${crypto.randomBytes(24).toString("hex")}'}}}`
   )
   write(dir, "src/index.js", "module.exports={register(){},bootstrap(){}}")
   write(dir, "src/api/article/content-types/article/schema.json", {
@@ -120,6 +122,7 @@ function prepare(mode, database) {
     },
   })
   fs.mkdirSync(path.join(dir, "public/uploads"), { recursive: true })
+  fs.mkdirSync(path.join(dir, "formidable-temp"), { recursive: true })
 
   return dir
 }
@@ -172,6 +175,9 @@ async function host(mode, dir) {
     strapi.config
       .get("plugin::discussions")
       .moderatorRoleIds.push(moderatorRole.id)
+    strapi.config
+      .get("plugin::discussions")
+      .sanctionRoleIds.push(moderatorRole.id)
     const member = await strapi.db
       .query("plugin::users-permissions.user")
       .create({
@@ -299,6 +305,13 @@ async function host(mode, dir) {
     )
     assert.equal(first.status, 200, JSON.stringify(first.data))
     assert.equal(second.status, 200, JSON.stringify(second.data))
+    const overQuota = await request(
+      "POST",
+      `/api/discussions/records/thread/${thread.id}/revisions`,
+      memberToken,
+      { body: "Admission denied", baseVersion: 1 }
+    )
+    assert.equal(overQuota.status, 429)
     const competing = await Promise.all(
       [first, second].map((edit) =>
         request(
@@ -367,6 +380,328 @@ async function host(mode, dir) {
       ).status,
       200
     )
+    // New interfaces run against actual HTTP, private file storage and PostgreSQL locks.
+    assert.equal(
+      (
+        await request(
+          "GET",
+          "/api/discussions/moderation/revisions",
+          memberToken
+        )
+      ).status,
+      403
+    )
+    assert.equal(
+      (await request("GET", "/api/discussions/moderation/reports", memberToken))
+        .status,
+      403
+    )
+    const reaction = await request(
+      "PUT",
+      `/api/discussions/records/thread/${thread.id}/reaction`,
+      memberToken,
+      { reaction: "love" }
+    )
+    assert.equal(reaction.status, 200, JSON.stringify(reaction.data))
+    assert.deepEqual(reaction.data.reactions, { like: 0, love: 1 })
+    await request(
+      "PUT",
+      `/api/discussions/threads/${thread.id}/subscription`,
+      memberToken,
+      { enabled: true }
+    )
+    const following = await request(
+      "GET",
+      "/api/discussions/threads?view=following&q=portable",
+      memberToken
+    )
+    assert.equal(following.status, 200)
+    assert.equal(following.data.data[0].id, thread.id)
+    assert.equal(following.data.data[0].subscribed, true)
+    assert.equal(following.data.data[0].replyCount, 1)
+    assert.equal(following.data.data[0].myReaction, "love")
+    const quote = await request(
+      "POST",
+      `/api/discussions/threads/${thread.id}/replies`,
+      memberToken,
+      {
+        body: "A referenced response",
+        quote: { kind: "reply", id: reply.data.reply.id, version: 1 },
+      }
+    )
+    assert.equal(quote.status, 200, JSON.stringify(quote.data))
+    await request(
+      "PUT",
+      `/api/discussions/moderation/revisions/${quote.data.revision.id}`,
+      moderatorToken,
+      { decision: "approve", baseVersion: 0 }
+    )
+    const sourceEdit = await request(
+      "POST",
+      `/api/discussions/records/reply/${reply.data.reply.id}/revisions`,
+      memberToken,
+      { body: "Revised source", baseVersion: 1 }
+    )
+    await request(
+      "PUT",
+      `/api/discussions/moderation/revisions/${sourceEdit.data.id}`,
+      moderatorToken,
+      { decision: "approve", baseVersion: 1 }
+    )
+    const quotedRows = await request(
+      "GET",
+      `/api/discussions/threads/${thread.id}/replies`
+    )
+    assert.equal(
+      quotedRows.data.data.find((row) => row.id === quote.data.reply.id).quote
+        .available,
+      false
+    )
+    assert(!JSON.stringify(quotedRows.data).includes("Pending reply"))
+    const sharp = hostRequire("sharp")
+    const bytes = await sharp({
+      create: { width: 10, height: 10, channels: 3, background: "red" },
+    })
+      .png()
+      .toBuffer()
+    const upload = new FormData()
+    upload.append(
+      "file",
+      new Blob([bytes], { type: "image/png" }),
+      "fixture.png"
+    )
+    upload.append("subjectId", subject.documentId)
+    upload.append("altText", "Library reading room")
+    const unauthenticatedUpload = await fetch(
+      base + "/api/discussions/attachments",
+      { method: "POST", body: upload }
+    )
+    httpRequests++
+    assert.equal(unauthenticatedUpload.status, 401)
+    assert.equal(
+      fs.readdirSync(path.join(dir, "formidable-temp")).length,
+      0,
+      "Anonymous raw image reached Formidable"
+    )
+    const declaredOversize = await fetch(
+      base + "/api/discussions/attachments",
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${memberToken}`,
+          "content-type": "multipart/form-data; boundary=test",
+        },
+        body: Buffer.alloc(4 * 1024 * 1024 + 16385),
+      }
+    )
+    httpRequests++
+    assert.equal(declaredOversize.status, 413)
+    const chunkedOversize = await fetch(base + "/api/discussions/attachments", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${memberToken}`,
+        "content-type": "multipart/form-data; boundary=test",
+      },
+      body: Readable.from([Buffer.alloc(4 * 1024 * 1024 + 16385)]),
+      duplex: "half",
+    })
+    httpRequests++
+    assert.equal(chunkedOversize.status, 413)
+    assert.equal(
+      fs.readdirSync(path.join(dir, "formidable-temp")).length,
+      0,
+      "Chunked private image reached Formidable"
+    )
+    const stagedResponse = await fetch(base + "/api/discussions/attachments", {
+      method: "POST",
+      headers: { authorization: `Bearer ${memberToken}` },
+      body: upload,
+    })
+    httpRequests++
+    const staged = await stagedResponse.json()
+    assert.equal(stagedResponse.status, 200, JSON.stringify(staged))
+    assert.equal(staged.mime, "image/webp")
+    assert.equal(
+      fs.readdirSync(path.join(dir, "formidable-temp")).length,
+      0,
+      "Accepted private image reached Formidable"
+    )
+    assert.equal(
+      (await fetch(base + `/api/discussions/attachments/${staged.id}`)).status,
+      404
+    )
+    httpRequests++
+    const svg = new FormData()
+    svg.append(
+      "file",
+      new Blob(
+        ['<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>'],
+        { type: "image/svg+xml" }
+      ),
+      "wrong.png"
+    )
+    svg.append("subjectId", subject.documentId)
+    svg.append("altText", "Invalid SVG")
+    const svgResponse = await fetch(base + "/api/discussions/attachments", {
+      method: "POST",
+      headers: { authorization: `Bearer ${memberToken}` },
+      body: svg,
+    })
+    httpRequests++
+    assert.equal(svgResponse.status, 400)
+    assert.equal(fs.readdirSync(path.join(dir, "formidable-temp")).length, 0)
+    const pictureEdit = await request(
+      "POST",
+      `/api/discussions/records/thread/${thread.id}/revisions`,
+      memberToken,
+      {
+        body: "Corrected after report",
+        baseVersion: 3,
+        attachments: [{ id: staged.id }],
+      }
+    )
+    assert.equal(pictureEdit.status, 200, JSON.stringify(pictureEdit.data))
+    const ownerPending = await request(
+      "GET",
+      `/api/discussions/my/records?recordId=${thread.id}`,
+      memberToken
+    )
+    assert.equal(
+      ownerPending.data.data[0].pendingRevision.attachments[0].id,
+      staged.id
+    )
+    const privateImage = await fetch(
+      base + `/api/discussions/attachments/${staged.id}`,
+      { headers: { authorization: `Bearer ${moderatorToken}` } }
+    )
+    httpRequests++
+    assert.equal(privateImage.status, 200)
+    assert.equal(privateImage.headers.get("content-type"), "image/webp")
+    assert.equal(privateImage.headers.get("cache-control"), "private, no-store")
+    await strapi.db
+      .connection(
+        strapi.db.metadata.get("plugin::discussions.attachment").tableName
+      )
+      .where("document_id", staged.id)
+      .update({ created_at: "2000-01-01T00:00:00.000Z" })
+    const mediaRace = await Promise.all([
+      request(
+        "PUT",
+        `/api/discussions/moderation/revisions/${pictureEdit.data.id}`,
+        moderatorToken,
+        { decision: "approve", baseVersion: 3 }
+      ),
+      service.cleanupImages(),
+    ])
+    assert.equal(mediaRace[0].status, 200)
+    assert.equal(
+      (
+        await strapi.db
+          .query("plugin::discussions.attachment")
+          .findOne({ where: { documentId: staged.id } })
+      ).retired,
+      false
+    )
+    const publicImage = await fetch(
+      base + `/api/discussions/attachments/${staged.id}`
+    )
+    httpRequests++
+    assert.equal(publicImage.status, 200)
+    assert.equal(
+      (await sharp(Buffer.from(await publicImage.arrayBuffer())).metadata())
+        .format,
+      "webp"
+    )
+    const sanctioned = await request(
+      "POST",
+      `/api/discussions/moderation/records/thread/${thread.id}/sanctions`,
+      moderatorToken,
+      {
+        mode: "ban",
+        scope: "subject",
+        reason: "Private test evidence",
+        contributorFeedback: "Temporary restriction for acceptance.",
+      }
+    )
+    assert.equal(sanctioned.status, 200, JSON.stringify(sanctioned.data))
+    assert.equal(
+      (
+        await request(
+          "GET",
+          `/api/discussions/threads/${thread.id}`,
+          memberToken
+        )
+      ).status,
+      404
+    )
+    const ownStatus = await request(
+      "GET",
+      "/api/discussions/my/status",
+      memberToken
+    )
+    assert.equal(
+      ownStatus.data.data[0].reason,
+      "Temporary restriction for acceptance."
+    )
+    assert(!JSON.stringify(ownStatus.data).includes("Private test evidence"))
+    assert.equal(
+      (
+        await request(
+          "PUT",
+          `/api/discussions/my/sanctions/${sanctioned.data.id}/appeal`,
+          memberToken,
+          { message: "Please review the fixture" }
+        )
+      ).status,
+      200
+    )
+    const sanctions = await request(
+      "GET",
+      "/api/discussions/moderation/sanctions",
+      moderatorToken
+    )
+    assert.equal(sanctions.data.data[0].appeal, "Please review the fixture")
+    assert.equal(sanctions.data.data[0].version, 2)
+    assert.equal(
+      (
+        await request(
+          "PUT",
+          `/api/discussions/moderation/sanctions/${sanctioned.data.id}`,
+          moderatorToken,
+          {
+            baseVersion: 1,
+            reason: "Stale review",
+            contributorFeedback: "Restored",
+          }
+        )
+      ).status,
+      409
+    )
+    assert.equal(
+      (
+        await request(
+          "PUT",
+          `/api/discussions/moderation/sanctions/${sanctioned.data.id}`,
+          moderatorToken,
+          {
+            baseVersion: 2,
+            reason: "Reviewed fixture",
+            contributorFeedback: "Participation restored.",
+          }
+        )
+      ).status,
+      200
+    )
+    assert.equal(
+      (
+        await request(
+          "GET",
+          `/api/discussions/threads/${thread.id}`,
+          memberToken
+        )
+      ).status,
+      200
+    )
     const indexes = await strapi.db.connection.raw(
       "SELECT indexname FROM pg_indexes WHERE tablename LIKE 'discussions_%'"
     )
@@ -376,6 +711,15 @@ async function host(mode, dir) {
       ),
       "thread lookup index missing"
     )
+    for (const name of [
+      "discussions_reaction_dedupe_key_unique",
+      "discussions_attachment_storage_key_unique",
+      "discussions_sanction_actor_active",
+    ])
+      assert(
+        indexes.rows.some((row) => row.indexname === name),
+        `Missing physical constraint/index: ${name}`
+      )
     const article = await strapi.documents("api::article.article").create({
       data: { title: "Published source", slug: "source" },
       status: "published",
@@ -482,6 +826,11 @@ async function host(mode, dir) {
     assert.equal(erasedPublic.status, 200)
     assert.equal(erasedPublic.data.body, "Corrected after report")
     assert.equal(
+      (await fetch(base + `/api/discussions/attachments/${staged.id}`)).status,
+      200
+    )
+    httpRequests++
+    assert.equal(
       erasedPublic.data.author.name,
       mode === "custom" ? "Community member" : "Former member"
     )
@@ -540,7 +889,7 @@ async function main() {
   const created = []
   try {
     for (const mode of ["users-permissions", "custom"]) {
-      const database = `discussions_${mode.replaceAll("-", "_")}_${process.pid}`
+      const database = `discussions_${mode.replaceAll("-", "_")}_${crypto.randomUUID().replaceAll("-", "").slice(0, 12)}`
       await admin.query(`CREATE DATABASE "${database}"`)
       created.push(database)
       const dir = prepare(mode, database)

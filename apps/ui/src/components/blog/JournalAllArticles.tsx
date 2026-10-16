@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 
 import { ArticleDiscoveryFilters } from "@/components/articles/ArticleDiscoveryFilters"
@@ -7,108 +6,47 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { JournalLandingData } from "@/lib/journal-landing"
 import { languageName } from "@/lib/locale-fallback"
-import { Link } from "@/lib/navigation"
 
 import { JournalArticleCard, JournalArticleRow } from "./JournalCards"
 import {
   JOURNAL_PAGE_SIZE,
   journalHref,
   journalCollectionKey,
-  type JournalQuery,
 } from "./journalLanding.helpers"
 import { JournalListControls } from "./JournalListControls"
 import { JournalPagination } from "./JournalPagination"
 import { JournalHeading } from "./JournalSectionBrowser"
 
-function SectionChips({
-  query,
-  sections,
-  total,
-}: {
-  readonly query: JournalQuery
-  readonly sections: JournalLandingData["sections"]
-  readonly total: number
-}) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("editorial")
-
-  if (sections.length === 0) return null
-
-  return (
-    <nav
-      aria-label={tUi("filter_by_section")}
-      className="mt-5 border-b pb-4"
-      style={{ borderColor: T.border.line }}
-    >
-      <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-        {[{ slug: null, name: t("all"), count: total }, ...sections].map(
-          (chip) => {
-            const active = query.section === chip.slug
-
-            return (
-              <li key={chip.slug ?? "all"}>
-                <Link
-                  aria-current={active ? "true" : undefined}
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[14px] font-semibold transition-colors"
-                  href={journalHref(query, { section: chip.slug })}
-                  scroll={false}
-                  style={
-                    active
-                      ? {
-                          background: T.accent.chip,
-                          borderColor: T.accent.primary,
-                          color: T.accent.primaryHover,
-                        }
-                      : {
-                          background: T.bg.deep,
-                          borderColor: T.border.hi,
-                          color: T.ink.base,
-                        }
-                  }
-                >
-                  {active ? (
-                    <Icon
-                      aria-hidden="true"
-                      height={15}
-                      icon="mdi:check"
-                      width={15}
-                    />
-                  ) : null}
-                  {chip.name}
-                  <span
-                    className="font-normal"
-                    style={{
-                      color: active ? T.accent.primaryHover : T.ink.dim,
-                    }}
-                  >
-                    {chip.count}
-                  </span>
-                </Link>
-              </li>
-            )
-          }
-        )}
-      </ul>
-    </nav>
-  )
-}
-
 function ArticleResults({
   list,
   query,
-  total,
   linkLocale,
 }: Pick<JournalLandingData, "list" | "query" | "total" | "linkLocale">) {
   const t = useUiTranslations("editorial")
+  const p = useUiTranslations("publishing")
   if (list.items.length === 0) {
     const pastTheEnd = list.total > 0
-    let message = t("emptySection")
-    if (pastTheEnd) message = t("emptyPage")
-    else if (total === 0) message = t("emptyJournal")
+    const message = pastTheEnd ? t("emptyPage") : p("noResults")
 
     return (
       <div>
         <EmptyState message={message} />
+        {!pastTheEnd && (
+          <p className="-mt-12 text-center text-sm">
+            <GlobalLink
+              href={journalHref(query, {
+                q: undefined,
+                section: null,
+                lang: "all",
+                filters: { origins: query.filters?.origins },
+                page: 1,
+              })}
+              className="font-semibold underline"
+            >
+              {p("resetSearch")}
+            </GlobalLink>
+          </p>
+        )}
         {pastTheEnd ? (
           <p className="-mt-12 text-center text-[14px]">
             <GlobalLink
@@ -212,7 +150,6 @@ export function JournalAllArticles({
         </p>
       ) : null}
 
-      <SectionChips query={query} sections={sections} total={total} />
       <ArticleDiscoveryFilters discovery={discovery} kind="journal" />
 
       <div className="mt-6">

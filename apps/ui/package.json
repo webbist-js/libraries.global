@@ -135,7 +135,8 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^4.0.9",
     "typescript": "^5",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "strapi-plugin-discussions": "workspace:*"
   },
   "trustedDependencies": [
     "sharp"

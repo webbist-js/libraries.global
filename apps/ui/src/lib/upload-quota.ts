@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 
 /** Every upload route reserves the same durable Strapi/PostgreSQL daily budget. */
 export const UPLOAD_QUOTA = { files: 20, bytes: 50 * 1024 * 1024 } as const
-export type UploadPurpose = "article" | "submission" | "avatar"
+export type UploadPurpose = "article" | "submission" | "avatar" | "cover"
 export type UploadReservation = { reservationId: string; expiresAt: string }
 export type QuotaReason = "files" | "bytes"
 

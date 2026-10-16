@@ -11,7 +11,11 @@ export async function GET() {
   )
 
   return NextResponse.json(
-    { signedIn: !!session?.user, canModerate },
+    {
+      signedIn: !!session?.user,
+      canModerate,
+      viewerId: session?.user?.id ?? null,
+    },
     { headers: { "Cache-Control": "private, no-store" } }
   )
 }

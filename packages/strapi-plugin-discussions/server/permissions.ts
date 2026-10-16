@@ -8,10 +8,44 @@ export async function permitted(
   action: Action,
   subject: any,
   thread?: any,
-  recordLanguage?: string
+  recordLanguage?: string,
+  sanctionScope?: "subject" | "all"
 ): Promise<boolean> {
   if (actor?.admin) return true
   if (!subject) return false
+  if (actor) {
+    const sanctions = await strapi.db
+      .query("plugin::discussions.sanction")
+      .findMany({
+        where: {
+          actorKey: actor.key,
+          active: true,
+          $and: [
+            {
+              $or: [
+                { expiresAt: null },
+                { expiresAt: { $gt: new Date().toISOString() } },
+              ],
+            },
+            { $or: [{ subjectId: null }, { subjectId: subject.documentId }] },
+          ],
+        },
+        limit: 101,
+      })
+    if (sanctions.length > 100) return false
+    if (
+      sanctions.some(
+        (row: any) =>
+          (!row.expiresAt || new Date(row.expiresAt).getTime() > Date.now()) &&
+          (!row.subjectId || row.subjectId === subject.documentId) &&
+          (row.mode === "ban" ||
+            ["createThread", "reply", "editOwn", "react", "upload"].includes(
+              action
+            ))
+      )
+    )
+      return false
+  }
   if (action === "read") {
     if (subject.visibility === "members" && !actor) return false
     if (
@@ -43,6 +77,7 @@ export async function permitted(
           subject,
           thread,
           recordLanguage,
+          sanctionScope,
         })
       )
     : true
@@ -54,7 +89,8 @@ export async function requirePermission(
   action: Action,
   subject: any,
   thread?: any,
-  recordLanguage?: string
+  recordLanguage?: string,
+  sanctionScope?: "subject" | "all"
 ) {
   if (
     !(await permitted(
@@ -64,7 +100,8 @@ export async function requirePermission(
       action,
       subject,
       thread,
-      recordLanguage
+      recordLanguage,
+      sanctionScope
     ))
   )
     fail(actor ? 403 : 401, "Discussion permission denied")

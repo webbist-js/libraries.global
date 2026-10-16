@@ -699,6 +699,46 @@ export default ({ strapi }: { strapi: any }) => ({
     ctx.body = { data: result }
   },
 
+  // POST /api/content-moderation/submissions/:id/withdraw — writer-owned articles only.
+  async withdraw(ctx: any) {
+    const user = await resolveUser(strapi, ctx)
+    if (!user) return ctx.unauthorized("You must be signed in.")
+    const id = ctx.params?.id
+    const body = ctx.request.body
+    if (
+      !isDocumentId(id) ||
+      !body ||
+      typeof body !== "object" ||
+      Array.isArray(body) ||
+      typeof body.baseUpdatedAt !== "string" ||
+      body.baseUpdatedAt.length > 40 ||
+      !Number.isFinite(Date.parse(body.baseUpdatedAt))
+    )
+      return ctx.badRequest("Invalid withdrawal request")
+    const result = await strapi
+      .plugin("content-moderation")
+      .service("submission")
+      .withdrawArticle(id, user.id, body.baseUpdatedAt)
+    if ("error" in result) {
+      if (result.error === "not_found")
+        return ctx.notFound("Submission not found")
+      if (result.error === "invalid")
+        return ctx.badRequest("Only article submissions can be withdrawn here")
+      ctx.status = 409
+      ctx.body = {
+        error: {
+          status: 409,
+          message:
+            "This submission changed. Reload its latest state before withdrawing.",
+        },
+      }
+
+      return
+    }
+    ctx.set("Cache-Control", "no-store")
+    ctx.body = { data: result.data }
+  },
+
   // PATCH /api/content-moderation/submissions/:id/draft  (content-api route)
   async saveDraft(ctx: any) {
     const user = await resolveUser(strapi, ctx)

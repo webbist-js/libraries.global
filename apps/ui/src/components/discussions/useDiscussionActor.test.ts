@@ -7,6 +7,7 @@ const session = vi.hoisted(() => ({
     user: { id: string; moderationScopes: string[] }
   } | null,
   isPending: false,
+  error: null as Error | null,
 }))
 vi.mock("@/lib/access-client", () => ({ useHydratedSession: () => session }))
 import { useDiscussionActor } from "./useDiscussionActor"
@@ -17,12 +18,18 @@ beforeEach(() => {
     user: { id: "moderator", moderationScopes: ["discussions"] },
   }
   session.isPending = false
+  session.error = null
+  fetch.mockReset()
   vi.stubGlobal("fetch", fetch)
 })
 describe("discussion host permission hint", () => {
   it("does not reuse a privileged hint when the same account's moderation scope changes", async () => {
     fetch.mockResolvedValueOnce(
-      Response.json({ signedIn: true, canModerate: true })
+      Response.json({
+        signedIn: true,
+        canModerate: true,
+        viewerId: "moderator",
+      })
     )
     const view = renderHook(useDiscussionActor)
     await waitFor(() => expect(view.result.current.canModerate).toBe(true))
@@ -40,7 +47,13 @@ describe("discussion host permission hint", () => {
       canModerate: false,
     })
     await act(async () =>
-      resolve(Response.json({ signedIn: true, canModerate: false }))
+      resolve(
+        Response.json({
+          signedIn: true,
+          canModerate: false,
+          viewerId: "moderator",
+        })
+      )
     )
     expect(view.result.current).toMatchObject({
       ready: true,
@@ -48,16 +61,42 @@ describe("discussion host permission hint", () => {
       canModerate: false,
     })
   })
-  it("requires session identity even if the host hint says signed in", async () => {
-    session.data = null
+  it("refuses a server hint for a different account even if the client still holds a session", async () => {
     fetch.mockResolvedValueOnce(
-      Response.json({ signedIn: true, canModerate: true })
+      Response.json({
+        signedIn: true,
+        canModerate: true,
+        viewerId: "another-account",
+      })
     )
     const view = renderHook(useDiscussionActor)
-    await waitFor(() => expect(view.result.current.ready).toBe(true))
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
     expect(view.result.current).toMatchObject({
       signedIn: false,
       canModerate: false,
+      ready: false,
     })
+  })
+  it("invalidates a matching cached hint after a session network error and waits for new verification", async () => {
+    fetch.mockResolvedValueOnce(
+      Response.json({
+        signedIn: true,
+        canModerate: true,
+        viewerId: "moderator",
+      })
+    )
+    const view = renderHook(useDiscussionActor)
+    await waitFor(() => expect(view.result.current.signedIn).toBe(true))
+    session.error = new Error("session verification unavailable")
+    view.rerender()
+    expect(view.result.current).toMatchObject({
+      ready: false,
+      signedIn: false,
+      canModerate: false,
+    })
+    session.error = null
+    fetch.mockImplementationOnce(() => new Promise(() => {}))
+    view.rerender()
+    expect(view.result.current.ready).toBe(false)
   })
 })

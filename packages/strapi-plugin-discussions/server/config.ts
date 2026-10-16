@@ -3,6 +3,14 @@ import type { DiscussionConfig } from "./contracts"
 export const defaults: DiscussionConfig = {
   targets: {},
   moderatorRoleIds: [],
+  sanctionRoleIds: [],
+  maxPendingPerActor: 20,
+  maxScanEntries: 10000,
+  profanityTerms: {},
+  maxImageBytes: 4 * 1024 * 1024,
+  maxImagesPerRevision: 3,
+  maxImagesPerActor: 30,
+  stagingRetentionHours: 168,
   requireConfirmed: true,
   allowSelfReview: false,
   maxBodyLength: 20000,
@@ -15,6 +23,12 @@ export default {
   validator(config: DiscussionConfig) {
     for (const [key, max] of [
       ["maxBodyLength", 100000],
+      ["maxImageBytes", 8 * 1024 * 1024],
+      ["maxImagesPerRevision", 5],
+      ["maxImagesPerActor", 100],
+      ["stagingRetentionHours", 720],
+      ["maxPendingPerActor", 100],
+      ["maxScanEntries", 100000],
       ["maxPageSize", 100],
       ["maxWritesPerHour", 10000],
       ["notificationBatchSize", 1000],
@@ -42,6 +56,23 @@ export default {
       )
         throw new Error("discussions: invalid target resolver")
     }
+    if (
+      config.mediaStore &&
+      ["put", "get", "delete"].some(
+        (key) => typeof (config.mediaStore as any)[key] !== "function"
+      )
+    )
+      throw new Error("discussions: invalid private media store")
+    if (
+      config.mediaStore?.prune !== undefined &&
+      typeof config.mediaStore.prune !== "function"
+    )
+      throw new Error("discussions: invalid private media cleanup")
+    if (
+      config.mediaDirectory !== undefined &&
+      (typeof config.mediaDirectory !== "string" || !config.mediaDirectory)
+    )
+      throw new Error("discussions: invalid private media directory")
     for (const hook of [
       "identity",
       "publicAuthor",
@@ -52,6 +83,29 @@ export default {
     ] as const)
       if (config[hook] !== undefined && typeof config[hook] !== "function")
         throw new Error(`discussions: ${hook} must be a function`)
+    if (
+      !config.profanityTerms ||
+      typeof config.profanityTerms !== "object" ||
+      Array.isArray(config.profanityTerms) ||
+      Object.entries(config.profanityTerms).some(
+        ([locale, terms]) =>
+          !/^[a-zA-Z-]{2,35}$/.test(locale) ||
+          !Array.isArray(terms) ||
+          terms.length > 128 ||
+          terms.some(
+            (term) =>
+              typeof term !== "string" || term.length < 2 || term.length > 64
+          )
+      )
+    )
+      throw new Error("discussions: invalid profanity terms")
+    if (
+      !Array.isArray(config.sanctionRoleIds) ||
+      config.sanctionRoleIds.some(
+        (value) => !Number.isSafeInteger(value) || value < 1
+      )
+    )
+      throw new Error("discussions: invalid sanction role ids")
     if (
       !Array.isArray(config.moderatorRoleIds) ||
       config.moderatorRoleIds.some(

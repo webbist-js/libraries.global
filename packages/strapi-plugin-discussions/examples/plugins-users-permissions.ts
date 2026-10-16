@@ -3,6 +3,8 @@ export default () => ({
   discussions: {
     enabled: true,
     config: {
+      sanctionRoleIds: [], // Separate explicit authority to mute/ban/lift discussion members.
+      profanityTerms: {}, // Supply reviewed literal dictionaries for your supported languages.
       moderatorRoleIds: [], // Explicit Users & Permissions moderator role IDs.
       targets: {
         "api::article.article": async (

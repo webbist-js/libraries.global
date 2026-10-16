@@ -11,10 +11,8 @@ import { BlogSearchBar } from "./BlogSearchBar"
 import { JournalAllArticles } from "./JournalAllArticles"
 import { JournalFeatureCard, JournalSideCard } from "./JournalCards"
 import { journalHref } from "./journalLanding.helpers"
-import { JournalSectionBrowser } from "./JournalSectionBrowser"
 import { JournalWriteCta } from "./JournalWriteCta"
 import { MonthlyDispatchCard } from "./MonthlyDispatchCard"
-import { MostReadCard } from "./MostReadCard"
 
 export function BlogLandingPage({
   data,
@@ -26,17 +24,15 @@ export function BlogLandingPage({
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
   const tDiscovery = useUiTranslations("discovery")
+  const p = useUiTranslations("publishing")
 
   const {
     landing,
     query,
-    sections,
-    total,
     linkLocale,
     featured,
     editorsPick,
     sideStories,
-    mostRead,
     communityPick,
   } = data
 
@@ -58,7 +54,11 @@ export function BlogLandingPage({
           lead={landing?.heroText ?? t("journalHeroLead")}
           title={landing?.heroTitle ?? t("journalHeroTitle")}
         >
-          <BlogSearchBar inputId="journal-search" />
+          <BlogSearchBar
+            inputId="journal-search"
+            initialQuery={query.q}
+            currentQuery={query}
+          />
         </PageHero>
 
         <Container className="pt-10 pb-20">
@@ -86,6 +86,9 @@ export function BlogLandingPage({
                   {tUi("view_all")}
                 </GlobalLink>
               </div>
+              <p className="mt-0 mb-5 text-sm" style={{ color: T.ink.dim }}>
+                {p("indexLead")}
+              </p>
               <div
                 className={`grid grid-cols-1 gap-4 ${sideStories.length ? "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
               >
@@ -125,12 +128,6 @@ export function BlogLandingPage({
             </section>
           ) : null}
 
-          <JournalSectionBrowser
-            query={query}
-            sections={sections}
-            total={total}
-          />
-
           <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
             <JournalAllArticles {...data} />
 
@@ -138,7 +135,6 @@ export function BlogLandingPage({
               aria-label={tUi("more_from_the_journal")}
               className="flex flex-col gap-5"
             >
-              <MostReadCard articles={mostRead} locale={linkLocale} />
               <MonthlyDispatchCard />
               <JournalWriteCta />
             </aside>

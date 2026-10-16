@@ -28,7 +28,7 @@ const CARDS: RoleCard[] = [
   {
     id: "editor",
     title: "Become an editor",
-    copy: "Publish your Knowledge or Journal changes straight away, in the languages you choose.",
+    copy: "Publish approved Knowledge or Journal changes in the languages you choose.",
     cta: "Apply to be an editor",
     href: "/contribute/knowledge/apply",
     icon: "mdi:book-open-page-variant-outline",

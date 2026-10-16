@@ -17,6 +17,8 @@ async function load(strapi: any, key: string) {
       "editOwn",
       "report",
       "subscribe",
+      "react",
+      "upload",
     ],
   }
 }

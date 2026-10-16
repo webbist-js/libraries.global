@@ -1,4 +1,5 @@
 export * from "./articles"
+export * from "./community-palette"
 
 // ── Events ────────────────────────────────────────────────────────────────────
 
@@ -192,3 +193,5 @@ export * from "./opening-schedule"
 export * from "./article-browse"
 
 export * from "./moderation-presentation"
+
+export * from "./profile-target"

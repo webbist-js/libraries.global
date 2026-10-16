@@ -1,19 +1,31 @@
 "use client"
 
-import { useTranslations } from "next-intl"
+import { ArrowLeft, Check, CornerDownRight } from "lucide-react"
+import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { languageName } from "@/lib/locale-fallback"
+import { Link } from "@/lib/navigation"
+
 import {
+  discussionAuthor,
   discussionErrorKey,
   discussionRequest,
+  orderedDiscussionReplies,
   type DiscussionList,
+  type DiscussionLanguage,
   type DiscussionRecord,
 } from "./api"
 import { DiscussionComposer } from "./DiscussionComposer"
 import { DiscussionRecordCard } from "./DiscussionRecordCard"
 import { useDiscussionActor } from "./useDiscussionActor"
 
-export function DiscussionThread(props: { id: string; language?: string }) {
+export function DiscussionThread(props: {
+  id: string
+  language?: string
+  languages?: readonly DiscussionLanguage[]
+  embedded?: boolean
+}) {
   const actor = useDiscussionActor()
 
   return <DiscussionThreadPanel {...props} key={actor.scope} actor={actor} />
@@ -23,12 +35,17 @@ function DiscussionThreadPanel({
   id,
   language,
   actor,
+  languages = [],
+  embedded = false,
 }: {
   id: string
   language?: string
+  languages?: readonly DiscussionLanguage[]
+  embedded?: boolean
   actor: ReturnType<typeof useDiscussionActor>
 }) {
   const t = useTranslations("discussions")
+  const locale = useLocale()
   const scope = `${id}:${actor.scope}`
   const currentScope = useRef(scope)
   useEffect(() => {
@@ -42,6 +59,13 @@ function DiscussionThreadPanel({
   const [nextOffset, setNextOffset] = useState<number | null>(null)
   const [ownReplyOffset, setOwnReplyOffset] = useState<number | null>(null)
   const [replyTo, setReplyTo] = useState<string | null>(null)
+  const [quote, setQuote] = useState<{
+    kind: "thread" | "reply"
+    id: string
+    version: number
+  } | null>(null)
+  const [removeConfirm, setRemoveConfirm] = useState(false)
+  const [removeReason, setRemoveReason] = useState("")
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
   const [busy, setBusy] = useState(false)
@@ -98,24 +122,70 @@ function DiscussionThreadPanel({
       await discussionRequest(path, "PUT", input)
       setNotice(t("saved"))
       await load()
+
+      return true
     } catch (failure) {
       setError(t(discussionErrorKey(failure)))
+
+      return false
     } finally {
       setBusy(false)
     }
   }
+  if (!actor.ready) return <p role="status">{t("loading")}</p>
   if (error && (!thread || loadedScope !== scope))
     return <p role="alert">{error}</p>
   if (!thread || loadedScope !== scope)
     return <p role="status">{t("loading")}</p>
-  const ownThread = ownThreads.find((record) => record.id === id)
-  const ownReplyIds = new Set(ownReplies.map((record) => record.id))
-  const pendingReplies = ownReplies.filter(
+  const ownThread = actor.signedIn
+    ? ownThreads.find((record) => record.id === id)
+    : undefined
+  const ownReplyIds = new Set(
+    (actor.signedIn ? ownReplies : []).map((record) => record.id)
+  )
+  if (
+    (thread.state === "pending" || thread.state === "rejected") &&
+    (!actor.signedIn || (!ownThread && !actor.canModerate))
+  )
+    return <p role="status">{t("unavailable")}</p>
+  const pendingReplies = (actor.signedIn ? ownReplies : []).filter(
     (record) => !replies.some((reply) => reply.id === record.id)
   )
+  const canReply =
+    actor.signedIn && !thread.locked && thread.viewer?.canReply !== false
+  const canReact = actor.signedIn && thread.viewer?.canReact !== false
+  const canModerate = actor.canModerate && thread.viewer?.canModerate !== false
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-6">
+      {!embedded && (
+        <header className="grid gap-4 border-b border-(--t-border-line) pb-6">
+          <Link
+            href="/community/discussions"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-(--t-accent-primary)"
+          >
+            <ArrowLeft size={16} aria-hidden />
+            {t("back")}
+          </Link>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full bg-(--t-palette-violet-bg) px-3 py-1 text-(--t-palette-violet-fg)">
+              {thread.subject?.name ?? t("threads")}
+            </span>
+            <span className="rounded-full bg-(--t-bg-muted) px-3 py-1">
+              {languageName(thread.language, languages, locale)}
+            </span>
+          </div>
+          <h1
+            className="m-0 max-w-4xl font-serif text-4xl leading-tight tracking-tight sm:text-5xl"
+            lang={thread.language}
+          >
+            {thread.title ||
+              ownThread?.pendingRevision?.title ||
+              ownThread?.latestRevision?.title ||
+              t("untitled")}
+          </h1>
+        </header>
+      )}
       <DiscussionRecordCard
         key={`${actor.scope}:${thread.id}`}
         record={ownThread ?? thread}
@@ -124,35 +194,44 @@ function DiscussionThreadPanel({
         signedIn={actor.signedIn}
         locked={thread.locked}
         onReload={load}
+        canReact={canReact}
+        canReply={canReply}
+        canSanction={thread.viewer?.canSanction === true}
+        onReply={() => {
+          setReplyTo(null)
+          document
+            .getElementById(`discussion-composer-${id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" })
+        }}
+        onQuote={() => {
+          setQuote({ kind: "thread", id: thread.id, version: thread.version })
+          document
+            .getElementById(`discussion-composer-${id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" })
+        }}
       />
       {thread.locked && <p role="status">{t("locked")}</p>}
-      {actor.signedIn && thread.state === "visible" && (
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              action(`threads/${encodeURIComponent(id)}/subscription`, {
-                enabled: true,
-              })
-            }
-          >
-            {t("follow")}
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              action(`threads/${encodeURIComponent(id)}/subscription`, {
-                enabled: false,
-              })
-            }
-          >
-            {t("unfollow")}
-          </button>
-        </div>
-      )}
-      {actor.canModerate && (
+      {actor.signedIn &&
+        thread.state === "visible" &&
+        typeof thread.subscribed === "boolean" && (
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              disabled={busy}
+              aria-pressed={thread.subscribed}
+              className="inline-flex items-center gap-2 rounded-full border border-(--t-accent-primary) px-5 py-2.5 font-semibold text-(--t-accent-primary)"
+              onClick={() =>
+                action(`threads/${encodeURIComponent(id)}/subscription`, {
+                  enabled: !thread.subscribed,
+                })
+              }
+            >
+              {thread.subscribed && <Check size={16} aria-hidden />}
+              {t(thread.subscribed ? "unfollow" : "follow")}
+            </button>
+          </div>
+        )}
+      {canModerate && (
         <div className="flex flex-wrap gap-3">
           {(
             [
@@ -166,10 +245,15 @@ function DiscussionThreadPanel({
               type="button"
               disabled={busy || thread.state === "removed"}
               onClick={() =>
-                action(`moderation/records/thread/${encodeURIComponent(id)}`, {
-                  action: command,
-                  baseVersion: thread.version,
-                })
+                command === "remove"
+                  ? setRemoveConfirm(true)
+                  : action(
+                      `moderation/records/thread/${encodeURIComponent(id)}`,
+                      {
+                        action: command,
+                        baseVersion: thread.version,
+                      }
+                    )
               }
             >
               {t(command)}
@@ -177,39 +261,118 @@ function DiscussionThreadPanel({
           ))}
         </div>
       )}
+      {removeConfirm && canModerate && (
+        <form
+          className="grid gap-3 rounded-2xl border border-(--t-palette-coral-fg) bg-(--t-palette-coral-soft) p-5"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!removeReason.trim()) return
+            action(`moderation/records/thread/${encodeURIComponent(id)}`, {
+              action: "remove",
+              baseVersion: thread.version,
+              contributorFeedback: removeReason.trim(),
+            }).then((success) => {
+              if (success) setRemoveConfirm(false)
+            })
+          }}
+        >
+          <h3 className="m-0 font-semibold">{t("confirmRemoval")}</h3>
+          <p className="m-0 text-sm">{t("removalLead")}</p>
+          <label>
+            {t("removalReason")}
+            <textarea
+              required
+              maxLength={2000}
+              value={removeReason}
+              onChange={(event) => setRemoveReason(event.target.value)}
+              className="mt-1 block w-full rounded-xl border bg-(--t-bg-deep) p-3"
+            />
+          </label>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={busy || !removeReason.trim()}
+              className="rounded-full bg-(--t-palette-coral-fg) px-4 py-2 text-white"
+            >
+              {t("confirmRemove")}
+            </button>
+            <button type="button" onClick={() => setRemoveConfirm(false)}>
+              {t("cancel")}
+            </button>
+          </div>
+        </form>
+      )}
       {thread.state === "visible" && (
         <section aria-label={t("replies")} className="grid gap-4">
           <h2 className="text-xl font-semibold">{t("replies")}</h2>
           {replies.length === 0 && <p>{t("noReplies")}</p>}
-          {replies.map((reply) => (
-            <div
-              key={reply.id}
-              className={
-                reply.parentId
-                  ? "ml-5 border-l border-(--t-border-line) pl-4"
-                  : ""
-              }
-            >
-              <DiscussionRecordCard
-                key={`${actor.scope}:${reply.id}`}
-                record={ownReplies.find((own) => own.id === reply.id) ?? reply}
-                kind="reply"
-                own={ownReplyIds.has(reply.id)}
-                signedIn={actor.signedIn}
-                locked={thread.locked}
-                onReload={load}
-              />
-              {actor.signedIn && !thread.locked && !reply.parentId && (
-                <button
-                  type="button"
-                  onClick={() => setReplyTo(reply.id)}
-                  className="mt-2 text-sm underline"
-                >
-                  {t("replyTo", { name: reply.author.name })}
-                </button>
-              )}
-            </div>
-          ))}
+          {orderedDiscussionReplies(replies).map(
+            ({ record: reply, depth, parent }) => (
+              <div
+                key={reply.id}
+                className={
+                  depth
+                    ? "ml-3 border-l-2 border-(--t-palette-violet-bg) pl-3 sm:ml-6 sm:pl-5"
+                    : ""
+                }
+              >
+                {reply.parentId && (
+                  <p className="mb-2 flex items-center gap-2 text-sm text-(--t-ink-dim)">
+                    <CornerDownRight size={15} aria-hidden />
+                    <a
+                      href={`#discussion-reply-${encodeURIComponent(reply.parentId)}`}
+                      className="underline"
+                    >
+                      {parent
+                        ? t("replyTo", {
+                            name: discussionAuthor(parent.author, t("member"))
+                              .name,
+                          })
+                        : t("parentMessage")}
+                    </a>
+                  </p>
+                )}
+                <DiscussionRecordCard
+                  key={`${actor.scope}:${reply.id}`}
+                  record={
+                    actor.signedIn
+                      ? (ownReplies.find((own) => own.id === reply.id) ?? reply)
+                      : reply
+                  }
+                  kind="reply"
+                  own={ownReplyIds.has(reply.id)}
+                  signedIn={actor.signedIn}
+                  locked={!(reply.viewer?.canReply ?? canReply)}
+                  onReload={load}
+                  canReact={reply.viewer?.canReact ?? canReact}
+                  canReply={reply.viewer?.canReply ?? canReply}
+                  canSanction={
+                    reply.viewer?.canSanction ??
+                    thread.viewer?.canSanction ??
+                    false
+                  }
+                  onReply={() => {
+                    setReplyTo(reply.parentId ?? reply.id)
+                    setQuote(null)
+                    document
+                      .getElementById(`discussion-composer-${id}`)
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }}
+                  onQuote={() => {
+                    setQuote({
+                      kind: "reply",
+                      id: reply.id,
+                      version: reply.version,
+                    })
+                    setReplyTo(reply.parentId ?? reply.id)
+                    document
+                      .getElementById(`discussion-composer-${id}`)
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }}
+                />
+              </div>
+            )
+          )}
           {nextOffset !== null && (
             <button
               type="button"
@@ -266,28 +429,46 @@ function DiscussionThreadPanel({
       )}
       {thread.state === "visible" && (
         <>
-          {replyTo && (
+          {(replyTo || quote) && (
             <p>
               {t("replySelected")}{" "}
-              <button type="button" onClick={() => setReplyTo(null)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyTo(null)
+                  setQuote(null)
+                }}
+              >
                 {t("cancel")}
               </button>
             </p>
           )}
-          <DiscussionComposer
-            key={`${actor.scope}:${replyTo ?? "root"}`}
-            threadId={id}
-            language={language ?? thread.language}
-            parentId={replyTo}
-            signedIn={actor.signedIn}
-            disabled={thread.locked}
-            onSubmitted={() => {
-              setReplyTo(null)
-              load().catch((failure) =>
-                setError(t(discussionErrorKey(failure)))
-              )
-            }}
-          />
+          <div id={`discussion-composer-${id}`}>
+            <DiscussionComposer
+              key={actor.scope}
+              threadId={id}
+              language={language ?? thread.language}
+              parentId={replyTo}
+              quote={quote}
+              languages={languages}
+              returnTo={
+                typeof window === "undefined"
+                  ? `/community/discussions/${encodeURIComponent(id)}`
+                  : `${window.location.pathname}${window.location.search}${embedded ? "#discussion" : window.location.hash}`
+              }
+              subjectId={thread.subjectId}
+              signedIn={actor.signedIn}
+              disabled={!canReply}
+              disabledMessage={thread.locked ? t("locked") : t("notAllowed")}
+              onSubmitted={() => {
+                setReplyTo(null)
+                setQuote(null)
+                load().catch((failure) =>
+                  setError(t(discussionErrorKey(failure)))
+                )
+              }}
+            />
+          </div>
         </>
       )}
       {error && <p role="alert">{error}</p>}

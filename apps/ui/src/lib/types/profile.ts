@@ -1,3 +1,5 @@
+import type { ProfileBackground } from "@repo/shared-data"
+
 export type FollowedLibrary = {
   id: number
   documentId: string
@@ -76,6 +78,8 @@ export type UserProfile = {
   mastodon?: string | null
   linkedin?: string | null
   avatar?: AvatarMedia | null
+  coverImage?: AvatarMedia | null
+  profileBackground?: ProfileBackground | null
   profileVisibility: "public" | "limited" | "private"
   /** Fresh, server-resolved recognition. Public responses carry only the mark. */
   supporterMark?: boolean

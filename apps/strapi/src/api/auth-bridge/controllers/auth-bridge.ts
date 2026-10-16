@@ -1,10 +1,13 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import {
   isDismissiblePrompt,
+  isExistingProfileTarget,
+  isProfileBackground,
   mergeNotificationPreferences,
 } from "@repo/shared-data"
 import freeEmailDomains from "free-email-domains"
 
+import { ownedUploadIds } from "../../../plugins/content-moderation/server/utils/uploads"
 import {
   claimAffiliationFilter,
   grantVerifiedLibrarian,
@@ -192,7 +195,14 @@ export default {
       "profileVisibility",
       "publicPrefs",
       "theme",
+      "profileBackground",
     ]
+
+    if (
+      "profileBackground" in fields &&
+      !isProfileBackground(fields.profileBackground)
+    )
+      return ctx.badRequest("Invalid profile background")
 
     const data: Record<string, unknown> = {}
     for (const key of scalarFields) {
@@ -265,10 +275,34 @@ export default {
       }
     }
 
-    // avatarFileId: integer ID of an already-uploaded Strapi file.
-    // Passed by the avatar upload route after a successful /api/upload call.
-    if ("avatarFileId" in fields && fields.avatarFileId != null) {
-      data.avatar = Number(fields.avatarFileId)
+    // Trusted upload adapters may attach only media durably owned by this user.
+    // Null clears a relation without deleting the underlying uploaded file.
+    for (const [field, relation] of [
+      ["avatarFileId", "avatar"],
+      ["coverImageFileId", "coverImage"],
+    ] as const) {
+      if (!(field in fields)) continue
+      const fileId = fields[field]
+      if (fileId === null) {
+        data[relation] = null
+        continue
+      }
+      if (!Number.isSafeInteger(fileId) || Number(fileId) < 1)
+        return ctx.badRequest("Invalid profile image")
+      const owned = await ownedUploadIds(strapi, baUserId, [Number(fileId)])
+      if (!owned.has(Number(fileId)))
+        return ctx.forbidden("Profile image is not owned by this user")
+      const file = await strapi.db
+        .query("plugin::upload.file")
+        .findOne({ where: { id: fileId }, select: ["id", "mime"] })
+      if (
+        !file ||
+        !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+          file.mime
+        )
+      )
+        return ctx.badRequest("Invalid profile image")
+      data[relation] = Number(fileId)
     }
 
     // Both paths use the Document Service so repeatable components (languages)
@@ -288,6 +322,7 @@ export default {
         where: { baUserId },
         populate: {
           avatar: true,
+          coverImage: true,
           languages: true,
           followedLibraries: true,
         },
@@ -590,7 +625,7 @@ export default {
       !baUserId ||
       baUserId.length > 200 ||
       typeof targetUsername !== "string" ||
-      !isValidUsername(targetUsername) ||
+      !isExistingProfileTarget(targetUsername) ||
       !["follow", "unfollow"].includes(action ?? "")
     )
       return ctx.badRequest("Missing baUserId, targetUsername, or action")
@@ -666,7 +701,12 @@ export default {
       baUserId?: string
       targetUsername?: string
     }
-    if (!baUserId || !targetUsername)
+    if (
+      typeof baUserId !== "string" ||
+      !baUserId ||
+      baUserId.length > 200 ||
+      !isExistingProfileTarget(targetUsername)
+    )
       return ctx.badRequest("Missing baUserId or targetUsername")
 
     const profile = await strapi.db

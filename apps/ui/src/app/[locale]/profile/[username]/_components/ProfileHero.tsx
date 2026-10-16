@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { profilePalette } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
@@ -138,6 +139,8 @@ export function ProfileHero({
 
   const initials = getInitials(profile)
   const avatar = avatarSrc(profile.avatar, "lg")
+  const cover = avatarSrc(profile.coverImage, "lg")
+  const palette = profilePalette(profile.profileBackground)
   const prefs = resolvePublicPrefs(profile.publicPrefs)
   const showAffiliation = isOwnProfile || prefs.showAffiliation
   const showLocation = isOwnProfile || prefs.showLocation
@@ -162,8 +165,21 @@ export function ProfileHero({
   return (
     <section
       className="border-b"
-      style={{ background: T.bg.space, borderColor: T.border.line }}
+      style={{
+        background: cover ? T.bg.space : palette.bg,
+        borderColor: T.border.line,
+      }}
     >
+      {cover ? (
+        <div
+          className="h-40 overflow-hidden border-b sm:h-60"
+          style={{ borderColor: T.border.line }}
+        >
+          {/* A decorative cover never sits behind profile text. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={cover} alt="" className="h-full w-full object-cover" />
+        </div>
+      ) : null}
       <div className="mx-auto w-full max-w-[1360px] px-4 pt-6 sm:px-8 sm:pt-10">
         <Breadcrumb
           className="mb-5"
@@ -180,8 +196,8 @@ export function ProfileHero({
           <div
             className="flex size-[80px] shrink-0 items-center justify-center overflow-hidden rounded-full text-[32px] sm:size-[128px] sm:text-[50px]"
             style={{
-              background: "var(--tint-national-bg)",
-              color: "var(--tint-national-fg)",
+              background: palette.soft,
+              color: palette.fg,
               fontFamily: T.font.serif,
               fontWeight: 500,
             }}
