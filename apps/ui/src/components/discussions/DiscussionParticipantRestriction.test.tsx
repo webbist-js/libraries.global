@@ -82,3 +82,24 @@ it("blocks an incomplete native date field instead of making an indefinite restr
   fireEvent.submit(input.form!)
   expect(fetch).not.toHaveBeenCalled()
 })
+
+it("retains the native deadline after a failed request so a retry stays timed", async () => {
+  fetch.mockRejectedValueOnce(new Error("Network unavailable"))
+  const input = openRestriction()
+  input.value = "2026-10-17T12:00"
+  fireEvent.submit(input.form!)
+  await screen.findByRole("alert")
+  expect(input.value).toBe("2026-10-17T12:00")
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Confirm restriction",
+      }) as HTMLButtonElement
+    ).disabled
+  ).toBe(false)
+  fireEvent.submit(input.form!)
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
+  expect(JSON.parse(fetch.mock.calls[1]?.[1].body).expiresAt).toBe(
+    new Date("2026-10-17T12:00").toISOString()
+  )
+})

@@ -9,6 +9,7 @@ import { useEffect } from "react"
 import { ContributionList } from "@/components/contributions/ContributionList"
 import { docsPathForSearchHit } from "@/components/docs/docs.config"
 import { StatCard } from "@/components/ds"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { useCapabilities, useHydratedSession } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
@@ -349,139 +350,134 @@ export function SubmissionsShell({ username }: { username: string | null }) {
         </p>
       </ContributeSectionHeader>
 
-      <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
-        <div
-          role="tablist"
+      <Tabs
+        value={tab}
+        onValueChange={(next) =>
+          setTab(next === "discussions" ? "discussions" : "articles")
+        }
+        className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8"
+      >
+        <TabsList
           aria-label={p("yourWork")}
-          className="mb-5 flex flex-wrap gap-2"
+          className="mb-5 h-auto flex-wrap gap-2 rounded-none bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-auto"
         >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "articles"}
-            onClick={() => setTab("articles")}
-            className="rounded-full border px-4 py-2 font-semibold"
+          <TabsTrigger
+            value="articles"
+            className="min-h-11 rounded-full border px-4 py-2 font-semibold"
           >
             {p("articleWork")}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "discussions"}
-            onClick={() => setTab("discussions")}
-            className="rounded-full border px-4 py-2 font-semibold"
+          </TabsTrigger>
+          <TabsTrigger
+            value="discussions"
+            className="min-h-11 rounded-full border px-4 py-2 font-semibold"
           >
             {p("discussionWork")}
-          </button>
-        </div>
-        {tab === "discussions" ? (
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="discussions">
           <DiscussionWork />
-        ) : (
-          <>
-            {isLoading ? (
-              <SkeletonList />
-            ) : submissions.length === 0 ? (
-              <section
-                aria-labelledby="subs-empty"
-                className="rounded-[20px] p-6"
+        </TabsContent>
+        <TabsContent value="articles">
+          {isLoading ? (
+            <SkeletonList />
+          ) : submissions.length === 0 ? (
+            <section
+              aria-labelledby="subs-empty"
+              className="rounded-[20px] p-6"
+              style={{
+                background: T.bg.deep,
+                border: `1px solid ${T.border.line}`,
+              }}
+            >
+              <h2
+                id="subs-empty"
+                className="m-0"
                 style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
+                  fontFamily: T.font.serif,
+                  fontSize: "24px",
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                  color: T.ink.base,
                 }}
               >
-                <h2
-                  id="subs-empty"
-                  className="m-0"
-                  style={{
-                    fontFamily: T.font.serif,
-                    fontSize: "24px",
-                    fontWeight: 500,
-                    letterSpacing: "-0.01em",
-                    color: T.ink.base,
-                  }}
-                >
-                  No submissions yet
-                </h2>
-                <p
-                  className="mt-2 mb-3 text-[15px] leading-[1.6]"
-                  style={{ color: T.ink.dim }}
-                >
-                  Libraries you add, corrections and articles appear here as
-                  soon as you start them.
-                </p>
-                <Link
-                  href="/contribute"
-                  className="text-[15px] font-semibold underline underline-offset-[3px]"
-                  style={{ color: T.accent.primary }}
-                >
-                  Start contributing
-                </Link>
-              </section>
-            ) : (
-              <div className="flex flex-col gap-6">
-                <h2 className="sr-only">{tUi("submission_summary")}</h2>
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  <StatCard
-                    label={tUi("drafts")}
-                    value={String(count("draft"))}
-                    bg="var(--tint-neutral-bg)"
-                    fg="var(--tint-neutral-fg)"
-                    icon="mdi:file-document-edit-outline"
-                  />
-                  <StatCard
-                    label={tUi("in_review")}
-                    value={String(count("pending"))}
-                    bg="var(--tint-academic-bg)"
-                    fg="var(--tint-academic-fg)"
-                    icon="mdi:clock-outline"
-                  />
-                  <StatCard
-                    label={tUi("changes_requested")}
-                    value={String(count("needs_info"))}
-                    bg="#F5EEDC"
-                    fg="#6B5420"
-                    icon="mdi:alert-circle-outline"
-                  />
-                  <StatCard
-                    label={tUi("accepted")}
-                    value={String(count("approved"))}
-                    bg="var(--tint-public-bg)"
-                    fg="var(--tint-public-fg)"
-                    icon="mdi:check-circle-outline"
-                  />
-                </div>
-
-                <ContributionList
-                  title={tUi("your_submissions")}
-                  items={submissions}
-                  filters={STATUS_FILTERS}
-                  matches={matchesStatus}
-                  legend="Filter by status"
-                  rowExtras={rowExtras}
-                  intro={
-                    username ? (
-                      <p
-                        className="m-0 text-[15px]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        Accepted ones also make up the public record on{" "}
-                        <Link
-                          href={`/profile/${encodeURIComponent(username)}/contributions`}
-                          className="font-semibold underline underline-offset-[3px]"
-                          style={{ color: T.accent.primary }}
-                        >
-                          your profile
-                        </Link>
-                        .
-                      </p>
-                    ) : null
-                  }
+                No submissions yet
+              </h2>
+              <p
+                className="mt-2 mb-3 text-[15px] leading-[1.6]"
+                style={{ color: T.ink.dim }}
+              >
+                Libraries you add, corrections and articles appear here as soon
+                as you start them.
+              </p>
+              <Link
+                href="/contribute"
+                className="text-[15px] font-semibold underline underline-offset-[3px]"
+                style={{ color: T.accent.primary }}
+              >
+                Start contributing
+              </Link>
+            </section>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <h2 className="sr-only">{tUi("submission_summary")}</h2>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <StatCard
+                  label={tUi("drafts")}
+                  value={String(count("draft"))}
+                  bg="var(--tint-neutral-bg)"
+                  fg="var(--tint-neutral-fg)"
+                  icon="mdi:file-document-edit-outline"
+                />
+                <StatCard
+                  label={tUi("in_review")}
+                  value={String(count("pending"))}
+                  bg="var(--tint-academic-bg)"
+                  fg="var(--tint-academic-fg)"
+                  icon="mdi:clock-outline"
+                />
+                <StatCard
+                  label={tUi("changes_requested")}
+                  value={String(count("needs_info"))}
+                  bg="#F5EEDC"
+                  fg="#6B5420"
+                  icon="mdi:alert-circle-outline"
+                />
+                <StatCard
+                  label={tUi("accepted")}
+                  value={String(count("approved"))}
+                  bg="var(--tint-public-bg)"
+                  fg="var(--tint-public-fg)"
+                  icon="mdi:check-circle-outline"
                 />
               </div>
-            )}
-          </>
-        )}
-      </div>
+
+              <ContributionList
+                title={tUi("your_submissions")}
+                items={submissions}
+                filters={STATUS_FILTERS}
+                matches={matchesStatus}
+                legend="Filter by status"
+                rowExtras={rowExtras}
+                intro={
+                  username ? (
+                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                      Accepted ones also make up the public record on{" "}
+                      <Link
+                        href={`/profile/${encodeURIComponent(username)}/contributions`}
+                        className="font-semibold underline underline-offset-[3px]"
+                        style={{ color: T.accent.primary }}
+                      >
+                        your profile
+                      </Link>
+                      .
+                    </p>
+                  ) : null
+                }
+              />
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </>
   )
 }

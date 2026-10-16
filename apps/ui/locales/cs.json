@@ -19,7 +19,7 @@
     "selectedFilters": "Vybrané filtry",
     "removeFilter": "Odebrat {facet}: {value}",
     "worldwide": "Celý svět. Jazyk článku je nezávislý na jazyce rozhraní.",
-    "countrySuggestion": "Prozkoumat příběhy o zemi {country}",
+    "countrySuggestion": "Prozkoumat obsah o zemi {country}",
     "preferenceFailed": "Výběr je v adrese URL; tento prohlížeč nemohl uložit předvolbu.",
     "exploreKnowledge": "Prozkoumat znalosti",
     "knowledgeLead": "Najděte referenční články podle jazyka, místa, knihovny nebo tématu. Sekce dokumentace pokračují níže.",

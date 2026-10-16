@@ -1022,7 +1022,7 @@ export function ArticleEditorShell({
             )}
           {reviewFeedback && (
             <p role="status" className="mb-3 rounded-xl border p-3">
-              <strong>{p("changesRequested")}</strong> {reviewFeedback}
+              <strong>{tUi("feedback")}</strong> {reviewFeedback}
             </p>
           )}
           {leaveHref && (

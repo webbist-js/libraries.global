@@ -54,6 +54,7 @@ export function DiscussionParticipantRestriction({
 
       return
     }
+    setExpiresAt(expiry)
     setBusy(true)
     setError("")
     try {

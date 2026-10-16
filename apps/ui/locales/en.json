@@ -19,7 +19,7 @@
     "selectedFilters": "Selected filters",
     "removeFilter": "Remove {facet}: {value}",
     "worldwide": "Worldwide. Article language is independent of your interface language.",
-    "countrySuggestion": "Explore stories about {country}",
+    "countrySuggestion": "Explore content about {country}",
     "preferenceFailed": "Your selection is in the URL; this browser could not save the preference.",
     "exploreKnowledge": "Explore Knowledge",
     "knowledgeLead": "Find reference articles by language, place, Library or subject. Documentation sections continue below.",

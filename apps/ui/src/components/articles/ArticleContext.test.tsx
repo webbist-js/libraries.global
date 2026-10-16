@@ -11,6 +11,7 @@ import {
   articleLibraryHref,
   type ArticleContextData,
 } from "@/lib/article-context"
+import type * as AvatarModule from "@/lib/avatar"
 import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import { ArticleContext } from "./ArticleContext"
@@ -53,7 +54,10 @@ vi.mock("@/components/discussions/AttachedDiscussion", () => ({
 vi.mock("@/components/articles/ArticleReaderActions", () => ({
   ArticleReaderActions: () => null,
 }))
-vi.mock("@/lib/avatar", () => ({ avatarSrc: () => null }))
+vi.mock("@/lib/avatar", async (importOriginal) => ({
+  ...(await importOriginal<typeof AvatarModule>()),
+  avatarSrc: () => null,
+}))
 vi.mock("@/lib/navigation", () => ({ routing: { defaultLocale: "en" } }))
 vi.mock("@/lib/env-vars", () => ({
   getEnvVar: () => "https://libraries.global",

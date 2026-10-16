@@ -82,6 +82,7 @@ export default async function DocsRoute(props: {
       discovery={discovery}
       queryActive={Boolean(query.q || Object.keys(query.filters).length)}
       searchQuery={query.q ?? ""}
+      currentQuery={searchParams}
     />
   )
 }

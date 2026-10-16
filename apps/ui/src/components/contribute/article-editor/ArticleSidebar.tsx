@@ -183,7 +183,7 @@ export function StatusCard({
               })
             : isPublished
               ? p("published")
-              : p("notPublishedLanguage")}
+              : p("notPublishedLanguage", { language: localeName })}
         </p>
       )}
       {publishesDirectly && !submitted && (

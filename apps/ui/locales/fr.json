@@ -19,7 +19,7 @@
     "selectedFilters": "Filtres sélectionnés",
     "removeFilter": "Retirer {facet} : {value}",
     "worldwide": "Monde entier. La langue de l’article est indépendante de celle de l’interface.",
-    "countrySuggestion": "Explorer les récits sur {country}",
+    "countrySuggestion": "Explorer le contenu sur {country}",
     "preferenceFailed": "Votre sélection figure dans l’URL ; ce navigateur n’a pas pu enregistrer la préférence.",
     "exploreKnowledge": "Explorer les connaissances",
     "knowledgeLead": "Trouvez des articles de référence par langue, lieu, bibliothèque ou sujet. Les sections de documentation suivent ci-dessous.",

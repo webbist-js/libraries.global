@@ -1,5 +1,9 @@
 import { Icon } from "@iconify/react"
-import type { ArticleBrowseResult } from "@repo/shared-data"
+import {
+  articleBrowseSearchParams,
+  parseArticleBrowseQuery,
+  type ArticleBrowseResult,
+} from "@repo/shared-data"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { ArticleDiscoveryFilters } from "@/components/articles/ArticleDiscoveryFilters"
@@ -89,6 +93,7 @@ export function DocsPage({
   discovery,
   queryActive = false,
   searchQuery = "",
+  currentQuery = {},
 }: {
   readonly articles: DocsWikiArticle[]
   /** The Knowledge taxonomy from Strapi, in display order. */
@@ -98,11 +103,23 @@ export function DocsPage({
   readonly landing?: WikiLandingData | null
   readonly queryActive?: boolean
   readonly searchQuery?: string
+  readonly currentQuery?: Record<string, unknown>
   readonly discovery?: ArticleBrowseResult
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
   const p = useUiTranslations("publishing")
+  const retainedSearch = new URLSearchParams(
+    articleBrowseSearchParams({
+      ...parseArticleBrowseQuery(currentQuery),
+      q: undefined,
+      page: 1,
+    })
+  )
+  retainedSearch.delete("q")
+  retainedSearch.delete("page")
+  for (const field of ["lang", "country"])
+    if (currentQuery[field] === "all") retainedSearch.set(field, "all")
 
   const entryCards =
     (landing?.quickStartCards ?? quickStartCards)
@@ -178,6 +195,9 @@ export function DocsPage({
               search_type: "knowledge",
             })}
           >
+            {[...retainedSearch].map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
             <SearchField
               id="docs-search"
               label={tUi("search_the_knowledge_base")}
