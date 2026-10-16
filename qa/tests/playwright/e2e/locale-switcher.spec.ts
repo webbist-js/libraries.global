@@ -8,7 +8,7 @@ test("the homepage language round trip persists across navigation and reload", a
   test.skip(isMobile, "the desktop language selector is in the header")
 
   await page.goto("/en")
-  const english = page.getByRole("combobox", {
+  const english = page.getByRole("banner").getByRole("combobox", {
     name: "Language",
     exact: true,
   })
@@ -17,7 +17,10 @@ test("the homepage language round trip persists across navigation and reload", a
   await expect(page).toHaveURL(/\/fr$/)
   await expect(page.locator("html")).toHaveAttribute("lang", "fr")
 
-  await page.getByRole("combobox", { name: "Langue", exact: true }).click()
+  await page
+    .getByRole("banner")
+    .getByRole("combobox", { name: "Langue", exact: true })
+    .click()
   await page.getByRole("option", { name: "English", exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.locator("html")).toHaveAttribute("lang", "en")
@@ -44,7 +47,10 @@ test("switching language preserves filters and the current fragment", async ({
   test.skip(isMobile, "the desktop language selector is in the header")
 
   await page.goto("/en/journal?view=list&section=data#all-articles")
-  await page.getByRole("combobox", { name: "Language", exact: true }).click()
+  await page
+    .getByRole("banner")
+    .getByRole("combobox", { name: "Language", exact: true })
+    .click()
   await page.getByRole("option", { name: "Français", exact: true }).click()
   await expect(page).toHaveURL(
     /\/fr\/journal\?view=list&section=data#all-articles$/
