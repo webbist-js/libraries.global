@@ -130,7 +130,7 @@ describe("article reader preferences", () => {
     )
     render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
     const suggestion = await screen.findByRole("button", {
-      name: "Explore stories about Colombia",
+      name: "Explore content about Colombia",
     })
     expect(mocks.replace).not.toHaveBeenCalled()
     expect(mocks.push).not.toHaveBeenCalled()
@@ -179,7 +179,7 @@ describe("article reader preferences", () => {
     render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
     expect(
       await screen.findByRole("button", {
-        name: "Explore stories about Colombia",
+        name: "Explore content about Colombia",
       })
     ).toBeTruthy()
     expect(mocks.push).not.toHaveBeenCalled()
@@ -206,6 +206,9 @@ it("stages mobile filters, hides stale counts and only navigates on Show results
   expect(mocks.push).toHaveBeenCalledWith(
     "/journal?lang=es&area=centre&continent=sa&country=co&region=bogota",
     { scroll: false }
+  )
+  expect(fetcher.mock.calls[0]![0]).toMatch(
+    /^\/api\/public-proxy\/api\/blog-articles\/browse\?/
   )
   const init = fetcher.mock.calls[0]![1] as RequestInit
   expect(init.signal?.aborted).toBe(true)

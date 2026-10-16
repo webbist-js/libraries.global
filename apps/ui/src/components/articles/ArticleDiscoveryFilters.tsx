@@ -126,7 +126,7 @@ export function ArticleDiscoveryFilters({
     const controller = new AbortController()
     const timer = setTimeout(() => {
       fetch(
-        `/api/public-proxy/${kind === "journal" ? "blog" : "wiki"}-articles/browse?${articlePreviewParams(staged, kind, locale)}`,
+        `/api/public-proxy/api/${kind === "journal" ? "blog" : "wiki"}-articles/browse?${articlePreviewParams(staged, kind, locale)}`,
         { signal: controller.signal, cache: "no-store" }
       )
         .then(async (response) => {

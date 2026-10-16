@@ -61,6 +61,13 @@ export const isStrapiEndpointAllowed = (
   const safePath = normaliseProxyPath(path)
   if (!safePath) return false
 
+  // Published-only browse DTOs are public; raw article and detail routes remain closed.
+  if (
+    method === "GET" &&
+    ["api/blog-articles/browse", "api/wiki-articles/browse"].includes(safePath)
+  )
+    return true
+
   return (
     ALLOWED_STRAPI_ENDPOINTS[method]?.some(
       (endpoint) => safePath === endpoint || safePath.startsWith(`${endpoint}/`)

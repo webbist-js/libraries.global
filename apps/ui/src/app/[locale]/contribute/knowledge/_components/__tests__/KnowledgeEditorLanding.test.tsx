@@ -67,5 +67,10 @@ it("allows ordinary Journal creation and gives an older search hit an edit doorw
       )
     ).toBe(true)
   )
+  expect(
+    fetcher.mock.calls.some(([url]) =>
+      url.startsWith("/api/public-proxy/api/blog-articles/browse?")
+    )
+  ).toBe(true)
   expect(screen.queryByText("Private name")).toBeNull()
 })

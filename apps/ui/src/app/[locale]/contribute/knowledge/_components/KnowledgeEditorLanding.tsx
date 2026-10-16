@@ -76,7 +76,7 @@ export function KnowledgeEditorLanding({
       Promise.all(
         kinds.map(async (targetKind) => {
           const response = await fetch(
-            `/api/public-proxy/${targetKind === "journal" ? "blog" : "wiki"}-articles/browse?${new URLSearchParams({ q: query.trim(), pageSize: "20", preferredLocale: locale })}`,
+            `/api/public-proxy/api/${targetKind === "journal" ? "blog" : "wiki"}-articles/browse?${new URLSearchParams({ q: query.trim(), pageSize: "20", preferredLocale: locale })}`,
             { signal: controller.signal }
           )
           if (!response.ok) throw new Error("Search unavailable")
