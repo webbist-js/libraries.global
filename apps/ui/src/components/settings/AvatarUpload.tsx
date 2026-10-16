@@ -33,8 +33,7 @@ export function AvatarUpload({
       return
     }
 
-    const localUrl = URL.createObjectURL(file)
-    setPreview(localUrl)
+    // Keep the current avatar until the server validates and re-encodes the file.
     setUploading(true)
 
     try {
@@ -48,25 +47,21 @@ export function AvatarUpload({
       if (!res.ok) {
         toast.error(json.error ?? "Upload failed")
         setPreview(currentUrl ?? null)
-        URL.revokeObjectURL(localUrl)
 
         return
       }
       if (!json.url) {
         toast.error("Upload failed")
         setPreview(currentUrl ?? null)
-        URL.revokeObjectURL(localUrl)
 
         return
       }
       setPreview(json.url)
       onUpload(json.url)
-      URL.revokeObjectURL(localUrl)
       toast.success("Avatar updated")
     } catch {
       toast.error("Upload failed")
       setPreview(currentUrl ?? null)
-      URL.revokeObjectURL(localUrl)
     } finally {
       setUploading(false)
     }

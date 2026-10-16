@@ -30,7 +30,7 @@ afterEach(() => {
 })
 
 describe("avatar upload preview", () => {
-  it("uses the saved URL after success instead of displaying a revoked temporary blob", async () => {
+  it("shows the saved avatar only after the server validates the upload", async () => {
     const onUpload = vi.fn()
     const { container } = render(
       <AvatarUpload initials="LA" onUpload={onUpload} />
@@ -47,9 +47,51 @@ describe("avatar upload preview", () => {
     expect(container.querySelector("img")?.getAttribute("src")).toBe(
       "/api/asset/uploads/avatar.webp"
     )
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:local-preview")
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
     expect(
       screen.getByRole("button", { name: "Upload new photo" })
     ).toBeTruthy()
+  })
+
+  it("keeps the current image while unverified file bytes are awaiting validation", async () => {
+    let finish!: (response: Response) => void
+    const pending = new Promise<Response>((resolve) => {
+      finish = resolve
+    })
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => pending)
+    )
+    const onUpload = vi.fn()
+    const { container } = render(
+      <AvatarUpload
+        currentUrl="/api/asset/uploads/current.webp"
+        initials="LA"
+        onUpload={onUpload}
+      />
+    )
+    fireEvent.change(container.querySelector("input[type=file]")!, {
+      target: {
+        files: [
+          new File(["<svg onload='alert(1)'></svg>"], "claimed.png", {
+            type: "image/png",
+          }),
+        ],
+      },
+    })
+    expect(container.querySelector("img")?.getAttribute("src")).toBe(
+      "/api/asset/uploads/current.webp"
+    )
+    expect(URL.createObjectURL).not.toHaveBeenCalled()
+    finish(Response.json({ error: "Invalid image data" }, { status: 400 }))
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Upload new photo" })
+      ).toBeTruthy()
+    )
+    expect(onUpload).not.toHaveBeenCalled()
+    expect(container.querySelector("img")?.getAttribute("src")).toBe(
+      "/api/asset/uploads/current.webp"
+    )
   })
 })
