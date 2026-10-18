@@ -992,9 +992,14 @@ export function updatedGuideBody(doc, locale) {
           ownHeadings.has(nodeText(c.body?.[0]))
         )
     )
-    // English staff-access copy had been entirely replaced by billing copy.
+    // Replace the older mixed pricing/staff overview in every language.
     if (doc.slug === "plans-and-staff-access")
-      body = [richText(staffPlans[locale]), ...body]
+      body = [
+        richText(staffPlans[locale]),
+        ...body.filter(
+          (component) => component.__component !== "content.rich-text"
+        ),
+      ]
     body.push(richText(billingSummary[locale]))
   }
   body = body.map(deduplicateSections)
