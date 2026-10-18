@@ -56,6 +56,27 @@ export default {
       )
         throw new Error("discussions: invalid target resolver")
     }
+    if (config.contextKinds !== undefined) {
+      if (
+        !config.contextKinds ||
+        typeof config.contextKinds !== "object" ||
+        Array.isArray(config.contextKinds)
+      )
+        throw new Error("discussions: contextKinds must be a map")
+      for (const [key, kind] of Object.entries(config.contextKinds)) {
+        if (
+          !/^[a-z][a-z0-9-]{0,39}$/.test(key) ||
+          ["constructor", "prototype", "__proto__"].includes(key) ||
+          !kind ||
+          !Object.hasOwn(config.targets, kind.uid) ||
+          typeof kind.label !== "string" ||
+          !kind.label.trim() ||
+          (kind.defaultEnabled !== undefined &&
+            typeof kind.defaultEnabled !== "boolean")
+        )
+          throw new Error("discussions: invalid context kind")
+      }
+    }
     if (
       config.mediaStore &&
       ["put", "get", "delete"].some(
@@ -77,6 +98,7 @@ export default {
       "identity",
       "publicAuthor",
       "authorize",
+      "authorizeContext",
       "notify",
       "notificationActor",
       "onEvent",

@@ -337,6 +337,16 @@ describe("picking the next library", () => {
 
   it("takes the next open one after the current, wrapping round", () => {
     const none = new Set<string>()
+    expect(
+      nextTask(
+        tasks.map((task) =>
+          task.documentId === "b" ? { ...task, heldByOther: true } : task
+        ),
+        "a",
+        none,
+        none
+      )?.documentId
+    ).not.toBe("b")
     expect(nextTask(tasks, "a", none, none)?.documentId).toBe("b")
     expect(nextTask(tasks, "b", new Set(["c"]), none)?.documentId).toBe("d")
     expect(nextTask(tasks, "d", none, new Set(["a"]))?.documentId).toBe("b")

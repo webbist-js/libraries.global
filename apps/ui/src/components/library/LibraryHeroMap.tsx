@@ -5,6 +5,7 @@ import type { Map as MapLibreMap } from "maplibre-gl"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
+import { MapLoading } from "@/components/map/MapLoading"
 import { T } from "@/lib/design-tokens"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { Link } from "@/lib/navigation"
@@ -61,53 +62,64 @@ export function LibraryHeroMap({
     let alive = true
     let observer: ResizeObserver | undefined
 
-    import("maplibre-gl").then((maplibregl) => {
-      maplibregl.setWorkerUrl(MAP_WORKER_URL)
-      if (!alive || !containerRef.current) return
-      let map: MapLibreMap
-      try {
-        map = new maplibregl.Map({
-          container: containerRef.current,
-          style: VOYAGER_NO_LABELS,
-          center: [lng, lat],
-          zoom: 13,
-          scrollZoom: false,
-          dragRotate: false,
-          pitchWithRotate: false,
-          touchPitch: false,
-          // The Voyager style carries its own CARTO / OpenStreetMap credit.
-          attributionControl: { compact: true },
+    import("maplibre-gl")
+      .then((maplibregl) => {
+        maplibregl.setWorkerUrl(MAP_WORKER_URL)
+        if (!alive || !containerRef.current) return
+        let map: MapLibreMap
+        try {
+          map = new maplibregl.Map({
+            container: containerRef.current,
+            style: VOYAGER_NO_LABELS,
+            center: [lng, lat],
+            zoom: 13,
+            scrollZoom: false,
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            // The Voyager style carries its own CARTO / OpenStreetMap credit.
+            attributionControl: { compact: true },
+          })
+        } catch {
+          setFailed(true)
+
+          return
+        }
+        map.touchZoomRotate.disableRotation()
+        map.addControl(
+          new maplibregl.NavigationControl({ showCompass: false }),
+          "top-left"
+        )
+        mapRef.current = map
+
+        if (neighbours.length > 0) {
+          const extent = new maplibregl.LngLatBounds([lng, lat], [lng, lat])
+          for (const n of neighbours) extent.extend([n.lng, n.lat])
+          map.fitBounds(extent, {
+            padding: { top: 56, bottom: 72, left: 48, right: 48 },
+            maxZoom: 14,
+            duration: 0,
+          })
+        }
+
+        map.on("load", () => {
+          if (alive) {
+            setFailed(false)
+            setReady(true)
+          }
         })
-      } catch {
-        setFailed(true)
-
-        return
-      }
-      map.touchZoomRotate.disableRotation()
-      map.addControl(
-        new maplibregl.NavigationControl({ showCompass: false }),
-        "top-left"
-      )
-      mapRef.current = map
-
-      if (neighbours.length > 0) {
-        const extent = new maplibregl.LngLatBounds([lng, lat], [lng, lat])
-        for (const n of neighbours) extent.extend([n.lng, n.lat])
-        map.fitBounds(extent, {
-          padding: { top: 56, bottom: 72, left: 48, right: 48 },
-          maxZoom: 14,
-          duration: 0,
+        map.on("error", (event) => {
+          if (alive && !("sourceId" in event) && !map.isStyleLoaded())
+            setFailed(true)
         })
-      }
+        map.on("move", () => setFrame((f) => f + 1))
 
-      map.on("load", () => {
-        if (alive) setReady(true)
+        observer = new ResizeObserver(() => map.resize())
+        observer.observe(containerRef.current)
       })
-      map.on("move", () => setFrame((f) => f + 1))
-
-      observer = new ResizeObserver(() => map.resize())
-      observer.observe(containerRef.current)
-    })
+      .catch(() => {
+        if (alive) setFailed(true)
+      })
 
     return () => {
       alive = false
@@ -139,11 +151,14 @@ export function LibraryHeroMap({
       <div
         ref={containerRef}
         role="region"
+        aria-busy={!ready && !failed}
         aria-label={`Map of ${name} and nearby libraries`}
         // maplibre-gl.css makes the container position: relative, so size it
         // explicitly rather than with inset-0.
         style={{ width: "100%", height: "100%" }}
       />
+
+      {!ready && !failed ? <MapLoading /> : null}
 
       {failed ? (
         <p

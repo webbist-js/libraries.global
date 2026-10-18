@@ -10,6 +10,9 @@ import {
   QUEUE_OF_SUBMISSION_TYPE,
   submissionTypesOfQueue,
   type SubmissionType,
+  type ReviewCategory,
+  REVIEW_CATEGORY_TYPES,
+  reviewCategoriesInScope,
 } from "@repo/access"
 import {
   type DriveInput,
@@ -111,6 +114,11 @@ type ArticleVersion = { title: unknown; summary: unknown; body: unknown }
 
 /** A Drive Proposal's review: the drive approval would create, and how big it is. */
 export type DriveProposalReview = {
+  discussions?: {
+    enabled: boolean
+    threadIds: string[]
+    featuredThreadId?: string
+  }
   /** The drive as approval would create it: the proposer's definition with the Moderator's dates. */
   drive: DriveInput
   /** True when draftData.moderatorEdit holds dates. */
@@ -168,6 +176,7 @@ export type ListQuery = {
   status: ListStatus
   queue?: ModerationQueue
   type?: SubmissionType
+  category?: ReviewCategory
   locale?: string
   q?: string
   page: number
@@ -542,6 +551,10 @@ export default ({ strapi }: { strapi: any }) => ({
     if (query.queue)
       and.push({ submissionType: { $in: submissionTypesOfQueue(query.queue) } })
     if (query.type) and.push({ submissionType: { $eq: query.type } })
+    if (query.category)
+      and.push({
+        submissionType: { $in: [...REVIEW_CATEGORY_TYPES[query.category]] },
+      })
     if (query.locale)
       and.push(localeFilter(query.locale, await defaultLocale(strapi)))
     if (query.drive) and.push({ driveDocumentId: { $eq: query.drive } })
@@ -811,6 +824,31 @@ export default ({ strapi }: { strapi: any }) => ({
     return {
       drive,
       datesEdited,
+      ...(s.draftData?.drive?.discussions &&
+      typeof s.draftData.drive.discussions.enabled === "boolean" &&
+      Array.isArray(s.draftData.drive.discussions.threadIds)
+        ? {
+            discussions: {
+              enabled: s.draftData.drive.discussions.enabled,
+              threadIds: s.draftData.drive.discussions.threadIds
+                .filter(
+                  (id: unknown): id is string =>
+                    typeof id === "string" && id.length <= 128
+                )
+                .slice(0, 10),
+              ...(typeof s.draftData.drive.discussions.featuredThreadId ===
+                "string" &&
+              s.draftData.drive.discussions.threadIds.includes(
+                s.draftData.drive.discussions.featuredThreadId
+              )
+                ? {
+                    featuredThreadId:
+                      s.draftData.drive.discussions.featuredThreadId,
+                  }
+                : {}),
+            },
+          }
+        : {}),
       counts,
       errors: validateDrive(drive, now),
       created,
@@ -868,7 +906,12 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   /** Counts per queue and list status, within the viewer's scope. */
-  async stats(caps: Capabilities, viewer: string, opts: ViewerOptions = {}) {
+  async stats(
+    caps: Capabilities,
+    viewer: string,
+    opts: ViewerOptions = {},
+    query: Partial<ListQuery> & { group?: "category" } = {}
+  ) {
     const base = baseFilters(
       caps,
       viewer,
@@ -876,16 +919,48 @@ export default ({ strapi }: { strapi: any }) => ({
       await (this as any).applicationIdsInScope(caps, viewer, opts),
       opts
     )
-    const cells = queuesInScope(caps.moderation).flatMap((queue) =>
-      LIST_STATUSES.map((status) => ({ queue, status }))
+    if (query.category)
+      base.push({
+        submissionType: { $in: [...REVIEW_CATEGORY_TYPES[query.category]] },
+      })
+    if (query.queue)
+      base.push({
+        submissionType: { $in: submissionTypesOfQueue(query.queue) },
+      })
+    if (query.type) base.push({ submissionType: { $eq: query.type } })
+    if (query.locale)
+      base.push(localeFilter(query.locale, await defaultLocale(strapi)))
+    if (query.drive) base.push({ driveDocumentId: { $eq: query.drive } })
+    if (query.q)
+      base.push({
+        $or: ["submittedByName", "targetSlug", "editSummary", "note"].map(
+          (key) => ({ [key]: { $containsi: query.q } })
+        ),
+      })
+    const groups: {
+      queue?: ModerationQueue
+      category?: ReviewCategory
+      types: readonly SubmissionType[]
+    }[] =
+      query.group === "category"
+        ? reviewCategoriesInScope(caps.moderation).map((category) => ({
+            category,
+            types: REVIEW_CATEGORY_TYPES[category],
+          }))
+        : queuesInScope(caps.moderation).map((queue) => ({
+            queue,
+            types: submissionTypesOfQueue(queue),
+          }))
+    const cells = groups.flatMap((group) =>
+      LIST_STATUSES.map((status) => ({ ...group, status }))
     )
     const counts = await Promise.all(
-      cells.map(({ queue, status }) =>
+      cells.map(({ types, status }) =>
         strapi.documents(SUBMISSION).count({
           filters: {
             $and: [
               ...base,
-              { submissionType: { $in: submissionTypesOfQueue(queue) } },
+              { submissionType: { $in: [...types] } },
               { status: STATUS_FILTER[status] },
             ],
           },
@@ -893,7 +968,10 @@ export default ({ strapi }: { strapi: any }) => ({
       )
     )
 
-    return cells.map((c, i) => ({ ...c, count: Number(counts[i] ?? 0) }))
+    return cells.map(({ types: _types, ...cell }, i) => ({
+      ...cell,
+      count: Number(counts[i] ?? 0),
+    }))
   },
 
   /**

@@ -1,7 +1,9 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+
+import { DiscussionThreadSkeleton } from "@/components/discussions/DiscussionSkeleton"
 
 import {
   discussionErrorKey,
@@ -18,9 +20,19 @@ import { useDiscussionActor } from "./useDiscussionActor"
 
 type AttachedDiscussionProps = {
   target: DiscussionTarget
-  subjectSlug: "journal" | "knowledge" | "library-life" | "practice" | "general"
+  subjectSlug:
+    | "journal"
+    | "knowledge"
+    | "library-life"
+    | "practice"
+    | "general"
+    | "suggestions"
   title: string
   language: string
+  variant?: "default" | "suggestion"
+  returnTo?: string
+  footerAction?: ReactNode
+  onActivity?: (thread: DiscussionRecord, latest?: DiscussionRecord) => void
 }
 
 export function AttachedDiscussion(props: AttachedDiscussionProps) {
@@ -35,6 +47,10 @@ function AttachedDiscussionPanel({
   title,
   language,
   actor,
+  variant = "default",
+  returnTo,
+  footerAction,
+  onActivity,
 }: AttachedDiscussionProps & { actor: ReturnType<typeof useDiscussionActor> }) {
   const t = useTranslations("discussions")
   const common = useTranslations("ui")
@@ -100,7 +116,8 @@ function AttachedDiscussionPanel({
   const handleLoadFailure = useCallback(
     (failure: unknown) => {
       if (currentScope.current !== scope) return
-      const errorKey = discussionErrorKey(failure)
+      const requestError = discussionErrorKey(failure)
+      const errorKey = requestError === "invalidInput" ? "error" : requestError
       setError(t(errorKey))
       setRetryable(errorKey === "error")
       setLoadedScope(scope)
@@ -114,13 +131,15 @@ function AttachedDiscussionPanel({
 
   return (
     <section
-      id="discussion"
+      id={variant === "suggestion" ? undefined : "discussion"}
       aria-label={t("attachedHeading")}
-      className="mt-6 grid gap-4"
+      className={variant === "suggestion" ? "grid gap-4" : "mt-6 grid gap-4"}
     >
-      <h2 className="text-2xl font-medium">{t("attachedHeading")}</h2>
+      {variant !== "suggestion" && (
+        <h2 className="text-2xl font-medium">{t("attachedHeading")}</h2>
+      )}
       {!actor.ready || loadedScope !== scope ? (
-        <p role="status">{t("loading")}</p>
+        <DiscussionThreadSkeleton embedded variant={variant} />
       ) : error ? (
         <div className="grid justify-items-start gap-2">
           <p role="alert">{error}</p>
@@ -143,21 +162,31 @@ function AttachedDiscussionPanel({
           language={language}
           languages={languages}
           embedded
+          variant={variant}
+          returnTo={returnTo}
+          footerAction={footerAction}
+          onActivity={onActivity}
         />
       ) : subject ? (
         <>
-          <p>{t("attachedLead")}</p>
+          {variant !== "suggestion" && <p>{t("attachedLead")}</p>}
           <DiscussionComposer
             key={scope}
             subject={subject}
             target={target}
             initialTitle={t("attachedTitle", { title })}
-            language={language}
+            language={variant === "suggestion" ? undefined : language}
+            defaultLanguage={language}
+            compositionPreferences={actor.compositionPreferences}
+            variant={variant}
+            footerAction={footerAction}
+            lockLanguage={variant !== "suggestion"}
             languages={languages}
             returnTo={
-              typeof window !== "undefined"
+              returnTo ??
+              (typeof window !== "undefined"
                 ? `${window.location.pathname}${window.location.search}#discussion`
-                : undefined
+                : undefined)
             }
             signedIn={actor.signedIn}
             disabled={

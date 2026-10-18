@@ -23,6 +23,7 @@ import {
 } from "@repo/shared-data"
 
 import { ownsJournalArticle } from "../../../../utils/article-relations"
+import { validateDriveConversationRequest } from "../../../../utils/drive-discussions"
 import { loadDriveLibrary } from "../../../../utils/drive-library"
 import { countLibraries } from "../../../../utils/meili-count"
 import { activeGrants } from "../../../../utils/role-grants"
@@ -294,6 +295,14 @@ export async function checkDriveProposal(
   input: { baUserId: string; draftData: unknown; excludeDocumentId?: string }
 ): Promise<Result> {
   const drive = proposedDrive(input.draftData)
+  const conversations = (input.draftData as any)?.drive?.discussions
+  if (conversations !== undefined) {
+    try {
+      validateDriveConversationRequest(conversations, false)
+    } catch {
+      return { ok: false, status: 400, message: "Invalid Drive conversations" }
+    }
+  }
   if (!drive)
     return {
       ok: false,

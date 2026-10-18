@@ -17,7 +17,7 @@ const FORMATS = {
  * `/uploads` path 404s on the Next origin). Null when there's no avatar.
  */
 export function avatarSrc(
-  avatar: AvatarMedia | null | undefined,
+  avatar: Pick<AvatarMedia, "url" | "formats"> | null | undefined,
   size: keyof typeof FORMATS = "sm"
 ): string | null {
   if (!avatar?.url) return null

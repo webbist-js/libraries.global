@@ -10,7 +10,7 @@ export default async function DiscussionModerationRedirect({
 }) {
   const { locale } = await params
   redirect({
-    href: "/contribute/moderation/discussions",
+    href: "/contribute/moderation?tab=discussions",
     locale: isSupportedLocale(locale) ? locale : DEFAULT_LOCALE,
   })
 }

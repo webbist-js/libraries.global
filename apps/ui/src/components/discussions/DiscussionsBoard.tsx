@@ -1,10 +1,16 @@
 "use client"
 
-import { MessagesSquare, Plus, Search } from "lucide-react"
+import { MessagesSquare, Search } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { CommunitySectionHeader } from "@/app/[locale]/community/_components/CommunitySectionHeader"
+import {
+  DiscussionComposerSkeleton,
+  DiscussionListSkeleton,
+} from "@/components/discussions/DiscussionSkeleton"
+import { EmptyState } from "@/components/ds/EmptyState"
+import { SelectField } from "@/components/ds/SelectField"
+import { StepsCard } from "@/components/ds/StepsCard"
 import { Container } from "@/components/elementary/Container"
 import {
   Dialog,
@@ -16,6 +22,7 @@ import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 
 import {
+  discussionAuthor,
   discussionErrorKey,
   discussionFilters,
   discussionRequest,
@@ -29,8 +36,14 @@ import {
   type Subject,
 } from "./api"
 import { DiscussionComposer } from "./DiscussionComposer"
-import { DiscussionPreview, subjectPalette } from "./DiscussionPresentation"
+import { DiscussionContextFilter } from "./DiscussionContextFilter"
+import {
+  DiscussionPreview,
+  DiscussionTime,
+  subjectPalette,
+} from "./DiscussionPresentation"
 import { DiscussionRestrictions } from "./DiscussionRestrictions"
+import { DiscussionsSectionHeader } from "./DiscussionsSectionHeader"
 import { useDiscussionActor } from "./useDiscussionActor"
 
 export function DiscussionsBoard({
@@ -83,13 +96,15 @@ function DiscussionsBoardPanel({
   const [ownOffset, setOwnOffset] = useState<number | null>(null)
   const [error, setError] = useState("")
   const [resolvedQuery, setResolvedQuery] = useState("")
-  const [showComposer, setShowComposer] = useState(false)
+  const [showComposer, setShowComposer] = useState(
+    () => new URLSearchParams(initialSearch).get("compose") === "1"
+  )
   const [composerSubject, setComposerSubject] = useState("")
   const [draft, setDraft] = useState<{
     title: string
     body: string
-    language: string
-  }>({ title: "", body: "", language: locale })
+    language?: string
+  }>({ title: "", body: "" })
   const [draftImages, setDraftImages] = useState<
     (DiscussionImage & { subjectId?: string })[]
   >([])
@@ -117,6 +132,9 @@ function DiscussionsBoardPanel({
       ["lang", next.language],
       ["view", next.view === "latest" ? "" : next.view],
       ["q", next.q],
+      ["context", next.contextType ?? ""],
+      ["entity", next.contextId ?? ""],
+      ["contextLocale", next.contextLocale ?? ""],
     ]) {
       if (value) url.searchParams.set(key!, value)
       else url.searchParams.delete(key!)
@@ -224,29 +242,7 @@ function DiscussionsBoardPanel({
 
   return (
     <>
-      <CommunitySectionHeader
-        section={t("threads")}
-        title={t("heroTitle")}
-        lead={t("lead")}
-        actions={
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={openComposer}
-              className={buttonClass}
-            >
-              <Plus size={17} aria-hidden />
-              {t("newThread")}
-            </button>
-            <Link
-              href="/contribute/submissions?tab=discussions"
-              className="rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-5 py-3 font-semibold"
-            >
-              {t("myRecords")}
-            </Link>
-          </div>
-        }
-      />
+      <DiscussionsSectionHeader onStart={openComposer} />
       <Container className="grid gap-8 py-8 sm:py-10">
         {actor.ready && actor.signedIn && (
           <DiscussionRestrictions
@@ -338,6 +334,11 @@ function DiscussionsBoardPanel({
         </section>
         <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section aria-label={t("threads")} className="grid min-w-0 gap-4">
+            <DiscussionContextFilter
+              type={filters.contextType}
+              id={filters.contextId}
+              onChange={changeFilters}
+            />
             <div className="flex flex-wrap items-center gap-3">
               <div
                 aria-label={t("view")}
@@ -372,26 +373,25 @@ function DiscussionsBoardPanel({
               <label className="sr-only" htmlFor="discussion-language-filter">
                 {t("language")}
               </label>
-              <select
+              <SelectField
                 id="discussion-language-filter"
+                label={t("language")}
                 value={filters.language}
-                onChange={(event) =>
-                  changeFilters({ language: event.target.value })
-                }
-                className="rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-4 py-3 text-sm"
-              >
-                <option value="">{t("allLanguages")}</option>
-                {[
-                  ...new Set([
-                    ...languages.map((item) => item.code),
-                    ...(filters.language ? [filters.language] : []),
-                  ]),
-                ].map((code) => (
-                  <option key={code} value={code}>
-                    {languageName(code, languages, locale)}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(language) => changeFilters({ language })}
+                className="w-auto rounded-full"
+                options={[
+                  { value: "", label: t("allLanguages") },
+                  ...[
+                    ...new Set([
+                      ...languages.map((item) => item.code),
+                      ...(filters.language ? [filters.language] : []),
+                    ]),
+                  ].map((code) => ({
+                    value: code,
+                    label: languageName(code, languages, locale),
+                  })),
+                ]}
+              />
             </div>
             {pending.length > 0 && (
               <p
@@ -415,7 +415,7 @@ function DiscussionsBoardPanel({
                 {t("signIn")}
               </Link>
             ) : loading ? (
-              <p role="status">{t("loading")}</p>
+              <DiscussionListSkeleton />
             ) : (
               <>
                 <p
@@ -435,32 +435,42 @@ function DiscussionsBoardPanel({
                     )}
                   />
                 ))}
-                {visibleThreads.length === 0 && (
-                  <div className="grid justify-items-start gap-3 rounded-[22px] border border-dashed border-(--t-border-line) bg-(--t-bg-deep) p-7">
-                    <h3 className="m-0 font-serif text-2xl">{t("empty")}</h3>
-                    <p className="m-0 text-(--t-ink-dim)">{t("emptyLead")}</p>
-                    <button
-                      type="button"
-                      className="font-semibold underline"
-                      onClick={() =>
-                        changeFilters({
-                          subjectId: "",
-                          language: "",
-                          view: "latest",
-                          q: "",
-                        })
-                      }
-                    >
-                      {t("showAll")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={openComposer}
-                      className={buttonClass}
-                    >
-                      {t("newThread")}
-                    </button>
-                  </div>
+                {visibleThreads.length === 0 && !error && (
+                  <EmptyState
+                    surface
+                    headingLevel={3}
+                    icon="mdi:forum-outline"
+                    lead={t("empty")}
+                    detail={t("emptyLead")}
+                    action={
+                      <>
+                        <button
+                          type="button"
+                          className="min-h-11 rounded-full border border-(--t-border-hi) px-5 py-2.5 font-semibold text-(--t-accent-primary)"
+                          onClick={() =>
+                            changeFilters({
+                              subjectId: "",
+                              language: "",
+                              view: "latest",
+                              q: "",
+                              contextType: "",
+                              contextId: "",
+                              contextLocale: "",
+                            })
+                          }
+                        >
+                          {t("showAll")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={openComposer}
+                          className={buttonClass}
+                        >
+                          {t("newThread")}
+                        </button>
+                      </>
+                    }
+                  />
                 )}
                 {nextOffset !== null && (
                   <button
@@ -532,58 +542,91 @@ function DiscussionsBoardPanel({
             )}
             {error && <p role="alert">{error}</p>}
           </section>
-          <aside className="grid gap-4">
+          <aside className="grid content-start gap-4">
             <section className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
-              <h2 className="mt-0 font-serif text-2xl">
-                {t("waitingHeading")}
-              </h2>
-              <p className="text-sm text-(--t-ink-dim)">{t("waitingLead")}</p>
+              <h2 className="m-0 font-serif text-2xl">{t("waitingHeading")}</h2>
+              <p className="mt-3 mb-4 text-sm text-(--t-ink-dim)">
+                {t("waitingLead")}
+              </p>
               {waiting.length ? (
-                waiting.map((record) => (
-                  <p
-                    key={record.id}
-                    className="border-t border-(--t-border-line) pt-3"
-                  >
-                    <Link
-                      href={`/community/discussions/${record.id}`}
-                      className="font-semibold hover:underline"
+                <ul className="m-0 grid list-none gap-4 p-0">
+                  {waiting.map((record) => (
+                    <li
+                      key={record.id}
+                      className="flex gap-3 border-t border-(--t-border-line) pt-4"
                     >
-                      {record.title}
-                    </Link>
-                  </p>
-                ))
+                      <span
+                        aria-hidden
+                        className="mt-1.5 size-2.5 shrink-0 rounded-full"
+                        style={{
+                          background: subjectPalette(
+                            visibleSubjects.find(
+                              (item) => item.id === record.subjectId
+                            )
+                          ).bg,
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <Link
+                          href={`/community/discussions/${encodeURIComponent(record.id)}`}
+                          className="leading-snug font-bold hover:underline"
+                          lang={record.language}
+                        >
+                          {record.title ?? t("untitled")}
+                        </Link>
+                        <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
+                          {discussionAuthor(record.author, t("member")).name}
+                          {" · "}
+                          {languageName(record.language, [], locale)}
+                          {record.createdAt && (
+                            <>
+                              {" · "}
+                              {t("started")}{" "}
+                              <DiscussionTime value={record.createdAt} />
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               ) : (
-                <p className="text-sm">{t("waitingEmpty")}</p>
+                <p className="mb-0 text-sm">{t("waitingEmpty")}</p>
               )}
             </section>
-            <section className="rounded-3xl border border-(--t-border-line) bg-(--t-palette-amber-soft) p-6">
-              <h2 className="mt-0 font-serif text-2xl">{t("howHeading")}</h2>
-              <ol className="grid list-decimal gap-3 pl-5 text-sm leading-relaxed">
-                <li>{t("howLanguage")}</li>
-                <li>{t("reviewLead")}</li>
-                <li>{t("howFollow")}</li>
-              </ol>
-              <Link
-                href="/knowledge"
-                className="text-sm font-semibold underline"
-              >
-                {t("guidelines")}
-              </Link>
-            </section>
+            <StepsCard
+              title={t("howHeading")}
+              steps={(["howLanguage", "reviewLead", "howFollow"] as const).map(
+                (key) => ({ id: key, content: t(key) })
+              )}
+              footer={<Link href="/knowledge">{t("guidelines")}</Link>}
+            />
             {actor.signedIn && actor.ready && (
               <section className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
-                <h2 className="mt-0 font-serif text-2xl">{t("youFollow")}</h2>
+                <h2 className="m-0 font-serif text-2xl">{t("youFollow")}</h2>
                 {followed.length ? (
-                  followed.map((record) => (
-                    <p key={record.id}>
-                      <Link
-                        href={`/community/discussions/${record.id}`}
-                        className="font-semibold hover:underline"
+                  <ul className="mt-4 mb-0 grid list-none gap-4 p-0">
+                    {followed.map((record) => (
+                      <li
+                        key={record.id}
+                        className="border-t border-(--t-border-line) pt-3"
                       >
-                        {record.title}
-                      </Link>
-                    </p>
-                  ))
+                        <Link
+                          href={`/community/discussions/${encodeURIComponent(record.id)}`}
+                          className="leading-snug font-bold hover:underline"
+                          lang={record.language}
+                        >
+                          {record.title ?? t("untitled")}
+                        </Link>
+                        {record.activityAt && (
+                          <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
+                            {t("latestActivity")}{" "}
+                            <DiscussionTime value={record.activityAt} />
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
                   <p className="text-sm text-(--t-ink-dim)">
                     {t("followLead")}
@@ -592,7 +635,7 @@ function DiscussionsBoardPanel({
                 <button
                   type="button"
                   onClick={() => changeFilters({ view: "following" })}
-                  className="text-sm font-semibold underline"
+                  className="mt-3 text-sm font-semibold underline underline-offset-4"
                 >
                   {t("following")}
                 </button>
@@ -600,7 +643,7 @@ function DiscussionsBoardPanel({
             )}
             {actor.canModerate && actor.ready && (
               <Link
-                href="/contribute/moderation/discussions"
+                href="/contribute/moderation?tab=discussions"
                 className="text-sm font-semibold underline"
               >
                 {t("moderation")}
@@ -620,22 +663,21 @@ function DiscussionsBoardPanel({
               <>
                 <label>
                   {t("subject")}
-                  <select
-                    aria-label={t("newThreadSubject")}
+                  <SelectField
+                    label={t("newThreadSubject")}
                     value={subject.id}
-                    onChange={(event) => setComposerSubject(event.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-3"
-                  >
-                    {visibleSubjects.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={setComposerSubject}
+                    className="mt-1"
+                    options={visibleSubjects.map((item) => ({
+                      value: item.id,
+                      label: item.name,
+                    }))}
+                  />
                 </label>
                 <DiscussionComposer
                   subject={subject}
                   language={draft.language}
+                  compositionPreferences={actor.compositionPreferences}
                   initialTitle={draft.title}
                   initialBody={draft.body}
                   onDraftChange={setDraft}
@@ -659,7 +701,7 @@ function DiscussionsBoardPanel({
                 />
               </>
             ) : (
-              <p role="status">{t("loading")}</p>
+              <DiscussionComposerSkeleton />
             )}
           </DialogContent>
         </Dialog>

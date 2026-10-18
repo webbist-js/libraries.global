@@ -1,10 +1,15 @@
 "use client"
 
-import { useLocale, useTranslations } from "next-intl"
-import { useCallback, useEffect, useState } from "react"
-
-import { languageName } from "@/lib/locale-fallback"
-import { Link } from "@/lib/navigation"
+import {
+  ClipboardCheck,
+  Flag,
+  LockKeyhole,
+  MessagesSquare,
+  RefreshCw,
+  ShieldAlert,
+} from "lucide-react"
+import { useFormatter, useTranslations } from "next-intl"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
   discussionErrorKey,
@@ -12,15 +17,28 @@ import {
   type DiscussionList,
   type DiscussionReport,
   type DiscussionRevision,
-} from "./api"
-import { DiscussionImages } from "./DiscussionPresentation"
-import { DiscussionRestrictions } from "./DiscussionRestrictions"
-import { useDiscussionActor } from "./useDiscussionActor"
+} from "@/components/discussions/api"
+import { DiscussionReportReviewCard } from "@/components/discussions/DiscussionReportReviewCard"
+import { DiscussionRestrictions } from "@/components/discussions/DiscussionRestrictions"
+import { DiscussionReviewCard } from "@/components/discussions/DiscussionReviewCard"
+import { DiscussionReviewSkeleton } from "@/components/discussions/DiscussionSkeleton"
+import { useDiscussionActor } from "@/components/discussions/useDiscussionActor"
+import { Badge } from "@/components/ds/Badge"
+import { EmptyState } from "@/components/ds/EmptyState"
+import { cn } from "@/lib/styles"
+
+type ReviewView = "messages" | "reports" | "restrictions"
+const pill =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[13px] font-semibold hover:border-(--t-accent-primary) disabled:opacity-50"
 
 export function DiscussionModeration() {
   const actor = useDiscussionActor()
 
-  return <DiscussionModerationPanel key={actor.scope} actor={actor} />
+  return (
+    <div className="w-full min-w-0">
+      <DiscussionModerationPanel key={actor.scope} actor={actor} />
+    </div>
+  )
 }
 
 function DiscussionModerationPanel({
@@ -29,455 +47,305 @@ function DiscussionModerationPanel({
   actor: ReturnType<typeof useDiscussionActor>
 }) {
   const t = useTranslations("discussions")
-  const locale = useLocale()
+  const workspace = useTranslations("moderationWorkspace")
+  const formatter = useFormatter()
   const [revisions, setRevisions] = useState<DiscussionRevision[]>([])
   const [reports, setReports] = useState<DiscussionReport[]>([])
-  const [notes, setNotes] = useState<Record<string, string>>({})
-  const [feedback, setFeedback] = useState<Record<string, string>>({})
-  const [exceptions, setExceptions] = useState<Record<string, boolean>>({})
-  const [exceptionReasons, setExceptionReasons] = useState<
-    Record<string, string>
-  >({})
-  const [confirmRemoval, setConfirmRemoval] = useState<string | null>(null)
+  const [totals, setTotals] = useState<{
+    messages: number
+    reports: number
+  } | null>(null)
+  const [view, setView] = useState<ReviewView>("messages")
   const [error, setError] = useState("")
-  const [busy, setBusy] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [paging, setPaging] = useState(false)
   const [loadedScope, setLoadedScope] = useState("")
   const [revisionOffset, setRevisionOffset] = useState<number | null>(null)
   const [reportOffset, setReportOffset] = useState<number | null>(null)
+  const generation = useRef(0)
+  const initialized = useRef(false)
+  const clear = useCallback(() => {
+    setRevisions([])
+    setReports([])
+    setTotals(null)
+    setRevisionOffset(null)
+    setReportOffset(null)
+    setLoadedScope("")
+  }, [])
   const load = useCallback(async () => {
-    const [proposals, flags] = await Promise.all([
-      discussionRequest<DiscussionList<DiscussionRevision>>(
-        "moderation/revisions?limit=20"
-      ),
-      discussionRequest<DiscussionList<DiscussionReport>>(
-        "moderation/reports?limit=20"
-      ),
-    ])
-    setRevisions(proposals.data)
-    setReports(flags.data)
-    setRevisionOffset(proposals.nextOffset ?? null)
-    setReportOffset(flags.nextOffset ?? null)
-    setLoadedScope(actor.scope)
-    setError("")
-  }, [actor.scope])
+    const request = ++generation.current
+    setRefreshing(true)
+    setPaging(false)
+    try {
+      const [proposals, flags] = await Promise.all([
+        discussionRequest<DiscussionList<DiscussionRevision>>(
+          "moderation/revisions?limit=20&reviewableOnly=true"
+        ),
+        discussionRequest<DiscussionList<DiscussionReport>>(
+          "moderation/reports?limit=20"
+        ),
+      ])
+      if (request !== generation.current) return
+      setRevisions(proposals.data)
+      setReports(flags.data)
+      setTotals({
+        messages: proposals.total ?? proposals.data.length,
+        reports: flags.total ?? flags.data.length,
+      })
+      setRevisionOffset(proposals.nextOffset ?? null)
+      setReportOffset(flags.nextOffset ?? null)
+      setLoadedScope(actor.scope)
+      setError("")
+      if (!initialized.current) {
+        setView(
+          !proposals.data.length && flags.data.length ? "reports" : "messages"
+        )
+        initialized.current = true
+      }
+    } catch (failure) {
+      if (request === generation.current) {
+        clear()
+        setError(t(discussionErrorKey(failure)))
+      }
+      throw failure
+    } finally {
+      if (request === generation.current) setRefreshing(false)
+    }
+  }, [actor.scope, clear, t])
   useEffect(() => {
     if (!actor.ready || !actor.canModerate) return
-    load().catch((failure) => setError(t(discussionErrorKey(failure))))
-  }, [load, actor.ready, actor.canModerate, t])
-  const decide = async (
-    kind: "revisions" | "reports",
-    id: string,
-    decision: string,
-    baseVersion: number,
-    recordBaseVersion?: number
-  ) => {
-    setBusy(true)
-    setError("")
+    load().catch(() => {})
+
+    const activeGeneration = generation
+
+    return () => {
+      activeGeneration.current++
+    }
+  }, [load, actor.ready, actor.canModerate])
+  const loadMore = async (kind: "messages" | "reports") => {
+    const offset = kind === "messages" ? revisionOffset : reportOffset
+    if (paging || refreshing || offset === null) return
+    const request = generation.current
+    setPaging(true)
     try {
-      await discussionRequest(
-        `moderation/${kind}/${encodeURIComponent(id)}`,
-        "PUT",
-        {
-          decision,
-          baseVersion,
-          note: notes[id] ?? "",
-          ...(feedback[id]?.trim()
-            ? { contributorFeedback: feedback[id].trim() }
-            : {}),
-          ...(decision === "remove" ? { recordBaseVersion } : {}),
-          ...(kind === "revisions" && decision === "approve" && exceptions[id]
-            ? {
-                profanityException: true,
-                exceptionReason: exceptionReasons[id]?.trim(),
-              }
-            : {}),
-        }
-      )
-      await load()
-      setConfirmRemoval(null)
+      if (kind === "messages") {
+        const result = await discussionRequest<
+          DiscussionList<DiscussionRevision>
+        >(`moderation/revisions?limit=20&reviewableOnly=true&offset=${offset}`)
+        if (request !== generation.current) return
+        setRevisions((previous) => [
+          ...new Map(
+            [...previous, ...result.data].map((record) => [record.id, record])
+          ).values(),
+        ])
+        setRevisionOffset(result.nextOffset ?? null)
+      } else {
+        const result = await discussionRequest<
+          DiscussionList<DiscussionReport>
+        >(`moderation/reports?limit=20&offset=${offset}`)
+        if (request !== generation.current) return
+        setReports((previous) => [
+          ...new Map(
+            [...previous, ...result.data].map((record) => [record.id, record])
+          ).values(),
+        ])
+        setReportOffset(result.nextOffset ?? null)
+      }
     } catch (failure) {
-      setError(t(discussionErrorKey(failure)))
+      if (request === generation.current) {
+        clear()
+        setError(t(discussionErrorKey(failure)))
+      }
     } finally {
-      setBusy(false)
+      if (request === generation.current) setPaging(false)
     }
   }
-  if (!actor.ready) return <p>{t("loading")}</p>
+  if (!actor.ready) return <DiscussionReviewSkeleton />
   if (!actor.canModerate) return <p role="status">{t("notAllowed")}</p>
-  if (loadedScope !== actor.scope && !error)
-    return <p role="status">{t("loading")}</p>
+  if (loadedScope !== actor.scope && !error) return <DiscussionReviewSkeleton />
+
+  const filters = [
+    {
+      id: "messages",
+      label: workspace("messages"),
+      icon: ClipboardCheck,
+      count: totals?.messages,
+    },
+    {
+      id: "reports",
+      label: workspace("reports"),
+      icon: Flag,
+      count: totals?.reports,
+    },
+    {
+      id: "restrictions",
+      label: workspace("restrictions"),
+      icon: ShieldAlert,
+      count: undefined,
+    },
+  ] as const
 
   return (
-    <div className="grid gap-6">
-      <p>{t("moderationLead")}</p>
-      <button
-        type="button"
-        onClick={() =>
-          load().catch((failure) => setError(t(discussionErrorKey(failure))))
-        }
-      >
-        {t("reload")}
-      </button>
-      {error && <p role="alert">{error}</p>}
+    <div className="grid gap-5 text-[16px] [--spacing:0.25rem]">
+      <section className="grid gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="m-0 flex items-center gap-2.5 font-serif text-[30px] leading-tight tracking-tight">
+              <MessagesSquare
+                size={23}
+                className="text-(--t-accent-primary)"
+                aria-hidden
+              />
+              {workspace("discussions")}
+            </h2>
+            <p className="mt-2 mb-0 max-w-[72ch] text-[14px] leading-relaxed text-(--t-ink-dim)">
+              {t("moderationLead")}
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={refreshing || paging}
+            onClick={() => load().catch(() => {})}
+            className={pill}
+            aria-busy={refreshing}
+          >
+            <RefreshCw size={15} aria-hidden />
+            {workspace("refresh")}
+          </button>
+        </header>
+        <div
+          role="group"
+          aria-label={workspace("reviewType")}
+          className="flex flex-wrap gap-2"
+        >
+          {filters.map((filter) => {
+            const Icon = filter.icon
+
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                aria-pressed={view === filter.id}
+                onClick={() => setView(filter.id)}
+                className={cn(
+                  pill,
+                  view === filter.id &&
+                    "border-(--t-accent-primary) bg-(--t-accent-chip) text-(--t-accent-primary)"
+                )}
+              >
+                <Icon size={15} aria-hidden />
+                {filter.label}
+                {filter.count !== undefined && (
+                  <Badge
+                    color={view === filter.id ? "violet" : "dim"}
+                    size="xs"
+                    label={formatter.number(filter.count)}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+        <p className="m-0 flex items-center gap-1.5 border-t border-(--t-border-line) pt-3 text-[12px] text-(--t-ink-dim)">
+          <LockKeyhole size={13} aria-hidden />
+          {workspace("privateReview")}
+        </p>
+      </section>
+      {error && (
+        <p
+          role="alert"
+          className="m-0 rounded-[18px] border border-(--t-palette-coral-fg)/20 bg-(--t-palette-coral-soft) p-4 text-[14px] text-(--t-palette-coral-fg)"
+        >
+          {error}
+        </p>
+      )}
       {loadedScope === actor.scope && (
         <>
-          <section aria-label={t("proposals")} className="grid gap-4">
-            <h2 className="text-xl font-semibold">{t("proposals")}</h2>
-            {revisions.length === 0 && <p>{t("emptyQueue")}</p>}
+          <section
+            aria-label={t("proposals")}
+            hidden={view !== "messages"}
+            className={view === "messages" ? "grid gap-4" : "hidden"}
+          >
+            <h2 className="sr-only">{t("proposals")}</h2>
+            <p className="m-0 text-[13px] text-(--t-ink-dim)">
+              {workspace("messagesLead")}
+            </p>
+            {!revisions.length && (
+              <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep)">
+                <EmptyState
+                  compact
+                  message={t("emptyQueue")}
+                  icon="mdi:clipboard-check-outline"
+                />
+              </div>
+            )}
             {revisions.map((revision) => (
-              <article
+              <DiscussionReviewCard
                 key={revision.id}
-                className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5"
-              >
-                <h3>
-                  {revision.title ?? revision.threadTitle ?? t("untitled")}
-                </h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <h4>{t("currentText")}</h4>
-                    {revision.previousTitle && (
-                      <p className="font-semibold">{revision.previousTitle}</p>
-                    )}
-                    <p className="break-words whitespace-pre-wrap">
-                      {revision.previousBody}
-                    </p>
-                  </div>
-                  <div>
-                    <h4>{t("proposedText")}</h4>
-                    {revision.title && (
-                      <p className="font-semibold">{revision.title}</p>
-                    )}
-                    <p className="break-words whitespace-pre-wrap">
-                      {revision.body}
-                    </p>
-                    <DiscussionImages images={revision.attachments} />
-                  </div>
-                </div>
-                {revision.baseVersion !== revision.currentVersion && (
-                  <p role="status">{t("conflict")}</p>
-                )}
-                <label>
-                  {t("reviewNote")}
-                  <textarea
-                    value={notes[revision.id] ?? ""}
-                    onChange={(event) =>
-                      setNotes((previous) => ({
-                        ...previous,
-                        [revision.id]: event.target.value,
-                      }))
-                    }
-                    maxLength={2000}
-                    rows={2}
-                    className="mt-1 w-full rounded-lg border p-2"
-                  />
-                </label>
-                <div className="mt-3 flex gap-3">
-                  <button
-                    type="button"
-                    disabled={
-                      busy ||
-                      revision.baseVersion !== revision.currentVersion ||
-                      (exceptions[revision.id] &&
-                        !exceptionReasons[revision.id]?.trim())
-                    }
-                    onClick={() =>
-                      decide(
-                        "revisions",
-                        revision.id,
-                        "approve",
-                        revision.baseVersion
-                      )
-                    }
-                  >
-                    {t("approve")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy || !feedback[revision.id]?.trim()}
-                    onClick={() =>
-                      decide(
-                        "revisions",
-                        revision.id,
-                        "reject",
-                        revision.baseVersion
-                      )
-                    }
-                  >
-                    {t("reject")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy || !feedback[revision.id]?.trim()}
-                    onClick={() =>
-                      decide(
-                        "revisions",
-                        revision.id,
-                        "request_changes",
-                        revision.baseVersion
-                      )
-                    }
-                  >
-                    {t("requestChanges")}
-                  </button>
-                </div>
-                <label className="mt-3 block text-sm">
-                  {t("authorFeedback")}
-                  <textarea
-                    value={feedback[revision.id] ?? ""}
-                    onChange={(event) =>
-                      setFeedback((previous) => ({
-                        ...previous,
-                        [revision.id]: event.target.value,
-                      }))
-                    }
-                    rows={3}
-                    maxLength={2000}
-                    className="mt-1 w-full rounded-xl border p-3"
-                  />
-                </label>
-                <p className="rounded-xl bg-(--t-bg-muted) p-3 text-sm">
-                  {revision.contentFlags
-                    ? t(
-                        revision.contentFlags.covered
-                          ? "wordFilterCovered"
-                          : "wordFilterUncovered",
-                        {
-                          language: languageName(
-                            revision.contentFlags.language,
-                            [],
-                            locale
-                          ),
-                        }
-                      )
-                    : t("wordFilterUnknown")}
-                </p>
-                {revision.contentFlags?.terms?.length ? (
-                  <p className="text-sm">
-                    {t("wordFilterFlags")}:{" "}
-                    {revision.contentFlags.terms.join(", ")}
-                  </p>
-                ) : null}
-                <label className="mt-3 flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={exceptions[revision.id] ?? false}
-                    onChange={(event) =>
-                      setExceptions((previous) => ({
-                        ...previous,
-                        [revision.id]: event.target.checked,
-                      }))
-                    }
-                  />
-                  {t("allowOriginalWording")}
-                </label>
-                {exceptions[revision.id] && (
-                  <label className="mt-2 block text-sm">
-                    {t("wordingReason")}
-                    <textarea
-                      required
-                      rows={2}
-                      maxLength={2000}
-                      value={exceptionReasons[revision.id] ?? ""}
-                      onChange={(event) =>
-                        setExceptionReasons((previous) => ({
-                          ...previous,
-                          [revision.id]: event.target.value,
-                        }))
-                      }
-                      className="mt-1 w-full rounded-xl border p-3"
-                    />
-                  </label>
-                )}
-              </article>
+                revision={revision}
+                onReload={load}
+                showThread
+              />
             ))}
             {revisionOffset !== null && (
               <button
                 type="button"
-                onClick={() =>
-                  discussionRequest<DiscussionList<DiscussionRevision>>(
-                    `moderation/revisions?limit=20&offset=${revisionOffset}`
-                  )
-                    .then((result) => {
-                      setRevisions((previous) => [...previous, ...result.data])
-                      setRevisionOffset(result.nextOffset ?? null)
-                    })
-                    .catch((failure) =>
-                      setError(t(discussionErrorKey(failure)))
-                    )
-                }
+                disabled={paging || refreshing}
+                className={cn(pill, "justify-self-center")}
+                onClick={() => void loadMore("messages")}
               >
                 {t("loadMore")}
               </button>
             )}
           </section>
-          <section aria-label={t("reports")} className="grid gap-4">
-            <h2 className="text-xl font-semibold">{t("reports")}</h2>
-            {reports.length === 0 && <p>{t("emptyQueue")}</p>}
+          <section
+            aria-label={t("reports")}
+            hidden={view !== "reports"}
+            className={view === "reports" ? "grid gap-4" : "hidden"}
+          >
+            <h2 className="sr-only">{t("reports")}</h2>
+            <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+              {workspace("reportsLead")}
+            </p>
+            {!reports.length && (
+              <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep)">
+                <EmptyState
+                  compact
+                  lead={workspace("noReports")}
+                  detail={workspace("noReportsLead")}
+                  icon="mdi:flag-checkered"
+                />
+              </div>
+            )}
             {reports.map((report) => (
-              <article
+              <DiscussionReportReviewCard
                 key={report.id}
-                className="rounded-2xl border border-(--t-border-line) p-5"
-              >
-                <Link
-                  href={`/community/discussions/${encodeURIComponent(report.threadId)}${report.recordType === "reply" ? `#discussion-reply-${encodeURIComponent(report.recordId)}` : ""}`}
-                  className="underline"
-                >
-                  {t("viewReported")}
-                </Link>
-                <p className="break-words whitespace-pre-wrap">
-                  {report.reason}
-                </p>
-                <div className="grid gap-4 rounded-xl bg-(--t-bg-muted) p-4 md:grid-cols-2">
-                  <div>
-                    <h3 className="text-sm font-semibold">
-                      {t("reportedText")}
-                      {typeof report.recordVersion === "number" && (
-                        <span className="block font-normal">
-                          {t("versionLabel", { version: report.recordVersion })}
-                        </span>
-                      )}
-                    </h3>
-                    {report.reportedTitle && (
-                      <p className="font-semibold">{report.reportedTitle}</p>
-                    )}
-                    <p className="break-words whitespace-pre-wrap">
-                      {report.reportedBody}
-                    </p>
-                    <DiscussionImages images={report.reportedAttachments} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold">
-                      {t("currentText")}
-                      {typeof report.currentVersion === "number" && (
-                        <span className="block font-normal">
-                          {t("versionLabel", {
-                            version: report.currentVersion,
-                          })}
-                        </span>
-                      )}
-                    </h3>
-                    {report.currentTitle && (
-                      <p className="font-semibold">{report.currentTitle}</p>
-                    )}
-                    <p className="break-words whitespace-pre-wrap">
-                      {report.currentBody}
-                    </p>
-                    <DiscussionImages images={report.currentAttachments} />
-                  </div>
-                </div>
-                <label>
-                  {t("reviewNote")}
-                  <textarea
-                    value={notes[report.id] ?? ""}
-                    onChange={(event) =>
-                      setNotes((previous) => ({
-                        ...previous,
-                        [report.id]: event.target.value,
-                      }))
-                    }
-                    rows={2}
-                    maxLength={2000}
-                    className="mt-1 w-full rounded-lg border p-2"
-                  />
-                </label>
-                <div className="mt-3 flex gap-3">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      decide("reports", report.id, "dismiss", report.version)
-                    }
-                  >
-                    {t("dismiss")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={
-                      busy ||
-                      report.currentState === "removed" ||
-                      typeof report.currentVersion !== "number"
-                    }
-                    onClick={() => setConfirmRemoval(report.id)}
-                  >
-                    {t("remove")}
-                  </button>
-                </div>
-                {confirmRemoval === report.id && (
-                  <form
-                    onSubmit={(event) => {
-                      event.preventDefault()
-                      if (!feedback[report.id]?.trim()) return
-                      decide(
-                        "reports",
-                        report.id,
-                        "remove",
-                        report.version,
-                        report.currentVersion
-                      )
-                    }}
-                    className="mt-4 grid gap-3 rounded-xl border border-(--t-palette-coral-fg) bg-(--t-palette-coral-soft) p-4"
-                  >
-                    <h3 className="m-0 font-semibold">{t("confirmRemoval")}</h3>
-                    <p className="m-0 text-sm">{t("removalLead")}</p>
-                    <label>
-                      {t("authorFeedback")}
-                      <textarea
-                        required
-                        value={feedback[report.id] ?? ""}
-                        onChange={(event) =>
-                          setFeedback((previous) => ({
-                            ...previous,
-                            [report.id]: event.target.value,
-                          }))
-                        }
-                        maxLength={2000}
-                        rows={3}
-                        className="mt-1 w-full rounded-xl border bg-(--t-bg-deep) p-3"
-                      />
-                    </label>
-                    <div className="flex gap-3">
-                      <button
-                        type="submit"
-                        disabled={busy || !feedback[report.id]?.trim()}
-                        className="rounded-full bg-(--t-palette-coral-fg) px-4 py-2 text-white"
-                      >
-                        {t("confirmRemove")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmRemoval(null)}
-                      >
-                        {t("cancel")}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </article>
+                report={report}
+                onReload={load}
+              />
             ))}
             {reportOffset !== null && (
               <button
                 type="button"
-                onClick={() =>
-                  discussionRequest<DiscussionList<DiscussionReport>>(
-                    `moderation/reports?limit=20&offset=${reportOffset}`
-                  )
-                    .then((result) => {
-                      setReports((previous) => [...previous, ...result.data])
-                      setReportOffset(result.nextOffset ?? null)
-                    })
-                    .catch((failure) =>
-                      setError(t(discussionErrorKey(failure)))
-                    )
-                }
+                disabled={paging || refreshing}
+                className={cn(pill, "justify-self-center")}
+                onClick={() => void loadMore("reports")}
               >
                 {t("loadMore")}
               </button>
             )}
           </section>
-          <DiscussionRestrictions
-            key={actor.scope}
-            scope={actor.scope}
-            moderation
-          />
+          <div hidden={view !== "restrictions"}>
+            <p className="mt-0 mb-4 text-[13px] text-(--t-ink-dim)">
+              {workspace("restrictionLead")}
+            </p>
+            <DiscussionRestrictions
+              key={actor.scope}
+              scope={actor.scope}
+              moderation
+              showEmpty
+            />
+          </div>
         </>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import {
+  libraryTypeName,
   isDismissiblePrompt,
   isExistingProfileTarget,
   isProfileBackground,
@@ -512,7 +513,10 @@ export default {
         filters: { baUserId } as any,
         populate: {
           library: {
-            populate: { heroImage: { fields: ["url"] } },
+            populate: {
+              libraryType: { fields: ["name"] },
+              heroImage: { fields: ["url"] },
+            },
           },
         } as any,
       })
@@ -528,7 +532,7 @@ export default {
         documentId: a.library.documentId ?? null,
         name: a.library.name ?? null,
         slug: a.library.slug ?? null,
-        libraryType: a.library.libraryType ?? null,
+        libraryType: libraryTypeName(a.library.libraryType) ?? null,
         heroImageUrl: a.library.heroImage?.url ?? null,
       }))
 
@@ -743,7 +747,9 @@ export default {
           "tier",
           "earnedProUntil",
           "dismissedPrompts",
+          "country",
         ],
+        populate: { languages: { fields: ["code", "proficiency"] } },
         limit: 1,
       }) as Promise<
         {
@@ -752,6 +758,8 @@ export default {
           tier?: string
           earnedProUntil?: string | null
           dismissedPrompts?: unknown
+          country?: string | null
+          languages?: { code: string; proficiency: string }[]
         }[]
       >,
       strapi
@@ -798,13 +806,14 @@ export default {
       staffClaims.length
         ? (
             (await strapi.documents("api::library.library").findMany({
+              populate: { libraryType: { fields: ["name"] } },
               filters: {
                 documentId: {
                   $in: staffClaims.map((claim) => claim.libraryDocumentId),
                 },
               },
               status: "published",
-              fields: ["documentId", "name", "slug", "libraryType"],
+              fields: ["documentId", "name", "slug"],
               limit: staffClaims.length,
             })) as any[]
           ).map((library) => [library.documentId, library])
@@ -822,12 +831,17 @@ export default {
                 ...claim,
                 name: library.name ?? "Library",
                 slug: library.slug ?? "",
-                libraryType: library.libraryType ?? "",
+                libraryType: libraryTypeName(library.libraryType) ?? "",
               },
             ]
           : []
       }),
       username: profile?.username ?? null,
+      country: profile?.country ?? null,
+      languages: (profile?.languages ?? []).map(({ code, proficiency }) => ({
+        code,
+        proficiency,
+      })),
       tier: profile?.tier ?? null,
       claims: affiliations
         .map((a) => a.library?.documentId)

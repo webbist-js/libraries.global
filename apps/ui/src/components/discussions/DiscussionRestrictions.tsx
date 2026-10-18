@@ -1,7 +1,11 @@
 "use client"
 
+import { LockKeyhole, ShieldAlert } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
+
+import { AuthorBadges } from "@/components/discussions/AuthorBadges"
+import { EmptyState } from "@/components/ds/EmptyState"
 
 import {
   discussionErrorKey,
@@ -10,6 +14,7 @@ import {
   type DiscussionRestriction,
   type Subject,
 } from "./api"
+import { DiscussionModeratorButton } from "./DiscussionModeratorButton"
 import { DiscussionTime } from "./DiscussionPresentation"
 
 /** Only server-projected restrictions are shown; identity keys never reach the UI. */
@@ -17,10 +22,12 @@ export function DiscussionRestrictions({
   scope,
   moderation = false,
   subjects = [],
+  showEmpty = false,
 }: {
   scope: string
   moderation?: boolean
   subjects?: readonly Pick<Subject, "id" | "name">[]
+  showEmpty?: boolean
 }) {
   const t = useTranslations("discussions")
   const [records, setRecords] = useState<DiscussionRestriction[]>([])
@@ -32,13 +39,19 @@ export function DiscussionRestrictions({
   const [busy, setBusy] = useState(false)
   const load = useCallback(
     async (offset = 0) => {
-      const result = await discussionRequest<
-        DiscussionList<DiscussionRestriction>
-      >(
-        moderation
-          ? `moderation/sanctions?state=active&limit=20&offset=${offset}`
-          : "my/status"
-      )
+      let result: DiscussionList<DiscussionRestriction>
+      try {
+        result = await discussionRequest<DiscussionList<DiscussionRestriction>>(
+          moderation
+            ? `moderation/sanctions?state=active&limit=20&offset=${offset}`
+            : "my/status"
+        )
+      } catch (failure) {
+        setRecords([])
+        setNextOffset(null)
+        setLoadedScope("")
+        throw failure
+      }
       const valid = (result.data ?? []).filter(
         (record) => record.mode === "mute" || record.mode === "ban"
       )
@@ -62,6 +75,7 @@ export function DiscussionRestrictions({
       cancelled = true
     }
   }, [load, t])
+  const RestrictionButton = moderation ? DiscussionModeratorButton : "button"
   const send = async (record: DiscussionRestriction) => {
     setBusy(true)
     setError("")
@@ -87,23 +101,44 @@ export function DiscussionRestrictions({
     }
   }
   if (loadedScope !== scope) return error ? <p role="alert">{error}</p> : null
-  if (!records.length && !error) return null
+  if (!records.length && !error)
+    return showEmpty ? (
+      <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep)">
+        <EmptyState
+          compact
+          message={t("noRestrictions")}
+          icon="mdi:shield-check-outline"
+        />
+      </div>
+    ) : null
 
   return (
     <section
-      className="grid gap-4 rounded-2xl border border-(--t-border-line) bg-(--t-palette-amber-soft) p-5"
+      className="grid gap-4 rounded-[24px] border border-(--t-palette-amber-bg) bg-(--t-palette-amber-soft) p-5 sm:p-6"
       aria-label={t("restrictions")}
     >
-      <h2 className="m-0 text-xl font-semibold">{t("restrictions")}</h2>
+      <h2 className="m-0 flex items-center gap-2.5 font-serif text-[25px] leading-tight tracking-tight">
+        <ShieldAlert
+          size={20}
+          className="text-(--t-palette-amber-fg)"
+          aria-hidden
+        />
+        {t("restrictions")}
+      </h2>
       {records.map((record) => (
         <article
           key={record.id}
-          className="border-t border-(--t-border-line) pt-4"
+          className="rounded-[18px] border border-(--t-border-line) bg-(--t-bg-deep) p-4"
         >
           <h3 className="m-0 text-base font-semibold">
             {t(record.mode === "ban" ? "discussionBan" : "discussionMute")}
             {record.author ? ` · ${record.author.name}` : ""}
           </h3>
+          {record.author && (
+            <div className="mt-2">
+              <AuthorBadges badges={record.author.badges} />
+            </div>
+          )}
           <p className="text-sm">
             {record.subjectName ??
               subjects.find((subject) => subject.id === record.subjectId)
@@ -139,7 +174,7 @@ export function DiscussionRestrictions({
                 send(record)
               }}
             >
-              <label className="text-sm">
+              <label className="text-[13px] font-semibold text-(--t-ink-dim)">
                 {t(moderation ? "liftReason" : "appeal")}
                 <textarea
                   required
@@ -155,7 +190,7 @@ export function DiscussionRestrictions({
                 />
               </label>
               {moderation && (
-                <label className="text-sm">
+                <label className="text-[13px] font-semibold text-(--t-ink-dim)">
                   {t("authorFeedback")}
                   <textarea
                     required
@@ -171,17 +206,18 @@ export function DiscussionRestrictions({
                   />
                 </label>
               )}
-              <button
+              <RestrictionButton
                 type="submit"
                 disabled={
                   busy ||
                   !messages[record.id]?.trim() ||
                   (moderation && !feedback[record.id]?.trim())
                 }
-                className="justify-self-start rounded-full border px-4 py-2 font-semibold disabled:opacity-50"
+                className="min-h-11 justify-self-start rounded-full border px-4 py-2 text-[13px] font-semibold disabled:opacity-50"
+                {...(moderation ? { tone: "neutral" as const } : {})}
               >
                 {t(moderation ? "liftRestriction" : "sendAppeal")}
-              </button>
+              </RestrictionButton>
             </form>
           )}
         </article>
@@ -189,6 +225,7 @@ export function DiscussionRestrictions({
       {nextOffset !== null && (
         <button
           type="button"
+          className="min-h-11 justify-self-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-[13px] font-semibold"
           onClick={() =>
             load(nextOffset).catch((failure) =>
               setError(t(discussionErrorKey(failure)))
@@ -197,6 +234,12 @@ export function DiscussionRestrictions({
         >
           {t("loadMore")}
         </button>
+      )}
+      {moderation && (
+        <p className="m-0 flex items-center gap-1.5 text-[12px] text-(--t-ink-dim)">
+          <LockKeyhole size={13} aria-hidden />
+          {t("moderationLogPrivacy")}
+        </p>
       )}
       {error && <p role="alert">{error}</p>}
     </section>

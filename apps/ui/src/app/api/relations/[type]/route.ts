@@ -14,6 +14,7 @@ const relationHeaders = async () => ({
 // Map wizard keys → Strapi plural API names
 const TYPE_MAP: Record<string, string> = {
   services: "services",
+  "library-types": "library-types",
   amenities: "amenities",
   accessibility: "accessibility-features",
   continents: "continents",
@@ -340,6 +341,26 @@ export async function GET(
       )
     if (configured.some((entry) => entry.code === requestedLocale))
       locale = requestedLocale
+  }
+  // The published suggestion catalogue also serves type choices, without broad CMS token permissions.
+  if (type === "library-types") {
+    try {
+      const response = await fetch(
+        `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(locale)}`,
+        { headers: strapiServiceHeaders(), cache: "no-store" }
+      )
+      if (!response.ok) return NextResponse.json({ data: [] }, { status: 503 })
+      const json = await response.json()
+
+      return NextResponse.json({
+        data: (json.data?.library_types ?? []).map((item: Choice) => ({
+          documentId: item.documentId,
+          name: item.name,
+        })),
+      })
+    } catch {
+      return NextResponse.json({ data: [] }, { status: 503 })
+    }
   }
   if (type === "topics") return approvedTopics(locale)
   if (type === "locales") return locales()

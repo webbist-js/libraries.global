@@ -1,18 +1,10 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
 
-const { translate } = vi.hoisted(() => ({ translate: (key: string) => key }))
-vi.mock("next-intl", () => ({ useTranslations: () => translate }))
-vi.mock("@iconify/react", () => ({ Icon: () => null }))
+import { PlanCompareTable } from "@/app/[locale]/contribute/_components/membership/PlanCompareTable"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
-import { PlanCompareTable } from "../PlanCompareTable"
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 
 afterEach(cleanup)
 
@@ -22,7 +14,7 @@ it("compares two selected plans on mobile using the same export limits as the fu
     screen.getByRole("region", { name: "Compare two plans" })
   )
   expect(mobile.getByText("10,000")).toBeTruthy()
-  fireEvent.change(mobile.getByLabelText("Second plan"), {
+  fireEvent.change(screen.getByLabelText("Second plan"), {
     target: { value: "supporter" },
   })
   expect(mobile.getByText("500")).toBeTruthy()
@@ -46,4 +38,74 @@ it("keeps the highlighted column distinct from the current membership and syncs 
   expect(
     (screen.getByLabelText("Second plan") as HTMLSelectElement).value
   ).toBe("team")
+})
+
+it("filters roadmap features across both layouts without losing the selected plans", () => {
+  render(<PlanCompareTable currentPlan="pro" />)
+  const controls = within(
+    screen.getByRole("region", { name: "Comparison controls" })
+  )
+  fireEvent.change(controls.getByLabelText("Second plan"), {
+    target: { value: "team" },
+  })
+  const full = within(
+    screen.getByRole("region", { name: "What each plan includes" })
+  )
+  const mobile = within(
+    screen.getByRole("region", { name: "Compare two plans" })
+  )
+  expect(
+    full.getByRole("row", { name: /Deprivation and transit layers/ })
+  ).toBeTruthy()
+  expect(
+    mobile.getByRole("row", { name: /Deprivation and transit layers/ })
+  ).toBeTruthy()
+
+  fireEvent.click(controls.getByRole("radio", { name: "Available now" }))
+  expect(
+    full.queryByRole("row", { name: /Deprivation and transit layers/ })
+  ).toBeNull()
+  expect(
+    mobile.queryByRole("row", { name: /Deprivation and transit layers/ })
+  ).toBeNull()
+  expect(
+    full.getByRole("row", { name: /Export Atlas results as CSV/ })
+  ).toBeTruthy()
+  expect(
+    full.getByRole("button", { name: /Team £600/ }).getAttribute("aria-pressed")
+  ).toBe("true")
+  expect(
+    (controls.getByLabelText("Second plan") as HTMLSelectElement).value
+  ).toBe("team")
+
+  fireEvent.click(controls.getByRole("radio", { name: "All features" }))
+  expect(
+    mobile.getByRole("row", { name: /Deprivation and transit layers/ })
+  ).toBeTruthy()
+})
+
+it("expands and collapses the visible feature groups from the shared toolbar", () => {
+  render(<PlanCompareTable />)
+  const controls = within(
+    screen.getByRole("region", { name: "Comparison controls" })
+  )
+  const mobile = within(
+    screen.getByRole("region", { name: "Compare two plans" })
+  )
+  fireEvent.click(controls.getByRole("button", { name: "Expand all groups" }))
+  expect(
+    mobile
+      .getAllByRole("button")
+      .every((button) => button.getAttribute("aria-expanded") === "true")
+  ).toBe(true)
+  fireEvent.click(controls.getByRole("button", { name: "Collapse all groups" }))
+  expect(mobile.queryAllByRole("table")).toHaveLength(0)
+  expect(controls.getByText(/^Showing 0 of/)).toBeTruthy()
+  fireEvent.click(controls.getByRole("radio", { name: "Available now" }))
+  fireEvent.click(controls.getByRole("button", { name: "Expand all groups" }))
+  expect(
+    mobile
+      .getAllByRole("button")
+      .every((button) => button.getAttribute("aria-expanded") === "true")
+  ).toBe(true)
 })

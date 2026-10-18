@@ -2,6 +2,7 @@ import "server-only"
 
 import {
   submittedSourceRecords,
+  type LibraryTypeValue,
   type LibrarySourceRecord,
   type LibraryNotice,
 } from "@repo/shared-data"
@@ -595,7 +596,7 @@ export type PopulatedCountryData = Omit<
     name: string
     slug: string
     summary?: string | null
-    libraryType?: string | null
+    libraryType?: LibraryTypeValue
     operationalStatus?: string | null
     heroImage?: { url?: string | null; alternativeText?: string | null } | null
   } | null
@@ -650,7 +651,7 @@ export type RegionLibrary = {
   documentId: string
   name: string
   slug: string
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
   city?: string | null
   district?: string | null
   summary?: string | null

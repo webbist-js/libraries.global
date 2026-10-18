@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   diffTimetable,
   normalizeMobileTimetable,
   summarizeDiff,
@@ -178,7 +179,7 @@ export function toCorrectionRecord(
     closureReason: str(lib.closureReason),
     openingTimes:
       hours && Array.isArray(hours.days) ? (hours as OpeningTimesData) : null,
-    libraryType: str(lib.libraryType),
+    libraryType: str(libraryTypeName(lib.libraryType)),
     mobileTimetable: normalizeMobileTimetable(lib.mobileTimetable),
     accessibility: refs(lib.accessibility),
     amenities: refs(lib.amenities),
@@ -238,7 +239,8 @@ export function recordChanges(
   current: CorrectionRecord,
   edit: RecordEdit
 ): RecordChanges {
-  const keys = KEYS[editorFor(category, current.libraryType)]
+  const keys =
+    KEYS[editorFor(category, libraryTypeName(current.libraryType) ?? undefined)]
   const changes: Record<string, unknown> = {}
   const previous: Record<string, unknown> = {}
   const suggestedOptions: Partial<Record<OptionKey, string[]>> = {}

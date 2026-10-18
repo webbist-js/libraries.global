@@ -2,9 +2,16 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { CompositionPreferences } from "@/lib/composition-language"
+
 const session = vi.hoisted(() => ({
   data: { user: { id: "moderator", moderationScopes: ["discussions"] } } as {
-    user: { id: string; moderationScopes: string[] }
+    user: {
+      id: string
+      moderationScopes: string[]
+      capabilities?: string[]
+      compositionPreferences?: CompositionPreferences
+    }
   } | null,
   isPending: false,
   error: null as Error | null,
@@ -23,6 +30,48 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetch)
 })
 describe("discussion host permission hint", () => {
+  it("invalidates context management when Board capabilities change without changing moderation scope", async () => {
+    session.data!.user.capabilities = ["drives.manage"]
+    fetch.mockResolvedValueOnce(
+      Response.json({
+        signedIn: true,
+        canModerate: true,
+        viewerId: "moderator",
+      })
+    )
+    const view = renderHook(useDiscussionActor)
+    await waitFor(() => expect(view.result.current.ready).toBe(true))
+    const originalScope = view.result.current.scope
+    fetch.mockImplementationOnce(() => new Promise(() => {}))
+    session.data!.user.capabilities = []
+    view.rerender()
+    expect(view.result.current.scope).not.toBe(originalScope)
+    expect(view.result.current).toMatchObject({
+      ready: false,
+      signedIn: false,
+      canModerate: false,
+    })
+  })
+  it("uses only the verified current account's owner preferences and drops them on account changes", async () => {
+    session.data!.user.compositionPreferences = { country: "CO" }
+    fetch.mockResolvedValueOnce(
+      Response.json({
+        signedIn: true,
+        canModerate: false,
+        viewerId: "moderator",
+      })
+    )
+    const view = renderHook(useDiscussionActor)
+    await waitFor(() =>
+      expect(view.result.current.compositionPreferences).toEqual({
+        country: "CO",
+      })
+    )
+    fetch.mockImplementationOnce(() => new Promise(() => {}))
+    session.data = { user: { id: "new-account", moderationScopes: [] } }
+    view.rerender()
+    expect(view.result.current.compositionPreferences).toBeUndefined()
+  })
   it("does not reuse a privileged hint when the same account's moderation scope changes", async () => {
     fetch.mockResolvedValueOnce(
       Response.json({

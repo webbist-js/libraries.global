@@ -4,9 +4,10 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { BackLink } from "@/components/ds/BackLink"
 import { Drawer } from "@/components/ds/Drawer"
-import { useCapabilities } from "@/lib/access-client"
-import { authClient } from "@/lib/auth-client"
+import { useCapabilities, useHydratedSession } from "@/lib/access-client"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import {
   contributionPlaceParams,
   type ContributionPlace,
@@ -15,6 +16,7 @@ import { T } from "@/lib/design-tokens"
 import { plainDriveTitle } from "@/lib/drives/drive-view"
 import type { Drive, DriveTask } from "@/lib/drives/types"
 
+import { DriveHowToHelp } from "./DriveHowToHelp"
 import { DriveTaskList } from "./DriveTaskList"
 import { DriveTaskPanel } from "./DriveTaskPanel"
 import { type DriveMine, DriveYourPart } from "./DriveYourPart"
@@ -30,40 +32,21 @@ import {
   taskVerb,
 } from "./task-panel.logic"
 
-/** The panel sits beside the list from Tailwind's `lg` up; below, a drawer. */
-const WIDE_QUERY = "(min-width: 1024px)"
-
 const CARD = {
   background: T.bg.deep,
   border: `1px solid ${T.border.line}`,
-  borderRadius: 24,
-  padding: "clamp(20px,2.6vw,28px)",
+  borderRadius: 32,
+  padding: "clamp(20px,2.6vw,32px)",
 } as const
 
 type Point = { lat: number; lng: number }
-
-/** Whether the screen is wide enough for the side column. */
-function useWide(): boolean {
-  const [wide, setWide] = useState(true)
-  useEffect(() => {
-    const mq = globalThis.matchMedia?.(WIDE_QUERY)
-    if (!mq) return
-    const update = () => setWide(mq.matches)
-    update()
-    mq.addEventListener?.("change", update)
-
-    return () => mq.removeEventListener?.("change", update)
-  }, [])
-
-  return wide
-}
 
 const nameOf = (panel: HTMLElement) =>
   panel.querySelector<HTMLElement>("[data-drive-task-name]")
 
 /**
  * An open drive's tasks on its page (spec §6.1): the task list, the task
- * panel beside it on wide screens (a drawer below `lg`), and "Your part".
+ * editor in the shared drawer, help steps and "Your part".
  * After a send it announces "Sent for review", marks the row "In review"
  * and opens the next library, with focus on its name. Skips last for the
  * browser session. Every list and count is one page or one grouped count
@@ -76,21 +59,50 @@ export function DriveTaskArea({
   readonly drive: Drive
   readonly initialPlace?: ContributionPlace
 }) {
+  const actor = useHydratedSession()
+  const user = !actor.isPending && !actor.error ? actor.data?.user : null
+  const scope = contributionAccountScope(user)
+
+  return (
+    <DriveTasksWorkspace
+      key={`${drive.documentId}:${scope}:${JSON.stringify(initialPlace ?? {})}`}
+      drive={drive}
+      initialPlace={initialPlace}
+      signedIn={Boolean(user)}
+      accountScope={scope}
+    />
+  )
+}
+
+function DriveTasksWorkspace({
+  drive,
+  initialPlace,
+  signedIn,
+  accountScope,
+}: {
+  readonly drive: Drive
+  readonly initialPlace?: ContributionPlace
+  readonly signedIn: boolean
+  readonly accountScope: string
+}) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("drivePage")
   const placeQuery = new URLSearchParams(
     contributionPlaceParams(initialPlace ?? {})
   ).toString()
 
-  const { data: session, isPending } = authClient.useSession()
-  const signedIn = Boolean(session?.user)
   const { claimedLibraryIds } = useCapabilities()
-  const wide = useWide()
   const verb = taskVerb(drive.focus)
   const chip = focusChipOf(drive.focus)
 
   const [query, setQuery] = useState("")
   const [near, setNear] = useState<Point | null>(null)
   const [page, setPage] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [pageSize, setPageSize] = useState(8)
+  const [randomBusy, setRandomBusy] = useState(false)
+  const picking = useRef(false)
+  const skipScope = `${drive.documentId}:${accountScope}`
   const [tasks, setTasks] = useState<DriveTask[]>([])
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -112,8 +124,8 @@ export function DriveTaskArea({
 
   // Skips made earlier in this session.
   useEffect(() => {
-    setSkipped(new Set(readSkips(drive.documentId)))
-  }, [drive.documentId])
+    setSkipped(new Set(readSkips(skipScope)))
+  }, [skipScope])
 
   const load = useCallback(
     async (p: number, q: string, point: Point | null) => {
@@ -133,15 +145,14 @@ export function DriveTaskArea({
         const json = (await res.json()) as {
           data?: DriveTask[]
           hasMore?: boolean
+          total?: number
+          pageSize?: number
         }
         if (ask !== request.current) return
         const data = json.data ?? []
-        setTasks((prev) => {
-          if (p === 0) return data
-          const seen = new Set(prev.map((t) => t.documentId))
-
-          return [...prev, ...data.filter((t) => !seen.has(t.documentId))]
-        })
+        setTasks(data)
+        setPageSize(json.pageSize ?? 8)
+        setTotal(json.total ?? p * (json.pageSize ?? 8) + data.length)
         setHasMore(Boolean(json.hasMore))
         setPage(p)
       } catch {
@@ -156,6 +167,10 @@ export function DriveTaskArea({
 
   useEffect(() => {
     void load(0, query, near)
+
+    return () => {
+      request.current += 1
+    }
   }, [load, query, near])
 
   // The reader's quota and tier, once, and their part after each send.
@@ -228,7 +243,9 @@ export function DriveTaskArea({
     announce("Sent for review")
     setQuota((q) => q && { ...q, pendingCount: q.pendingCount + 1 })
     setMineVersion((v) => v + 1)
-    open(nextTask(tasks, task.documentId, skipped, nowDone))
+    const next = nextTask(tasks, task.documentId, skipped, nowDone)
+    if (next) void selectRow(next)
+    else open(null)
   }
 
   const onSkip = (task: DriveTask) => {
@@ -238,14 +255,17 @@ export function DriveTaskArea({
         { method: "DELETE" }
       ).catch(() => {})
     }
-    const nowSkipped = new Set(addSkip(drive.documentId, task.documentId))
+    const nowSkipped = new Set(addSkip(skipScope, task.documentId))
     setSkipped(nowSkipped)
-    open(nextTask(tasks, task.documentId, nowSkipped, done))
+    const next = nextTask(tasks, task.documentId, nowSkipped, done)
+    if (next) void selectRow(next)
+    else open(null)
   }
 
   // "Give me a library": signed in, a held pick from the server; signed
   // out, D1's random pick from what's already on screen.
   const onRandom = async () => {
+    if (picking.current) return
     if (!signedIn) {
       const pick = randomTask(tasks, skipped, done)
       if (pick) open(pick)
@@ -253,6 +273,8 @@ export function DriveTaskArea({
 
       return
     }
+    picking.current = true
+    setRandomBusy(true)
     try {
       const res = await fetch(
         `/api/drives/${encodeURIComponent(drive.slug)}/next`,
@@ -280,11 +302,6 @@ export function DriveTaskArea({
       }
       if (json.data) {
         const task = json.data
-        setTasks((prev) =>
-          prev.some((t) => t.documentId === task.documentId)
-            ? prev
-            : [task, ...prev]
-        )
         open(task)
         announce("Here’s a library. It’s kept for you for 20 minutes.")
       } else {
@@ -294,6 +311,9 @@ export function DriveTaskArea({
       }
     } catch {
       announce("We couldn’t get a library. Try again shortly.")
+    } finally {
+      picking.current = false
+      setRandomBusy(false)
     }
   }
 
@@ -365,92 +385,89 @@ export function DriveTaskArea({
 
   return (
     <>
-      <section
-        aria-labelledby="drive-tasks-heading"
-        className="flex flex-col gap-5"
-        style={CARD}
-      >
-        <div className="flex flex-col gap-1.5">
-          <h2
-            id="drive-tasks-heading"
-            className="m-0"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              fontSize: "clamp(26px,2.6vw,32px)",
-              color: T.ink.base,
-            }}
-          >
-            Pick a library
-          </h2>
-          <p
-            className="m-0 text-[15px] leading-[1.55]"
-            style={{ color: T.ink.dim }}
-          >
-            Most complete first, so each one is quick to finish. Every change
-            goes to a reviewer, as anywhere on the site.
-          </p>
-        </div>
-
-        <div
-          aria-label={tUi("drive_updates")}
-          className="min-h-0"
-          role="status"
-          style={{ color: T.accent.ok }}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <section
+          aria-labelledby="drive-tasks-heading"
+          className="flex min-w-0 flex-col gap-4"
+          style={CARD}
         >
-          {announcement.text ? (
-            <span
-              key={announcement.n}
-              className="inline-flex items-center gap-2 text-[15px] font-semibold"
-            >
-              <Icon
-                aria-hidden="true"
-                height={18}
-                icon="mdi:check-circle-outline"
-                width={18}
-              />
-              {announcement.text}
-            </span>
-          ) : null}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <h2
+                id="drive-tasks-heading"
+                className="m-0 text-[clamp(32px,3.3vw,40px)] leading-tight font-medium"
+                style={{ fontFamily: T.font.serif }}
+              >
+                {t("pickLibrary")}
+              </h2>
+              <BackLink
+                href="/community#drives"
+                icon="chevron"
+                className="shrink-0 text-base text-(--t-ink-dim) [&_svg]:size-4"
+              >
+                {t("backToDrives")}
+              </BackLink>
+            </div>
+            <p className="m-0 max-w-[70ch] text-base leading-relaxed text-(--t-ink-dim)">
+              {t("taskIntro")}
+            </p>
+          </div>
+          <div
+            aria-label={tUi("drive_updates")}
+            role="status"
+            className={
+              announcement.text
+                ? "text-[14px] font-semibold text-(--t-ink-base)"
+                : "sr-only"
+            }
+          >
+            {announcement.text ? (
+              <span
+                key={announcement.n}
+                className="inline-flex items-center gap-2"
+              >
+                <Icon aria-hidden icon="mdi:information-outline" width={17} />
+                {announcement.text}
+              </span>
+            ) : null}
+          </div>
           <DriveTaskList
             doneIds={done}
             error={listError}
             hasMore={hasMore}
             loading={loading}
             near={near !== null}
-            onMore={() => void load(page + 1, query, near)}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPage={(p) => void load(p, query, near)}
             onNear={setNear}
-            onRandom={() => void onRandom()}
             onSearch={setQuery}
             onSelect={(task) => void selectRow(task)}
             query={query}
-            selectedId={selected?.documentId ?? null}
+            selectedId={drawerOpen ? (selected?.documentId ?? null) : null}
             tasks={tasks}
             verb={verb}
+            icon={chip.icon}
           />
-          {wide ? (
-            <div
-              // Hidden by CSS below lg too, so a phone's first paint (before
-              // the media query is read) never shows the side column.
-              className="hidden flex-col rounded-[20px] border p-5 lg:sticky lg:top-24 lg:flex"
-              style={{ background: T.bg.void, borderColor: T.border.line }}
-            >
-              {panel ?? (
-                <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-                  {isPending || signedIn
-                    ? "Pick a library from the list, or press “Give me a library”."
-                    : "Pick a library to see what it needs. You’ll be asked to sign in before you send anything."}
-                </p>
-              )}
-            </div>
+        </section>
+        <div className="flex min-w-0 flex-col gap-3">
+          <DriveHowToHelp
+            drive={drive}
+            onRandom={() => void onRandom()}
+            busy={randomBusy}
+            disabled={loading}
+          />
+          {signedIn ? (
+            <DriveYourPart
+              mine={mine}
+              quota={quota}
+              toArchivist={toArchivist}
+            />
           ) : null}
         </div>
-      </section>
-
-      {!wide && drawerOpen && panel ? (
+      </div>
+      {drawerOpen && panel ? (
         <Drawer
           icon={{ name: chip.icon, bg: chip.tint.bg, fg: chip.tint.fg }}
           initialFocus={nameOf}
@@ -460,13 +477,20 @@ export function DriveTaskArea({
           titleId="drive-task-drawer-title"
         >
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
+            <p
+              role="status"
+              aria-label={tUi("drive_updates")}
+              className={
+                announcement.text
+                  ? "mt-0 mb-4 text-[14px] font-semibold text-(--t-ink-base)"
+                  : "sr-only"
+              }
+            >
+              {announcement.text}
+            </p>
             {panel}
           </div>
         </Drawer>
-      ) : null}
-
-      {signedIn ? (
-        <DriveYourPart mine={mine} quota={quota} toArchivist={toArchivist} />
       ) : null}
     </>
   )

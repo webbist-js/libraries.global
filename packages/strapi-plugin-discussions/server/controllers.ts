@@ -62,6 +62,24 @@ export default function controllers({ strapi }: { strapi: any }) {
     )
   const reportDecision = (ctx: any, actor: any) =>
     service().decideReport(actor, id(ctx.params.id), ctx.request.body)
+  const contextMetadata = (ctx: any, actor: any) =>
+    service().contextMetadata(actor, {
+      uid: ctx.query.contextUid,
+      documentId: ctx.query.contextId,
+      ...(ctx.query.contextLocale ? { locale: ctx.query.contextLocale } : {}),
+    })
+  const configureContext = (ctx: any, actor: any) =>
+    service().configureContext(
+      actor,
+      object(ctx.request.body).target,
+      ctx.request.body
+    )
+  const addContextLink = (ctx: any, actor: any) =>
+    service().addContextLink(actor, ctx.request.body)
+  const actContextLink = (ctx: any, actor: any) =>
+    service().actContextLink(actor, id(ctx.params.id), ctx.request.body)
+  const contexts = (ctx: any, actor: any) =>
+    service().discoverContexts(actor, ctx.query)
 
   const image = async (ctx: any, actor: any) => {
     const media = await service().image(actor, id(ctx.params.id))
@@ -169,6 +187,16 @@ export default function controllers({ strapi }: { strapi: any }) {
       service().listSubjects(actor, ctx.query)
     ),
     threads: endpoint((ctx, actor) => service().listThreads(actor, ctx.query)),
+    contextMetadata: endpoint(contextMetadata),
+    configureContext: endpoint(configureContext),
+    addContextLink: endpoint(addContextLink),
+    actContextLink: endpoint(actContextLink),
+    contexts: endpoint(contexts),
+    adminContextMetadata: endpoint(contextMetadata, true),
+    adminConfigureContext: endpoint(configureContext, true),
+    adminAddContextLink: endpoint(addContextLink, true),
+    adminActContextLink: endpoint(actContextLink, true),
+    adminContexts: endpoint(contexts, true),
     thread: endpoint((ctx, actor) =>
       service().getThread(actor, id(ctx.params.id))
     ),

@@ -10,9 +10,14 @@ import { discussionRequest } from "./api"
 export function useDiscussionActor() {
   const { data, isPending, error } = useHydratedSession()
   const identity = data?.user?.id ?? "guest"
-  const grants = JSON.stringify(
-    (data?.user as { moderationScopes?: unknown } | undefined)?.moderationScopes
-  )
+  const user = data?.user
+  const grants = JSON.stringify({
+    moderation: user?.moderationScopes,
+    capabilities: user?.capabilities,
+    staff: user?.staffLibraries,
+    claims: user?.claimedLibraryIds,
+    editors: user?.editorLocales,
+  })
   const scope = `${identity}:${grants}`
   const [access, setAccess] = useState<{
     scope: string
@@ -57,5 +62,7 @@ export function useDiscussionActor() {
     ready,
     signedIn: ready && Boolean(data?.user) && access.signedIn,
     canModerate: ready && Boolean(data?.user) && access.canModerate,
+    compositionPreferences:
+      ready && data?.user ? data.user.compositionPreferences : undefined,
   }
 }

@@ -136,6 +136,9 @@ export function ArticleEditorShell({
   const { canDirectEdit, ready } = useCapabilities()
   const sourceLocale =
     article?.locale ??
+    (mode === "new" && locales.some((item) => item.code === initialLocale)
+      ? initialLocale
+      : undefined) ??
     locales.find((l) => l.code === uiLocale)?.code ??
     locales.find((l) => l.isDefault)?.code ??
     uiLocale

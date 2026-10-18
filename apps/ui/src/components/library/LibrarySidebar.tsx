@@ -1,6 +1,7 @@
 // Sticky sidebar for the library detail page (v2): record, tasks and links.
 
 import { Icon } from "@iconify/react"
+import { libraryTypeName } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { facilityRows } from "@/components/library/facility-rows"
@@ -45,7 +46,7 @@ export function libraryChecklist(library: Lib) {
   const rec = asRecord(library)
 
   return recordChecklist({
-    libraryType: library.libraryType,
+    libraryType: libraryTypeName(library.libraryType),
     mobileTimetable: rec.mobileTimetable,
     homeLibrary: rec.homeLibrary,
     heroImage: library.heroImage,
@@ -197,7 +198,8 @@ export function LibraryRecordPanel({
         {availableSections(verifyRecordOf(library)).map((section) => (
           <div key={section} className="flex justify-between gap-3">
             <dt>
-              {section === "hours" && library.libraryType === "Mobile"
+              {section === "hours" &&
+              libraryTypeName(library.libraryType) === "Mobile"
                 ? "Timetable checked"
                 : `${section[0]!.toUpperCase()}${section.slice(1)} checked`}
             </dt>
@@ -240,7 +242,7 @@ export function LibraryTasksPanel({
   return (
     <LibraryHelpPanel
       showDrive={false}
-      libraryType={library.libraryType}
+      libraryType={libraryTypeName(library.libraryType)}
       facilityQuestions={facilityQuestions}
       gaps={
         facilityQuestions > 0 && !gaps.includes("facilities")
@@ -404,7 +406,7 @@ export function LibraryClaimNote({ library }: { readonly library: Lib }) {
       libraryEntityRef={library.entityRef ?? undefined}
       libraryName={library.name ?? ""}
       librarySlug={library.slug ?? ""}
-      libraryType={library.libraryType}
+      libraryType={libraryTypeName(library.libraryType)}
       hasActiveFeed={Boolean(asRecord(library).hasActiveFeed)}
     />
   )

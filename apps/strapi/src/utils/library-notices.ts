@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   checkText,
   noticeAddDays,
   noticeLocalDate,
@@ -32,7 +33,10 @@ export async function refreshBranchNoticesAtMidnight(
         ],
       },
       populate: {
-        library: { fields: ["documentId", "timezone", "libraryType"] },
+        library: {
+          populate: { libraryType: { fields: ["name"] } },
+          fields: ["documentId", "timezone"],
+        },
       },
       sort: "id:asc",
       start,
@@ -41,7 +45,12 @@ export async function refreshBranchNoticesAtMidnight(
     for (const row of rows) {
       const library = row.library,
         id = library?.documentId
-      if (!id || library.libraryType === "Mobile" || refreshed.has(id)) continue
+      if (
+        !id ||
+        libraryTypeName(library.libraryType) === "Mobile" ||
+        refreshed.has(id)
+      )
+        continue
       const local = localDateTime(now, library.timezone ?? "UTC")
       if (local.minute >= 60) continue
       refreshed.add(id)
@@ -90,7 +99,7 @@ export function normalizeNotice(
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new NoticeError(400, "invalid_notice")
   const body = input as Record<string, unknown>,
-    mobile = library.libraryType === "Mobile"
+    mobile = libraryTypeName(library.libraryType) === "Mobile"
   if (!(mobile ? MOBILE_TYPES : BRANCH_TYPES).includes(String(body.type)))
     throw new NoticeError(400, "invalid_type")
   if (

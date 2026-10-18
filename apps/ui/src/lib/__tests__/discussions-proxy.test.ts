@@ -14,6 +14,66 @@ beforeEach(() => {
   mocks.session.mockResolvedValue(null)
 })
 describe("discussion gateway", () => {
+  it("forwards the reviewable-only filter on the moderation revision queue", async () => {
+    mocks.session.mockResolvedValue({
+      user: { id: "moderator", email: "moderator@example.test" },
+    })
+    mocks.fetch.mockResolvedValue(Response.json({ data: [], total: 0 }))
+    const response = await proxyDiscussion(
+      new Request(
+        "https://example.test/api/discussions/moderation/revisions?limit=1&reviewableOnly=true"
+      ),
+      ["moderation", "revisions"]
+    )
+    expect(response.status).toBe(200)
+    expect(String(mocks.fetch.mock.calls[0]?.[0])).toContain(
+      "limit=1&reviewableOnly=true"
+    )
+  })
+
+  it.each([
+    "moderation/revisions?reviewableOnly=unknown",
+    "threads?reviewableOnly=true",
+  ])("rejects invalid reviewable filters: %s", async (path) => {
+    mocks.session.mockResolvedValue({
+      user: { id: "moderator", email: "moderator@example.test" },
+    })
+    const response = await proxyDiscussion(
+      new Request("https://example.test/api/discussions/" + path),
+      path.split("?")[0]!.split("/")
+    )
+    expect(response.status).toBe(400)
+    expect(mocks.fetch).not.toHaveBeenCalled()
+  })
+
+  it("forwards the inline conversation's chronological reply request", async () => {
+    mocks.fetch.mockResolvedValue(Response.json({ data: [], total: 0 }))
+    const response = await proxyDiscussion(
+      new Request(
+        `https://example.test/api/discussions/threads/${id}/replies?limit=20&offset=0&order=chronological`
+      ),
+      ["threads", id, "replies"]
+    )
+    expect(response.status).toBe(200)
+    expect(String(mocks.fetch.mock.calls[0]?.[0])).toContain(
+      "limit=20&offset=0&order=chronological"
+    )
+  })
+  it("rejects unknown reply ordering modes and ordering on unrelated routes", async () => {
+    for (const [path, order] of [
+      [`threads/${id}/replies`, "injected"],
+      ["threads", "chronological"],
+    ]) {
+      const response = await proxyDiscussion(
+        new Request(
+          `https://example.test/api/discussions/${path}?order=${order}`
+        ),
+        path!.split("/")
+      )
+      expect(response.status).toBe(400)
+    }
+    expect(mocks.fetch).not.toHaveBeenCalled()
+  })
   it("allows only explicit image, reaction and restriction routes with bounded language/view/search queries", async () => {
     expect(
       discussionProxyPath("PUT", ["records", "reply", id, "reaction"])

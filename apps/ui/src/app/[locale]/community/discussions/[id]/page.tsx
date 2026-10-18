@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 
+import { DiscussionsSectionHeader } from "@/components/discussions/DiscussionsSectionHeader"
 import { DiscussionThread } from "@/components/discussions/DiscussionThread"
 import { Container } from "@/components/elementary/Container"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
@@ -21,8 +22,11 @@ export default async function DiscussionPage({
   const languages = await fetchArticleLocales()
 
   return (
-    <Container className="max-w-[1100px] py-10">
-      <DiscussionThread id={id} languages={languages} />
-    </Container>
+    <>
+      <DiscussionsSectionHeader />
+      <Container className="py-8 sm:py-10">
+        <DiscussionThread id={id} languages={languages} />
+      </Container>
+    </>
   )
 }

@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   emailTemplate,
   findUnsafeContent,
   normalizeMobileTimetable,
@@ -61,7 +62,7 @@ export function facilityHealth(
   mobile: boolean,
   edit: string
 ) {
-  const checks = facilityChecklistFor(lib.libraryType)
+  const checks = facilityChecklistFor(libraryTypeName(lib.libraryType))
   const present = new Set<string>(
     ["accessibility", "services", "amenities"]
       .flatMap((key) => (Array.isArray(lib[key]) ? lib[key] : []))
@@ -262,6 +263,7 @@ export default ({ strapi }: { strapi: any }) => ({
       documentId: id,
       status: "published",
       populate: {
+        libraryType: { fields: ["name"] },
         heroImage: true,
         accessibility: true,
         amenities: true,
@@ -274,7 +276,7 @@ export default ({ strapi }: { strapi: any }) => ({
     })
     if (!lib) throw new StaffError(404, "not_found")
     const edit = `/staff/${lib.slug}/edit`
-    const mobile = lib.libraryType === "Mobile"
+    const mobile = libraryTypeName(lib.libraryType) === "Mobile"
     const checked = sectionCheckedAt(lib, "hours")
     const timetable = mobile
       ? normalizeMobileTimetable(lib.mobileTimetable)
@@ -373,7 +375,7 @@ export default ({ strapi }: { strapi: any }) => ({
         documentId: id,
         name: lib.name,
         slug: lib.slug,
-        libraryType: lib.libraryType,
+        libraryType: libraryTypeName(lib.libraryType),
         path: `/${path}`,
         completeness:
           typeof lib.completeness === "number" ? lib.completeness : null,

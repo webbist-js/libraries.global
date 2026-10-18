@@ -36,6 +36,10 @@ export function PageHero({
   leadPlacement = "right",
   actions,
   staff = false,
+  displayTitle = false,
+  prelude,
+  footer,
+  emphasisTone = "brand",
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
   readonly breadcrumb?: BreadcrumbItem[]
@@ -68,6 +72,13 @@ export function PageHero({
   readonly actions?: ReactNode
   /** Wider title column and display type for a library's staff workspace. */
   readonly staff?: boolean
+  /** Larger editorial display type, independent of the lead column position. */
+  readonly displayTitle?: boolean
+  /** Full-width metadata above the title columns. */
+  readonly prelude?: ReactNode
+  /** Full-width summary below the title columns, above section tabs. */
+  readonly footer?: ReactNode
+  readonly emphasisTone?: "brand" | "ink"
   /**
    * Section tabs (`SectionTabs`) on the band's bottom edge, for sections
    * with sub-pages (Contribute, Knowledge).
@@ -106,6 +117,7 @@ export function PageHero({
               }),
         ].join(" ")}
       >
+        {prelude ? <div className="-mb-4 lg:col-span-2">{prelude}</div> : null}
         <div>
           {back || eyebrow || chips ? (
             <div
@@ -166,13 +178,15 @@ export function PageHero({
             className="m-0 text-balance"
             style={{
               fontFamily: T.font.serif,
-              fontSize: staff
-                ? "clamp(40px,5.8vw,80px)"
-                : compact
-                  ? "clamp(32px,3.6vw,46px)"
-                  : leadPlacement === "left"
-                    ? "clamp(48px,6.5vw,88px)"
-                    : "clamp(40px,5vw,68px)",
+              fontSize: displayTitle
+                ? "clamp(48px,6.5vw,88px)"
+                : staff
+                  ? "clamp(40px,5.8vw,80px)"
+                  : compact
+                    ? "clamp(32px,3.6vw,46px)"
+                    : leadPlacement === "left"
+                      ? "clamp(48px,6.5vw,88px)"
+                      : "clamp(40px,5vw,68px)",
               fontWeight: 500,
               lineHeight: 1.04,
               letterSpacing: "-0.02em",
@@ -180,7 +194,7 @@ export function PageHero({
               whiteSpace: "pre-line",
             }}
           >
-            {plainTitle ? title : parseHeroText(title)}
+            {plainTitle ? title : parseHeroText(title, emphasisTone)}
           </h1>
           {meta ? (
             <div
@@ -214,6 +228,7 @@ export function PageHero({
             {children}
           </div>
         ) : null}
+        {footer ? <div className="lg:col-span-2">{footer}</div> : null}
       </Container>
       {tabs ? <Container>{tabs}</Container> : null}
     </section>
@@ -254,7 +269,10 @@ function bandPadding({
  *
  * Example: "Field notes *from the stacks.*"
  */
-export function parseHeroText(text: string): ReactNode[] {
+export function parseHeroText(
+  text: string,
+  emphasisTone: "brand" | "ink" = "brand"
+): ReactNode[] {
   const parts = text.split(/(\*[^*]+\*)/g)
 
   return parts.map((part, i) => {
@@ -265,7 +283,7 @@ export function parseHeroText(text: string): ReactNode[] {
           style={{
             fontStyle: "italic",
             fontWeight: 400,
-            color: T.accent.primary,
+            color: emphasisTone === "ink" ? T.ink.base : T.accent.primary,
           }}
         >
           {part.slice(1, -1)}

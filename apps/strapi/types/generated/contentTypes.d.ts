@@ -2869,6 +2869,47 @@ export interface ApiLibraryNoticeLibraryNotice
   }
 }
 
+export interface ApiLibraryTypeLibraryType extends Struct.CollectionTypeSchema {
+  collectionName: "library_types"
+  info: {
+    displayName: "Library Type"
+    pluralName: "library-types"
+    singularName: "library-type"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  attributes: {
+    category: Schema.Attribute.Enumeration<["Other"]> &
+      Schema.Attribute.DefaultTo<"Other">
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    description: Schema.Attribute.Blocks
+    icon: Schema.Attribute.JSON &
+      Schema.Attribute.CustomField<
+        "plugin::strapi-plugin-iconhub.iconhub",
+        {
+          storeIconData: true
+        }
+      >
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::library-type.library-type"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    publishedAt: Schema.Attribute.DateTime
+    summary: Schema.Attribute.Text
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
   collectionName: "libraries"
   info: {
@@ -3120,24 +3161,9 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
-    libraryType: Schema.Attribute.Enumeration<
-      [
-        "National",
-        "Public",
-        "Academic",
-        "University",
-        "Parliamentary",
-        "State",
-        "Municipal",
-        "Special",
-        "Monastic",
-        "Archive",
-        "Private",
-        "Cultural",
-        "Digital",
-        "Mobile",
-        "Other",
-      ]
+    libraryType: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-type.library-type"
     > &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -4841,11 +4867,15 @@ export interface PluginContentModerationOptionSuggestion
   }
   attributes: {
     acceptedOptionDocumentId: Schema.Attribute.String
+    comparison: Schema.Attribute.JSON
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     decidedAt: Schema.Attribute.DateTime
     decidedBy: Schema.Attribute.String
+    decisionKind: Schema.Attribute.Enumeration<
+      ["add", "update", "merge", "decline"]
+    >
     decisionNote: Schema.Attribute.Text
     description: Schema.Attribute.Text &
       Schema.Attribute.SetMinMaxLength<{
@@ -4872,6 +4902,19 @@ export interface PluginContentModerationOptionSuggestion
       ["accessibility", "amenities", "services", "library_types"]
     > &
       Schema.Attribute.Required
+    publicationAt: Schema.Attribute.DateTime
+    publicationHistory: Schema.Attribute.JSON & Schema.Attribute.Private
+    publicationReviewedAt: Schema.Attribute.DateTime
+    publicationReviewedBy: Schema.Attribute.String & Schema.Attribute.Private
+    publicationStatus: Schema.Attribute.Enumeration<
+      ["pending", "published", "rejected"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"published">
+    publicDecisionNote: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2000
+      }>
     publishedAt: Schema.Attribute.DateTime
     requests: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     status: Schema.Attribute.Enumeration<
@@ -4885,6 +4928,9 @@ export interface PluginContentModerationOptionSuggestion
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
   }
 }
 
@@ -5117,6 +5163,67 @@ export interface PluginContentModerationSubmissionUpload
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginContentModerationSuggestionRound
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_suggestion_rounds"
+  info: {
+    displayName: "Suggestion review round"
+    pluralName: "suggestion-rounds"
+    singularName: "suggestion-round"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    capacity: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 20
+          min: 1
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<5>
+    closedAt: Schema.Attribute.DateTime
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    cutoffAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.suggestion-round"
+    > &
+      Schema.Attribute.Private
+    opensAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    reviewAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    shortlist: Schema.Attribute.JSON
+    snapshotAt: Schema.Attribute.DateTime
+    state: Schema.Attribute.Enumeration<["voting", "review", "closed"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"voting">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
   }
 }
 
@@ -5374,6 +5481,114 @@ export interface PluginDiscussionsAuditEvent
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginDiscussionsContextLink
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_context_links"
+  info: {
+    displayName: "Discussion context-link"
+    pluralName: "context-links"
+    singularName: "context-link"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actorKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    dedupeKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    featuredKey: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.context-link"
+    > &
+      Schema.Attribute.Private
+    moderationFeedback: Schema.Attribute.Text & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    state: Schema.Attribute.Enumeration<
+      ["pending", "visible", "rejected", "removed"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    target: Schema.Attribute.JSON & Schema.Attribute.Private
+    targetKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    targetUid: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    threadId: Schema.Attribute.String & Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
+  }
+}
+
+export interface PluginDiscussionsContextSetting
+  extends Struct.CollectionTypeSchema {
+  collectionName: "discussions_context_settings"
+  info: {
+    displayName: "Discussion context-setting"
+    pluralName: "context-settings"
+    singularName: "context-setting"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::discussions.context-setting"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    target: Schema.Attribute.JSON & Schema.Attribute.Private
+    targetKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<0>
   }
 }
 
@@ -7157,6 +7372,7 @@ declare module "@strapi/strapi" {
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library-change.library-change": ApiLibraryChangeLibraryChange
       "api::library-notice.library-notice": ApiLibraryNoticeLibraryNotice
+      "api::library-type.library-type": ApiLibraryTypeLibraryType
       "api::library.library": ApiLibraryLibrary
       "api::notification.notification": ApiNotificationNotification
       "api::page.page": ApiPagePage
@@ -7182,11 +7398,14 @@ declare module "@strapi/strapi" {
       "plugin::content-moderation.review-event": PluginContentModerationReviewEvent
       "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
+      "plugin::content-moderation.suggestion-round": PluginContentModerationSuggestionRound
       "plugin::content-moderation.upload-reservation": PluginContentModerationUploadReservation
       "plugin::content-releases.release": PluginContentReleasesRelease
       "plugin::content-releases.release-action": PluginContentReleasesReleaseAction
       "plugin::discussions.attachment": PluginDiscussionsAttachment
       "plugin::discussions.audit-event": PluginDiscussionsAuditEvent
+      "plugin::discussions.context-link": PluginDiscussionsContextLink
+      "plugin::discussions.context-setting": PluginDiscussionsContextSetting
       "plugin::discussions.erased-actor": PluginDiscussionsErasedActor
       "plugin::discussions.outbox": PluginDiscussionsOutbox
       "plugin::discussions.rate-window": PluginDiscussionsRateWindow

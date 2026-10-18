@@ -1,4 +1,5 @@
 import { isSupporterPlan } from "@repo/access"
+import { libraryTypeName } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
 import { resolveUserEntitlements } from "../../../utils/entitlement-inputs"
@@ -104,7 +105,7 @@ function publishedFollowedLibraries(rows: unknown): Record<string, unknown>[] {
       documentId: lib.documentId ?? null,
       name: lib.name ?? null,
       slug: lib.slug ?? null,
-      libraryType: lib.libraryType ?? null,
+      libraryType: libraryTypeName(lib.libraryType) ?? null,
       heroImageUrl: lib.heroImage?.url ?? null,
       path: buildLibraryPath(lib),
     }))
@@ -275,7 +276,14 @@ async function loadAffiliations(
   return (await strapi.db.query(AFFILIATION).findMany({
     where: { baUserId },
     populate: {
-      library: { populate: { continent: true, country: true, region: true } },
+      library: {
+        populate: {
+          libraryType: { select: ["name"] },
+          continent: true,
+          country: true,
+          region: true,
+        },
+      },
     },
   })) as any[]
 }
@@ -289,7 +297,7 @@ function toClaimedLibraries(affiliations: any[]): Record<string, unknown>[] {
       documentId: a.library.documentId ?? null,
       name: a.library.name ?? null,
       slug: a.library.slug ?? null,
-      libraryType: a.library.libraryType ?? null,
+      libraryType: libraryTypeName(a.library.libraryType) ?? null,
       path: buildLibraryPath(a.library),
     }))
 }
@@ -315,6 +323,7 @@ async function loadFollows(baUserId: string | null | undefined): Promise<{
       followedLibraries: {
         where: { publishedAt: { $notNull: true } },
         populate: {
+          libraryType: { select: ["name"] },
           heroImage: true,
           continent: true,
           country: true,
@@ -409,6 +418,7 @@ export default factories.createCoreController(
             languages: true,
             followedLibraries: {
               populate: {
+                libraryType: { fields: ["name"] },
                 heroImage: true,
                 continent: true,
                 country: true,
@@ -557,6 +567,7 @@ export default factories.createCoreController(
             languages: true,
             followedLibraries: {
               populate: {
+                libraryType: { fields: ["name"] },
                 heroImage: true,
                 continent: true,
                 country: true,
@@ -578,7 +589,12 @@ export default factories.createCoreController(
               where: { baUserId: profile.baUserId },
               populate: {
                 library: {
-                  populate: { continent: true, country: true, region: true },
+                  populate: {
+                    libraryType: { select: ["name"] },
+                    continent: true,
+                    country: true,
+                    region: true,
+                  },
                 },
               },
             })
@@ -591,7 +607,7 @@ export default factories.createCoreController(
           documentId: a.library.documentId ?? null,
           name: a.library.name ?? null,
           slug: a.library.slug ?? null,
-          libraryType: a.library.libraryType ?? null,
+          libraryType: libraryTypeName(a.library.libraryType) ?? null,
           path: buildLibraryPath(a.library),
         }))
 

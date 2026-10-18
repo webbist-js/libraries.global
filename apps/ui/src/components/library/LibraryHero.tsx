@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import {
+  libraryTypeName,
   normalizeMobileTimetable,
   type LibraryNotice,
   type TimetableNotice,
@@ -60,13 +61,13 @@ export function LibraryHero({
   readonly untranslatedLocale?: string | null
 }) {
   const rec = library as unknown as Record<string, unknown>
-  const mobile = library.libraryType === "Mobile"
+  const mobile = libraryTypeName(library.libraryType) === "Mobile"
   const timetable = normalizeMobileTimetable(rec.mobileTimetable)
-  const tint = tintForLibraryType(library.libraryType)
-  const typeLabel = library.libraryType
-    ? library.libraryType === "Other"
+  const tint = tintForLibraryType(libraryTypeName(library.libraryType))
+  const typeLabel = libraryTypeName(library.libraryType)
+    ? libraryTypeName(library.libraryType) === "Other"
       ? "Library"
-      : `${library.libraryType} library`
+      : `${libraryTypeName(library.libraryType)} library`
     : null
   const openingTimes =
     (library.openingTimes as OpeningTimesValue | null) ?? null
@@ -91,7 +92,7 @@ export function LibraryHero({
         }).toString()}`
       : "/map"
 
-  const digital = library.libraryType === "Digital"
+  const digital = libraryTypeName(library.libraryType) === "Digital"
   const accessRows = facilityRows(library).filter(
     (row) => row.category !== "service"
   )
@@ -235,7 +236,7 @@ export function LibraryHero({
                 )}
               </p>
             ) : null}
-            {!mobile && library.libraryType !== "Digital" ? (
+            {!mobile && libraryTypeName(library.libraryType) !== "Digital" ? (
               <div className="mt-4">
                 <LibraryOpenStatusBadge
                   prominent
@@ -249,7 +250,7 @@ export function LibraryHero({
             <div className="mt-5">
               <LibraryHeroActions
                 directionsUrl={
-                  library.libraryType === "Digital" || mobile
+                  libraryTypeName(library.libraryType) === "Digital" || mobile
                     ? null
                     : directionsUrl
                 }
@@ -350,7 +351,7 @@ export function LibraryHero({
                   >
                     Explore the route and stops in the timetable below
                   </a>
-                ) : library.libraryType === "Digital" ? (
+                ) : libraryTypeName(library.libraryType) === "Digital" ? (
                   <div
                     className="flex min-h-60 items-center justify-center rounded-3xl border p-8"
                     style={{

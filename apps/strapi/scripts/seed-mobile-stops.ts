@@ -79,7 +79,7 @@ export async function seedMobileStops() {
   let count = 0
   for (let page = 1; ; page++) {
     const query = new URLSearchParams({
-      "filters[libraryType][$eq]": "Mobile",
+      "filters[libraryType][name][$eq]": "Mobile",
       status: "published",
       "pagination[page]": String(page),
       "pagination[pageSize]": "50",

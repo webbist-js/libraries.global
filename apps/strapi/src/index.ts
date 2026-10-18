@@ -28,6 +28,10 @@ import { ensureNotificationIndexes } from "./utils/ensure-notification-indexes"
 import { ensureSubscriberIndex } from "./utils/ensure-subscriber-index"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
 import { backfillLibraryCompleteness } from "./utils/library-completeness"
+import {
+  seedLibraryTypes,
+  registerLibraryTypeValidation,
+} from "./utils/library-type-catalogue"
 import { ensurePublicSearchKey } from "./utils/meilisearch-search-key"
 import { migrateContributorRolesToGrants } from "./utils/role-grants"
 
@@ -106,6 +110,8 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    await seedLibraryTypes(strapi)
+    registerLibraryTypeValidation(strapi)
     registerAdminUserSubscriber({ strapi })
     registerEntityRefSubscriber({ strapi })
     registerRoleGrantSubscriber({ strapi })

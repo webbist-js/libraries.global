@@ -27,16 +27,14 @@ import {
 } from "@/lib/strapi-api/content/server"
 
 import { ContributeSectionHeader } from "./_components/ContributeSectionHeader"
+import { ContributionJourney } from "./_components/hub/ContributionJourney"
 import { DrivesYouCanHelpWith } from "./_components/hub/DrivesYouCanHelpWith"
-import { HowReviewWorks } from "./_components/hub/HowReviewWorks"
 import { HubActionChooser } from "./_components/hub/HubActionChooser"
 import {
   RecordsThatNeedYou,
   type ContinentCount,
   type IncompleteRecord,
 } from "./_components/hub/RecordsThatNeedYou"
-import { RolesTable } from "./_components/hub/RolesTable"
-import { TakeOnARole } from "./_components/hub/TakeOnARole"
 import {
   SignInPromptCard,
   YourSubmissionsList,
@@ -374,8 +372,7 @@ export default async function ContributePage({
         />
       ) : null}
 
-      <HowReviewWorks />
-      <TakeOnARole
+      <ContributionJourney
         signedIn={!!session?.user}
         hasClaim={caps.claimedLibraryIds.size > 0}
         isEditor={
@@ -383,7 +380,6 @@ export default async function ContributePage({
         }
         isModerator={caps.set.has("moderate.queue")}
       />
-      <RolesTable />
 
       {/* You: your submissions (3/4) beside voting on new additions (1/4). */}
       <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 gap-6 px-4 py-12 sm:px-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">

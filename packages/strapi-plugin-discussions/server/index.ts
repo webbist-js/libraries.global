@@ -19,7 +19,10 @@ const permissions = [
   { uid: "sanction", displayName: "Apply discussion member sanctions" },
   { uid: "read", displayName: "Read discussion moderation queue" },
   { uid: "review", displayName: "Review discussions and reports" },
-  { uid: "manage", displayName: "Manage discussion subjects" },
+  {
+    uid: "manage",
+    displayName: "Manage discussion subjects and context links",
+  },
 ]
 
 export default {
@@ -28,6 +31,10 @@ export default {
     strapi.server.use(attachmentAdmission(strapi))
   },
   async bootstrap({ strapi }: { strapi: any }) {
+    await strapi
+      .plugin("discussions")
+      .service("discussion")
+      .backfillContextLinks()
     await strapi.service("admin::permission").actionProvider.registerMany(
       permissions.map((permission) => ({
         ...permission,

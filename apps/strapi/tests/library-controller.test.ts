@@ -80,7 +80,7 @@ describe("library.atlas (E2, E3)", () => {
     expect(calls[0].filters).toEqual({
       id: { $gt: 0 },
       $or: [
-        { libraryType: { $ne: "Mobile" } },
+        { libraryType: { name: { $ne: "Mobile" } } },
         { mobileTimetable: { $null: true } },
       ],
     })

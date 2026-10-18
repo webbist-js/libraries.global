@@ -3,10 +3,12 @@
 import { Icon } from "@iconify/react"
 import type { SupportersResponse } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useState, useTransition, type FormEvent } from "react"
+import { useRef, useState, useTransition, type FormEvent } from "react"
 
 import { Avatar } from "@/components/ds/Avatar"
+import { EmptyState } from "@/components/ds/EmptyState"
 import { SearchField } from "@/components/ds/SearchField"
+import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
   supportersHref,
@@ -57,6 +59,8 @@ export function SupportersDirectory({
 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const formRef = useRef<HTMLFormElement>(null)
+  const [sort, setSort] = useState(query.sort ?? "longest")
   const [directory, setDirectory] = useState(data)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -139,10 +143,7 @@ export function SupportersDirectory({
             className="flex w-full flex-wrap items-center gap-3 md:w-auto"
             method="get"
             onSubmit={search}
-            onChange={(event) => {
-              if (event.target instanceof HTMLSelectElement)
-                event.currentTarget.requestSubmit()
-            }}
+            ref={formRef}
           >
             <SearchField
               id="supporters-search"
@@ -158,17 +159,31 @@ export function SupportersDirectory({
             />
             <label className="flex items-center gap-2 text-[14px] font-semibold">
               Sort
-              <select
+              <SelectField
                 name="sort"
-                defaultValue={query.sort ?? "longest"}
+                label="Sort"
+                value={sort}
                 disabled={pending}
-                className="min-h-11 rounded-xl border bg-(--t-bg-deep) px-3 py-2 text-[14px] font-normal"
-                style={{ borderColor: T.border.hi }}
-              >
-                <option value="longest">Longest supporting</option>
-                <option value="newest">Newest supporting</option>
-                <option value="name">Name A–Z</option>
-              </select>
+                className="w-auto font-normal"
+                options={[
+                  { value: "longest", label: "Longest supporting" },
+                  { value: "newest", label: "Newest supporting" },
+                  { value: "name", label: "Name A–Z" },
+                ]}
+                onValueChange={(value) => {
+                  setSort(value)
+                  const form = formRef.current && new FormData(formRef.current)
+                  startTransition(() =>
+                    router.push(
+                      supportersHref({
+                        ...query,
+                        q: String(form?.get("q") ?? ""),
+                        sort: value,
+                      })
+                    )
+                  )
+                }}
+              />
             </label>
             <button type="submit" className="sr-only focus:not-sr-only">
               Search supporters
@@ -235,14 +250,21 @@ export function SupportersDirectory({
           The supporters list is unavailable. Please try again shortly.
         </p>
       ) : directory.entries.length === 0 ? (
-        <p
-          className="mt-6 rounded-2xl border p-6"
-          style={{ background: T.bg.deep, borderColor: T.border.line }}
-        >
-          {directory.listed
-            ? "No supporters match these filters."
-            : "No public supporter profiles are listed yet. Thank you to everyone helping keep Libraries Global open."}
-        </p>
+        <EmptyState
+          surface
+          className="mt-6"
+          icon="mdi:heart-outline"
+          lead={
+            directory.listed
+              ? "No supporters match these filters."
+              : "No public supporter profiles are listed yet."
+          }
+          detail={
+            directory.listed
+              ? undefined
+              : "Thank you to everyone helping keep Libraries Global open."
+          }
+        />
       ) : (
         <ul className="mt-6 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {directory.entries.map((entry, index) => (

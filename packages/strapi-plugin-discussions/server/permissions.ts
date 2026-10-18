@@ -127,8 +127,17 @@ export async function resolveTarget(
   return {
     target,
     projection: {
+      ...(typeof result.active === "boolean" ? { active: result.active } : {}),
       title: text(result.title, "target title", 250),
       url: safeUrl(result.url),
+      ...(result.links?.length
+        ? {
+            links: result.links.slice(0, 5).map((link) => ({
+              label: text(link.label, "target link label", 120),
+              url: safeUrl(link.url),
+            })),
+          }
+        : {}),
     },
   }
 }

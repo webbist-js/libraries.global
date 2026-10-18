@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto"
 
 import { defaults } from "./config"
 import { maskContent, inspectContent } from "./content-policy"
+import { contextLinks } from "./context-links"
 import type {
   Actor,
   CommittedEvent,
@@ -49,6 +50,17 @@ export default function discussionService({ strapi }: { strapi: any }) {
     query(kind).create({ data: { documentId: randomUUID(), ...data } })
   const update = (kind: string, documentId: string, data: any) =>
     query(kind).update({ where: { documentId }, data })
+  const connections = contextLinks({
+    strapi,
+    config,
+    query,
+    create,
+    update,
+    lock,
+    context,
+    audit,
+    consume,
+  })
   async function required(kind: string, documentId: string) {
     return (
       (await find(kind, id(documentId))) ??
@@ -219,13 +231,31 @@ export default function discussionService({ strapi }: { strapi: any }) {
 
     return true
   }
-  async function projectedAuthor(row: any) {
+  async function projectedAuthor(row: any, target = row.target) {
     if (!config.publicAuthor) return snapshotAuthor(row)
-    const projection = await config.publicAuthor(row.authorKey, { strapi })
+    const projection = await config.publicAuthor(row.authorKey, {
+      strapi,
+      ...(target ? { target } : {}),
+    })
     if (!projection) return null
+    const badges = Array.isArray(projection.badges)
+      ? [
+          ...new Set(
+            projection.badges.filter((badge) =>
+              [
+                "editor",
+                "moderator",
+                "editorial_board",
+                "suggested_this",
+              ].includes(badge)
+            )
+          ),
+        ].slice(0, 4)
+      : []
 
     return {
       name: text(projection.name, "public author name", 120),
+      ...(badges.length ? { badges } : {}),
       ...(projection.avatar
         ? {
             avatar: {
@@ -506,7 +536,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
               source.language,
               config.profanityTerms
             ),
-        author: await projectedAuthor(source),
+        author: await projectedAuthor(source, ctx.thread.target),
       }
     } catch (error: any) {
       if (error.status === 404) return { ...reference, available: false }
@@ -524,6 +554,21 @@ export default function discussionService({ strapi }: { strapi: any }) {
     const replies =
       thread.state === "visible" ? await visibleReplies(thread, actor) : []
     const subject = await required("subject", thread.subjectId)
+    const threadAuthor = await projectedAuthor(thread)
+    const participantRows = new Map<string, any>([[thread.authorKey, thread]])
+    for (const reply of [...replies].reverse()) {
+      if (!participantRows.has(reply.authorKey))
+        participantRows.set(reply.authorKey, reply)
+    }
+    const participants = (
+      await Promise.all(
+        [...participantRows.values()]
+          .slice(0, 12)
+          .map((row) =>
+            row === thread ? threadAuthor : projectedAuthor(row, thread.target)
+          )
+      )
+    ).filter((value) => value !== null)
 
     return {
       id: thread.documentId,
@@ -547,10 +592,13 @@ export default function discussionService({ strapi }: { strapi: any }) {
       version: thread.version,
       locked: thread.locked,
       pinned: thread.pinned,
-      author: await projectedAuthor(thread),
+      author: threadAuthor,
       activityAt: thread.activityAt,
       createdAt: thread.createdAt,
       replyCount: replies.length,
+      participants,
+      participantCount: participantRows.size,
+      ...(replies.length ? { lastReplyAt: replies.at(-1).createdAt } : {}),
       subscribed: Boolean(
         actor &&
         (await query("subscription").findOne({
@@ -578,6 +626,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
       ...(await reactions("thread", thread, actor)),
       quote: await quoteDto(thread, actor),
       ...(target ? { target } : {}),
+      contexts: await connections.linksForThread(thread.documentId, actor),
     }
   }
   async function replyDto(
@@ -636,7 +685,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
       parent: parentVisible
         ? {
             id: parent.documentId,
-            author: await projectedAuthor(parent),
+            author: await projectedAuthor(parent, thread.target),
             excerpt: (parent.profanityException
               ? parent.body
               : maskContent(parent.body, parent.language, config.profanityTerms)
@@ -649,7 +698,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
       language: reply.language,
       state: reply.state,
       version: reply.version,
-      author: await projectedAuthor(reply),
+      author: await projectedAuthor(reply, thread.target),
       createdAt: reply.createdAt,
       attachments: await attachmentDtos(
         reply.attachments,
@@ -943,6 +992,12 @@ export default function discussionService({ strapi }: { strapi: any }) {
         })
       })
     },
+    contextMetadata: connections.metadata,
+    addContextLink: connections.add,
+    actContextLink: connections.act,
+    configureContext: connections.configure,
+    discoverContexts: connections.discover,
+    backfillContextLinks: connections.backfill,
     async listThreads(actor: Actor | null, params: any = {}) {
       page(params, config.maxPageSize)
       const view = params.view ?? "latest"
@@ -955,6 +1010,9 @@ export default function discussionService({ strapi }: { strapi: any }) {
           ? ""
           : text(params.q, "search", 180, true).toLocaleLowerCase()
       const where: any = { state: "visible" }
+      if (params.mine === "1") where.authorKey = authenticated(actor).key
+      const eligible = await connections.eligible(actor, params)
+      if (eligible) where.documentId = { $in: [...eligible.keys()] }
       if (params.subjectId) where.subjectId = id(params.subjectId)
       if (params.language) where.language = language(params.language)
       if (params.targetUid || params.targetId) {
@@ -963,7 +1021,10 @@ export default function discussionService({ strapi }: { strapi: any }) {
           documentId: params.targetId,
           ...(params.targetLocale ? { locale: params.targetLocale } : {}),
         })
-        where.targetKey = `${target.uid}:${target.documentId}`
+        where.$or = [
+          { targetKey: `${target.uid}:${target.documentId}` },
+          { documentId: { $in: await connections.linkedIds(target) } },
+        ]
       }
       const contexts = new Map<string, any>()
       const rows = await scan(
@@ -1003,6 +1064,12 @@ export default function discussionService({ strapi }: { strapi: any }) {
           }
         }
       )
+      if (eligible && (params.contextUid || params.contextId))
+        rows.sort(
+          (a: any, b: any) =>
+            Number(eligible.get(b.documentId)) -
+            Number(eligible.get(a.documentId))
+        )
       const result = slice(rows, params)
 
       return {
@@ -1034,9 +1101,14 @@ export default function discussionService({ strapi }: { strapi: any }) {
           ? (await resolveTarget(strapi, config, actor, input.target)).target
           : null
         const targetKey = target ? `${target.uid}:${target.documentId}` : null
+        const existingTarget = targetKey
+          ? await query("thread").findOne({ where: { targetKey } })
+          : null
         if (
-          targetKey &&
-          (await query("thread").findOne({ where: { targetKey } }))
+          existingTarget &&
+          !Object.values(config.contextKinds ?? {}).some(
+            (kind) => kind.uid === target?.uid
+          )
         )
           fail(409, "An attached discussion already exists for this target")
         const row = await create("thread", {
@@ -1045,11 +1117,24 @@ export default function discussionService({ strapi }: { strapi: any }) {
           language: contentLanguage(input.language, subject),
           ...author(actor),
           target,
-          targetKey,
+          targetKey: existingTarget ? null : targetKey,
           state: "pending",
           version: 0,
           activityAt: now(),
         })
+        if (target) {
+          if (
+            !(await connections.setting(target)).enabled &&
+            (await connections.permission(actor, target)) !== "manage"
+          )
+            fail(403, "Conversations are disabled for this context")
+          await connections.add(
+            actor,
+            { target, threadId: row.documentId },
+            true,
+            trx
+          )
+        }
 
         return {
           thread: await threadDto(row, undefined, actor),
@@ -1075,7 +1160,16 @@ export default function discussionService({ strapi }: { strapi: any }) {
       for (const row of selected)
         if (!ordered.some((item) => item.documentId === row.documentId))
           ordered.push(row)
-      const result = slice(ordered, params)
+      // Inline hosts can show the newest messages without changing the default threaded order.
+      const result = slice(
+        params.order === "chronological"
+          ? [...selected].sort(
+              (a: any, b: any) =>
+                (Date.parse(a.createdAt) || 0) - (Date.parse(b.createdAt) || 0)
+            )
+          : ordered,
+        params
+      )
 
       return {
         ...result,
@@ -1243,7 +1337,10 @@ export default function discussionService({ strapi }: { strapi: any }) {
           documentId: params.targetId,
           ...(params.targetLocale ? { locale: params.targetLocale } : {}),
         })
-        where.targetKey = `${target.uid}:${target.documentId}`
+        where.$or = [
+          { targetKey: `${target.uid}:${target.documentId}` },
+          { documentId: { $in: await connections.linkedIds(target) } },
+        ]
       }
       if (kind === "reply" && params.threadId)
         where.threadId = id(params.threadId)
@@ -1336,9 +1433,22 @@ export default function discussionService({ strapi }: { strapi: any }) {
       const actor = authenticated(actorInput),
         pagination = page(params, config.maxPageSize)
       moderationGate(actor)
+      if (
+        params.reviewableOnly !== undefined &&
+        !["true", "false", true, false].includes(params.reviewableOnly)
+      )
+        fail(400, "Invalid reviewable filter")
+      const reviewableOnly =
+        params.reviewableOnly === true || params.reviewableOnly === "true"
       const rows = await scan(
         "revision",
-        { state: "pending" },
+        {
+          state: "pending",
+          ...(reviewableOnly && !config.allowSelfReview
+            ? { authorKey: { $ne: actor.key } }
+            : {}),
+          ...(params.threadId ? { threadId: id(params.threadId) } : {}),
+        },
         { id: "asc" },
         async (revision) => {
           const thread = await required("thread", revision.threadId),
@@ -1375,6 +1485,9 @@ export default function discussionService({ strapi }: { strapi: any }) {
             throw error
           }
         }
+        const parent = row.parentId ? await find("reply", row.parentId) : null
+        const parentVisible =
+          parent && (await replyReadable(parent, thread, actor, false, true))
         data.push({
           id: revision.documentId,
           recordType: revision.recordType,
@@ -1383,24 +1496,43 @@ export default function discussionService({ strapi }: { strapi: any }) {
           title: revision.title,
           body: revision.body,
           language: row.language,
-          quote: revision.quote,
+          quote: await quoteDto(revision, actor),
           contentFlags: revision.contentFlags,
           attachments: await attachmentDtos(revision.attachments),
           previousBody: row.body,
           previousTitle: row.title,
           baseVersion: revision.baseVersion,
           currentVersion: row.version,
-          author: await projectedAuthor(revision),
+          author: await projectedAuthor(revision, thread.target),
           state: revision.state,
           createdAt: revision.createdAt,
           subjectId: thread.subjectId,
           threadTitle: thread.title,
           threadVersion: thread.version,
+          recordState: row.state,
+          parentId: row.parentId || null,
+          parentAuthor: parentVisible
+            ? await projectedAuthor(parent, thread.target)
+            : null,
+          canReview: config.allowSelfReview || actor.key !== revision.authorKey,
+          isOwn: actor.key === revision.authorKey,
+          canSanction:
+            actor.key !== row.authorKey &&
+            (await permitted(
+              strapi,
+              config,
+              actor,
+              "sanction",
+              subject,
+              thread,
+              row.language
+            )),
         })
       }
 
       return {
         data,
+        total: rows.length,
         nextOffset:
           rows.length > pagination.offset + pagination.limit
             ? pagination.offset + pagination.limit
@@ -1744,6 +1876,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
 
       return {
         data,
+        total: rows.length,
         nextOffset:
           rows.length > pagination.offset + pagination.limit
             ? pagination.offset + pagination.limit
@@ -2152,7 +2285,7 @@ export default function discussionService({ strapi }: { strapi: any }) {
           recordId: sanction.recordId,
           threadId: sanction.threadId,
           language: sanction.language,
-          author: await projectedAuthor(row),
+          author: await projectedAuthor(row, thread.target),
           reason: sanction.reason,
           contributorFeedback: sanction.contributorFeedback,
           expiresAt: sanction.expiresAt,
@@ -2443,15 +2576,21 @@ export default function discussionService({ strapi }: { strapi: any }) {
       }
 
       return {
-        data: authorized.map((row: any) => ({
-          id: row.documentId,
-          recordType: row.recordType,
-          recordId: row.recordId,
-          action: row.action,
-          detail: row.detail,
-          createdAt: row.createdAt,
-          ...(actor.admin ? { actorKey: row.actorKey } : {}),
-        })),
+        data: await Promise.all(
+          authorized.map(async (row: any) => ({
+            id: row.documentId,
+            recordType: row.recordType,
+            recordId: row.recordId,
+            action: row.action,
+            detail: row.detail,
+            createdAt: row.createdAt,
+            actor:
+              config.publicAuthor && row.actorKey
+                ? await projectedAuthor({ authorKey: row.actorKey })
+                : null,
+            ...(actor.admin ? { actorKey: row.actorKey } : {}),
+          }))
+        ),
       }
     },
     /** Trusted server-only lifecycle seam. The host revokes sessions/grants before calling. */
@@ -2563,6 +2702,16 @@ export default function discussionService({ strapi }: { strapi: any }) {
         await query("sanction").updateMany({
           where: { liftedBy: key },
           data: { liftedBy: "erased", liftReason: "" },
+        })
+        await query("context-link").deleteMany({
+          where: {
+            actorKey: key,
+            state: { $in: ["pending", "rejected", "removed"] },
+          },
+        })
+        await query("context-link").updateMany({
+          where: { actorKey: key },
+          data: { actorKey: "erased", moderationFeedback: null },
         })
         await query("report").deleteMany({ where: { reporterKey: key } })
         await query("report").updateMany({

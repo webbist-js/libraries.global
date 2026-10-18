@@ -50,7 +50,7 @@ export type LibraryJoin = {
  */
 export function libraryJoin(
   strapi: Core.Strapi,
-  relation: "continent" | "country" | "region" | "area"
+  relation: "continent" | "country" | "region" | "area" | "libraryType"
 ): LibraryJoin {
   const attribute = metadataOf(strapi, "api::library.library").attributes[
     relation
@@ -64,6 +64,11 @@ export function libraryJoin(
     linkTable: joinTable.name,
     libraryColumn: joinTable.joinColumn.name,
     targetColumn: joinTable.inverseJoinColumn.name,
-    table: tableOf(strapi, `api::${relation}.${relation}`),
+    table: tableOf(
+      strapi,
+      relation === "libraryType"
+        ? "api::library-type.library-type"
+        : `api::${relation}.${relation}`
+    ),
   }
 }

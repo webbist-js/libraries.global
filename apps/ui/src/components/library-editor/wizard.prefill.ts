@@ -1,4 +1,4 @@
-import { normalizeMobileTimetable } from "@repo/shared-data"
+import { libraryTypeName, normalizeMobileTimetable } from "@repo/shared-data"
 
 import type { LibraryForEditing } from "@/lib/strapi-api/content/server"
 
@@ -22,7 +22,7 @@ export function prefillLibrary(lib: LibraryForEditing): Partial<FormData> {
     name: str(lib.name),
     shortName: str(lib.shortName),
     summary: str(lib.summary),
-    libraryType: str(lib.libraryType),
+    libraryType: libraryTypeName(lib.libraryType) ?? "",
     mobileTimetable: normalizeMobileTimetable(lib.mobileTimetable),
     homeLibrary:
       (lib.homeLibrary as { documentId?: string } | null)?.documentId ?? "",

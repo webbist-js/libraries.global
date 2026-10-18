@@ -32,6 +32,10 @@ The publish guard compares complete article content, media, SEO and relations. U
 
 Libraries Global supplies Better Auth identity, current public profile projection, published article/Library target resolvers and in-app notifications. The `discussions` moderation queue is explicit; Journal or Knowledge editor roles alone grant no forum moderation. The community UI supports author recovery, conflict handling, reporting, following and review. Journal, Knowledge and Library pages expose attached discussions.
 
+Production hosts must set `DISCUSSIONS_MEDIA_DIRECTORY` to a persistent private directory owned by the CMS process and mounted outside `public`. Keep the same volume through image replacement and include it in private recovery procedures. The plugin's `.tmp` default is for development; container-local images would be lost on replacement. Media still passes the plugin's authorisation and review checks when served.
+
+Moderator applications can request Index, Knowledge, Journal or Discussions. Discussions applications retain their requested languages, have no article-section selection and require the usual accepted-contribution threshold and board approval. Approval creates only the requested queue/language grants. Decision emails name the queue. Feed curation remains separate from message review.
+
 Moderation language is the language of the thread, reply or immutable revision being reviewed. A reply may use a different language from its parent thread. Private-thread access is checked separately, so a reply-language grant cannot open an otherwise inaccessible thread.
 
 Account deletion calls the plugin's trusted erasure service: approved public text survives with generic attribution, while private proposals, subscriptions and identifying audit data are removed. Imported Events are referenced through durable Journal citations.

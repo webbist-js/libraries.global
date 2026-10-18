@@ -2,11 +2,16 @@ import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import type {
   Actor,
   DiscussionConfig,
+  PublicAuthorBadge,
+  Target,
   TargetResolver,
 } from "strapi-plugin-discussions/types"
 
 import { publicArticleProfile } from "./article-attribution"
+import { isBoardMember } from "./board"
+import { publicAuthorRoleBadges } from "./public-author-badges"
 import { activeGrants } from "./role-grants"
+import { loadStaffClaims } from "./staff"
 import { isValidServiceSecret } from "../plugins/content-moderation/server/utils/service-secret"
 
 const PROFILE = "api::user-profile.user-profile"
@@ -76,7 +81,7 @@ export async function discussionActor(
 
 export async function publicDiscussionAuthor(
   key: string,
-  { strapi }: { strapi: any }
+  { strapi, target }: { strapi: any; target?: Target }
 ) {
   const profile = key.startsWith(PREFIX)
     ? await profileOf(strapi, key.slice(PREFIX.length))
@@ -87,9 +92,28 @@ export async function publicDiscussionAuthor(
   const avatar = visible?.avatar as
     | { url?: string; alternativeText?: string }
     | undefined
+  const badges: PublicAuthorBadge[] = username
+    ? await publicAuthorRoleBadges(strapi, key.slice(PREFIX.length))
+    : []
+  if (
+    username &&
+    target?.uid === "plugin::content-moderation.option-suggestion"
+  ) {
+    const suggestion = await strapi.documents(target.uid).findOne({
+      documentId: target.documentId,
+      fields: ["suggestedBy", "publicationStatus", "status"],
+    })
+    if (
+      suggestion?.publicationStatus === "published" &&
+      suggestion.status !== "removed" &&
+      suggestion.suggestedBy === key.slice(PREFIX.length)
+    )
+      badges.push("suggested_this")
+  }
 
   return {
     name: username ? `@${username}` : "Community member",
+    ...(badges.length ? { badges } : {}),
     ...(username
       ? { slug: username, url: `/profile/${encodeURIComponent(username)}` }
       : {}),
@@ -143,6 +167,31 @@ const articleTarget: TargetResolver = async (target, { strapi }) => {
 export const discussionsHostConfig: Partial<DiscussionConfig> & {
   publicAuthor: typeof publicDiscussionAuthor
 } = {
+  mediaDirectory: process.env.DISCUSSIONS_MEDIA_DIRECTORY || undefined,
+  contextKinds: {
+    libraries: {
+      uid: "api::library.library",
+      label: "Libraries",
+      defaultEnabled: true,
+    },
+    drives: { uid: "api::drive.drive", label: "Drives", defaultEnabled: false },
+  },
+  authorizeContext: async ({ strapi, actor, target }) => {
+    if (!actor?.key.startsWith(PREFIX)) return false
+    if (!["api::drive.drive", "api::library.library"].includes(target.uid))
+      return false
+    const userId = actor.key.slice(PREFIX.length)
+    if (await isBoardMember(strapi, userId)) return "manage"
+    if (
+      target.uid === "api::library.library" &&
+      (await loadStaffClaims(strapi, userId)).some(
+        (claim) => claim.libraryDocumentId === target.documentId
+      )
+    )
+      return "propose"
+
+    return false
+  },
   identity: async (ctx, { strapi }) => {
     if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
       return null
@@ -188,6 +237,57 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
       ? discussionActor(strapi, key.slice(PREFIX.length))
       : null,
   targets: {
+    "api::drive.drive": async (target, { strapi, actor }) => {
+      const locale =
+        target.locale && isSupportedLocale(target.locale)
+          ? target.locale
+          : DEFAULT_LOCALE
+      let drive = await strapi.documents(target.uid).findOne({
+        documentId: target.documentId,
+        locale,
+        fields: ["title", "slug", "status"],
+      })
+      if (!drive && locale !== DEFAULT_LOCALE)
+        drive = await strapi.documents(target.uid).findOne({
+          documentId: target.documentId,
+          locale: DEFAULT_LOCALE,
+          fields: ["title", "slug", "status"],
+        })
+      if (!drive?.slug) return null
+      if (
+        !["scheduled", "open", "closed"].includes(drive.status) &&
+        !(
+          actor?.key.startsWith(PREFIX) &&
+          (await isBoardMember(strapi, actor.key.slice(PREFIX.length)))
+        )
+      )
+        return null
+
+      return {
+        title: drive.title,
+        url: `/community/drives/${encodeURIComponent(drive.slug)}`,
+        active: drive.status === "open",
+      }
+    },
+    "plugin::content-moderation.option-suggestion": async (
+      target,
+      { strapi }
+    ) => {
+      const item = await strapi
+        .documents(target.uid)
+        .findOne({ documentId: target.documentId })
+      if (
+        !item ||
+        item.status === "removed" ||
+        item.publicationStatus !== "published"
+      )
+        return null
+
+      return {
+        title: item.name,
+        url: `/community/suggestions?suggestion=${encodeURIComponent(target.documentId)}#suggestion-${encodeURIComponent(target.documentId)}`,
+      }
+    },
     "api::blog-article.blog-article": articleTarget,
     "api::wiki-article.wiki-article": articleTarget,
     "api::library.library": async (target, { strapi }) => {
@@ -218,7 +318,16 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
         .map(encodeURIComponent)
         .join("/")
 
-      return { title: library.name, url: `/${path}` }
+      return {
+        title: library.name,
+        url: `/${path}`,
+        links: [
+          {
+            label: "Read stories",
+            url: `/journal?collection=all&country=all&lang=all&library=${encodeURIComponent(target.documentId)}#all-articles`,
+          },
+        ],
+      }
     },
   },
   notify: async ({ idempotencyKey, actorKey, event }) => {
@@ -238,6 +347,16 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
 
 export async function seedDiscussionSubjects(strapi: any) {
   const subjects = [
+    [
+      "drives",
+      "Drive coordination",
+      "Questions, advice and updates about community drives.",
+    ],
+    [
+      "suggestions",
+      "Suggestions",
+      "Discuss proposed additions to library checklists.",
+    ],
     [
       "library-life",
       "Library life",

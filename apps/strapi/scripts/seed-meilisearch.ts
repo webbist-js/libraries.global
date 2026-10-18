@@ -12,7 +12,11 @@
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
-import type { LibraryNotice, ArticleBrowseResult } from "@repo/shared-data"
+import {
+  type LibraryNotice,
+  type ArticleBrowseResult,
+  libraryTypeName,
+} from "@repo/shared-data"
 
 import pluginsConfig from "../config/plugins"
 
@@ -143,7 +147,10 @@ export async function attachMobileTimetables(
 ): Promise<void> {
   const byId = new Map<string, Entry[]>()
   for (const entry of entries) {
-    if (entry.libraryType !== "Mobile" || typeof entry.documentId !== "string")
+    if (
+      libraryTypeName(entry.libraryType) !== "Mobile" ||
+      typeof entry.documentId !== "string"
+    )
       continue
     byId.set(entry.documentId, [...(byId.get(entry.documentId) ?? []), entry])
   }

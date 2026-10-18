@@ -1102,6 +1102,19 @@ export function AtlasExplorer({
   const overlays = (
     <>
       {dataNotices}
+      {!mapReady && !mapError ? (
+        <AtlasLoading
+          listReady={Boolean(all)}
+          onOpenList={() => {
+            pushAnalyticsEvent("atlas_action", {
+              interaction_source: "atlas_toolbar",
+              action_type: "view",
+              view_mode: "list",
+            })
+            setList(true)
+          }}
+        />
+      ) : null}
       {usableLayers.includes("access") &&
       accessibilityView === "matches" &&
       accessibilityCoverage &&
@@ -1682,19 +1695,6 @@ export function AtlasExplorer({
           style={{ left: leftEdge, right: rightEdge + 90 }}
         >
           {overlays}
-          {!mapReady && !mapError ? (
-            <AtlasLoading
-              listReady={Boolean(all)}
-              onOpenList={() => {
-                pushAnalyticsEvent("atlas_action", {
-                  interaction_source: "atlas_toolbar",
-                  action_type: "view",
-                  view_mode: "list",
-                })
-                setList(true)
-              }}
-            />
-          ) : null}
         </div>
       )}
 

@@ -103,6 +103,20 @@ describe("ModerationQueue errors", () => {
 })
 
 describe("queueHref", () => {
+  it("preserves category and all filters through pagination", () => {
+    expect(
+      queueHref({
+        ...BASE_STATE,
+        category: "articles",
+        queue: "knowledge",
+        locale: "fr",
+        q: "hours",
+        page: 2,
+      })
+    ).toBe(
+      "/contribute/moderation?category=articles&queue=knowledge&locale=fr&q=hours&page=2"
+    )
+  })
   const DRIVE = "drv1234567890123456789a"
 
   it("round-trips a drive filter into the URL", () => {

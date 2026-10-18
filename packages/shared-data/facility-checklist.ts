@@ -1,3 +1,4 @@
+import { libraryTypeName, type LibraryTypeValue } from "./library-types"
 // ── Facility checklist ────────────────────────────────────────────────────────
 // The eight questions the library page asks readers ("Tap Yes or No"), and the
 // taxonomy entry each one stands for. The UI uses it to decide what's
@@ -68,11 +69,11 @@ export const MOBILE_FACILITY_CHECKLIST: readonly FacilityCheck[] = [
   { label: "Hearing loop", collection: "accessibility", name: "Hearing loop" },
 ]
 export function facilityChecklistFor(
-  libraryType: string | null | undefined
+  libraryType: LibraryTypeValue | undefined
 ): readonly FacilityCheck[] {
-  if (libraryType === "Digital") return []
+  if (libraryTypeName(libraryType) === "Digital") return []
 
-  return libraryType === "Mobile"
+  return libraryTypeName(libraryType) === "Mobile"
     ? MOBILE_FACILITY_CHECKLIST
     : FACILITY_CHECKLIST
 }

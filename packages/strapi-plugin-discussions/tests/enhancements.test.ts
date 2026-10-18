@@ -128,6 +128,32 @@ describe("community discovery and participation", () => {
       db.service.react(reader, "thread", db.threadId, { reaction: "wow" })
     ).rejects.toMatchObject({ status: 400 })
   })
+  it("previews only public participants and the latest readable approved reply", async () => {
+    const db = await fixture({
+      authorize: async ({ actor, action, recordLanguage }: any) =>
+        !(action === "read" && !actor && recordLanguage === "es"),
+    })
+    const visible = await reply(db, "Public answer")
+    await reply(db, "Another answer from the same reader")
+    await reply(
+      db,
+      "Unreadable answer",
+      { language: "es" },
+      { ...reader, key: "user:hidden", name: "Hidden reader" }
+    )
+    await db.service.createReply(
+      { ...reader, key: "user:pending", name: "Pending reader" },
+      db.threadId,
+      { body: "Awaiting approval", language: "en" }
+    )
+    const dto = await db.service.getThread(null, db.threadId)
+    expect(dto.participants).toEqual([{ name: "Writer" }, { name: "Reader" }])
+    expect(dto.participantCount).toBe(2)
+    expect(dto.replyCount).toBe(2)
+    expect(dto.lastReplyAt).toBe(db.rows("reply")[1].createdAt)
+    expect(JSON.stringify(dto.participants)).not.toContain("user:")
+    expect(db.rows("reply")[0].documentId).toBe(visible)
+  })
   it("filters current discovery and projects public authors only on the selected page", async () => {
     const publicAuthor = vi.fn(async () => ({ name: "Member" }))
     const db = await fixture({ publicAuthor })
@@ -163,10 +189,13 @@ describe("community discovery and participation", () => {
     })
     expect((await db.service.listSubjects(null)).data[0].threadCount).toBe(2)
     publicAuthor.mockClear()
-    expect((await db.service.listThreads(null, { limit: 1 })).nextOffset).toBe(
-      1
+    const selectedPage = await db.service.listThreads(null, { limit: 1 })
+    expect(selectedPage.nextOffset).toBe(1)
+    // Identical activity timestamps can select either thread. Project only that
+    // thread's author and visible reply participants, never the other page.
+    expect(publicAuthor.mock.calls.length).toBe(
+      selectedPage.data[0].participantCount
     )
-    expect(publicAuthor).toHaveBeenCalledTimes(1)
     await expect(
       db.service.listThreads(null, { view: "following" })
     ).rejects.toMatchObject({ status: 401 })
@@ -330,6 +359,33 @@ describe("community discovery and participation", () => {
     expect(page.nextOffset).toBeNull()
     expect(JSON.stringify(page)).not.toContain(es.revision.id)
   })
+  it("filters self-review before pagination while retaining the full queue for thread views", async () => {
+    const db = await fixture()
+    const own = await db.service.createReply(moderator, db.threadId, {
+      body: "My pending message",
+      language: "en",
+    })
+    const other = await db.service.createReply(reader, db.threadId, {
+      body: "Another member's message",
+      language: "en",
+    })
+    const page = await db.service.reviewQueue(moderator, {
+      reviewableOnly: "true",
+      limit: 1,
+    })
+    expect(page.total).toBe(1)
+    expect(page.data.map((row: any) => row.id)).toEqual([other.revision.id])
+    expect(page.nextOffset).toBeNull()
+    expect(
+      (await db.service.reviewQueue(moderator)).data.some(
+        (row: any) => row.id === own.revision.id && row.isOwn
+      )
+    ).toBe(true)
+    await expect(
+      db.service.reviewQueue(reader, { reviewableOnly: "true" })
+    ).rejects.toMatchObject({ status: 403 })
+  })
+
   it("paginates report queues only after applying the moderator's reply language scope", async () => {
     const db = await fixture({
       authorize: async ({ actor, action, recordLanguage }: any) =>
@@ -352,6 +408,7 @@ describe("community discovery and participation", () => {
       reason: "English concern",
     })
     const page = await db.service.reports(moderator, { limit: 1 })
+    expect(page.total).toBe(1)
     expect(page.data.map((row: any) => row.id)).toEqual([en.id])
     expect(page.nextOffset).toBeNull()
     expect(JSON.stringify(page)).not.toContain("Spanish concern")
@@ -755,6 +812,7 @@ describe("sanction and background retry lifecycle", () => {
   it("retries outbox and private image cleanup without cron and clears timers on destroy", async () => {
     vi.useFakeTimers()
     const service = {
+      backfillContextLinks: vi.fn().mockResolvedValue(undefined),
       flushNotifications: vi
         .fn()
         .mockRejectedValueOnce(new Error("Transient"))
@@ -773,5 +831,96 @@ describe("sanction and background retry lifecycle", () => {
     await plugin.destroy({ strapi })
     await vi.advanceTimersByTimeAsync(120_000)
     expect(service.flushNotifications).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("thread review queue projections", () => {
+  it("filters and counts only authorized revisions in the selected thread, with explicit self-review grants", async () => {
+    const db = await fixture({
+      publicAuthor: async (key: string) => ({
+        name: key === moderator.key ? "Editor" : "Writer",
+      }),
+    })
+    const parentId = await reply(db, "Public parent")
+    const first = await db.service.createReply(reader, db.threadId, {
+      body: "Pending child",
+      parentId,
+    })
+    const own = await db.service.createReply(moderator, db.threadId, {
+      body: "Moderator's own proposal",
+    })
+    const other = await db.service.createThread(writer, {
+      subjectId: db.subject.documentId,
+      title: "Other conversation",
+      body: "Separate pending opening",
+      language: "en",
+    })
+    const page = await db.service.reviewQueue(moderator, {
+      threadId: db.threadId,
+      limit: 1,
+    })
+    expect(page.total).toBe(2)
+    expect(page.nextOffset).toBe(1)
+    expect(page.data[0]).toMatchObject({
+      id: first.revision.id,
+      recordState: "pending",
+      parentId,
+      parentAuthor: { name: "Writer" },
+      canReview: true,
+      canSanction: true,
+    })
+    const next = await db.service.reviewQueue(moderator, {
+      threadId: db.threadId,
+      limit: 1,
+      offset: 1,
+    })
+    expect(next.data[0]).toMatchObject({
+      id: own.revision.id,
+      canReview: false,
+      canSanction: false,
+    })
+    expect(next.nextOffset).toBeNull()
+    expect(JSON.stringify(page)).not.toContain(other.thread.id)
+    expect(JSON.stringify(page)).not.toContain(reader.key)
+    expect((await db.service.reviewQueue(moderator, { limit: 1 })).total).toBe(
+      3
+    )
+    await expect(
+      db.service.review(moderator, own.revision.id, {
+        decision: "approve",
+        baseVersion: 0,
+      })
+    ).rejects.toMatchObject({ status: 403 })
+    const audit = await db.service.auditLog(moderator, db.threadId)
+    expect(
+      audit.data.find((event: any) => event.action === "approved")
+    ).toMatchObject({ actor: { name: "Editor" } })
+    expect(JSON.stringify(audit)).not.toContain(moderator.key)
+  })
+  it("does not count proposals outside the moderator's language scope", async () => {
+    const db = await fixture({
+      authorize: async ({ actor, action, recordLanguage }: any) =>
+        actor?.key !== moderator.key ||
+        action !== "moderate" ||
+        recordLanguage === "en",
+    })
+    await db.service.createReply(reader, db.threadId, {
+      body: "Hidden Spanish proposal",
+      language: "es",
+    })
+    const english = await db.service.createReply(reader, db.threadId, {
+      body: "English proposal",
+      language: "en",
+    })
+    const queue = await db.service.reviewQueue(moderator, {
+      threadId: db.threadId,
+    })
+    expect(queue.total).toBe(1)
+    expect(queue.data.map((revision: any) => revision.id)).toEqual([
+      english.revision.id,
+    ])
+    await expect(
+      db.service.reviewQueue(reader, { threadId: db.threadId })
+    ).rejects.toMatchObject({ status: 403 })
   })
 })

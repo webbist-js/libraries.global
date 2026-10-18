@@ -1,6 +1,12 @@
 export default [
   {
     method: "GET",
+    path: "/option-catalogue",
+    handler: "option-suggestion.catalogue",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/articles/blog/:slug/ownership",
     handler: "submission.journalOwnership",
     config: { auth: false, policies: [] },
@@ -124,6 +130,24 @@ export default [
     method: "GET",
     path: "/option-suggestions",
     handler: "option-suggestion.listPublic",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/option-suggestions/:id",
+    handler: "option-suggestion.findPublic",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/suggestion-round",
+    handler: "moderation.suggestionRound",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "PUT",
+    path: "/moderation/suggestion-round",
+    handler: "moderation.updateSuggestionRound",
     config: { auth: false, policies: [] },
   },
   {

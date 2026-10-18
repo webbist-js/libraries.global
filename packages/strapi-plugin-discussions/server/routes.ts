@@ -42,6 +42,11 @@ export default {
         "sanctionRecord"
       ),
       publicRoute("GET", "/subjects", "subjects"),
+      publicRoute("GET", "/context", "contextMetadata"),
+      publicRoute("PUT", "/context", "configureContext"),
+      publicRoute("GET", "/contexts", "contexts"),
+      publicRoute("POST", "/context-links", "addContextLink"),
+      publicRoute("PUT", "/context-links/:id", "actContextLink"),
       publicRoute("GET", "/threads", "threads"),
       publicRoute("POST", "/threads", "createThread"),
       publicRoute("GET", "/threads/:id", "thread"),
@@ -63,6 +68,11 @@ export default {
     type: "admin",
     routes: [
       adminRoute("GET", "/threads", "adminThreads", "read"),
+      adminRoute("GET", "/context", "adminContextMetadata", "read"),
+      adminRoute("GET", "/contexts", "adminContexts", "read"),
+      adminRoute("PUT", "/context", "adminConfigureContext", "manage"),
+      adminRoute("POST", "/context-links", "adminAddContextLink", "manage"),
+      adminRoute("PUT", "/context-links/:id", "adminActContextLink", "manage"),
       adminRoute("GET", "/attachments/:id", "adminImage", "read"),
       adminRoute("GET", "/sanctions", "adminSanctions", "read"),
       adminRoute("PUT", "/sanctions/:id", "adminLiftSanction", "sanction"),

@@ -1,17 +1,22 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import type { CSSProperties } from "react"
+import { useFormatter, useTranslations } from "next-intl"
+import { useState, type CSSProperties } from "react"
 
+import { AuthorBadges } from "@/components/discussions/AuthorBadges"
 import GlobalLink from "@/components/global/GlobalLink"
+import { LibraryFeatureDetails } from "@/components/library/LibraryFeatureDetails"
 import {
   isVotable,
-  LIST_LABELS,
+  LIST_TINTS,
   type PublicSuggestion,
-  relativeAge,
+  type OptionCatalogue,
   STATUS_META,
 } from "@/lib/community/suggestions"
 import { T } from "@/lib/design-tokens"
+
+import { SuggestionConversation } from "./SuggestionConversation"
 
 export const votesText = (n: number) => `${n} ${n === 1 ? "vote" : "votes"}`
 
@@ -22,8 +27,8 @@ function boxStyle(voted: boolean, locked: boolean): CSSProperties {
   if (voted)
     return {
       border: `2px solid ${T.accent.primary}`,
-      background: T.accent.chip,
-      color: T.accent.primaryHover,
+      background: T.accent.primary,
+      color: "white",
     }
   if (locked)
     return {
@@ -40,13 +45,21 @@ function boxStyle(voted: boolean, locked: boolean): CSSProperties {
   }
 }
 
-function BoxContent({ votes }: { readonly votes: number }) {
+function BoxContent({
+  votes,
+  voted,
+}: {
+  readonly votes: number
+  readonly voted: boolean
+}) {
+  const t = useTranslations("optionSuggestions")
+
   return (
     <>
       <Icon aria-hidden="true" height={18} icon="mdi:chevron-up" width={18} />
-      <span className="text-[18px] leading-tight font-bold">{votes}</span>
-      <span className="text-[12px] font-semibold">
-        {votes === 1 ? "vote" : "votes"}
+      <span className="font-serif text-[28px] leading-tight">{votes}</span>
+      <span className="text-[11px] font-bold uppercase">
+        {t(voted ? "voteBoxVoted" : "voteBoxVote")}
       </span>
     </>
   )
@@ -59,13 +72,14 @@ function voteLabel(s: PublicSuggestion, locked: boolean): string {
 }
 
 function Summary({ s }: { readonly s: PublicSuggestion }) {
+  const t = useTranslations("optionSuggestions")
   let text: string | null = s.description
   if (!text && s.libraryCount > 0)
-    text = `Asked for in corrections to ${s.libraryCount} ${s.libraryCount === 1 ? "library" : "libraries"}.`
+    text = t("requestedLibraries", { count: s.libraryCount })
   if (!text) return null
 
   return (
-    <p className="m-0 text-[16px] leading-[1.55]" style={{ color: T.ink.base }}>
+    <p className="m-0 text-[16px] leading-[1.55]" style={{ color: T.ink.dim }}>
       {text}
     </p>
   )
@@ -85,6 +99,10 @@ export function SuggestionCard({
   onVote,
   signInHref,
   now,
+  shortlistRank,
+  frozen,
+  optionCatalogue,
+  initiallyExpanded = false,
 }: {
   readonly suggestion: PublicSuggestion
   readonly signedIn: boolean
@@ -93,108 +111,198 @@ export function SuggestionCard({
   readonly onVote: (s: PublicSuggestion) => void
   readonly signInHref: string
   /** "Now" for the relative age, so the server and client render alike. */
+  readonly shortlistRank?: number
+  readonly frozen?: boolean
+  readonly optionCatalogue?: OptionCatalogue
   readonly now: Date
+  readonly initiallyExpanded?: boolean
 }) {
+  const t = useTranslations("optionSuggestions")
+  const formatter = useFormatter()
+  const [expanded, setExpanded] = useState(initiallyExpanded)
+  const [mounted, setMounted] = useState(initiallyExpanded)
+  const toggleConversation = () => {
+    setMounted(true)
+    setExpanded((value) => !value)
+  }
+  const panelId = `suggestion-conversation-${s.documentId}`
+  const similar = s.comparison
+    ? optionCatalogue?.[s.optionKey].find(
+        (o) => o.documentId === s.comparison?.documentId
+      )
+    : undefined
   const status = STATUS_META[s.status]
-  const locked = !isVotable(s)
+  const locked = Boolean(frozen) || !isVotable(s)
   const voted = Boolean(s.voted)
-  const meta = [
-    LIST_LABELS[s.optionKey] ?? s.optionKey,
-    s.suggestedByName ? `Suggested by ${s.suggestedByName}` : null,
-    relativeAge(s.createdAt, now),
-  ]
-    .filter(Boolean)
-    .join(" · ")
 
   return (
-    <li
-      className="flex items-start gap-4"
+    <article
+      id={`suggestion-${s.documentId}`}
+      className="overflow-hidden"
       style={{
         background: T.bg.deep,
-        border: `1px solid ${T.border.line}`,
+        border: `1px solid ${shortlistRank || expanded ? "var(--t-palette-violet-bg)" : T.border.line}`,
         borderRadius: 22,
-        padding: "16px 18px",
       }}
     >
-      {signedIn || locked ? (
-        <button
-          type="button"
-          aria-pressed={voted}
-          aria-label={voteLabel(s, locked)}
-          disabled={locked || busy}
-          onClick={() => onVote(s)}
-          className={`${BOX} ${locked ? "" : "cursor-pointer hover:border-(--t-accent-primary) disabled:cursor-wait disabled:opacity-60"}`}
-          style={boxStyle(voted, locked)}
-        >
-          <BoxContent votes={s.votes} />
-        </button>
-      ) : (
-        <GlobalLink
-          href={signInHref}
-          aria-label={`Sign in to vote for ${s.name}, ${votesText(s.votes)}`}
-          className={`${BOX} no-underline hover:border-(--t-accent-primary)`}
-          style={boxStyle(false, false)}
-        >
-          <BoxContent votes={s.votes} />
-        </GlobalLink>
-      )}
-
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3
-            className="m-0"
-            style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
-              fontSize: 24,
-              lineHeight: 1.15,
-              color: T.ink.base,
-            }}
+      <div className="flex items-start gap-4 p-5 sm:p-6">
+        {signedIn || locked ? (
+          <button
+            type="button"
+            aria-pressed={voted}
+            aria-label={voteLabel(s, locked)}
+            disabled={locked || busy}
+            onClick={() => onVote(s)}
+            className={`${BOX} ${locked ? "" : "cursor-pointer hover:border-(--t-accent-primary) disabled:cursor-wait disabled:opacity-60"}`}
+            style={boxStyle(voted, locked)}
           >
-            {s.name}
-          </h3>
-          {status ? (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full text-[13px] font-bold"
+            <BoxContent votes={s.votes} voted={voted} />
+          </button>
+        ) : (
+          <GlobalLink
+            href={signInHref}
+            aria-label={`Sign in to vote for ${s.name}, ${votesText(s.votes)}`}
+            className={`${BOX} no-underline hover:border-(--t-accent-primary)`}
+            style={boxStyle(false, false)}
+          >
+            <BoxContent votes={s.votes} voted={false} />
+          </GlobalLink>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3
+              className="m-0"
               style={{
-                background: status.bg,
-                color: status.fg,
-                padding: "3px 10px",
+                fontFamily: T.font.sans,
+                fontWeight: 700,
+                fontSize: 19,
+                lineHeight: 1.15,
+                color: T.ink.base,
               }}
             >
-              <Icon
-                aria-hidden="true"
-                height={13}
-                icon={status.icon}
-                width={13}
-              />
-              {status.label}
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={panelId}
+                onClick={toggleConversation}
+                className="cursor-pointer text-left hover:underline"
+              >
+                {s.name}
+              </button>
+            </h3>
+            {status ? (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full text-[13px] font-bold"
+                style={{
+                  background: status.bg,
+                  color: status.fg,
+                  padding: "3px 10px",
+                }}
+              >
+                <Icon
+                  aria-hidden="true"
+                  height={13}
+                  icon={status.icon}
+                  width={13}
+                />
+                {t(`statuses.${s.status}`)}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+            <span
+              className="rounded-full px-2 py-1"
+              style={{
+                background: LIST_TINTS[s.optionKey].bg,
+                color: LIST_TINTS[s.optionKey].fg,
+              }}
+            >
+              {t(`lists.${s.optionKey}`)}
             </span>
+            {shortlistRank && (
+              <span className="rounded-full bg-(--t-ink-base) px-2 py-1 text-(--t-bg-deep)">
+                {t(frozen ? "savedRank" : "provisionalRank", {
+                  rank: shortlistRank,
+                })}
+              </span>
+            )}
+            {now.getTime() - Date.parse(s.createdAt) < 7 * 86400000 && (
+              <span className="rounded-full bg-(--t-palette-amber-soft) px-2 py-1">
+                {t("newWeek")}
+              </span>
+            )}
+          </div>
+          <Summary s={s} />
+
+          {s.decisionNote ? (
+            <p
+              className="m-0 text-[15px] leading-normal"
+              style={{
+                color: T.ink.dim,
+                background: T.bg.surface,
+                border: `1px solid ${T.border.divider}`,
+                borderRadius: 12,
+                padding: "8px 12px",
+              }}
+            >
+              <strong style={{ color: T.ink.base }}>Board note:</strong>{" "}
+              {s.decisionNote}
+            </p>
           ) : null}
-        </div>
 
-        <Summary s={s} />
-
-        {s.decisionNote ? (
-          <p
-            className="m-0 text-[15px] leading-normal"
-            style={{
-              color: T.ink.dim,
-              background: T.bg.surface,
-              border: `1px solid ${T.border.divider}`,
-              borderRadius: 12,
-              padding: "8px 12px",
-            }}
+          <div
+            className="flex flex-wrap items-baseline gap-x-4 gap-y-2 text-[14px]"
+            style={{ color: T.ink.dim }}
           >
-            <strong style={{ color: T.ink.base }}>Board note:</strong>{" "}
-            {s.decisionNote}
-          </p>
-        ) : null}
-
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-          {meta}
-        </p>
+            <p className="m-0 inline-flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              {t("suggestedBy")}{" "}
+              {s.suggestedByProfile ? (
+                <GlobalLink
+                  href={`/profile/${encodeURIComponent(s.suggestedByProfile)}`}
+                  className="font-semibold text-(--t-ink-base) hover:underline"
+                >
+                  {s.suggestedByName}
+                </GlobalLink>
+              ) : (
+                <strong className="text-(--t-ink-base)">
+                  {s.suggestedByName ?? t("communityMember")}
+                </strong>
+              )}
+              <AuthorBadges badges={s.suggestedByBadges} />
+              {" · "}
+              {formatter.relativeTime(new Date(s.createdAt), now)}
+            </p>
+            {s.comparison && (
+              <details className="text-sm">
+                <summary className="cursor-pointer">
+                  {t("notSameAs")}{" "}
+                  <strong className="text-(--t-ink-base)">
+                    {similar?.name ?? s.comparison.name}
+                  </strong>
+                </summary>
+                <p className="text-(--t-ink-dim)">{s.comparison.explanation}</p>
+                {similar && (
+                  <LibraryFeatureDetails
+                    name={similar.name}
+                    summary={similar.summary}
+                    description={similar.description}
+                    detailCategory={similar.category}
+                  />
+                )}
+              </details>
+            )}
+          </div>
+        </div>
       </div>
-    </li>
+      <SuggestionConversation
+        suggestion={s}
+        expanded={expanded}
+        mounted={mounted}
+        panelId={panelId}
+        onToggle={toggleConversation}
+      />
+    </article>
   )
 }

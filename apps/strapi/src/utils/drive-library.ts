@@ -1,4 +1,8 @@
-import { librarySourceKey, type DriveLibrary } from "@repo/shared-data"
+import {
+  libraryTypeName,
+  librarySourceKey,
+  type DriveLibrary,
+} from "@repo/shared-data"
 
 const LIBRARY = "api::library.library"
 
@@ -13,12 +17,12 @@ const isDocumentId = (v: unknown): v is string =>
 
 const DRIVE_LIBRARY_FIELDS = [
   "documentId",
-  "libraryType",
   "completeness",
   "createdAt",
   "operationalStatus",
 ] as const
 const DRIVE_LIBRARY_POPULATE = {
+  libraryType: { fields: ["name"] },
   sourceRecords: { fields: ["dataset", "role"] },
   continent: { fields: ["slug"] },
   country: { fields: ["slug"] },
@@ -63,7 +67,7 @@ export async function loadDriveLibrary(
     country: row.country?.slug ?? null,
     region: row.region?.slug ?? null,
     area: row.area?.slug ?? null,
-    libraryType: row.libraryType ?? null,
+    libraryType: libraryTypeName(row.libraryType) ?? null,
     source: librarySourceKey(row.sourceRecords),
     completeness: row.completeness ?? null,
     createdAt: row.createdAt ?? null,

@@ -7,11 +7,86 @@ import {
   discussionFilters,
   discussionThreadQuery,
   orderedDiscussionReplies,
+  discussionReplyFlow,
   type DiscussionRecord,
 } from "./api"
 
 afterEach(() => vi.unstubAllGlobals())
 describe("discussion bridge", () => {
+  it("preserves a context's content locale separately from the conversation language", () => {
+    const query = new URLSearchParams(
+      discussionThreadQuery(
+        discussionFilters(
+          new URLSearchParams(
+            "context=libraries&entity=library&contextLocale=fr&lang=es"
+          )
+        )
+      )
+    )
+    expect(query.get("contextLocale")).toBe("fr")
+    expect(query.get("language")).toBe("es")
+  })
+  it("preserves shareable entity, language, subject and following filters together", () => {
+    const query = new URLSearchParams(
+      discussionThreadQuery(
+        discussionFilters(
+          new URLSearchParams(
+            "context=drives&entity=drive-one&subject=subject&lang=es&view=following"
+          )
+        )
+      )
+    )
+    expect(Object.fromEntries(query)).toMatchObject({
+      contextType: "drives",
+      contextUid: "api::drive.drive",
+      contextId: "drive-one",
+      subjectId: "subject",
+      language: "es",
+      view: "following",
+    })
+    expect(
+      new URLSearchParams(
+        discussionThreadQuery(
+          discussionFilters(
+            new URLSearchParams("context=unknown&entity=private")
+          )
+        )
+      ).has("contextId")
+    ).toBe(false)
+  })
+  it("places owner-only pending replies under their parent without pulling unpaged published or removed records into the flow", () => {
+    const parent = {
+      id: "parent",
+      state: "visible",
+      createdAt: "2026-10-17T09:00:00Z",
+    } as DiscussionRecord
+    const next = {
+      id: "next",
+      state: "visible",
+      createdAt: "2026-10-17T10:00:00Z",
+    } as DiscussionRecord
+    const pending = {
+      id: "pending",
+      state: "pending",
+      parentId: "parent",
+      createdAt: "2026-10-17T11:00:00Z",
+    } as DiscussionRecord
+    const own = [
+      pending,
+      { id: "off-page", state: "visible" },
+      { id: "removed", state: "removed" },
+    ] as DiscussionRecord[]
+    const flow = discussionReplyFlow([parent, next], own)
+    expect(flow.map(({ record }) => record.id)).toEqual([
+      "parent",
+      "pending",
+      "next",
+    ])
+    expect(flow[1]).toMatchObject({ depth: 1, parent })
+    expect(
+      discussionReplyFlow([parent, next], []).map(({ record }) => record.id)
+    ).toEqual(["parent", "next"])
+  })
   it("keeps bookmarkable view/language/search filters bounded and places nested replies beside their parent", () => {
     const filters = discussionFilters(
       new URLSearchParams(

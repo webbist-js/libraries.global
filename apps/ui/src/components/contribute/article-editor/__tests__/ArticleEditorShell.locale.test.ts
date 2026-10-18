@@ -171,6 +171,70 @@ beforeEach(() => {
 })
 
 describe("article-type citation scope", () => {
+  it.each(["journal", "knowledge"] as const)(
+    "opens a new %s article in its server-resolved profile language",
+    async (kind) => {
+      render(
+        createElement(ArticleEditorShell, {
+          kind,
+          mode: "new",
+          locales: LOCALES,
+          uiLocale: "en",
+          initialLocale: "fr",
+        })
+      )
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Test language",
+          }) as HTMLSelectElement
+        ).value
+      ).toBe("fr")
+      expect(articleFetches()).toEqual([])
+    }
+  )
+
+  it("restores a resumed article draft's language ahead of a new-article profile default", async () => {
+    fetchMock.mockImplementation(async (url) =>
+      Response.json(
+        String(url).includes("/api/submissions/my")
+          ? {
+              data: [
+                {
+                  documentId: "draft",
+                  status: "draft",
+                  submissionType: "blog_submission",
+                  draftData: {
+                    title: "Saved article",
+                    locale: "en",
+                    doc: { type: "doc", content: [] },
+                  },
+                },
+              ],
+            }
+          : { data: null }
+      )
+    )
+    render(
+      createElement(ArticleEditorShell, {
+        kind: "journal",
+        mode: "new",
+        resumeDraftId: "draft",
+        locales: LOCALES,
+        uiLocale: "en",
+        initialLocale: "fr",
+      })
+    )
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Test language",
+          }) as HTMLSelectElement
+        ).value
+      ).toBe("en")
+    )
+  })
   it.each(["new", "edit"] as const)(
     "offers actual Event citation controls only for Journal in %s mode",
     (mode) => {

@@ -187,6 +187,7 @@ describe("ReviewDecisionForm — Next in this drive", () => {
     const u = new URL(url, "http://localhost")
     expect(u.pathname).toBe("/api/moderation/submissions")
     expect(Object.fromEntries(u.searchParams)).toEqual({
+      category: "libraries",
       drive: DRIVE,
       status: "pending",
       pageSize: "2",

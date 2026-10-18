@@ -34,7 +34,16 @@ export default async function DiscussionsPage({
   const initialSearch = new URLSearchParams(
     Object.entries(query).flatMap(([key, value]) =>
       typeof value === "string" &&
-      ["subject", "lang", "view", "q"].includes(key)
+      [
+        "subject",
+        "lang",
+        "view",
+        "q",
+        "compose",
+        "context",
+        "entity",
+        "contextLocale",
+      ].includes(key)
         ? [[key, value]]
         : []
     )

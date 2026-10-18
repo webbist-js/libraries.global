@@ -1,3 +1,4 @@
+import { DEFAULT_LIBRARY_TYPES } from "@repo/shared-data"
 import type React from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -35,23 +36,10 @@ export const fieldHintStyle: React.CSSProperties = {
   lineHeight: 1.5,
 }
 
-export const LIBRARY_TYPES = [
-  { value: "National", label: "National" },
-  { value: "Public", label: "Public" },
-  { value: "Academic", label: "Academic" },
-  { value: "University", label: "University" },
-  { value: "Parliamentary", label: "Parliamentary" },
-  { value: "State", label: "State" },
-  { value: "Municipal", label: "Municipal" },
-  { value: "Special", label: "Special" },
-  { value: "Monastic", label: "Monastic" },
-  { value: "Archive", label: "Archive" },
-  { value: "Private", label: "Private" },
-  { value: "Cultural", label: "Cultural" },
-  { value: "Digital", label: "Digital" },
-  { value: "Mobile", label: "Mobile" },
-  { value: "Other", label: "Other" },
-]
+export const LIBRARY_TYPES = DEFAULT_LIBRARY_TYPES.map((value) => ({
+  value,
+  label: value,
+}))
 
 export const OPERATOR_TYPES = [
   { value: "National Government", label: "National Government" },

@@ -1,46 +1,39 @@
+import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
-import { DiscussionModeration } from "@/components/discussions/DiscussionModeration"
-import { Container } from "@/components/elementary/Container"
+import { redirect } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ModerationAccessUnavailable } from "../_components/ModerationAccessUnavailable"
-import { ModerationHero } from "../_components/ModerationHero"
 import { requireModerator } from "../_components/moderator"
 
 export const metadata = privateMetadata("Discussion moderation")
 
-export default async function DiscussionModerationPage() {
-  const { scopes, accessUnknown } = await requireModerator(
-    "/contribute/moderation/discussions"
-  )
-  const t = await getTranslations("discussions")
-  if (accessUnknown)
+/** Existing bookmarks retain their access check and open the shared workspace. */
+export default async function DiscussionModerationPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const destination = "/contribute/moderation?tab=discussions"
+  const { scopes, accessUnknown } = await requireModerator(destination)
+  if (accessUnknown) {
+    const t = await getTranslations("discussions")
+
     return (
-      <ModerationAccessUnavailable
-        title={t("moderation")}
-        leaf={t("threads")}
-        path="/contribute/moderation/discussions"
-      />
+      <ModerationAccessUnavailable title={t("moderation")} path={destination} />
     )
+  }
   if (
     !scopes.some(
       (scope) => scope.queue === "all" || scope.queue === "discussions"
     )
   )
     notFound()
-
-  return (
-    <>
-      <ModerationHero
-        title={t("moderation")}
-        leaf={t("threads")}
-        lead={t("moderationLead")}
-      />
-      <Container className="max-w-[1100px] py-10">
-        <DiscussionModeration />
-      </Container>
-    </>
-  )
+  const { locale } = await params
+  redirect({
+    href: destination,
+    locale: isSupportedLocale(locale) ? locale : DEFAULT_LOCALE,
+  })
 }

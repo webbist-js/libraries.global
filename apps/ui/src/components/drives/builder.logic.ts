@@ -32,6 +32,7 @@ import type { ProposePrefill } from "@/lib/drives/propose-link"
 import type { Drive, DriveSource } from "@/lib/drives/types"
 import { nameFromSlug } from "@/lib/find-places"
 
+import type { DriveDiscussionSetup } from "./DriveDiscussionOptions"
 import { FOCUS_META, type PanelGap } from "./focus-meta"
 
 /**
@@ -72,6 +73,7 @@ export const WEBSITE_SOURCE = "Each library’s own website"
 
 /** The form as typed: numbers and dates stay strings until `toDriveInput`. */
 export interface BuilderState {
+  discussions?: DriveDiscussionSetup
   focusKind: FocusKind
   gaps: GapKey[]
   /** A verify drive's sections to confirm, from `VERIFY_SECTIONS`. */
@@ -1151,6 +1153,40 @@ export function parseSavedDraft(
   const steps = asStrings(saved.steps)
   state.steps = steps && steps.length > 0 ? steps.slice(0, 5) : [""]
   state.places = savedPlaces(saved.places) ?? []
+  const discussions = saved.discussions as Record<string, unknown> | undefined
+  if (
+    discussions &&
+    typeof discussions.enabled === "boolean" &&
+    Array.isArray(discussions.threadIds)
+  ) {
+    const start = discussions.start as Record<string, unknown> | undefined
+    state.discussions = {
+      enabled: discussions.enabled,
+      threadIds: discussions.threadIds
+        .filter(
+          (id): id is string => typeof id === "string" && id.length <= 128
+        )
+        .slice(0, 10),
+      ...(typeof discussions.baseVersion === "number"
+        ? { baseVersion: discussions.baseVersion }
+        : {}),
+      ...(typeof discussions.featuredThreadId === "string"
+        ? { featuredThreadId: discussions.featuredThreadId }
+        : {}),
+      ...(start &&
+      typeof start.title === "string" &&
+      typeof start.body === "string" &&
+      typeof start.language === "string"
+        ? {
+            start: {
+              title: start.title.slice(0, 250),
+              body: start.body.slice(0, 20000),
+              language: start.language.slice(0, 35),
+            },
+          }
+        : {}),
+    }
+  }
 
   const dirtySrc = (src.dirty ?? {}) as Record<string, unknown>
 

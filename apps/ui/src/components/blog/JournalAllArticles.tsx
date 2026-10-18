@@ -29,36 +29,29 @@ function ArticleResults({
     const message = pastTheEnd ? t("emptyPage") : p("noResults")
 
     return (
-      <div>
-        <EmptyState message={message} />
-        {!pastTheEnd && (
-          <p className="-mt-12 text-center text-sm">
-            <GlobalLink
-              href={journalHref(query, {
-                q: undefined,
-                section: null,
-                lang: "all",
-                filters: { origins: query.filters?.origins },
-                page: 1,
-              })}
-              className="font-semibold underline"
-            >
-              {p("resetSearch")}
-            </GlobalLink>
-          </p>
-        )}
-        {pastTheEnd ? (
-          <p className="-mt-12 text-center text-[14px]">
-            <GlobalLink
-              className="font-semibold underline underline-offset-[3px]"
-              href={journalHref(query, { page: 1 })}
-              style={{ color: T.accent.primary }}
-            >
-              {t("firstPage")}
-            </GlobalLink>
-          </p>
-        ) : null}
-      </div>
+      <EmptyState
+        message={message}
+        icon="mdi:newspaper-variant-outline"
+        action={
+          <GlobalLink
+            href={journalHref(
+              query,
+              pastTheEnd
+                ? { page: 1 }
+                : {
+                    q: undefined,
+                    section: null,
+                    lang: "all",
+                    filters: { origins: query.filters?.origins },
+                    page: 1,
+                  }
+            )}
+            className="min-h-11 rounded-full border border-(--t-border-hi) px-5 py-2.5 font-semibold text-(--t-accent-primary)"
+          >
+            {pastTheEnd ? t("firstPage") : p("resetSearch")}
+          </GlobalLink>
+        }
+      />
     )
   }
 

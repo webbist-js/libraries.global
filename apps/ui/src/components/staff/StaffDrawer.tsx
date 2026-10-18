@@ -7,13 +7,14 @@ import { useEffect, useMemo, useState } from "react"
 import { Drawer } from "@/components/ds/Drawer"
 import {
   DRAWER_CARD as CARD,
-  DrawerLinkCard,
-  DrawerTile as Tile,
+  DrawerAction,
+  DrawerFooter,
+  DrawerSection,
 } from "@/components/ds/DrawerCards"
 import { TONES as NOTICE_TONES } from "@/components/ds/Notice"
 import { useFeaturedDrive } from "@/hooks/useContributeMenu"
 import { useEntitlements, useStaff } from "@/lib/access-client"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
 import { searchLibraryNames } from "@/lib/meilisearch"
 import { mobileConsoleHref } from "@/lib/mobile-app"
@@ -48,16 +49,12 @@ export type StaffDrawerData = {
   drives: { slug: string; title: string; need: string | null }[]
 }
 
-/** Per library, for the session: shown at once, refreshed on every open. */
-const cache = new Map<string, StaffDrawerData>()
-
 async function fetchDrawer(id: string): Promise<StaffDrawerData> {
   const res = await fetch(`/api/staff/${encodeURIComponent(id)}/drawer`, {
     cache: "no-store",
   })
   if (!res.ok) throw new Error("drawer_unavailable")
   const data = (await res.json()) as StaffDrawerData
-  cache.set(id, data)
 
   return data
 }
@@ -97,6 +94,7 @@ async function lookupPageLibrary(
  */
 export function StaffDrawer() {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("workspaceDrawer")
 
   const staff = useStaff()
   const { libraries } = staff
@@ -114,8 +112,7 @@ export function StaffDrawer() {
     return pick ?? libraries[0]?.id ?? null
   }, [requested, current, ids, libraries])
   const [selected, setSelected] = useState<string | null>(initial)
-  // What the last fetch returned, for which library; the cache fills in
-  // while a refetch is in flight, so nothing is set synchronously.
+  // Keep summaries local to this open drawer, never shared between accounts.
   const [loaded, setLoaded] = useState<{
     id: string
     data: StaffDrawerData | null
@@ -138,7 +135,7 @@ export function StaffDrawer() {
         if (live)
           setLoaded({
             id: selected,
-            data: cache.get(selected) ?? null,
+            data: null,
             failed: true,
           })
       })
@@ -160,12 +157,7 @@ export function StaffDrawer() {
     }
   }, [elsewhere, current, locale])
 
-  const data =
-    loaded?.id === selected
-      ? loaded.data
-      : selected
-        ? (cache.get(selected) ?? null)
-        : null
+  const data = loaded?.id === selected ? loaded.data : null
   const failed = loaded?.id === selected && loaded.failed
 
   const library = libraries.find((l) => l.id === selected) ?? libraries[0]
@@ -209,39 +201,50 @@ export function StaffDrawer() {
       }
       headerContent={
         <div className="flex flex-col gap-3">
-          <label className="relative block" style={{ color: T.ink.dim }}>
-            <Icon
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
-              height={18}
-              icon="mdi:swap-vertical"
-              width={18}
-            />
-            <span className="sr-only">{tUi("library")}</span>
-            <select
-              className="min-h-12 w-full min-w-0 appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-[15px] font-semibold"
-              onChange={(event) => setSelected(event.target.value)}
-              style={{
-                background: T.bg.deep,
-                borderColor: T.border.hi,
-                color: T.ink.base,
-              }}
-              value={id}
-            >
-              {libraries.map((lib) => (
-                <option key={lib.id} value={lib.id}>
-                  {lib.name}
-                </option>
-              ))}
-            </select>
-            <Icon
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2"
-              height={18}
-              icon="mdi:chevron-down"
-              width={18}
-            />
-          </label>
+          {libraries.length > 1 ? (
+            <label className="relative block" style={{ color: T.ink.dim }}>
+              <Icon
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
+                height={18}
+                icon="mdi:swap-vertical"
+                width={18}
+              />
+              <span className="sr-only">{tUi("library")}</span>
+              <select
+                className="min-h-12 w-full min-w-0 appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-[15px] font-semibold"
+                onChange={(event) => setSelected(event.target.value)}
+                style={{
+                  background: T.bg.deep,
+                  borderColor: T.border.hi,
+                  color: T.ink.base,
+                }}
+                value={id}
+              >
+                {libraries.map((lib) => (
+                  <option key={lib.id} value={lib.id}>
+                    {lib.name}
+                  </option>
+                ))}
+              </select>
+              <Icon
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2"
+                height={18}
+                icon="mdi:chevron-down"
+                width={18}
+              />
+            </label>
+          ) : (
+            <p className="m-0 flex flex-wrap items-center gap-2 text-[13px] text-(--t-ink-dim)">
+              <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-(--t-ink-base)">
+                {library.role === "owner"
+                  ? t("libraryOwner")
+                  : t("libraryEditor")}
+              </span>
+              {library.libraryType}
+            </p>
+          )}
 
           {mobile ? (
             <section
@@ -299,38 +302,12 @@ export function StaffDrawer() {
         </div>
       }
       footer={
-        <div
-          className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t px-5 py-3"
-          style={{ background: T.bg.deep, borderColor: T.border.line }}
-        >
-          <Link
-            href={base}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-            onClick={closeStaffDrawer}
-          >
-            Open staff area
-            <Icon
-              aria-hidden="true"
-              height={15}
-              icon="mdi:arrow-right"
-              width={15}
-            />
-          </Link>
-          <span className="text-[13px]" style={{ color: T.ink.dim }}>
-            Shortcut:{" "}
-            <kbd
-              className="rounded-md border px-1.5 py-0.5 font-semibold"
-              style={{
-                borderColor: T.border.hi,
-                background: T.bg.surface,
-                fontFamily: T.font.mono,
-                color: T.ink.base,
-              }}
-            >
-              Alt S
-            </kbd>
-          </span>
-        </div>
+        <DrawerFooter
+          href={base}
+          label={t("openStaff")}
+          shortcut="Alt S"
+          onClose={closeStaffDrawer}
+        />
       }
       onClose={closeStaffDrawer}
       initialFocus={(panel) =>
@@ -338,7 +315,7 @@ export function StaffDrawer() {
         panel.querySelector<HTMLElement>("button")
       }
     >
-      <div className="flex flex-col gap-5 px-5 py-4">
+      <div className="flex flex-col gap-4 px-5 py-4">
         {elsewhere ? (
           <p
             className="m-0 flex items-start gap-2 rounded-[16px] px-3.5 py-3 text-[14px]"
@@ -371,210 +348,209 @@ export function StaffDrawer() {
           </p>
         ) : null}
 
-        <div aria-live="polite">
-          {failed && !data ? (
-            <p
-              role="status"
-              className="m-0 rounded-[16px] px-3 py-2 text-[13px]"
-              style={{ background: T.bg.muted, color: T.ink.dim }}
-            >
-              The summary is unavailable right now. The links below still work.
-            </p>
-          ) : data && data.suggestions > 0 ? (
-            <Link
-              href={`${base}#suggestions`}
-              className={`${CARD} flex items-center gap-3 px-3.5 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface)`}
-              style={{ background: T.bg.deep, borderColor: T.edge.danger }}
-            >
-              <span
-                aria-hidden="true"
-                className="flex size-9 shrink-0 items-center justify-center rounded-full text-[14px] font-bold tabular-nums"
-                style={{
-                  background: TYPE_TINT.special.bg,
-                  color: T.accent.danger,
-                }}
+        <DrawerSection id="staff-drawer-library-h" title={t("yourLibrary")}>
+          <div aria-live="polite" className="mb-2">
+            {failed && !data ? (
+              <p
+                role="status"
+                className="m-0 rounded-[14px] bg-(--t-bg-surface) px-3 py-2.5 text-[13px] leading-relaxed text-(--t-ink-dim)"
               >
-                {data.suggestions}
-              </span>
-              <span className="min-w-0 flex-1">
+                {t("staffUnavailable")}
+              </p>
+            ) : data && data.suggestions > 0 ? (
+              <Link
+                href={`${base}#suggestions`}
+                onClick={closeStaffDrawer}
+                className="flex items-center gap-3 rounded-[16px] bg-[#19172c] px-3.5 py-3 text-white no-underline transition-colors hover:bg-[#29253f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+              >
                 <span
-                  className="block text-[15px] leading-snug font-semibold"
-                  style={{ color: T.ink.base }}
+                  aria-hidden
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[17px] font-semibold tabular-nums"
                 >
-                  {data.suggestions} suggested{" "}
-                  {data.suggestions === 1 ? "change" : "changes"} to review
+                  {data.suggestions}
                 </span>
-                <span
-                  className="mt-0.5 block text-[15px] leading-snug"
-                  style={{ color: T.ink.dim }}
-                >
-                  Review them before they go live.
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] leading-snug font-semibold">
+                    {t("suggestedChanges", { count: data.suggestions })}
+                  </span>
+                  <span className="mt-0.5 block text-[12px] leading-snug text-[#d1cedd]">
+                    {t("reviewBeforeLive")}
+                  </span>
                 </span>
-              </span>
-              <Icon
-                aria-hidden="true"
-                height={18}
-                icon="mdi:chevron-right"
-                style={{ color: T.ink.dim }}
-                width={18}
-              />
-            </Link>
-          ) : (
-            <p
-              className="m-0 flex items-center gap-2 px-1 text-[13px]"
-              style={{ color: T.ink.dim }}
-            >
-              <Icon
-                aria-hidden="true"
-                height={15}
-                icon={data ? "mdi:check-circle-outline" : "mdi:progress-clock"}
-                style={{ color: data ? T.accent.ok : T.ink.dim }}
-                width={15}
-              />
-              {data
-                ? tUi("nothing_waiting_for_review")
-                : "Checking for suggestions…"}
-            </p>
-          )}
-        </div>
-
-        <section aria-labelledby="staff-drawer-library-h">
-          <h3
-            id="staff-drawer-library-h"
-            className="m-0 mb-2.5 text-[14px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            Your library
-          </h3>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Tile
-              href={base}
-              icon="mdi:view-dashboard-outline"
-              label={tUi("staff_area")}
-            />
-            <Tile
+                <Icon
+                  aria-hidden
+                  icon="mdi:arrow-right"
+                  width={17}
+                  height={17}
+                />
+              </Link>
+            ) : (
+              <p className="m-0 flex items-center gap-2 rounded-[12px] bg-(--t-bg-surface) px-3 py-2.5 text-[12px] text-(--t-ink-dim)">
+                <Icon
+                  aria-hidden
+                  icon={
+                    data ? "mdi:check-circle-outline" : "mdi:progress-clock"
+                  }
+                  width={15}
+                  height={15}
+                  className={data ? "text-(--t-accent-ok)" : undefined}
+                />
+                {data
+                  ? tUi("nothing_waiting_for_review")
+                  : t("checkingSuggestions")}
+              </p>
+            )}
+          </div>
+          <div className="divide-y divide-(--t-border-line)">
+            <DrawerAction
               href={`${base}/edit`}
               icon="mdi:pencil-outline"
               label={tUi("edit_record")}
+              onClick={closeStaffDrawer}
+            />
+            <DrawerAction
+              href={`${base}/notices`}
+              icon="mdi:bell-outline"
+              label={tUi("notices")}
+              count={
+                data && data.noticesUpcoming > 0
+                  ? data.noticesUpcoming
+                  : undefined
+              }
+              onClick={closeStaffDrawer}
+            />
+            <DrawerAction
+              href={`${base}/events`}
+              icon="mdi:calendar-check-outline"
+              label={tUi("event_feeds")}
+              onClick={closeStaffDrawer}
             />
             {mobile ? (
               <>
-                <Tile
+                <DrawerAction
                   href={`${base}/edit?step=timetable`}
                   icon="mdi:calendar-blank-outline"
                   label={tUi("timetable")}
                   tag="Mobile"
+                  onClick={closeStaffDrawer}
                 />
-                <Tile
+                <DrawerAction
                   href={`${base}/live`}
                   icon="mdi:broadcast"
                   label={tUi("go_live")}
                   tag="Mobile"
+                  onClick={closeStaffDrawer}
                 />
               </>
             ) : null}
-            <Tile
-              href={`${base}/notices`}
-              icon="mdi:bell-outline"
-              label={tUi("notices")}
-            />
-            <Tile
-              href={`${base}/events`}
-              icon="mdi:calendar-check-outline"
-              label={tUi("event_feeds")}
-            />
-            <Tile
+            <DrawerAction
               href={
                 data?.library.path ??
                 `/libraries?q=${encodeURIComponent(library.slug)}`
               }
               icon="mdi:eye-outline"
               label={tUi("public_page")}
+              onClick={closeStaffDrawer}
             />
-            <Tile
-              href="/contribute/index/new"
-              icon="mdi:map-marker-plus-outline"
-              label={tUi("add_a_library")}
+            <DrawerAction
+              href={base}
+              icon="mdi:view-dashboard-outline"
+              label={tUi("staff_area")}
+              onClick={closeStaffDrawer}
             />
-            <Tile
-              href={`${base}/traffic`}
-              icon="mdi:chart-bar"
-              label={tUi("traffic")}
-              tag={trafficCovered ? undefined : "Team"}
-            />
-            <Tile
-              href={`${base}/team`}
-              icon="mdi:account-group-outline"
-              label={tUi("team")}
-              tag={teamCovered ? undefined : "Team"}
-            />
-            {organises ? (
-              <Tile
-                href="/staff/team"
-                icon="mdi:account-multiple-plus-outline"
-                label={tUi("team_organiser")}
-              />
-            ) : null}
           </div>
-        </section>
+        </DrawerSection>
 
-        {featuredDrive ? (
-          <section aria-labelledby="staff-drawer-featured-drive-h">
-            <h3
-              id="staff-drawer-featured-drive-h"
-              className="m-0 mb-2.5 text-[14px] font-semibold"
-              style={{ color: T.ink.dim }}
-            >
-              Featured drive
-            </h3>
-            <DrawerLinkCard
-              href={driveHref(featuredDrive.slug)}
-              title={featuredDrive.title}
+        <DrawerSection id="staff-drawer-team-h" title={t("teamAndInsights")}>
+          <DrawerAction
+            href={`${base}/team`}
+            icon="mdi:account-group-outline"
+            label={tUi("team")}
+            tag={teamCovered ? undefined : "Team"}
+            onClick={closeStaffDrawer}
+          />
+          <DrawerAction
+            href={`${base}/traffic`}
+            icon="mdi:chart-bar"
+            label={tUi("traffic")}
+            tag={trafficCovered ? undefined : "Team"}
+            onClick={closeStaffDrawer}
+          />
+          {organises ? (
+            <DrawerAction
+              href="/staff/team"
+              icon="mdi:account-multiple-plus-outline"
+              label={tUi("team_organiser")}
+              onClick={closeStaffDrawer}
             />
-          </section>
-        ) : null}
+          ) : null}
+          {!teamCovered || !trafficCovered ? (
+            <p className="m-0 mt-2 border-t border-(--t-border-line) pt-2 text-[12px] leading-relaxed text-(--t-ink-dim)">
+              {t("teamAccess")}
+            </p>
+          ) : null}
+        </DrawerSection>
 
-        <section aria-labelledby="staff-drawer-drives-h">
-          <h3
-            id="staff-drawer-drives-h"
-            className="m-0 mb-2.5 text-[14px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            Drives that include your library
-          </h3>
+        <DrawerSection
+          id="staff-drawer-drives-h"
+          title={t("communityDrives")}
+          action={
+            <Link
+              href="/community"
+              onClick={closeStaffDrawer}
+              className="inline-flex min-h-8 shrink-0 items-center text-[12px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
+            >
+              {tUi("all_drives")}
+            </Link>
+          }
+        >
           <div aria-live="polite">
             {data?.drives.length ? (
-              <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              <div className="divide-y divide-(--t-border-line)">
                 {data.drives.map((drive) => (
-                  <li key={drive.slug}>
-                    <DrawerLinkCard
-                      href={`/community/drives/${drive.slug}`}
-                      title={drive.title}
-                      description={
-                        drive.need
-                          ? `Your library needs: ${drive.need}`
-                          : undefined
-                      }
-                    />
-                  </li>
+                  <DrawerAction
+                    key={drive.slug}
+                    href={driveHref(drive.slug)}
+                    icon="mdi:flag-outline"
+                    label={drive.title}
+                    description={
+                      drive.need
+                        ? t("libraryNeeds", { need: drive.need })
+                        : undefined
+                    }
+                    onClick={closeStaffDrawer}
+                  />
                 ))}
-              </ul>
+              </div>
             ) : (
-              <p className="m-0 px-1 text-[13px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
                 {data
-                  ? "No open drive includes it right now."
-                  : "Checking drives…"}
+                  ? t("noLibraryDrive")
+                  : failed
+                    ? t("drivesUnavailable")
+                    : t("checkingDrives")}
               </p>
             )}
           </div>
-          <Link
-            href="/community"
-            className="mt-2 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
-            style={{ color: T.accent.primary }}
-          >
-            {tUi("all_drives")}
-          </Link>
-        </section>
+          {featuredDrive &&
+          !data?.drives.some((drive) => drive.slug === featuredDrive.slug) ? (
+            <div className="mt-3 border-t border-(--t-border-line) pt-2">
+              <DrawerAction
+                href={driveHref(featuredDrive.slug)}
+                icon="mdi:pin-outline"
+                label={featuredDrive.title}
+                description={t("featuredDrive")}
+                onClick={closeStaffDrawer}
+              />
+            </div>
+          ) : null}
+        </DrawerSection>
+        <DrawerAction
+          href="/contribute/index/new"
+          icon="mdi:map-marker-plus-outline"
+          label={tUi("add_a_library")}
+          onClick={closeStaffDrawer}
+        />
       </div>
     </Drawer>
   )

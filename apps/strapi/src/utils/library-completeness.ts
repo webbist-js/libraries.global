@@ -1,4 +1,10 @@
-import { completenessOf, gapsOf, type GapKey } from "@repo/shared-data"
+import {
+  libraryTypeName,
+  type LibraryTypeValue,
+  completenessOf,
+  gapsOf,
+  type GapKey,
+} from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
 import { withAtlasLibraryWrite } from "./atlas-outbox"
@@ -17,7 +23,7 @@ export type OpeningTimes = {
 export type CompletenessSource = {
   heroImage?: unknown
   openingTimes?: OpeningTimes
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
   mobileTimetable?: unknown
   homeLibrary?: unknown
   streetAddress?: string | null
@@ -39,7 +45,6 @@ export type CompletenessSource = {
 /** Scalar attributes completeness reads. */
 export const COMPLETENESS_FIELDS = [
   "openingTimes",
-  "libraryType",
   "mobileTimetable",
   "streetAddress",
   "location",
@@ -55,6 +60,7 @@ export const COMPLETENESS_FIELDS = [
 
 /** Relations and components completeness reads, populated as ids only. */
 export const COMPLETENESS_POPULATE = {
+  libraryType: { fields: ["name"] },
   heroImage: { fields: ["id"] },
   accessibility: { fields: ["id"] },
   services: { fields: ["id"] },
@@ -109,12 +115,13 @@ export function compactHours(o: OpeningTimes | undefined): number[][][] | null {
  * used to count any truthy string.
  */
 export function computeCompleteness(l: CompletenessSource): number {
-  return completenessOf(l).percent
+  return completenessOf({ ...l, libraryType: libraryTypeName(l.libraryType) })
+    .percent
 }
 
 /** The record's gaps (registry order), stored beside completeness. */
 export function computeGaps(l: CompletenessSource): GapKey[] {
-  return gapsOf(l)
+  return gapsOf({ ...l, libraryType: libraryTypeName(l.libraryType) })
 }
 
 type LibraryRow = {

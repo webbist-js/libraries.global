@@ -5,6 +5,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 import { StandingCard } from "@/components/community/StandingCard"
 import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
+import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
 import { FinishedDrives } from "@/components/drives/FinishedDrives"
 import { isFocusFilterKey } from "@/components/drives/focus-meta"
 import { hasCapability } from "@/lib/access-server"
@@ -182,6 +183,7 @@ export default async function CommunityPage({
             initials={user ? viewerInitials(profile, user) : ""}
             signInReturnTo="/community"
           />
+          <DiscussionFeed contextType="drives" activeOnly compact />
           <TopThisMonthCard entries={top} />
           <VoteOnAdditionsCard
             initial={suggestions}

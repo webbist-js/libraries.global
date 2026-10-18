@@ -101,6 +101,11 @@ export type RoleApplicant = {
  * `DriveProposalReview` (content-moderation `services/moderation.ts`).
  */
 export type DriveProposalReview = {
+  discussions?: {
+    enabled: boolean
+    threadIds: string[]
+    featuredThreadId?: string
+  }
   /** The drive as approval would create it: the proposer's definition with the Moderator's dates. */
   drive: DriveInput
   /** True when the Moderator's dates have replaced the proposer's. */
@@ -135,6 +140,10 @@ export type ModerationStat = {
 }
 
 export type OptionSuggestion = {
+  publicationStatus?: "pending" | "published" | "rejected"
+  version?: number
+  comparison?: { documentId: string; name: string; explanation: string } | null
+
   documentId: string
   name: string
   optionKey: "accessibility" | "amenities" | "services" | "library_types"

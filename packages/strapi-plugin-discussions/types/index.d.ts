@@ -16,15 +16,26 @@ export type Actor = {
   capabilities?: Action[]
   admin?: boolean
 }
+export type PublicAuthorBadge =
+  | "editor"
+  | "moderator"
+  | "editorial_board"
+  | "suggested_this"
 export type PublicAuthor = {
   name: string
   slug?: string
   url?: string
   avatar?: { url: string; alternativeText?: string }
   background?: "violet" | "coral" | "mint" | "amber" | "blue" | "rose"
+  badges?: PublicAuthorBadge[]
 }
 export type Target = { uid: string; documentId: string; locale?: string }
-export type TargetProjection = { title: string; url: string }
+export type TargetProjection = {
+  active?: boolean
+  title: string
+  url: string
+  links?: { label: string; url: string }[]
+}
 export type Context = { strapi: any; actor: Actor | null }
 export type TargetResolver = (
   target: Target,
@@ -54,6 +65,13 @@ export type MediaStore = {
   ) => Promise<void>
 }
 export type DiscussionConfig = {
+  contextKinds?: Record<
+    string,
+    { uid: string; label: string; defaultEnabled?: boolean }
+  >
+  authorizeContext?: (
+    context: Context & { target: Target }
+  ) => Promise<"manage" | "propose" | false>
   mediaStore?: MediaStore
   mediaDirectory?: string
   maxImageBytes: number
@@ -62,7 +80,7 @@ export type DiscussionConfig = {
   stagingRetentionHours: number
   publicAuthor?: (
     key: string,
-    context: { strapi: any }
+    context: { strapi: any; target?: Target }
   ) => Promise<PublicAuthor | null>
   identity?: (ctx: any, context: { strapi: any }) => Promise<Actor | null>
   authorize?: (
@@ -125,6 +143,7 @@ export type DiscussionQuote = {
   author?: PublicAuthor | null
 }
 export type DiscussionRecord = {
+  contexts?: DiscussionContextLink[]
   id: string
   subjectId: string
   body: string
@@ -142,6 +161,9 @@ export type DiscussionRecord = {
   activityAt?: string
   excerpt?: string
   replyCount?: number
+  participants?: PublicAuthor[]
+  participantCount?: number
+  lastReplyAt?: string
   subscribed?: boolean
   reactions: { like: number; love: number }
   myReaction: "like" | "love" | null
@@ -173,6 +195,30 @@ export type DiscussionRecord = {
     attachments: DiscussionImage[]
   } | null
 }
+
+export type DiscussionContextLink = TargetProjection & {
+  public?: boolean
+  targetPublic?: boolean
+  feedback?: string | null
+  id: string
+  target: Target
+  threadId: string
+  featured: boolean
+  state: "visible" | "pending" | "rejected" | "removed"
+  version: number
+  canManage?: boolean
+  canReview?: boolean
+  thread?: { title: string; language: string }
+}
+export type DiscussionContextFeed = {
+  target: Target
+  projection: TargetProjection
+  enabled: boolean
+  version: number
+  canManage: boolean
+  canPropose: boolean
+  links: DiscussionContextLink[]
+}
 export type DiscussionRevision = {
   id: string
   recordType: "thread" | "reply"
@@ -187,10 +233,27 @@ export type DiscussionRevision = {
   currentVersion: number
   threadTitle?: string
   threadVersion?: number
+  subjectId?: string
+  createdAt?: string
+  recordState?: DiscussionState
+  parentId?: string | null
+  parentAuthor?: PublicAuthor | null
+  canReview?: boolean
+  canSanction?: boolean
+  isOwn?: boolean
+  quote?: DiscussionQuote | null
   author?: PublicAuthor | null
   state?: string
   attachments: DiscussionImage[]
   contentFlags?: { language: string; covered: boolean; terms: string[] }
+}
+export type DiscussionAuditEvent = {
+  id: string
+  recordType: "thread" | "reply"
+  recordId: string
+  action: string
+  createdAt?: string
+  actor?: PublicAuthor | null
 }
 export type DiscussionReport = {
   id: string

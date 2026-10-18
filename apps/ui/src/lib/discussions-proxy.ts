@@ -8,14 +8,17 @@ import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
 
 const ID =
   "(?:[a-z0-9]{20,32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"
+const REPLY_READ = new RegExp(`^threads/${ID}/replies$`)
 const ROUTES: Record<string, RegExp[]> = {
   GET: [
     new RegExp(`^attachments/${ID}$`),
     /^my\/status$/,
     /^subjects$/,
     /^threads$/,
+    /^context$/,
+    /^contexts$/,
     new RegExp(`^threads/${ID}$`),
-    new RegExp(`^threads/${ID}/replies$`),
+    REPLY_READ,
     new RegExp(`^records/(thread|reply)/${ID}/revisions$`),
     /^my\/records$/,
     /^moderation\/(revisions|reports)$/,
@@ -25,11 +28,14 @@ const ROUTES: Record<string, RegExp[]> = {
   POST: [
     /^attachments$/,
     /^threads$/,
+    /^context-links$/,
     new RegExp(`^threads/${ID}/replies$`),
     new RegExp(`^records/(thread|reply)/${ID}/(revisions|reports)$`),
     new RegExp(`^moderation/records/(thread|reply)/${ID}/sanctions$`),
   ],
   PUT: [
+    /^context$/,
+    new RegExp(`^context-links/${ID}$`),
     new RegExp(`^threads/${ID}/subscription$`),
     new RegExp(`^records/(thread|reply)/${ID}/reaction$`),
     new RegExp(`^moderation/(revisions|reports)/${ID}$`),
@@ -39,15 +45,23 @@ const ROUTES: Record<string, RegExp[]> = {
   ],
 }
 const QUERY_KEYS = new Set([
+  "contextUid",
+  "contextId",
+  "contextLocale",
+  "contextType",
+  "mine",
+  "activeContexts",
   "subjectId",
   "targetUid",
   "targetId",
   "targetLocale",
   "language",
   "offset",
+  "order",
   "limit",
   "kind",
   "threadId",
+  "reviewableOnly",
   "recordId",
   "state",
   "view",
@@ -218,6 +232,14 @@ export async function proxyDiscussion(req: Request, path: string[]) {
   for (const [key, value] of query) {
     if (
       !QUERY_KEYS.has(key) ||
+      (key === "reviewableOnly" &&
+        (req.method !== "GET" ||
+          route !== "moderation/revisions" ||
+          !["true", "false"].includes(value))) ||
+      (key === "order" &&
+        (req.method !== "GET" ||
+          !REPLY_READ.test(route) ||
+          value !== "chronological")) ||
       value.length > 180 ||
       ++count > 15 ||
       upstream.searchParams.has(key)

@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_suggestion_rounds",
+  "info": {
+    "singularName": "suggestion-round",
+    "pluralName": "suggestion-rounds",
+    "displayName": "Suggestion review round"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "opensAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "cutoffAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "reviewAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "capacity": {
+      "type": "integer",
+      "default": 5,
+      "min": 1,
+      "max": 20,
+      "required": true
+    },
+    "state": {
+      "type": "enumeration",
+      "enum": ["voting", "review", "closed"],
+      "default": "voting",
+      "required": true
+    },
+    "shortlist": {
+      "type": "json"
+    },
+    "snapshotAt": {
+      "type": "datetime"
+    },
+    "closedAt": {
+      "type": "datetime"
+    },
+    "version": {
+      "type": "integer",
+      "default": 0,
+      "required": true
+    }
+  },
+  "indexes": [
+    {
+      "name": "cm_suggestion_round_key_unique",
+      "columns": ["key"],
+      "type": "unique"
+    }
+  ]
+}

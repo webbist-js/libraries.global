@@ -1,7 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { hasOpeningHours, gapDefinition, type GapKey } from "@repo/shared-data"
+import {
+  libraryTypeName,
+  hasOpeningHours,
+  gapDefinition,
+  type GapKey,
+} from "@repo/shared-data"
 import { useLocale } from "next-intl"
 import {
   useCallback,
@@ -149,7 +154,7 @@ export function RegionLibraryIndex({
     documentId: library.documentId,
     name: library.name,
     slug: library.slug,
-    libraryType: library.libraryType,
+    libraryType: libraryTypeName(library.libraryType),
     city: library.city ?? library.district,
     summary: library.summary,
     openingTimes: library.openingTimes,
@@ -221,8 +226,8 @@ export function RegionLibraryIndex({
     const gap = (state.needs.find((key) => gaps.includes(key)) ?? gaps[0]) as
       | GapKey
       | undefined
-    const mobile = hit.libraryType === "Mobile"
-    const physical = !mobile && hit.libraryType !== "Digital"
+    const mobile = libraryTypeName(hit.libraryType) === "Mobile"
+    const physical = !mobile && libraryTypeName(hit.libraryType) !== "Digital"
     const category =
       gap === "hours"
         ? mobile
@@ -270,14 +275,14 @@ export function RegionLibraryIndex({
     const improve = gap ? (
       <GlobalLink
         href={action}
-        aria-label={`${gap === "hours" && mobile ? "Add stops and times" : `Add ${gapDefinition(gap, hit.libraryType).label.toLowerCase()}`} for ${hit.name}`}
+        aria-label={`${gap === "hours" && mobile ? "Add stops and times" : `Add ${gapDefinition(gap, libraryTypeName(hit.libraryType)).label.toLowerCase()}`} for ${hit.name}`}
         className={ACTION_CLASS}
         style={{ background: T.accent.chip, color: T.accent.primary }}
       >
         <Icon aria-hidden="true" icon="mdi:plus" width={15} height={15} />
         {gap === "hours" && mobile
           ? "Add stops and times"
-          : `Add ${gapDefinition(gap, hit.libraryType).label.toLowerCase()}`}
+          : `Add ${gapDefinition(gap, libraryTypeName(hit.libraryType)).label.toLowerCase()}`}
       </GlobalLink>
     ) : null
 

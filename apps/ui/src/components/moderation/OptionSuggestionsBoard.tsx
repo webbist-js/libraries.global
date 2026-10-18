@@ -5,7 +5,10 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { Badge, EmptyState } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import {
+  type OptionCatalogue,
+  type SuggestionReviewRound,
   LIST_LABELS,
   STATUS_META,
   type SuggestionStatus,
@@ -17,6 +20,7 @@ import {
   humanise,
   type OptionSuggestion,
 } from "./submissionMeta"
+import { SuggestionRoundControls } from "./SuggestionRoundControls"
 
 const PRIMARY =
   "inline-flex items-center justify-center rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
@@ -37,7 +41,16 @@ const UNDECIDED_STATUSES = new Set<SuggestionStatus>([
   "planned",
 ])
 
-type Decision = "review" | "plan" | "accept" | "decline" | "remove"
+type Decision =
+  | "review"
+  | "plan"
+  | "accept"
+  | "decline"
+  | "remove"
+  | "publish"
+  | "reject"
+  | "update"
+  | "merge"
 
 const FILTERS: { id: "" | SuggestionStatus; label: string }[] = [
   { id: "", label: "All undecided" },
@@ -80,11 +93,26 @@ function librariesLine(s: OptionSuggestion): string {
 function SuggestionCard({
   s,
   onDecided,
+  catalogue,
 }: {
   s: OptionSuggestion
-  onDecided: (id: string, text: string, newStatus?: SuggestionStatus) => void
+  catalogue?: OptionCatalogue
+  onDecided: (
+    id: string,
+    text: string,
+    newStatus?: SuggestionStatus,
+    patch?: Partial<OptionSuggestion>
+  ) => void
 }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("optionSuggestions")
+  const [feature, setFeature] = useState({
+    summary: "",
+    description: "",
+    icon: "",
+    category: "",
+  })
+  const [existingOptionDocumentId, setExistingOptionDocumentId] = useState("")
 
   const nameId = useId()
   const noteId = useId()
@@ -95,6 +123,10 @@ function SuggestionCard({
   const [confirmingRemove, setConfirmingRemove] = useState(false)
 
   const DECIDED_MESSAGE: Record<Decision, string> = {
+    publish: t("publish"),
+    reject: t("rejectPublication"),
+    update: t("updateFeature"),
+    merge: t("mergeFeature"),
     review: `Marked “${s.name}” under review.`,
     plan: `Marked “${s.name}” planned.`,
     accept: `Accepted “${s.name}”.`,
@@ -105,11 +137,19 @@ function SuggestionCard({
   const NEW_STATUS: Partial<Record<Decision, SuggestionStatus>> = {
     review: "reviewing",
     plan: "planned",
+    publish: "open",
   }
 
   async function decide(decision: Decision) {
-    if (decision === "decline" && !note.trim()) {
-      setError("Add a note: it’s shown with the suggestion.")
+    if (
+      ["accept", "decline", "update", "merge", "reject", "plan"].includes(
+        decision
+      ) &&
+      !note.trim()
+    ) {
+      setError(
+        t(decision === "reject" ? "privateNoteRequired" : "noteRequired")
+      )
 
       return
     }
@@ -123,6 +163,9 @@ function SuggestionCard({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             decision,
+            version: s.version ?? 0,
+            feature,
+            existingOptionDocumentId,
             ...(decision === "accept" && name.trim() && name.trim() !== s.name
               ? { name: name.trim() }
               : {}),
@@ -136,7 +179,16 @@ function SuggestionCard({
 
         return
       }
-      onDecided(s.documentId, DECIDED_MESSAGE[decision], NEW_STATUS[decision])
+      const data =
+        body && typeof body === "object" && "data" in body
+          ? (body as { data?: Partial<OptionSuggestion> }).data
+          : undefined
+      onDecided(
+        s.documentId,
+        DECIDED_MESSAGE[decision],
+        NEW_STATUS[decision],
+        data
+      )
     } catch {
       setError("Something went wrong. Check your connection and try again.")
     } finally {
@@ -147,6 +199,7 @@ function SuggestionCard({
 
   return (
     <li
+      id={`moderation-suggestion-${s.documentId}`}
       className="flex flex-col gap-4 rounded-[20px] p-5"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
@@ -167,6 +220,19 @@ function SuggestionCard({
         />
         <StatusChip status={s.status} />
       </div>
+      {s.publicationStatus === "pending" && (
+        <p className="m-0 text-sm font-semibold text-(--t-accent-primary)">
+          {t("publicationReview")}
+        </p>
+      )}
+      {s.comparison && (
+        <div className="rounded-xl bg-(--t-bg-muted) p-3 text-sm">
+          <strong>
+            {t("comparisonTitle")}: {s.comparison.name}
+          </strong>
+          <p className="mb-0">{s.comparison.explanation}</p>
+        </div>
+      )}
       {s.description ? (
         <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
           {s.description}
@@ -204,7 +270,11 @@ function SuggestionCard({
               className="text-[14px] font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Note
+              {t(
+                s.publicationStatus === "pending"
+                  ? "privateFeedback"
+                  : "publicNote"
+              )}
             </label>
             <input
               id={noteId}
@@ -215,16 +285,92 @@ function SuggestionCard({
               style={inputStyle}
             />
             <span className="text-[13px]" style={{ color: T.ink.dim }}>
-              Shown publicly with the suggestion.
+              {t(
+                s.publicationStatus === "pending"
+                  ? "privateFeedbackHint"
+                  : "publicFeedbackHint"
+              )}
             </span>
           </div>
         </div>
-        {s.optionKey === "library_types" ? (
-          <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
-            Library types are a fixed list. Accept once the type is in the
-            schema; until then, mark it planned.
-          </p>
-        ) : null}
+        {existingOptionDocumentId && (
+          <p className="text-sm text-(--t-ink-dim)">{t("appendHint")}</p>
+        )}
+        {s.publicationStatus !== "pending" && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(["summary", "description", "icon", "category"] as const).map(
+              (key) => (
+                <label key={key} className="grid gap-1 text-sm font-semibold">
+                  {t(
+                    (
+                      {
+                        summary: "featureSummary",
+                        description: "featureDescription",
+                        icon: "featureIcon",
+                        category: "featureCategory",
+                      } as const
+                    )[key]
+                  )}
+                  {key === "category" ? (
+                    <SelectField
+                      label={t("featureCategory")}
+                      value={feature.category}
+                      onValueChange={(category) =>
+                        setFeature((value) => ({ ...value, category }))
+                      }
+                      options={[
+                        { value: "", label: "—" },
+                        ...(catalogue?.categories?.[s.optionKey] ?? []).map(
+                          (category) => ({ value: category, label: category })
+                        ),
+                      ]}
+                    />
+                  ) : key === "description" ? (
+                    <textarea
+                      rows={3}
+                      maxLength={4000}
+                      value={feature[key]}
+                      onChange={(e) =>
+                        setFeature((value) => ({
+                          ...value,
+                          [key]: e.target.value,
+                        }))
+                      }
+                      className="rounded-lg border p-2 font-normal"
+                    />
+                  ) : (
+                    <input
+                      value={feature[key]}
+                      maxLength={key === "summary" ? 400 : 100}
+                      onChange={(e) =>
+                        setFeature((value) => ({
+                          ...value,
+                          [key]: e.target.value,
+                        }))
+                      }
+                      className="min-h-11 rounded-lg border p-2 font-normal"
+                    />
+                  )}
+                </label>
+              )
+            )}
+            <label className="grid gap-1 text-sm font-semibold sm:col-span-2">
+              {t("existingFeature")}
+              <SelectField
+                label={t("existingFeature")}
+                value={existingOptionDocumentId}
+                onValueChange={setExistingOptionDocumentId}
+                options={[
+                  { value: "", label: t("chooseFeature") },
+                  ...(catalogue?.[s.optionKey] ?? []).map((item) => ({
+                    value: item.documentId,
+                    label: item.name,
+                  })),
+                ]}
+              />
+            </label>
+          </div>
+        )}
         {error ? (
           <p
             role="alert"
@@ -235,39 +381,79 @@ function SuggestionCard({
           </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
-          {s.status === "open" ? (
-            <button
-              type="button"
-              className={SECONDARY}
-              onClick={() => void decide("review")}
-            >
-              Mark under review
-            </button>
-          ) : null}
-          {s.status === "open" || s.status === "reviewing" ? (
-            <button
-              type="button"
-              className={SECONDARY}
-              onClick={() => void decide("plan")}
-            >
-              Mark planned
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className={PRIMARY}
-            onClick={() => void decide("accept")}
-          >
-            Accept
-          </button>
-          <button
-            type="button"
-            className={SECONDARY}
-            style={{ color: T.accent.danger }}
-            onClick={() => void decide("decline")}
-          >
-            Decline
-          </button>
+          {s.publicationStatus === "pending" ? (
+            <>
+              <button
+                type="button"
+                className={PRIMARY}
+                onClick={() => void decide("publish")}
+              >
+                {t("publish")}
+              </button>
+              <button
+                type="button"
+                className={SECONDARY}
+                onClick={() => void decide("reject")}
+              >
+                {t("rejectPublication")}
+              </button>
+            </>
+          ) : (
+            <>
+              {existingOptionDocumentId && (
+                <>
+                  <button
+                    type="button"
+                    className={SECONDARY}
+                    onClick={() => void decide("update")}
+                  >
+                    {t("updateFeature")}
+                  </button>
+                  <button
+                    type="button"
+                    className={SECONDARY}
+                    onClick={() => void decide("merge")}
+                  >
+                    {t("mergeFeature")}
+                  </button>
+                </>
+              )}
+
+              {s.status === "open" ? (
+                <button
+                  type="button"
+                  className={SECONDARY}
+                  onClick={() => void decide("review")}
+                >
+                  Mark under review
+                </button>
+              ) : null}
+              {s.status === "open" || s.status === "reviewing" ? (
+                <button
+                  type="button"
+                  className={SECONDARY}
+                  onClick={() => void decide("plan")}
+                >
+                  Mark planned
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className={PRIMARY}
+                onClick={() => void decide("accept")}
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                className={SECONDARY}
+                style={{ color: T.accent.danger }}
+                onClick={() => void decide("decline")}
+              >
+                Decline
+              </button>
+            </>
+          )}
           {confirmingRemove ? (
             <span className="inline-flex flex-wrap items-center gap-2">
               <span
@@ -317,7 +503,11 @@ function SuggestionCard({
  */
 export function OptionSuggestionsBoard({
   initial,
+  catalogue,
+  round,
 }: {
+  readonly catalogue?: OptionCatalogue
+  readonly round?: SuggestionReviewRound | null
   readonly initial: OptionSuggestion[]
 }) {
   const tUi = useUiTranslations("ui")
@@ -335,12 +525,13 @@ export function OptionSuggestionsBoard({
   function handleDecided(
     id: string,
     text: string,
-    newStatus?: SuggestionStatus
+    newStatus?: SuggestionStatus,
+    patch?: Partial<OptionSuggestion>
   ) {
     setItems((list) =>
       newStatus
         ? list.map((x) =>
-            x.documentId === id ? { ...x, status: newStatus } : x
+            x.documentId === id ? { ...x, ...patch, status: newStatus } : x
           )
         : list.filter((x) => x.documentId !== id)
     )
@@ -349,6 +540,7 @@ export function OptionSuggestionsBoard({
 
   return (
     <div className="flex flex-col gap-4">
+      <SuggestionRoundControls initial={round} />
       <div
         role="group"
         aria-label={tUi("filter_by_status")}
@@ -421,6 +613,7 @@ export function OptionSuggestionsBoard({
               key={s.documentId}
               s={s}
               onDecided={handleDecided}
+              catalogue={catalogue}
             />
           ))}
         </ul>

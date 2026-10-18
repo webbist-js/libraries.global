@@ -176,19 +176,23 @@ const tileHref = (label: string) =>
   screen.getByRole("link", { name: label }).getAttribute("href")
 
 describe("StaffDrawer", () => {
-  it("shows a building library's tiles, no live strip and no Mobile tiles", async () => {
+  it("groups a building library’s tools without a redundant library selector", async () => {
     state.libraries = [PUBLIC]
     data.set(PUBLIC.id, payload(PUBLIC))
     render(createElement(StaffDrawer))
     expect(screen.getByRole("dialog", { name: "Central Library" })).toBeTruthy()
     expect(screen.getByText("Verified staff")).toBeTruthy()
+    expect(screen.getByText("Library owner")).toBeTruthy()
+    expect(screen.queryByRole("combobox", { name: "Library" })).toBeNull()
     const base = `/staff/${PUBLIC.slug}`
     expect(tileHref("Staff area")).toBe(base)
     expect(tileHref("Edit record")).toBe(`${base}/edit`)
     expect(tileHref("Notices")).toBe(`${base}/notices`)
     expect(tileHref("Event feeds")).toBe(`${base}/events`)
     expect(tileHref("Add a library")).toBe("/contribute/index/new")
-    expect(tileHref("Pinned drive")).toBe("/community/drives/pinned-drive")
+    expect(
+      screen.getByRole("link", { name: /Pinned drive/ }).getAttribute("href")
+    ).toBe("/community/drives/pinned-drive")
     expect(screen.queryByRole("link", { name: /Timetable/ })).toBeNull()
     expect(screen.queryByRole("link", { name: /Go live/ })).toBeNull()
     expect(screen.queryByRole("region", { name: "Live sharing" })).toBeNull()
@@ -236,7 +240,7 @@ describe("StaffDrawer", () => {
     expect(
       screen.getByRole("link", { name: /^Timetable/ }).getAttribute("href")
     ).toBe(`/staff/${MOBILE.slug}/edit?step=timetable`)
-    expect(screen.getAllByText("Mobile").length).toBe(2)
+    expect(screen.getAllByText("Mobile").length).toBe(3)
   })
 
   it("says Live now and the current stop while a session runs", async () => {
@@ -284,6 +288,30 @@ describe("StaffDrawer", () => {
     expect(
       screen.getByRole("link", { name: /^Photos$/ }).textContent
     ).not.toContain("needs")
+  })
+
+  it("combines related and featured drives without duplicating a drive", async () => {
+    state.libraries = [PUBLIC]
+    data.set(
+      PUBLIC.id,
+      payload(PUBLIC, {
+        noticesUpcoming: 2,
+        drives: [
+          { slug: "pinned-drive", title: "Pinned drive", need: "Photos" },
+        ],
+      })
+    )
+    render(createElement(StaffDrawer))
+    const drives = screen.getByRole("region", { name: "Community drives" })
+    await within(drives).findByText("Your library needs: Photos")
+    expect(
+      within(drives).getAllByRole("link", { name: /Pinned drive/ })
+    ).toHaveLength(1)
+    const tools = screen.getByRole("region", { name: "Your library" })
+    expect(within(tools).getByRole("link", { name: /Notices 2/ })).toBeTruthy()
+    const team = screen.getByRole("region", { name: "Team and insights" })
+    expect(within(team).getByRole("link", { name: /^Traffic/ })).toBeTruthy()
+    expect(within(tools).queryByRole("link", { name: /^Traffic/ })).toBeNull()
   })
 
   it("uses the singular for one suggestion", async () => {
@@ -334,7 +362,7 @@ describe("StaffDrawer", () => {
   })
 
   it("keeps the links working when the summary can't be loaded", async () => {
-    // An id no earlier test cached: the session cache would otherwise fill in.
+    // No response for this library: navigation remains available without a summary.
     const fresh: Lib = {
       ...PUBLIC,
       id: "lib000000000000000000009",

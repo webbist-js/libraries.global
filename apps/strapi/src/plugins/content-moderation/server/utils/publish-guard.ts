@@ -114,7 +114,6 @@ export const LIBRARY_COMPARE_FIELDS: readonly string[] = [
   "alternateNames",
   "summary",
   "description",
-  "libraryType",
   "operatorType",
   "foundedYear",
   "openedYear",
@@ -240,7 +239,12 @@ export async function loadPublishedTarget(
     ...(locale ? { locale } : {}),
     fields: ["documentId", ...compare],
     ...(uid === "api::library.library"
-      ? { populate: { sourceRecords: true } }
+      ? {
+          populate: {
+            libraryType: { fields: ["documentId"] },
+            sourceRecords: true,
+          },
+        }
       : {}),
   })
 
@@ -298,7 +302,12 @@ async function applyToPublishedUnlocked(
     ...(locale ? { locale } : {}),
     fields: ["documentId", ...compare],
     ...(uid === "api::library.library"
-      ? { populate: { sourceRecords: true } }
+      ? {
+          populate: {
+            libraryType: { fields: ["documentId"] },
+            sourceRecords: true,
+          },
+        }
       : ARTICLE_UIDS.has(uid)
         ? { populate: articleSnapshotPopulate(uid) }
         : {}),
@@ -332,6 +341,15 @@ async function applyToPublishedUnlocked(
     ])
     if (publishedRelations) Object.assign(published, publishedRelations)
     if (draft && draftRelations) Object.assign(draft, draftRelations)
+  }
+  if (
+    draft &&
+    uid === "api::library.library" &&
+    !("libraryType" in data) &&
+    canonical((draft.libraryType as any)?.documentId) !==
+      canonical((published.libraryType as any)?.documentId)
+  ) {
+    compare.push("libraryType")
   }
   const divergentKeys = draft
     ? compare.filter((k) => canonical(draft[k]) !== canonical(published[k]))

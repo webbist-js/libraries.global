@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 
+import { DRIVE_MAX_TASKS } from "@repo/shared-data"
 import { beforeAll, describe, expect, it, vi } from "vitest"
 
 import pluginsConfig from "../config/plugins"
@@ -31,6 +32,7 @@ type IndexConfig = {
     filterableAttributes?: string[]
     sortableAttributes?: string[]
     displayedAttributes?: string[]
+    pagination?: { maxTotalHits: number }
   }
   entriesQuery?: {
     fields?: unknown
@@ -483,6 +485,11 @@ describe("Meilisearch indexes every locale", () => {
 })
 
 describe("Meilisearch transforms keep their derived fields", () => {
+  it("keeps every task of the largest drive reachable", () => {
+    expect(
+      meili.library.settings.pagination?.maxTotalHits
+    ).toBeGreaterThanOrEqual(DRIVE_MAX_TASKS)
+  })
   it("library: flattened location, facet arrays and _geo", async () => {
     const doc = await meili.library.transformEntry!({
       entry: structuredClone(FIXTURES.library),

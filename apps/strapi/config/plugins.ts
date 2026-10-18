@@ -1,4 +1,8 @@
-import type { LibraryNotice } from "@repo/shared-data"
+import {
+  DRIVE_MAX_TASKS,
+  libraryTypeName,
+  type LibraryNotice,
+} from "@repo/shared-data"
 
 import {
   articleSearchFacets,
@@ -169,6 +173,8 @@ export default ({ env }) => {
 
         library: {
           settings: {
+            // Every task in a drive (up to 2,000) must remain reachable by pagination.
+            pagination: { maxTotalHits: DRIVE_MAX_TASKS },
             searchableAttributes: [
               "name",
               "shortName",
@@ -218,6 +224,7 @@ export default ({ env }) => {
             fields: LIBRARY_FIELDS,
             locale: ALL_LOCALES,
             populate: {
+              libraryType: { fields: ["name"] },
               sourceRecords: { fields: ["dataset", "role"] },
               continent: { fields: ["slug", "name"] },
               country: {
@@ -269,6 +276,7 @@ export default ({ env }) => {
 
             return {
               ...pick(entry, LIBRARY_DOC_KEYS),
+              libraryType: libraryTypeName(entry.libraryType),
               heroImage: mediaSummary(entry.heroImage),
               continent_slug: continent?.slug ?? null,
               continent_name: continent?.name ?? null,
@@ -475,7 +483,6 @@ const LIBRARY_FIELDS = [
   "entityRef",
   "shortName",
   "summary",
-  "libraryType",
   "operatorType",
   "operationalStatus",
   "foundedYear",
@@ -511,6 +518,7 @@ const DERIVE_ONLY = new Set([
 const LIBRARY_DOC_KEYS = [
   "id",
   "source",
+  "libraryType",
   ...LIBRARY_FIELDS.filter((f) => !DERIVE_ONLY.has(f)),
 ]
 /** Derived by librarySearchFields; completeness is a document key and is filterable too. */

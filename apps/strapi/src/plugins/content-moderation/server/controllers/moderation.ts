@@ -1,6 +1,7 @@
 import {
   type Capabilities,
   isSubmissionType,
+  isReviewCategory,
   MODERATION_QUEUES,
   type ModerationQueue,
 } from "@repo/access"
@@ -8,7 +9,11 @@ import {
 import { decideFromRequest } from "./option-suggestion"
 import { claimAffiliationFilter } from "../../../../utils/affiliations"
 import { decodeHeaderName } from "../../../../utils/header-name"
-import { LIST_STATUSES, type ListStatus } from "../services/moderation"
+import {
+  LIST_STATUSES,
+  type ListStatus,
+  type ListQuery,
+} from "../services/moderation"
 import {
   HIERARCHY_KEYS,
   HIERARCHY_UIDS,
@@ -22,6 +27,7 @@ import {
 import { isDocumentId } from "../utils/params"
 import { contributorReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
+import { reviewRoundView, updateReviewRound } from "../utils/suggestion-rounds"
 
 /**
  * Community moderation on the site (`/api/content-moderation/moderation/*`).
@@ -104,6 +110,48 @@ function oneOf<T extends string>(
   return typeof v === "string" && (allowed as readonly string[]).includes(v)
     ? (v as T)
     : false
+}
+
+/** Shared narrowing for list and counts; permissions are applied in the service. */
+async function readReviewFilters(
+  strapi: any,
+  ctx: any
+): Promise<Omit<ListQuery, "status" | "page" | "pageSize"> | null> {
+  const q = (ctx.query ?? {}) as Record<string, unknown>
+  const queue = oneOf<ModerationQueue>(q.queue, MODERATION_QUEUES)
+  const invalid = (message: string) => {
+    fail(ctx, 400, message)
+
+    return null
+  }
+  if (queue === false) return invalid("Unknown queue")
+  if (q.type !== undefined && q.type !== "" && !isSubmissionType(q.type))
+    return invalid("Unknown submission type")
+  if (
+    q.category !== undefined &&
+    q.category !== "" &&
+    !isReviewCategory(q.category)
+  )
+    return invalid("Unknown review category")
+  let locale: string | undefined
+  if (q.locale !== undefined && q.locale !== "") {
+    const known = await knownLocale(strapi, q.locale)
+    if (!known) return invalid("Unknown locale")
+    locale = known
+  }
+  if (q.q !== undefined && (typeof q.q !== "string" || q.q.length > MAX_Q))
+    return invalid("Invalid search")
+  if (q.drive !== undefined && q.drive !== "" && !isDocumentId(q.drive))
+    return invalid("Invalid drive")
+
+  return {
+    queue,
+    type: isSubmissionType(q.type) ? q.type : undefined,
+    category: isReviewCategory(q.category) ? q.category : undefined,
+    locale,
+    q: typeof q.q === "string" ? q.q.trim() || undefined : undefined,
+    drive: typeof q.drive === "string" && q.drive ? q.drive : undefined,
+  }
 }
 
 export default ({ strapi }: { strapi: any }) => {
@@ -360,41 +408,17 @@ export default ({ strapi }: { strapi: any }) => {
       const status = oneOf<ListStatus>(q.status, LIST_STATUSES)
       if (status === false)
         return fail(ctx, 400, "status must be pending, needs_info or decided")
-      const queue = oneOf<ModerationQueue>(q.queue, MODERATION_QUEUES)
-      if (queue === false) return fail(ctx, 400, "Unknown queue")
-      if (q.type !== undefined && q.type !== "" && !isSubmissionType(q.type))
-        return fail(ctx, 400, "Unknown submission type")
-      let locale: string | undefined
-      if (q.locale !== undefined && q.locale !== "") {
-        const known = await knownLocale(strapi, q.locale)
-        if (!known) return fail(ctx, 400, "Unknown locale")
-        locale = known
-      }
-      let search: string | undefined
-      if (q.q !== undefined) {
-        if (typeof q.q !== "string") return fail(ctx, 400, "Invalid q")
-        if (q.q.length > MAX_Q)
-          return fail(ctx, 400, `q is limited to ${MAX_Q} characters`)
-        search = q.q.trim() || undefined
-      }
-      let drive: string | undefined
-      if (q.drive !== undefined && q.drive !== "") {
-        if (!isDocumentId(q.drive)) return fail(ctx, 400, "Invalid drive")
-        drive = q.drive
-      }
+      const filters = await readReviewFilters(strapi, ctx)
+      if (!filters) return
 
       ctx.body = await moderation().list(
         auth.caps,
         auth.viewer.id,
         {
           status: status ?? "pending",
-          queue,
-          type: isSubmissionType(q.type) ? q.type : undefined,
-          locale,
-          q: search,
+          ...filters,
           page: clampInt(q.page, PAGE),
           pageSize: clampInt(q.pageSize, PAGE_SIZE),
-          drive,
         },
         { board: isBoard(auth) }
       )
@@ -652,10 +676,17 @@ export default ({ strapi }: { strapi: any }) => {
     async stats(ctx: any) {
       const auth = await authorise(ctx)
       if (!auth) return
+      const filters = await readReviewFilters(strapi, ctx)
+      if (!filters) return
+      const group = oneOf(ctx.query?.group, ["category"] as const)
+      if (group === false) return fail(ctx, 400, "Unknown count grouping")
       ctx.body = {
-        data: await moderation().stats(auth.caps, auth.viewer.id, {
-          board: isBoard(auth),
-        }),
+        data: await moderation().stats(
+          auth.caps,
+          auth.viewer.id,
+          { board: isBoard(auth) },
+          { ...filters, group }
+        ),
       }
     },
 
@@ -683,6 +714,22 @@ export default ({ strapi }: { strapi: any }) => {
     },
 
     // GET /moderation/option-suggestions  (editorial board)
+    async suggestionRound(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      if (!isBoard(auth))
+        return fail(ctx, 403, "Only the editorial board manages review rounds.")
+      ctx.body = { data: await reviewRoundView(strapi, false) }
+    },
+    async updateSuggestionRound(ctx: any) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      if (!isBoard(auth))
+        return fail(ctx, 403, "Only the editorial board manages review rounds.")
+      const result = await updateReviewRound(strapi, ctx.request.body ?? {})
+      if (!result.ok) return fail(ctx, result.status, result.message)
+      ctx.body = { data: await reviewRoundView(strapi, false) }
+    },
     async optionSuggestions(ctx: any) {
       const auth = await authorise(ctx)
       if (!auth) return

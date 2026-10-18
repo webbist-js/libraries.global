@@ -1,15 +1,30 @@
+import { isReviewCategory, reviewCategoriesInScope } from "@repo/access"
+import { ArrowUpRight } from "lucide-react"
+import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
+
+import { DiscussionModeration } from "@/components/discussions/DiscussionModeration"
+import {
+  EditorialToolbar,
+  EDITORIAL_SUBTLE_PILL,
+} from "@/components/ds/EditorialToolbar"
 import {
   describeScopes,
   type DriveTag,
   DriveQueueStrip,
   ModerationQueue,
-  type QueueState,
-  SEGMENTS,
 } from "@/components/moderation"
+import { ModerationOverview } from "@/components/moderation/ModerationOverview"
+import { ModerationWorkspaceNav } from "@/components/moderation/ModerationWorkspaceNav"
+import type { CategoryStat } from "@/components/moderation/workspace"
+import {
+  firstQueryValue as first,
+  workspaceQueueState,
+  workspaceCategoryViews,
+} from "@/components/moderation/workspace-state"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
-import { isDocumentIdParam } from "@/lib/bridge-params"
-import { T } from "@/lib/design-tokens"
 import { fetchModeration } from "@/lib/moderation-proxy"
+import { fetchDiscussionReviewCount } from "@/lib/moderation-work-counts"
 import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -22,110 +37,151 @@ import {
 } from "./_components/moderator"
 
 export const metadata = privateMetadata("Moderation")
-
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
-
-const first = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v) ?? ""
 
 export default async function ModerationQueuePage({
   searchParams,
 }: {
   searchParams: SearchParams
 }) {
-  const { user, scopes, accessUnknown } = await requireModerator(
-    "/contribute/moderation"
-  )
+  const sp = await searchParams
+  const callback = new URLSearchParams()
+  for (const key of [
+    "category",
+    "tab",
+    "status",
+    "queue",
+    "locale",
+    "q",
+    "drive",
+    "page",
+  ]) {
+    const value = first(sp[key]).slice(0, 100)
+    if (value) callback.set(key, value)
+  }
+  const callbackPath =
+    "/contribute/moderation" + (callback.size ? "?" + callback.toString() : "")
+  const { user, scopes, accessUnknown } = await requireModerator(callbackPath)
+  const t = await getTranslations("moderationWorkspace")
+  const discussions = await getTranslations("discussions")
   if (accessUnknown)
     return (
-      <ModerationAccessUnavailable
-        title="Review *submissions*"
-        path="/contribute/moderation"
-      />
+      <ModerationAccessUnavailable title={t("title")} path={callbackPath} />
     )
-  const [sp, locales, driveStatsRes] = await Promise.all([
-    searchParams,
-    fetchArticleLocales(),
-    fetchModeration<{ data?: { drive: DriveTag; waiting: number }[] }>(
-      user,
-      "drive-stats"
-    ),
-  ])
-  const driveStats = driveStatsRes.body?.data ?? []
-  const localeNames = Object.fromEntries(locales.map((l) => [l.code, l.name]))
 
-  const queues = queuesOf(scopes)
-  // The language filter: every language when a scope is unrestricted,
-  // otherwise the languages the scopes name.
-  const scoped = [
-    ...new Set(scopes.flatMap((s) => (s.locale ? [s.locale] : []))),
-  ]
-  const filterLocales = scopes.some((s) => s.locale === null)
-    ? locales.map(({ code, name }) => ({ code, name }))
-    : scoped.map((code) => ({
-        code,
-        name: localeNames[code] ?? code.toUpperCase(),
-      }))
-
-  const segment = first(sp.status)
-  const queue = first(sp.queue)
-  const locale = first(sp.locale)
-  const q = first(sp.q).slice(0, 100)
-  const drive = first(sp.drive)
-  const page = Math.min(
-    500,
-    Math.max(1, Math.trunc(Number(first(sp.page))) || 1)
+  const allQueues = queuesOf(scopes)
+  const categories = reviewCategoriesInScope(scopes)
+  const canReviewDiscussions = scopes.some(
+    (scope) => scope.queue === "all" || scope.queue === "discussions"
   )
-  const state: QueueState = {
-    segment: SEGMENTS.some((s) => s.id === segment)
-      ? (segment as QueueState["segment"])
-      : "pending",
-    queue: (queues as string[]).includes(queue)
-      ? (queue as QueueState["queue"])
-      : "",
-    locale: filterLocales.some((l) => l.code === locale) ? locale : "",
-    q,
-    drive: isDocumentIdParam(drive) ? drive : "",
-    page,
-  }
+  const requested = first(sp.category)
+  if (
+    requested &&
+    (!isReviewCategory(requested) || !categories.includes(requested))
+  )
+    notFound()
+  if (first(sp.tab) === "discussions" && !canReviewDiscussions) notFound()
+  const active =
+    first(sp.tab) === "discussions" ||
+    (!allQueues.length && canReviewDiscussions)
+      ? "discussions"
+      : isReviewCategory(requested)
+        ? requested
+        : categories.length === 1 && !canReviewDiscussions
+          ? categories[0]!
+          : "overview"
+  const category = isReviewCategory(active) ? active : undefined
+  const legacyList =
+    active === "overview" &&
+    ["status", "queue", "locale", "q", "drive", "page"].some(
+      (key) => !!first(sp[key])
+    )
+  const showList = !!category || legacyList || first(sp.tab) === "submissions"
+  const [locales, countResult, discussionCount, driveStatsRes] =
+    await Promise.all([
+      fetchArticleLocales(),
+      allQueues.length
+        ? fetchModeration<{ data?: CategoryStat[] }>(
+            user,
+            "stats?group=category"
+          )
+        : Promise.resolve({
+            status: 200,
+            body: { data: [] as CategoryStat[] },
+          }),
+      canReviewDiscussions
+        ? fetchDiscussionReviewCount(user)
+        : Promise.resolve(null),
+      (category === "libraries" || legacyList) && !first(sp.drive)
+        ? fetchModeration<{ data?: { drive: DriveTag; waiting: number }[] }>(
+            user,
+            "drive-stats"
+          )
+        : Promise.resolve({ body: null }),
+    ])
+  const { state, queues, filterLocales, localeNames } = workspaceQueueState(
+    sp,
+    scopes,
+    allQueues,
+    locales,
+    category,
+    legacyList
+  )
+  const stats = countResult.status === 200 ? countResult.body?.data : undefined
+  const views = workspaceCategoryViews(categories, allQueues, state, stats)
+  if (canReviewDiscussions)
+    views.push({
+      id: "discussions",
+      href: "/contribute/moderation?tab=discussions",
+      pending: discussionCount,
+    })
 
   return (
     <>
       <ModerationHero
-        title="Review *submissions*"
-        lead={`You review ${describeScopes(scopes, localeNames)}. Your own submissions never appear here.`}
-      >
-        {coversEverything(scopes) ? (
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-            <Link
-              href="/contribute/moderation/suggestions"
-              className="font-semibold underline-offset-2 hover:underline"
-              style={{ color: T.accent.primary }}
-            >
-              Option suggestions →
-            </Link>{" "}
-            New facilities and services contributors asked for.
-          </p>
-        ) : null}
-      </ModerationHero>
-      <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-6 px-4 pt-8 pb-16 sm:px-8">
-        {scopes.some(
-          (scope) => scope.queue === "all" || scope.queue === "discussions"
-        ) && (
-          <Link
-            href="/contribute/moderation/discussions"
-            className="self-start rounded-full border px-4 py-2 font-semibold"
-          >
-            Review discussions →
-          </Link>
-        )}
-        {!state.drive ? <DriveQueueStrip rows={driveStats} /> : null}
-        <ModerationQueue
-          state={state}
-          queues={queues}
-          locales={filterLocales}
-          localeNames={localeNames}
+        title={t("title")}
+        lead={
+          active === "discussions"
+            ? discussions("moderationLead")
+            : `You review ${describeScopes(scopes, localeNames)}. Your own submissions never appear here.`
+        }
+      />
+      <div className="mx-auto grid w-full max-w-[1360px] gap-6 px-4 pt-8 pb-16 text-[16px] [--spacing:0.25rem] sm:px-8">
+        <EditorialToolbar
+          label={t("workspace")}
+          description={t("scopeHint")}
+          variant="subtle"
+          actions={
+            coversEverything(scopes) ? (
+              <Link
+                href="/contribute/moderation/suggestions"
+                className={EDITORIAL_SUBTLE_PILL}
+              >
+                {t("optionSuggestions")}
+                <ArrowUpRight size={14} aria-hidden />
+              </Link>
+            ) : undefined
+          }
         />
+        <ModerationWorkspaceNav active={active} views={views} />
+        {active === "discussions" ? (
+          <DiscussionModeration />
+        ) : showList ? (
+          <>
+            {(category === "libraries" || legacyList) && !state.drive ? (
+              <DriveQueueStrip rows={driveStatsRes.body?.data ?? []} />
+            ) : null}
+            <ModerationQueue
+              key={category ?? "all"}
+              state={state}
+              queues={queues}
+              locales={filterLocales}
+              localeNames={localeNames}
+            />
+          </>
+        ) : (
+          <ModerationOverview views={views} />
+        )}
       </div>
     </>
   )

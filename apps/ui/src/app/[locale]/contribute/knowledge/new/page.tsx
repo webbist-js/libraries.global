@@ -1,17 +1,20 @@
+import { canDirectEdit } from "@repo/access"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { isArticleKind } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
+import { sessionCapabilities } from "@/lib/access-server"
 import {
   fetchArticleLocales,
   loadArticleWriteContext,
 } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
+import { compositionLanguage } from "@/lib/composition-language"
 import { T } from "@/lib/design-tokens"
-import { requireEditorOrApply } from "@/lib/editor-gate"
+import { editorApplyHref, requireEditorOrApply } from "@/lib/editor-gate"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
@@ -31,6 +34,7 @@ export default async function NewArticlePage({
     section?: string
     library?: string
     event?: string
+    locale?: string
   }>
 }) {
   const tUi = await getUiTranslations("ui")
@@ -46,6 +50,8 @@ export default async function NewArticlePage({
   for (const key of ["draft", "library", "event"] as const)
     if (query[key] && isDocumentIdParam(query[key]))
       callbackQuery.set(key, query[key])
+  if (query.locale && /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(query.locale))
+    callbackQuery.set("locale", query.locale)
   if (!session?.user)
     redirect(
       `/auth/signin?callbackUrl=${encodeURIComponent(`/contribute/knowledge/new?${callbackQuery}`)}`
@@ -57,6 +63,19 @@ export default async function NewArticlePage({
   ])
   const resumeDraftId =
     query.draft && isDocumentIdParam(query.draft) ? query.draft : undefined
+  const capabilities = sessionCapabilities(session.user)
+  const writableLocales =
+    kind === "journal"
+      ? locales
+      : locales.filter((item) => canDirectEdit(capabilities, "docs", item.code))
+  if (!writableLocales.length) redirect(editorApplyHref(kind))
+  const initialLocale = compositionLanguage({
+    selected: query.locale,
+    preferences: session.user.compositionPreferences,
+    available: writableLocales.map((item) => item.code),
+    fallback: locale,
+    defaultLanguage: locales.find((item) => item.isDefault)?.code,
+  })
 
   return (
     <div
@@ -83,6 +102,7 @@ export default async function NewArticlePage({
         resumeDraftId={resumeDraftId}
         locales={locales}
         uiLocale={locale}
+        initialLocale={initialLocale}
         initialTags={context.tags}
         initialEventMentions={context.eventMentions}
       />

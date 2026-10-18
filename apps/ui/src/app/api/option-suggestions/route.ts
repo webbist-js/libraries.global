@@ -1,11 +1,14 @@
 import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { requireCapability } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
-import { userHeaders } from "@/lib/bridge-user-headers"
+import { strapiServiceHeaders, userHeaders } from "@/lib/bridge-user-headers"
 import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
+import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
@@ -21,7 +24,9 @@ export async function GET() {
   const res = await fetch(
     `${STRAPI}/api/content-moderation/option-suggestions`,
     {
-      headers: session?.user ? userHeaders(session.user) : {},
+      headers: session?.user
+        ? userHeaders(session.user)
+        : strapiServiceHeaders(),
       cache: "no-store",
     }
   )
@@ -34,6 +39,13 @@ export async function GET() {
 // amenity, service or library type. Strapi validates the list, name and
 // duplicates; this route only forwards the three string fields it accepts.
 export async function POST(req: Request) {
+  if (
+    !isSameOrigin(
+      req,
+      process.env.APP_PUBLIC_URL ?? process.env.NEXT_PUBLIC_APP_URL
+    )
+  )
+    return sameOriginResponse()
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json(
@@ -47,21 +59,32 @@ export async function POST(req: Request) {
   const limit = await limiter.check(session.user.id)
   if (!limit.ok) return rateLimitResponse(limit)
 
-  let body: { optionKey?: unknown; name?: unknown; description?: unknown }
-  try {
-    body = (await req.json()) as typeof body
-  } catch {
+  const parsed = await readTypedJson(
+    req,
+    8192,
+    z.object({
+      optionKey: z.enum([
+        "accessibility",
+        "amenities",
+        "services",
+        "library_types",
+      ]),
+      name: z.string().trim().min(2).max(80),
+      description: z.string().max(400).optional(),
+      comparison: z
+        .object({
+          documentId: z.string().regex(/^[a-z0-9]{20,32}$/),
+          explanation: z.string().trim().min(1).max(400),
+        })
+        .optional(),
+    })
+  )
+  if (!parsed.ok)
     return NextResponse.json(
-      { error: { message: "Invalid request body" } },
-      { status: 400 }
+      { error: "Invalid suggestion." },
+      { status: parsed.status }
     )
-  }
-
-  const { optionKey, name, description } = body
-  const payload: Record<string, string> = {}
-  if (typeof optionKey === "string") payload.optionKey = optionKey
-  if (typeof name === "string") payload.name = name
-  if (typeof description === "string") payload.description = description
+  const payload = parsed.body
 
   const res = await fetch(
     `${STRAPI}/api/content-moderation/option-suggestions`,

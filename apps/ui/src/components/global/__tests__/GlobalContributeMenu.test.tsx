@@ -174,11 +174,11 @@ describe("GlobalContributeMenu", () => {
         progress: { done: 74, total: 198, percent: 37, unit: "library" },
       },
     })
-    responses.set("/api/moderation/stats", {
+    responses.set("/api/moderation/summary", {
       data: [
-        { queue: "index", status: "pending", count: 9 },
-        { queue: "knowledge", status: "pending", count: 5 },
-        { queue: "index", status: "approved", count: 3 },
+        { id: "libraries", pending: 9 },
+        { id: "articles", pending: 3 },
+        { id: "discussions", pending: 2 },
       ],
     })
     responses.set("/api/staff/lib1/drawer", { suggestions: 2 })
@@ -188,7 +188,7 @@ describe("GlobalContributeMenu", () => {
     const { trigger, nav } = await openMenu()
 
     expect(within(nav).getByText("Your work")).toBeTruthy()
-    expect(within(nav).getByText("Everyone")).toBeTruthy()
+    expect(within(nav).getByText("Get involved")).toBeTruthy()
     const edit = within(nav).getByRole("link", { name: /Edit Nailsea Library/ })
     expect(edit.getAttribute("href")).toBe("/staff/nailsea-library/edit")
     await waitFor(() => expect(edit.textContent).toContain("2 waiting"))
@@ -246,4 +246,96 @@ describe("GlobalContributeMenu", () => {
     expect(trigger.getAttribute("aria-expanded")).toBe("false")
     expect(document.activeElement).toBe(trigger)
   })
+
+  it("groups publishing by channel and keeps a single hub link above the everyday actions", async () => {
+    session.data = {
+      user: {
+        id: "editor",
+        capabilities: [
+          "docs.directEdit",
+          "journal.directEdit",
+          "moderate.queue",
+          "drives.manage",
+        ],
+        moderationScopes: [{ queue: "all", locale: null }],
+      },
+    }
+    responses.set("/api/moderation/summary", {
+      data: [{ id: "discussions", pending: 2 }],
+    })
+    responses.set("/api/drives/featured", { data: null })
+    renderMenu()
+    const { nav, trigger } = await openMenu()
+    const work = within(nav).getByRole("group", { name: "Your work" })
+    const knowledge = within(work).getByRole("list", { name: "Knowledge" })
+    const journal = within(work).getByRole("list", { name: "Journal" })
+    expect(
+      within(knowledge)
+        .getByRole("link", { name: "Write an article" })
+        .getAttribute("href")
+    ).toBe("/contribute/knowledge/new?type=knowledge")
+    expect(
+      within(journal)
+        .getByRole("link", { name: "Edit articles" })
+        .getAttribute("href")
+    ).toBe("/contribute/knowledge?type=journal")
+    expect(
+      within(work).queryByRole("link", { name: /Moderation queue/ })
+    ).toBeNull()
+    expect(
+      within(nav).getByRole("group", { name: "Get involved" })
+    ).toBeTruthy()
+    expect(within(nav).getByRole("group", { name: "Drives" })).toBeTruthy()
+    const hub = within(nav).getByRole("link", { name: "Contribute hub" })
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .filter((link) => link.getAttribute("href") === "/contribute")
+    ).toHaveLength(1)
+    fireEvent.click(hub)
+    await waitFor(() =>
+      expect(trigger.getAttribute("aria-expanded")).toBe("false")
+    )
+  })
+
+  it.each([0, null])(
+    "shows a moderator’s known-empty or unavailable count honestly (%s)",
+    async (count) => {
+      session.data = {
+        user: {
+          id: "moderator",
+          capabilities: ["moderate.queue"],
+          moderationScopes: [{ queue: "discussions", locale: "fr" }],
+        },
+      }
+      responses.set("/api/moderation/summary", {
+        data: [{ id: "discussions", pending: count }],
+      })
+      responses.set("/api/drives/featured", { data: null })
+      renderMenu()
+      const { nav } = await openMenu()
+      await waitFor(() =>
+        expect(
+          vi
+            .mocked(fetch)
+            .mock.calls.some(
+              ([url]) => String(url) === "/api/moderation/summary"
+            )
+        ).toBe(true)
+      )
+      if (count === 0)
+        expect(await within(nav).findByText("Nothing waiting")).toBeTruthy()
+      else {
+        expect(within(nav).queryByText("Nothing waiting")).toBeNull()
+        expect(
+          within(nav).getByText("Review contributions within your scope.")
+        ).toBeTruthy()
+      }
+      expect(within(nav).queryByRole("group", { name: "Your work" })).toBeNull()
+      expect(
+        within(nav).queryByRole("link", { name: "Write an article" })
+      ).toBeNull()
+      expect(within(nav).queryByRole("link", { name: /New drive/ })).toBeNull()
+    }
+  )
 })

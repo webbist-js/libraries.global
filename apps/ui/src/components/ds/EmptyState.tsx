@@ -14,6 +14,9 @@ export function EmptyState({
   icon = "mdi:tray-arrow-down",
   action,
   compact,
+  surface = false,
+  headingLevel,
+  className,
 }: {
   /** The one-line lead (kept for older callers). */
   readonly message?: string
@@ -27,15 +30,28 @@ export function EmptyState({
   readonly action?: ReactNode
   /** Tighter padding, for a card or a panel. */
   readonly compact?: boolean
+  /** Standalone results card; omit inside an existing panel. */
+  readonly surface?: boolean
+  readonly headingLevel?: 2 | 3 | 4
+  readonly className?: string
 }) {
   const headline = lead ?? message ?? "Nothing here yet"
+  const Headline = headingLevel
+    ? (`h${headingLevel}` as "h2" | "h3" | "h4")
+    : "p"
 
   return (
     <div
       className={[
         "flex flex-col items-center gap-3 text-center",
         compact ? "px-4 py-8" : "px-4 py-16",
-      ].join(" ")}
+        surface
+          ? "rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep)"
+          : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <span
         aria-hidden="true"
@@ -44,12 +60,12 @@ export function EmptyState({
       >
         <Icon height={22} icon={icon} width={22} />
       </span>
-      <p
+      <Headline
         className="m-0 text-[16px] font-semibold"
         style={{ fontFamily: T.font.sans, color: T.ink.base }}
       >
         {headline}
-      </p>
+      </Headline>
       {detail ? (
         <p
           className="m-0 max-w-md text-[14px] leading-[1.5]"
@@ -58,7 +74,11 @@ export function EmptyState({
           {detail}
         </p>
       ) : null}
-      {action ? <div className="mt-1">{action}</div> : null}
+      {action ? (
+        <div className="mt-1 flex max-w-full flex-wrap items-center justify-center gap-3">
+          {action}
+        </div>
+      ) : null}
     </div>
   )
 }

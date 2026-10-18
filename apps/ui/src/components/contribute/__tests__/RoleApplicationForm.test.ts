@@ -38,7 +38,7 @@ const LOCALES = [
 const NONE = {
   wiki_editor: [],
   journal_editor: [],
-  moderator: { index: [], knowledge: [], journal: [] },
+  moderator: { index: [], knowledge: [], journal: [], discussions: [] },
 }
 
 const renderForm = (over: Record<string, unknown> = {}) =>
@@ -144,20 +144,23 @@ describe("RoleApplicationForm", () => {
     )
   })
 
-  it("asks a moderator applicant for a queue and sends it", async () => {
+  it.each([
+    ["Index (library records)", "index"],
+    ["Discussions", "discussions"],
+  ])("sends a %s moderator application", async (label, queue) => {
     renderForm({ initialRole: "moderator" })
     fillAndSend()
     expect(fetchMock).not.toHaveBeenCalled()
     expect(screen.getByRole("alert").textContent).toMatch(/queue/)
 
-    fireEvent.click(screen.getByLabelText("Index (library records)"))
+    fireEvent.click(screen.getByLabelText(label))
     // No section list for the Index queue.
     expect(screen.queryByText(/sections you’d work on/)).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: /Send application/ }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     expect(sent().body.fields).toEqual({
       role: "moderator",
-      queue: "index",
+      queue,
       locales: [],
       statement: STATEMENT,
       samples: [],

@@ -150,6 +150,69 @@ describe("discussion workflows and access boundaries", () => {
       db.service.getThread(null, db.thread.id)
     ).rejects.toMatchObject({ status: 400 })
   })
+  it("projects allowlisted author tags using the canonical target for replies, participants and review", async () => {
+    const target = { uid: "host.suggestion", documentId: "suggestion" }
+    const publicAuthor = vi.fn(async (_key: string, context: any) => ({
+      name: "Writer",
+      badges: context.target
+        ? ["moderator", "moderator", "suggested_this", "administrator"]
+        : [],
+    }))
+    const db = await fixture({
+      publicAuthor,
+      targets: {
+        [target.uid]: async () => ({
+          title: "Suggestion",
+          url: "/suggestions",
+        }),
+      },
+    })
+    const attached = await db.service.createThread(member, {
+      subjectId: db.subject.documentId,
+      title: "Attached",
+      body: "Body",
+      language: "en",
+      target,
+    })
+    await db.service.review(moderator, attached.revision.id, {
+      decision: "approve",
+      baseVersion: 0,
+    })
+    const reply = await db.service.createReply(other, attached.thread.id, {
+      body: "A reply",
+    })
+    expect(
+      (await db.service.reviewQueue(moderator)).data.find(
+        (item: any) => item.id === reply.revision.id
+      )?.author
+    ).toEqual({
+      name: "Writer",
+      badges: ["moderator", "suggested_this"],
+    })
+    await db.service.review(moderator, reply.revision.id, {
+      decision: "approve",
+      baseVersion: 0,
+    })
+    publicAuthor.mockClear()
+    const thread = await db.service.getThread(null, attached.thread.id)
+    const replies = await db.service.listReplies(null, attached.thread.id)
+    expect(thread.author?.badges).toEqual(["moderator", "suggested_this"])
+    expect(
+      thread.participants?.every((author: any) =>
+        author.badges.includes("suggested_this")
+      )
+    ).toBe(true)
+    expect(replies.data[0].author?.badges).toEqual([
+      "moderator",
+      "suggested_this",
+    ])
+    expect(
+      publicAuthor.mock.calls.every(
+        ([, context]) => context.target?.documentId === target.documentId
+      )
+    ).toBe(true)
+    expect(thread.viewer?.canModerate).toBe(false)
+  })
   it("preserves approved text while an edit awaits review", async () => {
     const db = await fixture()
     await publish(db)
@@ -354,6 +417,62 @@ describe("discussion workflows and access boundaries", () => {
         .data
     ).toHaveLength(1)
   })
+  it("offers chronological reply pages without including pending or orphaned messages", async () => {
+    const db = await fixture()
+    await publish(db)
+    const first = await db.service.createReply(other, db.thread.id, {
+      body: "First",
+    })
+    await db.service.review(moderator, first.revision.id, {
+      decision: "approve",
+      baseVersion: 0,
+    })
+    const second = await db.service.createReply(other, db.thread.id, {
+      body: "Second",
+    })
+    await db.service.review(moderator, second.revision.id, {
+      decision: "approve",
+      baseVersion: 0,
+    })
+    const child = await db.service.createReply(member, db.thread.id, {
+      body: "Latest child",
+      parentId: first.reply.id,
+    })
+    await db.service.review(moderator, child.revision.id, {
+      decision: "approve",
+      baseVersion: 0,
+    })
+    await db.service.createReply(member, db.thread.id, {
+      body: "Private pending",
+    })
+    for (const [index, row] of db.rows("reply").entries())
+      row.createdAt = `2026-10-${String(index + 1).padStart(2, "0")}T12:00:00Z`
+    expect(
+      (await db.service.listReplies(null, db.thread.id)).data.map(
+        (row: any) => row.body
+      )
+    ).toEqual(["First", "Latest child", "Second"])
+    expect(
+      (
+        await db.service.listReplies(null, db.thread.id, {
+          order: "chronological",
+          offset: 2,
+          limit: 3,
+        })
+      ).data.map((row: any) => row.body)
+    ).toEqual(["Latest child"])
+    await db.service.moderate(moderator, "reply", first.reply.id, {
+      action: "remove",
+      baseVersion: 1,
+    })
+    expect(
+      (
+        await db.service.listReplies(null, db.thread.id, {
+          order: "chronological",
+        })
+      ).data.map((row: any) => row.body)
+    ).toEqual(["Second"])
+  })
   it("hides descendants of removed replies and all replies of removed threads", async () => {
     const db = await fixture()
     await publish(db)
@@ -446,7 +565,9 @@ describe("discussion workflows and access boundaries", () => {
     })
     expect(duplicate.id).toBe(report.id)
     expect(db.rows("report")).toHaveLength(1)
-    await expect(db.service.reports(member)).rejects.toMatchObject({ status: 403 })
+    await expect(db.service.reports(member)).rejects.toMatchObject({
+      status: 403,
+    })
     expect(JSON.stringify(await db.service.reports(moderator))).not.toContain(
       other.key
     )
@@ -540,8 +661,15 @@ describe("discussion workflows and access boundaries", () => {
   })
   it("allowlists attachment resolvers and rechecks target visibility on every read", async () => {
     let visible = true
+    let relatedUrl = "/journal?library=one"
     const resolver = vi.fn(async () =>
-      visible ? { title: "Article", url: "/articles/one" } : null
+      visible
+        ? {
+            title: "Article",
+            url: "/articles/one",
+            links: [{ label: "Read stories", url: relatedUrl }],
+          }
+        : null
     )
     const db = await fixture({ targets: { "api::article.article": resolver } })
     await expect(
@@ -567,6 +695,15 @@ describe("discussion workflows and access boundaries", () => {
     expect(
       (await db.service.getThread(null, attached.thread.id)).target?.url
     ).toBe("/articles/one")
+    expect(
+      (await db.service.getThread(null, attached.thread.id)).target?.links
+    ).toEqual([{ label: "Read stories", url: "/journal?library=one" }])
+    // eslint-disable-next-line sonarjs/code-eval -- Rejection fixture; the URL is never executed.
+    relatedUrl = "javascript:alert(1)"
+    await expect(
+      db.service.getThread(null, attached.thread.id)
+    ).rejects.toMatchObject({ status: 400 })
+    relatedUrl = "/journal?library=one"
     await expect(
       db.service.createThread(other, {
         subjectId: db.subject.documentId,

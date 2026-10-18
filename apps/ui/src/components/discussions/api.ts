@@ -1,15 +1,19 @@
 import type {
   DiscussionImage,
   DiscussionRecord,
+  DiscussionList,
   PublicAuthor,
 } from "strapi-plugin-discussions/types"
 
 export type {
+  DiscussionContextFeed,
+  DiscussionContextLink,
   DiscussionState,
   DiscussionImage,
   DiscussionRecord,
   DiscussionList,
   DiscussionRevision,
+  DiscussionAuditEvent,
   DiscussionReport,
   DiscussionRestriction,
   DiscussionQuote,
@@ -55,6 +59,9 @@ export function discussionRecordState(record: DiscussionRecord) {
 }
 
 export type DiscussionFilters = {
+  contextType?: string
+  contextId?: string
+  contextLocale?: string
   subjectId: string
   language: string
   view: "latest" | "unanswered" | "following"
@@ -64,6 +71,11 @@ export function discussionFilters(query: URLSearchParams): DiscussionFilters {
   const view = query.get("view")
 
   return {
+    contextType: ["libraries", "drives"].includes(query.get("context") ?? "")
+      ? query.get("context")!
+      : "",
+    contextId: (query.get("entity") ?? "").slice(0, 128),
+    contextLocale: (query.get("contextLocale") ?? "").slice(0, 35),
     subjectId: (query.get("subject") ?? "").slice(0, 64),
     language: (query.get("lang") ?? "").slice(0, 35),
     view: view === "unanswered" || view === "following" ? view : "latest",
@@ -72,6 +84,19 @@ export function discussionFilters(query: URLSearchParams): DiscussionFilters {
 }
 export function discussionThreadQuery(filters: DiscussionFilters, offset = 0) {
   return new URLSearchParams({
+    ...(filters.contextType ? { contextType: filters.contextType } : {}),
+    ...(filters.contextId && filters.contextType
+      ? {
+          contextUid:
+            filters.contextType === "drives"
+              ? "api::drive.drive"
+              : "api::library.library",
+          contextId: filters.contextId,
+          ...(filters.contextLocale
+            ? { contextLocale: filters.contextLocale }
+            : {}),
+        }
+      : {}),
     limit: "20",
     ...(offset ? { offset: String(offset) } : {}),
     ...(filters.subjectId ? { subjectId: filters.subjectId } : {}),
@@ -121,6 +146,60 @@ export function orderedDiscussionReplies(
   for (const record of records) visit(record, 0)
 
   return result
+}
+
+/** Owner-only proposals share the conversation order without changing public reply counts. */
+export function discussionReplyFlow(
+  published: DiscussionRecord[],
+  own: DiscussionRecord[]
+) {
+  const publicIds = new Set(published.map((record) => record.id))
+  const owned = new Map(own.map((record) => [record.id, record]))
+  const records = [
+    ...published.map((record) => owned.get(record.id) ?? record),
+    ...own.filter(
+      (record) =>
+        !publicIds.has(record.id) &&
+        ["pending", "rejected"].includes(record.state)
+    ),
+  ]
+  records.sort((a, b) => {
+    const first = Date.parse(a.createdAt ?? ""),
+      second = Date.parse(b.createdAt ?? "")
+
+    return Number.isFinite(first) && Number.isFinite(second)
+      ? first - second
+      : 0
+  })
+
+  return orderedDiscussionReplies(records)
+}
+
+export function mergeDiscussionRecords(
+  ...pages: readonly DiscussionRecord[][]
+) {
+  return [
+    ...new Map(pages.flat().map((record) => [record.id, record])).values(),
+  ]
+}
+
+/** Reload the reader's current window rather than dropping a reply target on a later page. */
+export async function loadDiscussionReplyPages(
+  threadId: string,
+  count: number
+) {
+  const pages = await Promise.all(
+    Array.from({ length: count }, (_, page) =>
+      discussionRequest<DiscussionList<DiscussionRecord>>(
+        `threads/${encodeURIComponent(threadId)}/replies?limit=20${page ? `&offset=${page * 20}` : ""}`
+      )
+    )
+  )
+
+  return {
+    data: mergeDiscussionRecords(...pages.map((page) => page.data)),
+    nextOffset: pages.at(-1)?.nextOffset ?? null,
+  }
 }
 
 export class DiscussionRequestError extends Error {

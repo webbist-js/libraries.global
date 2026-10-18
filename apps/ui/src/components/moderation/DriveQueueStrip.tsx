@@ -18,9 +18,9 @@ export function DriveQueueStrip({
   if (rows.length === 0) return null
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3 rounded-[24px] border border-(--t-palette-mint-bg) bg-(--t-palette-mint-soft) p-5">
       <h2
-        className="m-0 text-[15px] font-semibold"
+        className="m-0 font-serif text-[24px] leading-tight tracking-tight"
         style={{ color: T.ink.base }}
       >
         Drives with work waiting
@@ -29,7 +29,7 @@ export function DriveQueueStrip({
         {rows.map(({ drive, waiting }) => (
           <li key={drive.documentId}>
             <Link
-              href={`/contribute/moderation?drive=${encodeURIComponent(drive.documentId)}&status=pending`}
+              href={`/contribute/moderation?category=libraries&drive=${encodeURIComponent(drive.documentId)}&status=pending`}
               className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-muted2)"
               style={{
                 border: `1px solid ${T.border.hi}`,

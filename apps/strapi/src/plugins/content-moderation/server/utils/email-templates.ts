@@ -28,6 +28,7 @@ const QUEUE_LABELS: Record<string, string> = {
   index: "Index",
   knowledge: "Knowledge",
   journal: "Journal",
+  discussions: "Discussions",
 }
 
 export function typeLabel(type: string): string {

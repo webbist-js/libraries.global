@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto"
 
 import type { StaffRole } from "@repo/access"
-import { emailTemplate } from "@repo/shared-data"
+import { libraryTypeName, emailTemplate } from "@repo/shared-data"
 
 import {
   grantVerifiedLibrarian,
@@ -196,7 +196,8 @@ const MEMBER_FIELDS = [
   "removedAt",
   "preassign",
 ]
-const LIBRARY_FIELDS = ["documentId", "name", "slug", "libraryType"]
+const LIBRARY_FIELDS = ["documentId", "name", "slug"]
+const LIBRARY_POPULATE = { libraryType: { fields: ["name"] } }
 
 /** Serialise every write to one Team. */
 export async function teamTransaction<T>(
@@ -324,7 +325,9 @@ export default ({ strapi }: { strapi: any }) => {
     const team = (await teams().findOne({
       documentId,
       fields: TEAM_FIELDS,
-      populate: { libraries: { fields: LIBRARY_FIELDS } },
+      populate: {
+        libraries: { populate: LIBRARY_POPULATE, fields: LIBRARY_FIELDS },
+      },
     })) as TeamRow | null
     if (!team) throw new AccessError(404, "not_found")
 
@@ -477,7 +480,7 @@ export default ({ strapi }: { strapi: any }) => {
         documentId: l.documentId,
         name: l.name,
         slug: l.slug,
-        libraryType: l.libraryType,
+        libraryType: libraryTypeName(l.libraryType),
       })),
       members: rows.map((r) => {
         const email = (r.email ?? "").toLowerCase()
@@ -527,6 +530,7 @@ export default ({ strapi }: { strapi: any }) => {
     const rows = (await strapi.documents(LIBRARY).findMany({
       filters: { documentId: { $in: ids } },
       status: "published",
+      populate: LIBRARY_POPULATE,
       fields: LIBRARY_FIELDS,
       limit: ids.length,
     })) as TeamLibrary[]
@@ -740,7 +744,9 @@ export default ({ strapi }: { strapi: any }) => {
       const rows = (await teams().findMany({
         filters: query ? { name: { $containsi: query } } : {},
         fields: TEAM_FIELDS,
-        populate: { libraries: { fields: LIBRARY_FIELDS } },
+        populate: {
+          libraries: { populate: LIBRARY_POPULATE, fields: LIBRARY_FIELDS },
+        },
         sort: [{ createdAt: "desc" }, { id: "desc" }],
         limit: TEAM_LIST_MAX,
       })) as TeamRow[]
@@ -765,7 +771,7 @@ export default ({ strapi }: { strapi: any }) => {
             documentId: l.documentId,
             name: l.name,
             slug: l.slug,
-            libraryType: l.libraryType,
+            libraryType: libraryTypeName(l.libraryType),
           })),
           viewerRole: "admin" as const,
           organiserNames: [] as string[],
@@ -784,6 +790,7 @@ export default ({ strapi }: { strapi: any }) => {
       return (await strapi.documents(LIBRARY).findMany({
         filters: { name: { $containsi: query } },
         status: "published",
+        populate: LIBRARY_POPULATE,
         fields: LIBRARY_FIELDS,
         sort: "name:asc",
         limit: LIBRARY_SEARCH_MAX,
@@ -1199,7 +1206,9 @@ export default ({ strapi }: { strapi: any }) => {
         populate: {
           team: {
             fields: TEAM_FIELDS,
-            populate: { libraries: { fields: LIBRARY_FIELDS } },
+            populate: {
+              libraries: { populate: LIBRARY_POPULATE, fields: LIBRARY_FIELDS },
+            },
           },
         },
         limit: 1,

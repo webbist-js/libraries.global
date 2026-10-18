@@ -128,13 +128,11 @@ function PlanColumn({
   billing,
   current,
   purchase,
-  complimentary = false,
 }: {
   readonly plan: PlanCard
   readonly billing: Billing
   readonly current: boolean
   readonly purchase?: React.ReactNode
-  readonly complimentary?: boolean
 }) {
   return (
     <li
@@ -162,11 +160,6 @@ function PlanColumn({
           {current ? <CurrentPlanBadge /> : null}
         </div>
         <Price billing={billing} plan={plan} />
-        {complimentary ? (
-          <p className="m-0 text-[13.5px] font-semibold text-(--t-accent-primary)">
-            Your Pro is complimentary. There’s nothing to pay.
-          </p>
-        ) : null}
       </div>
       <p
         className="m-0 text-[14.5px] leading-[1.5]"
@@ -202,6 +195,7 @@ export function MembershipPlans({
   } | null
 }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("membershipPlans")
 
   const [billing, setBilling] = useState<Billing>("monthly")
   const plans = MEMBERSHIP.map(planCard)
@@ -243,32 +237,31 @@ export function MembershipPlans({
           />
         }
         id="membership-h"
-        sub="Membership keeps the open index running. Supporter adds history and export; Pro adds analysis; Team brings those tools to your service."
+        sub={t("lead")}
         title={tUi("choose_your_membership")}
       />
       <p className="m-0 mb-5 text-[14px] leading-relaxed text-(--t-ink-dim)">
-        Monthly and yearly billing apply to Supporter and Pro. Team is invoiced
-        yearly.{" "}
-        <a
-          href="#get-pro-free"
-          className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
-        >
-          You may qualify for Pro free — check eligibility
-        </a>
-        .
+        {t("personalBilling")}
+        {currentPlan !== "pro" && currentPlan !== "team" ? (
+          <>
+            {" "}
+            <a
+              href="#get-pro-free"
+              className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
+            >
+              {t("checkEligibility")}
+            </a>
+            .
+          </>
+        ) : null}
       </p>
-      <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2 lg:grid-cols-3">
+      <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2">
         {plans.map((plan) => (
           <PlanColumn
             key={plan.key}
             billing={billing}
             current={plan.key === currentPlan}
             plan={plan}
-            complimentary={
-              plan.key === currentPlan &&
-              plan.key === "pro" &&
-              checkoutUser?.complimentaryPro
-            }
             purchase={
               checkoutUser?.hasPaidMembership ? (
                 <GlobalLink

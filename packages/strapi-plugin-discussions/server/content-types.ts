@@ -81,6 +81,31 @@ const index = (name: string, columns: string[]) => ({
 })
 
 export default {
+  "context-setting": schema("context-setting", {
+    targetKey: { ...privateString, required: true, unique: true },
+    target: { ...json, private: true },
+    enabled: { type: "boolean", default: true },
+    version: integer,
+  }),
+  "context-link": schema(
+    "context-link",
+    {
+      threadId: required,
+      targetKey: { ...privateString, required: true },
+      targetUid: { ...privateString, required: true },
+      target: { ...json, private: true },
+      dedupeKey: { ...privateString, required: true, unique: true },
+      actorKey: { ...privateString, required: true },
+      moderationFeedback: { type: "text", private: true },
+      featuredKey: { ...privateString, unique: true },
+      state,
+      version: integer,
+    },
+    [
+      index("context_link_target_state", ["target_key", "state"]),
+      index("context_link_thread_state", ["thread_id", "state"]),
+    ]
+  ),
   subject: schema("subject", {
     name: required,
     slug: { ...required, unique: true },

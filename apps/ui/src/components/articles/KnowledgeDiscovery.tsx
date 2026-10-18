@@ -2,6 +2,7 @@ import type { ArticleBrowseResult } from "@repo/shared-data"
 import { useTranslations, type Locale } from "next-intl"
 
 import { ArticleDiscoveryFilters } from "@/components/articles/ArticleDiscoveryFilters"
+import { EmptyState } from "@/components/ds/EmptyState"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { Link, routing } from "@/lib/navigation"
@@ -67,12 +68,18 @@ export function KnowledgeDiscovery({
         })}
       </ul>
       {!discovery.items.length && (
-        <p>
-          {p("noResults")}{" "}
-          <Link href="/knowledge?lang=all&country=all" className="underline">
-            {p("resetSearch")}
-          </Link>
-        </p>
+        <EmptyState
+          icon="mdi:book-open-page-variant-outline"
+          lead={p("noResults")}
+          action={
+            <Link
+              href="/knowledge?lang=all&country=all"
+              className="min-h-11 rounded-full border border-(--t-border-hi) px-5 py-2.5 font-semibold text-(--t-accent-primary)"
+            >
+              {p("resetSearch")}
+            </Link>
+          }
+        />
       )}
       <KnowledgeBrowsePagination
         page={discovery.page}

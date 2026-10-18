@@ -1,8 +1,10 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
+import { PlanCompareCell } from "@/app/[locale]/contribute/_components/membership/PlanCompareCell"
 import { T } from "@/lib/design-tokens"
 import pricing from "@/lib/membership-pricing.json"
 import {
@@ -13,7 +15,63 @@ import {
 } from "@/lib/plan-compare"
 import { planCard, type PlanCardKey } from "@/lib/plans"
 
-import { PlanCompareCell } from "./PlanCompareCell"
+/** The two mobile plan choices live alongside the shared comparison controls. */
+export function PlanCompareSelectors({
+  selected,
+  baseline,
+  onSelected,
+  onBaseline,
+}: {
+  readonly selected: PlanCardKey
+  readonly baseline: PlanCardKey
+  readonly onSelected: (key: PlanCardKey) => void
+  readonly onBaseline: (key: PlanCardKey) => void
+}) {
+  const controlId = useId()
+  const t = useTranslations("membershipCompare")
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {[
+        {
+          id: `${controlId}-first`,
+          label: t("firstPlan"),
+          value: baseline,
+          other: selected,
+          onChange: onBaseline,
+        },
+        {
+          id: `${controlId}-second`,
+          label: t("secondPlan"),
+          value: selected,
+          other: baseline,
+          onChange: onSelected,
+        },
+      ].map((choice) => (
+        <div
+          key={choice.label}
+          className="flex min-w-0 flex-col gap-1.5 text-[13px] font-semibold"
+        >
+          <label htmlFor={choice.id}>{choice.label}</label>
+          <select
+            id={choice.id}
+            className="min-h-11 w-full rounded-[12px] border border-(--t-border-hi) bg-white px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+            value={choice.value}
+            onChange={(event) =>
+              choice.onChange(event.target.value as PlanCardKey)
+            }
+          >
+            {COMPARE_PLANS.map((key) => (
+              <option key={key} disabled={key === choice.other} value={key}>
+                {planCard(key).name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function PlanCompareMobile({
   groups,
@@ -21,61 +79,17 @@ export function PlanCompareMobile({
   onToggle,
   selected,
   baseline,
-  onSelected,
-  onBaseline,
 }: {
   readonly groups: CompareGroup[]
   readonly open: ReadonlySet<string>
   readonly onToggle: (id: string) => void
   readonly selected: PlanCardKey
   readonly baseline: PlanCardKey
-  readonly onSelected: (key: PlanCardKey) => void
-  readonly onBaseline: (key: PlanCardKey) => void
 }) {
-  const controlId = useId()
   const columns = [baseline, selected]
 
   return (
     <div className="md:hidden" role="region" aria-label="Compare two plans">
-      <div className="mb-4 grid grid-cols-2 gap-3">
-        {[
-          {
-            id: `${controlId}-first`,
-            label: "First plan",
-            value: baseline,
-            other: selected,
-            onChange: onBaseline,
-          },
-          {
-            id: `${controlId}-second`,
-            label: "Second plan",
-            value: selected,
-            other: baseline,
-            onChange: onSelected,
-          },
-        ].map((choice) => (
-          <div
-            key={choice.label}
-            className="flex min-w-0 flex-col gap-1.5 text-[13px] font-semibold"
-          >
-            <label htmlFor={choice.id}>{choice.label}</label>
-            <select
-              id={choice.id}
-              className="min-h-11 w-full rounded-[12px] border border-(--t-border-hi) bg-white px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-offset-2"
-              value={choice.value}
-              onChange={(event) =>
-                choice.onChange(event.target.value as PlanCardKey)
-              }
-            >
-              {COMPARE_PLANS.map((key) => (
-                <option key={key} disabled={key === choice.other} value={key}>
-                  {planCard(key).name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
-      </div>
       <div className="overflow-hidden rounded-[20px] border border-(--t-border-line) bg-white">
         {groups.map((group) => {
           const expanded = open.has(group.id)

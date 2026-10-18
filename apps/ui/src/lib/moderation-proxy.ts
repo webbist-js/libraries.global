@@ -1,6 +1,10 @@
 import "server-only"
 
-import { isSubmissionType, MODERATION_QUEUES } from "@repo/access"
+import {
+  isSubmissionType,
+  isReviewCategory,
+  MODERATION_QUEUES,
+} from "@repo/access"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
@@ -65,11 +69,17 @@ export const SUBMISSION_LIST_PARAMS: Record<string, ParamRule> = {
   status: oneOf(["pending", "needs_info", "decided"]),
   queue: oneOf(MODERATION_QUEUES),
   type: (v) => isSubmissionType(v),
+  category: isReviewCategory,
   locale: (v) => LOCALE_PATTERN.test(v),
   q: (v) => v.length > 0 && v.length <= 100,
   page: intIn(1, 500),
   pageSize: intIn(1, 50),
   drive: isDocumentIdParam,
+}
+
+export const SUBMISSION_STATS_PARAMS: Record<string, ParamRule> = {
+  ...SUBMISSION_LIST_PARAMS,
+  group: oneOf(["category"]),
 }
 
 /** `GET /moderation/relation-labels`. */
