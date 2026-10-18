@@ -79,7 +79,7 @@ describe("continent.detail (E5)", () => {
         {
           ...published,
           documentId: "l1",
-          libraryType: "Public",
+          libraryType: { name: "Public" },
           continent: { id: 1, documentId: "eu" },
           country: { documentId: "gb" },
           location: { lat: 1, lng: 2 },
@@ -137,7 +137,7 @@ describe("region.detail (E5)", () => {
           ...published,
           documentId: "l1",
           name: "A",
-          libraryType: "Public",
+          libraryType: { name: "Public" },
           region: { id: 1, documentId: "eng" },
           country: { documentId: "gb" },
         },

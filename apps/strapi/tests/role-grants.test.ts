@@ -319,14 +319,14 @@ describe("migrateContributorRolesToGrants", () => {
       migrated: 450,
     })
     expect(store[ROLE_GRANT]).toHaveLength(450)
-    const i = strapi.documents.mock.calls.findIndex(
+    const i = strapi.db.query.mock.calls.findIndex(
       ([u]: [string]) => u === PROFILE
     )
-    const { findMany } = strapi.documents.mock.results[i].value
+    const { findMany } = strapi.db.query.mock.results[i].value
     expect(findMany.mock.calls[0][0]).toMatchObject({
-      start: 0,
+      offset: 0,
       limit: 200,
-      sort: "id:asc",
+      orderBy: { id: "asc" },
     })
   })
 })

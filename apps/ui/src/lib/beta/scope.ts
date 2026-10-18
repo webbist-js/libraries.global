@@ -54,6 +54,8 @@ export function betaPublicRequest(pathname: string, method: string): boolean {
       ? method === "POST"
       : method === "GET"
   if (pathname === "/api/billing/webhook") return method === "POST"
+  // The handler authenticates the CMS bridge independently of a browser beta pass.
+  if (pathname === "/api/internal/articles/invalidate") return method === "POST"
   const path = betaPath(pathname)
   if (pathname.startsWith("/_next/static/") || ASSETS.has(pathname))
     return method === "GET" || method === "HEAD"

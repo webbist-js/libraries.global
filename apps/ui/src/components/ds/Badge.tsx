@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import type { CSSProperties } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 
@@ -65,13 +66,15 @@ export function Badge({
   dot,
   icon,
   size = "sm",
+  style,
 }: {
   readonly label: string
   readonly color: BadgeColor
   readonly dot?: boolean
   /** Iconify id shown before the label, in the badge's text colour. */
   readonly icon?: string
-  readonly size?: "sm" | "md"
+  readonly size?: "xs" | "sm" | "md"
+  readonly style?: CSSProperties
 }) {
   const { text, border, bg } = COLOR_MAP[color]
   const dotColor = color === "dim" ? T.ink.faint : text
@@ -81,16 +84,19 @@ export function Badge({
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "6px",
-        padding: size === "md" ? "5px 12px" : "3px 10px",
+        gap: size === "xs" ? "4px" : "6px",
+        padding:
+          size === "md" ? "5px 12px" : size === "xs" ? "2px 8px" : "3px 10px",
         borderRadius: "999px",
         fontFamily: T.font.sans,
-        fontSize: size === "md" ? "14px" : "13px",
+        fontSize: size === "md" ? "14px" : size === "xs" ? "12px" : "13px",
+        ...(size === "xs" ? { lineHeight: 1.35 } : {}),
         fontWeight: 600,
         color: text,
         border: `1px solid ${border}`,
         background: bg,
         whiteSpace: "nowrap",
+        ...style,
       }}
     >
       {dot && (
@@ -109,8 +115,8 @@ export function Badge({
         <Icon
           aria-hidden="true"
           icon={icon}
-          width={size === "md" ? 16 : 14}
-          height={size === "md" ? 16 : 14}
+          width={size === "md" ? 16 : size === "xs" ? 12 : 14}
+          height={size === "md" ? 16 : size === "xs" ? 12 : 14}
           style={{ color: text, flexShrink: 0 }}
         />
       ) : null}

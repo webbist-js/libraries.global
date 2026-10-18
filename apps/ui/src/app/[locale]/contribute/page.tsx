@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
@@ -10,10 +9,10 @@ import {
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
 import { sessionCapabilities, staffLibrariesOf } from "@/lib/access-server"
-import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { KOFI_URL } from "@/lib/constants"
+import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
 import { followedRegionSlugs, type DriveView } from "@/lib/drives/drive-view"
 import { drivesInPlaces, loadDriveViews } from "@/lib/drives/drive-view-server"
@@ -28,16 +27,14 @@ import {
 } from "@/lib/strapi-api/content/server"
 
 import { ContributeSectionHeader } from "./_components/ContributeSectionHeader"
+import { ContributionJourney } from "./_components/hub/ContributionJourney"
 import { DrivesYouCanHelpWith } from "./_components/hub/DrivesYouCanHelpWith"
-import { HowReviewWorks } from "./_components/hub/HowReviewWorks"
 import { HubActionChooser } from "./_components/hub/HubActionChooser"
 import {
   RecordsThatNeedYou,
   type ContinentCount,
   type IncompleteRecord,
 } from "./_components/hub/RecordsThatNeedYou"
-import { RolesTable } from "./_components/hub/RolesTable"
-import { TakeOnARole } from "./_components/hub/TakeOnARole"
 import {
   SignInPromptCard,
   YourSubmissionsList,
@@ -237,7 +234,7 @@ export default async function ContributePage({
   const tUi = await getUiTranslations("ui")
 
   const { locale } = await params
-  const session = await getSessionSSR(await headers())
+  const session = await getContributionSession()
   // UI only; staff endpoints re-check the selected library's access.
   const caps = sessionCapabilities(session?.user)
   const staffLibraries = caps.set.has("staff.area")
@@ -375,8 +372,7 @@ export default async function ContributePage({
         />
       ) : null}
 
-      <HowReviewWorks />
-      <TakeOnARole
+      <ContributionJourney
         signedIn={!!session?.user}
         hasClaim={caps.claimedLibraryIds.size > 0}
         isEditor={
@@ -384,7 +380,6 @@ export default async function ContributePage({
         }
         isModerator={caps.set.has("moderate.queue")}
       />
-      <RolesTable />
 
       {/* You: your submissions (3/4) beside voting on new additions (1/4). */}
       <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 gap-6 px-4 py-12 sm:px-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">

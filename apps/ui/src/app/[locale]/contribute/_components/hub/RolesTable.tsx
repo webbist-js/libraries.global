@@ -36,6 +36,10 @@ const ROWS: Row[] = [
     cells: [YES, YES, YES, YES, YES, YES],
   },
   {
+    label: "Start discussions, reply, react and follow conversations",
+    cells: [YES, YES, YES, YES, YES, YES],
+  },
+  {
     label: "Edit a library’s record and connect its events feed",
     cells: [
       NO,
@@ -57,6 +61,17 @@ const ROWS: Row[] = [
   {
     label: "Review submissions in their queue and language",
     cells: [NO, NO, NO, NO, YES, { kind: "yes", note: "Every queue" }],
+  },
+  {
+    label: "Review discussion messages and reports",
+    cells: [
+      NO,
+      NO,
+      NO,
+      NO,
+      { kind: "yes", note: "With Discussions queue and language access" },
+      YES,
+    ],
   },
 ]
 
@@ -110,26 +125,16 @@ function CellValue({ cell }: { cell: Cell }) {
 
 export function RolesTable() {
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8">
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(26px,3vw,32px)",
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          color: T.ink.base,
-        }}
-      >
-        Roles and what they can do
-      </h2>
+    <div className="px-6 pb-6 sm:px-8 sm:pb-8">
       <p
-        className="mt-2 mb-6 max-w-[62ch] text-[16px] leading-[1.6]"
+        className="mt-0 mb-4 max-w-[75ch] text-sm leading-relaxed"
         style={{ color: T.ink.dim }}
       >
         Roles are granted for care and accuracy, never bought with points or a
         plan. Every change is reviewed, whatever your role: editor roles change
-        what happens once an edit is approved.
+        what happens once an edit is approved. Discussion posts and edits need
+        another authorised reviewer, including posts by editors, moderators and
+        the board.
       </p>
 
       <div
@@ -137,6 +142,7 @@ export function RolesTable() {
         style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
       >
         <table className="w-full min-w-[1100px] border-collapse text-left">
+          <caption className="sr-only">Roles and what they can do</caption>
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border.divider}` }}>
               <th
@@ -192,7 +198,7 @@ export function RolesTable() {
                   {row.label}
                 </th>
                 {row.cells.map((cell, cellIndex) => (
-                  <td key={cellIndex} className="px-6 py-3.5">
+                  <td key={COLUMNS[cellIndex]!.title} className="px-6 py-3.5">
                     <CellValue cell={cell} />
                   </td>
                 ))}
@@ -216,6 +222,6 @@ export function RolesTable() {
           Find your library, then choose Claim
         </GlobalLink>
       </p>
-    </section>
+    </div>
   )
 }

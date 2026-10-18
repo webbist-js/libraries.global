@@ -148,7 +148,7 @@ describe("applyArticleSubmission: new articles", () => {
     expect(created.title).toBe("How we verify records")
     expect(created.slug).toBe("how-we-verify-records")
     expect(created.summary).toBe("A short summary")
-    expect(created.author).toBe("Ada")
+    expect(created.author).toBe("Community member")
     expect(created.docsSections).toEqual(["data-api", "contributing"])
     expect(created.body).toEqual([
       { __component: "content.rich-text", body: body[0]!.body },
@@ -226,32 +226,35 @@ describe("applyArticleSubmission: new articles", () => {
     expect(strapi.documents(WIKI).update).not.toHaveBeenCalled()
   })
 
-  it("drops image blocks the submitter didn't upload", async () => {
+  it("refuses unowned image blocks without silently changing the submitted article", async () => {
     const { strapi, store } = harness(seed, "reader")
-    await applyArticleSubmission(
-      strapi,
-      {
-        documentId: "s1",
-        submittedByUserId: "u1",
-        draftData: {
-          ...draft,
-          body: [
-            ...body,
-            { __component: "content.image-block", image: 77, caption: "mine" },
-            {
-              __component: "content.image-block",
-              image: 78,
-              caption: "theirs",
-            },
-          ],
+    await expect(
+      applyArticleSubmission(
+        strapi,
+        {
+          documentId: "s1",
+          submittedByUserId: "u1",
+          draftData: {
+            ...draft,
+            body: [
+              ...body,
+              {
+                __component: "content.image-block",
+                image: 77,
+                caption: "mine",
+              },
+              {
+                __component: "content.image-block",
+                image: 78,
+                caption: "theirs",
+              },
+            ],
+          },
         },
-      },
-      "wiki"
-    )
-    expect(store[WIKI]![0]!.body).toEqual([
-      { __component: "content.rich-text", body: body[0]!.body },
-      { __component: "content.image-block", image: 77, caption: "mine" },
-    ])
+        "wiki"
+      )
+    ).rejects.toMatchObject({ reason: "invalid_media" })
+    expect(store[WIKI]).toEqual(seed[WIKI])
   })
 
   it("is a noop without a title", async () => {

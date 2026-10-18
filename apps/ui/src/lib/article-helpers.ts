@@ -1,5 +1,7 @@
 /** Shared formatting utilities for blog and wiki article components */
 
+import { articleReadingMinutes, articleText } from "@repo/shared-data"
+
 export function formatDate(
   dateStr?: string | null,
   monthFormat: "long" | "short" = "long",
@@ -58,42 +60,15 @@ export const CATEGORY_ACCENTS = [
   },
 ] as const
 
-/**
- * Rough reading-time estimate in minutes.
- * Each block ≈ 100 words at 200 wpm → 0.5 min/block.
- */
+/** Reading time from visible article text, regardless of block grouping. */
 export function estimateReadingTime(
   blocks?: readonly unknown[] | null
 ): number {
-  if (!blocks || blocks.length === 0) return 1
-
-  return Math.max(1, Math.ceil(blocks.length * 0.5))
+  return articleReadingMinutes(blocks)
 }
 
-/** Approximate word count from body blocks by scanning all text nodes */
-export function countWords(
-  blocks?: readonly { __component: string; body?: unknown }[] | null
-): number {
-  if (!blocks) return 0
-  let total = 0
-  for (const block of blocks) {
-    if (
-      block.__component === "content.rich-text" &&
-      Array.isArray(block.body)
-    ) {
-      const stack: unknown[] = [...(block.body as unknown[])]
-      while (stack.length) {
-        const node = stack.pop() as Record<string, unknown>
-        if (typeof node.text === "string") {
-          total += node.text.trim().split(/\s+/).filter(Boolean).length
-        }
-        if (Array.isArray(node.children))
-          stack.push(...(node.children as unknown[]))
-      }
-    }
-  }
-
-  return total
+export function countWords(blocks?: readonly unknown[] | null): number {
+  return articleText(blocks).split(/\s+/u).filter(Boolean).length
 }
 
 /** Compact relative date: "2d ago", "3w ago", "1mo ago" */

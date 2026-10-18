@@ -1,23 +1,22 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import type { Capability } from "@repo/access"
+import { reviewCategoriesInScope, type Capability } from "@repo/access"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { Drawer } from "@/components/ds/Drawer"
 import {
-  DRAWER_CARD as CARD,
-  DrawerLinkCard,
-  DrawerTile as Tile,
+  DRAWER_PILL,
+  DrawerAction,
+  DrawerFooter,
+  DrawerSection,
 } from "@/components/ds/DrawerCards"
 import { describeScopes } from "@/components/moderation/submissionMeta"
-import {
-  useFeaturedDrive,
-  useModerationWaiting,
-} from "@/hooks/useContributeMenu"
+import { useFeaturedDrive } from "@/hooks/useContributeMenu"
+import { useModerationSummary } from "@/hooks/useModerationSummary"
 import { useHydratedSession } from "@/lib/access-client"
 import { sessionCapabilities } from "@/lib/access-server"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
 import { closeEditorialDrawer } from "@/lib/editorial/drawer"
 import { languageName } from "@/lib/locale-fallback"
@@ -31,39 +30,21 @@ export const EDITORIAL_CAPABILITIES: readonly Capability[] = [
   "drives.manage",
 ]
 
+const REVIEW_ICON = {
+  libraries: "mdi:bookshelf",
+  articles: "mdi:book-open-page-variant-outline",
+  claims: "mdi:badge-account-outline",
+  drives: "mdi:flag-outline",
+  applications: "mdi:account-check-outline",
+  discussions: "mdi:forum-outline",
+} as const
+
 /** "every language", or the editor's languages by name. */
 function languagesOf(locales: "all" | ReadonlySet<string>): string {
   if (locales === "all") return "In every language"
   const names = [...locales].map((code) => languageName(code))
 
   return names.length ? `In ${names.join(", ")}` : ""
-}
-
-function SectionHeading({
-  id,
-  children,
-  sub,
-}: {
-  readonly id: string
-  readonly children: string
-  readonly sub?: string
-}) {
-  return (
-    <div className="mb-2.5">
-      <h3
-        id={id}
-        className="m-0 text-[14px] font-semibold"
-        style={{ color: T.ink.dim }}
-      >
-        {children}
-      </h3>
-      {sub ? (
-        <p className="m-0 mt-0.5 text-[13px]" style={{ color: T.ink.dim }}>
-          {sub}
-        </p>
-      ) : null}
-    </div>
-  )
 }
 
 /**
@@ -75,6 +56,8 @@ function SectionHeading({
  */
 export function EditorialDrawer() {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("workspaceDrawer")
+  const review = useUiTranslations("moderationWorkspace")
 
   const { data } = useHydratedSession()
   const c = sessionCapabilities(data?.user)
@@ -83,7 +66,24 @@ export function EditorialDrawer() {
   const moderates = has("moderate.queue")
   const docs = has("docs.directEdit")
   const journal = has("journal.directEdit")
-  const { data: waiting = null } = useModerationWaiting(moderates)
+  const summary = useModerationSummary(moderates)
+  const categories = reviewCategoriesInScope(c.moderation)
+  const reviewIds = [
+    ...categories,
+    ...(c.moderation.some(
+      (scope) => scope.queue === "all" || scope.queue === "discussions"
+    )
+      ? ["discussions" as const]
+      : []),
+  ]
+  const countFor = (id: string) =>
+    summary.data?.find((row) => row.id === id)?.pending ?? null
+  const waiting = reviewIds.reduce((sum, id) => sum + (countFor(id) ?? 0), 0)
+  const countsKnown =
+    reviewIds.length > 0 && reviewIds.every((id) => countFor(id) !== null)
+  const allScopes = c.moderation.some(
+    (scope) => scope.queue === "all" && scope.locale === null
+  )
   const { data: featuredDrive = null } = useFeaturedDrive(board)
 
   const roles = board
@@ -123,206 +123,222 @@ export function EditorialDrawer() {
           {roles.join(" · ")}
         </span>
       }
+      subtitle={t("editorialLead")}
       footer={
-        <div
-          className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t px-5 py-3"
-          style={{ background: T.bg.deep, borderColor: T.border.line }}
-        >
-          <Link
-            href={
-              moderates ? "/contribute/moderation" : "/contribute/knowledge"
-            }
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-            onClick={closeEditorialDrawer}
-          >
-            {moderates ? "Open the queue" : "Open the editor"}
-            <Icon
-              aria-hidden="true"
-              height={15}
-              icon="mdi:arrow-right"
-              width={15}
-            />
-          </Link>
-          <span className="text-[13px]" style={{ color: T.ink.dim }}>
-            Shortcut:{" "}
-            <kbd
-              className="rounded-md border px-1.5 py-0.5 font-semibold"
-              style={{
-                borderColor: T.border.hi,
-                background: T.bg.surface,
-                fontFamily: T.font.mono,
-                color: T.ink.base,
-              }}
-            >
-              Alt E
-            </kbd>
-          </span>
-        </div>
+        <DrawerFooter
+          href={
+            moderates
+              ? "/contribute/moderation"
+              : docs
+                ? "/contribute/knowledge"
+                : journal
+                  ? "/contribute/knowledge?type=journal"
+                  : "/community/drives/new"
+          }
+          label={moderates ? t("openWorkspace") : t("openEditor")}
+          shortcut="Alt E"
+          onClose={closeEditorialDrawer}
+        />
       }
       onClose={closeEditorialDrawer}
     >
-      <div className="flex flex-col gap-5 px-5 py-4">
+      <div className="flex flex-col gap-4 px-5 py-4">
         {moderates ? (
-          <section aria-labelledby="editorial-drawer-review-h">
-            <SectionHeading
-              id="editorial-drawer-review-h"
-              sub={`You review ${describeScopes(c.moderation, scopeLocales)}.`}
+          <DrawerSection
+            id="editorial-drawer-review-h"
+            title={t("review")}
+            description={`You review ${describeScopes(c.moderation, scopeLocales)}.`}
+          >
+            <div
+              aria-live="polite"
+              className="mb-2 rounded-[16px] bg-[#19172c] px-3.5 py-3 text-white"
             >
-              Review
-            </SectionHeading>
-            <div aria-live="polite" className="mb-2.5">
-              {waiting ? (
-                <Link
-                  href="/contribute/moderation"
-                  className={`${CARD} flex items-center gap-3 px-3.5 py-3.5 no-underline transition-colors hover:bg-(--t-bg-surface)`}
-                  style={{ background: T.bg.deep, borderColor: T.edge.danger }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[14px] font-bold tabular-nums"
-                    style={{
-                      background: TYPE_TINT.special.bg,
-                      color: T.accent.danger,
-                    }}
-                  >
-                    {waiting}
-                  </span>
-                  <span
-                    className="min-w-0 flex-1 text-[15px] leading-snug font-semibold"
-                    style={{ color: T.ink.base }}
-                  >
-                    {waiting} {waiting === 1 ? "submission" : "submissions"}
-                    waiting for review
-                  </span>
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#c5bdf8]">
                   <Icon
-                    aria-hidden="true"
-                    height={18}
-                    icon="mdi:chevron-right"
-                    style={{ color: T.ink.dim }}
-                    width={18}
-                  />
-                </Link>
-              ) : (
-                <p
-                  className="m-0 flex items-center gap-2 px-1 text-[13px]"
-                  style={{ color: T.ink.dim }}
-                >
-                  <Icon
-                    aria-hidden="true"
-                    height={15}
+                    aria-hidden
                     icon={
-                      waiting === 0
-                        ? "mdi:check-circle-outline"
-                        : "mdi:progress-clock"
+                      countsKnown && !waiting
+                        ? "mdi:shield-check-outline"
+                        : "mdi:clipboard-text-clock-outline"
                     }
-                    style={{ color: waiting === 0 ? T.accent.ok : T.ink.dim }}
-                    width={15}
+                    width={19}
+                    height={19}
                   />
-                  {waiting === 0
-                    ? tUi("nothing_waiting_for_review")
-                    : "Checking the queue…"}
-                </p>
-              )}
+                </span>
+                <div className="min-w-0">
+                  <p className="m-0 text-[15px] font-semibold">
+                    {waiting > 0
+                      ? t("waiting", { count: waiting })
+                      : countsKnown
+                        ? tUi("nothing_waiting_for_review")
+                        : summary.isPending
+                          ? t("checking")
+                          : t("countsUnavailable")}
+                  </p>
+                  <p className="m-0 mt-0.5 text-[12px] leading-relaxed text-[#d1cedd]">
+                    {summary.isPending || countsKnown
+                      ? t("reviewPrivacy")
+                      : t("partialCounts")}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              <Tile
-                href="/contribute/moderation"
-                icon="mdi:shield-check-outline"
-                label={tUi("moderation_queue")}
-              />
-              {board ? (
-                <Tile
+            <nav
+              aria-label={review("reviewQueues")}
+              className="divide-y divide-(--t-divider)"
+            >
+              {reviewIds.map((id) => (
+                <DrawerAction
+                  key={id}
+                  href={
+                    id === "discussions"
+                      ? "/contribute/moderation?tab=discussions"
+                      : `/contribute/moderation?category=${id}`
+                  }
+                  icon={REVIEW_ICON[id]}
+                  label={review(id)}
+                  count={
+                    countFor(id) ?? (
+                      <span
+                        aria-label={
+                          summary.isPending
+                            ? t("checking")
+                            : review("countUnavailable")
+                        }
+                      >
+                        —
+                      </span>
+                    )
+                  }
+                  onClick={closeEditorialDrawer}
+                />
+              ))}
+            </nav>
+            {allScopes ? (
+              <div className="mt-2 border-t border-(--t-border-line) pt-2">
+                <DrawerAction
                   href="/contribute/moderation/suggestions"
                   icon="mdi:lightbulb-on-outline"
-                  label={tUi("option_suggestions")}
-                />
-              ) : null}
-            </div>
-          </section>
-        ) : null}
-
-        {docs ? (
-          <section aria-labelledby="editorial-drawer-knowledge-h">
-            <SectionHeading
-              id="editorial-drawer-knowledge-h"
-              sub={languagesOf(c.editorLocales.docs)}
-            >
-              {tUi("knowledge")}
-            </SectionHeading>
-            <div className="grid grid-cols-2 gap-2.5">
-              <Tile
-                href="/contribute/knowledge/new?type=knowledge"
-                icon="mdi:file-document-plus-outline"
-                label={tUi("write_an_article")}
-              />
-              <Tile
-                href="/contribute/knowledge"
-                icon="mdi:pencil-outline"
-                label={tUi("edit_articles")}
-              />
-              <Tile
-                href="/knowledge"
-                icon="mdi:book-open-page-variant-outline"
-                label={tUi("knowledge")}
-              />
-            </div>
-          </section>
-        ) : null}
-
-        {journal ? (
-          <section aria-labelledby="editorial-drawer-journal-h">
-            <SectionHeading
-              id="editorial-drawer-journal-h"
-              sub={languagesOf(c.editorLocales.journal)}
-            >
-              {tUi("journal")}
-            </SectionHeading>
-            <div className="grid grid-cols-2 gap-2.5">
-              <Tile
-                href="/contribute/knowledge/new?type=journal"
-                icon="mdi:file-document-plus-outline"
-                label={tUi("write_an_article")}
-              />
-              <Tile
-                href="/contribute/knowledge?type=journal"
-                icon="mdi:pencil-outline"
-                label={tUi("edit_articles")}
-              />
-              <Tile
-                href="/journal"
-                icon="mdi:newspaper-variant-outline"
-                label={tUi("journal")}
-              />
-            </div>
-          </section>
-        ) : null}
-
-        {board ? (
-          <section aria-labelledby="editorial-drawer-drives-h">
-            <SectionHeading id="editorial-drawer-drives-h">
-              {tUi("drives")}
-            </SectionHeading>
-            <div className="grid grid-cols-2 gap-2.5">
-              <Tile
-                href="/community/drives/new"
-                icon="mdi:flag-plus-outline"
-                label={tUi("new_drive")}
-              />
-              <Tile
-                href="/community"
-                icon="mdi:flag-outline"
-                label={tUi("all_drives")}
-              />
-            </div>
-            {featuredDrive ? (
-              <div className="mt-2.5">
-                <DrawerLinkCard
-                  href={driveHref(featuredDrive.slug)}
-                  title={featuredDrive.title}
+                  label={review("optionSuggestions")}
+                  onClick={closeEditorialDrawer}
                 />
               </div>
             ) : null}
-          </section>
+          </DrawerSection>
+        ) : null}
+
+        {docs || journal ? (
+          <DrawerSection
+            id="editorial-drawer-publishing-h"
+            title={t("publishing")}
+          >
+            <div className="divide-y divide-(--t-border-line)">
+              {(["docs", "journal"] as const)
+                .filter((kind) => (kind === "docs" ? docs : journal))
+                .map((kind) => (
+                  <div key={kind} className="py-3 first:pt-0 last:pb-0">
+                    <div className="mb-2.5 flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="m-0 flex items-center gap-2 text-[14px] font-semibold text-(--t-ink-base)">
+                          <Icon
+                            aria-hidden
+                            icon={
+                              kind === "docs"
+                                ? "mdi:book-open-page-variant-outline"
+                                : "mdi:newspaper-variant-outline"
+                            }
+                            width={17}
+                            height={17}
+                            className="text-(--t-accent-primary)"
+                          />
+                          {tUi(kind === "docs" ? "knowledge" : "journal")}
+                        </h4>
+                        <p className="m-0 mt-1 text-[12px] text-(--t-ink-dim)">
+                          {languagesOf(c.editorLocales[kind])}
+                        </p>
+                      </div>
+                      <Link
+                        href={kind === "docs" ? "/knowledge" : "/journal"}
+                        onClick={closeEditorialDrawer}
+                        className="inline-flex min-h-8 items-center text-[12px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                      >
+                        {t("browse")}
+                      </Link>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/contribute/knowledge/new?type=${kind === "docs" ? "knowledge" : "journal"}`}
+                        className={DRAWER_PILL}
+                        onClick={closeEditorialDrawer}
+                      >
+                        <Icon
+                          aria-hidden
+                          icon="mdi:plus"
+                          width={15}
+                          height={15}
+                        />
+                        {tUi("write_an_article")}
+                      </Link>
+                      <Link
+                        href={
+                          kind === "docs"
+                            ? "/contribute/knowledge"
+                            : "/contribute/knowledge?type=journal"
+                        }
+                        className={DRAWER_PILL}
+                        onClick={closeEditorialDrawer}
+                      >
+                        <Icon
+                          aria-hidden
+                          icon="mdi:pencil-outline"
+                          width={15}
+                          height={15}
+                        />
+                        {tUi("edit_articles")}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </DrawerSection>
+        ) : null}
+
+        {board ? (
+          <DrawerSection
+            id="editorial-drawer-drives-h"
+            title={tUi("drives")}
+            description={t("drivesLead")}
+          >
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/community/drives/new"
+                className={DRAWER_PILL}
+                onClick={closeEditorialDrawer}
+              >
+                <Icon aria-hidden icon="mdi:plus" width={15} height={15} />
+                {tUi("new_drive")}
+              </Link>
+              <Link
+                href="/community"
+                className={DRAWER_PILL}
+                onClick={closeEditorialDrawer}
+              >
+                {tUi("all_drives")}
+              </Link>
+            </div>
+            {featuredDrive ? (
+              <div className="mt-3 border-t border-(--t-border-line) pt-2">
+                <DrawerAction
+                  href={driveHref(featuredDrive.slug)}
+                  icon="mdi:pin-outline"
+                  label={featuredDrive.title}
+                  description={t("featuredDrive")}
+                  onClick={closeEditorialDrawer}
+                />
+              </div>
+            ) : null}
+          </DrawerSection>
         ) : null}
       </div>
     </Drawer>

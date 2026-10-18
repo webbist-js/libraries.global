@@ -1,10 +1,13 @@
 import {
+  libraryTypeName,
   hasErrors,
   normalizeMobileTimetable,
   timetableHash,
   validateMobileTimetable,
   type MobileTimetable,
 } from "@repo/shared-data"
+
+import { resolveLibraryType } from "./library-type-catalogue"
 
 const LIBRARY = "api::library.library"
 
@@ -63,7 +66,12 @@ export async function prepareMobileLibraryData(
   locale: string
 ): Promise<Record<string, unknown>> {
   const next = { ...data },
-    type = data.libraryType ?? current?.libraryType
+    type =
+      data.libraryType === undefined
+        ? libraryTypeName(current?.libraryType)
+        : typeof data.libraryType === "string"
+          ? data.libraryType
+          : (await resolveLibraryType(strapi, data.libraryType)).name
   if (Object.prototype.hasOwnProperty.call(data, "mobileTimetable")) {
     if (type !== "Mobile" && data.mobileTimetable != null)
       throw new TimetableWriteError(
@@ -87,21 +95,15 @@ export async function prepareMobileLibraryData(
         (relation === undefined ? current?.homeLibrary?.documentId : null))
   if (homeId) {
     const home = await strapi.documents(LIBRARY).findOne({
+      populate: { libraryType: { fields: ["name"] } },
       documentId: homeId,
       locale,
       status: "published",
-      fields: [
-        "libraryType",
-        "location",
-        "streetAddress",
-        "city",
-        "postalCode",
-        "timezone",
-      ],
+      fields: ["location", "streetAddress", "city", "postalCode", "timezone"],
     })
     if (
       !home ||
-      home.libraryType === "Mobile" ||
+      libraryTypeName(home.libraryType) === "Mobile" ||
       homeId === current?.documentId
     )
       throw new TimetableWriteError(

@@ -119,9 +119,9 @@ async function publicUsernames(
   ]
   const out = new Map<string, string>()
   if (ids.length === 0) return out
-  const profiles = (await strapi.documents(PROFILE).findMany({
-    filters: { baUserId: { $in: ids } },
-    fields: ["baUserId", "username", "profileVisibility", "publicPrefs"],
+  const profiles = (await strapi.db.query(PROFILE).findMany({
+    where: { baUserId: { $in: ids } },
+    select: ["baUserId", "username", "profileVisibility", "publicPrefs"],
     limit: ids.length,
   })) as any[]
   for (const p of profiles ?? [])

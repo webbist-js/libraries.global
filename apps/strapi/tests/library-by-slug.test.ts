@@ -22,7 +22,7 @@ const rows = [
     name: "Kent Mobile Library",
     slug: "kent-mobile",
     locale: "en",
-    libraryType: "Mobile",
+    libraryType: { name: "Mobile" },
     mobileTimetable: timetable,
     description: "Long text the list shape drops",
     publishedAt: "2026-09-01T00:00:00.000Z",
@@ -33,7 +33,7 @@ const rows = [
     name: "Other",
     slug: "other",
     locale: "en",
-    libraryType: "Public",
+    libraryType: { name: "Public" },
     mobileTimetable: null,
     publishedAt: "2026-09-01T00:00:00.000Z",
   },
@@ -64,7 +64,7 @@ function build(seed = rows) {
     strapi: { ...faked.strapi, contentType: () => ({ uid: LIBRARY }) },
   } as any)
   const find = vi.fn(async (c: any) => {
-    const { filters, locale, status, fields } = c.query
+    const { filters, locale, status, fields, populate } = c.query
     const found = await faked.strapi
       .documents(LIBRARY)
       .findMany({ filters, locale, status })
@@ -72,7 +72,10 @@ function build(seed = rows) {
       Array.isArray(fields)
         ? Object.fromEntries(
             Object.entries(row).filter(
-              ([k]) => k === "documentId" || fields.includes(k)
+              ([k]) =>
+                k === "documentId" ||
+                fields.includes(k) ||
+                k in (populate ?? {})
             )
           )
         : row
@@ -156,7 +159,7 @@ describe("GET /libraries/by-slug/:slug (the library page's read)", () => {
     expect(c.body.data[0]).toMatchObject({
       documentId: "lib00000000000000000001",
       slug: "kent-mobile",
-      libraryType: "Mobile",
+      libraryType: { name: "Mobile" },
       mobileTimetable: timetable,
       description: "Long text the list shape drops",
     })

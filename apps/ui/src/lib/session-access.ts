@@ -15,6 +15,7 @@ import {
 import type { DismissiblePrompt } from "@repo/shared-data"
 
 import type { SessionTeam, StaffLibrarySummary } from "./access-server"
+import type { CompositionPreferences } from "./composition-language"
 import type { SessionProfile } from "./session-profile"
 
 export type SessionAccess = {
@@ -22,6 +23,8 @@ export type SessionAccess = {
   profileLoaded: boolean
   contributorRole: ContributorRole
   username: string | null
+  /** Owner-only content defaults; unrelated to capabilities or UI locale. */
+  compositionPreferences: CompositionPreferences
   capabilities: Capability[]
   claimedLibraryIds: string[]
   staffLibraries: StaffLibrarySummary[]
@@ -80,6 +83,10 @@ export function buildSessionAccess(
     profileLoaded: profile !== null,
     contributorRole: role,
     username: profile?.username ?? null,
+    compositionPreferences: profile?.compositionPreferences ?? {
+      country: null,
+      languages: [],
+    },
     ...(caps
       ? toSessionCapabilities(caps)
       : {

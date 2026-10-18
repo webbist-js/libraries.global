@@ -1,5 +1,6 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 
+import { EmptyState } from "@/components/ds/EmptyState"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
@@ -85,24 +86,12 @@ export function BlogArticleGrid({
   const t = useUiTranslations("editorial")
   if (articles.length === 0) {
     return (
-      <div
-        className="rounded-[24px] border px-8 py-16 text-center"
-        style={{ background: T.bg.deep, borderColor: T.border.line }}
-      >
-        <p
-          className="m-0 text-[24px]"
-          style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            color: T.ink.base,
-          }}
-        >
-          {t("emptySection")}
-        </p>
-        <p className="m-0 mt-2 text-[15px]" style={{ color: T.ink.dim }}>
-          {t("newDispatches")}
-        </p>
-      </div>
+      <EmptyState
+        surface
+        icon="mdi:newspaper-variant-outline"
+        lead={t("emptySection")}
+        detail={t("newDispatches")}
+      />
     )
   }
 

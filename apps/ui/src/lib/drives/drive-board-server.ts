@@ -46,6 +46,7 @@ export const MAX_DRIVE_BODY_BYTES = 128 * 1024
 
 /** The keys a create or update forwards; every other key is dropped. */
 export const DRIVE_BODY_KEYS = [
+  "discussions",
   "title",
   "summary",
   "steps",

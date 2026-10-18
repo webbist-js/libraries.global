@@ -64,6 +64,7 @@ export const QUEUE_LABELS: Record<string, string> = {
   knowledge: "Knowledge",
   journal: "Journal",
   applications: "Applications",
+  discussions: "Discussions",
 }
 
 export const SOURCE_LABELS: Record<string, string> = {

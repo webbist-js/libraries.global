@@ -31,17 +31,17 @@ import {
 const PILL =
   "min-h-11 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
 
-const GROUP_LABEL = "m-0 mx-1 text-[13px] font-bold"
+const FOCUS =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
 
 function Chevron() {
   return (
     <Icon
       icon="mdi:chevron-right"
-      width={16}
-      height={16}
-      aria-hidden="true"
-      className="shrink-0"
-      style={{ color: T.ink.faint }}
+      width={15}
+      height={15}
+      aria-hidden
+      className="shrink-0 text-(--t-ink-low)"
     />
   )
 }
@@ -57,12 +57,14 @@ function CardLink({
     <GlobalLink
       href={link.href}
       onClick={onNavigate}
-      className="flex min-h-10 items-center gap-2 rounded-[10px] px-2 py-1.5 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-accent-chip) hover:text-(--t-accent-primary-hover)"
+      className={`flex min-h-11 items-center gap-2 rounded-[12px] px-2 py-2 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
     >
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[15px] font-semibold">{link.label}</span>
+        <span className="text-[14px] leading-snug font-semibold">
+          {link.label}
+        </span>
         {link.sub ? (
-          <span className="truncate text-[13px]" style={{ color: T.ink.dim }}>
+          <span className="mt-0.5 text-[12px] leading-snug text-(--t-ink-dim)">
             {link.sub}
           </span>
         ) : null}
@@ -73,7 +75,7 @@ function CardLink({
   )
 }
 
-/** The Drives card's featured drive: a placeholder until it has loaded. */
+/** A compact drive preview; its published progress remains the source of truth. */
 function FeaturedDrive({
   featured,
   onNavigate,
@@ -82,68 +84,52 @@ function FeaturedDrive({
   readonly onNavigate: () => void
 }) {
   const tUi = useUiTranslations("ui")
-
-  if (featured === "loading") {
+  const t = useUiTranslations("contributeMenu")
+  if (featured === "loading")
     return (
       <div
         role="status"
         aria-busy="true"
         aria-label={tUi("loading_featured_drive")}
-        className="flex flex-col gap-1.5 rounded-[12px] border px-3 py-2.5"
-        style={{ background: T.bg.surface, borderColor: T.border.divider }}
+        className="flex flex-col gap-2 rounded-[16px] bg-(--t-accent-chip)/50 px-3.5 py-3"
       >
         <span
-          className="h-2.5 w-2/5 animate-pulse rounded"
-          style={{ background: T.bg.muted2 }}
+          aria-hidden
+          className="h-2.5 w-2/5 animate-pulse rounded bg-(--t-border-hi) motion-reduce:animate-none"
         />
         <span
-          className="h-3.5 w-5/6 animate-pulse rounded"
-          style={{ background: T.bg.muted2 }}
+          aria-hidden
+          className="h-4 w-5/6 animate-pulse rounded bg-(--t-border-hi) motion-reduce:animate-none"
         />
-        <span
-          className="h-1.5 rounded-full"
-          style={{ background: T.bg.muted2 }}
-        />
+        <span aria-hidden className="h-1.5 rounded-full bg-white" />
       </div>
     )
-  }
 
   return (
     <GlobalLink
       href={featured.href}
       onClick={onNavigate}
-      className="flex flex-col gap-1.5 rounded-[12px] border border-transparent px-3 py-2.5 text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)"
-      style={{ background: T.accent.chip }}
+      className={`flex flex-col gap-2 rounded-[16px] border border-(--t-edge-info) bg-(--t-bg-selected) px-3.5 py-3 text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) ${FOCUS}`}
     >
-      <span
-        className="text-[12px] font-bold"
-        style={{ color: T.accent.primaryHover }}
-      >
-        Featured drive
+      <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-(--t-accent-primary) uppercase">
+        <Icon aria-hidden icon="mdi:pin-outline" width={13} height={13} />
+        {t("featuredDrive")}
       </span>
-      <span
-        className="line-clamp-2 text-[18px] leading-tight"
-        style={{ fontFamily: T.font.serif }}
-      >
+      <span className="font-serif text-[21px] leading-[1.1] tracking-[-0.015em]">
         {featured.title}
       </span>
       {featured.progress ? (
         <>
-          {/* Decorative: the line under it says the same. */}
           <span
-            aria-hidden="true"
-            className="block h-1.5 overflow-hidden rounded-full"
-            style={{ background: T.bg.deep }}
+            aria-hidden
+            className="mt-0.5 block h-1.5 overflow-hidden rounded-full bg-white"
           >
             <span
-              className="block h-full rounded-full"
-              style={{
-                width: `${featured.percent}%`,
-                background: T.accent.primary,
-              }}
+              className="block h-full rounded-full bg-(--t-accent-primary)"
+              style={{ width: `${featured.percent}%` }}
             />
           </span>
-          <span className="text-[13px]" style={{ color: T.ink.dim }}>
+          <span className="text-[12px] leading-snug text-(--t-ink-dim)">
             {featured.progress}
           </span>
         </>
@@ -152,83 +138,199 @@ function FeaturedDrive({
   )
 }
 
-function Card({
+/** Review is a single prominent entry point; decisions stay in the workspace. */
+function ReviewShortcut({
   card,
-  span,
-  library,
   onNavigate,
 }: {
   readonly card: ContributorCard
-  /** The odd card out takes the whole row. */
-  readonly span: boolean
+  readonly onNavigate: () => void
+}) {
+  const t = useUiTranslations("contributeMenu")
+  const link = card.links[0]
+  if (!link) return null
+
+  return (
+    <GlobalLink
+      href={link.href}
+      onClick={onNavigate}
+      className={`flex min-h-[76px] items-center gap-3 rounded-[18px] bg-[#19172c] px-4 py-3 text-white no-underline transition-colors hover:bg-[#29253f] ${FOCUS}`}
+    >
+      <span
+        aria-hidden
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#c5bdf8]"
+      >
+        <Icon icon="mdi:shield-check-outline" width={21} height={21} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] font-semibold">{link.label}</span>
+        <span className="mt-0.5 block text-[12px] leading-relaxed text-[#d1cedd]">
+          {link.sub ?? t("reviewLead")}
+        </span>
+      </span>
+      {link.badge ? (
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[12px] font-semibold tabular-nums">
+          {link.badge} <span>{t("waiting")}</span>
+        </span>
+      ) : null}
+      <Icon
+        aria-hidden
+        icon="mdi:arrow-right"
+        width={17}
+        height={17}
+        className="shrink-0 text-[#d1cedd]"
+      />
+    </GlobalLink>
+  )
+}
+
+function Card({
+  card,
+  library,
+  onNavigate,
+  hideHeading = false,
+  columns = false,
+  groupHeadingId,
+}: {
+  readonly card: ContributorCard
+  readonly library: ContributeMenu["library"]
+  readonly onNavigate: () => void
+  readonly hideHeading?: boolean
+  readonly groupHeadingId: string
+  readonly columns?: boolean
+}) {
+  const titleId = useId()
+  const publishing = card.key === "knowledge" || card.key === "journal"
+  const hasHeading = !hideHeading && card.key !== "hub"
+  // The hub is always available in the panel header.
+  const links = card.links.filter((link) => link.href !== "/contribute")
+
+  return (
+    <li
+      className={`flex min-w-0 flex-col gap-2.5 ${columns ? "" : "py-3 first:pt-0 last:pb-0"}`}
+    >
+      {hasHeading ? (
+        <div className="flex items-start gap-2.5 px-1">
+          <CardMonogram icon={card.icon} tint={card.tint} size={30} />
+          <div className="min-w-0 flex-1">
+            <h4
+              id={titleId}
+              className="m-0 text-[14px] leading-tight font-bold text-(--t-ink-base)"
+            >
+              {card.title}
+            </h4>
+            <p className="m-0 mt-1 text-[12px] leading-snug text-(--t-ink-dim)">
+              {card.description}
+            </p>
+          </div>
+        </div>
+      ) : null}
+      {hideHeading && card.key !== "hub" ? (
+        <p className="m-0 text-[12px] leading-relaxed text-(--t-ink-dim)">
+          {card.description}
+        </p>
+      ) : null}
+      {card.key === "libraries" && library.options.length > 1 ? (
+        <LibrarySelect library={library} />
+      ) : null}
+      <div
+        className={
+          card.key === "drives" && card.featured
+            ? "grid items-center gap-3 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]"
+            : undefined
+        }
+      >
+        {card.featured ? (
+          <FeaturedDrive featured={card.featured} onNavigate={onNavigate} />
+        ) : null}
+        <ul
+          aria-labelledby={hasHeading ? titleId : groupHeadingId}
+          className={
+            publishing
+              ? "m-0 flex list-none flex-wrap gap-2 p-0"
+              : card.key === "hub"
+                ? "m-0 grid list-none gap-1 p-0 sm:grid-cols-2"
+                : "m-0 flex list-none flex-col p-0"
+          }
+        >
+          {links.map((link) => (
+            <li key={`${link.href}:${link.label}`}>
+              {publishing ? (
+                <GlobalLink
+                  href={link.href}
+                  onClick={onNavigate}
+                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[12px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+                >
+                  <Icon
+                    aria-hidden
+                    icon={
+                      link.href.includes("/new")
+                        ? "mdi:plus"
+                        : "mdi:pencil-outline"
+                    }
+                    width={14}
+                    height={14}
+                  />
+                  {link.label}
+                </GlobalLink>
+              ) : (
+                <CardLink link={link} onNavigate={onNavigate} />
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </li>
+  )
+}
+
+function CardGroup({
+  title,
+  cards,
+  library,
+  onNavigate,
+  columns = false,
+}: {
+  readonly title: string
+  readonly cards: ContributorCard[]
+  readonly columns?: boolean
   readonly library: ContributeMenu["library"]
   readonly onNavigate: () => void
 }) {
   const titleId = useId()
 
   return (
-    <li
-      className={`flex min-w-0 flex-col gap-2 rounded-[18px] border p-3 ${span ? "col-span-full" : ""}`}
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
+    <div
+      role="group"
+      aria-labelledby={titleId}
+      className="min-w-0 rounded-[20px] border border-(--t-border-line) bg-white p-3.5"
     >
-      <div className="flex items-start gap-2.5 px-1 pt-0.5">
-        <CardMonogram icon={card.icon} tint={card.tint} />
-        <div className="flex min-w-0 flex-1 flex-col gap-px">
-          <p
-            id={titleId}
-            className="m-0 text-[16px] leading-tight font-bold"
-            style={{ color: T.ink.base }}
-          >
-            {card.title}
-          </p>
-          <p
-            className="m-0 text-[13px] leading-snug"
-            style={{ color: T.ink.dim }}
-          >
-            {card.description}
-          </p>
-        </div>
-      </div>
-      {card.key === "libraries" && library.options.length > 1 ? (
-        <LibrarySelect library={library} />
-      ) : null}
-      {card.featured ? (
-        <FeaturedDrive featured={card.featured} onNavigate={onNavigate} />
-      ) : null}
-      <ul aria-labelledby={titleId} className="m-0 flex list-none flex-col p-0">
-        {card.links.map((link) => (
-          <li key={`${link.href}:${link.label}`}>
-            <CardLink link={link} onNavigate={onNavigate} />
-          </li>
+      <h3
+        id={titleId}
+        className="m-0 mb-3 font-serif text-[23px] leading-tight tracking-[-0.02em] text-(--t-ink-base)"
+      >
+        {title}
+      </h3>
+      <ul
+        className={
+          columns
+            ? "m-0 grid list-none gap-4 p-0 sm:grid-cols-2"
+            : "m-0 list-none divide-y divide-(--t-divider) p-0"
+        }
+      >
+        {cards.map((card) => (
+          <Card
+            key={card.key}
+            card={card}
+            library={library}
+            onNavigate={onNavigate}
+            hideHeading={cards.length === 1 && card.title === title}
+            columns={columns}
+            groupHeadingId={titleId}
+          />
         ))}
       </ul>
-    </li>
-  )
-}
-
-function CardGrid({
-  cards,
-  library,
-  onNavigate,
-}: {
-  readonly cards: ContributorCard[]
-  readonly library: ContributeMenu["library"]
-  readonly onNavigate: () => void
-}) {
-  const odd = cards.length % 2 === 1
-
-  return (
-    <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0">
-      {cards.map((card, index) => (
-        <Card
-          key={card.key}
-          card={card}
-          span={odd && index === cards.length - 1}
-          library={library}
-          onNavigate={onNavigate}
-        />
-      ))}
-    </ul>
+    </div>
   )
 }
 
@@ -236,61 +338,53 @@ function SignInCard({ onNavigate }: { readonly onNavigate: () => void }) {
   const tUi = useUiTranslations("ui")
 
   return (
-    <div
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[18px] border px-4 py-3.5"
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      <p
-        className="m-0 flex-1 basis-[260px] text-[15px] leading-normal"
-        style={{ color: T.ink.base }}
-      >
-        <strong>{tUi("contributing_is_free")}</strong>{" "}
-        {tUi("sign_in_to_suggest_edits_add_libraries_and_join_drives")}{" "}
+    <div className="rounded-[18px] border border-(--t-edge-info) bg-(--t-bg-selected) px-4 py-3.5">
+      <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        <strong className="text-(--t-ink-base)">
+          {tUi("contributing_is_free")}
+        </strong>{" "}
+        {tUi("sign_in_to_suggest_edits_add_libraries_and_join_drives")}
       </p>
-      <span className="flex gap-1.5">
+      <div className="mt-3 flex flex-wrap gap-2">
         <GlobalLink
           href="/auth/signin"
           onClick={onNavigate}
-          className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+          className={`inline-flex min-h-10 items-center rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) ${FOCUS}`}
         >
-          {tUi("sign_in")}{" "}
+          {tUi("sign_in")}
         </GlobalLink>
         <GlobalLink
           href="/auth/register"
           onClick={onNavigate}
-          className="rounded-full border border-(--t-border-hi) bg-white px-3.5 py-2 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)"
+          className={`inline-flex min-h-10 items-center rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
         >
-          {tUi("create_account")}{" "}
+          {tUi("create_account")}
         </GlobalLink>
-      </span>
+      </div>
     </div>
   )
 }
 
 function LoadingRow() {
+  const t = useUiTranslations("contributeMenu")
+
   return (
     <div
       role="status"
       aria-busy="true"
-      className="flex items-center gap-3 rounded-[18px] border border-dashed px-4 py-3"
-      style={{ borderColor: T.border.hi }}
+      className="flex items-center gap-3 rounded-[18px] border border-dashed border-(--t-border-hi) px-4 py-3"
     >
       <span
-        aria-hidden="true"
-        className="size-[30px] shrink-0 animate-pulse rounded-full"
-        style={{ background: T.bg.muted2 }}
+        aria-hidden
+        className="size-8 shrink-0 animate-pulse rounded-full bg-(--t-bg-muted-2) motion-reduce:animate-none"
       />
-      <span className="flex flex-1 flex-col gap-1.5">
-        <span
-          className="text-[14px] font-semibold"
-          style={{ color: T.ink.dim }}
-        >
-          Loading your shortcuts…
+      <span className="flex flex-1 flex-col gap-2">
+        <span className="text-[13px] font-semibold text-(--t-ink-dim)">
+          {t("loading")}
         </span>
         <span
-          aria-hidden="true"
-          className="h-2 w-3/5 animate-pulse rounded"
-          style={{ background: T.bg.muted2 }}
+          aria-hidden
+          className="h-2 w-3/5 animate-pulse rounded bg-(--t-bg-muted-2) motion-reduce:animate-none"
         />
       </span>
     </div>
@@ -310,14 +404,13 @@ function MembershipRow({
     <GlobalLink
       href="/contribute/membership"
       onClick={onNavigate}
-      className="flex items-center gap-3 rounded-[16px] border border-(--t-border-line) px-3.5 py-2.5 text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)"
-      style={{ background: T.bg.deep }}
+      className={`flex min-h-16 items-center gap-3 border-t border-(--t-border-line) bg-white px-5 py-3 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
     >
-      <CardMonogram icon="mdi:heart-outline" tint="accent" />
+      <CardMonogram icon="mdi:heart-outline" tint="accent" size={30} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <strong className="text-[15px]">{tUi("membership")}</strong>
-        <span className="text-[13px]" style={{ color: T.ink.dim }}>
-          {tUi("support_the_index_and_explore_pro")}{" "}
+        <strong className="text-[14px]">{tUi("membership")}</strong>
+        <span className="mt-0.5 text-[12px] leading-snug text-(--t-ink-dim)">
+          {tUi("support_the_index_and_explore_pro")}
         </span>
       </span>
       {plan ? <PlanPill plan={plan} /> : null}
@@ -326,12 +419,7 @@ function MembershipRow({
   )
 }
 
-/**
- * The panel's contents: a sign-in card or a loading row, "Your work" (the
- * viewer's own cards, when any), "Everyone" (Drives and Contribute) and
- * the Membership row. Shared by the header popover; the mobile menu lays
- * the same cards out as accordions.
- */
+/** Capability-based shortcuts, with review separated from everyday contribution. */
 export function ContributeMenuPanel({
   menu,
   onNavigate,
@@ -340,62 +428,82 @@ export function ContributeMenuPanel({
   readonly onNavigate: () => void
 }) {
   const tUi = useUiTranslations("ui")
-
-  const workId = useId()
-  const everyoneId = useId()
-  const hasWork = menu.work.length > 0
+  const t = useUiTranslations("contributeMenu")
+  const tools = menu.work.filter((card) => card.key !== "review")
+  const review = menu.work.find((card) => card.key === "review")
+  const hub = menu.common.find((card) => card.key === "hub")
+  const drives = menu.common.find((card) => card.key === "drives")
+  const hubLink = hub?.links.find((link) => link.href === "/contribute")
 
   return (
-    <nav aria-label={tUi("contribute_menu")} className="flex flex-col gap-3">
-      {menu.status === "signedOut" ? (
-        <SignInCard onNavigate={onNavigate} />
-      ) : null}
-      {menu.status === "loading" ? <LoadingRow /> : null}
-
-      {hasWork ? (
-        <div
-          role="group"
-          aria-labelledby={workId}
-          className="flex flex-col gap-2"
-        >
-          <p id={workId} className={GROUP_LABEL} style={{ color: T.ink.dim }}>
-            {tUi("your_work")}{" "}
+    <nav aria-label={tUi("contribute_menu")} className="flex flex-col">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-(--t-border-line) bg-(--t-bg-space) px-5 py-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="m-0 font-serif text-[28px] leading-tight tracking-[-0.02em] text-(--t-ink-base)">
+            {tUi("contribute")}
+          </h2>
+          <p className="m-0 mt-1 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            {t("lead")}
           </p>
-          <CardGrid
-            cards={menu.work}
+        </div>
+        {hubLink ? (
+          <GlobalLink
+            href={hubLink.href}
+            onClick={onNavigate}
+            className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[12px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+          >
+            {t("hub")}
+            <Icon
+              aria-hidden
+              icon="mdi:arrow-top-right"
+              width={14}
+              height={14}
+            />
+          </GlobalLink>
+        ) : null}
+      </div>
+      <div className="flex flex-col gap-3 p-4">
+        {menu.status === "signedOut" ? (
+          <SignInCard onNavigate={onNavigate} />
+        ) : null}
+        {menu.status === "loading" ? <LoadingRow /> : null}
+        {review ? (
+          <ReviewShortcut card={review} onNavigate={onNavigate} />
+        ) : null}
+        {tools.length > 0 ? (
+          <CardGroup
+            title={tUi("your_work")}
+            cards={tools}
+            library={menu.library}
+            onNavigate={onNavigate}
+            columns={tools.length > 1}
+          />
+        ) : null}
+        {hub ? (
+          <CardGroup
+            title={t("getInvolved")}
+            cards={[hub]}
             library={menu.library}
             onNavigate={onNavigate}
           />
-        </div>
-      ) : null}
-
-      <div
-        role="group"
-        aria-labelledby={everyoneId}
-        className="flex flex-col gap-2"
-      >
-        <p
-          id={everyoneId}
-          className={hasWork ? GROUP_LABEL : "sr-only"}
-          style={{ color: T.ink.dim }}
-        >
-          {tUi("everyone")}{" "}
-        </p>
-        <CardGrid
-          cards={menu.common}
-          library={menu.library}
-          onNavigate={onNavigate}
-        />
+        ) : null}
+        {drives ? (
+          <CardGroup
+            title={drives.title}
+            cards={[drives]}
+            library={menu.library}
+            onNavigate={onNavigate}
+          />
+        ) : null}
       </div>
-
       <MembershipRow plan={menu.plan} onNavigate={onNavigate} />
     </nav>
   )
 }
 
 /**
- * The header's primary action: a Contribute button that opens a 640px
- * panel of small cards, one per kind of work the viewer can do. Open for
+ * The header's primary action: a Contribute button that opens a 680px
+ * panel of grouped shortcuts for the work the viewer can do. Open for
  * everyone, signed out included; the cards combine for people with several
  * roles. Escape closes it and returns focus to the button.
  */
@@ -435,7 +543,7 @@ export function GlobalContributeMenu({
       <PopoverContent
         ref={contentRef}
         align="end"
-        sideOffset={20}
+        sideOffset={12}
         collisionPadding={16}
         onOpenAutoFocus={(event) => {
           // Land on the first link rather than on the panel itself.
@@ -446,8 +554,8 @@ export function GlobalContributeMenu({
             first.focus()
           }
         }}
-        className="max-h-(--radix-popover-content-available-height) w-[640px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[24px] border p-3 shadow-[0_12px_28px_rgba(23,22,43,.08)]"
-        style={{ background: T.bg.surface, borderColor: T.border.hi }}
+        className="max-h-(--radix-popover-content-available-height) w-[680px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-[24px] border p-0 shadow-[0_16px_40px_rgba(23,22,43,.12)] motion-reduce:animate-none"
+        style={{ background: T.bg.void, borderColor: T.border.hi }}
       >
         <ContributeMenuPanel menu={menu} onNavigate={() => setOpen(false)} />
       </PopoverContent>

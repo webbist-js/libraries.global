@@ -2,6 +2,7 @@ import { resolveUser } from "./submission"
 import {
   createSuggestion,
   decideSuggestion,
+  publishSuggestion,
   isSuggestionList,
   listSuggestions,
   NON_REMOVED_STATUSES,
@@ -11,8 +12,24 @@ import {
   toggleVote,
 } from "../utils/option-suggestions"
 import { isDocumentId } from "../utils/params"
+import {
+  publicComparisons,
+  suggestionCatalogue,
+} from "../utils/suggestion-catalogue"
+import { suggestionConversationSummaries } from "../utils/suggestion-discussions"
+import { updateReviewRound, reviewRoundView } from "../utils/suggestion-rounds"
 
-const DECISIONS = new Set(["accept", "decline", "review", "plan", "remove"])
+const DECISIONS = new Set([
+  "accept",
+  "decline",
+  "review",
+  "plan",
+  "remove",
+  "publish",
+  "update",
+  "merge",
+  "reject",
+])
 
 /**
  * Validates a decision body and applies it: shared by the admin route and
@@ -29,24 +46,85 @@ export async function decideFromRequest(
   | { ok: true; data: unknown }
   | { ok: false; status: 400 | 404; message: string }
 > {
-  const { decision, name, note } = (body ?? {}) as {
-    decision?: unknown
-    name?: unknown
-    note?: unknown
-  }
+  const { decision, name, note, version, feature, existingOptionDocumentId } =
+    (body ?? {}) as {
+      decision?: unknown
+      name?: unknown
+      note?: unknown
+      version?: number
+      feature?: {
+        summary?: string
+        description?: string
+        category?: string
+        icon?: string
+      }
+      existingOptionDocumentId?: string
+    }
   if (!isDocumentId(id))
     return { ok: false, status: 400, message: "Invalid id" }
   if (typeof decision !== "string" || !DECISIONS.has(decision))
     return {
       ok: false,
       status: 400,
-      message: "decision must be accept, decline, review, plan or remove",
+      message:
+        "Choose publish, reject, accept, update, merge, decline, review, plan or remove.",
     }
 
-  if (decision === "accept" || decision === "decline")
+  if (
+    feature !== undefined &&
+    (!feature ||
+      typeof feature !== "object" ||
+      Array.isArray(feature) ||
+      Object.values(feature).some((value) => typeof value !== "string"))
+  )
+    return {
+      ok: false,
+      status: 400,
+      message: "Feature details must be text fields.",
+    }
+  if (decision === "accept" && !feature?.summary?.trim())
+    return {
+      ok: false,
+      status: 400,
+      message: "Give the new feature a summary so contributors understand it.",
+    }
+  if (!Number.isInteger(version) || (version ?? -1) < 0)
+    return { ok: false, status: 400, message: "Invalid suggestion version." }
+  if (decision === "reject") {
+    if (typeof note !== "string" || !note.trim())
+      return {
+        ok: false,
+        status: 400,
+        message: "Explain why this cannot be published.",
+      }
+
+    return publishSuggestion(strapi, id, version ?? -1, note, decidedBy)
+  }
+  if (decision === "publish")
+    return publishSuggestion(strapi, id, version ?? -1, undefined, decidedBy)
+  if (
+    ["accept", "decline", "update", "merge", "plan"].includes(decision) &&
+    (typeof note !== "string" || !note.trim())
+  )
+    return {
+      ok: false,
+      status: 400,
+      message: "Explain the decision; this note is public.",
+    }
+  if (
+    decision === "accept" ||
+    decision === "decline" ||
+    decision === "update" ||
+    decision === "merge"
+  )
     return decideSuggestion(strapi, {
       documentId: id,
-      decision,
+      decision: decision === "decline" ? "decline" : "accept",
+      decisionKind:
+        decision === "update" || decision === "merge" ? decision : "add",
+      version,
+      feature,
+      existingOptionDocumentId,
       decidedBy,
       name: typeof name === "string" ? name : undefined,
       note: typeof note === "string" ? note : undefined,
@@ -62,6 +140,7 @@ export async function decideFromRequest(
     documentId: id,
     status,
     decidedBy,
+    version,
     note: typeof note === "string" ? note : undefined,
   })
   if (!updated)
@@ -87,14 +166,25 @@ export function toPublicSuggestion(s: SuggestionView) {
     optionKey: s.optionKey,
     status: s.status,
     votes: s.votes,
+    votesThisMonth: s.votesThisMonth ?? 0,
     ...(s.voted !== undefined ? { voted: s.voted } : {}),
     description: s.description,
+    publicationStatus: s.publicationStatus ?? "published",
+    comparison: s.comparison ?? null,
+    acceptedOptionDocumentId: s.acceptedOptionDocumentId ?? null,
+    decisionKind: s.decisionKind ?? null,
+    ...(s.suggestedByProfile
+      ? { suggestedByProfile: s.suggestedByProfile }
+      : {}),
     suggestedByName: s.suggestedByName,
+    ...(s.suggestedByBadges?.length
+      ? { suggestedByBadges: s.suggestedByBadges }
+      : {}),
     createdAt: s.createdAt,
     decidedAt: s.decidedAt ?? null,
-    decisionNote: NOTE_VISIBLE_STATUSES.has(s.status)
-      ? (s.decisionNote ?? null)
-      : null,
+    decisionNote:
+      s.publicDecisionNote ??
+      (NOTE_VISIBLE_STATUSES.has(s.status) ? (s.decisionNote ?? null) : null),
     libraryCount: s.libraries.length,
   }
 }
@@ -114,6 +204,22 @@ function sendError(
  * the editorial board's tally and decisions (admin).
  */
 export default ({ strapi }: { strapi: any }) => ({
+  async catalogue(ctx: any) {
+    ctx.body = await suggestionCatalogue(strapi, ctx.query?.locale)
+  },
+  async round(ctx: any) {
+    ctx.body = { data: await reviewRoundView(strapi, false) }
+  },
+  async manageRound(ctx: any) {
+    const result = await updateReviewRound(strapi, ctx.request.body ?? {})
+    if (!result.ok) {
+      ctx.status = result.status
+      ctx.body = { error: { message: result.message } }
+
+      return
+    }
+    ctx.body = { data: await reviewRoundView(strapi, false) }
+  },
   // GET /api/content-moderation/option-suggestions  (content-api)
   // Every non-removed suggestion, most wanted first; `voted` when the
   // viewer is known.
@@ -122,18 +228,58 @@ export default ({ strapi }: { strapi: any }) => ({
     const rows = await listSuggestions(strapi, {
       statuses: NON_REMOVED_STATUSES,
       viewer: user?.id,
+      publicOnly: true,
+      includeOwnPending: true,
     })
-    ctx.body = { data: rows.map((r) => toPublicSuggestion(r)) }
+    const round = await reviewRoundView(strapi)
+    const conversations = await suggestionConversationSummaries(
+      strapi,
+      rows
+        .filter((r) => r.publicationStatus === "published")
+        .map((r) => r.documentId)
+    )
+    ctx.set?.("Cache-Control", "no-store")
+    ctx.body = {
+      data: (await publicComparisons(strapi, rows)).map((r) => ({
+        ...toPublicSuggestion(r),
+        commentCount: conversations.get(r.documentId)?.count ?? 0,
+        conversation: conversations.get(r.documentId) ?? null,
+      })),
+      round,
+    }
+  },
+
+  async findPublic(ctx: any) {
+    if (!isDocumentId(ctx.params.id)) return ctx.notFound()
+    const rows = await listSuggestions(strapi, {
+      statuses: NON_REMOVED_STATUSES,
+      publicOnly: true,
+    })
+    const item = rows.find((r) => r.documentId === ctx.params.id)
+    if (!item || item.publicationStatus !== "published") return ctx.notFound()
+    const [safe] = await publicComparisons(strapi, [item])
+    const conversations = await suggestionConversationSummaries(strapi, [
+      item.documentId,
+    ])
+    ctx.body = {
+      data: {
+        ...toPublicSuggestion(safe!),
+        commentCount: conversations.get(item.documentId)?.count ?? 0,
+        conversation: conversations.get(item.documentId) ?? null,
+      },
+    }
   },
 
   // POST /api/content-moderation/option-suggestions  (content-api)
   async create(ctx: any) {
     const user = await resolveUser(strapi, ctx)
     if (!user) return ctx.unauthorized("Sign in to suggest an option.")
-    const { optionKey, name, description } = (ctx.request.body ?? {}) as {
+    const { optionKey, name, description, comparison } = (ctx.request.body ??
+      {}) as {
       optionKey?: unknown
       name?: unknown
       description?: unknown
+      comparison?: { documentId?: unknown; explanation?: unknown }
     }
     if (!isSuggestionList(optionKey))
       return sendError(
@@ -148,6 +294,7 @@ export default ({ strapi }: { strapi: any }) => ({
       name,
       description: typeof description === "string" ? description : null,
       baUserId: user.id,
+      comparison,
     })
     if (!result.ok)
       return sendError(

@@ -1,7 +1,10 @@
+import {
+  facilityChecklistFor,
+  type FacilityAnswer,
+  type LibraryTypeValue,
+} from "@repo/shared-data"
 // Rows for the library page's accessibility & facilities grid. Pure, so
 // the page and the tests share it.
-
-import { facilityChecklistFor, type FacilityAnswer } from "@repo/shared-data"
 
 import {
   facilityIcon,
@@ -38,7 +41,7 @@ type TagItem = {
  * entry (FACILITY_CHECKLIST) or by a documented name that clearly means it.
  */
 export function facilityRows(library: {
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
   accessibility?: unknown
   services?: unknown
   amenities?: unknown

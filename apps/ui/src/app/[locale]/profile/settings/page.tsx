@@ -6,6 +6,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/ProfileHero"
 import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
+import { AccountGuard } from "@/components/auth/AccountGuard"
 import { PageHero } from "@/components/ds"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -47,36 +48,39 @@ export default async function ProfileSettingsPage({
   return (
     <>
       <GlobalHeader locale={locale as Locale} />
-      <div
-        className="relative isolate flex min-h-screen w-full flex-col"
-        style={{ background: T.bg.void, color: T.ink.base }}
-      >
-        {profile && username ? (
-          <ProfileHero
+      <AccountGuard mode="identity" expectedScope={session.user.id}>
+        <div
+          className="relative isolate flex min-h-screen w-full flex-col"
+          style={{ background: T.bg.void, color: T.ink.base }}
+        >
+          {profile && username ? (
+            <ProfileHero
+              profile={profile}
+              isOwnProfile
+              isSignedIn
+              tabs={<ProfileTabNav username={username} isOwnProfile />}
+            />
+          ) : (
+            <PageHero
+              compact
+              breadcrumb={[
+                { label: tUi("home"), href: "/" },
+                { label: tUi("settings") },
+              ]}
+              eyebrow="Account settings"
+              eyebrowIcon="mdi:cog-outline"
+              title={`Welcome back, *${name}.*`}
+              lead="Your public profile, who can see it, what we email you about, and your account."
+            />
+          )}
+          <SettingsShell
             profile={profile}
-            isOwnProfile
-            isSignedIn
-            tabs={<ProfileTabNav username={username} isOwnProfile />}
+            sessionUser={session.user}
+            avatarUrl={avatarSrc(profile?.avatar)}
+            imageUploadsEnabled={Boolean(process.env.STRAPI_UPLOAD_API_KEY)}
           />
-        ) : (
-          <PageHero
-            compact
-            breadcrumb={[
-              { label: tUi("home"), href: "/" },
-              { label: tUi("settings") },
-            ]}
-            eyebrow="Account settings"
-            eyebrowIcon="mdi:cog-outline"
-            title={`Welcome back, *${name}.*`}
-            lead="Your public profile, who can see it, what we email you about, and your account."
-          />
-        )}
-        <SettingsShell
-          profile={profile}
-          sessionUser={session.user}
-          avatarUrl={avatarSrc(profile?.avatar)}
-        />
-      </div>
+        </div>
+      </AccountGuard>
     </>
   )
 }

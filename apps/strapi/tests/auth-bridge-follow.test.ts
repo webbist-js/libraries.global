@@ -262,6 +262,18 @@ describe("account follower notifications", () => {
   const request = (action = "follow", targetUsername = "owner") =>
     ctx({ baUserId: "reader", targetUsername, action })
 
+  it("follows a stored historical public username without relaxing new username validation", async () => {
+    fake.store[PROFILE][1].username = "preview-writer"
+    const following = request("follow", "preview-writer")
+    await controller.toggleFollowUser(following)
+    expect(following.body).toEqual({ following: true })
+    expect(enqueue).toHaveBeenCalledTimes(1)
+    for (const target of ["../private", "x".repeat(31), "bad\n"]) {
+      const invalid = request("follow", target)
+      await controller.toggleFollowUser(invalid)
+      expect(invalid.status).toBe(400)
+    }
+  })
   it("records an anonymous alert once for repeated follows", async () => {
     await controller.toggleFollowUser(request())
     // The fake stores connect instructions rather than resolving relations.

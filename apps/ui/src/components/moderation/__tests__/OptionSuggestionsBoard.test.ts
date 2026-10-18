@@ -26,7 +26,24 @@ vi.mock("@/lib/navigation", async () => {
 
 const fetchMock = vi.fn(async () => Response.json({ data: {} }))
 
-const { OptionSuggestionsBoard } = await import("../OptionSuggestionsBoard")
+const { OptionSuggestionsBoard: Board } =
+  await import("../OptionSuggestionsBoard")
+function OptionSuggestionsBoard(props: Parameters<typeof Board>[0]) {
+  return createElement(Board, {
+    round: {
+      documentId: "round",
+      version: 0,
+      opensAt: "2026-10-01T00:00:00Z",
+      cutoffAt: "2026-11-03T00:00:00Z",
+      reviewAt: "2026-11-03T00:00:00Z",
+      capacity: 5,
+      state: "voting",
+      shortlist: [],
+      snapshotAt: null,
+    },
+    ...props,
+  })
+}
 
 function suggestion(over: Partial<OptionSuggestion> = {}): OptionSuggestion {
   return {
@@ -110,9 +127,11 @@ describe("OptionSuggestionsBoard", () => {
     )
     fireEvent.click(screen.getByRole("button", { name: "Decline" }))
     expect(fetchMock).not.toHaveBeenCalled()
-    expect(screen.getByRole("alert").textContent).toMatch(/add a note/i)
+    expect(screen.getByRole("alert").textContent).toMatch(
+      /explain the decision/i
+    )
 
-    fireEvent.change(screen.getByLabelText("Note"), {
+    fireEvent.change(screen.getByLabelText("Public explanation"), {
       target: { value: "Spam name." },
     })
     fireEvent.click(screen.getByRole("button", { name: "Decline" }))
@@ -155,14 +174,14 @@ describe("OptionSuggestionsBoard", () => {
     })
   })
 
-  it("shows a hint for library types instead of a functional note requirement", () => {
+  it("supports editable library types with feature details and a public explanation", () => {
     render(
       createElement(OptionSuggestionsBoard, {
-        initial: [suggestion({ documentId: "a", optionKey: "library_types" })],
+        initial: [suggestion({ optionKey: "library_types" })],
       })
     )
-    expect(
-      screen.getByText(/Accept once the type is in the schema/)
-    ).toBeTruthy()
+    expect(screen.getByLabelText("Feature summary")).toBeTruthy()
+    expect(screen.getByLabelText("Public explanation")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Accept" })).toBeTruthy()
   })
 })

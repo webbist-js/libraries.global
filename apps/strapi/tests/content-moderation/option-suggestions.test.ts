@@ -17,6 +17,7 @@ import { makeFakeStrapi, type FakeStrapiOptions } from "../helpers/fake-strapi"
 
 const LIBRARY = "api::library.library"
 const SERVICE = "api::service.service"
+const TYPE = "api::library-type.library-type"
 const PROFILE = "api::user-profile.user-profile"
 const L1 = { documentId: "lib00000000000000000001", name: "Nailsea Library" }
 const L2 = { documentId: "lib00000000000000000002", name: "Clevedon Library" }
@@ -537,9 +538,9 @@ describe("createSuggestion: duplicates and limits", () => {
     })
   })
 
-  it("refuses a library_types name that matches the libraryType enum", async () => {
+  it("refuses a library_types name that already exists in the catalogue", async () => {
     const { strapi } = memoised(
-      {},
+      { [TYPE]: [{ documentId: "type00000000000000000001", name: "Public" }] },
       {
         contentTypes: {
           [LIBRARY]: {
@@ -922,34 +923,31 @@ describe("decideSuggestion: library_types", () => {
     libraries: [],
   }
 
-  it("refuses to accept a name not in the enum", async () => {
-    const { strapi } = memoised(
-      { [SUGGESTION]: [libType] },
-      {
-        contentTypes: {
-          [LIBRARY]: {
-            attributes: { libraryType: { enum: ["National", "Public"] } },
-          },
-        },
-      }
-    )
+  it("adds a new library type to the editable catalogue", async () => {
+    const { strapi, store } = memoised({ [SUGGESTION]: [libType] })
     expect(
       await decideSuggestion(strapi, {
         documentId: libType.documentId,
         decision: "accept",
         decidedBy: "Board",
+        name: "Makerspace",
       })
     ).toMatchObject({
-      ok: false,
-      status: 400,
-      message:
-        "Add the library type to the schema first, then accept it. Mark it planned until then.",
+      ok: true,
+      data: { status: "accepted", name: "Makerspace" },
     })
+    expect(store[TYPE]).toHaveLength(1)
+    expect(store[TYPE]![0]).toMatchObject({ name: "Makerspace" })
   })
 
-  it("accepts and renames to the enum's spelling, creating no option", async () => {
+  it("reuses an existing library type with its canonical spelling", async () => {
     const { strapi, store } = memoised(
-      { [SUGGESTION]: [libType] },
+      {
+        [SUGGESTION]: [libType],
+        [TYPE]: [
+          { documentId: "type00000000000000000001", name: "Makerspace" },
+        ],
+      },
       {
         contentTypes: {
           [LIBRARY]: {
@@ -970,9 +968,10 @@ describe("decideSuggestion: library_types", () => {
       data: { status: "accepted", name: "Makerspace" },
     })
     expect(store[SERVICE]).toBeUndefined()
+    expect(store[TYPE]).toHaveLength(1)
   })
 
-  it("matches the enum against the board's tidied name, not the stored one", async () => {
+  it("uses the board's tidied name for a new library type", async () => {
     const { strapi, store } = memoised(
       { [SUGGESTION]: [{ ...libType, name: "Prison library" }] },
       {
@@ -998,6 +997,67 @@ describe("decideSuggestion: library_types", () => {
 })
 
 describe("listSuggestions: suggester names and board notes", () => {
+  it("exposes only active public author roles and removes them after profile opt-out", async () => {
+    const roleGrant = "api::role-grant.role-grant"
+    const { strapi, store } = memoised({
+      [SUGGESTION]: [
+        {
+          documentId: "suggestion",
+          name: "Feature",
+          optionKey: "services",
+          status: "open",
+          publicationStatus: "published",
+          suggestedBy: "writer",
+        },
+      ],
+      [PROFILE]: [
+        {
+          documentId: "profile",
+          baUserId: "writer",
+          username: "writer",
+          profileVisibility: "public",
+          publicPrefs: { showActivity: true },
+        },
+      ],
+      [roleGrant]: [
+        {
+          documentId: "editor",
+          baUserId: "writer",
+          role: "wiki_editor",
+          queue: "all",
+          expiresAt: null,
+        },
+        {
+          documentId: "duplicate",
+          baUserId: "writer",
+          role: "journal_editor",
+          queue: "all",
+          expiresAt: null,
+        },
+        {
+          documentId: "expired",
+          baUserId: "writer",
+          role: "editorial_board",
+          queue: "all",
+          expiresAt: "2000-01-01T00:00:00Z",
+        },
+        {
+          documentId: "other",
+          baUserId: "other",
+          role: "moderator",
+          queue: "all",
+          expiresAt: null,
+        },
+      ],
+    })
+    const visible = toPublicSuggestion((await listSuggestions(strapi))[0]!)
+    expect(visible.suggestedByBadges).toEqual(["editor"])
+    expect(visible).not.toHaveProperty("suggestedBy")
+    store[PROFILE]![0].publicPrefs.showActivity = false
+    const anonymous = toPublicSuggestion((await listSuggestions(strapi))[0]!)
+    expect(anonymous.suggestedByName).toBeNull()
+    expect(anonymous).not.toHaveProperty("suggestedByBadges")
+  })
   it("names the suggester when their activity is public, else null", async () => {
     const { strapi } = memoised({
       [SUGGESTION]: [
@@ -1108,6 +1168,25 @@ describe("listSuggestions: statuses filter", () => {
 })
 
 describe("toPublicSuggestion", () => {
+  it("exposes an explicit public explanation without exposing an older internal note", () => {
+    expect(
+      toPublicSuggestion({
+        documentId: "s1",
+        name: "Feature",
+        optionKey: "services",
+        status: "accepted",
+        votes: 0,
+        requests: 0,
+        libraries: [],
+        unlinkedLibraries: [],
+        description: null,
+        suggestedBy: null,
+        suggestedByName: null,
+        decisionNote: "Private board history",
+        publicDecisionNote: "A useful, distinct feature.",
+      }).decisionNote
+    ).toBe("A useful, distinct feature.")
+  })
   const base = {
     documentId: "sug00000000000000000001",
     name: "A",

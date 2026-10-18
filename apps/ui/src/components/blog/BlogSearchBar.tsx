@@ -1,185 +1,59 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
-import { useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
+import { useState } from "react"
 
 import { SearchField } from "@/components/ds"
-import GlobalLink from "@/components/global/GlobalLink"
-import { analyticsAttributes, pushAnalyticsEvent } from "@/lib/analytics-events"
-import { T } from "@/lib/design-tokens"
+import { analyticsAttributes } from "@/lib/analytics-events"
+import { useRouter } from "@/lib/navigation"
+
 import {
-  searchBlogArticles,
-  type BlogArticleSearchHit,
-} from "@/lib/meilisearch"
+  journalHref,
+  DEFAULT_JOURNAL_QUERY,
+  type JournalQuery,
+} from "./journalLanding.helpers"
 
-export function BlogSearchBar({ inputId }: { readonly inputId?: string }) {
-  const tUi = useUiTranslations("ui")
-
-  const locale = useLocale()
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState<BlogArticleSearchHit[]>([])
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+/** Search shares the browse query so relation/language filters and counts stay aligned. */
+export function BlogSearchBar({
+  inputId,
+  initialQuery = "",
+  currentQuery = DEFAULT_JOURNAL_QUERY,
+}: {
+  inputId?: string
+  initialQuery?: string
+  currentQuery?: JournalQuery
+}) {
+  const t = useTranslations("ui")
   const router = useRouter()
-
-  // Debounced search
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([])
-      setOpen(false)
-
-      return
-    }
-    setLoading(true)
-    const t = setTimeout(async () => {
-      try {
-        const res = await searchBlogArticles(query, 8, locale)
-        setResults(res.hits)
-        setOpen(res.hits.length > 0)
-      } catch {
-        setResults([])
-      } finally {
-        setLoading(false)
-      }
-    }, 250)
-
-    return () => clearTimeout(t)
-  }, [query, locale])
-
-  // Close on outside click
-  useEffect(() => {
-    function onPointerDown(e: PointerEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener("pointerdown", onPointerDown)
-
-    return () => document.removeEventListener("pointerdown", onPointerDown)
-  }, [])
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && query.trim()) {
-      pushAnalyticsEvent("search", {
-        interaction_source: "article",
-        search_type: "journal",
-      })
-      router.push(`/journal/search?q=${encodeURIComponent(query.trim())}`)
-      setOpen(false)
-    }
-  }
+  const [query, setQuery] = useState(initialQuery)
 
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        router.push(journalHref(currentQuery, { q: query.trim(), page: 1 }))
+      }}
+      {...analyticsAttributes("search", {
+        interaction_source: "article",
+        search_type: "journal",
+      })}
+    >
       <SearchField
         id={inputId ?? "blog-search"}
-        placeholder={tUi("search_articles_authors_or_topics")}
-        loading={loading}
-        inputRef={inputRef}
+        label={t("search_articles_authors_or_topics")}
+        placeholder={t("search_articles_authors_or_topics")}
         onClear={() => {
           setQuery("")
-          setOpen(false)
-          inputRef.current?.focus()
+          router.push(journalHref(currentQuery, { q: "", page: 1 }))
         }}
         inputProps={{
+          name: "q",
           value: query,
-          onChange: (e) => setQuery(e.target.value),
-          onFocus: () => results.length > 0 && setOpen(true),
-          onKeyDown: handleKeyDown,
+          maxLength: 120,
+          onChange: (event) => setQuery(event.target.value),
           autoComplete: "off",
         }}
       />
-
-      {/* Results dropdown */}
-      {open && results.length > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            left: 0,
-            right: 0,
-            background: T.bg.deep,
-            border: `1px solid ${T.border.line}`,
-            boxShadow: "0 12px 28px rgba(23,22,43,.08)",
-            borderRadius: "16px",
-            overflow: "hidden",
-            zIndex: 50,
-          }}
-        >
-          {results.map((hit, i) => (
-            <GlobalLink
-              key={hit.documentId}
-              href={`/journal/${hit.section_slug ?? "general"}/${hit.slug}`}
-              {...analyticsAttributes("select_content", {
-                interaction_source: "article",
-                content_type: "journal",
-                content_id: hit.documentId,
-              })}
-              onClick={() => setOpen(false)}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "2px",
-                padding: "11px 14px",
-                borderTop: i > 0 ? `1px solid ${T.border.line}` : undefined,
-                textDecoration: "none",
-                transition: "background 150ms",
-              }}
-              className="hover:bg-(--t-bg-surface)"
-            >
-              <span
-                style={{
-                  fontSize: "15px",
-                  color: T.ink.base,
-                  fontWeight: 500,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {hit.title ?? hit.slug}
-              </span>
-              {hit.section_slug && (
-                <span style={{ fontSize: "13px", color: T.ink.dim }}>
-                  {hit.section_slug}
-                </span>
-              )}
-            </GlobalLink>
-          ))}
-          {query.trim() && (
-            <GlobalLink
-              href={`/journal/search?q=${encodeURIComponent(query.trim())}`}
-              {...analyticsAttributes("search", {
-                interaction_source: "article",
-                search_type: "journal",
-              })}
-              onClick={() => setOpen(false)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "10px 14px",
-                borderTop: `1px solid ${T.border.line}`,
-                textDecoration: "none",
-                fontSize: "14px",
-                color: T.accent.primary,
-                fontWeight: 600,
-              }}
-              className="hover:bg-(--t-bg-surface)"
-            >
-              View all results for &ldquo;{query}&rdquo; →
-            </GlobalLink>
-          )}
-        </div>
-      )}
-    </div>
+    </form>
   )
 }
-
-export default BlogSearchBar

@@ -1,9 +1,11 @@
 import { Icon } from "@iconify/react"
+import { reviewCategoryOf } from "@repo/access"
 import { isStaleTimetableSuggestion } from "@repo/shared-data"
 import { notFound } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 import type { ReactNode } from "react"
 
+import { BackLink } from "@/components/ds/BackLink"
 import {
   ArticleReviewPanel,
   ClaimPanel,
@@ -28,6 +30,7 @@ import {
   StatusBadge,
   VerificationPanel,
 } from "@/components/moderation"
+import { reviewReturnHref } from "@/components/moderation/queue-navigation"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
@@ -54,11 +57,11 @@ function Section({
   return (
     <section
       aria-label={title}
-      className="flex flex-col gap-4 rounded-[20px] p-5 sm:p-6"
+      className="flex flex-col gap-4 rounded-[24px] p-5 sm:p-6"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
       <h2
-        className="m-0 text-[20px]"
+        className="m-0 text-[24px] leading-tight tracking-tight"
         style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
       >
         {title}
@@ -244,14 +247,20 @@ function LoadFailed() {
 
 export default async function ReviewSubmissionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; documentId: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
   const tUi = await getUiTranslations("ui")
 
   const { documentId } = await params
+  const search = await (searchParams ?? Promise.resolve({}))
+  const requestedReturn = reviewReturnHref(
+    "returnTo" in search ? search.returnTo : undefined
+  )
   const { user, accessUnknown } = await requireModerator(
-    `/contribute/moderation/${encodeURIComponent(documentId)}`
+    `/contribute/moderation/${encodeURIComponent(documentId)}${requestedReturn ? `?returnTo=${encodeURIComponent(requestedReturn)}` : ""}`
   )
   if (!isDocumentIdParam(documentId)) notFound()
   // The bridge didn't answer: the viewer may well moderate, and the
@@ -281,6 +290,12 @@ export default async function ReviewSubmissionPage({
   const d = detailRes.body?.data
   if (detailRes.status !== 200 || !d) return <LoadFailed />
   const events = eventsRes.body?.data ?? []
+  const category = reviewCategoryOf(d.submissionType)
+  const returnTo =
+    requestedReturn ??
+    (category
+      ? `/contribute/moderation?category=${category}`
+      : "/contribute/moderation")
   const created = await createdRecord(d)
   const panelContext: PanelContext = {
     localeNames: Object.fromEntries(locales.map((l) => [l.code, l.name])),
@@ -308,7 +323,10 @@ export default async function ReviewSubmissionPage({
         </div>
       </ModerationHero>
 
-      <div className="mx-auto grid w-full max-w-[1360px] gap-8 px-4 pt-8 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="mx-auto grid w-full max-w-[1360px] gap-8 px-4 pt-8 pb-16 text-[16px] [--spacing:0.25rem] sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="lg:col-span-2">
+          <BackLink href={returnTo}>Back to the queue</BackLink>
+        </div>
         <div className="flex min-w-0 flex-col gap-6">
           <Section title={tUi("about_this_submission")}>
             <KeyValueList
@@ -382,6 +400,7 @@ export default async function ReviewSubmissionPage({
               canPublish={d.canPublish}
               reviewedAt={d.reviewedAt}
               driveDocumentId={d.drive?.documentId ?? null}
+              returnTo={returnTo}
             />
           </Section>
           <Section title={tUi("history")}>
@@ -433,7 +452,7 @@ export default async function ReviewSubmissionPage({
               </Link>
             ))}
             <Link
-              href="/contribute/moderation"
+              href={returnTo}
               className="inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline"
               style={{ color: T.accent.primary }}
             >

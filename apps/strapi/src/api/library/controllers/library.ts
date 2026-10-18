@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   normalizeOpeningSchedule,
   atlasWeeklyIntervals,
   effectiveLibraryWeekHours,
@@ -69,7 +70,7 @@ function toAtlasProperties(l: AtlasSource, notices: LibraryNotice[] = []) {
     id: l.documentId,
     name: l.name ?? "",
     slug: l.slug ?? "",
-    type: l.libraryType ?? "Other",
+    type: libraryTypeName(l.libraryType) ?? "Other",
     status: l.operationalStatus ?? "unknown",
     operator: l.operatorType ?? null,
     city: l.city ?? null,
@@ -201,7 +202,6 @@ export default factories.createCoreController(
               fields: [
                 "name",
                 "slug",
-                "libraryType",
                 "operationalStatus",
                 "operatorType",
                 "city",
@@ -216,6 +216,7 @@ export default factories.createCoreController(
                 "completeness",
               ] as never,
               populate: {
+                libraryType: { fields: ["name"] },
                 continent: { fields: ["slug"] },
                 country: { fields: ["slug", "name"] },
                 region: { fields: ["slug", "name"] },

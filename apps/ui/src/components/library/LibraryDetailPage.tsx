@@ -1,13 +1,16 @@
 import {
+  libraryTypeName,
   hasOpeningHours,
   normalizeMobileTimetable,
   type LibraryNotice,
 } from "@repo/shared-data"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
 import type { BreadcrumbItem } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
+import GlobalLink from "@/components/global/GlobalLink"
 import { CurrentLibraryMarker } from "@/components/library/CurrentLibraryMarker"
 import { facilityRows } from "@/components/library/facility-rows"
 import { LibrariesOnTheMove } from "@/components/library/LibrariesOnTheMove"
@@ -47,6 +50,7 @@ import { verifyRecordOf } from "@/components/library/verify.logic"
 import { StopsTimesSection } from "@/components/mobile/StopsTimesSection"
 import { placeAddHref } from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
+import { routing } from "@/lib/navigation"
 import { publicCanonicalUrl } from "@/lib/seo/metadata"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
 import type { LibraryAreaData } from "@/lib/strapi-api/content/library-area"
@@ -100,6 +104,7 @@ export function LibraryDetailPage({
   translateLocales = [],
 }: LibraryDetailPageProps) {
   const tUi = useUiTranslations("ui")
+  const tDiscovery = useUiTranslations("discovery")
 
   if (library) library = { ...library, notices } as PopulatedLibraryData
   if (!library) {
@@ -117,6 +122,12 @@ export function LibraryDetailPage({
   }
 
   const rec = library as unknown as Record<string, unknown>
+  const contentLocale =
+    typeof rec.locale === "string"
+      ? rec.locale
+      : untranslatedLocale
+        ? routing.defaultLocale
+        : locale
   const heroUrl = formatStrapiMediaUrl(library.heroImage?.url)
   const coords = toLatLng(library.location)
 
@@ -172,7 +183,7 @@ export function LibraryDetailPage({
   const facilities = facilityRows(library)
   const unanswered = facilities.filter((r) => r.state === "unknown")
   const hasAccess =
-    library.libraryType !== "Digital" ||
+    libraryTypeName(library.libraryType) !== "Digital" ||
     facilities.some((row) => row.category === "accessibility") ||
     Boolean(rec.accessibilityNotes)
   const hasFeed = Boolean(rec.hasActiveFeed)
@@ -184,7 +195,7 @@ export function LibraryDetailPage({
   )
 
   const anchors = [
-    library.libraryType === "Mobile"
+    libraryTypeName(library.libraryType) === "Mobile"
       ? LIBRARY_ANCHORS.stops
       : LIBRARY_ANCHORS.visit,
     ...(hasAccess
@@ -205,13 +216,15 @@ export function LibraryDetailPage({
         ]
       : []),
     LIBRARY_ANCHORS.events,
-    ...(library.libraryType === "Digital"
+    ...(libraryTypeName(library.libraryType) === "Digital"
       ? []
       : [
           {
             ...LIBRARY_ANCHORS.area,
             label:
-              library.libraryType === "Mobile" ? "Base and returns" : "Nearby",
+              libraryTypeName(library.libraryType) === "Mobile"
+                ? "Base and returns"
+                : "Nearby",
           },
         ]),
     { ...LIBRARY_ANCHORS.changes, label: "Sources & reuse" },
@@ -238,7 +251,7 @@ export function LibraryDetailPage({
                   documentId: library.documentId,
                   slug: library.slug ?? "",
                   name: library.name ?? "This library",
-                  libraryType: library.libraryType,
+                  libraryType: libraryTypeName(library.libraryType),
                   verifiedSections: rec.verifiedSections,
                   lastVerifiedAt: rec.lastVerifiedAt,
                   city: library.city,
@@ -251,7 +264,7 @@ export function LibraryDetailPage({
                   unanswered.filter((row) => row.category !== "service").length
                 }
                 hasHours={
-                  library.libraryType === "Mobile"
+                  libraryTypeName(library.libraryType) === "Mobile"
                     ? Boolean(
                         normalizeMobileTimetable(rec.mobileTimetable)?.visits
                           .length
@@ -276,7 +289,7 @@ export function LibraryDetailPage({
           <Container className="pt-7 pb-22">
             <div className="flex flex-wrap items-start gap-6">
               <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
-                {library.libraryType === "Mobile" ? (
+                {libraryTypeName(library.libraryType) === "Mobile" ? (
                   <StopsTimesSection
                     slug={library.slug ?? undefined}
                     id={library.documentId}
@@ -309,7 +322,7 @@ export function LibraryDetailPage({
                   library={library}
                   includeAmenities={!hasAccess}
                 />
-                {library.libraryType !== "Mobile" &&
+                {libraryTypeName(library.libraryType) !== "Mobile" &&
                 library.mobileLibraries?.length ? (
                   <LibrariesOnTheMove libraries={library.mobileLibraries} />
                 ) : null}
@@ -351,7 +364,7 @@ export function LibraryDetailPage({
                   </LibrarySectionCard>
                 ) : null}
 
-                {library.libraryType === "Mobile" ? (
+                {libraryTypeName(library.libraryType) === "Mobile" ? (
                   <LibrarySectionCard
                     id="area"
                     title="Base and returns"
@@ -366,7 +379,8 @@ export function LibraryDetailPage({
                       Suggest return arrangements
                     </OpenCorrectionLink>
                   </LibrarySectionCard>
-                ) : library.libraryType === "Digital" ? null : (
+                ) : libraryTypeName(library.libraryType) ===
+                  "Digital" ? null : (
                   <LibraryAreaSection
                     addHref={placeAddHref({
                       continent: library.continent?.slug ?? undefined,
@@ -385,6 +399,14 @@ export function LibraryDetailPage({
                   datasets={datasets}
                   reuseUrl={publicCanonicalUrl(canonicalUrl ?? path)}
                 />
+                <DiscussionFeed
+                  target={{
+                    uid: "api::library.library",
+                    documentId: library.documentId,
+                    locale: contentLocale,
+                  }}
+                  subjectSlug="library-life"
+                />
               </div>
 
               <aside
@@ -392,6 +414,19 @@ export function LibraryDetailPage({
                 className="top-32 flex flex-[1_1_280px] flex-col gap-4 lg:sticky lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto lg:overscroll-contain"
               >
                 <LibraryRecordPanel followers={followers} library={library} />
+                <GlobalLink
+                  className="mt-4 block rounded-xl border p-4 text-sm font-semibold"
+                  href={`/contribute/knowledge/new?type=journal&library=${encodeURIComponent(library.documentId)}`}
+                  style={{ borderColor: T.border.line }}
+                >
+                  {tDiscovery("writeLibrary")}
+                </GlobalLink>
+                <GlobalLink
+                  className="mt-2 block text-sm underline"
+                  href={`/journal?origin=all&library=${encodeURIComponent(library.documentId)}`}
+                >
+                  {tDiscovery("readLibrary")}
+                </GlobalLink>
                 <LibraryTasksPanel
                   facilityQuestions={
                     unanswered.filter((row) => row.category !== "service")

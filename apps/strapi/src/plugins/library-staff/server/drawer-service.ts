@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   addDays,
   dayRoute,
   GAPS,
@@ -123,7 +124,7 @@ export default ({ strapi }: { strapi: any }) => ({
    * plus the next route from the timetable.
    */
   async live(lib: any): Promise<DrawerLive | null> {
-    if (lib.libraryType !== "Mobile") return null
+    if (libraryTypeName(lib.libraryType) !== "Mobile") return null
     const tt = normalizeMobileTimetable(lib.mobileTimetable)
     const tz = lib.timezone ?? "UTC"
     const now = new Date()
@@ -166,7 +167,7 @@ export default ({ strapi }: { strapi: any }) => ({
       country: lib.country?.slug ?? null,
       region: lib.region?.slug ?? null,
       area: lib.area?.slug ?? null,
-      libraryType: lib.libraryType ?? null,
+      libraryType: libraryTypeName(lib.libraryType) ?? null,
       source: librarySourceKey(lib.sourceRecords),
       completeness: lib.completeness ?? null,
       createdAt: lib.createdAt ?? null,
@@ -200,7 +201,6 @@ export default ({ strapi }: { strapi: any }) => ({
         "documentId",
         "name",
         "slug",
-        "libraryType",
         "mobileTimetable",
         "timezone",
         "operationalStatus",
@@ -209,6 +209,7 @@ export default ({ strapi }: { strapi: any }) => ({
         "gaps",
       ],
       populate: {
+        libraryType: { fields: ["name"] },
         sourceRecords: { fields: ["dataset", "role"] },
         continent: { fields: ["slug"] },
         country: { fields: ["slug"] },
@@ -238,7 +239,7 @@ export default ({ strapi }: { strapi: any }) => ({
         name: lib.name,
         slug: lib.slug,
         path: `/${path}`,
-        libraryType: lib.libraryType,
+        libraryType: libraryTypeName(lib.libraryType),
         role: member.staffRole,
       },
       suggestions,

@@ -23,16 +23,9 @@ export const linkPopulate = {
 export const basicImagePopulate = { populate: { media: true } }
 
 export const homepageLibraryPopulate = {
-  fields: [
-    "name",
-    "shortName",
-    "summary",
-    "slug",
-    "city",
-    "libraryType",
-    "website",
-  ],
+  fields: ["name", "shortName", "summary", "slug", "city", "website"],
   populate: {
+    libraryType: { fields: ["name"] },
     heroImage: true,
     country: { fields: ["name"] },
     continent: { fields: ["name", "code"] },

@@ -21,7 +21,7 @@ export function FindSkeletonGrid({ count = 6 }: { count?: number }) {
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
-          className="animate-pulse overflow-hidden"
+          className="overflow-hidden motion-safe:animate-pulse"
           style={{
             background: T.bg.deep,
             border: `1px solid ${T.border.line}`,

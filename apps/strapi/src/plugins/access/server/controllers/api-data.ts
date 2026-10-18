@@ -1,4 +1,4 @@
-import { isLibraryEntityRef } from "@repo/shared-data"
+import { isLibraryEntityRef, libraryTypeName } from "@repo/shared-data"
 
 import { isValidServiceSecret } from "../../../../utils/service-secret"
 import { AccessError, isDocumentId } from "../utils/admin"
@@ -11,7 +11,6 @@ const FIELDS = [
   "entityRef",
   "shortName",
   "summary",
-  "libraryType",
   "operationalStatus",
   "operatorType",
   "streetAddress",
@@ -106,6 +105,7 @@ export default ({ strapi }: { strapi: any }) => {
         sort: "documentId:asc",
         limit: detail ? 1 : limit + 1,
         populate: {
+          libraryType: { fields: ["name"] },
           country: { fields: ["name", "slug", "iso2"] },
           region: { fields: ["name", "slug"] },
           sourceRecords: true,
@@ -138,6 +138,7 @@ export default ({ strapi }: { strapi: any }) => {
       const records = page.map((row: any) => ({
         documentId: row.documentId,
         ...pick(row, FIELDS),
+        libraryType: libraryTypeName(row.libraryType),
         country: row.country
           ? pick(row.country, ["name", "slug", "iso2"])
           : null,

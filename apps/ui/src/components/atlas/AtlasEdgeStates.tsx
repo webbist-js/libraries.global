@@ -14,27 +14,28 @@ export function AtlasLoading({
   readonly listReady: boolean
   readonly onOpenList: () => void
 }) {
+  const tUi = useUiTranslations("ui")
+
   return (
     <div
-      className="flex items-center justify-between gap-4 rounded-[18px] border bg-white px-[18px] py-3.5"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border bg-white px-4 py-3.5 sm:gap-4"
       style={{ borderColor: T.border.line }}
       role="status"
+      aria-busy="true"
     >
       <span className="flex items-center gap-3">
         <span
           aria-hidden="true"
-          className="size-[22px] animate-spin rounded-full border-[3px] motion-reduce:animate-none"
+          className="size-[22px] shrink-0 rounded-full border-[3px] motion-safe:animate-spin"
           style={{
             borderColor: T.accent.chip,
             borderTopColor: T.accent.primary,
           }}
         />
         <span>
-          <strong className="block">Loading the map…</strong>
+          <strong className="block">{tUi("loading_map")}</strong>
           <span className="text-[14px]" style={{ color: T.ink.dim }}>
-            {listReady
-              ? "The library list is already available."
-              : "Fetching libraries."}
+            {listReady ? tUi("library_list_ready") : tUi("fetching_libraries")}
           </span>
         </span>
       </span>
@@ -46,7 +47,7 @@ export function AtlasLoading({
           style={{ borderColor: T.border.hi }}
         >
           <Icon name="list" size={15} />
-          Open list
+          {tUi("open_list")}
         </button>
       ) : null}
     </div>

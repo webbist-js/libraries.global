@@ -35,11 +35,13 @@ export function OnboardingShell({
   sessionUser,
   initialProfile,
   avatarUrl,
+  imageUploadsEnabled = true,
 }: {
   sessionUser: SessionUser
   initialProfile: UserProfile | null
   /** The browser-safe avatar URL (`avatarSrc`), or null. */
   avatarUrl: string | null
+  imageUploadsEnabled?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -52,6 +54,7 @@ export function OnboardingShell({
     profile: initialProfile,
     sessionName: sessionUser.name ?? "",
     avatarUrl,
+    imageUploadsEnabled,
   })
 
   const handleSave = async (then: "profile" | "home") => {

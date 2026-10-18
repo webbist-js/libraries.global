@@ -18,14 +18,14 @@ function Rule({
 }) {
   return (
     <div
-      className="flex flex-col gap-0.5"
+      className="grid grid-cols-[minmax(90px,0.4fr)_minmax(0,1fr)] gap-3"
       style={{ borderTop: `1px solid ${T.border.divider}`, padding: "10px 0" }}
     >
-      <dt className="text-[14px] font-semibold" style={{ color: T.ink.dim }}>
+      <dt className="text-[13px]" style={{ color: T.ink.dim }}>
         {label}
       </dt>
       <dd
-        className="m-0 text-[15px] leading-[1.5]"
+        className="m-0 text-[14px] leading-[1.5]"
         style={{ color: T.ink.base }}
       >
         {children}
@@ -42,10 +42,12 @@ function Rule({
 export function DriveRules({
   drive,
   source,
+  total = null,
 }: {
   readonly drive: Drive
   /** The scope's Dataset, by name. */
   readonly source: string | null
+  readonly total?: number | null
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -66,8 +68,8 @@ export function DriveRules({
     >
       <h2
         id="drive-rules-heading"
-        className="m-0 mb-1 text-[17px] font-bold"
-        style={{ color: T.ink.base }}
+        className="m-0 mb-1 text-[27px] font-medium"
+        style={{ color: T.ink.base, fontFamily: T.font.serif }}
       >
         Rules
       </h2>
@@ -99,6 +101,9 @@ export function DriveRules({
         {goal !== 100 ? (
           <Rule label={tUi("goal")}>
             {goal}% of the drive’s {unitNoun(drive.unit, 2)}
+            {total != null
+              ? ` (${Math.ceil((total * goal) / 100).toLocaleString("en-GB")})`
+              : ""}
           </Rule>
         ) : null}
         {drive.status === "scheduled" ? (
@@ -113,8 +118,8 @@ export function DriveRules({
         )}
       </dl>
       <p
-        className="m-0 pt-2 text-[14px] leading-[1.5]"
-        style={{ color: T.ink.dim, borderTop: `1px solid ${T.border.divider}` }}
+        className="m-0 mt-1 rounded-[14px] p-3 text-[12px] leading-[1.5]"
+        style={{ color: T.ink.dim, background: T.bg.void }}
       >
         Every task is an ordinary suggestion, checked by a moderator before it
         changes a record. Libraries added after the drive opened don’t count.

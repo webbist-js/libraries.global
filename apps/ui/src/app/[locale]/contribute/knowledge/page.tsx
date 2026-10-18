@@ -1,27 +1,19 @@
+import { canDirectEdit } from "@repo/access"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import {
   type ArticleKind,
   isArticleKind,
 } from "@/components/contribute/article-editor/article.types"
-import {
-  docsSectionSlugsOf,
-  toDocsSections,
-} from "@/components/docs/docs.config"
 import { sessionCapabilities } from "@/lib/access-server"
+import { fetchArticleBrowse } from "@/lib/article-discovery"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import { T } from "@/lib/design-tokens"
-import { editableKinds, requireEditorOrApply } from "@/lib/editor-gate"
+import { ownsJournalArticle } from "@/lib/journal-ownership-server"
 import { privateMetadata } from "@/lib/seo/metadata"
-import {
-  fetchDocsWikiArticles,
-  fetchRecentBlogArticles,
-  fetchWikiSections,
-} from "@/lib/strapi-api/content/server"
 
 import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 import {
@@ -55,7 +47,13 @@ async function fetchArticleDrafts(user: {
         submissionType?: string
         status?: string
         targetSlug?: string | null
-        draftData?: { title?: unknown; proposedTitle?: unknown } | null
+        draftData?: {
+          title?: unknown
+          proposedTitle?: unknown
+          locale?: string
+          contentLocale?: string
+          sourceLocale?: string
+        } | null
         updatedAt?: string
       }[]
     }
@@ -63,7 +61,7 @@ async function fetchArticleDrafts(user: {
     return (json.data ?? [])
       .filter(
         (s) =>
-          s.status === "draft" &&
+          ["draft", "needs_info", "pending"].includes(s.status ?? "") &&
           (s.submissionType === "wiki_edit" ||
             s.submissionType === "blog_submission") &&
           s.draftData
@@ -79,6 +77,9 @@ async function fetchArticleDrafts(user: {
               ? s.draftData.proposedTitle
               : "",
         targetSlug: s.targetSlug ?? null,
+        locale: s.draftData?.contentLocale ?? s.draftData?.locale ?? null,
+        status: s.status ?? "draft",
+        sourceLocale: s.draftData?.sourceLocale ?? null,
         updatedAt: s.updatedAt ?? new Date(0).toISOString(),
       }))
   } catch {
@@ -93,7 +94,7 @@ export default async function KnowledgeEditorPage({
   params: Promise<{ locale: string }>
   searchParams: Promise<{ type?: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const p = await getUiTranslations("publishing")
 
   const [{ locale }, { type }, session] = await Promise.all([
     params,
@@ -101,73 +102,68 @@ export default async function KnowledgeEditorPage({
     getSessionSSR(await headers()),
   ])
   if (!session?.user) redirect("/auth/signin?callbackUrl=/contribute/knowledge")
-  // Editors only; `?type=` asks for that kind's editor role.
-  requireEditorOrApply(session.user, isArticleKind(type) ? type : undefined)
-
   const caps = sessionCapabilities(session.user)
-  const kinds = editableKinds((cap) => caps.set.has(cap))
-  const initialKind: ArticleKind =
-    isArticleKind(type) && kinds.includes(type) ? type : kinds[0]!
-
-  const [wiki, wikiSections, blog, drafts] = await Promise.all([
-    kinds.includes("knowledge")
-      ? fetchDocsWikiArticles(locale as Locale)
-      : Promise.resolve(null),
-    kinds.includes("knowledge")
-      ? fetchWikiSections(locale as Locale)
-      : Promise.resolve(null),
-    kinds.includes("journal")
-      ? fetchRecentBlogArticles(locale as Locale)
-      : Promise.resolve(null),
-    fetchArticleDrafts(session.user).then((list) =>
-      list.filter((d) => kinds.includes(d.kind))
-    ),
-  ])
-
-  const docsSections = toDocsSections(wikiSections?.data)
-  const sectionTitle = (slug: string) =>
-    docsSections.find((s) => s.slug === slug)?.title ?? slug
-  const articles: EditableArticle[] = [
-    ...(wiki?.data ?? []).map((a) => {
-      return {
-        kind: "knowledge" as const,
-        documentId: a.documentId,
-        slug: a.slug ?? "",
-        title: a.title ?? a.slug ?? "Untitled",
-        sections: docsSectionSlugsOf(a).map(sectionTitle),
-        publishedAt: a.publishedAt ?? null,
-        updatedAt: a.updatedAt ?? null,
-        contributorCount: 0,
-      }
-    }),
-    ...(blog?.data ?? []).map((a) => ({
-      kind: "journal" as const,
-      documentId: a.documentId,
-      slug: a.slug ?? "",
-      title: a.title ?? a.slug ?? "Untitled",
-      sections: a.section?.name ? [a.section.name] : [],
-      publishedAt: a.publishedAt ?? null,
-      updatedAt: a.updatedAt ?? null,
-      contributorCount: 0,
-    })),
+  const creatableKinds: ArticleKind[] = [
+    "journal",
+    ...(caps.set.has("docs.directEdit") ? ["knowledge" as const] : []),
   ]
-    .filter((a) => a.slug)
-    .sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""))
+  const kinds: ArticleKind[] = ["journal", "knowledge"]
+  const initialKind: ArticleKind = isArticleKind(type) ? type : "journal"
+  const [wiki, blog, drafts] = await Promise.all([
+    fetchArticleBrowse(
+      "wiki",
+      `preferredLocale=${encodeURIComponent(locale)}&pageSize=24`
+    ).catch(() => null),
+    fetchArticleBrowse(
+      "blog",
+      `preferredLocale=${encodeURIComponent(locale)}&collection=all&pageSize=24`
+    ).catch(() => null),
+    fetchArticleDrafts(session.user),
+  ])
+  const articles: EditableArticle[] = await Promise.all(
+    [
+      ...(wiki?.items ?? []).map((a) => ({ ...a, kind: "knowledge" as const })),
+      ...(blog?.items ?? []).map((a) => ({ ...a, kind: "journal" as const })),
+    ].map(async (a) => ({
+      kind: a.kind,
+      documentId: a.documentId,
+      slug: a.slug,
+      title: a.title,
+      sections: a.facets.sections?.map((section) => section.label) ?? [],
+      publishedAt: a.publishedAt,
+      updatedAt: a.updatedAt,
+      locale: a.locale,
+      publicPath:
+        a.kind === "journal"
+          ? `/journal/${a.section?.slug ?? "general"}/${a.slug}`
+          : `/knowledge/${a.sectionSlugs[0] ?? a.section?.slug ?? "general"}/${a.slug}`,
+      canEdit:
+        canDirectEdit(
+          caps,
+          a.kind === "journal" ? "journal" : "docs",
+          a.locale
+        ) ||
+        (a.kind === "journal" &&
+          (await ownsJournalArticle(session.user, a.slug))),
+    }))
+  )
 
   return (
     <div
       style={{ background: T.bg.void, minHeight: "100vh", color: T.ink.base }}
     >
       <ContributeSectionHeader
-        section={tUi("knowledge_editor")}
-        title="Write for *the knowledge base.*"
-        lead="Add or improve Knowledge articles and Journal stories, or translate them. Tag them to sections so readers can find them."
+        compact
+        section={p("newWriting")}
+        title={p("newWriting")}
+        lead={p("writingLead")}
       />
       <KnowledgeEditorLanding
         articles={articles}
         drafts={drafts}
         initialKind={initialKind}
         kinds={kinds}
+        creatableKinds={creatableKinds}
       />
     </div>
   )

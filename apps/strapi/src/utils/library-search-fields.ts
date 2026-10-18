@@ -1,11 +1,5 @@
-/**
- * Derived fields the library search index carries so Find libraries can
- * filter, count and sort in Meilisearch instead of loading every record:
- * "open now", the record's gaps, digital collections, checked hours, the
- * stored completeness, and a 1° grid cell for the homepage globe.
- */
-
 import {
+  libraryTypeName,
   addDays,
   librarySourceKey,
   type LibrarySourceRecord,
@@ -24,6 +18,12 @@ import {
   WEEKDAYS,
   type LibraryNotice,
 } from "@repo/shared-data"
+/**
+ * Derived fields the library search index carries so Find libraries can
+ * filter, count and sort in Meilisearch instead of loading every record:
+ * "open now", the record's gaps, digital collections, checked hours, the
+ * stored completeness, and a 1° grid cell for the homepage globe.
+ */
 
 export {
   ATLAS_OPEN_DAYS as OPEN_DAYS,
@@ -126,7 +126,7 @@ export function librarySearchFields(
 ): Record<string, unknown> {
   const cell = geoCell(lat, lng)
   const tt =
-    entry.libraryType === "Mobile"
+    libraryTypeName(entry.libraryType) === "Mobile"
       ? normalizeMobileTimetable(entry.mobileTimetable)
       : null
   const tz = atlasTimezone(

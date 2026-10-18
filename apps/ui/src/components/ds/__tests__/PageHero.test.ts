@@ -24,6 +24,22 @@ const { PageHero } = await import("../PageHero")
 const h1 = (html: string) => /<h1[^>]*>(.*?)<\/h1>/s.exec(html)?.[1] ?? ""
 
 describe("PageHero title", () => {
+  it("supports ink emphasis and a summary before the section tabs", () => {
+    const html = renderToStaticMarkup(
+      createElement(PageHero, {
+        title: "A *drive*",
+        emphasisTone: "ink",
+        prelude: "Metadata",
+        footer: "Progress summary",
+        tabs: "Section tabs",
+      })
+    )
+    expect(h1(html)).toContain("var(--t-ink-base)")
+    expect(html.indexOf("Metadata")).toBeLessThan(html.indexOf("<h1"))
+    expect(html.indexOf("Progress summary")).toBeLessThan(
+      html.indexOf("Section tabs")
+    )
+  })
   it("renders *markup* as italic by default", () => {
     const html = renderToStaticMarkup(
       createElement(PageHero, { eyebrow: "X", title: "Review *submissions*" })

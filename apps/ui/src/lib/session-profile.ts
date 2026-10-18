@@ -17,6 +17,10 @@ import { type DismissiblePrompt, isDismissiblePrompt } from "@repo/shared-data"
 import { z } from "zod"
 
 import { billingConfig } from "./billing/config"
+import {
+  compositionPreferencesFrom,
+  type CompositionPreferences,
+} from "./composition-language"
 
 export const SESSION_PROFILE_TTL_MS = 60_000
 export const SESSION_PROFILE_MAX_ROLE_GRANTS = 50
@@ -41,6 +45,7 @@ export type SessionProfileTeam = {
 export const SESSION_PROFILE_MAX_TEAMS = 10
 
 export type SessionProfile = {
+  compositionPreferences?: CompositionPreferences
   paidMembership?: PaidMembership | null
   staff: (StaffClaim & { name: string; slug: string; libraryType: string })[]
   contributorRole: ContributorRole
@@ -60,6 +65,8 @@ export type SessionProfile = {
 }
 
 const Body = z.object({
+  country: z.unknown().optional(),
+  languages: z.unknown().optional(),
   paidMembership: z.unknown().optional(),
   staff: z
     .array(
@@ -238,6 +245,7 @@ async function loadSessionProfile(
       ? d.contributorRole
       : "reader"
     const value: SessionProfile = {
+      compositionPreferences: compositionPreferencesFrom(d),
       ...(isPaidMembership(d.paidMembership) &&
       d.paidMembership.mode === billingConfig().mode
         ? { paidMembership: d.paidMembership }

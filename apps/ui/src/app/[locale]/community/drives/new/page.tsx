@@ -1,8 +1,10 @@
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import { AccountGuard } from "@/components/auth/AccountGuard"
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
 import { BOARD_FLOW, DriveFlowPills } from "@/components/drives/DriveFlowPills"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { T } from "@/lib/design-tokens"
 import { drivePlaceRefs } from "@/lib/drives/drive-view"
 import { fetchPlaceNames } from "@/lib/drives/drive-view-server"
@@ -41,28 +43,30 @@ export default async function NewDrivePage({
   )
 
   return (
-    <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.void, color: T.ink.base }}
-    >
-      <CommunitySectionHeader
-        crumbs={[
-          { label: tUi("drives"), href: "/community#drives" },
-          { label: tUi("new_drive") },
-        ]}
-        title="New *drive*"
-        lead="Create a drive for the community. Pick the job and the place, and the live preview shows what helpers will see."
+    <AccountGuard expectedScope={contributionAccountScope(user)}>
+      <div
+        className="relative isolate flex min-h-screen w-full flex-col"
+        style={{ background: T.bg.void, color: T.ink.base }}
       >
-        <DriveFlowPills steps={BOARD_FLOW} />
-      </CommunitySectionHeader>
-      <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
-        <DriveBuilder
-          initial={builderStateFromPrefill(prefill, names, "board")}
-          locale={locale}
-          userId={user.id}
-          restoreDraft={prefillQuery(prefill) === ""}
-        />
-      </main>
-    </div>
+        <CommunitySectionHeader
+          crumbs={[
+            { label: tUi("drives"), href: "/community#drives" },
+            { label: tUi("new_drive") },
+          ]}
+          title="New *drive*"
+          lead="Create a drive for the community. Pick the job and the place, and the live preview shows what helpers will see."
+        >
+          <DriveFlowPills steps={BOARD_FLOW} />
+        </CommunitySectionHeader>
+        <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+          <DriveBuilder
+            initial={builderStateFromPrefill(prefill, names, "board")}
+            locale={locale}
+            userId={user.id}
+            restoreDraft={prefillQuery(prefill) === ""}
+          />
+        </main>
+      </div>
+    </AccountGuard>
   )
 }

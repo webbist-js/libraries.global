@@ -31,3 +31,24 @@ The script checks for unpublished edits, preserves unrelated content and creates
 The production API guide states that purchases are not enabled yet. Update that availability copy after the complete API release and owned checkout acceptance. Existing published articles keep their section, links, author, media and other metadata.
 
 The older `update-billing-docs.mjs` script remains a local feature migration. It now preserves the current Team pricing section; use an explicit reviewed production update for editorial work.
+
+## Discussion guide rollout
+
+The community publishing release updates existing guides in English, French and Czech and adds one localized conversation guide. Detailed membership instructions belong in the plans and Team guides; other guides link to them. The pricing helper preserves that separation.
+
+```sh
+# Read production and save a private preview; no CMS writes.
+node apps/strapi/scripts/update-discussions-guides.mjs
+
+# Save reviewed private drafts, preserving current publications and metadata.
+node apps/strapi/scripts/update-discussions-guides.mjs --stage
+
+# Resume or verify the saved staging checkpoint after an interrupted operation.
+node apps/strapi/scripts/update-discussions-guides.mjs --resume-stage
+
+# After the matching feature release passes production acceptance, publish
+# only the staged versions and verify each publication by reading it back.
+node apps/strapi/scripts/update-discussions-guides.mjs --publish
+```
+
+Use `--local` explicitly for local development. Backups, previews and staging checkpoints stay under ignored `.scratch/discussions-guide-rollout/`. The script refuses unrelated drafts or content changed after staging. All three translations of the new guide share one document identity. Publication is separate from staging so the live guides do not advertise features before deployment.

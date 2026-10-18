@@ -1,9 +1,11 @@
 "use client"
 
+import type { ReviewCategory } from "@repo/access"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -14,6 +16,7 @@ import {
 } from "./submissionMeta"
 
 export type QueueFilters = {
+  category?: ReviewCategory
   segment: Segment
   queue: ModerationQueueName | ""
   locale: string
@@ -22,13 +25,6 @@ export type QueueFilters = {
    * only carried in the URL by `queueHref`/`apiQuery` (set by a deep
    * link, cleared from the "Filtered by drive" banner). */
   drive: string
-}
-
-const selectStyle: React.CSSProperties = {
-  borderColor: T.border.hi,
-  background: T.bg.deep,
-  color: T.ink.base,
-  fontFamily: T.font.sans,
 }
 
 /**
@@ -52,6 +48,7 @@ export function ModerationFilters({
   readonly onChange: (patch: Partial<QueueFilters>) => void
 }) {
   const tUi = useUiTranslations("ui")
+  const workspace = useUiTranslations("moderationWorkspace")
 
   const ids = { queue: useId(), locale: useId(), search: useId() }
   const [q, setQ] = useState(value.q)
@@ -79,7 +76,7 @@ export function ModerationFilters({
   }, [q, value.q, onChange])
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
       <div
         role="group"
         aria-label={tUi("status")}
@@ -96,13 +93,13 @@ export function ModerationFilters({
               type="button"
               aria-pressed={active}
               onClick={() => onChange({ segment: s.id })}
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[15px] transition-colors"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-[14px] transition-colors"
               style={{
-                background: active ? T.bg.deep : "transparent",
-                color: active ? T.ink.base : T.ink.dim,
+                background: active ? T.accent.chip : "transparent",
+                color: active ? T.accent.primary : T.ink.dim,
                 fontWeight: active ? 600 : 500,
                 border: active
-                  ? `1px solid ${T.border.line}`
+                  ? `1px solid ${T.accent.primary}`
                   : "1px solid transparent",
                 cursor: "pointer",
               }}
@@ -134,24 +131,36 @@ export function ModerationFilters({
               className="text-[14px] font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Queue
+              {value.category === "articles"
+                ? workspace("articleType")
+                : "Queue"}
             </label>
-            <select
+            <SelectField
               id={ids.queue}
-              value={value.queue}
-              onChange={(e) =>
-                onChange({ queue: e.target.value as QueueFilters["queue"] })
+              label={
+                value.category === "articles"
+                  ? workspace("articleType")
+                  : "Queue"
               }
-              className="rounded-[14px] border px-3 py-2.5 text-[15px]"
-              style={selectStyle}
-            >
-              <option value="">All your queues</option>
-              {queues.map((queue) => (
-                <option key={queue} value={queue}>
-                  {QUEUE_LABELS[queue]}
-                </option>
-              ))}
-            </select>
+              value={value.queue}
+              onValueChange={(queue) =>
+                onChange({ queue: queue as QueueFilters["queue"] })
+              }
+              className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-[14px] shadow-none"
+              options={[
+                {
+                  value: "",
+                  label:
+                    value.category === "articles"
+                      ? workspace("allArticleTypes")
+                      : "All your queues",
+                },
+                ...queues.map((queue) => ({
+                  value: queue,
+                  label: QUEUE_LABELS[queue],
+                })),
+              ]}
+            />
           </div>
         ) : null}
         {locales.length > 1 ? (
@@ -163,25 +172,25 @@ export function ModerationFilters({
             >
               {tUi("language")}{" "}
             </label>
-            <select
+            <SelectField
               id={ids.locale}
+              label={tUi("language")}
               value={value.locale}
-              onChange={(e) => onChange({ locale: e.target.value })}
-              className="rounded-[14px] border px-3 py-2.5 text-[15px]"
-              style={selectStyle}
-            >
-              <option value="">All languages</option>
-              {locales.map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
+              onValueChange={(locale) => onChange({ locale })}
+              className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-[14px] shadow-none"
+              options={[
+                { value: "", label: "All languages" },
+                ...locales.map((locale) => ({
+                  value: locale.code,
+                  label: locale.name,
+                })),
+              ]}
+            />
           </div>
         ) : null}
         <SearchField
           id={ids.search}
-          className="min-w-[16rem] flex-1"
+          className="min-h-11 min-w-0 flex-1 basis-64"
           size="sm"
           placeholder={tUi("search_contributor_record_or_note")}
           label={tUi("search_submissions")}

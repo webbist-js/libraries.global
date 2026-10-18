@@ -18,6 +18,7 @@ import type { DriveInput } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
 import { isBoardMember } from "../../../utils/board"
+import { configureDriveDiscussions } from "../../../utils/drive-discussions"
 import {
   bridgeBaUserId,
   isValidServiceSecret,
@@ -149,6 +150,36 @@ function sendErrors(
   return ctx.badRequest(badRequestMessage, { errors: result.errors })
 }
 
+/** Preserve validation/conflict responses after the atomic Drive/link write rolls back. */
+async function discussionWrite<T>(
+  ctx: any,
+  write: () => Promise<T>
+): Promise<T | null> {
+  try {
+    return await write()
+  } catch (error: any) {
+    const duplicate = [
+      "23505",
+      "SQLITE_CONSTRAINT_UNIQUE",
+      "ER_DUP_ENTRY",
+    ].includes(error?.code)
+    const status = duplicate ? 409 : error?.status
+    if (![400, 401, 403, 404, 409, 429, 503].includes(status)) throw error
+    ctx.status = status
+    ctx.body = {
+      data: null,
+      error: {
+        status,
+        message: duplicate
+          ? "Drive conversations changed. Reload and try again."
+          : error.message,
+      },
+    }
+
+    return null
+  }
+}
+
 export default factories.createCoreController(UID, ({ strapi }) => ({
   // GET /drives?state=&limit=&locale= — public.
   async list(ctx) {
@@ -179,9 +210,24 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     const baUserId = await requireBoardMember(ctx, strapi)
     if (!baUserId) return
 
-    const result = await strapi
-      .service(UID)
-      .createDrive(driveInputFromBody(ctx.request.body), baUserId)
+    const result = await discussionWrite(ctx, () =>
+      strapi.db.transaction(async () => {
+        const created = await strapi
+          .service(UID)
+          .createDrive(driveInputFromBody(ctx.request.body), baUserId)
+        if (!("errors" in created))
+          await configureDriveDiscussions(
+            strapi,
+            baUserId,
+            created.data.documentId,
+            String(ctx.request.body.locale ?? created.data.locale ?? "en"),
+            ctx.request.body.discussions
+          )
+
+        return created
+      })
+    )
+    if (!result) return
     if ("errors" in result) return sendErrors(ctx, result, "Invalid drive")
     ctx.body = { data: result.data, meta: {} }
   },
@@ -193,7 +239,22 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     const { documentId } = ctx.params as { documentId: string }
     const { pinned: _pinned, ...input } = driveInputFromBody(ctx.request.body)
-    const result = await strapi.service(UID).updateDrive(documentId, input)
+    const result = await discussionWrite(ctx, () =>
+      strapi.db.transaction(async () => {
+        const saved = await strapi.service(UID).updateDrive(documentId, input)
+        if (!("errors" in saved))
+          await configureDriveDiscussions(
+            strapi,
+            baUserId,
+            documentId,
+            String(ctx.request.body.locale ?? saved.data.locale ?? "en"),
+            ctx.request.body.discussions
+          )
+
+        return saved
+      })
+    )
+    if (!result) return
     if ("errors" in result) return sendErrors(ctx, result, "Invalid drive")
     ctx.body = { data: result.data, meta: {} }
   },

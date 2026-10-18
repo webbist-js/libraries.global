@@ -257,7 +257,7 @@ describe("hot-path index list", () => {
       "ON wiki_articles (slug, locale, published_at)",
       "ON blog_articles (slug, locale, published_at)",
       "ON libraries (entity_ref)",
-      "ON libraries (library_type)",
+      "ON library_types (name)",
       "ON user_profiles (ba_user_id)",
       "ON user_profiles (points DESC)",
       "ON user_profiles (country, points DESC)",

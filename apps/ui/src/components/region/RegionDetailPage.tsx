@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { type GapKey, PANEL_GAPS } from "@repo/shared-data"
+import { libraryTypeName, type GapKey, PANEL_GAPS } from "@repo/shared-data"
 import { cookies } from "next/headers"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
@@ -203,7 +203,7 @@ export async function RegionDetailPage({
     })
 
   const pins: HeroMapLibraryPin[] = libraries
-    .filter((library) => library.libraryType !== "Digital")
+    .filter((library) => libraryTypeName(library.libraryType) !== "Digital")
     .flatMap((l) => {
       const lat = toCoord(l.location?.lat)
       const lng = toCoord(l.location?.lng)
@@ -216,7 +216,7 @@ export async function RegionDetailPage({
               href: `${basePath}/${l.slug}`,
               lat,
               lng,
-              libraryType: l.libraryType,
+              libraryType: libraryTypeName(l.libraryType),
             },
           ]
         : []
@@ -380,7 +380,7 @@ export async function RegionDetailPage({
                     <li key={library.documentId}>
                       <FeaturedLibraryCard
                         name={library.name}
-                        libraryType={library.libraryType}
+                        libraryType={libraryTypeName(library.libraryType)}
                         city={library.city}
                         countryName={countryName}
                         imageUrl={library.heroImage?.url}

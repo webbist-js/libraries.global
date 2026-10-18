@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { libraryTypeName, type LibraryTypeValue } from "@repo/shared-data"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
@@ -26,7 +27,7 @@ const CLOSED_LABELS: Record<string, string> = {
 
 export type LocationLibraryCardData = {
   name?: string | null
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
   summary?: string | null
   openingTimes?: OpeningTimesValue | null
   operationalStatus?: string | null
@@ -50,7 +51,7 @@ export function LocationLibraryCard({
   readonly gaps?: LocationGapKey[]
 }) {
   const name = library.name ?? ""
-  const tint = tintForLibraryType(library.libraryType)
+  const tint = tintForLibraryType(libraryTypeName(library.libraryType))
   const photo = formatStrapiMediaUrl(
     library.heroImage?.formats?.small?.url ?? library.heroImage?.url ?? null
   )
@@ -95,7 +96,7 @@ export function LocationLibraryCard({
             className="rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold"
             style={{ background: tint.bg, color: tint.fg }}
           >
-            {libraryTypeLabel(library.libraryType)}
+            {libraryTypeLabel(libraryTypeName(library.libraryType))}
           </span>
           {place ? (
             <span

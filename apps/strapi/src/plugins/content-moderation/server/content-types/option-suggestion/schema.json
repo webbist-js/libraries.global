@@ -7,14 +7,28 @@
     "displayName": "Option Suggestion",
     "description": "A new accessibility feature, service, amenity or library type that contributors asked for, posted directly or named in a correction. The editorial board reviews them monthly."
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "pluginOptions": {
-    "content-manager": { "visible": false },
-    "content-type-builder": { "visible": false }
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
   },
   "attributes": {
-    "name": { "type": "string", "required": true, "maxLength": 80 },
-    "nameKey": { "type": "string", "required": true, "maxLength": 80 },
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "nameKey": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
     "optionKey": {
       "type": "enumeration",
       "enum": ["accessibility", "amenities", "services", "library_types"],
@@ -22,19 +36,84 @@
     },
     "status": {
       "type": "enumeration",
-      "enum": ["open", "reviewing", "planned", "accepted", "declined", "removed"],
+      "enum": [
+        "open",
+        "reviewing",
+        "planned",
+        "accepted",
+        "declined",
+        "removed"
+      ],
       "default": "open",
       "required": true
     },
-    "requests": { "type": "integer", "default": 0 },
-    "libraries": { "type": "json" },
-    "submissionIds": { "type": "json" },
-    "acceptedOptionDocumentId": { "type": "string" },
-    "unlinkedLibraries": { "type": "json" },
-    "description": { "type": "text", "maxLength": 400 },
-    "suggestedBy": { "type": "string" },
-    "decidedAt": { "type": "datetime" },
-    "decidedBy": { "type": "string" },
-    "decisionNote": { "type": "text" }
+    "requests": {
+      "type": "integer",
+      "default": 0
+    },
+    "libraries": {
+      "type": "json"
+    },
+    "submissionIds": {
+      "type": "json"
+    },
+    "acceptedOptionDocumentId": {
+      "type": "string"
+    },
+    "unlinkedLibraries": {
+      "type": "json"
+    },
+    "description": {
+      "type": "text",
+      "maxLength": 400
+    },
+    "suggestedBy": {
+      "type": "string"
+    },
+    "decidedAt": {
+      "type": "datetime"
+    },
+    "decidedBy": {
+      "type": "string"
+    },
+    "decisionNote": {
+      "type": "text"
+    },
+    "publicationStatus": {
+      "type": "enumeration",
+      "enum": ["pending", "published", "rejected"],
+      "default": "published",
+      "required": true
+    },
+    "publicationAt": {
+      "type": "datetime"
+    },
+    "comparison": {
+      "type": "json"
+    },
+    "decisionKind": {
+      "type": "enumeration",
+      "enum": ["add", "update", "merge", "decline"]
+    },
+    "version": {
+      "type": "integer",
+      "default": 0,
+      "required": true
+    },
+    "publicDecisionNote": {
+      "type": "text",
+      "maxLength": 2000
+    },
+    "publicationReviewedAt": {
+      "type": "datetime"
+    },
+    "publicationReviewedBy": {
+      "type": "string",
+      "private": true
+    },
+    "publicationHistory": {
+      "type": "json",
+      "private": true
+    }
   }
 }

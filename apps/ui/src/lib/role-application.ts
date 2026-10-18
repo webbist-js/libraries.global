@@ -24,13 +24,19 @@ export const APPLICATION_ROLE_LABEL: Record<ApplicationRole, string> = {
 }
 
 /** The queues a Moderator applicant may ask for (never `applications`). */
-export const APPLICATION_QUEUES = ["index", "knowledge", "journal"] as const
+export const APPLICATION_QUEUES = [
+  "index",
+  "knowledge",
+  "journal",
+  "discussions",
+] as const
 export type ApplicationQueue = (typeof APPLICATION_QUEUES)[number]
 
 export const APPLICATION_QUEUE_LABEL: Record<ApplicationQueue, string> = {
   index: "Index (library records)",
   knowledge: "Knowledge",
   journal: "Journal",
+  discussions: "Discussions",
 }
 
 export const APPLICATION_STATEMENT_MIN = 20
@@ -106,7 +112,7 @@ export function applicationQueueFrom(v: unknown): ApplicationQueue | null {
 
 /**
  * Which section list the application picks from: wiki sections for
- * Knowledge, blog sections for the Journal, none for the Index queue.
+ * Knowledge, blog sections for the Journal, none for Index or Discussions.
  */
 export function sectionKindOf(
   role: ApplicationRole | null,

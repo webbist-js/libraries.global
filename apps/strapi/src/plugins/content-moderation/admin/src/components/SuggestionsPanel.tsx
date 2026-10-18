@@ -26,8 +26,12 @@ import { useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
 import { relativeTime } from "./submissionMeta"
+import { SuggestionRoundPanel } from "./SuggestionRoundPanel"
 
 export type Suggestion = {
+  publicationStatus?: "pending" | "published" | "rejected"
+  version?: number
+  comparison?: { name: string; explanation: string } | null
   documentId: string
   name: string
   optionKey: "accessibility" | "amenities" | "services" | "library_types"
@@ -80,7 +84,17 @@ const describeUnlinked = (list: UnlinkedLibrary[]) =>
     .map((l) => `${l.name} (${UNLINKED_REASON[l.reason] ?? l.reason})`)
     .join(", ")
 
-type Deciding = { suggestion: Suggestion; decision: "accept" | "decline" }
+type Deciding = {
+  suggestion: Suggestion
+  decision:
+    | "accept"
+    | "decline"
+    | "publish"
+    | "reject"
+    | "review"
+    | "plan"
+    | "remove"
+}
 
 /** Accept (with tidied wording) or decline one suggestion. */
 function DecisionModal({
@@ -92,15 +106,32 @@ function DecisionModal({
   onClose: () => void
   onDone: () => void
 }) {
-  const { put } = useFetchClient()
+  const { get, put } = useFetchClient()
   const { toggleNotification } = useNotification()
   const [name, setName] = useState("")
   const [note, setNote] = useState("")
+  const [feature, setFeature] = useState({
+    summary: "",
+    description: "",
+    icon: "",
+    category: "",
+  })
+  const [operation, setOperation] = useState("accept")
+  const [existingId, setExistingId] = useState("")
+  const [catalogue, setCatalogue] = useState<any>(null)
+  useEffect(() => {
+    get("/content-moderation/option-catalogue")
+      .then((r: any) => setCatalogue(r.data))
+      .catch(() => {})
+  }, [get])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setName(deciding?.suggestion.name ?? "")
     setNote("")
+    setOperation("accept")
+    setExistingId("")
+    setFeature({ summary: "", description: "", icon: "", category: "" })
   }, [deciding])
 
   if (!deciding) return null
@@ -114,7 +145,10 @@ function DecisionModal({
       const res = await put(
         `/content-moderation/option-suggestions/${suggestion.documentId}`,
         {
-          decision,
+          decision: decision === "accept" ? operation : decision,
+          version: suggestion.version ?? 0,
+          feature,
+          existingOptionDocumentId: existingId,
           name: accept ? name : undefined,
           note,
         }
@@ -127,11 +161,13 @@ function DecisionModal({
       const libraryTypes = suggestion.optionKey === "library_types"
       toggleNotification({
         type: "success",
-        message: accept
-          ? libraryTypes
-            ? `Marked “${data?.name ?? (name.trim() || suggestion.name)}” as added.`
-            : `Added “${name.trim() || suggestion.name}” to ${LIST_LABEL[suggestion.optionKey]} and linked ${linked} ${linked === 1 ? "library" : "libraries"}.`
-          : "Declined. It won’t be suggested again.",
+        message: !["accept", "decline"].includes(decision)
+          ? `Saved: ${decision}.`
+          : accept
+            ? libraryTypes
+              ? `Marked “${data?.name ?? (name.trim() || suggestion.name)}” as added.`
+              : `Added “${name.trim() || suggestion.name}” to ${LIST_LABEL[suggestion.optionKey]} and linked ${linked} ${linked === 1 ? "library" : "libraries"}.`
+            : "Declined. It won’t be suggested again.",
       })
       if (accept && !libraryTypes && unlinked.length > 0)
         toggleNotification({
@@ -154,7 +190,18 @@ function DecisionModal({
       <Modal.Content>
         <Modal.Header>
           <Modal.Title>
-            {accept ? "Accept" : "Decline"} “{suggestion.name}”
+            {decision === "publish"
+              ? "Approve publication"
+              : decision === "reject"
+                ? "Reject publication"
+                : decision === "review"
+                  ? "Mark under review"
+                  : decision === "plan"
+                    ? "Defer / plan"
+                    : accept
+                      ? "Decide"
+                      : "Decline"}{" "}
+            “{suggestion.name}”
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -162,7 +209,7 @@ function DecisionModal({
             <Typography textColor="neutral600">
               {accept
                 ? suggestion.optionKey === "library_types"
-                  ? "Accept only works once the type is in the schema; until then, mark it planned. It creates no option and links no libraries — the enum itself is changed by hand."
+                  ? "This adds the type to the editable library-type catalogue."
                   : `This adds it to the ${LIST_LABEL[suggestion.optionKey].toLowerCase()} list (or reuses an option with the same name) and links it to the ${libraries} ${libraries === 1 ? "library" : "libraries"} that asked for it.`
                 : "Declined names stay declined: later requests for the same name are not counted."}
             </Typography>
@@ -179,13 +226,98 @@ function DecisionModal({
                 <Field.Hint />
               </Field.Root>
             ) : null}
+            {suggestion.description && (
+              <Typography>{suggestion.description}</Typography>
+            )}
+            {suggestion.comparison && (
+              <Typography>
+                Different from {suggestion.comparison.name}:{" "}
+                {suggestion.comparison.explanation}
+              </Typography>
+            )}
+            {accept && (
+              <>
+                <label>
+                  Decision
+                  <select
+                    value={operation}
+                    onChange={(e) => setOperation(e.target.value)}
+                  >
+                    <option value="accept">Add a feature</option>
+                    <option value="update">Clarify an existing feature</option>
+                    <option value="merge">
+                      Merge into an existing feature
+                    </option>
+                  </select>
+                </label>
+                {operation === "update" && (
+                  <Typography>
+                    Clarifications are appended; existing description text is
+                    preserved.
+                  </Typography>
+                )}
+                {operation !== "accept" && (
+                  <label>
+                    Existing feature
+                    <select
+                      value={existingId}
+                      onChange={(e) => setExistingId(e.target.value)}
+                    >
+                      <option value="">Choose a published feature</option>
+                      {catalogue?.data?.[suggestion.optionKey]?.map(
+                        (item: any) => (
+                          <option key={item.documentId} value={item.documentId}>
+                            {item.name}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </label>
+                )}
+                {(["summary", "description", "icon"] as const).map((key) => (
+                  <Field.Root key={key} name={key}>
+                    <Field.Label>{key}</Field.Label>
+                    <Textarea
+                      value={feature[key]}
+                      onChange={(e: any) =>
+                        setFeature((value) => ({
+                          ...value,
+                          [key]: e.target.value,
+                        }))
+                      }
+                    />
+                  </Field.Root>
+                ))}
+                <label>
+                  Category
+                  <select
+                    value={feature.category}
+                    onChange={(e) =>
+                      setFeature((value) => ({
+                        ...value,
+                        category: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">—</option>
+                    {catalogue?.categories?.[suggestion.optionKey]?.map(
+                      (category: string) => (
+                        <option key={category}>{category}</option>
+                      )
+                    )}
+                  </select>
+                </label>
+              </>
+            )}
             <Field.Root
               name="note"
-              required={!accept}
+              required={!["publish", "review"].includes(decision)}
               hint={
-                accept
-                  ? "Kept with the decision for the board’s records. Not shown publicly."
-                  : "Shown publicly with the suggestion."
+                decision === "reject"
+                  ? "Private feedback, visible only to the contributor and reviewers."
+                  : accept
+                    ? "Shown publicly with the decision."
+                    : "Shown publicly with the suggestion."
               }
             >
               <Field.Label>Note</Field.Label>
@@ -202,17 +334,25 @@ function DecisionModal({
             <Button variant="tertiary">Cancel</Button>
           </Modal.Close>
           <Button
-            variant={accept ? "success" : "danger-light"}
-            startIcon={accept ? <Check /> : <Cross />}
+            variant={
+              accept || decision === "publish" ? "success" : "danger-light"
+            }
+            startIcon={accept || decision === "publish" ? <Check /> : <Cross />}
             loading={saving}
-            disabled={accept ? !name.trim() : !note.trim()}
+            disabled={
+              (accept && !name.trim()) ||
+              (!["publish", "review"].includes(decision) && !note.trim()) ||
+              (accept && operation !== "accept" && !existingId)
+            }
             onClick={() => void save()}
           >
-            {accept
-              ? suggestion.optionKey === "library_types"
-                ? "Mark as added"
-                : "Accept and link"
-              : "Decline"}
+            {!["accept", "decline"].includes(decision)
+              ? "Save review"
+              : accept
+                ? suggestion.optionKey === "library_types"
+                  ? "Mark as added"
+                  : "Accept and link"
+                : "Decline"}
           </Button>
         </Modal.Footer>
       </Modal.Content>
@@ -270,6 +410,7 @@ export function SuggestionsPanel({
 
   return (
     <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
+      <SuggestionRoundPanel />
       <Flex direction="column" alignItems="stretch" gap={4}>
         <Flex
           justifyContent="space-between"
@@ -282,8 +423,8 @@ export function SuggestionsPanel({
               Suggested additions
             </Typography>
             <Typography variant="omega" textColor="neutral600">
-              Options contributors asked for in approved corrections, with their
-              votes from the Contribute hub.{" "}
+              Ideas proposed directly or in approved corrections. New
+              submissions need a publication check.{" "}
               {open.length > 0
                 ? `${open.length} open, ${open.reduce((n, s) => n + s.votes, 0)} votes so far.`
                 : ""}
@@ -299,6 +440,10 @@ export function SuggestionsPanel({
               }
             >
               <SingleSelectOption value="open">Open</SingleSelectOption>
+              <SingleSelectOption value="reviewing">
+                Under review
+              </SingleSelectOption>
+              <SingleSelectOption value="planned">Planned</SingleSelectOption>
               <SingleSelectOption value="accepted">Accepted</SingleSelectOption>
               <SingleSelectOption value="declined">Declined</SingleSelectOption>
             </SingleSelect>
@@ -372,7 +517,7 @@ export function SuggestionsPanel({
                     {status === "open" ? "First asked" : "Decided"}
                   </Typography>
                 </Th>
-                {status === "open" ? (
+                {["open", "reviewing", "planned"].includes(status) ? (
                   <Th>
                     <Typography variant="sigma">Decision</Typography>
                   </Th>
@@ -428,26 +573,67 @@ export function SuggestionsPanel({
                   </Td>
                   {status === "open" ? (
                     <Td>
-                      <Flex gap={2}>
+                      <Flex gap={2} wrap="wrap">
+                        {s.publicationStatus !== "pending" && (
+                          <>
+                            <Button
+                              size="S"
+                              variant="tertiary"
+                              onClick={() =>
+                                setDeciding({
+                                  suggestion: s,
+                                  decision: "review",
+                                })
+                              }
+                            >
+                              Under review
+                            </Button>
+                            <Button
+                              size="S"
+                              variant="tertiary"
+                              onClick={() =>
+                                setDeciding({ suggestion: s, decision: "plan" })
+                              }
+                            >
+                              Defer / plan
+                            </Button>
+                          </>
+                        )}
                         <Button
                           size="S"
                           variant="success-light"
                           startIcon={<Check />}
                           onClick={() =>
-                            setDeciding({ suggestion: s, decision: "accept" })
+                            setDeciding({
+                              suggestion: s,
+                              decision:
+                                s.publicationStatus === "pending"
+                                  ? "publish"
+                                  : "accept",
+                            })
                           }
                         >
-                          Accept
+                          {s.publicationStatus === "pending"
+                            ? "Approve publication"
+                            : "Decide"}
                         </Button>
                         <Button
                           size="S"
                           variant="danger-light"
                           startIcon={<Cross />}
                           onClick={() =>
-                            setDeciding({ suggestion: s, decision: "decline" })
+                            setDeciding({
+                              suggestion: s,
+                              decision:
+                                s.publicationStatus === "pending"
+                                  ? "reject"
+                                  : "decline",
+                            })
                           }
                         >
-                          Decline
+                          {s.publicationStatus === "pending"
+                            ? "Reject publication"
+                            : "Decline"}
                         </Button>
                       </Flex>
                     </Td>

@@ -21,6 +21,10 @@ export function CommunitySectionHeader({
   actions,
   showEyebrow = true,
   showTabs = true,
+  displayTitle,
+  prelude,
+  footer,
+  emphasisTone,
 }: {
   /** Breadcrumb leaf after "Community". Omit on the Noticeboard itself. */
   readonly section?: string
@@ -39,6 +43,10 @@ export function CommunitySectionHeader({
   readonly actions?: ReactNode
   readonly showEyebrow?: boolean
   readonly showTabs?: boolean
+  readonly displayTitle?: boolean
+  readonly prelude?: ReactNode
+  readonly footer?: ReactNode
+  readonly emphasisTone?: "brand" | "ink"
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -46,6 +54,10 @@ export function CommunitySectionHeader({
 
   return (
     <PageHero
+      displayTitle={displayTitle}
+      prelude={prelude}
+      footer={footer}
+      emphasisTone={emphasisTone}
       breadcrumb={
         trail.length > 0
           ? [

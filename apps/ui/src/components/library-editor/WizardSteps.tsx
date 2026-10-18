@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslations as useUiTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 import type React from "react"
 
 import { TimetableEditor } from "@/components/mobile/TimetableEditor"
@@ -33,6 +34,24 @@ import {
 // ── Step 1 — Identity ─────────────────────────────────────────────────────────
 
 function StepBasics({ f, set }: StepProps) {
+  const [libraryTypes, setLibraryTypes] = useState(LIBRARY_TYPES)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch("/api/relations/library-types", { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (json?.data?.length)
+          setLibraryTypes(
+            json.data.map((item: { name: string }) => ({
+              value: item.name,
+              label: item.name,
+            }))
+          )
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [])
   const tUi = useUiTranslations("ui")
 
   return (
@@ -83,7 +102,7 @@ function StepBasics({ f, set }: StepProps) {
           id="libraryType"
           value={f.libraryType}
           onChange={set}
-          options={LIBRARY_TYPES}
+          options={libraryTypes}
           required
         />
         <WizardSelect

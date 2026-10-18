@@ -184,6 +184,17 @@
       "type": "boolean",
       "default": true,
       "private": true
+    },
+    "profileBackground": {
+      "type": "enumeration",
+      "enum": ["violet", "coral", "mint", "amber", "blue", "rose"],
+      "default": "violet"
+    },
+    "coverImage": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
     }
   }
 }

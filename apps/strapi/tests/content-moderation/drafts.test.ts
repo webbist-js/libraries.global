@@ -16,7 +16,7 @@ const sub = (over: Record<string, any>) => ({
 })
 
 describe("saveDraft", () => {
-  it.each(["pending", "approved", "rejected", "needs_info"])(
+  it.each(["pending", "approved", "rejected"])(
     "refuses edits once %s",
     async (status) => {
       const { strapi, store } = makeFakeStrapi({ [UID]: [sub({ status })] })

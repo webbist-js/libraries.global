@@ -4,9 +4,11 @@ import { useTranslations, type Locale } from "next-intl"
 import type { ReactNode } from "react"
 
 import { formatDate } from "@/lib/article-helpers"
+import { avatarInitials } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
 import type { JournalCardData } from "@/lib/journal-landing"
-import { Link } from "@/lib/navigation"
+import { languageName } from "@/lib/locale-fallback"
+import { Link, routing } from "@/lib/navigation"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
@@ -34,8 +36,13 @@ function ArticleLink({
   return (
     <Link
       className={className}
-      href={articleHref(article)}
-      locale={locale}
+      href={`${articleHref(article)}${article.locale && !(routing.locales as readonly string[]).includes(article.locale) ? `?contentLang=${encodeURIComponent(article.locale)}` : ""}`}
+      locale={
+        article.locale &&
+        (routing.locales as readonly string[]).includes(article.locale)
+          ? (article.locale as Locale)
+          : locale
+      }
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       {children}
@@ -60,6 +67,7 @@ export function articleMeta(
     withAuthor ? article.author : null,
     formatDate(article.publishedAt ?? article.updatedAt, "short", locale),
     readingTime,
+    article.locale ? languageName(article.locale, [], locale) : null,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -136,15 +144,6 @@ function ArticleThumb({
   )
 }
 
-function initialsOf(name: string) {
-  return name
-    .split(/\s+/)
-    .map((word) => word.charAt(0))
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
-}
-
 /** The lead story: image left, badges, title, summary and byline right. */
 export function JournalFeatureCard({
   article,
@@ -156,6 +155,7 @@ export function JournalFeatureCard({
   readonly locale: Locale
 }) {
   const t = useTranslations("editorial")
+  const visual = sectionVisual(article.section)
   const imgUrl = article.heroImage?.url
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
@@ -182,17 +182,17 @@ export function JournalFeatureCard({
         ) : (
           <div
             className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed"
-            style={{ background: T.bg.surface, borderColor: T.border.hi }}
+            style={{ background: visual.bg, borderColor: visual.fg }}
           >
             <Icon
               aria-hidden="true"
               height={26}
-              icon="mdi:image-outline"
+              icon={visual.icon}
               style={{ color: T.ink.faint }}
               width={26}
             />
             <span className="text-[13px]" style={{ color: T.ink.low }}>
-              {t("noCover")}
+              {article.section?.name ?? article.place ?? ""}
             </span>
           </div>
         )}
@@ -249,7 +249,7 @@ export function JournalFeatureCard({
                   color: "var(--tint-national-fg)",
                 }}
               >
-                {initialsOf(article.author)}
+                {avatarInitials(article.author)}
               </span>
               <span className="font-semibold" style={{ color: T.ink.base }}>
                 {article.author}

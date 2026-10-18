@@ -3,6 +3,7 @@ import * as React from "react"
 import { createElement as h } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import type { Drive } from "@/lib/drives/types"
 import {
   cleanup,
@@ -189,7 +190,7 @@ afterEach(() => {
 })
 
 const row = (name: string) =>
-  screen.getByRole("button", { name: `Add hours for ${name}` })
+  screen.getByRole("button", { name: `Add hours for ${name}`, hidden: true })
 
 async function sendHoursFor(name: string) {
   fireEvent.click(row(name))
@@ -231,7 +232,7 @@ describe("DriveTaskArea", () => {
     )
     expect(row("Alpha Library").getAttribute("aria-disabled")).toBe("true")
     expect(within(row("Alpha Library")).getByText("In review")).toBeTruthy()
-    const next = screen.getByRole("heading", { name: "Beta Library" })
+    const next = await screen.findByRole("heading", { name: "Beta Library" })
     expect(document.activeElement).toBe(next)
     expect(row("Beta Library").getAttribute("aria-pressed")).toBe("true")
     // "Your part" is asked again after the send.
@@ -246,11 +247,14 @@ describe("DriveTaskArea", () => {
     await screen.findByText("Alpha Library")
     fireEvent.click(row("Alpha Library"))
     fireEvent.click(await screen.findByRole("button", { name: "Skip" }))
-    expect(document.activeElement).toBe(
-      screen.getByRole("heading", { name: "Beta Library" })
-    )
+    const next = await screen.findByRole("heading", { name: "Beta Library" })
+    await waitFor(() => expect(document.activeElement).toBe(next))
     expect(
-      JSON.parse(sessionStorage.getItem(`drive.skips.${DRIVE.documentId}`)!)
+      JSON.parse(
+        sessionStorage.getItem(
+          `drive.skips.${DRIVE.documentId}:${contributionAccountScope(session.value.data?.user)}`
+        )!
+      )
     ).toEqual([TASKS[0]!.documentId])
   })
 
@@ -266,6 +270,7 @@ describe("DriveTaskArea", () => {
     )
     fireEvent.keyDown(document, { key: "Escape" })
     expect(screen.queryByRole("dialog")).toBeNull()
+    expect(row("Alpha Library").getAttribute("aria-pressed")).toBe("false")
   })
 
   it("asks a signed-out reader to sign in, and leaves out Your part", async () => {
@@ -310,4 +315,75 @@ it("preserves the selected place through sign-in", async () => {
   expect(href.searchParams.get("callbackUrl")).toBe(
     "/community/drives/ohio-hours?country=united-states&region=ohio"
   )
+})
+
+it("replaces paged tasks and resets pagination when the search changes", async () => {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url.startsWith("/api/drives/ohio-hours/tasks")) {
+      const page = Number(
+        new URL(url, "http://localhost").searchParams.get("page")
+      )
+
+      return Promise.resolve(
+        Response.json({
+          data:
+            page === 1
+              ? [{ ...TASKS[0], name: "Delta Library", documentId: "delta" }]
+              : TASKS,
+          page,
+          pageSize: 8,
+          total: 9,
+          hasMore: page === 0,
+        })
+      )
+    }
+
+    return respond(url, init)
+  })
+  render(h(DriveTaskArea, { drive: DRIVE }))
+  await screen.findByText("Alpha Library")
+  fireEvent.click(screen.getByRole("button", { name: "Page 2" }))
+  await screen.findByText("Delta Library")
+  expect(screen.queryByText("Alpha Library")).toBeNull()
+  expect(
+    screen.getByRole("button", { name: "Page 2" }).getAttribute("aria-current")
+  ).toBe("page")
+  fireEvent.change(screen.getByRole("searchbox"), {
+    target: { value: "Columbus" },
+  })
+  await screen.findByText("Alpha Library")
+  expect(
+    screen.getByRole("button", { name: "Page 1" }).getAttribute("aria-current")
+  ).toBe("page")
+  expect(
+    fetchMock.mock.calls.some(([url]) =>
+      String(url).includes("q=Columbus&page=0")
+    )
+  ).toBe(true)
+})
+
+it("clears personal counts immediately when the signed-in account changes", async () => {
+  let resolveMine: ((value: Response) => void) | undefined
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (String(url).includes("/mine") && session.value.data?.user.id === "u2")
+      return new Promise<Response>((resolve) => {
+        resolveMine = resolve
+      })
+
+    return respond(url, init)
+  })
+  const result = render(h(DriveTaskArea, { drive: DRIVE }))
+  await waitFor(() =>
+    expect(
+      screen.getByRole("region", { name: "Your part" }).textContent
+    ).toContain("2Sent")
+  )
+  session.value = { data: { user: { id: "u2" } }, isPending: false }
+  result.rerender(h(DriveTaskArea, { drive: DRIVE }))
+  const part = screen.getByRole("region", { name: "Your part" })
+  expect(part.textContent).toContain("Loading your part…")
+  expect(part.textContent).not.toContain("2Sent")
+  await waitFor(() => expect(resolveMine).toBeTruthy())
+  resolveMine!(Response.json({ data: { sent: 0, inReview: 0, accepted: 0 } }))
+  await within(part).findByText("Nothing sent for this drive yet.")
 })

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@repo/design-system/theme.css";
+@import "@repo/design-system/palette.css";
 @import "@repo/design-system/custom-styles.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -46,22 +47,22 @@
 
   /* legacy accent slots, re-pointed at the v2 palette */
   --t-accent-aurora: #4338ca;
-  --t-accent-violet: #4a3f8c;
-  --t-accent-ember: #8a3f22;
-  --t-accent-gold: #6b5420;
-  --t-accent-ok: #2f5d3a;
-  --t-accent-warn: #6b5420;
-  --t-accent-danger: #a13a1a;
+  --t-accent-violet: var(--t-palette-violet-fg);
+  --t-accent-ember: var(--t-palette-coral-fg);
+  --t-accent-gold: var(--t-palette-amber-fg);
+  --t-accent-ok: var(--t-palette-mint-fg);
+  --t-accent-warn: var(--t-palette-amber-fg);
+  --t-accent-danger: var(--t-palette-coral-fg);
 
   /* library-type tints — [bg, fg] pairs for badges, monograms, stat cards */
-  --tint-national-bg: #ece8f6;
-  --tint-national-fg: #4a3f8c;
-  --tint-public-bg: #e6efe6;
-  --tint-public-fg: #2f5d3a;
-  --tint-academic-bg: #e4ecf5;
-  --tint-academic-fg: #28496e;
-  --tint-special-bg: #f6e3da;
-  --tint-special-fg: #8a3f22;
+  --tint-national-bg: var(--t-palette-violet-bg);
+  --tint-national-fg: var(--t-palette-violet-fg);
+  --tint-public-bg: var(--t-palette-mint-bg);
+  --tint-public-fg: var(--t-palette-mint-fg);
+  --tint-academic-bg: var(--t-palette-blue-bg);
+  --tint-academic-fg: var(--t-palette-blue-fg);
+  --tint-special-bg: var(--t-palette-coral-bg);
+  --tint-special-fg: var(--t-palette-coral-fg);
   --tint-neutral-bg: #f3f0ea;
   --tint-neutral-fg: #55536a;
 
@@ -112,6 +113,31 @@
     var(--t-bg-void) 100%
   );
   --lib-card-border: rgba(23, 22, 43, 0.28);
+}
+
+/* Semantic utilities used by Shadcn and legacy page-builder controls. */
+@theme inline {
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --color-background: var(--t-bg-void);
+  --color-foreground: var(--t-ink-base);
+  --color-card: var(--t-bg-deep);
+  --color-card-foreground: var(--t-ink-base);
+  --color-popover: var(--t-bg-deep);
+  --color-popover-foreground: var(--t-ink-base);
+  --color-primary: var(--t-accent-primary);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--t-palette-violet-bg);
+  --color-secondary-foreground: var(--t-palette-violet-fg);
+  --color-muted: var(--t-bg-muted);
+  --color-muted-foreground: var(--t-ink-dim);
+  --color-accent: var(--t-accent-chip);
+  --color-accent-foreground: var(--t-accent-primary-hover);
+  --color-destructive: var(--t-accent-danger);
+  --color-border: var(--t-border-line);
+  --color-input: var(--t-border-hi);
+  --color-ring: var(--t-accent-primary);
 }
 
 /* ── Transparent-until-scroll global header ─────────────────────────────────

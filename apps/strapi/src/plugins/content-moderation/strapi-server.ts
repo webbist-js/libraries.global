@@ -5,6 +5,7 @@ import services from "./server/services"
 import { backfillLibraryHistory } from "./server/services/history"
 import { backfillSubmissionLocales } from "./server/utils/locales"
 import { migrateReviewerPrefix } from "./server/utils/reviewer"
+import { reviewRoundView } from "./server/utils/suggestion-rounds"
 
 export default {
   register({ strapi }: { strapi: any }) {},
@@ -23,6 +24,13 @@ export default {
         pluginName: "content-moderation",
       },
     ])
+    await strapi.db
+      .query("plugin::content-moderation.option-suggestion")
+      .updateMany({
+        where: { publicationStatus: { $null: true } },
+        data: { publicationStatus: "published" },
+      })
+    await reviewRoundView(strapi, false)
     // One-off, flag-guarded: Submissions from before they carried a locale.
     try {
       await backfillSubmissionLocales(strapi)

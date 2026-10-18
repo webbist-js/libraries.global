@@ -60,12 +60,12 @@ export const FEATURED_LIBRARY_POPULATE = {
     "entityRef",
     "shortName",
     "summary",
-    "libraryType",
     "operationalStatus",
     "city",
     "featured",
   ],
   populate: {
+    libraryType: { fields: ["name"] },
     heroImage: mediaPopulate,
     continent: continentRef,
     country: locationRef,
@@ -90,7 +90,6 @@ const LIBRARY_LIST_FIELDS = [
   "entityRef",
   "shortName",
   "summary",
-  "libraryType",
   "operatorType",
   "operationalStatus",
   "city",
@@ -123,6 +122,7 @@ const LIBRARY_LIST_FIELDS = [
 ]
 
 const LIBRARY_LIST_POPULATE = {
+  libraryType: { fields: ["name"] },
   heroImage: mediaPopulate,
   continent: continentRef,
   country: {
@@ -216,12 +216,12 @@ export const LIBRARY_SHAPES: ShapeSet = {
         fields: [
           "name",
           "slug",
-          "libraryType",
           "mobileTimetable",
           "timezone",
           "operationalStatus",
         ],
         populate: {
+          libraryType: { fields: ["name"] },
           continent: continentRef,
           country: locationRef,
           region: locationRef,
@@ -238,6 +238,7 @@ export const LIBRARY_SHAPES: ShapeSet = {
 // ── Continent ───────────────────────────────────────────────────────────────
 
 const CONTINENT_FIELDS = [
+  "locale",
   "name",
   "slug",
   "code",
@@ -269,6 +270,7 @@ export const CONTINENT_SHAPES: ShapeSet = {
 // ── Country ─────────────────────────────────────────────────────────────────
 
 const COUNTRY_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",
@@ -318,8 +320,11 @@ export const COUNTRY_SHAPES: ShapeSet = {
         populate: { mapConfig: MAP_CONFIG_POPULATE },
       },
       nationalLibrary: {
-        fields: ["name", "slug", "summary", "libraryType", "operationalStatus"],
-        populate: { heroImage: mediaPopulate },
+        fields: ["name", "slug", "summary", "operationalStatus"],
+        populate: {
+          libraryType: { fields: ["name"] },
+          heroImage: mediaPopulate,
+        },
       },
       featuredLibraries: FEATURED_LIBRARY_POPULATE,
       seo: SEO_POPULATE,
@@ -330,6 +335,7 @@ export const COUNTRY_SHAPES: ShapeSet = {
 // ── Region ──────────────────────────────────────────────────────────────────
 
 const REGION_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",
@@ -387,6 +393,7 @@ export const REGION_SHAPES: ShapeSet = {
 // ── Area ────────────────────────────────────────────────────────────────────
 
 const AREA_FIELDS = [
+  "locale",
   "name",
   "slug",
   "entityRef",

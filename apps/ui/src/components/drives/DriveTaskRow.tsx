@@ -30,6 +30,7 @@ export function DriveTaskRow({
   inReview,
   heldByOther = false,
   onSelect,
+  icon = "mdi:clock-outline",
 }: {
   readonly task: DriveTask
   /** The action, e.g. "Add hours". */
@@ -39,15 +40,22 @@ export function DriveTaskRow({
   /** Someone else currently holds this library in this drive. */
   readonly heldByOther?: boolean
   readonly onSelect: (task: DriveTask) => void
+  readonly icon?: string
 }) {
   const tUi = useUiTranslations("ui")
 
   const id = useId()
-  const place = taskPlace(task)
+  const place =
+    task.city && task.area_name
+      ? [...new Set([task.city, task.area_name])].join(", ")
+      : taskPlace(task)
   const disabled = inReview || heldByOther
   const statusId = `${id}-status`
   const placeId = `${id}-place`
-  const described = [place ? placeId : null, disabled ? statusId : null]
+  const described = [
+    place || task.distanceKm != null ? placeId : null,
+    disabled ? statusId : null,
+  ]
     .filter(Boolean)
     .join(" ")
   const label = heldByOther
@@ -60,12 +68,13 @@ export function DriveTaskRow({
         type="button"
         aria-label={label}
         aria-pressed={selected}
+        aria-haspopup="dialog"
         aria-disabled={disabled || undefined}
         aria-describedby={described || undefined}
         onClick={() => {
           if (!disabled) onSelect(task)
         }}
-        className={`flex w-full items-center gap-3 rounded-[16px] border px-4 py-3 text-left transition-colors ${
+        className={`flex min-h-14 w-full items-center gap-3 px-3.5 py-2 text-left transition-colors ${
           disabled
             ? "cursor-default"
             : selected
@@ -74,19 +83,26 @@ export function DriveTaskRow({
         }`}
         style={{
           background: selected ? T.accent.chip : T.bg.deep,
-          borderColor: selected ? T.accent.primary : T.border.line,
-          borderWidth: selected ? 2 : 1,
+          boxShadow: selected
+            ? `inset 0 0 0 1px ${T.accent.primary}`
+            : undefined,
           color: T.ink.base,
         }}
       >
+        <span
+          aria-hidden
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--t-bg-muted) text-(--t-ink-dim)"
+        >
+          <Icon icon={icon} width={16} />
+        </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-[16px] leading-[1.3] font-semibold">
+          <span className="text-[14px] leading-[1.3] font-semibold">
             {task.name}
           </span>
           {place || task.distanceKm != null ? (
             <span
               id={placeId}
-              className="text-[14.5px]"
+              className="text-[12px]"
               style={{ color: T.ink.dim }}
             >
               {place ? <span>{place}</span> : null}
@@ -99,7 +115,7 @@ export function DriveTaskRow({
         </span>
         {inReview ? (
           <span
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
             style={{ background: "var(--tint-public-bg)", color: T.accent.ok }}
           >
             <Icon
@@ -112,7 +128,7 @@ export function DriveTaskRow({
           </span>
         ) : heldByOther ? (
           <span
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
             style={{ background: T.bg.muted, color: T.ink.dim }}
           >
             <Icon
@@ -126,11 +142,10 @@ export function DriveTaskRow({
         ) : (
           <span
             aria-hidden="true"
-            className="inline-flex shrink-0 items-center gap-1 text-[14px] font-semibold"
-            style={{ color: T.accent.primary }}
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-(--t-border-hi) bg-white px-3 text-[12px] font-semibold"
+            style={{ color: T.ink.base }}
           >
             {verb}
-            <Icon height={16} icon="mdi:chevron-right" width={16} />
           </span>
         )}
       </button>

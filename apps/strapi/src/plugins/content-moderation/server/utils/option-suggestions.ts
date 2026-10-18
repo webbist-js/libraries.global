@@ -1,8 +1,13 @@
-import { findUnsafeContent } from "@repo/shared-data"
+import { compareSuggestionRank, findUnsafeContent } from "@repo/shared-data"
+import type { PublicAuthorBadge } from "strapi-plugin-discussions/types"
 
+import { allDocuments } from "./documents-all"
 import { isDocumentId } from "./params"
 import { ApplyRefusedError, applyToPublished } from "./publish-guard"
+import { syncReviewRound, withBoardLock, ROUND } from "./suggestion-rounds"
 import { isActivityPublic } from "../../../../utils/activity-visibility"
+import { LIBRARY_TYPE } from "../../../../utils/library-type-catalogue"
+import { publicAuthorRoleBadges } from "../../../../utils/public-author-badges"
 
 /**
  * New accessibility features, services, amenities and library types that
@@ -105,6 +110,11 @@ type SuggestionRow = {
   nameKey: string
   optionKey: SuggestionList
   status: SuggestionStatus
+  publicationStatus?: "pending" | "published" | "rejected"
+  publicationAt?: string | null
+  comparison?: { documentId: string; name: string; explanation: string } | null
+  decisionKind?: "add" | "update" | "merge" | "decline" | null
+  version?: number
   requests?: number | null
   libraries?: LibraryRef[] | null
   submissionIds?: string[] | null
@@ -115,6 +125,7 @@ type SuggestionRow = {
   decidedAt?: string | null
   decidedBy?: string | null
   decisionNote?: string | null
+  publicDecisionNote?: string | null
   createdAt?: string
 }
 
@@ -123,7 +134,7 @@ type SuggestionRow = {
  * request (and library) on the existing one. A declined or removed name is
  * left as is; an accepted one never gets here (it's in the list by then).
  */
-export async function recordSuggestion(
+async function recordSuggestionUnlocked(
   strapi: any,
   input: {
     optionKey: OptionKey
@@ -184,11 +195,20 @@ export type SuggestionView = {
   status: SuggestionRow["status"]
   requests: number
   votes: number
+  votesThisMonth?: number
   /** Whether the viewer voted (list for a signed-in viewer only). */
   voted?: boolean
   libraries: LibraryRef[]
   /** Accepted suggestions only: the libraries still to link by hand. */
   unlinkedLibraries: UnlinkedLibrary[]
+  publicationStatus?: "pending" | "published" | "rejected"
+  publicationAt?: string | null
+  comparison?: { documentId: string; name: string; explanation: string } | null
+  decisionKind?: string | null
+  acceptedOptionDocumentId?: string | null
+  version?: number
+  suggestedByProfile?: string | null
+  suggestedByBadges?: PublicAuthorBadge[]
   description: string | null
   suggestedBy: string | null
   /** "Firstname L.", only when the suggester's profile activity is public. */
@@ -201,13 +221,18 @@ export type SuggestionView = {
    * controller's public mapping hides it outside `NOTE_VISIBLE_STATUSES`.
    */
   decisionNote?: string | null
+  publicDecisionNote?: string | null
 }
 
 const snakeCase = (s: string) =>
   s.replaceAll(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()
 
 /** The vote table and column, from the model's metadata (never hard-coded). */
-function voteColumns(strapi: any): { table: string; suggestion: string } {
+function voteColumns(strapi: any): {
+  table: string
+  suggestion: string
+  created: string
+} {
   const meta = strapi.db?.metadata?.get?.(VOTE)
   const schema = strapi.contentType?.(VOTE)
   const table: string =
@@ -216,23 +241,30 @@ function voteColumns(strapi: any): { table: string; suggestion: string } {
     meta?.attributes?.suggestionDocumentId?.columnName ??
     snakeCase("suggestionDocumentId")
 
-  return { table, suggestion }
+  return {
+    table,
+    suggestion,
+    created: meta?.attributes?.createdAt?.columnName ?? "created_at",
+  }
 }
 
 /** Vote counts per suggestion, aggregated in the database. */
 async function countVotes(
   strapi: any,
-  suggestionIds: readonly string[]
+  suggestionIds: readonly string[],
+  since?: Date
 ): Promise<Map<string, number>> {
   const count = new Map<string, number>()
   if (suggestionIds.length === 0) return count
-  const { table, suggestion } = voteColumns(strapi)
-  const rows = (await strapi.db
+  const { table, suggestion, created } = voteColumns(strapi)
+  const query = strapi.db
     .connection(table)
     .select(suggestion)
     .count("* as votes")
     .whereIn(suggestion, [...suggestionIds])
-    .groupBy(suggestion)) as Record<string, unknown>[]
+    .groupBy(suggestion)
+  if (since) query.where(created, ">=", since.toISOString())
+  const rows = (await query) as Record<string, unknown>[]
   for (const r of rows) {
     const id = r[suggestion]
     if (typeof id === "string") count.set(id, Number(r.votes ?? 0))
@@ -273,6 +305,8 @@ export async function listSuggestions(
     status?: SuggestionRow["status"]
     statuses?: readonly SuggestionRow["status"][]
     viewer?: string
+    publicOnly?: boolean
+    includeOwnPending?: boolean
   } = {}
 ): Promise<SuggestionView[]> {
   const filters = opts.status
@@ -280,23 +314,45 @@ export async function listSuggestions(
     : opts.statuses
       ? { status: { $in: opts.statuses } }
       : undefined
-  const rows = (await strapi.documents(SUGGESTION).findMany({
-    ...(filters ? { filters } : {}),
-    sort: { createdAt: "desc" },
-    limit: 500,
+  const publication = opts.publicOnly
+    ? {
+        $or: [
+          { publicationStatus: { $eq: "published" } },
+          ...(opts.includeOwnPending && opts.viewer
+            ? [
+                {
+                  publicationStatus: { $in: ["pending", "rejected"] },
+                  suggestedBy: { $eq: opts.viewer },
+                },
+              ]
+            : []),
+        ],
+      }
+    : {}
+  const rows = (await allDocuments(strapi, SUGGESTION, {
+    filters: { ...filters, ...publication },
+    sort: ["createdAt:asc", "documentId:asc"],
   })) as SuggestionRow[]
   if (rows.length === 0) return []
 
   const ids = rows.map((r) => r.documentId)
   const count = await countVotes(strapi, ids)
+  const now = new Date()
+  const monthly = await countVotes(
+    strapi,
+    ids,
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+  )
   const mine = new Set<string>()
   if (opts.viewer) {
-    const own = (await strapi.documents(VOTE).findMany({
-      filters: { baUserId: { $eq: opts.viewer } },
+    const own = await allDocuments(strapi, VOTE, {
+      filters: {
+        baUserId: { $eq: opts.viewer },
+        suggestionDocumentId: { $in: ids },
+      },
       fields: ["suggestionDocumentId"],
-      limit: 500,
-    })) as { suggestionDocumentId: string }[]
-    for (const v of own) mine.add(v.suggestionDocumentId)
+    })
+    for (const vote of own) mine.add(vote.suggestionDocumentId)
   }
 
   // One batch read for every suggester's profile, not one per row.
@@ -308,8 +364,10 @@ export async function listSuggestions(
     ),
   ]
   const names = new Map<string, string | null>()
+  const profilesById = new Map<string, string>()
+  const badgesById = new Map<string, PublicAuthorBadge[]>()
   if (suggesterIds.length > 0) {
-    const profiles = (await strapi.documents(PROFILE).findMany({
+    const profiles = (await allDocuments(strapi, PROFILE, {
       filters: { baUserId: { $in: suggesterIds } },
       fields: [
         "baUserId",
@@ -319,7 +377,6 @@ export async function listSuggestions(
         "profileVisibility",
         "publicPrefs",
       ],
-      limit: 500,
     })) as {
       baUserId: string
       firstName?: string | null
@@ -328,8 +385,26 @@ export async function listSuggestions(
       profileVisibility?: string
       publicPrefs?: { showActivity?: boolean } | null
     }[]
-    for (const p of profiles)
+    for (const p of profiles) {
       names.set(p.baUserId, isActivityPublic(p) ? displayName(p) : null)
+      if (isActivityPublic(p) && p.username)
+        profilesById.set(p.baUserId, p.username)
+    }
+    await Promise.all(
+      profiles
+        .filter(
+          (p) =>
+            p.profileVisibility === "public" &&
+            isActivityPublic(p) &&
+            displayName(p)
+        )
+        .map(async (p) => {
+          badgesById.set(
+            p.baUserId,
+            await publicAuthorRoleBadges(strapi, p.baUserId)
+          )
+        })
+    )
   }
 
   return rows
@@ -340,9 +415,22 @@ export async function listSuggestions(
       status: r.status,
       requests: r.requests ?? 0,
       votes: count.get(r.documentId) ?? 0,
+      votesThisMonth: monthly.get(r.documentId) ?? 0,
       ...(opts.viewer ? { voted: mine.has(r.documentId) } : {}),
       libraries: r.libraries ?? [],
       unlinkedLibraries: r.unlinkedLibraries ?? [],
+      publicationStatus: r.publicationStatus ?? "published",
+      publicationAt: r.publicationAt ?? r.createdAt ?? null,
+      comparison: r.comparison ?? null,
+      decisionKind: r.decisionKind ?? null,
+      acceptedOptionDocumentId: r.acceptedOptionDocumentId ?? null,
+      version: r.version ?? 0,
+      suggestedByProfile: r.suggestedBy
+        ? (profilesById.get(r.suggestedBy) ?? null)
+        : null,
+      suggestedByBadges: r.suggestedBy
+        ? (badgesById.get(r.suggestedBy) ?? [])
+        : [],
       description: r.description ?? null,
       suggestedBy: r.suggestedBy ?? null,
       suggestedByName: r.suggestedBy
@@ -354,25 +442,40 @@ export async function listSuggestions(
       // Every caller sees the real note here; the content-api controller's
       // public mapping is the one that hides it outside NOTE_VISIBLE_STATUSES.
       decisionNote: r.decisionNote ?? null,
+      publicDecisionNote: r.publicDecisionNote ?? null,
     }))
-    .sort(
-      (a, b) =>
-        b.votes + b.requests - (a.votes + a.requests) ||
-        a.name.localeCompare(b.name)
-    )
+    .sort(compareSuggestionRank)
 }
 
 /** Adds or removes the viewer's vote on a still-undecided suggestion. */
-export async function toggleVote(
+async function toggleVoteUnlocked(
   strapi: any,
   suggestionDocumentId: string,
-  baUserId: string
+  baUserId: string,
+  creator = false
 ): Promise<{ voted: boolean; votes: number } | null> {
   if (!isDocumentId(suggestionDocumentId)) return null
   const suggestion = (await strapi
     .documents(SUGGESTION)
     .findOne({ documentId: suggestionDocumentId })) as SuggestionRow | null
-  if (!suggestion || !VOTABLE_STATUSES.has(suggestion.status)) return null
+  if (
+    !suggestion ||
+    !VOTABLE_STATUSES.has(suggestion.status) ||
+    (!creator &&
+      suggestion.publicationStatus !== undefined &&
+      suggestion.publicationStatus !== "published")
+  )
+    return null
+  if (!creator && strapi.contentType?.(ROUND)?.attributes?.cutoffAt) {
+    const round = await syncReviewRound(strapi)
+    if (
+      round.state === "review" &&
+      round.shortlist?.some(
+        (item: any) => item.documentId === suggestionDocumentId
+      )
+    )
+      return null
+  }
 
   const mine = (await strapi.documents(VOTE).findMany({
     filters: {
@@ -418,22 +521,33 @@ const MOVE_TARGETS = {
  * without deciding it. A suggestion already in a final status (accepted,
  * declined, removed) can't move.
  */
-export async function setSuggestionStatus(
+async function setSuggestionStatusUnlocked(
   strapi: any,
   input: {
     documentId: string
     status: "reviewing" | "planned" | "removed"
     decidedBy: string
     note?: string
+    version?: number
   }
 ): Promise<SuggestionRow | null> {
   const suggestion = (await strapi
     .documents(SUGGESTION)
     .findOne({ documentId: input.documentId })) as SuggestionRow | null
-  if (!suggestion || !MOVE_TARGETS[input.status].has(suggestion.status))
+  if (
+    !suggestion ||
+    (input.version !== undefined &&
+      input.version !== (suggestion.version ?? 0)) ||
+    (suggestion.publicationStatus === "pending" &&
+      input.status !== "removed") ||
+    !MOVE_TARGETS[input.status].has(suggestion.status)
+  )
     return null
 
-  const data: Record<string, unknown> = { status: input.status }
+  const data: Record<string, unknown> = {
+    status: input.status,
+    version: (suggestion.version ?? 0) + 1,
+  }
   // "Under review" is a holding state, not a decision: no decidedAt/By.
   if (input.status !== "reviewing") {
     data.decidedAt = new Date()
@@ -455,7 +569,7 @@ export async function setSuggestionStatus(
  * A library type has no option collection: accepting only renames it to
  * the schema enum's spelling, and is refused until the enum has the value.
  */
-export async function decideSuggestion(
+async function decideSuggestionUnlocked(
   strapi: any,
   input: {
     documentId: string
@@ -463,6 +577,15 @@ export async function decideSuggestion(
     decidedBy: string
     name?: string
     note?: string
+    decisionKind?: "add" | "update" | "merge"
+    existingOptionDocumentId?: string
+    feature?: {
+      summary?: string
+      description?: string
+      icon?: string
+      category?: string
+    }
+    version?: number
   }
 ): Promise<
   | { ok: true; data: SuggestionRow }
@@ -477,8 +600,27 @@ export async function decideSuggestion(
       status: 404,
       message: "This suggestion was already decided.",
     }
+  if (
+    input.version !== undefined &&
+    input.version !== (suggestion.version ?? 0)
+  )
+    return {
+      ok: false,
+      status: 400,
+      message: "This suggestion changed. Reload before deciding.",
+    }
+  if (suggestion.publicationStatus === "pending")
+    return {
+      ok: false,
+      status: 400,
+      message: "Review publication before deciding the idea.",
+    }
   const note = input.note?.trim().slice(0, 2000) || null
-  const decided = { decidedAt: new Date(), decidedBy: input.decidedBy }
+  const decided = {
+    decidedAt: new Date(),
+    decidedBy: input.decidedBy,
+    version: (suggestion.version ?? 0) + 1,
+  }
 
   if (input.decision === "decline") {
     if (!note)
@@ -492,36 +634,11 @@ export async function decideSuggestion(
       ok: true,
       data: await strapi.documents(SUGGESTION).update({
         documentId: suggestion.documentId,
-        data: { status: "declined", decisionNote: note, ...decided },
-      }),
-    }
-  }
-
-  if (suggestion.optionKey === "library_types") {
-    // `name` lets the board tidy the wording ("Prison library" → "Prison")
-    // before matching it against the schema enum.
-    const candidateName = (input.name?.trim() || suggestion.name).slice(0, 80)
-    const enumValues: string[] =
-      strapi.contentType?.(LIBRARY)?.attributes?.libraryType?.enum ?? []
-    const match = enumValues.find(
-      (v) => v.toLowerCase() === candidateName.toLowerCase()
-    )
-    if (!match)
-      return {
-        ok: false,
-        status: 400,
-        message:
-          "Add the library type to the schema first, then accept it. Mark it planned until then.",
-      }
-
-    return {
-      ok: true,
-      data: await strapi.documents(SUGGESTION).update({
-        documentId: suggestion.documentId,
         data: {
-          status: "accepted",
-          name: match,
+          status: "declined",
+          decisionKind: "decline",
           decisionNote: note,
+          publicDecisionNote: note,
           ...decided,
         },
       }),
@@ -529,18 +646,108 @@ export async function decideSuggestion(
   }
 
   const name = (input.name?.trim() || suggestion.name).slice(0, 80)
-  const uid = OPTION_UIDS[suggestion.optionKey as OptionKey]
+  const uid =
+    suggestion.optionKey === "library_types"
+      ? LIBRARY_TYPE
+      : OPTION_UIDS[suggestion.optionKey as OptionKey]
   const [existing] = await strapi.documents(uid).findMany({
     filters: { name: { $eqi: name } },
     fields: ["documentId"],
     status: "published",
     limit: 1,
   })
-  const option =
-    existing ??
-    (await strapi
+  const kind = input.decisionKind ?? "add"
+  let option = existing
+  if (kind !== "add") {
+    if (!isDocumentId(input.existingOptionDocumentId))
+      return {
+        ok: false,
+        status: 400,
+        message: "Choose an existing published option.",
+      }
+    option = await strapi.documents(uid).findOne({
+      documentId: input.existingOptionDocumentId,
+      status: "published",
+    })
+    if (!option)
+      return {
+        ok: false,
+        status: 400,
+        message: "The existing option is unavailable.",
+      }
+  }
+  const feature = input.feature ?? {}
+  const summary = feature.summary?.trim()
+  const description = feature.description?.trim()
+  const icon = feature.icon?.trim()
+  const category = feature.category?.trim()
+  if (
+    (summary?.length ?? 0) > 400 ||
+    (description?.length ?? 0) > 4000 ||
+    (icon && !/^[a-z0-9-]+:[a-z0-9-]+$/i.test(icon)) ||
+    (category &&
+      !(strapi.contentType?.(uid)?.attributes?.category?.enum ?? []).includes(
+        category
+      )) ||
+    findUnsafeContent({ summary, description })
+  )
+    return {
+      ok: false,
+      status: 400,
+      message: "Check the feature description, icon and category.",
+    }
+  if (kind === "add" && option && input.decisionKind === "add")
+    return {
+      ok: false,
+      status: 400,
+      message:
+        "An option with this name already exists. Choose merge or clarify instead.",
+    }
+  if (kind === "add" && !option && input.feature && !summary)
+    return {
+      ok: false,
+      status: 400,
+      message: "Give the new feature a summary so contributors understand it.",
+    }
+  if (findUnsafeContent({ name }))
+    return {
+      ok: false,
+      status: 400,
+      message: "Check the accepted feature name.",
+    }
+  const featureData = {
+    ...(summary ? { summary } : {}),
+    ...(description
+      ? {
+          description: [
+            {
+              type: "paragraph",
+              children: [{ type: "text", text: description }],
+            },
+          ],
+        }
+      : {}),
+    ...(icon ? { icon: { iconName: icon } } : {}),
+    ...(category ? { category } : {}),
+  }
+  if (kind === "update") {
+    if (!Object.keys(featureData).length)
+      return {
+        ok: false,
+        status: 400,
+        message: "Supply the clarification to add to the existing option.",
+      }
+    if (description)
+      featureData.description = [
+        ...(Array.isArray(option.description) ? option.description : []),
+        ...featureData.description!,
+      ]
+    await applyToPublished(strapi, uid, option.documentId, featureData)
+  } else if (!option) {
+    option = await strapi
       .documents(uid)
-      .create({ data: { name }, status: "published" }))
+      .create({ data: { name, ...featureData }, status: "published" })
+  }
 
   // One library can't hold up the board's decision: a library that can't
   // take the link now is recorded on the suggestion for a follow-up by hand.
@@ -563,9 +770,13 @@ export async function decideSuggestion(
         LIBRARY,
         found.documentId,
         {
-          [suggestion.optionKey]: {
-            connect: [{ documentId: option.documentId }],
-          },
+          ...(suggestion.optionKey === "library_types"
+            ? { libraryType: { set: [{ documentId: option.documentId }] } }
+            : {
+                [suggestion.optionKey]: {
+                  connect: [{ documentId: option.documentId }],
+                },
+              }),
           contentUpdatedAt: new Date(),
         },
         { locale: found.locale ?? undefined }
@@ -588,10 +799,12 @@ export async function decideSuggestion(
       documentId: suggestion.documentId,
       data: {
         status: "accepted",
-        name,
+        name: option.name,
         acceptedOptionDocumentId: option.documentId,
+        decisionKind: kind,
         unlinkedLibraries,
         decisionNote: note,
+        publicDecisionNote: note,
         ...decided,
       },
     }),
@@ -605,13 +818,14 @@ export async function decideSuggestion(
  * more than `DAILY_SUGGESTION_LIMIT` suggestions from the same contributor
  * in 24 hours.
  */
-export async function createSuggestion(
+async function createSuggestionUnlocked(
   strapi: any,
   input: {
     optionKey: SuggestionList
     name: string
     description?: string | null
     baUserId: string
+    comparison?: { documentId?: unknown; explanation?: unknown } | null
   }
 ): Promise<
   | { ok: true; suggestion: SuggestionView }
@@ -647,36 +861,43 @@ export async function createSuggestion(
 
   const nameKey = nameKeyOf(name)
 
-  if (input.optionKey === "library_types") {
-    const enumValues: string[] =
-      strapi.contentType?.(LIBRARY)?.attributes?.libraryType?.enum ?? []
-    if (enumValues.some((v) => v.toLowerCase() === name.toLowerCase()))
-      return {
-        ok: false,
-        status: 409,
-        message: "That option is already in the lists.",
-      }
-  } else {
-    const uid = OPTION_UIDS[input.optionKey]
-    const [existingOption] = await strapi.documents(uid).findMany({
-      filters: { name: { $eqi: name } },
-      fields: ["documentId"],
-      status: "published",
-      limit: 1,
-    })
-    if (existingOption)
-      return {
-        ok: false,
-        status: 409,
-        message: "That option is already in the lists.",
-      }
-  }
+  const uid =
+    input.optionKey === "library_types"
+      ? LIBRARY_TYPE
+      : OPTION_UIDS[input.optionKey]
+  const [existingOption] = await strapi.documents(uid).findMany({
+    filters: { name: { $eqi: name } },
+    fields: ["documentId"],
+    status: "published",
+    limit: 1,
+  })
+  if (existingOption)
+    return {
+      ok: false,
+      status: 409,
+      message: "That option is already in the lists.",
+    }
 
   const [existingSuggestion] = (await strapi.documents(SUGGESTION).findMany({
     filters: { optionKey: { $eq: input.optionKey }, nameKey: { $eq: nameKey } },
     limit: 1,
   })) as SuggestionRow[]
-  if (existingSuggestion) {
+  if (
+    existingSuggestion &&
+    !(
+      existingSuggestion.publicationStatus === "rejected" &&
+      existingSuggestion.suggestedBy === input.baUserId
+    )
+  ) {
+    if (
+      existingSuggestion.publicationStatus &&
+      existingSuggestion.publicationStatus !== "published"
+    )
+      return {
+        ok: false,
+        status: 409,
+        message: "This name is unavailable. Choose another name.",
+      }
     if (
       existingSuggestion.status === "open" ||
       existingSuggestion.status === "reviewing" ||
@@ -697,6 +918,46 @@ export async function createSuggestion(
     }
   }
 
+  let comparison: {
+    documentId: string
+    name: string
+    explanation: string
+  } | null = null
+  if (input.comparison) {
+    const { documentId, explanation } = input.comparison
+    if (
+      !isDocumentId(documentId) ||
+      typeof explanation !== "string" ||
+      !explanation.trim() ||
+      explanation.length > 400 ||
+      findUnsafeContent(explanation)
+    )
+      return {
+        ok: false,
+        status: 400,
+        message:
+          "Choose a published feature and explain how this differs (up to 400 characters).",
+      }
+    const reference = await strapi
+      .documents(
+        input.optionKey === "library_types"
+          ? LIBRARY_TYPE
+          : OPTION_UIDS[input.optionKey]
+      )
+      .findOne({ documentId, status: "published", fields: ["name"] })
+    if (!reference)
+      return {
+        ok: false,
+        status: 400,
+        message: "That comparison feature is unavailable.",
+      }
+    comparison = {
+      documentId,
+      name: reference.name,
+      explanation: explanation.trim(),
+    }
+  }
+
   const dayAgo = new Date(Date.now() - 86_400_000).toISOString()
   const recentCount = await strapi.documents(SUGGESTION).count({
     filters: {
@@ -713,20 +974,47 @@ export async function createSuggestion(
 
   // requests counts correction requests for the same name; a direct post
   // isn't one (the creator's vote, added below, already counts them).
-  const created = (await strapi.documents(SUGGESTION).create({
-    data: {
-      name,
-      nameKey,
-      optionKey: input.optionKey,
-      status: "open",
-      requests: 0,
-      libraries: [],
-      submissionIds: [],
-      description,
-      suggestedBy: input.baUserId,
+  const data = {
+    name,
+    nameKey,
+    optionKey: input.optionKey,
+    status: "open",
+    publicationStatus: "pending",
+    comparison,
+    description,
+    suggestedBy: input.baUserId,
+  }
+  const created =
+    existingSuggestion?.publicationStatus === "rejected"
+      ? await strapi.documents(SUGGESTION).update({
+          documentId: existingSuggestion.documentId,
+          data: {
+            ...data,
+            decidedAt: null,
+            decidedBy: null,
+            decisionNote: null,
+            publicDecisionNote: null,
+            version: (existingSuggestion.version ?? 0) + 1,
+          },
+        })
+      : await strapi.documents(SUGGESTION).create({
+          data: { ...data, requests: 0, libraries: [], submissionIds: [] },
+        })
+  const [ownVote] = await strapi.documents(VOTE).findMany({
+    filters: {
+      suggestionDocumentId: { $eq: created.documentId },
+      baUserId: { $eq: input.baUserId },
     },
-  })) as SuggestionRow
-  const vote = await toggleVote(strapi, created.documentId, input.baUserId)
+    limit: 1,
+  })
+  const vote = ownVote
+    ? {
+        voted: true,
+        votes: await strapi.documents(VOTE).count({
+          filters: { suggestionDocumentId: { $eq: created.documentId } },
+        }),
+      }
+    : await toggleVoteUnlocked(strapi, created.documentId, input.baUserId, true)
 
   const [profile] = (await strapi.documents(PROFILE).findMany({
     filters: { baUserId: { $eq: input.baUserId } },
@@ -756,6 +1044,9 @@ export async function createSuggestion(
       name: created.name,
       optionKey: created.optionKey,
       status: created.status,
+      publicationStatus: "pending",
+      comparison,
+      version: created.version ?? 0,
       requests: created.requests ?? 0,
       votes: vote?.votes ?? 1,
       voted: vote?.voted ?? true,
@@ -770,4 +1061,165 @@ export async function createSuggestion(
       decisionNote: null,
     },
   }
+}
+
+export async function toggleVote(
+  ...args: Parameters<typeof toggleVoteUnlocked>
+) {
+  return withBoardLock(args[0], async () => {
+    if (args[0].contentType?.(ROUND)?.attributes?.cutoffAt)
+      await syncReviewRound(args[0])
+
+    return toggleVoteUnlocked(...args)
+  })
+}
+
+export async function createSuggestion(
+  ...args: Parameters<typeof createSuggestionUnlocked>
+) {
+  return withBoardLock(args[0], async () => {
+    if (args[0].contentType?.(ROUND)?.attributes?.cutoffAt)
+      await syncReviewRound(args[0])
+
+    return createSuggestionUnlocked(...args)
+  })
+}
+
+export async function decideSuggestion(
+  ...args: Parameters<typeof decideSuggestionUnlocked>
+) {
+  return withBoardLock(args[0], async () => {
+    if (args[0].contentType?.(ROUND)?.attributes?.cutoffAt)
+      await syncReviewRound(args[0])
+
+    return decideSuggestionUnlocked(...args)
+  })
+}
+
+export async function publishSuggestion(
+  strapi: any,
+  documentId: string,
+  version: number,
+  rejectionNote?: string,
+  reviewer = "Editorial board"
+) {
+  return withBoardLock(strapi, async () => {
+    await syncReviewRound(strapi)
+    const item = await strapi.documents(SUGGESTION).findOne({ documentId })
+    if (
+      !item ||
+      item.status === "removed" ||
+      item.publicationStatus !== "pending" ||
+      version !== (item.version ?? 0)
+    )
+      return {
+        ok: false,
+        status: 400,
+        message: "This publication review changed. Reload the list.",
+      }
+    const audit = {
+      publicationReviewedAt: new Date().toISOString(),
+      publicationReviewedBy: reviewer,
+      publicationHistory: [
+        ...(Array.isArray(item.publicationHistory)
+          ? item.publicationHistory
+          : []),
+        {
+          at: new Date().toISOString(),
+          by: reviewer,
+          outcome: rejectionNote?.trim() ? "rejected" : "approved",
+          version: item.version ?? 0,
+          note: rejectionNote?.trim().slice(0, 2000) ?? null,
+        },
+      ],
+    }
+    if (rejectionNote?.trim()) {
+      const data = await strapi.documents(SUGGESTION).update({
+        documentId,
+        data: {
+          publicationStatus: "rejected",
+          status: "declined",
+          ...audit,
+          decidedBy: reviewer,
+          decisionNote: rejectionNote.trim().slice(0, 2000),
+          decidedAt: new Date().toISOString(),
+          version: (item.version ?? 0) + 1,
+        },
+      })
+
+      return { ok: true, data }
+    }
+    if (item.comparison) {
+      const target = await strapi
+        .documents(
+          item.optionKey === "library_types"
+            ? LIBRARY_TYPE
+            : OPTION_UIDS[item.optionKey as OptionKey]
+        )
+        .findOne({
+          documentId: item.comparison.documentId,
+          status: "published",
+          fields: ["name"],
+        })
+      if (!target)
+        return {
+          ok: false,
+          status: 400,
+          message:
+            "The comparison is no longer published. Reject with feedback so the contributor can revise it.",
+        }
+    }
+    {
+      const [duplicate] = await strapi
+        .documents(
+          item.optionKey === "library_types"
+            ? LIBRARY_TYPE
+            : OPTION_UIDS[item.optionKey as OptionKey]
+        )
+        .findMany({
+          status: "published",
+          filters: { name: { $eqi: item.name } },
+          limit: 1,
+        })
+      if (duplicate)
+        return {
+          ok: false,
+          status: 400,
+          message:
+            "This feature now exists. Remove the duplicate suggestion instead.",
+        }
+    }
+    const data = await strapi.documents(SUGGESTION).update({
+      documentId,
+      data: {
+        publicationStatus: "published",
+        publicationAt: new Date().toISOString(),
+        ...audit,
+        version: (item.version ?? 0) + 1,
+      },
+    })
+
+    return { ok: true, data }
+  })
+}
+
+export async function recordSuggestion(
+  ...args: Parameters<typeof recordSuggestionUnlocked>
+) {
+  return withBoardLock(args[0], async () => {
+    if (args[0].contentType?.(ROUND)?.attributes?.cutoffAt)
+      await syncReviewRound(args[0])
+
+    return recordSuggestionUnlocked(...args)
+  })
+}
+export async function setSuggestionStatus(
+  ...args: Parameters<typeof setSuggestionStatusUnlocked>
+) {
+  return withBoardLock(args[0], async () => {
+    if (args[0].contentType?.(ROUND)?.attributes?.cutoffAt)
+      await syncReviewRound(args[0])
+
+    return setSuggestionStatusUnlocked(...args)
+  })
 }

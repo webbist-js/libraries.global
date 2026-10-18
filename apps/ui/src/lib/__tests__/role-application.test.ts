@@ -4,6 +4,8 @@ import {
   applicationFields,
   applicationProblem,
   applicationRoleFrom,
+  applicationQueueFrom,
+  sectionKindOf,
   latestApplications,
 } from "@/lib/role-application"
 
@@ -146,5 +148,26 @@ describe("applicationFields", () => {
       samples: ["https://example.org/a"],
       acceptedGuidelines: true,
     })
+  })
+})
+
+describe("Discussions moderator application", () => {
+  it("keeps its queue and languages without article sections", () => {
+    expect(applicationQueueFrom("discussions")).toBe("discussions")
+    expect(sectionKindOf("moderator", "discussions")).toBeNull()
+    const input = {
+      ...valid,
+      role: "moderator" as const,
+      queue: "discussions" as const,
+      locales: ["fr"],
+      sections: ["guides"],
+    }
+    expect(applicationProblem(input, LOCALES)).toBeNull()
+    expect(applicationFields(input)).toMatchObject({
+      role: "moderator",
+      queue: "discussions",
+      locales: ["fr"],
+    })
+    expect(applicationFields(input)).not.toHaveProperty("sections")
   })
 })

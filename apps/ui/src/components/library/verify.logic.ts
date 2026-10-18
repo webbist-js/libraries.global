@@ -1,13 +1,13 @@
-// "Still right?": a reader confirms parts of a library's record without
-// changing them. Pure helpers, no React, so they're unit-testable.
-
 import {
+  libraryTypeName,
   hasOpeningHours,
   normalizeMobileTimetable,
   sectionCheckedAt as sharedSectionCheckedAt,
   VERIFY_SECTIONS,
   type VerifySection,
 } from "@repo/shared-data"
+// "Still right?": a reader confirms parts of a library's record without
+// changing them. Pure helpers, no React, so they're unit-testable.
 
 import {
   DAY_ORDER,
@@ -50,7 +50,7 @@ export function verifyRecordOf(library: object): VerifyRecord {
   const r = library as Record<string, unknown>
 
   return {
-    libraryType: str(r.libraryType),
+    libraryType: libraryTypeName(r.libraryType) ?? "",
     mobileTimetable: r.mobileTimetable ?? null,
     openingTimes: r.openingTimes ?? null,
     operationalStatus: str(r.operationalStatus),

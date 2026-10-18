@@ -5,7 +5,7 @@ import {
 } from "@repo/shared-data"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { makeFakeStrapi } from "./helpers/fake-strapi"
+import { makeFakeStrapi as makeBaseFakeStrapi } from "./helpers/fake-strapi"
 import {
   mobileBoundaryNeedsRefresh,
   mobileStopDocuments,
@@ -16,6 +16,55 @@ import {
 
 const ID = "mobile00000000000000001",
   LIBRARY = "api::library.library"
+function makeFakeStrapi(...args: Parameters<typeof makeBaseFakeStrapi>) {
+  const made = makeBaseFakeStrapi(...args)
+  const original = made.strapi.db.connection
+  const metadata = made.strapi.db.metadata.get
+  made.strapi.db.metadata.get = (uid: string) =>
+    uid === LIBRARY
+      ? {
+          tableName: "libraries",
+          attributes: {
+            libraryType: {
+              joinTable: {
+                name: "libraries_library_type_lnk",
+                joinColumn: { name: "library_id" },
+                inverseJoinColumn: { name: "library_type_id" },
+              },
+            },
+          },
+        }
+      : uid === "api::library-type.library-type"
+        ? { tableName: "library_types", attributes: {} }
+        : metadata(uid)
+  made.strapi.db.connection = (table: string) => {
+    if (table !== "libraries as l") return original(table)
+    const query = {
+      join: vi.fn(() => query),
+      where: vi.fn(() => query),
+      whereNotNull: vi.fn(() => query),
+      distinct: vi.fn(() =>
+        [
+          ...new Set(
+            (made.store[LIBRARY] ?? [])
+              .filter(
+                (row) =>
+                  row.publishedAt &&
+                  (typeof row.libraryType === "string"
+                    ? row.libraryType
+                    : row.libraryType?.name) === "Mobile"
+              )
+              .map((row) => row.timezone)
+          ),
+        ].map((timezone) => ({ timezone }))
+      ),
+    }
+
+    return query
+  }
+
+  return made
+}
 const tt: MobileTimetable = {
   ...emptyTimetable("2026-10-05"),
   stops: [
@@ -52,7 +101,7 @@ const library = {
   documentId: ID,
   name: "Vehicle one",
   slug: "vehicle-one",
-  libraryType: "Mobile",
+  libraryType: { name: "Mobile" },
   operationalStatus: "open",
   timezone: "UTC",
   mobileTimetable: tt,
@@ -250,7 +299,7 @@ describe("mobile stop index", () => {
     expect(pages).toEqual([
       expect.objectContaining({
         filters: {
-          libraryType: "Mobile",
+          libraryType: { name: "Mobile" },
           id: { $gt: 0 },
           $or: [{ timezone: { $in: ["UTC"] } }],
         },

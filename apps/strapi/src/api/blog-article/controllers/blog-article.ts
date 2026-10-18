@@ -1,5 +1,15 @@
 import { factories } from "@strapi/strapi"
 
+import {
+  ARTICLE_PROFILE_FIELDS,
+  projectArticleAttribution,
+} from "../../../utils/article-attribution"
+import {
+  articleRevision,
+  ARTICLE_CONTEXT_POPULATE,
+  ARTICLE_EVENTS_POPULATE,
+} from "../../../utils/article-content"
+import { publishedArticleLocales } from "../../../utils/public-article-locales"
 import { readLocale, readStatus } from "../../../utils/read-status"
 
 const BODY_POPULATE = {
@@ -15,6 +25,35 @@ const BODY_POPULATE = {
 export default factories.createCoreController(
   "api::blog-article.blog-article",
   ({ strapi }) => ({
+    async publishedLocales(ctx) {
+      const documentId = ctx.params.documentId
+      if (
+        typeof documentId !== "string" ||
+        !/^[a-z0-9]{20,32}$/.test(documentId)
+      )
+        return ctx.badRequest("Invalid article documentId")
+      ctx.body = {
+        data: await publishedArticleLocales(
+          strapi,
+          "api::blog-article.blog-article",
+          documentId
+        ),
+        meta: {},
+      }
+    },
+    async find(ctx) {
+      const response = await super.find(ctx)
+      response.data = response.data.map(projectArticleAttribution)
+
+      return response
+    },
+    async findOne(ctx) {
+      const response = await super.findOne(ctx)
+      if (response.data)
+        response.data = projectArticleAttribution(response.data)
+
+      return response
+    },
     // ── /blog-articles/detail/:slug ───────────────────────────────────────────
     async detail(ctx) {
       const { slug } = ctx.params as { slug: string }
@@ -28,17 +67,14 @@ export default factories.createCoreController(
           locale,
           status,
           populate: {
+            ...ARTICLE_CONTEXT_POPULATE,
+            eventMentions: ARTICLE_EVENTS_POPULATE,
             heroImage: true,
             authorAvatar: true,
             // Public profile fields only: the Document Service doesn't strip
             // private attributes, so name them.
             authorProfile: {
-              fields: [
-                "username",
-                "firstName",
-                "lastName",
-                "profileVisibility",
-              ],
+              fields: ARTICLE_PROFILE_FIELDS,
               populate: { avatar: true },
             } as Record<string, unknown>,
             section: { fields: ["name", "slug"] },
@@ -69,17 +105,13 @@ export default factories.createCoreController(
         })
 
       const article = results[0] ?? null
-
-      // A private profile isn't linked from a byline; the text author stays.
-      const authorProfile = (article as Record<string, unknown> | null)
-        ?.authorProfile as { profileVisibility?: string } | null | undefined
-      if (authorProfile) {
-        if (authorProfile.profileVisibility === "private") {
-          ;(article as Record<string, unknown>).authorProfile = null
-        } else {
-          delete authorProfile.profileVisibility
-        }
-      }
+      const availableLocales = article
+        ? await publishedArticleLocales(
+            strapi,
+            "api::blog-article.blog-article",
+            article.documentId
+          )
+        : []
 
       // If no curated related articles, fall back to 3 recent posts
       if (
@@ -114,7 +146,16 @@ export default factories.createCoreController(
         ;(article as Record<string, unknown>).relatedArticles = fallback
       }
 
-      ctx.body = { data: article, meta: {} }
+      ctx.body = {
+        data: article
+          ? {
+              ...projectArticleAttribution(article as any),
+              contentRevision: articleRevision(article as any),
+              availableLocales,
+            }
+          : null,
+        meta: {},
+      }
     },
 
     // ── /blog-articles/slugs ──────────────────────────────────────────────────

@@ -40,6 +40,7 @@ describe("fetchSessionProfile", () => {
     const expected = {
       contributorRole: "contributor",
       username: "ada",
+      compositionPreferences: { country: null, languages: [] },
       tier: "Reader",
       claims: [],
       staff: [],
@@ -65,6 +66,31 @@ describe("fetchSessionProfile", () => {
     invalidateSessionProfile("u1")
     await fetchSessionProfile("u1")
     expect(f).toHaveBeenCalledTimes(2)
+  })
+
+  it("projects only valid owner country/language hints without losing grants to malformed preferences", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ...body,
+          country: "CO",
+          languages: [
+            { code: "es", proficiency: "native", privateNote: "omit" },
+            null,
+            { code: "fr", proficiency: "invalid" },
+          ],
+        })
+      )
+    )
+    const profile = await fetchSessionProfile("u1")
+    expect(profile?.compositionPreferences).toEqual({
+      country: "CO",
+      languages: [{ code: "es", proficiency: "native" }],
+    })
+    expect(profile?.roleGrants).toEqual([
+      { role: "contributor", queue: "all", locale: null },
+    ])
   })
   it("refreshes changed entitlements before the cache expires without a new login", async () => {
     const f = vi

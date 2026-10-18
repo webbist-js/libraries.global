@@ -4,6 +4,7 @@ import type { PlanKey } from "@repo/access"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
+import { useModerationSummary } from "@/hooks/useModerationSummary"
 import { useHydratedSession } from "@/lib/access-client"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import {
@@ -40,25 +41,18 @@ export function useFeaturedDrive(enabled: boolean) {
   })
 }
 
-type ModerationStat = { queue: string; status: string; count: number }
-
-/** Submissions pending in the Moderator's scope, from the queue's stats: the
- * Contribute menu and the editorial drawer. */
+/** Actionable submissions and discussions in the current review scope. */
 export function useModerationWaiting(enabled: boolean) {
-  return useQuery({
-    queryKey: ["contribute-menu", "moderation"],
-    enabled,
-    staleTime: STALE,
-    queryFn: async (): Promise<number | null> => {
-      const res = await fetch("/api/moderation/stats")
-      if (!res.ok) return null
-      const json = (await res.json()) as { data?: ModerationStat[] }
+  const summary = useModerationSummary(enabled)
+  const rows = summary.data
 
-      return (json.data ?? [])
-        .filter((s) => s.status === "pending")
-        .reduce((sum, s) => sum + (Number(s.count) || 0), 0)
-    },
-  })
+  return {
+    ...summary,
+    data:
+      rows?.length && rows.every((row) => row.pending !== null)
+        ? rows.reduce((sum, row) => sum + row.pending!, 0)
+        : null,
+  }
 }
 
 /** Suggested changes waiting on one staff library (the drawer's summary). */

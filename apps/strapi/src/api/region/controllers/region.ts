@@ -228,7 +228,6 @@ export default factories.createCoreController(
                   fields: [
                     "name",
                     "slug",
-                    "libraryType",
                     "city",
                     "district",
                     "summary",
@@ -245,6 +244,7 @@ export default factories.createCoreController(
                     "absentFacilities",
                   ] as never,
                   populate: {
+                    libraryType: { fields: ["name"] },
                     homeLibrary: { fields: ["name", "slug"] },
                     heroImage: mediaPopulate,
                     accessibility: { fields: ["documentId"] },

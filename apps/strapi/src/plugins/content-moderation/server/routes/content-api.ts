@@ -1,6 +1,18 @@
 export default [
   {
     method: "GET",
+    path: "/option-catalogue",
+    handler: "option-suggestion.catalogue",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/articles/blog/:slug/ownership",
+    handler: "submission.journalOwnership",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
     path: "/locales",
     handler: "submission.locales",
     config: { auth: false, policies: [] },
@@ -53,6 +65,12 @@ export default [
     handler: "submission.findMine",
     config: { auth: false, policies: [] },
   },
+  {
+    method: "POST",
+    path: "/submissions/:id/withdraw",
+    handler: "submission.withdraw",
+    config: { auth: false, policies: [] },
+  },
   // Bridge secret + X-Ba-User-Id (401 otherwise).
   {
     method: "GET",
@@ -91,9 +109,45 @@ export default [
     config: { auth: false, policies: [] },
   },
   {
+    method: "POST",
+    path: "/uploads/reservations",
+    handler: "upload.reserve",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations/complete",
+    handler: "upload.complete",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/uploads/reservations/cancel",
+    handler: "upload.cancel",
+    config: { auth: false, policies: [] },
+  },
+  {
     method: "GET",
     path: "/option-suggestions",
     handler: "option-suggestion.listPublic",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/option-suggestions/:id",
+    handler: "option-suggestion.findPublic",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/moderation/suggestion-round",
+    handler: "moderation.suggestionRound",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "PUT",
+    path: "/moderation/suggestion-round",
+    handler: "moderation.updateSuggestionRound",
     config: { auth: false, policies: [] },
   },
   {

@@ -1,81 +1,71 @@
 import "server-only"
 
+import { DEFAULT_LOCALE } from "@repo/shared-data"
+
+import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
 import type {
+  OptionCatalogue,
   PublicSuggestion,
   SuggestionList,
+  SuggestionReviewRound,
 } from "@/lib/community/suggestions"
-import { LIBRARY_TYPES } from "@/lib/meilisearch"
-import { PublicStrapiClient } from "@/lib/strapi-api"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
-/** Every open, under-review, planned, accepted or declined suggestion. */
-export async function fetchPublicSuggestions(): Promise<PublicSuggestion[]> {
+export async function fetchSuggestionBoard(): Promise<{
+  data: PublicSuggestion[]
+  round: SuggestionReviewRound | null
+}> {
   try {
     const res = await fetch(
       `${STRAPI}/api/content-moderation/option-suggestions`,
-      {
-        next: { revalidate: 60, tags: ["option-suggestions"] },
-      }
+      { cache: "no-store", headers: strapiServiceHeaders() }
     )
-    if (!res.ok) return []
-    const json = (await res.json()) as { data?: PublicSuggestion[] }
+    if (!res.ok) return { data: [], round: null }
+    const json = await res.json()
 
-    return json.data ?? []
+    return { data: json.data ?? [], round: json.round ?? null }
   } catch {
-    return []
+    return { data: [], round: null }
   }
 }
 
-const NAME_UIDS = {
-  accessibility: "api::accessibility.accessibility",
-  amenities: "api::amenity.amenity",
-  services: "api::service.service",
-} as const
+export async function fetchPublicSuggestions(): Promise<PublicSuggestion[]> {
+  return (await fetchSuggestionBoard()).data
+}
 
-const MAX_NAMES = 200
-
-async function fetchNames(
-  uid: (typeof NAME_UIDS)[keyof typeof NAME_UIDS]
-): Promise<string[]> {
+/** Full published catalogue with translated documents overriding default-language entries. */
+export async function fetchOptionCatalogue(
+  locale: string = DEFAULT_LOCALE
+): Promise<OptionCatalogue> {
   try {
-    const result = (await PublicStrapiClient.fetchMany(
-      uid,
-      {
-        fields: ["name"],
-        sort: { name: "asc" },
-        pagination: { pageSize: MAX_NAMES },
-        status: "published",
-      } as never,
-      { next: { revalidate: 3600 } }
-    )) as { data?: { name?: string | null }[] }
+    const response = await fetch(
+      `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(locale)}`,
+      { cache: "no-store", headers: strapiServiceHeaders() }
+    )
+    if (response.ok) {
+      const body = await response.json()
 
-    return (result.data ?? [])
-      .map((r) => r.name)
-      .filter((n): n is string => typeof n === "string")
+      return { ...body.data, categories: body.categories }
+    }
   } catch {
-    return []
+    /* Catalogue errors must not stop the public suggestion board. */
   }
+  console.warn("[suggestions] Published checklist catalogue unavailable.")
+
+  return { accessibility: [], services: [], amenities: [], library_types: [] }
 }
 
-/**
- * The published accessibility, amenity and service names, sorted and
- * capped (at most 200 each), plus the library-type enum — for the
- * suggestion form's "is this already on the list?" check.
- */
-export async function fetchOptionNames(): Promise<
-  Record<SuggestionList, string[]>
-> {
-  const [accessibility, amenities, services] = await Promise.all([
-    fetchNames(NAME_UIDS.accessibility),
-    fetchNames(NAME_UIDS.amenities),
-    fetchNames(NAME_UIDS.services),
-  ])
+/** Name-only compatibility projection for duplicate checks. */
+export async function fetchOptionNames(
+  locale = DEFAULT_LOCALE
+): Promise<Record<SuggestionList, string[]>> {
+  const catalogue = await fetchOptionCatalogue(locale)
 
   return {
-    accessibility,
-    amenities,
-    services,
-    library_types: [...LIBRARY_TYPES],
+    accessibility: catalogue.accessibility.map((item) => item.name),
+    amenities: catalogue.amenities.map((item) => item.name),
+    services: catalogue.services.map((item) => item.name),
+    library_types: catalogue.library_types.map((item) => item.name),
   }
 }

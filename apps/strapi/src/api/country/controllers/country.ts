@@ -41,14 +41,11 @@ export default factories.createCoreController(
         heroImage: mediaPopulate,
         mapConfig: MAP_CONFIG_POPULATE,
         nationalLibrary: {
-          fields: [
-            "name",
-            "slug",
-            "summary",
-            "libraryType",
-            "operationalStatus",
-          ],
-          populate: { heroImage: mediaPopulate },
+          fields: ["name", "slug", "summary", "operationalStatus"],
+          populate: {
+            libraryType: { fields: ["name"] },
+            heroImage: mediaPopulate,
+          },
         },
         featuredLibraries: FEATURED_LIBRARY_POPULATE,
         seo: SEO_POPULATE,

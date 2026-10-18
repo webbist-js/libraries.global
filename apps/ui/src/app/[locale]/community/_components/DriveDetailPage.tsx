@@ -2,23 +2,23 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
+import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
 import { DriveDates } from "@/components/drives/DriveDates"
 import { DriveFocusChip } from "@/components/drives/DriveFocusChip"
 import { DriveFollowButton } from "@/components/drives/DriveFollowButton"
 import { DriveHelpers } from "@/components/drives/DriveHelpers"
-import { DriveProgress } from "@/components/drives/DriveProgress"
+import { DriveHowToHelp } from "@/components/drives/DriveHowToHelp"
+import { DriveProgressSummary } from "@/components/drives/DriveProgressSummary"
 import { DriveRules } from "@/components/drives/DriveRules"
 import { DriveShareButton } from "@/components/drives/DriveShareButton"
 import { DriveTaskArea } from "@/components/drives/DriveTaskArea"
-import { focusChipOf, gapPhraseOf } from "@/components/drives/focus-meta"
+import { gapPhraseOf } from "@/components/drives/focus-meta"
+import { driveHeroTitle } from "@/components/drives/progress-summary"
 import { Notice } from "@/components/ds"
+import { BackLink } from "@/components/ds/BackLink"
 import type { ContributionPlace } from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
-import {
-  type DriveView,
-  plainDriveTitle,
-  progressMeta,
-} from "@/lib/drives/drive-view"
+import { type DriveView, plainDriveTitle } from "@/lib/drives/drive-view"
 import type { Drive, DriveLeaderboardEntry } from "@/lib/drives/types"
 import { Link } from "@/lib/navigation"
 import type { BlogArticleSummary } from "@/lib/strapi-api/content/server"
@@ -35,15 +35,8 @@ const CARD = {
   padding: "clamp(20px,2.6vw,28px)",
 } as const
 
-const SECTION_HEADING = {
-  fontFamily: T.font.serif,
-  fontWeight: 500,
-  fontSize: "clamp(26px,2.6vw,32px)",
-  color: T.ink.base,
-} as const
-
 const CHIP =
-  "inline-flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px]"
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px]"
 
 type ChipLook = { label: string; icon: string; bg: string; fg: string }
 
@@ -156,7 +149,7 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
         title={tUi("this_drive_hasnt_opened_yet")}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
-          Its tasks appear here when it opens. The counts below are today’s.
+          Its tasks appear here when it opens. The counts above are today’s.
         </p>
       </Notice>
     )
@@ -199,11 +192,10 @@ function JournalStoryCard({
 }
 
 /**
- * A drive's own page (spec §5.6): the hero (chips, title, summary, dates,
- * follow, share), then progress with its sparkline, "How to help", the task list
- * and panel with "Your part" while it's open, and the helpers and rules in
- * the rail. A finished drive shows its final numbers and only
- * the helpers whose activity is public, and no steps or tasks.
+ * The shared hero carries metadata and progress. Library tasks lead the body,
+ * beside help and the reader's private counts; helpers, rules and connected
+ * discussions follow. Finished drives retain their final tally and story,
+ * public helpers and the original discussion feed, without accepting tasks.
  */
 export function DriveDetailPage({
   drive,
@@ -233,7 +225,6 @@ export function DriveDetailPage({
   const progress = view?.progress ?? null
   const helpers = view?.helpers ?? null
   const finished = drive.status === "closed" || drive.status === "cancelled"
-  const steps = drive.steps?.filter((s) => s.text?.trim()) ?? []
 
   return (
     <div
@@ -245,137 +236,87 @@ export function DriveDetailPage({
           { label: tUi("drives"), href: "/community#drives" },
           { label: title },
         ]}
-        title={drive.title}
+        title={driveHeroTitle(drive.title)}
+        displayTitle
+        emphasisTone="ink"
+        showEyebrow={false}
         lead={drive.summary}
         counts={counts}
-      >
-        <div className="flex flex-col gap-4">
+        prelude={
           <div className="flex flex-wrap items-center gap-2">
             <StatusChip drive={drive} />
-            <DriveFocusChip focus={drive.focus} />
+            <DriveFocusChip focus={drive.focus} compact />
             {view?.place ? (
               <span
                 className={`${CHIP} font-semibold`}
                 style={{ background: T.bg.deep, color: T.ink.base }}
               >
+                <Icon aria-hidden icon="mdi:map-marker-outline" width={13} />
                 {view.place}
               </span>
             ) : null}
+            <DriveDates drive={drive} detail />
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <DriveDates drive={drive} size="lg" />
-            {drive.status === "draft" ? null : (
-              <DriveFollowButton
-                driveDocumentId={drive.documentId}
-                driveSlug={drive.slug}
-                driveTitle={title}
-              />
-            )}
-            <DriveShareButton title={title} />
-          </div>
-        </div>
-      </CommunitySectionHeader>
-
-      <div
-        className="mx-auto flex w-full max-w-[1360px] flex-wrap items-start"
-        style={{
-          padding:
-            "clamp(28px,3.4vw,44px) clamp(16px,3vw,32px) clamp(56px,7vw,88px)",
-          gap: "clamp(16px,2.4vw,28px)",
-        }}
-      >
-        <div
-          className="flex min-w-0 flex-col"
-          style={{ flex: "2 1 440px", gap: "clamp(18px,2.4vw,28px)" }}
-        >
-          <DriveStateNotice drive={drive} />
-
+        }
+        footer={
           <section
             aria-labelledby="drive-progress-heading"
-            className="flex flex-col gap-4"
-            style={CARD}
+            className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) px-6 py-5 sm:px-8"
           >
-            <h2
-              id="drive-progress-heading"
-              className="m-0"
-              style={SECTION_HEADING}
-            >
+            <h2 id="drive-progress-heading" className="sr-only">
               {finished ? "Final numbers" : tUi("progress")}
             </h2>
             {progress ? (
-              <DriveProgress
+              <DriveProgressSummary
                 progress={progress}
                 unit={drive.unit}
                 gapPhrase={gapPhraseOf(drive.focus)}
                 log={drive.progressLog}
                 goalPercent={drive.goalPercent}
-                meta={progressMeta(progress.percent, helpers, finished)}
-                color={focusChipOf(drive.focus).tint.fg}
+                helpers={helpers}
+                finished={finished}
               />
             ) : (
-              <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-[14px] text-(--t-ink-dim)">
                 Progress shows once the drive is counted, within the hour.
               </p>
             )}
           </section>
-
-          {drive.status === "closed" && story ? (
-            <JournalStoryCard story={story} />
-          ) : null}
-
-          {!finished && steps.length > 0 ? (
-            <section
-              aria-labelledby="drive-steps-heading"
-              className="flex flex-col gap-3.5"
-              style={CARD}
-            >
-              <h2
-                id="drive-steps-heading"
-                className="m-0"
-                style={SECTION_HEADING}
-              >
-                How to help
-              </h2>
-              <ol className="m-0 flex list-none flex-col gap-3 p-0">
-                {steps.map((step, i) => (
-                  <li key={step.id ?? i} className="flex items-start gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="flex size-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold"
-                      style={{
-                        background: T.accent.chip,
-                        color: T.accent.primaryHover,
-                      }}
-                    >
-                      {i + 1}
-                    </span>
-                    <span
-                      className="pt-0.5 text-[16px] leading-[1.5]"
-                      style={{ color: T.ink.base }}
-                    >
-                      {step.text}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ) : null}
-
-          {drive.status === "open" ? (
-            <DriveTaskArea
-              key={JSON.stringify(initialPlace ?? {})}
-              drive={drive}
-              initialPlace={initialPlace}
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          {drive.status !== "draft" ? (
+            <DriveFollowButton
+              driveDocumentId={drive.documentId}
+              driveSlug={drive.slug}
+              driveTitle={title}
             />
           ) : null}
+          <DriveShareButton title={title} />
         </div>
+      </CommunitySectionHeader>
 
-        <aside
-          aria-label={tUi("about_this_drive")}
-          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
-          style={{ flex: "1 1 290px" }}
-        >
-          {boardActions}
+      <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-6 px-4 pt-6 pb-20 sm:px-8 sm:pt-8">
+        {drive.status !== "open" && (
+          <div className="text-[13px]">
+            <BackLink href="/community#drives">{tUi("all_drives")}</BackLink>
+          </div>
+        )}
+        {boardActions}
+        <DriveStateNotice drive={drive} />
+        {drive.status === "closed" && story ? (
+          <JournalStoryCard story={story} />
+        ) : null}
+        {drive.status === "open" ? (
+          <DriveTaskArea
+            key={JSON.stringify(initialPlace ?? {})}
+            drive={drive}
+            initialPlace={initialPlace}
+          />
+        ) : !finished ? (
+          <DriveHowToHelp drive={drive} />
+        ) : null}
+        <div className="grid items-start gap-5 md:grid-cols-2">
           {credited ? (
             <DriveHelpers
               week={week}
@@ -383,8 +324,21 @@ export function DriveDetailPage({
               publicOnly={drive.status === "closed"}
             />
           ) : null}
-          <DriveRules drive={drive} source={view?.source ?? null} />
-        </aside>
+          <DriveRules
+            drive={drive}
+            source={view?.source ?? null}
+            total={progress?.total ?? null}
+          />
+        </div>
+        <DiscussionFeed
+          target={{
+            uid: "api::drive.drive",
+            documentId: drive.documentId,
+            locale: drive.locale,
+          }}
+          subjectSlug="drives"
+          contextType="drives"
+        />
       </div>
     </div>
   )

@@ -344,6 +344,33 @@ export function DriveProposalPanel({
 
   return (
     <div className="flex flex-col gap-6">
+      {proposal.discussions && (
+        <section className="grid gap-2 rounded-xl border border-(--t-border-line) p-4">
+          <h3 className={heading}>Requested conversation feed</h3>
+          <p className="m-0 text-sm">
+            {proposal.discussions.enabled
+              ? "Enable conversations and link the following threads. Original authorship and moderation are retained."
+              : "Keep conversations turned off."}
+          </p>
+          {proposal.discussions.enabled && (
+            <ul className="m-0 list-disc pl-5">
+              {proposal.discussions.threadIds.map((id, index) => (
+                <li key={id}>
+                  <Link
+                    href={`/community/discussions/${encodeURIComponent(id)}`}
+                    className="text-sm text-(--t-accent-primary) underline"
+                  >
+                    Review conversation {index + 1}
+                    {proposal.discussions?.featuredThreadId === id
+                      ? " · Featured"
+                      : ""}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
       <div className="flex flex-col gap-2">
         <h3
           className="m-0 text-[18px]"

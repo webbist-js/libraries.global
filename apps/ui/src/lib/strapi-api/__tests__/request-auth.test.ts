@@ -11,6 +11,8 @@ describe("isStrapiEndpointAllowed", () => {
     "api/libraries/atlas",
     "api/events/ics/library/GB-BL-001.ics",
     "api/countries",
+    "api/blog-articles/browse",
+    "api/wiki-articles/browse",
   ])("allows %s", (path) => {
     expect(isStrapiEndpointAllowed(path, "GET")).toBe(true)
   })
@@ -24,6 +26,11 @@ describe("isStrapiEndpointAllowed", () => {
     "api/libraries/%2e%2e/user-profiles",
     "api/user-profiles",
     "api/users/me",
+    "api/blog-articles",
+    "api/wiki-articles",
+    "api/blog-articles/detail/story",
+    "api/wiki-articles/browse/private",
+    "api/blog-articles/browse-x",
   ])("blocks %s", (path) => {
     expect(isStrapiEndpointAllowed(path, "GET")).toBe(false)
   })
@@ -49,3 +56,15 @@ describe("isStrapiEndpointAllowed", () => {
     expect(isStrapiEndpointAllowed("api/libraries", "DELETE")).toBe(false)
   })
 })
+
+it.each(["POST", "PUT", "DELETE", "HEAD"])(
+  "keeps article browse closed for %s",
+  (method) => {
+    expect(isStrapiEndpointAllowed("api/blog-articles/browse", method)).toBe(
+      false
+    )
+    expect(isStrapiEndpointAllowed("api/wiki-articles/browse", method)).toBe(
+      false
+    )
+  }
+)

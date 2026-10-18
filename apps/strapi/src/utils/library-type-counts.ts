@@ -1,16 +1,12 @@
-import { DEFAULT_LOCALE } from "@repo/shared-data"
+import { DEFAULT_LOCALE, DEFAULT_LIBRARY_TYPES } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
-import { isPostgres } from "./library-sql"
+import { isPostgres, libraryJoin } from "./library-sql"
 import {
   canonicalPlaceLibraries,
   scopePlaceQuery,
   PLACE_LIBRARY_FILTERS,
 } from "./place-library-scope"
-
-import librarySchema from "../api/library/content-types/library/schema.json"
-
-const LIBRARY_TYPES = librarySchema.attributes.libraryType.enum as string[]
 
 type Relation = "continent" | "country" | "region"
 type CountOptions = { locale?: string; status: "draft" | "published" }
@@ -19,7 +15,7 @@ type TypeCount = { type: string; count: number }
 const finish = (counts: TypeCount[]) =>
   counts.filter((c) => c.count > 0).sort((a, b) => b.count - a.count)
 
-/** One `GROUP BY library_type` over the location's link table (Postgres). */
+/** One grouped query over the location and type relations (Postgres). */
 async function countBySql(
   strapi: Core.Strapi,
   relation: Relation,
@@ -27,6 +23,7 @@ async function countBySql(
   opts: CountOptions
 ): Promise<TypeCount[]> {
   const knex = strapi.db.connection
+  const type = libraryJoin(strapi, "libraryType")
   const query = scopePlaceQuery(
     canonicalPlaceLibraries(strapi, opts.locale, opts.status, {
       relation,
@@ -38,8 +35,10 @@ async function countBySql(
   )
 
   const rows = (await query
-    .groupBy("l.library_type")
-    .select("l.library_type as type", knex.raw("count(*) as count"))) as {
+    .leftJoin(`${type.linkTable} as tl`, `tl.${type.libraryColumn}`, "l.id")
+    .leftJoin(`${type.table} as lt`, "lt.id", `tl.${type.targetColumn}`)
+    .groupBy("lt.name")
+    .select("lt.name as type", knex.raw("count(*) as count"))) as {
     type: string | null
     count: unknown
   }[]
@@ -58,12 +57,21 @@ async function countByType(
   documentId: string,
   opts: CountOptions
 ): Promise<TypeCount[]> {
+  const catalogue = await strapi
+    .documents("api::library-type.library-type")
+    .findMany({ status: "published", fields: ["name"], limit: 1000 })
+  const types = [
+    ...new Set([
+      ...DEFAULT_LIBRARY_TYPES,
+      ...catalogue.map((entry) => entry.name),
+    ]),
+  ]
   const counts = await Promise.all(
-    LIBRARY_TYPES.map(async (type) => {
+    types.map(async (type) => {
       const count = await strapi.documents("api::library.library").count({
         filters: {
           [relation]: { documentId: { $eq: documentId } },
-          libraryType: { $eq: type },
+          libraryType: { name: { $eq: type } },
           ...PLACE_LIBRARY_FILTERS,
         } as never,
         locale: DEFAULT_LOCALE,

@@ -1,9 +1,12 @@
 import Image from "next/image"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { ArticleContext } from "@/components/articles/ArticleContext"
+import { ArticleReaderActions } from "@/components/articles/ArticleReaderActions"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { ArticleShareButtons } from "@/components/blog/ArticleShareButtons"
 import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
+import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Badge } from "@/components/ds/Badge"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
@@ -11,15 +14,17 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
+import { articleReaderPath } from "@/lib/article-content-language"
 import {
   countWords,
   estimateReadingTime,
   extractHeadings,
   formatDate,
 } from "@/lib/article-helpers"
-import { avatarSrc } from "@/lib/avatar"
+import { avatarInitials, avatarSrc } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
 import { isFounder } from "@/lib/founder"
+import { languageName } from "@/lib/locale-fallback"
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
 import type {
@@ -53,15 +58,18 @@ export function BlogArticlePage({
   related,
   locale,
   untranslatedLocale = null,
+  contentLocale,
 }: {
   readonly article: BlogArticleDetail | null
   readonly related?: BlogArticleSummary[]
   readonly locale: Locale
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
+  readonly contentLocale?: string
 }) {
   const tUi = useUiTranslations("ui")
   const tArticle = useUiTranslations("editorial")
+  const p = useUiTranslations("publishing")
 
   if (!article) {
     return (
@@ -115,7 +123,7 @@ export function BlogArticlePage({
     : null
   const authorPhoto = avatarSrc(authorProfile?.avatar, "sm")
   const authorIsFounder = isFounder(authorProfile?.username)
-  const authorInitial = (authorName ?? "?").charAt(0).toUpperCase()
+  const authorInitial = avatarInitials(authorName)
 
   const metaRows = [
     { label: tUi("published"), value: publishedDate },
@@ -215,6 +223,32 @@ export function BlogArticlePage({
                 </p>
               ) : null}
 
+              <p className="mt-3 text-sm" style={{ color: T.ink.dim }}>
+                {languageName(contentLocale ?? locale, [], locale)}
+              </p>
+              <ArticleReaderActions
+                kind="journal"
+                slug={article.slug ?? ""}
+                path={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
+                contentLocale={
+                  contentLocale ??
+                  (untranslatedLocale ? routing.defaultLocale : locale)
+                }
+                interfaceLocale={locale}
+                availableLocales={article.availableLocales}
+                authorUsername={authorProfile?.username}
+              />
+              <details className="mt-4 lg:hidden">
+                <summary className="text-sm font-semibold">
+                  {p("contextStory")}
+                </summary>
+                <ArticleContext
+                  article={article}
+                  kind="journal"
+                  locale={locale}
+                />
+              </details>
+
               {/* Byline + share */}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -270,7 +304,12 @@ export function BlogArticlePage({
                   contentId={article.documentId}
                   title={article.title}
                   url={absoluteUrl(
-                    `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                    articleReaderPath(
+                      `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                      locale,
+                      contentLocale ??
+                        (untranslatedLocale ? routing.defaultLocale : locale)
+                    ),
                     locale
                   )}
                 />
@@ -301,8 +340,7 @@ export function BlogArticlePage({
             {/* Prose — white section card on paper */}
             <article
               id={`analytics-journal-${article.documentId}`}
-              className="rounded-3xl border px-6 py-8 sm:px-12 sm:py-11"
-              style={{ background: T.bg.deep, borderColor: T.border.line }}
+              className="max-w-[68ch] py-6"
             >
               <ArticleEngagement
                 bodyId={`analytics-journal-${article.documentId}`}
@@ -324,10 +362,28 @@ export function BlogArticlePage({
               </div>
             </article>
 
+            <div id="article-history" />
             <ArticleEditHistorySection
               kind="blog"
               documentId={article.documentId}
               locale={untranslatedLocale ? routing.defaultLocale : locale}
+            />
+
+            <div id="article-discussion" />
+            <AttachedDiscussion
+              target={{
+                uid: "api::blog-article.blog-article",
+                documentId: article.documentId,
+                locale:
+                  contentLocale ??
+                  (untranslatedLocale ? routing.defaultLocale : locale),
+              }}
+              subjectSlug="journal"
+              title={article.title ?? article.slug ?? ""}
+              language={
+                contentLocale ??
+                (untranslatedLocale ? routing.defaultLocale : locale)
+              }
             />
 
             {/* Author bio */}
@@ -438,6 +494,13 @@ export function BlogArticlePage({
 
           {/* Sidebar */}
           <aside className="top-24 flex flex-col gap-4 lg:sticky">
+            <div className="hidden lg:block">
+              <ArticleContext
+                article={article}
+                kind="journal"
+                locale={locale}
+              />
+            </div>
             {metaRows.length > 0 ? (
               <div
                 className="rounded-[20px] border p-5"

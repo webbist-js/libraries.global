@@ -1,16 +1,27 @@
 /**
  * Shapes, labels and pure helpers for the site's Moderation Queue
- * (`/contribute/moderation`). `summaryOf`, `detailOf`, `humanise`,
- * `renderValue` and `extractText` are ports of the Strapi admin's helpers
- * (content-moderation `admin/src/components/submissionMeta.ts` and
- * `WikiEditDiffPanel.tsx`); a test keeps them in step.
+ * (`/contribute/moderation`). Matching summary/text/value rules live in
+ * shared-data; this adapter retains community shapes, redaction, badges,
+ * scope copy and decision errors.
  */
 
 import {
-  EVENT_PROVIDERS,
-  type EventProviderKey,
   type DriveInput,
-  proposedDrive,
+  MODERATION_ARTICLE_REFUSAL_COPY,
+  moderationHumanise as humanise,
+  moderationIsHttpUrl as isHttpUrl,
+  moderationRenderValue as renderValue,
+  moderationSummaryOf as summaryOf,
+  moderationDriveProposalTitle as driveProposalTitle,
+  moderationRoleApplicationSummary as roleApplicationSummary,
+  moderationDetailOf as detailOf,
+  moderationExtractText as extractText,
+  moderationFormatDate as formatDate,
+  moderationFormatDateTime as formatDateTime,
+  MODERATION_TYPE_LABELS as TYPE_LABELS,
+  MODERATION_EVIDENCE_TYPE_LABELS as EVIDENCE_TYPE_LABELS,
+  MODERATION_FIELD_GROUPS as FIELD_GROUPS,
+  MODERATION_EXCLUDE_FROM_OTHER as EXCLUDE_FROM_OTHER,
 } from "@repo/shared-data"
 
 import type { BadgeColor } from "@/components/ds"
@@ -90,6 +101,11 @@ export type RoleApplicant = {
  * `DriveProposalReview` (content-moderation `services/moderation.ts`).
  */
 export type DriveProposalReview = {
+  discussions?: {
+    enabled: boolean
+    threadIds: string[]
+    featuredThreadId?: string
+  }
   /** The drive as approval would create it: the proposer's definition with the Moderator's dates. */
   drive: DriveInput
   /** True when the Moderator's dates have replaced the proposer's. */
@@ -124,6 +140,10 @@ export type ModerationStat = {
 }
 
 export type OptionSuggestion = {
+  publicationStatus?: "pending" | "published" | "rejected"
+  version?: number
+  comparison?: { documentId: string; name: string; explanation: string } | null
+
   documentId: string
   name: string
   optionKey: "accessibility" | "amenities" | "services" | "library_types"
@@ -149,19 +169,6 @@ export type ScopeLike = { queue: string; locale: string | null }
 
 // ── Labels ────────────────────────────────────────────────────────────────
 
-export const TYPE_LABELS: Record<string, string> = {
-  correction: "Correction",
-  new_library: "New library",
-  library_edit: "Library edit",
-  library_claim: "Library claim",
-  wiki_edit: "Knowledge",
-  blog_submission: "Journal",
-  topic_suggestion: "Topic",
-  role_application: "Role application",
-  event_feed: "Event feed",
-  drive_proposal: "Drive proposal",
-}
-
 export const TYPE_COLORS: Record<string, BadgeColor> = {
   correction: "aurora",
   new_library: "ok",
@@ -177,10 +184,9 @@ export const TYPE_COLORS: Record<string, BadgeColor> = {
 
 /** The Type column's label for a queue row (or any submission). */
 export function moderationRowLabel(row: { submissionType: string }): string {
-  return (
-    TYPE_LABELS[row.submissionType] ??
-    humanise(row.submissionType.replaceAll("_", " "))
-  )
+  return Object.hasOwn(TYPE_LABELS, row.submissionType)
+    ? TYPE_LABELS[row.submissionType]!
+    : humanise(row.submissionType.replaceAll("_", " "))
 }
 
 /** Status as colour, icon and text together (never colour alone). */
@@ -207,11 +213,13 @@ export const STATUS_META: Record<
 }
 
 export const statusMeta = (status: string) =>
-  STATUS_META[status] ?? {
-    label: humanise(status.replaceAll("_", " ")),
-    color: "dim" as BadgeColor,
-    icon: "mdi:help-circle-outline",
-  }
+  Object.hasOwn(STATUS_META, status)
+    ? STATUS_META[status]!
+    : {
+        label: humanise(status.replaceAll("_", " ")),
+        color: "dim" as BadgeColor,
+        icon: "mdi:help-circle-outline",
+      }
 
 /** The queue segments: Strapi's `decided` is approved or rejected. */
 export const SEGMENTS = [
@@ -262,437 +270,21 @@ export function describeScopes(
   return `${unique.slice(0, -1).join(", ")}, and ${unique.at(-1)}`
 }
 
-export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
-  institutional_url: "Institutional URL",
-  on_site_photo: "On-site photo",
-  on_site_visit: "Checked in person",
-  press_release: "Press release",
-  personal_communication: "Personal communication",
-  my_institutional_affiliation: "Institutional affiliation",
-  other: "Other",
-}
-
-export const FIELD_GROUPS: { label: string; keys: string[] }[] = [
-  {
-    label: "Identity",
-    keys: [
-      "name",
-      "shortName",
-      "officialName",
-      "libraryType",
-      "operatorType",
-      "operationalStatus",
-      "closureReason",
-      "summary",
-    ],
-  },
-  {
-    label: "Location",
-    keys: [
-      "streetAddress",
-      "district",
-      "city",
-      "postalCode",
-      "country",
-      "lat",
-      "lng",
-    ],
-  },
-  {
-    label: "Contact & web",
-    keys: [
-      "website",
-      "email",
-      "phone",
-      "catalogueUrl",
-      "planVisitUrl",
-      "bookingUrl",
-      "membershipUrl",
-      "virtualTourUrl",
-      "virtualTourEmbed",
-      "donationUrl",
-      "iiifEndpoint",
-    ],
-  },
-  {
-    label: "Visit",
-    keys: [
-      "admissionInfo",
-      "transitInfo",
-      "languagesServed",
-      "accessibilityNotes",
-      "visitNotes",
-    ],
-  },
-  {
-    label: "Collections",
-    keys: [
-      "collectionSize",
-      "collectionTypes",
-      "specialCollections",
-      "classificationSystem",
-    ],
-  },
-  {
-    label: "Building & history",
-    keys: [
-      "foundedYear",
-      "openedYear",
-      "closedYear",
-      "architect",
-      "architecturalStyle",
-      "buildingInfo",
-    ],
-  },
-  { label: "Media", keys: ["imageUrl", "imageNote", "imageCredit"] },
-]
-
-export const EXCLUDE_FROM_OTHER = new Set([
-  "kind",
-  "previous",
-  "continentDocumentId",
-  "countryDocumentId",
-  "regionDocumentId",
-  "areaDocumentId",
-  "uploadedImages",
-  "socialLinks",
-  "services",
-  "amenities",
-  "accessibility",
-  "openingTimes",
-  "sourceRecords",
-  "photoId",
-  "photoUrl",
-])
-
-// ── Ports of the admin helpers ───────────────────────────────────────────────
-
-/** camelCase → words. */
-export const humanise = (key: string) =>
-  key
-    .replace(/DocumentId$/, "")
-    .replaceAll(/([A-Z])/g, " $1")
-    .toLowerCase()
-    .replace(/^./, (c) => c.toUpperCase())
-
-/**
- * Whether contributor-supplied text may be rendered as a link: http(s)
- * only. Anything else (javascript:, data:, a bare path) is shown as text.
- */
-export function isHttpUrl(v: unknown): v is string {
-  return typeof v === "string" && /^https?:\/\/\S+$/i.test(v.trim())
-}
-
-export function renderValue(v: unknown): { text: string; isUrl: boolean } {
-  if (v === null || v === undefined || v === "")
-    return { text: "—", isUrl: false }
-  if (Array.isArray(v)) {
-    if (v.length === 0) return { text: "—", isUrl: false }
-
-    return {
-      text: v
-        .map((item) => {
-          if (item && typeof item === "object") {
-            const source = item as {
-              url?: string
-              label?: string
-              fields?: string[]
-            }
-            if (source.url)
-              return [source.label, source.url, source.fields?.join(", ")]
-                .filter(Boolean)
-                .join(" · ")
-
-            return JSON.stringify(item)
-          }
-
-          return String(item)
-        })
-        .join(", "),
-      isUrl: false,
-    }
-  }
-  if (typeof v === "object") {
-    const o = v as Record<string, unknown>
-    if (Array.isArray(o.days))
-      return {
-        text: `${(o.days as { enabled?: boolean }[]).filter((d) => d?.enabled).length} day(s) with hours`,
-        isUrl: false,
-      }
-
-    return { text: JSON.stringify(v), isUrl: false }
-  }
-  const s = String(v)
-
-  return { text: s, isUrl: isHttpUrl(s) }
-}
-
-type SubmissionLike = {
-  submissionType: string
-  targetSlug?: string | null
-  fields?: Record<string, unknown> | null
-  draftData?: Record<string, unknown> | null
-}
-
-/** One line describing what a submission is about. */
-export function summaryOf(sub: SubmissionLike): string {
-  const f = sub.fields ?? {}
-  const d = sub.draftData ?? {}
-  const str = (v: unknown) =>
-    typeof v === "string" && v.trim() ? v.trim() : null
-  switch (sub.submissionType) {
-    case "new_library":
-      return str(f.name) ?? "Unnamed library"
-    case "library_claim":
-      return str(f.name) ?? sub.targetSlug ?? "Library claim"
-    case "wiki_edit":
-    case "blog_submission":
-      return (
-        str(d.title) ??
-        str(d.proposedTitle) ??
-        str(f.title) ??
-        (sub.targetSlug ? `Edit: ${sub.targetSlug}` : "Untitled article")
-      )
-    case "topic_suggestion":
-      return str(f.name) ?? "Topic"
-    case "event_feed":
-      return `${EVENT_PROVIDERS[f.provider as EventProviderKey]?.label ?? "Event"} feed${f.kind === "replace" ? " (new details)" : ""}`
-    case "role_application":
-      return roleApplicationSummary(f)
-    case "drive_proposal": {
-      const title = driveProposalTitle(d)
-
-      return title ? `Drive: ${title}` : "Drive proposal"
-    }
-
-    default:
-      return sub.targetSlug ?? "Library"
-  }
-}
-
-/**
- * A Drive Proposal's title without its `*italic*` markers, or null when it
- * has none.
- */
-export function driveProposalTitle(draftData: unknown): string | null {
-  const title = proposedDrive(draftData)?.title
-  if (typeof title !== "string") return null
-  const plain = title.replaceAll("*", "").trim()
-
-  return plain || null
-}
-
-const APPLICATION_ROLE_NAMES: Record<string, string> = {
-  wiki_editor: "Knowledge editor",
-  journal_editor: "Journal editor",
-  moderator: "Moderator",
-}
-
-const APPLICATION_QUEUE_NAMES: Record<string, string> = {
-  index: "Index",
-  knowledge: "Knowledge",
-  journal: "Journal",
-}
-
-/**
- * A Role Application in a line, as Strapi's submission summary writes it:
- * "Moderator application: Index (fr)", "Knowledge editor application (all
- * languages)".
- */
-export function roleApplicationSummary(f: Record<string, unknown>): string {
-  const role =
-    typeof f.role === "string" ? APPLICATION_ROLE_NAMES[f.role] : undefined
-  const locales = Array.isArray(f.locales)
-    ? [
-        ...new Set(
-          f.locales.filter(
-            (l): l is string => typeof l === "string" && l.trim() !== ""
-          )
-        ),
-      ]
-    : []
-  const langs = locales.length > 0 ? locales.join(", ") : "all languages"
-  if (f.role === "moderator") {
-    const queue =
-      typeof f.queue === "string" ? APPLICATION_QUEUE_NAMES[f.queue] : undefined
-
-    return `Moderator application: ${queue ?? "Queue"} (${langs})`
-  }
-
-  return `${role ?? "Editor"} application (${langs})`
-}
-
-const fieldCount = (f: Record<string, unknown>) => {
-  const n = Object.keys(f).filter((k) => !EXCLUDE_FROM_OTHER.has(k)).length
-
-  return `${n} field${n === 1 ? "" : "s"} changed`
-}
-
-function articleDetail(
-  f: Record<string, unknown>,
-  d: Record<string, unknown>
-): string | null {
-  if (d.kind === "new_article" || f.kind === "new_article") return "New article"
-  if (d.isTranslation === true || f.isTranslation === true)
-    return `Translation (${String(d.locale ?? f.locale ?? "?")})`
-  if (Array.isArray(d.body)) return "Direct edit"
-  if (Array.isArray(d.proposedBody)) return "Suggested edit"
-  if (typeof f.category === "string") return `Report: ${f.category}`
-
-  return null
-}
-
-const CORRECTION_KINDS: Record<string, string> = {
-  facilities: "Facility answers",
-  photo: "Photo",
-  source: "Source",
-  verify: "Still right?",
-}
-
-/** A second line: what kind of change, in a few words. */
-export function detailOf(sub: SubmissionLike): string | null {
-  const f = sub.fields ?? {}
-  const d = sub.draftData ?? {}
-  switch (sub.submissionType) {
-    case "wiki_edit":
-    case "blog_submission":
-      return articleDetail(f, d)
-    case "correction":
-      if (f.kind === "record") return fieldCount(f)
-      if (typeof f.kind === "string" && f.kind in CORRECTION_KINDS)
-        return CORRECTION_KINDS[f.kind] ?? null
-
-      return typeof f.category === "string" ? f.category : null
-    case "library_edit":
-      return fieldCount(f)
-    case "new_library":
-      return (
-        [
-          f.libraryType,
-          f.city,
-          sub.draftData?.staffCreation ? "Staff ownership requested" : null,
-        ]
-          .filter((x) => typeof x === "string" && x)
-          .join(" · ") || null
-      )
-    case "library_claim":
-      return typeof f.role === "string" ? f.role.replaceAll("_", " ") : null
-    case "event_feed": {
-      const kind = f.kind === "replace" ? "replace" : "connect"
-      const library = sub.targetSlug ?? "Library"
-
-      return `${library} · ${kind === "replace" ? "new details" : "new connection"}`
-    }
-
-    default:
-      return null
-  }
-}
-
-/** Plain text of a Strapi blocks AST (paragraphs, headings, lists, quotes, code). */
-function blocksToText(nodes: unknown): string {
-  if (!Array.isArray(nodes)) return ""
-  const inline = (children: unknown): string =>
-    Array.isArray(children)
-      ? children
-          .map((c) => {
-            if (!c || typeof c !== "object") return ""
-            const child = c as Record<string, unknown>
-            if (typeof child.text === "string") return child.text
-
-            return inline(child.children)
-          })
-          .join("")
-      : ""
-  const lines: string[] = []
-  for (const node of nodes) {
-    if (!node || typeof node !== "object") continue
-    const n = node as Record<string, unknown>
-    switch (n.type) {
-      case "heading":
-        lines.push(`${"#".repeat(Number(n.level) || 2)} ${inline(n.children)}`)
-        break
-      case "list":
-        if (Array.isArray(n.children))
-          n.children.forEach((item, i) => {
-            const li = item as Record<string, unknown>
-            lines.push(
-              `${n.format === "ordered" ? `${i + 1}.` : "•"} ${inline(li?.children)}`
-            )
-          })
-        break
-      case "quote":
-        lines.push(`> ${inline(n.children)}`)
-        break
-      case "code":
-        lines.push(`[code] ${inline(n.children).slice(0, 200)}`)
-        break
-      case "image":
-        lines.push("[image]")
-        break
-
-      default:
-        lines.push(inline(n.children))
-    }
-  }
-
-  return lines.join("\n")
-}
-
-function blockText(b: Record<string, unknown>): string {
-  const s = (v: unknown) => (typeof v === "string" ? v : "")
-  switch (b.__component) {
-    case "content.rich-text":
-      // Drafts carry Strapi blocks in `body`; the retired editor saved `text`.
-      return typeof b.text === "string" ? b.text : blocksToText(b.body)
-    case "content.quote-block":
-      return typeof b.quote === "string"
-        ? `"${b.quote}"${s(b.attribution) ? ` — ${s(b.attribution)}` : ""}`
-        : ""
-    case "content.callout":
-      return typeof b.body === "string"
-        ? `[${String(b.type ?? "note")}${s(b.title) ? `: ${s(b.title)}` : ""}] ${b.body}`
-        : ""
-    case "content.code-block":
-      return typeof b.code === "string"
-        ? `[code] ${b.code.slice(0, 200)}${b.code.length > 200 ? "…" : ""}`
-        : ""
-    case "content.image-block":
-      return `[image${s(b.caption) ? `: ${s(b.caption)}` : ""}]`
-
-    default:
-      return ""
-  }
-}
-
-/** Readable text of an article body (dynamic zone). */
-export function extractText(body: unknown): string {
-  if (!Array.isArray(body)) return ""
-
-  return body
-    .filter((b): b is Record<string, unknown> => !!b && typeof b === "object")
-    .map(blockText)
-    .filter(Boolean)
-    .join("\n\n")
-}
-
-// ── Dates ─────────────────────────────────────────────────────────────────
-
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—"
-
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
-}
-
-export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—"
-  const d = new Date(iso)
-
-  return `${formatDate(iso)} · ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+export {
+  humanise,
+  isHttpUrl,
+  renderValue,
+  summaryOf,
+  driveProposalTitle,
+  roleApplicationSummary,
+  detailOf,
+  extractText,
+  formatDate,
+  formatDateTime,
+  TYPE_LABELS,
+  EVIDENCE_TYPE_LABELS,
+  FIELD_GROUPS,
+  EXCLUDE_FROM_OTHER,
 }
 
 // ── Decision errors (spec §5.2) ──────────────────────────────────────────────
@@ -714,6 +306,7 @@ const ERROR_COPY: Record<string, string> = {
 }
 
 const REFUSAL_COPY: Record<string, string> = {
+  ...MODERATION_ARTICLE_REFUSAL_COPY,
   no_hierarchy:
     "This library needs a continent, country and region before it can be published. Set its location, then approve again.",
   not_published:
@@ -738,10 +331,11 @@ export function decisionErrorMessage(status: number, body: unknown): string {
   const name = typeof err.name === "string" ? err.name : ""
   if (name === "apply_refused")
     return (
-      REFUSAL_COPY[String(err.reason)] ??
-      "This change can't be applied to the record yet."
+      (Object.hasOwn(REFUSAL_COPY, String(err.reason))
+        ? REFUSAL_COPY[String(err.reason)]
+        : undefined) ?? "This change can't be applied to the record yet."
     )
-  const known = ERROR_COPY[name]
+  const known = Object.hasOwn(ERROR_COPY, name) ? ERROR_COPY[name] : undefined
   if (known) return known
   switch (status) {
     case 400:

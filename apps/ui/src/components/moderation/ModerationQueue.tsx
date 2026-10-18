@@ -1,43 +1,34 @@
 "use client"
 
+import { ClipboardList, RefreshCw } from "lucide-react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { Badge, EmptyState, Pager } from "@/components/ds"
+import { EmptyState, Pager } from "@/components/ds"
+import { ModerationQueueSkeleton } from "@/components/moderation/ModerationQueueSkeleton"
+import { ModerationSubmissionList } from "@/components/moderation/ModerationSubmissionList"
+import {
+  queueHref,
+  type QueueState,
+} from "@/components/moderation/queue-navigation"
+import { REVIEW_ICONS } from "@/components/moderation/workspace"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 
-import { DriveChip } from "./DriveChip"
 import { ModerationFilters, type QueueFilters } from "./ModerationFilters"
-import { StatusBadge } from "./StatusBadge"
-import {
-  formatDate,
-  type ModerationListResponse,
-  type ModerationQueueName,
-  moderationRowLabel,
-  type ModerationStat,
-  type Segment,
-  TYPE_COLORS,
+import type {
+  ModerationListResponse,
+  ModerationQueueName,
+  ModerationStat,
+  Segment,
 } from "./submissionMeta"
 
 const PAGE_SIZE = 25
-const BASE = "/contribute/moderation"
 
-export type QueueState = QueueFilters & { page: number }
-
-/** The queue's URL for a set of filters (the URL holds the state). */
-export function queueHref(s: QueueState): string {
-  const p = new URLSearchParams()
-  if (s.segment !== "pending") p.set("status", s.segment)
-  if (s.queue) p.set("queue", s.queue)
-  if (s.locale) p.set("locale", s.locale)
-  if (s.q) p.set("q", s.q)
-  if (s.drive) p.set("drive", s.drive)
-  if (s.page > 1) p.set("page", String(s.page))
-  const qs = p.toString()
-
-  return qs ? `${BASE}?${qs}` : BASE
-}
+export {
+  queueHref,
+  type QueueState,
+} from "@/components/moderation/queue-navigation"
 
 function apiQuery(s: QueueState): string {
   const p = new URLSearchParams({
@@ -46,6 +37,7 @@ function apiQuery(s: QueueState): string {
     pageSize: String(PAGE_SIZE),
   })
   if (s.queue) p.set("queue", s.queue)
+  if (s.category) p.set("category", s.category)
   if (s.locale) p.set("locale", s.locale)
   if (s.q) p.set("q", s.q)
   if (s.drive) p.set("drive", s.drive)
@@ -60,8 +52,6 @@ export function listErrorMessage(status: number): string {
 
   return "The queue couldn't be loaded. Try again."
 }
-
-const cell = "px-4 py-3 text-left align-top text-[14px]"
 
 /**
  * The Moderation Queue: status segments, filters, and a page of the
@@ -81,13 +71,21 @@ export function ModerationQueue({
   readonly localeNames: Record<string, string>
 }) {
   const tUi = useUiTranslations("ui")
+  const workspace = useUiTranslations("moderationWorkspace")
 
   const router = useRouter()
   const [result, setResult] = useState<ModerationListResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshEpoch, setRefreshEpoch] = useState(0)
   const [stats, setStats] = useState<ModerationStat[] | null>(null)
   const query = apiQuery(state)
+  const statsParams = new URLSearchParams(query)
+  for (const key of ["status", "page", "pageSize"]) statsParams.delete(key)
+  const statsQuery = statsParams.toString()
+  const QueueIcon = state.category
+    ? REVIEW_ICONS[state.category]
+    : ClipboardList
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -97,6 +95,7 @@ export function ModerationQueue({
     fetch(`/api/moderation/submissions?${query}`, { signal: ctrl.signal })
       .then(async (res) => {
         const body: unknown = await res.json().catch(() => null)
+        if (ctrl.signal.aborted) return
         if (!res.ok) throw new Error(listErrorMessage(res.status))
         setResult(body as ModerationListResponse)
       })
@@ -112,16 +111,24 @@ export function ModerationQueue({
       })
 
     return () => ctrl.abort()
-  }, [query])
+  }, [query, refreshEpoch])
 
   useEffect(() => {
-    fetch("/api/moderation/stats")
+    const ctrl = new AbortController()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStats(null)
+    fetch(`/api/moderation/stats${statsQuery ? `?${statsQuery}` : ""}`, {
+      signal: ctrl.signal,
+    })
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: { data?: ModerationStat[] } | null) =>
-        setStats(j?.data ?? null)
+      .then(
+        (j: { data?: ModerationStat[] } | null) =>
+          !ctrl.signal.aborted && setStats(j?.data ?? null)
       )
       .catch(() => {})
-  }, [])
+
+    return () => ctrl.abort()
+  }, [refreshEpoch, statsQuery])
 
   const counts = useMemo(() => {
     if (!stats) return {}
@@ -178,7 +185,36 @@ export function ModerationQueue({
   const emptyList = !loading && !error && rows.length === 0
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5" aria-busy={loading}>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="m-0 flex items-center gap-2.5 font-serif text-[30px] leading-tight tracking-tight">
+            <QueueIcon
+              size={23}
+              className="text-(--t-accent-primary)"
+              aria-hidden
+            />
+            {workspace(state.category ?? "submissions")}
+          </h2>
+          <p className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+            {workspace(
+              state.category ? `${state.category}Lead` : "submissionsCaption"
+            )}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            setRefreshEpoch((value) => value + 1)
+            router.refresh()
+          }}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-[13px] font-semibold disabled:opacity-50"
+        >
+          <RefreshCw size={15} aria-hidden />
+          {workspace("refresh")}
+        </button>
+      </header>
       <ModerationFilters
         value={state}
         queues={queues}
@@ -258,86 +294,14 @@ export function ModerationQueue({
           />
         </div>
       ) : null}
+      {loading && <ModerationQueueSkeleton />}
 
-      {rows.length > 0 ? (
-        <div
-          className="overflow-x-auto rounded-[20px]"
-          style={{
-            background: T.bg.deep,
-            border: `1px solid ${T.border.line}`,
-            opacity: loading ? 0.6 : 1,
-          }}
-        >
-          <table className="w-full min-w-[760px] border-collapse">
-            <caption className="sr-only">Submissions to review</caption>
-            <thead>
-              <tr style={{ background: T.bg.surface }}>
-                {[
-                  tUi("type"),
-                  "Submission",
-                  "Contributor",
-                  tUi("language"),
-                  "Submitted",
-                  tUi("status"),
-                ].map((h) => (
-                  <th
-                    key={h}
-                    scope="col"
-                    className={`${cell} font-semibold`}
-                    style={{ color: T.ink.dim }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr
-                  key={row.documentId}
-                  className="transition-colors hover:bg-(--t-bg-surface)"
-                  style={{ borderTop: `1px solid ${T.border.divider}` }}
-                >
-                  <td className={cell}>
-                    <Badge
-                      label={moderationRowLabel(row)}
-                      color={TYPE_COLORS[row.submissionType] ?? "dim"}
-                    />
-                  </td>
-                  <th scope="row" className={`${cell} font-semibold`}>
-                    <div className="flex flex-col items-start gap-1.5">
-                      <Link
-                        href={`${BASE}/${row.documentId}`}
-                        className="underline-offset-2 hover:underline"
-                        style={{ color: T.accent.primary }}
-                      >
-                        {row.summary}
-                      </Link>
-                      {row.drive ? <DriveChip drive={row.drive} /> : null}
-                      {row.staffReviewHint ? (
-                        <Badge label={row.staffReviewHint} color="aurora" />
-                      ) : null}
-                    </div>
-                  </th>
-                  <td className={cell} style={{ color: T.ink.base }}>
-                    {row.submittedByName ?? "Anonymous"}
-                  </td>
-                  <td className={cell} style={{ color: T.ink.base }}>
-                    {localeNames[row.locale] ?? row.locale.toUpperCase()}
-                  </td>
-                  <td className={cell} style={{ color: T.ink.dim }}>
-                    <time dateTime={row.createdAt}>
-                      {formatDate(row.createdAt)}
-                    </time>
-                  </td>
-                  <td className={cell}>
-                    <StatusBadge status={row.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {!loading && rows.length > 0 ? (
+        <ModerationSubmissionList
+          rows={rows}
+          localeNames={localeNames}
+          returnTo={queueHref(state)}
+        />
       ) : null}
 
       {pages > 1 ? (

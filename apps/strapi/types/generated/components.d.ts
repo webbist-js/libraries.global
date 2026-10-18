@@ -28,6 +28,25 @@ export interface ContentCodeBlock extends Struct.ComponentSchema {
   }
 }
 
+export interface ContentEventMention extends Struct.ComponentSchema {
+  collectionName: "components_content_event_mentions"
+  info: {
+    description: "Durable public citation of an Event, retained after imported Events expire."
+    displayName: "Event mention"
+  }
+  attributes: {
+    citationId: Schema.Attribute.String
+    endTime: Schema.Attribute.DateTime
+    event: Schema.Attribute.Relation<"manyToOne", "plugin::events.event">
+    eventDocumentId: Schema.Attribute.String
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    startTime: Schema.Attribute.DateTime
+    timezone: Schema.Attribute.String
+    title: Schema.Attribute.String & Schema.Attribute.Required
+    url: Schema.Attribute.Text
+  }
+}
+
 export interface ContentImageBlock extends Struct.ComponentSchema {
   collectionName: "components_content_image_blocks"
   info: {
@@ -35,6 +54,7 @@ export interface ContentImageBlock extends Struct.ComponentSchema {
     displayName: "Image Block"
   }
   attributes: {
+    alternativeText: Schema.Attribute.String
     caption: Schema.Attribute.String
     fullWidth: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
     image: Schema.Attribute.Media<"images"> & Schema.Attribute.Required
@@ -798,6 +818,7 @@ declare module "@strapi/strapi" {
     export interface ComponentSchemas {
       "content.callout": ContentCallout
       "content.code-block": ContentCodeBlock
+      "content.event-mention": ContentEventMention
       "content.image-block": ContentImageBlock
       "content.quote-block": ContentQuoteBlock
       "content.rich-text": ContentRichText

@@ -4,6 +4,7 @@ import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 import type { ReactNode } from "react"
 
+import { AccountGuard } from "@/components/auth/AccountGuard"
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
 import {
@@ -14,6 +15,7 @@ import { Notice } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { T } from "@/lib/design-tokens"
 import { drivePlaceRefs } from "@/lib/drives/drive-view"
 import { fetchPlaceNames } from "@/lib/drives/drive-view-server"
@@ -129,19 +131,21 @@ export default async function ProposeDrivePage({
   }
 
   return page(
-    <main className={MAIN}>
-      <DriveBuilder
-        mode="propose"
-        initial={initial}
-        locale={locale}
-        blocked={blocked}
-        userId={user.id}
-        restoreDraft={prefillQuery(prefill) === ""}
-        standing={{
-          accepted: standing.accepted,
-          open: standing.open ? { title: standing.open.title } : null,
-        }}
-      />
-    </main>
+    <AccountGuard expectedScope={contributionAccountScope(user)}>
+      <main className={MAIN}>
+        <DriveBuilder
+          mode="propose"
+          initial={initial}
+          locale={locale}
+          blocked={blocked}
+          userId={user.id}
+          restoreDraft={prefillQuery(prefill) === ""}
+          standing={{
+            accepted: standing.accepted,
+            open: standing.open ? { title: standing.open.title } : null,
+          }}
+        />
+      </main>
+    </AccountGuard>
   )
 }

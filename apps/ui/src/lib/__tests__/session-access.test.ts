@@ -29,6 +29,7 @@ describe("buildSessionAccess", () => {
       profileLoaded: false,
       contributorRole: "reader",
       username: null,
+      compositionPreferences: { country: null, languages: [] },
       capabilities: [],
       claimedLibraryIds: [],
       staffLibraries: [],
@@ -50,6 +51,21 @@ describe("buildSessionAccess", () => {
       dismissedPrompts: ["find-contribute"],
     })
     expect(a.dismissedPrompts).toEqual(["find-contribute"])
+  })
+
+  it("carries owner composition preferences independently of role grants", () => {
+    const preferences = {
+      country: "CO",
+      languages: [{ code: "es", proficiency: "native" as const }],
+    }
+    const access = buildSessionAccess({
+      ...baseProfile,
+      compositionPreferences: preferences,
+    })
+    expect(access.compositionPreferences).toEqual(preferences)
+    expect(access.capabilities).toEqual(
+      buildSessionAccess(baseProfile).capabilities
+    )
   })
 
   it("resolves a wiki editor's capabilities", () => {

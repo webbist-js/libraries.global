@@ -1,5 +1,7 @@
+import { libraryTypeName } from "@repo/shared-data"
 import { errors } from "@strapi/utils"
 
+import { resolveLibraryType } from "../utils/library-type-catalogue"
 import {
   prepareMobileLibraryData,
   TimetableWriteError,
@@ -47,18 +49,21 @@ export function registerMobileTimetableMiddleware({
       ? await strapi.documents("api::library.library").findOne({
           documentId: context.params.documentId,
           locale,
-          fields: [
-            "documentId",
-            "libraryType",
-            "mobileTimetable",
-            "location",
-            "timezone",
-          ],
-          populate: { homeLibrary: { fields: ["documentId"] } },
+          fields: ["documentId", "mobileTimetable", "location", "timezone"],
+          populate: {
+            libraryType: { fields: ["name"] },
+            homeLibrary: { fields: ["documentId"] },
+          },
         })
       : null
+    const type =
+      data.libraryType === undefined
+        ? libraryTypeName(current?.libraryType)
+        : typeof data.libraryType === "string"
+          ? data.libraryType
+          : (await resolveLibraryType(strapi, data.libraryType)).name
     if (
-      (data.libraryType ?? current?.libraryType) !== "Mobile" &&
+      type !== "Mobile" &&
       !Object.prototype.hasOwnProperty.call(data, "mobileTimetable")
     )
       return next()

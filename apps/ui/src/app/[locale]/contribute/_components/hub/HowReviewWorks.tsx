@@ -1,99 +1,107 @@
-import { Icon } from "@iconify/react"
+import { Check, Clock3, RotateCcw, Send, ShieldCheck, X } from "lucide-react"
 
-import { T } from "@/lib/design-tokens"
-
-const STAGES = [
+const OUTCOMES = [
   {
-    chip: "Submitted",
-    icon: "mdi:send-outline",
-    bg: "var(--t-bg-muted)",
-    fg: "#55536A",
-    copy: "Your change is saved and waiting for a reviewer.",
+    label: "Accepted",
+    icon: Check,
+    tint: "bg-[#e5f2eb] text-[#256346]",
+    copy: "Published with your name in the record’s history.",
   },
   {
-    chip: "In review",
-    icon: "mdi:clock-outline",
-    bg: "var(--tint-academic-bg)",
-    fg: "var(--tint-academic-fg)",
-    copy: "A trusted contributor is checking it against your source.",
+    label: "Needs changes",
+    icon: RotateCcw,
+    tint: "bg-[#fbefd7] text-[#805817]",
+    copy: "A question or a better source is needed. Your work is saved, ready to revise.",
   },
   {
-    chip: "Needs changes",
-    icon: "mdi:undo-variant",
-    bg: "#F5EEDC",
-    fg: "#6B5420",
-    copy: "The reviewer asked a question or needs a better source. Nothing is lost.",
-  },
-  {
-    chip: "Accepted",
-    icon: "mdi:check",
-    bg: "var(--tint-public-bg)",
-    fg: "var(--tint-public-fg)",
-    copy: "Published with your name in the record's history.",
-  },
-  {
-    chip: "Not accepted",
-    icon: "mdi:close",
-    bg: "var(--tint-special-bg)",
-    fg: "var(--tint-special-fg)",
-    copy: "Explained with a reason, such as a duplicate or an unverifiable claim.",
+    label: "Not accepted",
+    icon: X,
+    tint: "bg-[#fae5e1] text-[#9b4640]",
+    copy: "You’ll get a reason, such as a duplicate or a claim that can’t be verified.",
   },
 ] as const
 
+/** Review has two steps, followed by one of three possible outcomes. */
 export function HowReviewWorks() {
   return (
-    <section className="mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8">
-      <h2
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(26px,3vw,32px)",
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          color: T.ink.base,
-        }}
-      >
-        How review works
-      </h2>
-      <p
-        className="mt-2 mb-6 max-w-[62ch] text-[16px] leading-[1.6]"
-        style={{ color: T.ink.dim }}
-      >
-        Every change is checked before it&rsquo;s published, and every published
-        change is credited to you and kept in the record&rsquo;s history.
-      </p>
-
-      <ol className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-5">
-        {STAGES.map((stage) => (
-          <li
-            key={stage.chip}
-            className="rounded-[18px] p-5"
-            style={{
-              background: T.bg.deep,
-              border: `1px solid ${T.border.line}`,
-            }}
+    <section
+      aria-labelledby="how-review-works"
+      className="grid gap-7 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10"
+    >
+      <div className="min-w-0">
+        <div className="mb-4 flex items-center gap-3">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#eeebfb] text-(--t-accent-primary)">
+            <ShieldCheck size={20} aria-hidden />
+          </span>
+          <h2
+            id="how-review-works"
+            className="m-0 font-serif text-[30px] leading-tight font-medium text-(--t-ink-base) sm:text-[32px]"
           >
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
-              style={{ background: stage.bg, color: stage.fg }}
-            >
-              <Icon
-                icon={stage.icon}
-                width={13}
-                height={13}
-                aria-hidden="true"
-              />
-              {stage.chip}
+            How review works
+          </h2>
+        </div>
+        <p className="m-0 max-w-[52ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+          Every change is checked before it’s published. Accepted work is
+          credited to you and kept in the record’s history.
+        </p>
+        <ol className="mt-6 mb-0 grid list-none gap-5 p-0">
+          <li className="relative flex gap-3 before:absolute before:top-10 before:bottom-[-16px] before:left-[19px] before:border-l before:border-(--t-border-line)">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-(--t-bg-muted) text-(--t-ink-dim)">
+              <Send size={17} aria-hidden />
             </span>
-            <p
-              className="mt-3 mb-0 text-[14.5px] leading-[1.55]"
-              style={{ color: T.ink.dim }}
-            >
-              {stage.copy}
-            </p>
+            <div className="min-w-0 pt-0.5">
+              <h3 className="m-0 text-[15px] font-bold text-(--t-ink-base)">
+                1. Send your change
+              </h3>
+              <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                Submitted with a source and saved while it waits for review.
+              </p>
+            </div>
           </li>
-        ))}
-      </ol>
+          <li className="flex gap-3">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f2f8] text-[#326077]">
+              <Clock3 size={18} aria-hidden />
+            </span>
+            <div className="min-w-0 pt-0.5">
+              <h3 className="m-0 text-[15px] font-bold text-(--t-ink-base)">
+                2. A reviewer checks it
+              </h3>
+              <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                In review, a trusted contributor checks the change against your
+                source.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div className="rounded-[20px] bg-(--t-bg-surface) p-5 sm:p-6">
+        <h3 className="m-0 text-xs font-bold tracking-[0.08em] text-(--t-ink-dim) uppercase">
+          After review
+        </h3>
+        <ul className="mt-4 mb-0 grid list-none gap-4 p-0">
+          {OUTCOMES.map(({ label, icon: Icon, tint, copy }) => (
+            <li key={label} className="flex items-start gap-3">
+              <span
+                className={
+                  "inline-flex size-8 shrink-0 items-center justify-center rounded-full " +
+                  tint
+                }
+              >
+                <Icon size={16} aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <h4 className="m-0 text-[14px] font-bold text-(--t-ink-base)">
+                  {label}
+                </h4>
+                <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                  {copy}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }
