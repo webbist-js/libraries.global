@@ -62,10 +62,10 @@
     "jsonwebtoken": "9.0.3",
     "lodash": "^4.17.21",
     "pg": "^8.13.1",
-    "qs": "^6.16.0",
+    "qs": "^6.16.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.0.0",
+    "react-router-dom": "^7.18.4",
     "strapi-plugin-config-sync": "2.1.0",
     "strapi-plugin-meilisearch": "^0.16.5",
     "strapi-plugin-timezone-select": "2.0.0",
@@ -81,7 +81,7 @@
     "@types/react-dom": "^18",
     "tsx": "^4.21.0",
     "typescript": "^5",
-    "vitest": "4.1.11"
+    "vitest": "5.0.5"
   },
   "strapi": {
     "uuid": "@repo/strapi"
