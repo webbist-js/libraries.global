@@ -24,7 +24,11 @@ FROM base AS builder
 ARG APP
 ARG WORKSPACE
 COPY --from=prepare /app/out/json/ .
-COPY --from=prepare /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+# Turbo 2.7 can omit auto-installed peer snapshots from its pruned lockfile.
+# Keep the checked lockfile and matching patch configuration; install only
+# the workspace manifests selected by prune.
+COPY --from=prepare /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=prepare /app/patches/ ./patches/
 COPY --from=prepare /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 RUN --mount=type=cache,id=ui-pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
