@@ -1,7 +1,7 @@
-import type {
-  LibraryTypeValue,
+import {
   facilityChecklistFor,
   type FacilityAnswer,
+  type LibraryTypeValue,
 } from "@repo/shared-data"
 // Rows for the library page's accessibility & facilities grid. Pure, so
 // the page and the tests share it.
