@@ -23,7 +23,10 @@ ENV NODE_OPTIONS=--max-old-space-size=4096
 ARG APP
 ARG WORKSPACE
 COPY --from=prepare /app/out/json/ .
-COPY --from=prepare /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+# Keep every locked peer snapshot and its matching patch configuration.
+# The pruned workspace manifests still limit which packages are installed.
+COPY --from=prepare /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=prepare /app/patches/ ./patches/
 COPY --from=prepare /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 RUN --mount=type=cache,id=cms-pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
