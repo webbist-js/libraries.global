@@ -160,8 +160,36 @@ export function DocsPage({
     section,
     rows: rowsBySection.get(section.slug) ?? [],
   }))
+  // Facet identities span locales; labels follow the current interface taxonomy.
+  const localizedDiscovery = discovery
+    ? {
+        ...discovery,
+        facets: {
+          ...discovery.facets,
+          sections: discovery.facets.sections.map((facet) => ({
+            ...facet,
+            label:
+              sections.find(
+                (section) =>
+                  section.slug === facet.value || section.slug === facet.slug
+              )?.title ?? facet.label,
+          })),
+        },
+      }
+    : undefined
+  const activeSection = sections.find(
+    (section) => section.slug === currentQuery.section
+  )
   const counts = Object.fromEntries(
-    sectionData.map(({ section, rows }) => [section.slug, rows.length])
+    sectionData.map(({ section, rows }) => [
+      section.slug,
+      localizedDiscovery
+        ? (localizedDiscovery.facets.sections.find(
+            (facet) =>
+              facet.value === section.slug || facet.slug === section.slug
+          )?.count ?? 0)
+        : rows.length,
+    ])
   )
 
   // Recent changes — articles are already sorted by updatedAt desc
@@ -214,13 +242,17 @@ export function DocsPage({
         </PageHero>
 
         <Container className="pt-8 pb-20">
-          {discovery ? (
+          {localizedDiscovery ? (
             queryActive ? (
-              <KnowledgeDiscovery discovery={discovery} locale={locale} />
+              <KnowledgeDiscovery
+                discovery={localizedDiscovery}
+                locale={locale}
+                section={activeSection}
+              />
             ) : (
               <div className="mb-8">
                 <ArticleDiscoveryFilters
-                  discovery={discovery}
+                  discovery={localizedDiscovery}
                   kind="knowledge"
                 />
               </div>

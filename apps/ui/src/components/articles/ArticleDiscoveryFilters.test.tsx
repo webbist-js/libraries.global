@@ -213,3 +213,38 @@ it("stages mobile filters, hides stale counts and only navigates on Show results
   const init = fetcher.mock.calls[0]![1] as RequestInit
   expect(init.signal?.aborted).toBe(true)
 })
+
+it("keeps interface section labels when a mobile preview aggregates other languages", async () => {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: true,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }))
+  const initial = {
+    ...discovery,
+    facets: {
+      ...discovery.facets,
+      sections: [{ value: "stories", label: "Stories", count: 1 }],
+    },
+  }
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ...initial,
+        facets: {
+          ...initial.facets,
+          sections: [{ value: "stories", label: "Histoires", count: 1 }],
+        },
+      }),
+    })
+  )
+  mocks.params = new URLSearchParams("lang=es")
+  render(<ArticleDiscoveryFilters discovery={initial} kind="journal" />)
+  fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
+  fireEvent.click(screen.getByRole("button", { name: "All languages" }))
+  await screen.findByRole("button", { name: "Show 1 results" })
+  expect(screen.getByRole("checkbox", { name: "Stories (1)" })).toBeTruthy()
+  expect(screen.queryByRole("checkbox", { name: "Histoires (1)" })).toBeNull()
+})
