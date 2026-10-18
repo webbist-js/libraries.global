@@ -25,7 +25,7 @@ export type JournalQuery = {
   lang: string | null
   q?: string
   filters?: ArticleBrowseQuery["filters"]
-  /** Explicit all-origin selection overrides the community default. */
+  /** Explicit all-origin selection overrides a collection filter. */
   allOrigins?: boolean
   worldwide?: boolean
 }
@@ -138,9 +138,6 @@ export function journalBrowseParams(
     ...(query.section ? { sections: [query.section] } : {}),
     ...(query.lang && query.lang !== "all" && !query.filters?.languages?.length
       ? { languages: [query.lang] }
-      : {}),
-    ...(!query.allOrigins && !query.filters?.origins?.length
-      ? { origins: ["community"] }
       : {}),
   }
   const params = new URLSearchParams(

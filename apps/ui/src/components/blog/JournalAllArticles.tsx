@@ -143,7 +143,23 @@ export function JournalAllArticles({
         </p>
       ) : null}
 
-      <ArticleDiscoveryFilters discovery={discovery} kind="journal" />
+      <ArticleDiscoveryFilters
+        discovery={{
+          ...discovery,
+          facets: {
+            ...discovery.facets,
+            sections: discovery.facets.sections.map((facet) => ({
+              ...facet,
+              label:
+                sections.find(
+                  (section) =>
+                    section.slug === facet.value || section.slug === facet.slug
+                )?.name ?? facet.label,
+            })),
+          },
+        }}
+        kind="journal"
+      />
 
       <div className="mt-6">
         <ArticleResults

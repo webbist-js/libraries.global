@@ -1539,7 +1539,7 @@
     "countrySuggestion": "Explore content about {country}",
     "preferenceFailed": "Your selection is in the URL; this browser could not save the preference.",
     "exploreKnowledge": "Explore Knowledge",
-    "knowledgeLead": "Find reference articles by language, place, Library or subject. Documentation sections continue below.",
+    "knowledgeLead": "Practical guides to using the index, contributing and looking after library records.",
     "articleCount": "{count, plural, one {# article} other {# articles}}",
     "readingTime": "{minutes} min read",
     "pagination": "Knowledge result pages",
@@ -1549,7 +1549,10 @@
     "writeLibrary": "Write about this Library",
     "readLibrary": "Read stories about this Library",
     "writeEvent": "Write about this Event",
-    "readingLanguage": "Reading in {language}. Interface language: {interface}."
+    "readingLanguage": "Reading in {language}. Interface language: {interface}.",
+    "noFilterChoices": "No filter choices match your search.",
+    "readGuide": "Read guide",
+    "languageDefault": "Guides start in your selected language. Choose All languages to explore translations."
   },
   "authorBadges": {
     "editor": "Editor",
@@ -2376,5 +2379,15 @@
     "recognitionLead": "Supporter, Pro and Team members can choose an optional profile mark and public credit. Each is chosen separately in Privacy settings; neither shows what you pay.",
     "recognitionSettings": "Choose your visibility",
     "meetSupporters": "Meet the supporters"
+  },
+  "eventListing": {
+    "emptyTitle": "Be the first to share what’s on",
+    "emptyLead": "Help people discover your library’s talks, workshops and storytimes. Connect an events feed and upcoming events will appear here.",
+    "feedGuide": "How to connect an event feed",
+    "contribute": "Contribute to the index",
+    "errorTitle": "Events are temporarily unavailable",
+    "errorLead": "We couldn’t reach the events calendar. Try again in a moment.",
+    "retry": "Try again",
+    "reset": "Clear event filters"
   }
 }

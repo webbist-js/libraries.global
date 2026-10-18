@@ -70,16 +70,38 @@ export function clearArticleFacets(encoded: string): URLSearchParams {
 
   return next
 }
+/** Knowledge starts in the interface language; an explicit choice always wins. */
+export function knowledgeBrowseParams(
+  locale: string,
+  input: Record<string, unknown>
+): string {
+  const query = parseArticleBrowseQuery(input)
+  const requested = Array.isArray(input.lang) ? input.lang[0] : input.lang
+  if (!query.filters.languages?.length && requested !== "all")
+    query.filters.languages = [locale]
+  const params = new URLSearchParams(articleBrowseSearchParams(query))
+  params.set("preferredLocale", locale)
+  if (requested === "all") params.set("lang", "all")
+
+  return params.toString()
+}
+
 export function articlePreviewParams(
   encoded: string,
   kind: "journal" | "knowledge",
   locale: string
 ): string {
-  const params = Object.fromEntries(new URLSearchParams(encoded))
-  const query = parseArticleBrowseQuery(params)
-  if (kind === "journal" && !params.origin && !params.collection)
-    query.filters.origins = ["community"]
+  const input: Record<string, string> = {
+    ...Object.fromEntries(new URLSearchParams(encoded)),
+    page: "1",
+  }
+  if (kind === "knowledge") return knowledgeBrowseParams(locale, input)
+  const params = new URLSearchParams(
+    articleBrowseSearchParams(parseArticleBrowseQuery(input))
+  )
+  params.set("preferredLocale", locale)
+  if (input.lang === "all") params.set("lang", "all")
 
-  return `${articleBrowseSearchParams({ ...query, page: 1 })}&preferredLocale=${encodeURIComponent(locale)}`
+  return params.toString()
 }
 export const articleFacetMatches = matches

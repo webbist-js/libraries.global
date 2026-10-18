@@ -92,9 +92,11 @@ function SourceStep({
 
 export function EventsPageClient() {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("eventListing")
 
   const [upcoming, setUpcoming] = useState<EventSearchHit[]>([])
   const [state, setState] = useState<LoadState>("loading")
+  const [retry, setRetry] = useState(0)
   const [filters, setFilters] = useState<EventsFilters>(DEFAULT_EVENTS_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const filterSidebar = useFilterSidebar("events")
@@ -111,22 +113,14 @@ export function EventsPageClient() {
         setUpcoming(result.hits)
         setState("ready")
       })
-      .catch((error: unknown) => {
-        if (cancelled) return
-        // A missing index just means no events have been synced yet.
-        const message = error instanceof Error ? error.message : String(error)
-        if (message.includes("not found")) {
-          setUpcoming([])
-          setState("ready")
-        } else {
-          setState("error")
-        }
+      .catch(() => {
+        if (!cancelled) setState("error")
       })
 
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [retry])
 
   // Events in the next 7 days for the carousel
   const thisWeek = useMemo(
@@ -264,36 +258,50 @@ export function EventsPageClient() {
               >
                 {state === "loading"
                   ? "Loading events…"
-                  : `${filtered.length} ${filtered.length === 1 ? "event" : "events"}`}
+                  : state === "error"
+                    ? t("errorTitle")
+                    : `${filtered.length} ${filtered.length === 1 ? "event" : "events"}`}
               </h2>
-              <a
-                href="/api/events/ics"
-                download
-                className="text-[14.5px] font-semibold underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
-              >
-                Subscribe to this calendar (.ics)
-              </a>
+              {state === "ready" && upcoming.length > 0 ? (
+                <a
+                  href="/api/events/ics"
+                  download
+                  className="text-[14.5px] font-semibold underline underline-offset-[3px]"
+                  style={{ color: T.accent.primary }}
+                >
+                  Subscribe to this calendar (.ics)
+                </a>
+              ) : null}
             </div>
 
             {state === "error" ? (
               <div
                 role="alert"
-                className="rounded-[20px] px-7 py-8"
-                style={{ background: "var(--tint-special-bg)" }}
+                className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) px-7 py-8"
               >
                 <p
                   className="m-0 text-[17px] font-bold"
-                  style={{ color: "var(--tint-special-fg)" }}
+                  style={{ color: T.ink.base }}
                 >
-                  We couldn&rsquo;t load events just now.
+                  {t("errorTitle")}
                 </p>
                 <p
                   className="m-0 mt-1 text-[15px]"
                   style={{ color: T.ink.base }}
                 >
-                  Please try again in a moment.
+                  {t("errorLead")}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setState("loading")
+                    setRetry((attempt) => attempt + 1)
+                  }}
+                  className="mt-5 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) px-5 py-2.5 text-sm font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-muted)"
+                >
+                  <Icon aria-hidden="true" icon="mdi:refresh" width={18} />
+                  {t("retry")}
+                </button>
               </div>
             ) : (
               <EventsAgenda
@@ -301,6 +309,7 @@ export function EventsPageClient() {
                 loading={state === "loading"}
                 now={now}
                 totalUnfiltered={upcoming.length}
+                onReset={() => setFilters(DEFAULT_EVENTS_FILTERS)}
               />
             )}
           </section>

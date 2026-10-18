@@ -131,19 +131,22 @@ export function EventsAgenda({
   loading,
   now,
   totalUnfiltered,
+  onReset,
 }: {
   readonly events: EventSearchHit[]
   readonly loading: boolean
   readonly now: Date
   readonly totalUnfiltered: number
+  readonly onReset?: () => void
 }) {
+  const t = useUiTranslations("eventListing")
   if (loading) {
     return (
       <div aria-busy="true" className="flex flex-col gap-3">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="h-[92px] animate-pulse rounded-[18px]"
+            className="h-[92px] animate-pulse rounded-[18px] motion-reduce:animate-none"
             style={{
               background: T.bg.muted,
               border: `1px solid ${T.border.line}`,
@@ -160,8 +163,14 @@ export function EventsAgenda({
         className="rounded-[24px] border px-8 py-14 text-center"
         style={{ borderColor: T.border.line, background: T.bg.deep }}
       >
+        <span
+          aria-hidden="true"
+          className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-(--t-accent-chip) text-(--t-accent-primary)"
+        >
+          <Icon icon="mdi:calendar-plus-outline" width={27} />
+        </span>
         <h3
-          className="m-0 text-[26px]"
+          className="m-0 text-[28px] text-balance"
           style={{
             fontFamily: T.font.serif,
             fontWeight: 500,
@@ -169,7 +178,7 @@ export function EventsAgenda({
           }}
         >
           {totalUnfiltered === 0
-            ? "No upcoming events yet"
+            ? t("emptyTitle")
             : "No events match these filters"}
         </h3>
         <p
@@ -177,9 +186,36 @@ export function EventsAgenda({
           style={{ color: T.ink.dim }}
         >
           {totalUnfiltered === 0
-            ? "Events appear here as libraries connect their calendars and ticketing feeds."
+            ? t("emptyLead")
             : "Try widening the date range or clearing a filter."}
         </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {totalUnfiltered === 0 ? (
+            <>
+              <GlobalLink
+                href="/knowledge/events/event-feeds"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+              >
+                {t("feedGuide")}
+                <Icon aria-hidden="true" icon="mdi:arrow-right" width={18} />
+              </GlobalLink>
+              <GlobalLink
+                href="/contribute"
+                className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted)"
+              >
+                {t("contribute")}
+              </GlobalLink>
+            </>
+          ) : onReset ? (
+            <button
+              type="button"
+              onClick={onReset}
+              className="min-h-11 cursor-pointer rounded-full border border-(--t-border-hi) px-5 py-2.5 text-sm font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-muted)"
+            >
+              {t("reset")}
+            </button>
+          ) : null}
+        </div>
       </div>
     )
   }
