@@ -243,9 +243,7 @@ it("keeps interface section labels when a mobile preview aggregates other langua
   mocks.params = new URLSearchParams("lang=es")
   render(<ArticleDiscoveryFilters discovery={initial} kind="journal" />)
   fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
-  fireEvent.click(
-    screen.getByRole("button", { name: "All languages", exact: true })
-  )
+  fireEvent.click(screen.getByRole("button", { name: "All languages" }))
   await screen.findByRole("button", { name: "Show 1 results" })
   expect(screen.getByRole("checkbox", { name: "Stories (1)" })).toBeTruthy()
   expect(screen.queryByRole("checkbox", { name: "Histoires (1)" })).toBeNull()
