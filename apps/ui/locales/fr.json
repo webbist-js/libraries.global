@@ -1539,7 +1539,7 @@
     "countrySuggestion": "Explorer le contenu sur {country}",
     "preferenceFailed": "Votre sélection figure dans l’URL ; ce navigateur n’a pas pu enregistrer la préférence.",
     "exploreKnowledge": "Explorer les connaissances",
-    "knowledgeLead": "Trouvez des articles de référence par langue, lieu, bibliothèque ou sujet. Les sections de documentation suivent ci-dessous.",
+    "knowledgeLead": "Des guides pratiques pour utiliser le répertoire, contribuer et gérer les fiches des bibliothèques.",
     "articleCount": "{count, plural, one {# article} other {# articles}}",
     "readingTime": "{minutes} min de lecture",
     "pagination": "Pages des résultats de connaissances",
@@ -1549,7 +1549,10 @@
     "writeLibrary": "Écrire sur cette bibliothèque",
     "readLibrary": "Lire les récits sur cette bibliothèque",
     "writeEvent": "Écrire sur cet événement",
-    "readingLanguage": "Lecture en {language}. Langue de l’interface : {interface}."
+    "readingLanguage": "Lecture en {language}. Langue de l’interface : {interface}.",
+    "noFilterChoices": "Aucun filtre ne correspond à votre recherche.",
+    "readGuide": "Lire le guide",
+    "languageDefault": "Les guides s’affichent dans la langue sélectionnée. Choisissez Toutes les langues pour explorer les traductions."
   },
   "authorBadges": {
     "editor": "Éditeur",
@@ -2376,5 +2379,15 @@
     "recognitionLead": "Les membres Supporter, Pro et Team peuvent choisir une marque sur leur profil et une mention publique. Ces choix sont indépendants dans Confidentialité ; aucun ne révèle ce que vous payez.",
     "recognitionSettings": "Choisir votre visibilité",
     "meetSupporters": "Découvrir les soutiens"
+  },
+  "eventListing": {
+    "emptyTitle": "Soyez le premier à partager vos événements",
+    "emptyLead": "Aidez le public à découvrir les conférences, ateliers et heures du conte de votre bibliothèque. Connectez un flux pour afficher les événements à venir ici.",
+    "feedGuide": "Comment connecter un flux d’événements",
+    "contribute": "Contribuer au répertoire",
+    "errorTitle": "Les événements sont temporairement indisponibles",
+    "errorLead": "Le calendrier est inaccessible pour le moment. Réessayez dans un instant.",
+    "retry": "Réessayer",
+    "reset": "Effacer les filtres"
   }
 }

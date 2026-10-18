@@ -16,20 +16,30 @@ import {
 function tabsFor(
   sections: readonly DocsSection[],
   counts: DocsSectionCounts,
-  allSections: string
+  allSections: string,
+  query = ""
 ): SectionTab[] {
+  const href = (section?: string) => {
+    const params = new URLSearchParams(query)
+    params.delete("page")
+    if (section) params.set("section", section)
+    else params.delete("section")
+
+    return `/knowledge${params.size ? `?${params}` : ""}`
+  }
+
   return [
     {
       id: ALL_SECTIONS,
       label: allSections,
-      href: "/knowledge",
+      href: href(),
       icon: "mdi:book-open-outline",
       count: sections.reduce((sum, s) => sum + (counts[s.slug] ?? 0), 0),
     },
     ...sections.map((s) => ({
       id: s.slug,
       label: s.title,
-      href: `/knowledge?section=${s.slug}`,
+      href: href(s.slug),
       icon: s.icon,
       count: counts[s.slug] ?? 0,
     })),
@@ -46,14 +56,15 @@ function TabsFromUrl({
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
 
-  const active = activeDocsSection(useSearchParams().get("section"), sections)
+  const params = useSearchParams()
+  const active = activeDocsSection(params.get("section"), sections)
 
   return (
     <SectionTabs
       activeId={active}
       label={tUi("knowledge_sections")}
       scroll={false}
-      tabs={tabsFor(sections, counts, t("allSections"))}
+      tabs={tabsFor(sections, counts, t("allSections"), params.toString())}
     />
   )
 }

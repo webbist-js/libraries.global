@@ -5,7 +5,11 @@ import {
 } from "@repo/shared-data"
 import { describe, expect, it } from "vitest"
 
-import { changeArticleFacet } from "./article-filter-state"
+import {
+  articlePreviewParams,
+  knowledgeBrowseParams,
+  changeArticleFacet,
+} from "./article-filter-state"
 
 const story = {
   documentId: "one",
@@ -87,5 +91,61 @@ describe("canonical article geography selections", () => {
       lang: "es",
       q: "Story",
     })
+  })
+})
+
+describe("discovery request defaults", () => {
+  it.each(["en", "fr", "cs"])(
+    "limits Knowledge to the %s interface language by default",
+    (locale) => {
+      const params = new URLSearchParams(
+        knowledgeBrowseParams(locale, { section: "contributing" })
+      )
+      const result = aggregateArticleBrowse(
+        [
+          story,
+          {
+            ...story,
+            locale,
+            facets: {
+              ...story.facets,
+              languages: [{ value: locale, label: locale }],
+            },
+          },
+        ],
+        parseArticleBrowseQuery({ lang: params.get("lang") })
+      )
+      expect(result.items.map((item) => item.locale)).toEqual([locale])
+      expect(params.get("preferredLocale")).toBe(locale)
+    }
+  )
+  it("preserves explicit language selections and all languages", () => {
+    expect(
+      new URLSearchParams(knowledgeBrowseParams("en", { lang: "fr,cs" })).get(
+        "lang"
+      )
+    ).toBe("fr,cs")
+    expect(
+      new URLSearchParams(knowledgeBrowseParams("en", { lang: "all" })).get(
+        "lang"
+      )
+    ).toBe("all")
+  })
+  it("uses the same defaults and explicit all-language choice in mobile previews", () => {
+    expect(
+      new URLSearchParams(
+        articlePreviewParams("section=contributing", "knowledge", "en")
+      ).get("lang")
+    ).toBe("en")
+    expect(
+      new URLSearchParams(
+        articlePreviewParams("lang=all", "knowledge", "en")
+      ).get("lang")
+    ).toBe("all")
+    expect(
+      new URLSearchParams(articlePreviewParams("", "journal", "en")).has(
+        "origin"
+      )
+    ).toBe(false)
   })
 })

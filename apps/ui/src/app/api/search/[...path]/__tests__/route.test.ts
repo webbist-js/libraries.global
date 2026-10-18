@@ -98,3 +98,41 @@ describe("search proxy", () => {
     ).toBe(400)
   })
 })
+
+it("treats only a missing event index as an empty calendar", async () => {
+  fetchMock.mockResolvedValueOnce(
+    Response.json(
+      { code: "index_not_found", message: "Index event not found" },
+      { status: 404 }
+    )
+  )
+  const result = await search(["indexes", "event", "search"], {
+    q: "",
+    page: 1,
+    hitsPerPage: 300,
+  })
+  expect(result.status).toBe(200)
+  expect(await result.json()).toMatchObject({
+    hits: [],
+    totalHits: 0,
+    totalPages: 0,
+    page: 1,
+    hitsPerPage: 300,
+  })
+})
+it.each([
+  ["event", 500, "internal"],
+  ["event", 403, "invalid_api_key"],
+  ["event", 404, "other"],
+  ["library", 404, "index_not_found"],
+])(
+  "does not disguise %s failures (%s, %s) as an empty calendar",
+  async (index, status, code) => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ code, message: "private upstream detail" }, { status })
+    )
+    const result = await search(["indexes", index, "search"], {})
+    expect(result.status).toBe(502)
+    expect(await result.text()).not.toContain("private upstream detail")
+  }
+)

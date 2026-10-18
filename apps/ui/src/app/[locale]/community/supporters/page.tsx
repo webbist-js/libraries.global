@@ -227,13 +227,13 @@ export default async function SupportersPage({
 
         <section
           aria-labelledby="supporter-benefits"
-          className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
+          className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12"
         >
           <div>
             <h2 id="supporter-benefits" className="m-0" style={heading}>
               What supporters get
             </h2>
-            <ul className="mt-6 flex list-none flex-col gap-5 p-0">
+            <ul className="mt-7 mb-0 flex list-none flex-col gap-6 p-0">
               <li className="flex items-start gap-3">
                 <span
                   className="flex size-10 shrink-0 items-center justify-center rounded-xl"
@@ -287,7 +287,7 @@ export default async function SupportersPage({
               </li>
             </ul>
             <p
-              className="mb-0 max-w-xl text-[14px] leading-relaxed"
+              className="mt-6 mb-0 max-w-xl border-t border-(--t-border-line) pt-5 text-[14px] leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               That&apos;s all, on purpose. Supporting doesn&apos;t change what
@@ -296,17 +296,17 @@ export default async function SupportersPage({
             </p>
           </div>
           <div
-            className="rounded-[28px] border p-6"
+            className="rounded-[28px] border p-5 sm:p-7"
             style={{ background: T.bg.space, borderColor: T.border.line }}
           >
             <p
-              className="mt-0 text-[14px] font-semibold"
+              className="mt-0 mb-4 text-[14px] font-semibold"
               style={{ color: T.ink.dim }}
             >
               How the badge looks on a profile
             </p>
             <div
-              className="flex items-center gap-4 rounded-[22px] border p-5"
+              className="flex flex-col items-start gap-4 rounded-[22px] border p-5 sm:flex-row sm:items-center sm:p-6"
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
               <Avatar initials="YN" variant="tint" tint="academic" size="xl" />
@@ -333,7 +333,10 @@ export default async function SupportersPage({
                 </div>
               </div>
             </div>
-            <p className="mt-3 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
+            <p
+              className="mt-4 mb-0 text-[13px] leading-relaxed"
+              style={{ color: T.ink.dim }}
+            >
               The mark never shows how much someone pays. It&apos;s off your
               profile the moment you hide it.
             </p>

@@ -135,11 +135,19 @@ describe("combined Journal discovery URL state", () => {
 })
 
 describe("resolved Journal collection", () => {
-  it("defaults the list request to Community and labels the resolved result predicate", () => {
+  it("defaults to all stories and retains explicit collection choices", () => {
     const params = new URLSearchParams(
       journalBrowseParams("en", DEFAULT_JOURNAL_QUERY)
     )
-    expect(params.get("origin")).toBe("community")
+    expect(params.has("origin")).toBe(false)
+    expect(
+      new URLSearchParams(
+        journalBrowseParams(
+          "en",
+          parseJournalQuery({ collection: "community" })
+        )
+      ).get("origin")
+    ).toBe("community")
     expect(params.get("preferredLocale")).toBe("en")
     expect(journalCollectionKey(["community"])).toBe("communityJournal")
     expect(journalCollectionKey(["index"])).toBe("fromIndex")
