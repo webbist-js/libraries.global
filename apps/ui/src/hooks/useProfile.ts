@@ -3,10 +3,12 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { authClient } from "@/lib/auth-client"
 import type { NotifPrefs, UserProfile } from "@/lib/types/profile"
 
 export function useProfile() {
   const [saving, setSaving] = useState(false)
+  const { refetch } = authClient.useSession()
 
   async function updateProfile(data: Partial<UserProfile>): Promise<boolean> {
     setSaving(true)
@@ -23,6 +25,13 @@ export function useProfile() {
         return false
       }
       toast.success("Profile saved")
+      // The profile route invalidates the bridge cache; update reactive form
+      // defaults too. A failed refresh must not undo a successful profile save.
+      try {
+        await refetch()
+      } catch {
+        // The next session refresh can retry; the profile is already saved.
+      }
 
       return true
     } catch {

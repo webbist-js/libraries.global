@@ -116,11 +116,18 @@ describe("VoteOnAdditionsCard", () => {
 
   it("votes when signed in and announces the new count", async () => {
     session.value = { data: { user: { id: "u1" } }, isPending: false }
-    const fetchMock = vi.fn(async (url: string) =>
-      url.endsWith("/vote")
-        ? Response.json({ data: { voted: true, votes: 3 } })
-        : Response.json({ data: [suggestion(2)] })
-    )
+    let hasVoted = false
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith("/vote")) {
+        hasVoted = true
+
+        return Response.json({ data: { voted: true, votes: 3 } })
+      }
+
+      return Response.json({
+        data: [suggestion(2, { voted: hasVoted, votes: hasVoted ? 3 : 2 })],
+      })
+    })
     vi.stubGlobal("fetch", fetchMock)
     render(
       createElement(VoteOnAdditionsCard, {

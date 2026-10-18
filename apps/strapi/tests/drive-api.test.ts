@@ -1,5 +1,5 @@
 import type { DriveInput } from "@repo/shared-data"
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import controllerFactory from "../src/api/drive/controllers/drive"
@@ -266,6 +266,107 @@ describe("drive.updateDrive", () => {
 })
 
 describe("drive board gate (controller)", () => {
+  it("rolls back Drive creation and feed settings when an existing conversation is inaccessible", async () => {
+    const { controller, store, services, strapi } = build({
+      [ROLE_GRANT]: [BOARD_GRANT("board-1")],
+      ["api::user-profile.user-profile"]: [
+        { baUserId: "board-1", username: "board" },
+      ],
+    })
+    services["discussions.discussion"] = {
+      contextMetadata: async () => ({ links: [], version: 0 }),
+      configureContext: async () =>
+        strapi
+          .documents("plugin::discussions.context-setting")
+          .create({ data: { enabled: true } }),
+      addContextLink: async () => {
+        throw Object.assign(new Error("Discussion unavailable"), {
+          status: 404,
+        })
+      },
+    }
+    const c = ctx({
+      body: {
+        ...validInput(),
+        discussions: { enabled: true, threadIds: ["unreadable-thread"] },
+      },
+      baUserId: "board-1",
+    })
+    await controller.create(c)
+    expect(c.status).toBe(404)
+    expect(store[DRIVE]).toEqual([])
+    expect(store["plugin::discussions.context-setting"] ?? []).toEqual([])
+  })
+  it("rolls back edited Drive text on a stale feed version and returns a conflict", async () => {
+    const { controller, store, services } = build({
+      [DRIVE]: [drive(1)],
+      [ROLE_GRANT]: [BOARD_GRANT("board-1")],
+      ["api::user-profile.user-profile"]: [{ baUserId: "board-1" }],
+    })
+    services["discussions.discussion"] = {
+      contextMetadata: async () => ({ links: [], version: 2 }),
+      configureContext: async () => {
+        throw Object.assign(new Error("Context settings have changed"), {
+          status: 409,
+        })
+      },
+    }
+    const c = ctx({
+      params: { documentId: "drive1" },
+      body: {
+        title: "A newly edited Drive title",
+        discussions: { enabled: true, threadIds: [], baseVersion: 1 },
+      },
+      baUserId: "board-1",
+    })
+    await controller.update(c)
+    expect(c.status).toBe(409)
+    expect(store[DRIVE][0].title).toBe("Drive 1")
+  })
+  it("allows the Board to clear a featured conversation without altering the thread", async () => {
+    const { controller, services } = build({
+      [DRIVE]: [drive(1)],
+      [ROLE_GRANT]: [BOARD_GRANT("board-1")],
+      ["api::user-profile.user-profile"]: [{ baUserId: "board-1" }],
+    })
+    const actContextLink = vi.fn()
+    services["discussions.discussion"] = {
+      contextMetadata: async () => ({
+        links: [
+          {
+            id: "association",
+            threadId: "thread",
+            state: "visible",
+            featured: true,
+            version: 3,
+          },
+        ],
+        version: 2,
+      }),
+      configureContext: vi.fn(),
+      addContextLink: vi.fn(),
+      actContextLink,
+    }
+    const c = ctx({
+      params: { documentId: "drive1" },
+      body: {
+        discussions: {
+          enabled: true,
+          threadIds: ["thread"],
+          baseVersion: 2,
+          featuredThreadId: "",
+        },
+      },
+      baUserId: "board-1",
+    })
+    await controller.update(c)
+    expect(c.status).toBeUndefined()
+    expect(actContextLink).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "ba:board-1" }),
+      "association",
+      { action: "unfeature", baseVersion: 3 }
+    )
+  })
   it("refuses without the bridge secret (401)", async () => {
     const { controller } = build()
     const c = ctx({ body: validInput(), secret: null })

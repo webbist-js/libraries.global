@@ -1,15 +1,17 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import {
+  MembershipRecognition,
+  PlanStatusBanner,
+} from "@/app/[locale]/contribute/_components/membership/PlanStatusBanner"
 import { Container } from "@/components/elementary/Container"
-import GlobalLink from "@/components/global/GlobalLink"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
-import { getSessionSSR } from "@/lib/auth-server"
 import { billingConfig } from "@/lib/billing/config"
 import { hasManagedMembership } from "@/lib/billing/current-membership"
+import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -19,7 +21,6 @@ import { LibraryStaffSection } from "../_components/membership/LibraryStaffSecti
 import { MembershipPlans } from "../_components/membership/MembershipPlans"
 import { MembershipPolicies } from "../_components/membership/MembershipPolicies"
 import { PlanCompareTable } from "../_components/membership/PlanCompareTable"
-import { PlanStatusBanner } from "../_components/membership/PlanStatusBanner"
 import { ProFaq } from "../_components/membership/ProFaq"
 import { ProFreeRoutes } from "../_components/membership/ProFreeRoutes"
 
@@ -49,7 +50,7 @@ const PROMISES = [
 export default async function MembershipPage() {
   const tUi = await getUiTranslations("ui")
 
-  const session = await getSessionSSR(await headers())
+  const session = await getContributionSession()
   const user = session?.user
   // A signed-in session missing its plan counts as free (missing means deny).
   const currentPlan = user ? (user.plan ?? "free") : "public"
@@ -92,7 +93,12 @@ export default async function MembershipPage() {
         <FreePlansCard signedIn={Boolean(user)} />
         <LibraryStaffSection isStaff={isStaff} />
         <div className="flex flex-col gap-5">
-          <PlanStatusBanner plan={user?.plan} planSource={user?.planSource} />
+          <PlanStatusBanner
+            plan={currentPlan}
+            planSource={user?.planSource}
+            hasPaidMembership={hasPaidMembership}
+            isStaff={isStaff}
+          />
           <MembershipPlans
             currentPlan={currentPlan}
             billingAvailable={billingConfig().enabled}
@@ -114,37 +120,11 @@ export default async function MembershipPage() {
         <PlanCompareTable currentPlan={currentPlan} />
         <div className="flex flex-col gap-6">
           <ProFreeRoutes />
-          <section
-            aria-labelledby="member-recognition-h"
-            className="rounded-[22px] border border-(--t-border-line) bg-(--t-bg-space) p-5 sm:p-6"
-          >
-            <h2
-              id="member-recognition-h"
-              className="m-0 mb-2 text-[26px] font-medium"
-              style={{ fontFamily: T.font.serif }}
-            >
-              Choose public recognition
-            </h2>
-            <p
-              className="m-0 text-[16px] leading-relaxed"
-              style={{ color: T.ink.dim }}
-            >
-              Supporter, Pro and Team members can choose an optional profile
-              mark and public credit.{" "}
-              <GlobalLink
-                href="/community/supporters"
-                className="font-semibold underline underline-offset-4"
-                style={{ color: T.accent.primary }}
-              >
-                Meet the supporters
-              </GlobalLink>
-              . Both visibility choices are in your profile settings.
-            </p>
-            <p className="m-0 mt-3 text-[14px] text-(--t-ink-dim)">
-              Profile marks and supporters-page credit are optional and chosen
-              separately. They never show what you pay.
-            </p>
-          </section>
+          {currentPlan !== "supporter" &&
+          currentPlan !== "pro" &&
+          currentPlan !== "team" ? (
+            <MembershipRecognition />
+          ) : null}
         </div>
         <ProFaq />
         <MembershipPolicies />

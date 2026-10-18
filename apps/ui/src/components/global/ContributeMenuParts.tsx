@@ -18,7 +18,7 @@ export function tintOf(tint: ContributorTint): { bg: string; fg: string } {
     : TYPE_TINT[tint]
 }
 
-/** The tinted square with the card's icon. Decorative: the title says it. */
+/** A tinted icon disc. Decorative: the title says it. */
 export function CardMonogram({
   icon,
   tint,
@@ -34,7 +34,7 @@ export function CardMonogram({
   return (
     <span
       aria-hidden="true"
-      className="flex shrink-0 items-center justify-center rounded-[10px]"
+      className="flex shrink-0 items-center justify-center rounded-full"
       style={{ width: size, height: size, background: bg, color: fg }}
     >
       <Icon icon={icon} width={glyph} height={glyph} />
@@ -53,7 +53,7 @@ export function CountPill({
   return (
     <span
       className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-[13px] font-bold text-white"
-      style={{ background: T.accent.primary }}
+      style={{ background: T.ink.base }}
     >
       {count.toLocaleString("en-GB")}
       <span className="sr-only"> {what}</span>
@@ -86,7 +86,7 @@ export function LibrarySelect({
 
   return (
     <div
-      className="flex h-10 items-center gap-2 rounded-[12px] border px-2.5"
+      className="flex min-h-11 items-center gap-2 rounded-[12px] border px-2.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--t-accent-primary)"
       style={{ borderColor: T.border.hi, background: T.bg.surface }}
     >
       <label
@@ -100,7 +100,7 @@ export function LibrarySelect({
         id={id}
         value={library.selectedId ?? ""}
         onChange={(e) => library.select(e.target.value)}
-        className="min-w-0 flex-1 cursor-pointer truncate rounded-md border-0 bg-transparent text-[14px] font-semibold"
+        className="min-w-0 flex-1 cursor-pointer truncate rounded-md border-0 bg-transparent text-[14px] font-semibold outline-none"
         style={{ color: T.ink.base, fontFamily: T.font.sans }}
       >
         {library.options.map((option) => (

@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "article_projection_jobs",
+  "info": {
+    "singularName": "article-projection-job",
+    "pluralName": "article-projection-jobs",
+    "displayName": "Article projection retry"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "indexes": [
+    {
+      "name": "article_projection_jobs_key_unique",
+      "columns": ["key"],
+      "type": "unique"
+    }
+  ],
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "private": true
+    },
+    "version": {
+      "type": "string",
+      "required": true,
+      "private": true
+    },
+    "targets": {
+      "type": "json",
+      "private": true
+    },
+    "tasks": {
+      "type": "json",
+      "private": true
+    }
+  }
+}

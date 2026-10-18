@@ -1,4 +1,7 @@
+"use client"
+
 import { useTranslations as useUiTranslations } from "next-intl"
+import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -32,15 +35,11 @@ function HelperList({
 
   return (
     <div className="flex flex-col gap-1">
-      <h3
-        id={headingId}
-        className="m-0 text-[15px] font-bold"
-        style={{ color: T.ink.dim }}
-      >
+      <h3 id={headingId} className="sr-only" style={{ color: T.ink.dim }}>
         {label}
       </h3>
       {entries.length === 0 ? (
-        <p className="m-0 py-1.5 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 py-1.5 text-[14px]" style={{ color: T.ink.dim }}>
           {empty}
         </p>
       ) : (
@@ -49,7 +48,9 @@ function HelperList({
             const tint = entry.username
               ? (TINTS[i] ?? TYPE_TINT.neutral)
               : TYPE_TINT.neutral
-            const name = entry.displayName ?? entry.username ?? "A contributor"
+            const name = entry.username
+              ? (entry.displayName ?? entry.username)
+              : "A contributor"
 
             return (
               <li
@@ -61,19 +62,19 @@ function HelperList({
                 }}
               >
                 <span
-                  className="w-5 text-[15px] font-bold"
+                  className="w-4 text-[12px] font-bold"
                   style={{ color: T.ink.dim }}
                 >
                   {entry.rank}
                 </span>
                 <span
                   aria-hidden="true"
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
                   style={{ background: tint.bg, color: tint.fg }}
                 >
                   {entry.username ? initialsOf(entry) : "·"}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">
                   {entry.username ? (
                     <GlobalLink
                       href={`/profile/${entry.username}`}
@@ -87,7 +88,7 @@ function HelperList({
                   )}
                 </span>
                 <span
-                  className="shrink-0 text-[14px] whitespace-nowrap"
+                  className="shrink-0 text-[12px] whitespace-nowrap"
                   style={{ color: T.ink.dim }}
                 >
                   {entry.credits.toLocaleString("en-GB")} accepted
@@ -117,6 +118,8 @@ export function DriveHelpers({
   readonly publicOnly?: boolean
 }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("drivePage")
+  const [period, setPeriod] = useState<"week" | "all">("week")
 
   const shownAll = publicOnly ? all.filter((e) => e.username) : all
   const hidden = all.length - shownAll.length
@@ -132,25 +135,46 @@ export function DriveHelpers({
         padding: "20px 22px",
       }}
     >
-      <h2
-        id="drive-helpers-heading"
-        className="m-0 text-[17px] font-bold"
-        style={{ color: T.ink.base }}
-      >
-        Helpers
-      </h2>
-      {publicOnly ? null : (
-        <HelperList
-          label={tUi("this_week")}
-          entries={week}
-          empty="No accepted work yet this week."
-        />
-      )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          id="drive-helpers-heading"
+          className="m-0 text-[27px] font-medium"
+          style={{ fontFamily: T.font.serif }}
+        >
+          {t("helpersHeading")}
+        </h2>
+        {publicOnly ? null : (
+          <div
+            role="group"
+            aria-label={t("helperPeriod")}
+            className="flex rounded-full bg-(--t-bg-muted) p-1"
+          >
+            {(["week", "all"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={period === value}
+                onClick={() => setPeriod(value)}
+                className={`min-h-8 cursor-pointer rounded-full px-3 text-xs font-semibold ${period === value ? "bg-white text-(--t-ink-base)" : "text-(--t-ink-dim) hover:text-(--t-ink-base)"}`}
+              >
+                {tUi(value === "week" ? "this_week" : "all_time")}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <HelperList
-        label={tUi("all_time")}
-        entries={shownAll}
-        empty="No accepted work yet."
+        label={tUi(publicOnly || period === "all" ? "all_time" : "this_week")}
+        entries={publicOnly || period === "all" ? shownAll : week}
+        empty={
+          publicOnly || period === "all"
+            ? "No accepted work yet."
+            : "No accepted work yet this week."
+        }
       />
+      <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
+        {t("helpersRanked")}
+      </p>
       {hidden > 0 ? (
         <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
           And {hidden} more who {hidden === 1 ? "keeps their" : "keep their"}{" "}

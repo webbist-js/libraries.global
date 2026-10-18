@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   addDays,
   cancelledDates,
   localDateTime,
@@ -10,6 +11,7 @@ import {
 } from "@repo/shared-data"
 
 import { noticesForLibraries, noticesForLibrary } from "./library-notices"
+import { libraryJoin } from "./library-sql"
 
 export const MOBILE_STOP_INDEX = "mobile-stop"
 export const MOBILE_STOP_SETTINGS = {
@@ -75,7 +77,7 @@ export function mobileStopDocuments(
 ) {
   const tt = normalizeMobileTimetable(library.mobileTimetable)
   if (
-    library.libraryType !== "Mobile" ||
+    libraryTypeName(library.libraryType) !== "Mobile" ||
     library.operationalStatus === "permanently_closed" ||
     !tt
   )
@@ -241,7 +243,7 @@ export async function rebuildMobileStopIndex(strapi: any): Promise<void> {
   )
   for (let start = 0; ; start += 100) {
     const rows = await strapi.documents(LIBRARY).findMany({
-      filters: { libraryType: "Mobile" },
+      filters: { libraryType: { name: "Mobile" } },
       fields: ["documentId"],
       status: "published",
       sort: "id:asc",
@@ -305,10 +307,13 @@ async function mobileTimezones(strapi: any): Promise<(string | null)[]> {
   const meta = strapi.db?.metadata?.get?.(LIBRARY)
   const knex = strapi.db?.connection
   if (!meta?.tableName || typeof knex !== "function") return []
-  const rows = (await knex(meta.tableName)
-    .where({ library_type: "Mobile" })
-    .whereNotNull("published_at")
-    .distinct("timezone")) as { timezone: string | null }[]
+  const type = libraryJoin(strapi, "libraryType")
+  const rows = (await knex(`${meta.tableName} as l`)
+    .join(`${type.linkTable} as tl`, `tl.${type.libraryColumn}`, "l.id")
+    .join(`${type.table} as lt`, "lt.id", `tl.${type.targetColumn}`)
+    .where("lt.name", "Mobile")
+    .whereNotNull("l.published_at")
+    .distinct("l.timezone")) as { timezone: string | null }[]
 
   return rows.map((row) => row.timezone)
 }
@@ -341,7 +346,7 @@ export async function refreshMobileAtLocalMidnight(
   for (;;) {
     const rows = await strapi.documents(LIBRARY).findMany({
       filters: {
-        libraryType: "Mobile",
+        libraryType: { name: "Mobile" },
         id: { $gt: after },
         ...timezoneFilter,
       },
@@ -386,11 +391,15 @@ export function registerMobileStopIndex(strapi: any): void {
    * branches therefore makes no network call.
    */
   const typeOf = async (id: string) =>
-    (
-      await strapi.db
-        .query(LIBRARY)
-        .findOne({ where: { documentId: id }, select: ["libraryType"] })
-    )?.libraryType
+    libraryTypeName(
+      (
+        await strapi.db.query(LIBRARY).findOne({
+          populate: { libraryType: { select: ["name"] } },
+          where: { documentId: id },
+          select: ["id"],
+        })
+      )?.libraryType
+    )
   strapi.documents.use(async (context: any, next: () => Promise<any>) => {
     const relevant =
       context.uid === LIBRARY &&
@@ -402,16 +411,17 @@ export function registerMobileStopIndex(strapi: any): void {
     const before =
       id &&
       (["delete", "unpublish"].includes(context.action) ||
-        (typeof written === "string" && written !== "Mobile"))
+        written !== undefined)
         ? await typeOf(id)
         : undefined
     const result = await next()
     const documentId = relevant ? (id ?? result?.documentId) : undefined
     if (documentId) {
       const after =
-        written ??
-        (Array.isArray(result?.entries) ? result.entries[0] : result)
-          ?.libraryType ??
+        libraryTypeName(
+          (Array.isArray(result?.entries) ? result.entries[0] : result)
+            ?.libraryType
+        ) ??
         (context.action === "delete" ? undefined : await typeOf(documentId))
       if (before === "Mobile" || after === "Mobile")
         await guardedSync(documentId)

@@ -1,15 +1,22 @@
 "use client"
 
 import { useTranslations as useUiTranslations } from "next-intl"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useRef, useState } from "react"
 
 import type {
+  OptionCatalogue,
   PublicSuggestion,
   SuggestionList,
+  SuggestionReviewRound,
 } from "@/lib/community/suggestions"
 
+import { AlreadyInLists } from "./AlreadyInLists"
+import { SuggestionHowItWorks } from "./SuggestionReviewCard"
 import { type BoardFilter, SuggestionsBoard } from "./SuggestionsBoard"
-import { SuggestOptionForm } from "./SuggestOptionForm"
+import {
+  SuggestOptionForm,
+  type SuggestOptionFormHandle,
+} from "./SuggestOptionForm"
 import { useSuggestions } from "./useSuggestions"
 
 /**
@@ -21,23 +28,38 @@ import { useSuggestions } from "./useSuggestions"
 export function SuggestionsWorkspace({
   initial,
   optionNames,
-  signedIn,
+  optionCatalogue,
   now,
+  round: initialRound,
   children,
+  selectedSuggestionId,
 }: {
   /** Server-rendered suggestions; refetched with the viewer's votes. */
   readonly initial: PublicSuggestion[]
   readonly optionNames: Record<SuggestionList, string[]>
+  readonly optionCatalogue?: OptionCatalogue
   readonly signedIn: boolean
   /** The server's "now" (ISO), so relative ages hydrate unchanged. */
+  readonly round?: SuggestionReviewRound | null
   readonly now: string
   /** The rail's cards under the form. */
   readonly children?: ReactNode
+  readonly selectedSuggestionId?: string
 }) {
   const tUi = useUiTranslations("ui")
 
-  const { items, setItems, vote, busyId, error } = useSuggestions(initial)
+  const {
+    items,
+    setItems,
+    vote,
+    busyId,
+    error,
+    round,
+    viewerScope,
+    signedIn: viewerSignedIn,
+  } = useSuggestions(initial, initialRound)
   const [filter, setFilter] = useState<BoardFilter>("all")
+  const form = useRef<SuggestOptionFormHandle>(null)
 
   const onPosted = (s: PublicSuggestion) => {
     setItems((list) => [
@@ -56,6 +78,21 @@ export function SuggestionsWorkspace({
         gap: "clamp(16px,2.4vw,28px)",
       }}
     >
+      <div className="w-full">
+        <SuggestOptionForm
+          ref={form}
+          key={viewerScope}
+          signedIn={viewerSignedIn}
+          optionNames={optionNames}
+          optionCatalogue={optionCatalogue}
+          suggestions={items}
+          onPosted={onPosted}
+          onVote={vote}
+          busyId={busyId}
+          round={round}
+          voteError={error}
+        />
+      </div>
       <div
         className="flex min-w-0 flex-col"
         style={{ flex: "2 1 440px", gap: "clamp(24px,3vw,36px)" }}
@@ -67,9 +104,13 @@ export function SuggestionsWorkspace({
           onVote={vote}
           busyId={busyId}
           error={error}
-          signedIn={signedIn}
+          signedIn={viewerSignedIn}
           optionNames={optionNames}
+          optionCatalogue={optionCatalogue}
           now={new Date(now)}
+          round={round}
+          selectedSuggestionId={selectedSuggestionId}
+          onRevise={(suggestion) => form.current?.revise(suggestion.documentId)}
         />
       </div>
 
@@ -78,12 +119,12 @@ export function SuggestionsWorkspace({
         className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
         style={{ flex: "1 1 290px" }}
       >
-        <SuggestOptionForm
-          signedIn={signedIn}
+        <AlreadyInLists
           optionNames={optionNames}
-          suggestions={items}
-          onPosted={onPosted}
+          optionCatalogue={optionCatalogue}
+          filter="all"
         />
+        <SuggestionHowItWorks />
         {children}
       </aside>
     </div>

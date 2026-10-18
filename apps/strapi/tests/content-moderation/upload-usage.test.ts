@@ -89,7 +89,7 @@ describe("GET /uploads/usage", () => {
     const c = ctx({ "x-service-secret": "test-secret", "x-ba-user-id": "u1" })
     await controller.uploadUsage(c)
     // 100 KB + 50.5 KB; yesterday's file and u2's are not counted.
-    expect(c.body).toEqual({ files: 2, bytes: 154_112 })
+    expect(c.body).toEqual({ files: 2, bytes: 150_500 })
 
     const none = ctx({
       "x-service-secret": "test-secret",

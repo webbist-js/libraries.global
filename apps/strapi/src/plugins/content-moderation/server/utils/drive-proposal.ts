@@ -1,6 +1,11 @@
 import { proposedDrive } from "@repo/shared-data"
 
 import { ApplyRefusedError } from "./publish-guard"
+import { discussionActor } from "../../../../utils/discussions-host"
+import {
+  configureDriveDiscussions,
+  validateDriveConversationRequest,
+} from "../../../../utils/drive-discussions"
 
 const DRIVE = "api::drive.drive"
 
@@ -36,6 +41,40 @@ export async function applyDriveProposal(
       `[content-moderation] drive_proposal ${documentId} isn't a valid drive as it stands: ${errors.join(" ") || "no drive created"}`
     )
     throw new ApplyRefusedError("invalid_drive", DRIVE, documentId)
+  }
+
+  const requested = submission?.draftData?.drive?.discussions
+  if (requested !== undefined) {
+    try {
+      validateDriveConversationRequest(requested, false)
+      const actor = await discussionActor(
+        strapi,
+        String(submission.submittedByUserId)
+      )
+      if (!actor) throw new Error("Discussion participant unavailable")
+      const discussions = strapi.plugin("discussions").service("discussion")
+      for (const threadId of requested.threadIds) {
+        const thread = await discussions.getThread(actor, threadId)
+        if (thread.state !== "visible")
+          throw new Error("Discussion unavailable")
+      }
+      // An approved, immutable Drive proposal authorizes these context links;
+      // verify the proposer's current read access before the trusted apply.
+      await configureDriveDiscussions(
+        strapi,
+        String(submission.submittedByUserId),
+        String(result.data.documentId),
+        String(result.data.locale ?? "en"),
+        { ...requested, baseVersion: 0 },
+        {
+          key: "system:approved-drive",
+          name: "Approved Drive proposal",
+          admin: true,
+        }
+      )
+    } catch {
+      throw new ApplyRefusedError("invalid_drive", DRIVE, documentId)
+    }
   }
 
   return String(result.data.documentId)

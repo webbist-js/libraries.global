@@ -36,6 +36,8 @@ describe("auth-bridge sessionProfile", () => {
           baUserId: "u1",
           contributorRole: "verified_librarian",
           username: "ada",
+          country: "CO",
+          languages: [{ code: "es", proficiency: "native", id: 1 }],
           tier: "Indexer",
           earnedProUntil: FUTURE_ISO,
           dismissedPrompts: ["find-contribute", "not-a-prompt"],
@@ -131,6 +133,8 @@ describe("auth-bridge sessionProfile", () => {
     expect(c.body).toEqual({
       contributorRole: "verified_librarian",
       username: "ada",
+      country: "CO",
+      languages: [{ code: "es", proficiency: "native" }],
       tier: "Indexer",
       claims: ["libA", "libD"],
       staff: [],
@@ -152,6 +156,8 @@ describe("auth-bridge sessionProfile", () => {
     expect(c.body).toEqual({
       contributorRole: "reader",
       username: null,
+      country: null,
+      languages: [],
       tier: null,
       claims: [],
       staff: [],

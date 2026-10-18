@@ -26,6 +26,7 @@ const ACTION_SEGMENTS = new Set([
   "stats",
   "search",
   "revisions",
+  "browse",
 ])
 
 const segments = (path: string) =>

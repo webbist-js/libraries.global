@@ -2,6 +2,7 @@ import "server-only"
 
 import {
   submittedSourceRecords,
+  type LibraryTypeValue,
   type LibrarySourceRecord,
   type LibraryNotice,
 } from "@repo/shared-data"
@@ -14,6 +15,7 @@ import {
   computeCompleteness,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import type { ArticleContextData } from "@/lib/article-context"
 import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
 import {
   bridgeUserHeaders,
@@ -594,7 +596,7 @@ export type PopulatedCountryData = Omit<
     name: string
     slug: string
     summary?: string | null
-    libraryType?: string | null
+    libraryType?: LibraryTypeValue
     operationalStatus?: string | null
     heroImage?: { url?: string | null; alternativeText?: string | null } | null
   } | null
@@ -649,7 +651,7 @@ export type RegionLibrary = {
   documentId: string
   name: string
   slug: string
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
   city?: string | null
   district?: string | null
   summary?: string | null
@@ -966,6 +968,7 @@ export type ContentImageBlock = {
   id: number
   image?: MediaItem | null
   caption?: string | null
+  alternativeText?: string | null
   fullWidth?: boolean | null
 }
 
@@ -1034,18 +1037,20 @@ export type BlogArticleSummary = {
   heroImage?: MediaItem | null
 }
 
-export type BlogArticleDetail = BlogArticleSummary & {
-  body?: ArticleBodyBlock[] | null
-  /** The author's public profile, when the article is attributed to one. */
-  authorProfile?: {
-    username: string
-    firstName?: string | null
-    lastName?: string | null
-    avatar?: AvatarMedia | null
-  } | null
-  relatedArticles?: BlogArticleSummary[] | null
-  seo?: LibrarySeoData | null
-}
+export type BlogArticleDetail = BlogArticleSummary &
+  ArticleContextData & {
+    availableLocales?: string[]
+    body?: ArticleBodyBlock[] | null
+    /** The author's public profile, when the article is attributed to one. */
+    authorProfile?: {
+      username: string
+      firstName?: string | null
+      lastName?: string | null
+      avatar?: AvatarMedia | null
+    } | null
+    relatedArticles?: BlogArticleSummary[] | null
+    seo?: LibrarySeoData | null
+  }
 
 export type BlogLandingData = {
   heroEyebrow?: string | null
@@ -1075,7 +1080,20 @@ export async function fetchBlogLanding(locale: Locale) {
 }
 
 /** A Journal article in `locale`, or the default-locale version flagged `localeFallback`. */
-export async function fetchBlogArticle(slug: string, locale: Locale) {
+export async function fetchBlogArticle(
+  slug: string,
+  locale: Locale,
+  contentLanguage?: string | null
+) {
+  if (
+    contentLanguage &&
+    /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(contentLanguage)
+  ) {
+    const result = await fetchBlogArticleIn(slug, contentLanguage as Locale)
+
+    return result ? { ...result, localeFallback: false } : undefined
+  }
+
   return withLocaleFallback(locale, (l) => fetchBlogArticleIn(slug, l))
 }
 
@@ -1373,12 +1391,14 @@ export type WikiContributor = {
   avatar?: { url?: string | null } | null
 }
 
-export type WikiArticleDetail = WikiArticleSummary & {
-  body?: ArticleBodyBlock[] | null
-  contributors?: WikiContributor[] | null
-  relatedArticles?: WikiArticleSummary[] | null
-  seo?: LibrarySeoData | null
-}
+export type WikiArticleDetail = WikiArticleSummary &
+  ArticleContextData & {
+    availableLocales?: string[]
+    body?: ArticleBodyBlock[] | null
+    contributors?: WikiContributor[] | null
+    relatedArticles?: WikiArticleSummary[] | null
+    seo?: LibrarySeoData | null
+  }
 
 export type WikiLandingData = {
   quickStartCards?: WikiArticleSummary[] | null
@@ -1438,7 +1458,20 @@ async function fetchWikiSectionsIn(locale: Locale) {
 }
 
 /** A Knowledge article in `locale`, or the default-locale version flagged `localeFallback`. */
-export async function fetchWikiArticle(slug: string, locale: Locale) {
+export async function fetchWikiArticle(
+  slug: string,
+  locale: Locale,
+  contentLanguage?: string | null
+) {
+  if (
+    contentLanguage &&
+    /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(contentLanguage)
+  ) {
+    const result = await fetchWikiArticleIn(slug, contentLanguage as Locale)
+
+    return result ? { ...result, localeFallback: false } : undefined
+  }
+
   return withLocaleFallback(locale, (l) => fetchWikiArticleIn(slug, l))
 }
 
@@ -1463,7 +1496,10 @@ async function fetchWikiArticleIn(slug: string, locale: Locale) {
   }
 }
 
-export type DocsWikiArticle = WikiArticleSummary & { body?: unknown }
+export type DocsWikiArticle = WikiArticleSummary & {
+  body?: unknown
+  readingTimeMinutes?: number | null
+}
 
 /**
  * Every published wiki article with its body — the /knowledge front door
@@ -1479,30 +1515,33 @@ export async function fetchDocsWikiArticles(locale: Locale) {
     isDraft = false
   }
   try {
-    return (await PublicStrapiClient.fetchAPI("/wiki-articles", {
-      locale,
-      status: isDraft ? "draft" : "published",
+    return (await PublicStrapiClient.fetchAll(
+      "api::wiki-article.wiki-article",
+      {
+        locale,
+        status: isDraft ? "draft" : "published",
 
-      populate: {
-        section: { fields: ["name", "slug"] },
-        category: { fields: ["name", "slug"] },
-        body: { populate: "*" },
-      } as any,
+        populate: {
+          section: { fields: ["name", "slug"] },
+          category: { fields: ["name", "slug"] },
+        } as any,
 
-      fields: [
-        "title",
-        "slug",
-        "summary",
-        "author",
-        "publishedAt",
-        "updatedAt",
-        "docsSections",
-      ] as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sort: ["updatedAt:desc"] as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pagination: { pageSize: 100 } as any,
-    })) as APIResponseCollection<DocsWikiArticle>
+        fields: [
+          "title",
+          "slug",
+          "summary",
+          "author",
+          "publishedAt",
+          "updatedAt",
+          "docsSections",
+          "readingTimeMinutes",
+        ] as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sort: ["updatedAt:desc"] as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pagination: { pageSize: 100 } as any,
+      }
+    )) as APIResponseCollection<DocsWikiArticle>
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching docs wiki articles for locale '${locale}'`,
@@ -2172,6 +2211,8 @@ async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
 // ── Knowledge editor ───────────────────────────────────────────────────────
 
 export type ArticleForEditing = {
+  availableLocales?: string[]
+  publishedAt?: string | null
   documentId: string
   slug: string
   locale?: string | null
@@ -2185,6 +2226,36 @@ export type ArticleForEditing = {
     | null
   libraries?:
     | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  continents?:
+    | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  countries?:
+    | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  regions?:
+    | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  areas?:
+    | { documentId: string; name?: string | null; slug?: string | null }[]
+    | null
+  eventMentions?:
+    | {
+        id?: number
+        citationId?: string
+        eventDocumentId?: string | null
+        title?: string | null
+        startTime?: string | null
+        endTime?: string | null
+        timezone?: string | null
+        url?: string | null
+        library?: {
+          documentId: string
+          name?: string | null
+          slug?: string | null
+        } | null
+        event?: { documentId: string; title?: string | null } | null
+      }[]
     | null
   localizations?: { locale?: string | null }[] | null
   contributors?: { username?: string | null }[] | null
@@ -2211,13 +2282,33 @@ export async function fetchArticleForEditing(
         section: { fields: ["name", "slug"] },
         topics: { fields: ["name", "slug"] },
         libraries: { fields: ["name", "slug"] },
+        continents: { fields: ["name", "slug"] },
+        countries: { fields: ["name", "slug"] },
+        regions: { fields: ["name", "slug"] },
+        areas: { fields: ["name", "slug"] },
+        ...(kind === "journal"
+          ? {
+              eventMentions: {
+                populate: {
+                  library: { fields: ["name", "slug"] },
+                  event: { fields: ["title"] },
+                },
+              },
+            }
+          : {}),
         localizations: { fields: ["locale"] },
         contributors: { fields: ["username"] },
       } as any,
       pagination: { pageSize: 1 } as any,
     })) as APIResponseCollection<ArticleForEditing>
 
-    return res.data?.[0] ?? null
+    const article = res.data?.[0]
+    if (!article) return null
+    const variants = (await PublicStrapiClient.fetchAPI(
+      `${path}/published-locales/${encodeURIComponent(article.documentId)}`
+    )) as { data?: string[] }
+
+    return { ...article, availableLocales: variants.data ?? [] }
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching ${kind} article '${slug}' for editing`,

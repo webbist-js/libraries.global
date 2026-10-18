@@ -30,7 +30,8 @@
         "staff_update",
         "feed_update",
         "billing_update",
-        "beta_invitation"
+        "beta_invitation",
+        "discussion_update"
       ],
       "required": true
     },

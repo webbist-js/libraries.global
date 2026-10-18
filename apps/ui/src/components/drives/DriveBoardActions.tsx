@@ -4,10 +4,17 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
+import {
+  EditorialToolbar,
+  EDITORIAL_SUBTLE_PILL,
+  EDITORIAL_SUBTLE_DANGER_PILL,
+  EDITORIAL_DANGER_PILL,
+} from "@/components/ds/EditorialToolbar"
 import { useCapabilities } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import type { Drive } from "@/lib/drives/types"
 import { Link, useRouter } from "@/lib/navigation"
+import { cn } from "@/lib/styles"
 
 type BoardAction =
   | "pin"
@@ -48,10 +55,8 @@ const CONFIRM: Record<
   },
 }
 
-const PILL =
-  "inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-4 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary) disabled:cursor-not-allowed disabled:opacity-60"
-const PRIMARY =
-  "inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-4 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+const PILL = EDITORIAL_SUBTLE_PILL
+const PRIMARY = cn(EDITORIAL_SUBTLE_PILL, EDITORIAL_DANGER_PILL)
 
 /** Strapi's refusal, or a fallback. */
 async function messageOf(res: Response): Promise<string> {
@@ -144,13 +149,7 @@ function JournalStoryForm({
         ohio-hours-thank-you.
       </p>
       <div>
-        <button
-          type="button"
-          className={PILL}
-          style={{ color: T.ink.base }}
-          disabled={busy}
-          onClick={save}
-        >
+        <button type="button" className={PILL} disabled={busy} onClick={save}>
           {busy ? tUi("saving") : tUi("save")}
         </button>
       </div>
@@ -238,155 +237,152 @@ export function DriveBoardActions({
     }
   }
 
-  const button = (
-    action: BoardAction,
-    label: string,
-    icon: string,
-    onClick?: () => void
-  ) => (
+  const button = (action: BoardAction, label: string, onClick?: () => void) => (
     <button
       type="button"
-      className={PILL}
-      style={{ color: T.ink.base }}
+      className={cn(
+        PILL,
+        action === "cancel" &&
+          cn(EDITORIAL_SUBTLE_DANGER_PILL, "border-(--t-palette-coral-fg)/30")
+      )}
       disabled={busy !== null}
       onClick={onClick ?? (() => run(action))}
     >
-      <Icon aria-hidden="true" icon={icon} width={17} />
       {busy === action ? "Working…" : label}
     </button>
   )
 
   return (
-    <section
-      aria-labelledby="drive-board-heading"
-      className="flex flex-col gap-3.5"
-      style={{
-        background: T.bg.deep,
-        border: `1px solid ${T.border.line}`,
-        borderRadius: 24,
-        padding: "clamp(20px,2.6vw,24px)",
-      }}
-    >
-      <div className="flex flex-col gap-1">
-        <h2
-          id="drive-board-heading"
-          className="m-0"
-          style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: 24,
-            color: T.ink.base,
-          }}
-        >
-          Run this drive
-        </h2>
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-          Only the editorial board sees this.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href={`/community/drives/${encodeURIComponent(drive.slug)}/edit`}
-          className={PILL}
-          style={{ color: T.ink.base }}
-        >
-          <Icon aria-hidden="true" icon="mdi:pencil-outline" width={17} />
-          {tUi("edit")}{" "}
-        </Link>
-        {drive.status === "scheduled"
-          ? button("open", tUi("open_now"), "mdi:play-circle-outline")
-          : null}
-        {settled
-          ? null
-          : drive.pinned
-            ? button("unpin", "Unpin", "mdi:pin-off-outline")
-            : button("pin", "Pin", "mdi:pin-outline")}
-        {!settled && drive.pinned
-          ? drive.featured
-            ? button("unfeature", "Stop featuring", "mdi:star-off-outline")
-            : button("feature", "Feature", "mdi:star-outline")
-          : null}
-        {drive.status === "open"
-          ? button("close", "Close now", "mdi:stop-circle-outline", () => {
-              setMessage(null)
-              setConfirming("close")
-            })
-          : null}
-        {settled
-          ? null
-          : button("cancel", "Cancel drive", "mdi:cancel", () => {
-              setMessage(null)
-              setConfirming("cancel")
-            })}
-      </div>
-
-      {drive.status === "closed" ? <JournalStoryForm drive={drive} /> : null}
-
-      {confirming ? (
-        <div
-          role="group"
-          aria-labelledby="drive-board-confirm"
-          className="flex flex-col gap-3 rounded-[16px] px-4 py-3.5"
-          style={{ background: "#F5EEDC" }}
-        >
-          <p
-            id="drive-board-confirm"
-            className="m-0 flex items-start gap-2 text-[15px] leading-[1.5]"
-            style={{ color: T.ink.base }}
-          >
-            <Icon
-              aria-hidden="true"
-              icon="mdi:alert-outline"
-              width={18}
-              className="mt-0.5 shrink-0"
-              style={{ color: T.accent.warn }}
-            />
-            {CONFIRM[confirming].question}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={PRIMARY}
-              disabled={busy !== null}
-              onClick={() => run(confirming)}
-            >
-              {busy === confirming ? "Working…" : CONFIRM[confirming].yes}
-            </button>
-            <button
-              type="button"
-              className={PILL}
-              style={{ color: T.ink.base }}
-              disabled={busy !== null}
-              onClick={() => setConfirming(null)}
-            >
-              {CONFIRM[confirming].no}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      <p
-        role="status"
-        aria-live="polite"
-        className="m-0 flex items-center gap-1.5 text-[14px] font-semibold"
-        style={{
-          color: message?.tone === "error" ? T.accent.danger : T.accent.ok,
-        }}
+    <>
+      <EditorialToolbar
+        variant="subtle"
+        showIcon={false}
+        className="rounded-[18px] py-2.5"
+        label="Run this drive"
+        headingId="drive-board-heading"
+        description="Only the editorial board sees this."
+        actions={
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/community/drives/${encodeURIComponent(drive.slug)}/edit`}
+                className={PILL}
+              >
+                {tUi("edit")}{" "}
+              </Link>
+              {drive.status === "scheduled"
+                ? button("open", tUi("open_now"))
+                : null}
+              {settled
+                ? null
+                : drive.pinned
+                  ? button("unpin", "Unpin")
+                  : button("pin", "Pin")}
+              {!settled && drive.pinned
+                ? drive.featured
+                  ? button("unfeature", "Stop featuring")
+                  : button("feature", "Feature")
+                : null}
+            </div>
+            {!settled && (
+              <div className="flex flex-wrap items-center gap-2 border-l border-(--t-border-hi) pl-2.5">
+                {drive.status === "open"
+                  ? button("close", "Close now", () => {
+                      setMessage(null)
+                      setConfirming("close")
+                    })
+                  : null}
+                {button("cancel", "Cancel drive", () => {
+                  setMessage(null)
+                  setConfirming("cancel")
+                })}
+              </div>
+            )}
+          </>
+        }
       >
-        {message ? (
-          <Icon
-            aria-hidden="true"
-            icon={
-              message.tone === "error"
-                ? "mdi:alert-circle-outline"
-                : "mdi:check-circle-outline"
-            }
-            width={17}
-          />
+        {drive.status === "closed" || confirming || message ? (
+          <>
+            {drive.status === "closed" ? (
+              <JournalStoryForm drive={drive} />
+            ) : null}
+
+            {confirming ? (
+              <div
+                role="group"
+                aria-labelledby="drive-board-confirm"
+                className="flex flex-col gap-3 rounded-[16px] px-4 py-3.5"
+                style={{ background: "#F5EEDC" }}
+              >
+                <p
+                  id="drive-board-confirm"
+                  className="m-0 flex items-start gap-2 text-[15px] leading-[1.5]"
+                  style={{ color: T.ink.base }}
+                >
+                  <Icon
+                    aria-hidden="true"
+                    icon="mdi:alert-outline"
+                    width={18}
+                    className="mt-0.5 shrink-0"
+                    style={{ color: T.accent.warn }}
+                  />
+                  {CONFIRM[confirming].question}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className={PRIMARY}
+                    disabled={busy !== null}
+                    onClick={() => run(confirming)}
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      icon="mdi:shield-alert-outline"
+                      width={15}
+                    />
+                    {busy === confirming ? "Working…" : CONFIRM[confirming].yes}
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex min-h-8 items-center rounded-full border border-(--t-border-hi) bg-white px-3 py-1.5 text-xs font-semibold text-(--t-ink-base) disabled:opacity-50"
+                    disabled={busy !== null}
+                    onClick={() => setConfirming(null)}
+                  >
+                    {CONFIRM[confirming].no}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <p
+              className={cn(
+                "m-0 flex items-center gap-1.5 text-[14px] font-semibold",
+                !message && "sr-only"
+              )}
+              style={{
+                color:
+                  message?.tone === "error" ? T.accent.danger : T.accent.ok,
+              }}
+            >
+              {message ? (
+                <Icon
+                  aria-hidden="true"
+                  icon={
+                    message.tone === "error"
+                      ? "mdi:alert-circle-outline"
+                      : "mdi:check-circle-outline"
+                  }
+                  width={17}
+                />
+              ) : null}
+              {message?.text}
+            </p>
+          </>
         ) : null}
+      </EditorialToolbar>
+      <p role="status" aria-live="polite" className="sr-only">
         {message?.text}
       </p>
-    </section>
+    </>
   )
 }

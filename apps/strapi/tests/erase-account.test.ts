@@ -247,6 +247,19 @@ describe("eraseAccount", () => {
     expect(strapi.db.transaction).toHaveBeenCalledTimes(1)
   })
 
+  it("erases a profile cover and its selected background along with the avatar", async () => {
+    const { strapi, store, remove } = seed()
+    const cover = { id: 78, name: "cover.webp", url: "/uploads/cover.webp" }
+    store[PROFILE][0]!.coverImage = cover
+    store[PROFILE][0]!.profileBackground = "rose"
+    await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
+    expect(remove).toHaveBeenCalledWith(cover)
+    expect(store[PROFILE][0]).toMatchObject({
+      coverImage: null,
+      profileBackground: "violet",
+    })
+  })
+
   it("deletes the avatar file", async () => {
     const { strapi, remove, avatar } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })

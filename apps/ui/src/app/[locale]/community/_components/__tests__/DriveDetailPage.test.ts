@@ -31,12 +31,19 @@ vi.mock("@/components/ds", async () => {
     Notice: ({
       title,
       children,
+      prelude,
+      footer,
     }: {
+      prelude?: React.ReactNode
+      footer?: React.ReactNode
       title: string
       children?: React.ReactNode
     }) => h("div", { role: "note" }, h("p", null, title), children),
   }
 })
+vi.mock("@/components/discussions/DiscussionFeed", () => ({
+  DiscussionFeed: () => null,
+}))
 // The task area is a client island with its own tests (DriveTaskArea.test).
 vi.mock("@/components/drives/DriveTaskArea", async () => {
   const { createElement: h } = await import("react")
@@ -77,7 +84,11 @@ vi.mock("../CommunitySectionHeader", async () => {
       title,
       crumbs,
       children,
+      prelude,
+      footer,
     }: {
+      prelude?: React.ReactNode
+      footer?: React.ReactNode
       title: string
       crumbs?: { label: string }[]
       children?: React.ReactNode
@@ -86,7 +97,9 @@ vi.mock("../CommunitySectionHeader", async () => {
         "header",
         { "data-crumbs": crumbs?.map((c) => c.label).join(" › ") },
         h("h1", null, title),
-        children
+        prelude,
+        children,
+        footer
       ),
   }
 })
@@ -202,8 +215,8 @@ describe("DriveDetailPage", () => {
         name: "142 of 251 branches have hours, 9 in review",
       })
     ).toBeTruthy()
-    expect(screen.getByRole("heading", { name: "How to help" })).toBeTruthy()
-    expect(screen.getByText("Add its week of hours.")).toBeTruthy()
+    // Steps and task interactions live in the task island, tested separately.
+    expect(screen.getByTestId("task-area")).toBeTruthy()
     expect(screen.getByRole("list", { name: "This week" })).toBeTruthy()
     expect(screen.getByRole("heading", { name: "Rules" })).toBeTruthy()
   })

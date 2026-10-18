@@ -209,11 +209,11 @@ export async function migrateContributorRolesToGrants(
 
   let migrated = 0
   for (let start = 0; ; start += MIGRATION_PAGE) {
-    const profiles = (await strapi.documents(PROFILE).findMany({
-      filters: { contributorRole: { $in: [...GRANTABLE_ROLES] } },
-      fields: ["baUserId", "contributorRole", "isVerifiedLibrarian"],
-      sort: "id:asc",
-      start,
+    const profiles = (await strapi.db.query(PROFILE).findMany({
+      where: { contributorRole: { $in: [...GRANTABLE_ROLES] } },
+      select: ["baUserId", "contributorRole", "isVerifiedLibrarian"],
+      orderBy: { id: "asc" },
+      offset: start,
       limit: MIGRATION_PAGE,
     })) as {
       baUserId?: string | null
@@ -283,16 +283,16 @@ export async function resyncExpiredRoleGrants(
   const users = new Set<string>()
   const expired: { baUserId: string; documentId: string }[] = []
   for (let start = 0; ; start += MIGRATION_PAGE) {
-    const rows = (await strapi.documents(ROLE_GRANT as any).findMany({
-      filters: {
+    const rows = (await strapi.db.query(ROLE_GRANT).findMany({
+      where: {
         $and: [
           { expiresAt: { $gte: since.toISOString() } },
           { expiresAt: { $lte: now.toISOString() } },
         ],
       },
-      fields: ["baUserId", "documentId"],
-      sort: "id:asc",
-      start,
+      select: ["baUserId", "documentId"],
+      orderBy: { id: "asc" },
+      offset: start,
       limit: MIGRATION_PAGE,
     })) as { baUserId?: string | null; documentId: string }[]
     for (const row of rows)

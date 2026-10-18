@@ -47,13 +47,13 @@ const ROLE_CARD: Record<
   { hint: string; icon: string; bg: string; fg: string }
 > = {
   wiki_editor: {
-    hint: "Your Knowledge edits and translations publish straight away.",
+    hint: "Your approved Knowledge edits and translations publish.",
     icon: "mdi:book-open-page-variant-outline",
     bg: "var(--tint-academic-bg)",
     fg: "var(--tint-academic-fg)",
   },
   journal_editor: {
-    hint: "Your journal articles and edits publish straight away.",
+    hint: "Your approved Journal articles and edits publish.",
     icon: "mdi:newspaper-variant-outline",
     bg: "var(--tint-special-bg)",
     fg: "var(--tint-special-fg)",

@@ -67,6 +67,28 @@ beforeEach(() => {
 })
 
 describe("GET /api/drives/[slug]/tasks", () => {
+  it("returns exact filtered totals beyond the search estimate and never publicly caches hold flags", async () => {
+    search.mockResolvedValue({
+      hits: [],
+      estimatedTotalHits: 1000,
+      facetDistribution: { locale: { en: 1237 } },
+    })
+    const res = await get(
+      "http://localhost/api/drives/yorkshire-hours/tasks?page=154"
+    )
+    expect(await res.json()).toMatchObject({
+      page: 154,
+      pageSize: 8,
+      total: 1237,
+    })
+    expect(res.headers.get("Cache-Control")).toBe("private, no-store")
+    expect(search.mock.calls[0]?.[1]).toMatchObject({
+      offset: 1232,
+      limit: 8,
+      facets: ["locale"],
+    })
+  })
+
   it("404s when the drive doesn't exist", async () => {
     fetchDrive.mockResolvedValue(null)
 
@@ -124,23 +146,23 @@ describe("GET /api/drives/[slug]/tasks", () => {
     expect(search.mock.calls[0]?.[0]).toBe("leeds")
   })
 
-  it("sorts by completeness by default, limit 10", async () => {
+  it("sorts by completeness by default, limit 8", async () => {
     await get("http://localhost/api/drives/yorkshire-hours/tasks")
 
     const [, params] = search.mock.calls[0] as [
       string,
       { sort?: string[]; limit: number; offset: number },
     ]
-    expect(params.sort).toEqual(["completeness:desc", "name:asc"])
-    expect(params.limit).toBe(10)
+    expect(params.sort).toEqual(["completeness:desc", "name:asc", "id:asc"])
+    expect(params.limit).toBe(8)
     expect(params.offset).toBe(0)
   })
 
-  it("pages with offset = page * 10", async () => {
+  it("pages with offset = page * 8", async () => {
     await get("http://localhost/api/drives/yorkshire-hours/tasks?page=2")
 
     const [, params] = search.mock.calls[0] as [string, { offset: number }]
-    expect(params.offset).toBe(20)
+    expect(params.offset).toBe(16)
   })
 
   it("sorts by distance when near is given", async () => {
@@ -149,12 +171,12 @@ describe("GET /api/drives/[slug]/tasks", () => {
     )
 
     const [, params] = search.mock.calls[0] as [string, { sort?: string[] }]
-    expect(params.sort).toEqual(["_geoPoint(53.8, -1.5):asc"])
+    expect(params.sort).toEqual(["_geoPoint(53.8, -1.5):asc", "id:asc"])
   })
 
   it("reports hasMore true when more hits remain past this page", async () => {
     search.mockResolvedValue({
-      hits: Array.from({ length: 10 }, (_, i) => ({
+      hits: Array.from({ length: 8 }, (_, i) => ({
         documentId: `lib${i}`,
         slug: `lib-${i}`,
         name: `Library ${i}`,
@@ -171,7 +193,7 @@ describe("GET /api/drives/[slug]/tasks", () => {
 
   it("reports hasMore false on the last page", async () => {
     search.mockResolvedValue({
-      hits: Array.from({ length: 5 }, (_, i) => ({
+      hits: Array.from({ length: 1 }, (_, i) => ({
         documentId: `lib${i}`,
         slug: `lib-${i}`,
         name: `Library ${i}`,
@@ -180,7 +202,7 @@ describe("GET /api/drives/[slug]/tasks", () => {
     })
 
     const res = await get(
-      "http://localhost/api/drives/yorkshire-hours/tasks?page=2"
+      "http://localhost/api/drives/yorkshire-hours/tasks?page=3"
     )
     const body = (await res.json()) as { hasMore: boolean }
 

@@ -1,9 +1,16 @@
 "use client"
 
-import { Icon } from "@iconify/react"
+import {
+  AlertCircle,
+  MessageSquareText,
+  ShieldCheck,
+  ShieldX,
+  Upload,
+} from "lucide-react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
+import { reviewHref } from "@/components/moderation/queue-navigation"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 
@@ -23,9 +30,9 @@ const APPROVE_LABEL: Record<string, string> = {
 }
 
 const PRIMARY =
-  "inline-flex items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-[#21704d] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
 const SECONDARY =
-  "inline-flex items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2.5 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
 
 /**
  * The decision on one submission: a note (required for Needs changes and
@@ -42,6 +49,7 @@ export function ReviewDecisionForm({
   canApprove = true,
   reviewedAt,
   driveDocumentId,
+  returnTo,
 }: {
   readonly documentId: string
   readonly status: string
@@ -51,6 +59,7 @@ export function ReviewDecisionForm({
   readonly reviewedAt?: string | null
   /** The Drive this submission is tagged with, when there is one. */
   readonly driveDocumentId?: string | null
+  readonly returnTo?: string
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -71,7 +80,7 @@ export function ReviewDecisionForm({
     if (!done || !driveDocumentId) return
     let cancelled = false
     fetch(
-      `/api/moderation/submissions?drive=${encodeURIComponent(driveDocumentId)}&status=pending&pageSize=2`
+      `/api/moderation/submissions?category=libraries&drive=${encodeURIComponent(driveDocumentId)}&status=pending&pageSize=2`
     )
       .then((r) => (r.ok ? r.json() : null))
       .then((j: { data?: { documentId: string }[] } | null) => {
@@ -82,7 +91,7 @@ export function ReviewDecisionForm({
           next
             ? {
                 documentId: next.documentId,
-                href: `/contribute/moderation/${encodeURIComponent(next.documentId)}`,
+                href: reviewHref(next.documentId, returnTo),
               }
             : "none"
         )
@@ -94,7 +103,7 @@ export function ReviewDecisionForm({
     return () => {
       cancelled = true
     }
-  }, [done, driveDocumentId, documentId])
+  }, [done, driveDocumentId, documentId, returnTo])
 
   const nextInDriveBlock =
     done && driveDocumentId ? (
@@ -228,7 +237,7 @@ export function ReviewDecisionForm({
           maxLength={MAX_NOTE}
           rows={5}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-[14px] border px-3.5 py-2.5 text-[15px] leading-normal"
+          className="w-full rounded-[16px] border px-3.5 py-3 text-[15px] leading-relaxed focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
           style={{
             borderColor: T.border.hi,
             background: T.bg.deep,
@@ -245,13 +254,7 @@ export function ReviewDecisionForm({
           className="m-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-[14px] leading-normal"
           style={{ background: "#F6E3DA", color: T.accent.danger }}
         >
-          <Icon
-            aria-hidden="true"
-            icon="mdi:alert-circle-outline"
-            width={18}
-            height={18}
-            className="mt-0.5 shrink-0"
-          />
+          <AlertCircle size={18} aria-hidden className="mt-0.5 shrink-0" />
           {error}
         </p>
       ) : null}
@@ -308,7 +311,7 @@ export function ReviewDecisionForm({
           disabled={disabled || !canApprove}
           onClick={() => void decide("approved")}
         >
-          <Icon aria-hidden="true" icon="mdi:check" width={18} height={18} />
+          <ShieldCheck size={18} aria-hidden />
           {busy === "approved" ? "Approving…" : approveLabel}
         </button>
         {canPublish && canApprove ? (
@@ -323,12 +326,7 @@ export function ReviewDecisionForm({
               setConfirming(true)
             }}
           >
-            <Icon
-              aria-hidden="true"
-              icon="mdi:publish"
-              width={18}
-              height={18}
-            />
+            <Upload size={18} aria-hidden />
             Approve and publish
           </button>
         ) : null}
@@ -339,12 +337,7 @@ export function ReviewDecisionForm({
           disabled={disabled || !canApprove}
           onClick={() => void decide("needs_info")}
         >
-          <Icon
-            aria-hidden="true"
-            icon="mdi:message-alert-outline"
-            width={18}
-            height={18}
-          />
+          <MessageSquareText size={18} aria-hidden />
           {busy === "needs_info" ? tUi("sending") : "Needs changes"}
         </button>
         <button
@@ -354,7 +347,7 @@ export function ReviewDecisionForm({
           disabled={disabled}
           onClick={() => void decide("rejected")}
         >
-          <Icon aria-hidden="true" icon="mdi:close" width={18} height={18} />
+          <ShieldX size={18} aria-hidden />
           {busy === "rejected" ? "Rejecting…" : "Reject"}
         </button>
       </div>

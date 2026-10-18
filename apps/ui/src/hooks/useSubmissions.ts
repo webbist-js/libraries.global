@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query"
 
+import { useHydratedSession } from "@/lib/access-client"
+
 export interface Submission {
   documentId: string
   submissionType:
@@ -64,14 +66,25 @@ async function apiFetch(path: string, init?: RequestInit) {
 }
 
 export function useMySubmissions() {
-  return useQuery({
-    queryKey: ["my-submissions"],
-    queryFn: async () => {
-      const json = await apiFetch("/my")
+  const { data: session, isPending } = useHydratedSession()
+  const userId = !isPending ? session?.user?.id : undefined
+  const query = useQuery({
+    queryKey: ["my-submissions", userId ?? null],
+    queryFn: async ({ signal }) => {
+      // Callers may refetch a disabled query while their session is hydrating.
+      if (!userId) return []
+      const json = await apiFetch("/my", { cache: "no-store", signal })
 
       return json.data as Submission[]
     },
+    enabled: Boolean(userId),
   })
+
+  return {
+    ...query,
+    data: userId ? query.data : undefined,
+    isLoading: isPending || query.isLoading,
+  }
 }
 
 export function useCreateSubmission() {
@@ -157,9 +170,20 @@ export function useResumeDraft(
   locale?: string,
   staffCreation = false
 ) {
+  const { data: session, isPending } = useHydratedSession()
+  const userId = !isPending ? session?.user?.id : undefined
+
   return useQuery({
-    queryKey: ["draft", type, targetSlug, locale ?? null, staffCreation],
-    queryFn: async () => {
+    queryKey: [
+      "draft",
+      userId ?? null,
+      type,
+      targetSlug,
+      locale ?? null,
+      staffCreation,
+    ],
+    queryFn: async ({ signal }) => {
+      if (!userId) return null
       const res = await fetch(
         resumeDraftUrl(
           type,
@@ -167,13 +191,14 @@ export function useResumeDraft(
           locale,
           window.location.origin,
           staffCreation
-        )
+        ),
+        { cache: "no-store", signal }
       )
       if (!res.ok) return null
       const json = await res.json()
 
       return (json.data ?? null) as Submission | null
     },
-    enabled: !!type,
+    enabled: Boolean(userId && type),
   })
 }

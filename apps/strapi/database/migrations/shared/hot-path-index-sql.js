@@ -70,7 +70,7 @@ const HOT_PATH_INDEXES = [
   index("regions", ["geonames_id"]),
   index("areas", ["geonames_id"]),
   index("libraries", ["entity_ref"]),
-  index("libraries", ["library_type"]),
+  index("library_types", ["name"]),
   // Drives and Find libraries filter or sort on these (also in Meilisearch).
   index("libraries", ["completeness"]),
   index("libraries", ["last_verified_at"]),

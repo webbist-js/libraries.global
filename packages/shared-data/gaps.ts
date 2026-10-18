@@ -1,15 +1,16 @@
+import {
+  FACILITY_CHECKLIST,
+  MOBILE_FACILITY_CHECKLIST,
+} from "./facility-checklist"
+import { libraryTypeName, type LibraryTypeValue } from "./library-types"
+import { normalizeMobileTimetable } from "./mobile-timetable/normalize"
+
 // ── Gaps ──────────────────────────────────────────────────────────────────────
 // The record sections a Library can lack: one definition for the stored
 // completeness score, the search index's `needs`, the library page's
 // checklist, location pages, Find libraries and drives. Eight count toward
 // completeness; `accessibility` and `services` are the narrower gaps that
 // filters and drives use.
-
-import {
-  FACILITY_CHECKLIST,
-  MOBILE_FACILITY_CHECKLIST,
-} from "./facility-checklist"
-import { normalizeMobileTimetable } from "./mobile-timetable/normalize"
 
 export type GapKey =
   | "photo"
@@ -27,7 +28,7 @@ export type GapKey =
 export interface GapRecord {
   heroImage?: unknown
   openingTimes?: unknown
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
   mobileTimetable?: unknown
   homeLibrary?: unknown
   streetAddress?: string | null
@@ -106,7 +107,7 @@ export const GAPS: readonly GapDefinition[] = [
     phrase: "opening hours",
     completeness: true,
     filled: (r) =>
-      r.libraryType === "Mobile"
+      libraryTypeName(r.libraryType) === "Mobile"
         ? Boolean(normalizeMobileTimetable(r.mobileTimetable)?.visits.length)
         : hasOpeningHours(r.openingTimes),
   },
@@ -116,7 +117,7 @@ export const GAPS: readonly GapDefinition[] = [
     phrase: "an address",
     completeness: true,
     filled: (r) =>
-      r.libraryType === "Mobile"
+      libraryTypeName(r.libraryType) === "Mobile"
         ? Boolean(r.homeLibrary) || text(r.streetAddress)
         : text(r.streetAddress),
   },
@@ -127,7 +128,7 @@ export const GAPS: readonly GapDefinition[] = [
     completeness: true,
     filled: (r) =>
       Boolean(r.location) ||
-      (r.libraryType === "Mobile" &&
+      (libraryTypeName(r.libraryType) === "Mobile" &&
         Boolean(
           normalizeMobileTimetable(r.mobileTimetable)?.stops.some(
             (s) => s.location
@@ -195,21 +196,21 @@ export const isGapKey = (v: unknown): v is GapKey =>
 
 export const gapDefinition = (
   key: GapKey,
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
 ): GapDefinition => {
   const definition = GAPS.find((g) => g.key === key)!
 
-  return key === "hours" && libraryType === "Mobile"
+  return key === "hours" && libraryTypeName(libraryType) === "Mobile"
     ? { ...definition, label: "Stops & times", phrase: "stops and times" }
     : definition
 }
 
 export function applicableGap(
   key: GapKey,
-  libraryType?: string | null
+  libraryType?: LibraryTypeValue
 ): boolean {
   return (
-    libraryType !== "Digital" ||
+    libraryTypeName(libraryType) !== "Digital" ||
     ![
       "hours",
       "address",

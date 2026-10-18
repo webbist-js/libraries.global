@@ -16,6 +16,10 @@ function heatColor(count: number, isFuture: boolean): string {
   return "#4338CA"
 }
 
+function calendarKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+}
+
 function buildGrid(
   dateCountMap: Map<string, number>,
   now: Date
@@ -36,7 +40,7 @@ function buildGrid(
 
       return {
         date: d,
-        count: dateCountMap.get(d.toISOString().slice(0, 10)) ?? 0,
+        count: dateCountMap.get(calendarKey(d)) ?? 0,
         isFuture: d > today,
       }
     })
@@ -57,7 +61,9 @@ export function ContributionHeatmap({
   const dateCountMap = useMemo(() => {
     const m = new Map<string, number>()
     for (const s of submissions) {
-      const key = s.createdAt.slice(0, 10)
+      const createdAt = new Date(s.createdAt)
+      if (!Number.isFinite(createdAt.getTime())) continue
+      const key = calendarKey(createdAt)
       m.set(key, (m.get(key) ?? 0) + 1)
     }
 
@@ -68,6 +74,11 @@ export function ContributionHeatmap({
     () => buildGrid(dateCountMap, new Date(now)),
     [dateCountMap, now]
   )
+
+  const activeDays = grid
+    .flat()
+    .filter((cell) => !cell.isFuture && cell.count > 0)
+  const visibleCount = activeDays.reduce((total, cell) => total + cell.count, 0)
 
   return (
     <div
@@ -144,10 +155,10 @@ export function ContributionHeatmap({
           Activity as text
         </summary>
         <p style={{ fontSize: "14px", color: T.ink.dim, margin: "8px 0 0" }}>
-          {submissions.length} contribution
-          {submissions.length === 1 ? "" : "s"} recorded in the last 26 weeks
-          across {dateCountMap.size} active day
-          {dateCountMap.size === 1 ? "" : "s"}.
+          {visibleCount} contribution
+          {visibleCount === 1 ? "" : "s"} recorded in the last 26 weeks across{" "}
+          {activeDays.length} active day
+          {activeDays.length === 1 ? "" : "s"}.
         </p>
       </details>
 

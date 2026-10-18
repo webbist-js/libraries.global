@@ -1,10 +1,14 @@
+import { parseArticleBrowseQuery } from "@repo/shared-data"
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
-import { use } from "react"
 
 import { toDocsSections } from "@/components/docs/docs.config"
 import DocsPage from "@/components/docs/DocsPage"
+import {
+  articleBrowseParams,
+  fetchArticleBrowse,
+} from "@/lib/article-discovery"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
   fetchDocsWikiArticles,
@@ -12,15 +16,20 @@ import {
   fetchWikiSections,
 } from "@/lib/strapi-api/content/server"
 
-export const dynamic = "force-static"
 export const revalidate = 300
+type KnowledgeSearchParams = Record<string, string | string[] | undefined>
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>
+  searchParams?: Promise<KnowledgeSearchParams>
 }): Promise<Metadata> {
   const { locale } = await params
+  const search: KnowledgeSearchParams = await (searchParams ??
+    Promise.resolve({}))
+  const query = parseArticleBrowseQuery(search)
   const [tUi, tArticle] = await Promise.all([
     getTranslations({ locale: locale as Locale, namespace: "ui" }),
     getTranslations({ locale: locale as Locale, namespace: "editorial" }),
@@ -31,23 +40,37 @@ export async function generateMetadata({
     description: tArticle("knowledgeDescription", { site: SITE_NAME }),
     path: "knowledge",
     locale,
+    robots:
+      Object.keys(query.filters).length ||
+      query.page > 1 ||
+      query.q ||
+      search.lang === "all"
+        ? "noindex-follow"
+        : "index",
   })
 }
 
-export default function DocsRoute(props: {
+export default async function DocsRoute(props: {
   params: Promise<{ locale: string }>
+  searchParams: Promise<KnowledgeSearchParams>
 }) {
-  const params = use(props.params)
+  const [params, searchParams] = await Promise.all([
+    props.params,
+    props.searchParams,
+  ])
   const locale = params.locale as Locale
   setRequestLocale(locale)
 
-  const [articlesRes, sectionsRes, landingRes] = use(
-    Promise.all([
-      fetchDocsWikiArticles(locale),
-      fetchWikiSections(locale as Locale),
-      fetchWikiLanding(locale),
-    ])
-  )
+  const query = parseArticleBrowseQuery(searchParams)
+  const browseParams = new URLSearchParams(articleBrowseParams(query))
+  browseParams.set("preferredLocale", locale)
+  if (searchParams.lang === "all") browseParams.set("lang", "all")
+  const [articlesRes, sectionsRes, landingRes, discovery] = await Promise.all([
+    fetchDocsWikiArticles(locale),
+    fetchWikiSections(locale as Locale),
+    fetchWikiLanding(locale),
+    fetchArticleBrowse("wiki", browseParams.toString()),
+  ])
 
   return (
     <DocsPage
@@ -56,6 +79,10 @@ export default function DocsRoute(props: {
       landing={landingRes?.data}
       quickStartCards={landingRes?.data?.quickStartCards}
       sections={toDocsSections(sectionsRes.data)}
+      discovery={discovery}
+      queryActive={Boolean(query.q || Object.keys(query.filters).length)}
+      searchQuery={query.q ?? ""}
+      currentQuery={searchParams}
     />
   )
 }

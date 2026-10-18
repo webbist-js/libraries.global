@@ -9,98 +9,145 @@ import {
 } from "react"
 
 import { authClient } from "@/lib/auth-client"
-import type { PublicSuggestion } from "@/lib/community/suggestions"
+import type {
+  PublicSuggestion,
+  SuggestionReviewRound,
+} from "@/lib/community/suggestions"
 
-type VoteReply = {
-  data?: { voted: boolean; votes: number }
-  error?: string | { message?: string }
+type BoardReply = {
+  data?: PublicSuggestion[]
+  round?: SuggestionReviewRound | null
 }
 
-/**
- * Option Suggestions on the client: the server-rendered list, refetched
- * once the session is known so a signed-in viewer sees their own votes,
- * and votes sent through `POST /api/option-suggestions/{id}/vote`.
- *
- * Every local change (a vote, or `setItems`) bumps a counter, so a list
- * requested before it can't land on top of it.
- */
-export function useSuggestions(initial: PublicSuggestion[]) {
+export function useSuggestions(
+  initial: PublicSuggestion[],
+  initialRound?: SuggestionReviewRound | null
+) {
   const { data: session, isPending } = authClient.useSession()
-  const signedIn = Boolean(session?.user)
-  const [items, setItemsState] = useState<PublicSuggestion[]>(initial)
+  const viewerScope = isPending ? "pending" : (session?.user?.id ?? "anonymous")
+  const scope = useRef(viewerScope)
+  scope.current = viewerScope
+  const [items, setItemsState] = useState(initial)
+  const [itemScope, setItemScope] = useState(viewerScope)
+  const [round, setRound] = useState(initialRound ?? null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const localChanges = useRef(0)
 
   useEffect(() => {
-    // The server-rendered list carries no `voted`; only a signed-in viewer
-    // has votes to pick up.
-    if (isPending || !signedIn) return
-    let live = true
-    const seen = localChanges.current
-    fetch("/api/option-suggestions", { cache: "no-store" })
-      .then((r) =>
-        r.ok ? r.json() : Promise.reject(new Error(String(r.status)))
-      )
-      .then((json: { data?: PublicSuggestion[] }) => {
-        if (live && seen === localChanges.current && json.data)
-          setItemsState(json.data)
+    localChanges.current += 1
+    setItemScope(viewerScope)
+    setItemsState(
+      initial
+        .filter((s) => (s.publicationStatus ?? "published") === "published")
+        .map((s) => ({ ...s, voted: undefined }))
+    )
+    setBusyId(null)
+    setError(null)
+    if (isPending) return
+    const controller = new AbortController()
+    const refresh = () => {
+      const seen = localChanges.current
+      fetch("/api/option-suggestions", {
+        cache: "no-store",
+        signal: controller.signal,
       })
-      // Keep the server-rendered list when the refetch fails.
-      .catch(() => {})
+        .then((r) =>
+          r.ok ? r.json() : Promise.reject(new Error(String(r.status)))
+        )
+        .then((json: BoardReply) => {
+          if (
+            !controller.signal.aborted &&
+            scope.current === viewerScope &&
+            seen === localChanges.current
+          ) {
+            if (json.data) setItemsState(json.data)
+            if (json.round !== undefined) setRound(json.round)
+          }
+        })
+        .catch(() => {})
+    }
+    refresh()
+    const interval = setInterval(refresh, 60000)
 
     return () => {
-      live = false
+      controller.abort()
+      clearInterval(interval)
     }
-  }, [isPending, signedIn])
+  }, [viewerScope, isPending, initial])
 
   const setItems = useCallback((next: SetStateAction<PublicSuggestion[]>) => {
     localChanges.current += 1
     setItemsState(next)
   }, [])
 
-  const vote = useCallback(async (s: PublicSuggestion) => {
+  const vote = useCallback(async (suggestion: PublicSuggestion) => {
+    const actor = scope.current
     localChanges.current += 1
-    setBusyId(s.documentId)
+    setBusyId(suggestion.documentId)
     setError(null)
     try {
-      const res = await fetch(`/api/option-suggestions/${s.documentId}/vote`, {
-        method: "POST",
-      })
-      const json = (await res.json().catch(() => ({}))) as VoteReply
+      const res = await fetch(
+        `/api/option-suggestions/${encodeURIComponent(suggestion.documentId)}/vote`,
+        { method: "POST" }
+      )
+      const json = await res.json().catch(() => ({}))
+      if (scope.current !== actor) return null
       if (!res.ok || !json.data) {
-        const message =
-          typeof json.error === "string" ? json.error : json.error?.message
-        setError(message ?? "Your vote didn’t save. Please try again.")
+        setError(
+          typeof json.error === "string"
+            ? json.error
+            : (json.error?.message ??
+                "Your vote didn’t save. Please try again.")
+        )
 
         return null
       }
-      const { voted, votes } = json.data
-      localChanges.current += 1
+      const { voted, votes } = json.data as { voted: boolean; votes: number }
+      const seen = ++localChanges.current
       setItemsState((list) =>
-        list.map((x) =>
-          x.documentId === s.documentId ? { ...x, voted, votes } : x
+        list.map((s) =>
+          s.documentId === suggestion.documentId ? { ...s, voted, votes } : s
         )
       )
+      const latest = await fetch("/api/option-suggestions", {
+        cache: "no-store",
+      })
+        .then((r) => (r.ok ? (r.json() as Promise<BoardReply>) : null))
+        .catch(() => null)
+      if (scope.current === actor && seen === localChanges.current && latest) {
+        if (latest.data) setItemsState(latest.data)
+        if (latest.round !== undefined) setRound(latest.round)
+      }
 
       return { voted, votes }
     } catch {
-      setError("Network error. Please try again.")
+      if (scope.current === actor) setError("Network error. Please try again.")
 
       return null
     } finally {
-      setBusyId(null)
+      if (scope.current === actor) setBusyId(null)
     }
   }, [])
 
+  const visibleItems =
+    itemScope === viewerScope
+      ? items
+      : initial
+          .filter(
+            (item) => (item.publicationStatus ?? "published") === "published"
+          )
+          .map((item) => ({ ...item, voted: undefined }))
+
   return {
-    items,
+    items: visibleItems,
+    round,
     setItems,
     vote,
     busyId,
     error,
-    signedIn,
-    /** False until the session is known: sign-in links wait for it. */
+    viewerScope,
+    signedIn: !isPending && Boolean(session?.user),
     ready: !isPending,
   }
 }

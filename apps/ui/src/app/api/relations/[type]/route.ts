@@ -3,13 +3,18 @@ import { NextResponse } from "next/server"
 
 import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
 import { cacheTagsFor } from "@/lib/strapi-api/cache-tags"
+import { createStrapiAuthHeader } from "@/lib/strapi-api/request-auth"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const SECRET = process.env.STRAPI_BRIDGE_SECRET
+const relationHeaders = async () => ({
+  ...strapiServiceHeaders(),
+  ...(await createStrapiAuthHeader({ isReadOnly: true, isPrivate: false })),
+})
 
 // Map wizard keys → Strapi plural API names
 const TYPE_MAP: Record<string, string> = {
   services: "services",
+  "library-types": "library-types",
   amenities: "amenities",
   accessibility: "accessibility-features",
   continents: "continents",
@@ -29,6 +34,173 @@ const COUNTRY_LABELS = [
   "areasSectionLabel",
 ]
 const REGION_LABELS = ["areaTypeLabel", "areasSectionLabel"]
+const FALLBACK_TYPES = new Set([
+  "continents",
+  "countries",
+  "regions",
+  "areas",
+  ...SECTION_TYPES,
+])
+const PAGE_SIZE = 100 // Strapi REST maxLimit; larger requests are silently clamped.
+const MAX_VARIANTS = 10_000
+type Choice = {
+  documentId: string
+  name: string
+  locale?: string
+  slug?: string
+  order?: number | null
+  [key: string]: unknown
+}
+
+/** Complete, bounded public aggregation, including when the CMS clamps its page size. */
+async function choiceRows(
+  url: string,
+  maximumDocuments: number,
+  revalidate: number,
+  tags: string[]
+): Promise<Choice[] | null> {
+  const headers = await relationHeaders()
+  const rows: Choice[] = []
+  const documents = new Set<string>()
+  let start = 0
+  for (;;) {
+    const pageUrl = new URL(url)
+    pageUrl.searchParams.set("pagination[limit]", String(PAGE_SIZE))
+    pageUrl.searchParams.set("pagination[start]", String(start))
+    let json: { data?: Choice[]; meta?: { pagination?: { total?: number } } }
+    try {
+      const response = await fetch(pageUrl.toString(), {
+        headers,
+        next: { revalidate, tags },
+      })
+      if (!response.ok) return null
+      json = await response.json()
+    } catch {
+      return null
+    }
+    if (!Array.isArray(json.data)) return null
+    const total = json.meta?.pagination?.total
+    if (
+      total !== undefined &&
+      (!Number.isSafeInteger(total) ||
+        total < start + json.data.length ||
+        total > MAX_VARIANTS)
+    )
+      return null
+    if (rows.length + json.data.length > MAX_VARIANTS) return null
+    for (const row of json.data) {
+      if (
+        !row ||
+        typeof row.documentId !== "string" ||
+        typeof row.name !== "string"
+      )
+        return null
+      documents.add(row.documentId)
+      if (documents.size > maximumDocuments) return null
+      rows.push(row)
+    }
+    start += json.data.length
+    if (total !== undefined ? start >= total : json.data.length < PAGE_SIZE)
+      return rows
+    if (!json.data.length || start >= MAX_VARIANTS) return null
+  }
+}
+
+/** One row per document; a partial translation cannot remove another public document. */
+function localizedChoices(
+  rows: Choice[],
+  locale: string,
+  defaultLocale: string,
+  fields: string[],
+  preserveOrder = false
+): Choice[] {
+  const variants = new Map<string, Choice[]>()
+  for (const row of rows)
+    variants.set(row.documentId, [...(variants.get(row.documentId) ?? []), row])
+  const rank = (row: Choice) =>
+    (row.locale ?? DEFAULT_LOCALE) === locale
+      ? 0
+      : (row.locale ?? DEFAULT_LOCALE) === defaultLocale
+        ? 1
+        : 2
+  const selected = [...variants.values()].map((values) => {
+    values.sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        String(a.locale ?? DEFAULT_LOCALE).localeCompare(
+          String(b.locale ?? DEFAULT_LOCALE)
+        ) ||
+        a.name.localeCompare(b.name)
+    )
+    const preferred = values[0]!
+    // Regional terminology and ISO ancestry must remain useful if a translation omits them.
+    const selected = Object.fromEntries(
+      fields.flatMap((field) => {
+        const value = [preferred, ...values].find(
+          (row) =>
+            row[field] !== undefined && row[field] !== null && row[field] !== ""
+        )?.[field]
+
+        return value !== undefined
+          ? [[field, value]]
+          : field in preferred
+            ? [[field, preferred[field]]]
+            : []
+      })
+    ) as Choice
+
+    return selected
+  })
+  const order = (row: Choice) =>
+    typeof row.order === "number" && Number.isFinite(row.order)
+      ? row.order
+      : Infinity
+
+  return selected.sort(
+    (a, b) =>
+      (preserveOrder ? order(a) - order(b) : 0) ||
+      a.name.localeCompare(b.name, locale) ||
+      a.documentId.localeCompare(b.documentId)
+  )
+}
+
+/** Parent membership is identified from any public variant, then translated display rows are expanded. */
+async function expandPlaceVariants(
+  url: string,
+  rows: Choice[],
+  maximumDocuments: number,
+  revalidate: number,
+  tags: string[]
+): Promise<Choice[] | null> {
+  const ids = [...new Set(rows.map((row) => row.documentId))]
+  if (!ids.length) return rows
+  const expanded: Choice[] = []
+  for (let offset = 0; offset < ids.length; offset += PAGE_SIZE) {
+    const query = new URL(url)
+    for (const key of query.searchParams.keys())
+      if (key.startsWith("filters[")) query.searchParams.delete(key)
+    const pageIds = ids.slice(offset, offset + PAGE_SIZE)
+    const selectedIds = new Set(pageIds)
+    pageIds.forEach((id, index) =>
+      query.searchParams.set(`filters[documentId][$in][${index}]`, id)
+    )
+    const values = await choiceRows(
+      query.toString(),
+      maximumDocuments,
+      revalidate,
+      tags
+    )
+    if (
+      !values ||
+      values.some((row) => !selectedIds.has(row.documentId)) ||
+      expanded.length + values.length > MAX_VARIANTS
+    )
+      return null
+    expanded.push(...values)
+  }
+
+  return expanded
+}
 
 /** Curated, approved topics from the topics plugin (its own route shape). */
 async function approvedTopics(locale: string) {
@@ -49,17 +221,21 @@ async function approvedTopics(locale: string) {
 }
 
 /** Strapi's configured locales, for the article editor's language picker. */
-async function locales() {
+async function configuredLocales() {
   const res = await fetch(`${STRAPI}/api/content-moderation/locales`, {
     headers: strapiServiceHeaders(),
     next: { revalidate: 3600 },
   })
-  if (!res.ok) return NextResponse.json({ data: [] })
+  if (!res.ok) return null
   const json = (await res.json()) as {
     data?: { code: string; name: string; isDefault: boolean }[]
   }
 
-  return NextResponse.json({ data: json.data ?? [] })
+  return json.data ?? []
+}
+
+async function locales() {
+  return NextResponse.json({ data: (await configuredLocales()) ?? [] })
 }
 
 const ISO_CODE = /^[A-Z]{2}(?:-[A-Z0-9]{1,3})?$/
@@ -79,7 +255,11 @@ type CountryRow = {
  * Atlas countries by ISO code (`?iso2=GB-ENG,GB`), in the order asked, for
  * the location lookup. The UK's countries are filed by ISO 3166-2 code.
  */
-async function countriesByCode(raw: string, locale: string) {
+async function countriesByCode(
+  raw: string,
+  locale: string,
+  verifiedLocales?: { code: string; isDefault: boolean }[] | null
+) {
   const codes = raw
     .split(",")
     .map((code) => code.trim().toUpperCase())
@@ -90,15 +270,23 @@ async function countriesByCode(raw: string, locale: string) {
   const filters = codes
     .map((code, i) => `filters[iso2][$in][${i}]=${encodeURIComponent(code)}`)
     .join("&")
-  const res = await fetch(
-    `${STRAPI}/api/countries?${filters}&status=published&pagination[limit]=${codes.length}&locale=${locale}&fields[0]=name&fields[1]=iso2&${COUNTRY_LABELS.map((field, index) => `fields[${index + 2}]=${field}`).join("&")}&populate[continent][fields][0]=name`,
-    {
-      headers: { ...(SECRET ? { "X-Service-Secret": SECRET } : {}) },
-      next: { revalidate: 3600 },
-    }
+  const values = await choiceRows(
+    `${STRAPI}/api/countries?${filters}&status=published&locale=*&fields[0]=name&fields[1]=iso2&fields[2]=locale&${COUNTRY_LABELS.map((field, index) => `fields[${index + 3}]=${field}`).join("&")}&populate[continent][fields][0]=name&sort[0]=documentId:asc&sort[1]=locale:asc`,
+    codes.length,
+    3600,
+    cacheTagsFor("/countries", {})
   )
-  if (!res.ok) return NextResponse.json({ data: [] }, { status: 503 })
-  const rows = ((await res.json()) as { data?: CountryRow[] }).data ?? []
+  if (!values) return NextResponse.json({ data: [] }, { status: 503 })
+  const configured = verifiedLocales ?? (await configuredLocales())
+  const base =
+    configured?.find((entry) => entry.isDefault)?.code ?? DEFAULT_LOCALE
+  const rows = localizedChoices(values, locale, base, [
+    "documentId",
+    "name",
+    "iso2",
+    "continent",
+    ...COUNTRY_LABELS,
+  ]) as CountryRow[]
 
   return NextResponse.json({
     data: codes.flatMap((code) => {
@@ -131,14 +319,57 @@ export async function GET(
   const { type } = await params
   const searchParams = new URL(req.url).searchParams
   const requestedLocale = searchParams.get("locale")
-  const locale = isSupportedLocale(requestedLocale)
+  let verifiedLocales:
+    | { code: string; name: string; isDefault: boolean }[]
+    | null
+    | undefined
+  let locale: string = isSupportedLocale(requestedLocale)
     ? requestedLocale
     : DEFAULT_LOCALE
+  // Article languages may extend the interface's en/fr/cs locales.
+  if (
+    requestedLocale &&
+    !isSupportedLocale(requestedLocale) &&
+    /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(requestedLocale)
+  ) {
+    const configured = await configuredLocales()
+    verifiedLocales = configured
+    if (!configured)
+      return NextResponse.json(
+        { data: [], error: "Language choices are unavailable" },
+        { status: 503 }
+      )
+    if (configured.some((entry) => entry.code === requestedLocale))
+      locale = requestedLocale
+  }
+  // The published suggestion catalogue also serves type choices, without broad CMS token permissions.
+  if (type === "library-types") {
+    try {
+      const response = await fetch(
+        `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(locale)}`,
+        { headers: strapiServiceHeaders(), cache: "no-store" }
+      )
+      if (!response.ok) return NextResponse.json({ data: [] }, { status: 503 })
+      const json = await response.json()
+
+      return NextResponse.json({
+        data: (json.data?.library_types ?? []).map((item: Choice) => ({
+          documentId: item.documentId,
+          name: item.name,
+        })),
+      })
+    } catch {
+      return NextResponse.json({ data: [] }, { status: 503 })
+    }
+  }
   if (type === "topics") return approvedTopics(locale)
   if (type === "locales") return locales()
   const iso2 = searchParams.get("iso2")
-  if (type === "countries" && iso2) return countriesByCode(iso2, locale)
-  const strapiPlural = TYPE_MAP[type]
+  if (type === "countries" && iso2)
+    return countriesByCode(iso2, locale, verifiedLocales)
+  const strapiPlural = Object.hasOwn(TYPE_MAP, type)
+    ? TYPE_MAP[type]
+    : undefined
   if (!strapiPlural)
     return NextResponse.json({ error: "Not found" }, { status: 404 })
 
@@ -161,7 +392,9 @@ export async function GET(
   const fields = [
     "name",
     "documentId",
+    ...(FALLBACK_TYPES.has(type) ? ["locale"] : []),
     ...(SECTION_TYPES.has(type) ? ["slug"] : []),
+    ...(type === "wiki-sections" ? ["order"] : []),
     ...(type === "countries"
       ? COUNTRY_LABELS
       : type === "regions"
@@ -173,9 +406,11 @@ export async function GET(
     .join("&")
   const sort =
     type === "wiki-sections"
-      ? "sort[0]=order:asc&sort[1]=name:asc"
-      : "sort=name:asc"
-  const url = `${STRAPI}/api/${strapiPlural}?locale=${locale}&${sort}&pagination[limit]=${limit}${status}&${fieldParams}${filterParam}`
+      ? "sort[0]=order:asc&sort[1]=name:asc&sort[2]=documentId:asc&sort[3]=locale:asc"
+      : FALLBACK_TYPES.has(type)
+        ? "sort[0]=name:asc&sort[1]=documentId:asc&sort[2]=locale:asc"
+        : "sort=name:asc"
+  const url = `${STRAPI}/api/${strapiPlural}?locale=${FALLBACK_TYPES.has(type) ? "*" : locale}&${sort}&pagination[limit]=${limit}${status}&${fieldParams}${filterParam}`
 
   // The world place import adds Regions and Areas and sets each Country's
   // Place Labels (the wizard's select labels), so those lists refresh within
@@ -183,10 +418,37 @@ export async function GET(
   const revalidate = ["countries", "regions", "areas"].includes(type)
     ? 60
     : 3600
+  if (FALLBACK_TYPES.has(type)) {
+    const tags = cacheTagsFor(`/${strapiPlural}`, {})
+    const values = await choiceRows(url, limit, revalidate, tags)
+    const rows =
+      values && filterParam
+        ? await expandPlaceVariants(url, values, limit, revalidate, tags)
+        : values
+    if (!rows)
+      return NextResponse.json(
+        {
+          data: [],
+          error: "Place choices exceed the supported size or are unavailable",
+        },
+        { status: 503 }
+      )
+    const configured = verifiedLocales ?? (await configuredLocales())
+    const base =
+      configured?.find((entry) => entry.isDefault)?.code ?? DEFAULT_LOCALE
+
+    return NextResponse.json({
+      data: localizedChoices(
+        rows,
+        locale,
+        base,
+        fields,
+        type === "wiki-sections"
+      ),
+    })
+  }
   const res = await fetch(url, {
-    headers: {
-      ...(SECRET ? { "X-Service-Secret": SECRET } : {}),
-    },
+    headers: await relationHeaders(),
     // Tagged like every Strapi fetch, so the publish webhook purges it.
     next: { revalidate, tags: cacheTagsFor(`/${strapiPlural}`, {}) },
   })

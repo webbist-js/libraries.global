@@ -1,3 +1,9 @@
+import {
+  articleReadingMinutes,
+  articleSectionKeys,
+  articleText,
+} from "@repo/shared-data"
+
 import { T } from "@/lib/design-tokens"
 import type { WikiSection } from "@/lib/strapi-api/content/server"
 
@@ -99,14 +105,7 @@ type SectionLike = {
  * `docsSections`. An article with no relation takes its first tag as home.
  */
 export function docsSectionSlugsOf(article: SectionLike): string[] {
-  const tagged = Array.isArray(article.docsSections)
-    ? article.docsSections.filter(
-        (s): s is string => typeof s === "string" && s.length > 0
-      )
-    : []
-  const home = article.section?.slug ?? tagged[0] ?? null
-
-  return [...new Set([...(home ? [home] : []), ...tagged])]
+  return articleSectionKeys(article)
 }
 
 /** The slug of an article's home section, or null when it has none. */
@@ -153,22 +152,9 @@ export function docsPathForSearchHit(hit: {
   return `/knowledge/${hit.section_slug ?? UNFILED_SECTION_SEGMENT}/${hit.slug}`
 }
 
-/** Rough reading time from a Strapi dynamic-zone body: walk every string,
- * count words, 200wpm, minimum 1 minute. */
+/** The same text measure as Journal cards and the article editor. */
 export function readingTimeMinutes(body: unknown): number | null {
-  if (body == null) return null
-  let words = 0
-  const walk = (node: unknown) => {
-    if (typeof node === "string") {
-      words += node.split(/\s+/).filter(Boolean).length
-    } else if (Array.isArray(node)) {
-      node.forEach(walk)
-    } else if (typeof node === "object" && node !== null) {
-      Object.values(node).forEach(walk)
-    }
-  }
-  walk(body)
-  if (words === 0) return null
-
-  return Math.max(1, Math.round(words / 200))
+  return body == null || !articleText(body).trim()
+    ? null
+    : articleReadingMinutes(body)
 }

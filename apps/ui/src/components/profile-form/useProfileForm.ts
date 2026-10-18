@@ -1,7 +1,9 @@
 "use client"
 
+import { profilePalette, type ProfileBackground } from "@repo/shared-data"
 import { useEffect, useState } from "react"
 
+import { avatarSrc } from "@/lib/avatar"
 import type { LanguageEntry, UserProfile } from "@/lib/types/profile"
 
 import type { ClaimResult } from "./LibraryClaimSearch"
@@ -27,12 +29,14 @@ export function useProfileForm({
   profile,
   sessionName,
   avatarUrl: initialAvatarUrl,
+  imageUploadsEnabled = true,
 }: {
   profile: UserProfile | null
   /** The session's name, to start the name fields before a profile exists. */
   sessionName: string
   /** The browser-safe avatar URL (`avatarSrc`), or null. */
   avatarUrl: string | null
+  imageUploadsEnabled?: boolean
 }) {
   // ── Identity ─────────────────────────────────────────────────────
   const [firstName, setFirstName] = useState(
@@ -48,6 +52,12 @@ export function useProfileForm({
   const [country, setCountry] = useState(profile?.country ?? "")
   const [timezone, setTimezone] = useState(profile?.timezone ?? "")
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl ?? "")
+  const [profileBackground, setProfileBackground] = useState<ProfileBackground>(
+    profilePalette(profile?.profileBackground).key
+  )
+  const [coverUrl, setCoverUrl] = useState(
+    avatarSrc(profile?.coverImage, "lg") ?? ""
+  )
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle")
 
   useEffect(() => {
@@ -141,6 +151,7 @@ export function useProfileForm({
     city,
     country,
     timezone,
+    profileBackground,
     affiliationType:
       (affiliationType as UserProfile["affiliationType"]) || null,
     jobTitle,
@@ -173,7 +184,12 @@ export function useProfileForm({
     setTimezone,
     avatarUrl,
     setAvatarUrl,
+    imageUploadsEnabled,
     initials,
+    profileBackground,
+    setProfileBackground,
+    coverUrl,
+    setCoverUrl,
     affiliationType,
     setAffiliationType,
     selectedAffiliation,

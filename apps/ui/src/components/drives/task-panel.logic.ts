@@ -421,7 +421,11 @@ const isOpen = (
   t: DriveTask,
   skipped: ReadonlySet<string>,
   done: ReadonlySet<string>
-) => !t.inReview && !skipped.has(t.documentId) && !done.has(t.documentId)
+) =>
+  !t.inReview &&
+  !t.heldByOther &&
+  !skipped.has(t.documentId) &&
+  !done.has(t.documentId)
 
 /**
  * The next library to offer after `currentId`: the first open one after it

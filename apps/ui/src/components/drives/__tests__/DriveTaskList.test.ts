@@ -25,8 +25,7 @@ const TASKS = [task("a", "Alpha Library"), task("b", "Beta Library")]
 const handlers = () => ({
   onSearch: vi.fn(),
   onNear: vi.fn(),
-  onMore: vi.fn(),
-  onRandom: vi.fn(),
+  onPage: vi.fn(),
   onSelect: vi.fn(),
 })
 
@@ -41,6 +40,9 @@ function show(props: Partial<Parameters<typeof DriveTaskList>[0]> = {}) {
       loading: false,
       error: null,
       hasMore: false,
+      page: 0,
+      pageSize: 8,
+      total: 2,
       near: false,
       query: "",
       ...on,
@@ -134,15 +136,20 @@ describe("DriveTaskList", () => {
     ).toBeTruthy()
   })
 
-  it("shows more, and picks one at random", () => {
-    const on = show({ hasMore: true })
-    fireEvent.click(screen.getByRole("button", { name: "Show more" }))
-    expect(on.onMore).toHaveBeenCalled()
-    fireEvent.click(screen.getByRole("button", { name: "Give me a library" }))
-    expect(on.onRandom).toHaveBeenCalled()
+  it("pages explicitly and keeps the next page disabled at the end", () => {
+    const on = show({ hasMore: true, total: 20 })
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }))
+    expect(on.onPage).toHaveBeenCalledWith(1)
+    expect(
+      screen
+        .getByRole("button", { name: "Previous page" })
+        .hasAttribute("disabled")
+    ).toBe(true)
     cleanup()
-    show({ hasMore: false })
-    expect(screen.queryByRole("button", { name: "Show more" })).toBeNull()
+    show({ page: 2, total: 20, hasMore: false })
+    expect(
+      screen.getByRole("button", { name: "Next page" }).hasAttribute("disabled")
+    ).toBe(true)
   })
 
   it("is honest when nothing matches", () => {

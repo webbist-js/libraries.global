@@ -1,3 +1,5 @@
+import { articleText } from "@repo/shared-data"
+
 /**
  * Converts between an article body as Strapi stores it (a dynamic zone of
  * `content.*` components, rich text as the Strapi blocks AST) and the
@@ -33,14 +35,16 @@ type StrapiText = {
 }
 type StrapiLink = { type: "link"; url: string; children: StrapiText[] }
 type StrapiInline = StrapiText | StrapiLink
+type StrapiList = {
+  type: "list"
+  format: "ordered" | "unordered"
+  children: (StrapiList | { type: "list-item"; children: StrapiInline[] })[]
+}
+
 type StrapiBlock =
   | { type: "paragraph"; children: StrapiInline[] }
   | { type: "heading"; level: number; children: StrapiInline[] }
-  | {
-      type: "list"
-      format: "ordered" | "unordered"
-      children: { type: "list-item"; children: StrapiInline[] }[]
-    }
+  | StrapiList
   | { type: "quote"; children: StrapiInline[] }
   | { type: "code"; children: StrapiText[] }
   | {
@@ -118,6 +122,25 @@ function paragraph(children: unknown): TiptapNode {
   return withContent("paragraph", inlinesToTiptap(children))
 }
 
+/** Strapi nests a list alongside the list-item it belongs to. */
+function listToTiptap(list: StrapiList): TiptapNode {
+  const items: TiptapNode[] = []
+  for (const child of list.children ?? []) {
+    if (child.type === "list-item") {
+      items.push({ type: "listItem", content: [paragraph(child.children)] })
+    } else if (child.type === "list") {
+      if (items.length === 0)
+        items.push({ type: "listItem", content: [{ type: "paragraph" }] })
+      items.at(-1)!.content!.push(listToTiptap(child))
+    }
+  }
+
+  return {
+    type: list.format === "ordered" ? "orderedList" : "bulletList",
+    content: items,
+  }
+}
+
 function richTextToTiptap(blocks: unknown): TiptapNode[] {
   if (!Array.isArray(blocks)) return []
   const out: TiptapNode[] = []
@@ -135,13 +158,7 @@ function richTextToTiptap(blocks: unknown): TiptapNode[] {
         )
         break
       case "list":
-        out.push({
-          type: block.format === "ordered" ? "orderedList" : "bulletList",
-          content: (block.children ?? []).map((item) => ({
-            type: "listItem",
-            content: [paragraph(item?.children)],
-          })),
-        })
+        out.push(listToTiptap(block))
         break
       case "quote":
         out.push({ type: "blockquote", content: [paragraph(block.children)] })
@@ -200,15 +217,23 @@ export function dynamicZoneToTiptap(
         case "content.image-block": {
           const image = block.image as
             | { id?: number; url?: string; alternativeText?: string | null }
+            | number
             | null
             | undefined
-          if (image?.url)
+          if (typeof image === "number" || image?.url)
             content.push({
               type: "image",
               attrs: {
-                src: resolveImageUrl(image.url),
-                alt: image.alternativeText ?? null,
-                imageId: image.id ?? null,
+                // Preserve unresolved historical references while media metadata reloads.
+                src:
+                  typeof image === "number" ? "" : resolveImageUrl(image.url!),
+                alt:
+                  typeof block.alternativeText === "string"
+                    ? block.alternativeText
+                    : ((typeof image === "number"
+                        ? null
+                        : image.alternativeText) ?? null),
+                imageId: typeof image === "number" ? image : (image.id ?? null),
                 caption:
                   typeof block.caption === "string" ? block.caption : null,
                 fullWidth: block.fullWidth === true,
@@ -336,6 +361,22 @@ function paragraphsText(node: TiptapNode): string {
     .join("\n\n")
 }
 
+function listToStrapi(node: TiptapNode): StrapiList {
+  const children: StrapiList["children"] = []
+  for (const item of node.content ?? []) {
+    children.push({ type: "list-item", children: flattenInlines(item) })
+    for (const child of item.content ?? [])
+      if (child.type === "bulletList" || child.type === "orderedList")
+        children.push(listToStrapi(child))
+  }
+
+  return {
+    type: "list",
+    format: node.type === "orderedList" ? "ordered" : "unordered",
+    children,
+  }
+}
+
 function richNode(node: TiptapNode): StrapiBlock | null {
   switch (node.type) {
     case "paragraph":
@@ -348,14 +389,7 @@ function richNode(node: TiptapNode): StrapiBlock | null {
       }
     case "bulletList":
     case "orderedList":
-      return {
-        type: "list",
-        format: node.type === "orderedList" ? "ordered" : "unordered",
-        children: (node.content ?? []).map((item) => ({
-          type: "list-item",
-          children: flattenInlines(item),
-        })),
-      }
+      return listToStrapi(node)
     case "blockquote":
       return { type: "quote", children: flattenInlines(node) }
     case "image": {
@@ -426,6 +460,8 @@ export function tiptapToDynamicZone(
                 typeof node.attrs.alt === "string" ? node.attrs.alt : null,
             }
           : node.attrs.imageId,
+        alternativeText:
+          typeof node.attrs.alt === "string" ? node.attrs.alt : null,
         caption:
           typeof node.attrs.caption === "string" ? node.attrs.caption : null,
         fullWidth: node.attrs.fullWidth === true,
@@ -485,9 +521,8 @@ export function tiptapToDynamicZone(
 
 /** The document's words, for the footer count and reading time. */
 export function wordCount(doc: TiptapDoc | null | undefined): number {
-  const text = (doc?.content ?? []).map(plainText).join(" ")
-
-  return text.split(/\s+/).filter(Boolean).length
+  return articleText(tiptapToDynamicZone(doc)).split(/\s+/u).filter(Boolean)
+    .length
 }
 
 export function isEmptyDoc(doc: TiptapDoc | null | undefined): boolean {

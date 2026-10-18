@@ -1,4 +1,5 @@
 import { isSupporterPlan } from "@repo/access"
+import { libraryTypeName } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
 import { resolveUserEntitlements } from "../../../utils/entitlement-inputs"
@@ -104,7 +105,7 @@ function publishedFollowedLibraries(rows: unknown): Record<string, unknown>[] {
       documentId: lib.documentId ?? null,
       name: lib.name ?? null,
       slug: lib.slug ?? null,
-      libraryType: lib.libraryType ?? null,
+      libraryType: libraryTypeName(lib.libraryType) ?? null,
       heroImageUrl: lib.heroImage?.url ?? null,
       path: buildLibraryPath(lib),
     }))
@@ -275,7 +276,14 @@ async function loadAffiliations(
   return (await strapi.db.query(AFFILIATION).findMany({
     where: { baUserId },
     populate: {
-      library: { populate: { continent: true, country: true, region: true } },
+      library: {
+        populate: {
+          libraryType: { select: ["name"] },
+          continent: true,
+          country: true,
+          region: true,
+        },
+      },
     },
   })) as any[]
 }
@@ -289,7 +297,7 @@ function toClaimedLibraries(affiliations: any[]): Record<string, unknown>[] {
       documentId: a.library.documentId ?? null,
       name: a.library.name ?? null,
       slug: a.library.slug ?? null,
-      libraryType: a.library.libraryType ?? null,
+      libraryType: libraryTypeName(a.library.libraryType) ?? null,
       path: buildLibraryPath(a.library),
     }))
 }
@@ -315,6 +323,7 @@ async function loadFollows(baUserId: string | null | undefined): Promise<{
       followedLibraries: {
         where: { publishedAt: { $notNull: true } },
         populate: {
+          libraryType: { select: ["name"] },
           heroImage: true,
           continent: true,
           country: true,
@@ -405,9 +414,11 @@ export default factories.createCoreController(
           filters: { username: { $eq: username } } as any,
           populate: {
             avatar: true,
+            coverImage: true,
             languages: true,
             followedLibraries: {
               populate: {
+                libraryType: { fields: ["name"] },
                 heroImage: true,
                 continent: true,
                 country: true,
@@ -515,7 +526,7 @@ export default factories.createCoreController(
 
       const profile = await strapi.documents(PROFILE).findFirst({
         filters: { baUserId: { $eq: baUserId } },
-        populate: { avatar: true, languages: true },
+        populate: { avatar: true, coverImage: true, languages: true },
       })
       if (!profile) return ctx.notFound("Profile not found")
 
@@ -552,9 +563,11 @@ export default factories.createCoreController(
           documentId,
           populate: {
             avatar: true,
+            coverImage: true,
             languages: true,
             followedLibraries: {
               populate: {
+                libraryType: { fields: ["name"] },
                 heroImage: true,
                 continent: true,
                 country: true,
@@ -576,7 +589,12 @@ export default factories.createCoreController(
               where: { baUserId: profile.baUserId },
               populate: {
                 library: {
-                  populate: { continent: true, country: true, region: true },
+                  populate: {
+                    libraryType: { select: ["name"] },
+                    continent: true,
+                    country: true,
+                    region: true,
+                  },
                 },
               },
             })
@@ -589,7 +607,7 @@ export default factories.createCoreController(
           documentId: a.library.documentId ?? null,
           name: a.library.name ?? null,
           slug: a.library.slug ?? null,
-          libraryType: a.library.libraryType ?? null,
+          libraryType: libraryTypeName(a.library.libraryType) ?? null,
           path: buildLibraryPath(a.library),
         }))
 
@@ -661,11 +679,11 @@ export default factories.createCoreController(
 
     async findBadgesByDocumentId(ctx: any) {
       const { documentId } = ctx.params as { documentId: string }
-      const profile = await strapi
-        .documents("api::user-profile.user-profile")
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
         .findOne({
-          documentId,
-          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
+          where: { documentId },
+          select: ["baUserId", "profileVisibility", "publicPrefs"],
         })
 
       // No owner bypass for a private profile on this endpoint.
@@ -681,14 +699,12 @@ export default factories.createCoreController(
 
     async findBadgesByUsername(ctx: any) {
       const { username } = ctx.params as { username: string }
-      const results = await strapi
-        .documents("api::user-profile.user-profile")
-        .findMany({
-          filters: { username: { $eq: username } } as any,
-          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
-          limit: 1,
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({
+          where: { username },
+          select: ["baUserId", "profileVisibility", "publicPrefs"],
         })
-      const profile = results[0] ?? null
       if (
         !profile ||
         !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: true }))
@@ -702,14 +718,12 @@ export default factories.createCoreController(
     /** The Drives ribbons for a profile (spec §8): follows the activity rule. */
     async findDrivesByUsername(ctx: any) {
       const { username } = ctx.params as { username: string }
-      const results = await strapi
-        .documents("api::user-profile.user-profile")
-        .findMany({
-          filters: { username: { $eq: username } } as any,
-          fields: ["baUserId", "profileVisibility", "publicPrefs"] as any,
-          limit: 1,
+      const profile = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({
+          where: { username },
+          select: ["baUserId", "profileVisibility", "publicPrefs"],
         })
-      const profile = results[0] ?? null
       if (
         !profile ||
         !(await mayShowBadges(ctx, profile, { ownerSeesPrivate: true }))

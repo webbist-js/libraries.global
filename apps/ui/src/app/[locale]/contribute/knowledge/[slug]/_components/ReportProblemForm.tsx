@@ -39,12 +39,14 @@ export function ReportProblemForm({
   title,
   editHref,
   canEdit,
+  contentLocale,
 }: {
   readonly slug: string
   readonly title: string
   readonly editHref: string
   /** The viewer holds the Knowledge editor role (`docs.directEdit`). */
   readonly canEdit: boolean
+  readonly contentLocale?: string
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -67,6 +69,7 @@ export function ReportProblemForm({
           submissionType: "wiki_edit",
           targetEntityType: "wiki_article",
           targetSlug: slug,
+          ...(contentLocale ? { locale: contentLocale } : {}),
           fields: { category, proposal: proposal.trim() },
           editSummary: `Issue report: ${category}`,
           evidenceUrl: evidenceUrl.trim() || undefined,

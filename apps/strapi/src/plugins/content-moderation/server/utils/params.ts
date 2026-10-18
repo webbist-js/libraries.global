@@ -72,7 +72,12 @@ export const APPLICATION_ROLES = [
 export type ApplicationRole = (typeof APPLICATION_ROLES)[number]
 
 /** The queues a Moderator application may ask to review. */
-export const APPLICATION_QUEUES = ["index", "knowledge", "journal"] as const
+export const APPLICATION_QUEUES = [
+  "index",
+  "knowledge",
+  "journal",
+  "discussions",
+] as const
 export type ApplicationQueue = (typeof APPLICATION_QUEUES)[number]
 
 export const APPLICATION_STATEMENT_MIN = 20
@@ -100,7 +105,7 @@ export type RoleApplicationFields = {
   /**
    * Section slugs they'd work on: wiki sections (Knowledge editor, Knowledge
    * queue) or blog sections (Journal editor, Journal queue). Always empty
-   * for the Index queue.
+   * for Index or Discussions.
    */
   sections: string[]
   statement: string
@@ -111,7 +116,7 @@ export type RoleApplicationFields = {
 /**
  * Which section list an application's `sections` come from: `wiki` for a
  * Knowledge editor or the Knowledge queue, `blog` for a Journal editor or
- * the Journal queue, none for the Index queue.
+ * the Journal queue, none for Index or Discussions.
  */
 export function applicationSectionKind(a: {
   role: ApplicationRole | null
@@ -221,7 +226,8 @@ export function validateRoleApplicationFields(
     if (!isApplicationQueue(f.queue))
       return {
         ok: false,
-        message: "Choose the queue you'd review: Index, Knowledge or Journal.",
+        message:
+          "Choose the queue you'd review: Index, Knowledge, Journal or Discussions.",
       }
     queue = f.queue
   }

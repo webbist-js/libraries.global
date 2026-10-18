@@ -44,15 +44,10 @@ const copy = {
   },
 }
 
+// Keep detailed prices in the canonical plans and Team guides. Other guides link there.
 export const pricingGuideSlugs = new Set([
   "plans-and-pro",
-  "plans-and-staff-access",
   "teams-for-library-services",
-  "your-account-and-profile",
-  "deleting-your-account",
-  "change-history-on-library-pages",
-  "reusing-the-data",
-  "sources-and-data-retention",
 ])
 export function stripComponentIds(value) {
   if (Array.isArray(value)) return value.map(stripComponentIds)

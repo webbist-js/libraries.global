@@ -6,6 +6,7 @@ import {
 } from "node:crypto"
 
 import {
+  libraryTypeName,
   cycleWeekOf,
   dayRoute,
   localDateTime,
@@ -165,19 +166,19 @@ export default ({ strapi }: { strapi: any }) => {
     if (!(await requireStaffMember(strapi, userId, id, action)))
       throw new LiveError(403, "staff_access_removed")
     const library = await strapi.documents("api::library.library").findOne({
+      populate: { libraryType: { fields: ["name"] } },
       documentId: id,
       status: "published",
       fields: [
         "documentId",
         "name",
-        "libraryType",
         "mobileTimetable",
         "timezone",
         "location",
         "operationalStatus",
       ],
     })
-    if (!library || library.libraryType !== "Mobile")
+    if (!library || libraryTypeName(library.libraryType) !== "Mobile")
       throw new LiveError(404, "not_mobile")
     if (
       action === "goLive" &&
@@ -892,11 +893,11 @@ export default ({ strapi }: { strapi: any }) => {
       // sessions and their notices, instead of four per id (1.5).
       const libraries = (
         (await strapi.documents("api::library.library").findMany({
+          populate: { libraryType: { fields: ["name"] } },
           filters: { documentId: { $in: unique } },
           status: "published",
           fields: [
             "documentId",
-            "libraryType",
             "mobileTimetable",
             "timezone",
             "operationalStatus",
@@ -907,7 +908,7 @@ export default ({ strapi }: { strapi: any }) => {
         const tt = normalizeMobileTimetable(library.mobileTimetable)
 
         return tt &&
-          library.libraryType === "Mobile" &&
+          libraryTypeName(library.libraryType) === "Mobile" &&
           !CLOSED_STATUSES.has(library.operationalStatus)
           ? [
               {
@@ -1068,13 +1069,14 @@ export default ({ strapi }: { strapi: any }) => {
             const library = await strapi
               .documents("api::library.library")
               .findOne({
+                populate: { libraryType: { fields: ["name"] } },
                 documentId: current.libraryDocumentId,
                 status: "published",
-                fields: ["libraryType", "operationalStatus"],
+                fields: ["operationalStatus"],
               })
             if (
               !library ||
-              library.libraryType !== "Mobile" ||
+              libraryTypeName(library.libraryType) !== "Mobile" ||
               ["temporarily_closed", "permanently_closed", "planned"].includes(
                 library.operationalStatus
               ) ||

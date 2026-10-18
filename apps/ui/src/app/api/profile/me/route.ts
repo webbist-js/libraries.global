@@ -1,5 +1,7 @@
+import { isProfileBackground } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { auth, authDbPool } from "@/lib/auth"
 import { stopBillingBeforeDeletion } from "@/lib/billing/deletion"
@@ -7,6 +9,7 @@ import { deleteStrapiProfile } from "@/lib/delete-profile"
 import { readOwnProfile } from "@/lib/own-profile-server"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
 import { invalidateSessionProfile } from "@/lib/session-profile"
+import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -34,12 +37,25 @@ export async function PUT(req: Request) {
   if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
     return sameOriginResponse()
 
-  let body: Record<string, unknown>
-  try {
-    body = (await req.json()) as Record<string, unknown>
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
+  const parsed = await readTypedJson(
+    req,
+    64 * 1024,
+    z.record(z.string(), z.unknown())
+  )
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const body = parsed.body
+  if (
+    "profileBackground" in body &&
+    !isProfileBackground(body.profileBackground)
+  )
+    return NextResponse.json(
+      { error: "Invalid profile background" },
+      { status: 400 }
+    )
 
   const allowed = [
     "username",
@@ -65,6 +81,7 @@ export async function PUT(req: Request) {
     // set it, with the id of the file it just uploaded. Accepting it here would
     // let users attach any media-library file to their profile.
     "theme",
+    "profileBackground",
   ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
   for (const key of allowed) {
@@ -87,6 +104,7 @@ export async function PUT(req: Request) {
         "X-Service-Secret": SECRET,
       },
       body: JSON.stringify(data),
+      signal: AbortSignal.timeout(5000),
     })
   } catch {
     return NextResponse.json({ error: "CMS unavailable" }, { status: 503 })
@@ -111,15 +129,29 @@ export async function PATCH(req: Request) {
   if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
     return sameOriginResponse()
 
-  let body: Record<string, unknown>
-  try {
-    body = (await req.json()) as Record<string, unknown>
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
+  const parsed = await readTypedJson(
+    req,
+    64 * 1024,
+    z.record(z.string(), z.unknown())
+  )
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const body = parsed.body
+  if (
+    "profileBackground" in body &&
+    !isProfileBackground(body.profileBackground)
+  )
+    return NextResponse.json(
+      { error: "Invalid profile background" },
+      { status: 400 }
+    )
 
   const patchAllowed = [
     "theme",
+    "profileBackground",
     "notifPrefs",
     "profileVisibility",
     "publicPrefs",
@@ -156,6 +188,7 @@ export async function PATCH(req: Request) {
         "X-Service-Secret": SECRET,
       },
       body: JSON.stringify(data),
+      signal: AbortSignal.timeout(5000),
     })
   } catch {
     return NextResponse.json({ error: "CMS unavailable" }, { status: 503 })

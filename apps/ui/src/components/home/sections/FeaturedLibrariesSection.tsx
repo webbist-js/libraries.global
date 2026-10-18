@@ -1,3 +1,5 @@
+import { libraryTypeName } from "@repo/shared-data"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import type { SectionIntro } from "@/components/home/homepage.types"
 import SectionHeader from "@/components/home/sections/SectionHeader"
@@ -57,7 +59,7 @@ export function FeaturedLibrariesSection({
             <li key={library.documentId}>
               <FeaturedLibraryCard
                 name={library.name}
-                libraryType={library.libraryType}
+                libraryType={libraryTypeName(library.libraryType)}
                 city={library.city}
                 countryName={library.country?.name}
                 imageUrl={library.heroImage?.url}

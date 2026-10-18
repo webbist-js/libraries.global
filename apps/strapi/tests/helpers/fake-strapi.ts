@@ -52,7 +52,7 @@ export function makeFakeStrapi(
   const view = (d: Doc, status?: string): Doc | null =>
     status === "published" ? publishedView(d) : d
   const inLocale = (d: Doc, locale?: string) =>
-    !locale || d.locale === undefined || d.locale === locale
+    !locale || locale === "*" || d.locale === undefined || d.locale === locale
   const snapshot = (d: Doc): Doc => {
     const { __published: _p, ...rest } = d
 
@@ -384,7 +384,7 @@ export function makeFakeStrapi(
       counts: [] as { alias: string; distinct?: string }[],
       groupBy: [] as string[],
       whereIn: [] as { column: string; values: unknown[] }[],
-      where: [] as { column: string; value: unknown }[],
+      where: [] as { column: string; value: unknown; operator?: string }[],
       whereNotNull: [] as string[],
       distinct: false,
       first: false,
@@ -395,7 +395,15 @@ export function makeFakeStrapi(
           state.whereIn.every((w) =>
             w.values.includes(d[camelCase(w.column)])
           ) &&
-          state.where.every((w) => d[camelCase(w.column)] === w.value) &&
+          state.where.every((w) => {
+            const value = d[camelCase(w.column)]
+            if (w.operator === ">=") return compare(value, w.value) >= 0
+            if (w.operator === ">") return compare(value, w.value) > 0
+            if (w.operator === "<=") return compare(value, w.value) <= 0
+            if (w.operator === "<") return compare(value, w.value) < 0
+
+            return value === w.value
+          }) &&
           state.whereNotNull.every((col) => d[camelCase(col)] != null)
       )
       const project = (group: Doc[], sample: Doc) => {
@@ -484,7 +492,11 @@ export function makeFakeStrapi(
         b?: unknown
       ) => {
         if (typeof column === "string")
-          state.where.push({ column, value: b === undefined ? a : b })
+          state.where.push({
+            column,
+            value: b === undefined ? a : b,
+            operator: b === undefined ? undefined : String(a),
+          })
         else
           for (const [col, value] of Object.entries(column))
             state.where.push({ column: col, value })
@@ -583,8 +595,26 @@ export function makeFakeStrapi(
         return { count: data.length, ids }
       }),
       // `populate` is ignored: seed relations as nested objects instead.
-      findMany: vi.fn(async ({ where }: { where?: Record<string, any> } = {}) =>
-        table(uid).filter((d) => match(d, where))
+      findMany: vi.fn(
+        async ({
+          where,
+          orderBy,
+          offset,
+          limit,
+        }: {
+          where?: Record<string, any>
+          orderBy?: unknown
+          offset?: number
+          limit?: number
+        } = {}) =>
+          page(
+            sortRows(
+              table(uid).filter((d) => match(d, where)),
+              orderBy
+            ),
+            offset,
+            limit
+          )
       ),
       update: vi.fn(
         async ({

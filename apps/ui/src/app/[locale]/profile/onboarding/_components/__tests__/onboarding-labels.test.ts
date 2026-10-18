@@ -17,11 +17,12 @@ Object.assign(globalThis, { React })
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
-// next-intl's navigation can't load under vitest; only Link is used.
+// Exercise the form and its cover refresh without a Next navigation context.
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
 
   return {
+    useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
     Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
       h("a", { href }, children),
   }

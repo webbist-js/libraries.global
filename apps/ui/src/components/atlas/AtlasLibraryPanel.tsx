@@ -10,6 +10,7 @@ import {
   getOpenStatus,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import { Skeleton } from "@/components/ui/skeleton"
 import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
@@ -89,6 +90,7 @@ export function AtlasLibraryPanel({
   useEffect(() => {
     let alive = true
     fetchDetail(library.id)
+      .catch(() => null)
       .then((d) => alive && setDetail(d))
       .finally(() => alive && setLoading(false))
 
@@ -125,6 +127,7 @@ export function AtlasLibraryPanel({
   const closedForGood = library.status === "permanently_closed"
   const updated = relative(detail?.updatedAt)
   const catalogueHref = library.path ? (detail?.catalogueUrl ?? null) : null
+  const pending = loading && !detail
 
   const statusBox =
     status.state === "open"
@@ -149,13 +152,20 @@ export function AtlasLibraryPanel({
           }
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col" aria-busy={pending}>
+      {pending ? (
+        <span role="status" className="sr-only">
+          {tUi("loading_library_details")}
+        </span>
+      ) : null}
       {!compact ? (
         <div
           className="relative mx-2 mt-2 h-[150px] shrink-0 overflow-hidden rounded-2xl"
           style={{ background: tint.bg }}
         >
-          {img ? (
+          {pending ? (
+            <Skeleton className="h-full w-full rounded-2xl bg-(--t-border-line)" />
+          ) : img ? (
             <img
               src={img}
               alt={detail?.heroImage?.alternativeText ?? ""}
@@ -178,9 +188,7 @@ export function AtlasLibraryPanel({
                   .map((w) => w[0])
                   .join("") || library.name[0]}
               </span>
-              <span className="text-[13px] font-semibold">
-                {loading ? "" : "No photo yet"}
-              </span>
+              <span className="text-[13px] font-semibold">No photo yet</span>
             </div>
           )}
           <button
@@ -227,7 +235,12 @@ export function AtlasLibraryPanel({
           >
             {library.name}
           </h2>
-          {!compact && detail?.summary ? (
+          {!compact && pending ? (
+            <div className="mt-2 grid gap-2" aria-hidden="true">
+              <Skeleton className="h-3 w-full rounded-full bg-(--t-border-line)" />
+              <Skeleton className="h-3 w-3/4 rounded-full bg-(--t-border-line)" />
+            </div>
+          ) : !compact && detail?.summary ? (
             <p
               className="mt-1 mb-0 line-clamp-2 text-[14px]"
               style={{ color: T.ink.dim }}
@@ -245,6 +258,11 @@ export function AtlasLibraryPanel({
             <Icon name="x" size={17} stroke={2.4} />
             Permanently closed{library.closed ? ` in ${library.closed}` : ""}
           </div>
+        ) : pending ? (
+          <div className="flex min-h-[43px] items-center justify-between gap-3 rounded-[14px] bg-(--t-bg-muted) px-3.5 py-2.5">
+            <Skeleton className="h-3.5 w-20 rounded-full bg-(--t-border-line)" />
+            <Skeleton className="h-3.5 w-24 rounded-full bg-(--t-border-line)" />
+          </div>
         ) : (
           <div
             className="flex items-center justify-between gap-2.5 rounded-[14px] px-3.5 py-2.5"
@@ -258,11 +276,9 @@ export function AtlasLibraryPanel({
               {statusBox.text}
             </span>
             <span className="text-right text-[15px]">
-              {loading && !detail
-                ? "…"
-                : status.state === "open"
-                  ? status.label.replace("Open until", "Until")
-                  : status.label.replace("Closed · ", "")}
+              {status.state === "open"
+                ? status.label.replace("Open until", "Until")
+                : status.label.replace("Closed · ", "")}
             </span>
           </div>
         )}
@@ -273,6 +289,9 @@ export function AtlasLibraryPanel({
             <span className="sr-only">{tUi("address")}</span>
           </dt>
           <dd className="m-0">
+            {pending ? (
+              <Skeleton className="my-1.5 h-3 w-3/4 rounded-full bg-(--t-border-line)" />
+            ) : null}
             {address ||
               [library.city, library.region, library.country]
                 .filter(Boolean)

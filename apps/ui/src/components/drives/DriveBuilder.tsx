@@ -99,6 +99,7 @@ import {
   type ScopeCounts,
   StandingCard,
 } from "./DriveBuilderRail"
+import { DriveDiscussionOptions } from "./DriveDiscussionOptions"
 import { FOCUS_META, longDate, unitNoun } from "./focus-meta"
 import { LEVEL_WORD, PlaceSearch } from "./PlaceSearch"
 
@@ -463,6 +464,22 @@ export function DriveBuilder({
   readonly userId?: string | null
   readonly restoreDraft?: boolean
 }) {
+  const [libraryTypeChoices, setLibraryTypeChoices] =
+    useState<readonly string[]>(LIBRARY_TYPES)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch("/api/relations/library-types", { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (json?.data?.length && !controller.signal.aborted)
+          setLibraryTypeChoices(
+            json.data.map((item: { name: string }) => item.name)
+          )
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [])
   const tUi = useUiTranslations("ui")
 
   const router = useRouter()
@@ -656,7 +673,11 @@ export function DriveBuilder({
       const res = await fetch("/api/drives/proposals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...toDriveInput(state), note: note.trim() }),
+        body: JSON.stringify({
+          ...toDriveInput(state),
+          ...(state.discussions ? { discussions: state.discussions } : {}),
+          note: note.trim(),
+        }),
       })
       const json: unknown = await res.json().catch(() => null)
       if (res.ok) {
@@ -690,7 +711,10 @@ export function DriveBuilder({
         {
           method: drive ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(locked ? textOnlyInput(body) : body),
+          body: JSON.stringify({
+            ...(locked ? textOnlyInput(body) : body),
+            ...(state.discussions ? { discussions: state.discussions } : {}),
+          }),
         }
       )
       const json = (await res.json().catch(() => null)) as {
@@ -1053,6 +1077,20 @@ export function DriveBuilder({
         <FieldMessage field="focus" message={errorOf("focus")} />
       </Step>
 
+      <section className="grid gap-4 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
+        <h2 className="m-0 font-serif text-2xl">
+          {tUi("drive_conversations")}
+        </h2>
+        <DriveDiscussionOptions
+          driveId={drive?.documentId}
+          value={state.discussions}
+          onChange={(discussions) =>
+            setState((before) => ({ ...before, discussions }))
+          }
+          proposing={proposing}
+          disabled={saving}
+        />
+      </section>
       <Step
         n={2}
         title={tUi("where")}
@@ -1145,7 +1183,7 @@ export function DriveBuilder({
             Library types<Tag>None chosen means every type</Tag>
           </legend>
           <div className="flex flex-wrap gap-2">
-            {LIBRARY_TYPES.map((type) => (
+            {libraryTypeChoices.map((type) => (
               <CheckChip
                 key={type}
                 checked={state.libraryTypes.includes(type)}

@@ -1,22 +1,12 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
+import { PlanStatusBanner } from "@/app/[locale]/contribute/_components/membership/PlanStatusBanner"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
+
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 
-const { translate } = vi.hoisted(() => ({
-  translate: (key: string) => key,
-}))
-vi.mock("next-intl", () => ({
-  useTranslations: () => translate,
-}))
 vi.mock("@/components/global/GlobalLink", () => ({
   default: ({ children, href }: { children: ReactNode; href: string }) => (
     <a href={href}>{children}</a>
@@ -146,4 +136,70 @@ it("reveals planned features independently without adding them to the included l
   )
   expect(proList.hidden).toBe(true)
   expect(teamList.hidden).toBe(false)
+})
+
+it("keeps service choices keyboard accessible and the quote separate from personal billing", () => {
+  render(<MembershipPlans currentPlan="free" />)
+  const team = within(screen.getByRole("listitem", { name: "Team" }))
+  const service = within(team.getByRole("radiogroup", { name: "Team pricing" }))
+  const standard = service.getByRole("radio", { name: /^Standard/ })
+  const publicService = service.getByRole("radio", {
+    name: /^Public library service/,
+  })
+  standard.focus()
+  fireEvent.keyDown(standard, { key: "ArrowRight" })
+  expect(document.activeElement).toBe(publicService)
+  expect(publicService.getAttribute("aria-checked")).toBe("true")
+  const quote = within(team.getByRole("region", { name: "Estimate your Team" }))
+  expect(quote.getByText("£480")).toBeTruthy()
+  expect(quote.getByText("£15 / month")).toBeTruthy()
+  expect(
+    quote.getByText(/eligibility is confirmed with your quote/)
+  ).toBeTruthy()
+  expect(
+    quote.getByText(
+      /not included in this estimate or the public library service discount/
+    )
+  ).toBeTruthy()
+  fireEvent.keyDown(publicService, { key: "Home" })
+  expect(document.activeElement).toBe(standard)
+  expect(quote.getByText("£600")).toBeTruthy()
+  expect(
+    quote.queryByText(/eligibility is confirmed with your quote/)
+  ).toBeNull()
+})
+
+it("keeps complimentary access in one summary and preserves the option to support the project", () => {
+  render(
+    <>
+      <PlanStatusBanner plan="pro" planSource="grant" />
+      <MembershipPlans
+        currentPlan="pro"
+        billingAvailable
+        supporterApproved
+        checkoutUser={{
+          email: "editor@example.test",
+          verified: true,
+          complimentaryPro: true,
+          hasPaidMembership: false,
+        }}
+      />
+    </>
+  )
+  expect(
+    screen.getAllByText(
+      "Granted by the Libraries Global team, with no payment required for this access."
+    )
+  ).toHaveLength(1)
+  expect(
+    screen.getAllByRole("region", { name: "Public recognition" })
+  ).toHaveLength(1)
+  expect(screen.queryByRole("link", { name: /check eligibility/ })).toBeNull()
+  expect(screen.getByRole("link", { name: "Open the Atlas" })).toBeTruthy()
+  expect(
+    screen.getByRole("button", { name: "Checkout supporter month" })
+  ).toBeTruthy()
+  expect(
+    screen.queryByRole("button", { name: "Checkout pro month" })
+  ).toBeNull()
 })

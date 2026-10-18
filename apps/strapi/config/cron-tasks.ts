@@ -1,5 +1,6 @@
 // https://docs.strapi.io/dev-docs/configurations/cron
 
+import { reviewRoundView } from "../src/plugins/content-moderation/server/utils/suggestion-rounds"
 import {
   handleAutoPaused,
   purgeOAuthDrafts,
@@ -71,6 +72,18 @@ const driveLifecycleJob = {
 }
 
 export default {
+  suggestionReviewRounds: {
+    task: async ({ strapi }: { strapi: any }) => {
+      try {
+        await reviewRoundView(strapi, false)
+      } catch {
+        strapi.log.error(
+          "[suggestions] Review-round cutoff failed; requests will retry it."
+        )
+      }
+    },
+    options: { rule: "* * * * *", tz: "Etc/UTC" },
+  },
   openingSchedules: {
     task: ({ strapi }: { strapi: any }) =>
       refreshDueOpeningSchedules(strapi).catch((error) =>

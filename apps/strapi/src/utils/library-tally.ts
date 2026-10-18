@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE } from "@repo/shared-data"
+import { libraryTypeName, DEFAULT_LOCALE } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
 import { isPostgres, libraryJoin } from "./library-sql"
@@ -39,7 +39,7 @@ const toCoord = (value: unknown): number | null => {
 
 /** A jsonb coordinate as a float, only when it really is a number. */
 const coordSql = (key: "lat" | "lng") =>
-  `CASE WHEN l.library_type is distinct from 'Digital' AND jsonb_typeof(l.location->'lat') = 'number' ` +
+  `CASE WHEN lt.name is distinct from 'Digital' AND jsonb_typeof(l.location->'lat') = 'number' ` +
   `AND jsonb_typeof(l.location->'lng') = 'number' ` +
   `THEN (l.location->>'${key}')::float END`
 
@@ -54,6 +54,7 @@ async function tallyBySql(
   const knex = strapi.db.connection
   const parent = libraryJoin(strapi, opts.parent)
   const child = libraryJoin(strapi, opts.child)
+  const type = libraryJoin(strapi, "libraryType")
 
   const query = canonicalPlaceLibraries(strapi, opts.locale, opts.status, {
     relation: opts.parent,
@@ -66,12 +67,14 @@ async function tallyBySql(
     .where("p.document_id", opts.parentDocumentId)
 
   const rows = (await query
+    .leftJoin(`${type.linkTable} as tl`, `tl.${type.libraryColumn}`, "l.id")
+    .leftJoin(`${type.table} as lt`, "lt.id", `tl.${type.targetColumn}`)
     .groupBy("c.document_id")
     .select(
       "c.document_id as child_id",
       knex.raw("count(*) as count"),
       knex.raw(
-        "count(*) filter (where l.library_type is distinct from 'Digital') as place_based_count"
+        "count(*) filter (where lt.name is distinct from 'Digital') as place_based_count"
       ),
       knex.raw(`avg(${coordSql("lat")}) as lat`),
       knex.raw(`avg(${coordSql("lng")}) as lng`)
@@ -124,8 +127,11 @@ async function tallyByRows(
         ...PLACE_LIBRARY_FILTERS,
         ...(after ? { id: { $gt: after } } : {}),
       } as never,
-      fields: ["id", "location", "libraryType"] as never,
-      populate: { [opts.child]: { fields: ["documentId"] } } as never,
+      fields: ["id", "location"] as never,
+      populate: {
+        libraryType: { fields: ["name"] },
+        [opts.child]: { fields: ["documentId"] },
+      } as never,
       locale: DEFAULT_LOCALE,
       status: opts.status,
       sort: "id:asc" as never,
@@ -143,10 +149,15 @@ async function tallyByRows(
         located: 0,
       }
       entry.count += 1
-      if (row.libraryType !== "Digital") entry.placeBasedCount += 1
+      if (libraryTypeName(row.libraryType) !== "Digital")
+        entry.placeBasedCount += 1
       const lat = toCoord(row.location?.lat)
       const lng = toCoord(row.location?.lng)
-      if (row.libraryType !== "Digital" && lat !== null && lng !== null) {
+      if (
+        libraryTypeName(row.libraryType) !== "Digital" &&
+        lat !== null &&
+        lng !== null
+      ) {
         entry.lat += lat
         entry.lng += lng
         entry.located += 1

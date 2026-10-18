@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   validateOpeningSchedule,
   FACILITY_CHECKLIST,
   submittedSourceRecords,
@@ -82,23 +83,6 @@ const STRING_FIELDS = new Set([
 const NEVER_CLEAR = new Set(["name"])
 
 const ENUM_FIELDS: Record<string, readonly string[]> = {
-  libraryType: [
-    "National",
-    "Public",
-    "Academic",
-    "University",
-    "Parliamentary",
-    "State",
-    "Municipal",
-    "Special",
-    "Monastic",
-    "Archive",
-    "Private",
-    "Cultural",
-    "Digital",
-    "Mobile",
-    "Other",
-  ],
   operatorType: [
     "National Government",
     "Regional Government",
@@ -397,6 +381,11 @@ export function buildLibraryRecordData(
       data[key] = v
       continue
     }
+    if (key === "libraryType") {
+      if (typeof raw === "string" && raw.trim() && raw.length <= 80)
+        data.libraryType = raw.trim()
+      continue
+    }
     if (key in ENUM_FIELDS) {
       if (typeof raw === "string" && ENUM_FIELDS[key]!.includes(raw))
         data[key] = raw
@@ -527,7 +516,6 @@ async function findLibrary(strapi: any, submission: Submission, base: string) {
     "locale",
     "name",
     "verifiedSections",
-    "libraryType",
     "mobileTimetable",
     "location",
     "timezone",
@@ -537,12 +525,14 @@ async function findLibrary(strapi: any, submission: Submission, base: string) {
       documentId: submission.targetDocumentId,
       locale: base,
       fields,
+      populate: { libraryType: { fields: ["name"] } },
     })
   if (!submission.targetSlug) return null
   const [library] = await strapi.documents(LIBRARY).findMany({
     filters: { slug: { $eq: submission.targetSlug } },
     locale: base,
     fields,
+    populate: { libraryType: { fields: ["name"] } },
     limit: 1,
   })
 
@@ -726,7 +716,10 @@ async function currentValues(
   const keys = Object.keys(data)
   const populated = keys.filter(
     (k) =>
-      DOCUMENT_RELATIONS.has(k) || MEDIA_RELATIONS.has(k) || COMPONENTS.has(k)
+      k === "libraryType" ||
+      DOCUMENT_RELATIONS.has(k) ||
+      MEDIA_RELATIONS.has(k) ||
+      COMPONENTS.has(k)
   )
   const scalars = keys.filter((k) => !populated.includes(k))
   const row = await strapi.documents(LIBRARY).findOne({
@@ -742,7 +735,13 @@ async function currentValues(
               COMPONENTS.has(k)
                 ? true
                 : {
-                    fields: [DOCUMENT_RELATIONS.has(k) ? "documentId" : "id"],
+                    fields: [
+                      k === "libraryType"
+                        ? "name"
+                        : DOCUMENT_RELATIONS.has(k)
+                          ? "documentId"
+                          : "id",
+                    ],
                   },
             ])
           ),
@@ -750,7 +749,7 @@ async function currentValues(
       : {}),
   })
 
-  return row ?? {}
+  return row ? { ...row, libraryType: libraryTypeName(row.libraryType) } : {}
 }
 
 /**

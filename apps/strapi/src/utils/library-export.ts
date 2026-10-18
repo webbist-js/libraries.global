@@ -1,5 +1,6 @@
 import { resolveEntitlements } from "@repo/access"
 import {
+  libraryTypeName,
   appendSourceRecords,
   type LibrarySourceRecord,
 } from "@repo/shared-data"
@@ -86,7 +87,7 @@ function toRow(lib: ExportSource): LibraryExportRow {
   return {
     name: lib.name ?? null,
     slug: lib.slug ?? null,
-    libraryType: lib.libraryType ?? null,
+    libraryType: libraryTypeName(lib.libraryType) ?? null,
     operationalStatus: lib.operationalStatus ?? null,
     streetAddress: lib.streetAddress ?? null,
     city: lib.city ?? null,
@@ -122,7 +123,6 @@ export async function findLibrariesForExport(
       fields: [
         "name",
         "slug",
-        "libraryType",
         "operationalStatus",
         "streetAddress",
         "city",
@@ -132,6 +132,7 @@ export async function findLibrariesForExport(
         "email",
       ],
       populate: {
+        libraryType: { fields: ["name"] },
         sourceRecords: true,
         continent: { fields: ["slug"] },
         country: { fields: ["slug", "name"] },

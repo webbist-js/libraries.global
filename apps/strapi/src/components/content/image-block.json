@@ -10,7 +10,9 @@
       "type": "media",
       "multiple": false,
       "required": true,
-      "allowedTypes": ["images"]
+      "allowedTypes": [
+        "images"
+      ]
     },
     "caption": {
       "type": "string"
@@ -18,6 +20,9 @@
     "fullWidth": {
       "type": "boolean",
       "default": false
+    },
+    "alternativeText": {
+      "type": "string"
     }
   }
 }

@@ -117,7 +117,6 @@ export default async function SupportersPage({
         }
         leadPlacement="left"
         showEyebrow={false}
-        showTabs={false}
         lead={
           data?.lead ||
           "Support helps cover the servers, maps and data behind Libraries Global. Library records, downloads and community contributions stay free for everyone."

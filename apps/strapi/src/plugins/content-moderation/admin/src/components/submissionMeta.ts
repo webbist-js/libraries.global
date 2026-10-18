@@ -1,6 +1,20 @@
 import {
   DRIVE_PLACE_LEVELS,
+  moderationArticleRefusalMessage as articleDecisionErrorMessage,
   EVENT_PROVIDERS,
+  moderationHumanise as humanise,
+  moderationIsHttpUrl as isHttpUrl,
+  moderationRenderValue as renderValue,
+  moderationSummaryOf,
+  moderationRoleApplicationSummary,
+  moderationDetailOf,
+  moderationFieldChangeCount,
+  moderationDriveProposalTitle as driveTitle,
+  moderationFormatDateTime as formatDateTime,
+  MODERATION_TYPE_LABELS as TYPE_LABELS,
+  MODERATION_EVIDENCE_TYPE_LABELS as EVIDENCE_TYPE_LABELS,
+  MODERATION_FIELD_GROUPS as FIELD_GROUPS,
+  MODERATION_EXCLUDE_FROM_OTHER as EXCLUDE_FROM_OTHER,
   gapDefinition,
   isGapKey,
   proposedDrive,
@@ -76,19 +90,6 @@ export const STATUS_META: Record<
   draft: { label: "Draft", variant: "alternative" },
 }
 
-export const TYPE_LABELS: Record<string, string> = {
-  correction: "Correction",
-  new_library: "New library",
-  library_edit: "Library edit",
-  library_claim: "Library claim",
-  wiki_edit: "Knowledge",
-  blog_submission: "Journal",
-  topic_suggestion: "Topic",
-  role_application: "Role application",
-  event_feed: "Event feed",
-  drive_proposal: "Drive proposal",
-}
-
 /** Design System colour tokens per type: badge background and text. */
 export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   correction: { bg: "primary100", text: "primary600" },
@@ -101,127 +102,6 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   role_application: { bg: "danger100", text: "danger600" },
   event_feed: { bg: "warning100", text: "warning600" },
   drive_proposal: { bg: "success100", text: "success600" },
-}
-
-export const EVIDENCE_TYPE_LABELS: Record<string, string> = {
-  institutional_url: "Institutional URL",
-  on_site_photo: "On-site photo",
-  on_site_visit: "Checked in person",
-  press_release: "Press release",
-  personal_communication: "Personal communication",
-  my_institutional_affiliation: "Institutional affiliation",
-  other: "Other",
-}
-
-export const FIELD_GROUPS: { label: string; keys: string[] }[] = [
-  {
-    label: "Identity",
-    keys: [
-      "name",
-      "shortName",
-      "officialName",
-      "libraryType",
-      "operatorType",
-      "operationalStatus",
-      "closureReason",
-      "summary",
-    ],
-  },
-  {
-    label: "Location",
-    keys: [
-      "streetAddress",
-      "district",
-      "city",
-      "postalCode",
-      "country",
-      "lat",
-      "lng",
-    ],
-  },
-  {
-    label: "Contact & web",
-    keys: [
-      "website",
-      "email",
-      "phone",
-      "catalogueUrl",
-      "planVisitUrl",
-      "bookingUrl",
-      "membershipUrl",
-      "virtualTourUrl",
-      "virtualTourEmbed",
-      "donationUrl",
-      "iiifEndpoint",
-    ],
-  },
-  {
-    label: "Visit",
-    keys: [
-      "admissionInfo",
-      "transitInfo",
-      "languagesServed",
-      "accessibilityNotes",
-      "visitNotes",
-    ],
-  },
-  {
-    label: "Collections",
-    keys: [
-      "collectionSize",
-      "collectionTypes",
-      "specialCollections",
-      "classificationSystem",
-    ],
-  },
-  {
-    label: "Building & history",
-    keys: [
-      "foundedYear",
-      "openedYear",
-      "closedYear",
-      "architect",
-      "architecturalStyle",
-      "buildingInfo",
-    ],
-  },
-  { label: "Media", keys: ["imageUrl", "imageNote", "imageCredit"] },
-]
-
-export const EXCLUDE_FROM_OTHER = new Set([
-  "kind",
-  "previous",
-  "continentDocumentId",
-  "countryDocumentId",
-  "regionDocumentId",
-  "areaDocumentId",
-  "uploadedImages",
-  "socialLinks",
-  "services",
-  "amenities",
-  "accessibility",
-  "openingTimes",
-  "sourceRecords",
-  // A shared photo is shown as an image, not as its id and address.
-  "photoId",
-  "photoUrl",
-])
-
-/** camelCase → words. */
-export const humanise = (key: string) =>
-  key
-    .replace(/DocumentId$/, "")
-    .replaceAll(/([A-Z])/g, " $1")
-    .toLowerCase()
-    .replace(/^./, (c) => c.toUpperCase())
-
-/**
- * Whether contributor-supplied text may be rendered as a link: http(s)
- * only. Anything else (javascript:, data:, a bare path) is shown as text,
- * since React doesn't block dangerous schemes in `href`.
- */
-export function isHttpUrl(v: unknown): v is string {
-  return typeof v === "string" && /^https?:\/\/\S+$/i.test(v.trim())
 }
 
 /**
@@ -243,130 +123,33 @@ export function assetPath(url: unknown): string | null {
   return /^\/(?!\/)/.test(raw) ? raw : null
 }
 
-export function renderValue(v: unknown): { text: string; isUrl: boolean } {
-  if (v === null || v === undefined || v === "")
-    return { text: "—", isUrl: false }
-  if (Array.isArray(v)) {
-    if (v.length === 0) return { text: "—", isUrl: false }
-
-    return {
-      text: v
-        .map((item) => {
-          if (item && typeof item === "object") {
-            const source = item as {
-              url?: string
-              label?: string
-              fields?: string[]
-            }
-            if (source.url)
-              return [source.label, source.url, source.fields?.join(", ")]
-                .filter(Boolean)
-                .join(" · ")
-
-            return JSON.stringify(item)
-          }
-
-          return String(item)
-        })
-        .join(", "),
-      isUrl: false,
-    }
-  }
-  if (typeof v === "object") {
-    const o = v as Record<string, unknown>
-    if (Array.isArray(o.days))
-      return {
-        text: `${(o.days as { enabled?: boolean }[]).filter((d) => d?.enabled).length} day(s) with hours`,
-        isUrl: false,
-      }
-
-    return { text: JSON.stringify(v), isUrl: false }
-  }
-  const s = String(v)
-
-  return { text: s, isUrl: isHttpUrl(s) }
+export {
+  articleDecisionErrorMessage,
+  humanise,
+  isHttpUrl,
+  renderValue,
+  formatDateTime,
+  TYPE_LABELS,
+  EVIDENCE_TYPE_LABELS,
+  FIELD_GROUPS,
+  EXCLUDE_FROM_OTHER,
 }
 
-/** One line describing what a submission is about, for the queue table. */
+/** The privileged admin includes the snapshotted library name in feed summaries. */
 export function summaryOf(sub: Submission): string {
-  const f = sub.fields ?? {}
-  const d = sub.draftData ?? {}
-  const str = (v: unknown) =>
-    typeof v === "string" && v.trim() ? v.trim() : null
-  switch (sub.submissionType) {
-    case "new_library":
-      return str(f.name) ?? "Unnamed library"
-    case "library_claim":
-      return str(f.name) ?? sub.targetSlug ?? "Library claim"
-    case "wiki_edit":
-    case "blog_submission":
-      return (
-        str(d.title) ??
-        str(d.proposedTitle) ??
-        str(f.title) ??
-        (sub.targetSlug ? `Edit: ${sub.targetSlug}` : "Untitled article")
-      )
-    case "topic_suggestion":
-      return str(f.name) ?? "Topic"
-    case "event_feed": {
-      const library = str(f.libraryName) ?? sub.targetSlug ?? "a library"
+  const fields = sub.fields ?? {}
+  if (sub.submissionType === "event_feed") {
+    const library =
+      typeof fields.libraryName === "string" && fields.libraryName.trim()
+        ? fields.libraryName.trim()
+        : (sub.targetSlug ?? "a library")
 
-      return `${EVENT_PROVIDERS[f.provider as keyof typeof EVENT_PROVIDERS]?.label ?? "Event"} feed for ${library}${f.kind === "replace" ? " (new details)" : ""}`
-    }
-    case "role_application": {
-      const role =
-        f.role === "journal_editor"
-          ? "Journal editor"
-          : f.role === "wiki_editor"
-            ? "Knowledge editor"
-            : "Editor"
-      const locales = Array.isArray(f.locales)
-        ? [
-            ...new Set(
-              f.locales.flatMap((l: unknown) => {
-                const code = str(l)
-
-                return code ? [code] : []
-              })
-            ),
-          ]
-        : []
-
-      const languages =
-        locales.length > 0 ? locales.join(", ") : "all languages"
-      if (f.role === "moderator") {
-        const queue =
-          f.queue === "index"
-            ? "Index"
-            : f.queue === "knowledge"
-              ? "Knowledge"
-              : f.queue === "journal"
-                ? "Journal"
-                : "Queue"
-
-        return `Moderator application: ${queue} (${languages})`
-      }
-
-      return `${role} application (${languages})`
-    }
-    case "drive_proposal": {
-      const title = driveTitle(d)
-
-      return title ? `Drive: ${title}` : "Drive proposal"
-    }
-
-    default:
-      return sub.targetSlug ?? "Library"
+    return `${EVENT_PROVIDERS[fields.provider as keyof typeof EVENT_PROVIDERS]?.label ?? "Event"} feed for ${library}${fields.kind === "replace" ? " (new details)" : ""}`
   }
-}
+  if (sub.submissionType === "role_application")
+    return moderationRoleApplicationSummary(fields, { trimLocales: true })
 
-/** A Drive Proposal's title without its `*italic*` markers, or null. */
-function driveTitle(draftData: unknown): string | null {
-  const title = proposedDrive(draftData)?.title
-  if (typeof title !== "string") return null
-  const plain = title.replaceAll("*", "").trim()
-
-  return plain || null
+  return moderationSummaryOf(sub)
 }
 
 const shortDate = (v: unknown): string | null => {
@@ -439,7 +222,10 @@ function focusSummary(focus: Record<string, unknown> | null): string | null {
   if (focus.kind === "verify" && Array.isArray(focus.sections)) {
     const sections = joinAnd(
       focus.sections.map((s) =>
-        (VERIFY_SECTION_LABELS[String(s)] ?? String(s)).toLowerCase()
+        (Object.hasOwn(VERIFY_SECTION_LABELS, String(s))
+          ? VERIFY_SECTION_LABELS[String(s)]!
+          : String(s)
+        ).toLowerCase()
       )
     )
     if (!sections) return null
@@ -495,74 +281,30 @@ function driveProposalDetail(draftData: unknown): string | null {
   return parts.length > 0 ? parts.join(" · ") : null
 }
 
-/** A second line: what kind of change, in a few words. */
+/** Admin-only detail preserves library names and full drive definitions. */
 export function detailOf(sub: Submission): string | null {
-  const f = sub.fields ?? {}
-  const d = sub.draftData ?? {}
-  if (
-    sub.submissionType === "wiki_edit" ||
-    sub.submissionType === "blog_submission"
-  ) {
-    if (d.kind === "new_article" || f.kind === "new_article")
-      return "New article"
-    if (d.isTranslation === true || f.isTranslation === true)
-      return `Translation (${String(d.locale ?? f.locale ?? "?")})`
-    if (Array.isArray(d.body)) return "Direct edit"
-    if (Array.isArray(d.proposedBody)) return "Suggested edit"
-    if (typeof f.category === "string") return `Report: ${f.category}`
-
-    return null
-  }
-  if (sub.submissionType === "correction") {
-    if (f.kind === "record") {
-      const n = Object.keys(f).filter((k) => !EXCLUDE_FROM_OTHER.has(k)).length
-
-      return `${n} field${n === 1 ? "" : "s"} changed`
-    }
-    if (f.kind === "facilities") return "Facility answers"
-    if (f.kind === "photo") return "Photo"
-    if (f.kind === "source") return "Source"
-    if (f.kind === "verify") return "Still right?"
-
-    return typeof f.category === "string" ? f.category : null
-  }
-  if (sub.submissionType === "library_edit") {
-    const n = Object.keys(f).filter((k) => !EXCLUDE_FROM_OTHER.has(k)).length
-
-    return `${n} field${n === 1 ? "" : "s"} changed`
-  }
-  if (sub.submissionType === "new_library")
-    return (
-      [
-        f.libraryType,
-        f.city,
-        sub.draftData?.staffCreation ? "Staff ownership requested" : null,
-      ]
-        .filter((x) => typeof x === "string" && x)
-        .join(" · ") || null
-    )
-  if (sub.submissionType === "library_claim")
-    return typeof f.role === "string" ? f.role.replaceAll("_", " ") : null
+  const fields = sub.fields ?? {}
   if (sub.submissionType === "event_feed") {
-    const kind = f.kind === "replace" ? "replace" : "connect"
     const library =
-      (typeof f.libraryName === "string" && f.libraryName.trim()) ||
+      (typeof fields.libraryName === "string" && fields.libraryName.trim()) ||
       sub.targetSlug ||
       "Library"
 
-    return `${library} · ${kind === "replace" ? "new details" : "new connection"}`
+    return `${library} · ${fields.kind === "replace" ? "new details" : "new connection"}`
   }
   if (sub.submissionType === "drive_proposal")
     return driveProposalDetail(sub.draftData)
+  if (sub.submissionType === "correction") {
+    if (fields.kind === "record") return moderationFieldChangeCount(fields)
+    if (fields.kind === "facilities") return "Facility answers"
+    if (fields.kind === "photo") return "Photo"
+    if (fields.kind === "source") return "Source"
+    if (fields.kind === "verify") return "Still right?"
 
-  return null
-}
+    return typeof fields.category === "string" ? fields.category : null
+  }
 
-export function formatDateTime(iso: string | undefined): string {
-  if (!iso) return "—"
-  const d = new Date(iso)
-
-  return `${d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`
+  return moderationDetailOf(sub)
 }
 
 export function relativeTime(iso: string | undefined): string {

@@ -31,7 +31,7 @@ const limiter = createRateLimiter({
 
 /** `?page=` as a whole number from 0 to MAX_PAGE; anything else reads as 0. */
 function pageParam(raw: string | null): number {
-  const n = Number.parseInt(raw ?? "", 10)
+  const n = raw && /^\d+$/.test(raw) ? Number(raw) : 0
 
   return Number.isFinite(n) ? Math.min(Math.max(n, 0), MAX_PAGE) : 0
 }
@@ -83,6 +83,7 @@ export async function GET(
     sort: taskSort(near),
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
+    facets: ["locale"],
     attributesToRetrieve: [...TASK_ATTRIBUTES],
   })
 
@@ -91,8 +92,16 @@ export async function GET(
     ...taskOf(hit, near),
     heldByOther: heldByOthers.has(hit.documentId),
   }))
-  const total = result.estimatedTotalHits ?? page * PAGE_SIZE + data.length
+  const locales = result.facetDistribution?.locale
+  const total = locales
+    ? Object.values(locales).reduce((sum, n) => sum + n, 0)
+    : (result.estimatedTotalHits ?? page * PAGE_SIZE + data.length)
   const hasMore = page * PAGE_SIZE + data.length < total
 
-  return NextResponse.json({ data, page, hasMore })
+  return NextResponse.json(
+    { data, page, hasMore, total, pageSize: PAGE_SIZE },
+    {
+      headers: { "Cache-Control": "private, no-store" },
+    }
+  )
 }

@@ -1,6 +1,7 @@
 // Server-rendered content sections for the library detail page (v2).
 
 import {
+  libraryTypeName,
   librarySourceKey,
   publicSourceUrl,
   type LibrarySourceRecord,
@@ -200,7 +201,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
   // The shared rule: an enabled day with a timeframe that has both ends.
   const hasHours = hasOpeningHours(openingTimes)
 
-  if (library.libraryType === "Digital")
+  if (libraryTypeName(library.libraryType) === "Digital")
     return (
       <LibrarySectionCard
         id="visit"
@@ -410,7 +411,7 @@ export function LibraryFacilitiesSection({
     <LibrarySectionCard
       id="access"
       title={
-        library.libraryType === "Mobile"
+        libraryTypeName(library.libraryType) === "Mobile"
           ? "Onboard accessibility and facilities"
           : "Accessibility & facilities"
       }

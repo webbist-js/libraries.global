@@ -1,4 +1,5 @@
 import {
+  libraryTypeName,
   ATLAS_LIMITS,
   type AtlasLibrarySource,
   type AtlasPlace,
@@ -14,7 +15,6 @@ export const ATLAS_SOURCE_FIELDS = [
   "publishedAt",
   "name",
   "slug",
-  "libraryType",
   "operationalStatus",
   "operatorType",
   "city",
@@ -29,6 +29,7 @@ export const ATLAS_SOURCE_FIELDS = [
   "mobileTimetable",
 ]
 const POPULATE = {
+  libraryType: { fields: ["name"] },
   ...Object.fromEntries(
     ["continent", "country", "region", "area"].map((field) => [
       field,
@@ -66,6 +67,7 @@ export function atlasSourceDto(
         (field) => !["publishedAt", "mobileTimetable"].includes(field)
       ).map((field) => [field, row[field]])
     ),
+    libraryType: libraryTypeName(row.libraryType),
     documentId: row.documentId,
     locale: row.locale ?? "en",
     published: Boolean(row.publishedAt),

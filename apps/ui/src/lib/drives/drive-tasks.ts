@@ -4,12 +4,14 @@
  * shape of a search hit as a `DriveTask`, and the "exclude these ids"
  * filter clause both routes build the same way.
  */
+import { DRIVE_MAX_TASKS } from "@repo/shared-data"
+
 import { contributionPlaceParams } from "@/lib/contribution-place"
 import type { DriveTask } from "@/lib/drives/types"
 
-export const PAGE_SIZE = 10
+export const PAGE_SIZE = 8
 /** A drive opens with at most DRIVE_MAX_TASKS (2,000) tasks (ADR-0004). */
-export const MAX_PAGE = 200
+export const MAX_PAGE = Math.ceil(DRIVE_MAX_TASKS / PAGE_SIZE) - 1
 
 export const TASK_ATTRIBUTES = [
   "documentId",
@@ -61,8 +63,8 @@ export function nearParam(
 /** The sort a task search uses: nearest first when asked, else least done. */
 export function taskSort(near: { lat: number; lng: number } | null): string[] {
   return near
-    ? [`_geoPoint(${near.lat}, ${near.lng}):asc`]
-    : ["completeness:desc", "name:asc"]
+    ? [`_geoPoint(${near.lat}, ${near.lng}):asc`, "id:asc"]
+    : ["completeness:desc", "name:asc", "id:asc"]
 }
 
 /** The library page's path, or null when a parent slug is missing. */

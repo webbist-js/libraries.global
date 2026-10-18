@@ -23,6 +23,15 @@ type BlockInlineNode = BlockTextNode | BlockLinkNode
 // with a known-safe scheme (or a relative path / in-page anchor).
 const SAFE_LINK = /^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i
 
+type BlockListNode = {
+  type: "list"
+  format: "ordered" | "unordered"
+  children: (
+    | BlockListNode
+    | { type: "list-item"; children: BlockInlineNode[] }
+  )[]
+}
+
 type BlockNode =
   | { type: "paragraph"; children: BlockInlineNode[] }
   | {
@@ -30,11 +39,7 @@ type BlockNode =
       level: 1 | 2 | 3 | 4 | 5 | 6
       children: BlockInlineNode[]
     }
-  | {
-      type: "list"
-      format: "ordered" | "unordered"
-      children: { type: "list-item"; children: BlockInlineNode[] }[]
-    }
+  | BlockListNode
   | { type: "quote"; children: BlockInlineNode[] }
   | { type: "code"; children: [{ type: "text"; text: string }] }
 
@@ -71,6 +76,37 @@ function renderInlineNode(node: BlockInlineNode, index: number) {
     )
 
   return <span key={index}>{content}</span>
+}
+
+/** Group Strapi's sibling nested lists into their preceding HTML list item. */
+function renderList(list: BlockListNode, key: number): React.ReactNode {
+  const items: { children: BlockInlineNode[]; lists: BlockListNode[] }[] = []
+  for (const child of list.children) {
+    if (child.type === "list-item")
+      items.push({ children: child.children, lists: [] })
+    else {
+      if (items.length === 0) items.push({ children: [], lists: [] })
+      items.at(-1)!.lists.push(child)
+    }
+  }
+  const Tag = list.format === "ordered" ? "ol" : "ul"
+
+  return (
+    <Tag
+      key={key}
+      className={cn(
+        list.format === "ordered" ? "list-decimal" : "list-disc",
+        "space-y-1.5 pl-5 text-(--t-ink-dim)"
+      )}
+    >
+      {items.map((item, index) => (
+        <li key={index}>
+          {item.children.map(renderInlineNode)}
+          {item.lists.map(renderList)}
+        </li>
+      ))}
+    </Tag>
+  )
 }
 
 export function StrapiBlocksContent({
@@ -139,25 +175,7 @@ export function StrapiBlocksContent({
           }
 
           case "list":
-            return block.format === "ordered" ? (
-              <ol
-                key={blockIndex}
-                className="list-decimal space-y-1.5 pl-5 text-(--t-ink-dim)"
-              >
-                {block.children.map((item, i) => (
-                  <li key={i}>{item.children.map(renderInlineNode)}</li>
-                ))}
-              </ol>
-            ) : (
-              <ul
-                key={blockIndex}
-                className="list-disc space-y-1.5 pl-5 text-(--t-ink-dim)"
-              >
-                {block.children.map((item, i) => (
-                  <li key={i}>{item.children.map(renderInlineNode)}</li>
-                ))}
-              </ul>
-            )
+            return renderList(block, blockIndex)
 
           case "quote":
             return (

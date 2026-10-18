@@ -1,11 +1,10 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations as useUiTranslations } from "next-intl"
 import { useTransition } from "react"
 
 import { T } from "@/lib/design-tokens"
-import { languageName } from "@/lib/locale-fallback"
 import { Link, useRouter } from "@/lib/navigation"
 
 import {
@@ -21,8 +20,6 @@ const SELECT_CLASS =
 /** Language and sort selects plus the grid/list switch for "All articles". */
 export function JournalListControls({
   query,
-  lang,
-  languages,
 }: {
   readonly query: JournalQuery
   readonly lang: string
@@ -30,7 +27,6 @@ export function JournalListControls({
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
-  const locale = useLocale()
 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -52,26 +48,6 @@ export function JournalListControls({
       aria-busy={pending}
       className="flex flex-wrap items-center gap-x-4 gap-y-2"
     >
-      <label className="flex items-center gap-2 text-[14px]">
-        <span style={{ color: T.ink.dim }}>{tUi("language")}</span>
-        <select
-          className={SELECT_CLASS}
-          onChange={(e) => go({ lang: e.target.value })}
-          style={selectStyle}
-          value={lang}
-        >
-          {languages.length === 0 ? (
-            <option value={lang}>{lang}</option>
-          ) : (
-            languages.map((l) => (
-              <option key={l.code} value={l.code}>
-                {languageName(l.code, languages, locale)}
-              </option>
-            ))
-          )}
-        </select>
-      </label>
-
       <label className="flex items-center gap-2 text-[14px]">
         <span style={{ color: T.ink.dim }}>{t("sort")}</span>
         <select

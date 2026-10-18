@@ -24,11 +24,16 @@ const META: Record<string, any> = {
   [LIBRARY]: {
     tableName: "libraries",
     attributes: {
+      libraryType: link("libraries_library_type_lnk", "library_type_id"),
       continent: link("libraries_continent_lnk", "continent_id"),
       country: link("libraries_country_lnk", "country_id"),
       region: link("libraries_region_lnk", "region_id"),
       area: link("libraries_area_lnk", "area_id"),
     },
+  },
+  "api::library-type.library-type": {
+    tableName: "library_types",
+    attributes: {},
   },
   "api::continent.continent": { tableName: "continents", attributes: {} },
   "api::country.country": { tableName: "countries", attributes: {} },
@@ -107,14 +112,14 @@ describe("tallyLibrariesByChild (E4)", () => {
       [LIBRARY]: [
         {
           documentId: "branch",
-          libraryType: "Public",
+          libraryType: { name: "Public" },
           location: { lat: 10, lng: 20 },
           country: { documentId: "gb" },
           region: { documentId: "regA" },
         },
         {
           documentId: "legacy-mobile",
-          libraryType: "Mobile",
+          libraryType: { name: "Mobile" },
           mobileTimetable: null,
           location: { lat: 20, lng: 30 },
           country: { documentId: "gb" },
@@ -122,7 +127,7 @@ describe("tallyLibrariesByChild (E4)", () => {
         },
         {
           documentId: "scheduled-mobile",
-          libraryType: "Mobile",
+          libraryType: { name: "Mobile" },
           mobileTimetable: { version: 1 },
           location: { lat: 90, lng: 100 },
           country: { documentId: "gb" },
@@ -290,7 +295,7 @@ describe("countLibrariesByType (E4)", () => {
 
     expect(libraryFindManyCalls(strapi)).toBe(0)
     expect(queries).toHaveLength(2)
-    expect(args(1, "groupBy")).toEqual([["l.library_type"]])
+    expect(args(1, "groupBy")).toEqual([["lt.name"]])
     expect(args(1, "join")).toEqual(
       expect.arrayContaining([
         ["libraries_country_lnk as pl", "pl.library_id", "l.id"],
@@ -313,17 +318,17 @@ describe("countLibrariesByType (E4)", () => {
       [LIBRARY]: [
         {
           documentId: "l1",
-          libraryType: "Public",
+          libraryType: { name: "Public" },
           country: { documentId: "gb" },
         },
         {
           documentId: "l2",
-          libraryType: "Public",
+          libraryType: { name: "Public" },
           country: { documentId: "gb" },
         },
         {
           documentId: "l3",
-          libraryType: "National",
+          libraryType: { name: "National" },
           country: { documentId: "gb" },
         },
       ],

@@ -8,6 +8,7 @@ import { ChoiceCard, Notice } from "@/components/ds"
 import { AvatarUpload } from "@/components/settings/AvatarUpload"
 import { CountryCombobox } from "@/components/settings/CountryCombobox"
 import { InterestsChips } from "@/components/settings/InterestsChips"
+import { ProfileAppearance } from "@/components/settings/ProfileAppearance"
 import { TimezoneCombobox } from "@/components/settings/TimezoneCombobox"
 import { VisibilityCards } from "@/components/settings/VisibilityCards"
 import { T } from "@/lib/design-tokens"
@@ -102,6 +103,14 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
         currentUrl={form.avatarUrl}
         initials={form.initials}
         onUpload={form.setAvatarUrl}
+        uploadEnabled={form.imageUploadsEnabled}
+      />
+      <ProfileAppearance
+        background={form.profileBackground}
+        onBackgroundChange={form.setProfileBackground}
+        coverUrl={form.coverUrl}
+        onCoverChange={form.setCoverUrl}
+        uploadEnabled={form.imageUploadsEnabled}
       />
 
       <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">

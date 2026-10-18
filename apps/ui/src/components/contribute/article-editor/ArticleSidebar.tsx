@@ -4,12 +4,18 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { articleEventTime } from "@/lib/article-event-time"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { searchLibraryNames } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
 
-import type { ArticleKind, ArticleLocale, ArticleTag } from "./article.types"
+import type {
+  ArticleEventMention,
+  ArticleKind,
+  ArticleLocale,
+  ArticleTag,
+} from "./article.types"
 
 export type SaveState = "idle" | "saving" | "saved" | "error"
 export type SubmitState = "idle" | "submitting" | "submitted" | "error"
@@ -98,6 +104,10 @@ export function StatusCard({
   canSubmit,
   publishesDirectly,
   onSubmit,
+  publishedAt,
+  isPublished,
+  onRetry,
+  offline = false,
 }: {
   mode: "new" | "edit"
   kind: ArticleKind
@@ -110,9 +120,15 @@ export function StatusCard({
   canSubmit: boolean
   publishesDirectly: boolean
   onSubmit: () => void
+  publishedAt?: string | null
+  isPublished?: boolean
+  onRetry?: () => void
+  offline?: boolean
 }) {
   const tUi = useUiTranslations("ui")
   const tLanguage = useUiTranslations("translation")
+  const p = useUiTranslations("publishing")
+  const displayLocale = useLocale()
 
   let saveLabel = tUi("not_saved_yet")
   let saveIcon = "mdi:circle-outline"
@@ -154,13 +170,37 @@ export function StatusCard({
       </div>
       <p style={cardHint}>
         {submitted
-          ? tUi("in_review_you_cant_edit_it_until_an_editor_replies")
-          : publishesDirectly
-            ? tUi(
-                "not_published_approved_changes_from_editors_publish_straight_away"
-              )
-            : tUi("not_published_only_you_and_the_editors_can_see_drafts")}
+          ? p("awaitingReview")
+          : mode === "edit"
+            ? p("privateProposal")
+            : p("privateDraft")}
       </p>
+      {mode === "edit" && (
+        <p className="mt-2 text-sm text-(--t-ink-dim)">
+          {publishedAt
+            ? p("livePublished", {
+                date: new Date(publishedAt).toLocaleDateString(displayLocale),
+              })
+            : isPublished
+              ? p("published")
+              : p("notPublishedLanguage", { language: localeName })}
+        </p>
+      )}
+      {publishesDirectly && !submitted && (
+        <p className="mt-2 text-xs text-(--t-ink-dim)">
+          {p("approvedChanges")}
+        </p>
+      )}
+      {saveState === "error" && onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={offline}
+          className="mt-3 underline"
+        >
+          {p("retrySave")}
+        </button>
+      )}
       <button
         type="button"
         onClick={onSubmit}
@@ -334,8 +374,11 @@ export function SectionsCard({
 const TAG_ICON: Record<ArticleTag["kind"], string> = {
   topic: "mdi:tag-outline",
   library: "mdi:bank-outline",
-  place: "mdi:map-marker-outline",
-  free: "mdi:pound",
+  continent: "mdi:earth",
+  country: "mdi:flag-outline",
+  region: "mdi:map-marker-outline",
+  area: "mdi:map-marker-outline",
+  event: "mdi:calendar-outline",
 }
 
 function tagKey(t: ArticleTag) {
@@ -355,6 +398,7 @@ export function TagsCard({
 }) {
   const tUi = useUiTranslations("ui")
   const tEditor = useUiTranslations("articleEditor")
+  const tRelations = useUiTranslations("articleRelations")
 
   const locale = useLocale()
   const [query, setQuery] = useState("")
@@ -396,6 +440,7 @@ export function TagsCard({
 
   useEffect(() => {
     if (debounce.current) clearTimeout(debounce.current)
+    let cancelled = false
     const q = query.trim()
     debounce.current = setTimeout(() => {
       if (q.length < 2) {
@@ -408,7 +453,8 @@ export function TagsCard({
         hitsPerPage: 4,
         attributesToRetrieve: ["documentId", "name", "slug", "city"],
       })
-        .then((res) =>
+        .then((res) => {
+          if (cancelled) return
           setLibraryHits(
             res.hits.flatMap((h) =>
               h.documentId
@@ -423,11 +469,14 @@ export function TagsCard({
                 : []
             )
           )
-        )
-        .catch(() => setLibraryHits([]))
+        })
+        .catch(() => {
+          if (!cancelled) setLibraryHits([])
+        })
     }, 300)
 
     return () => {
+      cancelled = true
       if (debounce.current) clearTimeout(debounce.current)
     }
   }, [query, locale])
@@ -456,21 +505,13 @@ export function TagsCard({
   }
   const remove = (tag: ArticleTag) =>
     onChange(tags.filter((t) => tagKey(t) !== tagKey(tag)))
-  const addFree = () => {
-    const label = query.trim()
-    if (!label) return
-    const topic = topics.find(
-      (t) => t.label.toLowerCase() === label.toLowerCase()
-    )
-    add(topic ?? { kind: "free", label: label.slice(0, 80) })
-  }
 
   return (
     <section aria-labelledby="tags-heading" style={card}>
       <h2 id="tags-heading" style={cardTitle}>
         {tUi("tags")}{" "}
       </h2>
-      <p style={cardHint}>{tUi("topics_places_and_libraries_this_is_about")}</p>
+      <p style={cardHint}>{tRelations("lead")}</p>
       {tags.length > 0 && (
         <ul className="m-0 mt-4 flex list-none flex-wrap gap-2 p-0">
           {tags.map((tag) => (
@@ -508,6 +549,7 @@ export function TagsCard({
       )}
       {!disabled && (
         <>
+          <ArticlePlacePicker locale={contentLocale} onAdd={add} />
           <div className="mt-4 flex gap-2">
             <label htmlFor="tag-query" className="sr-only">
               {tUi("add_a_topic_place_or_library")}{" "}
@@ -520,7 +562,6 @@ export function TagsCard({
                 if (e.key === "Enter") {
                   e.preventDefault()
                   if (suggestions[0] && q) add(suggestions[0])
-                  else addFree()
                 }
               }}
               placeholder={tUi("add_a_topic_place_or_library")}
@@ -540,8 +581,8 @@ export function TagsCard({
             />
             <button
               type="button"
-              onClick={addFree}
-              disabled={!query.trim()}
+              onClick={() => suggestions[0] && add(suggestions[0])}
+              disabled={!query.trim() || !suggestions[0]}
               className="inline-flex h-[46px] items-center rounded-full px-4 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50"
               style={{
                 border: `1px solid ${T.border.hi}`,
@@ -573,6 +614,329 @@ export function TagsCard({
             </div>
           )}
         </>
+      )}
+    </section>
+  )
+}
+
+type PlaceKind = "continent" | "country" | "region" | "area"
+const PLACE_KINDS: readonly PlaceKind[] = [
+  "continent",
+  "country",
+  "region",
+  "area",
+]
+
+type PlaceChoice = { documentId: string; name: string }
+
+function ArticlePlacePicker({
+  locale,
+  onAdd,
+}: {
+  locale: string
+  onAdd: (tag: ArticleTag) => void
+}) {
+  const tRelations = useUiTranslations("articleRelations")
+  const [selected, setSelected] = useState<
+    Partial<Record<PlaceKind, PlaceChoice>>
+  >({})
+  const [options, setOptions] = useState<
+    Partial<Record<PlaceKind, PlaceChoice[]>>
+  >({})
+  const [error, setError] = useState(false)
+  const continent = selected.continent?.documentId
+  const country = selected.country?.documentId
+  const region = selected.region?.documentId
+  useEffect(() => {
+    let cancelled = false
+    const requests: [PlaceKind, string][] = [
+      ["continent", "continents"],
+      [
+        "country",
+        `countries${continent ? `&continentDocumentId=${encodeURIComponent(continent)}` : ""}`,
+      ],
+    ]
+    if (country)
+      requests.push([
+        "region",
+        `regions&countryDocumentId=${encodeURIComponent(country)}`,
+      ])
+    if (region)
+      requests.push([
+        "area",
+        `areas&regionDocumentId=${encodeURIComponent(region)}`,
+      ])
+    Promise.all(
+      requests.map(async ([kind, query]) => {
+        const [plural, filters = ""] = query.split("&", 2)
+        const response = await fetch(
+          `/api/relations/${plural}?locale=${encodeURIComponent(locale)}${filters ? `&${filters}` : ""}`
+        )
+        if (!response.ok) throw new Error("Places unavailable")
+        const json = (await response.json()) as { data?: PlaceChoice[] }
+
+        return [kind, json.data ?? []] as const
+      })
+    )
+      .then((values) => {
+        if (cancelled) return
+        setOptions(Object.fromEntries(values))
+        setError(false)
+      })
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [locale, continent, country, region])
+
+  return (
+    <fieldset
+      className="mt-4 min-w-0 rounded-[14px] border p-3"
+      style={{ borderColor: T.border.line }}
+    >
+      <legend className="px-1 text-[14px] font-semibold">
+        {tRelations("places")}
+      </legend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {PLACE_KINDS.filter(
+          (kind) =>
+            kind === "continent" ||
+            kind === "country" ||
+            (kind === "region" ? country : region)
+        ).map((kind) => (
+          <label
+            key={kind}
+            className="text-[13px]"
+            style={{ color: T.ink.dim }}
+          >
+            {tRelations(kind)}
+            <select
+              aria-label={tRelations(kind)}
+              value={selected[kind]?.documentId ?? ""}
+              className="mt-1 w-full rounded-lg border p-2"
+              style={{
+                background: T.bg.deep,
+                color: T.ink.base,
+                borderColor: T.border.line,
+              }}
+              onChange={(event) => {
+                const choice = options[kind]?.find(
+                  (place) => place.documentId === event.target.value
+                )
+                const level = PLACE_KINDS.indexOf(kind)
+                setSelected((previous) =>
+                  Object.fromEntries(
+                    PLACE_KINDS.slice(0, level)
+                      .flatMap((parent) =>
+                        previous[parent] ? [[parent, previous[parent]]] : []
+                      )
+                      .concat(choice ? [[kind, choice]] : [])
+                  )
+                )
+                if (choice)
+                  onAdd({
+                    kind,
+                    label: choice.name,
+                    documentId: choice.documentId,
+                  })
+              }}
+            >
+              <option value="">
+                {tRelations("choosePlace", { place: tRelations(kind) })}
+              </option>
+              {(options[kind] ?? []).map((place) => (
+                <option key={place.documentId} value={place.documentId}>
+                  {place.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+      {error && (
+        <p role="alert" className="mb-0 text-[13px]">
+          {tRelations("placeError")}
+        </p>
+      )}
+    </fieldset>
+  )
+}
+
+/** Event mentions keep a citation after a live event listing has expired. */
+export function ArticleEventsCard({
+  mentions,
+  libraries,
+  onChange,
+  disabled,
+}: {
+  mentions: ArticleEventMention[]
+  libraries: ArticleTag[]
+  onChange: (mentions: ArticleEventMention[]) => void
+  disabled?: boolean
+}) {
+  const tRelations = useUiTranslations("articleRelations")
+  const [title, setTitle] = useState("")
+  const [url, setUrl] = useState("")
+  const [date, setDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [zone, setZone] = useState("UTC")
+  const p = useUiTranslations("publishing")
+  const [libraryId, setLibraryId] = useState("")
+  const [error, setError] = useState("")
+  const add = () => {
+    if (disabled || !title.trim() || mentions.length >= 10) return
+    let citation: URL
+    try {
+      citation = new URL(url)
+      if (!["http:", "https:"].includes(citation.protocol))
+        throw new Error("Invalid citation")
+    } catch {
+      setError(tRelations("invalidSource"))
+
+      return
+    }
+    let startTime: string | null, endTime: string | null
+    try {
+      startTime = articleEventTime(date, zone)
+      endTime = articleEventTime(endDate, zone)
+      if (startTime && endTime && endTime < startTime)
+        throw new Error("End before start")
+    } catch {
+      setError(p("invalidEventTime"))
+
+      return
+    }
+    onChange([
+      ...mentions,
+      {
+        title: title.trim(),
+        url: citation.href,
+        startTime,
+        endTime,
+        timezone: zone,
+        libraryDocumentId: libraryId || null,
+      },
+    ])
+    setTitle("")
+    setUrl("")
+    setDate("")
+    setEndDate("")
+    setError("")
+  }
+
+  return (
+    <section aria-labelledby="event-mentions-heading" style={card}>
+      <h2 id="event-mentions-heading" style={cardTitle}>
+        {tRelations("eventsHeading")}
+      </h2>
+      <p style={cardHint}>{tRelations("eventsLead")}</p>
+      {mentions.map((mention, index) => (
+        <div
+          key={
+            mention.citationId ??
+            `${mention.eventDocumentId ?? mention.title}:${index}`
+          }
+          className="mt-3 flex items-start justify-between gap-2 rounded-lg border p-3"
+          style={{ borderColor: T.border.line }}
+        >
+          <span>
+            {mention.title}
+            {mention.startTime ? ` · ${mention.startTime.slice(0, 10)}` : ""}
+          </span>
+          {!disabled && (
+            <button
+              type="button"
+              aria-label={tRelations("removeEvent", { title: mention.title })}
+              onClick={() => onChange(mentions.filter((_, i) => i !== index))}
+            >
+              {tRelations("remove")}
+            </button>
+          )}
+        </div>
+      ))}
+      {!disabled && (
+        <div className="mt-4 grid gap-3 text-[14px]">
+          <label>
+            {tRelations("eventName")}
+            <input
+              className="mt-1 w-full rounded-lg border p-2"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              maxLength={200}
+            />
+          </label>
+          <label>
+            {tRelations("sourceUrl")}
+            <input
+              type="url"
+              className="mt-1 w-full rounded-lg border p-2"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://"
+            />
+          </label>
+          <label>
+            {tRelations("eventDate")}
+            <input
+              type="datetime-local"
+              className="mt-1 w-full rounded-lg border p-2"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+            />
+          </label>
+          <label>
+            {p("eventEnd")}
+            <input
+              type="datetime-local"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="mt-1 w-full rounded-lg border p-2"
+            />
+          </label>
+          <label>
+            {p("eventTimezone")}
+            <input
+              value={zone}
+              onChange={(event) => setZone(event.target.value)}
+              placeholder="America/Bogota"
+              maxLength={80}
+              className="mt-1 w-full rounded-lg border p-2"
+            />
+          </label>
+          <label>
+            {tRelations("eventLibrary")}
+            <select
+              className="mt-1 w-full rounded-lg border p-2"
+              value={libraryId}
+              onChange={(event) => setLibraryId(event.target.value)}
+            >
+              <option value="">{tRelations("noLibrary")}</option>
+              {libraries
+                .filter((tag) => tag.kind === "library" && tag.documentId)
+                .map((tag) => (
+                  <option key={tag.documentId} value={tag.documentId}>
+                    {tag.label}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={!title.trim() || !url.trim() || mentions.length >= 10}
+            onClick={add}
+            className="rounded-full border px-4 py-2 font-semibold"
+          >
+            {tRelations("addEvent")}
+          </button>
+          {error && (
+            <p role="alert" className="m-0">
+              {error}
+            </p>
+          )}
+        </div>
       )}
     </section>
   )

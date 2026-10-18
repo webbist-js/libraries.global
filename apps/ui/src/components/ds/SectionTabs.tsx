@@ -10,7 +10,7 @@ export type SectionTab = {
   id: string
   label: ReactNode
   href: string
-  /** Iconify id, e.g. "mdi:shield-outline". Indigo on the active tab. */
+  /** Iconify id for inactive tabs; the active tab uses the brand-blue dot. */
   icon?: string
   /** Trailing count, e.g. pages in a Knowledge section. Zero is not shown. */
   count?: number
@@ -86,17 +86,19 @@ export function SectionTabs({
             key={tab.id}
             scroll={scroll}
           >
-            {tab.icon ? (
+            {active ? (
               <span
                 aria-hidden="true"
                 className="inline-flex size-4 shrink-0 items-center justify-center"
               >
-                <Icon
-                  height={15}
-                  icon={tab.icon}
-                  style={active ? { color: T.accent.primary } : undefined}
-                  width={15}
-                />
+                <span className="size-2 rounded-full bg-(--t-accent-primary)" />
+              </span>
+            ) : tab.icon ? (
+              <span
+                aria-hidden="true"
+                className="inline-flex size-4 shrink-0 items-center justify-center"
+              >
+                <Icon height={15} icon={tab.icon} width={15} />
               </span>
             ) : null}
             {tab.label}

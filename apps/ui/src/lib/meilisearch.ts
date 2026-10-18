@@ -599,24 +599,6 @@ export async function fetchUpcomingEvents({
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-export const LIBRARY_TYPES = [
-  "National",
-  "Public",
-  "Academic",
-  "University",
-  "Parliamentary",
-  "State",
-  "Municipal",
-  "Special",
-  "Monastic",
-  "Archive",
-  "Private",
-  "Cultural",
-  "Digital",
-  "Mobile",
-  "Other",
-] as const
-
 export const OPERATIONAL_STATUSES = [
   { value: "open", label: "Open" },
   { value: "temporarily_closed", label: "Temporarily Closed" },
@@ -626,3 +608,5 @@ export const OPERATIONAL_STATUSES = [
   { value: "planned", label: "Planned" },
   { value: "unknown", label: "Unknown" },
 ] as const
+
+export { DEFAULT_LIBRARY_TYPES as LIBRARY_TYPES } from "@repo/shared-data"

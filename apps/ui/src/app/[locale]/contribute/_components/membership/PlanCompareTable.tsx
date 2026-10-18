@@ -4,6 +4,13 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
+import { PlanSectionHeader } from "@/app/[locale]/contribute/_components/membership/PlanBits"
+import { PlanCompareCell } from "@/app/[locale]/contribute/_components/membership/PlanCompareCell"
+import {
+  PlanCompareMobile,
+  PlanCompareSelectors,
+} from "@/app/[locale]/contribute/_components/membership/PlanCompareMobile"
+import { PlanToggle } from "@/app/[locale]/contribute/_components/membership/PlanToggle"
 import { T } from "@/lib/design-tokens"
 import pricing from "@/lib/membership-pricing.json"
 import {
@@ -15,10 +22,6 @@ import {
   shortPrice,
 } from "@/lib/plan-compare"
 import { planCard, type PlanCardKey } from "@/lib/plans"
-
-import { PlanSectionHeader } from "./PlanBits"
-import { PlanCompareCell } from "./PlanCompareCell"
-import { PlanCompareMobile } from "./PlanCompareMobile"
 
 const GROUPS = compareGroups()
 const NOW = availableNow(GROUPS)
@@ -83,6 +86,7 @@ export function PlanCompareTable({
   currentPlan,
 }: { readonly currentPlan?: string } = {}) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("membershipCompare")
 
   const [selectedPlan, setSelectedPlan] = useState<PlanCardKey>("pro")
   const [baseline, setBaseline] = useState<PlanCardKey>("free")
@@ -98,6 +102,7 @@ export function PlanCompareTable({
   )
   const groups = nowOnly ? NOW : GROUPS
   const allOpen = groups.every((g) => open.has(g.id))
+  const featureCount = groups.reduce((n, group) => n + group.rows.length, 0)
   const rowCount = groups
     .filter((g) => open.has(g.id))
     .reduce((n, g) => n + g.rows.length, 0)
@@ -118,58 +123,75 @@ export function PlanCompareTable({
       className="scroll-mt-24"
     >
       <PlanSectionHeader
-        control={
-          <label
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold"
-            style={{ borderColor: T.border.hi }}
-          >
-            <input
-              checked={nowOnly}
-              className="size-[18px]"
-              onChange={(e) => setNowOnly(e.target.checked)}
-              style={{ accentColor: "var(--t-accent-primary)" }}
-              type="checkbox"
-            />
-            Only show what’s available now
-          </label>
-        }
         id="compare-h"
-        sub={
-          <>
-            Features marked “Soon” are on the roadmap and not yet available.
-            Open a group to see its features.{" "}
-            <span className="hidden md:inline">
-              Select a plan heading to highlight its column.
-            </span>
-            <span className="md:hidden">
-              Choose two plans below to compare them.
-            </span>
-            <br />
-            <button
-              className="mt-1 inline-flex min-h-11 items-center text-[15px] font-semibold underline underline-offset-[3px]"
-              onClick={() =>
-                setOpen(allOpen ? new Set() : new Set(GROUPS.map((g) => g.id)))
-              }
-              style={{ color: T.accent.primary }}
-              type="button"
-            >
-              {allOpen ? "Collapse all groups" : "Expand all groups"}
-            </button>
-          </>
-        }
+        sub={t("lead")}
         title={tUi("compare_every_plan")}
       />
-      <p aria-live="polite" className="sr-only">
-        Showing {rowCount} features
-      </p>
+      <div
+        aria-label={t("controls")}
+        className="mb-4 rounded-[22px] border border-(--t-border-line) bg-white p-4 sm:p-5"
+        role="region"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <PlanToggle
+            label={t("availability")}
+            value={nowOnly ? "now" : "all"}
+            onChange={(value) => setNowOnly(value === "now")}
+            className="bg-(--t-bg-surface)"
+            options={[
+              { value: "all", label: t("allFeatures") },
+              { value: "now", label: t("availableNow") },
+            ]}
+          />
+          <button
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
+            onClick={() =>
+              setOpen(allOpen ? new Set() : new Set(GROUPS.map((g) => g.id)))
+            }
+            type="button"
+          >
+            <Icon
+              aria-hidden
+              icon={
+                allOpen
+                  ? "mdi:unfold-less-horizontal"
+                  : "mdi:unfold-more-horizontal"
+              }
+              width={18}
+              height={18}
+            />
+            {allOpen ? t("collapseAll") : t("expandAll")}
+          </button>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-(--t-border-line) pt-3 text-[13px] text-(--t-ink-dim)">
+          <p aria-live="polite" aria-atomic="true" className="m-0 font-medium">
+            {t("showing", { count: rowCount, total: featureCount })}
+          </p>
+          <p className="m-0 hidden items-center gap-1.5 md:flex">
+            <Icon
+              aria-hidden
+              icon="mdi:cursor-default-click-outline"
+              width={16}
+              height={16}
+            />
+            {t("highlightHint")}
+          </p>
+        </div>
+        <div className="mt-4 md:hidden">
+          <PlanCompareSelectors
+            selected={selectedPlan}
+            baseline={mobileBaseline}
+            onSelected={setSelectedPlan}
+            onBaseline={setBaseline}
+          />
+        </div>
+      </div>
       <PlanCompareMobile
         groups={groups}
         open={open}
         onToggle={toggle}
         selected={selectedPlan}
         baseline={mobileBaseline}
-        onSelected={setSelectedPlan}
-        onBaseline={setBaseline}
       />
       <div
         className="hidden overflow-x-auto rounded-[22px] border bg-white [contain:paint] md:block"

@@ -1,6 +1,6 @@
 import "server-only"
 
-import { atlasPopulationBaseline } from "@repo/shared-data"
+import { libraryTypeName, atlasPopulationBaseline } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import type {
@@ -32,7 +32,7 @@ export async function fetchAboutLibraries(
         locale: recordLocale,
         status: "published",
         filters: {
-          libraryType: { $eq: "National" },
+          libraryType: { name: { $eq: "National" } },
           heroImage: { id: { $notNull: true } },
         },
         fields: ["name", "slug", "city", "summary"],
@@ -192,7 +192,7 @@ export async function fetchAboutGlobeRecord(
       locale: recordLocale,
       status: "published",
       filters: { country: { slug: { $eq: slug } }, featured: { $eq: true } },
-      fields: ["name", "slug", "city", "libraryType"],
+      fields: ["name", "slug", "city"],
       populate: {
         continent: { fields: ["slug"] },
         country: { fields: ["slug"] },
@@ -264,7 +264,7 @@ export async function fetchAboutGlobeRecord(
     featuredLibraries: featured.slice(0, 3).map((library) => ({
       name: library.name ?? "Library",
       place: library.city ?? library.region?.name ?? country!.name ?? "",
-      type: library.libraryType ?? null,
+      type: libraryTypeName(library.libraryType) ?? null,
       href: buildLibraryPath(library),
     })),
   }

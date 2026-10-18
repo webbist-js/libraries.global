@@ -172,7 +172,6 @@ describe("library export (bridge)", () => {
         fields: [
           "name",
           "slug",
-          "libraryType",
           "operationalStatus",
           "streetAddress",
           "city",
@@ -182,6 +181,7 @@ describe("library export (bridge)", () => {
           "email",
         ],
         populate: {
+          libraryType: { fields: ["name"] },
           sourceRecords: true,
           continent: { fields: ["slug"] },
           country: { fields: ["slug", "name"] },

@@ -6,6 +6,7 @@ import type { Map as MapLibreMap } from "maplibre-gl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { parseBounds } from "@/components/map/map.helpers"
+import { MapLoading } from "@/components/map/MapLoading"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { Link } from "@/lib/navigation"
@@ -130,125 +131,134 @@ export function LocationHeroMap({
     let alive = true
     let observer: ResizeObserver | undefined
 
-    import("maplibre-gl").then((maplibregl) => {
-      maplibregl.setWorkerUrl(MAP_WORKER_URL)
-      if (!alive || !containerRef.current) return
+    import("maplibre-gl")
+      .then((maplibregl) => {
+        maplibregl.setWorkerUrl(MAP_WORKER_URL)
+        if (!alive || !containerRef.current) return
 
-      const coords = [...points, ...pins].map((p) => [p.lng, p.lat] as const)
-      let map: MapLibreMap
-      try {
-        map = new maplibregl.Map({
-          container: containerRef.current,
-          style: VOYAGER_NO_LABELS,
-          center: coords[0] ? [coords[0][0], coords[0][1]] : [10, 50],
-          zoom: coords.length === 1 ? 10 : 3,
-          scrollZoom: false,
-          dragRotate: false,
-          pitchWithRotate: false,
-          touchPitch: false,
-          // The Voyager style carries its own CARTO / OpenStreetMap credit.
-          attributionControl: { compact: true },
-        })
-      } catch {
-        setFailed(true)
+        const coords = [...points, ...pins].map((p) => [p.lng, p.lat] as const)
+        let map: MapLibreMap
+        try {
+          map = new maplibregl.Map({
+            container: containerRef.current,
+            style: VOYAGER_NO_LABELS,
+            center: coords[0] ? [coords[0][0], coords[0][1]] : [10, 50],
+            zoom: coords.length === 1 ? 10 : 3,
+            scrollZoom: false,
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            // The Voyager style carries its own CARTO / OpenStreetMap credit.
+            attributionControl: { compact: true },
+          })
+        } catch {
+          setFailed(true)
 
-        return
-      }
-      map.touchZoomRotate.disableRotation()
-      map.addControl(
-        new maplibregl.NavigationControl({ showCompass: false }),
-        "top-right"
-      )
-      mapRef.current = map
-
-      const b = parseBounds(bounds?.ne, bounds?.sw)
-      if (b) {
-        map.fitBounds(
-          [
-            [b.swLng, b.swLat],
-            [b.neLng, b.neLat],
-          ],
-          { padding: 28, duration: 0 }
+          return
+        }
+        map.touchZoomRotate.disableRotation()
+        map.addControl(
+          new maplibregl.NavigationControl({ showCompass: false }),
+          "top-right"
         )
-      } else if (coords.length > 1) {
-        const extent = new maplibregl.LngLatBounds(
-          [coords[0]![0], coords[0]![1]],
-          [coords[0]![0], coords[0]![1]]
-        )
-        for (const [lng, lat] of coords) extent.extend([lng, lat])
-        map.fitBounds(extent, { padding: 56, maxZoom: 11, duration: 0 })
-      }
+        mapRef.current = map
 
-      map.on("load", () => {
-        if (!alive) return
-        const countries = new Map<string, number>()
-        for (const record of countryRecords) {
-          const code = record.iso2?.toUpperCase()
-          const shape = atlasPopulationBaseline.countries.find(
-            (country) =>
-              country.iso2 === code ||
-              (code?.startsWith("GB-") && country.iso2 === "GB")
+        const b = parseBounds(bounds?.ne, bounds?.sw)
+        if (b) {
+          map.fitBounds(
+            [
+              [b.swLng, b.swLat],
+              [b.neLng, b.neLat],
+            ],
+            { padding: 28, duration: 0 }
           )
-          if (shape)
-            countries.set(
-              shape.iso3,
-              (countries.get(shape.iso3) ?? 0) + record.count
-            )
+        } else if (coords.length > 1) {
+          const extent = new maplibregl.LngLatBounds(
+            [coords[0]![0], coords[0]![1]],
+            [coords[0]![0], coords[0]![1]]
+          )
+          for (const [lng, lat] of coords) extent.extend([lng, lat])
+          map.fitBounds(extent, { padding: 56, maxZoom: 11, duration: 0 })
         }
-        if (countries.size) {
-          const known = [...countries.keys()]
-          const populated = [...countries]
-            .filter(([, count]) => count > 0)
-            .map(([code]) => code)
-          const empty = [...countries]
-            .filter(([, count]) => count === 0)
-            .map(([code]) => code)
-          map.addSource("place-record-countries", {
-            type: "geojson",
-            data: atlasPopulationBaseline.geometryUrl,
-          })
-          map.addLayer({
-            id: "place-record-fill",
-            type: "fill",
-            source: "place-record-countries",
-            filter: ["in", ["get", "iso3"], ["literal", populated]],
-            paint: { "fill-color": "#4338CA", "fill-opacity": 0.14 },
-          })
-          map.addLayer({
-            id: "place-record-outline",
-            type: "line",
-            source: "place-record-countries",
-            filter: ["in", ["get", "iso3"], ["literal", known]],
-            paint: {
-              "line-color": "#4338CA",
-              "line-opacity": 0.35,
-              "line-width": 1,
-            },
-          })
-          map.addLayer({
-            id: "place-record-empty",
-            type: "line",
-            source: "place-record-countries",
-            filter: ["in", ["get", "iso3"], ["literal", empty]],
-            paint: {
-              "line-color": "#4338CA",
-              "line-opacity": 0.8,
-              "line-width": 1.5,
-              "line-dasharray": [3, 2],
-            },
-          })
-        }
-        regroupRef.current()
-        setReady(true)
-      })
-      map.on("zoomend", () => regroupRef.current())
-      map.on("resize", () => regroupRef.current())
-      map.on("move", () => setFrame((f) => f + 1))
 
-      // The hero column can settle after the map mounts (fonts, grid).
-      observer = new ResizeObserver(() => map.resize())
-      observer.observe(containerRef.current)
-    })
+        map.on("load", () => {
+          if (!alive) return
+          const countries = new Map<string, number>()
+          for (const record of countryRecords) {
+            const code = record.iso2?.toUpperCase()
+            const shape = atlasPopulationBaseline.countries.find(
+              (country) =>
+                country.iso2 === code ||
+                (code?.startsWith("GB-") && country.iso2 === "GB")
+            )
+            if (shape)
+              countries.set(
+                shape.iso3,
+                (countries.get(shape.iso3) ?? 0) + record.count
+              )
+          }
+          if (countries.size) {
+            const known = [...countries.keys()]
+            const populated = [...countries]
+              .filter(([, count]) => count > 0)
+              .map(([code]) => code)
+            const empty = [...countries]
+              .filter(([, count]) => count === 0)
+              .map(([code]) => code)
+            map.addSource("place-record-countries", {
+              type: "geojson",
+              data: atlasPopulationBaseline.geometryUrl,
+            })
+            map.addLayer({
+              id: "place-record-fill",
+              type: "fill",
+              source: "place-record-countries",
+              filter: ["in", ["get", "iso3"], ["literal", populated]],
+              paint: { "fill-color": "#4338CA", "fill-opacity": 0.14 },
+            })
+            map.addLayer({
+              id: "place-record-outline",
+              type: "line",
+              source: "place-record-countries",
+              filter: ["in", ["get", "iso3"], ["literal", known]],
+              paint: {
+                "line-color": "#4338CA",
+                "line-opacity": 0.35,
+                "line-width": 1,
+              },
+            })
+            map.addLayer({
+              id: "place-record-empty",
+              type: "line",
+              source: "place-record-countries",
+              filter: ["in", ["get", "iso3"], ["literal", empty]],
+              paint: {
+                "line-color": "#4338CA",
+                "line-opacity": 0.8,
+                "line-width": 1.5,
+                "line-dasharray": [3, 2],
+              },
+            })
+          }
+          regroupRef.current()
+          setFailed(false)
+          setReady(true)
+        })
+        map.on("error", (event) => {
+          if (alive && !("sourceId" in event) && !map.isStyleLoaded())
+            setFailed(true)
+        })
+        map.on("zoomend", () => regroupRef.current())
+        map.on("resize", () => regroupRef.current())
+        map.on("move", () => setFrame((f) => f + 1))
+
+        // The hero column can settle after the map mounts (fonts, grid).
+        observer = new ResizeObserver(() => map.resize())
+        observer.observe(containerRef.current)
+      })
+      .catch(() => {
+        if (alive) setFailed(true)
+      })
 
     return () => {
       alive = false
@@ -311,11 +321,14 @@ export function LocationHeroMap({
       <div
         ref={containerRef}
         role="region"
+        aria-busy={!ready && !failed}
         aria-label={label}
         // maplibre-gl.css makes the container position: relative, so size it
         // explicitly rather than with inset-0.
         style={{ width: "100%", height: "100%" }}
       />
+
+      {!ready && !failed ? <MapLoading /> : null}
 
       {failed ? (
         <p

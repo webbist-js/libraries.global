@@ -1143,6 +1143,77 @@ describe("PUT /moderation/submissions/:documentId/target", () => {
 })
 
 describe("GET /moderation/stats", () => {
+  it("groups categories without mixing claims, proposals and tagged library changes", async () => {
+    const rows = [
+      sub({
+        submissionType: "correction",
+        driveDocumentId: "drive0000000000000000001",
+      }),
+      sub({ submissionType: "library_claim" }),
+      sub({ submissionType: "drive_proposal" }),
+      sub({ submissionType: "correction", submittedByUserId: INDEX_MOD }),
+      sub({ submissionType: "wiki_edit" }),
+    ]
+    const { controller } = setup(rows)
+    const counts = ctxFor({ viewer: INDEX_MOD, query: { group: "category" } })
+    await controller.stats(counts)
+    expect(
+      counts.body.data.filter((item: any) => item.status === "pending")
+    ).toEqual([
+      { category: "libraries", status: "pending", count: 1 },
+      { category: "claims", status: "pending", count: 1 },
+      { category: "drives", status: "pending", count: 1 },
+    ])
+    const list = ctxFor({
+      viewer: INDEX_MOD,
+      query: { category: "libraries", pageSize: 1 },
+    })
+    await controller.list(list)
+    expect(list.body.meta.total).toBe(1)
+    expect(list.body.data.map((item: any) => item.submissionType)).toEqual([
+      "correction",
+    ])
+  })
+
+  it("applies category, language and queue together to both totals and pages", async () => {
+    const { controller } = setup([
+      sub({ submissionType: "wiki_edit", contentLocale: "fr" }),
+      sub({ submissionType: "wiki_edit", contentLocale: "en" }),
+      sub({ submissionType: "blog_submission", contentLocale: "fr" }),
+      sub({ submissionType: "correction", contentLocale: "fr" }),
+    ])
+    const query = { category: "articles", queue: "knowledge", locale: "fr" }
+    const counts = ctxFor({ viewer: GLOBAL_MOD, query })
+    await controller.stats(counts)
+    expect(
+      counts.body.data
+        .filter((item: any) => item.status === "pending")
+        .reduce((sum: number, item: any) => sum + item.count, 0)
+    ).toBe(1)
+    const list = ctxFor({ viewer: GLOBAL_MOD, query })
+    await controller.list(list)
+    expect(list.body.meta.total).toBe(1)
+    expect(list.body.data[0].submissionType).toBe("wiki_edit")
+    const forbiddenCategory = ctxFor({
+      viewer: FR_KNOWLEDGE,
+      query: { category: "claims" },
+    })
+    await controller.list(forbiddenCategory)
+    expect(forbiddenCategory.body.meta.total).toBe(0)
+  })
+
+  it.each(["unknown", ["libraries", "claims"]])(
+    "rejects invalid category filters: %j",
+    async (category) => {
+      const { controller } = setup([])
+      for (const action of ["list", "stats"] as const) {
+        const ctx = ctxFor({ viewer: INDEX_MOD, query: { category } })
+        await controller[action](ctx)
+        expect(ctx.status).toBe(400)
+      }
+    }
+  )
+
   it("counts per queue and status within scope", async () => {
     const { controller } = setup([
       sub(),
@@ -1202,7 +1273,7 @@ describe("option suggestions", () => {
     const decide = ctxFor({
       viewer: BOARD,
       params: { id: suggestion.documentId },
-      body: { decision: "decline", note: "Not an option" },
+      body: { decision: "decline", note: "Not an option", version: 0 },
     })
     await controller.decideOptionSuggestion(decide)
     expect(decide.status).toBe(200)

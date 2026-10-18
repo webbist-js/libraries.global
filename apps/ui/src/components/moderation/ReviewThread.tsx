@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react"
+import { Check, Clock3, MessageCircle, X } from "lucide-react"
 
 import { T } from "@/lib/design-tokens"
 
@@ -43,20 +43,43 @@ export function ReviewThread({ events }: { readonly events: ReviewEvent[] }) {
     )
 
   return (
-    <ol className="m-0 flex list-none flex-col gap-4 p-0">
+    <ol className="relative m-0 flex list-none flex-col gap-4 p-0 before:absolute before:top-3 before:bottom-3 before:left-[14px] before:w-px before:bg-(--t-border-line)">
       {events.map((e) => {
-        const meta = statusMeta(e.toStatus ?? "")
+        const HistoryIcon =
+          e.toStatus === "approved"
+            ? Check
+            : e.toStatus === "rejected"
+              ? X
+              : e.toStatus === "needs_info"
+                ? MessageCircle
+                : Clock3
 
         return (
-          <li key={e.documentId} className="flex gap-3">
-            <Icon
-              aria-hidden="true"
-              icon={meta.icon}
-              width={18}
-              height={18}
-              className="mt-0.5 shrink-0"
-              style={{ color: T.ink.dim }}
-            />
+          <li key={e.documentId} className="relative flex gap-3">
+            <span
+              className="flex size-7 shrink-0 items-center justify-center rounded-full"
+              style={{
+                background:
+                  e.toStatus === "approved"
+                    ? "var(--t-palette-mint-soft)"
+                    : e.toStatus === "rejected"
+                      ? "var(--t-palette-coral-soft)"
+                      : T.bg.muted,
+              }}
+            >
+              <HistoryIcon
+                aria-hidden="true"
+                size={14}
+                style={{
+                  color:
+                    e.toStatus === "approved"
+                      ? T.accent.ok
+                      : e.toStatus === "rejected"
+                        ? T.accent.danger
+                        : T.ink.dim,
+                }}
+              />
+            </span>
             <div className="flex min-w-0 flex-col gap-1">
               <p className="m-0 text-[14px]" style={{ color: T.ink.base }}>
                 <strong className="font-semibold">{who(e)}</strong> {verb(e)}

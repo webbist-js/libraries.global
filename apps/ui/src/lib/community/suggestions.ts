@@ -1,9 +1,16 @@
+import { compareSuggestionRank } from "@repo/shared-data"
+import type {
+  PublicAuthor,
+  PublicAuthorBadge,
+} from "strapi-plugin-discussions/types"
+
+export type { SuggestionReviewRound } from "@repo/shared-data"
 // Shared types and pure helpers for Option Suggestions ("Suggest an
 // addition"): the public shape, sorting, status presentation and the
 // editorial board's monthly review date. No `server-only` — client islands
 // (the suggestion form, the sort toggle) import this directly.
 
-import { TYPE_TINT } from "@/lib/design-tokens"
+import { COMMUNITY_TINTS, TYPE_TINT } from "@/lib/design-tokens"
 
 /** The four lists a contributor can suggest an addition to. */
 export const SUGGESTION_LISTS = [
@@ -15,12 +22,37 @@ export const SUGGESTION_LISTS = [
 
 export type SuggestionList = (typeof SUGGESTION_LISTS)[number]
 
+/** Published catalogue data shown before suggesting a new option. */
+export type ExistingOption = {
+  documentId: string
+  name: string
+  summary?: string | null
+  description?: unknown
+  category?: string | null
+  icon?: { iconName?: string } | string | null
+}
+
+export type OptionCatalogue = Record<SuggestionList, ExistingOption[]> & {
+  categories?: Partial<Record<SuggestionList, string[]>>
+}
+
 export type SuggestionStatus =
   | "open"
   | "reviewing"
   | "planned"
   | "accepted"
   | "declined"
+
+export type SuggestionConversationSummary = {
+  count: number
+  participants: PublicAuthor[]
+  latestAt?: string
+  latestAuthor?: PublicAuthor | null
+}
+
+export function suggestionHref(id: string) {
+  return `/community/suggestions?suggestion=${encodeURIComponent(id)}#suggestion-${encodeURIComponent(id)}`
+}
 
 /** The public shape of a suggestion, as `GET /api/option-suggestions` returns it. */
 export type PublicSuggestion = {
@@ -29,6 +61,15 @@ export type PublicSuggestion = {
   optionKey: SuggestionList
   status: SuggestionStatus
   votes: number
+  votesThisMonth?: number
+  publicationStatus?: "pending" | "published" | "rejected"
+  comparison?: { documentId: string; name: string; explanation: string } | null
+  acceptedOptionDocumentId?: string | null
+  decisionKind?: "add" | "update" | "merge" | "decline" | null
+  commentCount?: number
+  conversation?: SuggestionConversationSummary | null
+  suggestedByProfile?: string | null
+  suggestedByBadges?: PublicAuthorBadge[]
   /** Only present when the viewer is signed in. */
   voted?: boolean
   description: string | null
@@ -45,6 +86,13 @@ export const LIST_LABELS: Record<SuggestionList, string> = {
   amenities: "Facilities",
   library_types: "Library types",
 }
+
+export const LIST_TINTS = {
+  accessibility: COMMUNITY_TINTS.violet,
+  services: COMMUNITY_TINTS.mint,
+  amenities: COMMUNITY_TINTS.coral,
+  library_types: COMMUNITY_TINTS.blue,
+} as const
 
 export const LIST_ORDER: SuggestionList[] = [
   "accessibility",
@@ -106,7 +154,7 @@ export function isVotable(s: Pick<PublicSuggestion, "status">): boolean {
 
 /**
  * Sorts a list of suggestions for display.
- * - "top": declined suggestions last, then by votes descending, then by name.
+ * - "top": declined suggestions last, then by votes descending, then by creation time and stable document ID.
  * - "new": most recently suggested first.
  */
 export function sortSuggestions<T extends PublicSuggestion>(
@@ -128,7 +176,7 @@ export function sortSuggestions<T extends PublicSuggestion>(
     if (declinedA !== declinedB) return declinedA - declinedB
     if (b.votes !== a.votes) return b.votes - a.votes
 
-    return a.name.localeCompare(b.name)
+    return compareSuggestionRank(a, b)
   })
 }
 
@@ -185,4 +233,30 @@ export function relativeAge(iso: string, now: Date = new Date()): string {
   const years = Math.floor(days / 365)
 
   return plural(years, "year")
+}
+
+/** Loose name matching for suggestions; partial matches are guidance, never proof of a duplicate. */
+export function suggestionMatchScore(query: string, name: string): number {
+  const normalize = (value: string) =>
+    value
+      .normalize("NFKD")
+      .replaceAll(/[\u0300-\u036F]/g, "")
+      .toLowerCase()
+      .replaceAll(/[^\p{L}\p{N}]+/gu, " ")
+      .trim()
+  const needle = normalize(query)
+  const haystack = normalize(name)
+  if (needle.length < 2 || !haystack) return 0
+  if (needle === haystack) return 100
+  if (haystack.includes(needle)) return 80
+  const tokens = needle.split(" ").filter((token) => token.length >= 3)
+  const words = haystack.split(" ")
+  const matched = tokens.filter((token) =>
+    words.some(
+      (word) =>
+        word.startsWith(token) || (token.startsWith(word) && word.length >= 3)
+    )
+  ).length
+
+  return matched ? (matched / tokens.length) * 60 : 0
 }

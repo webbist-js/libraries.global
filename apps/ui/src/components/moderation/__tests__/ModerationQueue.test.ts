@@ -3,6 +3,8 @@ import * as React from "react"
 import { createElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { ContributionAccountGuard } from "@/components/contribute/ContributionAccountGuard"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { cleanup, render, screen, waitFor } from "@/test/render"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
@@ -16,11 +18,29 @@ vi.mock("@/lib/navigation", async () => {
   return {
     Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
       h("a", { href }, children),
+    usePathname: () => "/contribute/moderation",
     useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
     formatHref: (href?: string | null) => href || "#",
     isAppLink: () => true,
   }
 })
+
+const actor = vi.hoisted(() => ({
+  user: {
+    id: "moderator-a",
+    moderationScopes: [{ queue: "all", locale: null }] as {
+      queue: string
+      locale: string | null
+    }[],
+  },
+  pending: false,
+}))
+vi.mock("@/lib/access-client", () => ({
+  useHydratedSession: () => ({
+    data: { user: actor.user },
+    isPending: actor.pending,
+  }),
+}))
 
 const fetchMock = vi.fn()
 const { ModerationQueue, queueHref } = await import("../ModerationQueue")
@@ -83,6 +103,20 @@ describe("ModerationQueue errors", () => {
 })
 
 describe("queueHref", () => {
+  it("preserves category and all filters through pagination", () => {
+    expect(
+      queueHref({
+        ...BASE_STATE,
+        category: "articles",
+        queue: "knowledge",
+        locale: "fr",
+        q: "hours",
+        page: 2,
+      })
+    ).toBe(
+      "/contribute/moderation?category=articles&queue=knowledge&locale=fr&q=hours&page=2"
+    )
+  })
   const DRIVE = "drv1234567890123456789a"
 
   it("round-trips a drive filter into the URL", () => {
@@ -176,4 +210,97 @@ describe("ModerationQueue drive filter", () => {
     expect(screen.queryByText(/Filtered by drive/)).toBeNull()
     expect(screen.queryByText(/Drive:/)).toBeNull()
   })
+})
+
+it("hides real private moderation rows immediately after account or moderation scope changes", async () => {
+  actor.user = {
+    id: "moderator-a",
+    moderationScopes: [{ queue: "all", locale: null }],
+  }
+  fetchMock.mockImplementation(async (url: string) =>
+    String(url).includes("/stats")
+      ? Response.json({ data: [] })
+      : Response.json({
+          data: [
+            {
+              documentId: "private-submission",
+              submissionType: "blog_submission",
+              queue: "journal",
+              status: "pending",
+              locale: "en",
+              summary: "Private proposal A",
+              targetLabel: "Private proposal A",
+              submittedByName: "Writer A",
+              createdAt: "2026-10-16T10:00:00Z",
+            },
+          ],
+          meta: { page: 1, pageSize: 25, total: 1 },
+        })
+  )
+  const originalScope = contributionAccountScope(actor.user)
+  const queue = createElement(ModerationQueue, {
+    state: BASE_STATE,
+    queues: ["journal"],
+    locales: [],
+    localeNames: {},
+  })
+  const view = render(
+    createElement(ContributionAccountGuard, {
+      expectedScope: originalScope,
+      children: queue,
+    })
+  )
+  await screen.findAllByText("Private proposal A")
+  actor.user = {
+    id: "moderator-b",
+    moderationScopes: [{ queue: "all", locale: null }],
+  }
+  view.rerender(
+    createElement(ContributionAccountGuard, {
+      expectedScope: originalScope,
+      children: queue,
+    })
+  )
+  expect(screen.queryAllByText("Private proposal A")).toHaveLength(0)
+  fetchMock.mockImplementation(async (url: string) =>
+    String(url).includes("/stats")
+      ? Response.json({ data: [] })
+      : Response.json({
+          data: [
+            {
+              documentId: "private-b",
+              submissionType: "blog_submission",
+              queue: "journal",
+              status: "pending",
+              locale: "en",
+              summary: "Private proposal B",
+              targetLabel: "Private proposal B",
+              submittedByName: "Writer B",
+              createdAt: "2026-10-16T10:00:00Z",
+            },
+          ],
+          meta: { page: 1, pageSize: 25, total: 1 },
+        })
+  )
+  view.rerender(
+    createElement(ContributionAccountGuard, {
+      expectedScope: contributionAccountScope(actor.user),
+      children: queue,
+    })
+  )
+  expect(screen.queryAllByText("Private proposal A")).toHaveLength(0)
+  await screen.findAllByText("Private proposal B")
+  actor.user = { id: "moderator-b", moderationScopes: [] }
+  view.rerender(
+    createElement(ContributionAccountGuard, {
+      expectedScope: contributionAccountScope({
+        id: "moderator-b",
+        moderationScopes: [{ queue: "all", locale: null }],
+      }),
+      children: queue,
+    })
+  )
+  expect(screen.queryAllByText("Private proposal A")).toHaveLength(0)
+  expect(screen.queryAllByText("Private proposal B")).toHaveLength(0)
+  expect(screen.getByText(/account or permissions changed/)).toBeTruthy()
 })

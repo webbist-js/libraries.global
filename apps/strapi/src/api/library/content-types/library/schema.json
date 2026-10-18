@@ -73,25 +73,10 @@
       }
     },
     "libraryType": {
-      "type": "enumeration",
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library-type.library-type",
       "required": true,
-      "enum": [
-        "National",
-        "Public",
-        "Academic",
-        "University",
-        "Parliamentary",
-        "State",
-        "Municipal",
-        "Special",
-        "Monastic",
-        "Archive",
-        "Private",
-        "Cultural",
-        "Digital",
-        "Mobile",
-        "Other"
-      ],
       "pluginOptions": {
         "i18n": {
           "localized": false

@@ -1,3 +1,4 @@
+import { libraryTypeName } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 import type { Locale } from "next-intl"
 
@@ -106,7 +107,7 @@ export async function GET(
     name: library.name ?? null,
     slug: library.slug ?? null,
     url: pageUrl,
-    libraryType: library.libraryType ?? null,
+    libraryType: libraryTypeName(library.libraryType) ?? null,
     operationalStatus: str("operationalStatus"),
     operatorType: str("operatorType"),
     address: {
@@ -169,7 +170,7 @@ export async function GET(
   const row: Record<(typeof CSV_COLUMNS)[number], Cell> = {
     entityRef: record.entityRef,
     name: record.name,
-    libraryType: record.libraryType,
+    libraryType: libraryTypeName(record.libraryType),
     operationalStatus: record.operationalStatus,
     streetAddress: record.address.streetAddress,
     city: record.address.city,

@@ -24,7 +24,7 @@
     },
     "queue": {
       "type": "enumeration",
-      "enum": ["all", "index", "knowledge", "journal", "applications"],
+      "enum": ["all", "index", "knowledge", "journal", "applications", "discussions"],
       "default": "all"
     },
     "scopeLocale": { "type": "string" },

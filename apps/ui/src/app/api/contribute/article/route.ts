@@ -1,10 +1,12 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
+import { toExistingArticle } from "@/lib/article-editor-server"
 import { auth } from "@/lib/auth"
+import type { ArticleForEditing } from "@/lib/strapi-api/content/server"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
-const SLUG = /^[a-z0-9-]{1,120}$/
+const SLUG = /^[a-z0-9-]{1,255}$/
 const LOCALE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/
 
 const DETAIL: Record<string, string> = {
@@ -31,24 +33,45 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 })
 
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
-  const res = await fetch(
-    `${STRAPI}/api/${plural}/detail/${encodeURIComponent(slug)}?locale=${encodeURIComponent(locale)}`,
-    {
-      cache: "no-store",
-      headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/${plural}/detail/${encodeURIComponent(slug)}?locale=${encodeURIComponent(locale)}`,
+      {
+        cache: "no-store",
+        headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},
+      }
+    )
+    if (res.status === 404) return NextResponse.json({ data: null })
+    if (!res.ok)
+      return NextResponse.json(
+        { error: "The article could not be loaded." },
+        { status: res.status }
+      )
+    const json = (await res.json()) as {
+      data?: (ArticleForEditing & { contentRevision?: string }) | null
     }
-  )
-  if (!res.ok) return NextResponse.json({ data: null })
-  const json = (await res.json()) as {
-    data?: { title?: string; summary?: string | null; body?: unknown } | null
-  }
-  if (!json.data) return NextResponse.json({ data: null })
+    if (!json.data) return NextResponse.json({ data: null })
+    const context = toExistingArticle(
+      kind as "knowledge" | "journal",
+      json.data,
+      locale
+    )
 
-  return NextResponse.json({
-    data: {
-      title: json.data.title ?? "",
-      summary: json.data.summary ?? "",
-      body: json.data.body ?? [],
-    },
-  })
+    return NextResponse.json({
+      data: {
+        title: json.data.title ?? "",
+        summary: json.data.summary ?? "",
+        body: json.data.body ?? [],
+        contentRevision: json.data.contentRevision,
+        sections: context.sections,
+        tags: context.tags,
+        eventMentions: context.eventMentions,
+      },
+    })
+  } catch {
+    return NextResponse.json(
+      { error: "The article could not be loaded." },
+      { status: 503 }
+    )
+  }
 }

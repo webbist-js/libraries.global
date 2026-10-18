@@ -4,7 +4,7 @@ import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { DriveLeaderboardEntry } from "@/lib/drives/types"
-import { cleanup, render, screen, within } from "@/test/render"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -59,6 +59,8 @@ describe("DriveHelpers", () => {
     expect(rows[0]!.textContent).toContain("12 accepted")
     expect(rows[1]!.textContent).toContain("1 accepted")
 
+    expect(screen.queryByRole("list", { name: "All time" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "All time" }))
     const all = screen.getByRole("list", { name: "All time" })
     expect(within(all).getAllByRole("listitem")).toHaveLength(2)
   })
@@ -94,6 +96,7 @@ describe("DriveHelpers", () => {
     render(createElement(DriveHelpers, { week: [], all: [] }))
 
     expect(screen.getByText("No accepted work yet this week.")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "All time" }))
     expect(screen.getByText("No accepted work yet.")).toBeTruthy()
   })
 })

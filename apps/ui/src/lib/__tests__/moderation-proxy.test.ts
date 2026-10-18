@@ -6,6 +6,7 @@ const fetchMock = vi.fn(async () => Response.json({ data: [] }))
 vi.mock("next/headers", () => ({ headers: vi.fn(async () => new Headers()) }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }))
 
+vi.stubEnv("APP_PUBLIC_URL", "http://localhost")
 vi.stubEnv("STRAPI_URL", "http://strapi.test")
 vi.stubEnv("STRAPI_BRIDGE_SECRET", "s3cret")
 
@@ -41,6 +42,26 @@ beforeEach(() => {
 })
 
 describe("proxyModeration", () => {
+  it("rejects cross-origin moderator decisions before calling CMS", async () => {
+    const response = await proxyModeration(
+      new Request("http://localhost/x", {
+        method: "PUT",
+        headers: {
+          Origin: "https://foreign.test",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "approved" }),
+      }),
+      {
+        path: `submissions/${DOC}/status`,
+        method: "PUT",
+        ids: [DOC],
+        bodyKeys: ["status"],
+      }
+    )
+    expect(response.status).toBe(403)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
   it("401 without a session, and never calls Strapi", async () => {
     getSession.mockResolvedValue(null)
     const res = await list("")
@@ -125,6 +146,10 @@ describe("proxyModeration", () => {
     const res = await proxyModeration(
       new Request("http://localhost/x", {
         method: "PUT",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           status: "approved",
           note: "ok",
@@ -156,6 +181,10 @@ describe("proxyModeration", () => {
     const res = await proxyModeration(
       new Request("http://localhost/x", {
         method: "PUT",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ note: "x".repeat(17 * 1024) }),
       }),
       {
@@ -173,6 +202,10 @@ describe("proxyModeration", () => {
     proxyModeration(
       new Request("http://localhost/x", {
         method: "PUT",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ status: "approved" }),
       }),
       {

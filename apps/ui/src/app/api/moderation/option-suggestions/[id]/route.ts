@@ -10,6 +10,13 @@ export async function PUT(req: Request, { params }: Ctx) {
     path: `option-suggestions/${encodeURIComponent(id)}`,
     ids: [id],
     method: "PUT",
-    bodyKeys: ["decision", "name", "note"],
+    bodyKeys: [
+      "decision",
+      "name",
+      "note",
+      "version",
+      "feature",
+      "existingOptionDocumentId",
+    ],
   })
 }

@@ -1,4 +1,4 @@
-import { normalizeMobileTimetable } from "@repo/shared-data"
+import { libraryTypeName, normalizeMobileTimetable } from "@repo/shared-data"
 
 import { noticesForLibrary } from "../../../utils/library-notices"
 
@@ -11,28 +11,31 @@ export default {
       .plugin("i18n")
       .service("locales")
       .getDefaultLocale()
-    const library = await strapi.documents("api::library.library").findOne({
-      documentId: id,
-      status: "published",
-      locale,
-      fields: [
-        "name",
-        "slug",
-        "libraryType",
-        "operationalStatus",
-        "timezone",
-        "mobileTimetable",
-        "operatorName",
-        "timetableUrl",
-        "updatedAt",
-      ],
-      populate: {
-        continent: { fields: ["slug"] },
-        country: { fields: ["slug"] },
-        region: { fields: ["slug"] },
-      },
-    } as any)
-    if (!library || library.libraryType !== "Mobile") return ctx.notFound()
+    const library: any = await strapi
+      .documents("api::library.library")
+      .findOne({
+        documentId: id,
+        status: "published",
+        locale,
+        fields: [
+          "name",
+          "slug",
+          "operationalStatus",
+          "timezone",
+          "mobileTimetable",
+          "operatorName",
+          "timetableUrl",
+          "updatedAt",
+        ],
+        populate: {
+          libraryType: { fields: ["name"] },
+          continent: { fields: ["slug"] },
+          country: { fields: ["slug"] },
+          region: { fields: ["slug"] },
+        },
+      } as any)
+    if (!library || libraryTypeName(library.libraryType) !== "Mobile")
+      return ctx.notFound()
     const relations = library as typeof library & {
       continent?: { slug?: string }
       country?: { slug?: string }

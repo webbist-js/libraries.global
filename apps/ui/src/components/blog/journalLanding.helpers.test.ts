@@ -4,6 +4,8 @@ import {
   DEFAULT_JOURNAL_QUERY,
   DEFAULT_SECTION_ICON,
   journalHref,
+  journalBrowseParams,
+  journalCollectionKey,
   journalSortParam,
   pageWindow,
   parseJournalQuery,
@@ -90,6 +92,59 @@ describe("journalSortParam", () => {
     expect(journalSortParam("newest")).toEqual(["publishedAt:desc", "id:desc"])
     expect(journalSortParam("oldest")).toEqual(["publishedAt:asc", "id:asc"])
     expect(journalSortParam("title")).toEqual(["title:asc", "id:asc"])
+  })
+})
+
+describe("combined Journal discovery URL state", () => {
+  it("preserves geography and author filters when changing layout or section", () => {
+    const query = parseJournalQuery({
+      country: "colombia",
+      author: "webbist",
+      lang: "es",
+      page: "3",
+    })
+    expect(journalHref(query, { view: "list" })).toContain("country=colombia")
+    expect(journalHref(query, { section: "stories" })).toContain(
+      "author=webbist"
+    )
+    expect(journalHref(query, { section: "stories" })).not.toContain("page=3")
+  })
+  it("preserves an explicit worldwide reset and all-origin/all-language choices", () => {
+    const query = parseJournalQuery({
+      country: "all",
+      lang: "all",
+      origin: "all",
+    })
+    expect(journalHref(query)).toBe("/journal?lang=all&origin=all&country=all")
+    expect(
+      new URLSearchParams(journalBrowseParams("en", query)).get("lang")
+    ).toBe("all")
+    expect(
+      new URLSearchParams(journalBrowseParams("en", query)).has("origin")
+    ).toBe(false)
+  })
+  it("keeps OR across several content languages and resets it when choosing one", () => {
+    const query = parseJournalQuery({ lang: "es,fr", country: "colombia" })
+    expect(
+      new URLSearchParams(journalBrowseParams("en", query)).get("lang")
+    ).toBe("es,fr")
+    expect(journalHref(query, { lang: "en" })).toBe(
+      "/journal?lang=en&country=colombia"
+    )
+  })
+})
+
+describe("resolved Journal collection", () => {
+  it("defaults the list request to Community and labels the resolved result predicate", () => {
+    const params = new URLSearchParams(
+      journalBrowseParams("en", DEFAULT_JOURNAL_QUERY)
+    )
+    expect(params.get("origin")).toBe("community")
+    expect(params.get("preferredLocale")).toBe("en")
+    expect(journalCollectionKey(["community"])).toBe("communityJournal")
+    expect(journalCollectionKey(["index"])).toBe("fromIndex")
+    expect(journalCollectionKey(undefined)).toBe("allStories")
+    expect(journalCollectionKey(["community", "index"])).toBe("allStories")
   })
 })
 

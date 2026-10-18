@@ -214,7 +214,9 @@ export const PLANS: readonly PlanCard[] = [
     includes: [
       feature("Every library record, with hours and services"),
       feature("Search, the map and lists"),
-      feature("Read the Journal, Knowledge articles, events and noticeboard"),
+      feature(
+        "Read the Journal, Knowledge articles, events, noticeboard and public discussions"
+      ),
       feature("Browse community drives and library notices and timetables"),
       feature("Library record downloads"),
     ],
@@ -229,6 +231,7 @@ export const PLANS: readonly PlanCard[] = [
       feature("Everything in Public"),
       feature("Contribute corrections, photos and new libraries"),
       feature("Follow libraries and save events"),
+      feature("Start discussions, reply, react and follow conversations"),
       feature("Join community drives; propose one after 5 accepted changes"),
       feature("Suggest Knowledge edits and pitch Journal stories"),
       feature("Apply for Knowledge or Journal editing roles"),

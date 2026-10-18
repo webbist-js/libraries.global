@@ -246,6 +246,7 @@ describe("role application eligibility", () => {
       apply(index.policy, fieldsFor({ role: "moderator", queue }))
     expect(await asMod("index")).toMatchObject({ ok: false, status: 403 })
     expect(await asMod("journal")).toEqual({ ok: true })
+    expect(await asMod("discussions")).toEqual({ ok: true })
 
     const board = setup({
       [SUB]: accepted(5),
@@ -334,6 +335,40 @@ describe("role application approval", () => {
       resultDocumentId: PROFILE_ID,
     })
     expect(award).not.toHaveBeenCalled()
+  })
+
+  it("approves a Discussions application with only the requested language access", async () => {
+    const fields = fieldsFor({
+      role: "moderator",
+      queue: "discussions",
+      locales: ["fr"],
+      sections: ["not-an-article-section"],
+    })
+    const parsed = validateRoleApplicationFields(fields, ["en", "fr"])
+    expect(parsed).toMatchObject({
+      ok: true,
+      value: { queue: "discussions", sections: [] },
+    })
+    const row = {
+      ...pendingApplication(["fr"]),
+      fields: parsed.ok ? parsed.value : fields,
+    }
+    row.payloadHash = payloadHash(row)
+    const f = setup({ [SUB]: [row] })
+    f.services["rewards.points"] = { award: vi.fn() }
+    await createService({ strapi: f.strapi }).updateStatus(
+      APP_ID,
+      "approved",
+      REVIEWER
+    )
+    expect(f.store[ROLE_GRANT]).toHaveLength(1)
+    expect(f.store[ROLE_GRANT]![0]).toMatchObject({
+      baUserId: "u1",
+      role: "moderator",
+      queue: "discussions",
+      scopeLocale: "fr",
+      source: "application",
+    })
   })
 
   it("grants every locale when none were named", async () => {

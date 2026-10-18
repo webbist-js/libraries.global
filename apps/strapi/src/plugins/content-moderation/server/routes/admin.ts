@@ -9,6 +9,24 @@ const can = (action: "read" | "update") => [
 export default [
   {
     method: "GET",
+    path: "/option-catalogue",
+    handler: "option-suggestion.catalogue",
+    config: { policies: can("read") },
+  },
+  {
+    method: "GET",
+    path: "/suggestion-round",
+    handler: "option-suggestion.round",
+    config: { policies: can("read") },
+  },
+  {
+    method: "PUT",
+    path: "/suggestion-round",
+    handler: "option-suggestion.manageRound",
+    config: { policies: can("update") },
+  },
+  {
+    method: "GET",
     path: "/submissions",
     handler: "submission.findAll",
     config: { policies: can("read") },

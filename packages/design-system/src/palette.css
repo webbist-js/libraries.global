@@ -1,0 +1,22 @@
+/* Discussions reference palette: warm paper, indigo, six chromatic tints.
+   Keep text on the soft fills in the paired dark ink, never white. */
+:root {
+  --t-palette-violet-bg: oklch(0.93 0.055 285);
+  --t-palette-violet-fg: oklch(0.38 0.13 285);
+  --t-palette-violet-soft: oklch(0.97 0.025 285);
+  --t-palette-coral-bg: oklch(0.93 0.055 25);
+  --t-palette-coral-fg: oklch(0.38 0.13 25);
+  --t-palette-coral-soft: oklch(0.97 0.025 25);
+  --t-palette-mint-bg: oklch(0.93 0.055 155);
+  --t-palette-mint-fg: oklch(0.38 0.13 155);
+  --t-palette-mint-soft: oklch(0.97 0.025 155);
+  --t-palette-amber-bg: oklch(0.93 0.055 75);
+  --t-palette-amber-fg: oklch(0.38 0.13 75);
+  --t-palette-amber-soft: oklch(0.97 0.025 75);
+  --t-palette-blue-bg: oklch(0.93 0.055 220);
+  --t-palette-blue-fg: oklch(0.38 0.13 220);
+  --t-palette-blue-soft: oklch(0.97 0.025 220);
+  --t-palette-rose-bg: oklch(0.93 0.055 330);
+  --t-palette-rose-fg: oklch(0.38 0.13 330);
+  --t-palette-rose-soft: oklch(0.97 0.025 330);
+}

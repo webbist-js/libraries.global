@@ -144,6 +144,7 @@ describe("tiptapToDynamicZone", () => {
     expect(out[1]).toEqual({
       __component: "content.image-block",
       image: 77,
+      alternativeText: "A",
       caption: "Reading room",
       fullWidth: true,
     })
@@ -246,5 +247,70 @@ describe("measures", () => {
         content: [{ type: "image", attrs: { src: "x" } }],
       })
     ).toBe(false)
+  })
+})
+
+describe("nested lists and image accessibility", () => {
+  it("round-trips nested mixed lists in Strapi's canonical shape", () => {
+    const rich = [
+      {
+        __component: "content.rich-text",
+        body: [
+          {
+            type: "list",
+            format: "unordered",
+            children: [
+              {
+                type: "list-item",
+                children: [{ type: "text", text: "Parent", bold: true }],
+              },
+              {
+                type: "list",
+                format: "ordered",
+                children: [
+                  {
+                    type: "list-item",
+                    children: [{ type: "text", text: "Child text" }],
+                  },
+                  {
+                    type: "list",
+                    format: "unordered",
+                    children: [
+                      {
+                        type: "list-item",
+                        children: [{ type: "text", text: "Grandchild" }],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                type: "list-item",
+                children: [{ type: "text", text: "Sibling" }],
+              },
+            ],
+          },
+        ],
+      },
+    ]
+    const doc = dynamicZoneToTiptap(rich)
+    expect(doc.content[0]?.content?.[0]?.content?.[1]?.type).toBe("orderedList")
+    expect(tiptapToDynamicZone(doc)).toEqual(rich)
+    expect(wordCount(doc)).toBe(5)
+  })
+
+  it("persists an explicit alt override, including intentionally decorative images", () => {
+    const doc = dynamicZoneToTiptap([
+      {
+        __component: "content.image-block",
+        image: { id: 77, url: "/a.jpg", alternativeText: "Media fallback" },
+        alternativeText: "",
+      },
+    ])
+    expect(doc.content[0]?.attrs?.alt).toBe("")
+    expect(tiptapToDynamicZone(doc)[0]?.alternativeText).toBe("")
+    expect(
+      tiptapToDynamicZone(dynamicZoneToTiptap(body))[1]?.alternativeText
+    ).toBe("A")
   })
 })
