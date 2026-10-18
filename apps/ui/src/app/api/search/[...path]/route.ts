@@ -90,7 +90,31 @@ export async function POST(
         signal: AbortSignal.timeout(10000),
       }
     )
-    if (!upstream.ok) return json("Search failed", 502)
+    if (!upstream.ok) {
+      // An empty events installation may not have created its index yet.
+      // Only this exact response is an empty calendar; other failures stay errors.
+      if (single && path[1] === "event" && upstream.status === 404) {
+        const error = await upstream.json().catch(() => null)
+        if (error?.code === "index_not_found") {
+          const eventQuery = query.parse(body.data)
+
+          return NextResponse.json(
+            {
+              hits: [],
+              query: eventQuery.q ?? "",
+              processingTimeMs: 0,
+              totalHits: 0,
+              totalPages: 0,
+              page: eventQuery.page ?? 1,
+              hitsPerPage: eventQuery.hitsPerPage ?? 20,
+            },
+            { headers: { "Cache-Control": "private, no-store" } }
+          )
+        }
+      }
+
+      return json("Search failed", 502)
+    }
 
     return new NextResponse(upstream.body, {
       headers: {

@@ -5,10 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 
 import { toDocsSections } from "@/components/docs/docs.config"
 import DocsPage from "@/components/docs/DocsPage"
-import {
-  articleBrowseParams,
-  fetchArticleBrowse,
-} from "@/lib/article-discovery"
+import { fetchArticleBrowse } from "@/lib/article-discovery"
+import { knowledgeBrowseParams } from "@/lib/article-filter-state"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
   fetchDocsWikiArticles,
@@ -62,14 +60,12 @@ export default async function DocsRoute(props: {
   setRequestLocale(locale)
 
   const query = parseArticleBrowseQuery(searchParams)
-  const browseParams = new URLSearchParams(articleBrowseParams(query))
-  browseParams.set("preferredLocale", locale)
-  if (searchParams.lang === "all") browseParams.set("lang", "all")
+  const browseParams = knowledgeBrowseParams(locale, searchParams)
   const [articlesRes, sectionsRes, landingRes, discovery] = await Promise.all([
     fetchDocsWikiArticles(locale),
     fetchWikiSections(locale as Locale),
     fetchWikiLanding(locale),
-    fetchArticleBrowse("wiki", browseParams.toString()),
+    fetchArticleBrowse("wiki", browseParams),
   ])
 
   return (
@@ -80,7 +76,13 @@ export default async function DocsRoute(props: {
       quickStartCards={landingRes?.data?.quickStartCards}
       sections={toDocsSections(sectionsRes.data)}
       discovery={discovery}
-      queryActive={Boolean(query.q || Object.keys(query.filters).length)}
+      queryActive={Boolean(
+        query.q ||
+        Object.keys(query.filters).length ||
+        searchParams.lang === "all" ||
+        query.page > 1 ||
+        query.sort !== "newest"
+      )}
       searchQuery={query.q ?? ""}
       currentQuery={searchParams}
     />

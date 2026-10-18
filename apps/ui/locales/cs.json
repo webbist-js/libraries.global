@@ -1539,7 +1539,7 @@
     "countrySuggestion": "Prozkoumat obsah o zemi {country}",
     "preferenceFailed": "Výběr je v adrese URL; tento prohlížeč nemohl uložit předvolbu.",
     "exploreKnowledge": "Prozkoumat znalosti",
-    "knowledgeLead": "Najděte referenční články podle jazyka, místa, knihovny nebo tématu. Sekce dokumentace pokračují níže.",
+    "knowledgeLead": "Praktické návody k používání rejstříku, přispívání a správě záznamů knihoven.",
     "articleCount": "{count, plural, one {# článek} few {# články} other {# článků}}",
     "readingTime": "{minutes} min čtení",
     "pagination": "Stránky výsledků znalostí",
@@ -1549,7 +1549,10 @@
     "writeLibrary": "Napsat o této knihovně",
     "readLibrary": "Číst příběhy o této knihovně",
     "writeEvent": "Napsat o této akci",
-    "readingLanguage": "Čtete v jazyce {language}. Jazyk rozhraní: {interface}."
+    "readingLanguage": "Čtete v jazyce {language}. Jazyk rozhraní: {interface}.",
+    "noFilterChoices": "Hledání neodpovídá žádná možnost filtru.",
+    "readGuide": "Přečíst průvodce",
+    "languageDefault": "Návody se zobrazují ve zvoleném jazyce. Překlady najdete pod volbou Všechny jazyky."
   },
   "authorBadges": {
     "editor": "Redaktor",
@@ -2376,5 +2379,15 @@
     "recognitionLead": "Členové Supporter, Pro a Team si mohou zvolit označení na profilu a veřejné poděkování. Každé nastavíte zvlášť v Soukromí a ani jedno neukazuje, kolik platíte.",
     "recognitionSettings": "Nastavit viditelnost",
     "meetSupporters": "Poznejte podporovatele"
+  },
+  "eventListing": {
+    "emptyTitle": "Sdílejte akce jako první",
+    "emptyLead": "Pomozte lidem objevit přednášky, dílny a čtení ve vaší knihovně. Připojte zdroj akcí a nadcházející události se zobrazí zde.",
+    "feedGuide": "Jak připojit zdroj akcí",
+    "contribute": "Přispět do rejstříku",
+    "errorTitle": "Akce jsou dočasně nedostupné",
+    "errorLead": "Kalendář akcí se nepodařilo načíst. Zkuste to za chvíli znovu.",
+    "retry": "Zkusit znovu",
+    "reset": "Vymazat filtry akcí"
   }
 }

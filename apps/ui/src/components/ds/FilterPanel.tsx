@@ -70,7 +70,7 @@ export function FilterPanelHeader({
         <button
           type="button"
           onClick={onReset}
-          className="cursor-pointer rounded-full border-0 bg-transparent px-2 py-1 text-[14px] font-semibold underline"
+          className="min-h-10 cursor-pointer rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
           style={{ color: T.ink.dim, textUnderlineOffset: 3 }}
         >
           {resetLabel}
@@ -82,7 +82,7 @@ export function FilterPanelHeader({
             onClick={sidebar.hide}
             aria-controls={sidebar.sidebarId}
             aria-expanded
-            className="hidden cursor-pointer items-center gap-1.5 rounded-full border-0 bg-transparent px-2 py-1 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted2) lg:inline-flex"
+            className="hidden min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-muted2) lg:inline-flex"
             style={{ color: T.ink.dim }}
           >
             <PanelIcon />

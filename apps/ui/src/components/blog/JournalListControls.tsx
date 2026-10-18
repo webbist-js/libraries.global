@@ -15,7 +15,7 @@ import {
 } from "./journalLanding.helpers"
 
 const SELECT_CLASS =
-  "cursor-pointer rounded-[10px] border px-3 py-2 text-[14px] font-medium"
+  "min-h-11 cursor-pointer rounded-full border px-4 py-2 text-[14px] font-medium"
 
 /** Language and sort selects plus the grid/list switch for "All articles". */
 export function JournalListControls({
@@ -82,7 +82,7 @@ export function JournalListControls({
             <Link
               aria-current={active ? "true" : undefined}
               aria-label={label}
-              className="flex size-8 items-center justify-center rounded-full transition-colors"
+              className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-(--t-bg-muted)"
               href={journalHref(query, { view })}
               key={view}
               scroll={false}

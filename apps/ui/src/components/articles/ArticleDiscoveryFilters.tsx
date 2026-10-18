@@ -1,5 +1,6 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import {
   canonicalReaderCountry,
   parseArticleBrowseQuery,
@@ -10,6 +11,7 @@ import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState, useTransition } from "react"
 
+import { SearchField } from "@/components/ds"
 import {
   Dialog,
   DialogContent,
@@ -22,12 +24,26 @@ import {
   articlePreviewParams,
   changeArticleFacet,
   clearArticleFacets,
+  knowledgeBrowseParams,
 } from "@/lib/article-filter-state"
 import { articleLanguageOptions } from "@/lib/article-language-options"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { useRouter } from "@/lib/navigation"
+
+const FACET_ICONS: Partial<Record<ArticleFacetKey, string>> = {
+  languages: "mdi:translate",
+  continents: "mdi:earth",
+  countries: "mdi:flag-outline",
+  regions: "mdi:map-outline",
+  areas: "mdi:map-marker-outline",
+  sections: "mdi:bookshelf",
+  libraries: "mdi:library-outline",
+  topics: "mdi:tag-outline",
+  authors: "mdi:account-outline",
+  events: "mdi:calendar-outline",
+}
 
 const PREFERENCE_KEY = "libraries-global:article-country:v1"
 const FACETS: ArticleFacetKey[] = [
@@ -149,25 +165,37 @@ export function ArticleDiscoveryFilters({
   }, [open, mobile, staged, encoded, kind, locale])
   const current =
     mobile && open
-      ? parseArticleBrowseQuery(Object.fromEntries(new URLSearchParams(staged)))
-          .filters
+      ? parseArticleBrowseQuery(
+          kind === "knowledge"
+            ? Object.fromEntries(
+                new URLSearchParams(
+                  knowledgeBrowseParams(
+                    locale,
+                    Object.fromEntries(new URLSearchParams(staged))
+                  )
+                )
+              )
+            : Object.fromEntries(new URLSearchParams(staged))
+        ).filters
       : discovery.appliedFilters
   const resolved = preview ?? discovery
   const keys = FACETS.filter(
     (key) => kind === "journal" || (key !== "authors" && key !== "events")
   )
-  const chips = keys.flatMap((key) =>
-    (discovery.appliedFilters[key] ?? []).map((value) => ({
-      key,
-      value,
-      label:
-        key === "languages"
-          ? languageName(value, [], locale)
-          : (discovery.facets[key].find((facet) =>
-              articleFacetMatches(facet, value)
-            )?.label ?? value),
-    }))
-  )
+  const chips = keys
+    .filter((key) => key !== "origins")
+    .flatMap((key) =>
+      (discovery.appliedFilters[key] ?? []).map((value) => ({
+        key,
+        value,
+        label:
+          key === "languages"
+            ? languageName(value, [], locale)
+            : (discovery.facets[key].find((facet) =>
+                articleFacetMatches(facet, value)
+              )?.label ?? value),
+      }))
+    )
   function navigate(next: URLSearchParams) {
     if (next.has("country"))
       try {
@@ -207,21 +235,37 @@ export function ArticleDiscoveryFilters({
       }
   )
   const changingPreview = mobile && staged !== encoded && !preview
+  function facetLabel(
+    key: ArticleFacetKey,
+    facet: { value: string; label: string }
+  ) {
+    if (key === "languages") return languageName(facet.value, [], locale)
+    if (key === "sections")
+      return (
+        discovery.facets.sections.find((entry) => entry.value === facet.value)
+          ?.label ?? facet.label
+      )
+
+    return facet.label
+  }
 
   return (
-    <div aria-busy={pending} className="mt-5">
+    <div
+      aria-busy={pending}
+      className="mt-5 rounded-[22px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 sm:p-4"
+    >
       <div className="flex flex-wrap items-center gap-3">
         {kind === "journal" && (
           <div
             role="group"
             aria-label={t("origins")}
-            className="inline-flex rounded-full border p-1"
-            style={{ borderColor: T.border.line, background: T.bg.deep }}
+            className="inline-flex max-w-full flex-wrap gap-1 rounded-[24px] p-1"
+            style={{ borderColor: T.border.line, background: T.bg.muted }}
           >
             {[
+              ["all", t("allStories")],
               ["community", t("communityJournal")],
               ["index", t("fromIndex")],
-              ["all", t("allStories")],
             ].map(([value, label]) => (
               <button
                 key={value}
@@ -232,7 +276,7 @@ export function ArticleDiscoveryFilters({
                 onClick={() =>
                   choose("origins", value === "all" ? [] : [value!])
                 }
-                className="rounded-full px-3 py-2 text-sm font-semibold"
+                className="min-h-11 cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted2)"
                 style={{
                   background:
                     (discovery.appliedFilters.origins?.[0] ?? "all") === value
@@ -262,142 +306,200 @@ export function ArticleDiscoveryFilters({
           <DialogTrigger asChild>
             <button
               type="button"
-              className="rounded-full border px-4 py-2 text-sm font-semibold"
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted)"
               style={{ borderColor: T.border.hi }}
             >
+              <Icon aria-hidden="true" icon="mdi:tune-variant" width={18} />
               {p("filters")}
               {chips.length ? ` · ${chips.length}` : ""}
             </button>
           </DialogTrigger>
           <DialogContent
-            className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-3xl"
+            className="flex max-h-[min(90dvh,800px)] flex-col gap-0 overflow-hidden rounded-[28px] border-(--t-border-line) p-0 sm:max-w-3xl"
+            closeButtonClassName="top-5 right-5 rounded-full"
             style={{ background: T.bg.deep, color: T.ink.base }}
           >
-            <DialogTitle>{p("filters")}</DialogTitle>
-            <DialogDescription>{p("filterLogic")}</DialogDescription>
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="grow">
-                <span className="sr-only">{p("findFilter")}</span>
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={p("findFilter")}
-                  className="w-full rounded-xl border px-3 py-2"
-                />
-              </label>
-              <button
-                type="button"
-                className="text-sm underline"
-                onClick={() => {
-                  const next = clearArticleFacets(mobile ? staged : encoded)
-                  if (mobile) setStaged(next.toString())
-                  else navigate(next)
-                }}
+            <div className="shrink-0 border-b border-(--t-border-line) px-5 pt-6 pb-5 sm:px-7">
+              <DialogTitle
+                className="pr-10 text-[30px] font-medium"
+                style={{ fontFamily: T.font.serif }}
               >
-                {p("clearFilters")}
-              </button>
+                {p("filters")}
+              </DialogTitle>
+              <DialogDescription className="mt-2 max-w-[55ch] text-sm leading-relaxed text-(--t-ink-dim)">
+                {p("filterLogic")}
+              </DialogDescription>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <div className="min-w-[180px] flex-1">
+                  <SearchField
+                    className="focus-within:ring-2 focus-within:ring-(--t-accent-primary) focus-within:ring-offset-2 [&_input:focus-visible]:outline-none!"
+                    id="article-filter-search"
+                    label={p("findFilter")}
+                    placeholder={p("findFilter")}
+                    onClear={() => setSearch("")}
+                    inputProps={{
+                      value: search,
+                      onChange: (event) => setSearch(event.target.value),
+                      autoComplete: "off",
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-(--t-accent-primary) transition-colors hover:bg-(--t-accent-chip)"
+                  onClick={() => {
+                    const next = clearArticleFacets(mobile ? staged : encoded)
+                    if (mobile) setStaged(next.toString())
+                    else navigate(next)
+                  }}
+                >
+                  <Icon aria-hidden="true" icon="mdi:restart" width={17} />
+                  {p("clearFilters")}
+                </button>
+              </div>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-              {keys.map((key) => {
-                const choices = (
-                  key === "languages" ? languageValues : resolved.facets[key]
-                ).filter((facet) =>
-                  `${key === "languages" ? languageName(facet.value, [], locale) : facet.label}`
+            <div className="min-h-0 overflow-y-auto overscroll-contain bg-(--t-bg-void) px-5 py-5 sm:px-7">
+              <div className="grid items-start gap-4 sm:grid-cols-2">
+                {keys.map((key) => {
+                  const choices = (
+                    key === "languages" ? languageValues : resolved.facets[key]
+                  ).filter((facet) =>
+                    facetLabel(key, facet)
+                      .toLocaleLowerCase(locale)
+                      .includes(search.toLocaleLowerCase(locale))
+                  )
+                  if (!choices.length && !current[key]?.length) return null
+
+                  return (
+                    <fieldset
+                      key={key}
+                      className="m-0 min-w-0 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-4"
+                    >
+                      <legend className="float-left mb-3 flex w-full items-center gap-2 p-0 text-sm font-semibold">
+                        <Icon
+                          aria-hidden="true"
+                          icon={FACET_ICONS[key] ?? "mdi:tag-outline"}
+                          width={18}
+                          className="text-(--t-accent-primary)"
+                        />
+                        {t(key)}
+                      </legend>
+                      {(key === "languages" || key === "countries") && (
+                        <button
+                          type="button"
+                          className="mb-2 inline-flex min-h-9 cursor-pointer items-center rounded-full bg-(--t-bg-muted) px-3 text-xs font-semibold text-(--t-accent-primary) hover:bg-(--t-accent-chip)"
+                          onClick={() => choose(key, [])}
+                        >
+                          {t(
+                            key === "languages"
+                              ? "allLanguages"
+                              : "allCountries"
+                          )}
+                        </button>
+                      )}
+                      {key === "languages" && (
+                        <p
+                          className="clear-both mt-0 mb-2 text-xs leading-relaxed"
+                          style={{ color: T.ink.dim }}
+                        >
+                          {p("contentLanguageHint")}
+                        </p>
+                      )}
+                      <div className="clear-both -mx-1 max-h-52 overflow-y-auto overscroll-contain px-1">
+                        {choices.map((facet) => {
+                          const checked = (current[key] ?? []).some((value) =>
+                            articleFacetMatches(facet, value)
+                          )
+
+                          return (
+                            <label
+                              key={facet.value}
+                              className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-xl px-2 py-2 text-sm transition-colors hover:bg-(--t-bg-muted) ${checked ? "bg-(--t-accent-chip)" : ""}`}
+                            >
+                              <span className="flex min-w-0 items-center gap-2.5">
+                                <input
+                                  type="checkbox"
+                                  name={key}
+                                  aria-label={`${facetLabel(key, facet)}${changingPreview ? "" : ` (${facet.count})`}`}
+                                  className="size-4 shrink-0 cursor-pointer accent-(--t-accent-primary)"
+                                  checked={checked}
+                                  disabled={pending}
+                                  onChange={() =>
+                                    choose(
+                                      key,
+                                      checked
+                                        ? (current[key] ?? []).filter(
+                                            (value) =>
+                                              !articleFacetMatches(facet, value)
+                                          )
+                                        : [...(current[key] ?? []), facet.value]
+                                    )
+                                  }
+                                />
+                                <span>{facetLabel(key, facet)}</span>
+                              </span>
+                              {!changingPreview && (
+                                <span
+                                  aria-hidden="true"
+                                  className="shrink-0 rounded-full bg-(--t-bg-muted) px-2 py-0.5 text-xs tabular-nums"
+                                  style={{ color: T.ink.dim }}
+                                >
+                                  <span className="sr-only">(</span>
+                                  {facet.count}
+                                  <span className="sr-only">)</span>
+                                </span>
+                              )}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </fieldset>
+                  )
+                })}
+              </div>
+              {!keys.some((key) =>
+                (key === "languages"
+                  ? languageValues
+                  : resolved.facets[key]
+                ).some((facet) =>
+                  facetLabel(key, facet)
                     .toLocaleLowerCase(locale)
                     .includes(search.toLocaleLowerCase(locale))
                 )
-                if (!choices.length && !current[key]?.length) return null
-
-                return (
-                  <fieldset
-                    key={key}
-                    className="min-w-0 rounded-2xl border p-4"
-                  >
-                    <legend className="px-1 text-sm font-semibold">
-                      {t(key)}
-                    </legend>
-                    {(key === "languages" || key === "countries") && (
-                      <button
-                        type="button"
-                        className="mb-2 text-sm underline"
-                        onClick={() => choose(key, [])}
-                      >
-                        {t(
-                          key === "languages" ? "allLanguages" : "allCountries"
-                        )}
-                      </button>
-                    )}
-                    {key === "languages" && (
-                      <p className="mt-0 text-xs" style={{ color: T.ink.dim }}>
-                        {p("contentLanguageHint")}
-                      </p>
-                    )}
-                    <div className="max-h-52 overflow-y-auto">
-                      {choices.map((facet) => {
-                        const checked = (current[key] ?? []).some((value) =>
-                          articleFacetMatches(facet, value)
-                        )
-
-                        return (
-                          <label
-                            key={facet.value}
-                            className="flex items-start justify-between gap-3 py-1.5 text-sm"
-                          >
-                            <span className="flex items-start gap-2">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                disabled={pending}
-                                onChange={() =>
-                                  choose(
-                                    key,
-                                    checked
-                                      ? (current[key] ?? []).filter(
-                                          (value) =>
-                                            !articleFacetMatches(facet, value)
-                                        )
-                                      : [...(current[key] ?? []), facet.value]
-                                  )
-                                }
-                              />
-                              <span>
-                                {key === "languages"
-                                  ? languageName(facet.value, [], locale)
-                                  : facet.label}
-                              </span>
-                            </span>
-                            {!changingPreview && (
-                              <span style={{ color: T.ink.dim }}>
-                                ({facet.count})
-                              </span>
-                            )}
-                          </label>
-                        )
-                      })}
-                    </div>
-                  </fieldset>
-                )
-              })}
+              ) && (
+                <p
+                  role="status"
+                  className="m-0 py-8 text-center text-sm text-(--t-ink-dim)"
+                >
+                  {t("noFilterChoices")}
+                </p>
+              )}
             </div>
-            {previewFailed && <p role="status">{p("countUnavailable")}</p>}
-            <button
-              type="button"
-              onClick={() => {
-                if (mobile) navigate(new URLSearchParams(staged))
-                setOpen(false)
-              }}
-              className="rounded-full px-4 py-3 font-semibold"
-              style={{ background: T.accent.primary, color: T.bg.deep }}
-            >
-              {changingPreview
-                ? p("showResults")
-                : p("showCount", { count: resolved.total })}
-            </button>
+            <div className="shrink-0 border-t border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4 sm:px-7">
+              {previewFailed && (
+                <p role="status" className="mt-0 text-sm">
+                  {p("countUnavailable")}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (mobile) navigate(new URLSearchParams(staged))
+                  setOpen(false)
+                }}
+                className="min-h-12 w-full cursor-pointer rounded-full px-5 py-3 font-semibold transition-colors hover:bg-(--t-accent-primary-hover)"
+                style={{ background: T.accent.primary, color: T.bg.deep }}
+              >
+                {changingPreview
+                  ? p("showResults")
+                  : p("showCount", { count: resolved.total })}
+              </button>
+            </div>
           </DialogContent>
         </Dialog>
         {suggestion && !params.has("country") && (
           <button
-            className="text-sm underline"
+            className="min-h-11 cursor-pointer rounded-full px-3 text-sm font-semibold text-(--t-accent-primary) hover:bg-(--t-accent-chip)"
             type="button"
             onClick={() => choose("countries", [suggestion])}
           >
@@ -413,7 +515,7 @@ export function ArticleDiscoveryFilters({
       {chips.length > 0 ? (
         <ul
           aria-label={t("selectedFilters")}
-          className="mt-3 flex list-none flex-wrap gap-2 p-0"
+          className="mt-3 mb-0 flex list-none flex-wrap gap-2 border-t border-(--t-border-line) pt-3 pl-0"
         >
           {chips.map(({ key, value, label }) => (
             <li key={`${key}:${value}`}>
@@ -428,7 +530,7 @@ export function ArticleDiscoveryFilters({
                     )
                   )
                 }
-                className="rounded-full px-3 py-1 text-sm"
+                className="min-h-9 cursor-pointer rounded-full px-3 py-1 text-sm hover:brightness-95"
                 style={{
                   background: T.accent.chip,
                   color: T.accent.primaryHover,
@@ -439,11 +541,14 @@ export function ArticleDiscoveryFilters({
             </li>
           ))}
         </ul>
-      ) : (
-        <p className="mb-0 text-xs" style={{ color: T.ink.dim }}>
+      ) : kind === "journal" ? (
+        <p
+          className="mt-3 mb-0 text-xs leading-relaxed"
+          style={{ color: T.ink.dim }}
+        >
           {t("worldwide")}
         </p>
-      )}
+      ) : null}
       {preferenceFailed && (
         <p role="status" className="text-sm">
           {t("preferenceFailed")}
