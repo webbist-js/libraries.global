@@ -4,7 +4,7 @@ import { BillingError, billingConfig } from "@/lib/billing/config"
 
 import type { ApiLimits, ApiMembership } from "./types"
 
-export const API_TERMS_VERSION = "1.1"
+export { API_TERMS_VERSION } from "./constants"
 
 function integer(value: string | undefined, fallback: number, maximum: number) {
   if (!value) return fallback

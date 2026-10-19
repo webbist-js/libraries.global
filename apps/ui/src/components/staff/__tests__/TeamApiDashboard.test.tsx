@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { API_TERMS_VERSION } from "@/lib/team-api/config"
 import type { ApiDashboard } from "@/lib/team-api/types"
 
 vi.mock("next-intl", () => ({ useLocale: () => "en" }))
@@ -79,6 +80,31 @@ describe("Team API staff dashboard", () => {
     expect(button.disabled).toBe(true)
     fireEvent.click(screen.getByRole("checkbox"))
     expect(button.disabled).toBe(false)
+  })
+  it("submits the terms version accepted by API checkout", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json({ error: "fixture_stop" }, { status: 400 })
+      )
+    vi.stubGlobal("fetch", fetcher)
+    render(
+      <TeamApiDashboard
+        initial={{ ...initial, active: false }}
+        teams={[]}
+        confirming={false}
+      />
+    )
+    fireEvent.click(screen.getByRole("checkbox"))
+    fireEvent.click(
+      screen.getByRole("button", { name: "Subscribe to API access" })
+    )
+    await waitFor(() => expect(fetcher).toHaveBeenCalled())
+    expect(JSON.parse(fetcher.mock.calls[0]?.[1]?.body as string)).toEqual({
+      action: "checkout",
+      locale: "en",
+      termsVersion: API_TERMS_VERSION,
+    })
   })
   it("shows a created secret once and blocks another creation until it is saved", async () => {
     const secret = `lg_api_${"a".repeat(43)}`
