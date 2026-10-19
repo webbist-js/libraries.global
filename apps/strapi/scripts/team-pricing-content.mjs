@@ -121,7 +121,7 @@ const apiRecordEndpoint =
   "GET /api/v1/libraries/{entityRef} returns one published record by its exact entity reference. Take entityRef from search or list results and URL-encode it as one path segment (encodeURIComponent in JavaScript), for example europe:united-kingdom:scotland:national-library-of-scotland. Unknown references return 404. Treat pagination cursors as opaque."
 
 export const apiKnowledgeSummary =
-  "The paid Team API add-on: public search and library records, keys, shared allowances and usage reporting. Invited beta testers can use Stripe Test mode; live purchases are not enabled."
+  "Team API keys, shared allowances and usage reporting. New subscriptions are temporarily unavailable; existing active subscriptions can continue to use their keys."
 
 /** Update the existing guide’s endpoint and closed-beta availability. */
 export function apiKnowledgeBody(doc) {

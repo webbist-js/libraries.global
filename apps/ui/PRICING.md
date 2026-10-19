@@ -36,7 +36,7 @@ For a Team invoice, use one base item plus the number of additional seats. Six s
 - Apply `billing:migrate` to the application/auth PostgreSQL database. It adds the Team API tables without changing Strapi content schemas.
 - Configure the matching-mode API Price and portal IDs from the prepared catalogue. Keep runtime credentials private and preserve separate sandbox/live bindings.
 - Publish terms version 1.1 and the matching Knowledge copy. [Content operations](../strapi/CONTENT-OPERATIONS.md) documents production and local targets.
-- Complete the owned sandbox purchase, key lifecycle, usage, limits and cancellation checks before live activation. The current production CMS guide accurately says that API purchases are not enabled yet.
+- Complete the owned sandbox purchase, key lifecycle, usage, limits and cancellation checks before live activation. Production Knowledge guides distinguish Stripe Test mode from live purchases and record temporary checkout restrictions.
 - Prepare personal live portals/webhooks through the existing billing runbook after its acceptance requirements are met. Preparing the pricing catalogue does not satisfy settlement or Managed Payments activation checks.
 - Promote the accepted UI/CMS/worker release using the deployment runbook, then update the production API availability copy when purchases are enabled.
 
