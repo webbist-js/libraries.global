@@ -15,6 +15,17 @@ beforeEach(() => {
   session.mockResolvedValue({ user: { id: "u1" } })
 })
 describe("translation lookups", () => {
+  it("rejects CMS-only languages before loading article content", async () => {
+    const fetcher = vi.fn()
+    vi.stubGlobal("fetch", fetcher)
+    const response = await GET(
+      new Request(
+        "https://site.example/api/contribute/article?kind=knowledge&slug=story&locale=es"
+      )
+    )
+    expect(response.status).toBe(400)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
   it.each([403, 500, 503])(
     "preserves upstream failure %s instead of claiming the translation is absent",
     async (status) => {

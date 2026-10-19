@@ -1,4 +1,5 @@
 import type { Capability } from "@repo/access"
+import { isSupportedLocale } from "@repo/shared-data"
 
 import type { TiptapDoc } from "./articleBlocks"
 
@@ -113,12 +114,12 @@ export function isArticleKind(v: unknown): v is ArticleKind {
   return v === "knowledge" || v === "journal"
 }
 
-/** A `?locale=` value when it names a configured locale; otherwise undefined. */
+/** A `?locale=` value must be enabled in the CMS and supported by app routes. */
 export function editingLocaleFrom(
   requested: unknown,
   locales: readonly ArticleLocale[]
 ): string | undefined {
-  return typeof requested === "string" &&
+  return isSupportedLocale(requested) &&
     locales.some((l) => l.code === requested)
     ? requested
     : undefined

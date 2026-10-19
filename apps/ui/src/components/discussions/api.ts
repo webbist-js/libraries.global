@@ -77,7 +77,8 @@ export function discussionFilters(query: URLSearchParams): DiscussionFilters {
     contextId: (query.get("entity") ?? "").slice(0, 128),
     contextLocale: (query.get("contextLocale") ?? "").slice(0, 35),
     subjectId: (query.get("subject") ?? "").slice(0, 64),
-    language: (query.get("lang") ?? "").slice(0, 35),
+    language:
+      query.get("lang") === "all" ? "" : (query.get("lang") ?? "").slice(0, 35),
     view: view === "unanswered" || view === "following" ? view : "latest",
     q: (query.get("q") ?? "").slice(0, 180),
   }

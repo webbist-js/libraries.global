@@ -1,20 +1,11 @@
-"use client"
-
 import { Icon } from "@iconify/react"
-import { useSearchParams } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
-import { Suspense } from "react"
+import { useTranslations } from "next-intl"
 
 import { EditorOnly } from "@/components/contribute/EditorOnly"
 import type { DocsSection } from "@/components/docs/docs.config"
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
 
-import {
-  activeDocsSection,
-  ALL_SECTIONS,
-  sectionPreview,
-} from "./docs-sections"
+import { sectionPreview } from "./docs-sections"
 
 export type DocsPageRow = {
   documentId: string
@@ -25,262 +16,131 @@ export type DocsPageRow = {
   readMinutes: number | null
 }
 
-/** Each Knowledge section with the pages filed under it, in display order. */
-export type DocsSectionData = {
-  section: DocsSection
-  rows: DocsPageRow[]
-}[]
+export type DocsSectionData = { section: DocsSection; rows: DocsPageRow[] }[]
 
-function SectionChip({ count }: { readonly count: number }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("editorial")
-
-  if (count === 0) {
-    return (
-      <span
-        className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
-        style={{ background: "#F5EEDC", color: "#6B5420" }}
-      >
-        {tUi("planned")}
-      </span>
-    )
-  }
-
-  return (
-    <span
-      className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
-      style={{ background: T.bg.muted, color: T.ink.dim }}
-    >
-      {t("pageCount", { count })}
-    </span>
-  )
-}
-
-/**
- * Section cards; which ones show follows ?section= (the hero's tabs). The
- * "All sections" view lists a few pages per section with a link to the
- * section's own tab, which lists every page.
- */
+/** Short, scannable previews; the section link opens the complete guide list. */
 export function DocsSectionsExplorer({
   sections,
 }: {
   readonly sections: DocsSectionData
 }) {
-  return (
-    <Suspense
-      fallback={<SectionsBody active={ALL_SECTIONS} sections={sections} />}
-    >
-      <SectionsFromUrl sections={sections} />
-    </Suspense>
-  )
-}
-
-function SectionsFromUrl({ sections }: { readonly sections: DocsSectionData }) {
-  const active = activeDocsSection(
-    useSearchParams().get("section"),
-    sections.map((entry) => entry.section)
-  )
-
-  return <SectionsBody active={active} sections={sections} />
-}
-
-function PageRow({ row }: { readonly row: DocsPageRow }) {
-  const t = useUiTranslations("editorial")
+  const t = useTranslations("editorial")
 
   return (
-    <li className="border-t" style={{ borderColor: T.border.divider }}>
-      <GlobalLink
-        className="group flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3.5"
-        href={row.href}
+    <section aria-labelledby="docs-sections-heading">
+      <h2
+        id="docs-sections-heading"
+        className="m-0 mb-3 text-sm font-semibold text-(--t-ink-dim)"
       >
-        <span className="min-w-0">
-          <span
-            className="block text-[17px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors group-hover:decoration-current"
-            style={{ fontFamily: T.font.serif, color: T.ink.base }}
-          >
-            {row.title}
-          </span>
-          {row.summary ? (
-            <span
-              className="mt-1 block max-w-[64ch] text-[14px] leading-[1.5]"
-              style={{ color: T.ink.dim }}
-            >
-              {row.summary}
-            </span>
-          ) : null}
-        </span>
-        <span
-          className="flex shrink-0 items-center gap-4 text-[14px]"
-          style={{ color: T.ink.low }}
-        >
-          {row.readMinutes != null ? (
-            <span className="inline-flex items-center gap-1">
-              <Icon
-                aria-hidden="true"
-                height={14}
-                icon="mdi:clock-outline"
-                width={14}
-              />
-              {t("readingTime", { minutes: row.readMinutes })}
-            </span>
-          ) : null}
-          {row.updatedLabel ? (
-            <span>{t("updatedOn", { date: row.updatedLabel })}</span>
-          ) : null}
-        </span>
-      </GlobalLink>
-    </li>
+        {t("allSections")}
+      </h2>
+      {sections.length === 0 ? (
+        <p className="rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-6 text-sm text-(--t-ink-dim)">
+          {t("noSections")}
+        </p>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {sections.map(({ section, rows }) => (
+            <SectionCard key={section.slug} section={section} rows={rows} />
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
 function SectionCard({
   section,
   rows,
-  showAll,
 }: {
   readonly section: DocsSection
   readonly rows: DocsPageRow[]
-  readonly showAll: boolean
 }) {
-  const t = useUiTranslations("editorial")
-  const preview = sectionPreview(rows, showAll)
+  const t = useTranslations("editorial")
+  const preview = sectionPreview(rows, false)
+  const href = `/knowledge?section=${section.slug}`
 
   return (
     <section
-      aria-labelledby={`docs-${section.slug}`}
-      className="rounded-[20px] border p-6"
       id={section.slug}
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
+      aria-labelledby={`docs-${section.slug}`}
+      className="flex min-w-0 scroll-mt-40 flex-col rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <span
-            aria-hidden="true"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full"
-            style={{ background: section.tintBg, color: section.tintFg }}
-          >
-            <Icon height={20} icon={section.icon} width={20} />
-          </span>
-          <div>
-            <h2
-              className="m-0"
-              id={`docs-${section.slug}`}
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "24px",
-                fontWeight: 500,
-                color: T.ink.base,
-              }}
-            >
-              {section.title}
-            </h2>
-            {section.description ? (
-              <p className="mt-1 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
-                {section.description}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        <SectionChip count={rows.length} />
-      </div>
-
-      {rows.length === 0 ? (
-        <div
-          className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t pt-4"
-          style={{ borderColor: T.border.divider }}
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: section.tintBg, color: section.tintFg }}
         >
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-            {t("noWrittenPages")}
-          </p>
+          <Icon icon={section.icon} width={19} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+            <h3
+              id={`docs-${section.slug}`}
+              className="m-0 font-serif text-[24px] leading-tight font-medium"
+            >
+              <GlobalLink
+                href={href}
+                className="transition-colors hover:text-(--t-accent-primary)"
+              >
+                {section.title}
+              </GlobalLink>
+            </h3>
+            <span className="shrink-0 text-xs text-(--t-ink-dim)">
+              {t("guideCount", { count: rows.length })}
+            </span>
+          </div>
+          {section.description ? (
+            <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+              {section.description}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      {rows.length ? (
+        <ul className="mt-4 mb-0 list-none p-0">
+          {preview.rows.map((row) => (
+            <li key={row.documentId} className="border-t border-(--t-divider)">
+              <GlobalLink
+                href={row.href}
+                className="group flex min-h-11 items-baseline justify-between gap-3 py-3 text-sm transition-colors hover:text-(--t-accent-primary)"
+              >
+                <span className="min-w-0">{row.title}</span>
+                {row.readMinutes != null ? (
+                  <span className="shrink-0 text-xs text-(--t-ink-dim)">
+                    {t("minutes", { minutes: row.readMinutes })}
+                  </span>
+                ) : null}
+              </GlobalLink>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="mt-4 border-t border-(--t-divider) pt-4 text-sm text-(--t-ink-dim)">
+          <p className="m-0">{t("noWrittenPages")}</p>
           <EditorOnly kind="knowledge">
             <GlobalLink
-              className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
               href={`/contribute/knowledge/new?type=knowledge&section=${section.slug}`}
-              style={{ color: T.accent.primary }}
+              className="mt-2 inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary)"
             >
               {t("writeFirstPage")}
-              <Icon
-                aria-hidden="true"
-                height={14}
-                icon="mdi:arrow-right"
-                width={14}
-              />
             </GlobalLink>
           </EditorOnly>
         </div>
-      ) : (
-        <>
-          <ul className="m-0 mt-5 list-none p-0">
-            {preview.rows.map((row) => (
-              <PageRow key={row.documentId} row={row} />
-            ))}
-          </ul>
-          {preview.hidden > 0 ? (
-            <div
-              className="flex border-t pt-4"
-              style={{ borderColor: T.border.divider }}
-            >
-              <GlobalLink
-                className="inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
-                href={`/knowledge?section=${section.slug}`}
-                style={{ color: T.accent.primary }}
-              >
-                {t("showAllPages", { count: rows.length })}
-                <span className="sr-only">
-                  {t("inSection", { section: section.title })}
-                </span>
-                <Icon
-                  aria-hidden="true"
-                  height={14}
-                  icon="mdi:arrow-right"
-                  width={14}
-                />
-              </GlobalLink>
-            </div>
-          ) : null}
-        </>
       )}
+      <GlobalLink
+        href={href}
+        className="mt-auto inline-flex min-h-11 items-center gap-1.5 pt-3 text-sm font-semibold text-(--t-accent-primary) hover:underline"
+      >
+        {preview.hidden > 0
+          ? t("allGuides", { count: rows.length })
+          : t("openSection")}
+        <span className="sr-only">
+          {t("inSection", { section: section.title })}
+        </span>
+        <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+      </GlobalLink>
     </section>
-  )
-}
-
-function SectionsBody({
-  sections,
-  active,
-}: {
-  readonly sections: DocsSectionData
-  /** A section slug, or "all". */
-  readonly active: string
-}) {
-  const t = useUiTranslations("editorial")
-  const showAll = active !== ALL_SECTIONS
-  const totalPages = sections.reduce((sum, s) => sum + s.rows.length, 0)
-  const visibleSections = showAll
-    ? sections.filter((entry) => entry.section.slug === active)
-    : sections
-
-  return (
-    <div>
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-        {t("pagesSoFar", { pages: t("pageCount", { count: totalPages }) })}
-      </p>
-
-      {sections.length === 0 ? (
-        <p className="mt-5 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
-          {t("noSections")}
-        </p>
-      ) : (
-        <div className="mt-5 flex flex-col gap-5">
-          {visibleSections.map(({ section, rows }) => (
-            <SectionCard
-              key={section.slug}
-              rows={rows}
-              section={section}
-              showAll={showAll}
-            />
-          ))}
-        </div>
-      )}
-    </div>
   )
 }

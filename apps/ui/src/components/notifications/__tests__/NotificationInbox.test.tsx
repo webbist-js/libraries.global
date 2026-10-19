@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { NextIntlClientProvider } from "next-intl"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
@@ -25,7 +26,89 @@ beforeEach(() => {
 })
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.unstubAllGlobals()
+})
+
+it("shows a loading state without claiming the inbox is empty or read", () => {
+  state.loading = true
+  render(<NotificationInbox />)
+  expect(screen.getByRole("status").textContent).toContain(
+    "Loading your updates"
+  )
+  expect(
+    screen.queryByRole("heading", { name: "No notifications yet" })
+  ).toBeNull()
+  expect(screen.queryByText("All read")).toBeNull()
+})
+
+it("offers a retry without showing an empty inbox when loading fails", () => {
+  state.error = true
+  render(<NotificationInbox />)
+  expect(screen.getByRole("alert").textContent).toContain("Could not load")
+  expect(
+    screen.queryByRole("heading", { name: "No notifications yet" })
+  ).toBeNull()
+  expect(screen.queryByText("All read")).toBeNull()
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }))
+  expect(state.refresh).toHaveBeenCalledOnce()
+})
+
+it("marks all notifications read through the existing bulk action", async () => {
+  state.items = [
+    {
+      documentId: "a",
+      title: "An update",
+      kind: "announcement",
+      body: "News",
+      createdAt: new Date().toISOString(),
+      readAt: null,
+    },
+  ]
+  state.unread = 1
+  render(<NotificationInbox />)
+  fireEvent.click(screen.getByRole("button", { name: "Mark all as read" }))
+  await waitFor(() => expect(state.refresh).toHaveBeenCalledOnce())
+  expect(fetch).toHaveBeenCalledWith(
+    "/api/notifications",
+    expect.objectContaining({ method: "POST", body: '{"documentId":"all"}' })
+  )
+})
+
+it("keeps this week's updates visible when the group label is translated", () => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date("2026-10-21T12:00:00Z"))
+  state.items = [
+    {
+      documentId: "a",
+      title: "An update from Tuesday",
+      kind: "announcement",
+      body: "News",
+      createdAt: "2026-10-20T12:00:00Z",
+      readAt: null,
+    },
+  ]
+  render(
+    <NextIntlClientProvider
+      locale="fr"
+      timeZone="Europe/London"
+      messages={{
+        ui: {
+          notifications: "Notifications",
+          your_notifications: "Vos notifications",
+          settings: "Paramètres",
+          filter_notifications: "Filtrer les notifications",
+          this_week: "Cette semaine",
+        },
+      }}
+    >
+      <NotificationInbox />
+    </NextIntlClientProvider>
+  )
+  expect(screen.getByRole("heading", { name: "Cette semaine" })).toBeTruthy()
+  expect(
+    screen.getByRole("heading", { name: "An update from Tuesday" })
+  ).toBeTruthy()
 })
 it("offers useful next actions in the empty inbox", () => {
   render(<NotificationInbox />)

@@ -248,23 +248,23 @@ describe("public article context", () => {
     ).toContain("/knowledge?")
     expect(screen.queryByText("Reading workshop")).toBeNull()
   })
-  it("copies and shares the displayed Spanish-only Journal variant", async () => {
+  it("copies and shares the displayed French Journal variant", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal("navigator", { clipboard: { writeText } })
     render(
       <BlogArticlePage
         article={{
-          documentId: "es-story",
-          title: "Una tarde en Bogotá",
+          documentId: "fr-story",
+          title: "Un après-midi à Bogotá",
           slug: "demo-bogota-workshop",
           section: { documentId: "feature", name: "Feature", slug: "feature" },
         }}
         locale="en"
-        contentLocale="es"
+        contentLocale="fr"
       />
     )
     const url =
-      "https://libraries.global/journal/feature/demo-bogota-workshop?contentLang=es"
+      "https://libraries.global/journal/feature/demo-bogota-workshop?contentLang=fr"
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(url))
     const intent = new URL(

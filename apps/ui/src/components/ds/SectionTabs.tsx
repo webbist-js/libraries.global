@@ -10,7 +10,7 @@ export type SectionTab = {
   id: string
   label: ReactNode
   href: string
-  /** Iconify id for inactive tabs; the active tab uses the brand-blue dot. */
+  /** Optional Iconify id, shown before the tab label. */
   icon?: string
   /** Trailing count, e.g. pages in a Knowledge section. Zero is not shown. */
   count?: number
@@ -18,9 +18,8 @@ export type SectionTab = {
 }
 
 /**
- * Folder tabs that sit on the bottom edge of a hero band (PageHero's `tabs`
- * slot, or the legal document hero). The active tab takes the page colour
- * and covers the band's bottom border, so it reads as the page below.
+ * Underline tabs for the shared sticky SectionNavigation bar.
+ * The selected tab stays in view when the row scrolls on narrow screens.
  * Internal links only: each tab is a real URL, marked with aria-current.
  */
 export function SectionTabs({
@@ -42,7 +41,6 @@ export function SectionTabs({
 }) {
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (!roomy) return
     const nav = navRef.current
     const current = nav?.querySelector<HTMLElement>('[aria-current="page"]')
     if (!nav || !current) return
@@ -61,7 +59,7 @@ export function SectionTabs({
       aria-label={label}
       className={[
         // A right-edge fade says the row scrolls on narrow screens.
-        "relative -mb-px flex gap-1 overflow-x-auto [scrollbar-width:none] after:pointer-events-none after:sticky after:right-0 after:-ml-8 after:w-8 after:shrink-0 after:bg-linear-to-l after:from-(--t-bg-space) after:to-transparent sm:after:hidden print:hidden [&::-webkit-scrollbar]:hidden",
+        "relative -mb-px flex min-w-0 flex-1 gap-1 self-stretch overflow-x-auto [scrollbar-width:none] after:pointer-events-none after:sticky after:right-0 after:-ml-6 after:w-6 after:shrink-0 after:bg-linear-to-l after:from-(--t-bg-deep) after:to-transparent sm:after:hidden print:hidden [&::-webkit-scrollbar]:hidden",
         className,
       ]
         .filter(Boolean)
@@ -74,26 +72,19 @@ export function SectionTabs({
           <Link
             aria-current={active ? "page" : undefined}
             className={[
-              "inline-flex shrink-0 items-center gap-2 border border-b-0 font-semibold whitespace-nowrap transition-colors",
+              "inline-flex shrink-0 items-center gap-2 border-b-2 font-medium whitespace-nowrap transition-colors duration-150 focus-visible:-outline-offset-4! motion-reduce:transition-none",
               roomy
-                ? "min-h-14 rounded-t-[20px] px-4 py-3 text-[16px]"
-                : "min-h-11 rounded-t-[14px] px-4 py-2.5 text-[14px]",
+                ? "min-h-[60px] px-4 py-3 text-[16px]"
+                : "min-h-[56px] px-3 py-3 text-[15px]",
               active
-                ? "border-(--t-border-line) bg-(--t-bg-void) text-(--t-ink-base)"
-                : "border-transparent text-(--t-ink-dim) hover:text-(--t-ink-base)",
+                ? "border-(--t-accent-primary) font-semibold text-(--t-ink-base)"
+                : "border-transparent text-(--t-ink-dim) hover:border-(--t-accent-primary)/35 hover:text-(--t-accent-primary) focus-visible:text-(--t-accent-primary)",
             ].join(" ")}
             href={tab.href}
             key={tab.id}
             scroll={scroll}
           >
-            {active ? (
-              <span
-                aria-hidden="true"
-                className="inline-flex size-4 shrink-0 items-center justify-center"
-              >
-                <span className="size-2 rounded-full bg-(--t-accent-primary)" />
-              </span>
-            ) : tab.icon ? (
+            {tab.icon ? (
               <span
                 aria-hidden="true"
                 className="inline-flex size-4 shrink-0 items-center justify-center"
@@ -105,10 +96,10 @@ export function SectionTabs({
             {tab.badge}
             {tab.count ? (
               <span
-                className="rounded-full px-2 text-[13px] font-bold tabular-nums"
+                className="rounded-full px-1.5 py-0.5 text-[13px] leading-none font-semibold tabular-nums"
                 style={{
-                  background: roomy ? T.accent.primary : T.bg.muted,
-                  color: roomy ? T.bg.deep : T.ink.dim,
+                  background: T.bg.muted,
+                  color: T.ink.dim,
                 }}
               >
                 {tab.count}

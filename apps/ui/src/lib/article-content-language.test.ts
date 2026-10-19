@@ -8,15 +8,13 @@ import {
 
 describe("explicit article language links", () => {
   it("preserves a valid content language independent of route language", () => {
-    expect(articleContentLanguage({ contentLang: "es" })).toBe("es")
-    expect(contentLanguageSuffix("es")).toBe("?contentLang=es")
-    expect(articleContentLanguage({ contentLang: ["pt-BR", "en"] })).toBe(
-      "pt-BR"
-    )
+    expect(articleContentLanguage({ contentLang: "fr" })).toBe("fr")
+    expect(contentLanguageSuffix("fr")).toBe("?contentLang=fr")
+    expect(articleContentLanguage({ contentLang: ["cs", "en"] })).toBe("cs")
   })
   it("keeps reader actions on the displayed content variant while preserving same-language URLs", () => {
-    expect(articleReaderPath("/journal/feature/story", "en", "es")).toBe(
-      "/journal/feature/story?contentLang=es"
+    expect(articleReaderPath("/journal/feature/story", "en", "fr")).toBe(
+      "/journal/feature/story?contentLang=fr"
     )
     expect(articleReaderPath("/knowledge/reference/guide", "en", "fr")).toBe(
       "/knowledge/reference/guide?contentLang=fr"
@@ -28,7 +26,9 @@ describe("explicit article language links", () => {
       "/journal/feature/story"
     )
   })
-  it("drops arbitrary paths and unsupported query syntax", () => {
+  it("drops CMS-only languages, arbitrary paths and unsupported query syntax", () => {
+    expect(articleContentLanguage({ contentLang: "es" })).toBeNull()
+    expect(contentLanguageSuffix("es")).toBe("")
     expect(articleContentLanguage({ contentLang: "../../draft" })).toBeNull()
     expect(
       articleContentLanguage({ contentLang: "es&status=draft" })

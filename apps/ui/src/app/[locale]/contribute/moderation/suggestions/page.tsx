@@ -1,9 +1,12 @@
+import { reviewCategoriesInScope } from "@repo/access"
 import { notFound } from "next/navigation"
 
 import {
   type OptionSuggestion,
   OptionSuggestionsBoard,
 } from "@/components/moderation"
+import { ModerationWorkspaceNav } from "@/components/moderation/ModerationWorkspaceNav"
+import type { WorkspaceView } from "@/components/moderation/workspace"
 import type { SuggestionReviewRound } from "@/lib/community/suggestions"
 import { fetchOptionCatalogue } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
@@ -14,7 +17,7 @@ import { ModerationAccessUnavailable } from "../_components/ModerationAccessUnav
 import { ModerationHero } from "../_components/ModerationHero"
 import { coversEverything, requireModerator } from "../_components/moderator"
 
-export const metadata = privateMetadata("Option suggestions")
+export const metadata = privateMetadata("Suggested additions")
 
 /**
  * Open Option Suggestions for the editorial board. Shown only to a viewer
@@ -33,8 +36,8 @@ export default async function OptionSuggestionsPage({
   if (accessUnknown)
     return (
       <ModerationAccessUnavailable
-        title="Option *suggestions*"
-        leaf="Option suggestions"
+        title="Suggested *additions*"
+        leaf="Suggested additions"
         path="/contribute/moderation/suggestions"
       />
     )
@@ -49,18 +52,42 @@ export default async function OptionSuggestionsPage({
     fetchOptionCatalogue(locale),
     fetchModeration<{ data?: SuggestionReviewRound }>(user, "suggestion-round"),
   ])
+  const suggestions = res.body?.data ?? []
+  const views: WorkspaceView[] = reviewCategoriesInScope(scopes).map((id) => ({
+    id,
+    href: `/contribute/moderation?category=${id}`,
+    pending: null,
+  }))
+  views.push(
+    {
+      id: "discussions",
+      href: "/contribute/moderation?tab=discussions",
+      pending: null,
+    },
+    {
+      id: "optionSuggestions",
+      href: "/contribute/moderation/suggestions",
+      pending:
+        res.status === 200
+          ? suggestions.filter((item) =>
+              ["open", "reviewing", "planned"].includes(item.status)
+            ).length
+          : null,
+    }
+  )
 
   return (
     <>
       <ModerationHero
-        title="Option *suggestions*"
-        leaf="Option suggestions"
-        lead="Options contributors asked for, most wanted first. Review, plan, accept or decline them; New ideas need a publication check first. Decision explanations are public."
+        title="Suggested *additions*"
+        leaf="Suggested additions"
+        lead="Review community requests for new accessibility features, services, facilities and library types. Check new suggestions before publication, then explain what will be added."
       />
-      <div className="mx-auto w-full max-w-[960px] px-4 pt-8 pb-16 sm:px-8">
+      <div className="mx-auto grid w-full max-w-[1360px] gap-6 px-4 pt-8 pb-16 sm:px-8">
+        <ModerationWorkspaceNav active="optionSuggestions" views={views} />
         {res.status === 200 ? (
           <OptionSuggestionsBoard
-            initial={res.body?.data ?? []}
+            initial={suggestions}
             catalogue={catalogue}
             round={round.body?.data}
           />

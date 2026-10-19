@@ -41,6 +41,47 @@ function article(
 }
 
 describe("article discovery predicates", () => {
+  it("groups the writing catalogue before pagination and searches every translation", () => {
+    const records = [
+      article("one", { locale: "en", title: "Library guide" }),
+      article("one", {
+        locale: "fr",
+        title: "Guide des bibliothèques",
+        slug: "guide-fr",
+      }),
+      article("two", { locale: "en" }),
+    ]
+    const grouped = aggregateArticleBrowse(
+      records,
+      parseArticleBrowseQuery({ groupBy: "document", pageSize: "1" }),
+      null,
+      "fr"
+    )
+    expect(grouped.total).toBe(2)
+    expect(grouped.pageCount).toBe(2)
+    const search = aggregateArticleBrowse(
+      records,
+      parseArticleBrowseQuery({ groupBy: "document", q: "bibliotheques" }),
+      null,
+      "en"
+    )
+    expect(search.total).toBe(1)
+    expect(search.items[0]?.title).toBe("Library guide")
+    expect(search.items[0]?.translations).toEqual([
+      { locale: "en", slug: "one", title: "Library guide" },
+      { locale: "fr", slug: "guide-fr", title: "Guide des bibliothèques" },
+    ])
+    const missing = aggregateArticleBrowse(
+      records,
+      parseArticleBrowseQuery({ groupBy: "document", missingLocale: "fr" }),
+      null,
+      "fr"
+    )
+    expect(missing.items.map((item) => item.documentId)).toEqual(["two"])
+    expect(
+      aggregateArticleBrowse(records, parseArticleBrowseQuery({})).total
+    ).toBe(3)
+  })
   it("searches bounded public text with accents and keeps filters/counts coherent", () => {
     const stories = [
       article("one", {

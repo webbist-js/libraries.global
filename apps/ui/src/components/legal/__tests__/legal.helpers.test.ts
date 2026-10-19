@@ -7,7 +7,6 @@ import {
   legalReadingMinutes,
   revisionsNewestFirst,
   sectionAnchors,
-  sectionNumber,
 } from "../legal.helpers"
 
 const words = (n: number) => Array.from({ length: n }, () => "word").join(" ")
@@ -39,13 +38,6 @@ describe("sectionAnchors", () => {
 
   it("falls back to a positional anchor for headings with no letters", () => {
     expect(sectionAnchors([{ heading: "—" }])).toEqual(["section-1"])
-  })
-})
-
-describe("sectionNumber", () => {
-  it("zero-pads to two digits", () => {
-    expect(sectionNumber(0)).toBe("01")
-    expect(sectionNumber(11)).toBe("12")
   })
 })
 

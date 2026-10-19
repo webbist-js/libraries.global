@@ -12,6 +12,7 @@ import {
 
 import { BetaFeedback } from "@/components/beta/BetaFeedback"
 import { ContactModalProvider } from "@/components/contact/ContactModalProvider"
+import { StickyPageLayout } from "@/components/ds/StickyPageLayout"
 import { EditorialDrawerMount } from "@/components/editorial/EditorialDrawerMount"
 import { ErrorBoundary } from "@/components/elementary/ErrorBoundary"
 import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener"
@@ -129,7 +130,7 @@ export default async function RootLayout({
           <TrackingScripts nonce={nonce} locale={locale} />
           <ServerProviders>
             <ContactModalProvider aliases={contactAliases}>
-              <div id="main">{children}</div>
+              <StickyPageLayout id="main">{children}</StickyPageLayout>
               <BetaFeedback label={tUi("feedback")} />
             </ContactModalProvider>
           </ServerProviders>
@@ -164,12 +165,12 @@ export default async function RootLayout({
             <ClientProviders nonce={nonce} liveConsole={liveConsole}>
               <EventModalProvider>
                 <div className="relative flex min-h-screen flex-col">
-                  <div
+                  <StickyPageLayout
                     id="main"
                     className="strapi-page-slot flex flex-1 flex-col"
                   >
                     {children}
-                  </div>
+                  </StickyPageLayout>
 
                   {!liveConsole && <TailwindIndicator />}
 

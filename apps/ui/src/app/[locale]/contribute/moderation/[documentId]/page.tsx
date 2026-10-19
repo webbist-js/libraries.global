@@ -379,7 +379,7 @@ export default async function ReviewSubmissionPage({
 
         <aside
           aria-label={tUi("decision")}
-          className="flex flex-col gap-6 self-start lg:sticky lg:top-24"
+          className="flex flex-col gap-6 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
         >
           <Section title={tUi("your_decision")}>
             <ReviewDecisionForm

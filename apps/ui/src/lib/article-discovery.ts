@@ -22,6 +22,9 @@ export const fetchArticleBrowse = cache(
       `/${kind === "blog" ? "blog" : "wiki"}-articles/browse`,
       params,
       {
+        ...(params.groupBy === "document"
+          ? { cache: "no-store" as const }
+          : {}),
         next: {
           tags: [
             "user-profile",

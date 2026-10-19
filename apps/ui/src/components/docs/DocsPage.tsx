@@ -11,7 +11,6 @@ import { KnowledgeDiscovery } from "@/components/articles/KnowledgeDiscovery"
 import {
   DEFAULT_SECTION_ICON,
   DOCS_REPO_URL,
-  DOCS_VERSION,
   docsArticlePath,
   docsSectionSlugsOf,
   homeSectionOf,
@@ -26,10 +25,12 @@ import {
 import { DocsSectionTabs } from "@/components/docs/DocsSectionTabs"
 import { SearchField } from "@/components/ds"
 import { PageHero } from "@/components/ds/PageHero"
+import { SectionNavigation } from "@/components/ds/SectionNavigation"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { analyticsAttributes } from "@/lib/analytics-events"
+import { articleReaderPath } from "@/lib/article-content-language"
 import { formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
 import type {
@@ -44,8 +45,8 @@ const ENTRY_CARDS = [
     description: "improveRecordsLead",
     href: "/contribute",
     icon: "mdi:pencil-outline",
-    bg: "#F5EEDC",
-    fg: "#6B5420",
+    bg: "var(--t-palette-amber-bg)",
+    fg: "var(--t-palette-amber-fg)",
     external: false,
   },
   {
@@ -72,12 +73,17 @@ function toRow(
   article: DocsWikiArticle,
   sections: readonly DocsSection[],
   locale: string,
-  untitled: string
+  untitled: string,
+  contentLocale = locale
 ): DocsPageRow {
   return {
     documentId: article.documentId,
     title: article.title ?? article.slug ?? untitled,
-    href: docsArticlePath(article, sections),
+    href: articleReaderPath(
+      docsArticlePath(article, sections),
+      locale,
+      contentLocale
+    ),
     summary: article.summary ?? null,
     updatedLabel: formatDate(article.updatedAt, "short", locale),
     readMinutes: article.readingTimeMinutes ?? readingTimeMinutes(article.body),
@@ -88,6 +94,7 @@ export function DocsPage({
   articles,
   sections,
   locale,
+  contentLocale = locale,
   quickStartCards,
   landing,
   discovery,
@@ -99,6 +106,7 @@ export function DocsPage({
   /** The Knowledge taxonomy from Strapi, in display order. */
   readonly sections: DocsSection[]
   readonly locale: Locale
+  readonly contentLocale?: string
   readonly quickStartCards?: readonly WikiArticleSummary[] | null
   readonly landing?: WikiLandingData | null
   readonly queryActive?: boolean
@@ -122,21 +130,30 @@ export function DocsPage({
     if (currentQuery[field] === "all") retainedSearch.set(field, "all")
 
   const entryCards =
-    (landing?.quickStartCards ?? quickStartCards)
-      ?.filter((article) => Boolean(article.slug))
-      .map((article) => {
-        const section = homeSectionOf(article, sections)
+    (landing?.quickStartCards ?? quickStartCards)?.flatMap((source) => {
+      const article =
+        contentLocale === locale
+          ? source
+          : articles.find((item) => item.documentId === source.documentId)
+      if (!article?.slug) return []
+      const section = homeSectionOf(article, sections)
 
-        return {
+      return [
+        {
           title: article.title ?? article.slug ?? t("untitled"),
           description: article.summary ?? "",
-          href: docsArticlePath(article, sections),
+          href: articleReaderPath(
+            docsArticlePath(article, sections),
+            locale,
+            contentLocale
+          ),
           icon: section?.icon ?? DEFAULT_SECTION_ICON,
           bg: section?.tintBg ?? T.bg.muted,
           fg: section?.tintFg ?? T.ink.dim,
           external: false,
-        }
-      }) ??
+        },
+      ]
+    }) ??
     ENTRY_CARDS.map((card) => ({
       ...card,
       title: t(card.title),
@@ -151,7 +168,7 @@ export function DocsPage({
     // and listed again under any other section the editor tagged.
     const home = homeSectionOf(article, sections)
     if (!home) return
-    const row = toRow(article, sections, locale, t("untitled"))
+    const row = toRow(article, sections, locale, t("untitled"), contentLocale)
     new Set([home.slug, ...docsSectionSlugsOf(article)]).forEach((slug) =>
       rowsBySection.get(slug)?.push(row)
     )
@@ -195,220 +212,285 @@ export function DocsPage({
   // Recent changes — articles are already sorted by updatedAt desc
   const recent = articles.slice(0, 5)
 
+  const total = localizedDiscovery?.total ?? articles.length
+  const isOverview = !queryActive && !activeSection
+  const firstGuide = activeSection ? localizedDiscovery?.items[0] : undefined
+
   return (
     <div
       className="relative isolate flex min-h-screen w-full flex-col"
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale} />
-
       <main className="relative z-10 flex-1">
         <PageHero
           breadcrumb={[
             { label: tUi("home"), href: "/" },
-            { label: tUi("knowledge") },
+            {
+              label: tUi("knowledge"),
+              ...(activeSection ? { href: "/knowledge" } : {}),
+            },
+            ...(activeSection ? [{ label: activeSection.title }] : []),
           ]}
-          eyebrow={landing?.heroEyebrow ?? tUi("knowledge")}
-          eyebrowAccent={landing?.version ?? DOCS_VERSION}
+          eyebrow={
+            activeSection
+              ? undefined
+              : (landing?.heroEyebrow ?? tUi("knowledge"))
+          }
+          eyebrowAccent={
+            isOverview ? t("guideCount", { count: total }) : undefined
+          }
           eyebrowIcon="mdi:book-open-outline"
-          lead={landing?.heroText ?? t("knowledgeHeroLead")}
-          title={landing?.heroTitle ?? t("knowledgeHeroTitle")}
-          tabs={<DocsSectionTabs counts={counts} sections={sections} />}
+          title={
+            activeSection?.title ??
+            landing?.heroTitle ??
+            t("knowledgeHeroTitle")
+          }
+          plainTitle={Boolean(activeSection)}
+          compact={Boolean(activeSection)}
+          emphasisTone="ink"
+          leadPlacement={activeSection ? "left" : "right"}
+          lead={
+            activeSection?.description ??
+            landing?.heroText ??
+            t("knowledgeHeroLead")
+          }
+          titleIcon={
+            activeSection ? (
+              <span
+                aria-hidden="true"
+                className="flex size-12 items-center justify-center rounded-2xl"
+                style={{
+                  background: activeSection.tintBg,
+                  color: activeSection.tintFg,
+                }}
+              >
+                <Icon icon={activeSection.icon} width={25} />
+              </span>
+            ) : undefined
+          }
         >
-          <form
-            action={locale === "en" ? "/knowledge" : `/${locale}/knowledge`}
-            method="get"
-            {...analyticsAttributes("search", {
-              interaction_source: "article",
-              search_type: "knowledge",
-            })}
-          >
-            {[...retainedSearch].map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={value} />
-            ))}
-            <SearchField
-              id="docs-search"
-              label={tUi("search_the_knowledge_base")}
-              placeholder={tUi(
-                "search_the_knowledge_base_eg_contribute_api_run_locally"
+          {activeSection && firstGuide && !searchQuery ? (
+            <GlobalLink
+              href={articleReaderPath(
+                docsArticlePath(firstGuide, sections),
+                locale,
+                firstGuide.locale
               )}
-              inputProps={{
-                name: "q",
-                defaultValue: searchQuery,
-                maxLength: 120,
-              }}
-            />
-          </form>
-        </PageHero>
-
-        <Container className="pt-8 pb-20">
-          {localizedDiscovery ? (
-            queryActive ? (
-              <KnowledgeDiscovery
-                discovery={localizedDiscovery}
-                locale={locale}
-                section={activeSection}
-              />
-            ) : (
-              <div className="mb-8">
-                <ArticleDiscoveryFilters
-                  discovery={localizedDiscovery}
-                  kind="knowledge"
-                />
-              </div>
-            )
-          ) : null}
-          {/* Entry cards */}
-          {!queryActive && entryCards.length > 0 ? (
-            <nav
-              aria-label={tUi("start_here")}
-              className="grid gap-4 md:grid-cols-3"
+              className="group flex items-center justify-between gap-5 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 lg:ml-auto lg:max-w-sm"
             >
-              {entryCards.map((card) => (
-                <GlobalLink
-                  className="group rounded-[18px] p-5 transition-transform hover:-translate-y-0.5"
-                  href={card.href}
-                  key={card.href}
-                  style={{ background: card.bg }}
-                  {...(card.external
-                    ? { rel: "noopener noreferrer", target: "_blank" }
-                    : {})}
-                >
-                  <span className="flex items-start gap-3.5">
-                    <span
-                      aria-hidden="true"
-                      className="flex size-10 shrink-0 items-center justify-center rounded-full"
-                      style={{ background: T.bg.deep, color: card.fg }}
-                    >
-                      <Icon height={19} icon={card.icon} width={19} />
-                    </span>
-                    <span>
-                      <span
-                        className="block text-[19px]"
-                        style={{
-                          fontFamily: T.font.serif,
-                          fontWeight: 500,
-                          color: T.ink.base,
-                        }}
+              <span>
+                <span className="block text-xs font-semibold text-(--t-ink-dim)">
+                  {t("startWith")}
+                </span>
+                <span className="mt-1 block font-serif text-[22px] leading-tight">
+                  {firstGuide.title}
+                </span>
+              </span>
+              <Icon
+                aria-hidden="true"
+                icon="mdi:arrow-right"
+                width={20}
+                className="shrink-0 text-(--t-accent-primary)"
+              />
+            </GlobalLink>
+          ) : (
+            <form
+              action={locale === "en" ? "/knowledge" : `/${locale}/knowledge`}
+              method="get"
+              {...analyticsAttributes("search", {
+                interaction_source: "article",
+                search_type: "knowledge",
+              })}
+            >
+              {[...retainedSearch].map(([name, value]) => (
+                <input key={name} type="hidden" name={name} value={value} />
+              ))}
+              <SearchField
+                id="docs-search"
+                label={tUi("search_the_knowledge_base")}
+                placeholder={tUi(
+                  "search_the_knowledge_base_eg_contribute_api_run_locally"
+                )}
+                inputProps={{
+                  name: "q",
+                  defaultValue: searchQuery,
+                  maxLength: 120,
+                }}
+              />
+            </form>
+          )}
+        </PageHero>
+        <SectionNavigation>
+          <DocsSectionTabs
+            counts={counts}
+            sections={sections}
+            total={isOverview ? total : undefined}
+          />
+          {localizedDiscovery ? (
+            <ArticleDiscoveryFilters
+              discovery={localizedDiscovery}
+              kind="knowledge"
+              compact
+            />
+          ) : null}
+        </SectionNavigation>
+        <Container className="py-8 pb-16 sm:pb-20">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="min-w-0">
+              {isOverview && entryCards.length > 0 ? (
+                <section className="mb-7" aria-labelledby="docs-start-heading">
+                  <h2
+                    id="docs-start-heading"
+                    className="m-0 mb-3 text-sm font-semibold text-(--t-ink-dim)"
+                  >
+                    {t("popularStartingPoints")}
+                  </h2>
+                  <nav
+                    aria-label={tUi("start_here")}
+                    className="grid gap-3 sm:grid-cols-3"
+                  >
+                    {entryCards.map((card) => (
+                      <GlobalLink
+                        key={card.href}
+                        href={card.href}
+                        className="group flex flex-col items-start rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 transition-colors hover:border-(--t-border-hi) hover:bg-(--t-bg-surface)"
+                        {...(card.external
+                          ? { rel: "noopener noreferrer", target: "_blank" }
+                          : {})}
                       >
-                        {card.title}{" "}
                         <span
                           aria-hidden="true"
-                          className="inline-block transition-transform group-hover:translate-x-0.5"
+                          className="mb-4 flex size-9 items-center justify-center rounded-xl"
+                          style={{ background: card.bg, color: card.fg }}
                         >
-                          →
+                          <Icon icon={card.icon} width={20} />
                         </span>
-                      </span>
-                      <span
-                        className="mt-1 block text-[14px] leading-[1.5]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {card.description}
-                      </span>
-                    </span>
-                  </span>
-                </GlobalLink>
-              ))}
-            </nav>
-          ) : null}
-
-          {/* Sections + sidebar */}
-          {!queryActive && (
-            <div className="mt-10 flex flex-col gap-8 lg:flex-row">
-              <div className="min-w-0 flex-1">
+                        <span className="font-serif text-[23px] leading-tight font-medium group-hover:text-(--t-accent-primary)">
+                          {card.title}
+                        </span>
+                        <span className="mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
+                          {card.description}
+                        </span>
+                      </GlobalLink>
+                    ))}
+                  </nav>
+                </section>
+              ) : null}
+              {isOverview ? (
                 <DocsSectionsExplorer sections={sectionData} />
-              </div>
-
-              <aside className="flex w-full shrink-0 flex-col gap-5 lg:w-[300px]">
-                <section
-                  aria-labelledby="docs-recent"
-                  className="rounded-[20px] border p-5"
-                  style={{ background: T.bg.deep, borderColor: T.border.line }}
-                >
-                  <h2
-                    className="m-0 flex items-center gap-2 text-[17px]"
-                    id="docs-recent"
-                    style={{
-                      fontFamily: T.font.serif,
-                      fontWeight: 500,
-                      color: T.ink.base,
-                    }}
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      height={17}
-                      icon="mdi:pulse"
-                      style={{ color: T.accent.primary }}
-                      width={17}
-                    />
-                    {p("recentPages")}
-                  </h2>
-                  <ul className="m-0 mt-3 flex list-none flex-col gap-3 p-0">
-                    {recent.map((article) => {
-                      const row = toRow(
-                        article,
-                        sections,
-                        locale,
-                        t("untitled")
-                      )
-                      const sectionTitle = homeSectionOf(
-                        article,
-                        sections
-                      )?.title
-
-                      return (
-                        <li key={article.documentId}>
-                          <GlobalLink
-                            className="text-[15px] font-semibold underline decoration-(--t-ink-ghost) underline-offset-[3px] transition-colors hover:decoration-current"
-                            href={row.href}
-                            style={{ color: T.ink.base }}
-                          >
-                            {row.title}
-                          </GlobalLink>
-                          <p
-                            className="m-0 mt-0.5 text-[13px]"
-                            style={{ color: T.ink.low }}
-                          >
-                            {sectionTitle}
-                            {row.updatedLabel ? ` · ${row.updatedLabel}` : ""}
-                          </p>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </section>
-
-                <section
-                  aria-labelledby="docs-write-with-us"
-                  className="rounded-[20px] p-5"
-                  style={{ background: T.ink.base, color: "#fff" }}
-                >
-                  <h2
-                    className="m-0 text-[20px]"
-                    id="docs-write-with-us"
-                    style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-                  >
-                    {p("suggestImprovement")}
-                  </h2>
-                  <p
-                    className="mt-2 mb-0 text-[14px] leading-[1.55]"
-                    style={{ color: "rgba(255,255,255,.75)" }}
-                  >
-                    {p("maintenanceHint")}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <GlobalLink
-                      href="/contribute/knowledge"
-                      className="inline-flex items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-semibold"
-                      style={{ color: T.ink.base }}
-                    >
-                      {p("suggestImprovement")}
-                    </GlobalLink>
-                  </div>
-                </section>
-              </aside>
+              ) : localizedDiscovery ? (
+                <KnowledgeDiscovery
+                  discovery={localizedDiscovery}
+                  locale={locale}
+                  section={activeSection}
+                />
+              ) : (
+                <DocsSectionsExplorer
+                  sections={sectionData.filter(
+                    ({ section }) =>
+                      !activeSection || section.slug === activeSection.slug
+                  )}
+                />
+              )}
             </div>
-          )}
+            <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <section
+                aria-labelledby="docs-recent"
+                className="rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5"
+              >
+                <h2 id="docs-recent" className="m-0 mb-2 text-sm font-semibold">
+                  {activeSection ? t("otherSections") : p("recentPages")}
+                </h2>
+                <ul className="m-0 list-none p-0">
+                  {activeSection
+                    ? sections
+                        .filter(
+                          (section) => section.slug !== activeSection.slug
+                        )
+                        .map((section) => (
+                          <li key={section.slug}>
+                            <GlobalLink
+                              href={`/knowledge?section=${section.slug}`}
+                              className="flex min-h-12 items-center gap-3 py-2 text-sm hover:text-(--t-accent-primary)"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+                                style={{
+                                  background: section.tintBg,
+                                  color: section.tintFg,
+                                }}
+                              >
+                                <Icon icon={section.icon} width={17} />
+                              </span>
+                              <span className="flex-1">{section.title}</span>
+                              <span className="text-xs text-(--t-ink-dim)">
+                                {counts[section.slug] ?? 0}
+                              </span>
+                            </GlobalLink>
+                          </li>
+                        ))
+                    : recent.map((article) => {
+                        const row = toRow(
+                          article,
+                          sections,
+                          locale,
+                          t("untitled"),
+                          contentLocale
+                        )
+
+                        return (
+                          <li
+                            key={article.documentId}
+                            className="border-t border-(--t-divider) py-3"
+                          >
+                            <GlobalLink
+                              href={row.href}
+                              className="block text-sm leading-snug font-semibold hover:text-(--t-accent-primary)"
+                            >
+                              {row.title}
+                            </GlobalLink>
+                            <p className="mt-1 mb-0 text-xs text-(--t-ink-dim)">
+                              {homeSectionOf(article, sections)?.title}
+                              {row.updatedLabel ? ` · ${row.updatedLabel}` : ""}
+                            </p>
+                          </li>
+                        )
+                      })}
+                </ul>
+                {!activeSection && !recent.length ? (
+                  <p className="mb-0 text-sm text-(--t-ink-dim)">
+                    {t("noPages")}
+                  </p>
+                ) : null}
+              </section>
+              <section
+                aria-labelledby="docs-write-with-us"
+                className="rounded-[20px] p-5"
+                style={{ background: T.ink.base, color: T.bg.deep }}
+              >
+                <h2
+                  id="docs-write-with-us"
+                  className="m-0 font-serif text-[26px] leading-tight font-medium"
+                >
+                  {activeSection ? t("missingGuide") : t("outOfDate")}
+                </h2>
+                <p
+                  className="mt-3 mb-0 text-sm leading-relaxed"
+                  style={{ color: T.ink.onDark }}
+                >
+                  {activeSection ? t("missingGuideLead") : p("maintenanceHint")}
+                </p>
+                <GlobalLink
+                  href="/contribute/knowledge"
+                  className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"
+                >
+                  {activeSection ? t("suggestGuide") : p("suggestImprovement")}
+                </GlobalLink>
+              </section>
+            </aside>
+          </div>
         </Container>
       </main>
     </div>

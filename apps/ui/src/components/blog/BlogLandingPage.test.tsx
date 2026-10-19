@@ -21,8 +21,17 @@ vi.mock("@/components/global/GlobalLink", () => ({
   ),
 }))
 vi.mock("@/lib/navigation", () => ({
-  Link: ({ href, children }: { href: string; children: ReactNode }) => (
-    <a href={href}>{children}</a>
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string
+    children: ReactNode
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }))
 vi.mock("@/components/ds/PageHero", () => ({

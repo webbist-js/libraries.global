@@ -1,5 +1,6 @@
 "use client"
 
+import { profilePalette, type ProfileBackground } from "@repo/shared-data"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -10,15 +11,18 @@ export function AvatarUpload({
   initials,
   onUpload,
   uploadEnabled = true,
+  background,
 }: {
   currentUrl?: string | null
   initials: string
   onUpload: (url: string) => void
   uploadEnabled?: boolean
+  background?: ProfileBackground | null
 }) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(currentUrl ?? null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const palette = profilePalette(background)
 
   const handleFile = async (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
@@ -81,7 +85,7 @@ export function AvatarUpload({
           width: "56px",
           height: "56px",
           borderRadius: "50%",
-          background: preview ? "transparent" : "var(--tint-national-bg)",
+          background: preview ? "transparent" : palette.bg,
           border: `1px solid ${uploading ? T.accent.primary : T.border.line}`,
           display: "flex",
           alignItems: "center",
@@ -89,7 +93,7 @@ export function AvatarUpload({
           fontFamily: T.font.serif,
           fontSize: "20px",
           fontWeight: 500,
-          color: "var(--tint-national-fg)",
+          color: palette.fg,
           flexShrink: 0,
           overflow: "hidden",
           cursor: uploading ? "not-allowed" : "pointer",

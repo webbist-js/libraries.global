@@ -4,13 +4,16 @@ import { useSearchParams } from "next/navigation"
 import { type Locale, useTranslations } from "next-intl"
 import React from "react"
 
+import { DROPDOWN_OPTION } from "@/components/ds/dropdown-styles"
+import {
+  HeaderDropdownContent,
+  HeaderDropdownTrigger,
+} from "@/components/global/HeaderDropdown"
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
 import {
   Select,
-  SelectContent,
   SelectItem,
   SelectSeparator,
-  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
@@ -67,34 +70,28 @@ function SuspensedLocaleSwitcher({
 
   return (
     <Select value={locale} onValueChange={handleLocaleChange}>
-      <SelectTrigger
+      <HeaderDropdownTrigger
+        kind="select"
         aria-label={t("language")}
         className={triggerClassName ?? "w-18 font-bold uppercase"}
       >
         <SelectValue>{locale}</SelectValue>
-      </SelectTrigger>
-      <SelectContent
-        position="popper"
-        className="border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base) shadow-xl shadow-black/40"
-      >
+      </HeaderDropdownTrigger>
+      <HeaderDropdownContent kind="select" className="w-[208px] p-1">
         {routing.locales.map((locale, index) => (
           <React.Fragment key={locale}>
-            <SelectItem
-              key={locale}
-              value={locale}
-              className="text-(--t-ink-low) focus:bg-(--t-bg-surface) focus:text-(--t-ink-base) data-[state=checked]:text-(--t-ink-base)"
-            >
+            <SelectItem key={locale} value={locale} className={DROPDOWN_OPTION}>
               {localeTranslation[locale]}
             </SelectItem>
             {index < routing.locales.length - 1 && (
               <SelectSeparator
                 key={`${locale}-separator`}
-                className="bg-(--t-border-line)"
+                className="mx-1 my-1.5 bg-(--t-divider)"
               />
             )}
           </React.Fragment>
         ))}
-      </SelectContent>
+      </HeaderDropdownContent>
     </Select>
   )
 }

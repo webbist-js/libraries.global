@@ -1,8 +1,15 @@
-import { Icon } from "@iconify/react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import { StepsCard } from "@/components/ds/StepsCard"
+import { Container } from "@/components/elementary/Container"
+import {
+  WIZARD_GRID,
+  WIZARD_RAIL,
+  WIZARD_CARD,
+} from "@/components/library-editor/wizard.constants"
+import { WizardStepNav } from "@/components/library-editor/WizardStepNav"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -29,53 +36,6 @@ const NEXT_STEPS = [
     title: "It goes live, credited to you.",
     body: "The record keeps its full history.",
   },
-]
-
-function RailStep({
-  n,
-  label,
-  sub,
-}: {
-  n: number
-  label: string
-  sub: string
-}) {
-  return (
-    <li className="flex items-start gap-3">
-      <span
-        aria-hidden="true"
-        className="flex size-9 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
-        style={{
-          border: `1.5px solid ${T.accent.primary}`,
-          color: T.accent.primary,
-          background: T.bg.deep,
-        }}
-      >
-        {n}
-      </span>
-      <span className="flex flex-col pt-1">
-        <span
-          className="text-[17px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
-          {label}
-        </span>
-        <span className="text-[15px]" style={{ color: T.ink.dim }}>
-          {sub}
-        </span>
-      </span>
-    </li>
-  )
-}
-
-const STEPS = [
-  { n: 1, label: "Identity", sub: "Name · Type · Status" },
-  { n: 2, label: "Location", sub: "Address · Coordinates" },
-  { n: 3, label: "Visit", sub: "Links · Hours · Access" },
-  { n: 4, label: "Collections", sub: "Holdings · Classification" },
-  { n: 5, label: "History", sub: "Founding · Building" },
-  { n: 6, label: "Photo", sub: "Image · Credit" },
-  { n: 7, label: "Sources & send", sub: "Evidence · Review" },
 ]
 
 export default async function IndexEditorPage({
@@ -117,175 +77,58 @@ export default async function IndexEditorPage({
         title="Add or improve *a library.*"
         lead="Search the index first. Improve the record if it’s there, or add it if it isn’t. An editor reviews every change before it goes live."
       />
-      <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_340px] 2xl:grid-cols-[300px_minmax(0,1fr)_380px]">
-          {/* Left — the form's steps, as a preview */}
-          <div className="min-w-0 self-start lg:sticky lg:top-[128px]">
-            <h2
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "24px",
-                fontWeight: 500,
-                letterSpacing: "-0.01em",
-                lineHeight: 1.2,
-                color: T.ink.base,
-                margin: "0 0 6px",
-              }}
-            >
+      <Container className="py-8 lg:py-10">
+        <main className={WIZARD_GRID}>
+          <aside
+            className={`${WIZARD_RAIL} hidden lg:block`}
+            aria-label="Your record"
+          >
+            <h2 className="m-0 font-serif text-[24px] leading-tight font-medium">
               {tUi("your_record")}
             </h2>
-            <p
-              className="m-0 flex items-center gap-2 text-[15px]"
-              style={{ color: T.ink.dim }}
-            >
-              <Icon icon="mdi:circle-outline" width={16} aria-hidden="true" />
+            <p className="mt-2 mb-5 text-[15px] text-(--t-ink-dim)">
               Choose a library to start
             </p>
-            <ol className="m-0 mt-6 hidden list-none flex-col gap-1 p-0 lg:flex">
-              <li
-                className="flex items-center gap-3.5 rounded-[16px] px-4 py-3"
-                style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: T.accent.primary, color: "#fff" }}
-                >
-                  <Icon icon="mdi:magnify" width={18} />
-                </span>
-                <span className="flex flex-col">
-                  <span
-                    className="text-[17px] font-semibold"
-                    style={{ color: T.ink.base }}
-                  >
-                    Find existing
-                  </span>
-                  <span className="text-[15px]" style={{ color: T.ink.dim }}>
-                    Add or improve
-                  </span>
-                </span>
-              </li>
-              {STEPS.map((step) => (
-                <li
-                  key={step.n}
-                  className="flex items-center gap-3 px-3 py-2.5"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
-                    style={{
-                      border: `1.5px solid ${T.border.hi}`,
-                      color: T.ink.dim,
-                      background: T.bg.deep,
-                    }}
-                  >
-                    {step.n}
-                  </span>
-                  <span className="flex flex-col">
-                    <span
-                      className="text-[17px] font-semibold"
-                      style={{ color: T.ink.dim }}
-                    >
-                      {step.label}
-                    </span>
-                    <span className="text-[15px]" style={{ color: T.ink.low }}>
-                      {step.sub}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* Centre — search */}
-          <div className="min-w-0">
-            {claiming ? (
-              <div
-                role="status"
-                className="mb-6 flex items-start gap-3 rounded-[20px] px-5 py-4"
-                style={{ background: "var(--tint-public-bg)" }}
-              >
-                <Icon
-                  icon="mdi:bank-outline"
-                  width={22}
-                  aria-hidden="true"
-                  style={{ color: "var(--tint-public-fg)", flexShrink: 0 }}
-                />
+            <WizardStepNav
+              preview
+              currentStep={0}
+              progress={[]}
+              findHref="/contribute/index"
+            />
+          </aside>
+          <div className="grid min-w-0 gap-6">
+            <section
+              className={WIZARD_CARD}
+              aria-label={tUi("find_the_library_first")}
+            >
+              {claiming && (
                 <p
-                  className="m-0 text-[15px] leading-[1.55]"
-                  style={{ color: T.ink.base }}
+                  role="status"
+                  className="mb-5 rounded-2xl bg-(--t-accent-chip) p-4 text-[15px] leading-relaxed"
                 >
-                  <strong style={{ color: "var(--tint-public-fg)" }}>
-                    Claiming your library?
-                  </strong>{" "}
                   Find your library, then choose Claim on its page.
                 </p>
-              </div>
-            ) : null}
-            <FindLibraryFirst
-              needsHelp={needsHelp}
-              intent={claiming ? "claim" : "edit"}
+              )}
+              <FindLibraryFirst
+                needsHelp={needsHelp}
+                intent={claiming ? "claim" : "edit"}
+              />
+            </section>
+            <StepsCard
+              title="What happens next"
+              steps={NEXT_STEPS.map((step) => ({
+                id: step.title,
+                content: (
+                  <>
+                    <strong className="block text-white">{step.title}</strong>
+                    {step.body}
+                  </>
+                ),
+              }))}
             />
           </div>
-
-          {/* Right — what happens next */}
-          <aside className="flex flex-col gap-5 self-start lg:col-start-2 xl:sticky xl:top-[128px] xl:col-start-auto">
-            <section
-              aria-labelledby="next-heading"
-              className="rounded-[24px] p-7"
-              style={{
-                background: T.bg.deep,
-                border: `1px solid ${T.border.line}`,
-              }}
-            >
-              <h2
-                id="next-heading"
-                className="m-0 mb-4 text-[17px] font-bold"
-                style={{ color: T.ink.base }}
-              >
-                What happens next
-              </h2>
-              <ol className="m-0 flex list-none flex-col gap-4 p-0">
-                {NEXT_STEPS.map((step, i) => (
-                  <RailStep
-                    key={step.title}
-                    n={i + 1}
-                    label={step.title}
-                    sub={step.body}
-                  />
-                ))}
-              </ol>
-            </section>
-            <aside
-              aria-label={tUi("tip")}
-              className="rounded-[20px] px-6 py-5"
-              style={{ background: "var(--tint-national-bg)" }}
-            >
-              <p
-                className="m-0 mb-2 flex items-center gap-2 text-[16px] font-bold"
-                style={{ color: "var(--tint-national-fg)" }}
-              >
-                <Icon
-                  icon="mdi:lightbulb-on-outline"
-                  width={20}
-                  aria-hidden="true"
-                />
-                Why search first?
-              </p>
-              <p
-                className="m-0 text-[15px] leading-[1.6]"
-                style={{ color: T.ink.base }}
-              >
-                A duplicate splits contributions across two records. Improving
-                the existing one keeps its history and sources together.
-              </p>
-            </aside>
-          </aside>
-        </div>
-      </main>
+        </main>
+      </Container>
     </div>
   )
 }

@@ -176,7 +176,7 @@ export function EditorialDrawer() {
                           ? t("checking")
                           : t("countsUnavailable")}
                   </p>
-                  <p className="m-0 mt-0.5 text-[12px] leading-relaxed text-[#d1cedd]">
+                  <p className="m-0 mt-1 text-[14px] leading-relaxed text-[#d1cedd]">
                     {summary.isPending || countsKnown
                       ? t("reviewPrivacy")
                       : t("partialCounts")}
@@ -254,14 +254,14 @@ export function EditorialDrawer() {
                           />
                           {tUi(kind === "docs" ? "knowledge" : "journal")}
                         </h4>
-                        <p className="m-0 mt-1 text-[12px] text-(--t-ink-dim)">
+                        <p className="m-0 mt-1 text-[14px] text-(--t-ink-dim)">
                           {languagesOf(c.editorLocales[kind])}
                         </p>
                       </div>
                       <Link
                         href={kind === "docs" ? "/knowledge" : "/journal"}
                         onClick={closeEditorialDrawer}
-                        className="inline-flex min-h-8 items-center text-[12px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                        className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
                       >
                         {t("browse")}
                       </Link>

@@ -1,10 +1,11 @@
 import { Icon } from "@iconify/react"
+import { profilePalette, type ProfileBackground } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { Standing } from "@/lib/community/leaderboard-server"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 
 const fmt = (n: number) => n.toLocaleString("en-GB")
 
@@ -21,25 +22,38 @@ const CARD_STYLE = {
 function Header({
   initials,
   subtitle,
+  avatarUrl,
+  background,
 }: {
   readonly initials: string | null
   readonly subtitle?: string
+  readonly avatarUrl?: string | null
+  readonly background?: ProfileBackground | null
 }) {
+  const palette = profilePalette(background)
+
   return (
     <div className="flex items-center gap-3">
       <span
         aria-hidden="true"
-        className="flex shrink-0 items-center justify-center rounded-full"
+        className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
         style={{
           width: 44,
           height: 44,
-          background: TYPE_TINT.national.bg,
-          color: TYPE_TINT.national.fg,
+          background: avatarUrl ? "transparent" : palette.bg,
+          color: palette.fg,
           fontFamily: T.font.serif,
           fontSize: 18,
         }}
       >
-        {initials ?? <Icon height={22} icon="mdi:account-outline" width={22} />}
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatarUrl} alt="" className="size-full object-cover" />
+        ) : (
+          (initials ?? (
+            <Icon height={22} icon="mdi:account-outline" width={22} />
+          ))
+        )}
       </span>
       <div className="min-w-0">
         <h2
@@ -174,6 +188,8 @@ export function StandingCard({
   signedIn,
   initials,
   signInReturnTo,
+  avatarUrl,
+  background,
 }: {
   readonly standing: Standing | null
   readonly signedIn: boolean
@@ -181,6 +197,8 @@ export function StandingCard({
   readonly initials: string
   /** Where "Sign in" comes back to. */
   readonly signInReturnTo: string
+  readonly avatarUrl?: string | null
+  readonly background?: ProfileBackground | null
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -207,7 +225,11 @@ export function StandingCard({
   if (!standing) {
     return (
       <Shell>
-        <Header initials={initials} />
+        <Header
+          initials={initials}
+          avatarUrl={avatarUrl}
+          background={background}
+        />
         <p
           className="m-0 text-[15px] leading-[1.55]"
           style={{ color: T.ink.dim }}
@@ -242,6 +264,8 @@ export function StandingCard({
     <Shell>
       <Header
         initials={initials}
+        avatarUrl={avatarUrl}
+        background={background}
         subtitle={`${standing.tier.name} · Level ${standing.tier.level}`}
       />
       <dl className="m-0 grid grid-cols-2 gap-2">

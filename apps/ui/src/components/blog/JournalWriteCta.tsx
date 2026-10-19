@@ -33,14 +33,14 @@ export function JournalWriteCta() {
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <GlobalLink
-          className="inline-flex items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
           href={JOURNAL_PITCH_HREF}
           style={{ background: "#fff", color: T.ink.base }}
         >
           {t("pitchStory")}
         </GlobalLink>
         <GlobalLink
-          className="inline-flex items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
           href={JOURNAL_EDITOR_APPLY_HREF}
           style={{
             borderColor: "rgba(255,255,255,.35)",

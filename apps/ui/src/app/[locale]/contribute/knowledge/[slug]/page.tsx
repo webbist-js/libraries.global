@@ -46,6 +46,7 @@ export default async function EditKnowledgeArticlePage({
   }>
 }) {
   const tUi = await getUiTranslations("ui")
+  const w = await getUiTranslations("writeWorkspace")
 
   const [
     { locale, slug },
@@ -95,12 +96,20 @@ export default async function EditKnowledgeArticlePage({
         title={
           report
             ? `Something wrong in *${article.title}?*`
-            : `Improve *${article.title}.*`
+            : w(
+                requestedLocale && requestedLocale !== article.locale
+                  ? "translateTitle"
+                  : "editTitle"
+              )
         }
         lead={
           report
             ? "Describe the problem. A reviewer checks it against your source, and accepted changes are credited to you."
-            : "Edit the article, or add a translation. Editors review every change before it’s published, and each contributor is credited."
+            : w(
+                requestedLocale && requestedLocale !== article.locale
+                  ? "translateLead"
+                  : "editLead"
+              )
         }
       />
       {report ? (

@@ -99,7 +99,7 @@ describe.each([
     expect("generateStaticParams" in route).toBe(false)
   })
   it("chooses each request's content language independently of the UI locale", async () => {
-    for (const language of ["es", "fr", undefined]) {
+    for (const language of ["cs", "fr", undefined]) {
       const tree = await route.default(props(language))
       expect(viewProps(tree)).toMatchObject({
         locale: "en",
@@ -114,14 +114,14 @@ describe.each([
     }
   })
   it("retains the requested language when redirecting an old section URL", async () => {
-    await expect(route.default(props("es", "old-section"))).rejects.toThrow(
-      `redirect:/${_name === "Journal" ? "journal" : "knowledge"}/reports/story?contentLang=es`
+    await expect(route.default(props("fr", "old-section"))).rejects.toThrow(
+      `redirect:/${_name === "Journal" ? "journal" : "knowledge"}/reports/story?contentLang=fr`
     )
   })
   it("keeps explicit-language canonical metadata on its own URL", async () => {
-    const metadata = await route.generateMetadata(props("es"))
+    const metadata = await route.generateMetadata(props("fr"))
     expect(metadata.alternates?.canonical).toBe(
-      `/${_name === "Journal" ? "journal" : "knowledge"}/reports/story?contentLang=es`
+      `/${_name === "Journal" ? "journal" : "knowledge"}/reports/story?contentLang=fr`
     )
     expect(metadata.robots).toMatchObject({ index: false, follow: true })
   })

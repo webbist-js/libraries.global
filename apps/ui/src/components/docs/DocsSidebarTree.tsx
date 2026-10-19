@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import { SearchField } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -34,11 +34,19 @@ export function DocsSidebarTree({
   const tUi = useUiTranslations("ui")
   const tArticle = useUiTranslations("editorial")
 
+  const instanceId = useId()
   const [filter, setFilter] = useState("")
   const [open, setOpen] = useState<ReadonlySet<string>>(() =>
     openSectionsByDefault(tree)
   )
   const query = filter.trim().toLowerCase()
+  const hasMatches = sections.some(
+    (section) =>
+      section.title.toLowerCase().includes(query) ||
+      (tree[section.slug] ?? []).some((page) =>
+        page.title.toLowerCase().includes(query)
+      )
+  )
   const allOpen = sections.every((s) => open.has(s.slug))
 
   const toggle = (key: string) =>
@@ -53,7 +61,8 @@ export function DocsSidebarTree({
   return (
     <nav aria-label={tUi("knowledge")} className="flex flex-col gap-5">
       <SearchField
-        id="docs-filter"
+        id={`${instanceId}-docs-filter`}
+        label={tUi("filter_articles")}
         placeholder={tUi("filter_articles")}
         size="sm"
         onClear={() => setFilter("")}
@@ -66,7 +75,7 @@ export function DocsSidebarTree({
 
       <div className="flex items-center justify-between gap-3">
         <GlobalLink
-          className="text-[14px] font-medium transition-colors hover:text-(--t-ink-base)"
+          className="inline-flex min-h-10 items-center text-[13px] font-medium transition-colors hover:text-(--t-ink-base)"
           href="/knowledge"
           style={{ color: T.ink.dim }}
         >
@@ -75,7 +84,7 @@ export function DocsSidebarTree({
         {query ? null : (
           <button
             type="button"
-            className="cursor-pointer rounded-full border-0 bg-transparent p-0 text-[13px] font-medium transition-colors hover:text-(--t-ink-base)"
+            className="cursor-pointer rounded-full border-0 bg-transparent px-1 py-2 text-[12px] font-medium transition-colors hover:text-(--t-ink-base)"
             style={{ color: T.ink.dim }}
             onClick={() =>
               setOpen(
@@ -88,19 +97,28 @@ export function DocsSidebarTree({
         )}
       </div>
 
-      <ul className="m-0 flex list-none flex-col gap-3 p-0">
+      {query && !hasMatches ? (
+        <p
+          role="status"
+          className="m-0 rounded-xl bg-(--t-bg-muted) p-3 text-sm text-(--t-ink-dim)"
+        >
+          {tArticle("noMatchingGuides")}
+        </p>
+      ) : null}
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {sections.map((section) => {
           const pages = tree[section.slug] ?? []
-          const visiblePages = query
-            ? pages.filter((page) => page.title.toLowerCase().includes(query))
-            : pages
+          const visiblePages =
+            query && !section.title.toLowerCase().includes(query)
+              ? pages.filter((page) => page.title.toLowerCase().includes(query))
+              : pages
           const sectionMatches =
             !query || section.title.toLowerCase().includes(query)
           if (query && !sectionMatches && visiblePages.length === 0) {
             return null
           }
           const expanded = query ? true : open.has(section.slug)
-          const listId = `docs-tree-${section.slug}`
+          const listId = `${instanceId}-docs-tree-${section.slug}`
 
           return (
             <li key={section.slug}>
@@ -114,7 +132,7 @@ export function DocsSidebarTree({
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-lg"
                   style={{ background: section.tintBg, color: section.tintFg }}
                 >
                   <Icon height={15} icon={section.icon} width={15} />

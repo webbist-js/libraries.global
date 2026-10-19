@@ -2,7 +2,10 @@
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
+import { Badge } from "@/components/ds/Badge"
+import { Button } from "@/components/ui/button"
 import type { SuggestionReviewRound } from "@/lib/community/suggestions"
+import { T } from "@/lib/design-tokens"
 
 export function SuggestionRoundControls({
   initial,
@@ -17,6 +20,7 @@ export function SuggestionRoundControls({
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState("")
   const [failed, setFailed] = useState(false)
+  const [loading, setLoading] = useState(!initial)
   function adopt(value: SuggestionReviewRound) {
     setRound(value)
     setCutoff(value.cutoffAt.slice(0, 16))
@@ -32,6 +36,9 @@ export function SuggestionRoundControls({
         if (json?.data && !controller.signal.aborted) adopt(json.data)
       })
       .catch(() => {})
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
     return () => controller.abort()
   }, [initial])
@@ -71,32 +78,55 @@ export function SuggestionRoundControls({
       setBusy(false)
     }
   }
-  if (!round) return <p role="status">{t("reviewUnavailable")}</p>
+  if (!round)
+    return (
+      <p
+        role="status"
+        className="m-0 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[15px] leading-relaxed text-(--t-ink-dim)"
+      >
+        {loading ? "Loading the review schedule…" : t("reviewUnavailable")}
+      </p>
+    )
 
   return (
-    <section className="grid gap-4 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5">
-      <h2 className="m-0 font-serif text-2xl">{t("manageRound")}</h2>
+    <section className="grid min-w-0 gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5">
+      <div className="flex flex-col items-start gap-3">
+        <h2
+          className="m-0 text-[26px] leading-tight"
+          style={{ fontFamily: T.font.serif }}
+        >
+          {t("manageRound")}
+        </h2>
+        <Badge
+          label={t(round.state === "voting" ? "openVotes" : "reviewInProgress")}
+          color={round.state === "voting" ? "ok" : "aurora"}
+        />
+      </div>
       {round.state === "voting" ? (
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="grid gap-1 text-sm font-semibold">
+        <fieldset
+          disabled={busy}
+          className="m-0 grid min-w-0 gap-4 border-0 p-0"
+        >
+          <legend className="sr-only">{t("manageRound")}</legend>
+          <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
             {t("cutoffAt")}
             <input
               type="datetime-local"
               value={cutoff}
               onChange={(e) => setCutoff(e.target.value)}
-              className="min-h-11 rounded-lg border p-2"
+              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-[15px] font-normal"
             />
           </label>
-          <label className="grid gap-1 text-sm font-semibold">
+          <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
             {t("reviewAt")}
             <input
               type="datetime-local"
               value={review}
               onChange={(e) => setReview(e.target.value)}
-              className="min-h-11 rounded-lg border p-2"
+              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-[15px] font-normal"
             />
           </label>
-          <label className="grid gap-1 text-sm font-semibold">
+          <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
             {t("capacity")}
             <input
               type="number"
@@ -104,17 +134,17 @@ export function SuggestionRoundControls({
               max={20}
               value={capacity}
               onChange={(e) => setCapacity(Number(e.target.value))}
-              className="min-h-11 rounded-lg border p-2"
+              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-[16px] font-normal"
             />
           </label>
-        </div>
+        </fieldset>
       ) : (
-        <ol className="m-0 grid gap-2 pl-5 text-sm">
+        <ol className="m-0 grid gap-3 pl-5 text-[15px] leading-relaxed">
           {round.shortlist.map((item) => (
             <li key={item.documentId}>
               <a
                 href={`#moderation-suggestion-${item.documentId}`}
-                className="underline"
+                className="inline-flex min-h-[44px] items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
               >
                 {item.name}
               </a>{" "}
@@ -123,18 +153,23 @@ export function SuggestionRoundControls({
           ))}
         </ol>
       )}
-      <button
+      <Button
         type="button"
         disabled={busy}
         onClick={() =>
           void save(round.state === "voting" ? "schedule" : "close")
         }
-        className="min-h-11 justify-self-start rounded-full bg-(--t-accent-primary) px-5 font-semibold text-white disabled:opacity-50"
+        variant="primary"
+        size="pill"
+        className="w-full"
       >
         {t(round.state === "voting" ? "saveRound" : "completeRound")}
-      </button>
+      </Button>
       {message && (
-        <p role={failed ? "alert" : "status"} className="m-0 text-sm">
+        <p
+          role={failed ? "alert" : "status"}
+          className={`m-0 rounded-xl px-4 py-3 text-[14px] leading-relaxed ${failed ? "bg-(--t-palette-coral-soft) text-(--t-palette-coral-fg)" : "bg-(--t-palette-mint-soft) text-(--t-palette-mint-fg)"}`}
+        >
           {message}
         </p>
       )}

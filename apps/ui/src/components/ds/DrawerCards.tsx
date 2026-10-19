@@ -10,7 +10,7 @@ import { Badge } from "./Badge"
 
 export const DRAWER_CARD = "rounded-[20px] border"
 export const DRAWER_PILL =
-  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[13px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
 
 /** Compact workspace shortcuts, grouped on a single paper surface. */
 export function DrawerSection({
@@ -40,7 +40,7 @@ export function DrawerSection({
             {title}
           </h3>
           {description ? (
-            <p className="m-0 mt-1 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 mt-1 text-[14px] leading-relaxed text-(--t-ink-dim)">
               {description}
             </p>
           ) : null}
@@ -89,7 +89,7 @@ export function DrawerAction({
           {label}
         </span>
         {description ? (
-          <span className="mt-0.5 block text-[12px] leading-snug text-(--t-ink-dim)">
+          <span className="mt-0.5 block text-[14px] leading-relaxed text-(--t-ink-dim)">
             {description}
           </span>
         ) : null}
@@ -99,7 +99,7 @@ export function DrawerAction({
       ) : null}
       {count !== undefined ? (
         <span
-          className={`min-w-6 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[12px] font-semibold tabular-nums ${typeof count === "number" && count > 0 ? "bg-[#19172c] text-white" : "bg-(--t-bg-space) text-(--t-ink-dim)"}`}
+          className={`min-w-6 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[13px] font-semibold tabular-nums ${typeof count === "number" && count > 0 ? "bg-[#19172c] text-white" : "bg-(--t-bg-space) text-(--t-ink-dim)"}`}
         >
           {count}
         </span>
@@ -137,7 +137,7 @@ export function DrawerFooter({
         <Icon aria-hidden height={16} width={16} icon="mdi:arrow-right" />
       </Link>
       <kbd
-        className="rounded-md border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-1 text-[12px] text-(--t-ink-dim)"
+        className="rounded-md border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-1 text-[14px] text-(--t-ink-dim)"
         style={{ fontFamily: T.font.mono }}
       >
         {shortcut}

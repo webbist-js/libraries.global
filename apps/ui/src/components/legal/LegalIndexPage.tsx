@@ -61,12 +61,12 @@ export function LegalIndexPage({
           title={t("legal_policies")}
           lead={t("legal_policies_intro")}
         />
-        <Container className="grid gap-8 py-10 sm:py-14 lg:grid-cols-3">
+        <Container className="grid items-start gap-8 py-10 sm:gap-10 sm:py-14 lg:grid-cols-3">
           {groups.map((group) => (
             <section key={group.key} aria-labelledby={group.key}>
               <h2
                 id={group.key}
-                className="m-0 mb-4 text-[26px] font-medium"
+                className="m-0 mb-5 text-[28px] leading-tight font-medium"
                 style={{ fontFamily: T.font.serif }}
               >
                 {t(group.key)}
@@ -76,11 +76,11 @@ export function LegalIndexPage({
                   <li key={doc.documentId}>
                     <GlobalLink
                       href={`/legal/${doc.slug}`}
-                      className="flex min-h-20 items-center gap-3 rounded-[18px] border border-(--t-border-line) bg-white p-5 text-[15px] font-semibold no-underline hover:border-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4"
+                      className="group flex min-h-20 items-center gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[16px] leading-relaxed font-medium no-underline transition-colors hover:border-(--t-accent-primary)/40 hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4"
                     >
                       <Icon
                         aria-hidden="true"
-                        className="shrink-0 text-(--t-accent-primary)"
+                        className="size-10 shrink-0 rounded-xl bg-(--t-accent-chip) p-2.5 text-(--t-accent-primary)"
                         height={20}
                         icon={legalIcon(doc.slug)}
                         width={20}

@@ -30,7 +30,7 @@ export function FeedsAside() {
   return (
     <aside aria-labelledby="event-feed-aside-heading" className="min-w-0">
       <div
-        className="flex flex-col gap-5 p-6 lg:sticky lg:top-32"
+        className="flex flex-col gap-5 p-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
         style={{
           border: `1px solid ${T.border.line}`,
           borderRadius: "20px",

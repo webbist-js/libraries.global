@@ -52,6 +52,7 @@ export function DiscussionComposer({
   lockLanguage = Boolean(target),
   variant = "default",
   footerAction,
+  embedded = false,
 }: {
   subject?: Subject
   threadId?: string
@@ -85,6 +86,7 @@ export function DiscussionComposer({
   ) => void
   variant?: "default" | "suggestion"
   footerAction?: ReactNode
+  embedded?: boolean
 }) {
   const t = useTranslations("discussions")
   const locale = useLocale()
@@ -128,6 +130,15 @@ export function DiscussionComposer({
         >
           {t(threadId || inlineSuggestion ? "signInToReply" : "signIn")}
         </Link>
+        {embedded && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="min-h-11 rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold"
+          >
+            {t("cancel")}
+          </button>
+        )}
         {footerAction}
       </div>
     )
@@ -135,6 +146,15 @@ export function DiscussionComposer({
     return (
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p role="status">{disabledMessage ?? t("locked")}</p>
+        {embedded && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="min-h-11 rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold"
+          >
+            {t("cancel")}
+          </button>
+        )}
         {footerAction}
       </div>
     )
@@ -199,7 +219,7 @@ export function DiscussionComposer({
       className={
         threadId || inlineSuggestion
           ? "flex flex-wrap items-center gap-2.5 text-[13px] text-(--t-ink-dim)"
-          : "grid gap-1"
+          : "grid gap-1 text-sm font-semibold"
       }
     >
       <span className="inline-flex items-center gap-1.5">
@@ -214,7 +234,7 @@ export function DiscussionComposer({
         className={
           threadId || inlineSuggestion
             ? "min-h-[44px] w-auto min-w-[132px] rounded-full border-(--t-border-hi) px-3.5 text-[14px] font-medium shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
-            : "mt-1"
+            : "mt-1 min-h-12 px-4 text-[16px] font-normal shadow-none"
         }
         onValueChange={(value) => {
           setSelectedLanguage(value)
@@ -237,14 +257,16 @@ export function DiscussionComposer({
       }
       onSubmit={(event) => submit(event)}
       className={
-        inlineSuggestion
-          ? "grid gap-3 text-[16px] [--spacing:0.25rem]"
-          : "grid gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[16px] [--spacing:0.25rem] sm:p-6"
+        embedded
+          ? "grid gap-5 border-t border-(--t-divider) pt-5 text-[16px] [--spacing:0.25rem]"
+          : inlineSuggestion
+            ? "grid gap-3 text-[16px] [--spacing:0.25rem]"
+            : "grid gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[16px] [--spacing:0.25rem] sm:p-6"
       }
     >
       <div
         className={
-          inlineSuggestion && !onCancel
+          embedded || (inlineSuggestion && !onCancel)
             ? "sr-only"
             : "flex items-center justify-between gap-3"
         }
@@ -258,7 +280,7 @@ export function DiscussionComposer({
         >
           {heading ?? (threadId ? t("joinConversation") : t("newThread"))}
         </h3>
-        {onCancel && (
+        {onCancel && !embedded && (
           <button
             type="button"
             onClick={onCancel}
@@ -269,24 +291,26 @@ export function DiscussionComposer({
         )}
       </div>
       {!threadId && !inlineSuggestion && (
-        <label>
-          {t("threadTitle")}
-          <input
-            disabled={busy}
-            value={title}
-            onChange={(event) => {
-              setSelectedLanguage(language)
-              setTitle(event.target.value)
-              onDraftChange?.({ title: event.target.value, body, language })
-            }}
-            maxLength={250}
-            required
-            className="mt-1 w-full rounded-lg border border-(--t-border-line) p-2"
-          />
-        </label>
+        <div className="grid items-start gap-4 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm font-semibold">
+            {t("threadTitle")}
+            <input
+              disabled={busy}
+              value={title}
+              onChange={(event) => {
+                setSelectedLanguage(language)
+                setTitle(event.target.value)
+                onDraftChange?.({ title: event.target.value, body, language })
+              }}
+              maxLength={250}
+              required
+              className="mt-1 min-h-12 w-full min-w-0 rounded-xl border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-[16px] font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+            />
+          </label>
+          {languageControl}
+        </div>
       )}
-      {!threadId && !inlineSuggestion && languageControl}
-      <label>
+      <label className="grid gap-1 text-sm font-semibold">
         <span className={threadId || inlineSuggestion ? "sr-only" : undefined}>
           {t("body")}
         </span>
@@ -298,7 +322,9 @@ export function DiscussionComposer({
               ? t("inlineReplyPlaceholder")
               : threadId
                 ? t("replyPlaceholder")
-                : undefined
+                : embedded
+                  ? t("storyMessagePlaceholder")
+                  : undefined
           }
           value={body}
           onChange={(event) => {
@@ -312,12 +338,12 @@ export function DiscussionComposer({
           rows={inlineSuggestion ? 3 : threadId ? 5 : 6}
           className={
             inlineSuggestion
-              ? "block field-sizing-fixed min-h-28 w-full rounded-[18px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-[16px] leading-relaxed shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
-              : "mt-1 block field-sizing-fixed min-h-[140px] w-full rounded-[16px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-[16px] leading-relaxed shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
+              ? "block field-sizing-fixed min-h-28 w-full rounded-[18px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-[16px] leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
+              : "mt-1 block field-sizing-fixed min-h-[140px] w-full rounded-[16px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-[16px] leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
           }
         />
       </label>
-      {!inlineSuggestion && (
+      {!inlineSuggestion && !embedded && (
         <p className="m-0 flex items-start gap-1.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
           <ShieldCheck size={15} className="mt-0.5 shrink-0" aria-hidden />
           {t("reviewLead")}
@@ -372,6 +398,15 @@ export function DiscussionComposer({
           inlineSuggestion && "mt-1 border-t border-(--t-border-line) pt-4"
         )}
       >
+        {embedded && (
+          <p className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-relaxed text-(--t-ink-dim)">
+            <ShieldCheck size={15} aria-hidden />
+            {t("reviewLead")}
+            <span id={counterId}>
+              · {formatter.number(body.length)} / {formatter.number(20000)}
+            </span>
+          </p>
+        )}
         <div
           className={
             inlineSuggestion
@@ -379,14 +414,26 @@ export function DiscussionComposer({
               : "ml-auto flex items-center gap-3"
           }
         >
-          <span
-            id={counterId}
-            className={
-              inlineSuggestion ? "sr-only" : "text-xs text-(--t-ink-dim)"
-            }
-          >
-            {formatter.number(body.length)} / {formatter.number(20000)}
-          </span>
+          {!embedded && (
+            <span
+              id={counterId}
+              className={
+                inlineSuggestion ? "sr-only" : "text-xs text-(--t-ink-dim)"
+              }
+            >
+              {formatter.number(body.length)} / {formatter.number(20000)}
+            </span>
+          )}
+          {embedded && onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={busy}
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold hover:bg-(--t-bg-muted)"
+            >
+              {t("cancel")}
+            </button>
+          )}
           <button
             type="submit"
             disabled={

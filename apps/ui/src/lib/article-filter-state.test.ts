@@ -131,6 +131,33 @@ describe("discovery request defaults", () => {
       )
     ).toBe("all")
   })
+  it("uses a profile language for Knowledge and mobile previews without overriding explicit choices", () => {
+    expect(
+      new URLSearchParams(knowledgeBrowseParams("en", {}, "es")).get("lang")
+    ).toBe("es")
+    expect(
+      new URLSearchParams(
+        knowledgeBrowseParams("en", { lang: "all" }, "es")
+      ).get("lang")
+    ).toBe("all")
+    for (const kind of ["journal", "knowledge"] as const) {
+      expect(
+        new URLSearchParams(
+          articlePreviewParams("section=practice", kind, "en", "es")
+        ).get("lang")
+      ).toBe("es")
+      expect(
+        new URLSearchParams(
+          articlePreviewParams("lang=fr,cs", kind, "en", "es")
+        ).get("lang")
+      ).toBe("fr,cs")
+      expect(
+        new URLSearchParams(
+          articlePreviewParams("lang=all", kind, "en", "es")
+        ).get("lang")
+      ).toBe("all")
+    }
+  })
   it("uses the same defaults and explicit all-language choice in mobile previews", () => {
     expect(
       new URLSearchParams(

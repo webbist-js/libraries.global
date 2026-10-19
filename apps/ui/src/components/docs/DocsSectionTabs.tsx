@@ -17,7 +17,8 @@ function tabsFor(
   sections: readonly DocsSection[],
   counts: DocsSectionCounts,
   allSections: string,
-  query = ""
+  query = "",
+  total?: number
 ): SectionTab[] {
   const href = (section?: string) => {
     const params = new URLSearchParams(query)
@@ -33,14 +34,13 @@ function tabsFor(
       id: ALL_SECTIONS,
       label: allSections,
       href: href(),
-      icon: "mdi:book-open-outline",
-      count: sections.reduce((sum, s) => sum + (counts[s.slug] ?? 0), 0),
+      count:
+        total ?? sections.reduce((sum, s) => sum + (counts[s.slug] ?? 0), 0),
     },
     ...sections.map((s) => ({
       id: s.slug,
       label: s.title,
       href: href(s.slug),
-      icon: s.icon,
       count: counts[s.slug] ?? 0,
     })),
   ]
@@ -49,9 +49,11 @@ function tabsFor(
 function TabsFromUrl({
   sections,
   counts,
+  total,
 }: {
   readonly sections: readonly DocsSection[]
   readonly counts: DocsSectionCounts
+  readonly total?: number
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
@@ -64,7 +66,13 @@ function TabsFromUrl({
       activeId={active}
       label={tUi("knowledge_sections")}
       scroll={false}
-      tabs={tabsFor(sections, counts, t("allSections"), params.toString())}
+      tabs={tabsFor(
+        sections,
+        counts,
+        t("allSections"),
+        params.toString(),
+        total
+      )}
     />
   )
 }
@@ -76,9 +84,11 @@ function TabsFromUrl({
 export function DocsSectionTabs({
   sections,
   counts,
+  total,
 }: {
   readonly sections: readonly DocsSection[]
   readonly counts: DocsSectionCounts
+  readonly total?: number
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
@@ -89,11 +99,11 @@ export function DocsSectionTabs({
         <SectionTabs
           activeId={ALL_SECTIONS}
           label={tUi("knowledge_sections")}
-          tabs={tabsFor(sections, counts, t("allSections"))}
+          tabs={tabsFor(sections, counts, t("allSections"), "", total)}
         />
       }
     >
-      <TabsFromUrl counts={counts} sections={sections} />
+      <TabsFromUrl counts={counts} sections={sections} total={total} />
     </Suspense>
   )
 }
