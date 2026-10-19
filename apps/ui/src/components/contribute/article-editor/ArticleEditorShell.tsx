@@ -4,13 +4,14 @@ import { Icon } from "@iconify/react"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
+import { Notice } from "@/components/ds/Notice"
+import { Button } from "@/components/ui/button"
 import { useCapabilities, useHydratedSession } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
-import type { ArticleBodyBlock } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
+import { cn } from "@/lib/styles"
 
 import {
   ARTICLE_KIND_META,
@@ -42,6 +43,11 @@ import {
   type SubmitState,
   TagsCard,
 } from "./ArticleSidebar"
+import { ArticleSourcePanel } from "./ArticleSourcePanel"
+import {
+  ArticleWorkspaceLayout,
+  ArticleWorkspaceSidebar,
+} from "./ArticleWorkspaceLayout"
 import { useArticleRecovery } from "./useArticleRecovery"
 
 type View = "write" | "preview" | "source"
@@ -130,6 +136,7 @@ export function ArticleEditorShell({
     error: sessionError,
   } = useHydratedSession()
   const p = useUiTranslations("publishing")
+  const w = useUiTranslations("writeWorkspace")
   const displayLocale = useLocale()
 
   const meta = ARTICLE_KIND_META[kind]
@@ -196,6 +203,7 @@ export function ArticleEditorShell({
     (session?.user as { editorLocales?: { journal?: unknown } } | undefined)
       ?.editorLocales?.journal === "all"
   const [view, setView] = useState<View>("write")
+  const [showSource, setShowSource] = useState(true)
   const [submissionId, setSubmissionId] = useState<string | null>(null)
   const [saveState, setSaveState] = useState<SaveState>("idle")
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
@@ -225,6 +233,14 @@ export function ArticleEditorShell({
   const localeRef = useRef(locale)
   localeRef.current = locale
   const translating = mode === "edit" && locale !== sourceLocale
+  const wideWorkspace = translating || Boolean(comparison)
+  const hadComparison = useRef(false)
+
+  useEffect(() => {
+    if (hadComparison.current && !comparison)
+      document.getElementById("compare-published-version")?.focus()
+    hadComparison.current = Boolean(comparison)
+  }, [comparison])
   const submitted = submitState === "submitted"
   const editorBusy =
     loadingLocale ||
@@ -244,6 +260,14 @@ export function ArticleEditorShell({
   const hydrate = useCallback(
     (d: ServerDraft) => {
       const from = restoreArticleDraft(d.draftData ?? {}, mediaUrl)
+      if (from.locale && !locales.some((item) => item.code === from.locale)) {
+        setLoadedResumeId(d.documentId)
+        setResumeUnavailable(true)
+        setSubmitError(tConflict("draftLocaleUnavailable"))
+        setSubmitState("error")
+
+        return
+      }
       const previous = draftRef.current
       const next = {
         title: from.title ?? previous.title,
@@ -284,7 +308,7 @@ export function ArticleEditorShell({
       )
       dirty.current = false
     },
-    [article?.baseRevision, article?.locale]
+    [article?.baseRevision, article?.locale, locales, tConflict]
   )
 
   const lookupLocale = resumeDraftId ? null : locale
@@ -578,7 +602,7 @@ export function ArticleEditorShell({
         setDraft(next)
         baseRevisionRef.current = existing?.contentRevision ?? null
         setDocKey(`locale:${code}`)
-        setView("source")
+        setView("write")
       }
       submissionRef.current = null
       setSubmissionId(null)
@@ -917,23 +941,37 @@ export function ArticleEditorShell({
     }
   }, [submitted])
 
-  const sourceBlocks = useMemo(
-    () =>
-      (Array.isArray(article?.body) ? article.body : []).map((b, i) => ({
-        id: i,
-        ...(b as object),
-      })) as unknown as ArticleBodyBlock[],
-    [article?.body]
-  )
-
   const segment = (id: View, label: string) => (
     <button
       key={id}
       type="button"
+      id={`article-view-${id}`}
       role="tab"
       aria-selected={view === id}
+      aria-controls="article-editor-panel"
+      tabIndex={view === id ? 0 : -1}
       onClick={() => setView(id)}
-      className="rounded-full px-4 py-2 text-[14px] font-semibold transition-colors"
+      onKeyDown={(event) => {
+        const views: View[] = translating
+          ? ["write", "preview", "source"]
+          : ["write", "preview"]
+        const index = views.indexOf(id)
+        const next =
+          event.key === "Home"
+            ? views[0]
+            : event.key === "End"
+              ? views.at(-1)
+              : event.key === "ArrowRight"
+                ? views[(index + 1) % views.length]
+                : event.key === "ArrowLeft"
+                  ? views[(index + views.length - 1) % views.length]
+                  : undefined
+        if (!next) return
+        event.preventDefault()
+        setView(next)
+        document.getElementById(`article-view-${next}`)?.focus()
+      }}
+      className="min-h-[44px] rounded-full px-4 py-2 text-[15px] font-semibold transition-colors"
       style={{
         background: view === id ? T.bg.deep : "transparent",
         color: view === id ? T.ink.base : T.ink.dim,
@@ -948,201 +986,302 @@ export function ArticleEditorShell({
   )
 
   return (
-    <div className="mx-auto w-full max-w-[1360px] px-4 py-5 sm:px-8">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="min-w-0">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <ArticleWorkspaceLayout wide={wideWorkspace}>
+      <div className="min-w-0">
+        <div className="mb-5 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
               href={
                 kind === "journal"
                   ? "/contribute/knowledge?type=journal"
                   : "/contribute/knowledge"
               }
-              className="inline-flex items-center gap-1.5 text-[15px] font-semibold no-underline"
+              className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-semibold no-underline hover:text-(--t-accent-primary)"
               style={{ color: T.ink.base }}
             >
               <Icon icon="mdi:chevron-left" width={20} aria-hidden="true" />
               {tUi("all_articles")}{" "}
             </Link>
-            <div
-              role="tablist"
-              aria-label={tUi("view")}
-              className="inline-flex gap-1 rounded-full p-1"
-              style={{ background: T.bg.muted2 }}
-            >
-              {segment("write", tUi("write"))}
-              {segment("preview", tUi("preview"))}
-              {translating && segment("source", tUi("source"))}
-            </div>
+            <LanguageCard
+              inline
+              mode={mode}
+              locale={locale}
+              locales={locales}
+              sourceLocale={sourceLocale}
+              availableLocales={article?.availableLocales ?? []}
+              allowedLocales={
+                ready
+                  ? locales
+                      .filter(
+                        (l) =>
+                          openJournalDraft ||
+                          canOwnEdit ||
+                          canDirectEdit(editorKind, l.code)
+                      )
+                      .map((l) => l.code)
+                  : []
+              }
+              onChange={(code) => void changeLocale(code)}
+              disabled={submitted || editorBusy}
+            />
+            {!comparison && (
+              <div
+                role="tablist"
+                aria-label={tUi("view")}
+                className="inline-flex gap-1 rounded-full p-1"
+                style={{ background: T.bg.muted2 }}
+              >
+                {segment("write", tUi("write"))}
+                {segment("preview", tUi("preview"))}
+                {translating && segment("source", tUi("source"))}
+              </div>
+            )}
           </div>
 
-          <p className="mb-4 text-sm text-(--t-ink-dim)">
-            {p(
-              mode === "new"
-                ? kind === "journal"
-                  ? "journalStory"
-                  : "knowledgeArticle"
-                : "privateProposal"
-            )}{" "}
-            · {localeName}
-          </p>
-          {!online && (
-            <p role="status" className="mb-3 rounded-xl border p-3">
-              {p("offline")}
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-(--t-divider) pt-3">
+            <p className="m-0 text-[14px] text-(--t-ink-dim)">
+              {p(
+                mode === "new"
+                  ? kind === "journal"
+                    ? "journalStory"
+                    : "knowledgeArticle"
+                  : "privateDraft"
+              )}{" "}
+              · {localeName}
             </p>
-          )}
-          {recovery.storageFailed && <p role="alert">{p("localSaveFailed")}</p>}
-          {recovery.candidate?.owner === session?.user?.id &&
-            recovery.candidate?.locale === locale &&
-            !submitted && (
-              <section
-                aria-label={p("recoveryTitle")}
-                className="mb-4 rounded-xl border p-4"
+            {translating && !comparison && view === "write" && (
+              <Button
+                variant="surface"
+                size="pill"
+                className="hidden xl:inline-flex"
+                aria-pressed={showSource}
+                onClick={() => setShowSource((value) => !value)}
               >
-                <h2 className="font-semibold">{p("recoveryTitle")}</h2>
-                <p>
-                  {p("recoveryHint")} ·{" "}
-                  {new Date(recovery.candidate.writtenAt).toLocaleString(
-                    displayLocale
-                  )}
-                </p>
-                <p className="truncate">{recovery.candidate.draft.title}</p>
-                <button
-                  type="button"
-                  onClick={() => void restoreCopy()}
-                  className="mr-3 underline"
-                >
-                  {p("restoreCopy")}
-                </button>
-                <button
-                  type="button"
-                  onClick={recovery.discard}
-                  className="underline"
-                >
-                  {p("discardCopy")}
-                </button>
-              </section>
+                {w(showSource ? "hideSource" : "viewSource")}
+              </Button>
             )}
-          {reviewFeedback && (
-            <p role="status" className="mb-3 rounded-xl border p-3">
-              <strong>{tUi("feedback")}</strong> {reviewFeedback}
-            </p>
-          )}
-          {leaveHref && (
-            <div
-              role="alertdialog"
-              aria-modal="true"
-              aria-label={p("leaveUnsaved")}
+          </div>
+        </div>
+        {translating && !comparison && (
+          <div className="mb-4">
+            <Notice
+              icon="mdi:translate"
+              tone="info"
+              title={tLanguage("translateSource", {
+                language: languageName(sourceLocale, locales, displayLocale),
+              })}
+            >
+              <p className="m-0">
+                {w("sourceHelp")} {p("translationInherited")}
+              </p>
+            </Notice>
+          </div>
+        )}
+        {!online && (
+          <p role="status" className="mb-3 rounded-xl border p-3">
+            {p("offline")}
+          </p>
+        )}
+        {recovery.storageFailed && <p role="alert">{p("localSaveFailed")}</p>}
+        {recovery.candidate?.owner === session?.user?.id &&
+          recovery.candidate?.locale === locale &&
+          !submitted && (
+            <section
+              aria-label={p("recoveryTitle")}
               className="mb-4 rounded-xl border p-4"
             >
-              <p>{p("leaveUnsaved")}</p>
+              <h2 className="font-semibold">{p("recoveryTitle")}</h2>
+              <p>
+                {p("recoveryHint")} ·{" "}
+                {new Date(recovery.candidate.writtenAt).toLocaleString(
+                  displayLocale
+                )}
+              </p>
+              <p className="truncate">{recovery.candidate.draft.title}</p>
               <button
                 type="button"
-                onClick={() => setLeaveHref(null)}
+                onClick={() => void restoreCopy()}
                 className="mr-3 underline"
               >
-                {p("backDraft")}
+                {p("restoreCopy")}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  dirty.current = false
-                  window.location.assign(leaveHref)
-                }}
+                onClick={recovery.discard}
                 className="underline"
               >
-                {p("leave")}
+                {p("discardCopy")}
               </button>
-            </div>
+            </section>
           )}
-          {resuming && <p role="status">{tConflict("loadingDraft")}</p>}
-          {resumable && (
-            <div
-              className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] px-5 py-3.5"
-              style={{ background: T.accent.chip, color: T.ink.base }}
+        {reviewFeedback && (
+          <p role="status" className="mb-3 rounded-xl border p-3">
+            <strong>{tUi("feedback")}</strong> {reviewFeedback}
+          </p>
+        )}
+        {leaveHref && (
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-label={p("leaveUnsaved")}
+            className="mb-4 rounded-xl border p-4"
+          >
+            <p>{p("leaveUnsaved")}</p>
+            <button
+              type="button"
+              onClick={() => setLeaveHref(null)}
+              className="mr-3 underline"
             >
-              <p className="m-0 text-[15px]">
-                <strong>{tUi("you_have_an_unsent_draft")}</strong>{" "}
-                {tEditor("resume", {
-                  time: relativeTime(resumable.updatedAt, displayLocale),
-                })}
-              </p>
-              <span className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => hydrate(resumable)}
-                  className="rounded-full px-4 py-2 text-[14px] font-semibold text-white"
-                  style={{
-                    background: T.accent.primary,
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  {tUi("continue_draft")}{" "}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setResumable(null)}
-                  className="rounded-full px-4 py-2 text-[14px] font-semibold"
-                  style={{
-                    background: T.bg.deep,
-                    border: `1px solid ${T.border.hi}`,
-                    color: T.ink.base,
-                    cursor: "pointer",
-                    fontFamily: T.font.sans,
-                  }}
-                >
-                  {tUi("start_again")}{" "}
-                </button>
-              </span>
-            </div>
-          )}
-
-          {mode === "edit" && !submitted && (
-            <div className="mb-4 grid gap-2">
-              {staleArticle && (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-(--t-border-line) p-4"
-                >
-                  {tConflict("stale")}
-                </p>
-              )}
+              {p("backDraft")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                dirty.current = false
+                window.location.assign(leaveHref)
+              }}
+              className="underline"
+            >
+              {p("leave")}
+            </button>
+          </div>
+        )}
+        {resuming && <p role="status">{tConflict("loadingDraft")}</p>}
+        {resumable && (
+          <div
+            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] px-5 py-3.5"
+            style={{ background: T.accent.chip, color: T.ink.base }}
+          >
+            <p className="m-0 text-[15px]">
+              <strong>{tUi("you_have_an_unsent_draft")}</strong>{" "}
+              {tEditor("resume", {
+                time: relativeTime(resumable.updatedAt, displayLocale),
+              })}
+            </p>
+            <span className="flex gap-2">
               <button
                 type="button"
-                className="justify-self-start underline"
-                disabled={comparing || loadingLocale}
-                onClick={() => {
-                  comparePublished()
+                onClick={() => hydrate(resumable)}
+                className="rounded-full px-4 py-2 text-[14px] font-semibold text-white"
+                style={{
+                  background: T.accent.primary,
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: T.font.sans,
                 }}
               >
-                {comparing ? tConflict("loading") : tConflict("compare")}
+                {tUi("continue_draft")}{" "}
               </button>
-            </div>
-          )}
-          {comparison && (
-            <ArticleRevisionComparison
-              kind={kind}
-              draft={draft}
-              published={comparison}
-              busy={comparing || loadingLocale}
-              onBack={() => setComparison(null)}
-              onAdopt={() => {
-                adoptComparedRevision()
-              }}
-            />
-          )}
+              <button
+                type="button"
+                onClick={() => setResumable(null)}
+                className="rounded-full px-4 py-2 text-[14px] font-semibold"
+                style={{
+                  background: T.bg.deep,
+                  border: `1px solid ${T.border.hi}`,
+                  color: T.ink.base,
+                  cursor: "pointer",
+                  fontFamily: T.font.sans,
+                }}
+              >
+                {tUi("start_again")}{" "}
+              </button>
+            </span>
+          </div>
+        )}
 
-          {!comparison && (
-            <>
-              {view === "write" && (
+        {mode === "edit" && !submitted && !comparison && (
+          <div className="mb-4 grid gap-2">
+            {staleArticle && (
+              <p
+                role="alert"
+                className="rounded-xl border border-(--t-border-line) p-4"
+              >
+                {tConflict("stale")}
+              </p>
+            )}
+            <Button
+              id="compare-published-version"
+              type="button"
+              variant="surface"
+              size="pill"
+              className="justify-self-start"
+              disabled={comparing || loadingLocale}
+              onClick={() => {
+                comparePublished()
+              }}
+            >
+              <Icon
+                aria-hidden="true"
+                icon={comparing ? "mdi:loading" : "mdi:compare-horizontal"}
+                width={18}
+                className={
+                  comparing
+                    ? "animate-spin motion-reduce:animate-none"
+                    : undefined
+                }
+              />
+              {comparing ? tConflict("loading") : tConflict("compare")}
+            </Button>
+          </div>
+        )}
+        {comparison && (
+          <ArticleRevisionComparison
+            kind={kind}
+            draftLocale={locale}
+            draft={draft}
+            published={comparison}
+            busy={comparing || loadingLocale}
+            onBack={() => setComparison(null)}
+            onAdopt={() => {
+              adoptComparedRevision()
+            }}
+          />
+        )}
+
+        {!comparison && (
+          <div
+            role="tabpanel"
+            id="article-editor-panel"
+            aria-labelledby={`article-view-${view}`}
+          >
+            {view === "write" && (
+              <div
+                className={cn(
+                  "grid min-w-0 items-start gap-4",
+                  translating && showSource && "xl:grid-cols-2"
+                )}
+              >
+                {translating && article && showSource && (
+                  <>
+                    <div className="hidden min-w-0 xl:sticky xl:top-(--sticky-content-top) xl:block">
+                      <ArticleSourcePanel article={article} locales={locales} />
+                    </div>
+                    <details className="min-w-0 xl:hidden">
+                      <summary className="cursor-pointer rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 text-[15px] font-semibold marker:text-(--t-accent-primary)">
+                        {tUi("source_article")}
+                      </summary>
+                      <div className="mt-3">
+                        <ArticleSourcePanel
+                          article={article}
+                          locales={locales}
+                        />
+                      </div>
+                    </details>
+                  </>
+                )}
                 <div
-                  className={editorBusy ? "opacity-60" : undefined}
+                  lang={locale}
+                  className={cn("min-w-0", editorBusy && "opacity-60")}
                   aria-busy={editorBusy}
                 >
                   <ArticleEditor
                     kind={kind}
+                    heading={
+                      translating
+                        ? w("yourTranslation", { language: localeName })
+                        : undefined
+                    }
                     title={draft.title}
                     summary={draft.summary}
                     doc={draft.doc}
@@ -1154,177 +1293,156 @@ export function ArticleEditorShell({
                     uploadImage={uploadImage}
                   />
                 </div>
-              )}
-              {view === "preview" && (
-                <div
-                  className="overflow-hidden rounded-[24px]"
-                  style={{
-                    background: T.bg.deep,
-                    border: `1px solid ${T.border.line}`,
-                  }}
-                >
-                  <ArticlePreview
-                    kind={kind}
-                    title={draft.title}
-                    summary={draft.summary}
-                    doc={draft.doc}
-                  />
-                </div>
-              )}
-              {view === "source" && article && (
-                <div
-                  className="overflow-hidden rounded-[24px]"
-                  style={{
-                    background: T.bg.deep,
-                    border: `1px solid ${T.border.line}`,
-                  }}
-                >
-                  <article
-                    aria-label={tUi("source_article")}
-                    className="px-6 py-8 sm:px-10"
-                  >
-                    <p
-                      className="m-0 mb-3 text-[13px] font-semibold tracking-wide uppercase"
-                      style={{ color: T.ink.dim }}
-                    >
-                      {tEditor("source", {
-                        language: languageName(
-                          sourceLocale,
-                          locales,
-                          displayLocale
-                        ),
-                      })}
-                    </p>
-                    <h1
-                      className="m-0"
-                      style={{
-                        fontFamily: T.font.serif,
-                        fontSize: "clamp(34px,4vw,48px)",
-                        fontWeight: 500,
-                        lineHeight: 1.1,
-                        letterSpacing: "-0.02em",
-                        color: T.ink.base,
-                      }}
-                    >
-                      {article.title}
-                    </h1>
-                    {article.summary && (
-                      <p
-                        className="mt-4 mb-0 text-[19px] leading-[1.55]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {article.summary}
-                      </p>
-                    )}
-                    <hr
-                      className="my-8 border-0"
-                      style={{ height: 1, background: T.border.divider }}
-                    />
-                    <ArticleBodyBlocks blocks={sourceBlocks} />
-                  </article>
-                </div>
-              )}
-
-              <p
-                className="mt-3 mb-0 flex flex-wrap gap-x-4 text-[14px]"
-                style={{ color: T.ink.dim }}
+              </div>
+            )}
+            {view === "preview" && (
+              <div
+                lang={locale}
+                className="overflow-hidden rounded-[24px]"
+                style={{
+                  background: T.bg.deep,
+                  border: `1px solid ${T.border.line}`,
+                }}
               >
-                <span>{tEditor("words", { count: words })}</span>
-                <span>
-                  {tEditor("readingTime", {
-                    count: Math.max(1, Math.ceil(words / 200)),
-                  })}
-                </span>
-                <span>{tUi("select_text_to_format_it_with_the_toolbar")}</span>
-              </p>
-            </>
-          )}
-        </div>
+                <ArticlePreview
+                  kind={kind}
+                  title={draft.title}
+                  summary={draft.summary}
+                  doc={draft.doc}
+                />
+              </div>
+            )}
+            {view === "source" && article && (
+              <ArticleSourcePanel article={article} locales={locales} />
+            )}
 
-        <aside className="flex flex-col gap-4 self-start lg:sticky lg:top-[112px]">
-          <StatusCard
-            mode={mode}
-            kind={kind}
-            translating={translating}
-            localeName={localeName}
-            saveState={saveState}
-            lastSavedAt={lastSavedAt}
-            submitState={submitState}
-            submitError={submitError}
-            canSubmit={canSubmit}
-            publishesDirectly={canDirect}
-            onSubmit={() => void submit()}
-            publishedAt={
-              locale === sourceLocale ? article?.publishedAt : undefined
-            }
-            isPublished={publishedLocales.has(locale)}
-            onRetry={() => {
-              persist(draftRef.current).then((saved) => {
-                if (saved) dirty.current = false
-              })
-            }}
-            offline={!online}
-          />
-          {submitted && submissionId && (
-            <section className="rounded-2xl border p-4">
-              <p>{p("withdrawHint")}</p>
-              {!withdrawConfirm ? (
+            <p
+              className="mt-3 mb-0 flex flex-wrap gap-x-4 text-[14px]"
+              style={{ color: T.ink.dim }}
+            >
+              <span>{tEditor("words", { count: words })}</span>
+              <span>
+                {tEditor("readingTime", {
+                  count: Math.max(1, Math.ceil(words / 200)),
+                })}
+              </span>
+              <span>{tUi("select_text_to_format_it_with_the_toolbar")}</span>
+            </p>
+          </div>
+        )}
+      </div>
+
+      <ArticleWorkspaceSidebar wide={wideWorkspace}>
+        <StatusCard
+          mode={mode}
+          kind={kind}
+          translating={translating}
+          localeName={localeName}
+          saveState={saveState}
+          lastSavedAt={lastSavedAt}
+          submitState={submitState}
+          submitError={submitError}
+          canSubmit={canSubmit}
+          publishesDirectly={canDirect}
+          checks={[
+            {
+              id: "title",
+              label: w("checkTitle"),
+              done: !!draft.title.trim(),
+            },
+            {
+              id: "body",
+              label: w("checkBody"),
+              done: !empty || (mode === "edit" && !translating),
+            },
+            {
+              id: "sections",
+              label: w("checkSections"),
+              done: draft.sections.length > 0,
+            },
+            ...(mode === "edit"
+              ? [
+                  {
+                    id: "note",
+                    label: w("checkNote"),
+                    done: !!draft.editSummary.trim(),
+                  },
+                ]
+              : []),
+          ]}
+          note={
+            mode === "edit" ? (
+              <EditSummaryCard
+                embedded
+                value={draft.editSummary}
+                onChange={(editSummary) => update({ editSummary })}
+                disabled={submitted || editorBusy || !canWrite}
+              />
+            ) : undefined
+          }
+          onSubmit={() => void submit()}
+          publishedAt={
+            locale === sourceLocale ? article?.publishedAt : undefined
+          }
+          isPublished={publishedLocales.has(locale)}
+          onRetry={() => {
+            persist(draftRef.current).then((saved) => {
+              if (saved) dirty.current = false
+            })
+          }}
+          offline={!online}
+        />
+        {submitted && submissionId && (
+          <section className="rounded-2xl border p-4">
+            <p>{p("withdrawHint")}</p>
+            {!withdrawConfirm ? (
+              <button
+                type="button"
+                className="underline"
+                onClick={() => setWithdrawConfirm(true)}
+              >
+                {p("withdraw")}
+              </button>
+            ) : (
+              <>
+                <p>{p("withdrawConfirm")}</p>
                 <button
                   type="button"
-                  className="underline"
-                  onClick={() => setWithdrawConfirm(true)}
+                  disabled={withdrawing || !submissionUpdatedAt}
+                  onClick={() => void withdraw()}
+                  className="mr-3 underline"
                 >
                   {p("withdraw")}
                 </button>
-              ) : (
-                <>
-                  <p>{p("withdrawConfirm")}</p>
-                  <button
-                    type="button"
-                    disabled={withdrawing || !submissionUpdatedAt}
-                    onClick={() => void withdraw()}
-                    className="mr-3 underline"
-                  >
-                    {p("withdraw")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWithdrawConfirm(false)}
-                    className="underline"
-                  >
-                    {p("backDraft")}
-                  </button>
-                </>
-              )}
-              {submitError && <p role="alert">{submitError}</p>}
-            </section>
-          )}
-          <h2 className="text-sm font-semibold tracking-wide uppercase">
+                <button
+                  type="button"
+                  onClick={() => setWithdrawConfirm(false)}
+                  className="underline"
+                >
+                  {p("backDraft")}
+                </button>
+              </>
+            )}
+            {submitError && <p role="alert">{submitError}</p>}
+          </section>
+        )}
+
+        <section className="grid gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5">
+          <h2 className="m-0 font-serif text-[24px] leading-tight font-medium">
             {p("publishing")}
           </h2>
-          <LanguageCard
-            mode={mode}
-            locale={locale}
-            locales={locales}
-            sourceLocale={sourceLocale}
-            availableLocales={article?.availableLocales ?? []}
-            allowedLocales={
-              ready
-                ? locales
-                    .filter(
-                      (l) =>
-                        openJournalDraft ||
-                        canOwnEdit ||
-                        canDirectEdit(editorKind, l.code)
-                    )
-                    .map((l) => l.code)
-                : []
-            }
-            onChange={(code) => void changeLocale(code)}
-            disabled={submitted || editorBusy}
-          />
+          <SectionsCard
+            embedded
+            kind={kind}
+            locale={translating ? sourceLocale : locale}
+            inherited={translating}
+            sections={draft.sections}
+            onChange={(sections) => update({ sections })}
+            disabled={translating || submitted || editorBusy || !canWrite}
+          />{" "}
           {mode === "new" && kind === "journal" && (
             <ArticleBylineCard
+              embedded
               byline={draft.byline ?? ""}
               origin={draft.origin ?? "community"}
               allowIndex={allowIndexOrigin}
@@ -1332,56 +1450,36 @@ export function ArticleEditorShell({
               onChange={update}
             />
           )}
-          {mode === "edit" && (
-            <EditSummaryCard
-              value={draft.editSummary}
-              onChange={(editSummary) => update({ editSummary })}
-              disabled={submitted || editorBusy || !canWrite}
+        </section>
+
+        <TagsCard
+          tags={draft.tags}
+          locale={translating ? sourceLocale : locale}
+          inherited={translating}
+          onChange={(tags) => update({ tags })}
+          disabled={translating || submitted || editorBusy || !canWrite}
+        />
+        {kind === "journal" && (
+          <details className="rounded-2xl border">
+            <summary className="cursor-pointer p-4 font-semibold">
+              {p("eventMentions")}
+            </summary>
+            <ArticleEventsCard
+              mentions={draft.eventMentions ?? []}
+              libraries={draft.tags}
+              onChange={(eventMentions) => update({ eventMentions })}
+              disabled={translating || submitted || editorBusy || !canWrite}
             />
-          )}
-          {translating && (
-            <p className="text-sm text-(--t-ink-dim)">
-              {p("translationInherited")}
-            </p>
-          )}
-          <SectionsCard
-            kind={kind}
-            locale={locale}
-            sections={draft.sections}
-            onChange={(sections) => update({ sections })}
-            disabled={translating || submitted || editorBusy || !canWrite}
-          />
-          <h2 className="text-sm font-semibold tracking-wide uppercase">
-            {p("context")}
-          </h2>
-          <TagsCard
-            tags={draft.tags}
-            locale={locale}
-            onChange={(tags) => update({ tags })}
-            disabled={translating || submitted || editorBusy || !canWrite}
-          />
-          {kind === "journal" && (
-            <details className="rounded-2xl border">
-              <summary className="cursor-pointer p-4 font-semibold">
-                {p("eventMentions")}
-              </summary>
-              <ArticleEventsCard
-                mentions={draft.eventMentions ?? []}
-                libraries={draft.tags}
-                onChange={(eventMentions) => update({ eventMentions })}
-                disabled={translating || submitted || editorBusy || !canWrite}
-              />
-            </details>
-          )}
-          <HowEditingWorks publishesDirectly={canDirect} />
-          {submissionId && (
-            <details className="px-2 text-xs text-(--t-ink-dim)">
-              <summary>{p("details")}</summary>
-              <p>{tEditor("draft", { id: submissionId })}</p>
-            </details>
-          )}
-        </aside>
-      </div>
-    </div>
+          </details>
+        )}
+        <HowEditingWorks publishesDirectly={canDirect} />
+        {submissionId && (
+          <details className="px-2 text-xs text-(--t-ink-dim)">
+            <summary>{p("details")}</summary>
+            <p>{tEditor("draft", { id: submissionId })}</p>
+          </details>
+        )}
+      </ArticleWorkspaceSidebar>
+    </ArticleWorkspaceLayout>
   )
 }

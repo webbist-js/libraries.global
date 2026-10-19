@@ -1,10 +1,11 @@
 "use client"
 
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { DiscussionListSkeleton } from "@/components/discussions/DiscussionSkeleton"
 import { SelectField } from "@/components/ds/SelectField"
+import { languageName } from "@/lib/locale-fallback"
 
 import {
   discussionRequest,
@@ -17,15 +18,19 @@ export function DiscussionLinkPicker({
   selected = [],
   onSelect,
   disabled = false,
+  defaultLanguage,
 }: {
   selected?: readonly string[]
   onSelect: (thread: DiscussionRecord) => void
   disabled?: boolean
+  defaultLanguage?: string
 }) {
   const t = useTranslations("discussions")
+  const locale = useLocale()
   const [query, setQuery] = useState("")
   const [mine, setMine] = useState(false)
-  const [language, setLanguage] = useState("")
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null)
+  const language = selectedLanguage ?? defaultLanguage ?? locale
   const [languages, setLanguages] = useState<{ code: string; name: string }[]>(
     []
   )
@@ -109,10 +114,15 @@ export function DiscussionLinkPicker({
       <SelectField
         label={t("language")}
         value={language}
-        onValueChange={setLanguage}
+        onValueChange={setSelectedLanguage}
         options={[
           { value: "", label: t("allLanguages") },
-          ...languages.map((item) => ({ value: item.code, label: item.name })),
+          ...[...new Set([...languages.map((item) => item.code), language])]
+            .filter(Boolean)
+            .map((code) => ({
+              value: code,
+              label: languageName(code, languages, locale),
+            })),
         ]}
       />
       {failed ? (

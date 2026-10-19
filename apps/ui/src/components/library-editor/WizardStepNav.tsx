@@ -21,7 +21,9 @@ interface WizardStepNavProps {
   progress: StepProgress[]
   /** Improve mode: steps holding a changed field get a pencil marker. */
   changedSteps?: number[]
-  onStepClick: (n: number) => void
+  onStepClick?: (n: number) => void
+  /** The search doorway shows the same rail before a record is chosen. */
+  preview?: boolean
   /** Where "Find existing" goes: the search page. Rendered as a completed link. */
   findHref: string
 }
@@ -164,11 +166,15 @@ export function WizardStepNav({
   findHref,
   staff = false,
   mobile = false,
+  preview = false,
 }: WizardStepNavProps) {
   const tUi = useUiTranslations("ui")
 
   return (
-    <nav aria-label={tUi("wizard_steps")}>
+    <nav
+      aria-label={tUi("wizard_steps")}
+      className={preview ? "hidden lg:block" : undefined}
+    >
       <ol className="-mx-4 my-0 flex list-none gap-1 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         {wizardSteps(mobile).map((step, position) => {
           if (step.n === 0) {
@@ -178,11 +184,25 @@ export function WizardStepNav({
               <li key={step.n} className="shrink-0 lg:shrink">
                 <Link
                   href={findHref}
-                  aria-label={`${step.label}, done. Choose a different library`}
+                  aria-current={preview ? "step" : undefined}
+                  aria-label={
+                    preview
+                      ? step.label
+                      : `${step.label}, done. Choose a different library`
+                  }
                   className={itemClass}
-                  style={itemStyle(false)}
+                  style={itemStyle(preview)}
                 >
-                  <StepCircle n={0} isActive={false} isDone />
+                  {preview ? (
+                    <span
+                      aria-hidden
+                      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--t-accent-primary) text-white"
+                    >
+                      <Icon icon="mdi:magnify" width={18} />
+                    </span>
+                  ) : (
+                    <StepCircle n={0} isActive={false} isDone />
+                  )}
                   <StepLabel
                     label={step.label}
                     sub={step.sub}
@@ -205,7 +225,8 @@ export function WizardStepNav({
             <li key={step.n} className="shrink-0 lg:shrink">
               <button
                 type="button"
-                onClick={() => onStepClick(step.n)}
+                onClick={() => onStepClick?.(step.n)}
+                disabled={preview}
                 aria-current={isActive ? "step" : undefined}
                 aria-label={`Step ${position}: ${label}${stepStatusText(state)}${changedText}`}
                 className={itemClass}

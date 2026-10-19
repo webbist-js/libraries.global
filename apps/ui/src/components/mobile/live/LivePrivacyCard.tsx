@@ -28,7 +28,7 @@ export function LivePrivacyCard({
 
   return (
     <aside
-      className="rounded-[24px] border p-5 sm:p-6 lg:sticky lg:top-32 lg:self-start"
+      className="rounded-[24px] border p-5 sm:p-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:self-start lg:overflow-y-auto lg:overscroll-contain"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="live-privacy-heading"
     >

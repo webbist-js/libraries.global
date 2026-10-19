@@ -273,7 +273,7 @@ export function ClaimLibraryForm({
           {/* ── Sidebar: what happens next ── */}
           <aside
             aria-labelledby="claim-next-heading"
-            className="self-start rounded-[20px] p-6 lg:sticky lg:top-[128px]"
+            className="self-start rounded-[20px] p-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
             style={{
               background: T.bg.deep,
               border: `1px solid ${T.border.line}`,

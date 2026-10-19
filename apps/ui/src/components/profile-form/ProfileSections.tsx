@@ -102,15 +102,13 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       <AvatarUpload
         currentUrl={form.avatarUrl}
         initials={form.initials}
+        background={form.profileBackground}
         onUpload={form.setAvatarUrl}
         uploadEnabled={form.imageUploadsEnabled}
       />
       <ProfileAppearance
         background={form.profileBackground}
         onBackgroundChange={form.setProfileBackground}
-        coverUrl={form.coverUrl}
-        onCoverChange={form.setCoverUrl}
-        uploadEnabled={form.imageUploadsEnabled}
       />
 
       <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">

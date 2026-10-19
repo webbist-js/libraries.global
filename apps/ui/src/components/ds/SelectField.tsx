@@ -1,7 +1,12 @@
 "use client"
 
-import { useId } from "react"
+import { useId, type ReactNode } from "react"
 
+import {
+  DROPDOWN_OPTION,
+  DROPDOWN_PANEL,
+  DROPDOWN_SELECT_POSITION,
+} from "@/components/ds/dropdown-styles"
 import {
   Select,
   SelectContent,
@@ -25,6 +30,8 @@ export function SelectField({
   required,
   disabled,
   className,
+  appearance = "field",
+  leading,
 }: {
   readonly value: string
   readonly onValueChange: (value: string) => void
@@ -39,8 +46,11 @@ export function SelectField({
   readonly required?: boolean
   readonly disabled?: boolean
   readonly className?: string
+  readonly appearance?: "field" | "pill"
+  readonly leading?: ReactNode
 }) {
   const generatedId = useId()
+  const pill = appearance === "pill"
 
   return (
     <Select
@@ -59,25 +69,50 @@ export function SelectField({
         aria-label={label}
         className={cn(
           "min-h-11 w-full rounded-xl border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base)",
+          pill &&
+            "min-h-[44px] w-auto min-w-[180px] gap-2.5 rounded-full px-4 text-[15px] font-semibold shadow-none transition-colors hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) data-[size=default]:h-[44px] [&_svg]:opacity-100",
           className
         )}
       >
+        {leading ? (
+          <span
+            aria-hidden="true"
+            className="flex shrink-0 items-center text-(--t-ink-dim)"
+          >
+            {leading}
+          </span>
+        ) : null}
         <SelectValue
+          className={leading ? "flex-1 text-left" : undefined}
           placeholder={
             options.find((option) => option.value === "")?.label ?? label
           }
-        />
+        >
+          {pill
+            ? options.find((option) => option.value === value)?.label
+            : undefined}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent
         position="popper"
-        className="rounded-xl border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base)"
+        align={pill ? "end" : "center"}
+        sideOffset={pill ? 8 : undefined}
+        collisionPadding={pill ? 16 : undefined}
+        className={cn(
+          "rounded-xl border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base)",
+          pill && [DROPDOWN_PANEL, DROPDOWN_SELECT_POSITION, "w-[240px] p-1"]
+        )}
       >
         {options.map((option) => (
           <SelectItem
             key={option.value}
             value={optionValue(option.value)}
             disabled={option.disabled}
-            className="min-h-10 cursor-pointer focus:bg-(--t-bg-surface) focus:text-(--t-ink-base)"
+            className={
+              pill
+                ? DROPDOWN_OPTION
+                : "min-h-10 cursor-pointer focus:bg-(--t-bg-surface) focus:text-(--t-ink-base)"
+            }
           >
             {option.label}
           </SelectItem>

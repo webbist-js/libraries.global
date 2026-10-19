@@ -28,19 +28,20 @@ const fetchMock = vi.fn(async () => Response.json({ data: {} }))
 
 const { OptionSuggestionsBoard: Board } =
   await import("../OptionSuggestionsBoard")
+const defaultRound = {
+  documentId: "round",
+  version: 0,
+  opensAt: "2026-10-01T00:00:00Z",
+  cutoffAt: "2026-11-03T00:00:00Z",
+  reviewAt: "2026-11-03T00:00:00Z",
+  capacity: 5,
+  state: "voting" as const,
+  shortlist: [],
+  snapshotAt: null,
+}
 function OptionSuggestionsBoard(props: Parameters<typeof Board>[0]) {
   return createElement(Board, {
-    round: {
-      documentId: "round",
-      version: 0,
-      opensAt: "2026-10-01T00:00:00Z",
-      cutoffAt: "2026-11-03T00:00:00Z",
-      reviewAt: "2026-11-03T00:00:00Z",
-      capacity: 5,
-      state: "voting",
-      shortlist: [],
-      snapshotAt: null,
-    },
+    round: defaultRound,
     ...props,
   })
 }
@@ -183,5 +184,80 @@ describe("OptionSuggestionsBoard", () => {
     expect(screen.getByLabelText("Feature summary")).toBeTruthy()
     expect(screen.getByLabelText("Public explanation")).toBeTruthy()
     expect(screen.getByRole("button", { name: "Accept" })).toBeTruthy()
+  })
+
+  it("keeps advanced feature fields in a disclosure and uses a multiline public explanation", () => {
+    render(createElement(OptionSuggestionsBoard, { initial: [suggestion()] }))
+    expect(screen.getByLabelText("Public explanation").tagName).toBe("TEXTAREA")
+    const details = screen
+      .getByText("Feature details and matching items")
+      .closest("details")!
+    expect(details.open).toBe(false)
+    expect(screen.getByLabelText("Feature summary").closest("details")).toBe(
+      details
+    )
+  })
+
+  it("keeps publication feedback private and retains the publication decision actions", () => {
+    render(
+      createElement(OptionSuggestionsBoard, {
+        initial: [suggestion({ publicationStatus: "pending" })],
+      })
+    )
+    expect(screen.getByLabelText("Private feedback").tagName).toBe("TEXTAREA")
+    expect(screen.queryByLabelText("Public explanation")).toBeNull()
+    expect(
+      screen.getByText("Visible only to the contributor and reviewers.")
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Approve publication" })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Reject publication" })
+    ).toBeTruthy()
+  })
+
+  it("restores the queue from an empty status filter", () => {
+    render(
+      createElement(OptionSuggestionsBoard, {
+        initial: [suggestion({ status: "planned" })],
+      })
+    )
+    fireEvent.click(screen.getByRole("button", { name: /^New/ }))
+    expect(
+      screen.getByRole("heading", { name: "No suggestions match this filter." })
+    ).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Show all suggestions" })
+    )
+    expect(
+      screen.getByRole("heading", { name: "Braille signage" })
+    ).toBeTruthy()
+  })
+
+  it("saves the review schedule with its version, capacity and UTC dates", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ data: { ...defaultRound, version: 1, capacity: 6 } })
+    )
+    render(createElement(OptionSuggestionsBoard, { initial: [] }))
+    fireEvent.change(
+      screen.getByRole("spinbutton", { name: "Shortlist places" }),
+      { target: { value: "6" } }
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Save schedule" }))
+    await vi.waitFor(() =>
+      expect(screen.getByText("Review round saved.")).toBeTruthy()
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/moderation/suggestion-round",
+      expect.objectContaining({ method: "PUT" })
+    )
+    expect(sentBody()).toMatchObject({
+      action: "schedule",
+      version: 0,
+      capacity: 6,
+      cutoffAt: "2026-11-03T00:00:00.000Z",
+      reviewAt: "2026-11-03T00:00:00.000Z",
+    })
   })
 })

@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState, useTransition } from "react"
 
 import { SearchField } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import {
   Dialog,
   DialogContent,
@@ -62,14 +63,17 @@ const FACETS: ArticleFacetKey[] = [
 export function ArticleDiscoveryFilters({
   discovery,
   kind,
+  compact = false,
 }: {
   readonly discovery: ArticleBrowseResult
   readonly kind: "journal" | "knowledge"
+  readonly compact?: boolean
 }) {
   const params = useSearchParams()
   const encoded = params.toString()
   const router = useRouter()
   const locale = useLocale()
+  const defaultLanguage = discovery.appliedFilters.languages?.[0] ?? locale
   const t = useTranslations("discovery")
   const p = useTranslations("publishing")
   const session = authClient.useSession()
@@ -142,7 +146,7 @@ export function ArticleDiscoveryFilters({
     const controller = new AbortController()
     const timer = setTimeout(() => {
       fetch(
-        `/api/public-proxy/api/${kind === "journal" ? "blog" : "wiki"}-articles/browse?${articlePreviewParams(staged, kind, locale)}`,
+        `/api/public-proxy/api/${kind === "journal" ? "blog" : "wiki"}-articles/browse?${articlePreviewParams(staged, kind, locale, defaultLanguage)}`,
         { signal: controller.signal, cache: "no-store" }
       )
         .then(async (response) => {
@@ -162,7 +166,7 @@ export function ArticleDiscoveryFilters({
       clearTimeout(timer)
       controller.abort()
     }
-  }, [open, mobile, staged, encoded, kind, locale])
+  }, [open, mobile, staged, encoded, kind, locale, defaultLanguage])
   const current =
     mobile && open
       ? parseArticleBrowseQuery(
@@ -171,7 +175,8 @@ export function ArticleDiscoveryFilters({
                 new URLSearchParams(
                   knowledgeBrowseParams(
                     locale,
-                    Object.fromEntries(new URLSearchParams(staged))
+                    Object.fromEntries(new URLSearchParams(staged)),
+                    defaultLanguage
                   )
                 )
               )
@@ -183,7 +188,12 @@ export function ArticleDiscoveryFilters({
     (key) => kind === "journal" || (key !== "authors" && key !== "events")
   )
   const chips = keys
-    .filter((key) => key !== "origins")
+    .filter(
+      (key) =>
+        key !== "origins" &&
+        (!compact ||
+          ((key !== "sections" || kind === "journal") && key !== "languages"))
+    )
     .flatMap((key) =>
       (discovery.appliedFilters[key] ?? []).map((value) => ({
         key,
@@ -249,13 +259,69 @@ export function ArticleDiscoveryFilters({
     return facet.label
   }
 
+  const countrySuggestion =
+    suggestion && !params.has("country") ? (
+      <button
+        className="min-h-11 cursor-pointer rounded-full px-3 text-sm font-semibold text-(--t-accent-primary) hover:bg-(--t-accent-chip)"
+        type="button"
+        onClick={() => choose("countries", [suggestion])}
+      >
+        {t("countrySuggestion", {
+          country:
+            discovery.facets.countries.find(
+              (facet) => facet.value === suggestion
+            )?.label ?? suggestion,
+        })}
+      </button>
+    ) : null
+
   return (
     <div
       aria-busy={pending}
-      className="mt-5 rounded-[22px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 sm:p-4"
+      className={
+        compact
+          ? "shrink-0 border-t border-(--t-divider) py-[6px] lg:border-t-0"
+          : "mt-5 rounded-[22px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 sm:p-4"
+      }
     >
       <div className="flex flex-wrap items-center gap-3">
-        {kind === "journal" && (
+        {compact ? (
+          <SelectField
+            appearance="pill"
+            label={t("languages")}
+            leading={<Icon icon="mdi:translate" width={19} />}
+            value={
+              current.languages?.length === 1
+                ? current.languages[0]!
+                : current.languages?.length
+                  ? "selected"
+                  : "all"
+            }
+            disabled={pending}
+            onValueChange={(value) =>
+              choose("languages", value === "all" ? [] : [value])
+            }
+            options={[
+              { value: "all", label: t("allLanguages") },
+              ...((current.languages?.length ?? 0) > 1
+                ? [
+                    {
+                      value: "selected",
+                      label: p("languageCount", {
+                        count: current.languages!.length,
+                      }),
+                      disabled: true,
+                    },
+                  ]
+                : []),
+              ...languageValues.map((language) => ({
+                value: language.value,
+                label: languageName(language.value, [], locale),
+              })),
+            ]}
+          />
+        ) : null}
+        {kind === "journal" && !compact && (
           <div
             role="group"
             aria-label={t("origins")}
@@ -306,7 +372,7 @@ export function ArticleDiscoveryFilters({
           <DialogTrigger asChild>
             <button
               type="button"
-              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted)"
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted) ${compact ? "h-[44px] min-h-[44px] text-[15px]" : ""}`}
               style={{ borderColor: T.border.hi }}
             >
               <Icon aria-hidden="true" icon="mdi:tune-variant" width={18} />
@@ -329,6 +395,7 @@ export function ArticleDiscoveryFilters({
               <DialogDescription className="mt-2 max-w-[55ch] text-sm leading-relaxed text-(--t-ink-dim)">
                 {p("filterLogic")}
               </DialogDescription>
+              {compact && countrySuggestion}
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <div className="min-w-[180px] flex-1">
                   <SearchField
@@ -497,20 +564,7 @@ export function ArticleDiscoveryFilters({
             </div>
           </DialogContent>
         </Dialog>
-        {suggestion && !params.has("country") && (
-          <button
-            className="min-h-11 cursor-pointer rounded-full px-3 text-sm font-semibold text-(--t-accent-primary) hover:bg-(--t-accent-chip)"
-            type="button"
-            onClick={() => choose("countries", [suggestion])}
-          >
-            {t("countrySuggestion", {
-              country:
-                discovery.facets.countries.find(
-                  (facet) => facet.value === suggestion
-                )?.label ?? suggestion,
-            })}
-          </button>
-        )}
+        {!compact && countrySuggestion}
       </div>
       {chips.length > 0 ? (
         <ul
@@ -541,7 +595,7 @@ export function ArticleDiscoveryFilters({
             </li>
           ))}
         </ul>
-      ) : kind === "journal" ? (
+      ) : kind === "journal" && !compact ? (
         <p
           className="mt-3 mb-0 text-xs leading-relaxed"
           style={{ color: T.ink.dim }}

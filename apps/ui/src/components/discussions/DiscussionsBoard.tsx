@@ -18,6 +18,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { preferredContentLanguage } from "@/lib/content-language"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 
@@ -76,9 +77,22 @@ function DiscussionsBoardPanel({
 }) {
   const t = useTranslations("discussions")
   const locale = useLocale()
-  const [filters, setFilters] = useState(() =>
+  const [storedFilters, setStoredFilters] = useState(() =>
     discussionFilters(new URLSearchParams(initialSearch))
   )
+  const [explicitLanguage, setExplicitLanguage] = useState(() =>
+    new URLSearchParams(initialSearch).has("lang")
+  )
+  const filters = {
+    ...storedFilters,
+    language: explicitLanguage
+      ? storedFilters.language
+      : preferredContentLanguage(
+          locale,
+          actor.compositionPreferences,
+          languages.map((language) => language.code)
+        ),
+  }
   const [settledSearch, setSettledSearch] = useState(filters.q)
   useEffect(() => {
     const timer = setTimeout(() => setSettledSearch(filters.q), 250)
@@ -117,19 +131,24 @@ function DiscussionsBoardPanel({
     currentActor.current = actor.scope
   }, [queryScope, actor.scope])
   useEffect(() => {
-    const restore = () =>
-      setFilters(discussionFilters(new URLSearchParams(window.location.search)))
+    const restore = () => {
+      const params = new URLSearchParams(window.location.search)
+      setStoredFilters(discussionFilters(params))
+      setExplicitLanguage(params.has("lang"))
+    }
     window.addEventListener("popstate", restore)
 
     return () => window.removeEventListener("popstate", restore)
   }, [])
   const changeFilters = (change: Partial<DiscussionFilters>) => {
-    const next = { ...filters, ...change }
-    setFilters(next)
+    const next = { ...storedFilters, ...change }
+    const explicit = explicitLanguage || change.language !== undefined
+    setStoredFilters(next)
+    setExplicitLanguage(explicit)
     const url = new URL(window.location.href)
     for (const [key, value] of [
       ["subject", next.subjectId],
-      ["lang", next.language],
+      ["lang", explicit ? next.language || "all" : ""],
       ["view", next.view === "latest" ? "" : next.view],
       ["q", next.q],
       ["context", next.contextType ?? ""],

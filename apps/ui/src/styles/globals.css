@@ -11,6 +11,20 @@
    Reference: "Library index redesign" POCs (Sept 2026).                    */
 
 :root {
+  /* Fallback clearance for standalone/portalled panels. The page shell
+     supplies measured values for its header and navigation. */
+  --sticky-header-height: 57px;
+  --sticky-content-top: 81px;
+  --sticky-content-max-height: calc(100dvh - 105px);
+
+  /* Avoid compounding em sizes in nested labels and controls. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+
   /* font — legacy alias, still referenced by blog card components; remove
      with their next restyle */
   --font-fraunces: var(--font-newsreader);
@@ -247,22 +261,41 @@
 
   ul {
     list-style-type: disc;
-    list-style-position: inside;
+    list-style-position: outside;
   }
 
   ol {
     list-style-type: decimal;
-    list-style-position: inside;
+    list-style-position: outside;
+  }
+
+  /* Prose keeps a hanging indent: continuation lines align with the text,
+     with another indent for each nested list. UI lists keep their own spacing. */
+  .tiptap-list,
+  :is(.ck-editor-rich-text-page, .ck-editor-rich-text-blog, .ck-content)
+    :is(ul, ol):not(.todo-list) {
+    padding-inline-start: 1.5em;
+  }
+
+  .tiptap-list > li + li,
+  :is(.ck-editor-rich-text-page, .ck-editor-rich-text-blog, .ck-content)
+    :is(ul, ol):not(.todo-list)
+    > li
+    + li {
+    margin-block-start: 0.375em;
+  }
+
+  .tiptap-list > li > :is(ul, ol),
+  :is(.ck-editor-rich-text-page, .ck-editor-rich-text-blog, .ck-content)
+    li
+    > :is(ul, ol):not(.todo-list) {
+    margin-block-start: 0.5em;
   }
 
   /* TiptapRichText renders list items with a wrapping <p> tag but we want the bullet/number and the item text on one line */
   .tiptap-list > li > p:first-child {
     display: inline;
     margin: 0;
-  }
-
-  .tiptap-unordered-list > li::marker {
-    color: black;
   }
 }
 

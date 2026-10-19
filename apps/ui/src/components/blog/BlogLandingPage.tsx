@@ -1,5 +1,7 @@
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { JournalAllArticles } from "@/components/blog/JournalAllArticles"
+import { JournalToolbar } from "@/components/blog/JournalToolbar"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -8,7 +10,6 @@ import { T } from "@/lib/design-tokens"
 import type { JournalLandingData } from "@/lib/journal-landing"
 
 import { BlogSearchBar } from "./BlogSearchBar"
-import { JournalAllArticles } from "./JournalAllArticles"
 import { JournalFeatureCard, JournalSideCard } from "./JournalCards"
 import { journalHref } from "./journalLanding.helpers"
 import { JournalWriteCta } from "./JournalWriteCta"
@@ -53,6 +54,7 @@ export function BlogLandingPage({
           eyebrowIcon="mdi:notebook-outline"
           lead={landing?.heroText ?? t("journalHeroLead")}
           title={landing?.heroTitle ?? t("journalHeroTitle")}
+          displayTitle
         >
           <BlogSearchBar
             inputId="journal-search"
@@ -61,84 +63,82 @@ export function BlogLandingPage({
           />
         </PageHero>
 
-        <Container className="pt-10 pb-20">
-          {featured ? (
-            <section aria-labelledby="journal-index">
-              <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <JournalToolbar data={data} />
+
+        <Container className="grid items-start gap-6 pt-8 pb-20 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-7">
+          <div className="min-w-0">
+            {featured ? (
+              <section aria-labelledby="journal-index">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <h2 id="journal-index" className="m-0 text-sm font-semibold">
+                    {tDiscovery("fromIndex")}
+                  </h2>
+                  <GlobalLink
+                    href={journalHref(
+                      query,
+                      {
+                        filters: { ...query.filters, origins: ["index"] },
+                        allOrigins: false,
+                      },
+                      "all-articles"
+                    )}
+                    className="inline-flex min-h-9 items-center text-xs font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                  >
+                    {tUi("view_all")}
+                  </GlobalLink>
+                </div>
+                <p className="mt-0 mb-3 text-xs" style={{ color: T.ink.dim }}>
+                  {p("indexLead")}
+                </p>
+                <div className="grid grid-cols-1 gap-3">
+                  <JournalFeatureCard
+                    article={featured}
+                    editorsPick={editorsPick}
+                    locale={linkLocale}
+                  />
+                  {sideStories.length > 0 ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {sideStories.map((article) => (
+                        <JournalSideCard
+                          article={article}
+                          key={`${article.documentId}:${article.locale}`}
+                          locale={linkLocale}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
+
+            {communityPick ? (
+              <section aria-label={t("editorPick")} className="mt-7">
                 <h2
-                  id="journal-index"
-                  className="m-0 text-3xl"
+                  className="mb-5 text-3xl"
                   style={{ fontFamily: T.font.serif }}
                 >
-                  {tDiscovery("fromIndex")}
+                  {t("editorPick")}
                 </h2>
-                <GlobalLink
-                  href={journalHref(
-                    query,
-                    {
-                      filters: { ...query.filters, origins: ["index"] },
-                      allOrigins: false,
-                    },
-                    "all-articles"
-                  )}
-                  className="font-semibold underline underline-offset-4"
-                >
-                  {tUi("view_all")}
-                </GlobalLink>
-              </div>
-              <p className="mt-0 mb-5 text-sm" style={{ color: T.ink.dim }}>
-                {p("indexLead")}
-              </p>
-              <div
-                className={`grid grid-cols-1 gap-4 ${sideStories.length ? "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
-              >
                 <JournalFeatureCard
-                  article={featured}
-                  editorsPick={editorsPick}
+                  article={communityPick}
+                  editorsPick
                   locale={linkLocale}
                 />
-                {sideStories.length > 0 ? (
-                  <div className="flex flex-col gap-4">
-                    {sideStories.map((article) => (
-                      <JournalSideCard
-                        article={article}
-                        key={`${article.documentId}:${article.locale}`}
-                        locale={linkLocale}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </section>
-          ) : null}
+              </section>
+            ) : null}
 
-          {communityPick ? (
-            <section aria-label={t("editorPick")} className="mt-10">
-              <h2
-                className="mb-5 text-3xl"
-                style={{ fontFamily: T.font.serif }}
-              >
-                {t("editorPick")}
-              </h2>
-              <JournalFeatureCard
-                article={communityPick}
-                editorsPick
-                locale={linkLocale}
-              />
-            </section>
-          ) : null}
-
-          <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <JournalAllArticles {...data} />
-
-            <aside
-              aria-label={tUi("more_from_the_journal")}
-              className="flex flex-col gap-5"
-            >
-              <MonthlyDispatchCard />
-              <JournalWriteCta />
-            </aside>
+            <div className="mt-8">
+              <JournalAllArticles {...data} />
+            </div>
           </div>
+
+          <aside
+            aria-label={tUi("more_from_the_journal")}
+            className="flex flex-col gap-4"
+          >
+            <MonthlyDispatchCard />
+            <JournalWriteCta />
+          </aside>
         </Container>
       </main>
     </div>

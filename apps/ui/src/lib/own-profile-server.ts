@@ -78,6 +78,7 @@ export async function fetchOwnProfile(
 export type OwnProfileSnippet = {
   username: string
   avatarUrl: string | null
+  profileBackground?: UserProfile["profileBackground"]
   isVerifiedLibrarian: boolean
   /** Language codes from the profile's languages, in profile order. */
   languages: string[]
@@ -97,6 +98,7 @@ export async function fetchOwnProfileSnippet(
     username: p.username,
     // Passed to the browser: the asset proxy form, never the Strapi origin.
     avatarUrl: avatarSrc(p.avatar),
+    profileBackground: p.profileBackground,
     isVerifiedLibrarian: p.isVerifiedLibrarian === true,
     languages: (p.languages ?? [])
       .map((l) => l?.code as unknown)

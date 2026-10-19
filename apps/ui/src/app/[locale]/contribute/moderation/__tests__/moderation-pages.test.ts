@@ -147,7 +147,7 @@ const moderator = {
 }
 
 beforeEach(() => {
-  mocks.discussionCount.mockResolvedValue(null)
+  mocks.discussionCount.mockReset().mockResolvedValue(null)
   mocks.queueProps.mockClear()
   mocks.fetchModeration.mockResolvedValue({ status: 404, body: null })
 })
@@ -218,6 +218,24 @@ describe("the queue page when the session profile didn't load", () => {
 })
 
 describe("the shared moderation workspace", () => {
+  it("includes Suggested additions in the board's navigation and overview with its undecided count", async () => {
+    mocks.getSessionSSR.mockResolvedValue({ user: moderator })
+    mocks.fetchModeration.mockImplementation(async (_user, path) =>
+      path === "option-suggestions"
+        ? {
+            status: 200,
+            body: { data: [{ status: "open" }, { status: "accepted" }] },
+          }
+        : { status: 404, body: null }
+    )
+    render(await ModerationQueuePage({ searchParams: Promise.resolve({}) }))
+    const link = screen.getByRole("link", { name: "Suggested additions 1" })
+    expect(link.getAttribute("href")).toBe("/contribute/moderation/suggestions")
+    expect(
+      screen.getByRole("heading", { name: "Suggested additions" })
+    ).toBeTruthy()
+  })
+
   it("opens the only available category directly", async () => {
     mocks.getSessionSSR.mockResolvedValue({
       user: {
@@ -232,6 +250,9 @@ describe("the shared moderation workspace", () => {
       })
     )
     expect(screen.queryByRole("link", { name: "Overview" })).toBeNull()
+    expect(
+      screen.queryByRole("link", { name: /Suggested additions/ })
+    ).toBeNull()
     expect(
       screen
         .getByRole("link", { name: "Articles" })
@@ -261,7 +282,11 @@ describe("the shared moderation workspace", () => {
       screen.getByRole("heading", { name: "Choose what to review" })
     ).toBeTruthy()
     expect(screen.getByRole("link", { name: "Library changes 4" })).toBeTruthy()
-    expect(screen.getByRole("link", { name: "Claims 0" })).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Claims" })).toBeTruthy()
+    expect(screen.queryByRole("link", { name: "Claims 0" })).toBeNull()
+    expect(
+      screen.getByRole("link", { name: /^Claims .*0 waiting for review/ })
+    ).toBeTruthy()
     expect(screen.queryByRole("link", { name: "Articles" })).toBeNull()
     expect(mocks.discussionCount).not.toHaveBeenCalled()
     expect(mocks.queueProps).not.toHaveBeenCalled()

@@ -1,4 +1,4 @@
-/** UI languages. CMS publication and contributor locale grants are separate. */
+/** Fully translated app routes; public content choices also require CMS enablement. */
 export const SUPPORTED_LOCALES = ["cs", "en", "fr"] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 export const DEFAULT_LOCALE: SupportedLocale = "en"

@@ -1,18 +1,15 @@
 import { isReviewCategory, reviewCategoriesInScope } from "@repo/access"
-import { ArrowUpRight } from "lucide-react"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { DiscussionModeration } from "@/components/discussions/DiscussionModeration"
-import {
-  EditorialToolbar,
-  EDITORIAL_SUBTLE_PILL,
-} from "@/components/ds/EditorialToolbar"
+import { EditorialToolbar } from "@/components/ds/EditorialToolbar"
 import {
   describeScopes,
   type DriveTag,
   DriveQueueStrip,
   ModerationQueue,
+  type OptionSuggestion,
 } from "@/components/moderation"
 import { ModerationOverview } from "@/components/moderation/ModerationOverview"
 import { ModerationWorkspaceNav } from "@/components/moderation/ModerationWorkspaceNav"
@@ -25,7 +22,6 @@ import {
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { fetchModeration } from "@/lib/moderation-proxy"
 import { fetchDiscussionReviewCount } from "@/lib/moderation-work-counts"
-import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ModerationAccessUnavailable } from "./_components/ModerationAccessUnavailable"
@@ -97,7 +93,7 @@ export default async function ModerationQueuePage({
       (key) => !!first(sp[key])
     )
   const showList = !!category || legacyList || first(sp.tab) === "submissions"
-  const [locales, countResult, discussionCount, driveStatsRes] =
+  const [locales, countResult, discussionCount, driveStatsRes, suggestionsRes] =
     await Promise.all([
       fetchArticleLocales(),
       allQueues.length
@@ -118,6 +114,12 @@ export default async function ModerationQueuePage({
             "drive-stats"
           )
         : Promise.resolve({ body: null }),
+      coversEverything(scopes)
+        ? fetchModeration<{ data?: OptionSuggestion[] }>(
+            user,
+            "option-suggestions"
+          )
+        : Promise.resolve(null),
     ])
   const { state, queues, filterLocales, localeNames } = workspaceQueueState(
     sp,
@@ -135,6 +137,17 @@ export default async function ModerationQueuePage({
       href: "/contribute/moderation?tab=discussions",
       pending: discussionCount,
     })
+  if (coversEverything(scopes))
+    views.push({
+      id: "optionSuggestions",
+      href: "/contribute/moderation/suggestions",
+      pending:
+        suggestionsRes?.status === 200
+          ? (suggestionsRes.body?.data ?? []).filter((item) =>
+              ["open", "reviewing", "planned"].includes(item.status)
+            ).length
+          : null,
+    })
 
   return (
     <>
@@ -151,17 +164,6 @@ export default async function ModerationQueuePage({
           label={t("workspace")}
           description={t("scopeHint")}
           variant="subtle"
-          actions={
-            coversEverything(scopes) ? (
-              <Link
-                href="/contribute/moderation/suggestions"
-                className={EDITORIAL_SUBTLE_PILL}
-              >
-                {t("optionSuggestions")}
-                <ArrowUpRight size={14} aria-hidden />
-              </Link>
-            ) : undefined
-          }
         />
         <ModerationWorkspaceNav active={active} views={views} />
         {active === "discussions" ? (

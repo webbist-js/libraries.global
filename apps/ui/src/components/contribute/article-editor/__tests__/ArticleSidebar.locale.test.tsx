@@ -12,6 +12,34 @@ vi.mock("@/lib/meilisearch", () => ({
   searchLibraryNames: vi.fn().mockResolvedValue({ hits: [] }),
 }))
 vi.mock("@/lib/navigation", () => ({ Link: () => null }))
+vi.mock("@/components/ds/SelectField", () => ({
+  SelectField: ({
+    label,
+    value,
+    onValueChange,
+    options,
+    disabled,
+  }: {
+    label: string
+    value: string
+    onValueChange: (value: string) => void
+    options: { value: string; label: string }[]
+    disabled?: boolean
+  }) => (
+    <select
+      aria-label={label}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onValueChange(event.target.value)}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}))
 
 afterEach(() => {
   cleanup()
@@ -19,6 +47,37 @@ afterEach(() => {
 })
 
 describe("article content locale", () => {
+  it("shows inherited sections as read-only labels without unrelated choices", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          data: [
+            { slug: "getting-started", name: "Getting started" },
+            { slug: "events", name: "Events" },
+          ],
+        })
+      )
+    )
+    const onChange = vi.fn()
+    render(
+      <SectionsCard
+        kind="knowledge"
+        locale="en"
+        sections={["getting-started"]}
+        onChange={onChange}
+        inherited
+        disabled
+      />
+    )
+
+    await screen.findByText("Getting started")
+    expect(screen.getByText("Inherited from the source article.")).toBeTruthy()
+    expect(screen.queryByText("Events")).toBeNull()
+    expect(screen.queryByRole("button")).toBeNull()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   it("reloads section labels for the article language and ignores an old response", async () => {
     let resolveEnglish!: (value: Response) => void
     const english = new Promise<Response>((resolve) => {
@@ -101,10 +160,10 @@ describe("explicit article relations", () => {
       { kind: "country", label: "Colombia", documentId: "colombia" },
     ])
     onChange.mockClear()
-    fireEvent.change(screen.getByRole("textbox"), {
+    fireEvent.change(screen.getByRole("searchbox"), {
       target: { value: "Invented tag" },
     })
-    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" })
+    fireEvent.keyDown(screen.getByRole("searchbox"), { key: "Enter" })
     expect(onChange).not.toHaveBeenCalled()
   })
 

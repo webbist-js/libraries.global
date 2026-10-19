@@ -411,7 +411,7 @@ export function LibraryDetailPage({
 
               <aside
                 aria-label={tUi("about_this_record")}
-                className="top-32 flex flex-[1_1_280px] flex-col gap-4 lg:sticky lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto lg:overscroll-contain"
+                className="flex flex-[1_1_280px] flex-col gap-4 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
               >
                 <LibraryRecordPanel followers={followers} library={library} />
                 <GlobalLink

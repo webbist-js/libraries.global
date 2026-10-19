@@ -1830,7 +1830,7 @@ export function DriveBuilder({
 
       <aside
         aria-label={tUi("about_this_drive")}
-        className="flex min-w-0 flex-col gap-4 self-start lg:sticky lg:top-24"
+        className="flex min-w-0 flex-col gap-4 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
       >
         {sent ? null : <PreviewCard view={view} />}
         {sent ? null : (

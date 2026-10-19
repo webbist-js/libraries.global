@@ -29,18 +29,11 @@ afterEach(cleanup)
 
 describe("Journal list presentation", () => {
   it("keeps sorting separate from the single shared filter panel", () => {
-    render(
-      <JournalListControls
-        query={DEFAULT_JOURNAL_QUERY}
-        lang="all"
-        languages={[{ code: "es", name: "Spanish" }]}
-      />
-    )
+    render(<JournalListControls query={DEFAULT_JOURNAL_QUERY} />)
     expect(screen.queryByRole("combobox", { name: "Language" })).toBeNull()
     expect(
-      (screen.getByRole("combobox", { name: "Sort" }) as HTMLSelectElement)
-        .value
-    ).toBe("newest")
+      screen.getByRole("combobox", { name: "Sort" }).textContent
+    ).toContain("Newest")
     expect(screen.getByRole("group", { name: "Layout" })).toBeTruthy()
   })
 })

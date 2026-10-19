@@ -5,6 +5,7 @@ import { cleanup, render, screen, fireEvent, waitFor } from "@/test/render"
 
 import { KnowledgeEditorLanding } from "../KnowledgeEditorLanding"
 
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/access-client", () => ({
   useHydratedSession: () => ({
     data: { user: { id: "author", name: "Private name" } },
@@ -52,14 +53,18 @@ it("allows ordinary Journal creation and gives an older search hit an edit doorw
     />
   )
   expect(
-    screen.getByRole("link", { name: "Start writing" }).getAttribute("href")
-  ).toBe("/contribute/knowledge/new?type=journal")
-  fireEvent.change(screen.getByRole("textbox"), { target: { value: "older" } })
+    screen
+      .getByRole("link", { name: "Start a Journal story" })
+      .getAttribute("href")
+  ).toBe("/contribute/knowledge/new?type=journal&locale=en")
+  fireEvent.change(screen.getByRole("searchbox"), {
+    target: { value: "older" },
+  })
   expect(
-    (await screen.findByRole("link", { name: "Edit your story" })).getAttribute(
-      "href"
-    )
-  ).toBe("/contribute/knowledge/journal/older-story?locale=es&sourceLocale=es")
+    (
+      await screen.findByRole("link", { name: "Translate to English" })
+    ).getAttribute("href")
+  ).toBe("/contribute/knowledge/journal/older-story?locale=en&sourceLocale=es")
   await waitFor(() =>
     expect(
       fetcher.mock.calls.some(
@@ -73,4 +78,60 @@ it("allows ordinary Journal creation and gives an older search hit an edit doorw
     )
   ).toBe(true)
   expect(screen.queryByText("Private name")).toBeNull()
+})
+
+it("groups translations once, defaults to the chosen content language and asks the server for missing translations", async () => {
+  const fetcher = vi.fn(async (_url: string, _init?: RequestInit) =>
+    Response.json({ items: [], total: 0, pageCount: 0 })
+  )
+  vi.stubGlobal("fetch", fetcher)
+  const article = {
+    kind: "knowledge" as const,
+    documentId: "one",
+    slug: "one",
+    title: "English title",
+    sections: [],
+    publishedAt: "2026-10-01",
+    updatedAt: null,
+    locale: "en",
+  }
+  render(
+    <KnowledgeEditorLanding
+      articles={[
+        article,
+        { ...article, locale: "fr", title: "Titre français" },
+      ]}
+      drafts={[]}
+      initialKind="journal"
+      kinds={["journal", "knowledge"]}
+      creatableKinds={["journal"]}
+      locales={[
+        { code: "en", name: "English", isDefault: true },
+        { code: "fr", name: "French", isDefault: false },
+      ]}
+      initialLocale="fr"
+    />
+  )
+  expect(
+    screen.getAllByRole("heading", { name: "Titre français" })
+  ).toHaveLength(1)
+  expect(screen.queryByRole("heading", { name: "English title" })).toBeNull()
+  expect(
+    screen
+      .getByRole("link", { name: "Start a Journal story" })
+      .getAttribute("href")
+  ).toContain("locale=fr")
+  fireEvent.click(screen.getByRole("button", { name: "Missing in French" }))
+  await waitFor(() => expect(fetcher).toHaveBeenCalled())
+  expect(
+    fetcher.mock.calls.every((call) =>
+      String(call[0]).includes("missingLocale=fr")
+    )
+  ).toBe(true)
+  expect(
+    fetcher.mock.calls.every((call) =>
+      String(call[0]).includes("groupBy=document")
+    )
+  ).toBe(true)
+  await screen.findByRole("button", { name: "Clear filters" })
 })

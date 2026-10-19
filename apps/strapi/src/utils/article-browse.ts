@@ -1,5 +1,6 @@
 import {
   aggregateArticleBrowse,
+  isSupportedLocale,
   parseArticleBrowseQuery,
   type ArticleBrowseItem,
   type ArticleFacetKey,
@@ -200,7 +201,9 @@ export const JOURNAL_BROWSE_POPULATE = {
  * CMS aggregate adapter. Batch lean published projections across every locale;
  * this avoids the old per-language/per-section count requests and body payloads.
  * Fail explicitly if the catalogue exceeds the operator's bound, never return
- * silently incomplete counts. A search adapter can replace this seam at scale.
+ * silently incomplete counts. The writing catalogue groups these published
+ * variants by document before pagination; reader discovery keeps its locale rows.
+ * A search adapter can replace this seam at scale.
  */
 export async function browseArticles(
   strapi: any,
@@ -246,7 +249,8 @@ export async function browseArticles(
     }
     for (const row of rows) {
       const item = publicArticleBrowseItem(row, kind)
-      if (item) items.push(item)
+      // A CMS-only translation has no translated app route yet.
+      if (item && isSupportedLocale(item.locale)) items.push(item)
     }
     if (rows.length < batchSize) break
   }

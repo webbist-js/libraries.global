@@ -19,6 +19,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import { preferredContentLanguage } from "@/lib/content-language"
+import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 import { cn, primaryCtaSm } from "@/lib/styles"
 
@@ -71,7 +73,13 @@ function DiscussionFeedPanel({
   const [next, setNext] = useState<number | null>(null)
   const [total, setTotal] = useState<number | null>(null)
   const [languages, setLanguages] = useState<DiscussionLanguage[]>([])
-  const [language, setLanguage] = useState("")
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null)
+  const defaultLanguage = preferredContentLanguage(
+    locale,
+    actor.compositionPreferences,
+    languages.length ? languages.map((item) => item.code) : undefined
+  )
+  const language = selectedLanguage ?? defaultLanguage
   const [subject, setSubject] = useState<Subject>()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -187,7 +195,7 @@ function DiscussionFeedPanel({
       setBusy(false)
     }
   }
-  const browse = `/community/discussions?${new URLSearchParams({ context: contextType ?? (target?.uid === "api::drive.drive" ? "drives" : "libraries"), ...(target ? { entity: target.documentId, ...(target.locale ? { contextLocale: target.locale } : {}) } : {}), ...(language ? { lang: language } : {}) })}`
+  const browse = `/community/discussions?${new URLSearchParams({ context: contextType ?? (target?.uid === "api::drive.drive" ? "drives" : "libraries"), ...(target ? { entity: target.documentId, ...(target.locale ? { contextLocale: target.locale } : {}) } : {}), ...(selectedLanguage !== null ? { lang: selectedLanguage || "all" } : {}) })}`
   const featuredId = metadata?.links.find(
     (link) => link.state === "visible" && link.featured
   )?.threadId
@@ -281,14 +289,18 @@ function DiscussionFeedPanel({
             <SelectField
               label={t("language")}
               value={language}
-              onValueChange={setLanguage}
+              onValueChange={setSelectedLanguage}
               className="w-auto min-w-[150px] rounded-full border-(--t-border-hi) px-4 text-sm font-semibold"
               options={[
                 { value: "", label: t("allLanguages") },
-                ...languages.map((item) => ({
-                  value: item.code,
-                  label: item.name,
-                })),
+                ...[
+                  ...new Set([...languages.map((item) => item.code), language]),
+                ]
+                  .filter(Boolean)
+                  .map((code) => ({
+                    value: code,
+                    label: languageName(code, languages, locale),
+                  })),
               ]}
             />
           )}
@@ -547,6 +559,7 @@ function DiscussionFeedPanel({
           <DialogDescription>{t("linkConversationLead")}</DialogDescription>
           {linkOpen && (
             <DiscussionLinkPicker
+              defaultLanguage={defaultLanguage}
               selected={metadata?.links
                 .filter((link) => ["visible", "pending"].includes(link.state))
                 .map((link) => link.threadId)}

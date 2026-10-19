@@ -106,6 +106,152 @@ afterEach(() => {
 
 describe("discussion interactions", () => {
   it.each([
+    ["", "en"],
+    ["lang=fr", "fr"],
+    ["lang=all", ""],
+  ])(
+    "resolves profile and shared discussion language choices (%s)",
+    async (initialSearch, expected) => {
+      actor.compositionPreferences = {
+        languages: [{ code: "es", proficiency: "native" }],
+      }
+      fetch.mockResolvedValue(Response.json({ data: [] }))
+      const view = render(
+        <DiscussionsBoard
+          initialSearch={initialSearch}
+          languages={[
+            { code: "en", name: "English" },
+            { code: "es", name: "Spanish" },
+            { code: "fr", name: "French" },
+          ]}
+        />
+      )
+      await waitFor(() =>
+        expect(
+          fetch.mock.calls.some(([url]) => {
+            const request = new URL(String(url), "https://libraries.global")
+
+            return (
+              request.pathname.endsWith("/threads") &&
+              (request.searchParams.get("language") ?? "") === expected
+            )
+          })
+        ).toBe(true)
+      )
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Language",
+          }) as HTMLSelectElement
+        ).value
+      ).toBe(expected)
+      actor.compositionPreferences = {
+        languages: [{ code: "fr", proficiency: "native" }],
+      }
+      view.rerender(
+        <DiscussionsBoard
+          initialSearch={initialSearch}
+          languages={[
+            { code: "en", name: "English" },
+            { code: "es", name: "Spanish" },
+            { code: "fr", name: "French" },
+          ]}
+        />
+      )
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Language",
+          }) as HTMLSelectElement
+        ).value
+      ).toBe(initialSearch ? expected : "fr")
+    }
+  )
+
+  it.each([
+    {
+      subjectSlug: "journal" as const,
+      uid: "api::blog-article.blog-article" as const,
+      heading: "Discuss this story",
+    },
+    {
+      subjectSlug: "knowledge" as const,
+      uid: "api::wiki-article.wiki-article" as const,
+      heading: "Discuss this article",
+    },
+  ])(
+    "expands and cancels the shared $subjectSlug article composer while keeping its language and review flow",
+    async ({ subjectSlug, uid, heading }) => {
+      fetch.mockImplementation(async (url: string) =>
+        Response.json({
+          data: url.includes("subjects")
+            ? [
+                {
+                  id: "subject",
+                  name: subjectSlug,
+                  slug: subjectSlug,
+                  visibility: "public",
+                  createPolicy: "members",
+                },
+              ]
+            : [],
+        })
+      )
+      render(
+        <AttachedDiscussion
+          presentation="article"
+          target={{
+            uid,
+            documentId: "article",
+            locale: "en",
+          }}
+          subjectSlug={subjectSlug}
+          title="A library story"
+          language="en"
+        />
+      )
+      const start = await screen.findByRole("button", {
+        name: "Start a discussion",
+      })
+      expect(screen.getByRole("region", { name: heading })).toBeTruthy()
+      expect(
+        fetch.mock.calls.some(([url]) => {
+          const query = new URL(String(url), "https://libraries.global")
+            .searchParams
+
+          return (
+            query.get("targetUid") === uid && query.get("targetLocale") === "en"
+          )
+        })
+      ).toBe(true)
+      expect(screen.queryByLabelText("Message")).toBeNull()
+      fireEvent.click(start)
+      expect(
+        (screen.getByLabelText("Discussion title") as HTMLInputElement).value
+      ).toBe("Discussion: A library story")
+      expect(
+        (screen.getByLabelText("Language") as HTMLSelectElement).disabled
+      ).toBe(true)
+      const submit = screen.getByRole("button", {
+        name: "Send for review",
+      }) as HTMLButtonElement
+      expect(submit.disabled).toBe(true)
+      fireEvent.change(screen.getByLabelText("Message"), {
+        target: { value: "A question about the story" },
+      })
+      expect(submit.disabled).toBe(false)
+      fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+      expect(screen.queryByLabelText("Message")).toBeNull()
+      expect(
+        screen.getByRole("button", { name: "Start a discussion" })
+      ).toBeTruthy()
+      expect(
+        fetch.mock.calls.some(([, options]) => options?.method === "POST")
+      ).toBe(false)
+    }
+  )
+
+  it.each([
     {
       variant: "default" as const,
       threadId: "thread",
@@ -432,7 +578,7 @@ describe("discussion interactions", () => {
     ).toBe("en")
   })
 
-  it("defaults new discussion composition to the profile while browsing all languages", async () => {
+  it("defaults new discussion composition to the profile while explicitly browsing all languages", async () => {
     actor.compositionPreferences = { country: "CO" }
     fetch.mockImplementation(async (url: string) =>
       Response.json({
@@ -449,7 +595,7 @@ describe("discussion interactions", () => {
           : [],
       })
     )
-    render(<DiscussionsBoard languages={languages} />)
+    render(<DiscussionsBoard languages={languages} initialSearch="lang=all" />)
     await screen.findAllByRole("button", { name: "Start a discussion" })
     fireEvent.click(
       screen.getAllByRole("button", { name: "Start a discussion" })[0]!
@@ -792,7 +938,7 @@ describe("discussion interactions", () => {
     fireEvent.error(image)
     expect(screen.getByText("AB")).toBeTruthy()
   })
-  it("browses all languages by default with named configured language choices", async () => {
+  it("browses the header language by default and preserves an explicit all-language choice", async () => {
     fetch.mockImplementation(async (url: string) => {
       if (url.includes("my/records")) return Response.json({ data: [] })
       if (url.includes("subjects"))
@@ -828,11 +974,11 @@ describe("discussion interactions", () => {
       />
     )
     await screen.findByText("English story")
-    expect(screen.getByText("Spanish story")).toBeTruthy()
+    expect(screen.queryByText("Spanish story")).toBeNull()
     const filter = screen.getByRole("combobox", {
       name: "Language",
     }) as HTMLSelectElement
-    expect(filter.value).toBe("")
+    expect(filter.value).toBe("en")
     expect(screen.getByRole("option", { name: "All languages" })).toBeTruthy()
     expect(screen.getByRole("option", { name: "Spanish" })).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Start a discussion" }))
@@ -843,6 +989,9 @@ describe("discussion interactions", () => {
           .find((element) => element.tagName === "SELECT") as HTMLInputElement
       ).value
     ).toBe("en")
+    fireEvent.change(filter, { target: { value: "" } })
+    await screen.findByText("Spanish story")
+    expect(new URLSearchParams(window.location.search).get("lang")).toBe("all")
     fireEvent.change(filter, { target: { value: "es" } })
     await waitFor(() => expect(screen.queryByText("English story")).toBeNull())
     await screen.findByText("Spanish story")

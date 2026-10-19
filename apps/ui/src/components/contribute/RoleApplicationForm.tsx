@@ -1040,7 +1040,7 @@ export function RoleApplicationForm({
 
       <aside
         aria-label={tUi("about_this_role")}
-        className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
+        className="flex flex-col gap-4 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
       >
         <RoleApplicationAside role={role} />
       </aside>

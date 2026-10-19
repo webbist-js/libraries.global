@@ -114,6 +114,27 @@ afterEach(() => {
 })
 
 describe("GlobalContributeMenu", () => {
+  it("links directly to Suggested additions for the editorial board", async () => {
+    session.data = {
+      user: {
+        id: "u1",
+        capabilities: ["moderate.queue"],
+        moderationScopes: [{ queue: "all", locale: null }],
+        plan: "free",
+      },
+    }
+    responses.set("/api/drives/featured", { data: null })
+    responses.set("/api/moderation/summary", { data: [] })
+    responses.set("/api/contribute/standing", { pendingCount: 0 })
+    renderMenu()
+    const { nav } = await openMenu()
+    expect(
+      within(nav)
+        .getByRole("link", { name: /^Suggested additions/ })
+        .getAttribute("href")
+    ).toBe("/contribute/moderation/suggestions")
+  })
+
   it("opens for a signed-out visitor with a sign-in card and the Everyone cards", async () => {
     responses.set("/api/drives/featured", { data: null })
     renderMenu()

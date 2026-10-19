@@ -131,13 +131,14 @@ export function journalHref(
 /** Metadata and visible results share exactly one CMS predicate and cache key. */
 export function journalBrowseParams(
   routeLocale: string,
-  query: JournalQuery
+  query: JournalQuery,
+  defaultLanguage = routeLocale
 ): string {
   const filters = {
     ...query.filters,
     ...(query.section ? { sections: [query.section] } : {}),
-    ...(query.lang && query.lang !== "all" && !query.filters?.languages?.length
-      ? { languages: [query.lang] }
+    ...(query.lang !== "all" && !query.filters?.languages?.length
+      ? { languages: [query.lang ?? defaultLanguage] }
       : {}),
   }
   const params = new URLSearchParams(

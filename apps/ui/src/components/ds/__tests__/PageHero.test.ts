@@ -39,6 +39,12 @@ describe("PageHero title", () => {
     expect(html.indexOf("Progress summary")).toBeLessThan(
       html.indexOf("Section tabs")
     )
+    // A sticky submenu inside the hero would stop sticking at its bottom edge.
+    expect(html.indexOf("</section>")).toBeLessThan(
+      html.indexOf("Section tabs")
+    )
+    expect(html).toContain("sticky top-(--sticky-header-height)")
+    expect(html).toContain('data-sticky-navigation=""')
   })
   it("renders *markup* as italic by default", () => {
     const html = renderToStaticMarkup(

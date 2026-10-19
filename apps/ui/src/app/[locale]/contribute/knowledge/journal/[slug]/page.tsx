@@ -42,6 +42,7 @@ export default async function EditJournalArticlePage({
   }>
 }) {
   const tUi = await getUiTranslations("ui")
+  const w = await getUiTranslations("writeWorkspace")
 
   const [
     { locale, slug },
@@ -79,8 +80,16 @@ export default async function EditJournalArticlePage({
       <ContributeSectionHeader
         compact
         section={tUi("knowledge_editor")}
-        title={`Improve *${article.title}.*`}
-        lead="Edit the story, or add a translation. Journal editors review every change before it’s published, and each contributor is credited."
+        title={w(
+          typeof requested === "string" && requested !== article.locale
+            ? "translateTitle"
+            : "editTitle"
+        )}
+        lead={w(
+          typeof requested === "string" && requested !== article.locale
+            ? "translateLead"
+            : "editLead"
+        )}
       />
       <ArticleEditorShell
         key={`${article.documentId}:${article.locale}:${requestedDraft ?? "fresh"}`}

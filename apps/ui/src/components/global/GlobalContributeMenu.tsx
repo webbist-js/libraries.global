@@ -7,10 +7,10 @@ import { useId, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  HeaderDropdownContent,
+  HeaderDropdownTrigger,
+} from "@/components/global/HeaderDropdown"
+import { Popover } from "@/components/ui/popover"
 import {
   type ContributeMenu,
   useContributeMenu,
@@ -19,7 +19,6 @@ import type {
   ContributorCard,
   ContributorLink,
 } from "@/lib/contributor-shortcuts"
-import { T } from "@/lib/design-tokens"
 
 import {
   CardMonogram,
@@ -64,7 +63,7 @@ function CardLink({
           {link.label}
         </span>
         {link.sub ? (
-          <span className="mt-0.5 text-[12px] leading-snug text-(--t-ink-dim)">
+          <span className="mt-0.5 text-[14px] leading-snug text-(--t-ink-dim)">
             {link.sub}
           </span>
         ) : null}
@@ -111,7 +110,7 @@ function FeaturedDrive({
       onClick={onNavigate}
       className={`flex flex-col gap-2 rounded-[16px] border border-(--t-edge-info) bg-(--t-bg-selected) px-3.5 py-3 text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) ${FOCUS}`}
     >
-      <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-(--t-accent-primary) uppercase">
+      <span className="flex items-center gap-1.5 text-[13px] font-bold tracking-wide text-(--t-accent-primary) uppercase">
         <Icon aria-hidden icon="mdi:pin-outline" width={13} height={13} />
         {t("featuredDrive")}
       </span>
@@ -129,7 +128,7 @@ function FeaturedDrive({
               style={{ width: `${featured.percent}%` }}
             />
           </span>
-          <span className="text-[12px] leading-snug text-(--t-ink-dim)">
+          <span className="text-[14px] leading-snug text-(--t-ink-dim)">
             {featured.progress}
           </span>
         </>
@@ -138,7 +137,7 @@ function FeaturedDrive({
   )
 }
 
-/** Review is a single prominent entry point; decisions stay in the workspace. */
+/** Review's main entry point and the board's additional review queues. */
 function ReviewShortcut({
   card,
   onNavigate,
@@ -151,36 +150,41 @@ function ReviewShortcut({
   if (!link) return null
 
   return (
-    <GlobalLink
-      href={link.href}
-      onClick={onNavigate}
-      className={`flex min-h-[76px] items-center gap-3 rounded-[18px] bg-[#19172c] px-4 py-3 text-white no-underline transition-colors hover:bg-[#29253f] ${FOCUS}`}
-    >
-      <span
-        aria-hidden
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#c5bdf8]"
+    <div className="grid gap-2">
+      <GlobalLink
+        href={link.href}
+        onClick={onNavigate}
+        className={`flex min-h-[76px] items-center gap-3 rounded-[18px] bg-[#19172c] px-4 py-3 text-white no-underline transition-colors hover:bg-[#29253f] ${FOCUS}`}
       >
-        <Icon icon="mdi:shield-check-outline" width={21} height={21} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold">{link.label}</span>
-        <span className="mt-0.5 block text-[12px] leading-relaxed text-[#d1cedd]">
-          {link.sub ?? t("reviewLead")}
+        <span
+          aria-hidden
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#c5bdf8]"
+        >
+          <Icon icon="mdi:shield-check-outline" width={21} height={21} />
         </span>
-      </span>
-      {link.badge ? (
-        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[12px] font-semibold tabular-nums">
-          {link.badge} <span>{t("waiting")}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold">{link.label}</span>
+          <span className="mt-0.5 block text-[14px] leading-relaxed text-[#d1cedd]">
+            {link.sub ?? t("reviewLead")}
+          </span>
         </span>
-      ) : null}
-      <Icon
-        aria-hidden
-        icon="mdi:arrow-right"
-        width={17}
-        height={17}
-        className="shrink-0 text-[#d1cedd]"
-      />
-    </GlobalLink>
+        {link.badge ? (
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[14px] font-semibold tabular-nums">
+            {link.badge} <span>{t("waiting")}</span>
+          </span>
+        ) : null}
+        <Icon
+          aria-hidden
+          icon="mdi:arrow-right"
+          width={17}
+          height={17}
+          className="shrink-0 text-[#d1cedd]"
+        />
+      </GlobalLink>
+      {card.links.slice(1).map((item) => (
+        <CardLink key={item.href} link={item} onNavigate={onNavigate} />
+      ))}
+    </div>
   )
 }
 
@@ -219,14 +223,14 @@ function Card({
             >
               {card.title}
             </h4>
-            <p className="m-0 mt-1 text-[12px] leading-snug text-(--t-ink-dim)">
+            <p className="m-0 mt-1 text-[14px] leading-snug text-(--t-ink-dim)">
               {card.description}
             </p>
           </div>
         </div>
       ) : null}
       {hideHeading && card.key !== "hub" ? (
-        <p className="m-0 text-[12px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
           {card.description}
         </p>
       ) : null}
@@ -259,7 +263,7 @@ function Card({
                 <GlobalLink
                   href={link.href}
                   onClick={onNavigate}
-                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[12px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
                 >
                   <Icon
                     aria-hidden
@@ -409,7 +413,7 @@ function MembershipRow({
       <CardMonogram icon="mdi:heart-outline" tint="accent" size={30} />
       <span className="flex min-w-0 flex-1 flex-col">
         <strong className="text-[14px]">{tUi("membership")}</strong>
-        <span className="mt-0.5 text-[12px] leading-snug text-(--t-ink-dim)">
+        <span className="mt-0.5 text-[14px] leading-snug text-(--t-ink-dim)">
           {tUi("support_the_index_and_explore_pro")}
         </span>
       </span>
@@ -437,7 +441,7 @@ export function ContributeMenuPanel({
 
   return (
     <nav aria-label={tUi("contribute_menu")} className="flex flex-col">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-(--t-border-line) bg-(--t-bg-space) px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4">
         <div className="min-w-0 flex-1">
           <h2 className="m-0 font-serif text-[28px] leading-tight tracking-[-0.02em] text-(--t-ink-base)">
             {tUi("contribute")}
@@ -450,7 +454,7 @@ export function ContributeMenuPanel({
           <GlobalLink
             href={hubLink.href}
             onClick={onNavigate}
-            className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[12px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+            className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
           >
             {t("hub")}
             <Icon
@@ -462,7 +466,7 @@ export function ContributeMenuPanel({
           </GlobalLink>
         ) : null}
       </div>
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 bg-(--t-bg-void) p-4">
         {menu.status === "signedOut" ? (
           <SignInCard onNavigate={onNavigate} />
         ) : null}
@@ -524,7 +528,7 @@ export function GlobalContributeMenu({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <HeaderDropdownTrigger kind="popover" asChild>
         <button
           type="button"
           className={`inline-flex cursor-pointer items-center gap-1 ${PILL} pr-3 ${className}`}
@@ -538,13 +542,11 @@ export function GlobalContributeMenu({
             className={`transition-transform ${open ? "rotate-180" : ""}`}
           />
         </button>
-      </PopoverTrigger>
+      </HeaderDropdownTrigger>
 
-      <PopoverContent
+      <HeaderDropdownContent
+        kind="popover"
         ref={contentRef}
-        align="end"
-        sideOffset={12}
-        collisionPadding={16}
         onOpenAutoFocus={(event) => {
           // Land on the first link rather than on the panel itself.
           const first =
@@ -554,11 +556,10 @@ export function GlobalContributeMenu({
             first.focus()
           }
         }}
-        className="max-h-(--radix-popover-content-available-height) w-[680px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-[24px] border p-0 shadow-[0_16px_40px_rgba(23,22,43,.12)] motion-reduce:animate-none"
-        style={{ background: T.bg.void, borderColor: T.border.hi }}
+        className="w-[680px] p-0"
       >
         <ContributeMenuPanel menu={menu} onNavigate={() => setOpen(false)} />
-      </PopoverContent>
+      </HeaderDropdownContent>
     </Popover>
   )
 }

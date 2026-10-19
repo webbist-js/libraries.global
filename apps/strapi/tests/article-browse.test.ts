@@ -16,7 +16,7 @@ import wikiSectionSchema from "../src/api/wiki-section/content-types/wiki-sectio
 
 const row = {
   documentId: "story",
-  locale: "es",
+  locale: "fr",
   slug: "story",
   title: "Library event in Colombia",
   publishedAt: "2026-10-16T12:00:00.000Z",
@@ -241,7 +241,7 @@ describe("CMS browse adapter", () => {
       })),
     }
     const result = await browseArticles(strapi, "blog", {
-      lang: "es",
+      lang: "fr",
       country: "colombia",
       event: "event-citation",
       status: "draft",
@@ -249,7 +249,7 @@ describe("CMS browse adapter", () => {
       pageSize: "999",
     })
     expect(result.total).toBe(1)
-    expect(result.items[0]?.locale).toBe("es")
+    expect(result.items[0]?.locale).toBe("fr")
     expect(findMany).toHaveBeenCalledTimes(1)
     expect(ancestry).toHaveBeenCalledTimes(1)
     expect(ancestry.mock.calls[0]?.[0]).toMatchObject({
@@ -289,13 +289,13 @@ describe("CMS browse adapter", () => {
         ...(kind === "blog" ? { origin: "community" } : {}),
       })
       expect(result.appliedFilters.languages).toBeUndefined()
-      expect(result.items.some((item) => item.locale === "es")).toBe(true)
+      expect(result.items.some((item) => item.locale === "fr")).toBe(true)
     }
     expect(
       (
         await browseArticles(strapi, "blog", {
           preferredLocale: "en",
-          lang: "fr",
+          lang: "cs",
         })
       ).items
     ).toEqual([])
@@ -328,3 +328,23 @@ describe("CMS browse adapter", () => {
     })
   })
 })
+
+it.each(["blog", "wiki"] as const)(
+  "excludes CMS-only translations from %s items, counts and language facets",
+  async (kind) => {
+    const strapi = {
+      documents: () => ({
+        findMany: async () => [
+          { ...row, documentId: "supported", locale: "fr" },
+          { ...row, documentId: "unsupported", locale: "es" },
+        ],
+      }),
+    }
+    const result = await browseArticles(strapi, kind, { lang: "all" })
+    expect(result.total).toBe(1)
+    expect(result.items.map((item) => item.locale)).toEqual(["fr"])
+    expect(result.facets.languages.map((language) => language.value)).toEqual([
+      "fr",
+    ])
+  }
+)

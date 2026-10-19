@@ -1448,7 +1448,7 @@ export function TimetableEditor({
           </div>
 
           {/* Map */}
-          <div className="min-w-0 lg:sticky lg:top-32 lg:self-start">
+          <div className="min-w-0 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:self-start lg:overflow-y-auto lg:overscroll-contain">
             {tt.stops.some((s) => s.location) ? (
               <>
                 <MobileRouteMap
