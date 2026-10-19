@@ -28,7 +28,23 @@ node apps/strapi/scripts/update-team-pricing.mjs --local --apply
 
 The script checks for unpublished edits, preserves unrelated content and creates private backups and previews under `.scratch/pricing-rollout/`. It updates existing Knowledge guides in English, French and Czech, membership pricing/API terms, and the English Team API guide. It does not change permissions, enable purchases or restart services.
 
-The production API guide states that purchases are not enabled yet. Update that availability copy after the complete API release and owned checkout acceptance. Existing published articles keep their section, links, author, media and other metadata.
+The production API guides distinguish closed-beta Stripe Test mode from live purchases. Update availability copy only after the deployed checkout passes owned acceptance. Existing published articles keep their section, links, author, media and other metadata.
+
+## Team API onboarding guides
+
+The signup walkthrough and request reference live in the production Knowledge Data & API section, linked from the existing API, Team and plans articles.
+
+```sh
+# Preview the English onboarding/reference guides and related corrections.
+node apps/strapi/scripts/update-team-api-guides.mjs
+
+# Publish and verify content, relations and preserved editorial metadata.
+node apps/strapi/scripts/update-team-api-guides.mjs --apply
+```
+
+Use `--local` explicitly for development. Private previews and backups stay under ignored `.scratch/team-api-guides/`. The helper refuses unpublished edits and concurrent changes. It does not provision Teams, create keys, contact testers, change billing flags or deploy code.
+
+The current rollout includes a temporary new-subscription checkout notice. Remove that notice from `team-api-knowledge-content.mjs` only after the matching UI release passes an owned sandbox checkout, settled-payment activation and first-key acceptance. Keep Stripe Test mode and live availability separate. A source regression test or synthetic paid fixture does not prove provider checkout.
 
 The older `update-billing-docs.mjs` script remains a local feature migration. It now preserves the current Team pricing section; use an explicit reviewed production update for editorial work.
 
