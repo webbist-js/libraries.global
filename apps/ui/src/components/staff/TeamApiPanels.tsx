@@ -1,5 +1,6 @@
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
+import { API_TERMS_VERSION } from "@/lib/team-api/constants"
 import type { ApiDashboard } from "@/lib/team-api/types"
 
 const BUTTON =
@@ -137,7 +138,11 @@ export function ApiSubscriptionPanel({
             className={BUTTON}
             disabled={pending || !consent || !data.purchasing}
             onClick={() =>
-              request({ action: "checkout", locale, termsVersion: "1.0" })
+              request({
+                action: "checkout",
+                locale,
+                termsVersion: API_TERMS_VERSION,
+              })
             }
           >
             Subscribe to API access
@@ -313,6 +318,22 @@ export function ApiGuidePanel() {
         Keep keys in your application server&apos;s environment. Requests use{" "}
         <code>Authorization: Bearer YOUR_API_KEY</code>. Keys give access to
         published public data and do not grant staff or account permissions.
+      </p>
+      <p className="mt-3">
+        <Link
+          href="/knowledge/data-api/team-api-quickstart"
+          className="underline"
+        >
+          Follow the signup and first-request guide
+        </Link>
+        {" or read the "}
+        <Link
+          href="/knowledge/data-api/team-api-reference"
+          className="underline"
+        >
+          API reference
+        </Link>
+        .
       </p>
       <pre className="mt-4 overflow-x-auto rounded-xl bg-white p-4 text-sm">{`POST /api/v1/search/libraries\n{ "q": "Bristol", "locale": "en", "limit": 20 }\n\nGET /api/v1/libraries?locale=en&limit=50\nGET /api/v1/libraries/{entityRef}?locale=en`}</pre>
       <p className="mt-3 text-sm">

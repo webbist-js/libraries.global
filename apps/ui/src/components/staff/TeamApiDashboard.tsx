@@ -27,6 +27,8 @@ const bytes = (n: number) =>
     : `${(n / 1024 ** 2).toFixed(2)} MiB`
 
 const ERRORS: Record<string, string> = {
+  api_terms_required:
+    "The membership terms have changed. Reload this page and review them before subscribing.",
   organiser_required: "Ask a Team Organiser to manage API access.",
   api_key_limit_reached: "Revoke an unused key before creating another.",
   api_key_inactive: "This key has expired or been revoked. Create a new key.",
