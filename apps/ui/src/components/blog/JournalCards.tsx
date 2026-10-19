@@ -15,7 +15,7 @@ import { cn } from "@/lib/styles"
 import { sectionVisual } from "./journalLanding.helpers"
 
 const CARD_HOVER =
-  "transition-[border-color,box-shadow] duration-300 hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"
+  "transition-[border-color,box-shadow] duration-200 hover:border-(--t-border-hi) hover:shadow-[0_4px_16px_rgba(23,22,43,.04)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
 
 function articleHref(article: JournalCardData) {
   return `/journal/${article.section?.slug ?? "general"}/${article.slug}`
@@ -35,7 +35,7 @@ function ArticleLink({
 }) {
   return (
     <Link
-      className={className}
+      className={cn("border-(--t-border-line)", className)}
       href={`${articleHref(article)}${article.locale && !(routing.locales as readonly string[]).includes(article.locale) ? `?contentLang=${encodeURIComponent(article.locale)}` : ""}`}
       locale={
         article.locale &&
@@ -43,7 +43,7 @@ function ArticleLink({
           ? (article.locale as Locale)
           : locale
       }
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
+      style={{ background: T.bg.deep }}
     >
       {children}
     </Link>
@@ -155,7 +155,6 @@ export function JournalFeatureCard({
   readonly locale: Locale
 }) {
   const t = useTranslations("editorial")
-  const visual = sectionVisual(article.section)
   const imgUrl = article.heroImage?.url
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
@@ -164,41 +163,26 @@ export function JournalFeatureCard({
     <ArticleLink
       article={article}
       className={cn(
-        "group grid grid-cols-1 overflow-hidden rounded-[24px] border md:grid-cols-[minmax(0,45fr)_minmax(0,55fr)]",
+        "group grid grid-cols-1 overflow-hidden rounded-[22px] border",
+        imgUrl && "md:grid-cols-[minmax(0,47fr)_minmax(0,53fr)]",
         CARD_HOVER
       )}
       locale={locale}
     >
-      <div className="relative m-2 aspect-[4/3] overflow-hidden rounded-[18px] md:aspect-auto md:min-h-[300px]">
-        {imgUrl ? (
+      {imgUrl ? (
+        <div className="relative m-2 aspect-[4/3] overflow-hidden rounded-[16px] md:aspect-auto md:min-h-[280px]">
           <Image
             alt={article.heroImage?.alternativeText ?? ""}
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            className="object-cover"
             fill
             priority
-            sizes="(min-width: 1024px) 400px, 100vw"
+            sizes="(min-width: 1024px) 440px, (min-width: 768px) 50vw, 100vw"
             src={imgUrl}
           />
-        ) : (
-          <div
-            className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed"
-            style={{ background: visual.bg, borderColor: visual.fg }}
-          >
-            <Icon
-              aria-hidden="true"
-              height={26}
-              icon={visual.icon}
-              style={{ color: T.ink.faint }}
-              width={26}
-            />
-            <span className="text-[13px]" style={{ color: T.ink.low }}>
-              {article.section?.name ?? article.place ?? ""}
-            </span>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
-      <div className="flex flex-col justify-center p-6 lg:p-8">
+      <div className="flex flex-col justify-center p-6 sm:p-7">
         <div className="mb-3 flex flex-wrap gap-2">
           {editorsPick ? (
             <span
@@ -211,11 +195,11 @@ export function JournalFeatureCard({
               {t("editorPick")}
             </span>
           ) : null}
-          <SectionTag section={article.section} />
+          <SectionLabel section={article.section} />
         </div>
 
         <h3
-          className="m-0 text-[clamp(26px,2.6vw,34px)] leading-[1.1]"
+          className="m-0 text-[clamp(28px,3vw,38px)] leading-[1.1]"
           style={{
             fontFamily: T.font.serif,
             fontWeight: 500,
@@ -228,7 +212,7 @@ export function JournalFeatureCard({
 
         {article.summary ? (
           <p
-            className="m-0 mt-3 line-clamp-3 text-[16px] leading-[1.55]"
+            className="m-0 mt-3 line-clamp-3 text-[15px] leading-[1.6]"
             style={{ color: T.ink.dim }}
           >
             {article.summary}
@@ -236,7 +220,7 @@ export function JournalFeatureCard({
         ) : null}
 
         <p
-          className="m-0 mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]"
+          className="m-0 mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px]"
           style={{ color: T.ink.dim }}
         >
           {article.author ? (
@@ -288,10 +272,10 @@ export function JournalSideCard({
       locale={locale}
     >
       <div>
-        <SectionTag section={article.section} />
+        <SectionLabel section={article.section} />
       </div>
       <h3
-        className="m-0 mt-3 mb-4 text-[21px] leading-[1.2] transition-colors group-hover:text-(--t-accent-primary)"
+        className="m-0 mt-3 mb-4 text-[23px] leading-[1.15] transition-colors group-hover:text-(--t-accent-primary)"
         style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
       >
         {article.title}
@@ -342,12 +326,14 @@ export function JournalArticleCard({
       )}
       locale={locale}
     >
-      <ArticleThumb
-        article={article}
-        className="m-2 aspect-[16/10]"
-        sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
-      />
-      <div className="flex flex-1 flex-col px-4 pt-2 pb-4">
+      {article.heroImage?.url ? (
+        <ArticleThumb
+          article={article}
+          className="m-2 aspect-[16/10]"
+          sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
+        />
+      ) : null}
+      <div className="flex flex-1 flex-col p-5">
         <SectionLabel section={article.section} />
         <h3
           className="m-0 text-[20px] leading-[1.2] transition-colors group-hover:text-(--t-accent-primary)"
@@ -361,10 +347,15 @@ export function JournalArticleCard({
         </h3>
         {article.summary ? (
           <p
-            className="m-0 mt-2 line-clamp-2 text-[14px] leading-[1.5]"
+            className="m-0 mt-2 line-clamp-3 text-[14px] leading-[1.5]"
             style={{ color: T.ink.dim }}
           >
             {article.summary}
+          </p>
+        ) : null}
+        {article.place && !article.heroImage?.url ? (
+          <p className="mt-3 mb-0 text-xs text-(--t-ink-dim)">
+            {article.place}
           </p>
         ) : null}
         <p
@@ -395,16 +386,18 @@ export function JournalArticleRow({
     <ArticleLink
       article={article}
       className={cn(
-        "group flex items-stretch gap-4 rounded-[20px] border p-2 pr-5",
+        "group flex items-stretch gap-4 rounded-[20px] border p-4",
         CARD_HOVER
       )}
       locale={locale}
     >
-      <ArticleThumb
-        article={{ ...article, place: null }}
-        className="aspect-[4/3] w-[104px] flex-none sm:w-[168px]"
-        sizes="168px"
-      />
+      {article.heroImage?.url ? (
+        <ArticleThumb
+          article={{ ...article, place: null }}
+          className="aspect-[4/3] w-[104px] flex-none sm:w-[168px]"
+          sizes="168px"
+        />
+      ) : null}
       <div className="flex min-w-0 flex-1 flex-col py-2">
         <SectionLabel section={article.section} />
         <h3

@@ -1,7 +1,7 @@
 import { COUNTRIES } from "@/lib/data/countries"
 import type { LanguageEntry } from "@/lib/types/profile"
 
-/** Owner-only hints for new content, never a browsing filter or access grant. */
+/** Owner-only language defaults; country is a composition hint, never an access grant. */
 export type CompositionPreferences = {
   country?: string | null
   languages?: readonly LanguageEntry[]

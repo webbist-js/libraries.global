@@ -12,6 +12,7 @@ import { DiscussionLinkPicker } from "@/components/discussions/DiscussionLinkPic
 import { useDiscussionActor } from "@/components/discussions/useDiscussionActor"
 import { SelectField } from "@/components/ds/SelectField"
 import { compositionLanguage } from "@/lib/composition-language"
+import { preferredContentLanguage } from "@/lib/content-language"
 
 export type DriveDiscussionSetup = {
   enabled: boolean
@@ -225,6 +226,11 @@ function DriveDiscussionOptionsPanel({
             />
           )}
           <DiscussionLinkPicker
+            defaultLanguage={preferredContentLanguage(
+              locale,
+              actor.compositionPreferences,
+              languages.length ? languages.map((item) => item.code) : undefined
+            )}
             selected={current.threadIds}
             disabled={disabled || current.threadIds.length >= 10}
             onSelect={(thread) => {

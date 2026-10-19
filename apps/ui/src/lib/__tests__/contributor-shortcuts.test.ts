@@ -296,4 +296,26 @@ describe("buildContributeMenu", () => {
       menu.work.flatMap((c) => c.links).some((l) => l.label === "Staff drawer")
     ).toBe(false)
   })
+
+  it("offers Suggested additions only when the viewer has both review access and the board scope", () => {
+    const board = buildContributeMenu({
+      status: "signedIn",
+      capabilities: ["moderate.queue"],
+      canReviewSuggestions: true,
+    })
+    expect(links(board.work[0])).toContainEqual([
+      "Suggested additions",
+      "/contribute/moderation/suggestions",
+    ])
+    const other = buildContributeMenu({
+      status: "signedIn",
+      capabilities: [],
+      canReviewSuggestions: true,
+    })
+    expect(
+      other.work
+        .flatMap((card) => card.links)
+        .some((link) => link.href.endsWith("/moderation/suggestions"))
+    ).toBe(false)
+  })
 })

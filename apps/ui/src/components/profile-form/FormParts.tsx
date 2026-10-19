@@ -103,7 +103,7 @@ export function SectionCard({
     <section
       id={id}
       aria-labelledby={`${id}-title`}
-      className="scroll-mt-24 rounded-[24px] p-6 sm:p-7"
+      className="scroll-mt-(--sticky-content-top) rounded-[24px] p-6 sm:p-7"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

@@ -68,7 +68,7 @@ function ReviewSidebar() {
   return (
     <aside
       aria-labelledby="correct-review-heading"
-      className="self-start rounded-[20px] p-6 lg:sticky lg:top-[128px]"
+      className="self-start rounded-[20px] p-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
       style={cardStyle}
     >
       <h2

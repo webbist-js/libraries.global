@@ -75,7 +75,7 @@ export function MonthlyDispatchCard() {
           <input
             aria-describedby="journal-subscribe-note"
             autoComplete="email"
-            className="w-full rounded-[14px] border px-3.5 py-2.5 text-[15px]"
+            className="min-h-11 w-full rounded-full border px-3.5 py-2.5 text-[15px]"
             id="journal-subscribe"
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.org"
@@ -89,7 +89,7 @@ export function MonthlyDispatchCard() {
             value={email}
           />
           <button
-            className="mt-3 w-full rounded-full px-4 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-60"
+            className="mt-3 min-h-11 w-fit cursor-pointer rounded-full px-4 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-60"
             disabled={status === "saving"}
             style={{ background: T.accent.primary }}
             type="submit"

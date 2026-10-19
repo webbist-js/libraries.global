@@ -55,7 +55,7 @@ export function FindMapPanel({
 
   return (
     <aside
-      className="sticky top-[90px] flex min-h-[420px] flex-col gap-4 p-6"
+      className="sticky top-(--sticky-content-top) flex max-h-(--sticky-content-max-height) min-h-[min(420px,var(--sticky-content-max-height))] flex-col gap-4 overflow-y-auto overscroll-contain p-6"
       style={{
         background: "var(--tint-academic-bg)",
         border: `1px dashed #D3DEEB`,

@@ -27,8 +27,9 @@ export function LocationTabBar({ tabs, activeTabId }: LocationTabBarProps) {
 
   return (
     <nav
+      data-sticky-navigation=""
       aria-label={tUi("on_this_page")}
-      className="sticky top-14 z-[5] mt-8 border-y"
+      className="sticky top-(--sticky-header-height) z-[5] mt-8 border-y"
       style={{ background: T.bg.void, borderColor: T.border.line }}
     >
       <div className="mx-auto flex max-w-[1360px] flex-wrap gap-1 overflow-x-auto px-4 py-2 sm:px-8">

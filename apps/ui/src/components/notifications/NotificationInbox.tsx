@@ -1,6 +1,8 @@
 "use client"
 
 import {
+  AlertCircle,
+  ArrowRight,
   Award,
   Bell,
   BookOpen,
@@ -15,15 +17,17 @@ import {
   Settings2,
   ShieldCheck,
   UserPlus,
+  type LucideIcon,
 } from "lucide-react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 
 import {
   type InboxItem,
   useNotifications,
 } from "@/components/notifications/NotificationProvider"
 import { Button } from "@/components/ui/button"
+import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 const categories = {
@@ -135,10 +139,10 @@ function period(createdAt: string, now: Date) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const week = new Date(today)
   week.setDate(week.getDate() - ((week.getDay() + 6) % 7))
-  if (date >= today) return "Today"
-  if (date >= week) return "This week"
+  if (date >= today) return "today"
+  if (date >= week) return "week"
 
-  return "Earlier"
+  return "earlier"
 }
 function when(createdAt: string, now: Date) {
   const date = new Date(createdAt)
@@ -164,6 +168,45 @@ function matches(item: InboxItem, filter: Filter) {
     (filter === "unread"
       ? !item.readAt
       : presentation(item.kind).category === filter)
+  )
+}
+
+function InboxEmptyState({
+  icon: Icon,
+  title,
+  detail,
+  children,
+}: {
+  readonly icon: LucideIcon
+  readonly title: string
+  readonly detail: string
+  readonly children: ReactNode
+}) {
+  return (
+    <div className="p-5 pt-0 sm:p-7 sm:pt-0">
+      <div className="flex flex-col items-start gap-5 rounded-[18px] bg-(--t-bg-surface) p-5 sm:flex-row sm:gap-6 sm:p-8">
+        <span
+          aria-hidden="true"
+          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-(--t-bg-deep) text-(--t-accent-primary)"
+        >
+          <Icon className="size-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3
+            className="m-0 text-[28px] leading-tight text-(--t-ink-base)"
+            style={{ fontFamily: T.font.serif }}
+          >
+            {title}
+          </h3>
+          <p className="mt-3 mb-0 max-w-xl text-[15px] leading-relaxed text-(--t-ink-dim)">
+            {detail}
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -206,31 +249,43 @@ export function NotificationInbox() {
       aria-label={tUi("your_notifications")}
       className="min-w-0 overflow-hidden rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep)"
     >
-      <div className="border-b border-(--t-divider) p-5 sm:p-7">
+      <div className="p-5 sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
-            <h1 className="m-0 flex items-center gap-3 font-serif text-3xl sm:text-4xl">
-              <Bell
-                aria-hidden="true"
-                className="size-6 text-(--t-accent-primary)"
-              />
-              {tUi("notifications")}{" "}
-            </h1>
-            <p className="mt-2 flex items-center gap-2 text-sm text-(--t-ink-dim)">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h2
+                className="m-0 text-[28px] leading-tight text-(--t-ink-base)"
+                style={{ fontFamily: T.font.serif }}
+              >
+                {tUi("notifications")}
+              </h2>
+              {!loading && !loadError && items.length > 0 ? (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${unread ? "bg-(--t-accent-chip) text-(--t-accent-primary)" : "bg-(--tint-public-bg) text-(--tint-public-fg)"}`}
+                >
+                  {unread ? (
+                    `${unread} unread`
+                  ) : (
+                    <>
+                      <CheckCheck aria-hidden className="size-3.5" />
+                      All read
+                    </>
+                  )}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-2 mb-0 flex items-center gap-2 text-[13px] text-(--t-ink-dim)">
               <LockKeyhole aria-hidden="true" className="size-4 shrink-0" />
-              Only you can see this tab<span aria-hidden="true">·</span>
-              {loading
-                ? tUi("loading")
-                : unread
-                  ? `${unread} unread`
-                  : "All read"}
+              Only you can see this tab
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div
+            className={`flex max-w-full flex-wrap gap-3 ${unread ? "w-full sm:w-auto" : ""}`}
+          >
             {unread > 0 && (
               <Button
-                variant="outline"
-                className="rounded-full"
+                variant="surface"
+                size="pill"
                 disabled={saving || loading}
                 onClick={() => void read("all")}
               >
@@ -238,18 +293,26 @@ export function NotificationInbox() {
                 Mark all as read
               </Button>
             )}
-            <Button asChild variant="outline" className="rounded-full">
+            <Button
+              asChild
+              variant="surface"
+              size="pill"
+              className="size-[44px] p-0 sm:h-auto sm:w-auto sm:px-6 sm:py-3"
+            >
               <Link href="/profile/settings#notifications">
                 <Settings2 aria-hidden="true" />
-                {tUi("settings")}{" "}
+                <span className="sr-only sm:not-sr-only">
+                  {tUi("settings")}
+                </span>
               </Link>
             </Button>
           </div>
         </div>
         {items.length > 0 && (
           <div
+            role="group"
             aria-label={tUi("filter_notifications")}
-            className="mt-5 flex flex-wrap gap-2"
+            className="-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:thin] sm:-mx-7 sm:px-7"
           >
             {(["all", "unread", ...Object.keys(categories)] as Filter[]).map(
               (key) => (
@@ -258,14 +321,16 @@ export function NotificationInbox() {
                   type="button"
                   aria-pressed={filter === key}
                   onClick={() => setFilter(key)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) ${filter === key ? "border-(--t-ink-base) bg-(--t-ink-base) text-(--t-bg-deep)" : "border-(--t-border-line) text-(--t-ink-base) hover:bg-(--t-bg-elevated)"}`}
+                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors focus-visible:-outline-offset-4! motion-reduce:transition-none ${filter === key ? "border-(--t-ink-base) bg-(--t-ink-base) text-(--t-bg-deep)" : "border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-dim) hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"}`}
                 >
                   {key === "all"
                     ? "All"
                     : key === "unread"
                       ? "Unread"
                       : categories[key].label}
-                  <span className="opacity-75">
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none tabular-nums ${filter === key ? "bg-white/15 text-white" : "bg-(--t-bg-muted) text-(--t-ink-dim)"}`}
+                  >
                     {items.filter((item) => matches(item, key)).length}
                   </span>
                 </button>
@@ -277,91 +342,102 @@ export function NotificationInbox() {
       {(error || loadError) && (
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-3 border-b border-(--t-divider) px-5 py-4 text-sm sm:px-7"
+          className="mx-5 mb-5 flex flex-wrap items-center gap-3 rounded-2xl bg-(--t-palette-coral-soft) p-4 text-[14px] leading-relaxed text-(--t-palette-coral-fg) sm:mx-7 sm:mb-7"
         >
-          {error || "Could not load notifications. Please try again."}
+          <p className="m-0 flex min-w-0 flex-1 items-start gap-2.5">
+            <AlertCircle aria-hidden className="mt-0.5 size-5 shrink-0" />
+            {error || "Could not load notifications. Please try again."}
+          </p>
           {loadError && (
-            <Button variant="outline" size="sm" onClick={() => void refresh()}>
-              {tUi("try_again")}{" "}
+            <Button
+              variant="surface"
+              size="pill"
+              onClick={() => void refresh()}
+            >
+              {tUi("try_again")}
             </Button>
           )}
         </div>
       )}
       {loading ? (
-        <div
-          role="status"
-          className="px-7 py-16 text-center text-(--t-ink-dim)"
-        >
-          Loading your updates…
+        <div role="status" className="px-5 pb-5 sm:px-7 sm:pb-7">
+          <p className="mt-0 mb-4 text-[14px] text-(--t-ink-dim)">
+            Loading your updates…
+          </p>
+          <div
+            aria-hidden="true"
+            className="divide-y divide-(--t-border-line) rounded-2xl bg-(--t-bg-surface) px-4 motion-safe:animate-pulse"
+          >
+            {["first", "second", "third"].map((key) => (
+              <div key={key} className="flex items-center gap-4 py-5">
+                <span className="size-10 shrink-0 rounded-full bg-(--t-bg-muted)" />
+                <div className="flex w-full flex-col gap-2.5">
+                  <span className="h-3 w-2/3 max-w-sm rounded-full bg-(--t-bg-muted)" />
+                  <span className="h-3 w-1/2 max-w-xs rounded-full bg-(--t-bg-muted)" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : !items.length && !loadError ? (
-        <div className="px-5 py-16 text-center sm:py-20">
-          <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">
-            <Bell aria-hidden="true" className="size-8" />
-          </div>
-          <h2 className="font-serif text-3xl sm:text-4xl">
-            No notifications yet
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-(--t-ink-dim)">
-            When a library you follow changes, a contribution is reviewed or
-            someone follows you, you’ll see it here.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="rounded-full">
-              <Link href="/libraries">
-                <Building2 aria-hidden="true" />
-                Follow libraries
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="rounded-full"
-            >
-              <Link href="/contribute">
-                <Pencil aria-hidden="true" />
-                Make a contribution
-              </Link>
-            </Button>
-          </div>
-        </div>
-      ) : items.length > 0 && !filtered.length ? (
-        <div role="status" className="px-5 py-16 text-center">
-          <CircleCheck
-            aria-hidden="true"
-            className="mx-auto mb-4 size-9 text-(--t-accent-primary)"
-          />
-          <h2 className="font-serif text-2xl">
-            {filter === "unread"
-              ? "You’re all caught up"
-              : "No updates in this category"}
-          </h2>
-          <p className="mt-3 text-(--t-ink-dim)">
-            {filter === "unread"
-              ? "You’ve read every update in your latest notifications."
-              : "Other updates are waiting in your inbox."}
-          </p>
-          <Button
-            variant="outline"
-            className="mt-6 rounded-full"
-            onClick={() => setFilter("all")}
-          >
-            Show all notifications
+        <InboxEmptyState
+          icon={Bell}
+          title="No notifications yet"
+          detail="Updates about the libraries you follow, your contributions and the community will appear here."
+        >
+          <Button asChild variant="primary" size="pill">
+            <Link href="/libraries">
+              <Building2 aria-hidden="true" />
+              Follow libraries
+            </Link>
           </Button>
+          <Button asChild variant="surface" size="pill">
+            <Link href="/contribute">
+              <Pencil aria-hidden="true" />
+              Make a contribution
+            </Link>
+          </Button>
+        </InboxEmptyState>
+      ) : items.length > 0 && !filtered.length ? (
+        <div role="status">
+          <InboxEmptyState
+            icon={filter === "unread" ? CircleCheck : Bell}
+            title={
+              filter === "unread"
+                ? "You’re all caught up"
+                : "No updates in this category"
+            }
+            detail={
+              filter === "unread"
+                ? "You’ve read every update in your latest notifications."
+                : "Other updates are waiting in your inbox."
+            }
+          >
+            <Button
+              variant="surface"
+              size="pill"
+              onClick={() => setFilter("all")}
+            >
+              Show all notifications
+            </Button>
+          </InboxEmptyState>
         </div>
       ) : (
-        ["Today", tUi("this_week"), "Earlier"].map((group) => {
+        [
+          { id: "today", label: "Today" },
+          { id: "week", label: tUi("this_week") },
+          { id: "earlier", label: "Earlier" },
+        ].map((group) => {
           const rows = filtered.filter(
-            (item) => period(item.createdAt, now) === group
+            (item) => period(item.createdAt, now) === group.id
           )
           if (!rows.length) return null
 
           return (
-            <div key={group}>
-              <h2 className="border-b border-(--t-divider) bg-(--t-bg-elevated) px-5 py-2.5 text-xs font-semibold tracking-wider text-(--t-ink-dim) uppercase sm:px-7">
-                {group}
-              </h2>
+            <div key={group.id}>
+              <h3 className="m-0 border-y border-(--t-border-line) bg-(--t-bg-surface) px-5 py-3 text-[12px] font-semibold text-(--t-ink-dim) sm:px-7">
+                {group.label}
+              </h3>
               <ul className="m-0 list-none p-0">
                 {rows.map((item) => {
                   const meta = presentation(item.kind)
@@ -371,45 +447,48 @@ export function NotificationInbox() {
                   return (
                     <li
                       key={item.documentId}
-                      className={`relative flex gap-3 border-b border-(--t-divider) px-5 py-5 last:border-b-0 sm:gap-4 sm:px-7 ${!item.readAt ? "bg-(--t-accent-chip)/30" : ""}`}
+                      className={`relative flex gap-3 border-b border-(--t-border-line) px-5 py-5 last:border-b-0 sm:gap-4 sm:px-7 ${!item.readAt ? "bg-(--t-accent-chip)/25" : ""}`}
                     >
                       <div
-                        className={`flex size-11 shrink-0 items-center justify-center rounded-2xl ${tint}`}
+                        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${tint}`}
                       >
                         <Icon aria-hidden="true" className="size-5" />
                       </div>
                       <div className="min-w-0 flex-1 pr-4">
-                        <h3
-                          className={`text-base leading-snug ${!item.readAt ? "font-semibold" : "font-medium"}`}
-                        >
-                          {item.title}
-                        </h3>
-                        <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-(--t-ink-dim)">
-                          {item.body}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-                          <span
-                            className={`rounded-full px-2.5 py-1 font-medium ${tint}`}
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                          <h4
+                            className={`m-0 text-[15px] leading-snug [overflow-wrap:anywhere] ${!item.readAt ? "font-semibold" : "font-medium"}`}
                           >
-                            {meta.label}
-                          </span>
+                            {item.title}
+                          </h4>
                           <time
                             dateTime={item.createdAt}
                             title={new Date(item.createdAt).toLocaleString()}
-                            className="text-(--t-ink-dim)"
+                            className="shrink-0 text-[12px] text-(--t-ink-low)"
                           >
                             {when(item.createdAt, now)}
                           </time>
+                        </div>
+                        <p className="mt-1.5 mb-0 text-[14px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-line text-(--t-ink-dim)">
+                          {item.body}
+                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${tint}`}
+                          >
+                            {meta.label}
+                          </span>
                           {item.href?.startsWith("/") &&
                             !item.href.startsWith("//") && (
                               <Link
                                 href={item.href}
-                                className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                                className="inline-flex min-h-[44px] items-center gap-1.5 font-semibold text-(--t-accent-primary) underline decoration-transparent underline-offset-4 hover:decoration-current"
                                 onClick={() => {
                                   if (!item.readAt) void read(item.documentId)
                                 }}
                               >
                                 {meta.action}
+                                <ArrowRight aria-hidden className="size-3.5" />
                               </Link>
                             )}
                           {!item.readAt && (
@@ -419,8 +498,9 @@ export function NotificationInbox() {
                               disabled={saving}
                               onClick={() => void read(item.documentId)}
                               aria-label={`Mark as read: ${item.title}`}
-                              className="h-7 rounded-full text-xs text-(--t-ink-dim)"
+                              className="min-h-[44px] rounded-full px-3 text-[13px] text-(--t-ink-dim)"
                             >
+                              <CheckCheck aria-hidden className="size-4" />
                               Mark as read
                             </Button>
                           )}
@@ -440,10 +520,10 @@ export function NotificationInbox() {
         })
       )}
       {items.length > 0 && (
-        <p className="border-t border-(--t-divider) px-5 py-4 text-xs text-(--t-ink-dim) sm:px-7">
-          Showing your latest {items.length === 50 ? "50 " : ""}notifications.
-          Filter counts cover this list; unread totals include all retained
-          updates.
+        <p className="m-0 border-t border-(--t-border-line) px-5 py-4 text-[12px] leading-relaxed text-(--t-ink-dim) sm:px-7">
+          Filters apply to the latest {items.length}{" "}
+          {items.length === 1 ? "update" : "updates"} shown here. The unread
+          total includes all retained notifications.
         </p>
       )}
     </section>

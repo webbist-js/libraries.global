@@ -5,6 +5,7 @@ import { cleanup, render, screen, fireEvent, waitFor } from "@/test/render"
 
 import { ArticleReaderActions } from "./ArticleReaderActions"
 
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/access-client", () => ({
   useHydratedSession: () => ({
     data: { user: { id: "reader" } },
@@ -18,7 +19,11 @@ vi.mock("@/lib/access-client", () => ({
 }))
 vi.mock("@/lib/navigation", () => ({
   routing: { locales: ["en", "fr", "cs"] },
-  Link: ({ href, children }: any) => <a href={href}>{children}</a>,
+  Link: ({ href, children, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 vi.mock(
   "@/app/[locale]/profile/[username]/_components/ProfileFollowButton",
@@ -44,9 +49,9 @@ it("keeps published variants tied to the displayed language and chooses a config
       kind="knowledge"
       slug="guide"
       path="/knowledge/practice/guide"
-      contentLocale="es"
+      contentLocale="cs"
       interfaceLocale="en"
-      availableLocales={["es", "en"]}
+      availableLocales={["cs", "en", "es"]}
     />
   )
   expect(
@@ -56,7 +61,8 @@ it("keeps published variants tied to the displayed language and chooses a config
     screen
       .getByRole("link", { name: "Suggest an improvement" })
       .getAttribute("href")
-  ).toContain("mode=report&locale=es")
+  ).toContain("mode=report&locale=cs")
+  expect(screen.queryByRole("link", { name: "Read in Spanish" })).toBeNull()
   fireEvent.click(screen.getByRole("button", { name: "Add a translation" }))
   await waitFor(() =>
     expect(screen.getByRole("option", { name: "French" })).toBeTruthy()
@@ -67,7 +73,7 @@ it("keeps published variants tied to the displayed language and chooses a config
   })
   expect(
     screen.getByRole("link", { name: "Add a translation" }).getAttribute("href")
-  ).toBe("/contribute/knowledge/guide?locale=fr&sourceLocale=es&mode=edit")
+  ).toBe("/contribute/knowledge/guide?locale=fr&sourceLocale=cs&mode=edit")
 })
 
 it.each([true, false])(

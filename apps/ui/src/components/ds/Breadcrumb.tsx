@@ -34,6 +34,8 @@ interface BreadcrumbProps {
    */
   root?: { label: string; href: string } | false
   className?: string
+  /** Article headings name the current page; the trail can link all ancestors. */
+  ancestorsOnly?: boolean
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -79,6 +81,7 @@ export function Breadcrumb({
   labels = {},
   root,
   className,
+  ancestorsOnly = false,
 }: BreadcrumbProps) {
   const tUi = useUiTranslations("ui")
 
@@ -107,7 +110,7 @@ export function Breadcrumb({
                   /
                 </span>
               ) : null}
-              {item.href && !isLast ? (
+              {item.href && (!isLast || ancestorsOnly) ? (
                 <GlobalLink
                   href={item.href}
                   className="text-(--t-ink-dim) underline decoration-transparent underline-offset-[3px] transition-colors hover:text-(--t-accent-primary) hover:decoration-current"
@@ -116,7 +119,7 @@ export function Breadcrumb({
                 </GlobalLink>
               ) : (
                 <span
-                  aria-current={isLast ? "page" : undefined}
+                  aria-current={isLast && !ancestorsOnly ? "page" : undefined}
                   className={cn(isLast && "truncate")}
                   style={{
                     color: isLast ? T.ink.base : T.ink.dim,

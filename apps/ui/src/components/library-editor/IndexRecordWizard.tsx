@@ -34,7 +34,13 @@ import {
   changedSteps,
   recordChangesPayload,
 } from "./wizard.changes"
-import { fieldInputStyle, fieldLabelStyle } from "./wizard.constants"
+import {
+  fieldInputStyle,
+  fieldLabelStyle,
+  WIZARD_GRID,
+  WIZARD_RAIL,
+  WIZARD_CARD,
+} from "./wizard.constants"
 import { stepProgress } from "./wizard.progress"
 import { nextWizardStep, wizardStepPosition, wizardSteps } from "./wizard.steps"
 import { tipFor } from "./wizard.tips"
@@ -494,12 +500,12 @@ export function IndexRecordWizard({
           <div
             id="wizard-main"
             ref={topRef}
-            className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 2xl:grid-cols-[300px_minmax(0,1fr)] 2xl:gap-10"
+            className={WIZARD_GRID}
             style={{ scrollMarginTop: "128px" }}
           >
             {/* Left — rail: title, status, completeness, stepper */}
             <div
-              className="min-w-0 self-start rounded-[24px] border p-5 lg:sticky lg:top-[128px]"
+              className={WIZARD_RAIL}
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
               <h2
@@ -568,7 +574,7 @@ export function IndexRecordWizard({
             {/* Right — step form */}
             <section
               aria-label={tUi("library_record_form")}
-              className="min-w-0 rounded-[28px] border p-5 sm:p-8"
+              className={WIZARD_CARD}
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
               {improve && !staff && (

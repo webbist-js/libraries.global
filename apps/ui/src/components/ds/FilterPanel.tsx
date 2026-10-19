@@ -475,9 +475,9 @@ export function FilterSidebar({
       id={sidebar.sidebarId}
       aria-label={tUi("filters")}
       className={[
-        "scrollbar-thin sticky top-[90px] w-[290px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain",
+        "scrollbar-thin sticky top-(--sticky-content-top) w-[290px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain",
         // Inner padding keeps focus rings clear of the scroll box's edge.
-        "-mx-1 max-h-[calc(100dvh-110px)] px-1 pb-4",
+        "-mx-1 max-h-(--sticky-content-max-height) px-1 pb-4",
         sidebar.collapsed ? "hidden" : "hidden lg:block",
       ].join(" ")}
     >

@@ -2,6 +2,7 @@ import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 
 import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
+import { fetchContentLocales as configuredLocales } from "@/lib/content-locales-server"
 import { cacheTagsFor } from "@/lib/strapi-api/cache-tags"
 import { createStrapiAuthHeader } from "@/lib/strapi-api/request-auth"
 
@@ -220,20 +221,6 @@ async function approvedTopics(locale: string) {
   })
 }
 
-/** Strapi's configured locales, for the article editor's language picker. */
-async function configuredLocales() {
-  const res = await fetch(`${STRAPI}/api/content-moderation/locales`, {
-    headers: strapiServiceHeaders(),
-    next: { revalidate: 3600 },
-  })
-  if (!res.ok) return null
-  const json = (await res.json()) as {
-    data?: { code: string; name: string; isDefault: boolean }[]
-  }
-
-  return json.data ?? []
-}
-
 async function locales() {
   return NextResponse.json({ data: (await configuredLocales()) ?? [] })
 }
@@ -255,11 +242,7 @@ type CountryRow = {
  * Atlas countries by ISO code (`?iso2=GB-ENG,GB`), in the order asked, for
  * the location lookup. The UK's countries are filed by ISO 3166-2 code.
  */
-async function countriesByCode(
-  raw: string,
-  locale: string,
-  verifiedLocales?: { code: string; isDefault: boolean }[] | null
-) {
+async function countriesByCode(raw: string, locale: string) {
   const codes = raw
     .split(",")
     .map((code) => code.trim().toUpperCase())
@@ -277,7 +260,7 @@ async function countriesByCode(
     cacheTagsFor("/countries", {})
   )
   if (!values) return NextResponse.json({ data: [] }, { status: 503 })
-  const configured = verifiedLocales ?? (await configuredLocales())
+  const configured = await configuredLocales()
   const base =
     configured?.find((entry) => entry.isDefault)?.code ?? DEFAULT_LOCALE
   const rows = localizedChoices(values, locale, base, [
@@ -319,29 +302,14 @@ export async function GET(
   const { type } = await params
   const searchParams = new URL(req.url).searchParams
   const requestedLocale = searchParams.get("locale")
-  let verifiedLocales:
-    | { code: string; name: string; isDefault: boolean }[]
-    | null
-    | undefined
-  let locale: string = isSupportedLocale(requestedLocale)
+  const locale: string = isSupportedLocale(requestedLocale)
     ? requestedLocale
     : DEFAULT_LOCALE
-  // Article languages may extend the interface's en/fr/cs locales.
-  if (
-    requestedLocale &&
-    !isSupportedLocale(requestedLocale) &&
-    /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(requestedLocale)
-  ) {
-    const configured = await configuredLocales()
-    verifiedLocales = configured
-    if (!configured)
-      return NextResponse.json(
-        { data: [], error: "Language choices are unavailable" },
-        { status: 503 }
-      )
-    if (configured.some((entry) => entry.code === requestedLocale))
-      locale = requestedLocale
-  }
+  if (requestedLocale && !isSupportedLocale(requestedLocale))
+    return NextResponse.json(
+      { data: [], error: "Unsupported language" },
+      { status: 400 }
+    )
   // The published suggestion catalogue also serves type choices, without broad CMS token permissions.
   if (type === "library-types") {
     try {
@@ -365,8 +333,7 @@ export async function GET(
   if (type === "topics") return approvedTopics(locale)
   if (type === "locales") return locales()
   const iso2 = searchParams.get("iso2")
-  if (type === "countries" && iso2)
-    return countriesByCode(iso2, locale, verifiedLocales)
+  if (type === "countries" && iso2) return countriesByCode(iso2, locale)
   const strapiPlural = Object.hasOwn(TYPE_MAP, type)
     ? TYPE_MAP[type]
     : undefined
@@ -433,7 +400,7 @@ export async function GET(
         },
         { status: 503 }
       )
-    const configured = verifiedLocales ?? (await configuredLocales())
+    const configured = await configuredLocales()
     const base =
       configured?.find((entry) => entry.isDefault)?.code ?? DEFAULT_LOCALE
 

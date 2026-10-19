@@ -245,7 +245,10 @@ const JOURNAL_CARD: ContributorCard = {
 }
 
 /** Moderators: the queue, with how much is waiting once that's known. */
-function reviewCard(moderation: number | null | undefined): ContributorCard {
+function reviewCard(
+  moderation: number | null | undefined,
+  suggestions: boolean
+): ContributorCard {
   return {
     key: "review",
     title: "Review",
@@ -259,6 +262,15 @@ function reviewCard(moderation: number | null | undefined): ContributorCard {
         ...(moderation === 0 ? { sub: "Nothing waiting" } : {}),
         ...(moderation ? { badge: moderation } : {}),
       },
+      ...(suggestions
+        ? [
+            {
+              label: "Suggested additions",
+              href: "/contribute/moderation/suggestions",
+              sub: "Review new features and library types",
+            },
+          ]
+        : []),
     ],
   }
 }
@@ -371,6 +383,7 @@ export function buildContributeMenu({
   selectedLibraryId = null,
   featuredDrive = null,
   counts = {},
+  canReviewSuggestions = false,
 }: {
   status: ContributeMenuStatus
   capabilities?: readonly string[]
@@ -383,6 +396,8 @@ export function buildContributeMenu({
   /** The featured drive: "loading" while it's being fetched. */
   featuredDrive?: FeaturedDriveInput
   counts?: ContributeMenuCounts
+  /** UI only; the suggestions route rechecks the editorial board's scope. */
+  canReviewSuggestions?: boolean
 }): ContributeMenuModel {
   const caps = new Set(capabilities)
   const work: ContributorCard[] = []
@@ -396,7 +411,8 @@ export function buildContributeMenu({
     if (teams.length > 0) work.push(teamCard(teams, libraries !== null))
     if (caps.has("docs.directEdit")) work.push(KNOWLEDGE_CARD)
     if (caps.has("journal.directEdit")) work.push(JOURNAL_CARD)
-    if (caps.has("moderate.queue")) work.push(reviewCard(counts.moderation))
+    if (caps.has("moderate.queue"))
+      work.push(reviewCard(counts.moderation, canReviewSuggestions))
   }
 
   return {

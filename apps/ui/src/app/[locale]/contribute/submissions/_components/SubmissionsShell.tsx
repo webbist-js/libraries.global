@@ -9,6 +9,7 @@ import { useEffect } from "react"
 import { ContributionList } from "@/components/contributions/ContributionList"
 import { docsPathForSearchHit } from "@/components/docs/docs.config"
 import { StatCard } from "@/components/ds"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMySubmissions, type Submission } from "@/hooks/useSubmissions"
 import { useCapabilities, useHydratedSession } from "@/lib/access-client"
@@ -409,13 +410,9 @@ export function SubmissionsShell({ username }: { username: string | null }) {
                 Libraries you add, corrections and articles appear here as soon
                 as you start them.
               </p>
-              <Link
-                href="/contribute"
-                className="text-[15px] font-semibold underline underline-offset-[3px]"
-                style={{ color: T.accent.primary }}
-              >
-                Start contributing
-              </Link>
+              <Button asChild variant="primary" size="pill">
+                <Link href="/contribute">Start contributing</Link>
+              </Button>
             </section>
           ) : (
             <div className="flex flex-col gap-6">

@@ -3,7 +3,10 @@ import { afterEach, it, expect, vi } from "vitest"
 
 import { cleanup, render, screen, waitFor } from "@/test/render"
 
-import { useJournalOwnership } from "./use-journal-ownership"
+import {
+  fetchJournalOwnership,
+  useJournalOwnership,
+} from "./use-journal-ownership"
 
 const actor = vi.hoisted(() => ({
   id: "a",
@@ -72,4 +75,23 @@ it("hides previously proven ownership on an auth network error without treating 
   actor.error = { message: "unavailable" }
   view.rerender(<Probe />)
   expect(screen.queryByText("Can edit own story")).toBeNull()
+})
+
+it("checks every loaded story while keeping each private request within the 24-story limit", async () => {
+  const fetcher = vi.fn(async (url: string) => {
+    const slugs = new URL(url, "http://test").searchParams.getAll("slug")
+    expect(slugs.length).toBeLessThanOrEqual(24)
+
+    return Response.json({
+      data: {
+        eligibility: Object.fromEntries(slugs.map((slug) => [slug, true])),
+      },
+    })
+  })
+  vi.stubGlobal("fetch", fetcher)
+  const slugs = Array.from({ length: 30 }, (_, index) => `story-${index}`)
+  const result = await fetchJournalOwnership(slugs)
+  expect(Object.keys(result)).toHaveLength(30)
+  expect(result["story-29"]).toBe(true)
+  expect(fetcher).toHaveBeenCalledTimes(2)
 })

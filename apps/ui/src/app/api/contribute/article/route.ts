@@ -1,3 +1,4 @@
+import { isSupportedLocale } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
@@ -7,7 +8,6 @@ import type { ArticleForEditing } from "@/lib/strapi-api/content/server"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SLUG = /^[a-z0-9-]{1,255}$/
-const LOCALE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/
 
 const DETAIL: Record<string, string> = {
   knowledge: "wiki-articles",
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   const slug = searchParams.get("slug") ?? ""
   const locale = searchParams.get("locale") ?? ""
   const plural = DETAIL[kind]
-  if (!plural || !SLUG.test(slug) || !LOCALE.test(locale))
+  if (!plural || !SLUG.test(slug) || !isSupportedLocale(locale))
     return NextResponse.json({ error: "Invalid request" }, { status: 400 })
 
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY

@@ -84,7 +84,9 @@ describe("Editorial drawer", () => {
     expect(
       screen.getByRole("region", { name: "Publish and edit" })
     ).toBeTruthy()
-    expect(screen.getByRole("link", { name: "Checklist ideas" })).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "Suggested additions" })
+    ).toBeTruthy()
   })
 
   it("shows only a discussion moderator’s permitted tools and closes on navigation", () => {
@@ -106,7 +108,9 @@ describe("Editorial drawer", () => {
     expect(
       screen.queryByRole("region", { name: "Publish and edit" })
     ).toBeNull()
-    expect(screen.queryByRole("link", { name: "Checklist ideas" })).toBeNull()
+    expect(
+      screen.queryByRole("link", { name: "Suggested additions" })
+    ).toBeNull()
     expect(screen.queryByRole("link", { name: "New drive" })).toBeNull()
     fireEvent.click(within(queues).getByRole("link", { name: "Discussions 2" }))
     expect(screen.getByTestId("drawer-open").textContent).toBe("false")

@@ -4,6 +4,9 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { SearchField } from "@/components/ds/SearchField"
+import { SelectField } from "@/components/ds/SelectField"
+import { Button } from "@/components/ui/button"
 import { articleEventTime } from "@/lib/article-event-time"
 import { T } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
@@ -44,7 +47,7 @@ const cardHint: React.CSSProperties = {
 }
 
 const chipBase =
-  "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors"
+  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
 
 function Chip({
   on,
@@ -53,6 +56,7 @@ function Chip({
   badge,
   dashed,
   ariaLabel,
+  disabled,
 }: {
   on?: boolean
   onClick: () => void
@@ -60,10 +64,12 @@ function Chip({
   badge?: string
   dashed?: boolean
   ariaLabel?: string
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       aria-pressed={dashed ? undefined : !!on}
       aria-label={ariaLabel}
       onClick={onClick}
@@ -80,7 +86,7 @@ function Chip({
       {children}
       {badge && (
         <span
-          className="rounded-full px-1.5 py-0.5 text-[11.5px] font-bold"
+          className="rounded-full px-1.5 py-0.5 text-[13px] font-bold"
           style={{ background: T.accent.primary, color: "#fff" }}
         >
           {badge}
@@ -108,6 +114,8 @@ export function StatusCard({
   isPublished,
   onRetry,
   offline = false,
+  checks = [],
+  note,
 }: {
   mode: "new" | "edit"
   kind: ArticleKind
@@ -124,11 +132,15 @@ export function StatusCard({
   isPublished?: boolean
   onRetry?: () => void
   offline?: boolean
+  checks?: readonly { id: string; label: string; done: boolean }[]
+  note?: React.ReactNode
 }) {
   const tUi = useUiTranslations("ui")
   const tLanguage = useUiTranslations("translation")
   const p = useUiTranslations("publishing")
   const displayLocale = useLocale()
+  const w = useUiTranslations("writeWorkspace")
+  const remaining = checks.filter((check) => !check.done).length
 
   let saveLabel = tUi("not_saved_yet")
   let saveIcon = "mdi:circle-outline"
@@ -155,13 +167,22 @@ export function StatusCard({
 
   return (
     <section aria-labelledby="status-heading" style={card}>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id="status-heading" style={cardTitle}>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2
+          id="status-heading"
+          style={{
+            ...cardTitle,
+            fontFamily: T.font.serif,
+            fontSize: 26,
+            fontWeight: 500,
+            lineHeight: 1.15,
+          }}
+        >
           {title}
         </h2>
         <p
           role="status"
-          className="m-0 flex items-center gap-1.5 text-[14px] font-semibold"
+          className="m-0 flex items-center gap-1.5 rounded-full bg-(--t-bg-surface) px-2.5 py-1 text-[14px] font-semibold"
           style={{ color: saveColor }}
         >
           <Icon icon={saveIcon} width={16} aria-hidden="true" />
@@ -201,24 +222,55 @@ export function StatusCard({
           {p("retrySave")}
         </button>
       )}
-      <button
+      {note && <div className="mt-4">{note}</div>}
+      {!submitted && checks.length > 0 && (
+        <ul
+          aria-label={w("beforeSubmit")}
+          className="mt-4 mb-0 grid list-none gap-2 p-0"
+        >
+          {checks.map((check) => (
+            <li
+              key={check.id}
+              className="flex items-center gap-2 text-[15px] leading-relaxed"
+            >
+              <Icon
+                aria-hidden
+                icon={check.done ? "mdi:check-circle" : "mdi:circle-outline"}
+                width={20}
+                className={
+                  check.done
+                    ? "shrink-0 text-(--t-accent-ok)"
+                    : "shrink-0 text-(--t-ink-faint)"
+                }
+              />
+              <span>
+                {check.label}
+                <span className="sr-only">
+                  {" "}
+                  · {w(check.done ? "done" : "needed")}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Button
         type="button"
         onClick={onSubmit}
         disabled={!canSubmit || submitState === "submitting" || submitted}
         aria-busy={submitState === "submitting"}
-        className="mt-4 inline-flex h-12 w-full items-center justify-center rounded-full text-[16px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
-        style={{
-          background: T.accent.primary,
-          border: "none",
-          cursor: "pointer",
-        }}
+        variant="primary"
+        size="pill"
+        className="mt-4 w-full"
       >
         {submitState === "submitting"
           ? tUi("sending")
           : submitted
             ? tUi("sent_for_review")
-            : tUi("submit_for_review")}
-      </button>
+            : remaining > 0
+              ? w("remaining", { count: remaining })
+              : tUi("submit_for_review")}
+      </Button>
       {submitted && (
         <p
           className="mt-3 mb-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-[14.5px]"
@@ -270,14 +322,26 @@ export function SectionsCard({
   sections,
   onChange,
   disabled,
+  embedded = false,
+  inherited = false,
 }: {
   kind: ArticleKind
   locale: string
   sections: string[]
   onChange: (next: string[]) => void
   disabled?: boolean
+  embedded?: boolean
+  inherited?: boolean
 }) {
   const tUi = useUiTranslations("ui")
+  const w = useUiTranslations("writeWorkspace")
+  const [loadResult, setLoadResult] = useState<{
+    key: string
+    state: "ready" | "error"
+  }>({ key: "", state: "ready" })
+  const [attempt, setAttempt] = useState(0)
+  const loadKey = `${kind}:${locale}:${attempt}`
+  const loadState = loadResult.key === loadKey ? loadResult.state : "loading"
 
   // Section keys stay stable while their labels follow the article language.
   const [options, setOptions] = useState<{ key: string; label: string }[]>([])
@@ -286,23 +350,39 @@ export function SectionsCard({
     fetch(
       `/api/relations/${kind === "knowledge" ? "wiki-sections" : "blog-sections"}?locale=${encodeURIComponent(locale)}`
     )
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Sections unavailable")
+
+        return r.json()
+      })
       .then((j: { data?: { slug?: string; name?: string }[] }) => {
         if (cancelled) return
+        setLoadResult({ key: loadKey, state: "ready" })
         setOptions(
           (j.data ?? []).flatMap((s) =>
             s.slug && s.name ? [{ key: s.slug, label: s.name }] : []
           )
         )
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) setLoadResult({ key: loadKey, state: "error" })
+      })
 
     return () => {
       cancelled = true
     }
-  }, [kind, locale])
+  }, [kind, locale, attempt, loadKey])
 
   const multi = kind === "knowledge"
+  const visibleOptions = inherited
+    ? sections.map(
+        (key) =>
+          options.find((option) => option.key === key) ?? {
+            key,
+            label: key.replaceAll("-", " "),
+          }
+      )
+    : options
 
   const toggle = (key: string) => {
     if (disabled) return
@@ -319,21 +399,28 @@ export function SectionsCard({
   }
 
   return (
-    <section aria-labelledby="sections-heading" style={card}>
+    <section
+      aria-labelledby="sections-heading"
+      style={embedded ? undefined : card}
+    >
       <h2 id="sections-heading" style={cardTitle}>
         {kind === "knowledge"
           ? tUi("knowledge_sections")
           : tUi("journal_section")}{" "}
-        <span style={{ color: "var(--tint-special-fg)", fontWeight: 500 }}>
-          {tUi("required")}{" "}
-        </span>
+        {!inherited && (
+          <span style={{ color: "var(--tint-special-fg)", fontWeight: 500 }}>
+            {tUi("required")}{" "}
+          </span>
+        )}
       </h2>
       <p style={cardHint}>
-        {kind === "knowledge"
-          ? tUi(
-              "where_this_article_appears_the_first_one_you_pick_is_its_home_section"
-            )
-          : tUi("where_this_story_appears_in_the_journal")}
+        {inherited
+          ? w("inherited")
+          : kind === "knowledge"
+            ? tUi(
+                "where_this_article_appears_the_first_one_you_pick_is_its_home_section"
+              )
+            : tUi("where_this_story_appears_in_the_journal")}
       </p>
       <div
         className="mt-4 flex flex-wrap gap-2"
@@ -344,26 +431,57 @@ export function SectionsCard({
             : tUi("journal_section")
         }
       >
-        {options.length === 0 && (
+        {loadState === "loading" && (
           <p className="m-0 text-[14px]" style={{ color: T.ink.faint }}>
             {tUi("loading_sections")}{" "}
           </p>
         )}
-        {options.map((o) => {
-          const on = sections.includes(o.key)
-          const home = multi && on && sections[0] === o.key
-
-          return (
-            <Chip
-              key={o.key}
-              on={on}
-              onClick={() => toggle(o.key)}
-              badge={home ? tUi("home_section") : undefined}
+        {loadState === "error" && (
+          <div role="alert">
+            <p className="m-0 mb-2 text-[14px]">{w("sectionsUnavailable")}</p>
+            <Button
+              variant="surface"
+              size="pill"
+              onClick={() => setAttempt((value) => value + 1)}
             >
-              {o.label}
-            </Chip>
-          )
-        })}
+              {tUi("try_again")}
+            </Button>
+          </div>
+        )}
+        {loadState === "ready" && !visibleOptions.length && (
+          <p className="m-0 text-[14px] text-(--t-ink-dim)">
+            {w("noSections")}
+          </p>
+        )}
+        {loadState === "ready" &&
+          visibleOptions.map((o) => {
+            const on = sections.includes(o.key)
+            const home = multi && on && sections[0] === o.key
+
+            return inherited ? (
+              <span
+                key={o.key}
+                className="inline-flex min-h-9 items-center gap-2 rounded-full bg-(--t-bg-muted) px-3 py-1.5 text-[14px] font-medium"
+              >
+                {o.label}
+                {home && (
+                  <span className="font-semibold text-(--t-accent-primary)">
+                    {tUi("home_section")}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <Chip
+                key={o.key}
+                on={on}
+                disabled={disabled}
+                onClick={() => toggle(o.key)}
+                badge={home ? tUi("home_section") : undefined}
+              >
+                {o.label}
+              </Chip>
+            )
+          })}
       </div>
     </section>
   )
@@ -390,15 +508,18 @@ export function TagsCard({
   locale: contentLocale,
   onChange,
   disabled,
+  inherited = false,
 }: {
   tags: ArticleTag[]
   locale: string
   onChange: (next: ArticleTag[]) => void
   disabled?: boolean
+  inherited?: boolean
 }) {
   const tUi = useUiTranslations("ui")
   const tEditor = useUiTranslations("articleEditor")
   const tRelations = useUiTranslations("articleRelations")
+  const w = useUiTranslations("writeWorkspace")
 
   const locale = useLocale()
   const [query, setQuery] = useState("")
@@ -509,29 +630,41 @@ export function TagsCard({
   return (
     <section aria-labelledby="tags-heading" style={card}>
       <h2 id="tags-heading" style={cardTitle}>
-        {tUi("tags")}{" "}
+        {w("about")}{" "}
       </h2>
-      <p style={cardHint}>{tRelations("lead")}</p>
+      <p style={cardHint}>{inherited ? w("inherited") : tRelations("lead")}</p>
+      {inherited && tags.length === 0 && (
+        <p className="mt-4 mb-0 text-[14px] text-(--t-ink-dim)">
+          {w("noRelations")}
+        </p>
+      )}
       {tags.length > 0 && (
         <ul className="m-0 mt-4 flex list-none flex-wrap gap-2 p-0">
           {tags.map((tag) => (
-            <li key={tagKey(tag)}>
+            <li key={tagKey(tag)} className="max-w-full">
               <span
-                className={chipBase}
+                className={`${chipBase} max-w-full`}
                 style={{
                   background: T.accent.chip,
                   color: T.accent.primary,
                   border: `1px solid ${T.accent.chip}`,
                 }}
               >
-                <Icon icon={TAG_ICON[tag.kind]} width={15} aria-hidden="true" />
-                {displayTag(tag)}
+                <Icon
+                  icon={TAG_ICON[tag.kind]}
+                  width={15}
+                  aria-hidden="true"
+                  className="shrink-0"
+                />
+                <span className="min-w-0 [overflow-wrap:anywhere]">
+                  {displayTag(tag)}
+                </span>
                 {!disabled && (
                   <button
                     type="button"
                     aria-label={tEditor("removeTag", { tag: displayTag(tag) })}
                     onClick={() => remove(tag)}
-                    className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full hover:bg-white/60"
+                    className="ml-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-white/60"
                     style={{
                       border: "none",
                       background: "transparent",
@@ -550,69 +683,60 @@ export function TagsCard({
       {!disabled && (
         <>
           <ArticlePlacePicker locale={contentLocale} onAdd={add} />
-          <div className="mt-4 flex gap-2">
-            <label htmlFor="tag-query" className="sr-only">
-              {tUi("add_a_topic_place_or_library")}{" "}
-            </label>
-            <input
+          <div className="mt-6 grid min-w-0 gap-3 border-t border-(--t-border-line) pt-6">
+            <h3 className="m-0 text-[15px] font-semibold">
+              {tRelations("topicsLibraries")}
+            </h3>
+            <SearchField
               id="tag-query"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  if (suggestions[0] && q) add(suggestions[0])
-                }
-              }}
-              placeholder={tUi("add_a_topic_place_or_library")}
-              autoComplete="off"
-              style={{
-                flex: 1,
-                minWidth: 0,
-                height: 46,
-                padding: "0 14px",
-                borderRadius: 14,
-                border: `1px solid ${T.border.hi}`,
-                background: T.bg.deep,
-                color: T.ink.base,
-                fontFamily: T.font.sans,
-                fontSize: 15,
+              label={tRelations("search")}
+              placeholder={tUi("search")}
+              className="min-w-0"
+              onClear={() => setQuery("")}
+              inputProps={{
+                value: query,
+                onChange: (e) => setQuery(e.target.value),
+                onKeyDown: (e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    if (suggestions[0] && q) add(suggestions[0])
+                  }
+                },
+                autoComplete: "off",
               }}
             />
-            <button
-              type="button"
-              onClick={() => suggestions[0] && add(suggestions[0])}
-              disabled={!query.trim() || !suggestions[0]}
-              className="inline-flex h-[46px] items-center rounded-full px-4 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50"
-              style={{
-                border: `1px solid ${T.border.hi}`,
-                background: T.bg.deep,
-                color: T.ink.base,
-                cursor: "pointer",
-                fontFamily: T.font.sans,
-              }}
-            >
-              {tUi("add")}{" "}
-            </button>
+            {suggestions.length > 0 && (
+              <div className="grid gap-2">
+                <p className="m-0 text-[14px] text-(--t-ink-dim)">
+                  {tUi("suggested")}
+                </p>
+                <ul className="m-0 grid list-none gap-2 p-0">
+                  {suggestions.map((s) => (
+                    <li key={tagKey(s)} className="min-w-0">
+                      <Button
+                        type="button"
+                        variant="surface"
+                        size="pill"
+                        className="h-auto min-h-11 w-full justify-start gap-2.5 px-3.5 py-2.5 text-left text-[15px] leading-snug whitespace-normal"
+                        onClick={() => add(s)}
+                        aria-label={tEditor("addTag", { tag: s.label })}
+                      >
+                        <Icon
+                          icon="mdi:plus"
+                          width={17}
+                          aria-hidden="true"
+                          className="shrink-0 text-(--t-accent-primary)"
+                        />
+                        <span className="min-w-0 [overflow-wrap:anywhere]">
+                          {s.label}
+                        </span>
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-          {suggestions.length > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-[14px]" style={{ color: T.ink.dim }}>
-                {tUi("suggested")}{" "}
-              </span>
-              {suggestions.map((s) => (
-                <Chip
-                  key={tagKey(s)}
-                  dashed
-                  onClick={() => add(s)}
-                  ariaLabel={tEditor("addTag", { tag: s.label })}
-                >
-                  <Icon icon="mdi:plus" width={14} aria-hidden="true" />
-                  {s.label}
-                </Chip>
-              ))}
-            </div>
-          )}
         </>
       )}
     </section>
@@ -693,38 +817,42 @@ function ArticlePlacePicker({
   }, [locale, continent, country, region])
 
   return (
-    <fieldset
-      className="mt-4 min-w-0 rounded-[14px] border p-3"
-      style={{ borderColor: T.border.line }}
-    >
-      <legend className="px-1 text-[14px] font-semibold">
+    <fieldset className="m-0 mt-6 min-w-0 border-0 p-0">
+      <legend className="mb-3 p-0 text-[15px] font-semibold">
         {tRelations("places")}
       </legend>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-4">
         {PLACE_KINDS.filter(
           (kind) =>
             kind === "continent" ||
             kind === "country" ||
             (kind === "region" ? country : region)
         ).map((kind) => (
-          <label
-            key={kind}
-            className="text-[13px]"
-            style={{ color: T.ink.dim }}
-          >
-            {tRelations(kind)}
-            <select
-              aria-label={tRelations(kind)}
+          <div key={kind} className="grid min-w-0 gap-2">
+            <label
+              htmlFor={`article-place-${kind}`}
+              className="text-[14px] font-medium text-(--t-ink-dim)"
+            >
+              {tRelations(kind)}
+            </label>
+            <SelectField
+              id={`article-place-${kind}`}
+              label={tRelations(kind)}
               value={selected[kind]?.documentId ?? ""}
-              className="mt-1 w-full rounded-lg border p-2"
-              style={{
-                background: T.bg.deep,
-                color: T.ink.base,
-                borderColor: T.border.line,
-              }}
-              onChange={(event) => {
+              className="min-h-[48px] min-w-0 px-4 text-[16px] font-normal"
+              options={[
+                {
+                  value: "",
+                  label: tRelations("choosePlace", { place: tRelations(kind) }),
+                },
+                ...(options[kind] ?? []).map((place) => ({
+                  value: place.documentId,
+                  label: place.name,
+                })),
+              ]}
+              onValueChange={(value) => {
                 const choice = options[kind]?.find(
-                  (place) => place.documentId === event.target.value
+                  (place) => place.documentId === value
                 )
                 const level = PLACE_KINDS.indexOf(kind)
                 setSelected((previous) =>
@@ -743,21 +871,12 @@ function ArticlePlacePicker({
                     documentId: choice.documentId,
                   })
               }}
-            >
-              <option value="">
-                {tRelations("choosePlace", { place: tRelations(kind) })}
-              </option>
-              {(options[kind] ?? []).map((place) => (
-                <option key={place.documentId} value={place.documentId}>
-                  {place.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            />
+          </div>
         ))}
       </div>
       {error && (
-        <p role="alert" className="mb-0 text-[13px]">
+        <p role="alert" className="mb-0 text-[14px]">
           {tRelations("placeError")}
         </p>
       )}
@@ -953,6 +1072,7 @@ export function LanguageCard({
   allowedLocales,
   onChange,
   disabled,
+  inline = false,
 }: {
   mode: "new" | "edit"
   locale: string
@@ -962,19 +1082,42 @@ export function LanguageCard({
   allowedLocales?: readonly string[]
   onChange: (code: string) => void
   disabled?: boolean
+  inline?: boolean
 }) {
   const tUi = useUiTranslations("ui")
   const tLanguage = useUiTranslations("translation")
   const displayLocale = useLocale()
+  const w = useUiTranslations("writeWorkspace")
 
   if (locales.length < 2) return null
   const translating = locale !== sourceLocale
   const nameOf = (code: string) => languageName(code, locales, displayLocale)
 
-  return (
+  const options = locales.map((l) => ({
+    value: l.code,
+    disabled: allowedLocales !== undefined && !allowedLocales.includes(l.code),
+    label: `${nameOf(l.code)}${mode !== "edit" ? "" : l.code === sourceLocale ? ` · ${tLanguage("original")}` : availableLocales.includes(l.code) ? ` · ${tLanguage("translated")}` : ` · ${tLanguage("addTranslation")}`}`,
+  }))
+
+  return inline ? (
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <span className="text-[14px] font-semibold text-(--t-ink-dim)">
+        {w("articleLanguage")}
+      </span>
+      <SelectField
+        id="article-locale"
+        label={w("articleLanguage")}
+        appearance="pill"
+        value={locale}
+        onValueChange={onChange}
+        options={options}
+        disabled={disabled}
+      />
+    </div>
+  ) : (
     <section aria-labelledby="language-heading" style={card}>
       <h2 id="language-heading" style={cardTitle}>
-        {tUi("language")}{" "}
+        {tUi("language")}
       </h2>
       <p style={cardHint}>
         {mode === "new"
@@ -983,45 +1126,16 @@ export function LanguageCard({
             ? tLanguage("translateSource", { language: nameOf(sourceLocale) })
             : tLanguage("chooseLanguage")}
       </p>
-      <label htmlFor="article-locale" className="sr-only">
-        {tUi("language")}{" "}
-      </label>
-      <select
-        id="article-locale"
-        value={locale}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-4 w-full"
-        style={{
-          height: 46,
-          padding: "0 14px",
-          borderRadius: 14,
-          border: `1px solid ${T.border.hi}`,
-          background: T.bg.deep,
-          color: T.ink.base,
-          fontFamily: T.font.sans,
-          fontSize: 15,
-        }}
-      >
-        {locales.map((l) => (
-          <option
-            key={l.code}
-            value={l.code}
-            disabled={
-              allowedLocales !== undefined && !allowedLocales.includes(l.code)
-            }
-          >
-            {nameOf(l.code)}
-            {mode === "edit" && l.code === sourceLocale
-              ? ` · ${tLanguage("original")}`
-              : mode === "edit" && availableLocales.includes(l.code)
-                ? ` · ${tLanguage("translated")}`
-                : mode === "edit"
-                  ? ` · ${tLanguage("addTranslation")}`
-                  : ""}
-          </option>
-        ))}
-      </select>
+      <div className="mt-4">
+        <SelectField
+          id="article-locale"
+          label={tUi("language")}
+          value={locale}
+          onValueChange={onChange}
+          options={options}
+          disabled={disabled}
+        />
+      </div>
     </section>
   )
 }
@@ -1032,15 +1146,20 @@ export function EditSummaryCard({
   value,
   onChange,
   disabled,
+  embedded = false,
 }: {
   value: string
   onChange: (v: string) => void
   disabled?: boolean
+  embedded?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
   return (
-    <section aria-labelledby="summary-heading" style={card}>
+    <section
+      aria-labelledby="summary-heading"
+      style={embedded ? undefined : card}
+    >
       <h2 id="summary-heading" style={cardTitle}>
         {tUi("what_changed")}{" "}
         <span style={{ color: "var(--tint-special-fg)", fontWeight: 500 }}>
@@ -1053,7 +1172,8 @@ export function EditSummaryCard({
       <label htmlFor="edit-summary" className="sr-only">
         {tUi("edit_summary")}{" "}
       </label>
-      <input
+      <textarea
+        rows={2}
         id="edit-summary"
         value={value}
         disabled={disabled}
@@ -1062,14 +1182,14 @@ export function EditSummaryCard({
         maxLength={200}
         className="mt-4 w-full"
         style={{
-          height: 46,
-          padding: "0 14px",
+          minHeight: 80,
+          padding: "10px 14px",
           borderRadius: 14,
           border: `1px solid ${T.border.hi}`,
           background: T.bg.deep,
           color: T.ink.base,
           fontFamily: T.font.sans,
-          fontSize: 15,
+          fontSize: 16,
           boxSizing: "border-box",
         }}
       />

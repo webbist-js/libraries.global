@@ -45,7 +45,34 @@ const props = { articles: [], sections, locale: "en" as const }
 afterEach(cleanup)
 
 describe("Knowledge landing quick-start cards", () => {
-  it("uses the localized CMS heading, introduction and version", () => {
+  it("uses preferred-language guide titles and reader links without changing the header language", () => {
+    render(
+      <DocsPage
+        {...props}
+        contentLocale="fr"
+        articles={[
+          {
+            documentId: "install",
+            title: "Installer en local",
+            slug: "install",
+            summary: "Exécutez la plateforme.",
+          },
+        ]}
+        quickStartCards={[
+          { documentId: "install", title: "Install locally", slug: "install" },
+        ]}
+      />
+    )
+    const cards = within(screen.getByRole("navigation", { name: "Start here" }))
+    expect(
+      cards
+        .getByRole("link", { name: /Installer en local/ })
+        .getAttribute("href")
+    ).toBe("/knowledge/getting-started/install?contentLang=fr")
+    expect(cards.queryByText("Install locally")).toBeNull()
+  })
+
+  it("uses the localized CMS heading and introduction with a live guide count", () => {
     render(
       <DocsPage
         {...props}
@@ -64,7 +91,8 @@ describe("Knowledge landing quick-start cards", () => {
     expect(
       screen.getByText("Průvodce příspěvky a otevřenými daty.")
     ).toBeTruthy()
-    expect(screen.getByText("v2")).toBeTruthy()
+    expect(screen.queryByText("v2")).toBeNull()
+    expect(screen.getAllByText("0 guides").length).toBeGreaterThan(0)
     expect(screen.queryByRole("navigation", { name: "Start here" })).toBeNull()
   })
 

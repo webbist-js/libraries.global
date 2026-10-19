@@ -15,20 +15,30 @@ export function ArticlePreview({
   title,
   summary,
   doc,
+  compact = false,
 }: {
   readonly kind: ArticleKind
   readonly title: string
   readonly summary: string
   readonly doc: TiptapDoc
+  readonly compact?: boolean
 }) {
   const tUi = useUiTranslations("ui")
+  const Heading = compact ? "h3" : "h1"
 
   const blocks = tiptapToDynamicZone(doc, { preview: true }).map(
     (block, i) => ({ id: i, ...block })
   ) as unknown as ArticleBodyBlock[]
 
   return (
-    <article aria-label={tUi("preview")} className="px-6 py-8 sm:px-10">
+    <article
+      aria-label={tUi("preview")}
+      className={
+        compact
+          ? "px-5 py-6 [overflow-wrap:anywhere] sm:px-7 sm:py-7"
+          : "px-6 py-8 [overflow-wrap:anywhere] sm:px-10"
+      }
+    >
       <p
         className="m-0 mb-3 text-[13px] font-semibold tracking-wide uppercase"
         style={{ color: T.ink.dim }}
@@ -36,11 +46,11 @@ export function ArticlePreview({
         {kind === "journal" ? tUi("journal") : tUi("knowledge")} ·{" "}
         {tUi("preview")}
       </p>
-      <h1
+      <Heading
         className="m-0"
         style={{
           fontFamily: T.font.serif,
-          fontSize: "clamp(34px,4vw,48px)",
+          fontSize: compact ? "clamp(28px,2.5vw,36px)" : "clamp(34px,4vw,48px)",
           fontWeight: 500,
           lineHeight: 1.1,
           letterSpacing: "-0.02em",
@@ -48,10 +58,14 @@ export function ArticlePreview({
         }}
       >
         {title || tUi("untitled")}
-      </h1>
+      </Heading>
       {summary ? (
         <p
-          className="mt-4 mb-0 text-[19px] leading-[1.55]"
+          className={
+            compact
+              ? "mt-4 mb-0 text-[17px] leading-relaxed"
+              : "mt-4 mb-0 text-[19px] leading-[1.55]"
+          }
           style={{ color: T.ink.dim }}
         >
           {summary}

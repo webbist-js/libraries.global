@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { fireEvent, render, screen, waitFor } from "@/test/render"
 
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }))

@@ -2,7 +2,11 @@ import "server-only"
 
 import { createHash } from "node:crypto"
 
-import { articleContentVersion, articleSectionKeys } from "@repo/shared-data"
+import {
+  articleContentVersion,
+  articleSectionKeys,
+  isSupportedLocale,
+} from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import type {
@@ -13,7 +17,7 @@ import type {
   ExistingArticle,
 } from "@/components/contribute/article-editor/article.types"
 import { isDocumentIdParam } from "@/lib/bridge-params"
-import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
+import { fetchContentLocales } from "@/lib/content-locales-server"
 import {
   type ArticleForEditing,
   fetchArticleForEditing,
@@ -21,22 +25,13 @@ import {
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 
-/** Strapi's configured locales; English alone when the bridge is down. */
+/** CMS-enabled languages with translated routes; English when the bridge is down. */
 export async function fetchArticleLocales(): Promise<ArticleLocale[]> {
-  try {
-    const res = await fetch(`${STRAPI}/api/content-moderation/locales`, {
-      headers: strapiServiceHeaders(),
-      next: { revalidate: 3600 },
-    })
-    if (!res.ok) throw new Error(String(res.status))
-    const json = (await res.json()) as { data?: ArticleLocale[] }
-    const locales = (json.data ?? []).filter((l) => l.code && l.name)
-    if (locales.length > 0) return locales
-  } catch {
-    // fall through
-  }
-
-  return [{ code: "en", name: "English", isDefault: true }]
+  return (
+    (await fetchContentLocales()) ?? [
+      { code: "en", name: "English", isDefault: true },
+    ]
+  )
 }
 
 /** An article as fetched, in the editor's shape. */
@@ -136,7 +131,9 @@ export function toExistingArticle(
     body: Array.isArray(article.body) ? article.body : [],
     sections,
     tags,
-    availableLocales: article.availableLocales ?? [article.locale ?? locale],
+    availableLocales: (
+      article.availableLocales ?? [article.locale ?? locale]
+    ).filter(isSupportedLocale),
   }
 }
 
@@ -147,6 +144,11 @@ export async function loadArticleForEditor(
   locale: Locale,
   opening: { targetLocale?: string; sourceLocale?: string } = {}
 ): Promise<ExistingArticle | null> {
+  if (
+    (opening.sourceLocale && !isSupportedLocale(opening.sourceLocale)) ||
+    (opening.targetLocale && !isSupportedLocale(opening.targetLocale))
+  )
+    return null
   if (opening.sourceLocale) {
     const source = await fetchArticleForEditing(
       kind,

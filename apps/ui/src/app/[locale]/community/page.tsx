@@ -10,6 +10,7 @@ import { FinishedDrives } from "@/components/drives/FinishedDrives"
 import { isFocusFilterKey } from "@/components/drives/focus-meta"
 import { hasCapability } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import { avatarSrc } from "@/lib/avatar"
 import { fetchDriveGaps } from "@/lib/community/drive-gaps-server"
 import {
   fetchLeaderboard,
@@ -174,13 +175,15 @@ export default async function CommunityPage({
 
         <aside
           aria-label={tUi("sidebar")}
-          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
+          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-(--sticky-content-top) min-[760px]:max-h-(--sticky-content-max-height) min-[760px]:max-w-[440px] min-[760px]:overflow-y-auto min-[760px]:overscroll-contain"
           style={{ flex: "1 1 290px" }}
         >
           <StandingCard
             standing={standing}
             signedIn={signedIn}
             initials={user ? viewerInitials(profile, user) : ""}
+            avatarUrl={avatarSrc(profile?.avatar)}
+            background={profile?.profileBackground}
             signInReturnTo="/community"
           />
           <DiscussionFeed contextType="drives" activeOnly compact />

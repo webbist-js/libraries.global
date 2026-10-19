@@ -92,10 +92,14 @@ export async function loadJournalTopStories(
 
 export async function loadJournalLanding(
   routeLocale: Locale,
-  query: JournalQuery
+  query: JournalQuery,
+  defaultLanguage = routeLocale as string
 ): Promise<JournalLandingData> {
   const [initialDiscovery, sectionsRes, landingRes] = await Promise.all([
-    fetchArticleBrowse("blog", journalBrowseParams(routeLocale, query)),
+    fetchArticleBrowse(
+      "blog",
+      journalBrowseParams(routeLocale, query, defaultLanguage)
+    ),
     fetchBlogSections(routeLocale),
     fetchBlogLanding(routeLocale),
   ])
@@ -108,7 +112,11 @@ export async function loadJournalLanding(
     query.section && !section
       ? await fetchArticleBrowse(
           "blog",
-          journalBrowseParams(routeLocale, { ...query, section: null })
+          journalBrowseParams(
+            routeLocale,
+            { ...query, section: null },
+            defaultLanguage
+          )
         )
       : initialDiscovery
   const lang = query.lang ?? discovery.appliedFilters.languages?.[0] ?? "all"
@@ -138,10 +146,7 @@ export async function loadJournalLanding(
     query: { ...query, section },
     lang,
     linkLocale,
-    fallbackFrom:
-      lang !== routeLocale && lang !== "all" && !query.lang
-        ? routeLocale
-        : null,
+    fallbackFrom: null,
     languages: discovery.facets.languages.map((facet) => ({
       code: facet.value,
       name: languageName(facet.value),

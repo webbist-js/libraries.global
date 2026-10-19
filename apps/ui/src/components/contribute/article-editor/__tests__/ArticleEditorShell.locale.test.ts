@@ -171,6 +171,48 @@ beforeEach(() => {
 })
 
 describe("article-type citation scope", () => {
+  it("keeps an unsupported saved draft intact and blocks editing it under another language", async () => {
+    fetchMock.mockImplementation(async () =>
+      Response.json({
+        data: [
+          {
+            documentId: "spanish-draft",
+            status: "draft",
+            submissionType: "blog_submission",
+            draftData: {
+              title: "Saved Spanish work",
+              locale: "es",
+              doc: { type: "doc", content: [] },
+            },
+          },
+        ],
+      })
+    )
+    render(
+      createElement(ArticleEditorShell, {
+        kind: "journal",
+        mode: "new",
+        resumeDraftId: "spanish-draft",
+        locales: LOCALES,
+        uiLocale: "en",
+      })
+    )
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "This draft is in a language that isn't available on the site yet"
+    )
+    expect(
+      (screen.getByLabelText("Test title") as HTMLInputElement).value
+    ).toBe("")
+    expect(
+      (screen.getByRole("button", { name: "Test send" }) as HTMLButtonElement)
+        .disabled
+    ).toBe(true)
+    expect(
+      fetchMock.mock.calls.every(
+        ([, init]) => !init?.method || init.method === "GET"
+      )
+    ).toBe(true)
+  })
   it.each(["journal", "knowledge"] as const)(
     "opens a new %s article in its server-resolved profile language",
     async (kind) => {
@@ -270,6 +312,35 @@ describe("article-type citation scope", () => {
 })
 
 describe("article translation draft isolation", () => {
+  it("preserves translated writing while toggling the reference pane", async () => {
+    renderShell("fr")
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("Test language") as HTMLSelectElement).value
+      ).toBe("fr")
+    )
+    fireEvent.change(screen.getByLabelText("Test title"), {
+      target: { value: "My translated draft" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Hide source" }))
+    expect(
+      screen.queryByRole("region", { name: "Source · English · read only" })
+    ).toBeNull()
+    expect(
+      (screen.getByLabelText("Test title") as HTMLInputElement).value
+    ).toBe("My translated draft")
+    fireEvent.click(
+      screen.getByRole("button", { name: "Show source alongside" })
+    )
+    expect(
+      screen.getAllByRole("region", { name: "Source · English · read only" })
+        .length
+    ).toBeGreaterThan(0)
+    expect(
+      (screen.getByLabelText("Test title") as HTMLInputElement).value
+    ).toBe("My translated draft")
+  })
+
   const writes = () =>
     fetchMock.mock.calls
       .filter(([, init]) => init?.method === "POST")
@@ -412,6 +483,12 @@ describe("editingLocaleFrom", () => {
   it("keeps a configured locale and ignores anything else", () => {
     expect(editingLocaleFrom("fr", LOCALES)).toBe("fr")
     expect(editingLocaleFrom("de", LOCALES)).toBeUndefined()
+    expect(
+      editingLocaleFrom("es", [
+        ...LOCALES,
+        { code: "es", name: "Spanish", isDefault: false },
+      ])
+    ).toBeUndefined()
     expect(editingLocaleFrom(["fr"], LOCALES)).toBeUndefined()
     expect(editingLocaleFrom(undefined, LOCALES)).toBeUndefined()
   })

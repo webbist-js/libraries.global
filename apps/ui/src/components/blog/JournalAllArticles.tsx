@@ -1,6 +1,5 @@
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 
-import { ArticleDiscoveryFilters } from "@/components/articles/ArticleDiscoveryFilters"
 import { EmptyState } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -13,9 +12,7 @@ import {
   journalHref,
   journalCollectionKey,
 } from "./journalLanding.helpers"
-import { JournalListControls } from "./JournalListControls"
 import { JournalPagination } from "./JournalPagination"
-import { JournalHeading } from "./JournalSectionBrowser"
 
 function ArticleResults({
   list,
@@ -24,6 +21,7 @@ function ArticleResults({
 }: Pick<JournalLandingData, "list" | "query" | "total" | "linkLocale">) {
   const t = useUiTranslations("editorial")
   const p = useUiTranslations("publishing")
+  const d = useUiTranslations("discovery")
   if (list.items.length === 0) {
     const pastTheEnd = list.total > 0
     const message = pastTheEnd ? t("emptyPage") : p("noResults")
@@ -33,23 +31,40 @@ function ArticleResults({
         message={message}
         icon="mdi:newspaper-variant-outline"
         action={
-          <GlobalLink
-            href={journalHref(
-              query,
-              pastTheEnd
-                ? { page: 1 }
-                : {
-                    q: undefined,
-                    section: null,
-                    lang: "all",
-                    filters: { origins: query.filters?.origins },
-                    page: 1,
-                  }
-            )}
-            className="min-h-11 rounded-full border border-(--t-border-hi) px-5 py-2.5 font-semibold text-(--t-accent-primary)"
-          >
-            {pastTheEnd ? t("firstPage") : p("resetSearch")}
-          </GlobalLink>
+          <div className="flex flex-wrap justify-center gap-2">
+            <GlobalLink
+              href={journalHref(
+                query,
+                pastTheEnd
+                  ? { page: 1 }
+                  : {
+                      q: undefined,
+                      section: null,
+                      lang: "all",
+                      filters: { origins: query.filters?.origins },
+                      page: 1,
+                    }
+              )}
+              className="min-h-11 rounded-full border border-(--t-border-hi) px-5 py-2.5 font-semibold text-(--t-accent-primary)"
+            >
+              {pastTheEnd ? t("firstPage") : p("resetSearch")}
+            </GlobalLink>
+            {!pastTheEnd && query.filters?.origins?.length ? (
+              <GlobalLink
+                href={journalHref(query, {
+                  q: undefined,
+                  section: null,
+                  lang: "all",
+                  filters: {},
+                  allOrigins: true,
+                  page: 1,
+                })}
+                className="inline-flex min-h-11 items-center rounded-full bg-(--t-ink-base) px-5 py-2.5 font-semibold text-white"
+              >
+                {d("allStories")}
+              </GlobalLink>
+            ) : null}
+          </div>
         }
       />
     )
@@ -68,7 +83,7 @@ function ArticleResults({
   }
 
   return (
-    <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
+    <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
       {list.items.map((article) => (
         <li key={`${article.documentId}:${article.locale}`}>
           <JournalArticleCard article={article} locale={linkLocale} />
@@ -115,12 +130,12 @@ export function JournalAllArticles({
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <JournalHeading id="journal-all">
+          <h2 id="journal-all" className="m-0 text-sm font-semibold">
             {tDiscovery(journalCollectionKey(discovery.appliedFilters.origins))}
-          </JournalHeading>
+          </h2>
           <p
             aria-live="polite"
-            className="m-0 mt-1 text-[14px]"
+            className="m-0 mt-1 text-xs"
             style={{ color: T.ink.dim }}
           >
             {activeSection
@@ -131,7 +146,6 @@ export function JournalAllArticles({
               : t("articleCount", { count: list.total })}
           </p>
         </div>
-        <JournalListControls lang={lang} languages={languages} query={query} />
       </div>
 
       {fallbackFrom ? (
@@ -143,25 +157,7 @@ export function JournalAllArticles({
         </p>
       ) : null}
 
-      <ArticleDiscoveryFilters
-        discovery={{
-          ...discovery,
-          facets: {
-            ...discovery.facets,
-            sections: discovery.facets.sections.map((facet) => ({
-              ...facet,
-              label:
-                sections.find(
-                  (section) =>
-                    section.slug === facet.value || section.slug === facet.slug
-                )?.name ?? facet.label,
-            })),
-          },
-        }}
-        kind="journal"
-      />
-
-      <div className="mt-6">
+      <div className="mt-4">
         <ArticleResults
           linkLocale={linkLocale}
           list={list}

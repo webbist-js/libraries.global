@@ -1,8 +1,7 @@
 /** Pure helpers for the /legal/[slug] documents. */
 
 export const LEGAL_CONTACT_EMAIL = "legal@libraries.global"
-export const LEGAL_FORUM_URL =
-  "https://github.com/webbist-js/libraries.global/discussions"
+export const LEGAL_FORUM_URL = "/community/discussions"
 /** The Contributor Covenant lives in the repo, not in the CMS. */
 export const CODE_OF_CONDUCT_URL =
   "https://github.com/webbist-js/libraries.global/blob/main/CODE_OF_CONDUCT.md"
@@ -41,11 +40,6 @@ export function sectionAnchors(sections: readonly { heading: string }[]) {
 
     return count === 1 ? base : `${base}-${count}`
   })
-}
-
-/** "01", "02" … the section's display number. */
-export function sectionNumber(index: number): string {
-  return String(index + 1).padStart(2, "0")
 }
 
 export function revisionsNewestFirst<T extends { date: string }>(

@@ -3,12 +3,14 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { parseHeroText } from "@/components/ds/PageHero"
+import { SectionNavigation } from "@/components/ds/SectionNavigation"
 import { SectionTabs } from "@/components/ds/SectionTabs"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
+import { Button } from "@/components/ui/button"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type {
   LegalDocumentDetail,
@@ -25,7 +27,6 @@ import {
   legalReadingMinutes,
   revisionsNewestFirst,
   sectionAnchors,
-  sectionNumber,
 } from "./legal.helpers"
 import { LegalPrintButton } from "./LegalPrintButton"
 
@@ -112,7 +113,7 @@ export function LegalDocumentPage({
           className="border-b"
           style={{ background: T.bg.space, borderColor: T.border.line }}
         >
-          <Container className="pt-6 sm:pt-10">
+          <Container className="pt-6 pb-6 sm:pt-10 sm:pb-8">
             <Breadcrumb
               items={[
                 { label: tUi("home"), href: "/" },
@@ -135,7 +136,7 @@ export function LegalDocumentPage({
                 color: T.ink.base,
               }}
             >
-              {parseHeroText(doc.heroTitle || title)}
+              {parseHeroText(doc.heroTitle || title, "ink")}
             </h1>
 
             {untranslatedLocale ? (
@@ -152,21 +153,15 @@ export function LegalDocumentPage({
                 </p>
               ) : null}
 
-              <dl className="m-0 flex shrink-0 flex-wrap gap-2">
+              <dl className="m-0 flex flex-wrap items-baseline gap-x-6 gap-y-3 text-[14px] lg:justify-end">
                 {meta.map((item) => (
                   <div
-                    className="rounded-[14px] border px-3.5 py-2"
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
                     key={item.label}
-                    style={{
-                      background: T.bg.deep,
-                      borderColor: T.border.line,
-                    }}
                   >
-                    <dt className="text-[12px]" style={{ color: T.ink.dim }}>
-                      {item.label}
-                    </dt>
+                    <dt style={{ color: T.ink.dim }}>{item.label}</dt>
                     <dd
-                      className="m-0 text-[15px] font-semibold"
+                      className="m-0 font-semibold"
                       style={{
                         color: T.ink.base,
                         fontFamily: item.mono ? T.font.mono : undefined,
@@ -178,55 +173,29 @@ export function LegalDocumentPage({
                 ))}
               </dl>
             </div>
-
-            <div className="mt-6">
-              <LegalTabs activeSlug={doc.slug ?? ""} documents={documents} />
-            </div>
           </Container>
         </section>
+        {documents.length > 1 ? (
+          <SectionNavigation>
+            <LegalTabs activeSlug={doc.slug ?? ""} documents={documents} />
+          </SectionNavigation>
+        ) : null}
 
         <Container className="py-10 sm:py-12">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_minmax(0,680px)] lg:gap-14">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,720px)] lg:gap-12 xl:gap-14">
             {/* ── Left: contents + actions ── */}
             <aside className="print:hidden">
-              <div className="flex flex-col items-start gap-3 lg:sticky lg:top-[80px]">
+              <div className="flex flex-col items-start gap-3 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:pb-1">
                 {sections.length > 0 ? (
-                  <nav
-                    aria-label={tUi("on_this_page")}
-                    className="w-full rounded-[20px] border p-5"
-                    style={{
-                      background: T.bg.deep,
-                      borderColor: T.border.line,
-                    }}
-                  >
-                    <p
-                      className="m-0 mb-2 text-[14px] font-semibold"
-                      style={{ color: T.ink.base }}
-                    >
-                      {tUi("on_this_page")}
-                    </p>
-                    <ol className="m-0 flex list-none flex-col p-0">
-                      {sections.map((section, index) => (
-                        <li key={section.id}>
-                          <a
-                            className="flex gap-3 py-1 text-[14px] leading-snug text-(--t-ink-dim) transition-colors hover:text-(--t-accent-primary)"
-                            href={`#${anchors[index]}`}
-                          >
-                            <span
-                              className="shrink-0 pt-px text-[12px] tabular-nums"
-                              style={{
-                                fontFamily: T.font.mono,
-                                color: T.ink.low,
-                              }}
-                            >
-                              {sectionNumber(index)}
-                            </span>
-                            {section.heading}
-                          </a>
-                        </li>
-                      ))}
-                    </ol>
-                  </nav>
+                  <div className="min-h-0 w-full">
+                    <LegalContents
+                      label={tUi("on_this_page")}
+                      items={sections.map((section, index) => ({
+                        id: anchors[index]!,
+                        label: section.heading,
+                      }))}
+                    />
+                  </div>
                 ) : null}
                 <LegalPrintButton />
               </div>
@@ -278,45 +247,35 @@ export function LegalDocumentPage({
               {summaryPoints.length > 0 ? (
                 <aside
                   aria-labelledby="legal-short-version"
-                  className="flex gap-3 rounded-[20px] border p-5 sm:p-6"
-                  style={{
-                    background: TYPE_TINT.academic.bg,
-                    borderColor:
-                      "color-mix(in srgb, var(--tint-academic-fg) 20%, transparent)",
-                  }}
+                  className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-7"
                 >
-                  <Icon
-                    aria-hidden="true"
-                    className="mt-0.5 shrink-0"
-                    height={18}
-                    icon="mdi:information-outline"
-                    style={{ color: TYPE_TINT.academic.fg }}
-                    width={18}
-                  />
-                  <div>
-                    <h2
-                      className="m-0 text-[15px] font-semibold"
-                      id="legal-short-version"
-                      style={{ color: T.ink.base }}
-                    >
-                      The short version
-                    </h2>
-                    <ul
-                      className="mt-2 mb-0 flex list-disc flex-col gap-1 pl-5 text-[15px] leading-[1.55]"
-                      style={{ color: T.ink.base }}
-                    >
-                      {summaryPoints.map((point) => (
-                        <li key={point.id}>{point.text}</li>
-                      ))}
-                    </ul>
-                    <p
-                      className="mt-3 mb-0 text-[13px] leading-snug"
-                      style={{ color: TYPE_TINT.academic.fg }}
-                    >
-                      These summaries help you read the document but aren’t part
-                      of it. The full text below is what applies.
-                    </p>
-                  </div>
+                  <h2
+                    className="m-0 text-[14px] font-semibold tracking-[0.06em] text-(--t-accent-primary) uppercase"
+                    id="legal-short-version"
+                  >
+                    The short version
+                  </h2>
+                  <ul
+                    className="mt-4 mb-0 grid list-none gap-3 p-0 text-[16px] leading-relaxed"
+                    style={{ color: T.ink.base }}
+                  >
+                    {summaryPoints.map((point) => (
+                      <li key={point.id} className="flex items-start gap-3">
+                        <Icon
+                          aria-hidden="true"
+                          icon="mdi:check"
+                          width={19}
+                          height={19}
+                          className="mt-1 shrink-0 text-(--t-accent-ok)"
+                        />
+                        <span>{point.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-5 mb-0 border-t border-(--t-border-line) pt-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                    These summaries help you read the document but aren’t part
+                    of it. The full text below is what applies.
+                  </p>
                 </aside>
               ) : null}
 
@@ -329,50 +288,34 @@ export function LegalDocumentPage({
               {sections.map((section, index) => (
                 <section
                   aria-labelledby={`${anchors[index]}-heading`}
-                  className="scroll-mt-24 border-b py-10"
+                  className="scroll-mt-(--sticky-content-top) border-b py-8 sm:py-10"
                   id={anchors[index]}
                   key={section.id}
                   style={{ borderColor: T.border.line }}
                 >
                   <h2
-                    className="m-0 flex items-baseline gap-3 text-[30px] leading-tight font-medium tracking-[-0.01em]"
+                    className="m-0 [break-after:avoid-page] text-[30px] leading-tight font-medium tracking-[-0.01em] sm:text-[32px]"
                     id={`${anchors[index]}-heading`}
                     style={{ fontFamily: T.font.serif, color: T.ink.base }}
                   >
-                    <span
-                      className="text-[13px] font-normal tabular-nums"
-                      style={{
-                        fontFamily: T.font.mono,
-                        color: T.accent.primary,
-                      }}
-                    >
-                      {sectionNumber(index)}
-                    </span>
                     {section.heading}
                   </h2>
 
                   {section.inShort ? (
                     <p
-                      className="mt-4 mb-0 flex gap-2 rounded-xl border px-4 py-2.5 text-[14px] leading-normal"
+                      className="mt-3 mb-0 [break-after:avoid-page] text-[19px] leading-relaxed italic"
                       style={{
-                        background: T.bg.deep,
-                        borderColor: T.border.line,
+                        fontFamily: T.font.serif,
                         color: T.ink.dim,
                       }}
                     >
-                      <strong
-                        className="shrink-0 font-semibold"
-                        style={{ color: T.ink.base }}
-                      >
-                        In short:
-                      </strong>
-                      <span>{section.inShort}</span>
+                      {section.inShort}
                     </p>
                   ) : null}
 
                   <StrapiBlocksContent
                     blocks={section.body as Blocks}
-                    className="mt-5 text-[16px] [&_li]:leading-[1.7] [&_p]:leading-[1.7]"
+                    className="mt-4 text-[16px] [&_li]:leading-[1.75] [&_p]:leading-[1.75]"
                   />
                 </section>
               ))}
@@ -381,20 +324,23 @@ export function LegalDocumentPage({
               {revisions.length > 0 ? (
                 <section aria-labelledby="legal-changes" className="pt-10">
                   <h2
-                    className="m-0 text-[24px] font-medium"
+                    className="m-0 text-[28px] leading-tight font-medium"
                     id="legal-changes"
                     style={{ fontFamily: T.font.serif, color: T.ink.base }}
                   >
                     Changes to this document
                   </h2>
                   <div
-                    className="mt-4 overflow-x-auto rounded-2xl border"
+                    role="region"
+                    aria-labelledby="legal-changes"
+                    tabIndex={0}
+                    className="mt-4 overflow-x-auto rounded-2xl border focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
                     style={{
                       background: T.bg.deep,
                       borderColor: T.border.line,
                     }}
                   >
-                    <table className="w-full border-collapse text-[14px]">
+                    <table className="w-full border-collapse text-[15px] leading-relaxed">
                       <caption className="sr-only">
                         Revision history of the {title.toLowerCase()}
                       </caption>
@@ -414,7 +360,7 @@ export function LegalDocumentPage({
                             style={{ borderColor: T.border.divider }}
                           >
                             <th
-                              className="py-3 pr-2 pl-4 text-left align-top text-[13px] font-normal whitespace-nowrap"
+                              className="py-4 pr-2 pl-4 text-left align-top text-[14px] font-medium whitespace-nowrap"
                               scope="row"
                               style={{
                                 fontFamily: T.font.mono,
@@ -424,7 +370,7 @@ export function LegalDocumentPage({
                               {formatVersion(revision.version)}
                             </th>
                             <td
-                              className="px-2 py-3 align-top font-semibold whitespace-nowrap"
+                              className="px-3 py-4 align-top font-semibold whitespace-nowrap"
                               style={{ color: T.ink.base }}
                             >
                               <time dateTime={revision.date}>
@@ -432,12 +378,12 @@ export function LegalDocumentPage({
                               </time>
                             </td>
                             <td
-                              className="px-2 py-3 align-top"
+                              className="min-w-[230px] px-3 py-4 align-top"
                               style={{ color: T.ink.dim }}
                             >
                               {revision.summary}
                             </td>
-                            <td className="py-3 pr-4 pl-2 text-right align-top whitespace-nowrap">
+                            <td className="py-4 pr-4 pl-3 text-right align-top whitespace-nowrap">
                               {revision.changesUrl ? (
                                 <GlobalLink
                                   className="font-semibold text-(--t-accent-primary) underline underline-offset-[3px] hover:text-(--t-accent-primary-hover)"
@@ -457,7 +403,7 @@ export function LegalDocumentPage({
                     </table>
                   </div>
                   <p
-                    className="mt-3 mb-0 text-[13px]"
+                    className="mt-3 mb-0 text-[14px] leading-relaxed"
                     style={{ color: T.ink.dim }}
                   >
                     We announce material changes in the journal and by email to
@@ -480,28 +426,28 @@ export function LegalDocumentPage({
                   Questions about this?
                 </h2>
                 <p
-                  className="mt-2 mb-0 text-[15px]"
+                  className="mt-2 mb-0 text-[15px] leading-relaxed"
                   style={{ color: T.ink.dim }}
                 >
                   Ask in the community forum, or write to the maintainers. We
                   reply within 5 working days.
                 </p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <a
-                    className="inline-flex items-center rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-                    href={`mailto:${contactEmail}`}
-                    data-contact-type={
-                      membershipPolicy ? "membership" : "privacy"
-                    }
-                  >
-                    {tUi("email")} {contactEmail}
-                  </a>
-                  <GlobalLink
-                    className="inline-flex items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[14px] font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"
-                    href={LEGAL_FORUM_URL}
-                  >
-                    Community forum
-                  </GlobalLink>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Button asChild variant="primary" size="pill">
+                    <a
+                      href={`mailto:${contactEmail}`}
+                      data-contact-type={
+                        membershipPolicy ? "membership" : "privacy"
+                      }
+                    >
+                      {tUi("email")} {contactEmail}
+                    </a>
+                  </Button>
+                  <Button asChild variant="surface" size="pill">
+                    <GlobalLink href={LEGAL_FORUM_URL}>
+                      Community forum
+                    </GlobalLink>
+                  </Button>
                 </div>
               </section>
             </article>
@@ -513,3 +459,61 @@ export function LegalDocumentPage({
 }
 
 export default LegalDocumentPage
+
+function LegalContents({
+  items,
+  label,
+}: {
+  readonly items: readonly { id: string; label: string }[]
+  readonly label: string
+}) {
+  const links = (
+    <ul className="scrollbar-thin m-0 min-h-0 list-none overflow-y-auto overscroll-contain p-0 [scrollbar-gutter:stable]">
+      {items.map((item) => (
+        <li key={item.id}>
+          <a
+            className="flex min-h-11 items-center rounded-lg px-3 py-2 text-[15px] leading-snug text-(--t-ink-dim) no-underline transition-colors hover:bg-(--t-accent-chip) hover:text-(--t-accent-primary) focus-visible:bg-(--t-accent-chip) focus-visible:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:-outline-offset-2 lg:min-h-9 lg:py-1.5"
+            href={`#${item.id}`}
+          >
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+
+  return (
+    <>
+      <nav
+        aria-label={label}
+        className="hidden min-h-0 w-full flex-col rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 lg:flex"
+        style={{
+          maxHeight:
+            "min(560px, calc(var(--sticky-content-max-height) - 64px))",
+        }}
+      >
+        <p className="m-0 shrink-0 px-3 pt-1 pb-3 text-[15px] font-semibold">
+          {label}
+        </p>
+        {links}
+      </nav>
+      <details className="group w-full rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 lg:hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
+          {label}
+          <Icon
+            aria-hidden="true"
+            icon="mdi:chevron-down"
+            width={20}
+            className="shrink-0 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <nav
+          aria-label={label}
+          className="scrollbar-thin mt-3 max-h-[min(420px,60dvh)] overflow-y-auto overscroll-contain border-t border-(--t-border-line) pt-3"
+        >
+          {links}
+        </nav>
+      </details>
+    </>
+  )
+}

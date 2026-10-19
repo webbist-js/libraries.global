@@ -106,7 +106,7 @@ export function OnboardingShell({
         {/* ── Aside: progress + actions (sticky) ── */}
         <aside
           aria-label={tUi("profile_setup")}
-          className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
+          className="flex flex-col gap-4 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
         >
           <ProfileProgress title={tUi("profile_setup")} steps={form.steps()}>
             <button

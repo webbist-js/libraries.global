@@ -3,7 +3,6 @@
 import { profilePalette, type ProfileBackground } from "@repo/shared-data"
 import { useEffect, useState } from "react"
 
-import { avatarSrc } from "@/lib/avatar"
 import type { LanguageEntry, UserProfile } from "@/lib/types/profile"
 
 import type { ClaimResult } from "./LibraryClaimSearch"
@@ -54,9 +53,6 @@ export function useProfileForm({
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl ?? "")
   const [profileBackground, setProfileBackground] = useState<ProfileBackground>(
     profilePalette(profile?.profileBackground).key
-  )
-  const [coverUrl, setCoverUrl] = useState(
-    avatarSrc(profile?.coverImage, "lg") ?? ""
   )
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle")
 
@@ -188,8 +184,6 @@ export function useProfileForm({
     initials,
     profileBackground,
     setProfileBackground,
-    coverUrl,
-    setCoverUrl,
     affiliationType,
     setAffiliationType,
     selectedAffiliation,

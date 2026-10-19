@@ -43,8 +43,9 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
 
   return (
     <nav
+      data-sticky-navigation=""
       aria-label={tUi("on_this_page")}
-      className="sticky top-14 z-5 border-b"
+      className="sticky top-(--sticky-header-height) z-5 border-b"
       style={{ background: T.bg.space, borderColor: T.border.line }}
     >
       <Container>
