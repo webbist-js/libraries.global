@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ArticleDiscoveryFilters } from "./ArticleDiscoveryFilters"
 
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   replace: vi.fn(),
@@ -44,7 +45,7 @@ vi.mock("@/lib/auth-client", () => ({
 const story: ArticleBrowseItem = {
   documentId: "one",
   title: "Story",
-  locale: "es",
+  locale: "fr",
   slug: "story",
   summary: null,
   author: null,
@@ -80,13 +81,13 @@ const story: ArticleBrowseItem = {
         continentDocumentId: "sa",
       },
     ],
-    languages: [{ value: "es", label: "Spanish" }],
+    languages: [{ value: "fr", label: "French" }],
     origins: [{ value: "community", label: "Community Journal" }],
   },
 }
 const discovery = aggregateArticleBrowse(
   [story],
-  parseArticleBrowseQuery({ lang: "es" })
+  parseArticleBrowseQuery({ lang: "fr" })
 )
 beforeEach(() => {
   localStorage.clear()
@@ -100,6 +101,43 @@ afterEach(() => {
 })
 
 describe("article reader preferences", () => {
+  it("keeps multiple content languages visible in the compact selector", () => {
+    const multi = { ...discovery, appliedFilters: { languages: ["fr", "en"] } }
+    render(
+      <ArticleDiscoveryFilters discovery={multi} kind="knowledge" compact />
+    )
+    const select = screen.getByRole("combobox", { name: "Content language" })
+    expect(select.textContent).toBe("2 languages")
+  })
+
+  it("changes language from the compact wiki submenu without losing search or section", async () => {
+    mocks.params = new URLSearchParams(
+      "lang=fr&section=practice&q=guide&page=3"
+    )
+    render(
+      <ArticleDiscoveryFilters discovery={discovery} kind="knowledge" compact />
+    )
+    const select = screen.getByRole("combobox", {
+      name: "Content language",
+    })
+    expect(select.textContent).toBe("French")
+    expect(
+      screen.queryByRole("button", { name: "Remove Content language: French" })
+    ).toBeNull()
+    fireEvent.keyDown(select, { key: "ArrowDown" })
+    const allLanguages = await screen.findByRole("option", {
+      name: "All languages",
+    })
+    fireEvent.keyDown(allLanguages, { key: "Enter" })
+    const [href, options] = mocks.push.mock.calls[0]!
+    const query = new URL(href, "https://libraries.global").searchParams
+    expect(query.get("section")).toBe("practice")
+    expect(query.get("q")).toBe("guide")
+    expect(query.get("lang")).toBe("all")
+    expect(query.has("page")).toBe(false)
+    expect(options).toEqual({ scroll: false })
+  })
+
   it.each(["journal", "knowledge"] as const)(
     "keeps an explicit unavailable language selected in %s filters",
     (kind) => {
@@ -123,7 +161,7 @@ describe("article reader preferences", () => {
   )
 
   it("offers a saved country only after explicit selection and preserves unrelated filters", async () => {
-    mocks.params = new URLSearchParams("lang=es&section=stories&page=3")
+    mocks.params = new URLSearchParams("lang=fr&section=stories&page=3")
     localStorage.setItem(
       "libraries-global:article-country:v1",
       JSON.stringify({ version: 1, countries: ["colombia"] })
@@ -136,7 +174,7 @@ describe("article reader preferences", () => {
     expect(mocks.push).not.toHaveBeenCalled()
     fireEvent.click(suggestion)
     expect(mocks.push).toHaveBeenCalledWith(
-      "/journal?lang=es&section=stories&country=co",
+      "/journal?lang=fr&section=stories&country=co",
       { scroll: false }
     )
   })
@@ -153,13 +191,13 @@ describe("article reader preferences", () => {
 
   it("country changes clear child filters and pagination, preserving unrelated facets", () => {
     mocks.params = new URLSearchParams(
-      "lang=es&region=bogota&area=centre&topic=reading&page=3"
+      "lang=fr&region=bogota&area=centre&topic=reading&page=3"
     )
     render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
     fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
     fireEvent.click(screen.getByRole("checkbox", { name: "Colombia (1)" }))
     expect(mocks.push).toHaveBeenCalledWith(
-      "/journal?lang=es&topic=reading&country=co",
+      "/journal?lang=fr&topic=reading&country=co",
       { scroll: false }
     )
     expect(
@@ -195,7 +233,7 @@ it("stages mobile filters, hides stale counts and only navigates on Show results
   }))
   const fetcher = vi.fn().mockImplementation(() => new Promise(() => {}))
   vi.stubGlobal("fetch", fetcher)
-  mocks.params = new URLSearchParams("lang=es")
+  mocks.params = new URLSearchParams("lang=fr")
   render(<ArticleDiscoveryFilters discovery={discovery} kind="journal" />)
   fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
   fireEvent.click(screen.getByRole("checkbox", { name: "Centre (1)" }))
@@ -204,7 +242,7 @@ it("stages mobile filters, hides stale counts and only navigates on Show results
   expect(screen.getByRole("checkbox", { name: "Centre" })).toBeTruthy()
   fireEvent.click(screen.getByRole("button", { name: "Show results" }))
   expect(mocks.push).toHaveBeenCalledWith(
-    "/journal?lang=es&area=centre&continent=sa&country=co&region=bogota",
+    "/journal?lang=fr&area=centre&continent=sa&country=co&region=bogota",
     { scroll: false }
   )
   expect(fetcher.mock.calls[0]![0]).toMatch(
@@ -240,7 +278,7 @@ it("keeps interface section labels when a mobile preview aggregates other langua
       }),
     })
   )
-  mocks.params = new URLSearchParams("lang=es")
+  mocks.params = new URLSearchParams("lang=fr")
   render(<ArticleDiscoveryFilters discovery={initial} kind="journal" />)
   fireEvent.click(screen.getByRole("button", { name: "Filters · 1" }))
   fireEvent.click(screen.getByRole("button", { name: "All languages" }))

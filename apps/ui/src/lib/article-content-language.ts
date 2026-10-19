@@ -1,3 +1,5 @@
+import { isSupportedLocale } from "@repo/shared-data"
+
 /** An explicit article language never silently falls back to another variant. */
 export function articleContentLanguage(
   params: Record<string, string | string[] | undefined>
@@ -6,13 +8,13 @@ export function articleContentLanguage(
     ? params.contentLang[0]
     : params.contentLang
 
-  return value && /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(value)
-    ? value
-    : null
+  return isSupportedLocale(value) ? value : null
 }
 
 export function contentLanguageSuffix(language: string | null): string {
-  return language ? `?contentLang=${encodeURIComponent(language)}` : ""
+  return isSupportedLocale(language)
+    ? `?contentLang=${encodeURIComponent(language)}`
+    : ""
 }
 
 /** Shared reader actions keep the displayed variant when interface and content differ. */

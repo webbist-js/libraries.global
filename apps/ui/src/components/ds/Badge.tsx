@@ -89,7 +89,7 @@ export function Badge({
           size === "md" ? "5px 12px" : size === "xs" ? "2px 8px" : "3px 10px",
         borderRadius: "999px",
         fontFamily: T.font.sans,
-        fontSize: size === "md" ? "14px" : size === "xs" ? "12px" : "13px",
+        fontSize: size === "md" ? "15px" : size === "xs" ? "13px" : "14px",
         ...(size === "xs" ? { lineHeight: 1.35 } : {}),
         fontWeight: 600,
         color: text,

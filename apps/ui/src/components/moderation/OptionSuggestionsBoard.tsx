@@ -6,6 +6,7 @@ import { useId, useState } from "react"
 
 import { Badge, EmptyState } from "@/components/ds"
 import { SelectField } from "@/components/ds/SelectField"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   type OptionCatalogue,
   type SuggestionReviewRound,
@@ -14,6 +15,7 @@ import {
   type SuggestionStatus,
 } from "@/lib/community/suggestions"
 import { T } from "@/lib/design-tokens"
+import { cn } from "@/lib/styles"
 
 import {
   decisionErrorMessage,
@@ -22,10 +24,10 @@ import {
 } from "./submissionMeta"
 import { SuggestionRoundControls } from "./SuggestionRoundControls"
 
-const PRIMARY =
-  "inline-flex items-center justify-center rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
-const SECONDARY =
-  "inline-flex items-center justify-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+const PRIMARY = cn(buttonVariants({ variant: "primary", size: "pill" }))
+const SECONDARY = cn(buttonVariants({ variant: "surface", size: "pill" }))
+const FIELD =
+  "min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-[16px] font-normal text-(--t-ink-base)"
 
 const inputStyle: React.CSSProperties = {
   borderColor: T.border.hi,
@@ -65,7 +67,7 @@ function StatusChip({ status }: { readonly status: SuggestionStatus }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
       style={{ background: meta.bg, color: meta.fg }}
     >
       <Icon aria-hidden="true" icon={meta.icon} width={14} height={14} />
@@ -75,19 +77,16 @@ function StatusChip({ status }: { readonly status: SuggestionStatus }) {
 }
 
 function librariesLine(s: OptionSuggestion): string {
-  const base = `${s.requests} request${s.requests === 1 ? "" : "s"} · ${s.votes} vote${s.votes === 1 ? "" : "s"} · ${s.libraries.length} librar${s.libraries.length === 1 ? "y" : "ies"}`
   const names =
     s.libraries.length > 0
-      ? `: ${s.libraries
+      ? `${s.libraries
           .slice(0, 5)
           .map((l) => l.name)
           .join(", ")}${s.libraries.length > 5 ? "…" : ""}`
       : ""
-  const suggester = s.suggestedByName
-    ? ` · Suggested by ${s.suggestedByName}`
-    : ""
+  const suggester = s.suggestedByName ? `Suggested by ${s.suggestedByName}` : ""
 
-  return `${base}${names}${suggester}`
+  return [names, suggester].filter(Boolean).join(" · ")
 }
 
 function SuggestionCard({
@@ -200,12 +199,12 @@ function SuggestionCard({
   return (
     <li
       id={`moderation-suggestion-${s.documentId}`}
-      className="flex flex-col gap-4 rounded-[20px] p-5"
+      className="flex min-w-0 scroll-mt-(--sticky-content-top) flex-col gap-5 rounded-[24px] p-5 sm:p-6"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-3">
         <h2
-          className="m-0 text-[22px]"
+          className="m-0 text-[28px] leading-tight [overflow-wrap:anywhere]"
           style={{
             fontFamily: T.font.serif,
             color: T.ink.base,
@@ -214,19 +213,21 @@ function SuggestionCard({
         >
           {s.name}
         </h2>
-        <Badge
-          label={LIST_LABELS[s.optionKey] ?? humanise(s.optionKey)}
-          color="dim"
-        />
-        <StatusChip status={s.status} />
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            label={LIST_LABELS[s.optionKey] ?? humanise(s.optionKey)}
+            color="dim"
+          />
+          <StatusChip status={s.status} />
+        </div>
       </div>
       {s.publicationStatus === "pending" && (
-        <p className="m-0 text-sm font-semibold text-(--t-accent-primary)">
+        <p className="m-0 rounded-xl bg-(--t-accent-chip) px-4 py-3 text-[14px] leading-relaxed font-medium text-(--t-accent-primary-hover)">
           {t("publicationReview")}
         </p>
       )}
       {s.comparison && (
-        <div className="rounded-xl bg-(--t-bg-muted) p-3 text-sm">
+        <div className="rounded-xl bg-(--t-bg-surface) p-4 text-[14px] leading-relaxed">
           <strong>
             {t("comparisonTitle")}: {s.comparison.name}
           </strong>
@@ -234,19 +235,47 @@ function SuggestionCard({
         </div>
       )}
       {s.description ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+        <p
+          className="m-0 text-[16px] leading-relaxed [overflow-wrap:anywhere]"
+          style={{ color: T.ink.base }}
+        >
           {s.description}
         </p>
       ) : null}
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-        {librariesLine(s)}
-      </p>
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-(--t-ink-dim)">
+        <span>
+          <strong className="font-semibold text-(--t-ink-base)">
+            {s.votes}
+          </strong>{" "}
+          {s.votes === 1 ? "vote" : "votes"}
+        </span>
+        <span>
+          <strong className="font-semibold text-(--t-ink-base)">
+            {s.requests}
+          </strong>{" "}
+          {s.requests === 1 ? "request" : "requests"}
+        </span>
+        <span>
+          <strong className="font-semibold text-(--t-ink-base)">
+            {s.libraries.length}
+          </strong>{" "}
+          {s.libraries.length === 1 ? "library" : "libraries"}
+        </span>
+      </div>
+      {librariesLine(s) ? (
+        <p
+          className="m-0 text-[14px] leading-relaxed"
+          style={{ color: T.ink.dim }}
+        >
+          {librariesLine(s)}
+        </p>
+      ) : null}
       <fieldset
-        className="m-0 flex flex-col gap-3 border-0 p-0"
+        className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0"
         disabled={busy}
       >
         <legend className="sr-only">{`Decide on ${s.name}`}</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 rounded-2xl bg-(--t-bg-surface) p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={nameId}
@@ -260,7 +289,7 @@ function SuggestionCard({
               value={name}
               maxLength={80}
               onChange={(e) => setName(e.target.value)}
-              className="rounded-[14px] border px-3 py-2 text-[15px]"
+              className={FIELD}
               style={inputStyle}
             />
           </div>
@@ -276,15 +305,21 @@ function SuggestionCard({
                   : "publicNote"
               )}
             </label>
-            <input
+            <textarea
               id={noteId}
+              rows={3}
+              aria-describedby={`${noteId}-hint`}
               value={note}
               maxLength={2000}
               onChange={(e) => setNote(e.target.value)}
-              className="rounded-[14px] border px-3 py-2 text-[15px]"
+              className={FIELD}
               style={inputStyle}
             />
-            <span className="text-[13px]" style={{ color: T.ink.dim }}>
+            <span
+              id={`${noteId}-hint`}
+              className="text-[14px] leading-relaxed"
+              style={{ color: T.ink.dim }}
+            >
               {t(
                 s.publicationStatus === "pending"
                   ? "privateFeedbackHint"
@@ -297,79 +332,98 @@ function SuggestionCard({
           <p className="text-sm text-(--t-ink-dim)">{t("appendHint")}</p>
         )}
         {s.publicationStatus !== "pending" && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(["summary", "description", "icon", "category"] as const).map(
-              (key) => (
-                <label key={key} className="grid gap-1 text-sm font-semibold">
-                  {t(
-                    (
-                      {
-                        summary: "featureSummary",
-                        description: "featureDescription",
-                        icon: "featureIcon",
-                        category: "featureCategory",
-                      } as const
-                    )[key]
-                  )}
-                  {key === "category" ? (
-                    <SelectField
-                      label={t("featureCategory")}
-                      value={feature.category}
-                      onValueChange={(category) =>
-                        setFeature((value) => ({ ...value, category }))
-                      }
-                      options={[
-                        { value: "", label: "—" },
-                        ...(catalogue?.categories?.[s.optionKey] ?? []).map(
-                          (category) => ({ value: category, label: category })
-                        ),
-                      ]}
-                    />
-                  ) : key === "description" ? (
-                    <textarea
-                      rows={3}
-                      maxLength={4000}
-                      value={feature[key]}
-                      onChange={(e) =>
-                        setFeature((value) => ({
-                          ...value,
-                          [key]: e.target.value,
-                        }))
-                      }
-                      className="rounded-lg border p-2 font-normal"
-                    />
-                  ) : (
-                    <input
-                      value={feature[key]}
-                      maxLength={key === "summary" ? 400 : 100}
-                      onChange={(e) =>
-                        setFeature((value) => ({
-                          ...value,
-                          [key]: e.target.value,
-                        }))
-                      }
-                      className="min-h-11 rounded-lg border p-2 font-normal"
-                    />
-                  )}
-                </label>
-              )
-            )}
-            <label className="grid gap-1 text-sm font-semibold sm:col-span-2">
-              {t("existingFeature")}
-              <SelectField
-                label={t("existingFeature")}
-                value={existingOptionDocumentId}
-                onValueChange={setExistingOptionDocumentId}
-                options={[
-                  { value: "", label: t("chooseFeature") },
-                  ...(catalogue?.[s.optionKey] ?? []).map((item) => ({
-                    value: item.documentId,
-                    label: item.name,
-                  })),
-                ]}
+          <details className="group rounded-2xl border border-(--t-border-line) px-4 py-1">
+            <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold text-(--t-ink-base) [&::-webkit-details-marker]:hidden">
+              {t("featureDetails")}
+              <Icon
+                aria-hidden
+                icon="mdi:chevron-down"
+                width={20}
+                className="shrink-0 transition-transform group-open:rotate-180"
               />
-            </label>
-          </div>
+            </summary>
+            <p className="mt-1 mb-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+              {t("featureDetailsHint")}
+            </p>
+            <div className="grid min-w-0 gap-4 pb-3 sm:grid-cols-2">
+              {(["summary", "description", "icon", "category"] as const).map(
+                (key) => (
+                  <label
+                    key={key}
+                    className="grid min-w-0 content-start gap-2 text-[14px] font-semibold"
+                  >
+                    {t(
+                      (
+                        {
+                          summary: "featureSummary",
+                          description: "featureDescription",
+                          icon: "featureIcon",
+                          category: "featureCategory",
+                        } as const
+                      )[key]
+                    )}
+                    {key === "category" ? (
+                      <SelectField
+                        label={t("featureCategory")}
+                        className="min-h-[48px] text-[16px]"
+                        value={feature.category}
+                        onValueChange={(category) =>
+                          setFeature((value) => ({ ...value, category }))
+                        }
+                        options={[
+                          { value: "", label: "—" },
+                          ...(catalogue?.categories?.[s.optionKey] ?? []).map(
+                            (category) => ({ value: category, label: category })
+                          ),
+                        ]}
+                      />
+                    ) : key === "description" ? (
+                      <textarea
+                        rows={3}
+                        maxLength={4000}
+                        value={feature[key]}
+                        onChange={(e) =>
+                          setFeature((value) => ({
+                            ...value,
+                            [key]: e.target.value,
+                          }))
+                        }
+                        className={FIELD}
+                      />
+                    ) : (
+                      <input
+                        value={feature[key]}
+                        maxLength={key === "summary" ? 400 : 100}
+                        onChange={(e) =>
+                          setFeature((value) => ({
+                            ...value,
+                            [key]: e.target.value,
+                          }))
+                        }
+                        className={FIELD}
+                      />
+                    )}
+                  </label>
+                )
+              )}
+              <label className="grid min-w-0 gap-2 text-[14px] font-semibold sm:col-span-2">
+                {t("existingFeature")}
+                <SelectField
+                  label={t("existingFeature")}
+                  className="min-h-[48px] text-[16px]"
+                  value={existingOptionDocumentId}
+                  onValueChange={setExistingOptionDocumentId}
+                  options={[
+                    { value: "", label: t("chooseFeature") },
+                    ...(catalogue?.[s.optionKey] ?? []).map((item) => ({
+                      value: item.documentId,
+                      label: item.name,
+                    })),
+                  ]}
+                />
+              </label>
+            </div>
+          </details>
         )}
         {error ? (
           <p
@@ -380,7 +434,7 @@ function SuggestionCard({
             {error}
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3 border-t border-(--t-border-line) pt-5">
           {s.publicationStatus === "pending" ? (
             <>
               <button
@@ -482,7 +536,7 @@ function SuggestionCard({
           ) : (
             <button
               type="button"
-              className={SECONDARY}
+              className={`${SECONDARY} sm:ml-auto`}
               style={{ color: T.accent.danger }}
               onClick={() => setConfirmingRemove(true)}
             >
@@ -539,85 +593,114 @@ export function OptionSuggestionsBoard({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <SuggestionRoundControls initial={round} />
-      <div
-        role="group"
-        aria-label={tUi("filter_by_status")}
-        className="inline-flex w-fit flex-wrap gap-1 rounded-full p-1"
-        style={{ background: T.bg.muted2 }}
-      >
-        {FILTERS.map((f) => {
-          const active = filter === f.id
-          const count = countOf(f.id)
+    <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
+        <a
+          href="#suggestion-review-schedule"
+          className="inline-flex min-h-[44px] items-center gap-2 self-start text-[15px] font-semibold text-(--t-accent-primary) underline underline-offset-4 lg:hidden"
+        >
+          Review schedule
+          <Icon aria-hidden icon="mdi:arrow-down" width={17} />
+        </a>
+        <div
+          role="group"
+          aria-label={tUi("filter_by_status")}
+          className="flex flex-wrap gap-2"
+        >
+          {FILTERS.map((f) => {
+            const active = filter === f.id
+            const count = countOf(f.id)
 
-          return (
-            <button
-              key={f.id || "all"}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setFilter(f.id)}
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[15px] transition-colors"
-              style={{
-                background: active ? T.bg.deep : "transparent",
-                color: active ? T.ink.base : T.ink.dim,
-                fontWeight: active ? 600 : 500,
-                border: active
-                  ? `1px solid ${T.border.line}`
-                  : "1px solid transparent",
-                cursor: "pointer",
-              }}
-            >
-              {f.label}
-              <span
-                className="rounded-full px-2 text-[13px] font-semibold tabular-nums"
+            return (
+              <button
+                key={f.id || "all"}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter(f.id)}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-[15px] transition-colors"
                 style={{
-                  background: active ? T.accent.chip : T.bg.muted,
-                  color: active ? T.accent.primary : T.ink.dim,
-                  lineHeight: "20px",
+                  background: active ? T.ink.base : T.bg.deep,
+                  color: active ? T.bg.deep : T.ink.dim,
+                  fontWeight: active ? 600 : 500,
+                  border: `1px solid ${active ? T.ink.base : T.border.line}`,
+                  cursor: "pointer",
                 }}
               >
-                {count}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-      <p
-        aria-live="polite"
-        className="m-0 text-[14px]"
-        style={{ color: T.ink.dim }}
-      >
-        {`${status ? `${status} ` : ""}${shown.length} suggestion${shown.length === 1 ? "" : "s"}.`}
-      </p>
-      {shown.length === 0 ? (
-        <div
-          className="rounded-[20px]"
-          style={{
-            background: T.bg.deep,
-            border: `1px solid ${T.border.line}`,
-          }}
-        >
-          <EmptyState
-            message={
-              items.length === 0
-                ? "No open suggestions. Thank you."
-                : "No suggestions match this filter."
-            }
-          />
+                {f.label}
+                <span
+                  className="rounded-full px-2 text-[13px] font-semibold tabular-nums"
+                  style={{
+                    background: active ? T.accent.chip : T.bg.muted,
+                    color: active ? T.accent.primary : T.ink.dim,
+                    lineHeight: "20px",
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            )
+          })}
         </div>
-      ) : (
-        <ul className="m-0 flex list-none flex-col gap-4 p-0">
-          {shown.map((s) => (
-            <SuggestionCard
-              key={s.documentId}
-              s={s}
-              onDecided={handleDecided}
-              catalogue={catalogue}
+        <p
+          aria-live="polite"
+          className="m-0 text-[14px]"
+          style={{ color: T.ink.dim }}
+        >
+          {`${status ? `${status} ` : ""}${shown.length} suggestion${shown.length === 1 ? "" : "s"}.`}
+        </p>
+        {shown.length === 0 ? (
+          <div
+            className="rounded-[24px]"
+            style={{
+              background: T.bg.deep,
+              border: `1px solid ${T.border.line}`,
+            }}
+          >
+            <EmptyState
+              headingLevel={2}
+              lead={
+                items.length === 0
+                  ? "No suggestions waiting"
+                  : "No suggestions match this filter."
+              }
+              detail={
+                items.length === 0
+                  ? "New requests for library features and types will appear here for review."
+                  : "Choose another status to see the remaining suggestions."
+              }
+              action={
+                items.length > 0 ? (
+                  <Button
+                    variant="surface"
+                    size="pill"
+                    onClick={() => setFilter("")}
+                  >
+                    Show all suggestions
+                  </Button>
+                ) : undefined
+              }
             />
-          ))}
-        </ul>
-      )}
+          </div>
+        ) : (
+          <ul className="m-0 flex list-none flex-col gap-4 p-0">
+            {shown.map((s) => (
+              <SuggestionCard
+                key={s.documentId}
+                s={s}
+                onDecided={handleDecided}
+                catalogue={catalogue}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+      <aside
+        id="suggestion-review-schedule"
+        aria-label="Review schedule"
+        className="min-w-0 scroll-mt-(--sticky-content-top) lg:sticky lg:top-(--sticky-content-top) lg:col-start-2 lg:row-start-1 lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
+      >
+        <SuggestionRoundControls initial={round} />
+      </aside>
     </div>
   )
 }

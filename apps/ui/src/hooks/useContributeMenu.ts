@@ -6,7 +6,11 @@ import { useState } from "react"
 
 import { useModerationSummary } from "@/hooks/useModerationSummary"
 import { useHydratedSession } from "@/lib/access-client"
-import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
+import {
+  sessionCapabilities,
+  sessionTeamsOf,
+  staffLibrariesOf,
+} from "@/lib/access-server"
 import {
   buildContributeMenu,
   type ContributeMenuModel,
@@ -144,6 +148,9 @@ export function useContributeMenu(active: boolean): ContributeMenu {
   const model = buildContributeMenu({
     status,
     capabilities,
+    canReviewSuggestions: sessionCapabilities(user).moderation.some(
+      (scope) => scope.queue === "all" && scope.locale === null
+    ),
     claimedLibraries: libraries,
     teams,
     selectedLibraryId: selectedId,

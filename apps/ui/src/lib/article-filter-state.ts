@@ -70,15 +70,16 @@ export function clearArticleFacets(encoded: string): URLSearchParams {
 
   return next
 }
-/** Knowledge starts in the interface language; an explicit choice always wins. */
+/** An explicit language (including all) wins over the reader's default. */
 export function knowledgeBrowseParams(
   locale: string,
-  input: Record<string, unknown>
+  input: Record<string, unknown>,
+  defaultLanguage = locale
 ): string {
   const query = parseArticleBrowseQuery(input)
   const requested = Array.isArray(input.lang) ? input.lang[0] : input.lang
   if (!query.filters.languages?.length && requested !== "all")
-    query.filters.languages = [locale]
+    query.filters.languages = [defaultLanguage]
   const params = new URLSearchParams(articleBrowseSearchParams(query))
   params.set("preferredLocale", locale)
   if (requested === "all") params.set("lang", "all")
@@ -89,16 +90,19 @@ export function knowledgeBrowseParams(
 export function articlePreviewParams(
   encoded: string,
   kind: "journal" | "knowledge",
-  locale: string
+  locale: string,
+  defaultLanguage = locale
 ): string {
   const input: Record<string, string> = {
     ...Object.fromEntries(new URLSearchParams(encoded)),
     page: "1",
   }
-  if (kind === "knowledge") return knowledgeBrowseParams(locale, input)
-  const params = new URLSearchParams(
-    articleBrowseSearchParams(parseArticleBrowseQuery(input))
-  )
+  if (kind === "knowledge")
+    return knowledgeBrowseParams(locale, input, defaultLanguage)
+  const query = parseArticleBrowseQuery(input)
+  if (!query.filters.languages?.length && input.lang !== "all")
+    query.filters.languages = [defaultLanguage]
+  const params = new URLSearchParams(articleBrowseSearchParams(query))
   params.set("preferredLocale", locale)
   if (input.lang === "all") params.set("lang", "all")
 

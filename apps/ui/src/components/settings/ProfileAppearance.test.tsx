@@ -4,52 +4,30 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { ProfileAppearance } from "./ProfileAppearance"
 
-vi.mock("@/lib/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 afterEach(() => cleanup())
 
 describe("profile appearance controls", () => {
-  it("keeps the palette available and disables cover upload when storage credentials are unavailable", () => {
-    render(
-      <ProfileAppearance
-        background="mint"
-        onBackgroundChange={vi.fn()}
-        coverUrl=""
-        onCoverChange={vi.fn()}
-        uploadEnabled={false}
-      />
+  it("offers avatar colours without a cover preview or cover upload", () => {
+    const { container } = render(
+      <ProfileAppearance background="mint" onBackgroundChange={vi.fn()} />
     )
-    expect(
-      (
-        screen.getByRole("button", {
-          name: "Upload cover photo",
-        }) as HTMLButtonElement
-      ).disabled
-    ).toBe(true)
+    expect(screen.getByRole("heading", { name: "Avatar colour" })).toBeTruthy()
     expect(screen.getAllByRole("radio")).toHaveLength(6)
-    expect(screen.getByText(/Cover uploads are not configured/)).toBeTruthy()
+    expect(screen.getByText(/Used behind your initials/)).toBeTruthy()
+    expect(screen.queryByLabelText("Profile background preview")).toBeNull()
+    expect(screen.queryByText("A place for your library stories.")).toBeNull()
+    expect(container.querySelector('input[type="file"]')).toBeNull()
   })
-  it("exposes six named keyboard-selectable colours and preserves the cover until explicitly removed", () => {
+  it("marks the saved colour and reports the chosen avatar colour", () => {
     const choose = vi.fn()
     render(
-      <ProfileAppearance
-        background="violet"
-        onBackgroundChange={choose}
-        coverUrl="/cover.webp"
-        onCoverChange={vi.fn()}
-      />
+      <ProfileAppearance background="violet" onBackgroundChange={choose} />
     )
-    expect(screen.getAllByRole("radio")).toHaveLength(6)
+    expect(
+      (screen.getByRole("radio", { name: "Violet" }) as HTMLInputElement)
+        .checked
+    ).toBe(true)
     fireEvent.click(screen.getByRole("radio", { name: "Mint" }))
     expect(choose).toHaveBeenCalledWith("mint")
-    expect(
-      screen
-        .getByLabelText("Profile background preview")
-        .querySelector("img")
-        ?.getAttribute("src")
-    ).toBe("/cover.webp")
-    expect(
-      screen.getByRole("button", { name: "Remove cover photo" })
-    ).toBeTruthy()
   })
 })

@@ -96,7 +96,7 @@ function renderList(list: BlockListNode, key: number): React.ReactNode {
       key={key}
       className={cn(
         list.format === "ordered" ? "list-decimal" : "list-disc",
-        "space-y-1.5 pl-5 text-(--t-ink-dim)"
+        "list-outside space-y-1.5 ps-[1.5em] text-(--t-ink-dim) [&_li>ol]:mt-2 [&_li>ul]:mt-2"
       )}
     >
       {items.map((item, index) => (

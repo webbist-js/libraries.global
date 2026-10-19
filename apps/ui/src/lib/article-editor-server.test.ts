@@ -8,6 +8,7 @@ vi.mock("@/lib/bridge-user-headers", () => ({
 }))
 
 import {
+  fetchArticleLocales,
   loadArticleWriteContext,
   loadArticleForEditor,
   toExistingArticle,
@@ -18,6 +19,36 @@ const eventId = "event0000000000000000001"
 beforeEach(() => vi.unstubAllGlobals())
 
 describe("article editor context", () => {
+  it("does not invent enabled languages when the CMS has only unsupported locales", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [{ code: "es", name: "Spanish", isDefault: true }],
+        })
+      )
+    )
+    expect(await fetchArticleLocales()).toEqual([])
+  })
+  it("offers only CMS locales with translated application routes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          data: [
+            { code: "en", name: "English", isDefault: true },
+            { code: "es", name: "Spanish", isDefault: false },
+            { code: "fr", name: "French", isDefault: false },
+          ],
+        })
+      )
+    )
+    expect((await fetchArticleLocales()).map((locale) => locale.code)).toEqual([
+      "en",
+      "fr",
+    ])
+  })
+
   it("preserves a purged Event's durable source ID and projects its public library label", () => {
     const article = toExistingArticle(
       "journal",
@@ -59,7 +90,7 @@ describe("article editor context", () => {
         },
         "en"
       ).availableLocales
-    ).toEqual(["en", "es"])
+    ).toEqual(["en"])
   })
   it("retains the current home section before historical section tags and pins a revision", () => {
     const article = toExistingArticle(
@@ -130,27 +161,27 @@ describe("article editor context", () => {
   })
 })
 
-it("opens an explicit published Spanish source and never silently substitutes a fallback locale", async () => {
+it("opens an explicit published French source and never silently substitutes a fallback locale", async () => {
   const { fetchArticleForEditing } =
     await import("@/lib/strapi-api/content/server")
   const fetch = vi.mocked(fetchArticleForEditing)
   fetch.mockResolvedValueOnce({
     documentId: "story",
     slug: "story",
-    locale: "es",
-    title: "Una historia",
+    locale: "fr",
+    title: "Une histoire",
     publishedAt: "2026-10-16",
-    availableLocales: ["es"],
+    availableLocales: ["fr"],
   })
   expect(
     (
       await loadArticleForEditor("journal", "story", "en", {
-        sourceLocale: "es",
-        targetLocale: "es",
+        sourceLocale: "fr",
+        targetLocale: "fr",
       })
     )?.locale
-  ).toBe("es")
-  expect(fetch).toHaveBeenLastCalledWith("journal", "story", "es")
+  ).toBe("fr")
+  expect(fetch).toHaveBeenLastCalledWith("journal", "story", "fr")
   fetch.mockResolvedValueOnce({
     documentId: "story",
     slug: "story",
@@ -159,7 +190,7 @@ it("opens an explicit published Spanish source and never silently substitutes a 
     availableLocales: ["en"],
   })
   expect(
-    await loadArticleForEditor("journal", "story", "en", { sourceLocale: "es" })
+    await loadArticleForEditor("journal", "story", "en", { sourceLocale: "fr" })
   ).toBeNull()
 })
 it("opens an existing requested content variant or keeps the original source when adding a missing translation", async () => {
@@ -169,17 +200,17 @@ it("opens an existing requested content variant or keeps the original source whe
   fetch.mockResolvedValueOnce({
     documentId: "story",
     slug: "story",
-    locale: "es",
-    title: "Una historia",
-    availableLocales: ["es"],
+    locale: "fr",
+    title: "Une histoire",
+    availableLocales: ["fr"],
   })
   expect(
     (
       await loadArticleForEditor("journal", "story", "en", {
-        targetLocale: "es",
+        targetLocale: "fr",
       })
     )?.locale
-  ).toBe("es")
+  ).toBe("fr")
   fetch.mockResolvedValueOnce(null).mockResolvedValueOnce({
     documentId: "story",
     slug: "story",
@@ -194,4 +225,20 @@ it("opens an existing requested content variant or keeps the original source whe
       })
     )?.locale
   ).toBe("en")
+})
+
+it("refuses unsupported source and target locales before fetching", async () => {
+  const { fetchArticleForEditing } =
+    await import("@/lib/strapi-api/content/server")
+  const fetcher = vi.mocked(fetchArticleForEditing)
+  fetcher.mockClear()
+  expect(
+    await loadArticleForEditor("knowledge", "story", "en", {
+      sourceLocale: "es",
+    })
+  ).toBeNull()
+  expect(
+    await loadArticleForEditor("journal", "story", "en", { targetLocale: "es" })
+  ).toBeNull()
+  expect(fetcher).not.toHaveBeenCalled()
 })

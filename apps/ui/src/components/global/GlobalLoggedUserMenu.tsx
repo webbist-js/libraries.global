@@ -1,22 +1,25 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { profilePalette, type ProfileBackground } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useRef, type ReactNode } from "react"
 
 import { useContactModal } from "@/components/contact/ContactModalProvider"
+import {
+  HeaderDropdownContent,
+  HeaderDropdownTrigger,
+} from "@/components/global/HeaderDropdown"
 import { useNotifications } from "@/components/notifications/NotificationProvider"
 import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { BetterAuthUser } from "@/lib/auth-server"
-import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { planShortName } from "@/lib/plans"
 
@@ -35,11 +38,14 @@ function Avatar({
   src,
   initials,
   size,
+  background,
 }: {
   src?: string | null
   initials: string
   size: number
+  background?: ProfileBackground | null
 }) {
+  const palette = profilePalette(background)
   if (src) {
     return (
       <img
@@ -62,14 +68,14 @@ function Avatar({
         width: size,
         height: size,
         borderRadius: "50%",
-        background: TYPE_TINT.national.bg,
+        background: palette.bg,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: T.font.sans,
         fontSize: size * 0.4,
         fontWeight: 700,
-        color: TYPE_TINT.national.fg,
+        color: palette.fg,
         flexShrink: 0,
       }}
     >
@@ -121,6 +127,7 @@ export function GlobalLoggedUserMenu({
   readonly user: BetterAuthUser
   readonly profileSnippet?: {
     avatarUrl?: string | null
+    profileBackground?: ProfileBackground | null
     username?: string | null
     isVerifiedLibrarian?: boolean | null
   } | null
@@ -157,7 +164,7 @@ export function GlobalLoggedUserMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <HeaderDropdownTrigger kind="menu" asChild>
         <button
           ref={menuTrigger}
           type="button"
@@ -181,7 +188,12 @@ export function GlobalLoggedUserMenu({
           className="group/profile hover:bg-(--t-bg-surface)"
         >
           <span className="relative inline-flex">
-            <Avatar src={avatarSrc} initials={initials} size={32} />
+            <Avatar
+              src={avatarSrc}
+              initials={initials}
+              size={32}
+              background={profileSnippet?.profileBackground}
+            />
             {unread > 0 ? (
               <span
                 aria-hidden="true"
@@ -198,9 +210,10 @@ export function GlobalLoggedUserMenu({
             className="shrink-0 transition-transform group-data-[state=open]/profile:rotate-180"
           />
         </button>
-      </DropdownMenuTrigger>
+      </HeaderDropdownTrigger>
 
-      <DropdownMenuContent
+      <HeaderDropdownContent
+        kind="menu"
         onCloseAutoFocus={(event) => {
           if (!supportSelected.current) return
           supportSelected.current = false
@@ -210,17 +223,19 @@ export function GlobalLoggedUserMenu({
           openContact("membership_support")
         }}
         aria-label={tUi("account_menu")}
-        align="end"
-        sideOffset={20}
-        className="w-[272px] rounded-[20px] border p-2 shadow-none"
-        style={{ background: T.bg.deep, borderColor: T.border.hi }}
+        className="w-[272px]"
       >
         {/* Identity header */}
         <div
           className="mb-1 flex items-center gap-3 border-b px-2.5 pt-2 pb-3"
           style={{ borderBottomColor: T.border.divider }}
         >
-          <Avatar src={avatarSrc} initials={initials} size={44} />
+          <Avatar
+            src={avatarSrc}
+            initials={initials}
+            size={44}
+            background={profileSnippet?.profileBackground}
+          />
           <div className="min-w-0 flex-1">
             <p
               className="m-0 truncate text-[16px] font-semibold"
@@ -357,7 +372,7 @@ export function GlobalLoggedUserMenu({
         <MenuLink href="/auth/signout" icon="mdi:logout">
           {tUi("sign_out")}{" "}
         </MenuLink>
-      </DropdownMenuContent>
+      </HeaderDropdownContent>
     </DropdownMenu>
   )
 }

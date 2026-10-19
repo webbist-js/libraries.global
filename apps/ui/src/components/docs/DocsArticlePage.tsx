@@ -13,7 +13,6 @@ import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
 import { countWords, extractHeadings, formatDate } from "@/lib/article-helpers"
 import { T } from "@/lib/design-tokens"
-import { languageName } from "@/lib/locale-fallback"
 import { routing } from "@/lib/navigation"
 import { absoluteUrl } from "@/lib/seo/metadata"
 import type {
@@ -41,7 +40,7 @@ function initialsOf(name: string): string {
   )
 }
 
-/** Ordered flat page list: section order first, then title. Drives prev/next. */
+/** Keep the section lists' reading order when moving to the previous/next guide. */
 function orderedPages(
   articles: DocsWikiArticle[],
   sections: readonly DocsSection[]
@@ -54,9 +53,8 @@ function orderedPages(
 
   return [...articles].sort((a, b) => {
     const bySection = indexOf(a) - indexOf(b)
-    if (bySection !== 0) return bySection
 
-    return (a.title ?? "").localeCompare(b.title ?? "")
+    return bySection
   })
 }
 
@@ -130,196 +128,183 @@ export function DocsArticlePage({
             .pathname
         }
       >
-        <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 gap-10 px-4 py-8 sm:px-8 lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)_240px]">
-          {/* ── Left: docs tree ── */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-[76px]">
+        <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-6 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 lg:grid-cols-[230px_minmax(0,1fr)] xl:grid-cols-[230px_minmax(0,1fr)_220px] xl:gap-8">
+          <aside className="hidden self-stretch lg:block">
+            <div className="sticky top-(--sticky-content-top) max-h-(--sticky-content-max-height) overflow-y-auto overscroll-contain pr-2 pb-3">
               <DocsSidebarTree sections={sections} tree={tree} />
             </div>
           </aside>
-
-          {/* ── Center: article ── */}
-          <article className="max-w-[720px] min-w-0">
-            <Breadcrumb
-              items={[
-                { label: tUi("home"), href: "/" },
-                { label: tUi("knowledge"), href: "/knowledge" },
-                {
-                  label: section.title,
-                  href: `/knowledge?section=${section.slug}`,
-                },
-                { label: title },
-              ]}
-            />
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span
-                className="rounded-full px-3 py-1 text-[13px] font-semibold"
-                style={{ background: section.tintBg, color: section.tintFg }}
-              >
-                {section.title}
-              </span>
-              <span
-                className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-semibold"
-                style={{
-                  background: "var(--tint-public-bg)",
-                  color: "var(--tint-public-fg)",
-                }}
-              >
-                <Icon
-                  aria-hidden="true"
-                  height={13}
-                  icon="mdi:check"
-                  width={13}
-                />
-                {status}
-              </span>
-              {readMinutes != null ? (
-                <span className="text-[13px]" style={{ color: T.ink.dim }}>
-                  {tArticle("readingTime", { minutes: readMinutes })}
-                </span>
+          <div className="min-w-0 lg:hidden">
+            <details className="rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4">
+              <summary className="cursor-pointer text-sm font-semibold">
+                {tArticle("browseGuides")}
+              </summary>
+              <div className="mt-5">
+                <DocsSidebarTree sections={sections} tree={tree} />
+              </div>
+            </details>
+          </div>
+          <article className="min-w-0">
+            <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-8 xl:p-10">
+              <Breadcrumb
+                ancestorsOnly
+                items={[
+                  { label: tUi("knowledge"), href: "/knowledge" },
+                  {
+                    label: section.title,
+                    href: `/knowledge?section=${section.slug}`,
+                  },
+                ]}
+              />
+              <h1 className="mt-4 mb-0 font-serif text-[clamp(36px,4.5vw,58px)] leading-[1.06] font-medium tracking-[-0.025em] text-pretty">
+                {title}
+              </h1>
+              {untranslatedLocale ? (
+                <NotTranslatedNote locale={untranslatedLocale} />
               ) : null}
-            </div>
-
-            <h1
-              className="mt-4 mb-0 text-balance"
-              style={{
-                fontFamily: T.font.serif,
-                fontSize: "clamp(38px, 4.5vw, 56px)",
-                fontWeight: 500,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.05,
-                color: T.ink.base,
-              }}
-            >
-              {title}
-            </h1>
-            {untranslatedLocale ? (
-              <NotTranslatedNote locale={untranslatedLocale} />
-            ) : null}
-
-            {article.summary ? (
-              <p
-                className="mt-4 mb-0 max-w-[62ch] text-[18px] leading-[1.6] text-pretty"
-                style={{ color: T.ink.dim }}
-              >
-                {article.summary}
-              </p>
-            ) : null}
-
-            {/* Author + page actions */}
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+              {article.summary ? (
+                <p className="mt-5 mb-0 max-w-[62ch] text-lg leading-relaxed text-pretty text-(--t-ink-dim)">
+                  {article.summary}
+                </p>
+              ) : null}
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
+                    style={{
+                      background: "var(--tint-national-bg)",
+                      color: "var(--tint-national-fg)",
+                    }}
+                  >
+                    {initialsOf(
+                      article.author ?? tArticle("communityContributors")
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">
+                      {article.author ?? tArticle("communityContributors")}
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-(--t-ink-dim)">
+                      {[
+                        updated
+                          ? tArticle("updatedOn", { date: updated })
+                          : null,
+                        readMinutes != null
+                          ? tArticle("readingTime", { minutes: readMinutes })
+                          : null,
+                        p("maintainedBy"),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </span>
+                </div>
                 <span
-                  aria-hidden="true"
-                  className="flex size-9 items-center justify-center rounded-full text-[13px] font-semibold"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
                   style={{
-                    background: "var(--tint-national-bg)",
-                    color: "var(--tint-national-fg)",
+                    background:
+                      article.articleStatus &&
+                      article.articleStatus !== "stable"
+                        ? T.bg.muted
+                        : "var(--tint-public-bg)",
+                    color:
+                      article.articleStatus &&
+                      article.articleStatus !== "stable"
+                        ? T.ink.dim
+                        : "var(--tint-public-fg)",
                   }}
                 >
-                  {initialsOf(article.author ?? tArticle("contributor"))}
-                </span>
-                <span className="flex flex-col">
-                  <span
-                    className="text-[15px] font-semibold"
-                    style={{ color: T.ink.base }}
-                  >
-                    {article.author ?? tArticle("communityContributors")}
-                  </span>
-                  {updated ? (
-                    <span className="text-[13px]" style={{ color: T.ink.dim }}>
-                      {tArticle("updatedOn", { date: updated })}
-                    </span>
-                  ) : null}
+                  <Icon
+                    aria-hidden="true"
+                    icon={
+                      article.articleStatus &&
+                      article.articleStatus !== "stable"
+                        ? "mdi:information-outline"
+                        : "mdi:check"
+                    }
+                    width={13}
+                  />
+                  {status}
                 </span>
               </div>
-            </div>
+              <ArticleReaderActions
+                kind="knowledge"
+                slug={article.slug ?? ""}
+                path={docsArticlePath(article, sections)}
+                contentLocale={
+                  contentLocale ??
+                  (untranslatedLocale ? routing.defaultLocale : locale)
+                }
+                interfaceLocale={locale}
+                availableLocales={article.availableLocales}
+              />
+              {body.length > 0 ? (
+                <div
+                  id={`analytics-knowledge-${article.documentId}`}
+                  className="mt-7 max-w-[68ch] pb-3"
+                >
+                  <ArticleEngagement
+                    bodyId={`analytics-knowledge-${article.documentId}`}
+                    contentId={article.documentId}
+                    contentType="knowledge"
+                    path={
+                      new URL(
+                        absoluteUrl(docsArticlePath(article, sections), locale)
+                      ).pathname
+                    }
+                  />
+                  {/* Heading margins are in rem: the spacing scale is em-based,
+                    so mt-* on a 26px heading would scale with it. */}
+                  <div className="[&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[26px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[20px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
+                    <ArticleBodyBlocks blocks={body} />
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-7 flex gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 text-sm leading-relaxed text-(--t-ink-dim)">
+                  <Icon
+                    aria-hidden="true"
+                    icon="mdi:book-open-outline"
+                    width={20}
+                    className="mt-0.5 shrink-0"
+                  />
+                  <p className="m-0">{tArticle("noContent")}</p>
+                </div>
+              )}
 
-            <p className="mt-4 text-sm" style={{ color: T.ink.dim }}>
-              {p("maintainedBy")} ·{" "}
-              {languageName(contentLocale ?? locale, [], locale)} ·{" "}
-              <a href="#article-history" className="underline">
-                {tArticle("editHistory")}
-              </a>
-            </p>
-            <ArticleReaderActions
-              kind="knowledge"
-              slug={article.slug ?? ""}
-              path={docsArticlePath(article, sections)}
-              contentLocale={
-                contentLocale ??
-                (untranslatedLocale ? routing.defaultLocale : locale)
-              }
-              interfaceLocale={locale}
-              availableLocales={article.availableLocales}
-            />
-            <p className="text-xs" style={{ color: T.ink.dim }}>
-              {p("maintenanceHint")}
-            </p>
-            <details className="mt-4 xl:hidden">
-              <summary className="text-sm font-semibold">
-                {p("contextReference")}
-              </summary>
+              <div id="article-history" className="scroll-mt-24" />
+              <ArticleEditHistorySection
+                className="mt-6"
+                kind="wiki"
+                documentId={article.documentId}
+                locale={untranslatedLocale ? routing.defaultLocale : locale}
+              />
+            </div>
+            <div className="mt-5 scroll-mt-24" id="article-discussion">
+              <AttachedDiscussion
+                presentation="article"
+                target={{
+                  uid: "api::wiki-article.wiki-article",
+                  documentId: article.documentId,
+                  locale:
+                    contentLocale ??
+                    (untranslatedLocale ? routing.defaultLocale : locale),
+                }}
+                subjectSlug="knowledge"
+                title={article.title ?? article.slug ?? ""}
+                language={
+                  contentLocale ??
+                  (untranslatedLocale ? routing.defaultLocale : locale)
+                }
+              />
+            </div>
+            <div className="mt-4 xl:hidden">
               <ArticleContext
                 article={article}
                 kind="knowledge"
                 locale={locale}
               />
-            </details>
-            {/* Body — white section card on paper, serif headings, 17px prose */}
-            {body.length > 0 ? (
-              <div
-                id={`analytics-knowledge-${article.documentId}`}
-                className="mt-7 max-w-[68ch] py-6"
-              >
-                <ArticleEngagement
-                  bodyId={`analytics-knowledge-${article.documentId}`}
-                  contentId={article.documentId}
-                  contentType="knowledge"
-                  path={
-                    new URL(
-                      absoluteUrl(docsArticlePath(article, sections), locale)
-                    ).pathname
-                  }
-                />
-                {/* Heading margins are in rem: the spacing scale is em-based,
-                    so mt-* on a 26px heading would scale with it. */}
-                <div className="[&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[26px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[20px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
-                  <ArticleBodyBlocks blocks={body} />
-                </div>
-              </div>
-            ) : (
-              <p className="mt-8 text-[16px]" style={{ color: T.ink.dim }}>
-                {tArticle("noContent")}
-              </p>
-            )}
-
-            <div id="article-history" />
-            <ArticleEditHistorySection
-              className="mt-6"
-              kind="wiki"
-              documentId={article.documentId}
-              locale={untranslatedLocale ? routing.defaultLocale : locale}
-            />
-
-            <div id="article-discussion" />
-            <AttachedDiscussion
-              target={{
-                uid: "api::wiki-article.wiki-article",
-                documentId: article.documentId,
-                locale:
-                  contentLocale ??
-                  (untranslatedLocale ? routing.defaultLocale : locale),
-              }}
-              subjectSlug="knowledge"
-              title={article.title ?? article.slug ?? ""}
-              language={
-                contentLocale ??
-                (untranslatedLocale ? routing.defaultLocale : locale)
-              }
-            />
-
+            </div>
             {/* Previous / next */}
             {(previous ?? next) ? (
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -376,13 +361,13 @@ export function DocsArticlePage({
           </article>
 
           {/* ── Right: on this page + meta ── */}
-          <aside className="hidden xl:block">
-            <ArticleContext
-              article={article}
-              kind="knowledge"
-              locale={locale}
-            />
-            <div className="sticky top-[76px] flex flex-col gap-5">
+          <aside className="hidden self-stretch xl:block">
+            <div className="sticky top-(--sticky-content-top) flex max-h-(--sticky-content-max-height) flex-col gap-5 overflow-y-auto overscroll-contain pb-2">
+              <ArticleContext
+                article={article}
+                kind="knowledge"
+                locale={locale}
+              />
               {headings.length > 0 ? (
                 <nav
                   aria-label={tUi("on_this_page")}
@@ -421,20 +406,10 @@ export function DocsArticlePage({
                 </nav>
               ) : null}
 
-              <div
-                className="rounded-[20px] border p-5"
-                style={{ background: T.bg.deep, borderColor: T.border.line }}
-              >
-                <p
-                  className="m-0 mb-2 text-[15px] font-semibold"
-                  style={{ color: T.ink.base }}
-                >
-                  {tArticle("aboutPage")}
-                </p>
+              <div className="px-1">
                 <dl className="m-0">
                   {[
-                    { label: tUi("status"), value: status },
-                    { label: tArticle("updated"), value: updated ?? "—" },
+                    { label: tArticle("section"), value: section.title },
                     {
                       label: tArticle("words"),
                       value: words > 0 ? words.toLocaleString(locale) : "—",

@@ -4,13 +4,14 @@ import {
   FileCheck2,
   Landmark,
   LibraryBig,
+  Lightbulb,
   MessagesSquare,
   Rocket,
 } from "lucide-react"
 
 export type ReviewView = ReviewCategory | "discussions"
 export type WorkspaceView = {
-  id: ReviewView
+  id: ReviewView | "optionSuggestions"
   href: string
   pending: number | null
   needsChanges?: number | null
@@ -28,4 +29,5 @@ export const REVIEW_ICONS = {
   drives: Rocket,
   applications: FileCheck2,
   discussions: MessagesSquare,
+  optionSuggestions: Lightbulb,
 } as const

@@ -5,6 +5,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 import { PointsTableCard } from "@/components/community/PointsTableCard"
 import { StandingCard } from "@/components/community/StandingCard"
 import { getSessionSSR } from "@/lib/auth-server"
+import { avatarSrc } from "@/lib/avatar"
 import {
   fetchLeaderboard,
   fetchStanding,
@@ -155,13 +156,15 @@ export default async function LeaderboardPage({
 
         <aside
           aria-label={tUi("sidebar")}
-          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
+          className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-(--sticky-content-top) min-[760px]:max-h-(--sticky-content-max-height) min-[760px]:max-w-[440px] min-[760px]:overflow-y-auto min-[760px]:overscroll-contain"
           style={{ flex: "1 1 290px" }}
         >
           <StandingCard
             standing={standing}
             signedIn={Boolean(user)}
             initials={initials}
+            avatarUrl={avatarSrc(profile?.avatar)}
+            background={profile?.profileBackground}
             signInReturnTo="/community/leaderboard"
           />
           <PointsTableCard />

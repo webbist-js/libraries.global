@@ -40,7 +40,7 @@ function ToolButton({
       disabled={disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="inline-flex h-9 min-w-9 items-center justify-center rounded-[10px] px-2 text-[13px] font-bold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-40"
+      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] px-2 text-[14px] font-bold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-40"
       style={{
         background: active ? T.accent.chip : "transparent",
         color: active ? T.accent.primary : T.ink.base,
@@ -65,19 +65,19 @@ function Divider() {
 }
 
 const smallInput: React.CSSProperties = {
-  height: 36,
+  minHeight: 44,
   padding: "0 12px",
   borderRadius: 10,
   border: `1px solid ${T.border.hi}`,
   background: T.bg.deep,
   color: T.ink.base,
   fontFamily: T.font.sans,
-  fontSize: 14,
+  fontSize: 16,
   minWidth: 0,
 }
 
 const smallPill =
-  "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-colors"
+  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold transition-colors"
 
 /** The toolbar's context row: link, quote, code and callout details. */
 function ContextRow({ editor }: { editor: Editor }) {
@@ -105,7 +105,7 @@ function ContextRow({ editor }: { editor: Editor }) {
   if (!state) return null
   const rows: React.ReactNode[] = []
   const labelStyle: React.CSSProperties = {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 600,
     color: T.ink.dim,
     whiteSpace: "nowrap",
@@ -410,8 +410,9 @@ const EDITOR_CSS = `
 .ae-editor .ProseMirror h3 { font-family: var(--ae-serif); font-size: 23px; font-weight: 500; line-height: 1.2; margin-top: 1.2em; }
 .ae-editor .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--t-ink-faint); float: left; height: 0; pointer-events: none; }
 .ae-editor .ProseMirror a { color: var(--t-accent-primary); text-decoration: underline; text-underline-offset: 3px; }
-.ae-editor .ProseMirror ul, .ae-editor .ProseMirror ol { padding-left: 1.5em; }
+.ae-editor .ProseMirror ul, .ae-editor .ProseMirror ol { padding-inline-start: 1.5em; }
 .ae-editor .ProseMirror ul { list-style: disc; } .ae-editor .ProseMirror ol { list-style: decimal; }
+.ae-editor .ProseMirror li > ul, .ae-editor .ProseMirror li > ol { margin-top: 0.5em; }
 .ae-editor .ProseMirror li + li { margin-top: 0.3em; }
 .ae-editor .ProseMirror blockquote { border-left: 2px solid var(--t-accent-primary); padding-left: 1.2em; font-style: italic; color: var(--t-ink-dim); }
 .ae-editor .ProseMirror pre { background: var(--t-bg-surface); border: 1px solid var(--t-border-line); border-radius: 14px; padding: 16px 18px; font-family: var(--ae-mono); font-size: 14px; line-height: 1.6; overflow-x: auto; }
@@ -427,6 +428,7 @@ const EDITOR_CSS = `
 
 export function ArticleEditor({
   kind,
+  heading,
   title,
   summary,
   doc,
@@ -438,6 +440,7 @@ export function ArticleEditor({
   uploadImage,
 }: {
   readonly kind: ArticleKind
+  readonly heading?: string
   readonly title: string
   readonly summary: string
   readonly doc: TiptapDoc
@@ -453,6 +456,7 @@ export function ArticleEditor({
   const tUi = useUiTranslations("ui")
   const tEditor = useUiTranslations("articleEditor")
   const p = useUiTranslations("publishing")
+  const w = useUiTranslations("writeWorkspace")
 
   const meta = ARTICLE_KIND_META[kind]
   const fileInputId = useId()
@@ -460,6 +464,8 @@ export function ArticleEditor({
   const [uploading, setUploading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageAlt, setImageAlt] = useState("")
+  const [imageCredit, setImageCredit] = useState("")
+  const [openingImage, setOpeningImage] = useState(false)
   const [imageError, setImageError] = useState(false)
   const titleRef = useRef<HTMLTextAreaElement>(null)
 
@@ -479,6 +485,8 @@ export function ArticleEditor({
     if (!editor || lastKey.current === docKey) return
     lastKey.current = docKey
     editor.commands.setContent(doc, { emitUpdate: false })
+    setImageFile(null)
+    setImageError(false)
   }, [editor, doc, docKey])
 
   useEffect(() => {
@@ -494,17 +502,37 @@ export function ArticleEditor({
   }, [title])
 
   async function handleFile(file: File | undefined) {
-    if (!file || !editor || readOnly || !imageAlt.trim()) return
+    if (
+      !file ||
+      !editor ||
+      readOnly ||
+      !imageAlt.trim() ||
+      (openingImage && !imageCredit.trim())
+    )
+      return
     setUploading(true)
     try {
       const uploaded = await uploadImage(file)
       if (uploaded) {
-        editor
-          .chain()
-          .focus()
-          .setImage({ src: uploaded.url, alt: imageAlt.trim() })
-          .updateAttributes("image", { imageId: uploaded.id })
-          .run()
+        const attrs = {
+          src: uploaded.url,
+          alt: imageAlt.trim(),
+          imageId: uploaded.id,
+          caption: imageCredit.trim() || null,
+        }
+        if (openingImage)
+          editor
+            .chain()
+            .focus()
+            .insertContentAt(0, { type: "image", attrs })
+            .run()
+        else
+          editor
+            .chain()
+            .focus()
+            .setImage({ src: uploaded.url, alt: imageAlt.trim() })
+            .updateAttributes("image", attrs)
+            .run()
         setImageFile(null)
         setImageAlt("")
         setImageError(false)
@@ -519,7 +547,7 @@ export function ArticleEditor({
 
   return (
     <div
-      className="ae-editor overflow-hidden rounded-[24px]"
+      className="ae-editor min-w-0 overflow-clip rounded-[24px]"
       style={
         {
           background: T.bg.deep,
@@ -531,15 +559,31 @@ export function ArticleEditor({
       }
     >
       <style>{EDITOR_CSS}</style>
+      {heading && (
+        <div className="flex min-h-16 items-center gap-3 border-b border-(--t-border-line) bg-(--t-bg-surface) px-5 py-4">
+          <Icon
+            aria-hidden="true"
+            icon="mdi:file-document-edit-outline"
+            width={20}
+            className="shrink-0 text-(--t-accent-primary)"
+          />
+          <h2 className="m-0 text-[15px] leading-snug font-semibold">
+            {heading}
+          </h2>
+        </div>
+      )}
       {editor ? (
         <fieldset
           disabled={readOnly || uploading}
-          className="m-0 min-w-0 border-0 p-0"
+          className="sticky top-(--sticky-content-top) z-20 m-0 min-w-0 border-0 bg-(--t-bg-deep) p-0"
         >
           <Toolbar
             editor={editor}
             uploading={uploading}
-            onPickImage={() => fileRef.current?.click()}
+            onPickImage={() => {
+              setOpeningImage(false)
+              fileRef.current?.click()
+            }}
           />
           <ContextRow editor={editor} />
         </fieldset>
@@ -555,6 +599,7 @@ export function ArticleEditor({
         onChange={(e) => {
           setImageFile(e.target.files?.[0] ?? null)
           setImageAlt("")
+          setImageCredit("")
           setImageError(false)
         }}
       />
@@ -576,16 +621,32 @@ export function ArticleEditor({
               required
               maxLength={500}
               disabled={uploading || readOnly}
-              className="rounded-lg border p-2"
+              className="min-h-[44px] rounded-xl border border-(--t-border-hi) px-3 py-2 text-[16px]"
             />
           </label>
           <p className="m-0 text-xs text-(--t-ink-dim)">
             {p("imageAltRequired")}
           </p>
+          <label className="grid gap-1 text-[15px] font-semibold">
+            {w("imageCredit")}
+            <input
+              value={imageCredit}
+              onChange={(event) => setImageCredit(event.target.value)}
+              required={openingImage}
+              maxLength={500}
+              disabled={uploading || readOnly}
+              className="min-h-[44px] min-w-0 rounded-xl border border-(--t-border-hi) px-3 py-2 text-[16px] font-normal"
+            />
+          </label>
           <div>
             <button
               type="submit"
-              disabled={!imageAlt.trim() || uploading || readOnly}
+              disabled={
+                !imageAlt.trim() ||
+                (openingImage && !imageCredit.trim()) ||
+                uploading ||
+                readOnly
+              }
               className="mr-3 underline"
             >
               {p("insertImage")}
@@ -653,6 +714,25 @@ export function ArticleEditor({
             color: T.ink.dim,
           }}
         />
+        {kind === "journal" &&
+          !readOnly &&
+          !doc.content?.some((node) => node.type === "image") && (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => {
+                setOpeningImage(true)
+                fileRef.current?.click()
+              }}
+              className="mt-6 flex min-h-[140px] w-full flex-col items-center justify-center gap-2 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-surface) p-5 text-center text-(--t-ink-dim) hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
+            >
+              <Icon aria-hidden icon="mdi:image-plus-outline" width={28} />
+              <strong className="text-[16px]">{w("addOpening")}</strong>
+              <span className="max-w-[48ch] text-[14px] leading-relaxed">
+                {w("coverHint")}
+              </span>
+            </button>
+          )}
         <hr
           className="my-7 border-0"
           style={{ height: 1, background: T.border.divider }}

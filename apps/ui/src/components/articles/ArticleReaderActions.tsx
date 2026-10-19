@@ -1,5 +1,7 @@
 "use client"
 
+import { Icon } from "@iconify/react"
+import { isSupportedLocale } from "@repo/shared-data"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 
@@ -37,9 +39,11 @@ export function ArticleReaderActions({
   )
   const [targetLanguage, setTargetLanguage] = useState("")
   const [languageFailed, setLanguageFailed] = useState(false)
+  const [languageLoading, setLanguageLoading] = useState(false)
   const loadLanguages = async () => {
     setTranslationOpen(true)
     setLanguageFailed(false)
+    setLanguageLoading(true)
     try {
       const response = await fetch("/api/relations/locales")
       if (!response.ok) throw new Error("Languages unavailable")
@@ -50,12 +54,15 @@ export function ArticleReaderActions({
       setLanguages(
         json.data.filter(
           (language) =>
+            isSupportedLocale(language.code) &&
             language.code !== contentLocale &&
             !availableLocales.includes(language.code)
         )
       )
     } catch {
       setLanguageFailed(true)
+    } finally {
+      setLanguageLoading(false)
     }
   }
   const direct =
@@ -70,42 +77,50 @@ export function ArticleReaderActions({
   const improve = `${edit}?mode=${direct ? "edit" : "report"}&locale=${encodeURIComponent(contentLocale)}&sourceLocale=${encodeURIComponent(contentLocale)}`
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+    <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-(--t-divider) py-3 text-xs">
+      <span
+        className="rounded-full bg-(--t-ink-base) px-2.5 py-1.5 font-semibold text-white"
+        aria-current="true"
+      >
+        {languageName(contentLocale, [], interfaceLocale)}
+      </span>
       {availableLocales
-        .filter((language) => language !== contentLocale)
+        .filter(
+          (language) =>
+            isSupportedLocale(language) && language !== contentLocale
+        )
         .map((language) => (
           <Link
             key={language}
             href={articleReaderPath(path, interfaceLocale, language)}
-            className="underline underline-offset-4"
-          >
-            {t("alsoLanguage", {
+            className="inline-flex min-h-9 items-center rounded-full bg-(--t-bg-muted) px-2.5 font-semibold text-(--t-ink-dim) hover:bg-(--t-accent-chip)"
+            aria-label={t("alsoLanguage", {
               language: languageName(language, [], interfaceLocale),
             })}
+          >
+            {languageName(language, [], interfaceLocale)}
           </Link>
         ))}
       {kind === "knowledge" && (
         <>
-          <Link
-            href={
-              signedIn
-                ? improve
-                : `/auth/signin?callbackUrl=${encodeURIComponent(improve)}`
-            }
-            className="rounded-full border px-3 py-2 font-semibold"
-          >
-            {t("suggestImprovement")}
-          </Link>
           <button
             type="button"
-            onClick={() => void loadLanguages()}
-            className="underline underline-offset-4"
+            onClick={() =>
+              translationOpen ? setTranslationOpen(false) : void loadLanguages()
+            }
+            aria-expanded={translationOpen}
+            className="inline-flex min-h-10 cursor-pointer items-center text-(--t-accent-primary) underline underline-offset-4"
           >
             {t("addTranslation")}
           </button>
           {translationOpen && (
-            <span className="flex flex-wrap items-center gap-2">
-              {languageFailed ? (
+            <span
+              className="order-last flex w-full flex-wrap items-center gap-3 rounded-xl bg-(--t-bg-surface) p-3"
+              aria-live="polite"
+            >
+              {languageLoading ? (
+                <span>{t("loadingLanguages")}</span>
+              ) : languageFailed ? (
                 <button
                   type="button"
                   onClick={() => void loadLanguages()}
@@ -134,7 +149,7 @@ export function ArticleReaderActions({
                   </select>
                 </label>
               )}
-              {targetLanguage && (
+              {!languageLoading && targetLanguage && (
                 <Link
                   className="rounded-full border px-3 py-2"
                   href={
@@ -150,12 +165,23 @@ export function ArticleReaderActions({
               )}
             </span>
           )}
+          <Link
+            href={
+              signedIn
+                ? improve
+                : `/auth/signin?callbackUrl=${encodeURIComponent(improve)}`
+            }
+            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-(--t-accent-primary) px-3 py-2 font-semibold text-(--t-accent-primary) transition-colors hover:bg-(--t-accent-chip) sm:ml-auto"
+          >
+            <Icon aria-hidden="true" icon="mdi:pencil-outline" width={14} />
+            {t("suggestImprovement")}
+          </Link>
         </>
       )}
       {kind === "journal" && (direct || ownJournal) && (
         <Link
           href={`${edit}?locale=${encodeURIComponent(contentLocale)}&sourceLocale=${encodeURIComponent(contentLocale)}`}
-          className="underline"
+          className="inline-flex min-h-10 items-center justify-center rounded-full border border-(--t-accent-primary) px-3 py-2 font-semibold text-(--t-accent-primary) hover:bg-(--t-accent-chip) sm:ml-auto"
         >
           {ownJournal ? t("editYourStory") : t("suggestImprovement")}
         </Link>
@@ -165,7 +191,11 @@ export function ArticleReaderActions({
           {t("ownershipRetry")}
         </button>
       )}
-      <a href="#article-discussion" className="underline underline-offset-4">
+      <a
+        href="#article-discussion"
+        className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-line) px-3 py-2 font-semibold transition-colors hover:bg-(--t-bg-muted)"
+      >
+        <Icon aria-hidden="true" icon="mdi:message-outline" width={14} />
         {t("discuss")}
       </a>
       {kind === "journal" &&

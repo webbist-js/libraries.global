@@ -1,5 +1,6 @@
 "use client"
 
+import type { ProfileBackground } from "@repo/shared-data"
 import { useTranslations } from "next-intl"
 import { useEffect, useRef } from "react"
 
@@ -15,6 +16,7 @@ export function GlobalNavbarAuthSection({
   sessionSSR?: AuthSessionResult | null
   profileSnippet?: {
     avatarUrl?: string | null
+    profileBackground?: ProfileBackground | null
     username?: string | null
     isVerifiedLibrarian?: boolean | null
   } | null

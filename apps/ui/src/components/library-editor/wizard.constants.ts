@@ -3,6 +3,13 @@ import type React from "react"
 
 import { T } from "@/lib/design-tokens"
 
+export const WIZARD_GRID =
+  "grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 2xl:grid-cols-[300px_minmax(0,1fr)] 2xl:gap-10"
+export const WIZARD_RAIL =
+  "min-w-0 self-start rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
+export const WIZARD_CARD =
+  "min-w-0 rounded-[28px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-8"
+
 export const fieldInputStyle: React.CSSProperties = {
   padding: "12px 16px",
   minWidth: 0,

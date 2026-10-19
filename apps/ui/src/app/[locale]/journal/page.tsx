@@ -10,6 +10,7 @@ import {
   parseJournalQuery,
 } from "@/components/blog/journalLanding.helpers"
 import { fetchArticleBrowse } from "@/lib/article-discovery"
+import { getPreferredContentLanguage } from "@/lib/content-language-server"
 import { loadJournalLanding } from "@/lib/journal-landing"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import {
@@ -97,9 +98,15 @@ export default async function BlogPage(props: {
     props.searchParams,
   ])
   setRequestLocale(locale as Locale)
+  const query = parseJournalQuery(searchParams)
+  const defaultLanguage =
+    query.lang || query.filters?.languages?.length
+      ? locale
+      : await getPreferredContentLanguage(locale)
   const data = await loadJournalLanding(
     locale as Locale,
-    parseJournalQuery(searchParams)
+    query,
+    defaultLanguage
   )
 
   return <BlogLandingPage data={data} locale={locale as Locale} />

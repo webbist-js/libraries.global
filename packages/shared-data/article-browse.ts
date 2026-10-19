@@ -31,6 +31,9 @@ export type ArticleBrowseQuery = {
   pageSize: number
   documentIds?: string[]
   q?: string
+  /** Writing catalogue: one result per document, with its published languages. */
+  groupBy?: "document"
+  missingLocale?: string
 }
 export type ArticleBrowseItem = {
   documentId: string
@@ -56,6 +59,7 @@ export type ArticleBrowseItem = {
   sectionSlugs: string[]
   heroImage: { url: string; alternativeText: string | null } | null
   facets: Partial<Record<ArticleFacetKey, Omit<ArticleFacetValue, "count">[]>>
+  translations?: { locale: string; slug: string; title: string }[]
 }
 export type ArticleBrowseResult = {
   items: ArticleBrowseItem[]
@@ -147,6 +151,11 @@ export function parseArticleBrowseQuery(
     page: boundedInteger(input.page, 1, 10_000),
     pageSize: boundedInteger(input.pageSize, 9, 50),
     ...(documentIds.length ? { documentIds } : {}),
+    ...(input.groupBy === "document" ? { groupBy: "document" as const } : {}),
+    ...(typeof input.missingLocale === "string" &&
+    LANGUAGE.test(input.missingLocale)
+      ? { missingLocale: input.missingLocale }
+      : {}),
     ...(typeof input.q === "string" && input.q.trim()
       ? { q: input.q.trim().replaceAll(/\s+/gu, " ").slice(0, 120) }
       : {}),
@@ -164,6 +173,8 @@ export function articleBrowseSearchParams(query: ArticleBrowseQuery): string {
     if (values?.length) params.set(ARTICLE_QUERY_KEYS[key], values.join(","))
   }
   if (query.q) params.set("q", query.q)
+  if (query.groupBy) params.set("groupBy", query.groupBy)
+  if (query.missingLocale) params.set("missingLocale", query.missingLocale)
   if (query.documentIds?.length)
     params.set("documentId", query.documentIds.join(","))
 
@@ -261,7 +272,7 @@ export function aggregateArticleBrowse(
   preferredLocale = "en"
 ): ArticleBrowseResult {
   const published = items.filter((item) => !!item.publishedAt)
-  const matched = sortArticles(
+  let matched = sortArticles(
     published.filter((item) => articleMatches(item, query)),
     query.sort
   )
@@ -299,6 +310,38 @@ export function aggregateArticleBrowse(
   const preferLanguage = (left: ArticleBrowseItem, right: ArticleBrowseItem) =>
     languageRank(left) - languageRank(right) ||
     left.locale.localeCompare(right.locale)
+  if (query.groupBy === "document") {
+    const matchingIds = new Set(matched.map((item) => item.documentId))
+    const variants = new Map<string, ArticleBrowseItem[]>()
+    for (const item of published) {
+      if (!matchingIds.has(item.documentId)) continue
+      const group = variants.get(item.documentId) ?? []
+      group.push(item)
+      variants.set(item.documentId, group)
+    }
+    matched = sortArticles(
+      [...variants.values()].flatMap((group) => {
+        if (
+          query.missingLocale &&
+          group.some((item) => item.locale === query.missingLocale)
+        )
+          return []
+        const chosen = [...group].sort(preferLanguage)[0]!
+
+        return [
+          {
+            ...chosen,
+            translations: group.map(({ locale, slug, title }) => ({
+              locale,
+              slug,
+              title,
+            })),
+          },
+        ]
+      }),
+      query.sort
+    )
+  }
   const editorialDocuments = new Map<string, ArticleBrowseItem>()
   for (const item of published) {
     if (!articleMatches(item, editorialQuery)) continue

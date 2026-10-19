@@ -2,10 +2,13 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, useLocale } from "next-intl"
-import type React from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
+import { Badge } from "@/components/ds/Badge"
+import { Notice } from "@/components/ds/Notice"
+import { SearchField } from "@/components/ds/SearchField"
 import { StepHeading } from "@/components/library-editor/WizardFields"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import {
   buildLibraryPath,
@@ -13,6 +16,7 @@ import {
   searchLibraryNames,
 } from "@/lib/meilisearch"
 import { Link } from "@/lib/navigation"
+import { cn } from "@/lib/styles"
 
 export const INDEX_EDITOR_PATH = "/contribute/index"
 
@@ -50,8 +54,7 @@ function newHref(name: string) {
     : `${INDEX_EDITOR_PATH}/new`
 }
 
-const improvePill =
-  "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+const improvePill = cn(buttonVariants({ variant: "surface", size: "pill" }))
 
 function Monogram({ libraryType }: { libraryType?: string | null }) {
   const tint = tintForLibraryType(libraryType)
@@ -116,16 +119,7 @@ function RecordRow({
         {gaps.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {gaps.map((gap) => (
-              <span
-                key={gap}
-                className="rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold"
-                style={{
-                  background: "var(--tint-special-bg)",
-                  color: "var(--tint-special-fg)",
-                }}
-              >
-                {gap}
-              </span>
+              <Badge key={gap} label={gap} color="dim" />
             ))}
           </div>
         )}
@@ -151,14 +145,6 @@ function RecordRow({
   )
 }
 
-const groupLabelStyle: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: "15px",
-  fontWeight: 600,
-  margin: 0,
-  color: T.ink.base,
-}
-
 /**
  * The Index editor's front door: search the index, improve a record that's
  * there, or add a new library when it isn't. Shows a handful of published
@@ -180,67 +166,72 @@ export function FindLibraryFirst({
   const [results, setResults] = useState<LibrarySearchHit[]>([])
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const search = useCallback(
-    async (q: string) => {
-      if (q.trim().length < 2) {
-        setResults([])
-        setHasSearched(false)
-
-        return
-      }
-      setLoading(true)
-      try {
-        const res = await searchLibraryNames(q, {
-          locale,
-          hitsPerPage: 8,
-          attributesToRetrieve: [
-            "id",
-            "documentId",
-            "name",
-            "slug",
-            "entityRef",
-            "libraryType",
-            "city",
-            "country_name",
-            "region_name",
-            "continent_slug",
-            "country_slug",
-            "region_slug",
-          ],
-        })
-        setResults(res.hits)
-        setHasSearched(true)
-      } catch {
-        setResults([])
-        setHasSearched(true)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [locale]
-  )
-
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const queryRef = useRef(query)
+  const handleQuery = (value: string) => {
+    queryRef.current = value
+    setQuery(value)
+    setResults([])
+    setFailed(false)
+    setHasSearched(false)
+    setLoading(value.trim().length >= 2)
+  }
+  const handleRetry = () => {
+    setFailed(false)
+    setLoading(true)
+    setAttempt((value) => value + 1)
+  }
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => void search(query), 350)
+    let cancelled = false
+    const q = query.trim()
+    if (q.length < 2) return
+    const timer = setTimeout(() => {
+      searchLibraryNames(q, {
+        locale,
+        hitsPerPage: 8,
+        attributesToRetrieve: [
+          "id",
+          "documentId",
+          "name",
+          "slug",
+          "entityRef",
+          "libraryType",
+          "city",
+          "country_name",
+          "region_name",
+          "continent_slug",
+          "country_slug",
+          "region_slug",
+        ],
+      })
+        .then((res) => {
+          if (!cancelled && queryRef.current.trim() === q) {
+            setResults(res.hits)
+            setHasSearched(true)
+          }
+        })
+        .catch(() => {
+          if (!cancelled && queryRef.current.trim() === q) setFailed(true)
+        })
+        .finally(() => {
+          if (!cancelled && queryRef.current.trim() === q) setLoading(false)
+        })
+    }, 350)
 
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      cancelled = true
+      clearTimeout(timer)
     }
-  }, [query, search])
-
-  const typing = query.trim().length > 0
-  const canAdd = query.trim().length >= 2
-  let status = ""
-  if (loading) status = "Searching…"
-  else if (hasSearched)
-    status =
-      results.length === 0
-        ? "No matching libraries in the index."
-        : `${results.length} result${results.length === 1 ? "" : "s"}`
-  else if (typing) status = "Type 2 or more letters to search"
+  }, [query, locale, attempt])
+  const canAdd = query.trim().length >= 2 && hasSearched && !failed && !loading
+  const status = loading
+    ? "Searching…"
+    : failed
+      ? "Search is unavailable. Try again before adding a record."
+      : hasSearched
+        ? `${results.length} matching librar${results.length === 1 ? "y" : "ies"}`
+        : "Type 2 or more letters to search"
 
   return (
     <div>
@@ -250,82 +241,72 @@ export function FindLibraryFirst({
         lead="If it’s already in the index, improve that record. If it isn’t, you can add it as a new library. It’s the same form either way."
       />
 
-      <div
-        role="search"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          marginTop: "32px",
-        }}
-      >
+      <div role="search" className="mt-6">
         <label
           htmlFor="index-query"
-          style={{
-            fontFamily: T.font.sans,
-            fontSize: "15px",
-            fontWeight: 600,
-            color: T.ink.base,
-          }}
+          id="index-query-label"
+          className="mb-2 block text-[15px] font-semibold"
         >
           Library name, town or city
         </label>
-        <div style={{ position: "relative" }}>
-          <Icon
-            icon="mdi:magnify"
-            width={26}
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              left: "20px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: T.ink.dim,
-              pointerEvents: "none",
-            }}
-          />
-          <input
-            id="index-query"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. Radlett, or Glasgow"
-            autoComplete="off"
-            aria-describedby="index-status"
-            autoFocus
-            style={{
-              height: "64px",
-              padding: "0 20px 0 58px",
-              borderRadius: "14px",
-              border: `2px solid ${T.accent.primary}`,
-              background: T.bg.deep,
-              color: T.ink.base,
-              fontSize: "19px",
-              fontFamily: T.font.sans,
-              width: "100%",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
+        <SearchField
+          id="index-query"
+          placeholder="e.g. Radlett, or Glasgow"
+          label="Library name, town or city"
+          loading={loading}
+          onClear={() => handleQuery("")}
+          inputProps={{
+            value: query,
+            onChange: (e) => handleQuery(e.target.value),
+            autoComplete: "off",
+            "aria-describedby": "index-status",
+            "aria-labelledby": "index-query-label",
+            maxLength: 120,
+          }}
+        />
       </div>
-
-      <div className="mt-5 mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <p style={groupLabelStyle}>
+      <div className="mt-6 mb-4 flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="m-0 text-[16px] font-semibold">
           {hasSearched
             ? tUi("results")
             : claiming
               ? "Your library"
               : "Records that need help"}
-        </p>
+        </h3>
         <p
           id="index-status"
-          aria-live="polite"
-          className="m-0 text-[14px]"
-          style={{ color: T.ink.dim, minHeight: "1.4em" }}
+          role="status"
+          className="m-0 text-[14px] text-(--t-ink-dim)"
         >
-          {status || "Type 2 or more letters to search"}
+          {status}
         </p>
       </div>
+      {failed && (
+        <div role="alert" className="mb-5">
+          <Notice
+            icon="mdi:alert-circle-outline"
+            tone="warn"
+            title="We couldn’t search the index"
+          >
+            <p className="m-0">
+              Your search is still here. Retry to check for an existing record.
+            </p>
+            <Button variant="surface" size="pill" onClick={handleRetry}>
+              Try again
+            </Button>
+          </Notice>
+        </div>
+      )}
+      {loading && (
+        <div aria-hidden className="mb-4 grid gap-3">
+          {[0, 1].map((n) => (
+            <div
+              key={n}
+              className="h-24 rounded-[20px] bg-(--t-bg-surface) motion-safe:animate-pulse"
+            />
+          ))}
+        </div>
+      )}
 
       {hasSearched ? (
         results.length > 0 ? (
@@ -353,28 +334,17 @@ export function FindLibraryFirst({
             ))}
           </ul>
         ) : (
-          <div
-            className="flex items-start gap-3 rounded-[20px] px-5 py-4"
-            style={{ background: "var(--tint-public-bg)" }}
+          <Notice
+            icon="mdi:magnify"
+            tone="info"
+            title="No matching library found"
           >
-            <Icon
-              icon="mdi:check-circle-outline"
-              width={22}
-              aria-hidden="true"
-              style={{ color: "var(--tint-public-fg)", flexShrink: 0 }}
-            />
-            <p
-              className="m-0 text-[15px] leading-[1.55]"
-              style={{ color: T.ink.base }}
-            >
-              <strong style={{ color: "var(--tint-public-fg)" }}>
-                Nothing found.
-              </strong>{" "}
-              No matching library in the index. You’re clear to add it as new.
+            <p className="m-0">
+              Try another name or spelling before adding a new record.
             </p>
-          </div>
+          </Notice>
         )
-      ) : claiming ? (
+      ) : loading || failed ? null : claiming ? (
         <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
           Search for your library by name, town or city.
         </p>
@@ -401,16 +371,13 @@ export function FindLibraryFirst({
         </ul>
       ) : (
         <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-          Every published record is complete. Search for one to improve, or add
-          a new library below.
+          No suggested records are available right now. Search for a library to
+          improve.
         </p>
       )}
 
       {/* Not listed? */}
-      <div
-        className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[20px] px-6 py-5"
-        style={{ border: `1.5px dashed ${T.border.hi}` }}
-      >
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-surface) p-5">
         <div>
           <p
             className="m-0 text-[17px] font-semibold"
@@ -427,7 +394,14 @@ export function FindLibraryFirst({
         <Link
           href={newHref(query)}
           aria-disabled={!canAdd}
-          className={`${improvePill} ${canAdd ? "" : "pointer-events-none opacity-50"}`}
+          tabIndex={canAdd ? undefined : -1}
+          onClick={(e) => {
+            if (!canAdd) e.preventDefault()
+          }}
+          className={cn(
+            buttonVariants({ variant: "primary", size: "pill" }),
+            !canAdd && "pointer-events-none opacity-50"
+          )}
           style={{
             border: "none",
             background: canAdd ? T.accent.primary : T.bg.muted,

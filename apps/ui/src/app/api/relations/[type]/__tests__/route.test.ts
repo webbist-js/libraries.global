@@ -56,36 +56,33 @@ describe("article taxonomy server reads", () => {
       expect(await response.text()).not.toContain("scoped-read-test-token")
     }
   )
-  it("supports configured article languages independently of interface locales", async () => {
-    fetchMock.mockResolvedValueOnce(
-      Response.json({ data: [{ code: "en" }, { code: "es" }] })
-    )
+  it("only lists CMS-enabled locales with translated routes", async () => {
     fetchMock.mockResolvedValueOnce(
       Response.json({
         data: [
-          { documentId: "section-es", name: "Informes", slug: "informes" },
+          { code: "en", name: "English", isDefault: true },
+          { code: "es", name: "Spanish", isDefault: false },
+          { code: "fr", name: "French", isDefault: false },
         ],
       })
     )
     const response = await GET(
-      new Request("http://localhost/api/relations/blog-sections?locale=es"),
-      { params: Promise.resolve({ type: "blog-sections" }) }
+      new Request("http://localhost/api/relations/locales"),
+      { params: Promise.resolve({ type: "locales" }) }
     )
-    expect(String(fetchMock.mock.calls[1]?.[0])).toContain("locale=*")
-    expect(await response.json()).toMatchObject({
-      data: [{ slug: "informes" }],
-    })
+    expect(
+      (await response.json()).data.map(
+        (locale: { code: string }) => locale.code
+      )
+    ).toEqual(["en", "fr"])
   })
-  it("does not silently change an article language when locale verification fails", async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response("unavailable", { status: 503 })
-    )
+  it("rejects a CMS-only language before requesting taxonomy content", async () => {
     const response = await GET(
       new Request("http://localhost/api/relations/blog-sections?locale=es"),
       { params: Promise.resolve({ type: "blog-sections" }) }
     )
-    expect(response.status).toBe(503)
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(response.status).toBe(400)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
   it("rejects inherited names before requesting a CMS model", async () => {
     const response = await GET(
@@ -196,14 +193,15 @@ describe("localized editorial relations", () => {
     expect(strapiUrl()).toContain("locale=*")
   })
 
-  it("defaults an unsupported language to English", async () => {
-    await GET(
+  it("rejects an unsupported language instead of loading a different one", async () => {
+    const response = await GET(
       new Request("http://localhost/api/relations/topics?locale=unknown"),
       {
         params: Promise.resolve({ type: "topics" }),
       }
     )
-    expect(strapiUrl()).toContain("locale=en")
+    expect(response.status).toBe(400)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })
 
@@ -246,10 +244,10 @@ describe("CMS hierarchy labels", () => {
 describe("per-document article taxonomy language fallback", () => {
   const configuration = [
     { code: "en", name: "English", isDefault: true },
-    { code: "es", name: "Spanish", isDefault: false },
+    { code: "fr", name: "French", isDefault: false },
     { code: "cs", name: "Czech", isDefault: false },
   ]
-  const request = (type: string, query = "locale=es") =>
+  const request = (type: string, query = "locale=fr") =>
     GET(new Request(`http://localhost/api/relations/${type}?${query}`), {
       params: Promise.resolve({ type }),
     })
@@ -287,9 +285,9 @@ describe("per-document article taxonomy language fallback", () => {
         },
         {
           documentId: "shared",
-          name: "Informes",
+          name: "Rapports",
           slug: "informes",
-          locale: "es",
+          locale: "fr",
           order: 2,
         },
       ])
@@ -299,8 +297,8 @@ describe("per-document article taxonomy language fallback", () => {
       expect(body.data).toContainEqual(
         expect.objectContaining({
           documentId: "shared",
-          name: "Informes",
-          locale: "es",
+          name: "Rapports",
+          locale: "fr",
         })
       )
       expect(body.data).toContainEqual(
@@ -334,12 +332,12 @@ describe("per-document article taxonomy language fallback", () => {
       },
       {
         documentId: "co",
-        name: "Colombia en español",
-        locale: "es",
+        name: "Colombie",
+        locale: "fr",
         regionTypeLabel: null,
       },
       { documentId: "pe", name: "Peru", locale: "en" },
-      { documentId: "outside", name: "Outside parent", locale: "es" },
+      { documentId: "outside", name: "Outside parent", locale: "fr" },
     ]
     fetchMock.mockImplementation(async (raw: string) => {
       if (raw.includes("/content-moderation/locales"))
@@ -357,13 +355,13 @@ describe("per-document article taxonomy language fallback", () => {
       })
     })
     const body = await (
-      await request("countries", "locale=es&continentDocumentId=south-america")
+      await request("countries", "locale=fr&continentDocumentId=south-america")
     ).json()
     expect(body.data).toEqual([
       {
         documentId: "co",
-        name: "Colombia en español",
-        locale: "es",
+        name: "Colombie",
+        locale: "fr",
         regionTypeLabel: "Department",
         areaTypeLabel: "District",
       },
@@ -415,10 +413,10 @@ describe("per-document article taxonomy language fallback", () => {
       ],
       [
         { code: "fr", name: "French", isDefault: true },
-        { code: "es", name: "Spanish", isDefault: false },
+        { code: "cs", name: "Czech", isDefault: false },
       ]
     )
-    const body = await (await request("blog-sections")).json()
+    const body = await (await request("blog-sections", "locale=cs")).json()
     expect(body.data).toContainEqual(
       expect.objectContaining({
         documentId: "default",
@@ -438,8 +436,8 @@ describe("per-document article taxonomy language fallback", () => {
   it("retains a region's default labels even when only its preferred variant matches the parent", async () => {
     const translated = {
       documentId: "london",
-      name: "Gran Londres",
-      locale: "es",
+      name: "Grand Londres",
+      locale: "fr",
       areaTypeLabel: null,
     }
     const original = {
@@ -464,7 +462,7 @@ describe("per-document article taxonomy language fallback", () => {
       })
     })
     const body = await (
-      await request("regions", "locale=es&countryDocumentId=eng")
+      await request("regions", "locale=fr&countryDocumentId=eng")
     ).json()
     expect(body.data).toEqual([
       {
@@ -503,8 +501,8 @@ describe("per-document article taxonomy language fallback", () => {
       { ...ENGLAND, locale: "en", regionTypeLabel: "County" },
       {
         ...ENGLAND,
-        name: "Inglaterra",
-        locale: "es",
+        name: "Angleterre",
+        locale: "fr",
         continent: null,
         regionTypeLabel: null,
       },
@@ -517,7 +515,7 @@ describe("per-document article taxonomy language fallback", () => {
       },
     ])
     const body = await (
-      await request("countries", "locale=es&iso2=CO,GB-ENG")
+      await request("countries", "locale=fr&iso2=CO,GB-ENG")
     ).json()
     expect(body.data).toEqual([
       {
@@ -528,7 +526,7 @@ describe("per-document article taxonomy language fallback", () => {
       },
       {
         documentId: "eng",
-        name: "Inglaterra",
+        name: "Angleterre",
         iso2: "GB-ENG",
         continentDocumentId: "eu",
         regionTypeLabel: "County",

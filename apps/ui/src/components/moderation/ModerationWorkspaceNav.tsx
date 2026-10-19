@@ -1,5 +1,8 @@
+"use client"
+
 import { LayoutGrid } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { useEffect, useRef } from "react"
 
 import {
   REVIEW_ICONS,
@@ -17,6 +20,17 @@ export function ModerationWorkspaceNav({
   views: readonly WorkspaceView[]
 }) {
   const t = useTranslations("moderationWorkspace")
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const nav = navRef.current
+    const current = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (!nav || !current) return
+    const left = current.offsetLeft
+    const right = left + current.offsetWidth
+    if (left < nav.scrollLeft) nav.scrollLeft = left
+    else if (right > nav.scrollLeft + nav.clientWidth)
+      nav.scrollLeft = right - nav.clientWidth + 12
+  }, [active])
   const items =
     views.length === 1
       ? views
@@ -31,8 +45,9 @@ export function ModerationWorkspaceNav({
 
   return (
     <nav
+      ref={navRef}
       aria-label={t("reviewQueues")}
-      className="flex flex-wrap gap-2 rounded-[24px] border border-(--t-border-line) bg-white p-3"
+      className="relative flex min-w-0 flex-nowrap gap-2 overflow-x-auto rounded-[24px] border border-(--t-border-line) bg-white p-3 [--spacing:0.25rem] [scrollbar-width:thin]"
     >
       {items.map((view) => {
         const selected = view.id === active
@@ -44,7 +59,7 @@ export function ModerationWorkspaceNav({
             href={view.href}
             aria-current={selected ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold no-underline sm:gap-2 sm:px-4 sm:text-sm",
+              "inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[15px] font-semibold whitespace-nowrap no-underline",
               selected
                 ? "border-(--t-ink-base) bg-(--t-ink-base) text-white"
                 : "border-transparent text-(--t-ink-dim) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"
@@ -52,7 +67,7 @@ export function ModerationWorkspaceNav({
           >
             <Icon size={16} aria-hidden />
             {t(view.id)}
-            {view.pending !== null && (
+            {view.pending !== null && view.pending > 0 && (
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-xs tabular-nums",

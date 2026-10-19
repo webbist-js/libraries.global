@@ -30,10 +30,26 @@ afterEach(() => {
 })
 
 describe("avatar upload preview", () => {
+  it("updates the initials preview when the avatar colour changes", () => {
+    const onUpload = vi.fn()
+    const { container, rerender } = render(
+      <AvatarUpload initials="LA" background="amber" onUpload={onUpload} />
+    )
+    const avatar = container.querySelector<HTMLButtonElement>(
+      'button[aria-hidden="true"]'
+    )!
+    expect(avatar.style.background).toBe("var(--t-palette-amber-bg)")
+    expect(avatar.style.color).toBe("var(--t-palette-amber-fg)")
+    rerender(
+      <AvatarUpload initials="LA" background="mint" onUpload={onUpload} />
+    )
+    expect(avatar.style.background).toBe("var(--t-palette-mint-bg)")
+  })
+
   it("shows the saved avatar only after the server validates the upload", async () => {
     const onUpload = vi.fn()
     const { container } = render(
-      <AvatarUpload initials="LA" onUpload={onUpload} />
+      <AvatarUpload initials="LA" background="amber" onUpload={onUpload} />
     )
     const input = container.querySelector("input[type=file]")!
     fireEvent.change(input, {

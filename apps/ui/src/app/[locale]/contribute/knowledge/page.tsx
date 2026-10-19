@@ -9,8 +9,10 @@ import {
 } from "@/components/contribute/article-editor/article.types"
 import { sessionCapabilities } from "@/lib/access-server"
 import { fetchArticleBrowse } from "@/lib/article-discovery"
+import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
+import { preferredContentLanguage } from "@/lib/content-language"
 import { T } from "@/lib/design-tokens"
 import { ownsJournalArticle } from "@/lib/journal-ownership-server"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -94,7 +96,7 @@ export default async function KnowledgeEditorPage({
   params: Promise<{ locale: string }>
   searchParams: Promise<{ type?: string }>
 }) {
-  const p = await getUiTranslations("publishing")
+  const p = await getUiTranslations("writeWorkspace")
 
   const [{ locale }, { type }, session] = await Promise.all([
     params,
@@ -109,14 +111,20 @@ export default async function KnowledgeEditorPage({
   ]
   const kinds: ArticleKind[] = ["journal", "knowledge"]
   const initialKind: ArticleKind = isArticleKind(type) ? type : "journal"
+  const locales = await fetchArticleLocales()
+  const preferredLocale = preferredContentLanguage(
+    locale,
+    session.user.compositionPreferences,
+    locales.map((item) => item.code)
+  )
   const [wiki, blog, drafts] = await Promise.all([
     fetchArticleBrowse(
       "wiki",
-      `preferredLocale=${encodeURIComponent(locale)}&pageSize=24`
+      `preferredLocale=${encodeURIComponent(preferredLocale)}&groupBy=document&pageSize=12`
     ).catch(() => null),
     fetchArticleBrowse(
       "blog",
-      `preferredLocale=${encodeURIComponent(locale)}&collection=all&pageSize=24`
+      `preferredLocale=${encodeURIComponent(preferredLocale)}&groupBy=document&collection=all&pageSize=12`
     ).catch(() => null),
     fetchArticleDrafts(session.user),
   ])
@@ -124,28 +132,33 @@ export default async function KnowledgeEditorPage({
     [
       ...(wiki?.items ?? []).map((a) => ({ ...a, kind: "knowledge" as const })),
       ...(blog?.items ?? []).map((a) => ({ ...a, kind: "journal" as const })),
-    ].map(async (a) => ({
-      kind: a.kind,
-      documentId: a.documentId,
-      slug: a.slug,
-      title: a.title,
-      sections: a.facets.sections?.map((section) => section.label) ?? [],
-      publishedAt: a.publishedAt,
-      updatedAt: a.updatedAt,
-      locale: a.locale,
-      publicPath:
-        a.kind === "journal"
-          ? `/journal/${a.section?.slug ?? "general"}/${a.slug}`
-          : `/knowledge/${a.sectionSlugs[0] ?? a.section?.slug ?? "general"}/${a.slug}`,
-      canEdit:
-        canDirectEdit(
-          caps,
-          a.kind === "journal" ? "journal" : "docs",
-          a.locale
-        ) ||
-        (a.kind === "journal" &&
-          (await ownsJournalArticle(session.user, a.slug))),
-    }))
+    ].map(async (a) => {
+      const owned =
+        a.kind === "journal" && (await ownsJournalArticle(session.user, a.slug))
+
+      return {
+        kind: a.kind,
+        documentId: a.documentId,
+        slug: a.slug,
+        title: a.title,
+        sections: a.facets.sections?.map((section) => section.label) ?? [],
+        publishedAt: a.publishedAt,
+        updatedAt: a.updatedAt,
+        locale: a.locale,
+        translations: a.translations,
+        publicPath:
+          a.kind === "journal"
+            ? `/journal/${a.section?.slug ?? "general"}/${a.slug}`
+            : `/knowledge/${a.sectionSlugs[0] ?? a.section?.slug ?? "general"}/${a.slug}`,
+        owned,
+        canEdit:
+          canDirectEdit(
+            caps,
+            a.kind === "journal" ? "journal" : "docs",
+            a.locale
+          ) || owned,
+      }
+    })
   )
 
   return (
@@ -154,12 +167,30 @@ export default async function KnowledgeEditorPage({
     >
       <ContributeSectionHeader
         compact
-        section={p("newWriting")}
-        title={p("newWriting")}
-        lead={p("writingLead")}
+        section={p("write")}
+        title={p("title")}
+        lead={p("lead")}
       />
       <KnowledgeEditorLanding
         articles={articles}
+        locales={locales}
+        initialLocale={preferredLocale}
+        initialFilter={isArticleKind(type) ? type : undefined}
+        initialTotal={
+          type === "journal"
+            ? (blog?.total ?? 0)
+            : type === "knowledge"
+              ? (wiki?.total ?? 0)
+              : (wiki?.total ?? 0) + (blog?.total ?? 0)
+        }
+        initialPageCount={
+          type === "journal"
+            ? (blog?.pageCount ?? 1)
+            : type === "knowledge"
+              ? (wiki?.pageCount ?? 1)
+              : Math.max(wiki?.pageCount ?? 1, blog?.pageCount ?? 1)
+        }
+        initialFailed={!wiki || !blog}
         drafts={drafts}
         initialKind={initialKind}
         kinds={kinds}

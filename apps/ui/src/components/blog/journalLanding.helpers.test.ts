@@ -135,6 +135,28 @@ describe("combined Journal discovery URL state", () => {
 })
 
 describe("resolved Journal collection", () => {
+  it("defaults content to the profile language or header, keeping explicit language choices", () => {
+    expect(
+      new URLSearchParams(journalBrowseParams("fr", DEFAULT_JOURNAL_QUERY)).get(
+        "lang"
+      )
+    ).toBe("fr")
+    expect(
+      new URLSearchParams(
+        journalBrowseParams("en", DEFAULT_JOURNAL_QUERY, "es")
+      ).get("lang")
+    ).toBe("es")
+    expect(
+      new URLSearchParams(
+        journalBrowseParams("en", parseJournalQuery({ lang: "cs" }), "es")
+      ).get("lang")
+    ).toBe("cs")
+    expect(
+      new URLSearchParams(
+        journalBrowseParams("en", parseJournalQuery({ lang: "all" }), "es")
+      ).get("lang")
+    ).toBe("all")
+  })
   it("defaults to all stories and retains explicit collection choices", () => {
     const params = new URLSearchParams(
       journalBrowseParams("en", DEFAULT_JOURNAL_QUERY)

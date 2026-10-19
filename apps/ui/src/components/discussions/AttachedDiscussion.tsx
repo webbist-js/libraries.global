@@ -30,6 +30,7 @@ type AttachedDiscussionProps = {
   title: string
   language: string
   variant?: "default" | "suggestion"
+  presentation?: "article"
   returnTo?: string
   footerAction?: ReactNode
   onActivity?: (thread: DiscussionRecord, latest?: DiscussionRecord) => void
@@ -48,17 +49,36 @@ function AttachedDiscussionPanel({
   language,
   actor,
   variant = "default",
+  presentation,
   returnTo,
   footerAction,
   onActivity,
 }: AttachedDiscussionProps & { actor: ReturnType<typeof useDiscussionActor> }) {
   const t = useTranslations("discussions")
   const common = useTranslations("ui")
+  const articleCard = presentation === "article"
+  const journal = subjectSlug === "journal"
+  const heading = t(articleCard && journal ? "storyHeading" : "attachedHeading")
   const [thread, setThread] = useState<DiscussionRecord | null>(null)
   const [subject, setSubject] = useState<Subject | null>(null)
   const [languages, setLanguages] = useState<DiscussionLanguage[]>([])
   const [error, setError] = useState("")
   const [retryable, setRetryable] = useState(false)
+  const [composing, setComposing] = useState(false)
+  const panelRef = useRef<HTMLElement>(null)
+  const wasComposing = useRef(false)
+  useEffect(() => {
+    if (composing) {
+      panelRef.current
+        ?.querySelector<HTMLElement>('input:not([type="hidden"]), a[href]')
+        ?.focus({ preventScroll: true })
+    } else if (wasComposing.current) {
+      panelRef.current
+        ?.querySelector<HTMLButtonElement>("button[data-start-discussion]")
+        ?.focus({ preventScroll: true })
+    }
+    wasComposing.current = composing
+  }, [composing])
   const [loadedScope, setLoadedScope] = useState("")
   const scope = `${target.uid}:${target.documentId}:${target.locale ?? language}:${subjectSlug}:${actor.scope}`
   const currentScope = useRef(scope)
@@ -131,12 +151,51 @@ function AttachedDiscussionPanel({
 
   return (
     <section
+      ref={panelRef}
       id={variant === "suggestion" ? undefined : "discussion"}
-      aria-label={t("attachedHeading")}
-      className={variant === "suggestion" ? "grid gap-4" : "mt-6 grid gap-4"}
+      aria-label={heading}
+      className={
+        articleCard
+          ? "grid gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-7"
+          : variant === "suggestion"
+            ? "grid gap-4"
+            : "mt-6 grid gap-4"
+      }
     >
       {variant !== "suggestion" && (
-        <h2 className="text-2xl font-medium">{t("attachedHeading")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h2
+              className={
+                articleCard
+                  ? "m-0 font-serif text-[28px] leading-tight font-medium"
+                  : "text-2xl font-medium"
+              }
+            >
+              {heading}
+            </h2>
+            {articleCard && (
+              <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                {t(journal ? "storyLead" : "attachedLead")}
+              </p>
+            )}
+          </div>
+          {articleCard &&
+            loadedScope === scope &&
+            !thread &&
+            subject &&
+            !composing &&
+            !error && (
+              <button
+                type="button"
+                data-start-discussion
+                onClick={() => setComposing(true)}
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-(--t-ink-base) px-4 text-sm font-semibold text-white hover:opacity-90"
+              >
+                {t("startDiscussion")}
+              </button>
+            )}
+        </div>
       )}
       {!actor.ready || loadedScope !== scope ? (
         <DiscussionThreadSkeleton embedded variant={variant} />
@@ -167,9 +226,11 @@ function AttachedDiscussionPanel({
           footerAction={footerAction}
           onActivity={onActivity}
         />
-      ) : subject ? (
+      ) : subject && (!articleCard || composing) ? (
         <>
-          {variant !== "suggestion" && <p>{t("attachedLead")}</p>}
+          {variant !== "suggestion" && !articleCard && (
+            <p>{t("attachedLead")}</p>
+          )}
           <DiscussionComposer
             key={scope}
             subject={subject}
@@ -179,6 +240,8 @@ function AttachedDiscussionPanel({
             defaultLanguage={language}
             compositionPreferences={actor.compositionPreferences}
             variant={variant}
+            embedded={articleCard}
+            onCancel={articleCard ? () => setComposing(false) : undefined}
             footerAction={footerAction}
             lockLanguage={variant !== "suggestion"}
             languages={languages}
@@ -198,9 +261,9 @@ function AttachedDiscussionPanel({
             }}
           />
         </>
-      ) : (
+      ) : !subject ? (
         <p>{t("unavailable")}</p>
-      )}
+      ) : null}
     </section>
   )
 }

@@ -108,7 +108,7 @@ export function SettingsShell({
         {/* ── Aside: progress, save, other sections (sticky) ── */}
         <aside
           aria-label={tUi("your_profile")}
-          className="flex flex-col gap-4 self-start lg:sticky lg:top-24"
+          className="flex flex-col gap-4 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
         >
           <ProfileProgress
             title={tUi("your_profile")}

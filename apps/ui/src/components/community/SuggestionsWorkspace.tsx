@@ -116,7 +116,7 @@ export function SuggestionsWorkspace({
 
       <aside
         aria-label={tUi("sidebar")}
-        className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-24 min-[760px]:max-w-[440px]"
+        className="flex min-w-0 flex-col gap-3.5 min-[760px]:sticky min-[760px]:top-(--sticky-content-top) min-[760px]:max-h-(--sticky-content-max-height) min-[760px]:max-w-[440px] min-[760px]:overflow-y-auto min-[760px]:overscroll-contain"
         style={{ flex: "1 1 290px" }}
       >
         <AlreadyInLists

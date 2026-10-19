@@ -2,6 +2,7 @@
 import * as React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { CompositionPreferences } from "@/lib/composition-language"
 import { cleanup, render, screen, waitFor, fireEvent } from "@/test/render"
 
 import { DiscussionFeed } from "./DiscussionFeed"
@@ -12,6 +13,7 @@ const actor = vi.hoisted(() => ({
   ready: true,
   signedIn: true,
   canModerate: false,
+  compositionPreferences: undefined as CompositionPreferences | undefined,
 }))
 vi.mock("./useDiscussionActor", () => ({ useDiscussionActor: () => actor }))
 vi.mock("@/lib/navigation", () => ({
@@ -58,13 +60,14 @@ beforeEach(() => {
   actor.scope = "board"
   actor.ready = true
   actor.signedIn = true
+  actor.compositionPreferences = undefined
   fetch.mockReset()
   fetch.mockImplementation(async (url: string) => {
     if (url.includes("/relations/locales"))
       return Response.json({
         data: [
           { code: "en", name: "English" },
-          { code: "es", name: "Spanish" },
+          { code: "fr", name: "French" },
         ],
       })
     if (url.includes("/context?"))
@@ -99,7 +102,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 describe("shared discussion feeds", () => {
-  it("opens the original thread, defaults to all languages, and combines entity and language filters", async () => {
+  it("opens the original thread, defaults to the header language, and combines entity and language filters", async () => {
     render(<DiscussionFeed target={target} />)
     expect(
       (await screen.findByRole("link", { name: /Reading room/ })).getAttribute(
@@ -109,14 +112,14 @@ describe("shared discussion feeds", () => {
     expect(
       (screen.getByRole("combobox", { name: "Language" }) as HTMLSelectElement)
         .value
-    ).toBe("")
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "es" } })
+    ).toBe("en")
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "fr" } })
     await waitFor(() =>
       expect(
         fetch.mock.calls.some(
           ([url]) =>
             String(url).includes("contextId=library") &&
-            String(url).includes("language=es")
+            String(url).includes("language=fr")
         )
       ).toBe(true)
     )
@@ -124,8 +127,37 @@ describe("shared discussion feeds", () => {
       screen
         .getByRole("link", { name: "View all conversations" })
         .getAttribute("href")
-    ).toBe("/community/discussions?context=libraries&entity=library&lang=es")
+    ).toBe("/community/discussions?context=libraries&entity=library&lang=fr")
   })
+  it("uses a late profile default until the reader explicitly chooses all languages", async () => {
+    const view = render(<DiscussionFeed target={target} />)
+    await screen.findByRole("link", { name: /Reading room/ })
+    actor.compositionPreferences = {
+      languages: [{ code: "fr", proficiency: "native" }],
+    }
+    view.rerender(<DiscussionFeed target={target} />)
+    expect(
+      (screen.getByRole("combobox", { name: "Language" }) as HTMLSelectElement)
+        .value
+    ).toBe("fr")
+    fireEvent.change(screen.getByRole("combobox", { name: "Language" }), {
+      target: { value: "" },
+    })
+    actor.compositionPreferences = {
+      languages: [{ code: "cs", proficiency: "native" }],
+    }
+    view.rerender(<DiscussionFeed target={target} />)
+    expect(
+      (screen.getByRole("combobox", { name: "Language" }) as HTMLSelectElement)
+        .value
+    ).toBe("")
+    expect(
+      screen
+        .getByRole("link", { name: "View all conversations" })
+        .getAttribute("href")
+    ).toContain("lang=all")
+  })
+
   it("isolates private recovery and management controls on a same-user authority change", async () => {
     const view = render(<DiscussionFeed target={target} />)
     expect(await screen.findByText("My private text")).toBeTruthy()
