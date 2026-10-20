@@ -457,7 +457,7 @@ describe("StaffDrawer", () => {
         .getByRole("link", { name: "Claim Other Library" })
         .getAttribute("href")
     ).toBe(
-      "/contribute/claim?librarySlug=other-library&libraryName=Other%20Library&libraryDocumentId=lib000000000000000000077"
+      "/staff/claim?librarySlug=other-library&libraryName=Other%20Library&libraryDocumentId=lib000000000000000000077"
     )
   })
 

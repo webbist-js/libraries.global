@@ -11,6 +11,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, Sheet } from "@/components/ds"
+import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { routing, useRouter } from "@/lib/navigation"
 
@@ -50,11 +51,6 @@ export function noticeDates(
     ? `${Number(notice.from.slice(8))}–${dayMonth(notice.to, locale)}`
     : `${dayMonth(notice.from, locale)} – ${dayMonth(notice.to, locale)}`
 }
-
-const OUTLINED =
-  "inline-flex min-h-11 shrink-0 items-center rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
-const PRIMARY =
-  "inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
 
 /** One notice as a bordered row: tinted chip, message, dates, actions. */
 function NoticeRow({
@@ -118,25 +114,27 @@ function NoticeRow({
       {ended ? null : (
         <div className="flex shrink-0 gap-2">
           {onEdit ? (
-            <button
+            <Button
               type="button"
-              className={OUTLINED}
+              variant="surface"
+              size="pill"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
               onClick={onEdit}
             >
               {tUi("edit")}{" "}
-            </button>
+            </Button>
           ) : null}
           {onEnd ? (
-            <button
+            <Button
               type="button"
-              className={OUTLINED}
+              variant="surface"
+              size="pill"
               style={{ borderColor: T.border.hi, color: T.accent.danger }}
               disabled={busy}
               onClick={onEnd}
             >
               {busy ? "Ending…" : "End now"}
-            </button>
+            </Button>
           ) : null}
         </div>
       )}
@@ -243,15 +241,16 @@ export function StaffNotices({
               style={{ color: T.accent.danger }}
             />
             <span className="min-w-0 flex-1">{error.message}</span>
-            <button
+            <Button
               type="button"
-              className={OUTLINED}
+              variant="surface"
+              size="pill"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
               disabled={busy !== null}
               onClick={() => void end(error.retry)}
             >
               {tUi("try_again")}{" "}
-            </button>
+            </Button>
           </div>
         )}
         {current.length ? (
@@ -344,23 +343,25 @@ export function StaffNotices({
               </p>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-3">
-              <button
+              <Button
                 type="button"
-                className={PRIMARY}
+                variant="primary"
+                size="pill"
                 disabled={busy !== null}
                 onClick={() => void end(ending.id)}
               >
                 {busy === ending.id ? "Ending…" : "End notice"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className={OUTLINED}
+                variant="surface"
+                size="pill"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
                 disabled={busy !== null}
                 onClick={() => setEnding(null)}
               >
                 Keep it
-              </button>
+              </Button>
             </div>
           </>
         ) : null}

@@ -1,44 +1,57 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getLocale, getTranslations } from "next-intl/server"
 
+import { Container } from "@/components/elementary/Container"
+import { LibraryClaimWorkspace } from "@/components/library-editor/LibraryClaimWorkspace"
+import {
+  knowledgeLink,
+  KNOWLEDGE_SLUGS,
+} from "@/components/staff/knowledge-links"
 import { getSessionSSR } from "@/lib/auth-server"
+import {
+  claimSignInHref,
+  selectedClaimLibrary,
+  type ClaimParams,
+} from "@/lib/library-claim"
 import { privateMetadata } from "@/lib/seo/metadata"
 
-import { ClaimLibraryForm } from "./_components/ClaimLibraryForm"
+import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 
 export const metadata = privateMetadata("Claim a library")
 
 export default async function ClaimLibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    librarySlug?: string
-    libraryName?: string
-    libraryDocumentId?: string
-    libraryEntityRef?: string
-  }>
+  searchParams: Promise<ClaimParams>
 }) {
   const session = await getSessionSSR(await headers())
   const params = await searchParams
+  const [locale, t] = await Promise.all([
+    getLocale(),
+    getTranslations("libraryClaim"),
+  ])
 
   if (!session?.user) {
-    const callbackUrl = `/contribute/claim?librarySlug=${params.librarySlug ?? ""}&libraryName=${encodeURIComponent(params.libraryName ?? "")}&libraryDocumentId=${params.libraryDocumentId ?? ""}`
-    redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`)
+    redirect(claimSignInHref("/contribute/claim", params, locale))
   }
 
-  const { librarySlug, libraryName, libraryDocumentId, libraryEntityRef } =
-    params
-
-  if (!libraryDocumentId || !librarySlug) {
-    redirect("/contribute/index?intent=claim")
-  }
+  const guide = await knowledgeLink(KNOWLEDGE_SLUGS.staffArea, locale)
 
   return (
-    <ClaimLibraryForm
-      libraryDocumentId={libraryDocumentId}
-      librarySlug={librarySlug}
-      libraryName={libraryName ?? librarySlug}
-      libraryEntityRef={libraryEntityRef}
-    />
+    <>
+      <ContributeSectionHeader
+        compact
+        section={t("title")}
+        title={t("title")}
+        lead={t("lead")}
+      />
+      <Container className="py-8 sm:py-10">
+        <LibraryClaimWorkspace
+          initialLibrary={selectedClaimLibrary(params)}
+          guide={guide}
+        />
+      </Container>
+    </>
   )
 }

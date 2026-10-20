@@ -147,7 +147,7 @@ afterEach(() => {
 describe("TeamOrganiser (organiser)", () => {
   it("shows the team, its seats, the libraries covered and where the viewer is staff", () => {
     render(organiser({}, [{ id: "t2", name: "Sussex Libraries" }]))
-    expect(screen.getByRole("heading", { name: "Kent Libraries" })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "Team details" })).toBeTruthy()
     expect(screen.getByText("Seats").parentElement?.textContent).toContain(
       "2 of 5"
     )
@@ -161,7 +161,7 @@ describe("TeamOrganiser (organiser)", () => {
       "Open ended"
     )
     expect(
-      screen.getByRole("heading", { name: "Libraries covered (2)" })
+      screen.getByRole("heading", { name: "Libraries covered" })
     ).toBeTruthy()
     expect(
       screen.getByRole("link", { name: "Open Staff area" }).getAttribute("href")
@@ -176,7 +176,7 @@ describe("TeamOrganiser (organiser)", () => {
 
   it("lists members with their role, status, assignments and actions", () => {
     render(organiser())
-    expect(screen.getByRole("heading", { name: "Members (3)" })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "Members" })).toBeTruthy()
     expect(screen.getByText("(you)")).toBeTruthy()
     // The organiser's own role isn't editable; others' are.
     expect(

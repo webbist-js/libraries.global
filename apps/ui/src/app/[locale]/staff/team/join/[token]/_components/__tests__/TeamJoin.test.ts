@@ -101,7 +101,7 @@ describe("TeamJoin", () => {
     const done = await screen.findByRole("status")
     expect(done.textContent).toContain("You’re on Kent Libraries")
     expect(done.textContent).toContain(
-      "You now have editor access to Maidstone Library"
+      "You now have Editor access to Maidstone Library"
     )
     expect(document.activeElement).toBe(done)
     expect(
@@ -114,6 +114,11 @@ describe("TeamJoin", () => {
         .getByRole("link", { name: /Open your Staff area/ })
         .getAttribute("href")
     ).toBe("/staff")
+    // The server consumes this token: refreshing would lose the confirmation.
+    expect(mocks.refresh).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole("heading", { name: "Your next steps" })
+    ).toBeTruthy()
   })
 
   it("keeps the success confirmation when the accepted invite can no longer be loaded", async () => {
@@ -139,8 +144,9 @@ describe("TeamJoin", () => {
       screen
         .getByRole("link", { name: "Open the Team organiser" })
         .getAttribute("href")
-    ).toBe("/staff/team")
+    ).toBe("/staff/team?team=t1")
     expect(screen.queryByRole("alert")).toBeNull()
+    expect(mocks.refresh).not.toHaveBeenCalled()
   })
 
   it("falls back to the library's id when the API sends no name", () => {
@@ -149,6 +155,99 @@ describe("TeamJoin", () => {
       screen.getByText("Library access on joining").nextElementSibling
         ?.textContent
     ).toBe(`library ${LIB} · Editor`)
+  })
+
+  it("explains a library assignment requiring review without promising immediate staff access", async () => {
+    mocks.request.mockResolvedValue({
+      team: {
+        id: "t1",
+        name: "Kent Libraries",
+        role: "member",
+        verified: false,
+      },
+    })
+    render(
+      join({
+        preassign: {
+          libraryDocumentId: LIB,
+          libraryName: "Maidstone Library",
+          librarySlug: "maidstone-library",
+          staffRole: "editor",
+        },
+      })
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Join Kent Libraries" }))
+    const done = await screen.findByRole("status")
+    expect(done.textContent).toContain("needs a moderator’s review")
+    expect(
+      screen.queryByRole("link", { name: /Open Maidstone Library/ })
+    ).toBeNull()
+    expect(
+      screen
+        .getByRole("link", { name: "Open your Staff area" })
+        .getAttribute("href")
+    ).toBe("/staff")
+  })
+
+  it("shows organiser next steps and published guides, then preserves the Team destination", async () => {
+    mocks.request.mockResolvedValue({
+      team: { id: "team & 1", name: "Kent Libraries", role: "organiser" },
+    })
+    render(
+      createElement(TeamJoin, {
+        token: "tok1",
+        invite: invite({ teamRole: "organiser", preassign: null }),
+        emailVerified: true,
+        guides: [
+          {
+            title: "Teams for library services",
+            href: "/knowledge/contributing/teams-for-library-services",
+          },
+        ],
+      })
+    )
+    expect(screen.getByRole("heading", { name: "Meet your Team" })).toBeTruthy()
+    expect(
+      screen.queryByRole("heading", { name: "Find your workspace" })
+    ).toBeNull()
+    expect(
+      screen
+        .getByRole("link", { name: "Teams for library services" })
+        .getAttribute("href")
+    ).toBe("/knowledge/contributing/teams-for-library-services")
+    expect(
+      screen.getByText(/API access is an optional Team add-on/)
+    ).toBeTruthy()
+    expect(mocks.request).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("button", { name: "Join Kent Libraries" }))
+    await screen.findByRole("status")
+    expect(
+      screen
+        .getByRole("link", { name: "Open the Team organiser" })
+        .getAttribute("href")
+    ).toBe("/staff/team?team=team%20%26%201")
+    expect(
+      screen.queryByRole("button", { name: "Join Kent Libraries" })
+    ).toBeNull()
+    expect(mocks.refresh).not.toHaveBeenCalled()
+  })
+
+  it("keeps inactive Teams blocked and offers Knowledge when no guides are published", () => {
+    render(join({ status: "team_inactive", preassign: null }))
+    expect(screen.getByText("This team isn’t active")).toBeTruthy()
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Join Kent Libraries",
+        }) as HTMLButtonElement
+      ).disabled
+    ).toBe(true)
+    expect(
+      screen
+        .getByRole("link", { name: "Browse Knowledge guides" })
+        .getAttribute("href")
+    ).toBe("/knowledge")
+    expect(mocks.request).not.toHaveBeenCalled()
   })
 
   it("asks a mismatched account to sign out, and blocks joining", () => {

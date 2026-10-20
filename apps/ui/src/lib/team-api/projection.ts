@@ -26,6 +26,7 @@ export function projectApiMembership(
   )
     throw new BillingError("api_subscription_catalogue_mismatch")
   let paidThrough = previous?.priceId === priceId ? previous.paidThrough : null
+  let startedAt = previous?.startedAt ?? null
   for (const invoice of invoices) {
     if (
       invoice.status !== "paid" ||
@@ -43,6 +44,15 @@ export function projectApiMembership(
         continue
       const end = new Date(line.period.end * 1000).toISOString()
       if (!paidThrough || end > paidThrough) paidThrough = end
+      // Payment settlement is when access actually opens, even for late invoices.
+      const paidAt =
+        previous?.paidThrough && previous.startedAt === undefined
+          ? subscription.start_date
+          : (invoice.status_transitions?.paid_at ?? line.period.start)
+      if (Number.isFinite(paidAt) && paidAt > 0) {
+        const start = new Date(paidAt * 1000).toISOString()
+        if (!startedAt || start < startedAt) startedAt = start
+      }
     }
   }
 
@@ -53,6 +63,7 @@ export function projectApiMembership(
     currency: item.price.currency,
     unitAmount: item.price.unit_amount,
     paidThrough,
+    startedAt,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
     revoked: previous?.revoked ?? false,
     limits,

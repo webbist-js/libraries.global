@@ -47,6 +47,36 @@ const invoice = () =>
 afterEach(() => vi.unstubAllEnvs())
 
 describe("Team API paid coverage", () => {
+  it("starts history at settlement and preserves that first date across renewals", () => {
+    const firstInvoice = invoice()
+    firstInvoice.status_transitions = {
+      paid_at: 1_790_000_000,
+    } as Stripe.Invoice.StatusTransitions
+    const first = projectApiMembership(
+      subscription(),
+      [firstInvoice],
+      null,
+      "price_api",
+      apiConfig().limits
+    )
+    expect(first.startedAt).toBe(new Date(1_790_000_000_000).toISOString())
+    const renewal = invoice()
+    renewal.status_transitions = {
+      paid_at: 1_800_000_000,
+    } as Stripe.Invoice.StatusTransitions
+    const renewed = projectApiMembership(
+      subscription(),
+      [renewal],
+      first,
+      "price_api",
+      first.limits
+    )
+    expect(renewed.startedAt).toBe(first.startedAt)
+    expect(
+      projectApiMembership(subscription(), [], null, "price_api", first.limits)
+        .startedAt
+    ).toBeNull()
+  })
   it("requires settled matching invoice lines and pins the purchased limits", () => {
     const limits = apiConfig().limits
     expect(
