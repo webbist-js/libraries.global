@@ -1205,10 +1205,9 @@ export default ({ strapi }: { strapi: any }) => {
         fields: MEMBER_FIELDS,
         populate: {
           team: {
-            fields: TEAM_FIELDS,
-            populate: {
-              libraries: { populate: LIBRARY_POPULATE, fields: LIBRARY_FIELDS },
-            },
+            // Preview needs only these fields; accept reloads the full Team.
+            // Nested selection rejects private attributes such as notes.
+            fields: ["documentId", "name", "status", "expiresAt"],
           },
         },
         limit: 1,
