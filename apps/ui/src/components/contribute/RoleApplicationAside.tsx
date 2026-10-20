@@ -194,7 +194,7 @@ export function RoleApplicationAside({
           Looking for a different role?
         </h2>
         <Link
-          href="/contribute/index?intent=claim"
+          href="/contribute/claim"
           className="group mt-3 flex items-start gap-3 rounded-[14px] border-t pt-3 no-underline"
           style={{ borderColor: T.border.line, color: T.ink.base }}
         >

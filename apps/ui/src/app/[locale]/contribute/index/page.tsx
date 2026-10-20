@@ -10,8 +10,10 @@ import {
   WIZARD_CARD,
 } from "@/components/library-editor/wizard.constants"
 import { WizardStepNav } from "@/components/library-editor/WizardStepNav"
+import { Button } from "@/components/ui/button"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { fetchIncompleteLibraries } from "@/lib/strapi-api/content/server"
 
@@ -44,17 +46,16 @@ export default async function IndexEditorPage({
   searchParams: Promise<{ intent?: string | string[] }>
 }) {
   const tUi = await getUiTranslations("ui")
+  const tClaim = await getUiTranslations("libraryClaim")
 
   const [{ intent }, session] = await Promise.all([
     searchParams,
     getSessionSSR(await headers()),
   ])
-  // ?intent=claim: the reader came to claim their library, not to edit.
-  const claiming = intent === "claim"
+  // Keep old bookmarks working; claims now have a dedicated entry page.
+  if (intent === "claim") redirect("/contribute/claim")
   if (!session?.user) {
-    const back = claiming
-      ? "/contribute/index?intent=claim"
-      : "/contribute/index"
+    const back = "/contribute/index"
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(back)}`)
   }
 
@@ -101,18 +102,20 @@ export default async function IndexEditorPage({
               className={WIZARD_CARD}
               aria-label={tUi("find_the_library_first")}
             >
-              {claiming && (
-                <p
-                  role="status"
-                  className="mb-5 rounded-2xl bg-(--t-accent-chip) p-4 text-[15px] leading-relaxed"
-                >
-                  Find your library, then choose Claim on its page.
+              <FindLibraryFirst needsHelp={needsHelp} />
+            </section>
+            <section className="flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-(--t-border-line) bg-(--t-accent-chip) p-6">
+              <div className="max-w-[52ch]">
+                <h2 className="m-0 text-[20px] font-semibold">
+                  {tClaim("workHere")}
+                </h2>
+                <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                  {tClaim("ctaBody")}
                 </p>
-              )}
-              <FindLibraryFirst
-                needsHelp={needsHelp}
-                intent={claiming ? "claim" : "edit"}
-              />
+              </div>
+              <Button asChild variant="primary" size="pill">
+                <Link href="/contribute/claim">{tClaim("title")}</Link>
+              </Button>
             </section>
             <StepsCard
               title="What happens next"

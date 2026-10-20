@@ -4,6 +4,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useTransition } from "react"
 
 import { Notice } from "@/components/ds"
+import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { useRouter } from "@/lib/navigation"
 
@@ -42,10 +43,11 @@ export function StaffLoadError({
           : "The Staff area is temporarily unavailable. Try again in a moment."}
       </p>
       <p className="m-0 mt-1">
-        <button
+        <Button
           type="button"
           disabled={pending}
-          className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+          variant="surface"
+          size="pill"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
           onClick={() =>
             startTransition(() => {
@@ -55,7 +57,7 @@ export function StaffLoadError({
           }
         >
           {pending ? "Trying again…" : tUi("try_again")}
-        </button>
+        </Button>
       </p>
     </Notice>
   )

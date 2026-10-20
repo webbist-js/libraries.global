@@ -25,7 +25,7 @@ const CARDS: RoleCard[] = [
     title: "Claim your library",
     copy: "Work or volunteer at a library? Verify it, then look after its record and connect its events.",
     cta: "Find your library",
-    href: "/contribute/index?intent=claim",
+    href: "/contribute/claim",
     icon: Landmark,
     tint: "bg-[#e5f2eb] text-[#256346]",
   },

@@ -200,7 +200,7 @@ export function StaffShell({
         />
         <div className="flex flex-wrap gap-x-4">
           <Link
-            href="/contribute/claim"
+            href="/staff/claim"
             className="inline-flex min-h-11 w-fit items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >

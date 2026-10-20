@@ -701,10 +701,14 @@ export function StepHeading({
   eyebrow,
   title,
   lead,
+  titleRef,
+  compact = false,
 }: {
   eyebrow: string
   title: string
   lead: string
+  titleRef?: React.Ref<HTMLHeadingElement>
+  compact?: boolean
 }) {
   return (
     <div style={{ marginBottom: "12px" }}>
@@ -720,9 +724,14 @@ export function StepHeading({
         {eyebrow}
       </p>
       <h2
+        ref={titleRef}
+        tabIndex={titleRef ? -1 : undefined}
         style={{
           fontFamily: T.font.serif,
-          fontSize: "clamp(32px, 3.5vw, 44px)",
+          fontSize: compact
+            ? "clamp(28px, 2.6vw, 36px)"
+            : "clamp(32px, 3.5vw, 44px)",
+          outline: titleRef ? "none" : undefined,
           fontWeight: 500,
           lineHeight: 1.12,
           letterSpacing: "-0.01em",
