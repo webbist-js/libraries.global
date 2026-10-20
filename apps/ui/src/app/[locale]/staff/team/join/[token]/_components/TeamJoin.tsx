@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
-import { Link, useRouter } from "@/lib/navigation"
+import { Link } from "@/lib/navigation"
 import { staffRequest } from "@/lib/staff/client"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import type { TeamInvitePreview, TeamSummary } from "@/lib/staff/types"
@@ -40,7 +40,6 @@ export function TeamJoin({
 }) {
   const tUi = useUiTranslations("ui")
 
-  const router = useRouter()
   const doneRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -66,7 +65,7 @@ export function TeamJoin({
         "POST"
       )
       setJoined(result.team)
-      router.refresh()
+      // Keep the confirmation: a refresh would reload the consumed invite token.
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not join.")
     } finally {
