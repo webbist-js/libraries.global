@@ -1,30 +1,24 @@
 "use client"
 
-import { useLocale } from "next-intl"
-import { useEffect, useState, useTransition } from "react"
+import { Icon } from "@iconify/react"
+import { useLocale, useTranslations } from "next-intl"
+import { useEffect, useRef, useState, useTransition } from "react"
 
-import { T } from "@/lib/design-tokens"
+import { Badge } from "@/components/ds/Badge"
+import { Notice } from "@/components/ds/Notice"
+import { SelectField } from "@/components/ds/SelectField"
+import { StaffPanel } from "@/components/staff/StaffPanel"
+import { TeamApiKeyDialog } from "@/components/staff/TeamApiKeyDialog"
+import { Button } from "@/components/ui/button"
 import { useRouter } from "@/lib/navigation"
-import {
-  API_SCOPES,
-  type ApiDashboard,
-  type ApiScope,
-} from "@/lib/team-api/types"
+import type { ApiDashboard } from "@/lib/team-api/types"
 
 import {
   ApiSubscriptionPanel,
   ApiUsagePanel,
   ApiGuidePanel,
+  formatApiBytes,
 } from "./TeamApiPanels"
-
-const BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-sm font-semibold disabled:opacity-50"
-const INPUT = "min-h-11 rounded-xl border bg-white px-3 text-sm"
-const count = (n: number) => n.toLocaleString("en-GB")
-const bytes = (n: number) =>
-  n >= 1024 ** 3
-    ? `${(n / 1024 ** 3).toFixed(2)} GiB`
-    : `${(n / 1024 ** 2).toFixed(2)} MiB`
 
 const ERRORS: Record<string, string> = {
   api_terms_required:
@@ -51,13 +45,13 @@ export function TeamApiDashboard({
   readonly confirming: boolean
 }) {
   const [data, setData] = useState(initial)
+  const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState("")
   const [secret, setSecret] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-  const [name, setName] = useState("")
-  const [expires, setExpires] = useState("")
-  const [scopes, setScopes] = useState<ApiScope[]>([...API_SCOPES])
-  const [consent, setConsent] = useState(false)
+  const [keyCreationOpen, setKeyCreationOpen] = useState(false)
+  const secretRef = useRef<HTMLDivElement>(null)
+  const t = useTranslations("teamApiKeys")
   const [confirmation, setConfirmation] = useState<{
     action: "rotate" | "revoke"
     keyId: string
@@ -67,12 +61,6 @@ export function TeamApiDashboard({
   const locale = useLocale(),
     router = useRouter()
   const endpoint = `/api/staff/team/${data.teamId}/api`
-  const toggleScope = (scope: ApiScope, checked: boolean) =>
-    setScopes((previous) =>
-      checked
-        ? [...previous, scope]
-        : previous.filter((value) => value !== scope)
-    )
 
   useEffect(() => {
     if ((!confirming && !data.pendingPayment) || data.active) return
@@ -96,6 +84,7 @@ export function TeamApiDashboard({
     if (!response.ok)
       throw new Error("Could not refresh API usage. Try again shortly.")
     setData((await response.json()) as ApiDashboard)
+    setNow(Date.now())
   }
   const request = (body: unknown) =>
     startTransition(async () => {
@@ -124,7 +113,7 @@ export function TeamApiDashboard({
         if (result.secret) {
           setSecret(result.secret)
           setCopied(false)
-          setName("")
+          setKeyCreationOpen(false)
         }
         setConfirmation(null)
         await refresh()
@@ -137,185 +126,335 @@ export function TeamApiDashboard({
       }
     })
 
+  const count = (value: number) => new Intl.NumberFormat(locale).format(value)
+  const activeKeys = data.keys.filter(
+    (key) =>
+      !key.revokedAt && (!key.expiresAt || Date.parse(key.expiresAt) > now)
+  ).length
+  const atLimit = activeKeys >= data.limits.keys
+  const subscription = (
+    <ApiSubscriptionPanel
+      data={data}
+      locale={locale}
+      pending={pending}
+      error={error}
+      clearError={() => setError("")}
+      request={request}
+      confirming={confirming}
+    />
+  )
+
   return (
-    <div className="space-y-6" style={{ color: T.ink.base }}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-3">
-          Team
-          <select
-            className={INPUT}
-            value={data.teamId}
-            onChange={(event) =>
-              router.push(`/staff/team/api?team=${event.target.value}`)
+    <div className="min-w-0 space-y-6 text-(--t-ink-base)">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {data.active ? (
+          <div className="min-w-0 flex-1">{subscription}</div>
+        ) : (
+          <p className="m-0 text-[15px] text-(--t-ink-dim)">
+            API access for {data.teamName}
+          </p>
+        )}
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          {teams.length > 1 ? (
+            <div className="w-full sm:w-60">
+              <SelectField
+                label="Team"
+                value={data.teamId}
+                options={teams.map((team) => ({
+                  value: team.id,
+                  label: team.name,
+                }))}
+                onValueChange={(value) =>
+                  router.push(
+                    "/staff/team/api?team=" + encodeURIComponent(value)
+                  )
+                }
+              />
+            </div>
+          ) : null}
+          <Button
+            type="button"
+            variant="surface"
+            size="pill"
+            disabled={pending}
+            aria-busy={pending}
+            className="px-4 py-2"
+            onClick={() =>
+              startTransition(async () => {
+                try {
+                  await refresh()
+                  setError("")
+                } catch {
+                  setError("Could not refresh API usage. Try again shortly.")
+                }
+              })
             }
           >
-            {teams.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={pending}
-          onClick={() =>
-            startTransition(async () => {
-              try {
-                await refresh()
-                setError("")
-              } catch {
-                setError("Could not refresh API usage.")
-              }
-            })
-          }
-        >
-          Refresh usage
-        </button>
+            <Icon
+              icon="mdi:refresh"
+              aria-hidden="true"
+              width={17}
+              height={17}
+            />
+            Refresh usage
+          </Button>
+        </div>
       </div>
       {error ? (
-        <p
-          role="alert"
-          className="rounded-xl border p-4"
-          style={{ color: T.accent.danger }}
+        <Notice
+          tone="warn"
+          title="API request not completed"
+          icon="mdi:alert-circle-outline"
         >
-          {error}
-        </p>
+          <span role="alert">{error}</span>
+        </Notice>
       ) : null}
-      <ApiSubscriptionPanel
-        data={data}
-        locale={locale}
-        pending={pending}
-        consent={consent}
-        setConsent={setConsent}
-        request={request}
-        confirming={confirming}
-      />
+      {!data.active ? subscription : null}
       <ApiUsagePanel data={data} locale={locale} />
-      <section
-        className="rounded-2xl border p-6"
-        aria-labelledby="api-keys-title"
+      <StaffPanel
+        title={t("title")}
+        id="api-keys"
+        aside={
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-(--t-bg-surface) px-3 py-1.5 text-[14px] text-(--t-ink-dim) tabular-nums">
+              {t("activeCount", { count: activeKeys, limit: data.limits.keys })}
+            </span>
+            {data.organiser && data.active ? (
+              <TeamApiKeyDialog
+                open={keyCreationOpen}
+                onOpenChange={(open) => {
+                  setKeyCreationOpen(open)
+                  setError("")
+                }}
+                pending={pending}
+                disabled={Boolean(secret) || atLimit}
+                error={error}
+                onCreate={(draft) => {
+                  if (pending || secret || atLimit) return
+
+                  request({ action: "create", ...draft })
+                }}
+                focusSecret={() => {
+                  if (!secretRef.current) return false
+                  secretRef.current.focus()
+
+                  return true
+                }}
+              />
+            ) : null}
+          </div>
+        }
       >
-        <h2
-          id="api-keys-title"
-          className="mb-4 text-2xl"
-          style={{ fontFamily: T.font.serif }}
-        >
-          API keys
-        </h2>
+        <p className="mt-0 mb-5 max-w-[70ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+          {t("intro")}
+        </p>
         {secret ? (
-          <div className="mb-5 rounded-xl border p-4" role="status">
-            <p className="mb-3 font-semibold">
-              Copy this key now. It will not be shown again.
+          <div
+            ref={secretRef}
+            tabIndex={-1}
+            className="mb-5 rounded-2xl border border-(--t-accent-primary)/25 bg-(--t-accent-primary)/5 p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) sm:p-5"
+            role="status"
+          >
+            <p className="mt-0 mb-3 text-[16px] font-semibold">
+              {t("copyNow")}
             </p>
-            <code className="block rounded-lg bg-white p-3 break-all select-all">
+            <code
+              translate="no"
+              className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-[14px] break-all select-all"
+            >
               {secret}
             </code>
-            <div className="mt-3 flex gap-3">
-              <button
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
                 type="button"
-                className={BUTTON}
-                onClick={() => {
+                variant="primary"
+                size="pill"
+                onClick={() =>
                   navigator.clipboard
                     .writeText(secret)
                     .then(() => setCopied(true))
                     .catch(() =>
                       setError("Select the key above and copy it manually.")
                     )
-                }}
+                }
               >
-                {copied ? "Copied" : "Copy key"}
-              </button>
-              <button
+                <Icon
+                  aria-hidden="true"
+                  icon={copied ? "mdi:check" : "mdi:content-copy"}
+                />
+                {t(copied ? "copied" : "copyKey")}
+              </Button>
+              <Button
                 type="button"
-                className={BUTTON}
+                variant="surface"
+                size="pill"
                 onClick={() => setSecret(null)}
               >
-                I have saved it
-              </button>
+                {t("saved")}
+              </Button>
             </div>
           </div>
         ) : null}
-        <ul className="space-y-4">
-          {data.keys.map((key) => (
-            <li key={key.id} className="rounded-xl border p-4">
-              <div className="flex flex-wrap justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold">{key.name}</h3>
-                  <p className="text-sm">
-                    <code>{key.prefix}…</code> ·{" "}
-                    {key.revokedAt
-                      ? "Revoked"
-                      : key.expiresAt && Date.parse(key.expiresAt) <= Date.now()
-                        ? "Expired"
-                        : "Active"}
-                  </p>
-                </div>
-                {data.organiser && !key.revokedAt ? (
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className={BUTTON}
-                      disabled={pending || !data.active}
-                      onClick={() =>
-                        setConfirmation({
-                          action: "rotate",
-                          keyId: key.id,
-                          name: key.name,
-                        })
-                      }
-                    >
-                      Regenerate
-                    </button>
-                    <button
-                      type="button"
-                      className={BUTTON}
-                      disabled={pending}
-                      onClick={() =>
-                        setConfirmation({
-                          action: "revoke",
-                          keyId: key.id,
-                          name: key.name,
-                        })
-                      }
-                    >
-                      Revoke
-                    </button>
+        {data.keys.length ? (
+          <ul className="m-0 grid list-none gap-3 p-0">
+            {data.keys.map((key) => {
+              const expired = Boolean(
+                key.expiresAt && Date.parse(key.expiresAt) <= now
+              )
+              const status = key.revokedAt
+                ? "Revoked"
+                : expired
+                  ? "Expired"
+                  : "Active"
+
+              return (
+                <li
+                  key={key.id}
+                  className={
+                    "min-w-0 rounded-2xl border border-(--t-border-line) p-4 " +
+                    (status === "Active"
+                      ? "bg-(--t-bg-deep)"
+                      : "bg-(--t-bg-surface)")
+                  }
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="m-0 text-[16px] font-semibold break-words">
+                          {key.name}
+                        </h3>
+                        <Badge
+                          label={status}
+                          color={status === "Active" ? "ok" : "dim"}
+                          dot={status === "Active"}
+                        />
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <code
+                          translate="no"
+                          className="rounded bg-(--t-bg-muted) px-2 py-0.5 font-mono text-[13px] break-all"
+                        >
+                          {key.prefix}…
+                        </code>
+                        {key.scopes.map((scope) => (
+                          <span
+                            key={scope}
+                            translate="no"
+                            className="rounded-full border border-(--t-border-line) px-2 py-0.5 font-mono text-[13px] text-(--t-ink-dim)"
+                          >
+                            {scope}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {data.organiser && !key.revokedAt ? (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="surface"
+                          size="pill"
+                          className="px-3.5 py-2 text-[14px]"
+                          disabled={
+                            pending ||
+                            !data.active ||
+                            expired ||
+                            Boolean(secret)
+                          }
+                          onClick={() =>
+                            setConfirmation({
+                              action: "rotate",
+                              keyId: key.id,
+                              name: key.name,
+                            })
+                          }
+                        >
+                          Regenerate
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="surface"
+                          size="pill"
+                          className="px-3.5 py-2 text-[14px] text-(--t-accent-danger)"
+                          disabled={pending}
+                          onClick={() =>
+                            setConfirmation({
+                              action: "revoke",
+                              keyId: key.id,
+                              name: key.name,
+                            })
+                          }
+                        >
+                          Revoke
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-              <p className="mt-2 text-sm">
-                {key.scopes.join(", ")} · {count(key.requests)} requests ·{" "}
-                {bytes(key.bytes)} this month
+                  <p className="mt-3 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                    {count(key.requests)} requests ·{" "}
+                    {formatApiBytes(key.bytes, locale)} this month ·{" "}
+                    {key.lastUsedAt
+                      ? "Last used " +
+                        new Date(key.lastUsedAt).toLocaleString(locale)
+                      : "Never used"}
+                    {key.expiresAt
+                      ? " · Expires " +
+                        new Date(key.expiresAt).toLocaleDateString(locale)
+                      : " · No expiry"}
+                  </p>
+                </li>
+              )
+            })}
+          </ul>
+        ) : secret ? null : (
+          <div className="flex items-start gap-4 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 sm:p-6">
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-(--t-bg-deep) text-(--t-accent-primary)">
+              <Icon aria-hidden="true" icon="mdi:key-outline" width={23} />
+            </span>
+            <div className="min-w-0">
+              <h3 className="m-0 font-serif text-[24px] leading-tight">
+                {t("emptyTitle")}
+              </h3>
+              <p className="mt-2 mb-0 max-w-[65ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+                {t(
+                  !data.organiser
+                    ? "emptyMember"
+                    : data.active
+                      ? "emptyOrganiser"
+                      : "emptyInactive"
+                )}
               </p>
-              <p className="mt-1 text-sm">
-                {key.lastUsedAt
-                  ? `Last used ${new Date(key.lastUsedAt).toLocaleString(locale)}`
-                  : "Never used"}
-                {key.expiresAt
-                  ? ` · Expires ${new Date(key.expiresAt).toLocaleDateString(locale)}`
-                  : " · No expiry"}
-              </p>
-            </li>
-          ))}
-        </ul>
-        {!data.keys.length ? <p>No keys have been created.</p> : null}
+            </div>
+          </div>
+        )}
+        {data.organiser && data.active && atLimit ? (
+          <p
+            role="status"
+            className="mt-4 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)"
+          >
+            {t("atLimit", { count: data.limits.keys })}
+          </p>
+        ) : null}
         {confirmation ? (
           <div
-            className="mt-4 rounded-xl border p-4"
+            className="mt-5 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) p-5"
             role="group"
             aria-label="Confirm key change"
           >
-            <p>
+            <p className="m-0 text-[16px] font-semibold">
               {confirmation.action === "rotate"
-                ? `Regenerate ${confirmation.name}? The old key will stop working immediately. Update every application using it.`
-                : `Revoke ${confirmation.name}? Applications using it will stop working.`}
+                ? "Regenerate " + confirmation.name + "?"
+                : "Revoke " + confirmation.name + "?"}
             </p>
-            <div className="mt-3 flex gap-3">
-              <button
+            <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+              {confirmation.action === "rotate"
+                ? "The old key will stop working immediately. Update every application using it."
+                : "Applications using it will stop working."}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
                 type="button"
-                className={BUTTON}
+                variant="primary"
+                size="pill"
                 disabled={pending}
                 onClick={() =>
                   request({
@@ -325,92 +464,20 @@ export function TeamApiDashboard({
                 }
               >
                 Confirm
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className={BUTTON}
+                variant="surface"
+                size="pill"
                 disabled={pending}
                 onClick={() => setConfirmation(null)}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : null}
-        {data.organiser && data.active ? (
-          <form
-            className="mt-6 space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (secret) {
-                setError(
-                  "Save or dismiss the current key before creating another."
-                )
-
-                return
-              }
-              request({
-                action: "create",
-                name,
-                scopes,
-                expiresAt: expires
-                  ? new Date(`${expires}T23:59:59Z`).toISOString()
-                  : null,
-              })
-            }}
-          >
-            <h3 className="font-semibold">Create a key</h3>
-            <div className="flex flex-wrap gap-4">
-              <label className="flex flex-col gap-2">
-                Name
-                <input
-                  className={INPUT}
-                  required
-                  maxLength={80}
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Council website"
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                Expiry (optional)
-                <input
-                  className={INPUT}
-                  type="date"
-                  value={expires}
-                  onChange={(event) => setExpires(event.target.value)}
-                />
-              </label>
-            </div>
-            <fieldset>
-              <legend className="mb-2">Allowed APIs</legend>
-              <div className="flex flex-wrap gap-4">
-                {API_SCOPES.map((scope) => (
-                  <label key={scope} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={scopes.includes(scope)}
-                      onChange={(event) =>
-                        toggleScope(scope, event.target.checked)
-                      }
-                    />
-                    {scope === "search:read"
-                      ? "Library search"
-                      : "Library records"}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <button
-              type="submit"
-              className={BUTTON}
-              disabled={pending || !scopes.length || Boolean(secret)}
-            >
-              Create key
-            </button>
-          </form>
-        ) : null}
-      </section>
+      </StaffPanel>
       <ApiGuidePanel />
     </div>
   )

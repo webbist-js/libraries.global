@@ -1,14 +1,16 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 
-import { PageHero } from "@/components/ds"
+import { Badge, PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
+import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamApiDashboard } from "@/components/staff/TeamApiDashboard"
 import { sessionTeamsOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { getSessionSSR } from "@/lib/auth-server"
 import { BillingError } from "@/lib/billing/config"
+import type { TeamDetail } from "@/lib/staff/types"
 import { apiDashboard } from "@/lib/team-api/dashboard"
 import { requireApiTeam } from "@/lib/team-api/team"
 
@@ -28,8 +30,10 @@ export default async function TeamApiPage({
     : (teams.find((team) => team.role === "organiser") ?? teams[0])
   if (!chosen) notFound()
   let data = null
+  let detail: TeamDetail | null = null
   try {
     const team = await requireApiTeam(chosen.id, session.user)
+    detail = team
     data = await apiDashboard(authDbPool, team)
   } catch (error) {
     if (error instanceof BillingError && error.status === 404) notFound()
@@ -38,14 +42,25 @@ export default async function TeamApiPage({
   return (
     <>
       <PageHero
-        compact
+        staff
         breadcrumb={[
           { label: "Staff area", href: "/staff" },
           { label: "Your Team", href: `/staff/team?team=${chosen.id}` },
           { label: "API access" },
         ]}
         eyebrow="Team API add-on"
-        title="API access"
+        title={detail?.name ?? chosen.name}
+        plainTitle
+        chips={
+          detail ? (
+            <Badge
+              label={detail.verifiedAt ? "Verified" : "Not yet verified"}
+              color={detail.verifiedAt ? "ok" : "warn"}
+              icon={detail.verifiedAt ? "mdi:check" : "mdi:clock-outline"}
+            />
+          ) : undefined
+        }
+        tabs={<StaffAreaTabs active="api" teamId={chosen.id} />}
         lead="Connect your own applications to public Library search and records. Manage keys and see how much your Team uses."
       />
       <Container className="py-10">

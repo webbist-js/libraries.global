@@ -10,6 +10,7 @@ import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
 import { StaffAccessRequired } from "@/components/staff/StaffAccessRequired"
+import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { contributionPlaceParams, placeAddHref } from "@/lib/contribution-place"
@@ -60,15 +61,25 @@ export default async function StaffNewLibraryPage({
   )
   if (memberships.length > 0 && !teamResult?.body)
     return (
-      <Container className="py-10">
-        <Notice
-          icon="mdi:alert-outline"
-          tone="warn"
-          title={tUi("team_coverage_couldnt_be_loaded")}
-        >
-          Reload this page to choose the Team for your new library.
-        </Notice>
-      </Container>
+      <>
+        <PageHero
+          compact
+          eyebrow="Library staff"
+          title="Add a library"
+          tabs={
+            <StaffAreaTabs active="new" adding teamId={memberships[0]?.id} />
+          }
+        />
+        <Container className="py-10">
+          <Notice
+            icon="mdi:alert-outline"
+            tone="warn"
+            title={tUi("team_coverage_couldnt_be_loaded")}
+          >
+            Reload this page to choose the Team for your new library.
+          </Notice>
+        </Container>
+      </>
     )
   if (!libraries.length && !teams.some((team) => team.verified))
     return <StaffAccessRequired signedIn />
@@ -85,6 +96,7 @@ export default async function StaffNewLibraryPage({
         eyebrow="Library staff"
         eyebrowIcon="mdi:shield-account-outline"
         title="Add a library *to your staff area.*"
+        tabs={<StaffAreaTabs active="new" adding teamId={memberships[0]?.id} />}
         lead="Fill in what you know. An editor reviews the new library and your staff access before it goes live."
       />
       <Container className="py-10">

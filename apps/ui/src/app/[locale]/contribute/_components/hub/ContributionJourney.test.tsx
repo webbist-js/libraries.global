@@ -66,7 +66,7 @@ describe("ContributionJourney", () => {
       screen.getByRole("region", { name: "Take on a role" })
     ).getAllByRole("link")
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
-      "/auth/signin?callbackUrl=%2Fcontribute%2Findex%3Fintent%3Dclaim",
+      "/auth/signin?callbackUrl=%2Fcontribute%2Fclaim",
       "/auth/signin?callbackUrl=%2Fcontribute%2Fknowledge%2Fapply",
       "/auth/signin?callbackUrl=%2Fcontribute%2Fknowledge%2Fapply%3Frole%3Dmoderator",
     ])

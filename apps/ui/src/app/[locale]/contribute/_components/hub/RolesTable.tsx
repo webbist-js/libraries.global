@@ -215,11 +215,11 @@ export function RolesTable() {
         Staff verification lets you steward your library&rsquo;s record. It
         doesn&rsquo;t mean the library endorses this project.{" "}
         <GlobalLink
-          href="/contribute/index"
+          href="/contribute/claim"
           className="underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
-          Find your library, then choose Claim
+          Claim your library
         </GlobalLink>
       </p>
     </div>

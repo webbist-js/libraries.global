@@ -1,17 +1,18 @@
 // @vitest-environment happy-dom
+import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { API_TERMS_VERSION } from "@/lib/team-api/config"
+import type { ApiDashboard } from "@/lib/team-api/types"
 import {
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
-} from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+  within,
+} from "@/test/render"
 
-import { API_TERMS_VERSION } from "@/lib/team-api/config"
-import type { ApiDashboard } from "@/lib/team-api/types"
-
-vi.mock("next-intl", () => ({ useLocale: () => "en" }))
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/navigation", async () => {
   const { createElement } = await import("react")
 
@@ -74,7 +75,14 @@ describe("Team API staff dashboard", () => {
         confirming={false}
       />
     )
-    const button = screen.getByRole("button", {
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(screen.queryByRole("checkbox")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Add API access" }))
+    const dialog = screen.getByRole("dialog", { name: "Add API access" })
+    expect(within(dialog).getByText("£15.00")).toBeTruthy()
+    expect(within(dialog).getByText("100,000")).toBeTruthy()
+    expect(within(dialog).getByText("10 GiB")).toBeTruthy()
+    const button = within(dialog).getByRole("button", {
       name: "Subscribe to API access",
     }) as HTMLButtonElement
     expect(button.disabled).toBe(true)
@@ -95,6 +103,7 @@ describe("Team API staff dashboard", () => {
         confirming={false}
       />
     )
+    fireEvent.click(screen.getByRole("button", { name: "Add API access" }))
     fireEvent.click(screen.getByRole("checkbox"))
     fireEvent.click(
       screen.getByRole("button", { name: "Subscribe to API access" })
@@ -105,6 +114,57 @@ describe("Team API staff dashboard", () => {
       locale: "en",
       termsVersion: API_TERMS_VERSION,
     })
+    const dialog = screen.getByRole("dialog", { name: "Add API access" })
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert").textContent).toContain(
+        "API access is temporarily unavailable"
+      )
+    )
+    expect(within(dialog).getByRole("checkbox").getAttribute("type")).toBe(
+      "checkbox"
+    )
+  })
+
+  it("resets consent when the modal is dismissed without creating a checkout", () => {
+    const fetcher = vi.fn<typeof fetch>()
+    vi.stubGlobal("fetch", fetcher)
+    render(
+      <TeamApiDashboard
+        initial={{ ...initial, active: false }}
+        teams={[]}
+        confirming={false}
+      />
+    )
+    const trigger = screen.getByRole("button", { name: "Add API access" })
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole("checkbox"))
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+    expect(screen.queryByRole("dialog")).toBeNull()
+    fireEvent.click(trigger)
+    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(
+      false
+    )
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Subscribe to API access",
+        }) as HTMLButtonElement
+      ).disabled
+    ).toBe(true)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it("does not offer a second checkout while payment is being confirmed", () => {
+    render(
+      <TeamApiDashboard
+        initial={{ ...initial, active: false, pendingPayment: true }}
+        teams={[]}
+        confirming
+      />
+    )
+    expect(screen.getByText("Confirming payment")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Add API access" })).toBeNull()
+    expect(screen.queryByRole("dialog")).toBeNull()
   })
   it("shows a created secret once and blocks another creation until it is saved", async () => {
     const secret = `lg_api_${"a".repeat(43)}`
@@ -114,6 +174,8 @@ describe("Team API staff dashboard", () => {
       .mockResolvedValueOnce(Response.json(initial))
     vi.stubGlobal("fetch", fetcher)
     render(<TeamApiDashboard initial={initial} teams={[]} confirming={false} />)
+    expect(screen.queryByRole("textbox", { name: "Name" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Create key" }))
     fireEvent.change(screen.getByRole("textbox", { name: "Name" }), {
       target: { value: "Council website" },
     })
@@ -121,12 +183,75 @@ describe("Team API staff dashboard", () => {
       screen.getByRole("button", { name: "Create key" }).closest("form")!
     )
     await waitFor(() => expect(screen.getByText(secret)).toBeTruthy())
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByText(secret).closest('[role="status"]')
+      )
+    )
     expect(
       (screen.getByRole("button", { name: "Create key" }) as HTMLButtonElement)
         .disabled
     ).toBe(true)
     fireEvent.click(screen.getByRole("button", { name: "I have saved it" }))
     expect(screen.queryByText(secret)).toBeNull()
+  })
+
+  it("creates only the selected API access and optional expiry from the key dialog", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({ error: "fixture_stop" }, { status: 400 })
+      )
+    vi.stubGlobal("fetch", fetcher)
+    render(<TeamApiDashboard initial={initial} teams={[]} confirming={false} />)
+    fireEvent.click(screen.getByRole("button", { name: "Create key" }))
+    const dialog = screen.getByRole("dialog", { name: "Create an API key" })
+    const create = within(dialog).getByRole("button", {
+      name: "Create key",
+    }) as HTMLButtonElement
+    expect(create.disabled).toBe(true)
+    fireEvent.change(within(dialog).getByRole("textbox", { name: "Name" }), {
+      target: { value: " Council website " },
+    })
+    fireEvent.change(within(dialog).getByLabelText("Expiry (optional)"), {
+      target: { value: "2027-01-31" },
+    })
+    fireEvent.click(
+      within(dialog).getByRole("checkbox", { name: /Library search/ })
+    )
+    fireEvent.click(
+      within(dialog).getByRole("checkbox", { name: /Library records/ })
+    )
+    expect(create.disabled).toBe(true)
+    fireEvent.click(
+      within(dialog).getByRole("checkbox", { name: /Library records/ })
+    )
+    fireEvent.submit(create.closest("form")!)
+    await waitFor(() => expect(fetcher).toHaveBeenCalled())
+    expect(JSON.parse(fetcher.mock.calls[0]?.[1]?.body as string)).toEqual({
+      action: "create",
+      name: "Council website",
+      scopes: ["libraries:read"],
+      expiresAt: "2027-01-31T23:59:59.000Z",
+    })
+    await waitFor(() =>
+      expect(within(dialog).getByRole("alert").textContent).toContain(
+        "API access is temporarily unavailable"
+      )
+    )
+  })
+
+  it("can dismiss key creation without issuing a key", () => {
+    const fetcher = vi.fn<typeof fetch>()
+    vi.stubGlobal("fetch", fetcher)
+    render(<TeamApiDashboard initial={initial} teams={[]} confirming={false} />)
+    fireEvent.click(screen.getByRole("button", { name: "Create key" }))
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })
+    )
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(fetcher).not.toHaveBeenCalled()
   })
   it("sends only the key id and action after regeneration confirmation", async () => {
     const key = {
@@ -163,5 +288,83 @@ describe("Team API staff dashboard", () => {
       action: "rotate",
       keyId: key.id,
     })
+  })
+  it("shows daily requests, bytes and errors in the accessible table", () => {
+    render(
+      <TeamApiDashboard
+        initial={{
+          ...initial,
+          usage: { ...initial.usage, requests: 29_527, bytes: 124 * 1024 ** 2 },
+          days: [
+            { day: "2026-10-20", requests: 500, bytes: 1024 ** 2, errors: 3 },
+          ],
+        }}
+        teams={[]}
+        confirming={false}
+      />
+    )
+    expect(screen.getByText("70,473 left this month")).toBeTruthy()
+    expect(
+      screen.getByRole("heading", {
+        name: "Requests per day · since Oct 20, 2026",
+      })
+    ).toBeTruthy()
+    const toggle = screen.getByRole("button", { name: "Show daily table" })
+    expect(toggle.getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(toggle)
+    const table = screen.getByRole("table", { name: "Daily API usage" })
+    expect(table.textContent).toContain("2026-10-20")
+    expect(table.textContent).toContain("500")
+    expect(table.textContent).toContain("1.0 MiB")
+    expect(table.textContent).toContain("Errors")
+    expect(
+      screen
+        .getByRole("button", { name: "Show chart" })
+        .getAttribute("aria-expanded")
+    ).toBe("true")
+  })
+
+  it("counts only active keys toward the limit and prevents creating beyond it", () => {
+    const key = {
+      id: "key-1",
+      name: "Council site",
+      prefix: "lg_api_fixture",
+      scopes: ["libraries:read" as const],
+      createdAt: "2020-01-01T00:00:00Z",
+      expiresAt: null,
+      lastUsedAt: null,
+      revokedAt: null,
+      requests: 0,
+      bytes: 0,
+    }
+    render(
+      <TeamApiDashboard
+        initial={{
+          ...initial,
+          limits: { ...initial.limits, keys: 1 },
+          keys: [
+            key,
+            {
+              ...key,
+              id: "old-key",
+              name: "Old site",
+              expiresAt: "2020-02-01T00:00:00Z",
+            },
+          ],
+        }}
+        teams={[]}
+        confirming={false}
+      />
+    )
+    expect(screen.getByText("1 of 1 active")).toBeTruthy()
+    expect(
+      (screen.getByRole("button", { name: "Create key" }) as HTMLButtonElement)
+        .disabled
+    ).toBe(true)
+    const regenerate = screen.getAllByRole("button", {
+      name: "Regenerate",
+    }) as HTMLButtonElement[]
+    expect(regenerate[0]!.disabled).toBe(false)
+    expect(regenerate[1]!.disabled).toBe(true)
   })
 })

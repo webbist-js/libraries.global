@@ -140,7 +140,7 @@ describe("StaffShell", () => {
       screen
         .getByRole("link", { name: /Claim another library/ })
         .getAttribute("href")
-    ).toBe("/contribute/claim")
+    ).toBe("/staff/claim")
   })
 
   it("gives a Mobile library every tab, the Mobile tags and the suggestions count", () => {

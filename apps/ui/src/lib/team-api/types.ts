@@ -17,6 +17,8 @@ export type ApiMembership = {
   currency: string
   unitAmount: number
   paidThrough: string | null
+  /** First settled API access, retained across renewals. Absent in older snapshots. */
+  startedAt?: string | null
   cancelAtPeriodEnd: boolean
   revoked: boolean
   limits: ApiLimits

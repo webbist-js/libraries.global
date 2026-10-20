@@ -19,8 +19,8 @@ import {
   fieldInputStyle,
   fieldLabelStyle,
 } from "@/components/library-editor/wizard.constants"
+import { Button } from "@/components/ui/button"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
-import { primaryCtaSm } from "@/lib/styles"
 
 type Stop = { id: string; name: string }
 const DAY_LABELS: Record<string, string> = {
@@ -414,13 +414,15 @@ export function LibraryNoticeForm({
           library’s page.
         </p>
       )}
-      <button
-        className={`${primaryCtaSm} min-h-14 w-full justify-center text-[16px]`}
+      <Button
+        variant="primary"
+        size="pill-lg"
+        className="w-full"
         disabled={busy}
         type="submit"
       >
         {busy ? "Posting…" : initial ? "Save notice" : "Post notice"}
-      </button>
+      </Button>
     </form>
   )
 }

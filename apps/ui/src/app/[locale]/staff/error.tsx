@@ -5,7 +5,9 @@
 import * as Sentry from "@sentry/nextjs"
 import { useEffect } from "react"
 
+import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
+import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 
 /**
@@ -25,8 +27,16 @@ export default function StaffErrorPage({
   }, [error])
 
   return (
-    <Container className="py-10">
-      <StaffLoadError what="This page" onRetry={reset} />
-    </Container>
+    <>
+      <PageHero
+        compact
+        eyebrow="Library staff"
+        title="Your Staff area"
+        tabs={<StaffAreaTabs active="overview" />}
+      />
+      <Container className="py-10">
+        <StaffLoadError what="This page" onRetry={reset} />
+      </Container>
+    </>
   )
 }

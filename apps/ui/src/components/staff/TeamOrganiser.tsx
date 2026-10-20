@@ -6,6 +6,8 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, SegmentedControl, Sheet } from "@/components/ds"
+import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
+import { Button } from "@/components/ui/button"
 import { useStaff } from "@/lib/access-client"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
@@ -25,18 +27,9 @@ type Confirmation = {
 }
 type Assignment = { libraryDocumentId: string; staffRole: StaffRole }
 
-const PILL =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
-const SMALL_PILL =
-  "inline-flex min-h-11 items-center justify-center gap-1 rounded-full border bg-white px-3.5 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
 const CONTACT_LINK =
-  "inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
-const PRIMARY =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
-const INPUT =
-  "min-h-11 rounded-[14px] border bg-(--t-bg-surface) px-3 text-[15px] font-normal"
-const QUIET_LINK =
-  "inline-flex min-h-11 items-center text-[13.5px] font-semibold underline underline-offset-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-4"
+const INPUT = STAFF_FIELD
 const NONE = "__none__"
 const LEVELS = [
   { value: "owner", label: "Owner" },
@@ -57,33 +50,7 @@ const initialsOf = (m: TeamMemberRow) =>
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("") || "?"
 
-function Card({
-  title,
-  aside,
-  children,
-}: {
-  readonly title: string
-  readonly aside?: React.ReactNode
-  readonly children: React.ReactNode
-}) {
-  return (
-    <section
-      className="rounded-[20px] border p-6 sm:p-8"
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2
-          className="m-0 text-[24px]"
-          style={{ fontFamily: T.font.serif, color: T.ink.base }}
-        >
-          {title}
-        </h2>
-        {aside}
-      </div>
-      {children}
-    </section>
-  )
-}
+const Card = StaffPanel
 
 /**
  * The Team organiser's page body: seats, the libraries covered, the
@@ -189,11 +156,6 @@ export function TeamOrganiser({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Link href={`/staff/team/api?team=${team.documentId}`} className={PILL}>
-          API access and usage
-        </Link>
-      </div>
       <div role="status" aria-live="polite" className="sr-only">
         {status}
       </div>
@@ -230,520 +192,577 @@ export function TeamOrganiser({
         </Notice>
       ) : null}
 
-      <Card
-        title={team.name}
-        aside={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge
-              label={team.verifiedAt ? "Verified team" : "Not yet verified"}
-              color={team.verifiedAt ? "ok" : "warn"}
-              icon={
-                team.verifiedAt
-                  ? "mdi:check-decagram-outline"
-                  : "mdi:clock-outline"
-              }
-            />
-            <Badge
-              label={
-                active
-                  ? "Active"
-                  : team.status === "lapsed"
-                    ? "Lapsed"
-                    : "Expired"
-              }
-              color={active ? "aurora" : "dim"}
-            />
-          </div>
-        }
-      >
-        <dl className="m-0 grid gap-4 sm:grid-cols-3">
-          <div>
-            <dt
-              className="text-[13px] font-semibold"
-              style={{ color: T.ink.dim }}
-            >
-              Seats
-            </dt>
-            <dd
-              className="m-0 text-[28px]"
-              style={{ fontFamily: T.font.serif }}
-            >
-              {team.used}{" "}
-              <span style={{ color: T.ink.dim, fontSize: 16 }}>
-                of {team.seats}
+      {!team.verifiedAt ? (
+        <Notice
+          tone="warn"
+          icon="mdi:clock-outline"
+          title="Waiting for Team verification"
+        >
+          Until the site team verifies {team.name}, each library assignment is
+          filed as a claim for a moderator to check.{" "}
+          <a href={TEAM_CONTACT_HREF} className={CONTACT_LINK}>
+            Contact the site team
+          </a>
+        </Notice>
+      ) : null}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+        <div className="min-w-0 space-y-6">
+          <Card
+            id="team-members"
+            title="Members"
+            aside={
+              <span className="text-[14px] text-(--t-ink-dim)">
+                {team.used} of {team.seats} seats
               </span>
-            </dd>
-          </div>
-          <div>
-            <dt
-              className="text-[13px] font-semibold"
-              style={{ color: T.ink.dim }}
+            }
+          >
+            <ul
+              className="m-0 list-none divide-y p-0"
+              style={{ borderColor: T.border.divider }}
             >
-              Organisers
-            </dt>
-            <dd className="m-0 text-[15px]">
-              {team.organiserNames.join(", ") || "None yet"}
-            </dd>
-          </div>
-          <div>
-            <dt
-              className="text-[13px] font-semibold"
-              style={{ color: T.ink.dim }}
-            >
-              Runs until
-            </dt>
-            <dd className="m-0 text-[15px]">
-              {team.expiresAt ? date(team.expiresAt) : "Open ended"}
-            </dd>
-          </div>
-        </dl>
-        {!team.verifiedAt ? (
-          <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
-            Until the site team verifies {team.name}, each assignment is filed
-            as a claim for a moderator to check.{" "}
-            <a
-              href={TEAM_CONTACT_HREF}
-              className={CONTACT_LINK}
-              style={{ color: T.accent.primary }}
-            >
-              Contact the site team
-            </a>
-          </p>
-        ) : null}
-        {others.length ? (
-          <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
-            Your other teams:{" "}
-            {others.map((t, i) => (
-              <span key={t.id}>
-                {i > 0 ? ", " : ""}
-                <Link
-                  href={`/staff/team?team=${t.id}`}
-                  className="font-semibold underline"
-                  style={{ color: T.accent.primary }}
-                >
-                  {t.name}
-                </Link>
-              </span>
-            ))}
-          </p>
-        ) : null}
-      </Card>
+              {team.members.map((member, index) => {
+                const current = assignmentsOf(member)
 
-      <Card title={`Libraries covered (${team.libraries.length})`}>
-        {team.libraries.length ? (
-          <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {team.libraries.map((lib) => {
-              const tint = tintForLibraryType(lib.libraryType)
-              const staff = staffOf.has(lib.documentId)
-
-              return (
-                <li
-                  key={lib.documentId}
-                  className="flex flex-col gap-2 rounded-2xl border p-4"
-                  style={{
-                    borderColor: T.border.line,
-                    background: T.bg.surface,
-                  }}
-                >
-                  <span
-                    className="inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold"
-                    style={{ background: tint.bg, color: tint.fg }}
+                return (
+                  <li
+                    key={member.documentId}
+                    className="py-5 first:pt-0 last:pb-0"
+                    style={{ borderColor: T.border.divider }}
                   >
-                    {lib.libraryType === "Mobile"
-                      ? "Mobile library"
-                      : `${lib.libraryType} library`}
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar
+                          initials={initialsOf(member)}
+                          index={index}
+                          size="lg"
+                          title={member.name ?? undefined}
+                          variant="tint"
+                        />
+                        <div className="min-w-0 [overflow-wrap:anywhere]">
+                          <p
+                            className="m-0 font-semibold"
+                            style={{ color: T.ink.base }}
+                          >
+                            {member.name ?? member.email ?? member.emailMasked}
+                            {member.isYou ? (
+                              <span style={{ color: T.ink.dim }}> (you)</span>
+                            ) : null}
+                          </p>
+                          <p
+                            className="m-0 text-[14px]"
+                            style={{ color: T.ink.dim }}
+                          >
+                            {organiser ? member.email : member.emailMasked}
+                            {member.status === "active"
+                              ? member.acceptedAt
+                                ? ` · joined ${date(member.acceptedAt)}`
+                                : ""
+                              : member.invitedAt
+                                ? ` · invited ${date(member.invitedAt)}`
+                                : " · invited"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          label={
+                            member.status === "active"
+                              ? "Active"
+                              : tUi("invited")
+                          }
+                          color={member.status === "active" ? "ok" : "warn"}
+                          dot
+                        />
+                        {organiser && !member.isYou ? (
+                          <label className="flex items-center gap-2 text-[14px]">
+                            <span className="sr-only">
+                              Team role for {member.name ?? member.email}
+                            </span>
+                            <select
+                              value={member.teamRole}
+                              disabled={busy}
+                              className={`${INPUT} text-[14px]`}
+                              style={{ borderColor: T.border.hi }}
+                              onChange={(event) =>
+                                setConfirm({
+                                  title:
+                                    event.target.value === "organiser"
+                                      ? `Make ${member.name ?? member.email} an organiser?`
+                                      : `Make ${member.name ?? member.email} a member?`,
+                                  body:
+                                    event.target.value === "organiser"
+                                      ? "Organisers invite colleagues, assign them to libraries and can remove anyone from the team."
+                                      : "Members keep their seat and their library access, but can’t change the team.",
+                                  path: `${base}/members/${member.documentId}`,
+                                  method: "PUT",
+                                  payload: { teamRole: event.target.value },
+                                })
+                              }
+                            >
+                              <option value="member">Member</option>
+                              <option value="organiser">Organiser</option>
+                            </select>
+                          </label>
+                        ) : (
+                          <Badge
+                            label={
+                              member.teamRole === "organiser"
+                                ? "Organiser"
+                                : "Member"
+                            }
+                            color="dim"
+                          />
+                        )}
+                        {organiser && member.status === "invited" ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="surface"
+                              size="pill"
+                              style={{ borderColor: T.border.hi }}
+                              disabled={busy}
+                              onClick={() =>
+                                void request(
+                                  `${base}/invites/${member.documentId}/resend`,
+                                  "POST"
+                                )
+                              }
+                            >
+                              Resend
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="surface"
+                              size="pill"
+                              style={{ borderColor: T.border.hi }}
+                              disabled={busy}
+                              onClick={() =>
+                                setConfirm({
+                                  title: `Revoke the invite for ${member.email}?`,
+                                  body: "Their link stops working and the seat is freed.",
+                                  path: `${base}/invites/${member.documentId}`,
+                                  method: "DELETE",
+                                })
+                              }
+                            >
+                              Revoke
+                            </Button>
+                          </>
+                        ) : null}
+                        {organiser &&
+                        member.status === "active" &&
+                        !member.isYou ? (
+                          <Button
+                            type="button"
+                            variant="link"
+                            size="pill"
+                            className="px-0 text-(--t-ink-dim) underline"
+                            style={{ color: T.ink.dim }}
+                            disabled={busy}
+                            onClick={() =>
+                              setConfirm({
+                                title: `Remove ${member.name ?? member.email} from ${team.name}?`,
+                                body: "They lose their seat, Pro from this team and staff access at every library this team gave them. They’re emailed for each library.",
+                                path: `${base}/members/${member.documentId}`,
+                                method: "DELETE",
+                                danger: true,
+                              })
+                            }
+                          >
+                            {tUi("remove")}{" "}
+                            <span className="sr-only">
+                              {" "}
+                              {memberName(member)} from the team
+                            </span>
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      {current.map((a) => (
+                        <Badge
+                          key={a.libraryDocumentId}
+                          label={`${libraryName(a.libraryDocumentId)} · ${a.staffRole === "owner" ? "Owner" : "Editor"}${member.status === "invited" ? " · on acceptance" : ""}`}
+                          color="dim"
+                          icon={
+                            team.libraries.find(
+                              (l) => l.documentId === a.libraryDocumentId
+                            )?.libraryType === "Mobile"
+                              ? "mdi:bus-side"
+                              : "mdi:library-outline"
+                          }
+                        />
+                      ))}
+                      {member.pending.map((p) => (
+                        <Badge
+                          key={p.submissionDocumentId}
+                          label={`${libraryName(p.libraryDocumentId)} · ${p.staffRole === "owner" ? "Owner" : "Editor"} · with a moderator`}
+                          color="warn"
+                          icon="mdi:clock-outline"
+                        />
+                      ))}
+                      {current.length === 0 && member.pending.length === 0 ? (
+                        <span
+                          className="text-[14px]"
+                          style={{ color: T.ink.dim }}
+                        >
+                          No libraries yet
+                        </span>
+                      ) : null}
+                      {organiser && team.libraries.length > 0 ? (
+                        <Button
+                          type="button"
+                          variant="surface"
+                          size="pill"
+                          style={{ borderColor: T.border.hi }}
+                          disabled={busy}
+                          onClick={() => openAssign(member)}
+                        >
+                          <Icon
+                            aria-hidden="true"
+                            icon={
+                              current.length ? "mdi:pencil-outline" : "mdi:plus"
+                            }
+                            width={14}
+                            height={14}
+                          />
+                          {current.length
+                            ? "Change libraries"
+                            : "Assign to a library"}
+                          <span className="sr-only">
+                            {" "}
+                            for {memberName(member)}
+                          </span>
+                        </Button>
+                      ) : null}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+            {!organiser ? (
+              <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+                Ask {team.organiserNames.join(" or ") || "your organiser"} to
+                change your access.
+              </p>
+            ) : null}
+          </Card>
+
+          <Card
+            id="team-libraries"
+            title="Libraries covered"
+            aside={
+              <span className="text-[14px] text-(--t-ink-dim)">
+                {team.libraries.length}
+              </span>
+            }
+          >
+            {team.libraries.length ? (
+              <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
+                {team.libraries.map((lib) => {
+                  const tint = tintForLibraryType(lib.libraryType)
+                  const staff = staffOf.has(lib.documentId)
+
+                  return (
+                    <li
+                      key={lib.documentId}
+                      className="flex flex-col gap-2 rounded-2xl border p-4"
+                      style={{
+                        borderColor: T.border.line,
+                        background: T.bg.surface,
+                      }}
+                    >
+                      <span
+                        className="inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[14px] font-semibold"
+                        style={{ background: tint.bg, color: tint.fg }}
+                      >
+                        {lib.libraryType === "Mobile"
+                          ? "Mobile library"
+                          : `${lib.libraryType} library`}
+                      </span>
+                      <strong className="text-[16px] font-semibold">
+                        {lib.name}
+                      </strong>
+                      {staff ? (
+                        <Link
+                          href={staffLibraryHref(lib.slug)}
+                          className="inline-flex min-h-11 items-center text-[14px] font-semibold underline underline-offset-[3px]"
+                          style={{ color: T.accent.primary }}
+                        >
+                          Open Staff area
+                        </Link>
+                      ) : (
+                        <span
+                          className="text-[14px]"
+                          style={{ color: T.ink.dim }}
+                        >
+                          You’re not assigned here
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-dashed border-(--t-border-hi) p-4">
+                <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-(--t-bg-space) text-(--t-ink-dim)">
+                  <Icon aria-hidden="true" icon="mdi:bank-outline" width={22} />
+                </span>
+                <p className="m-0 min-w-0 flex-1 basis-48 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                  <strong className="text-(--t-ink-base)">
+                    No libraries yet.
+                  </strong>{" "}
+                  The site team adds libraries to the Team. Once added,
+                  organisers can give members access to each one.
+                </p>
+                <Button asChild variant="surface" size="pill">
+                  <a href={TEAM_CONTACT_HREF}>Ask to add libraries</a>
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
+        <aside className="min-w-0 space-y-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain">
+          <Card
+            compact
+            title="Team details"
+            aside={
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  label={team.verifiedAt ? "Verified team" : "Not yet verified"}
+                  color={team.verifiedAt ? "ok" : "warn"}
+                  icon={
+                    team.verifiedAt
+                      ? "mdi:check-decagram-outline"
+                      : "mdi:clock-outline"
+                  }
+                />
+                <Badge
+                  label={
+                    active
+                      ? "Active"
+                      : team.status === "lapsed"
+                        ? "Lapsed"
+                        : "Expired"
+                  }
+                  color={active ? "aurora" : "dim"}
+                />
+              </div>
+            }
+          >
+            <dl className="m-0 grid gap-4">
+              <div>
+                <dt
+                  className="text-[14px] font-semibold"
+                  style={{ color: T.ink.dim }}
+                >
+                  Seats
+                </dt>
+                <dd
+                  className="m-0 text-[28px]"
+                  style={{ fontFamily: T.font.serif }}
+                >
+                  {team.used}{" "}
+                  <span style={{ color: T.ink.dim, fontSize: 16 }}>
+                    of {team.seats}
                   </span>
-                  <strong className="text-[16px] font-semibold">
-                    {lib.name}
-                  </strong>
-                  {staff ? (
+                </dd>
+                <progress
+                  aria-label="Team seats in use"
+                  value={team.used}
+                  max={Math.max(1, team.seats)}
+                  className="mt-3 h-2 w-full overflow-hidden rounded-full accent-(--t-accent-primary) [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:bg-(--t-accent-primary)"
+                />
+              </div>
+              <div>
+                <dt
+                  className="text-[14px] font-semibold"
+                  style={{ color: T.ink.dim }}
+                >
+                  Organisers
+                </dt>
+                <dd className="m-0 text-[15px]">
+                  {team.organiserNames.join(", ") || "None yet"}
+                </dd>
+              </div>
+              <div>
+                <dt
+                  className="text-[14px] font-semibold"
+                  style={{ color: T.ink.dim }}
+                >
+                  Runs until
+                </dt>
+                <dd className="m-0 text-[15px]">
+                  {team.expiresAt ? date(team.expiresAt) : "Open ended"}
+                </dd>
+              </div>
+            </dl>
+            {others.length ? (
+              <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+                Your other teams:{" "}
+                {others.map((t, i) => (
+                  <span key={t.id}>
+                    {i > 0 ? ", " : ""}
                     <Link
-                      href={staffLibraryHref(lib.slug)}
-                      className="inline-flex min-h-11 items-center text-[14px] font-semibold underline underline-offset-[3px]"
+                      href={`/staff/team?team=${t.id}`}
+                      className="font-semibold underline"
                       style={{ color: T.accent.primary }}
                     >
-                      Open Staff area
+                      {t.name}
                     </Link>
-                  ) : (
-                    <span className="text-[13px]" style={{ color: T.ink.dim }}>
-                      You’re not assigned here
-                    </span>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-            No libraries yet. The site team adds them to the Team.
-          </p>
-        )}
-      </Card>
+                  </span>
+                ))}
+              </p>
+            ) : null}
+          </Card>
 
-      <Card title={`Members (${team.members.length})`}>
-        <ul
-          className="m-0 list-none divide-y p-0"
-          style={{ borderColor: T.border.divider }}
-        >
-          {team.members.map((member, index) => {
-            const current = assignmentsOf(member)
-
-            return (
-              <li
-                key={member.documentId}
-                className="py-5"
-                style={{ borderColor: T.border.divider }}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      initials={initialsOf(member)}
-                      index={index}
-                      size="lg"
-                      title={member.name ?? undefined}
-                      variant="tint"
-                    />
-                    <div>
-                      <p
-                        className="m-0 font-semibold"
-                        style={{ color: T.ink.base }}
-                      >
-                        {member.name ?? member.email ?? member.emailMasked}
-                        {member.isYou ? (
-                          <span style={{ color: T.ink.dim }}> (you)</span>
-                        ) : null}
-                      </p>
-                      <p
-                        className="m-0 text-[13px]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {organiser ? member.email : member.emailMasked}
-                        {member.status === "active"
-                          ? member.acceptedAt
-                            ? ` · joined ${date(member.acceptedAt)}`
-                            : ""
-                          : member.invitedAt
-                            ? ` · invited ${date(member.invitedAt)}`
-                            : " · invited"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge
-                      label={
-                        member.status === "active" ? "Active" : tUi("invited")
-                      }
-                      color={member.status === "active" ? "ok" : "warn"}
-                      dot
-                    />
-                    {organiser && !member.isYou ? (
-                      <label className="flex items-center gap-2 text-[13px]">
-                        <span className="sr-only">
-                          Team role for {member.name ?? member.email}
-                        </span>
-                        <select
-                          value={member.teamRole}
-                          disabled={busy}
-                          className={`${INPUT} text-[13px]`}
-                          style={{ borderColor: T.border.hi }}
-                          onChange={(event) =>
-                            setConfirm({
-                              title:
-                                event.target.value === "organiser"
-                                  ? `Make ${member.name ?? member.email} an organiser?`
-                                  : `Make ${member.name ?? member.email} a member?`,
-                              body:
-                                event.target.value === "organiser"
-                                  ? "Organisers invite colleagues, assign them to libraries and can remove anyone from the team."
-                                  : "Members keep their seat and their library access, but can’t change the team.",
-                              path: `${base}/members/${member.documentId}`,
-                              method: "PUT",
-                              payload: { teamRole: event.target.value },
-                            })
-                          }
-                        >
-                          <option value="member">Member</option>
-                          <option value="organiser">Organiser</option>
-                        </select>
-                      </label>
-                    ) : (
-                      <Badge
-                        label={
-                          member.teamRole === "organiser"
-                            ? "Organiser"
-                            : "Member"
-                        }
-                        color="dim"
-                      />
-                    )}
-                    {organiser && member.status === "invited" ? (
-                      <>
-                        <button
-                          type="button"
-                          className={SMALL_PILL}
-                          style={{ borderColor: T.border.hi }}
-                          disabled={busy}
-                          onClick={() =>
-                            void request(
-                              `${base}/invites/${member.documentId}/resend`,
-                              "POST"
-                            )
-                          }
-                        >
-                          Resend
-                        </button>
-                        <button
-                          type="button"
-                          className={SMALL_PILL}
-                          style={{ borderColor: T.border.hi }}
-                          disabled={busy}
-                          onClick={() =>
-                            setConfirm({
-                              title: `Revoke the invite for ${member.email}?`,
-                              body: "Their link stops working and the seat is freed.",
-                              path: `${base}/invites/${member.documentId}`,
-                              method: "DELETE",
-                            })
-                          }
-                        >
-                          Revoke
-                        </button>
-                      </>
-                    ) : null}
-                    {organiser &&
-                    member.status === "active" &&
-                    !member.isYou ? (
-                      <button
-                        type="button"
-                        className={QUIET_LINK}
-                        style={{ color: T.ink.dim }}
-                        disabled={busy}
-                        onClick={() =>
-                          setConfirm({
-                            title: `Remove ${member.name ?? member.email} from ${team.name}?`,
-                            body: "They lose their seat, Pro from this team and staff access at every library this team gave them. They’re emailed for each library.",
-                            path: `${base}/members/${member.documentId}`,
-                            method: "DELETE",
-                            danger: true,
-                          })
-                        }
-                      >
-                        {tUi("remove")}{" "}
-                        <span className="sr-only">
-                          {" "}
-                          {memberName(member)} from the team
-                        </span>
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {current.map((a) => (
-                    <Badge
-                      key={a.libraryDocumentId}
-                      label={`${libraryName(a.libraryDocumentId)} · ${a.staffRole === "owner" ? "Owner" : "Editor"}${member.status === "invited" ? " · on acceptance" : ""}`}
-                      color="dim"
-                      icon={
-                        team.libraries.find(
-                          (l) => l.documentId === a.libraryDocumentId
-                        )?.libraryType === "Mobile"
-                          ? "mdi:bus-side"
-                          : "mdi:library-outline"
-                      }
-                    />
-                  ))}
-                  {member.pending.map((p) => (
-                    <Badge
-                      key={p.submissionDocumentId}
-                      label={`${libraryName(p.libraryDocumentId)} · ${p.staffRole === "owner" ? "Owner" : "Editor"} · with a moderator`}
-                      color="warn"
-                      icon="mdi:clock-outline"
-                    />
-                  ))}
-                  {current.length === 0 && member.pending.length === 0 ? (
-                    <span className="text-[13px]" style={{ color: T.ink.dim }}>
-                      No libraries yet
-                    </span>
-                  ) : null}
-                  {organiser && team.libraries.length > 0 ? (
-                    <button
-                      type="button"
-                      className={SMALL_PILL}
+          {organiser ? (
+            <Card
+              compact
+              title={tUi("invite_a_colleague")}
+              aside={
+                <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                  {seatsLeft} {seatsLeft === 1 ? "seat" : "seats"} left
+                </span>
+              }
+            >
+              {seatsLeft === 0 ? (
+                <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                  Every seat is taken. Remove someone, or ask the site team to
+                  add seats to {team.name}.{" "}
+                  <a
+                    href={TEAM_CONTACT_HREF}
+                    className={CONTACT_LINK}
+                    style={{ color: T.accent.primary }}
+                  >
+                    Contact the site team
+                  </a>
+                </p>
+              ) : (
+                <form
+                  className="grid min-w-0 gap-4"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    request(
+                      `${base}/invites`,
+                      "POST",
+                      {
+                        email: inviteEmail,
+                        teamRole: inviteRole,
+                        ...(inviteLibrary !== NONE
+                          ? {
+                              preassign: {
+                                libraryDocumentId: inviteLibrary,
+                                staffRole: inviteLevel,
+                              },
+                            }
+                          : {}),
+                      },
+                      "Invite sent."
+                    ).then(({ ok, body }) => {
+                      if (!ok) return
+                      setInviteEmail("")
+                      setInviteLibrary(NONE)
+                      const sent = (body as { emailSent?: boolean } | null)
+                        ?.emailSent
+                      if (sent === false)
+                        setStatus(
+                          "Invite created, but email isn’t configured: send them the link from the Resend action once it is."
+                        )
+                    })
+                  }}
+                >
+                  <label className="flex flex-col gap-2 text-[14px] font-semibold">
+                    {tUi("email")}{" "}
+                    <input
+                      type="email"
+                      required
+                      autoComplete="off"
+                      value={inviteEmail}
+                      onChange={(event) => setInviteEmail(event.target.value)}
+                      className={INPUT}
                       style={{ borderColor: T.border.hi }}
-                      disabled={busy}
-                      onClick={() => openAssign(member)}
+                      maxLength={254}
+                      placeholder="colleague@library.example"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-[14px] font-semibold">
+                    Team role
+                    <select
+                      value={inviteRole}
+                      onChange={(event) =>
+                        setInviteRole(
+                          event.target.value === "organiser"
+                            ? "organiser"
+                            : "member"
+                        )
+                      }
+                      className={INPUT}
+                      style={{ borderColor: T.border.hi }}
+                    >
+                      <option value="member">Member</option>
+                      <option value="organiser">
+                        Organiser (can manage this team)
+                      </option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2 text-[14px] font-semibold">
+                    Give access to (optional)
+                    <select
+                      value={inviteLibrary}
+                      onChange={(event) => setInviteLibrary(event.target.value)}
+                      className={INPUT}
+                      style={{ borderColor: T.border.hi }}
+                    >
+                      <option value={NONE}>No library yet</option>
+                      {team.libraries.map((l) => (
+                        <option key={l.documentId} value={l.documentId}>
+                          {l.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {inviteLibrary !== NONE ? (
+                    <div className="flex flex-col gap-2 text-[14px] font-semibold">
+                      Level
+                      <SegmentedControl
+                        label={tUi("level_at_the_library")}
+                        options={LEVELS}
+                        value={inviteLevel}
+                        onChange={setInviteLevel}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="min-w-0">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="pill"
+                      disabled={busy || !inviteEmail}
                     >
                       <Icon
                         aria-hidden="true"
-                        icon={
-                          current.length ? "mdi:pencil-outline" : "mdi:plus"
-                        }
-                        width={14}
-                        height={14}
+                        icon="mdi:email-fast-outline"
+                        width={16}
+                        height={16}
                       />
-                      {current.length
-                        ? "Change libraries"
-                        : "Assign to a library"}
-                      <span className="sr-only"> for {memberName(member)}</span>
-                    </button>
-                  ) : null}
-                </div>
-              </li>
-            )
-          })}
-        </ul>
-        {!organiser ? (
-          <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
-            Ask {team.organiserNames.join(" or ") || "your organiser"} to change
-            your access.
-          </p>
-        ) : null}
-      </Card>
-
-      {organiser ? (
-        <Card
-          title={tUi("invite_a_colleague")}
-          aside={
-            <span className="text-[14px]" style={{ color: T.ink.dim }}>
-              {seatsLeft} {seatsLeft === 1 ? "seat" : "seats"} left
-            </span>
-          }
-        >
-          {seatsLeft === 0 ? (
-            <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-              Every seat is taken. Remove someone, or ask the site team to add
-              seats to {team.name}.{" "}
-              <a
-                href={TEAM_CONTACT_HREF}
-                className={CONTACT_LINK}
-                style={{ color: T.accent.primary }}
-              >
-                Contact the site team
-              </a>
-            </p>
-          ) : (
-            <form
-              className="grid gap-4 sm:grid-cols-2"
-              onSubmit={(event) => {
-                event.preventDefault()
-                request(
-                  `${base}/invites`,
-                  "POST",
-                  {
-                    email: inviteEmail,
-                    teamRole: inviteRole,
-                    ...(inviteLibrary !== NONE
-                      ? {
-                          preassign: {
-                            libraryDocumentId: inviteLibrary,
-                            staffRole: inviteLevel,
-                          },
-                        }
-                      : {}),
-                  },
-                  "Invite sent."
-                ).then(({ ok, body }) => {
-                  if (!ok) return
-                  setInviteEmail("")
-                  setInviteLibrary(NONE)
-                  const sent = (body as { emailSent?: boolean } | null)
-                    ?.emailSent
-                  if (sent === false)
-                    setStatus(
-                      "Invite created, but email isn’t configured: send them the link from the Resend action once it is."
-                    )
-                })
-              }}
-            >
-              <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                {tUi("email")}{" "}
-                <input
-                  type="email"
-                  required
-                  autoComplete="off"
-                  value={inviteEmail}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  className={INPUT}
-                  style={{ borderColor: T.border.hi }}
-                  maxLength={254}
-                  placeholder="colleague@library.example"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                Team role
-                <select
-                  value={inviteRole}
-                  onChange={(event) =>
-                    setInviteRole(
-                      event.target.value === "organiser"
-                        ? "organiser"
-                        : "member"
-                    )
-                  }
-                  className={INPUT}
-                  style={{ borderColor: T.border.hi }}
-                >
-                  <option value="member">Member</option>
-                  <option value="organiser">
-                    Organiser (can manage this team)
-                  </option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                Give access to (optional)
-                <select
-                  value={inviteLibrary}
-                  onChange={(event) => setInviteLibrary(event.target.value)}
-                  className={INPUT}
-                  style={{ borderColor: T.border.hi }}
-                >
-                  <option value={NONE}>No library yet</option>
-                  {team.libraries.map((l) => (
-                    <option key={l.documentId} value={l.documentId}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {inviteLibrary !== NONE ? (
-                <div className="flex flex-col gap-2 text-[14px] font-semibold">
-                  Level
-                  <SegmentedControl
-                    label={tUi("level_at_the_library")}
-                    options={LEVELS}
-                    value={inviteLevel}
-                    onChange={setInviteLevel}
-                  />
-                </div>
-              ) : null}
-              <div className="sm:col-span-2">
-                <button
-                  type="submit"
-                  className={PRIMARY}
-                  disabled={busy || !inviteEmail}
-                >
-                  <Icon
-                    aria-hidden="true"
-                    icon="mdi:email-fast-outline"
-                    width={16}
-                    height={16}
-                  />
-                  Send invite
-                </button>
-                <p
-                  className="mt-3 mb-0 text-[13px]"
-                  style={{ color: T.ink.dim }}
-                >
-                  They sign in with that email and accept the link. The invite
-                  holds a seat for 14 days.
-                </p>
-              </div>
-            </form>
-          )}
-        </Card>
-      ) : null}
-
+                      Send invite
+                    </Button>
+                    <p
+                      className="mt-3 mb-0 text-[14px]"
+                      style={{ color: T.ink.dim }}
+                    >
+                      They sign in with that email and accept the link. The
+                      invite holds a seat for 14 days.
+                    </p>
+                  </div>
+                </form>
+              )}
+            </Card>
+          ) : null}
+        </aside>
+      </div>
       <Sheet
         open={assigning !== null}
         onClose={() => !busy && setAssigning(null)}
@@ -755,9 +774,10 @@ export function TeamOrganiser({
         }
         footer={
           <div className="flex flex-wrap gap-3">
-            <button
+            <Button
               type="button"
-              className={PRIMARY}
+              variant="primary"
+              size="pill"
               disabled={busy || !draftDirty}
               onClick={() => {
                 if (!assigning) return
@@ -767,16 +787,17 @@ export function TeamOrganiser({
               }}
             >
               {tUi("save_changes")}{" "}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={PILL}
+              variant="surface"
+              size="pill"
               style={{ borderColor: T.border.hi }}
               disabled={busy}
               onClick={() => setAssigning(null)}
             >
               {tUi("cancel")}{" "}
-            </button>
+            </Button>
           </div>
         }
       >
@@ -814,9 +835,11 @@ export function TeamOrganiser({
                     )
                   }
                 />
-                <button
+                <Button
                   type="button"
-                  className={QUIET_LINK}
+                  variant="link"
+                  size="pill"
+                  className="px-0 text-(--t-ink-dim) underline"
                   style={{ color: T.ink.dim }}
                   onClick={() =>
                     setDraft((all) =>
@@ -831,7 +854,7 @@ export function TeamOrganiser({
                     {" "}
                     {libraryName(a.libraryDocumentId)}
                   </span>
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -868,9 +891,10 @@ export function TeamOrganiser({
                 value={addLevel}
                 onChange={setAddLevel}
               />
-              <button
+              <Button
                 type="button"
-                className={SMALL_PILL}
+                variant="surface"
+                size="pill"
                 style={{ borderColor: T.border.hi }}
                 disabled={!addLibrary}
                 onClick={() => {
@@ -890,7 +914,7 @@ export function TeamOrganiser({
                   height={14}
                 />
                 {tUi("add")}{" "}
-              </button>
+              </Button>
             </div>
           </div>
         ) : null}
@@ -906,9 +930,10 @@ export function TeamOrganiser({
           {confirm?.body}
         </p>
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
-            className={PRIMARY}
+            variant="primary"
+            size="pill"
             style={
               confirm?.danger ? { background: T.accent.danger } : undefined
             }
@@ -919,15 +944,16 @@ export function TeamOrganiser({
             }}
           >
             {confirm?.danger ? "Yes, go ahead" : "Confirm"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={PILL}
+            variant="surface"
+            size="pill"
             style={{ borderColor: T.border.hi }}
             onClick={() => setConfirm(null)}
           >
             {tUi("cancel")}{" "}
-          </button>
+          </Button>
         </div>
         {error ? (
           <p role="alert" className="mt-4" style={{ color: T.accent.danger }}>
