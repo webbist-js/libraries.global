@@ -1,26 +1,27 @@
-// apps/strapi/src/plugins/events/admin/src/components/CredentialForm.tsx
 import {
   EVENT_PROVIDER_KEYS,
   EVENT_PROVIDERS,
+  validateFeedValues,
   type EventProviderKey,
 } from "@repo/shared-data"
-import { useFetchClient } from "@strapi/strapi/admin"
 import {
-  type CSSProperties,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  Field,
+  Flex,
+  Modal,
+  SingleSelect,
+  SingleSelectOption,
+  Tag,
+  TextInput,
+  Typography,
+} from "@strapi/design-system"
+import { useFetchClient } from "@strapi/strapi/admin"
+import { useEffect, useId, useRef, useState } from "react"
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type Library = {
-  documentId: string
-  name: string
-  entityRef?: string
-}
-
+type Library = { documentId: string; name: string; entityRef?: string }
 type Credential = {
   documentId: string
   label: string
@@ -31,256 +32,222 @@ type Credential = {
   libraries?: Library[]
 }
 
-// ── Shared input styles ───────────────────────────────────────────────────────
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  padding: "8px 10px",
-  fontSize: "13px",
-  color: "#32324d",
-  background: "#fff",
-  border: "1px solid #dcdce4",
-  borderRadius: "6px",
-  outline: "none",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-}
-
-const labelStyle: CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  color: "#666687",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  marginBottom: "4px",
-  display: "block",
-}
-
-const sectionHeadingStyle: CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  color: "#4945ff",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  margin: "0 0 10px",
-  paddingBottom: "6px",
-  borderBottom: "1px solid #f0f0ff",
-}
-
-const PROVIDER_OPTIONS = EVENT_PROVIDER_KEYS.map((k) => ({
-  value: k,
-  label: EVENT_PROVIDERS[k].label,
-}))
-
-// ── Library search multi-select ───────────────────────────────────────────────
-
 function LibrarySearch({
   selected,
   onChange,
   maxOne,
+  disabled,
 }: {
   selected: Library[]
-  onChange: (libs: Library[]) => void
+  onChange: (libraries: Library[]) => void
   maxOne: boolean
+  disabled: boolean
 }) {
   const { get } = useFetchClient()
+  const listId = useId()
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Library[]>([])
-  const [searching, setSearching] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [])
-
-  const search = useCallback(
-    async (q: string) => {
-      if (!q || q.length < 2) {
-        setResults([])
-
-        return
-      }
-      setSearching(true)
-      try {
-        const { data } = await get(
-          `/api/libraries?filters[name][$containsi]=${encodeURIComponent(q)}&pagination[pageSize]=10&fields[0]=name&fields[1]=entityRef`
-        )
-        const items = (data as any)?.data ?? []
-        setResults(
-          items.map((item: any) => ({
-            documentId: item.documentId,
-            name: item.name,
-            entityRef: item.entityRef,
-          }))
-        )
-      } catch {
-        setResults([])
-      } finally {
-        setSearching(false)
-      }
-    },
-    [get]
-  )
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setQuery(val)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => void search(val), 300)
-  }
-
-  const addLibrary = (lib: Library) => {
-    if (selected.some((s) => s.documentId === lib.documentId)) return
-    if (maxOne) {
-      onChange([lib])
-    } else {
-      onChange([...selected, lib])
-    }
-    setQuery("")
+    const controller = new AbortController()
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setResults([])
-  }
+    setError(false)
+    if (query.trim().length < 2) {
+      setLoading(false)
 
-  const removeLibrary = (documentId: string) => {
-    onChange(selected.filter((s) => s.documentId !== documentId))
+      return
+    }
+    setLoading(true)
+    const timer = setTimeout(() => {
+      get<{ data: Library[] }>(
+        `/events/admin/libraries?q=${encodeURIComponent(query.trim())}`,
+        { signal: controller.signal }
+      )
+        .then(({ data }) => {
+          if (!controller.signal.aborted) setResults(data.data)
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setError(true)
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoading(false)
+        })
+    }, 250)
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [query, get])
+
+  const choices = results.filter(
+    (item) =>
+      !selected.some((library) => library.documentId === item.documentId)
+  )
+  const expanded = !disabled && open && query.trim().length >= 2
+  const showOptions = expanded && !loading && choices.length > 0
+  const choose = (library: Library) => {
+    onChange(maxOne ? [library] : [...selected, library])
+    setQuery("")
+    setOpen(false)
+    setActive(0)
   }
 
   return (
-    <div>
-      {/* Selected tags */}
-      {selected.length > 0 && (
-        <div
+    <Field.Root
+      name="libraries"
+      hint="Search published libraries by name. Use the arrow keys to choose a result and Enter to select it."
+    >
+      <Field.Label>{maxOne ? "Library" : "Libraries"}</Field.Label>
+      <TextInput
+        role="combobox"
+        aria-label="Search libraries"
+        aria-autocomplete="list"
+        aria-expanded={showOptions}
+        aria-controls={showOptions ? listId : undefined}
+        aria-activedescendant={
+          showOptions && choices[active]
+            ? `${listId}-${choices[active].documentId}`
+            : undefined
+        }
+        autoComplete="off"
+        disabled={disabled}
+        placeholder="Type at least two characters…"
+        value={query}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+          setQuery(event.target.value)
+          setActive(0)
+          setOpen(true)
+        }}
+        onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
+          if (event.key === "Escape") {
+            event.preventDefault()
+            event.stopPropagation()
+            setOpen(false)
+          } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault()
+            setOpen(true)
+            setActive((current) =>
+              choices.length
+                ? (current +
+                    (event.key === "ArrowDown" ? 1 : -1) +
+                    choices.length) %
+                  choices.length
+                : 0
+            )
+          } else if (event.key === "Enter" && showOptions && choices[active]) {
+            event.preventDefault()
+            choose(choices[active])
+          }
+        }}
+      />
+      {expanded && (
+        <Box
+          id={showOptions ? listId : undefined}
+          role={showOptions ? "listbox" : undefined}
+          aria-label={showOptions ? "Matching libraries" : undefined}
+          background="neutral0"
+          borderColor="neutral200"
+          hasRadius
+          padding={2}
           style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px",
-            marginBottom: "8px",
+            maxHeight: 240,
+            overflowY: "auto",
+            borderWidth: 1,
+            borderStyle: "solid",
           }}
         >
-          {selected.map((lib) => (
-            <span
-              key={lib.documentId}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                padding: "3px 8px",
-                borderRadius: "100px",
-                background: "#f0f0ff",
-                border: "1px solid #c4c4ff",
-                fontSize: "12px",
-                color: "#4945ff",
-                fontWeight: 500,
-              }}
-            >
-              {lib.name}
-              {lib.entityRef && (
-                <span style={{ color: "#8e8ea9", fontSize: "10px" }}>
-                  {lib.entityRef}
-                </span>
-              )}
-              <button
-                onClick={() => removeLibrary(lib.documentId)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#8e8ea9",
-                  fontSize: "14px",
-                  lineHeight: 1,
-                  padding: "0 2px",
-                }}
+          {loading ? (
+            <Typography role="status" padding={3}>
+              Searching libraries…
+            </Typography>
+          ) : choices.length ? (
+            choices.map((item, index) => (
+              <Box
+                key={item.documentId}
+                id={`${listId}-${item.documentId}`}
+                role="option"
+                aria-selected={active === index}
+                padding={3}
+                background={active === index ? "primary100" : "neutral0"}
+                hasRadius
+                style={{ cursor: "pointer" }}
+                onMouseDown={(event: React.MouseEvent) =>
+                  event.preventDefault()
+                }
+                onClick={() => choose(item)}
+                onMouseEnter={() => setActive(index)}
               >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
+                <Typography tag="p" textColor="neutral800">
+                  {item.name}
+                </Typography>
+                {item.entityRef && (
+                  <Typography
+                    tag="p"
+                    variant="pi"
+                    textColor="neutral600"
+                    style={{ overflowWrap: "anywhere" }}
+                  >
+                    {item.entityRef}
+                  </Typography>
+                )}
+              </Box>
+            ))
+          ) : (
+            <Typography role="status" padding={3}>
+              {error
+                ? "Search unavailable. Edit the search to retry."
+                : "No matching libraries"}
+            </Typography>
+          )}
+        </Box>
       )}
-
-      {/* Search input */}
-      {(!maxOne || selected.length === 0) && (
-        <div style={{ position: "relative" }}>
-          <input
-            type="text"
-            value={query}
-            onChange={handleInput}
-            placeholder="Search libraries by name…"
-            style={inputStyle}
-          />
-          {searching && (
+      <Field.Hint />
+      {error && (
+        <Typography role="status" textColor="danger600">
+          Library search is unavailable. Change the search to retry.
+        </Typography>
+      )}
+      <Flex gap={2} wrap="wrap" paddingTop={2}>
+        {selected.map((library) => (
+          <Tag
+            key={library.documentId}
+            label={`Remove ${library.name}`}
+            disabled={disabled}
+            onClick={() =>
+              onChange(
+                selected.filter(
+                  (item) => item.documentId !== library.documentId
+                )
+              )
+            }
+            icon={<span aria-hidden>×</span>}
+          >
+            {library.name}
             <span
               style={{
                 position: "absolute",
-                right: "10px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: "11px",
-                color: "#8e8ea9",
+                width: 1,
+                height: 1,
+                overflow: "hidden",
               }}
             >
-              Searching…
+              {" "}
+              — remove library
             </span>
-          )}
-          {results.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                background: "#fff",
-                border: "1px solid #dcdce4",
-                borderRadius: "6px",
-                boxShadow: "0 4px 12px rgba(33,33,52,0.12)",
-                zIndex: 100,
-                maxHeight: "200px",
-                overflowY: "auto",
-              }}
-            >
-              {results.map((lib) => (
-                <div
-                  key={lib.documentId}
-                  onClick={() => addLibrary(lib)}
-                  style={{
-                    padding: "9px 12px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderBottom: "1px solid #f6f6f9",
-                    fontSize: "13px",
-                    color: "#32324d",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#f0f0ff")
-                  }
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "")}
-                >
-                  <span>{lib.name}</span>
-                  {lib.entityRef && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontFamily: "monospace",
-                        color: "#8e8ea9",
-                      }}
-                    >
-                      {lib.entityRef}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+          </Tag>
+        ))}
+      </Flex>
+    </Field.Root>
   )
 }
-
-// ── Modal ─────────────────────────────────────────────────────────────────────
 
 export function CredentialForm({
   credential,
@@ -292,414 +259,352 @@ export function CredentialForm({
   onCancel: () => void
 }) {
   const { post, put } = useFetchClient()
-  const isEdit = !!credential
-
-  // Form state
   const [label, setLabel] = useState(credential?.label ?? "")
   const [provider, setProvider] = useState<EventProviderKey>(
     credential?.provider ?? "eventbrite"
   )
   const [scope, setScope] = useState(credential?.scope ?? "library")
-  const [status, setStatus] = useState<"active" | "paused">(
+  const [status, setStatus] = useState(
     credential?.status === "paused" ? "paused" : "active"
   )
-  const [credFields, setCredFields] = useState<Record<string, string>>({})
-  const [selectedLibraries, setSelectedLibraries] = useState<Library[]>(
-    credential?.libraries ?? []
-  )
-
-  // UI state
+  const [values, setValues] = useState<Record<string, string>>({})
+  const [libraries, setLibraries] = useState(credential?.libraries ?? [])
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [testLoading, setTestLoading] = useState(false)
-  const [testResult, setTestResult] = useState<{
-    ok: boolean
-    message?: string
-    error?: string
-  } | null>(null)
-
-  // Reset cred fields when provider changes (only meaningful for a new
-  // credential — an edit keeps its own provider, fixed below)
-  useEffect(() => {
-    if (!isEdit) {
-      setCredFields({})
-      setTestResult(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider])
-
-  const providerDef = EVENT_PROVIDERS[provider]
-  const providerFields = providerDef?.fields ?? []
-  const hints = credential?.hints ?? {}
-
-  const setField = (key: string, value: string) => {
-    setCredFields((prev) => ({ ...prev, [key]: value }))
+  const [testing, setTesting] = useState(false)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
+    null
+  )
+  const alertRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const opener = useRef(document.activeElement as HTMLElement | null)
+  const definition = EVENT_PROVIDERS[provider]
+  const snapshot = JSON.stringify({
+    label,
+    provider,
+    scope,
+    status,
+    values,
+    libraries,
+  })
+  const original = useRef(snapshot)
+  const busy = saving || testing
+  const close = () => {
+    if (busy) return
+    if (snapshot === original.current) onCancel()
+    else setConfirmDiscard(true)
   }
-
-  const handleSave = async () => {
-    if (!label.trim()) {
-      setSaveError("Label is required.")
+  const save = async () => {
+    const invalid: Record<string, string> = {}
+    if (!label.trim()) invalid.label = "Enter a label."
+    const replacing =
+      !credential || Object.values(values).some((value) => value.trim())
+    if (replacing) {
+      const verdict = validateFeedValues(provider, values)
+      if (!verdict.ok) invalid[verdict.field ?? "credentials"] = verdict.error
+    }
+    setErrors(invalid)
+    if (Object.keys(invalid).length) {
+      requestAnimationFrame(() =>
+        document
+          .getElementById(`event-field-${Object.keys(invalid)[0]}`)
+          ?.focus()
+      )
 
       return
     }
     setSaving(true)
-    setSaveError(null)
-    setTestResult(null)
+    setMessage(null)
     try {
-      const hasCredentials = Object.values(credFields).some(
-        (v) => v.trim().length > 0
-      )
       const payload = {
         label: label.trim(),
         provider,
         scope,
         status,
-        libraryDocumentIds: selectedLibraries.map((l) => l.documentId),
-        ...(hasCredentials ? { credentials: credFields } : {}),
+        libraryDocumentIds: libraries.map((library) => library.documentId),
+        ...(replacing ? { credentials: values } : {}),
       }
-
-      await (isEdit
-        ? put(`/events/admin/credentials/${credential!.documentId}`, payload)
+      await (credential
+        ? put(`/events/admin/credentials/${credential.documentId}`, payload)
         : post("/events/admin/credentials", payload))
+      setValues({})
       onSaved()
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Save failed — check server logs."
-      setSaveError(message)
+    } catch (error) {
+      const body = (
+        error as { response?: { data?: { error?: string; field?: string } } }
+      ).response?.data
+      setMessage({
+        ok: false,
+        text:
+          body?.error ??
+          "Couldn’t save this credential. Your changes are still here; try again.",
+      })
+      if (body?.field)
+        setErrors({ [body.field]: body.error ?? "Check this value." })
+      requestAnimationFrame(() => alertRef.current?.focus())
     } finally {
       setSaving(false)
     }
   }
-
-  const handleTest = async () => {
-    setTestLoading(true)
-    setSaveError(null)
-    setTestResult(null)
+  const test = async () => {
+    if (!credential) return
+    setTesting(true)
+    setMessage(null)
     try {
-      const res = await post(
-        `/events/admin/credentials/${credential!.documentId}/test`,
+      const { data } = await post<{ result?: string; error?: string }>(
+        `/events/admin/credentials/${credential.documentId}/test`,
         {}
       )
-      const body = res.data as { result?: string; error?: string }
-      setTestResult(
-        body.result === "ok"
-          ? { ok: true, message: "Connection OK" }
-          : { ok: false, error: body.result ?? body.error ?? "Test failed" }
-      )
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Test failed"
-      setTestResult({ ok: false, error: message })
+      setMessage({
+        ok: data.result === "ok",
+        text:
+          data.result === "ok"
+            ? "Connection passed using the stored credential."
+            : `Connection test: ${data.error ?? data.result ?? "unavailable"}`,
+      })
+    } catch {
+      setMessage({
+        ok: false,
+        text: "Couldn’t test the stored credential. Try again.",
+      })
     } finally {
-      setTestLoading(false)
+      setTesting(false)
     }
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(33,33,52,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !saving && !testLoading) onCancel()
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: "12px",
-          width: "520px",
-          maxWidth: "calc(100vw - 32px)",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-          boxShadow: "0 8px 32px rgba(33,33,52,0.20)",
+    <>
+      <Modal.Root
+        open
+        onOpenChange={(open) => {
+          if (!open) close()
         }}
       >
-        {/* Modal header */}
-        <div
-          style={{
-            padding: "20px 24px 16px",
-            borderBottom: "1px solid #f0f0ff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        <Modal.Content
+          aria-describedby="credential-description"
+          onInteractOutside={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            opener.current?.focus()
           }}
         >
-          <p
-            style={{
-              margin: 0,
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "#32324d",
-            }}
-          >
-            {isEdit ? "Edit Credential" : "Add Credential"}
-          </p>
-          <button
-            onClick={onCancel}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#8e8ea9",
-              fontSize: "20px",
-              lineHeight: 1,
-            }}
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Modal body — scrollable */}
-        <div
-          style={{
-            padding: "20px 24px",
-            overflowY: "auto",
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-          }}
-        >
-          {/* Label */}
-          <div>
-            <label style={labelStyle}>Label *</label>
-            <input
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. British Library — Eventbrite"
-              style={inputStyle}
-            />
-          </div>
-
-          {/* Provider */}
-          <div>
-            <label style={labelStyle}>Provider</label>
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as EventProviderKey)}
-              disabled={isEdit}
-              style={{
-                ...inputStyle,
-                ...(isEdit ? { background: "#f6f6f9", color: "#666687" } : {}),
-              }}
-            >
-              {PROVIDER_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Scope */}
-          <div>
-            <label style={labelStyle}>Scope</label>
-            <div style={{ display: "flex", gap: "16px" }}>
-              {[
-                { value: "library", label: "Library (single)" },
-                { value: "group", label: "Group (venue match)" },
-              ].map(({ value, label: optLabel }) => (
-                <label
-                  key={value}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    color: "#32324d",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="scope"
-                    value={value}
-                    checked={scope === value}
-                    onChange={() => setScope(value)}
-                  />
-                  {optLabel}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Libraries */}
-          <div>
-            <label style={labelStyle}>
-              {scope === "library" ? "Library" : "Libraries"}
-            </label>
-            <LibrarySearch
-              selected={selectedLibraries}
-              onChange={setSelectedLibraries}
-              maxOne={scope === "library"}
-            />
-          </div>
-
-          {/* Dynamic credential fields, driven by the provider registry */}
-          {providerFields.length > 0 && (
-            <div>
-              <p style={sectionHeadingStyle}>{providerDef.label} Credentials</p>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
+          <Modal.Header closeLabel="Close credential editor">
+            <Modal.Title>
+              {credential ? "Edit credential" : "Add credential"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Flex direction="column" alignItems="stretch" gap={5}>
+              <Typography id="credential-description" textColor="neutral600">
+                Connect a library calendar or ticketing account. Stored secrets
+                are never loaded into this form.
+              </Typography>
+              <Field.Root
+                name="label"
+                id="event-field-label"
+                required
+                error={errors.label}
               >
-                {providerFields.map((field) => (
-                  <div key={field.key}>
-                    <label style={labelStyle}>
-                      {field.label}
-                      {!field.required && isEdit ? " (optional)" : ""}
-                    </label>
-                    <input
-                      type={field.secret ? "password" : "text"}
-                      value={credFields[field.key] ?? ""}
-                      onChange={(e) => setField(field.key, e.target.value)}
-                      placeholder={
-                        isEdit && hints[field.key]
-                          ? hints[field.key]
-                          : field.secret
-                            ? "••••••••••••••••"
-                            : (field.hint ?? "")
-                      }
-                      style={inputStyle}
-                      autoComplete={field.secret ? "new-password" : "off"}
-                    />
-                  </div>
-                ))}
-              </div>
-              {isEdit && (
-                <p
-                  style={{
-                    margin: "8px 0 0",
-                    fontSize: "11px",
-                    color: "#8e8ea9",
+                <Field.Label>Label</Field.Label>
+                <TextInput
+                  disabled={busy}
+                  value={label}
+                  maxLength={200}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    setLabel(event.target.value)
+                  }
+                  placeholder="British Library — Eventbrite"
+                  autoFocus
+                />
+                <Field.Error />
+              </Field.Root>
+              <Field.Root name="provider">
+                <Field.Label>Provider</Field.Label>
+                <SingleSelect
+                  value={provider}
+                  disabled={!!credential || busy}
+                  onChange={(value) => {
+                    setProvider(value as EventProviderKey)
+                    setValues({})
+                    setErrors({})
+                    setMessage(null)
                   }}
                 >
-                  Leave fields blank to keep the stored values.
-                </p>
+                  {EVENT_PROVIDER_KEYS.map((key) => (
+                    <SingleSelectOption key={key} value={key}>
+                      {EVENT_PROVIDERS[key].label}
+                    </SingleSelectOption>
+                  ))}
+                </SingleSelect>
+              </Field.Root>
+              <Field.Root
+                name="scope"
+                hint={
+                  credential
+                    ? "A saved feed keeps its original scope."
+                    : "Single-library feeds use one library; group feeds match venues across linked libraries."
+                }
+              >
+                <Field.Label>Scope</Field.Label>
+                <SingleSelect
+                  value={scope}
+                  disabled={!!credential || busy}
+                  onChange={(value) => {
+                    setScope(String(value))
+                    if (value === "library")
+                      setLibraries((items) => items.slice(0, 1))
+                  }}
+                >
+                  <SingleSelectOption value="library">
+                    Single library
+                  </SingleSelectOption>
+                  <SingleSelectOption value="group">
+                    Group of libraries
+                  </SingleSelectOption>
+                </SingleSelect>
+                <Field.Hint />
+              </Field.Root>
+              <LibrarySearch
+                disabled={busy}
+                selected={libraries}
+                onChange={setLibraries}
+                maxOne={scope === "library"}
+              />
+              <Box padding={4} background="neutral100" hasRadius>
+                <Typography tag="h3" variant="delta">
+                  {definition.label} credentials
+                </Typography>
+                {credential && (
+                  <Typography tag="p" textColor="neutral600" paddingTop={2}>
+                    Leave all fields blank to keep the stored credentials. To
+                    replace them, complete every required field.
+                  </Typography>
+                )}
+                <Flex
+                  direction="column"
+                  alignItems="stretch"
+                  gap={4}
+                  paddingTop={4}
+                >
+                  {definition.fields.map((field) => (
+                    <Field.Root
+                      key={field.key}
+                      id={`event-field-${field.key}`}
+                      name={field.key}
+                      required={!credential && field.required}
+                      error={errors[field.key]}
+                      hint={field.hint}
+                    >
+                      <Field.Label>{field.label}</Field.Label>
+                      <TextInput
+                        disabled={busy}
+                        type={field.secret ? "password" : "text"}
+                        value={values[field.key] ?? ""}
+                        maxLength={field.maxLength}
+                        autoComplete={field.secret ? "new-password" : "off"}
+                        placeholder={credential?.hints?.[field.key] ?? ""}
+                        onChange={(
+                          event: React.ChangeEvent<HTMLInputElement>
+                        ) =>
+                          setValues((current) => ({
+                            ...current,
+                            [field.key]: event.target.value,
+                          }))
+                        }
+                      />
+                      <Field.Hint />
+                      <Field.Error />
+                    </Field.Root>
+                  ))}
+                </Flex>
+              </Box>
+              <Field.Root name="status">
+                <Field.Label>Status</Field.Label>
+                <SingleSelect
+                  value={status}
+                  disabled={busy}
+                  onChange={(value) => setStatus(String(value))}
+                >
+                  <SingleSelectOption value="active">
+                    Active — include in sync runs
+                  </SingleSelectOption>
+                  <SingleSelectOption value="paused">Paused</SingleSelectOption>
+                </SingleSelect>
+              </Field.Root>
+              {message && (
+                <div ref={alertRef} tabIndex={-1}>
+                  <Alert
+                    title={message.ok ? "Connection passed" : "Action failed"}
+                    variant={message.ok ? "success" : "danger"}
+                    closeLabel="Dismiss message"
+                    onClose={() => setMessage(null)}
+                  >
+                    {message.text}
+                  </Alert>
+                </div>
               )}
-            </div>
-          )}
-
-          {/* Status */}
-          <div>
-            <label style={labelStyle}>Status</label>
-            <select
-              value={status}
-              onChange={(e) =>
-                setStatus(e.target.value === "paused" ? "paused" : "active")
-              }
-              style={inputStyle}
+            </Flex>
+          </Modal.Body>
+          <Modal.Footer>
+            <Flex gap={2}>
+              <Button
+                ref={closeButtonRef}
+                variant="tertiary"
+                disabled={busy}
+                onClick={close}
+              >
+                Cancel
+              </Button>
+              {credential && (
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  loading={testing}
+                  onClick={() => void test()}
+                >
+                  Test stored connection
+                </Button>
+              )}
+            </Flex>
+            <Button
+              loading={saving}
+              disabled={busy}
+              onClick={() => void save()}
             >
-              <option value="active">Active (include in sync runs)</option>
-              <option value="paused">Paused</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Modal footer */}
-        <div
-          style={{
-            padding: "16px 24px",
-            borderTop: "1px solid #f0f0ff",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
+              Save credential
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal.Root>
+      <Dialog.Root open={confirmDiscard} onOpenChange={setConfirmDiscard}>
+        <Dialog.Content
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            closeButtonRef.current?.focus()
           }}
         >
-          <button
-            onClick={onCancel}
-            disabled={saving || testLoading}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 600,
-              background: "#fff",
-              color: "#666687",
-              border: "1px solid #dcdce4",
-              borderRadius: "6px",
-              cursor: saving || testLoading ? "not-allowed" : "pointer",
-            }}
-          >
-            Cancel
-          </button>
-
-          {/* Only a saved credential can be tested: the server reads the
-              stored, encrypted credentials by documentId, never raw values
-              from the browser. Save first, then test. */}
-          {isEdit ? (
-            <button
-              onClick={() => void handleTest()}
-              disabled={testLoading}
-              style={{
-                padding: "8px 16px",
-                fontSize: "13px",
-                fontWeight: 600,
-                background: "#fff",
-                color: "#4945ff",
-                border: "1px solid #c4c4ff",
-                borderRadius: "6px",
-                cursor: testLoading ? "not-allowed" : "pointer",
-                opacity: testLoading ? 0.5 : 1,
-              }}
-            >
-              {testLoading ? "Testing…" : "Test Connection"}
-            </button>
-          ) : null}
-
-          <button
-            onClick={() => void handleSave()}
-            disabled={saving || !label.trim()}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 600,
-              background: saving || !label.trim() ? "#8e8ea9" : "#4945ff",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: saving || !label.trim() ? "not-allowed" : "pointer",
-              marginLeft: "auto",
-            }}
-          >
-            {saving ? "Saving…" : "Save Credential"}
-          </button>
-        </div>
-
-        {/* Test + save error feedback */}
-        {(testResult || saveError) && (
-          <div style={{ padding: "0 24px 16px" }}>
-            {testResult && (
-              <p
-                style={{
-                  margin: "0 0 4px",
-                  fontSize: "12px",
-                  color: testResult.ok ? "#1b7c3a" : "#d02b20",
-                }}
+          <Dialog.Header>Discard credential changes?</Dialog.Header>
+          <Dialog.Body>
+            <Dialog.Description>
+              Your unsaved changes will be lost.
+            </Dialog.Description>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Dialog.Cancel>
+              <Button
+                variant="tertiary"
+                onClick={() => setConfirmDiscard(false)}
               >
-                {testResult.ok
-                  ? `✓ ${testResult.message ?? "Connection OK"}`
-                  : `✗ ${testResult.error ?? "Test failed"}`}
-              </p>
-            )}
-            {saveError && (
-              <p style={{ margin: 0, fontSize: "12px", color: "#d02b20" }}>
-                {saveError}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+                Keep editing
+              </Button>
+            </Dialog.Cancel>
+            <Button variant="danger" onClick={onCancel}>
+              Discard changes
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Root>
+    </>
   )
 }

@@ -1,7 +1,7 @@
 // apps/strapi/src/plugins/events/admin/src/components/RevealCredentialButton.tsx
 import { Box, Button, Dialog, Typography } from "@strapi/design-system"
 import { useFetchClient, useRBAC } from "@strapi/strapi/admin"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const PERMISSIONS = [
   { action: "plugin::events.reveal-credentials", subject: null },
@@ -23,29 +23,45 @@ export function RevealCredentialButton({
   const { post } = useFetchClient()
   const [values, setValues] = useState<Record<string, string> | null>(null)
   const [error, setError] = useState<string | null>(null)
-  if (!allowedActions.canRevealCredentials) return null
-
-  const reveal = async () => {
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!open || !allowedActions.canRevealCredentials) return
+    const controller = new AbortController()
+    let current = true
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setValues(null)
     setError(null)
-    try {
-      const { data } = await post(
-        `/events/admin/credentials/${documentId}/reveal`,
-        { slot }
-      )
-      setValues((data as any).data)
-    } catch {
-      setError("Couldn't reveal the value.")
+    post(
+      `/events/admin/credentials/${documentId}/reveal`,
+      { slot },
+      { signal: controller.signal }
+    )
+      .then(({ data }) => {
+        if (current) setValues((data as { data: Record<string, string> }).data)
+      })
+      .catch(() => {
+        if (current) setError("Couldn’t reveal the value.")
+      })
+
+    return () => {
+      current = false
+      controller.abort()
     }
-  }
+  }, [open, allowedActions.canRevealCredentials, documentId, slot, post])
+  if (!allowedActions.canRevealCredentials) return null
 
   return (
     <Dialog.Root
+      open={open}
       onOpenChange={(open: boolean) => {
-        if (!open) setValues(null)
+        setValues(null)
+        setError(null)
+        setOpen(open)
       }}
     >
       <Dialog.Trigger>
-        <Button variant="tertiary" size="S" onClick={reveal}>
+        <Button variant="tertiary" size="S">
           {slot === "current" ? "Reveal value" : "Reveal new value"}
         </Button>
       </Dialog.Trigger>
@@ -72,9 +88,9 @@ export function RevealCredentialButton({
                   </Box>
                 ))
               : !error && <Typography>Loading…</Typography>}
-            <Typography variant="pi" textColor="neutral600">
-              This reveal was logged with your name.
-            </Typography>
+            <Dialog.Description variant="pi" textColor="neutral600">
+              Reveals are logged with your admin identity.
+            </Dialog.Description>
           </Box>
         </Dialog.Body>
         <Dialog.Footer>

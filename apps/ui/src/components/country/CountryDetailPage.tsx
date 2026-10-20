@@ -1,6 +1,7 @@
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
+import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -157,7 +158,7 @@ export function CountryDetailPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main id="main" className="relative z-10 flex-1">
+      <MainContent id="main" className="relative z-10 flex-1">
         <LocationHero
           untranslatedLocale={untranslatedLocale}
           breadcrumbLabels={{
@@ -318,12 +319,10 @@ export function CountryDetailPage({
 
             <LocationAbout name={name} about={country.about} />
 
-            {country.iso2 ? (
-              <LocationEventsStrip
-                countryCode={country.iso2}
-                locationLabel={name}
-              />
-            ) : null}
+            <LocationEventsStrip
+              countrySlug={country.slug ?? undefined}
+              locationLabel={name}
+            />
 
             <DrivesHere
               placeName={name}
@@ -345,7 +344,7 @@ export function CountryDetailPage({
             />
           </div>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

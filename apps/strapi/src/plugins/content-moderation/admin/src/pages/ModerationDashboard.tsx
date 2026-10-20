@@ -21,8 +21,13 @@ import {
 } from "@strapi/design-system"
 import { ArrowClockwise, Eye } from "@strapi/icons"
 import { EmptyDocuments } from "@strapi/icons/symbols"
-import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  Page,
+  Layouts,
+  useFetchClient,
+  useNotification,
+} from "@strapi/strapi/admin"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
 import { ReviewModal, StatusPill, TypeBadge } from "../components/ReviewModal"
@@ -50,9 +55,11 @@ export function ModerationDashboard() {
   const { get, put } = useFetchClient()
   const [searchParams] = useSearchParams()
   const { toggleNotification } = useNotification()
-  const [byStatus, setByStatus] = useState<
-    Partial<Record<ModerationStatus, Submission[]>>
-  >({})
+  const [rows, setRows] = useState<Submission[]>([])
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const generation = useRef(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<ModerationStatus>("pending")
@@ -65,34 +72,45 @@ export function ModerationDashboard() {
   const [openSuggestions, setOpenSuggestions] = useState(0)
 
   const load = useCallback(async () => {
+    const request = ++generation.current
     setLoading(true)
     setError(null)
     try {
-      const results = await Promise.all(
-        STATUS_TABS.map(async (tab) => {
-          const { data } = await get(
-            `/content-moderation/submissions?status=${tab.id}`
-          )
-          const items = Array.isArray((data as { data?: unknown })?.data)
-            ? (data as { data: Submission[] }).data
-            : []
-
-          return [tab.id, items] as const
-        })
-      )
-      setByStatus(Object.fromEntries(results))
-    } catch (err) {
-      setError(
-        "The queue couldn't be loaded. Check that you have the moderation permission and try again."
-      )
-      console.error(err)
+      const params = new URLSearchParams({
+        status,
+        page: String(page),
+        pageSize: "50",
+        q: query,
+      })
+      if (typeFilter !== "all") params.set("type", typeFilter)
+      const { data } = await get(`/content-moderation/submissions?${params}`)
+      const result = data as {
+        data: Submission[]
+        meta: { total: number; counts: Record<string, number> }
+      }
+      if (!Array.isArray(result.data) || !result.meta)
+        throw new Error("Invalid queue response")
+      if (request !== generation.current) return
+      setRows(result.data)
+      setCounts(result.meta.counts)
+      setTotal(result.meta.total)
+    } catch {
+      if (request === generation.current)
+        setError(
+          "The queue couldn't be loaded. Check your moderation permission and try again."
+        )
     } finally {
-      setLoading(false)
+      if (request === generation.current) setLoading(false)
     }
-  }, [get])
+  }, [get, status, page, query, typeFilter])
 
   useEffect(() => {
-    void load()
+    const timer = setTimeout(() => void load(), 200)
+
+    return () => {
+      clearTimeout(timer)
+      generation.current++
+    }
   }, [load])
 
   const decide = useCallback(
@@ -135,315 +153,338 @@ export function ModerationDashboard() {
     [put, load, toggleNotification]
   )
 
-  const current = byStatus[status] ?? []
-  const types = useMemo(
-    () =>
-      Array.from(
-        new Set([
-          ...current.map((s) => s.submissionType),
-          ...(typeFilter === "all" ? [] : [typeFilter]),
-        ])
-      ),
-    [current, typeFilter]
-  )
-  const q = query.trim().toLowerCase()
-  const rows = current.filter(
-    (s) =>
-      (typeFilter === "all" || s.submissionType === typeFilter) &&
-      (!q ||
-        [
-          summaryOf(s),
-          s.submittedByEmail,
-          s.submittedByName ?? "",
-          s.targetSlug ?? "",
-          detailOf(s) ?? "",
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(q))
-  )
-  const open = openId
-    ? (Object.values(byStatus)
-        .flat()
-        .find((s) => s?.documentId === openId) ?? null)
-    : null
-  const pendingCount = byStatus.pending?.length ?? 0
+  const types = Object.keys(TYPE_LABELS)
+  const open = rows.find((row) => row.documentId === openId) ?? null
+  const pendingCount = counts.pending ?? 0
+  const pageCount = Math.max(1, Math.ceil(total / 50))
 
   return (
-    <Layouts.Root>
-      <Layouts.Header
-        title="Moderation queue"
-        subtitle={
-          loading
-            ? "Loading submissions…"
-            : `${pendingCount} waiting for review · ${byStatus.needs_info?.length ?? 0} waiting on contributors`
-        }
-        primaryAction={
-          <Button
-            variant="secondary"
-            startIcon={<ArrowClockwise />}
-            onClick={() => void load()}
-            loading={loading}
-          >
-            Refresh
-          </Button>
-        }
-      />
-      <Layouts.Content>
-        {error && (
-          <Box paddingBottom={4}>
-            <Alert
-              variant="danger"
-              title="Couldn't load"
-              closeLabel="Dismiss"
-              onClose={() => setError(null)}
+    <Page.Main>
+      <Layouts.Root>
+        <Layouts.Header
+          title="Moderation queue"
+          subtitle={
+            loading
+              ? "Loading submissions…"
+              : `${pendingCount} waiting for review · ${counts.needs_info ?? 0} waiting on contributors`
+          }
+          primaryAction={
+            <Button
+              variant="secondary"
+              startIcon={<ArrowClockwise />}
+              onClick={() => void load()}
+              loading={loading}
             >
-              {error}
-            </Alert>
-          </Box>
-        )}
-        <Tabs.Root
-          value={tab}
-          onValueChange={(v) => {
-            setTab(v)
-            if (v !== "suggestions") {
-              setStatus(v as ModerationStatus)
-              setTypeFilter("all")
-            }
-          }}
-        >
-          <Tabs.List aria-label="Submission status">
-            {STATUS_TABS.map((tab) => (
-              <Tabs.Trigger key={tab.id} value={tab.id}>
-                <Flex gap={2} alignItems="center">
-                  {tab.label}
-                  {(byStatus[tab.id]?.length ?? 0) > 0 && (
-                    <Badge size="S" active={tab.id === "pending"}>
-                      {byStatus[tab.id]!.length}
-                    </Badge>
-                  )}
-                </Flex>
-              </Tabs.Trigger>
-            ))}
-            <Tabs.Trigger value="suggestions">
-              <Flex gap={2} alignItems="center">
-                Suggestions
-                {openSuggestions > 0 && (
-                  <Badge size="S">{openSuggestions}</Badge>
-                )}
-              </Flex>
-            </Tabs.Trigger>
-          </Tabs.List>
-          {STATUS_TABS.map((tab) => (
-            <Tabs.Content key={tab.id} value={tab.id}>
-              <Box
-                background="neutral0"
-                padding={6}
-                hasRadius
-                shadow="tableShadow"
+              Refresh
+            </Button>
+          }
+        />
+        <Layouts.Content>
+          {error && (
+            <Box paddingBottom={4}>
+              <Alert
+                variant="danger"
+                title="Couldn't load"
+                closeLabel="Dismiss"
+                onClose={() => setError(null)}
               >
-                <Flex gap={3} paddingBottom={4} wrap="wrap" alignItems="center">
-                  <Box width="28rem">
-                    <Searchbar
-                      name="queue-search"
-                      size="S"
-                      value={query}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setQuery(e.target.value)
-                      }
-                      onClear={() => setQuery("")}
-                      clearLabel="Clear search"
-                      placeholder="Search by title, target or contributor"
-                    >
-                      Search submissions
-                    </Searchbar>
-                  </Box>
-                  <Box width="20rem">
-                    <SingleSelect
-                      aria-label="Submission type"
-                      size="S"
-                      value={typeFilter}
-                      onChange={(v) => setTypeFilter(String(v))}
-                    >
-                      <SingleSelectOption value="all">
-                        All types
-                      </SingleSelectOption>
-                      {types.map((t) => (
-                        <SingleSelectOption key={t} value={t}>
-                          {TYPE_LABELS[t] ?? t}
-                        </SingleSelectOption>
-                      ))}
-                    </SingleSelect>
-                  </Box>
-                  <Typography variant="pi" textColor="neutral600">
-                    {rows.length} of {current.length} {tab.label.toLowerCase()}
-                  </Typography>
-                </Flex>
-
-                {loading ? (
-                  <Flex justifyContent="center" padding={8}>
-                    <Loader>Loading submissions</Loader>
+                {error}
+              </Alert>
+            </Box>
+          )}
+          <Tabs.Root
+            value={tab}
+            onValueChange={(v) => {
+              setTab(v)
+              if (v !== "suggestions") {
+                setStatus(v as ModerationStatus)
+                setTypeFilter("all")
+                setPage(1)
+                setOpenId(null)
+              }
+            }}
+          >
+            <Box
+              color="neutral500"
+              style={{
+                overflowX: "auto",
+                scrollbarWidth: "thin",
+                scrollbarColor: "currentColor transparent",
+              }}
+            >
+              <Tabs.List
+                aria-label="Submission status"
+                style={{ minWidth: "max-content", whiteSpace: "nowrap" }}
+              >
+                {STATUS_TABS.map((tab) => (
+                  <Tabs.Trigger key={tab.id} value={tab.id}>
+                    <Flex gap={2} alignItems="center">
+                      {tab.label}
+                      {(counts[tab.id] ?? 0) > 0 && (
+                        <Badge size="S" active={tab.id === "pending"}>
+                          {counts[tab.id]}
+                        </Badge>
+                      )}
+                    </Flex>
+                  </Tabs.Trigger>
+                ))}
+                <Tabs.Trigger value="suggestions">
+                  <Flex gap={2} alignItems="center">
+                    Suggestions
+                    {openSuggestions > 0 && (
+                      <Badge size="S">{openSuggestions}</Badge>
+                    )}
                   </Flex>
-                ) : rows.length === 0 ? (
-                  <EmptyStateLayout
-                    icon={<EmptyDocuments width="16rem" />}
-                    content={
-                      current.length === 0
-                        ? `Nothing ${tab.label.toLowerCase()} right now.`
-                        : "Nothing matches these filters."
-                    }
-                    action={
-                      current.length > 0 ? (
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            setQuery("")
-                            setTypeFilter("all")
-                          }}
-                        >
-                          Clear filters
-                        </Button>
-                      ) : undefined
-                    }
-                  />
-                ) : (
-                  <Table colCount={6} rowCount={rows.length + 1}>
-                    <Thead>
-                      <Tr>
-                        <Th>
-                          <Typography variant="sigma">Type</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Submission</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Contributor</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Submitted</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Status</Typography>
-                        </Th>
-                        <Th>
-                          <Typography
-                            variant="sigma"
-                            style={{
-                              position: "absolute",
-                              clip: "rect(0 0 0 0)",
+                </Tabs.Trigger>
+              </Tabs.List>
+            </Box>
+            {STATUS_TABS.map((tab) => (
+              <Tabs.Content key={tab.id} value={tab.id}>
+                <Box
+                  background="neutral0"
+                  padding={6}
+                  hasRadius
+                  shadow="tableShadow"
+                >
+                  <Flex
+                    gap={3}
+                    paddingBottom={4}
+                    wrap="wrap"
+                    alignItems="center"
+                  >
+                    <Box width="28rem">
+                      <Searchbar
+                        name="queue-search"
+                        size="S"
+                        value={query}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setQuery(e.target.value)
+                          setPage(1)
+                        }}
+                        onClear={() => {
+                          setQuery("")
+                          setPage(1)
+                        }}
+                        clearLabel="Clear search"
+                        placeholder="Search by title, target or contributor"
+                      >
+                        Search submissions
+                      </Searchbar>
+                    </Box>
+                    <Box width="20rem">
+                      <SingleSelect
+                        aria-label="Submission type"
+                        size="S"
+                        value={typeFilter}
+                        onChange={(v) => {
+                          setTypeFilter(String(v))
+                          setPage(1)
+                        }}
+                      >
+                        <SingleSelectOption value="all">
+                          All types
+                        </SingleSelectOption>
+                        {types.map((t) => (
+                          <SingleSelectOption key={t} value={t}>
+                            {TYPE_LABELS[t] ?? t}
+                          </SingleSelectOption>
+                        ))}
+                      </SingleSelect>
+                    </Box>
+                    <Typography variant="pi" textColor="neutral600">
+                      {total === 0 ? 0 : (page - 1) * 50 + 1}–
+                      {(page - 1) * 50 + rows.length} of {total}{" "}
+                      {tab.label.toLowerCase()}
+                    </Typography>
+                  </Flex>
+
+                  {loading ? (
+                    <Flex justifyContent="center" padding={8}>
+                      <Loader>Loading submissions</Loader>
+                    </Flex>
+                  ) : rows.length === 0 ? (
+                    <EmptyStateLayout
+                      icon={<EmptyDocuments width="16rem" />}
+                      content={
+                        !query && typeFilter === "all"
+                          ? `Nothing ${tab.label.toLowerCase()} right now.`
+                          : "Nothing matches these filters."
+                      }
+                      action={
+                        !!query || typeFilter !== "all" ? (
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              setQuery("")
+                              setTypeFilter("all")
                             }}
                           >
-                            Actions
-                          </Typography>
-                        </Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {rows.map((sub) => {
-                        const detail = detailOf(sub)
+                            Clear filters
+                          </Button>
+                        ) : undefined
+                      }
+                    />
+                  ) : (
+                    <Table colCount={6} rowCount={rows.length + 1}>
+                      <Thead>
+                        <Tr>
+                          <Th>
+                            <Typography variant="sigma">Type</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Submission</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Contributor</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Submitted</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Status</Typography>
+                          </Th>
+                          <Th>
+                            <Typography
+                              variant="sigma"
+                              style={{
+                                position: "absolute",
+                                clip: "rect(0 0 0 0)",
+                              }}
+                            >
+                              Actions
+                            </Typography>
+                          </Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {rows.map((sub) => {
+                          const detail = detailOf(sub)
 
-                        return (
-                          <Tr
-                            key={sub.documentId}
-                            onClick={() => setOpenId(sub.documentId)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <Td>
-                              <TypeBadge type={sub.submissionType} />
-                              {sub.staffReviewHint && (
-                                <Badge size="S">{sub.staffReviewHint}</Badge>
-                              )}
-                            </Td>
-                            <Td>
-                              <Flex
-                                direction="column"
-                                alignItems="flex-start"
-                                gap={0}
-                              >
+                          return (
+                            <Tr
+                              key={sub.documentId}
+                              onClick={() => setOpenId(sub.documentId)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              <Td>
+                                <TypeBadge type={sub.submissionType} />
+                                {sub.staffReviewHint && (
+                                  <Badge size="S">{sub.staffReviewHint}</Badge>
+                                )}
+                              </Td>
+                              <Td>
+                                <Flex
+                                  direction="column"
+                                  alignItems="flex-start"
+                                  gap={0}
+                                >
+                                  <Typography
+                                    fontWeight="semiBold"
+                                    textColor="neutral800"
+                                  >
+                                    {summaryOf(sub)}
+                                  </Typography>
+                                  {detail && (
+                                    <Typography
+                                      variant="pi"
+                                      textColor="neutral600"
+                                    >
+                                      {detail}
+                                    </Typography>
+                                  )}
+                                </Flex>
+                              </Td>
+                              <Td>
+                                <Flex
+                                  direction="column"
+                                  alignItems="flex-start"
+                                  gap={0}
+                                >
+                                  <Typography textColor="neutral800">
+                                    {sub.submittedByName ??
+                                      sub.submittedByEmail}
+                                  </Typography>
+                                  {sub.submittedByName && (
+                                    <Typography
+                                      variant="pi"
+                                      textColor="neutral600"
+                                    >
+                                      {sub.submittedByEmail}
+                                    </Typography>
+                                  )}
+                                </Flex>
+                              </Td>
+                              <Td>
                                 <Typography
-                                  fontWeight="semiBold"
                                   textColor="neutral800"
+                                  title={sub.createdAt}
                                 >
-                                  {summaryOf(sub)}
+                                  {relativeTime(sub.createdAt)}
                                 </Typography>
-                                {detail && (
-                                  <Typography
-                                    variant="pi"
-                                    textColor="neutral600"
+                              </Td>
+                              <Td>
+                                <StatusPill status={sub.status} />
+                              </Td>
+                              <Td>
+                                <Flex justifyContent="flex-end">
+                                  <IconButton
+                                    label="Review"
+                                    variant="ghost"
+                                    onClick={(e: React.MouseEvent) => {
+                                      e.stopPropagation()
+                                      setOpenId(sub.documentId)
+                                    }}
                                   >
-                                    {detail}
-                                  </Typography>
-                                )}
-                              </Flex>
-                            </Td>
-                            <Td>
-                              <Flex
-                                direction="column"
-                                alignItems="flex-start"
-                                gap={0}
-                              >
-                                <Typography textColor="neutral800">
-                                  {sub.submittedByName ?? sub.submittedByEmail}
-                                </Typography>
-                                {sub.submittedByName && (
-                                  <Typography
-                                    variant="pi"
-                                    textColor="neutral600"
-                                  >
-                                    {sub.submittedByEmail}
-                                  </Typography>
-                                )}
-                              </Flex>
-                            </Td>
-                            <Td>
-                              <Typography
-                                textColor="neutral800"
-                                title={sub.createdAt}
-                              >
-                                {relativeTime(sub.createdAt)}
-                              </Typography>
-                            </Td>
-                            <Td>
-                              <StatusPill status={sub.status} />
-                            </Td>
-                            <Td>
-                              <Flex justifyContent="flex-end">
-                                <IconButton
-                                  label="Review"
-                                  variant="ghost"
-                                  onClick={(e: React.MouseEvent) => {
-                                    e.stopPropagation()
-                                    setOpenId(sub.documentId)
-                                  }}
-                                >
-                                  <Eye />
-                                </IconButton>
-                              </Flex>
-                            </Td>
-                          </Tr>
-                        )
-                      })}
-                    </Tbody>
-                  </Table>
-                )}
-              </Box>
+                                    <Eye />
+                                  </IconButton>
+                                </Flex>
+                              </Td>
+                            </Tr>
+                          )
+                        })}
+                      </Tbody>
+                    </Table>
+                  )}
+                  {pageCount > 1 && (
+                    <Flex justifyContent="space-between" paddingTop={4} gap={3}>
+                      <Button
+                        variant="secondary"
+                        disabled={loading || page <= 1}
+                        onClick={() => setPage((value) => value - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Typography textColor="neutral600">
+                        Page {page} of {pageCount}
+                      </Typography>
+                      <Button
+                        variant="secondary"
+                        disabled={loading || page >= pageCount}
+                        onClick={() => setPage((value) => value + 1)}
+                      >
+                        Next
+                      </Button>
+                    </Flex>
+                  )}
+                </Box>
+              </Tabs.Content>
+            ))}
+            {/* Mounted up front so the tab badge shows the open count. */}
+            <Tabs.Content
+              value="suggestions"
+              forceMount
+              hidden={tab !== "suggestions"}
+            >
+              <SuggestionsPanel onOpenCount={setOpenSuggestions} />
             </Tabs.Content>
-          ))}
-          {/* Mounted up front so the tab badge shows the open count. */}
-          <Tabs.Content
-            value="suggestions"
-            forceMount
-            hidden={tab !== "suggestions"}
-          >
-            <SuggestionsPanel onOpenCount={setOpenSuggestions} />
-          </Tabs.Content>
-        </Tabs.Root>
-      </Layouts.Content>
-      <ReviewModal
-        sub={open}
-        onClose={() => setOpenId(null)}
-        onDecide={decide}
-      />
-    </Layouts.Root>
+          </Tabs.Root>
+        </Layouts.Content>
+        <ReviewModal
+          sub={open}
+          onClose={() => setOpenId(null)}
+          onDecide={decide}
+        />
+      </Layouts.Root>
+    </Page.Main>
   )
 }

@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import { planCard } from "@/lib/plans"
+import { useMembershipPlan } from "@/lib/localized-plans"
 
 const LINK =
   "inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
@@ -106,6 +106,7 @@ export function PlanStatusBanner({
   readonly hasPaidMembership?: boolean
   readonly isStaff?: boolean
 }) {
+  const planCard = useMembershipPlan()
   const t = useTranslations("membershipStatus")
   if (plan !== "supporter" && plan !== "pro" && plan !== "team") return null
   const source =

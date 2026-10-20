@@ -492,6 +492,56 @@ const REVIEW_STATUSES = new Set([
   "needs_info",
 ])
 
+type QueueOptions = {
+  page?: unknown
+  pageSize?: unknown
+  q?: unknown
+  type?: unknown
+}
+const queueInteger = (value: unknown, fallback: number, max: number) => {
+  const n =
+    typeof value === "string" || typeof value === "number"
+      ? Number(value)
+      : Number.NaN
+
+  return Number.isFinite(n)
+    ? Math.min(max, Math.max(1, Math.trunc(n)))
+    : fallback
+}
+
+function queueWindow(options: QueueOptions) {
+  const page = queueInteger(options.page, 1, 10000)
+  const pageSize = queueInteger(options.pageSize, 50, 100)
+
+  return { page, pageSize, start: (page - 1) * pageSize }
+}
+function queueFilters(status: unknown, options: QueueOptions = {}) {
+  const q = typeof options.q === "string" ? options.q.trim().slice(0, 200) : ""
+  const type =
+    typeof options.type === "string" && /^[a-z_]{1,80}$/.test(options.type)
+      ? options.type
+      : null
+
+  return {
+    status:
+      typeof status === "string" && REVIEW_STATUSES.has(status)
+        ? status
+        : { $ne: "draft" },
+    ...(type ? { submissionType: type } : {}),
+    ...(q
+      ? {
+          $or: [
+            "fields",
+            "submittedByName",
+            "submittedByEmail",
+            "targetSlug",
+            "note",
+          ].map((field) => ({ [field]: { $containsi: q } })),
+        }
+      : {}),
+  }
+}
+
 /** Default column lengths when the schema names none: string 255, text 10k. */
 const STRING_MAX = 255
 const TEXT_MAX = 10_000
@@ -805,23 +855,44 @@ export default ({ strapi }: { strapi: any }) => ({
     )
   },
 
-  async findAll(status?: unknown) {
-    // A review status only: drafts are private until finalized, and a
-    // non-string (an object from `?status[$ne]=`) would be a filter, not a
-    // value. Anything else means "everything in or past review".
-    const wanted =
-      typeof status === "string" && REVIEW_STATUSES.has(status)
-        ? status
-        : { $ne: "draft" }
-    const filters: Record<string, unknown> = { status: wanted }
+  async findPage(status?: unknown, options: QueueOptions = {}) {
+    const { page, pageSize } = queueWindow(options)
+    const [data, total, counts] = await Promise.all([
+      this.findAll(status, options),
+      strapi
+        .documents("plugin::content-moderation.submission")
+        .count({ filters: queueFilters(status, options) }),
+      Promise.all(
+        [...REVIEW_STATUSES].map(async (state) => [
+          state,
+          await strapi
+            .documents("plugin::content-moderation.submission")
+            .count({ filters: { status: state } }),
+        ])
+      ),
+    ])
 
-    // Default to all non-draft statuses when no filter is specified
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        pageSize,
+        pageCount: Math.ceil(total / pageSize),
+        counts: Object.fromEntries(counts),
+      },
+    }
+  },
+
+  async findAll(status?: unknown, options: QueueOptions = {}) {
+    const { start, pageSize } = queueWindow(options)
     const rows = await strapi
       .documents("plugin::content-moderation.submission")
       .findMany({
-        filters,
-        sort: { createdAt: "desc" },
-        limit: 200,
+        filters: queueFilters(status, options),
+        sort: ["createdAt:desc", "id:desc"],
+        start,
+        limit: pageSize,
       })
 
     // Record corrections still to review get the library's live values and

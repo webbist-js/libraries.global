@@ -1,3 +1,4 @@
+import type { Core } from "@strapi/strapi"
 // https://docs.strapi.io/dev-docs/configurations/cron
 
 import { reviewRoundView } from "../src/plugins/content-moderation/server/utils/suggestion-rounds"
@@ -5,6 +6,7 @@ import {
   handleAutoPaused,
   purgeOAuthDrafts,
 } from "../src/plugins/events/server/cron"
+import { refreshEventSearch } from "../src/utils/event-search-refresh"
 import {
   DRIVE_LIFECYCLE_LOCK_KEY,
   withLeaderLock,
@@ -72,6 +74,15 @@ const driveLifecycleJob = {
 }
 
 export default {
+  eventSearch: {
+    task: ({ strapi }: { strapi: Core.Strapi }) =>
+      refreshEventSearch(strapi).catch(() =>
+        strapi.log.warn(
+          "[events] Search refresh failed; the watermark was retained for retry"
+        )
+      ),
+    options: { rule: "* * * * *", tz: "Etc/UTC" },
+  },
   suggestionReviewRounds: {
     task: async ({ strapi }: { strapi: any }) => {
       try {

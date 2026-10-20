@@ -12,6 +12,7 @@ export function FindSkeletonGrid({ count = 6 }: { count?: number }) {
   return (
     <div
       aria-busy="true"
+      role="status"
       aria-label={tUi("loading_results")}
       className="grid gap-[18px]"
       style={{

@@ -60,15 +60,19 @@ export function useModerationWaiting(enabled: boolean) {
 }
 
 /** Suggested changes waiting on one staff library (the drawer's summary). */
-function useSuggestionsWaiting(libraryId: string | null, enabled: boolean) {
+function useSuggestionsWaiting(
+  userId: string | undefined,
+  libraryId: string | null,
+  enabled: boolean
+) {
   return useQuery({
-    queryKey: ["contribute-menu", "suggestions", libraryId],
-    enabled: enabled && !!libraryId,
+    queryKey: ["contribute-menu", userId, "suggestions", libraryId],
+    enabled: enabled && !!userId && !!libraryId,
     staleTime: STALE,
-    queryFn: async (): Promise<number | null> => {
+    queryFn: async ({ signal }): Promise<number | null> => {
       const res = await fetch(
         `/api/staff/${encodeURIComponent(libraryId ?? "")}/drawer`,
-        { cache: "no-store" }
+        { cache: "no-store", signal }
       )
       if (!res.ok) return null
       const json = (await res.json()) as { suggestions?: unknown }
@@ -79,13 +83,16 @@ function useSuggestionsWaiting(libraryId: string | null, enabled: boolean) {
 }
 
 /** The viewer's own submissions in review (`pendingCount`, when known). */
-function useInReview(enabled: boolean) {
+function useInReview(userId: string | undefined, enabled: boolean) {
   return useQuery({
-    queryKey: ["contribute-menu", "in-review"],
-    enabled,
+    queryKey: ["contribute-menu", userId, "in-review"],
+    enabled: enabled && !!userId,
     staleTime: STALE,
-    queryFn: async (): Promise<number | null> => {
-      const res = await fetch("/api/contribute/standing")
+    queryFn: async ({ signal }): Promise<number | null> => {
+      const res = await fetch("/api/contribute/standing", {
+        cache: "no-store",
+        signal,
+      })
       if (!res.ok) return null
       const json = (await res.json()) as { pendingCount?: unknown }
 
@@ -137,13 +144,14 @@ export function useContributeMenu(active: boolean): ContributeMenu {
 
   const featured = useFeaturedDrive(active)
   const suggestions = useSuggestionsWaiting(
+    user?.id,
     selectedId,
     active && signedIn && isStaff
   )
   const moderation = useModerationWaiting(
     active && signedIn && capabilities.includes("moderate.queue")
   )
-  const inReview = useInReview(active && signedIn)
+  const inReview = useInReview(user?.id, active && signedIn)
 
   const model = buildContributeMenu({
     status,

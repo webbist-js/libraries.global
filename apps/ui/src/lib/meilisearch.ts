@@ -1,4 +1,4 @@
-import { Meilisearch } from "meilisearch"
+import { Meilisearch, type SearchParams } from "meilisearch"
 
 import {
   type LibraryIndexFilterState,
@@ -474,6 +474,8 @@ export interface EventSearchHit {
 }
 
 export interface EventSearchParams {
+  timeSlots?: string[]
+  facets?: string[]
   query?: string
   eventTypes?: string[]
   isFree?: boolean
@@ -493,6 +495,8 @@ export interface EventSearchParams {
 
 export async function searchEvents(params: EventSearchParams = {}) {
   const {
+    timeSlots = [],
+    facets,
     query = "",
     eventTypes = [],
     isFree,
@@ -513,6 +517,10 @@ export async function searchEvents(params: EventSearchParams = {}) {
       `eventType IN [${eventTypes.map((t) => JSON.stringify(t)).join(", ")}]`
     )
   }
+  if (timeSlots.length > 0)
+    filterParts.push(
+      `timeSlot IN [${timeSlots.map((slot) => JSON.stringify(slot)).join(", ")}]`
+    )
   if (isFree === true) filterParts.push("isFree = true")
   if (isFree === false) filterParts.push("isFree = false")
   if (fromTimestamp != null)
@@ -536,7 +544,11 @@ export async function searchEvents(params: EventSearchParams = {}) {
 
   const index = meiliClient.index("event")
 
-  return index.search<EventSearchHit>(query, {
+  return index.search<
+    EventSearchHit,
+    SearchParams & { page: number; hitsPerPage: number }
+  >(query, {
+    facets,
     filter: filterParts.length > 0 ? filterParts.join(" AND ") : undefined,
     sort: ["startTimestamp:asc"],
     page: page + 1,

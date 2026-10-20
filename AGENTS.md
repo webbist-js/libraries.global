@@ -41,7 +41,7 @@ This updates `@repo/strapi-types`. Forgetting causes silent type mismatches betw
 - [Page Builder](apps/docs/docs/page-builder.md) — Component registry and rendering
 - [Strapi API Client](apps/docs/docs/strapi-api-client.md) — Fetching content from Strapi
 - [Pages Hierarchy](apps/docs/docs/pages-hierarchy.md) — URL structure and redirects
-- [Authentication](apps/docs/docs/authentication.md) — Better Auth + Strapi JWT integration
+- [Authentication](apps/docs/docs/authentication.md) — Better Auth sessions and server bridge
 - [Strapi Schemas](apps/docs/docs/strapi-schemas.md) — Schema attributes, localization, lifecycle hooks
 - [Strapi Types](apps/docs/docs/strapi-types-usage.md) — Type utilities and usage patterns
 

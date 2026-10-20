@@ -21,17 +21,14 @@ function ModerationIcon() {
 export default {
   register(app: any) {
     app.addMenuLink({
-      to: `/plugins/content-moderation`,
+      to: `plugins/content-moderation`,
       icon: ModerationIcon,
       intlLabel: {
         id: "content-moderation.plugin.name",
         defaultMessage: "Moderation",
       },
-      Component: async () => {
-        const { App } = await import("./admin/src/index")
-
-        return App
-      },
+      Component: () =>
+        import("./admin/src/index").then(({ App }) => ({ default: App })),
     })
   },
   bootstrap() {},

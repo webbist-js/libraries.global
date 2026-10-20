@@ -37,7 +37,7 @@ export async function withAuthDb<T>(
 
 /**
  * The newest unexpired magic-link token for `email`. The magicLink plugin
- * stores the raw token as the verification row's identifier and
+ * stores `magic-link:<token>` as the verification row's identifier and
  * `{ email, name }` as its value.
  */
 export async function latestMagicLinkToken(email: string): Promise<string> {
@@ -50,8 +50,13 @@ export async function latestMagicLinkToken(email: string): Promise<string> {
     )
     for (const row of rows) {
       try {
-        if ((JSON.parse(row.value) as { email?: string }).email === email)
-          return row.identifier
+        const value = JSON.parse(row.value) as { type?: string; email?: string }
+        if (
+          value.type === "magic-link" &&
+          value.email === email &&
+          row.identifier.startsWith("magic-link:")
+        )
+          return row.identifier.slice("magic-link:".length)
       } catch {
         // Not a magic-link row (other verification values aren't JSON).
       }

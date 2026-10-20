@@ -345,6 +345,38 @@ describe("the status change and its side effects commit together", () => {
 })
 
 describe("admin findAll", () => {
+  it("pages every submission and searches older rows with exact totals, excluding private drafts", async () => {
+    const { svc } = setup({
+      [SUB]: [
+        ...Array.from({ length: 251 }, (_, i) => ({
+          ...newLibrary(),
+          documentId: `queue-${i}`,
+          createdAt: new Date(2026, 0, 1, 0, i).toISOString(),
+          fields: { name: i === 0 ? "Rare archive" : `Library ${i}` },
+        })),
+        {
+          ...newLibrary(),
+          documentId: "private",
+          status: "draft",
+          fields: { name: "Rare archive" },
+        },
+      ],
+    })
+    const page = await svc.findPage("pending", { page: "6", pageSize: "50" })
+    expect(page.meta).toMatchObject({
+      total: 251,
+      pageCount: 6,
+      counts: { pending: 251 },
+    })
+    expect(page.data).toHaveLength(1)
+    expect(page.data[0].documentId).toBe("queue-0")
+    const searched = await svc.findPage(undefined, {
+      q: "rare archive",
+      type: "new_library",
+    })
+    expect(searched.meta.total).toBe(1)
+    expect(searched.data.map((row) => row.documentId)).toEqual(["queue-0"])
+  })
   it("accepts a review status only, never draft or a non-string", async () => {
     const rows = [
       { ...claim(), documentId: "c1", status: "pending" },

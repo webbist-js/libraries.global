@@ -20,6 +20,8 @@ vi.mock("@/lib/auth", () => ({
   },
 }))
 
+vi.stubEnv("APP_PUBLIC_URL", "http://localhost")
+
 const { DELETE, GET } = await import("./route")
 
 describe("GET /api/profile/me/sessions", () => {
@@ -77,6 +79,10 @@ describe("DELETE /api/profile/me/sessions", () => {
     getSession.mockResolvedValue(null)
     const req = new Request("http://localhost/api/profile/me/sessions", {
       method: "DELETE",
+      headers: {
+        Origin: "http://localhost",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ id: "s2" }),
     })
 
@@ -93,6 +99,10 @@ describe("DELETE /api/profile/me/sessions", () => {
     ])
     const req = new Request("http://localhost/api/profile/me/sessions", {
       method: "DELETE",
+      headers: {
+        Origin: "http://localhost",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ id: "s2" }),
     })
 
@@ -110,6 +120,10 @@ describe("DELETE /api/profile/me/sessions", () => {
     listSessions.mockResolvedValue([{ id: "s1", token: "secret-1" }])
     const req = new Request("http://localhost/api/profile/me/sessions", {
       method: "DELETE",
+      headers: {
+        Origin: "http://localhost",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ id: "unknown" }),
     })
 
@@ -123,6 +137,10 @@ describe("DELETE /api/profile/me/sessions", () => {
     getSession.mockResolvedValue({ user: { id: "u1" }, session: { id: "s1" } })
     const req = new Request("http://localhost/api/profile/me/sessions", {
       method: "DELETE",
+      headers: {
+        Origin: "http://localhost",
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({}),
     })
 
@@ -133,3 +151,24 @@ describe("DELETE /api/profile/me/sessions", () => {
     expect(res.status).toBe(200)
   })
 })
+
+it.each(["{broken", "null", "42", '{"id":42}', '{"unexpected":true}'])(
+  "never revokes sessions for invalid JSON %s",
+  async (body) => {
+    vi.clearAllMocks()
+    getSession.mockResolvedValue({ user: { id: "u1" } })
+    const response = await DELETE(
+      new Request("http://localhost/api/profile/me/sessions", {
+        method: "DELETE",
+        headers: {
+          Origin: "http://localhost",
+          "Content-Type": "application/json",
+        },
+        body,
+      })
+    )
+    expect(response.status).toBe(400)
+    expect(revokeOtherSessions).not.toHaveBeenCalled()
+    expect(revokeSession).not.toHaveBeenCalled()
+  }
+)

@@ -82,7 +82,11 @@ export function FeedRow({
     try {
       const res = await fetch(
         `/api/contribute/event-feeds/${feed.documentId}${path}`,
-        { method: "POST" }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        }
       )
       if (!res.ok) {
         setActionError(failed(res))
@@ -104,7 +108,11 @@ export function FeedRow({
     try {
       const res = await fetch(
         `/api/contribute/event-feeds/${feed.documentId}/test`,
-        { method: "POST" }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        }
       )
       const json = await res.json().catch(() => null)
       if (res.ok && json?.data?.result) setTestResult(json.data.result)

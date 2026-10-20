@@ -1,6 +1,7 @@
 import type { Locale } from "next-intl"
 import { use } from "react"
 
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalFooter from "@/components/global/GlobalFooter"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { resolveHomepageContent } from "@/components/home/homepage.content"
@@ -85,7 +86,7 @@ export function LibraryHomePage({
 
         <GlobalHeader locale={locale} />
 
-        <main className="relative z-10 flex-1">
+        <MainContent className="relative z-10 flex-1">
           <HomepageHero
             eyebrow={content.heroEyebrow}
             title={content.heroTitle}
@@ -108,7 +109,7 @@ export function LibraryHomePage({
             locale={locale}
             viewerPlan={viewerPlan}
           />
-        </main>
+        </MainContent>
 
         <GlobalFooter
           footer={footer}

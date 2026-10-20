@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { Suspense } from "react"
 
 import { PageHero, SearchField } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
 import { useArticleSearch } from "@/hooks/useArticleSearch"
@@ -134,7 +135,7 @@ function SearchPageInner() {
   const query = searchParams.get("q") ?? ""
 
   return (
-    <main className="relative z-10 flex-1">
+    <MainContent className="relative z-10 flex-1">
       <PageHero
         breadcrumb={[
           { label: tUi("home"), href: "/" },
@@ -175,7 +176,7 @@ function SearchPageInner() {
           )}
         </Container>
       </section>
-    </main>
+    </MainContent>
   )
 }
 

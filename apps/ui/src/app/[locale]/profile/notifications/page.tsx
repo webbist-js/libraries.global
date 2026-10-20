@@ -8,6 +8,7 @@ import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/Profi
 import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { PageHero } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { NotificationInbox } from "@/components/notifications/NotificationInbox"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -57,9 +58,9 @@ export default async function Page({
               lead="Updates about your contributions, libraries and community."
             />
           )}
-          <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+          <MainContent className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
             <NotificationInbox />
-          </main>
+          </MainContent>
         </div>
       </AccountGuard>
     </>

@@ -204,6 +204,7 @@ export function DriveTaskList({
       {loading && tasks.length === 0 && !error ? (
         <div
           aria-busy="true"
+          role="status"
           aria-label={tUi("loading_results")}
           className="divide-y divide-(--t-divider) overflow-hidden rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep)"
         >

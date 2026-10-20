@@ -1,28 +1,30 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { useMembershipPlan } from "@/lib/localized-plans"
 import pricing from "@/lib/membership-pricing.json"
-import { planCard, TEAM_CONTACT_HREF } from "@/lib/plans"
+import { TEAM_CONTACT_HREF } from "@/lib/plans"
 
 import { CurrentPlanBadge, PlanFeatures } from "./PlanBits"
 import { PlanRoadmap } from "./PlanRoadmap"
 import { PlanToggle } from "./PlanToggle"
 
-const gbp = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: pricing.currency,
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 0,
-})
-const pounds = (pence: number) => gbp.format(pence / 100)
-const team = planCard("team")
-
 /** Team has its own space: service benefits beside an annual quote builder. */
 export function TeamPlan({ current }: { readonly current: boolean }) {
+  const getPlan = useMembershipPlan()
+  const team = getPlan("team")
+  const locale = useLocale()
+  const pounds = (pence: number) =>
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: pricing.currency,
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    }).format(pence / 100)
   const t = useTranslations("membershipPlans")
   const headingId = useId()
   const quoteId = useId()

@@ -1,6 +1,7 @@
 import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { T } from "@/lib/design-tokens"
 import { routing } from "@/lib/navigation"
 
@@ -12,7 +13,7 @@ export function UtilityPage({ children }: { children: ReactNode }) {
   const tUi = useUiTranslations("ui")
 
   return (
-    <main
+    <MainContent
       className="flex min-h-dvh w-full flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-16"
       style={{ background: T.bg.void, color: T.ink.base }}
     >
@@ -53,7 +54,7 @@ export function UtilityPage({ children }: { children: ReactNode }) {
         </UtilityLink>
         <span>An independent, open-source project.</span>
       </footer>
-    </main>
+    </MainContent>
   )
 }
 

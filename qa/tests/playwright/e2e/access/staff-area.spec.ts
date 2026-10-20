@@ -279,9 +279,8 @@ test("publishing an hours change shows on the public page at once", async ({
   browserContexts.push(page.context())
   await expect(async () => {
     await page.goto(publicPath, NAVIGATION)
-    // The hours table: a row per day, "Mon" (or "Mon (today)") as its header.
-    const monday = page.locator("tr", {
-      has: page.getByRole("rowheader", { name: /^Mon\b/ }),
+    const monday = page.getByRole("listitem").filter({
+      has: page.getByText(/^Monday(?: \(today\))?$/),
     })
     await expect(monday.first()).toContainText(`09:00–${next}`, {
       timeout: 5000,

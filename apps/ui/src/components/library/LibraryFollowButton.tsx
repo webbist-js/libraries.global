@@ -3,12 +3,39 @@
 import { Icon } from "@iconify/react"
 import Link from "next/link"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
+import { useFollowTarget } from "@/hooks/useFollowTarget"
 import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
+
+function followStyle(
+  isFollowing: boolean,
+  disabled: boolean
+): React.CSSProperties {
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "9px 16px",
+    borderRadius: "10px",
+    border: isFollowing
+      ? `1px solid rgba(255,100,100,0.4)`
+      : `1px solid rgba(255,255,255,.22)`,
+    background: isFollowing
+      ? "rgba(255,100,100,0.08)"
+      : "rgba(255,255,255,.07)",
+    color: isFollowing ? "#ff8a8a" : "rgba(255,255,255,.80)",
+    fontFamily: T.font.mono,
+    fontSize: "10px",
+    letterSpacing: ".1em",
+    textTransform: "uppercase",
+    cursor: disabled ? "default" : "pointer",
+    opacity: disabled ? 0.6 : 1,
+    transition: "all 150ms",
+  }
+}
 
 export function LibraryFollowButton({
   libraryDocumentId,
@@ -20,48 +47,26 @@ export function LibraryFollowButton({
   const tUi = useUiTranslations("ui")
 
   const { data: session, isPending } = authClient.useSession()
-  const [following, setFollowing] = useState<boolean | null>(null)
-  const [loading, setLoading] = useState(false)
+  const tFollow = useUiTranslations("publishingFollow")
+  const {
+    following,
+    saving: loading,
+    error,
+    retry,
+    toggle: toggleFollow,
+  } = useFollowTarget(session?.user?.id, "libraryDocumentId", libraryDocumentId)
   // Better Auth's store can already hold a session on the client's first
   // render while the server rendered none, so every session-dependent
   // branch waits for mount; a same-height placeholder keeps the layout.
   const mounted = useMounted()
 
-  useEffect(() => {
-    if (!session?.user || !libraryDocumentId) return
-    fetch(
-      `/api/profile/me/follow?libraryDocumentId=${encodeURIComponent(libraryDocumentId)}`
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => {
-        if (json) setFollowing(json.following as boolean)
-      })
-      .catch(() => setFollowing(false))
-  }, [session?.user, libraryDocumentId])
-
   const toggle = async () => {
     if (!session?.user || following === null) return
-    const action = following ? "unfollow" : "follow"
-    setLoading(true)
-    try {
-      const res = await fetch("/api/profile/me/follow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ libraryDocumentId, action }),
-      })
-      if (!res.ok) throw new Error("Follow request failed")
-      const json = (await res.json()) as { following: boolean }
-      setFollowing(json.following)
+    const next = await toggleFollow()
+    if (next !== null)
       toast.success(
-        json.following
-          ? `Following ${libraryName}`
-          : `Unfollowed ${libraryName}`
+        next ? `Following ${libraryName}` : `Unfollowed ${libraryName}`
       )
-    } catch {
-      toast.error("Something went wrong. Please try again.")
-    } finally {
-      setLoading(false)
-    }
   }
 
   if (!mounted || isPending)
@@ -103,42 +108,38 @@ export function LibraryFollowButton({
   const isFollowing = following === true
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={loading || following === null}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        padding: "9px 16px",
-        borderRadius: "10px",
-        border: isFollowing
-          ? `1px solid rgba(255,100,100,0.4)`
-          : `1px solid rgba(255,255,255,.22)`,
-        background: isFollowing
-          ? "rgba(255,100,100,0.08)"
-          : "rgba(255,255,255,.07)",
-        color: isFollowing ? "#ff8a8a" : "rgba(255,255,255,.80)",
-        fontFamily: T.font.mono,
-        fontSize: "10px",
-        letterSpacing: ".1em",
-        textTransform: "uppercase",
-        cursor: loading || following === null ? "default" : "pointer",
-        opacity: loading || following === null ? 0.6 : 1,
-        transition: "all 150ms",
-      }}
-    >
-      <Icon
-        icon={isFollowing ? "mdi:heart" : "mdi:heart-outline"}
-        width={13}
-        height={13}
-      />
-      {following === null
-        ? "…"
-        : isFollowing
-          ? tUi("following")
-          : tUi("follow")}
-    </button>
+    <span className="inline-flex flex-col items-start gap-1">
+      <button
+        type="button"
+        onClick={error === "read" ? retry : toggle}
+        disabled={loading || (following === null && error !== "read")}
+        style={followStyle(
+          isFollowing,
+          loading || (following === null && error !== "read")
+        )}
+      >
+        <Icon
+          icon={isFollowing ? "mdi:heart" : "mdi:heart-outline"}
+          width={13}
+          height={13}
+        />
+        {error === "read"
+          ? tUi("try_again")
+          : following === null
+            ? "…"
+            : isFollowing
+              ? tUi("following")
+              : tUi("follow")}
+      </button>
+      {error && (
+        <span
+          role="status"
+          className="text-xs"
+          style={{ color: T.accent.danger }}
+        >
+          {tFollow(error === "read" ? "lookupError" : "updateError")}
+        </span>
+      )}
+    </span>
   )
 }

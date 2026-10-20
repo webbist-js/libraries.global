@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { StepsCard } from "@/components/ds/StepsCard"
 import { Container } from "@/components/elementary/Container"
 import {
@@ -78,7 +79,7 @@ export default async function IndexEditorPage({
         lead="Search the index first. Improve the record if it’s there, or add it if it isn’t. An editor reviews every change before it goes live."
       />
       <Container className="py-8 lg:py-10">
-        <main className={WIZARD_GRID}>
+        <MainContent className={WIZARD_GRID}>
           <aside
             className={`${WIZARD_RAIL} hidden lg:block`}
             aria-label="Your record"
@@ -127,7 +128,7 @@ export default async function IndexEditorPage({
               }))}
             />
           </div>
-        </main>
+        </MainContent>
       </Container>
     </div>
   )

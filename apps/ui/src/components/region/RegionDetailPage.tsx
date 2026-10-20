@@ -5,6 +5,7 @@ import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
+import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -276,7 +277,7 @@ export async function RegionDetailPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main id="main" className="relative z-10 flex-1">
+      <MainContent id="main" className="relative z-10 flex-1">
         <LocationHero
           untranslatedLocale={untranslatedLocale}
           breadcrumbLabels={{
@@ -497,7 +498,7 @@ export async function RegionDetailPage({
             />
           </div>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

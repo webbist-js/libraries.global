@@ -20,6 +20,7 @@ import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
 import { EventModal } from "@/components/events/EventModal"
 import { EventModalProvider } from "@/components/events/EventModalContext"
 import GlobalFooter from "@/components/global/GlobalFooter"
+import { SkipToContent } from "@/components/global/SkipToContent"
 import { ClientProviders } from "@/components/providers/ClientProviders"
 import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
@@ -124,13 +125,11 @@ export default async function RootLayout({
             fontJetBrainsMono.variable
           )}
         >
-          <a href="#main" className="skip-link">
-            {tUi("skip_to_main_content")}
-          </a>
+          <SkipToContent>{tUi("skip_to_main_content")}</SkipToContent>
           <TrackingScripts nonce={nonce} locale={locale} />
           <ServerProviders>
             <ContactModalProvider aliases={contactAliases}>
-              <StickyPageLayout id="main">{children}</StickyPageLayout>
+              <StickyPageLayout id="page-shell">{children}</StickyPageLayout>
               <BetaFeedback label={tUi("feedback")} />
             </ContactModalProvider>
           </ServerProviders>
@@ -155,9 +154,7 @@ export default async function RootLayout({
           fontJetBrainsMono.variable
         )}
       >
-        <a href="#main" className="skip-link">
-          {tUi("skip_to_main_content")}{" "}
-        </a>
+        <SkipToContent>{tUi("skip_to_main_content")} </SkipToContent>
         {!liveConsole && <TrackingScripts nonce={nonce} locale={locale} />}
         <ServerProviders>
           <ContactModalProvider aliases={contactAliases}>
@@ -166,7 +163,7 @@ export default async function RootLayout({
               <EventModalProvider>
                 <div className="relative flex min-h-screen flex-col">
                   <StickyPageLayout
-                    id="main"
+                    id="page-shell"
                     className="strapi-page-slot flex flex-1 flex-col"
                   >
                     {children}

@@ -1,1 +1,14 @@
-["/"]
+[
+  "/",
+  "/libraries",
+  "/events",
+  "/community",
+  "/knowledge",
+  "/journal",
+  "/about",
+  "/legal",
+  "/contribute/membership",
+  "/auth/signin",
+  "/fr/events",
+  "/cs/contribute/membership"
+]

@@ -2,6 +2,7 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { JournalAllArticles } from "@/components/blog/JournalAllArticles"
 import { JournalToolbar } from "@/components/blog/JournalToolbar"
+import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -44,7 +45,7 @@ export function BlogLandingPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
+      <MainContent className="relative z-10 flex-1">
         <PageHero
           breadcrumb={[
             { label: tUi("home"), href: "/" },
@@ -140,7 +141,7 @@ export function BlogLandingPage({
             <JournalWriteCta />
           </aside>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

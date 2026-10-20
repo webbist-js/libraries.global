@@ -7,14 +7,9 @@ import { useState } from "react"
 import { CheckoutButton } from "@/components/billing/CheckoutButton"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { useMembershipContent, useMembershipPlan } from "@/lib/localized-plans"
 import { splitPrice, yearlySavingMonths } from "@/lib/plan-compare"
-import {
-  planCard,
-  type PlanCard,
-  type PlanCardKey,
-  PRICES_ARE_PLACEHOLDERS,
-  PRO_STANDARD_PRICE_NOTE,
-} from "@/lib/plans"
+import type { PlanCard, PlanCardKey } from "@/lib/plans"
 
 import { CurrentPlanBadge, PlanFeatures, PlanSectionHeader } from "./PlanBits"
 import { PlanRoadmap } from "./PlanRoadmap"
@@ -35,6 +30,7 @@ function Price({
   readonly plan: PlanCard
   readonly billing: Billing
 }) {
+  const m = useMembershipContent()
   if (plan.price === "free") return null
   const { monthly, yearly, note } = plan.price
   const shown = billing === "yearly" ? (yearly ?? monthly) : (monthly ?? yearly)
@@ -54,7 +50,7 @@ function Price({
               {parts.amount}
             </span>
             <span className="text-[15px]" style={{ color: T.ink.dim }}>
-              / {parts.period}
+              / {m(parts.period === "month" ? "copy.month" : "copy.year")}
               {parts.suffix}
             </span>
           </>
@@ -70,7 +66,12 @@ function Price({
       {otherParts || note ? (
         <p className="m-0 mt-2 text-[14px]" style={{ color: T.ink.dim }}>
           {otherParts
-            ? `Or ${otherParts.amount} a ${otherParts.period}.`
+            ? m("copy.otherPrice", {
+                amount: otherParts.amount,
+                period: m(
+                  otherParts.period === "month" ? "copy.month" : "copy.year"
+                ),
+              })
             : null}
           {note ? ` ${note}` : null}
         </p>
@@ -88,6 +89,7 @@ function Cta({
   readonly current: boolean
   readonly purchase?: React.ReactNode
 }) {
+  const m = useMembershipContent()
   if (!current && purchase) return purchase
   if (current)
     return (
@@ -101,7 +103,7 @@ function Cta({
           icon="mdi:arrow-right"
           width={17}
         />
-        Open the Atlas
+        {m("copy.openAtlas")}
       </GlobalLink>
     )
 
@@ -165,7 +167,7 @@ function PlanColumn({
         className="m-0 text-[14.5px] leading-[1.5]"
         style={{ color: T.ink.base }}
       >
-        For {plan.who.charAt(0).toLowerCase() + plan.who.slice(1)}.
+        {plan.who}
       </p>
       <Cta current={current} plan={plan} purchase={purchase} />
       <PlanFeatures plan={plan}>
@@ -194,6 +196,8 @@ export function MembershipPlans({
     hasPaidMembership?: boolean
   } | null
 }) {
+  const m = useMembershipContent()
+  const planCard = useMembershipPlan()
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("membershipPlans")
 
@@ -217,10 +221,10 @@ export function MembershipPlans({
             value={billing}
             onChange={setBilling}
             options={[
-              { value: "monthly", label: "Monthly" },
+              { value: "monthly", label: m("copy.monthly") },
               {
                 value: "yearly",
-                label: "Yearly",
+                label: m("copy.yearly"),
                 badge: savingMonths ? (
                   <span
                     className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
@@ -229,7 +233,7 @@ export function MembershipPlans({
                       color: TYPE_TINT.public.fg,
                     }}
                   >
-                    {savingMonths} months free
+                    {m("copy.freeMonths", { count: savingMonths })}
                   </span>
                 ) : undefined,
               },
@@ -268,7 +272,7 @@ export function MembershipPlans({
                   href="/profile/settings#membership"
                   className={PILL}
                 >
-                  Manage membership
+                  {m("copy.manage")}
                 </GlobalLink>
               ) : billingAvailable &&
                 (plan.key === "pro" ||
@@ -298,45 +302,22 @@ export function MembershipPlans({
           width={16}
         />
         <span>
-          Supporter and Pro payments are processed securely by Stripe, which
-          confirms the final total and tax. Cancel renewal at any time. See our{" "}
+          {m("copy.payment")}{" "}
           <GlobalLink
             className="underline underline-offset-2"
             href="/legal/cancellation-refunds"
           >
-            cancellation and refund policy
+            {m("copy.refund")}
           </GlobalLink>
           .{" "}
           <a
             href="#compare-plans"
             className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
           >
-            Compare every feature
+            {m("copy.compare")}
           </a>
         </span>
       </p>
-      {PRICES_ARE_PLACEHOLDERS ? (
-        <p
-          className="m-0 mt-4 flex items-start gap-2 text-[14px] leading-[1.5]"
-          style={{ color: T.ink.dim }}
-        >
-          <Icon
-            aria-hidden="true"
-            className="mt-0.5 shrink-0"
-            height={16}
-            icon="mdi:information-outline"
-            style={{ color: TYPE_TINT.national.fg }}
-            width={16}
-          />
-          <span>
-            <strong style={{ color: T.ink.base }}>
-              Prices are placeholders.
-            </strong>{" "}
-            They may change before checkout opens, and nobody is charged until
-            then. {PRO_STANDARD_PRICE_NOTE}
-          </span>
-        </p>
-      ) : null}
     </section>
   )
 }

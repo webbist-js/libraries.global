@@ -2,8 +2,8 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useEffect, useState } from "react"
 
+import { useFollowTarget } from "@/hooks/useFollowTarget"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
@@ -11,8 +11,6 @@ import { Link } from "@/lib/navigation"
 
 const PILL =
   "inline-flex min-h-11 items-center gap-2 rounded-full border px-[18px] text-[15px] font-semibold no-underline transition-colors"
-
-const FAILED = "Couldn’t update your follow. Try again."
 
 /**
  * "Follow drive" / "Following" on a drive's page: a toggle (`aria-pressed`)
@@ -34,29 +32,12 @@ export function DriveFollowButton({
 
   const { data: session, isPending } = authClient.useSession()
   const signedIn = !!session?.user
-  const [following, setFollowing] = useState<boolean | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState("")
-
-  useEffect(() => {
-    if (!signedIn || !driveDocumentId) return
-    let live = true
-    fetch(
-      `/api/profile/me/follow?driveDocumentId=${encodeURIComponent(driveDocumentId)}`
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json: { following?: boolean } | null) => {
-        if (live) setFollowing(json?.following === true)
-      })
-      .catch(() => {
-        if (live) setFollowing(false)
-      })
-
-    return () => {
-      live = false
-    }
-  }, [signedIn, driveDocumentId])
-
+  const tFollow = useUiTranslations("publishingFollow")
+  const { following, saving, error, retry, toggle } = useFollowTarget(
+    session?.user?.id,
+    "driveDocumentId",
+    driveDocumentId
+  )
   if (isPending) return null
 
   if (!signedIn) {
@@ -77,64 +58,55 @@ export function DriveFollowButton({
     )
   }
 
-  const toggle = async () => {
-    if (following === null || saving) return
-    const next = !following
-    setFollowing(next)
-    setSaving(true)
-    setMessage("")
-    try {
-      const res = await fetch("/api/profile/me/follow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          driveDocumentId,
-          action: next ? "follow" : "unfollow",
-        }),
-      })
-      if (!res.ok) throw new Error(`Follow failed: ${res.status}`)
-      const json = (await res.json()) as { following?: boolean }
-      setFollowing(json.following === true)
-    } catch {
-      setFollowing(!next)
-      setMessage(FAILED)
-    } finally {
-      setSaving(false)
-    }
-  }
-
   const isFollowing = following === true
+  const look = isFollowing
+    ? {
+        title: `Stop following “${driveTitle}”`,
+        label: tUi("following"),
+        icon: "mdi:bell",
+        className: "border-(--t-accent-primary)",
+        color: T.accent.primary,
+        background: T.accent.chip,
+      }
+    : {
+        title: `Follow “${driveTitle}” from your profile`,
+        label: "Follow drive",
+        icon: "mdi:bell-outline",
+        className:
+          "border-(--t-border-hi) bg-white hover:border-(--t-accent-primary)",
+        color: T.ink.base,
+        background: undefined,
+      }
+  const feedback =
+    error === "read"
+      ? tFollow("lookupError")
+      : error === "write"
+        ? tFollow("updateError")
+        : ""
 
   return (
     <span className="inline-flex flex-wrap items-center gap-2.5">
       <button
         type="button"
-        onClick={toggle}
-        aria-pressed={isFollowing}
-        disabled={following === null || saving}
-        title={
-          isFollowing
-            ? `Stop following “${driveTitle}”`
-            : `Follow “${driveTitle}” from your profile`
+        onClick={
+          error === "read"
+            ? retry
+            : () => {
+                toggle()
+              }
         }
-        className={`${PILL} cursor-pointer disabled:cursor-default ${
-          isFollowing
-            ? "border-(--t-accent-primary)"
-            : "border-(--t-border-hi) bg-white hover:border-(--t-accent-primary)"
-        }`}
+        aria-pressed={following === null ? undefined : isFollowing}
+        disabled={(following === null && error !== "read") || saving}
+        title={look.title}
+        className={`${PILL} cursor-pointer disabled:cursor-default ${look.className}`}
         style={{
-          color: isFollowing ? T.accent.primary : T.ink.base,
-          background: isFollowing ? T.accent.chip : undefined,
+          color: look.color,
+          background: look.background,
           opacity: following === null ? 0.7 : 1,
         }}
       >
-        <Icon
-          aria-hidden="true"
-          height={17}
-          icon={isFollowing ? "mdi:bell" : "mdi:bell-outline"}
-          width={17}
-        />
-        {isFollowing ? tUi("following") : "Follow drive"}
+        <Icon aria-hidden="true" height={17} icon={look.icon} width={17} />
+        {error === "read" ? tUi("try_again") : look.label}
       </button>
       <span
         role="status"
@@ -142,7 +114,7 @@ export function DriveFollowButton({
         className="text-[14px] font-semibold"
         style={{ color: T.accent.danger }}
       >
-        {message}
+        {feedback}
       </span>
     </span>
   )

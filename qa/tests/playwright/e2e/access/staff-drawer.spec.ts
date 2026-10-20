@@ -161,7 +161,12 @@ test("at 800 px the tab is hidden and the user menu opens the drawer", async ({
   await page.setViewportSize({ width: 800, height: 900 })
   await page.goto(publicPath, NAVIGATION)
   // Staff, so the tab is in the DOM, but `hidden lg:flex` keeps it off screen.
-  await expect(edgeTab(page)).toBeAttached(NAVIGATION)
+  await expect(
+    page.getByRole("button", {
+      name: "Open the staff drawer",
+      includeHidden: true,
+    })
+  ).toBeAttached(NAVIGATION)
   await expect(edgeTab(page)).toBeHidden()
 
   // Below lg the user menu lives inside the header's menu panel. Its

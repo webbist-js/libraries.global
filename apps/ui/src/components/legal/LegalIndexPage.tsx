@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react"
 import { useTranslations, type Locale } from "next-intl"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -52,7 +53,7 @@ export function LegalIndexPage({
   return (
     <div style={{ background: T.bg.void, color: T.ink.base }}>
       <GlobalHeader locale={locale} />
-      <main>
+      <MainContent>
         <PageHero
           breadcrumb={[
             { label: t("home"), href: "/" },
@@ -105,7 +106,7 @@ export function LegalIndexPage({
             <p className="m-0 text-(--t-ink-dim)">{t("legal_unavailable")}</p>
           ) : null}
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

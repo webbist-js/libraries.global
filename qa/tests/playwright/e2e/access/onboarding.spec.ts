@@ -20,7 +20,10 @@ test.describe.configure({ mode: "serial", timeout: 300_000 })
 
 test.beforeAll(async ({ playwright }, testInfo) => {
   const baseURL = testInfo.project.use.baseURL!
-  const api = await playwright.request.newContext({ baseURL })
+  const api = await playwright.request.newContext({
+    baseURL,
+    extraHTTPHeaders: { Origin: new URL(baseURL).origin },
+  })
   try {
     const res = await signIn(api, baseURL, KEY)
     if (!res.ok())

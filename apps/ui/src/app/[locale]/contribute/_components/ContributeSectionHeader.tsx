@@ -49,7 +49,7 @@ export function ContributeSectionHeader({
               ]
             : [{ label: tUi("home"), href: "/" }, { label: tUi("contribute") }]
       }
-      eyebrow="Contribute"
+      eyebrow={tUi("contribute")}
       eyebrowIcon="mdi:account-group-outline"
       title={title}
       lead={lead}

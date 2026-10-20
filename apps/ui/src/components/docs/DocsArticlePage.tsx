@@ -7,6 +7,7 @@ import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
@@ -119,7 +120,7 @@ export function DocsArticlePage({
     >
       <GlobalHeader locale={locale} />
 
-      <main
+      <MainContent
         className="relative z-10 flex-1"
         data-analytics-page="knowledge"
         data-analytics-content-id={article.documentId}
@@ -437,7 +438,7 @@ export function DocsArticlePage({
             </div>
           </aside>
         </div>
-      </main>
+      </MainContent>
     </div>
   )
 }

@@ -1,257 +1,161 @@
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Flex,
+  Loader,
+  Typography,
+} from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
-import { useCallback, useEffect, useState, type CSSProperties } from "react"
+import { useEffect, useRef, useState } from "react"
 
-type WorkerStatus = "idle" | "running" | "offline"
-
-type HealthData = {
+type Status = "idle" | "running" | "offline"
+type Health = {
   ok: boolean
-  status?: WorkerStatus | "unreachable"
-  lastSync?: {
-    runId: string
-    startedAt: string
-    outcome: string
-  }
+  status?: Status | "unreachable"
+  lastSync?: { runId: string; startedAt: string; outcome: string }
   nextSync?: string
   version?: string
   cronExpression?: string
 }
 
-const labelStyle: CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  color: "#666687",
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  margin: "0 0 3px",
-}
-
-const valueStyle: CSSProperties = {
-  fontSize: "13px",
-  color: "#32324d",
-  fontWeight: 500,
-  margin: 0,
-}
-
-function MetaRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ padding: "10px 0", borderBottom: "1px solid #f0f0ff" }}>
-      <p style={labelStyle}>{label}</p>
-      <p style={valueStyle}>{value}</p>
-    </div>
-  )
-}
-
-function formatDate(iso: string) {
-  if (!iso) return "—"
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return "—"
-
-  return d.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
+const date = (value?: string) =>
+  value ? new Date(value).toLocaleString() : "Not available"
 
 export function WorkerHealth({
   onStatusChange,
 }: {
-  onStatusChange?: (status: "idle" | "running" | "offline") => void
+  onStatusChange?: (status: Status) => void
 }) {
   const { get } = useFetchClient()
-  const [health, setHealth] = useState<HealthData | null>(null)
+  const [health, setHealth] = useState<Health | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = useCallback(async () => {
+  const [error, setError] = useState(false)
+  const [revision, setRevision] = useState(0)
+  const notify = useRef(onStatusChange)
+  useEffect(() => {
+    notify.current = onStatusChange
+  }, [onStatusChange])
+  useEffect(() => {
+    const controller = new AbortController()
+    // Reset the external request state on an explicit refresh.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
-    setError(null)
-    try {
-      const { data } = await get("/events/admin/worker-health")
-      const h = (data as HealthData) ?? {}
-      setHealth(h)
-      if (onStatusChange) {
-        const s: WorkerStatus =
-          h.ok === false || h.status === "unreachable"
+    setError(false)
+    get<Health>("/events/admin/worker-health", {
+      signal: controller.signal,
+    })
+      .then(({ data }) => {
+        if (controller.signal.aborted) return
+        setHealth(data)
+        notify.current?.(
+          !data.ok || data.status === "unreachable"
             ? "offline"
-            : h.status === "running"
+            : data.status === "running"
               ? "running"
               : "idle"
-        onStatusChange(s)
-      }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch worker health."
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [get, onStatusChange])
+        )
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setError(true)
+          notify.current?.("offline")
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
-  useEffect(() => {
-    void load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const isOffline =
-    !health || (health.ok === false && health.status === "unreachable")
-
-  const statusLabel = isOffline
-    ? "Offline"
-    : health?.status === "running"
-      ? "Running"
-      : "Idle"
-
-  const statusColor = isOffline
-    ? "#d02b20"
-    : health?.status === "running"
-      ? "#0c75af"
-      : "#1b7c3a"
-  const dotColor = isOffline
-    ? "#d02b20"
-    : health?.status === "running"
-      ? "#0c75af"
-      : "#1b7c3a"
+    return () => controller.abort()
+  }, [get, revision])
+  const status =
+    !health?.ok || health.status === "unreachable"
+      ? "Offline"
+      : health.status === "running"
+        ? "Running"
+        : "Idle"
+  const rows = [
+    ["Last sync run", health?.lastSync?.runId ?? "Not yet"],
+    ["Last sync started", date(health?.lastSync?.startedAt)],
+    ["Last sync outcome", health?.lastSync?.outcome ?? "Not yet"],
+    ["Next scheduled sync", date(health?.nextSync)],
+    ["Schedule", health?.cronExpression ?? "Not available"],
+    ["Worker version", health?.version ?? "Not available"],
+  ]
 
   return (
-    <div style={{ maxWidth: "600px" }}>
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #dcdce4",
-          borderRadius: "8px",
-          padding: "24px",
-          boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-        }}
-      >
-        {loading && (
-          <p style={{ color: "#8e8ea9", fontSize: "13px" }}>Loading…</p>
-        )}
-
-        {error && (
-          <div
-            style={{
-              padding: "12px 16px",
-              background: "#ffeaea",
-              border: "1px solid #f5c0be",
-              borderRadius: "8px",
-              fontSize: "13px",
-              color: "#d02b20",
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            {/* Status row */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                marginBottom: "24px",
-              }}
+    <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
+      <Flex justifyContent="space-between" gap={4} paddingBottom={5}>
+        <Typography tag="h2" variant="delta">
+          Sync worker
+        </Typography>
+        <Button
+          variant="secondary"
+          disabled={loading}
+          onClick={() => setRevision((value) => value + 1)}
+        >
+          Refresh health
+        </Button>
+      </Flex>
+      {loading ? (
+        <Loader>Checking worker</Loader>
+      ) : error ? (
+        <Alert
+          variant="danger"
+          title="Health check failed"
+          closeLabel="Retry"
+          onClose={() => setRevision((value) => value + 1)}
+        >
+          Couldn’t read worker health. Try Refresh health.
+        </Alert>
+      ) : (
+        <Flex direction="column" alignItems="stretch" gap={5}>
+          <Flex gap={3}>
+            <Badge>{status}</Badge>
+            <Typography textColor="neutral600">
+              {status === "Running"
+                ? "An import is in progress."
+                : status === "Idle"
+                  ? "Ready for the next scheduled import."
+                  : "The worker could not be reached."}
+            </Typography>
+          </Flex>
+          {status === "Offline" && (
+            <Alert
+              variant="warning"
+              title="Worker offline"
+              closeLabel="Refresh health"
+              onClose={() => setRevision((value) => value + 1)}
             >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "50%",
-                  background: dotColor,
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: statusColor,
-                }}
+              Check the worker service and its configured health address.
+            </Alert>
+          )}
+          <Box tag="dl">
+            {rows.map(([label, value]) => (
+              <Box
+                key={label}
+                paddingTop={3}
+                paddingBottom={3}
+                borderColor="neutral200"
+                style={{ borderBottomWidth: 1, borderBottomStyle: "solid" }}
               >
-                {statusLabel}
-              </span>
-            </div>
-
-            {isOffline && (
-              <div
-                style={{
-                  padding: "12px 16px",
-                  background: "#ffeaea",
-                  border: "1px solid #f5c0be",
-                  borderRadius: "8px",
-                  fontSize: "13px",
-                  color: "#d02b20",
-                  marginBottom: "16px",
-                }}
-              >
-                Worker offline — check <code>WORKER_URL</code> environment
-                variable.
-              </div>
-            )}
-
-            {!isOffline && (
-              <div>
-                {health?.lastSync && (
-                  <>
-                    <MetaRow
-                      label="Last sync run ID"
-                      value={health.lastSync.runId}
-                    />
-                    <MetaRow
-                      label="Last sync started"
-                      value={formatDate(health.lastSync.startedAt)}
-                    />
-                    <MetaRow
-                      label="Last sync outcome"
-                      value={health.lastSync.outcome}
-                    />
-                  </>
-                )}
-                {health?.nextSync && (
-                  <MetaRow
-                    label="Next scheduled sync"
-                    value={formatDate(health.nextSync)}
-                  />
-                )}
-                {health?.cronExpression && (
-                  <MetaRow
-                    label="Cron expression"
-                    value={health.cronExpression}
-                  />
-                )}
-                {health?.version && (
-                  <MetaRow label="Worker version" value={health.version} />
-                )}
-              </div>
-            )}
-
-            <div style={{ marginTop: "16px" }}>
-              <button
-                onClick={() => void load()}
-                disabled={loading}
-                style={{
-                  padding: "7px 14px",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  background: "#fff",
-                  border: "1px solid #dcdce4",
-                  borderRadius: "6px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  color: "#32324d",
-                  opacity: loading ? 0.5 : 1,
-                }}
-              >
-                ↻ Refresh
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+                <Typography tag="dt" variant="sigma" textColor="neutral600">
+                  {label}
+                </Typography>
+                <Typography
+                  tag="dd"
+                  paddingTop={2}
+                  textColor="neutral800"
+                  style={{ overflowWrap: "anywhere" }}
+                >
+                  {value}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Flex>
+      )}
+    </Box>
   )
 }

@@ -1,355 +1,248 @@
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Flex,
+  Loader,
+  Modal,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Typography,
+} from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
-import { ImportRunDetail } from "./ImportRunDetail"
+import { ImportRunDetail, type RunRecord } from "./ImportRunDetail"
 
-type RunRecord = {
-  runId: string
-  triggeredBy?: string
-  startedAt?: string
-  finishedAt?: string
-  status: string
-  stats?: {
-    fetched?: number
-    created?: number
-    updated?: number
-    unchanged?: number
-    expired?: number
-    pendingReview?: number
-    errors?: number
-  }
-  providerBreakdown?: Record<string, { fetched: number; created: number }>
-  failedCredentials?: {
-    credentialDocumentId: string
-    label?: string
-    error: string
-  }[]
+type Runs = {
+  data: RunRecord[]
+  meta: { total: number; page: number; pageSize: number }
 }
+const date = (value?: string) =>
+  value ? new Date(value).toLocaleString() : "—"
 
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  success: { bg: "#eafbf2", text: "#1b7c3a" },
-  partial: { bg: "#fff3e0", text: "#d97706" },
-  failed: { bg: "#ffeaea", text: "#d02b20" },
-  running: { bg: "#eaf5ff", text: "#0c75af" },
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors = STATUS_COLORS[status] ?? { bg: "#f0f0ff", text: "#4945ff" }
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "2px 8px",
-        borderRadius: "100px",
-        fontSize: "11px",
-        fontWeight: 600,
-        background: colors.bg,
-        color: colors.text,
-      }}
-    >
-      {status === "running" && (
-        <span
-          style={{
-            display: "inline-block",
-            animation: "spin 1s linear infinite",
-          }}
-        >
-          ⟳
-        </span>
-      )}
-      {status}
-    </span>
-  )
-}
-
-function formatDate(iso?: string) {
-  if (!iso) return "—"
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return "—"
-
-  return d.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
-function durationStr(startedAt?: string, finishedAt?: string) {
-  if (!startedAt || !finishedAt) return "—"
-  const ms = new Date(finishedAt).getTime() - new Date(startedAt).getTime()
-  if (ms < 1000) return `${ms}ms`
-  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`
-  const mins = Math.floor(ms / 60_000)
-  const secs = Math.floor((ms % 60_000) / 1000)
-
-  return `${mins}m ${secs}s`
-}
-
-const thStyle = {
-  textAlign: "left" as const,
-  padding: "8px 12px",
-  fontSize: "11px",
-  fontWeight: 600,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase" as const,
-  color: "#666687",
-  whiteSpace: "nowrap" as const,
-  borderBottom: "2px solid #f0f0ff",
-}
-
-const tdStyle = {
-  padding: "10px 12px",
-  fontSize: "12px",
-  color: "#32324d",
-  verticalAlign: "middle" as const,
-  borderBottom: "1px solid #f6f6f9",
-}
-
-export function ImportRunList() {
+export function ImportRunList({ canManage = false }: { canManage?: boolean }) {
   const { get, post } = useFetchClient()
-  const [runs, setRuns] = useState<RunRecord[]>([])
+  const [result, setResult] = useState<Runs | null>(null)
+  const [page, setPage] = useState(1)
+  const [revision, setRevision] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [triggerLoading, setTriggerLoading] = useState(false)
-  const [triggerMsg, setTriggerMsg] = useState<string | null>(null)
-  const [expandedRunId, setExpandedRunId] = useState<string | null>(null)
-  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const loadRuns = useCallback(async () => {
-    try {
-      setError(null)
-      const { data } = await get("/events/admin/runs")
-      const items = Array.isArray((data as any)?.data)
-        ? (data as any).data
-        : Array.isArray(data)
-          ? (data as RunRecord[])
-          : []
-      setRuns(items)
-
-      // Auto-refresh every 30s if any run is still running
-      if (pollRef.current) clearTimeout(pollRef.current)
-      if (items.some((r: RunRecord) => r.status === "running")) {
-        pollRef.current = setTimeout(() => void loadRuns(), 30_000)
-      }
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to load import runs."
-      setError(msg)
-    } finally {
-      setLoading(false)
-    }
-  }, [get])
-
+  const [error, setError] = useState(false)
+  const [queuing, setQueuing] = useState(false)
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
+    null
+  )
+  const [open, setOpen] = useState<RunRecord | null>(null)
+  const refreshAfterRun = () => setRevision((value) => value + 1)
   useEffect(() => {
-    void loadRuns()
+    const controller = new AbortController()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    setLoading(true)
+    setError(false)
+    get<Runs>(`/events/admin/runs?page=${page}&limit=20`, {
+      signal: controller.signal,
+    })
+      .then(({ data }) => {
+        if (controller.signal.aborted) return
+        setResult(data)
+        if (data.data.some((run) => run.status === "running"))
+          timer = setTimeout(refreshAfterRun, 30000)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
     return () => {
-      if (pollRef.current) clearTimeout(pollRef.current)
+      controller.abort()
+      clearTimeout(timer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const triggerSync = useCallback(async () => {
-    setTriggerLoading(true)
-    setTriggerMsg(null)
+  }, [get, page, revision])
+  const trigger = async () => {
+    setQueuing(true)
+    setMessage(null)
     try {
       await post("/events/admin/sync", {})
-      setTriggerMsg("Sync command queued — worker picks up within 2 minutes.")
-      setTimeout(() => void loadRuns(), 2000)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to trigger sync"
-      setTriggerMsg(`Error: ${msg}`)
+      setMessage({
+        ok: true,
+        text: "Sync queued. The worker usually picks it up within two minutes.",
+      })
+      setRevision((value) => value + 1)
+    } catch {
+      setMessage({ ok: false, text: "Couldn’t queue a sync. Try again." })
     } finally {
-      setTriggerLoading(false)
+      setQueuing(false)
     }
-  }, [post, loadRuns])
-
-  const toggleExpand = (runId: string) => {
-    setExpandedRunId((prev) => (prev === runId ? null : runId))
   }
+  const rows = result?.data ?? []
+  const pages = Math.max(1, Math.ceil((result?.meta.total ?? 0) / 20))
 
   return (
-    <div>
-      {/* Header actions */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "16px",
+    <Flex direction="column" alignItems="stretch" gap={5}>
+      <Flex justifyContent="space-between" wrap="wrap" gap={3}>
+        <Box>
+          <Typography tag="h2" variant="delta">
+            Import history
+          </Typography>
+          <Typography tag="p" textColor="neutral600" paddingTop={2}>
+            Inspect completed imports and follow running jobs.
+          </Typography>
+        </Box>
+        <Flex gap={2}>
+          <Button
+            variant="tertiary"
+            disabled={loading}
+            onClick={() => setRevision((value) => value + 1)}
+          >
+            Refresh imports
+          </Button>
+          {canManage && (
+            <Button
+              loading={queuing}
+              disabled={queuing}
+              onClick={() => void trigger()}
+            >
+              Queue sync
+            </Button>
+          )}
+        </Flex>
+      </Flex>
+      {message && (
+        <Typography
+          role={message.ok ? "status" : "alert"}
+          textColor={message.ok ? "success600" : "danger600"}
+        >
+          {message.text}
+        </Typography>
+      )}
+      {error && (
+        <Alert
+          title="Couldn’t load imports"
+          variant="danger"
+          closeLabel="Retry"
+          onClose={() => setRevision((value) => value + 1)}
+        >
+          Try Refresh imports.
+        </Alert>
+      )}
+      {loading ? (
+        <Loader>Loading imports</Loader>
+      ) : rows.length === 0 && !error ? (
+        <Typography textColor="neutral600">
+          No imports yet. Runs will appear after the worker connects.
+        </Typography>
+      ) : (
+        <Box style={{ overflowX: "auto" }}>
+          <Table colCount={6} rowCount={rows.length} aria-label="Import runs">
+            <Thead>
+              <Tr>
+                {[
+                  "Run",
+                  "Status",
+                  "Started",
+                  "Finished",
+                  "Created / updated",
+                  "Details",
+                ].map((label) => (
+                  <Th key={label}>
+                    <Typography variant="sigma">{label}</Typography>
+                  </Th>
+                ))}
+              </Tr>
+            </Thead>
+            <Tbody>
+              {rows.map((run) => (
+                <Tr key={run.runId}>
+                  <Td>
+                    <Typography>{run.runId}</Typography>
+                    <Typography tag="p" variant="pi" textColor="neutral600">
+                      {run.triggeredBy ?? "Scheduled"}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Badge>{run.status}</Badge>
+                  </Td>
+                  <Td>
+                    <Typography textColor="neutral600">
+                      {date(run.startedAt)}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography textColor="neutral600">
+                      {date(run.completedAt ?? run.finishedAt)}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography>
+                      {run.eventsCreated ?? run.stats?.created ?? 0} /{" "}
+                      {run.eventsUpdated ?? run.stats?.updated ?? 0}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Button
+                      variant="tertiary"
+                      size="S"
+                      onClick={() => setOpen(run)}
+                    >
+                      View run
+                    </Button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+      )}
+      {pages > 1 && (
+        <Flex justifyContent="space-between" gap={4}>
+          <Button
+            variant="secondary"
+            disabled={loading || page === 1}
+            onClick={() => setPage((value) => value - 1)}
+          >
+            Previous
+          </Button>
+          <Typography textColor="neutral600">
+            Page {page} of {pages}
+          </Typography>
+          <Button
+            variant="secondary"
+            disabled={loading || page >= pages}
+            onClick={() => setPage((value) => value + 1)}
+          >
+            Next
+          </Button>
+        </Flex>
+      )}
+      <Modal.Root
+        open={!!open}
+        onOpenChange={(open) => {
+          if (!open) setOpen(null)
         }}
       >
-        <p
-          style={{
-            margin: 0,
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "#32324d",
-          }}
-        >
-          Import Runs
-        </p>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {triggerMsg && (
-            <span
-              style={{
-                fontSize: "12px",
-                color: triggerMsg.startsWith("Error") ? "#d02b20" : "#1b7c3a",
-              }}
-            >
-              {triggerMsg}
-            </span>
-          )}
-          <button
-            onClick={() => void triggerSync()}
-            disabled={triggerLoading}
-            style={{
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 600,
-              background: triggerLoading ? "#8e8ea9" : "#4945ff",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: triggerLoading ? "not-allowed" : "pointer",
-            }}
-          >
-            {triggerLoading ? "Queuing…" : "⟳ Trigger Sync"}
-          </button>
-        </div>
-      </div>
-
-      {loading && (
-        <p style={{ color: "#8e8ea9", fontSize: "13px" }}>Loading…</p>
-      )}
-
-      {error && (
-        <div
-          style={{
-            padding: "12px 16px",
-            background: "#ffeaea",
-            border: "1px solid #f5c0be",
-            borderRadius: "8px",
-            fontSize: "13px",
-            color: "#d02b20",
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && runs.length === 0 && (
-        <div
-          style={{
-            padding: "48px 24px",
-            textAlign: "center",
-            background: "#fff",
-            border: "1px solid #dcdce4",
-            borderRadius: "8px",
-          }}
-        >
-          <div style={{ fontSize: "28px", marginBottom: "8px" }}>—</div>
-          <p style={{ fontSize: "13px", color: "#666687", margin: 0 }}>
-            No import runs yet. Trigger a sync above.
-          </p>
-        </div>
-      )}
-
-      {!loading && !error && runs.length > 0 && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #dcdce4",
-            borderRadius: "8px",
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                {[
-                  "Run ID",
-                  "Triggered by",
-                  "Started",
-                  "Duration",
-                  "Status",
-                  "Created",
-                  "Updated",
-                  "Errors",
-                ].map((h) => (
-                  <th key={h} style={thStyle}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((run) => (
-                <React.Fragment key={run.runId}>
-                  <tr
-                    onClick={() => toggleExpand(run.runId)}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#fafafa")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "")
-                    }
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          fontFamily: "monospace",
-                          fontSize: "11px",
-                          color: "#4945ff",
-                        }}
-                      >
-                        {run.runId.slice(0, 12)}…
-                      </span>
-                    </td>
-                    <td style={tdStyle}>{run.triggeredBy ?? "scheduler"}</td>
-                    <td style={tdStyle}>{formatDate(run.startedAt)}</td>
-                    <td style={tdStyle}>
-                      {durationStr(run.startedAt, run.finishedAt)}
-                    </td>
-                    <td style={tdStyle}>
-                      <StatusBadge status={run.status} />
-                    </td>
-                    <td
-                      style={{ ...tdStyle, color: "#1b7c3a", fontWeight: 600 }}
-                    >
-                      +{run.stats?.created ?? 0}
-                    </td>
-                    <td style={tdStyle}>{run.stats?.updated ?? 0}</td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        color:
-                          (run.stats?.errors ?? 0) > 0 ? "#d02b20" : "#32324d",
-                      }}
-                    >
-                      {run.stats?.errors ?? 0}
-                    </td>
-                  </tr>
-                  {expandedRunId === run.runId && (
-                    <tr key={`${run.runId}-detail`}>
-                      <td colSpan={8} style={{ padding: 0 }}>
-                        <ImportRunDetail run={run} />
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+        {open && (
+          <Modal.Content aria-describedby={undefined}>
+            <Modal.Header>
+              <Modal.Title>Import {open.runId}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <ImportRunDetail run={open} />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="tertiary" onClick={() => setOpen(null)}>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal.Content>
+        )}
+      </Modal.Root>
+    </Flex>
   )
 }

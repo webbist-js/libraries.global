@@ -221,15 +221,9 @@ export async function fetchHomepage(locale: Locale) {
         populate: {
           featuredLibraries: {
             // Only what the featured cards show, not whole library records.
-            fields: [
-              "name",
-              "slug",
-              "summary",
-              "city",
-              "libraryType",
-              "openingTimes",
-            ],
+            fields: ["name", "slug", "summary", "city", "openingTimes"],
             populate: {
+              libraryType: { fields: ["name"] },
               heroImage: {
                 fields: [
                   "url",

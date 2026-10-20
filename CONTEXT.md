@@ -61,7 +61,7 @@ A user-initiated change request recorded through the contribution system. Covers
 _Avoid_: edit, change request, contribution (alone — too generic; use the specific type)
 
 **Submission State**:
-Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter resubmits (their edit-and-resubmit flow is still to come, C-M1); a moderator can also approve or reject it directly. `approved` and `rejected` are final. A staff publish alone may go directly from `draft` to `approved`, without awarding Points. These transitions are allowed by content-moderation `utils/transitions.ts`, each is logged as a Review Event, and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
+Where a Submission is in moderation: `draft` (saved, not sent) → `pending` (waiting for review) → `approved`, `rejected` or `needs_info` (the reviewer asked for more). `needs_info` returns to `pending` when the submitter edits and finalizes the returned draft; a moderator can also approve or reject it directly. `approved` and `rejected` are final. A staff publish alone may go directly from `draft` to `approved`, without awarding Points. These transitions are allowed by content-moderation `utils/transitions.ts`, each is logged as a Review Event, and approval side effects (applying the change, awarding Points) run once. Users see Draft, Submitted, Needs changes, Accepted and Not accepted.
 _Avoid_: status (alone — clashes with Strapi's document `status`, which the content-manager shows as `published` for every Submission)
 
 **Library Claim**:

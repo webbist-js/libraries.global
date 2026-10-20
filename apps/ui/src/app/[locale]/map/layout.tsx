@@ -1,6 +1,7 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
 
@@ -21,9 +22,9 @@ export default async function MapLayout({
       style={{ background: T.bg.surface }}
     >
       <GlobalHeader locale={locale} variant="app" />
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-clip">
+      <MainContent className="relative flex min-h-0 flex-1 flex-col overflow-clip">
         {children}
-      </div>
+      </MainContent>
     </div>
   )
 }

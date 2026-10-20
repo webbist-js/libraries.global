@@ -17,7 +17,7 @@ import {
   strapiRead,
   submit,
 } from "../../helpers/access-fixtures"
-import { NAVIGATION } from "../../helpers/ui-flows"
+import { expectMissingPage, NAVIGATION } from "../../helpers/ui-flows"
 
 // Local only, opt-in (the access project), after `pnpm seed:access`, which
 // gives the Moderator fixtures their Role Grants, adds Strapi's fr locale
@@ -76,7 +76,7 @@ async function pageFor(
 }
 
 const reviewLink = (documentId: string) =>
-  `a[href$="/contribute/moderation/${documentId}"]`
+  `a[href^="/contribute/moderation/${documentId}"]`
 
 test.beforeAll(async ({ playwright }, testInfo) => {
   const baseURL = testInfo.project.use.baseURL!
@@ -163,7 +163,7 @@ test("the Moderation tab shows for Moderators only", async ({
   await expect(nav.getByRole("link", { name: "Moderation" })).toHaveCount(0)
   // The pages don't announce themselves, and the API refuses.
   const denied = await asContributor.goto("/contribute/moderation", NAVIGATION)
-  expect(denied?.status()).toBe(404)
+  await expectMissingPage(asContributor, denied)
   expect((await contributor.get("/api/moderation/submissions")).status()).toBe(
     403
   )
@@ -177,7 +177,10 @@ test("the Moderation tab shows for Moderators only", async ({
   await tab.click()
   await expect(asModerator).toHaveURL(/\/contribute\/moderation$/, NAVIGATION)
   await expect(
-    asModerator.getByRole("heading", { level: 1, name: /Review\s*submissions/ })
+    asModerator.getByRole("heading", {
+      level: 1,
+      name: /Review\s*contributions/,
+    })
   ).toBeVisible(NAVIGATION)
 })
 
@@ -218,7 +221,7 @@ test("the French Knowledge Moderator sees the French suggestion, not the English
     `/contribute/moderation/${ids.enJournal}`,
     NAVIGATION
   )
-  expect(outOfScope?.status()).toBe(404)
+  await expectMissingPage(page, outOfScope)
 })
 
 test("a Moderator can't open or decide their own submission", async ({
@@ -234,7 +237,7 @@ test("a Moderator can't open or decide their own submission", async ({
 
   const page = await pageFor(browser, moderator, baseURL!)
   const own = await page.goto(`/contribute/moderation/${ids.own}`, NAVIGATION)
-  expect(own?.status()).toBe(404)
+  await expectMissingPage(page, own)
   await expect(
     page.getByRole("button", { name: "Approve", exact: true })
   ).toHaveCount(0)
@@ -297,7 +300,9 @@ test("a needs-info note appears on the contributor's submission card", async ({
 
   const page = await pageFor(browser, contributor, baseURL!)
   await page.goto("/contribute/submissions", NAVIGATION)
-  const card = page.getByRole("article").filter({ hasText: NEEDS_INFO_NOTE })
+  const card = page.getByRole("listitem").filter({ hasText: NEEDS_INFO_NOTE })
   await expect(card).toBeVisible(NAVIGATION)
-  await expect(card.getByText("Editorial board")).toBeVisible()
+  await expect(
+    card.getByText("Moderator’s note:", { exact: true })
+  ).toBeVisible()
 })
