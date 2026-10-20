@@ -114,7 +114,33 @@ describe("TeamJoin", () => {
         .getByRole("link", { name: /Open your Staff area/ })
         .getAttribute("href")
     ).toBe("/staff")
-    expect(mocks.refresh).toHaveBeenCalled()
+  })
+
+  it("keeps the success confirmation when the accepted invite can no longer be loaded", async () => {
+    mocks.request.mockResolvedValueOnce({
+      team: { id: "t1", name: "Kent Libraries", role: "organiser" },
+    })
+    const { rerender } = render(
+      join({ teamRole: "organiser", preassign: null })
+    )
+    // A route refresh re-runs the server preview after acceptance has consumed
+    // its single-use token, replacing this component with the unavailable view.
+    mocks.refresh.mockImplementation(() =>
+      rerender(
+        createElement("p", { role: "alert" }, "This invite is unavailable")
+      )
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Join Kent Libraries" }))
+
+    const done = await screen.findByRole("status")
+    expect(done.textContent).toContain("You’re on Kent Libraries")
+    expect(
+      screen
+        .getByRole("link", { name: "Open the Team organiser" })
+        .getAttribute("href")
+    ).toBe("/staff/team")
+    expect(screen.queryByRole("alert")).toBeNull()
   })
 
   it("falls back to the library's id when the API sends no name", () => {
