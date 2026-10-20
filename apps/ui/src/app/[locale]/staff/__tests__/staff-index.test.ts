@@ -103,7 +103,7 @@ describe("/staff", () => {
     mocks.getSessionSSR.mockResolvedValue(null)
     render(await page())
     expect(
-      screen.getByRole("heading", { name: "Do you work here?" })
+      screen.getByRole("heading", { name: "Your library. Your knowledge." })
     ).toBeTruthy()
     expect(mocks.fetchStaff).not.toHaveBeenCalled()
   })
@@ -172,7 +172,7 @@ describe("/staff", () => {
       screen
         .getByRole("link", { name: "Claim your library" })
         .getAttribute("href")
-    ).toBe("/contribute/claim")
+    ).toBe("/staff/claim")
     expect(mocks.fetchStaff).not.toHaveBeenCalled()
   })
 })

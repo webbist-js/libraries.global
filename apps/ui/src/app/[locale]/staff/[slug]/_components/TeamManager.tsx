@@ -6,6 +6,8 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, Sheet, Switch } from "@/components/ds"
+import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
+import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 import { staffRequest } from "@/lib/staff/client"
@@ -22,13 +24,7 @@ type Confirmation = {
   danger?: boolean
 }
 
-const PILL =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
-const PRIMARY =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
-const INPUT = "min-h-14 min-w-0 rounded-[16px] border bg-white px-4 text-[16px]"
-const QUIET_LINK =
-  "inline-flex min-h-11 items-center text-[13.5px] font-semibold underline underline-offset-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+const INPUT = STAFF_FIELD
 
 const ACTION_LABELS: Record<string, string> = {
   invite_sent: "sent an invite",
@@ -53,44 +49,7 @@ const formatDate = (iso: string, locale: string) =>
     year: "numeric",
   }).format(new Date(iso))
 
-function Card({
-  title,
-  children,
-  aside,
-  footer,
-}: {
-  readonly title: string
-  readonly children: React.ReactNode
-  readonly aside?: React.ReactNode
-  /** A bordered row at the foot of the card: the viewer's own actions. */
-  readonly footer?: React.ReactNode
-}) {
-  return (
-    <section
-      className="rounded-[28px] border p-5 sm:p-8"
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2
-          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
-          style={{ fontFamily: T.font.serif, color: T.ink.base }}
-        >
-          {title}
-        </h2>
-        {aside}
-      </div>
-      {children}
-      {footer ? (
-        <div
-          className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t pt-5"
-          style={{ borderColor: T.border.line }}
-        >
-          {footer}
-        </div>
-      ) : null}
-    </section>
-  )
-}
+const Card = StaffPanel
 
 /**
  * The library's staff. Covered by a Team: every member's level, verified
@@ -204,9 +163,10 @@ export function TeamManager({
                 : ""}
             </p>
             {data.canLeave ? (
-              <button
+              <Button
                 type="button"
-                className={PILL}
+                variant="surface"
+                size="pill"
                 style={{ borderColor: T.border.hi }}
                 onClick={() =>
                   setConfirm({
@@ -220,11 +180,12 @@ export function TeamManager({
                 }
               >
                 Leave this library
-              </button>
+              </Button>
             ) : null}
-            <button
+            <Button
               type="button"
-              className={PILL}
+              variant="surface"
+              size="pill"
               style={{ borderColor: T.border.hi }}
               onClick={() => setReport(true)}
             >
@@ -235,7 +196,7 @@ export function TeamManager({
                 height={16}
               />
               Report a problem
-            </button>
+            </Button>
           </>
         }
       >
@@ -330,8 +291,10 @@ export function TeamManager({
                     />
                   ) : null}
                   {owner && !member.isYou ? (
-                    <button
-                      className={QUIET_LINK}
+                    <Button
+                      variant="link"
+                      size="pill"
+                      className="px-0 text-(--t-ink-dim) underline"
                       style={{ color: T.ink.dim }}
                       disabled={
                         busy || (member.staffRole === "owner" && owners === 1)
@@ -352,7 +315,7 @@ export function TeamManager({
                         {" "}
                         {member.name} from the staff
                       </span>
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               ) : null}
@@ -399,10 +362,12 @@ export function TeamManager({
                     icon="mdi:clock-outline"
                   />
                   {organiser && team ? (
-                    <button
+                    <Button
                       type="button"
                       disabled={busy}
-                      className={QUIET_LINK}
+                      variant="link"
+                      size="pill"
+                      className="px-0 text-(--t-ink-dim) underline"
                       style={{ color: T.ink.dim }}
                       onClick={() =>
                         setConfirm({
@@ -419,7 +384,7 @@ export function TeamManager({
                         {" "}
                         the invite for {invite.emailMasked}
                       </span>
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               </li>
@@ -484,8 +449,9 @@ export function TeamManager({
                     <option value="owner">Owner</option>
                   </select>
                 </label>
-                <button
-                  className={PRIMARY}
+                <Button
+                  variant="primary"
+                  size="pill"
                   disabled={busy || !inviteEmail}
                   type="submit"
                 >
@@ -496,7 +462,7 @@ export function TeamManager({
                     height={16}
                   />
                   Send invite
-                </button>
+                </Button>
                 <p
                   className="m-0 basis-full text-[13px]"
                   style={{ color: T.ink.dim }}
@@ -598,9 +564,10 @@ export function TeamManager({
           {confirm?.body}
         </p>
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
-            className={PRIMARY}
+            variant="primary"
+            size="pill"
             style={
               confirm?.danger ? { background: T.accent.danger } : undefined
             }
@@ -616,15 +583,16 @@ export function TeamManager({
             }}
           >
             {confirm?.danger ? "Yes, go ahead" : "Confirm"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={PILL}
+            variant="surface"
+            size="pill"
             style={{ borderColor: T.border.hi }}
             onClick={() => setConfirm(null)}
           >
             {tUi("cancel")}{" "}
-          </button>
+          </Button>
         </div>
         {error ? (
           <p role="alert" className="mt-4" style={{ color: T.accent.danger }}>
@@ -666,9 +634,9 @@ export function TeamManager({
             A moderator can remove anyone from a library’s staff. 10 to 1,000
             characters.
           </p>
-          <button type="submit" disabled={busy} className={PRIMARY}>
+          <Button type="submit" disabled={busy} variant="primary" size="pill">
             Send report
-          </button>
+          </Button>
         </form>
       </Sheet>
     </div>

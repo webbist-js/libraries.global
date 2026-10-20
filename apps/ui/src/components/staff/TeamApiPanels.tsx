@@ -1,15 +1,21 @@
-import { T } from "@/lib/design-tokens"
+import { Badge } from "@/components/ds/Badge"
+import { BarSeries } from "@/components/ds/BarSeries"
+import { StaffPanel } from "@/components/staff/StaffPanel"
+import { TeamApiSubscribeDialog } from "@/components/staff/TeamApiSubscribeDialog"
+import { Button } from "@/components/ui/button"
 import { Link } from "@/lib/navigation"
-import { API_TERMS_VERSION } from "@/lib/team-api/constants"
 import type { ApiDashboard } from "@/lib/team-api/types"
 
-const BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-sm font-semibold disabled:opacity-50"
-const count = (n: number) => n.toLocaleString("en-GB")
-const bytes = (n: number) =>
-  n >= 1024 ** 3
-    ? `${(n / 1024 ** 3).toFixed(2)} GiB`
-    : `${(n / 1024 ** 2).toFixed(2)} MiB`
+export const formatApiBytes = (n: number, locale: string) => {
+  const gib = n >= 1024 ** 3
+
+  return (
+    new Intl.NumberFormat(locale, {
+      minimumFractionDigits: gib ? 0 : 1,
+      maximumFractionDigits: gib ? 2 : 1,
+    }).format(n / 1024 ** (gib ? 3 : 2)) + (gib ? " GiB" : " MiB")
+  )
+}
 const money = (amount: number, currency: string, locale: string) =>
   new Intl.NumberFormat(locale, { style: "currency", currency }).format(
     amount / 100
@@ -30,134 +36,220 @@ export function ApiSubscriptionPanel({
   data,
   locale,
   pending,
-  consent,
-  setConsent,
+  error,
+  clearError,
   request,
   confirming,
 }: {
   readonly data: ApiDashboard
   readonly locale: string
   readonly pending: boolean
-  readonly consent: boolean
-  readonly setConsent: (value: boolean) => void
+  readonly error: string
+  readonly clearError: () => void
   readonly request: (body: unknown) => void
   readonly confirming: boolean
 }) {
-  return (
-    <section
-      className="rounded-2xl border p-6"
-      aria-labelledby="api-subscription-title"
-    >
-      <h2
-        id="api-subscription-title"
-        className="mb-3 text-2xl"
-        style={{ fontFamily: T.font.serif }}
-      >
-        Your API add-on
-      </h2>
-      <p>
-        {data.active
-          ? "API access is active."
-          : data.pendingPayment || confirming
-            ? "Payment confirmation is pending. Access starts after your payment is verified."
-            : "API access is a paid add-on for active Teams."}
-      </p>
-      {!data.teamActive ? (
-        <p className="mt-3" role="status">
-          Your Team is inactive. Keys cannot make requests until the Team is
-          renewed.
-        </p>
-      ) : null}
-      <p className="mt-3">
-        {count(data.limits.requests)} successful requests and{" "}
-        {bytes(data.limits.bytes)} of response data each calendar month;{" "}
-        {count(data.limits.perMinute)} requests per minute,{" "}
-        {data.limits.concurrency} at once, and up to {data.limits.keys} keys.
-        There are no automatic overage charges.
-      </p>
+  const count = (n: number) => new Intl.NumberFormat(locale).format(n)
+  const canSubscribe = maySubscribe(data) && !data.pendingPayment && !confirming
+  const status = data.active
+    ? "API add-on active"
+    : data.pendingPayment || confirming
+      ? "Confirming payment"
+      : !data.teamActive
+        ? "Team inactive"
+        : "API add-on not active"
+  const summary = (
+    <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 text-[15px] text-(--t-ink-dim)">
+      <Badge label={status} color={data.active ? "ok" : "warn"} dot />
       {data.membership ? (
-        <p className="mt-3">
+        <span>
           {money(data.membership.unitAmount, data.membership.currency, locale)}{" "}
-          per month.
-          {data.membership.cancelAtPeriodEnd
-            ? " Cancellation is scheduled."
-            : ""}
+          / month
           {data.membership.paidThrough
-            ? ` Paid through ${new Date(data.membership.paidThrough).toLocaleDateString(locale)}.`
+            ? " · Paid through " +
+              new Date(data.membership.paidThrough).toLocaleDateString(locale, {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
             : ""}
-          {data.membership.revoked
-            ? " Access is suspended following a payment reversal."
-            : ""}
-        </p>
+        </span>
       ) : null}
       {data.organiser && data.membership ? (
-        <button
+        <Button
           type="button"
-          className={`${BUTTON} mt-4`}
+          variant="link"
+          className="h-auto min-h-11 p-0 text-[15px] text-(--t-accent-primary) underline underline-offset-4"
           disabled={pending}
           onClick={() => request({ action: "portal", locale })}
         >
           Manage API billing
-        </button>
+        </Button>
       ) : null}
-      {maySubscribe(data) ? (
-        <div className="mt-4 space-y-3">
-          {data.price ? (
-            <p>
-              {money(data.price.unitAmount, data.price.currency, locale)} per
-              month, including tax at the base GBP price. Stripe confirms your
-              checkout amount.
-            </p>
-          ) : (
-            <p>
-              API purchasing is currently unavailable. Please try again later.
-            </p>
-          )}
-          <label className="flex max-w-2xl items-start gap-3">
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(event) => setConsent(event.target.checked)}
-              className="mt-1 size-5"
+    </div>
+  )
+  if (data.active && !data.membership?.cancelAtPeriodEnd)
+    return (
+      <section aria-label="Your API add-on">
+        {summary}
+        {!data.organiser ? (
+          <p className="mt-2 mb-0 text-[14px] text-(--t-ink-dim)">
+            Team Organisers manage the subscription and API keys. You can view
+            usage.
+          </p>
+        ) : null}
+      </section>
+    )
+
+  return (
+    <StaffPanel
+      title="Your API add-on"
+      id="api-subscription"
+      aside={
+        canSubscribe ? (
+          <div className="flex flex-wrap items-center gap-3">
+            {data.price ? (
+              <span className="text-[16px] font-semibold text-(--t-ink-base)">
+                {money(data.price.unitAmount, data.price.currency, locale)} /
+                month
+              </span>
+            ) : null}
+            <TeamApiSubscribeDialog
+              key={data.teamId}
+              data={data}
+              locale={locale}
+              pending={pending}
+              error={error}
+              clearError={clearError}
+              request={request}
             />
-            <span>
-              I agree to the{" "}
-              <Link href="/legal/membership" className="underline">
-                membership terms
-              </Link>
-              ,{" "}
-              <Link href="/legal/cancellation-refunds" className="underline">
-                cancellation and refund policy
-              </Link>
-              , and the API limits shown here, and request access as soon as
-              payment is confirmed.
-            </span>
-          </label>
-          <button
-            type="button"
-            className={BUTTON}
-            disabled={pending || !consent || !data.purchasing}
-            onClick={() =>
-              request({
-                action: "checkout",
-                locale,
-                termsVersion: API_TERMS_VERSION,
-              })
-            }
-          >
-            Subscribe to API access
-          </button>
-        </div>
-      ) : null}
+          </div>
+        ) : null
+      }
+    >
+      {summary}
+      <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0">
+          {data.pendingPayment || confirming
+            ? "Payment confirmation is pending. Access starts after your payment is verified."
+            : data.active
+              ? "API access stays active until the end of your paid period."
+              : "Connect your applications to published library records with the Team API add-on."}
+        </p>
+        {!data.teamActive ? (
+          <p role="status">
+            Your Team is inactive. Keys cannot make requests until the Team is
+            renewed.
+          </p>
+        ) : null}
+        {data.membership?.revoked ? (
+          <p role="status">Access is suspended following a payment reversal.</p>
+        ) : null}
+        {data.membership?.cancelAtPeriodEnd ? (
+          <p role="status">
+            Cancellation is scheduled. Manage API billing to change it.
+          </p>
+        ) : null}
+        {!canSubscribe ? (
+          <p>
+            {count(data.limits.requests)} successful requests and{" "}
+            {formatApiBytes(data.limits.bytes, locale)} of response data each
+            calendar month; {count(data.limits.perMinute)} requests per minute,{" "}
+            {data.limits.concurrency} at once, and up to {data.limits.keys}{" "}
+            keys. There are no automatic overage charges.
+          </p>
+        ) : (
+          <p className="m-0">
+            {count(data.limits.requests)} successful requests and{" "}
+            {formatApiBytes(data.limits.bytes, locale)} of response data each
+            calendar month.
+          </p>
+        )}
+      </div>
       {!data.organiser ? (
-        <p className="mt-3">
+        <p className="mt-4 mb-0 text-[15px] text-(--t-ink-dim)">
           Team Organisers manage the subscription and API keys. You can view
           usage.
         </p>
       ) : null}
-    </section>
+    </StaffPanel>
   )
 }
+
+function UsageTable({
+  title,
+  firstColumn,
+  rows,
+  locale,
+}: {
+  readonly title: string
+  readonly firstColumn: string
+  readonly rows: {
+    label: string
+    requests: number
+    bytes: number
+    errors: number
+  }[]
+  readonly locale: string
+}) {
+  const count = (n: number) => new Intl.NumberFormat(locale).format(n)
+
+  return (
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label={title}
+      className="mt-3 max-h-[min(26rem,60dvh)] overflow-auto overscroll-contain rounded-2xl border border-(--t-border-line) outline-none focus-visible:ring-2 focus-visible:ring-(--t-accent-primary)"
+    >
+      <table className="w-full text-left text-[14px] tabular-nums">
+        <caption className="sr-only">{title}</caption>
+        <thead className="sticky top-0 z-10 bg-(--t-bg-surface) text-(--t-ink-dim)">
+          <tr>
+            {[firstColumn, "Requests", "Response data", "Errors"].map(
+              (label, i) => (
+                <th
+                  key={label}
+                  scope="col"
+                  className={
+                    "px-4 py-3 font-semibold whitespace-nowrap " +
+                    (i ? "text-right" : "")
+                  }
+                >
+                  {label}
+                </th>
+              )
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                colSpan={4}
+                className="px-4 py-6 text-center text-(--t-ink-dim)"
+              >
+                No usage recorded in this period.
+              </td>
+            </tr>
+          ) : null}
+          {rows.map((row) => (
+            <tr key={row.label} className="border-t border-(--t-border-line)">
+              <th scope="row" className="px-4 py-3 font-normal break-words">
+                {row.label}
+              </th>
+              <td className="px-4 py-3 text-right">{count(row.requests)}</td>
+              <td className="px-4 py-3 text-right whitespace-nowrap">
+                {formatApiBytes(row.bytes, locale)}
+              </td>
+              <td className="px-4 py-3 text-right">{count(row.errors)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export function ApiUsagePanel({
   data,
   locale,
@@ -165,193 +257,279 @@ export function ApiUsagePanel({
   readonly data: ApiDashboard
   readonly locale: string
 }) {
-  const maxRequests = Math.max(1, ...data.days.map((day) => day.requests))
-  const reset = new Date(data.usage.resetsAt).toLocaleDateString(locale)
+  const count = (n: number) => new Intl.NumberFormat(locale).format(n)
+  const firstDay = data.days[0]?.day
+  const historyTitle =
+    data.days.length >= 30
+      ? "Requests per day · last 30 days"
+      : firstDay
+        ? "Requests per day · since " +
+          new Intl.DateTimeFormat(locale, {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            timeZone: "UTC",
+          }).format(new Date(firstDay))
+        : "Requests per day"
+  const reset = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(data.usage.resetsAt))
+  const metrics = [
+    {
+      title: "Successful requests",
+      used: data.usage.requests,
+      limit: data.limits.requests,
+      display: count,
+    },
+    {
+      title: "Response data",
+      used: data.usage.bytes,
+      limit: data.limits.bytes,
+      display: (n: number) => formatApiBytes(n, locale),
+    },
+  ]
 
   return (
-    <section
-      className="rounded-2xl border p-6"
-      aria-labelledby="api-usage-title"
+    <StaffPanel
+      title="This month"
+      id="api-usage"
+      aside={
+        <p className="m-0 text-[14px] text-(--t-ink-dim)">
+          Resets {reset}, 00:00 UTC
+        </p>
+      }
     >
-      <h2
-        id="api-usage-title"
-        className="mb-4 text-2xl"
-        style={{ fontFamily: T.font.serif }}
-      >
-        This month
-      </h2>
-      <div className="grid gap-6 sm:grid-cols-2">
-        {[
-          {
-            title: "Successful requests",
-            used: data.usage.requests,
-            limit: data.limits.requests,
-            display: count,
-          },
-          {
-            title: "Response data",
-            used: data.usage.bytes,
-            limit: data.limits.bytes,
-            display: bytes,
-          },
-        ].map((metric) => (
-          <div key={metric.title}>
-            <p className="mb-2 font-semibold">{metric.title}</p>
-            <p>
-              {metric.display(metric.used)} / {metric.display(metric.limit)}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {metrics.map((metric) => (
+          <div
+            key={metric.title}
+            className="min-w-0 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5"
+          >
+            <h3 className="m-0 text-[15px] font-semibold text-(--t-ink-dim)">
+              {metric.title}
+            </h3>
+            <p className="mt-2 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
+              <span className="font-serif text-[clamp(30px,3.5vw,42px)] leading-none">
+                {metric.display(metric.used)}
+              </span>
+              <span className="text-[14px] text-(--t-ink-dim)">
+                of {metric.display(metric.limit)}
+              </span>
             </p>
             <progress
-              className="mt-3 h-3 w-full"
               aria-label={metric.title}
-              value={metric.used}
+              value={Math.min(Math.max(0, metric.used), metric.limit)}
               max={metric.limit}
+              className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-(--t-border-line) [&::-moz-progress-bar]:bg-(--t-accent-primary) [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-(--t-accent-primary)"
             />
+            <p className="mt-2 mb-0 text-[14px] text-(--t-ink-dim)">
+              {metric.display(Math.max(0, metric.limit - metric.used))} left
+              this month
+            </p>
           </div>
         ))}
       </div>
-      <p className="mt-4 text-sm">
-        Allowances reset on {reset} at 00:00 UTC. Response data measures
-        uncompressed JSON; separate media downloads are excluded. Totals include
-        reserved capacity for requests in progress.
-      </p>
       {data.warnings.length ? (
-        <p role="status" className="mt-4 font-semibold">
+        <p
+          role="status"
+          className="mt-5 rounded-xl bg-(--t-bg-surface) p-4 text-[15px] font-semibold"
+        >
           Your Team has used at least 80% of its {data.warnings.join(" and ")}{" "}
           allowance.
         </p>
       ) : null}
-      <h3 className="mt-6 mb-3 font-semibold">
-        Requests over the last 30 days
-      </h3>
-      {data.days.length ? (
-        <>
-          <div className="flex h-32 items-end gap-1" aria-hidden="true">
-            {data.days.map((day) => (
-              <span
-                key={day.day}
-                className="min-w-1 flex-1 rounded-t"
-                style={{
-                  height: `${Math.max(2, (day.requests / maxRequests) * 100)}%`,
-                  background: T.accent.primary,
-                }}
-                title={`${day.day}: ${count(day.requests)} requests`}
-              />
-            ))}
-          </div>
-          <details className="mt-4">
-            <summary className="cursor-pointer">Daily usage table</summary>
-            <div className="overflow-x-auto">
-              <table className="mt-3 w-full text-left text-sm">
-                <thead>
-                  <tr>
-                    <th>Date (UTC)</th>
-                    <th>Requests</th>
-                    <th>Response data</th>
-                    <th>Errors</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.days.map((day) => (
-                    <tr key={day.day}>
-                      <th scope="row" className="py-2 font-normal">
-                        {day.day}
-                      </th>
-                      <td>{count(day.requests)}</td>
-                      <td>{bytes(day.bytes)}</td>
-                      <td>{count(day.errors)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-        </>
-      ) : (
-        <p>No API usage yet.</p>
-      )}
+      <div className="mt-5">
+        <BarSeries
+          compact
+          title={historyTitle}
+          heading="h3"
+          points={data.days.map((day) => ({
+            date: day.day,
+            value: day.requests,
+          }))}
+          highlightLast
+          valueLabel="Requests"
+          locale={locale}
+          emptyMessage={
+            data.organiser && data.active
+              ? "No requests yet. Create a key below and make your first call."
+              : "No requests yet. Your Team’s usage will appear here."
+          }
+          dataTable={
+            <UsageTable
+              title="Daily API usage"
+              firstColumn="Date (UTC)"
+              rows={data.days.map((day) => ({ ...day, label: day.day }))}
+              locale={locale}
+            />
+          }
+        />
+      </div>
+      <p className="mt-5 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        Response data is uncompressed JSON; media downloads aren’t counted.
+        Totals include capacity reserved for requests still in progress. Failed
+        responses don’t use your allowance.
+      </p>
+      <p className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        {count(data.limits.perMinute)} requests per minute ·{" "}
+        {data.limits.concurrency} at once · up to {data.limits.keys} active keys
+        · no automatic overage charges.
+      </p>
       {data.endpoints.length ? (
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <caption className="mb-3 text-left font-semibold">
-              Usage by API
-            </caption>
-            <thead>
-              <tr>
-                <th>API</th>
-                <th>Requests</th>
-                <th>Response data</th>
-                <th>Errors</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.endpoints.map((row) => (
-                <tr key={row.endpoint}>
-                  <th scope="row" className="py-2 font-normal">
-                    {row.endpoint}
-                  </th>
-                  <td>{count(row.requests)}</td>
-                  <td>{bytes(row.bytes)}</td>
-                  <td>{count(row.errors)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-6">
+          <h3 className="m-0 text-[16px] font-semibold">Usage by API</h3>
+          <UsageTable
+            title="Usage by API"
+            firstColumn="API"
+            rows={data.endpoints.map((row) => ({
+              ...row,
+              label: row.endpoint,
+            }))}
+            locale={locale}
+          />
         </div>
       ) : null}
-    </section>
+    </StaffPanel>
   )
 }
+
 export function ApiGuidePanel() {
+  const endpoints = [
+    {
+      method: "POST",
+      path: "/api/v1/search/libraries",
+      detail: "Search by text, place and filters",
+    },
+    {
+      method: "GET",
+      path: "/api/v1/libraries?locale=en&limit=50",
+      detail: "List libraries, 50 at a time",
+    },
+    {
+      method: "GET",
+      path: "/api/v1/libraries/{entityRef}?locale=en",
+      detail: "Read one library’s full record",
+    },
+  ]
+  const example = [
+    "# Search libraries",
+    "curl -X POST https://libraries.global/api/v1/search/libraries \\",
+    "  -H 'Authorization: Bearer YOUR_API_KEY' \\",
+    "  -H 'Content-Type: application/json' \\",
+    '  -d \'{ "q": "Bristol", "locale": "en", "limit": 20 }\'',
+  ].join("\n")
+
   return (
-    <section
-      className="rounded-2xl border p-6"
-      aria-labelledby="api-guide-title"
-    >
-      <h2
-        id="api-guide-title"
-        className="mb-3 text-2xl"
-        style={{ fontFamily: T.font.serif }}
-      >
-        Using the API
-      </h2>
-      <p>
-        Keep keys in your application server&apos;s environment. Requests use{" "}
-        <code>Authorization: Bearer YOUR_API_KEY</code>. Keys give access to
-        published public data and do not grant staff or account permissions.
-      </p>
-      <p className="mt-3">
-        <Link
-          href="/knowledge/data-api/team-api-quickstart"
-          className="underline"
-        >
-          Follow the signup and first-request guide
-        </Link>
-        {" or read the "}
-        <Link
-          href="/knowledge/data-api/team-api-reference"
-          className="underline"
-        >
-          API reference
-        </Link>
-        .
-      </p>
-      <pre className="mt-4 overflow-x-auto rounded-xl bg-white p-4 text-sm">{`POST /api/v1/search/libraries\n{ "q": "Bristol", "locale": "en", "limit": 20 }\n\nGET /api/v1/libraries?locale=en&limit=50\nGET /api/v1/libraries/{entityRef}?locale=en`}</pre>
-      <p className="mt-3 text-sm">
-        Use the entityRef returned by search or a list for a single library,
-        encoded as one URL path segment (encodeURIComponent in JavaScript).
-        References include colons, for example
-        europe:united-kingdom:scotland:national-library-of-scotland. Lists
-        return a nextCursor; pass it as after to fetch the next page. Search
-        supports country, region, libraryType, operationalStatus and near (lat,
-        lng, radius in metres). Keep the source credits and licences returned
-        with each record.
-      </p>
-      <p className="mt-3 text-sm">
-        A 401 means the key is invalid or expired; 403 means its scope, Team or
-        add-on is inactive; 429 means a rate or allowance limit was reached.
-        Cache hits count as requests. Failed responses do not use the monthly
-        allowance.
-      </p>
-    </section>
+    <StaffPanel id="api-guide">
+      <div className="grid min-w-0 gap-7 lg:grid-cols-2">
+        <div className="min-w-0">
+          <h2
+            id="api-guide-title"
+            className="m-0 font-serif text-[clamp(26px,2.8vw,34px)] leading-tight font-medium"
+          >
+            Using the API
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-(--t-ink-dim)">
+            Keep keys in your application server’s environment. Requests use{" "}
+            <code
+              translate="no"
+              className="rounded bg-(--t-bg-muted) px-1 font-mono text-[13px] break-words text-(--t-ink-base)"
+            >
+              Authorization: Bearer YOUR_API_KEY
+            </code>
+            . Keys read published public data only; they never grant staff or
+            account permissions.
+          </p>
+          <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
+            {endpoints.map((endpoint) => (
+              <li
+                key={endpoint.path}
+                className="flex min-w-0 items-start gap-3 py-3"
+              >
+                <Badge
+                  label={endpoint.method}
+                  color={endpoint.method === "POST" ? "aurora" : "ok"}
+                />
+                <div className="min-w-0">
+                  <code
+                    translate="no"
+                    className="block font-mono text-[13px] break-all"
+                  >
+                    {endpoint.path}
+                  </code>
+                  <p className="mt-1 mb-0 text-[14px] text-(--t-ink-dim)">
+                    {endpoint.detail}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[14px] leading-relaxed text-(--t-ink-dim)">
+            Encode the <code translate="no">entityRef</code> from a search or
+            list as one path segment with{" "}
+            <code translate="no">encodeURIComponent</code> (it contains colons).
+            Lists return <code translate="no">nextCursor</code>; pass it as{" "}
+            <code translate="no">after</code>. Keep the source credits and
+            licences returned with each record.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button asChild variant="primary" size="pill">
+              <Link href="/knowledge/data-api/team-api-quickstart">
+                First-request guide
+              </Link>
+            </Button>
+            <Button asChild variant="surface" size="pill">
+              <Link href="/knowledge/data-api/team-api-reference">
+                API reference
+              </Link>
+            </Button>
+          </div>
+        </div>
+        <div className="min-w-0 space-y-4">
+          <div className="overflow-hidden rounded-2xl bg-(--t-ink-base) text-(--t-ink-on-dark)">
+            <pre
+              translate="no"
+              className="m-0 overflow-x-auto p-5 font-mono text-[13px] leading-[1.8]"
+              tabIndex={0}
+              aria-label="Example API request"
+            >
+              <code>{example}</code>
+            </pre>
+          </div>
+          <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+            Search filters: country, region, libraryType, operationalStatus and
+            near (latitude, longitude and radius in metres).
+          </p>
+          <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5">
+            <h3 className="m-0 mb-3 text-[15px] font-semibold">
+              When a request fails
+            </h3>
+            <dl className="m-0 divide-y divide-(--t-border-line) text-[14px] leading-relaxed">
+              {[
+                ["401", "The key is invalid or has expired."],
+                [
+                  "403",
+                  "The key lacks that API, or the Team or add-on isn’t active.",
+                ],
+                ["429", "Rate limit or monthly allowance reached."],
+              ].map(([code, text]) => (
+                <div key={code} className="flex gap-4 py-2 first:pt-0">
+                  <dt className="font-mono font-semibold text-(--t-accent-danger)">
+                    {code}
+                  </dt>
+                  <dd className="m-0">{text}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 mb-0 text-[14px] text-(--t-ink-dim)">
+              Cache hits count as requests.
+            </p>
+          </div>
+        </div>
+      </div>
+    </StaffPanel>
   )
 }

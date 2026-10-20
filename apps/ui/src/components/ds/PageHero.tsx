@@ -43,6 +43,7 @@ export function PageHero({
   prelude,
   footer,
   emphasisTone = "brand",
+  centered = false,
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
   readonly breadcrumb?: BreadcrumbItem[]
@@ -83,6 +84,8 @@ export function PageHero({
   /** Full-width summary below the title columns, above section tabs. */
   readonly footer?: ReactNode
   readonly emphasisTone?: "brand" | "ink"
+  /** Focused flows such as invitations: a centred title and lead in one column. */
+  readonly centered?: boolean
   /**
    * Section tabs (`SectionTabs`) on the band's bottom edge, for sections
    * with sub-pages (Contribute, Knowledge).
@@ -101,17 +104,24 @@ export function PageHero({
         style={{ background: T.bg.space, borderColor: T.border.line }}
       >
         {breadcrumb?.length ? (
-          <Container className={compact ? "pt-5 sm:pt-7" : "pt-6 sm:pt-10"}>
+          <Container
+            className={[
+              compact ? "pt-5 sm:pt-7" : "pt-6 sm:pt-10",
+              centered ? "flex justify-center" : "",
+            ].join(" ")}
+          >
             <Breadcrumb items={breadcrumb} />
           </Container>
         ) : null}
         <Container
           className={[
-            staff
-              ? "grid gap-x-12 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-end"
-              : leadPlacement === "left"
-                ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
-                : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
+            centered
+              ? "flex max-w-[960px] flex-col items-center text-center"
+              : staff
+                ? "grid gap-x-12 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-end"
+                : leadPlacement === "left"
+                  ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
+                  : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
             compact ? "gap-y-5" : "gap-y-8",
             leadPlacement === "left" && breadcrumb?.length
               ? "pt-3 pb-12 sm:pb-16"
@@ -125,11 +135,12 @@ export function PageHero({
           {prelude ? (
             <div className="-mb-4 lg:col-span-2">{prelude}</div>
           ) : null}
-          <div>
+          <div className={centered ? "w-full min-w-0" : "min-w-0"}>
             {back || eyebrow || chips ? (
               <div
                 className={[
                   "flex flex-wrap items-center gap-2",
+                  centered ? "justify-center" : "",
                   compact || staff ? "mb-3" : "mb-5",
                 ].join(" ")}
               >
@@ -181,10 +192,12 @@ export function PageHero({
                 {chips}
               </div>
             ) : null}
-            <div className="flex items-start gap-4">
+            <div
+              className={`flex items-start gap-4 ${centered ? "justify-center" : ""}`}
+            >
               {titleIcon ? <span className="shrink-0">{titleIcon}</span> : null}
               <h1
-                className="m-0 text-balance"
+                className="m-0 min-w-0 text-balance [overflow-wrap:anywhere]"
                 style={{
                   fontFamily: T.font.serif,
                   fontSize: displayTitle
@@ -208,15 +221,15 @@ export function PageHero({
             </div>
             {meta ? (
               <div
-                className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 ${staff ? "text-[17px]" : "text-[15px]"}`}
+                className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 ${staff ? "text-[17px]" : "text-[15px]"} ${centered ? "justify-center" : ""}`}
                 style={{ color: T.ink.dim }}
               >
                 {meta}
               </div>
             ) : null}
-            {leadPlacement === "left" && lead ? (
+            {(centered || leadPlacement === "left") && lead ? (
               <p
-                className="mt-6 mb-0 max-w-[56ch] text-[17px] leading-[1.6]"
+                className={`mt-6 mb-0 max-w-[56ch] text-[17px] leading-[1.6] ${centered ? "mx-auto" : ""}`}
                 style={{ color: T.ink.dim }}
               >
                 {lead}
@@ -225,9 +238,9 @@ export function PageHero({
             {actions ? <div className="mt-6">{actions}</div> : null}
           </div>
 
-          {(leadPlacement === "right" && lead) || children ? (
+          {(!centered && leadPlacement === "right" && lead) || children ? (
             <div className="flex flex-col gap-5">
-              {leadPlacement === "right" && lead ? (
+              {!centered && leadPlacement === "right" && lead ? (
                 <p
                   className="m-0 max-w-[52ch] text-[17px] leading-[1.6]"
                   style={{ color: T.ink.dim }}

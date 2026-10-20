@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react"
 import type { VerifySection } from "@repo/shared-data"
 import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { useRouter } from "@/lib/navigation"
 
@@ -62,11 +63,12 @@ export function StaffVerifyButton({
 
   return (
     <span className="flex shrink-0 flex-col items-end gap-1">
-      <button
+      <Button
         type="button"
         disabled={busy}
         onClick={verify}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+        variant="surface"
+        size="pill"
         style={{ borderColor: T.border.hi, color: T.ink.base }}
       >
         <Icon
@@ -77,7 +79,7 @@ export function StaffVerifyButton({
           style={{ color: T.accent.ok }}
         />
         {busy ? "Confirming…" : text}
-      </button>
+      </Button>
       <span role="status" aria-live="polite" className="sr-only">
         {done}
       </span>
