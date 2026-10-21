@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render, screen } from "@/test/render"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/navigation", async () => {
@@ -42,7 +43,7 @@ describe("staff access page", () => {
         .getAttribute("href")!,
       "https://libraries.example"
     )
-    expect(claim.pathname).toBe("/contribute/claim")
+    expect(claim.pathname).toBe("/staff/claim")
     expect(claim.searchParams.get("librarySlug")).toBe(library.slug)
     expect(claim.searchParams.get("libraryDocumentId")).toBe(library.documentId)
     expect(claim.searchParams.get("libraryEntityRef")).toBe(library.entityRef)
@@ -70,7 +71,7 @@ describe("staff access page", () => {
     )
     expect(claim.pathname).toBe("/auth/signin")
     expect(claim.searchParams.get("callbackUrl")).toContain(
-      "/contribute/claim?librarySlug=central-library"
+      "/staff/claim?librarySlug=central-library"
     )
     const signIn = new URL(
       screen
@@ -81,5 +82,32 @@ describe("staff access page", () => {
     expect(signIn.searchParams.get("callbackUrl")).toBe(
       "/staff/central-library/edit?step=hours"
     )
+  })
+  it("explains the claim steps without exposing private staff destinations", () => {
+    render(<StaffAccessRequired signedIn />)
+    const guide = screen.getByRole("navigation", {
+      name: "Library staff guide",
+    })
+    expect(guide.querySelector('a[href="#staff-steps"]')).toBeTruthy()
+    expect(
+      screen.getByRole("heading", { name: "Tell us about your role" })
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("heading", { name: "A moderator reviews it" })
+    ).toBeTruthy()
+    expect(
+      screen.getByText(/only seen by the moderators reviewing/)
+    ).toBeTruthy()
+    expect(
+      screen
+        .getByRole("link", { name: "View your submissions" })
+        .getAttribute("href")
+    ).toBe("/contribute/submissions")
+    expect(document.querySelector('a[href^="/staff/team"]')).toBeNull()
+    expect(
+      screen
+        .getByRole("link", { name: "Start your claim" })
+        .getAttribute("href")
+    ).toBe("/staff/claim")
   })
 })

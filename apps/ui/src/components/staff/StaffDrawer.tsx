@@ -172,7 +172,7 @@ export function StaffDrawer() {
   const trafficCovered = canForLibrary("library.traffic", id)
   const organises = teams.some((t) => t.role === "organiser")
   const claimHref = pageLibrary
-    ? `/contribute/claim?librarySlug=${encodeURIComponent(pageLibrary.slug)}&libraryName=${encodeURIComponent(pageLibrary.name)}&libraryDocumentId=${encodeURIComponent(pageLibrary.documentId)}`
+    ? `/staff/claim?librarySlug=${encodeURIComponent(pageLibrary.slug)}&libraryName=${encodeURIComponent(pageLibrary.name)}&libraryDocumentId=${encodeURIComponent(pageLibrary.documentId)}`
     : null
 
   return (

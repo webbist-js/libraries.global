@@ -13,10 +13,10 @@ import { useEffect, useState } from "react"
 
 import { DiffCard, EmptyState, Sheet } from "@/components/ds"
 import { TimetableReviewPanel } from "@/components/moderation/TimetableReviewPanel"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 import { timeAgo } from "@/lib/staff/format"
-import { primaryCtaSm } from "@/lib/styles"
 
 type Suggestion = {
   documentId: string
@@ -35,8 +35,6 @@ type Suggestion = {
 type Decided = { action: "approve" | "done" | "reject"; at: Date }
 
 const PAGE_SIZE = 20
-const OUTLINED =
-  "inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 
 /** "Opening hours · Tuesday" style title from the changed rows. */
 function titleOf(s: Suggestion): string {
@@ -212,14 +210,15 @@ export function StaffSuggestions({
             style={{ color: T.accent.danger }}
           />
           <span className="min-w-0 flex-1">{listError}</span>
-          <button
+          <Button
             type="button"
-            className={OUTLINED}
+            variant="surface"
+            size="pill"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
             onClick={() => setAttempt((n) => n + 1)}
           >
             {tUi("try_again")}{" "}
-          </button>
+          </Button>
         </div>
       )}
       <div className="flex flex-col gap-4">
@@ -292,11 +291,12 @@ export function StaffSuggestions({
                   ) : undefined
                 }
                 actions={s.actions.map((action) => (
-                  <button
+                  <Button
                     key={action}
                     type="button"
                     disabled={busy}
-                    className={action === "reject" ? OUTLINED : primaryCtaSm}
+                    variant={action === "reject" ? "surface" : "primary"}
+                    size="pill"
                     style={
                       action === "reject"
                         ? { borderColor: T.border.hi, color: T.ink.base }
@@ -313,7 +313,7 @@ export function StaffSuggestions({
                       : action === "done"
                         ? "Mark as done"
                         : "Decline"}
-                  </button>
+                  </Button>
                 ))}
               />
             </div>
@@ -328,7 +328,10 @@ export function StaffSuggestions({
               publicPath ? (
                 <Link
                   href={publicPath}
-                  className={`${OUTLINED} gap-1 no-underline`}
+                  className={buttonVariants({
+                    variant: "surface",
+                    size: "pill",
+                  })}
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
                   {tUi("view_public_page")}{" "}
@@ -357,27 +360,29 @@ export function StaffSuggestions({
           className="mt-5 flex items-center gap-4"
           aria-label={tUi("suggestions_pages")}
         >
-          <button
+          <Button
             type="button"
-            className={OUTLINED}
+            variant="surface"
+            size="pill"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
             disabled={page === 1}
             onClick={() => setPage((n) => n - 1)}
           >
             {tUi("previous")}{" "}
-          </button>
+          </Button>
           <span className="text-[14px]" style={{ color: T.ink.dim }}>
             Page {page} of {pages}
           </span>
-          <button
+          <Button
             type="button"
-            className={OUTLINED}
+            variant="surface"
+            size="pill"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
             disabled={page * PAGE_SIZE >= total}
             onClick={() => setPage((n) => n + 1)}
           >
             {tUi("next")}{" "}
-          </button>
+          </Button>
         </nav>
       )}
       <Sheet
@@ -386,14 +391,15 @@ export function StaffSuggestions({
         side="right"
         title={tUi("decline_this_suggestion")}
         footer={
-          <button
+          <Button
             type="button"
-            className={primaryCtaSm}
+            variant="primary"
+            size="pill"
             disabled={busy || (reason === "other" && !note.trim())}
             onClick={() => declining && decide(declining, "reject")}
           >
             Decline suggestion
-          </button>
+          </Button>
         }
       >
         <label className="block text-[15px] font-semibold">

@@ -3,10 +3,11 @@ import { notFound, redirect } from "next/navigation"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
-import { PageHero } from "@/components/ds"
+import { Badge, PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
+import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamOrganiser } from "@/components/staff/TeamOrganiser"
 import { sessionTeamsOf } from "@/lib/access-server"
@@ -56,15 +57,25 @@ export default async function TeamOrganiserPage({
   return (
     <>
       <PageHero
-        compact
+        staff
         breadcrumb={[
           { label: tUi("staff_area"), href: "/staff" },
           { label: team?.name ?? chosen.name },
         ]}
         eyebrow={organiser ? "Team organiser" : "Your team"}
         eyebrowIcon="mdi:account-group-outline"
-        plainTitle={organiser}
-        title={organiser ? (team?.name ?? chosen.name) : `Your *team*`}
+        plainTitle
+        title={team?.name ?? chosen.name}
+        chips={
+          team ? (
+            <Badge
+              label={team.verifiedAt ? "Verified" : "Not yet verified"}
+              color={team.verifiedAt ? "ok" : "warn"}
+              icon={team.verifiedAt ? "mdi:check" : "mdi:clock-outline"}
+            />
+          ) : undefined
+        }
+        tabs={<StaffAreaTabs active="team" teamId={chosen.id} />}
         lead={
           organiser
             ? "Invite colleagues, give them staff access on your libraries and choose their level. Changes take effect at once."

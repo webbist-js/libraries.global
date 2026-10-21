@@ -1,57 +1,50 @@
 "use client"
+
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds"
-import { T } from "@/lib/design-tokens"
-import { Link, useRouter } from "@/lib/navigation"
+import { StaffPanel, STAFF_LINK } from "@/components/staff/StaffPanel"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Link } from "@/lib/navigation"
 import { staffRequest } from "@/lib/staff/client"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import type { TeamInvitePreview, TeamSummary } from "@/lib/staff/types"
 
-const PRIMARY =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
-const OUTLINED =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
-const INLINE =
-  "inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
+const PRIMARY = buttonVariants({ variant: "primary", size: "pill" })
+const OUTLINED = buttonVariants({ variant: "surface", size: "pill" })
+type GuideLink = { href: string; title: string }
 
-/** The invite's pre-assignment, with the library's name and slug when the API sends them. */
-type Preassign = NonNullable<TeamInvitePreview["preassign"]> & {
-  libraryName?: string | null
-  librarySlug?: string | null
-}
-
-/**
- * Accept a Team invite: the team, who sent it, the masked email, the role
- * and the library it opens (when pre-assigned). Blocked states say what to
- * do next with a link; after joining, focus lands on the confirmation and
- * the pre-assigned library is one click away.
- */
+/** Keep the token URL as the email entry point; acceptance never happens on load. */
 export function TeamJoin({
   token,
   invite,
   emailVerified,
+  guides = [],
 }: {
   readonly token: string
   readonly invite: TeamInvitePreview
   readonly emailVerified: boolean
+  readonly guides?: readonly GuideLink[]
 }) {
-  const tUi = useUiTranslations("ui")
-
-  const router = useRouter()
+  const t = useTranslations("teamInvitation")
+  const tUi = useTranslations("ui")
   const doneRef = useRef<HTMLDivElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [joined, setJoined] = useState<TeamSummary | null>(null)
   const blocked =
     invite.status !== "open" || !invite.emailMatches || !emailVerified
-  const preassign = invite.preassign as Preassign | null
-  const staffBase = staffLibraryHref(preassign?.librarySlug)
+  const preassign = invite.preassign
   const libraryLabel = preassign
-    ? (preassign.libraryName ?? `library ${preassign.libraryDocumentId}`)
+    ? (preassign.libraryName ??
+      t("libraryFallback", { id: preassign.libraryDocumentId }))
     : null
+  const organiser = (joined?.role ?? invite.teamRole) === "organiser"
+  const libraryReady = Boolean(preassign && joined?.verified)
+  const libraryNeedsReview = Boolean(preassign && joined && !joined.verified)
+  const staffRole = t(preassign?.staffRole === "owner" ? "owner" : "editor")
 
   useEffect(() => {
     if (joined) doneRef.current?.focus()
@@ -65,237 +58,309 @@ export function TeamJoin({
         `/api/staff/team/join/${token}/accept`,
         "POST"
       )
+      // Acceptance consumes the token. Refreshing this URL would replace
+      // the confirmation with a not-found page, so navigate via the next steps.
       setJoined(result.team)
-      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not join.")
+      setError(err instanceof Error ? err.message : t("joinError"))
     } finally {
       setBusy(false)
     }
   }
 
-  if (joined)
-    return (
-      <section
-        className="max-w-[60ch] rounded-[20px] border p-6 sm:p-8"
-        style={{ background: T.bg.deep, borderColor: T.border.line }}
-      >
-        <div ref={doneRef} role="status" tabIndex={-1} className="outline-none">
-          <Notice
-            icon="mdi:check-circle-outline"
-            tone="ok"
-            title={`You’re on ${joined.name}`}
-          >
-            <span style={{ color: T.ink.base }}>
-              {joined.role === "organiser"
-                ? "You organise this team: invite colleagues and assign them to its libraries."
-                : preassign && libraryLabel
-                  ? `You now have ${preassign.staffRole} access to ${libraryLabel}. Your organiser can add more libraries at any time.`
-                  : "Your organiser gives you access to the team’s libraries; any library already assigned to you is in your Staff area."}
-            </span>
-          </Notice>
-        </div>
-        <div className="mt-5 flex flex-wrap gap-3">
-          {preassign ? (
-            <Link href={`${staffBase}`} className={PRIMARY}>
-              {tUi("open_library", { library: libraryLabel ?? "" })}
-              <Icon
-                aria-hidden="true"
-                icon="mdi:arrow-right"
-                width={16}
-                height={16}
-              />
-            </Link>
-          ) : null}
-          <Link
-            href={joined.role === "organiser" ? "/staff/team" : "/staff"}
-            className={preassign ? OUTLINED : PRIMARY}
-            style={
-              preassign
-                ? { borderColor: T.border.hi, color: T.ink.base }
-                : undefined
-            }
-          >
-            {joined.role === "organiser"
-              ? "Open the Team organiser"
-              : "Open your Staff area"}
-            {preassign ? null : (
-              <Icon
-                aria-hidden="true"
-                icon="mdi:arrow-right"
-                width={16}
-                height={16}
-              />
-            )}
-          </Link>
-        </div>
-      </section>
-    )
-
   return (
-    <section
-      className="max-w-[60ch] rounded-[20px] border p-6 sm:p-8"
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
-      <dl className="m-0 grid gap-4 sm:grid-cols-2">
-        <div>
-          <dt
-            className="text-[13px] font-semibold"
-            style={{ color: T.ink.dim }}
+    <div className="mx-auto max-w-[960px] space-y-8">
+      {joined ? (
+        <StaffPanel>
+          <div
+            ref={doneRef}
+            role="status"
+            tabIndex={-1}
+            className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-(--t-accent-primary)"
           >
-            {tUi("team")}
-          </dt>
-          <dd className="m-0 text-[22px]" style={{ fontFamily: T.font.serif }}>
-            {invite.teamName}
-          </dd>
-        </div>
-        <div>
-          <dt
-            className="text-[13px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            Invited by
-          </dt>
-          <dd className="m-0 text-[15px]">{invite.invitedByName}</dd>
-        </div>
-        <div>
-          <dt
-            className="text-[13px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            Sent to
-          </dt>
-          <dd
-            className="m-0 text-[15px] break-words"
-            style={{ fontFamily: T.font.mono, fontSize: 14 }}
-          >
-            {invite.emailMasked}
-          </dd>
-        </div>
-        <div>
-          <dt
-            className="text-[13px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
-            Your role
-          </dt>
-          <dd className="m-0 text-[15px]">
-            {invite.teamRole === "organiser" ? "Organiser" : "Member"}
-          </dd>
-        </div>
-        {preassign ? (
-          <div className="sm:col-span-2">
-            <dt
-              className="text-[13px] font-semibold"
-              style={{ color: T.ink.dim }}
+            <Notice
+              icon="mdi:check-circle-outline"
+              tone="ok"
+              title={t("joinedTitle", { team: joined.name })}
             >
-              Library access on joining
-            </dt>
-            <dd className="m-0 text-[15px]">
-              {libraryLabel} ·{" "}
-              {preassign.staffRole === "owner" ? "Owner" : "Editor"}
-            </dd>
+              <span className="text-(--t-ink-base)">
+                {libraryNeedsReview && libraryLabel
+                  ? t("joinedLibraryPending", { library: libraryLabel })
+                  : organiser
+                    ? t("joinedOrganiser")
+                    : preassign && libraryLabel
+                      ? t("joinedLibrary", {
+                          role: staffRole,
+                          library: libraryLabel,
+                        })
+                      : t("joinedMember")}
+              </span>
+            </Notice>
           </div>
-        ) : null}
-      </dl>
-      <div className="mt-6 space-y-4">
-        {invite.status === "expired" ? (
-          <Notice
-            icon="mdi:clock-alert-outline"
-            tone="warn"
-            title={tUi("this_invite_has_expired")}
-          >
-            <span style={{ color: T.ink.base }}>
-              Ask {invite.invitedByName} to send a new one.
-            </span>
-          </Notice>
-        ) : null}
-        {invite.status === "team_inactive" ? (
-          <Notice
-            icon="mdi:pause-circle-outline"
-            tone="warn"
-            title={tUi("this_team_isnt_active_2")}
-          >
-            <span style={{ color: T.ink.base }}>
-              Its plan has lapsed or expired. Ask {invite.invitedByName} to
-              check with the site team.
-            </span>
-          </Notice>
-        ) : null}
-        {invite.status === "open" && !invite.emailMatches ? (
-          <Notice
-            icon="mdi:account-alert-outline"
-            tone="warn"
-            title={tUi("sign_in_with_the_invited_email")}
-          >
-            <span style={{ color: T.ink.base }}>
-              This invite went to {invite.emailMasked}. Sign out, sign in with
-              that address, then open the link again.
-            </span>
-            <span>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            {preassign && libraryReady ? (
               <Link
-                href="/auth/signout"
-                className={INLINE}
-                style={{ color: T.accent.primary }}
+                href={staffLibraryHref(preassign.librarySlug)}
+                className={PRIMARY}
               >
-                {tUi("sign_out")}{" "}
-                <Icon
-                  aria-hidden="true"
-                  icon="mdi:logout"
-                  width={15}
-                  height={15}
-                />
+                {tUi("open_library", { library: libraryLabel ?? "" })}
+                <Icon aria-hidden="true" icon="mdi:arrow-right" width={18} />
               </Link>
-            </span>
-          </Notice>
-        ) : null}
-        {invite.status === "open" && invite.emailMatches && !emailVerified ? (
-          <Notice
-            icon="mdi:email-alert-outline"
-            tone="warn"
-            title={tUi("verify_your_email_first")}
-          >
-            <span style={{ color: T.ink.base }}>
-              Confirm your email address from your account settings, then come
-              back to this link.
-            </span>
-            <span>
-              <Link
-                href="/profile/settings"
-                className={INLINE}
-                style={{ color: T.accent.primary }}
-              >
-                Email settings
-                <Icon
-                  aria-hidden="true"
-                  icon="mdi:arrow-right"
-                  width={15}
-                  height={15}
-                />
+            ) : null}
+            <Link
+              href={
+                organiser
+                  ? "/staff/team?team=" + encodeURIComponent(joined.id)
+                  : "/staff"
+              }
+              className={libraryReady ? OUTLINED : PRIMARY}
+            >
+              {t(organiser ? "openTeam" : "openStaff")}
+              <Icon aria-hidden="true" icon="mdi:arrow-right" width={18} />
+            </Link>
+            {libraryNeedsReview ? (
+              <Link href="/contribute/submissions" className={OUTLINED}>
+                {tUi("my_submissions")}
+                <Icon aria-hidden="true" icon="mdi:arrow-right" width={18} />
               </Link>
-            </span>
-          </Notice>
-        ) : null}
-        {error ? (
-          <p role="alert" className="m-0" style={{ color: T.accent.danger }}>
-            {error}
+            ) : null}
+          </div>
+        </StaffPanel>
+      ) : (
+        <StaffPanel title={t("invitationTitle")} id="team-invitation">
+          <p className="mt-0 mb-6 max-w-[68ch] text-[16px] leading-relaxed text-(--t-ink-dim)">
+            {t("invitationIntro")}
           </p>
-        ) : null}
-        <button
-          type="button"
-          className={PRIMARY}
-          disabled={busy || blocked}
-          onClick={() => void join()}
-        >
-          <Icon
-            aria-hidden="true"
-            icon="mdi:account-plus-outline"
-            width={16}
-            height={16}
-          />
-          {busy ? "Joining…" : `Join ${invite.teamName}`}
-        </button>
-      </div>
-    </section>
+          <dl className="m-0 grid gap-x-8 gap-y-5 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 sm:grid-cols-2 sm:p-6 [&_dd]:mt-1.5 [&_dd]:mb-0 [&_dd]:ml-0 [&_dd]:text-[16px] [&_dd]:[overflow-wrap:anywhere] [&_dt]:text-[14px] [&_dt]:font-semibold [&_dt]:text-(--t-ink-dim)">
+            <div>
+              <dt>{tUi("team")}</dt>
+              <dd className="font-serif text-[23px]! leading-tight">
+                {invite.teamName}
+              </dd>
+            </div>
+            <div>
+              <dt>{t("invitedBy")}</dt>
+              <dd>{invite.invitedByName}</dd>
+            </div>
+            <div>
+              <dt>{t("sentTo")}</dt>
+              <dd>{invite.emailMasked}</dd>
+            </div>
+            <div>
+              <dt>{t("yourRole")}</dt>
+              <dd>{t(organiser ? "organiser" : "member")}</dd>
+            </div>
+            {preassign ? (
+              <div className="border-t border-(--t-border-line) pt-4 sm:col-span-2">
+                <dt>{t("libraryAccess")}</dt>
+                <dd>
+                  {libraryLabel} · {staffRole}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+          <p className="mt-5 mb-0 max-w-[72ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+            {t(organiser ? "organiserDetail" : "memberDetail")}
+          </p>
+          <div className="mt-6 space-y-4">
+            {invite.status === "expired" ? (
+              <Notice
+                icon="mdi:clock-alert-outline"
+                tone="warn"
+                title={tUi("this_invite_has_expired")}
+              >
+                <span className="text-(--t-ink-base)">
+                  {t("expiredDetail", { inviter: invite.invitedByName })}
+                </span>
+              </Notice>
+            ) : null}
+            {invite.status === "team_inactive" ? (
+              <Notice
+                icon="mdi:pause-circle-outline"
+                tone="warn"
+                title={tUi("this_team_isnt_active_2")}
+              >
+                <span className="text-(--t-ink-base)">
+                  {t("inactiveDetail", { inviter: invite.invitedByName })}
+                </span>
+              </Notice>
+            ) : null}
+            {invite.status === "open" && !invite.emailMatches ? (
+              <Notice
+                icon="mdi:account-alert-outline"
+                tone="warn"
+                title={tUi("sign_in_with_the_invited_email")}
+              >
+                <span className="text-(--t-ink-base)">
+                  {t("wrongEmailDetail", { email: invite.emailMasked })}
+                </span>
+                <Link
+                  href="/auth/signout"
+                  className={`inline-flex min-h-11 items-center gap-2 self-start ${STAFF_LINK}`}
+                >
+                  {tUi("sign_out")}
+                  <Icon aria-hidden="true" icon="mdi:logout" width={16} />
+                </Link>
+              </Notice>
+            ) : null}
+            {invite.status === "open" &&
+            invite.emailMatches &&
+            !emailVerified ? (
+              <Notice
+                icon="mdi:email-alert-outline"
+                tone="warn"
+                title={tUi("verify_your_email_first")}
+              >
+                <span className="text-(--t-ink-base)">{t("verifyDetail")}</span>
+                <Link
+                  href="/profile/settings"
+                  className={`inline-flex min-h-11 items-center gap-2 self-start ${STAFF_LINK}`}
+                >
+                  {t("emailSettings")}
+                  <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+                </Link>
+              </Notice>
+            ) : null}
+            {error ? (
+              <p
+                role="alert"
+                className="m-0 text-[15px] text-(--t-accent-danger)"
+              >
+                {error}
+              </p>
+            ) : null}
+          </div>
+          <div className="mt-6 flex flex-col gap-4 border-t border-(--t-border-line) pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <p className="m-0 flex max-w-[48ch] items-start gap-2 text-[14px] leading-relaxed text-(--t-ink-dim)">
+              <Icon
+                aria-hidden="true"
+                icon="mdi:shield-check-outline"
+                width={18}
+                className="mt-0.5 shrink-0"
+              />
+              {t("membershipNote")}
+            </p>
+            <Button
+              variant="primary"
+              size="pill"
+              disabled={busy || blocked}
+              aria-busy={busy}
+              onClick={() => void join()}
+            >
+              <Icon
+                aria-hidden="true"
+                icon={busy ? "mdi:loading" : "mdi:account-plus-outline"}
+                width={18}
+                className={busy ? "motion-safe:animate-spin" : undefined}
+              />
+              {busy ? t("joining") : t("joinAction", { team: invite.teamName })}
+            </Button>
+          </div>
+        </StaffPanel>
+      )}
+
+      <section aria-labelledby="invite-next-steps">
+        <div className="mb-5 text-center">
+          <h2
+            id="invite-next-steps"
+            className="m-0 font-serif text-[30px] leading-tight text-(--t-ink-base)"
+          >
+            {t(joined ? "nextTitleJoined" : "nextTitle")}
+          </h2>
+          <p className="mt-3 mb-0 text-[16px] leading-relaxed text-(--t-ink-dim)">
+            {t("nextIntro")}
+          </p>
+        </div>
+        <ol className="m-0 grid list-none gap-4 p-0 md:grid-cols-3">
+          {(
+            [
+              {
+                id: "workspace",
+                icon: "mdi:account-group-outline",
+                title: organiser ? "organiserStepTitle" : "memberStepTitle",
+                detail: organiser ? "organiserStepDetail" : "memberStepDetail",
+              },
+              {
+                id: "libraries",
+                icon: "mdi:library-outline",
+                title: "librariesStepTitle",
+                detail: organiser
+                  ? "organiserLibrariesDetail"
+                  : "memberLibrariesDetail",
+              },
+              {
+                id: "updates",
+                icon: "mdi:clipboard-edit-outline",
+                title: "updatesStepTitle",
+                detail: "updatesStepDetail",
+              },
+            ] as const
+          ).map((step) => (
+            <li
+              key={step.id}
+              className="min-w-0 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6"
+            >
+              <Icon
+                aria-hidden="true"
+                icon={step.icon}
+                width={23}
+                className="mb-4 text-(--t-accent-primary)"
+              />
+              <h3 className="m-0 font-serif text-[23px] leading-tight text-(--t-ink-base)">
+                {t(step.title)}
+              </h3>
+              <p className="mt-3 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                {t(step.detail)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <StaffPanel title={t("guidesTitle")} id="team-invitation-guides" compact>
+        {guides.length > 0 ? (
+          <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-3">
+            {guides.map((guide) => (
+              <li key={guide.href} className="min-w-0">
+                <Link
+                  href={guide.href}
+                  className="flex h-full min-h-14 items-center gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-[15px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)/40 hover:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                >
+                  <Icon
+                    aria-hidden="true"
+                    icon="mdi:book-open-page-variant-outline"
+                    width={20}
+                    className="shrink-0 text-(--t-accent-primary)"
+                  />
+                  <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                    {guide.title}
+                  </span>
+                  <Icon
+                    aria-hidden="true"
+                    icon="mdi:arrow-right"
+                    width={16}
+                    className="shrink-0"
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Link
+            href="/knowledge"
+            className={`inline-flex min-h-11 items-center gap-2 ${STAFF_LINK}`}
+          >
+            {t("browseGuides")}
+            <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+          </Link>
+        )}
+        <p className="mt-5 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+          {t("helpDetail")}{" "}
+          <Link href="/contribute/discussions" className={STAFF_LINK}>
+            {t("askCommunity")}
+          </Link>
+        </p>
+      </StaffPanel>
+    </div>
   )
 }

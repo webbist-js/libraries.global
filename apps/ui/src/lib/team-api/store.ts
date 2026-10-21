@@ -307,7 +307,9 @@ export async function finishApiRequest(
 
 export async function apiUsage(pool: Pool, teamId: string) {
   const month = apiMonth()
-  const [usage, keys, days, endpoints] = await Promise.all([
+  const today = Date.parse(new Date().toISOString().slice(0, 10))
+  const windowStart = new Date(today - 29 * 86_400_000)
+  const [usage, keys, days, endpoints, activation] = await Promise.all([
     pool.query<{ requests: string; bytes: string }>(
       "select requests,bytes from team_api_usage where team_id=$1 and month=$2",
       [teamId, month.start]
@@ -322,8 +324,8 @@ export async function apiUsage(pool: Pool, teamId: string) {
       bytes: string
       errors: string
     }>(
-      "select to_char(started_at at time zone 'UTC','YYYY-MM-DD') as day,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and started_at>=now()-interval '30 days' and state='complete' group by day order by day",
-      [teamId]
+      "select to_char(started_at at time zone 'UTC','YYYY-MM-DD') as day,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and started_at>=$2 and state='complete' group by day order by day",
+      [teamId, windowStart]
     ),
     pool.query<{
       endpoint: string
@@ -333,6 +335,12 @@ export async function apiUsage(pool: Pool, teamId: string) {
     }>(
       "select endpoint,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and month=$2 and state='complete' group by endpoint order by endpoint",
       [teamId, month.start]
+    ),
+    // Legacy paid snapshots predate startedAt; the API account is their earliest
+    // known start. A checkout alone must not generate usage history.
+    pool.query<{ started_at: Date | null }>(
+      "select min(coalesce((m.snapshot->>'startedAt')::timestamptz,a.created_at)) as started_at from team_api_memberships m join team_api_accounts a on a.team_id=m.team_id where m.team_id=$1 and m.snapshot->>'paidThrough' is not null",
+      [teamId]
     ),
   ])
   const keyViews: ApiKeyView[] = keys.rows.map((key) => ({
@@ -348,10 +356,16 @@ export async function apiUsage(pool: Pool, teamId: string) {
     bytes: Number(key.bytes),
   }))
   const byDay = new Map(days.rows.map((day) => [day.day, day]))
-  const calendar = Array.from({ length: 30 }, (_, index) => {
-    const day = new Date(Date.now() - (29 - index) * 86_400_000)
-      .toISOString()
-      .slice(0, 10)
+  const startedAt = activation.rows[0]?.started_at
+  const start = startedAt
+    ? Math.max(
+        windowStart.getTime(),
+        Date.parse(startedAt.toISOString().slice(0, 10))
+      )
+    : today + 86_400_000
+  const length = Math.max(0, Math.floor((today - start) / 86_400_000) + 1)
+  const calendar = Array.from({ length }, (_, index) => {
+    const day = new Date(start + index * 86_400_000).toISOString().slice(0, 10)
     const row = byDay.get(day)
 
     return {
