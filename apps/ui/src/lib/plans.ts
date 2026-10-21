@@ -390,8 +390,8 @@ export function planCard(key: PlanCardKey): PlanCard {
 /**
  * Whether a card shows its call to action, given the viewer's plan key
  * ("public" or undefined for a visitor). Members never see a sign-up prompt,
- * and a plan they already hold shows no "coming soon". "Talk to us" stays,
- * since a Team may want more seats.
+ * and a plan they already hold shows no "coming soon". Contact calls remain
+ * available; membership pages resolve Team management links separately.
  */
 export function showPlanCta(
   card: PlanCard,

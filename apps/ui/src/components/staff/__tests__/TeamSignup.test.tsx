@@ -52,9 +52,9 @@ it("saves a Team before billing, requires consent, and retries payment without a
     name: "Our libraries",
     publicServiceRequested: true,
   })
-  const pay = screen.getByRole("button", {
+  const pay = (await screen.findByRole("button", {
     name: "Continue to payment",
-  }) as HTMLButtonElement
+  })) as HTMLButtonElement
   expect(pay.disabled).toBe(true)
   fireEvent.click(screen.getByRole("checkbox"))
   f.fetch.mockResolvedValueOnce(
@@ -65,7 +65,9 @@ it("saves a Team before billing, requires consent, and retries payment without a
   f.fetch.mockResolvedValueOnce(
     Response.json({ error: "unavailable" }, { status: 503 })
   )
-  fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }))
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Continue to payment" })
+  )
   await waitFor(() => expect(f.fetch).toHaveBeenCalledTimes(3))
   expect(f.fetch.mock.calls.slice(1).map(([url]) => url)).toEqual([
     "/api/staff/team/saved-team/billing",
