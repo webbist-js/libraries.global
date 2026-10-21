@@ -9,6 +9,7 @@ import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
 import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
@@ -77,9 +78,9 @@ export function BlogArticlePage({
         style={{ background: T.bg.void, color: T.ink.base }}
       >
         <GlobalHeader locale={locale} />
-        <main className="flex flex-1 items-center justify-center">
+        <MainContent className="flex flex-1 items-center justify-center">
           <p style={{ color: T.ink.dim }}>{tArticle("articleNotFound")}</p>
-        </main>
+        </MainContent>
       </div>
     )
   }
@@ -151,7 +152,7 @@ export function BlogArticlePage({
     >
       <GlobalHeader locale={locale} />
 
-      <main
+      <MainContent
         className="relative z-10 mx-auto w-full max-w-[1240px] flex-1 px-4 pt-6 pb-20 sm:px-8 sm:pt-8"
         data-analytics-page="journal"
         data-analytics-content-id={article.documentId}
@@ -582,7 +583,7 @@ export function BlogArticlePage({
             ) : null}
           </aside>
         </div>
-      </main>
+      </MainContent>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import type { ComponentProps } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
 import { act, cleanup, fireEvent, render, screen } from "@/test/render"
@@ -12,7 +13,9 @@ vi.mock("@/hooks/useSubmissions", () => ({
   useCreateSubmission: () => ({ mutate: mocks.mutate, isPending: false }),
 }))
 vi.mock("@/lib/navigation", () => ({
-  Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+  Link: ({ children, ...props }: ComponentProps<"a">) => (
+    <a {...props}>{children}</a>
+  ),
 }))
 
 afterEach(() => {

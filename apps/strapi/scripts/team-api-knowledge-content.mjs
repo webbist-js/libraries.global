@@ -90,10 +90,10 @@ export function apiOnboardingArticles(sectionId) {
             "If your library service already has a Team, ask its organiser to invite you and give you the organiser role if you will manage the API. Open the Team invitation, sign in with the invited address and accept it. An ordinary Team member can inspect API usage but cannot subscribe or create, regenerate or revoke keys."
           ),
           p(
-            "To arrange a new Team, open Membership at /contribute/membership and choose the Team enquiry, or email info@libraries.global with your library service, organiser email and required seats. Team is an annual quotation and invoice offer. After confirming the agreement and payment, an administrator creates or renews the Team and sets its organiser, seats and covered Libraries. Registering an account or buying personal Pro does not create a Team."
+            "When Team purchases are available, open /staff/team/new, enter your Team name, choose at least five seats and subscribe yearly through Stripe. You become its Organiser. Team access starts after payment is confirmed. Invite colleagues and choose covered Libraries from Your Team; payment does not verify Library authority. Manage payment, renewal and seat changes from Team billing. Existing invoice agreements retain their agreed terms. Registering an account or buying personal Pro alone does not create a Team."
           ),
           p(
-            "For new quotes, Team costs £600/year excluding VAT for five seats, plus £120/year per additional seat. Eligible public-library services receive 20% off Team items (£480 and £96 respectively). Existing contracts keep their agreed terms. Ask us to arrange an owned beta test Team for a trial; do not assume the sandbox API checkout provisions a Team."
+            "For new quotes, Team costs £600/year excluding VAT for five seats, plus £120/year per additional seat. Eligible public-library services receive 20% off Team items (£480 and £96 respectively). Existing contracts keep their agreed terms. During beta, use the owned sandbox Team checkout when enabled. The separate API checkout does not provision a Team. Public-service discount eligibility is confirmed separately before discounted Team checkout."
           ),
           h("3. Open the Team API dashboard"),
           p(

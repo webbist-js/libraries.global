@@ -55,6 +55,30 @@ export function publicEventFilters(
   }
 }
 
+/** Geography is stored directly on the library; no Area or capped ID prefetch is required. */
+export function eventLocationFilter(
+  query: Record<string, unknown>
+): Record<string, unknown> {
+  const countryCode = asString(query.countryCode)
+  const country = asString(query.country)
+  const region = asString(query.regionSlug) ?? asString(query.region)
+  const continent = asString(query.continentSlug) ?? asString(query.continent)
+  if (!countryCode && !country && !region && !continent) return {}
+
+  return {
+    library: {
+      publishedAt: { $notNull: true },
+      ...(countryCode
+        ? { country: { iso2: countryCode.toUpperCase() } }
+        : country
+          ? { country: { slug: country } }
+          : {}),
+      ...(region ? { region: { slug: region } } : {}),
+      ...(continent ? { continent: { slug: continent } } : {}),
+    },
+  }
+}
+
 export interface ClampOptions {
   def: number
   min: number

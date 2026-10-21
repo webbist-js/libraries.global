@@ -1,11 +1,11 @@
 "use client"
 
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useEffect, useState } from "react"
 
 import { announceFollow } from "@/components/library/follow-events"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
+import { useFollowTarget } from "@/hooks/useFollowTarget"
 import { useMounted } from "@/hooks/useMounted"
 import {
   analyticsAttributes,
@@ -114,7 +114,6 @@ export function LibraryHeroActions({
 /** v2 pill Follow button (same API wiring as before). */
 function FollowPill({
   libraryDocumentId,
-  libraryName,
 }: {
   readonly libraryDocumentId: string
   readonly libraryName: string
@@ -122,51 +121,29 @@ function FollowPill({
   const tUi = useUiTranslations("ui")
 
   const { data: session, isPending } = authClient.useSession()
-  const [following, setFollowing] = useState<boolean | null>(null)
-  const [loading, setLoading] = useState(false)
+  const tFollow = useUiTranslations("publishingFollow")
+  const {
+    following,
+    saving: loading,
+    error,
+    retry,
+    toggle: toggleFollow,
+  } = useFollowTarget(session?.user?.id, "libraryDocumentId", libraryDocumentId)
   // Better Auth's store can already hold a session on the client's first
   // render while the server rendered none: wait for mount before branching.
   const mounted = useMounted()
 
-  useEffect(() => {
-    if (!session?.user || !libraryDocumentId) return
-    fetch(
-      `/api/profile/me/follow?libraryDocumentId=${encodeURIComponent(libraryDocumentId)}`
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => {
-        if (json) setFollowing(json.following as boolean)
-      })
-      .catch(() => setFollowing(false))
-  }, [session?.user, libraryDocumentId])
-
   const toggle = async () => {
     if (!session?.user || following === null || loading) return
-    setLoading(true)
     const measured = captureAnalyticsEvent("library_follow", {
       interaction_source: "library_hero",
       library_document_id: libraryDocumentId,
       action_type: following ? "unfollow" : "follow",
     })
-    try {
-      const res = await fetch("/api/profile/me/follow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          libraryDocumentId,
-          action: following ? "unfollow" : "follow",
-        }),
-      })
-      if (res.ok) {
-        const json = (await res.json()) as { following: boolean }
-        if (json.following !== following) {
-          measured()
-          announceFollow({ libraryDocumentId, following: json.following })
-        }
-        setFollowing(json.following)
-      }
-    } finally {
-      setLoading(false)
+    const next = await toggleFollow()
+    if (next !== null && next !== following) {
+      measured()
+      announceFollow({ libraryDocumentId, following: next })
     }
   }
 
@@ -194,25 +171,38 @@ function FollowPill({
   const isFollowing = following === true
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={isFollowing}
-      disabled={loading || following === null}
-      style={{
-        ...pillBase,
-        border: "1px solid transparent",
-        background: isFollowing ? T.ink.base : "transparent",
-        color: isFollowing ? "#fff" : T.ink.base,
-        opacity: loading || following === null ? 0.7 : 1,
-      }}
-    >
-      <LibIcon d={LIB_ICONS.bookmark} />
-      {following === null
-        ? tUi("follow")
-        : isFollowing
-          ? tUi("following")
-          : tUi("follow")}
-    </button>
+    <span className="inline-flex flex-col items-start gap-1">
+      <button
+        type="button"
+        onClick={error === "read" ? retry : toggle}
+        aria-pressed={following === null ? undefined : isFollowing}
+        disabled={loading || (following === null && error !== "read")}
+        style={{
+          ...pillBase,
+          border: "1px solid transparent",
+          background: isFollowing ? T.ink.base : "transparent",
+          color: isFollowing ? "#fff" : T.ink.base,
+          opacity: loading || following === null ? 0.7 : 1,
+        }}
+      >
+        <LibIcon d={LIB_ICONS.bookmark} />
+        {error === "read"
+          ? tUi("try_again")
+          : following === null
+            ? tUi("follow")
+            : isFollowing
+              ? tUi("following")
+              : tUi("follow")}
+      </button>
+      {error && (
+        <span
+          role="status"
+          className="text-xs"
+          style={{ color: T.accent.danger }}
+        >
+          {tFollow(error === "read" ? "lookupError" : "updateError")}
+        </span>
+      )}
+    </span>
   )
 }

@@ -1,3 +1,4 @@
+import { libraryJoin, tableOf } from "../../../../utils/library-sql"
 import {
   PUBLIC_EVENT_FIELDS,
   PUBLIC_EVENT_SORT,
@@ -9,6 +10,7 @@ import {
   parseIsoDate,
   parseTypeList,
   publicEventFilters,
+  eventLocationFilter,
 } from "../utils/query"
 
 const EVENT_UID = "plugin::events.event"
@@ -55,36 +57,11 @@ export default ({ strapi }: { strapi: any }) => ({
 
   async location(ctx: any) {
     const query = ctx.query as Record<string, unknown>
-    const continent = asString(query.continent)
-    const country = asString(query.country)
-    const region = asString(query.region)
     const { start, limit } = pageWindow(query, { def: 20, max: 100 })
-
-    const libraryFilters: Record<string, unknown> = {}
-    if (continent)
-      libraryFilters["area.region.country.continent.slug"] = continent
-    if (country) libraryFilters["area.region.country.slug"] = country
-    if (region) libraryFilters["area.region.slug"] = region
-
-    const libraries = await strapi.documents(LIBRARY_UID).findMany({
-      filters: libraryFilters,
-      fields: ["entityRef"],
-      status: "published",
-      sort: ["id:asc"],
-      limit: 500,
-    })
-    const refs = (libraries as any[])
-      .map((l: any) => l.entityRef as string)
-      .filter(Boolean)
-    if (!refs.length) {
-      ctx.body = []
-
-      return
-    }
 
     ctx.body = await strapi.documents(EVENT_UID).findMany({
       filters: publicEventFilters({
-        libraryEntityRef: { $in: refs },
+        ...eventLocationFilter(query),
         startTime: { $gte: new Date().toISOString() },
       }),
       sort: PUBLIC_EVENT_SORT,
@@ -102,11 +79,11 @@ export default ({ strapi }: { strapi: any }) => ({
     const to = parseIsoDate(query.to)
     const types = parseTypeList(query.type)
     const isFree = asString(query.isFree)
-    const db = strapi.db.connection
 
     const startTime: Record<string, string> = { $gte: from }
     if (to) startTime.$lte = to
     const filters = publicEventFilters({
+      ...eventLocationFilter(query),
       startTime,
       ...(types.length === 1
         ? { eventType: types[0] }
@@ -116,17 +93,8 @@ export default ({ strapi }: { strapi: any }) => ({
       ...(isFree != null ? { isFree: isFree === "true" } : {}),
     })
 
-    // Count with the same filters using knex
-    const countQuery = db("ev_events").count("* as total")
-    countQuery.where("start_time", ">=", from)
-    countQuery.whereIn("status", [...PUBLIC_EVENT_STATUSES])
-    countQuery.where("pending_review", false)
-    if (to) countQuery.where("start_time", "<=", to)
-    if (types.length === 1) countQuery.where("event_type", types[0])
-    else if (types.length > 1) countQuery.whereIn("event_type", types)
-    if (isFree != null) countQuery.where("is_free", isFree === "true")
-    const [countRow] = await countQuery
-    const total = Number((countRow as any)?.total ?? 0)
+    // The count must use precisely the same relation and visibility predicates.
+    const total = await strapi.documents(EVENT_UID).count({ filters })
 
     const events = await strapi.documents(EVENT_UID).findMany({
       filters,
@@ -167,7 +135,12 @@ export default ({ strapi }: { strapi: any }) => ({
 
   async stats(ctx: any) {
     const { computeEventStats } = await import("../services/stats")
-    ctx.body = await computeEventStats(strapi)
+    try {
+      ctx.body = await computeEventStats(strapi)
+    } catch {
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
+    }
   },
 
   async providerBreakdown(ctx: any) {
@@ -180,6 +153,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .count("* as count")
         .where("start_time", ">=", now)
         .where("pending_review", false)
+        .whereIn("status", [...PUBLIC_EVENT_STATUSES])
         .groupBy("source_provider")
         .orderBy("count", "desc")
 
@@ -189,7 +163,8 @@ export default ({ strapi }: { strapi: any }) => ({
       }))
     } catch (err) {
       strapi.log.error("[events] providerBreakdown failed", err)
-      ctx.body = []
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
     }
   },
 
@@ -208,6 +183,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .count("* as count")
         .where("start_time", ">=", now)
         .where("pending_review", false)
+        .whereIn("status", [...PUBLIC_EVENT_STATUSES])
         .whereNotNull("library_entity_ref")
         .groupBy("library_entity_ref")
         .orderBy("count", "desc")
@@ -236,7 +212,8 @@ export default ({ strapi }: { strapi: any }) => ({
       }))
     } catch (err) {
       strapi.log.error("[events] topLibraries failed", err)
-      ctx.body = []
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
     }
   },
 
@@ -250,6 +227,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .count("* as count")
         .where("start_time", ">=", now)
         .where("pending_review", false)
+        .whereIn("status", [...PUBLIC_EVENT_STATUSES])
         .groupBy("event_type")
         .orderBy("count", "desc")
 
@@ -259,7 +237,8 @@ export default ({ strapi }: { strapi: any }) => ({
       }))
     } catch (err) {
       strapi.log.error("[events] categoryBreakdown failed", err)
-      ctx.body = []
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
     }
   },
 
@@ -275,6 +254,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .where("start_time", ">=", now)
         .where("start_time", "<=", thirtyDays)
         .where("pending_review", false)
+        .whereIn("status", [...PUBLIC_EVENT_STATUSES])
         .groupByRaw("DATE(start_time)")
         .orderBy("date", "asc")
 
@@ -284,15 +264,58 @@ export default ({ strapi }: { strapi: any }) => ({
       }))
     } catch (err) {
       strapi.log.error("[events] dailyVolume failed", err)
-      ctx.body = []
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
     }
   },
 
   async countryBreakdown(ctx: any) {
-    // TODO: countryCode/regionSlug removed from event schema — this handler
-    // needs to derive country via the library relation join instead.
-    // Until then it returns empty so the UI falls back gracefully.
-    ctx.body = []
+    try {
+      const db = strapi.db.connection
+      const country = libraryJoin(strapi, "country")
+      const libraries = tableOf(strapi, LIBRARY_UID)
+      const countryCodeColumn = strapi.db.metadata.get("api::country.country")
+        .attributes.iso2.columnName
+      if (typeof countryCodeColumn !== "string")
+        throw new Error("Country code metadata is unavailable")
+      const event = strapi.db.metadata.get(EVENT_UID)
+      const link = event.attributes.library.joinTable
+      const rows = await db(`${event.tableName} as event`)
+        .join(`${link.name} as el`, "el." + link.joinColumn.name, "event.id")
+        .join(
+          `${libraries} as library`,
+          "library.id",
+          "el." + link.inverseJoinColumn.name
+        )
+        .join(
+          `${country.linkTable} as lc`,
+          "lc." + country.libraryColumn,
+          "library.id"
+        )
+        .join(
+          `${country.table} as country`,
+          "country.id",
+          "lc." + country.targetColumn
+        )
+        .select(`country.${countryCodeColumn} as countryCode`)
+        .countDistinct("event.id as count")
+        .where("event.start_time", ">=", new Date())
+        .where("event.pending_review", false)
+        .whereIn("event.status", [...PUBLIC_EVENT_STATUSES])
+        .whereNotNull("library.published_at")
+        .whereNotNull("country.published_at")
+        .whereNotNull(`country.${countryCodeColumn}`)
+        .groupBy(`country.${countryCodeColumn}`)
+        .orderBy("count", "desc")
+      ctx.body = rows.map((row: { countryCode: string; count: unknown }) => ({
+        countryCode: row.countryCode,
+        count: Number(row.count),
+      }))
+    } catch (error) {
+      strapi.log.error("[events] countryBreakdown failed", error)
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
+    }
   },
 
   async heatmap(ctx: any) {
@@ -312,6 +335,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .where("start_time", ">=", now)
         .where("start_time", "<=", fourWeeks)
         .where("pending_review", false)
+        .whereIn("status", [...PUBLIC_EVENT_STATUSES])
         .groupByRaw("1, 2")
 
       ctx.body = (rows as any[]).map((r) => ({
@@ -321,7 +345,8 @@ export default ({ strapi }: { strapi: any }) => ({
       }))
     } catch (err) {
       strapi.log.error("[events] heatmap failed", err)
-      ctx.body = []
+      ctx.status = 503
+      ctx.body = { error: "Event analytics unavailable" }
     }
   },
 

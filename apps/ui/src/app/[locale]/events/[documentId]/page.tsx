@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { use } from "react"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { EventDetailPage } from "@/components/events/EventDetailPage"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { T } from "@/lib/design-tokens"
@@ -102,13 +103,13 @@ export default function EventPage(props: {
       style={{ background: T.bg.space, color: T.ink.base }}
     >
       <GlobalHeader locale={locale as Locale} />
-      <main className="relative z-10 flex-1 pt-4">
+      <MainContent className="relative z-10 flex-1 pt-4">
         <EventDetailPage
           event={event}
           related={related}
           libraryName={libraryName}
         />
-      </main>
+      </MainContent>
     </div>
   )
 }

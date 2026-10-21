@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth, authDbPool } from "@/lib/auth"
+import { BillingError } from "@/lib/billing/config"
 import { stopBillingBeforeDeletion } from "@/lib/billing/deletion"
 import { deleteStrapiProfile } from "@/lib/delete-profile"
 import { readOwnProfile } from "@/lib/own-profile-server"
@@ -214,7 +215,19 @@ export async function DELETE(req: Request) {
 
   try {
     await stopBillingBeforeDeletion(authDbPool, session.user.id)
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof BillingError &&
+      error.code === "transfer_team_before_deletion"
+    )
+      return NextResponse.json(
+        {
+          error:
+            "Make another active member a Team Organiser before deleting your account. You can discard an unused Team from Team billing.",
+        },
+        { status: 409 }
+      )
+
     return NextResponse.json(
       {
         error:

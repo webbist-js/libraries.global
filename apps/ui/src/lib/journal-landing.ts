@@ -81,11 +81,11 @@ export async function loadJournalTopStories(
     fetchArticleBrowse(
       "blog",
       `preferredLocale=${encodeURIComponent(locale)}&origin=index&pageSize=3`
-    ),
+    ).catch(() => null),
   ])
 
   return topStories(
-    browse.editorialItems,
+    browse?.editorialItems ?? [],
     landing?.data?.featuredArticle?.documentId ?? null
   )
 }

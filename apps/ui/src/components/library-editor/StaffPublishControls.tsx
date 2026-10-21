@@ -44,6 +44,7 @@ export function StaffPublishControls({
   draftId,
   locale,
   onPublished,
+  savingDraft = false,
   onDiscard,
   onStale,
   publicPath,
@@ -55,6 +56,7 @@ export function StaffPublishControls({
   current: FormData
   draftId: string | null
   locale?: string
+  savingDraft?: boolean
   onPublished: () => void
   onDiscard: () => void
   /** Called with the live values of only the fields that were stale. */
@@ -107,6 +109,7 @@ export function StaffPublishControls({
     }
   }
   async function publish() {
+    if (savingDraft) return
     setBusy(true)
     setError("")
     try {
@@ -208,9 +211,13 @@ export function StaffPublishControls({
             type="button"
             className={primaryCtaSm}
             onClick={publish}
-            disabled={busy}
+            disabled={busy || savingDraft}
           >
-            {busy ? "Publishing…" : "Publish changes"}
+            {savingDraft
+              ? "Saving draft…"
+              : busy
+                ? "Publishing…"
+                : "Publish changes"}
           </button>
         }
       >

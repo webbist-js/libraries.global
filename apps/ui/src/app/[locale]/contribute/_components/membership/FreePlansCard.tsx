@@ -3,7 +3,8 @@ import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
-import { planCard, type PlanCard } from "@/lib/plans"
+import { useMembershipContent, useMembershipPlan } from "@/lib/localized-plans"
+import type { PlanCard } from "@/lib/plans"
 
 import { IncludeItem, PlanSectionHeader } from "./PlanBits"
 
@@ -88,6 +89,8 @@ function Half({
 
 /** Public and Free account side by side: everything factual, no payment. */
 export function FreePlansCard({ signedIn }: { readonly signedIn: boolean }) {
+  const m = useMembershipContent()
+  const planCard = useMembershipPlan()
   const tUi = useUiTranslations("ui")
 
   const publicPlan = planCard("public")
@@ -98,13 +101,13 @@ export function FreePlansCard({ signedIn }: { readonly signedIn: boolean }) {
       <PlanSectionHeader
         id="free-plans-h"
         title={tUi("free_for_everyone")}
-        sub="Every library fact, with or without an account."
+        sub={m("copy.freeLead")}
       />
       <div
         className="grid grid-cols-1 overflow-hidden rounded-[22px] border bg-white lg:grid-cols-2"
         style={{ borderColor: T.border.line }}
       >
-        <Half plan={publicPlan} footer={<Done>Just start browsing</Done>} />
+        <Half plan={publicPlan} footer={<Done>{m("copy.browse")}</Done>} />
         <div
           className="border-t lg:border-t-0 lg:border-l"
           style={{ borderColor: T.border.line }}
@@ -113,7 +116,7 @@ export function FreePlansCard({ signedIn }: { readonly signedIn: boolean }) {
             plan={freePlan}
             footer={
               signedIn ? (
-                <Done>You’re signed in</Done>
+                <Done>{m("copy.signedIn")}</Done>
               ) : freePlan.cta.href ? (
                 <GlobalLink
                   className="inline-flex h-10 items-center rounded-full bg-(--t-accent-primary) px-5 text-[14.5px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"

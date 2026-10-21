@@ -508,7 +508,7 @@ async function basePlaces(strapi, fixtureSlugs) {
   const rows = await strapi.documents(LIBRARY).findMany({
     status: "published",
     filters: {
-      libraryType: { $ne: "Mobile" },
+      libraryType: { name: { $ne: "Mobile" } },
       slug: { $notIn: fixtureSlugs },
       region: { slug: { $eq: "cornwall" } },
     },
@@ -544,6 +544,7 @@ async function libraryBySlug(strapi, slug) {
       filters: { slug: { $eq: slug } },
       status,
       populate: {
+        libraryType: { fields: ["documentId", "name"] },
         homeLibrary: { fields: ["documentId"] },
         continent: { fields: ["documentId"] },
         country: { fields: ["documentId"] },
@@ -565,9 +566,18 @@ async function libraryBySlug(strapi, slug) {
  */
 async function ensureLibrary(strapi, spec, options, places, shared) {
   const mobile = spec.libraryType === "Mobile"
+  const type = await strapi
+    .documents("api::library-type.library-type")
+    .findFirst({
+      status: "published",
+      filters: { name: spec.libraryType },
+      fields: ["documentId"],
+    })
+  if (!type)
+    throw new Error(`Missing published library type: ${spec.libraryType}`)
   const data = {
     name: spec.name,
-    libraryType: spec.libraryType,
+    libraryType: { set: [{ documentId: type.documentId }] },
     operationalStatus: "open",
     summary: spec.summary,
     timezone: options.timezone,
@@ -610,7 +620,8 @@ async function ensureLibrary(strapi, spec, options, places, shared) {
     ["continent", "country", "region"].some(
       (key) => row[key]?.documentId !== places[key]
     ) ||
-    ["name", "libraryType", "operationalStatus", "summary", "timezone"].some(
+    row.libraryType?.documentId !== type.documentId ||
+    ["name", "operationalStatus", "summary", "timezone"].some(
       (k) => row[k] !== data[k]
     ) ||
     (mobile

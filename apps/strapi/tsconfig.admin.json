@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noEmit": true,
+    "tsBuildInfoFile": ".cache/tsconfig.admin.tsbuildinfo"
+  },
+  "include": ["src/plugins/*/admin/**/*.ts", "src/plugins/*/admin/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/*.test.*"]
+}

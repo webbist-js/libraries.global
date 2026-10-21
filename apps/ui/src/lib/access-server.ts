@@ -114,6 +114,9 @@ export type SessionTeam = {
   slug: string
   role: "organiser" | "member"
   libraryCount: number
+  selfService?: boolean
+  status?: "active" | "lapsed"
+  expiresAt?: string | null
 }
 
 const isTeam = (v: unknown): v is SessionTeam => {
@@ -136,7 +139,24 @@ export function sessionTeamsOf(user: unknown): SessionTeam[] {
       ? (user as Record<string, unknown>).teams
       : null
 
-  return Array.isArray(raw) ? raw.filter(isTeam) : []
+  return Array.isArray(raw) ? preferredTeams(raw.filter(isTeam)) : []
+}
+
+/** Prefer a current Team to abandoned setup, while keeping explicit selection. */
+export function preferredTeams<T extends SessionTeam>(
+  teams: readonly T[],
+  now = Date.now()
+): T[] {
+  const active = (team: T) =>
+    team.status === "active" &&
+    (!team.expiresAt || Date.parse(team.expiresAt) > now)
+
+  return [...teams].sort(
+    (a, b) =>
+      Number(active(b)) - Number(active(a)) ||
+      Number(b.selfService === true) - Number(a.selfService === true) ||
+      Number(b.role === "organiser") - Number(a.role === "organiser")
+  )
 }
 
 /** The session's `teamLibraryIds`: libraries of the user's active Teams. */

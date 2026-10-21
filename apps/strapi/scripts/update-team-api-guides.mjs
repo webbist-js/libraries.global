@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { isDeepStrictEqual, parseEnv } from "node:util"
 
+import { articleReadingMinutes } from "@repo/shared-data"
+
 import {
   apiOnboardingArticles,
   updateApiGuide,
@@ -145,7 +147,6 @@ const metadataFields = [
   "libraries",
   "continents",
   "countries",
-  "readingTimeMinutes",
 ]
 const relationFields = new Set([
   "section",
@@ -195,6 +196,9 @@ for (const { doc, data } of plans) {
   if (!id)
     throw new Error(`CMS did not return a document identifier: ${data.slug}`)
   const published = await get(id, "published")
+  // Article discovery recalculates this derived value whenever body changes.
+  if (published.readingTimeMinutes !== articleReadingMinutes(data.body))
+    throw new Error(`Reading time verification failed: ${data.slug}`)
   for (const [key, value] of Object.entries(data)) {
     if (key === "section") {
       const relation = await api(

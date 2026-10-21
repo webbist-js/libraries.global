@@ -1,7 +1,33 @@
-import { useFetchClient } from "@strapi/strapi/admin"
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  Field,
+  Flex,
+  NumberInput,
+  SingleSelect,
+  SingleSelectOption,
+  Table,
+  Tbody,
+  Td,
+  Textarea,
+  TextInput,
+  Th,
+  Thead,
+  Tr,
+  Typography,
+} from "@strapi/design-system"
+import {
+  Layouts,
+  Page,
+  useAuth,
+  useFetchClient,
+  useRBAC,
+} from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+import { PluginPage } from "../../../../../admin/components/PluginUI"
 
 type PointEvent = {
   id: number
@@ -11,1184 +37,750 @@ type PointEvent = {
   awardedAt: string
   metadata: Record<string, unknown> | null
 }
-
-type Stats = {
-  totalContributors: number
-  pointsThisMonth: number
-}
-
-type DailyPoint = { date: string; points: number }
-
-type ActionBreakdown = { action: string; count: number; totalPoints: number }
-
+type Stats = { totalContributors: number; pointsThisMonth: number }
 type ChartData = {
-  dailyPoints: DailyPoint[]
-  actionBreakdown: ActionBreakdown[]
+  dailyPoints: { date: string; points: number }[]
+  actionBreakdown: { action: string; count: number; totalPoints: number }[]
 }
+type History = {
+  data: PointEvent[]
+  meta: { total: number; page: number; limit: number }
+}
+const ACTIONS: Record<string, string> = {
+  new_library_approved: "New library",
+  edit_accepted_major: "Major edit",
+  edit_accepted_minor: "Minor edit",
+  wiki_translated: "Wiki translation",
+  knowledge_edit_accepted: "Knowledge edit",
+  knowledge_article_published: "Knowledge article",
+  journal_accepted: "Journal article",
+  journal_edit_accepted: "Journal edit",
+  journal_translated: "Journal translation",
+  source_added: "Source added",
+  correction_approved: "Correction",
+  claim_approved: "Library claim",
+  photo_licensed_cc: "CC photo",
+  hours_verified: "Hours verified",
+  status_verified: "Status verified",
+  daily_streak: "Daily streak",
+  manual_award: "Manual award",
+  manual_deduct: "Manual deduction",
+  drive_task_accepted: "Drive task",
+  drive_finished: "Drive finished",
+  drive_proposal_accepted: "Drive proposal",
+}
+const actionLabel = (action: string) =>
+  ACTIONS[action] ?? action.replaceAll("_", " ")
+const PERMISSIONS = [
+  { action: "plugin::rewards.read", subject: null },
+  { action: "plugin::rewards.award", subject: null },
+]
 
-// ── Fetcher ───────────────────────────────────────────────────────────────────
+const pointEventCount = (total: number) =>
+  `${total.toLocaleString()} point ${total === 1 ? "event" : "events"}`
 
-function useAdminFetch<T>(path: string, deps: unknown[] = []) {
+function useAdminResource<T>(path: string, revision: number) {
   const { get } = useFetchClient()
-  const [data, setData] = useState<T | null>(null)
+  const [resource, setResource] = useState<{ path: string; value: T } | null>(
+    null
+  )
   const [loading, setLoading] = useState(true)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await get(`/rewards${path}`)
-      setData((res.data?.data ?? res.data) as T)
-    } catch {
-      setData(null)
-    }
-    setLoading(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path, ...deps])
-
+  const [error, setError] = useState(false)
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
-    void load()
-  }, [load])
+    const controller = new AbortController()
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+    setError(false)
+    get<{ data?: T; meta?: unknown }>(`/rewards${path}`, {
+      signal: controller.signal,
+    })
+      .then(({ data }) => {
+        if (!controller.signal.aborted)
+          setResource({
+            path,
+            value: (data?.meta ? data : (data?.data ?? data)) as T,
+          })
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
-  return { data, loading, reload: load }
+    return () => controller.abort()
+  }, [get, path, revision, retry])
+
+  return {
+    data: resource?.path === path ? resource.value : null,
+    loading,
+    error,
+    retry: () => setRetry((value) => value + 1),
+  }
 }
-
-// ── Action labels & colors ────────────────────────────────────────────────────
-
-const ACTION_META: Record<string, { label: string; color: string }> = {
-  new_library_approved: { label: "New library", color: "#4945ff" },
-  edit_accepted_major: { label: "Major edit", color: "#7b72ff" },
-  edit_accepted_minor: { label: "Minor edit", color: "#a39df5" },
-  wiki_translated: { label: "Wiki translation", color: "#0c75af" },
-  knowledge_edit_accepted: { label: "Knowledge edit", color: "#3b8fc4" },
-  knowledge_article_published: { label: "Knowledge article", color: "#075985" },
-  journal_accepted: { label: "Journal article", color: "#b45309" },
-  journal_edit_accepted: { label: "Journal edit", color: "#d4884a" },
-  journal_translated: { label: "Journal translation", color: "#c2410c" },
-  source_added: { label: "Source added", color: "#6d5bd0" },
-  correction_approved: { label: "Correction", color: "#8e8ea9" },
-  claim_approved: { label: "Library claim", color: "#32324d" },
-  photo_licensed_cc: { label: "CC photo", color: "#1b7c3a" },
-  hours_verified: { label: "Hours verified", color: "#2d9d5f" },
-  status_verified: { label: "Status verified", color: "#5dbf86" },
-  daily_streak: { label: "Streak", color: "#d97706" },
-  manual_award: { label: "Manual award", color: "#e8c98a" },
-  manual_deduct: { label: "Manual deduct", color: "#d02b20" },
-  drive_task_accepted: { label: "Drive task", color: "#8e8ea9" },
-  drive_finished: { label: "Drive finished", color: "#32324d" },
-  drive_proposal_accepted: { label: "Drive proposal", color: "#4945ff" },
+function Failure({ retry }: { retry: () => void }) {
+  return (
+    <Box paddingBottom={4}>
+      <Alert
+        variant="danger"
+        title="Couldn’t load rewards"
+        closeLabel="Retry"
+        onClose={retry}
+      >
+        This view is unavailable.{" "}
+        <Button variant="tertiary" onClick={retry}>
+          Try again
+        </Button>
+      </Alert>
+    </Box>
+  )
 }
-
-function actionLabel(action: string) {
-  return ACTION_META[action]?.label ?? action.replaceAll("_", " ")
-}
-
-function actionColor(action: string) {
-  return ACTION_META[action]?.color ?? "#8e8ea9"
-}
-
-// ── Stat card ─────────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  sub,
-  accent,
+function Card({
+  title,
+  children,
 }: {
-  label: string
-  value: string | number
-  sub?: string
-  accent?: string
+  title: string
+  children: React.ReactNode
 }) {
   return (
-    <div
-      style={{
-        flex: 1,
-        minWidth: 0,
-        padding: "16px 20px",
-        background: "#fff",
-        border: "1px solid #dcdce4",
-        borderRadius: "8px",
-        borderTop: accent ? `3px solid ${accent}` : "1px solid #dcdce4",
-        boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-      }}
+    <Box
+      background="neutral0"
+      padding={6}
+      hasRadius
+      shadow="tableShadow"
+      style={{ minWidth: 0 }}
     >
-      <p
-        style={{
-          margin: "0 0 6px",
-          fontSize: "11px",
-          fontWeight: 600,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          color: "#666687",
-        }}
-      >
-        {label}
-      </p>
-      <p
-        style={{
-          margin: 0,
-          fontSize: "28px",
-          fontWeight: 700,
-          color: "#32324d",
-          lineHeight: 1,
-        }}
-      >
-        {value}
-      </p>
-      {sub && (
-        <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#8e8ea9" }}>
-          {sub}
-        </p>
-      )}
-    </div>
+      <Typography tag="h2" variant="delta" paddingBottom={4}>
+        {title}
+      </Typography>
+      {children}
+    </Box>
   )
 }
-
-// ── Bar chart (SVG) ───────────────────────────────────────────────────────────
-
-function BarChart({ data }: { data: DailyPoint[] }) {
-  const [tooltip, setTooltip] = useState<{
-    x: number
-    y: number
-    date: string
-    points: number
-  } | null>(null)
-  const svgRef = useRef<SVGSVGElement>(null)
-
-  const W = 560
-  const H = 90
-  const max = Math.max(...data.map((d) => d.points), 1)
-  const barW = Math.floor(W / data.length) - 2
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso)
-
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-  }
-
-  return (
-    <div style={{ position: "relative" }}>
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ width: "100%", height: "90px", overflow: "visible" }}
-        onMouseLeave={() => setTooltip(null)}
-      >
-        {data.map((d, i) => {
-          const barH = Math.max((d.points / max) * H, d.points > 0 ? 3 : 0)
-          const x = i * (W / data.length)
-          const y = H - barH
-          const isToday = d.date === new Date().toISOString().slice(0, 10)
-
-          return (
-            <rect
-              key={d.date}
-              x={x + 1}
-              y={y}
-              width={barW}
-              height={barH}
-              rx={2}
-              fill={isToday ? "#4945ff" : "#c0bdf8"}
-              opacity={d.points === 0 ? 0.25 : 1}
-              style={{ cursor: "default", transition: "opacity 0.1s" }}
-              onMouseEnter={(e) => {
-                const rect = svgRef.current?.getBoundingClientRect()
-                if (!rect) return
-                setTooltip({
-                  x: e.clientX - rect.left,
-                  y: e.clientY - rect.top - 36,
-                  date: d.date,
-                  points: d.points,
-                })
-              }}
-            />
-          )
-        })}
-      </svg>
-
-      {tooltip && (
-        <div
-          style={{
-            position: "absolute",
-            left: Math.min(tooltip.x, W - 120),
-            top: Math.max(tooltip.y, 0),
-            background: "#32324d",
-            color: "#fff",
-            fontSize: "11px",
-            padding: "5px 9px",
-            borderRadius: "5px",
-            pointerEvents: "none",
-            whiteSpace: "nowrap",
-            zIndex: 10,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-          }}
-        >
-          <strong>{formatDate(tooltip.date)}</strong> — {tooltip.points} pts
-        </div>
-      )}
-
-      {/* X-axis: first, mid, last */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginTop: "4px",
-        }}
-      >
-        {[data[0], data[Math.floor(data.length / 2)], data.at(-1)]
-          .filter(Boolean)
-          .map((d) => (
-            <span key={d!.date} style={{ fontSize: "10px", color: "#8e8ea9" }}>
-              {formatDate(d!.date)}
-            </span>
-          ))}
-      </div>
-    </div>
-  )
-}
-
-// ── Action breakdown mini-bars ────────────────────────────────────────────────
-
-function ActionBreakdownPanel({ data }: { data: ActionBreakdown[] }) {
-  const maxCount = Math.max(...data.map((d) => d.count), 1)
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-      {data.slice(0, 8).map((row) => (
-        <div key={row.action}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: "2px",
-            }}
-          >
-            <span
-              style={{ fontSize: "11px", color: "#32324d", fontWeight: 500 }}
-            >
-              {actionLabel(row.action)}
-            </span>
-            <span style={{ fontSize: "11px", color: "#8e8ea9" }}>
-              {row.count}× · +{row.totalPoints} pts
-            </span>
-          </div>
-          <div
-            style={{
-              height: "4px",
-              borderRadius: "2px",
-              background: "#f0f0ff",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${(row.count / maxCount) * 100}%`,
-                background: actionColor(row.action),
-                borderRadius: "2px",
-                transition: "width 500ms",
-              }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── Event log ─────────────────────────────────────────────────────────────────
-
-function EventLog({ onAward }: { onAward: (baUserId: string) => void }) {
+function EventLog({
+  revision,
+  canAward,
+  onAward,
+}: {
+  revision: number
+  canAward: boolean
+  onAward: (id: string) => void
+}) {
   const [page, setPage] = useState(1)
-  const [filterUser, setFilterUser] = useState("")
-  const [filterAction, setFilterAction] = useState("")
-  const [pendingUser, setPendingUser] = useState("")
-  const [pendingAction, setPendingAction] = useState("")
-  const [queryKey, setQueryKey] = useState(0)
-
-  const path = `/events?page=${page}${filterUser ? `&baUserId=${filterUser}` : ""}${filterAction ? `&action=${filterAction}` : ""}&_k=${queryKey}`
-  const { data, loading } = useAdminFetch<{
-    data: PointEvent[]
-    meta: { total: number; page: number; limit: number }
-  }>(path, [queryKey, page])
-
-  const events: PointEvent[] = Array.isArray(data)
-    ? (data as unknown as PointEvent[])
-    : (data?.data ?? [])
-  const total = (data as any)?.meta?.total ?? 0
-  const limit = 50
-
-  const applyFilter = () => {
-    setFilterUser(pendingUser)
-    setFilterAction(pendingAction)
-    setPage(1)
-    setQueryKey((k) => k + 1)
-  }
-
-  const clearFilter = () => {
-    setPendingUser("")
-    setPendingAction("")
-    setFilterUser("")
-    setFilterAction("")
-    setPage(1)
-    setQueryKey((k) => k + 1)
-  }
-
-  const isFiltered = !!(filterUser || filterAction)
+  const [user, setUser] = useState("")
+  const [action, setAction] = useState("")
+  const [filter, setFilter] = useState({ user: "", action: "" })
+  const query = new URLSearchParams({
+    page: String(page),
+    ...(filter.user ? { baUserId: filter.user } : {}),
+    ...(filter.action ? { action: filter.action } : {}),
+  })
+  const result = useAdminResource<History>(`/events?${query}`, revision)
+  const events = result.data?.data ?? []
+  const total = result.data?.meta.total ?? 0
+  const limit = result.data?.meta.limit ?? 50
+  const pages = Math.max(1, Math.ceil(total / limit))
 
   return (
-    <div>
-      {/* Filter bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          marginBottom: "16px",
-          alignItems: "flex-end",
-          flexWrap: "wrap",
+    <Card title="Points history">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          setPage(1)
+          setFilter({ user: user.trim(), action })
         }}
       >
-        <div style={{ flex: "1 1 160px", minWidth: "140px" }}>
-          <p style={filterLabelStyle}>User ID</p>
-          <input
-            value={pendingUser}
-            onChange={(e) => setPendingUser(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyFilter()}
-            placeholder="baUserId"
-            style={filterInputStyle}
-          />
-        </div>
-        <div style={{ flex: "1 1 180px", minWidth: "150px" }}>
-          <p style={filterLabelStyle}>Action</p>
-          <input
-            value={pendingAction}
-            onChange={(e) => setPendingAction(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyFilter()}
-            placeholder="e.g. new_library_approved"
-            style={filterInputStyle}
-          />
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={applyFilter} style={filterBtnStyle}>
-            Filter
-          </button>
-          {isFiltered && (
-            <button onClick={clearFilter} style={filterBtnClearStyle}>
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Result count */}
-      {!loading && (
-        <p
-          style={{
-            fontSize: "11px",
-            color: "#8e8ea9",
-            margin: "0 0 10px",
-          }}
-        >
-          {isFiltered
-            ? `${total} result${total !== 1 ? "s" : ""}`
-            : `${total} total event${total !== 1 ? "s" : ""}`}
-        </p>
-      )}
-
-      {/* Table */}
-      {loading ? (
-        <div
-          style={{ padding: "32px 0", textAlign: "center", color: "#8e8ea9" }}
-        >
-          Loading…
-        </div>
-      ) : events.length === 0 ? (
-        <div
-          style={{
-            padding: "48px 24px",
-            textAlign: "center",
-            background: "#fafafa",
-            border: "1px solid #dcdce4",
-            borderRadius: "8px",
-          }}
-        >
-          <div style={{ fontSize: "28px", marginBottom: "8px" }}>✦</div>
-          <p style={{ fontSize: "14px", color: "#666687", margin: 0 }}>
-            No point events yet.
-          </p>
-        </div>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #f0f0ff" }}>
-                {["User ID", "Action", "Points", "Awarded at", "Metadata"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "8px 12px",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        letterSpacing: "0.06em",
-                        textTransform: "uppercase",
-                        color: "#666687",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((ev) => (
-                <tr
-                  key={ev.id}
-                  style={{ borderBottom: "1px solid #f6f6f9" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#fafafa")
-                  }
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "")}
-                >
-                  <td style={tdStyle}>
-                    <span
-                      style={{
-                        fontFamily: "monospace",
-                        fontSize: "11px",
-                        color: "#4945ff",
-                        cursor: "pointer",
-                        textDecoration: "underline",
-                        textDecorationStyle: "dotted",
-                      }}
-                      title="Click to pre-fill manual award"
-                      onClick={() => onAward(ev.baUserId)}
-                    >
-                      {ev.baUserId.slice(0, 12)}…
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "5px",
-                        padding: "2px 8px",
-                        borderRadius: "100px",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        background: actionColor(ev.action) + "18",
-                        color: actionColor(ev.action),
-                        border: `1px solid ${actionColor(ev.action)}30`,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {actionLabel(ev.action)}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        fontSize: "13px",
-                        color: ev.points < 0 ? "#d02b20" : "#1b7c3a",
-                      }}
-                    >
-                      {ev.points > 0 ? "+" : ""}
-                      {ev.points}
-                    </span>
-                  </td>
-                  <td style={tdStyle}>
-                    <span style={{ fontSize: "12px", color: "#666687" }}>
-                      {new Date(ev.awardedAt).toLocaleString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </td>
-                  <td style={{ ...tdStyle, maxWidth: "240px" }}>
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "#8e8ea9",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      {ev.metadata
-                        ? JSON.stringify(ev.metadata).slice(0, 80)
-                        : "—"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {total > limit && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            marginTop: "16px",
-          }}
-        >
-          <button
-            onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            disabled={page <= 1}
-            style={{ ...paginBtnStyle, opacity: page <= 1 ? 0.4 : 1 }}
-          >
-            ← Prev
-          </button>
-          <span style={{ fontSize: "12px", color: "#666687" }}>
-            Page {page} of {Math.ceil(total / limit)}
-          </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page * limit >= total}
-            style={{
-              ...paginBtnStyle,
-              opacity: page * limit >= total ? 0.4 : 1,
+        <Flex gap={4} wrap="wrap" alignItems="flex-end" paddingBottom={5}>
+          <Box style={{ flex: "1 1 22rem" }}>
+            <Field.Root name="history-user">
+              <Field.Label>Contributor ID</Field.Label>
+              <TextInput
+                value={user}
+                maxLength={255}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setUser(event.target.value)
+                }
+                placeholder="All contributors"
+              />
+            </Field.Root>
+          </Box>
+          <Box style={{ flex: "1 1 22rem" }}>
+            <Field.Root name="history-action">
+              <Field.Label>Action</Field.Label>
+              <SingleSelect
+                value={action || "all"}
+                onChange={(value) =>
+                  setAction(value === "all" ? "" : String(value))
+                }
+              >
+                <SingleSelectOption value="all">All actions</SingleSelectOption>
+                {Object.entries(ACTIONS).map(([value, label]) => (
+                  <SingleSelectOption key={value} value={value}>
+                    {label}
+                  </SingleSelectOption>
+                ))}
+              </SingleSelect>
+            </Field.Root>
+          </Box>
+          <Button type="submit" variant="secondary" disabled={result.loading}>
+            Apply filters
+          </Button>
+          <Button
+            variant="tertiary"
+            onClick={() => {
+              setUser("")
+              setAction("")
+              setFilter({ user: "", action: "" })
+              setPage(1)
             }}
           >
-            Next →
-          </button>
-        </div>
+            Clear
+          </Button>
+        </Flex>
+      </form>
+      {result.error && <Failure retry={result.retry} />}
+      <Typography
+        tag="p"
+        textColor="neutral600"
+        paddingBottom={4}
+        aria-live="polite"
+      >
+        {result.loading ? "Loading points history…" : pointEventCount(total)}
+      </Typography>
+      {events.length ? (
+        <Box style={{ overflowX: "auto" }}>
+          <Table
+            colCount={canAward ? 6 : 5}
+            rowCount={events.length}
+            aria-label="Point events"
+          >
+            <Thead>
+              <Tr>
+                {[
+                  "Contributor",
+                  "Action",
+                  "Points",
+                  "Awarded",
+                  "Details",
+                  ...(canAward ? ["Actions"] : []),
+                ].map((label) => (
+                  <Th key={label}>
+                    <Typography variant="sigma">{label}</Typography>
+                  </Th>
+                ))}
+              </Tr>
+            </Thead>
+            <Tbody>
+              {events.map((event) => (
+                <Tr key={event.id}>
+                  <Td>
+                    <Typography textColor="neutral800">
+                      {event.baUserId}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography>{actionLabel(event.action)}</Typography>
+                  </Td>
+                  <Td>
+                    <Typography
+                      textColor={event.points < 0 ? "danger600" : "success600"}
+                      fontWeight="semiBold"
+                    >
+                      {event.points > 0 ? "+" : ""}
+                      {event.points}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography textColor="neutral600">
+                      {new Date(event.awardedAt).toLocaleString()}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography
+                      textColor="neutral600"
+                      style={{
+                        whiteSpace: "normal",
+                        maxWidth: "30rem",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      {event.metadata ? JSON.stringify(event.metadata) : "—"}
+                    </Typography>
+                  </Td>
+                  {canAward && (
+                    <Td>
+                      <Button
+                        variant="tertiary"
+                        size="S"
+                        onClick={() => onAward(event.baUserId)}
+                      >
+                        Adjust points
+                      </Button>
+                    </Td>
+                  )}
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+      ) : !result.loading && !result.error ? (
+        <Typography tag="p" textColor="neutral600">
+          {filter.user || filter.action
+            ? "No point events match these filters."
+            : "No points have been awarded yet."}
+        </Typography>
+      ) : null}
+      {total > limit && (
+        <Flex
+          justifyContent="space-between"
+          gap={4}
+          paddingTop={5}
+          aria-label="History pages"
+        >
+          <Button
+            variant="secondary"
+            disabled={result.loading || page <= 1}
+            onClick={() => setPage((value) => value - 1)}
+          >
+            Previous
+          </Button>
+          <Typography textColor="neutral600">
+            Page {page} of {pages}
+          </Typography>
+          <Button
+            variant="secondary"
+            disabled={result.loading || page >= pages}
+            onClick={() => setPage((value) => value + 1)}
+          >
+            Next
+          </Button>
+        </Flex>
       )}
-    </div>
+    </Card>
   )
 }
-
-// ── Manual award sidebar widget ───────────────────────────────────────────────
-
-function newClientRequestId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID()
-  }
-
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
-}
-
-function readErrorMessage(err: unknown): string | null {
-  const e = err as {
-    response?: { data?: { error?: { message?: string } } }
-    message?: string
-  }
-
-  return e?.response?.data?.error?.message ?? e?.message ?? null
-}
-
-function ManualAwardWidget({
-  prefillUserId,
+function ManualAward({
+  user,
   onSuccess,
 }: {
-  prefillUserId: string
+  user: string
   onSuccess: () => void
 }) {
   const { put } = useFetchClient()
-  const [baUserId, setBaUserId] = useState(prefillUserId)
-  const [mode, setMode] = useState<"award" | "deduct">("award")
-  const [points, setPoints] = useState<number>(10)
+  const [id, setId] = useState(user)
+  const [action, setAction] = useState("manual_award")
+  const [points, setPoints] = useState<number | undefined>(10)
   const [reason, setReason] = useState("")
-  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">(
-    "idle"
+  const [busy, setBusy] = useState(false)
+  const [review, setReview] = useState(false)
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
+    null
   )
-
+  const request = useRef<{ fingerprint: string; id: string } | null>(null)
+  const inFlight = useRef(false)
   useEffect(() => {
-    setBaUserId(prefillUserId)
-  }, [prefillUserId])
-
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
+    setId(user)
+  }, [user])
+  const valid =
+    !!id.trim() &&
+    !!reason.trim() &&
+    Number.isInteger(points) &&
+    points! >= 1 &&
+    points! <= 500
   const submit = async () => {
-    if (!baUserId || !reason || !points) return
-    setStatus("loading")
-    setErrorMessage(null)
+    if (!valid || inFlight.current) return
+    inFlight.current = true
+    setBusy(true)
+    setMessage(null)
+    const payload = {
+      baUserId: id.trim(),
+      action,
+      points,
+      reason: reason.trim(),
+    }
+    const fingerprint = JSON.stringify(payload)
+    if (request.current?.fingerprint !== fingerprint)
+      request.current = { fingerprint, id: crypto.randomUUID() }
     try {
-      await put(`/rewards/award`, {
-        baUserId,
-        action: mode === "award" ? "manual_award" : "manual_deduct",
-        points,
-        reason,
-        // One id per click: the server keys the award on it, so a retry
-        // or double submit of this same request never awards twice.
-        clientRequestId: newClientRequestId(),
+      await put("/rewards/award", {
+        ...payload,
+        clientRequestId: request.current.id,
       })
-      setStatus("ok")
-      setBaUserId("")
+      request.current = null
       setReason("")
-      setPoints(10)
-      setTimeout(() => {
-        setStatus("idle")
-        onSuccess()
-      }, 1800)
-    } catch (err) {
-      setErrorMessage(readErrorMessage(err))
-      setStatus("err")
+      setReview(false)
+      setMessage({
+        ok: true,
+        text: "Points updated. The adjustment is recorded in the history.",
+      })
+      onSuccess()
+    } catch (error) {
+      const detail = (
+        error as { response?: { data?: { error?: { message?: string } } } }
+      ).response?.data?.error?.message
+      setMessage({
+        ok: false,
+        text:
+          detail ??
+          "Couldn’t confirm the adjustment. Retry with the same details to avoid applying it twice.",
+      })
+    } finally {
+      setBusy(false)
+      inFlight.current = false
     }
   }
 
-  const canSubmit = !!(
-    baUserId &&
-    reason &&
-    Number.isInteger(points) &&
-    points >= 1 &&
-    points <= 500 &&
-    status !== "loading"
-  )
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-      <p style={sidebarLabelStyle}>User ID (baUserId)</p>
-      <input
-        value={baUserId}
-        onChange={(e) => setBaUserId(e.target.value)}
-        placeholder="better-auth user ID"
-        style={filterInputStyle}
-      />
-
-      {/* Award / Deduct toggle */}
-      <div>
-        <p style={sidebarLabelStyle}>Action</p>
-        <div style={{ display: "flex", gap: "6px" }}>
-          <button
-            onClick={() => setMode("award")}
-            style={{
-              ...modeToggleStyle,
-              background: mode === "award" ? "#4945ff" : "#fff",
-              color: mode === "award" ? "#fff" : "#666687",
-              borderColor: mode === "award" ? "#4945ff" : "#dcdce4",
-            }}
+    <Card title="Adjust a contributor’s points">
+      <Flex direction="column" alignItems="stretch" gap={4}>
+        <Typography textColor="neutral600">
+          Use a manual adjustment for corrections. A reason is required and
+          saved with your admin identity.
+        </Typography>
+        <Field.Root name="award-user" required>
+          <Field.Label>Contributor ID</Field.Label>
+          <TextInput
+            value={id}
+            maxLength={255}
+            disabled={busy}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              setId(event.target.value)
+            }
+          />
+        </Field.Root>
+        <Field.Root name="award-action">
+          <Field.Label>Adjustment</Field.Label>
+          <SingleSelect
+            value={action}
+            disabled={busy}
+            onChange={(value) => setAction(String(value))}
           >
-            + Award
-          </button>
-          <button
-            onClick={() => setMode("deduct")}
-            style={{
-              ...modeToggleStyle,
-              background: mode === "deduct" ? "#d02b20" : "#fff",
-              color: mode === "deduct" ? "#fff" : "#666687",
-              borderColor: mode === "deduct" ? "#d02b20" : "#dcdce4",
-            }}
-          >
-            − Deduct
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <p style={sidebarLabelStyle}>Points</p>
-        <input
-          type="number"
-          min={1}
-          max={500}
-          step={1}
-          value={points}
-          onChange={(e) => setPoints(Number(e.target.value))}
-          style={{ ...filterInputStyle, width: "100px" }}
-        />
-      </div>
-
-      <div>
-        <p style={sidebarLabelStyle}>Reason (required)</p>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Why is this being applied?"
-          rows={3}
-          style={{
-            ...filterInputStyle,
-            resize: "vertical",
-            width: "100%",
-            fontFamily: "inherit",
-          }}
-        />
-      </div>
-
-      <button
-        onClick={submit}
-        disabled={!canSubmit}
-        style={{
-          padding: "9px 16px",
-          borderRadius: "6px",
-          border: "none",
-          fontSize: "13px",
-          fontWeight: 600,
-          cursor: canSubmit ? "pointer" : "not-allowed",
-          background:
-            status === "loading"
-              ? "#8e8ea9"
-              : mode === "deduct"
-                ? "#d02b20"
-                : "#4945ff",
-          color: "#fff",
-          opacity: canSubmit ? 1 : 0.5,
-          transition: "background 0.15s",
-        }}
-      >
-        {status === "loading"
-          ? "Saving…"
-          : mode === "award"
-            ? "Award Points"
-            : "Deduct Points"}
-      </button>
-
-      {status === "ok" && (
-        <p style={{ fontSize: "12px", color: "#1b7c3a", margin: 0 }}>
-          ✓ Points updated successfully.
-        </p>
-      )}
-      {status === "err" && (
-        <p style={{ fontSize: "12px", color: "#d02b20", margin: 0 }}>
-          {errorMessage ?? "Something went wrong. Check server logs."}
-        </p>
-      )}
-    </div>
-  )
-}
-
-// ── Shared styles ─────────────────────────────────────────────────────────────
-
-const filterLabelStyle: React.CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  color: "#666687",
-  margin: "0 0 4px",
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
-}
-
-const sidebarLabelStyle: React.CSSProperties = {
-  ...filterLabelStyle,
-  margin: 0,
-}
-
-const filterInputStyle: React.CSSProperties = {
-  padding: "7px 10px",
-  fontSize: "13px",
-  color: "#32324d",
-  background: "#fff",
-  border: "1px solid #dcdce4",
-  borderRadius: "6px",
-  outline: "none",
-  width: "100%",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-}
-
-const filterBtnStyle: React.CSSProperties = {
-  padding: "8px 16px",
-  fontSize: "13px",
-  fontWeight: 600,
-  background: "#4945ff",
-  color: "#fff",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-}
-
-const filterBtnClearStyle: React.CSSProperties = {
-  ...filterBtnStyle,
-  background: "#fff",
-  color: "#666687",
-  border: "1px solid #dcdce4",
-}
-
-const tdStyle: React.CSSProperties = {
-  padding: "9px 12px",
-  verticalAlign: "middle",
-}
-
-const paginBtnStyle: React.CSSProperties = {
-  padding: "6px 12px",
-  fontSize: "12px",
-  fontWeight: 500,
-  background: "#fff",
-  border: "1px solid #dcdce4",
-  borderRadius: "6px",
-  cursor: "pointer",
-  color: "#32324d",
-}
-
-const modeToggleStyle: React.CSSProperties = {
-  padding: "6px 14px",
-  fontSize: "12px",
-  fontWeight: 600,
-  borderRadius: "6px",
-  border: "1px solid",
-  cursor: "pointer",
-  transition: "all 0.12s",
-}
-
-// ── Main dashboard ────────────────────────────────────────────────────────────
-
-export function RewardsDashboard() {
-  const [awardRefresh, setAwardRefresh] = useState(0)
-  const [prefillUserId, setPrefillUserId] = useState("")
-
-  const { data: stats, loading: statsLoading } = useAdminFetch<Stats>(
-    "/stats",
-    [awardRefresh]
-  )
-  const { data: chartData, loading: chartLoading } = useAdminFetch<ChartData>(
-    "/chart-data",
-    [awardRefresh]
-  )
-
-  const dailyPoints: DailyPoint[] = chartData?.dailyPoints ?? []
-  const actionBreakdown: ActionBreakdown[] = chartData?.actionBreakdown ?? []
-
-  const totalEvents = actionBreakdown.reduce((s, r) => s + r.count, 0)
-  const topAction = actionBreakdown[0]
-
-  const handleAwardSuccess = () => setAwardRefresh((n) => n + 1)
-
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f6f6f9",
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          background: "#fff",
-          borderBottom: "1px solid #dcdce4",
-          padding: "20px 32px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#32324d",
-                lineHeight: 1.1,
-              }}
-            >
-              Rewards
-            </h1>
-            <p
-              style={{ margin: "3px 0 0", fontSize: "13px", color: "#8e8ea9" }}
-            >
-              Points, tiers, badges and leaderboard management
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: "24px 32px", maxWidth: "1400px" }}>
-        {/* Two-column layout: main + sidebar */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 300px",
-            gap: "24px",
-            alignItems: "start",
+            <SingleSelectOption value="manual_award">
+              Award points
+            </SingleSelectOption>
+            <SingleSelectOption value="manual_deduct">
+              Deduct points
+            </SingleSelectOption>
+          </SingleSelect>
+        </Field.Root>
+        <Field.Root
+          name="award-points"
+          required
+          hint="Whole numbers from 1 to 500."
+        >
+          <Field.Label>Points</Field.Label>
+          <NumberInput
+            value={points}
+            min={1}
+            max={500}
+            step={1}
+            disabled={busy}
+            onValueChange={setPoints}
+          />
+          <Field.Hint />
+        </Field.Root>
+        <Field.Root name="award-reason" required>
+          <Field.Label>Reason</Field.Label>
+          <Textarea
+            value={reason}
+            maxLength={2000}
+            disabled={busy}
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setReason(event.target.value)
+            }
+          />
+        </Field.Root>
+        <Button
+          disabled={!valid || busy}
+          variant={action === "manual_deduct" ? "danger-light" : "default"}
+          onClick={() => {
+            setMessage(null)
+            setReview(true)
           }}
         >
-          {/* ── Main column ── */}
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+          Review adjustment
+        </Button>
+        {message && (
+          <Typography
+            tag="p"
+            role={message.ok ? "status" : "alert"}
+            textColor={message.ok ? "success600" : "danger600"}
           >
-            {/* Stat cards row */}
-            <div style={{ display: "flex", gap: "12px" }}>
-              <StatCard
-                label="Contributors"
-                value={statsLoading ? "—" : (stats?.totalContributors ?? 0)}
-                sub="unique users with points"
-                accent="#4945ff"
-              />
-              <StatCard
-                label="Points this month"
-                value={statsLoading ? "—" : (stats?.pointsThisMonth ?? 0)}
-                sub={new Date().toLocaleString("en-GB", {
-                  month: "long",
-                  year: "numeric",
-                })}
-                accent="#7b72ff"
-              />
-              <StatCard
-                label="Total events"
-                value={chartLoading ? "—" : totalEvents}
-                sub="all-time point events"
-                accent="#0c75af"
-              />
-              <StatCard
-                label="Top action"
-                value={chartLoading || !topAction ? "—" : topAction.count}
-                sub={
-                  topAction
-                    ? `${actionLabel(topAction.action)} events`
-                    : "no data yet"
-                }
-                accent="#1b7c3a"
-              />
-            </div>
-
-            {/* Daily points chart */}
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #dcdce4",
-                borderRadius: "8px",
-                padding: "20px 24px",
-                boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "16px",
-                }}
-              >
-                <div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "#32324d",
-                    }}
-                  >
-                    Points awarded — last 30 days
-                  </p>
-                </div>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "2px",
-                      background: "#4945ff",
-                    }}
-                  />
-                  <span style={{ fontSize: "11px", color: "#8e8ea9" }}>
-                    Today
-                  </span>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "2px",
-                      background: "#c0bdf8",
-                      marginLeft: "8px",
-                    }}
-                  />
-                  <span style={{ fontSize: "11px", color: "#8e8ea9" }}>
-                    Prior days
-                  </span>
-                </div>
-              </div>
-
-              {chartLoading ? (
-                <div
-                  style={{
-                    height: "110px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#8e8ea9",
-                    fontSize: "13px",
-                  }}
-                >
-                  Loading chart…
-                </div>
-              ) : dailyPoints.length > 0 ? (
-                <BarChart data={dailyPoints} />
-              ) : (
-                <div
-                  style={{
-                    height: "90px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#8e8ea9",
-                    fontSize: "13px",
-                  }}
-                >
-                  No data yet
-                </div>
+            {message.text}
+          </Typography>
+        )}
+      </Flex>
+      <Dialog.Root
+        open={review}
+        onOpenChange={(open) => {
+          if (!busy) setReview(open)
+        }}
+      >
+        <Dialog.Content>
+          <Dialog.Header>Confirm points adjustment</Dialog.Header>
+          <Dialog.Body>
+            <Flex direction="column" alignItems="stretch" gap={4}>
+              <Dialog.Description>
+                {action === "manual_deduct" ? "Deduct" : "Award"} {points}{" "}
+                points {action === "manual_deduct" ? "from" : "to"} {id}?
+              </Dialog.Description>
+              <Typography textColor="neutral600">{reason}</Typography>
+              {message && !message.ok && (
+                <Typography role="alert" textColor="danger600">
+                  {message.text}
+                </Typography>
               )}
-            </div>
-
-            {/* Event log */}
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #dcdce4",
-                borderRadius: "8px",
-                padding: "20px 24px",
-                boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-              }}
-            >
-              <p
-                style={{
-                  margin: "0 0 16px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#32324d",
-                }}
+            </Flex>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Dialog.Cancel>
+              <Button
+                variant="tertiary"
+                disabled={busy}
+                onClick={() => setReview(false)}
               >
-                Event log
-              </p>
-              <EventLog
-                onAward={(uid) => {
-                  setPrefillUserId(uid)
-                  // Scroll to sidebar
-                  document
-                    .getElementById("reward-sidebar")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }}
-              />
-            </div>
-          </div>
+                Cancel
+              </Button>
+            </Dialog.Cancel>
+            <Button
+              loading={busy}
+              disabled={busy}
+              variant={action === "manual_deduct" ? "danger" : "default"}
+              onClick={() => void submit()}
+            >
+              Confirm adjustment
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Root>
+    </Card>
+  )
+}
+function Activity({ revision }: { revision: number }) {
+  const result = useAdminResource<ChartData>("/chart-data", revision)
+  const daily = result.data?.dailyPoints ?? []
+  const actions = result.data?.actionBreakdown ?? []
+  const max = Math.max(...daily.map((row) => row.points), 1)
 
-          {/* ── Sidebar ── */}
-          <div
-            id="reward-sidebar"
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+  return (
+    <Card title="Contribution activity">
+      {result.error && <Failure retry={result.retry} />}
+      {result.loading ? (
+        <Typography>Loading activity…</Typography>
+      ) : !daily.some((row) => row.points !== 0) &&
+        !actions.length &&
+        !result.error ? (
+        <Typography textColor="neutral600">
+          Activity will appear after the first accepted contribution.
+        </Typography>
+      ) : (
+        <>
+          {daily.length > 0 && (
+            <>
+              <Typography tag="p" textColor="neutral600" paddingBottom={4}>
+                Points awarded over the last {daily.length} days
+              </Typography>
+              <Box color="primary600">
+                <svg
+                  viewBox="0 0 600 120"
+                  style={{ width: "100%", height: "14rem" }}
+                  role="img"
+                  aria-label="Daily contribution points; values are also available in the data table below"
+                >
+                  {daily.map((row, index) => (
+                    <rect
+                      key={row.date}
+                      x={index * (600 / daily.length)}
+                      y={120 - Math.max(0, (row.points / max) * 110)}
+                      width={Math.max(1, 600 / daily.length - 3)}
+                      height={Math.max(0, (row.points / max) * 110)}
+                      rx={2}
+                      fill="currentColor"
+                    >
+                      <title>
+                        {row.date}: {row.points} points
+                      </title>
+                    </rect>
+                  ))}
+                </svg>
+              </Box>
+              <details>
+                <summary style={{ cursor: "pointer", padding: "1rem 0" }}>
+                  View daily values
+                </summary>
+                <Table
+                  colCount={2}
+                  rowCount={daily.length}
+                  aria-label="Daily points"
+                >
+                  <Thead>
+                    <Tr>
+                      <Th>
+                        <Typography variant="sigma">Date</Typography>
+                      </Th>
+                      <Th>
+                        <Typography variant="sigma">Points</Typography>
+                      </Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {daily.map((row) => (
+                      <Tr key={row.date}>
+                        <Td>
+                          <Typography>
+                            {new Date(row.date).toLocaleDateString()}
+                          </Typography>
+                        </Td>
+                        <Td>
+                          <Typography>{row.points}</Typography>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </details>
+            </>
+          )}
+          {actions.length > 0 && (
+            <Box paddingTop={5}>
+              <Typography tag="h3" variant="delta" paddingBottom={3}>
+                Points by action
+              </Typography>
+              <Table
+                colCount={3}
+                rowCount={actions.length}
+                aria-label="Action breakdown"
+              >
+                <Thead>
+                  <Tr>
+                    {["Action", "Events", "Points"].map((label) => (
+                      <Th key={label}>
+                        <Typography variant="sigma">{label}</Typography>
+                      </Th>
+                    ))}
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {actions.map((row) => (
+                    <Tr key={row.action}>
+                      <Td>
+                        <Typography>{actionLabel(row.action)}</Typography>
+                      </Td>
+                      <Td>
+                        <Typography>{row.count}</Typography>
+                      </Td>
+                      <Td>
+                        <Typography>{row.totalPoints}</Typography>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </Box>
+          )}
+        </>
+      )}
+    </Card>
+  )
+}
+
+export function RewardsDashboard() {
+  const loading = useAuth("Rewards", (state) => state.isLoading)
+  const user = useAuth("Rewards", (state) => state.user)
+  const permissions = useAuth("Rewards", (state) => state.permissions)
+  if (loading) return <Page.Loading />
+
+  return <ReadyRewards key={`${user?.id}:${JSON.stringify(permissions)}`} />
+}
+function ReadyRewards() {
+  const { allowedActions, isLoading, error } = useRBAC(PERMISSIONS)
+  const [revision, setRevision] = useState(0)
+  const [user, setUser] = useState("")
+  const refresh = useCallback(() => setRevision((value) => value + 1), [])
+  if (isLoading) return <Page.Loading />
+  if (error) return <Page.Error />
+  if (!allowedActions.canRead) return <Page.NoPermissions />
+
+  return (
+    <PluginPage>
+      <Layouts.Root>
+        <Layouts.Header
+          title="Rewards"
+          subtitle="Understand contributor activity, review point history and manage adjustments."
+          primaryAction={
+            <Button variant="secondary" onClick={refresh}>
+              Refresh
+            </Button>
+          }
+        />
+        <Layouts.Content>
+          <Flex direction="column" alignItems="stretch" gap={6}>
+            <Summary revision={revision} />
+            <Flex gap={6} wrap="wrap" alignItems="flex-start">
+              <Box style={{ flex: "2 1 48rem", minWidth: 0 }}>
+                <Activity revision={revision} />
+              </Box>
+              {allowedActions.canAward && (
+                <Box style={{ flex: "1 1 30rem", minWidth: 0 }}>
+                  <ManualAward user={user} onSuccess={refresh} />
+                </Box>
+              )}
+            </Flex>
+            <EventLog
+              revision={revision}
+              canAward={!!allowedActions.canAward}
+              onAward={(id) => {
+                setUser(id)
+                document
+                  .querySelector<HTMLInputElement>('[name="award-user"]')
+                  ?.focus()
+              }}
+            />
+          </Flex>
+        </Layouts.Content>
+      </Layouts.Root>
+    </PluginPage>
+  )
+}
+function Summary({ revision }: { revision: number }) {
+  const result = useAdminResource<Stats>("/stats", revision)
+
+  return (
+    <>
+      {result.error && <Failure retry={result.retry} />}
+      <Flex gap={5} wrap="wrap">
+        {[
+          ["Contributors", result.data?.totalContributors],
+          ["Points this month", result.data?.pointsThisMonth],
+        ].map(([label, value]) => (
+          <Box
+            key={label}
+            style={{ flex: "1 1 24rem" }}
+            background="neutral0"
+            padding={6}
+            hasRadius
+            shadow="tableShadow"
           >
-            {/* Action breakdown */}
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #dcdce4",
-                borderRadius: "8px",
-                padding: "18px 20px",
-                boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-              }}
+            <Typography tag="h2" variant="sigma" textColor="neutral600">
+              {label}
+            </Typography>
+            <Typography
+              tag="p"
+              variant="alpha"
+              paddingTop={3}
+              textColor="neutral800"
             >
-              <p
-                style={{
-                  margin: "0 0 14px",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: "#666687",
-                }}
-              >
-                Action breakdown
-              </p>
-              {chartLoading ? (
-                <p style={{ fontSize: "12px", color: "#8e8ea9", margin: 0 }}>
-                  Loading…
-                </p>
-              ) : actionBreakdown.length === 0 ? (
-                <p style={{ fontSize: "12px", color: "#8e8ea9", margin: 0 }}>
-                  No events yet.
-                </p>
-              ) : (
-                <ActionBreakdownPanel data={actionBreakdown} />
-              )}
-            </div>
-
-            {/* Manual award */}
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #dcdce4",
-                borderRadius: "8px",
-                padding: "18px 20px",
-                boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-              }}
-            >
-              <p
-                style={{
-                  margin: "0 0 14px",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: "#666687",
-                }}
-              >
-                Manual award / deduct
-              </p>
-              <ManualAwardWidget
-                prefillUserId={prefillUserId}
-                onSuccess={handleAwardSuccess}
-              />
-            </div>
-
-            {/* Points legend */}
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #dcdce4",
-                borderRadius: "8px",
-                padding: "18px 20px",
-                boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-              }}
-            >
-              <p
-                style={{
-                  margin: "0 0 12px",
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: "#666687",
-                }}
-              >
-                Point values
-              </p>
-              {[
-                { label: "New library approved", pts: 50 },
-                { label: "Major edit (4+ fields)", pts: 15 },
-                { label: "Wiki translation", pts: 15 },
-                { label: "Minor edit (1–3 fields)", pts: 5 },
-                { label: "Hours/status verified", pts: 5 },
-                { label: "CC-licensed photo", pts: 8 },
-                { label: "Daily streak", pts: 1 },
-              ].map(({ label, pts }) => (
-                <div
-                  key={label}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "5px 0",
-                    borderBottom: "1px solid #f6f6f9",
-                  }}
-                >
-                  <span style={{ fontSize: "12px", color: "#32324d" }}>
-                    {label}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: "#4945ff",
-                    }}
-                  >
-                    +{pts}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              {result.loading
+                ? "…"
+                : value === undefined
+                  ? "Unavailable"
+                  : Number(value).toLocaleString()}
+            </Typography>
+          </Box>
+        ))}
+      </Flex>
+    </>
   )
 }

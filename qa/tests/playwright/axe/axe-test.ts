@@ -7,9 +7,11 @@ import { chromium } from "@playwright/test"
 import type { AxeResults, NodeResult, Result } from "axe-core"
 import dotenv from "dotenv"
 
-import urls from "helpers/urls.json"
+import { publicPageReady } from "../helpers/page-ready"
 
-dotenv.config({ path: path.resolve(__dirname, "../.env"), override: true })
+import urls from "../helpers/urls.json"
+
+dotenv.config({ path: path.resolve(__dirname, "../.env"), override: false })
 
 // import { fetchSitemap } from "../helpers/get-sitemap-links"
 
@@ -93,11 +95,17 @@ function formatViolationsSection(
 
   try {
     for (const site of sites) {
-      const context = await browser.newContext()
+      const context = await browser.newContext({
+        viewport: {
+          width: process.env.QA_AXE_MOBILE === "1" ? 390 : 1280,
+          height: 900,
+        },
+      })
       const page = await context.newPage()
 
       try {
         await page.goto(site, { waitUntil: "load", timeout: 20000 })
+        await publicPageReady(page)
 
         const results: AxeResults = await new AxeBuilder({ page }).analyze()
         const allViolations: Result[] = results.violations ?? []

@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import GlobalLink from "@/components/global/GlobalLink"
 import { CONTACT_EMAIL } from "@/lib/constants"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
+import { useMembershipContent } from "@/lib/localized-plans"
 
 import { PlanSectionHeader } from "./PlanBits"
 
@@ -37,45 +38,46 @@ const STATUS: Record<
   },
 }
 
-const ROUTES: {
-  title: string
-  status: RouteStatus
-  icon: string
-  tint: { bg: string; fg: string }
-  body: string
-  link: { label: string; href: string }
-}[] = [
-  {
-    title: "Verified library staff, students and charities",
-    status: "proRequest",
-    icon: "mdi:bank-outline",
-    tint: TYPE_TINT.academic,
-    body: "Library staff, students and charity staff can request complimentary Pro. Write to us from your work, student or charity address. Self-service Pro verification is coming soon.",
-    link: { label: "Write to us", href: mailto("Pro verification") },
-  },
-  {
-    title: "Earned at Archivist tier",
-    status: "live",
-    icon: "mdi:star-outline",
-    tint: TYPE_TINT.public,
-    body: `Reach Archivist tier through accepted contributions and Pro switches on by itself. If you drop below Archivist, Pro holds for ${EARNED_PRO_HOLD_DAYS} days.`,
-    link: { label: "Start contributing", href: "/contribute" },
-  },
-  {
-    title: "Grants for press and partners",
-    status: "request",
-    icon: "mdi:file-document-outline",
-    tint: TYPE_TINT.special,
-    body: "Journalists, researchers on partner projects and partner organisations can ask the team for a Pro grant.",
-    link: { label: "Ask for a grant", href: mailto("Pro grant") },
-  },
-]
-
 const LINK_PILL =
   "mt-auto inline-flex h-10 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-[14.5px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** The three ways to hold Pro without paying. */
 export function ProFreeRoutes() {
+  const m = useMembershipContent()
+  const ROUTES: {
+    title: string
+    status: RouteStatus
+    icon: string
+    tint: { bg: string; fg: string }
+    body: string
+    link: { label: string; href: string }
+  }[] = [
+    {
+      title: m("copy.staffTitle"),
+      status: "proRequest",
+      icon: "mdi:bank-outline",
+      tint: TYPE_TINT.academic,
+      body: m("copy.staffBody"),
+      link: { label: m("copy.write"), href: mailto("Pro verification") },
+    },
+    {
+      title: m("copy.earnedTitle"),
+      status: "live",
+      icon: "mdi:star-outline",
+      tint: TYPE_TINT.public,
+      body: m("copy.earnedBody", { days: EARNED_PRO_HOLD_DAYS }),
+      link: { label: m("copy.start"), href: "/contribute" },
+    },
+    {
+      title: m("copy.grantTitle"),
+      status: "request",
+      icon: "mdi:file-document-outline",
+      tint: TYPE_TINT.special,
+      body: m("copy.grantBody"),
+      link: { label: m("copy.grant"), href: mailto("Pro grant") },
+    },
+  ]
+
   const tUi = useUiTranslations("ui")
 
   return (
@@ -86,7 +88,7 @@ export function ProFreeRoutes() {
     >
       <PlanSectionHeader
         id="get-pro-free-h"
-        sub="If you qualify for complimentary Pro, you’re never asked to pay."
+        sub={m("copy.freeProLead")}
         title={tUi("get_pro_free")}
       />
       <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-3">
@@ -128,7 +130,7 @@ export function ProFreeRoutes() {
                     icon={status.icon}
                     width={14}
                   />
-                  {status.label}
+                  {m(`copy.${route.status}`)}
                 </span>
               </div>
               <h3

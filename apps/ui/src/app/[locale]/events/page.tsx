@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import { use } from "react"
 
 import { EventsPageClient } from "@/components/events/EventsPageClient"
@@ -12,14 +13,14 @@ export const dynamic = "force-dynamic"
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: Locale }>
 }): Promise<Metadata> {
   const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "eventListing" })
 
   return buildMetadata({
-    title: "Library events",
-    description:
-      "Author talks, exhibitions, classes, storytime and archive tours, gathered from library calendars and ticketing sites.",
+    title: t("metaTitle"),
+    description: t("lead"),
     path: "events",
     locale,
   })

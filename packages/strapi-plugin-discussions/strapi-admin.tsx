@@ -16,11 +16,11 @@ function DiscussionIcon() {
 export default {
   register(app: any) {
     app.addMenuLink({
-      to: "/plugins/discussions",
+      to: "plugins/discussions",
       icon: DiscussionIcon,
       intlLabel: { id: "discussions.name", defaultMessage: "Discussions" },
       permissions: [{ action: "plugin::discussions.read", subject: null }],
-      Component: async () => (await import("./admin/Review")).default,
+      Component: () => import("./admin/Review"),
     })
     app.registerPlugin({ id: "discussions", name: "Discussions" })
   },

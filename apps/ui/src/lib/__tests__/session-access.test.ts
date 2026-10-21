@@ -152,6 +152,8 @@ describe("buildSessionAccess", () => {
         slug: "kent-libraries",
         role: "organiser",
         libraryCount: 2,
+        status: "active",
+        expiresAt: null,
       },
     ])
   })

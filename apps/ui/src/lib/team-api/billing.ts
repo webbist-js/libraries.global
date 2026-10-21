@@ -71,6 +71,12 @@ export async function apiCheckout(
     pool,
     `api-team:${team.documentId}`,
     async (client) => {
+      // Discard holds this same lock through CMS archival and the durable marker.
+      const archived = await client.query(
+        "select 1 from team_billing_accounts where team_id=$1 and archived_at is not null",
+        [team.documentId]
+      )
+      if (archived.rowCount) throw new BillingError("team_inactive", 403)
       await client.query(
         "insert into team_api_accounts(team_id,mode,create_token,customer_payload) values($1,$2,$3,$4) on conflict do nothing",
         [

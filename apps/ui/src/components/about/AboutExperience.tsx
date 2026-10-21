@@ -2,6 +2,7 @@ import type { AboutGlobeCountry } from "@/components/about/about-globe.types"
 import type { AboutLibrary } from "@/components/about/about.types"
 import { AboutHero } from "@/components/about/AboutHero"
 import { AboutStory } from "@/components/about/AboutStory"
+import { MainContent } from "@/components/ds/MainContent"
 import type {
   HomepageContinentSummary,
   HomepageStats,
@@ -25,9 +26,9 @@ export function AboutExperience({
   readonly libraries: readonly AboutLibrary[]
 }) {
   return (
-    <main className="about-page">
+    <MainContent className="about-page">
       <AboutHero markers={markers} countries={countries} />
       <AboutStory stats={stats} continents={continents} libraries={libraries} />
-    </main>
+    </MainContent>
   )
 }

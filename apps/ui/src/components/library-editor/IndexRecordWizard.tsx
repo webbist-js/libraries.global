@@ -1,8 +1,16 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { QueryClientContext } from "@tanstack/react-query"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { toast } from "sonner"
 
 import { Notice } from "@/components/ds/Notice"
@@ -13,6 +21,7 @@ import {
   useResumeDraft,
   useSaveDraft,
 } from "@/hooks/useSubmissions"
+import { useUnsavedNavigation } from "@/hooks/useUnsavedNavigation"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
@@ -68,6 +77,15 @@ export type { FormData, SocialLink, UploadedImage } from "./wizard.types"
 export { calcScore } from "./wizard.scoring"
 
 export const INDEX_EDITOR_PATH = "/contribute/index"
+
+type RecoveryDraft = {
+  form: FormData
+  step: number
+  id: string | null
+  savedSnapshot: string
+  creationTeamId: string
+  updatedAt: number
+}
 
 const LAST_STEP = 7
 
@@ -143,7 +161,25 @@ export function IndexRecordWizard({
 }: IndexRecordWizardProps) {
   const tUi = useUiTranslations("ui")
   const displayLocale = useLocale()
+  const tSave = useUiTranslations("draftSave")
 
+  const queryClient = useContext(QueryClientContext)
+  const recoveryKey = useMemo(
+    () => [
+      "index-editor-recovery",
+      mode,
+      target?.documentId ?? "new",
+      locale?.code ?? "default",
+    ],
+    [mode, target?.documentId, locale?.code]
+  )
+  const [recovery, setRecovery] = useState<RecoveryDraft | null>(() => {
+    const saved = queryClient?.getQueryData<RecoveryDraft>(recoveryKey)
+
+    return saved && Date.now() - saved.updatedAt < 4 * 60 * 60 * 1000
+      ? saved
+      : null
+  })
   const staff = mode === "staff"
   const staffNew = mode === "staff-new"
   const inStaffArea = staff || staffNew
@@ -196,6 +232,20 @@ export function IndexRecordWizard({
     [position, stepCount]
   )
   const [draftId, setDraftId] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    JSON.stringify(loaded)
+  )
+  const saveBusy = useRef(false)
+  const committed = useRef(false)
+  const persistedId = useRef<string | null>(null)
+  const queuedSave = useRef<{
+    form: FormData
+    step: number
+    id: string | null
+  } | null>(null)
+  const drainSave = useRef<() => void>(() => {})
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [draftBannerDismissed, setDraftBannerDismissed] = useState(false)
 
@@ -215,7 +265,59 @@ export function IndexRecordWizard({
     translationLocale ?? undefined,
     staffNew
   )
-  const isPending = isCreating || isFinalizing
+  const dirty = JSON.stringify(formData) !== savedSnapshot
+  const isPending = isCreating || isFinalizing || saving
+  useUnsavedNavigation(dirty || saving, tSave("leave"), committed)
+  // Browser Back cannot be cancelled reliably. Keep unpersisted work only in
+  // this account’s in-memory query client; account changes clear that client.
+  useEffect(() => {
+    if (!queryClient || recovery) return
+    if (!dirty || committed.current) {
+      queryClient.removeQueries({ queryKey: recoveryKey, exact: true })
+
+      return
+    }
+    queryClient.setQueryDefaults(["index-editor-recovery"], {
+      gcTime: 4 * 60 * 60 * 1000,
+    })
+    queryClient.setQueryData<RecoveryDraft>(recoveryKey, {
+      form: formData,
+      step,
+      id: draftId,
+      savedSnapshot,
+      creationTeamId,
+      updatedAt: Date.now(),
+    })
+  }, [
+    queryClient,
+    recovery,
+    dirty,
+    recoveryKey,
+    formData,
+    step,
+    draftId,
+    savedSnapshot,
+    creationTeamId,
+  ])
+  const restoreRecovery = () => {
+    if (!recovery) return
+    setFormData(recovery.form)
+    setStep(recovery.step)
+    setDraftId(recovery.id)
+    persistedId.current = recovery.id
+    setSavedSnapshot(recovery.savedSnapshot)
+    setCreationTeamId(
+      creationTeams.some((team) => team.id === recovery.creationTeamId)
+        ? recovery.creationTeamId
+        : ""
+    )
+    setDraftBannerDismissed(true)
+    setRecovery(null)
+  }
+  const discardRecovery = () => {
+    queryClient?.removeQueries({ queryKey: recoveryKey, exact: true })
+    setRecovery(null)
+  }
 
   // Improve mode: what differs from the record.
   const changed = useMemo(
@@ -233,6 +335,7 @@ export function IndexRecordWizard({
   )
 
   const showDraftBanner =
+    !recovery &&
     !draftBannerDismissed &&
     !draftId &&
     !!existingDraft?.draftData &&
@@ -260,6 +363,9 @@ export function IndexRecordWizard({
       )
     )
     setDraftId(existingDraft.documentId)
+    persistedId.current = existingDraft.documentId
+    setSavedSnapshot(JSON.stringify(resumed))
+    setLastSavedAt(new Date(existingDraft.updatedAt))
     if (staffNew) {
       const savedTeam = existingDraft.draftData.staffCreation as
         | { teamDocumentId?: string | null }
@@ -300,20 +406,6 @@ export function IndexRecordWizard({
     setRevealed({ step: at, focus: keys[0] })
   }
 
-  const saveDraft = useCallback(
-    (currentFormData: FormData, currentStep: number, id: string) => {
-      saveDraftMutation(
-        {
-          id,
-          draftData: currentFormData as unknown as Record<string, unknown>,
-          stepCompleted: currentStep,
-        },
-        { onSuccess: () => setLastSavedAt(new Date()) }
-      )
-    },
-    [saveDraftMutation]
-  )
-
   const targetParams = improve
     ? {
         targetEntityType: "library" as const,
@@ -322,9 +414,62 @@ export function IndexRecordWizard({
       }
     : {}
 
-  const startDraft = useCallback(
-    (currentFormData: FormData) => {
-      const { libraryFields, ...meta } = splitForm(currentFormData)
+  const persist = useCallback(
+    (currentFormData: FormData, currentStep: number, id: string | null) => {
+      queuedSave.current = { form: currentFormData, step: currentStep, id }
+      drainSave.current()
+    },
+    []
+  )
+
+  drainSave.current = () => {
+    if (saveBusy.current || committed.current || !queuedSave.current) return
+    const pending = queuedSave.current
+    queuedSave.current = null
+    saveBusy.current = true
+    setSaving(true)
+    setSaveError(null)
+    const snapshot = JSON.stringify(pending.form)
+    let succeeded = false
+    const callbacks = {
+      onSuccess: (submission?: { documentId?: string }) => {
+        succeeded = true
+        if (submission?.documentId) {
+          persistedId.current = submission.documentId
+          setDraftId(submission.documentId)
+        }
+        queryClient?.setQueryData<RecoveryDraft>(recoveryKey, (cached) =>
+          cached
+            ? {
+                ...cached,
+                id: submission?.documentId ?? persistedId.current ?? pending.id,
+              }
+            : undefined
+        )
+        setSavedSnapshot(snapshot)
+        setLastSavedAt(new Date())
+      },
+      onError: () => {
+        setSaveError(tSave("failed"))
+      },
+      onSettled: () => {
+        saveBusy.current = false
+        setSaving(false)
+        if (succeeded && queuedSave.current) drainSave.current()
+      },
+    }
+    const id = persistedId.current ?? pending.id
+    if (id) {
+      saveDraftMutation(
+        {
+          id,
+          draftData: pending.form as unknown as Record<string, unknown>,
+          stepCompleted: pending.step,
+        },
+        callbacks
+      )
+    } else {
+      const { libraryFields, ...meta } = splitForm(pending.form)
       createSubmission(
         withSubmissionLocale(
           {
@@ -332,35 +477,20 @@ export function IndexRecordWizard({
             ...targetParams,
             ...meta,
             fields: improve
-              ? recordChangesPayload(initial, currentFormData)
+              ? recordChangesPayload(initial, pending.form)
               : libraryFields,
             asDraft: true,
-            draftData: currentFormData as unknown as Record<string, unknown>,
+            draftData: pending.form as unknown as Record<string, unknown>,
             ...(staffNew ? { staffCreation } : {}),
           },
           translationLocale
         ),
-        {
-          onSuccess: (submission) => {
-            setDraftId(submission.documentId)
-            setLastSavedAt(new Date())
-          },
-          onError: () => {},
-        }
+        callbacks
       )
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      createSubmission,
-      submissionType,
-      improve,
-      initial,
-      target?.documentId,
-      translationLocale,
-      staffNew,
-      creationTeamId,
-    ]
-  )
+    }
+  }
+  const saveDraft = persist
+  const startDraft = (current: FormData) => persist(current, step, null)
 
   const goNext = () => {
     if (!staff && missing.length > 0) {
@@ -402,23 +532,33 @@ export function IndexRecordWizard({
   }, [step])
 
   useEffect(() => {
-    if (!staff || !changed.length || isCreating) return
-    const timeout = setTimeout(() => {
-      if (draftId) saveDraft(formData, step, draftId)
-      else startDraft(formData)
-    }, 800)
+    if (
+      !dirty ||
+      recovery ||
+      showDraftBanner ||
+      isFinalizing ||
+      saveError ||
+      !formData.name.trim()
+    )
+      return
+    const timeout = setTimeout(() => persist(formData, step, draftId), 800)
 
     return () => clearTimeout(timeout)
   }, [
-    staff,
-    changed.length,
-    draftId,
+    dirty,
+    recovery,
+    showDraftBanner,
+    isFinalizing,
+    saveError,
     formData,
     step,
-    isCreating,
-    saveDraft,
-    startDraft,
+    draftId,
+    persist,
   ])
+
+  useEffect(() => {
+    setSaveError(null)
+  }, [formData])
 
   // After the step scroll above, so the first missing field ends in view.
   useEffect(() => {
@@ -435,6 +575,9 @@ export function IndexRecordWizard({
   }, [step])
 
   const onSent = () => {
+    committed.current = true
+    queryClient?.removeQueries({ queryKey: recoveryKey, exact: true })
+    queuedSave.current = null
     toast.success(
       staffNew
         ? "Library sent for review. Approval will add it to your staff area."
@@ -446,6 +589,7 @@ export function IndexRecordWizard({
     toast.error(err?.message ?? "Submission failed")
 
   const submit = () => {
+    if (saveBusy.current) return
     if (improve && changed.length === 0) {
       toast.error("Change at least one field before sending.")
 
@@ -551,6 +695,28 @@ export function IndexRecordWizard({
                     : tUi("draft_not_yet_saved")}
                 </RailStatus>
               )}
+              <div className="mt-3" aria-live="polite">
+                {saveError ? (
+                  <div role="alert">
+                    <p className="text-sm">{saveError}</p>
+                    <button
+                      type="button"
+                      className="min-h-11 font-semibold underline"
+                      onClick={() => persist(formData, step, draftId)}
+                    >
+                      {tSave("retry")}
+                    </button>
+                  </div>
+                ) : saving ? (
+                  <RailStatus icon="mdi:loading" color={T.ink.dim}>
+                    {tSave("saving")}
+                  </RailStatus>
+                ) : dirty ? (
+                  <RailStatus icon="mdi:circle-outline" color={T.ink.dim}>
+                    {tSave("unsaved")}
+                  </RailStatus>
+                ) : null}
+              </div>
               <div className="mt-5">
                 <RecordProgress
                   progress={progress}
@@ -572,7 +738,8 @@ export function IndexRecordWizard({
             </div>
 
             {/* Right — step form */}
-            <section
+            <fieldset
+              disabled={isFinalizing || (isCreating && !saving)}
               aria-label={tUi("library_record_form")}
               className={WIZARD_CARD}
               style={{ background: T.bg.deep, borderColor: T.border.line }}
@@ -734,6 +901,35 @@ export function IndexRecordWizard({
                 />
               )}
 
+              {recovery && (
+                <section
+                  role="status"
+                  className="mb-6 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5"
+                >
+                  <h2 className="m-0 text-lg font-semibold">
+                    {tSave("recoveryTitle")}
+                  </h2>
+                  <p className="mt-2 text-sm text-(--t-ink-dim)">
+                    {tSave("recoveryLead")}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      className={primaryCtaSm}
+                      onClick={restoreRecovery}
+                    >
+                      {tSave("restore")}
+                    </button>
+                    <button
+                      type="button"
+                      className="min-h-11 px-3 text-sm underline"
+                      onClick={discardRecovery}
+                    >
+                      {tSave("discardRecovery")}
+                    </button>
+                  </div>
+                </section>
+              )}
               {showDraftBanner && existingDraft && (
                 <DraftResumeBanner
                   savedStep={Math.max(
@@ -877,6 +1073,7 @@ export function IndexRecordWizard({
               </div>
               {staff && target && (
                 <StaffPublishControls
+                  savingDraft={saving}
                   id={target.documentId}
                   slug={target.slug}
                   initial={initial}
@@ -894,13 +1091,20 @@ export function IndexRecordWizard({
                     setDraftBannerDismissed(true)
                   }}
                   onPublished={() => {
+                    queryClient?.removeQueries({
+                      queryKey: recoveryKey,
+                      exact: true,
+                    })
+                    queuedSave.current = null
+                    persistedId.current = null
+                    setSavedSnapshot(JSON.stringify(formData))
                     setInitial(formData)
                     setDraftId(null)
                     setDraftBannerDismissed(true)
                   }}
                 />
               )}
-            </section>
+            </fieldset>
           </div>
         </Wrapper>
       </ModeratedFieldsContext.Provider>

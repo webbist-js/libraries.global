@@ -12,6 +12,7 @@ import {
   SearchField,
   useFilterSidebar,
 } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import {
@@ -19,8 +20,6 @@ import {
   type TimeSlot,
   DEFAULT_EVENTS_FILTERS,
   inWhenScope,
-  matchesSearch,
-  timeSlotOf,
 } from "@/components/events/event-display"
 import { EventsAgenda } from "@/components/events/EventsAgenda"
 import {
@@ -29,30 +28,15 @@ import {
 } from "@/components/events/EventsFilterPanel"
 import { EventsWeekCarousel } from "@/components/events/EventsWeekCarousel"
 import { T } from "@/lib/design-tokens"
-import { getCountryName } from "@/lib/iso-continent"
 import { searchEvents, type EventSearchHit } from "@/lib/meilisearch"
 
+import {
+  eventSearchParams,
+  readEventBrowse,
+  writeEventBrowse,
+} from "./event-browse"
+
 type LoadState = "loading" | "ready" | "error"
-
-function statLine(events: EventSearchHit[]): string {
-  const libraries = new Set(
-    events.map((e) => e.library_slug ?? e.library_name).filter(Boolean)
-  )
-  const countries = new Set(
-    events.map((e) => e.library_country_code).filter(Boolean)
-  )
-  const eventNoun = events.length === 1 ? "event" : "events"
-  const libraryNoun = libraries.size === 1 ? "library" : "libraries"
-  let where = ""
-  if (countries.size === 1) {
-    const name = getCountryName([...countries][0]!.toLowerCase())
-    where = name
-      ? `, all in ${name === "United Kingdom" ? "the UK" : name} so far`
-      : ""
-  }
-
-  return `${events.length} upcoming ${eventNoun} at ${libraries.size} ${libraryNoun}${where}`
-}
 
 function SourceStep({
   index,
@@ -97,71 +81,111 @@ export function EventsPageClient() {
   const [upcoming, setUpcoming] = useState<EventSearchHit[]>([])
   const [state, setState] = useState<LoadState>("loading")
   const [retry, setRetry] = useState(0)
-  const [filters, setFilters] = useState<EventsFilters>(DEFAULT_EVENTS_FILTERS)
+  const [{ filters, page }, setBrowse] = useState({
+    filters: DEFAULT_EVENTS_FILTERS,
+    page: 1,
+  })
+  const [total, setTotal] = useState(0)
+  const [pages, setPages] = useState(0)
+  const [typeCounts, setTypeCounts] = useState(new Map<string, number>())
+  const [timeCounts, setTimeCounts] = useState(new Map<TimeSlot, number>())
+  const [freeCount, setFreeCount] = useState(0)
+  const changeBrowse = (nextFilters: EventsFilters, nextPage = 1) => {
+    const query = writeEventBrowse(
+      new URLSearchParams(window.location.search),
+      nextFilters,
+      nextPage
+    )
+    window.history.pushState(
+      null,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`
+    )
+    setBrowse({ filters: nextFilters, page: nextPage })
+  }
+  const setFilters = (next: EventsFilters) => changeBrowse(next)
+  useEffect(() => {
+    const restore = () => {
+      const next = readEventBrowse(new URLSearchParams(window.location.search))
+      setBrowse((current) =>
+        JSON.stringify(current) === JSON.stringify(next) ? current : next
+      )
+    }
+    restore()
+    window.addEventListener("popstate", restore)
+
+    return () => window.removeEventListener("popstate", restore)
+  }, [])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const filterSidebar = useFilterSidebar("events")
   const [now] = useState(() => new Date())
 
   useEffect(() => {
     let cancelled = false
-    searchEvents({
-      fromTimestamp: Math.floor(Date.now() / 1000),
-      hitsPerPage: 300,
-    })
-      .then((result) => {
-        if (cancelled) return
-        setUpcoming(result.hits)
-        setState("ready")
-      })
-      .catch(() => {
-        if (!cancelled) setState("error")
-      })
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState("loading")
+    const timer = setTimeout(() => {
+      const params = eventSearchParams(filters, page, now)
+      Promise.all([
+        searchEvents(params),
+        searchEvents({
+          ...params,
+          eventTypes: [],
+          page: 0,
+          hitsPerPage: 1,
+          facets: ["eventType"],
+        }),
+        searchEvents({
+          ...params,
+          timeSlots: [],
+          page: 0,
+          hitsPerPage: 1,
+          facets: ["timeSlot"],
+        }),
+        searchEvents({
+          ...params,
+          isFree: undefined,
+          page: 0,
+          hitsPerPage: 1,
+          facets: ["isFree"],
+        }),
+      ])
+        .then(([result, types, times, price]) => {
+          if (cancelled) return
+          setUpcoming(result.hits)
+          setTotal(result.totalHits ?? result.hits.length)
+          setPages(result.totalPages ?? Math.ceil(result.hits.length / 30))
+          setTypeCounts(
+            new Map(Object.entries(types.facetDistribution?.eventType ?? {}))
+          )
+          setTimeCounts(
+            new Map(
+              Object.entries(times.facetDistribution?.timeSlot ?? {}) as [
+                TimeSlot,
+                number,
+              ][]
+            )
+          )
+          setFreeCount(price.facetDistribution?.isFree?.true ?? 0)
+          setState("ready")
+        })
+        .catch(() => {
+          if (!cancelled) setState("error")
+        })
+    }, 200)
 
     return () => {
       cancelled = true
+      clearTimeout(timer)
     }
-  }, [retry])
+  }, [filters, page, now, retry])
 
   // Events in the next 7 days for the carousel
   const thisWeek = useMemo(
     () => upcoming.filter((e) => inWhenScope(e, "7d", now)).slice(0, 4),
     [upcoming, now]
   )
-
-  // Filtered agenda + facet counts. Counts for each group exclude that
-  // group's own selection, so options stay discoverable.
-  const { filtered, typeCounts, timeCounts, freeCount } = useMemo(() => {
-    const base = upcoming.filter(
-      (e) =>
-        inWhenScope(e, filters.when, now) && matchesSearch(e, filters.search)
-    )
-    const byType = (e: EventSearchHit) =>
-      filters.types.length === 0 || filters.types.includes(e.eventType)
-    const byTime = (e: EventSearchHit) =>
-      filters.times.length === 0 || filters.times.includes(timeSlotOf(e))
-    const byPrice = (e: EventSearchHit) => !filters.freeOnly || e.isFree
-
-    const counts = new Map<string, number>()
-    const slots = new Map<TimeSlot, number>()
-    let free = 0
-    for (const e of base) {
-      if (byTime(e) && byPrice(e)) {
-        counts.set(e.eventType, (counts.get(e.eventType) ?? 0) + 1)
-      }
-      if (byType(e) && byPrice(e)) {
-        const slot = timeSlotOf(e)
-        slots.set(slot, (slots.get(slot) ?? 0) + 1)
-      }
-      if (byType(e) && byTime(e) && e.isFree) free += 1
-    }
-
-    return {
-      filtered: base.filter((e) => byType(e) && byTime(e) && byPrice(e)),
-      typeCounts: counts,
-      timeCounts: slots,
-      freeCount: free,
-    }
-  }, [upcoming, filters, now])
 
   const filterPanel = (withHide: boolean) => (
     <EventsFilterPanel
@@ -175,16 +199,16 @@ export function EventsPageClient() {
   )
 
   return (
-    <main className="relative z-10 flex-1">
+    <MainContent className="relative z-10 flex-1">
       <PageHero
         breadcrumb={[
           { label: tUi("home"), href: "/" },
           { label: tUi("events") },
         ]}
-        eyebrow="Events"
+        eyebrow={tUi("events")}
         eyebrowIcon="mdi:calendar-blank-outline"
-        lead="Author talks, exhibitions, classes, storytime and archive tours, gathered from library calendars and ticketing sites."
-        title="What’s on at the world’s *libraries*"
+        lead={t("lead")}
+        title={t("title")}
       >
         <SearchField
           id="events-search"
@@ -210,8 +234,8 @@ export function EventsPageClient() {
               aria-hidden="true"
             />
             {upcoming.length === 0
-              ? "No upcoming events yet — they appear as libraries connect their calendars"
-              : statLine(upcoming)}
+              ? t("noUpcoming")
+              : t("matchingEvents", { count: total })}
           </p>
         ) : null}
       </PageHero>
@@ -235,7 +259,7 @@ export function EventsPageClient() {
           <FilterDrawer
             open={filtersOpen}
             onClose={() => setFiltersOpen(false)}
-            showLabel={`Show ${filtered.length} ${filtered.length === 1 ? "event" : "events"}`}
+            showLabel={t("showCount", { count: total })}
           >
             {filterPanel(false)}
           </FilterDrawer>
@@ -257,10 +281,10 @@ export function EventsPageClient() {
                 style={{ color: T.ink.base }}
               >
                 {state === "loading"
-                  ? "Loading events…"
+                  ? t("loading")
                   : state === "error"
                     ? t("errorTitle")
-                    : `${filtered.length} ${filtered.length === 1 ? "event" : "events"}`}
+                    : t("matchingEvents", { count: total })}
               </h2>
               {state === "ready" && upcoming.length > 0 ? (
                 <a
@@ -269,7 +293,7 @@ export function EventsPageClient() {
                   className="text-[14.5px] font-semibold underline underline-offset-[3px]"
                   style={{ color: T.accent.primary }}
                 >
-                  Subscribe to this calendar (.ics)
+                  {t("subscribe")}
                 </a>
               ) : null}
             </div>
@@ -305,13 +329,40 @@ export function EventsPageClient() {
               </div>
             ) : (
               <EventsAgenda
-                events={filtered}
+                events={upcoming}
                 loading={state === "loading"}
                 now={now}
-                totalUnfiltered={upcoming.length}
+                totalUnfiltered={
+                  total ||
+                  (activeEventsFilterCount(filters) || filters.search ? 1 : 0)
+                }
                 onReset={() => setFilters(DEFAULT_EVENTS_FILTERS)}
               />
             )}
+            {state === "ready" && pages > 1 ? (
+              <nav
+                aria-label={t("pagination")}
+                className="mt-6 flex items-center justify-between gap-4"
+              >
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  className="min-h-11 rounded-full border px-5 disabled:opacity-40"
+                  onClick={() => changeBrowse(filters, page - 1)}
+                >
+                  {t("previous")}
+                </button>
+                <span aria-live="polite">{t("pageOf", { page, pages })}</span>
+                <button
+                  type="button"
+                  disabled={page >= pages}
+                  className="min-h-11 rounded-full border px-5 disabled:opacity-40"
+                  onClick={() => changeBrowse(filters, page + 1)}
+                >
+                  {t("next")}
+                </button>
+              </nav>
+            ) : null}
           </section>
         </div>
 
@@ -330,29 +381,25 @@ export function EventsPageClient() {
               color: T.ink.base,
             }}
           >
-            Where these events come from
+            {t("sourcesTitle")}
           </h2>
           <p className="mt-1.5 mb-0 text-[15.5px]" style={{ color: T.ink.dim }}>
-            We don&rsquo;t sell tickets. Every listing links back to the
-            organiser.
+            {t("sourcesLead")}
           </p>
 
           <div className="mt-7 grid grid-cols-1 gap-7 md:grid-cols-3">
             <SourceStep index={1} title={tUi("collect")}>
-              We check library calendars and ticketing sites like Eventbrite and
-              TicketSource every 30 minutes.
+              {t("collectLead")}
             </SourceStep>
             <SourceStep index={2} title={tUi("match")}>
-              Duplicates are merged. When sources disagree, the library&rsquo;s
-              own calendar wins.
+              {t("matchLead")}
             </SourceStep>
             <SourceStep index={3} title={tUi("publish")}>
-              Events appear here and in the open API, each labelled with its
-              source.
+              {t("publishLead")}
             </SourceStep>
           </div>
         </section>
       </Container>
-    </main>
+    </MainContent>
   )
 }

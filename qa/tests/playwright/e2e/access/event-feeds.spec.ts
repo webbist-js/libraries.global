@@ -49,7 +49,7 @@ let libraryId = ""
 let librarySlug = ""
 
 const reviewLink = (documentId: string) =>
-  `a[href$="/contribute/moderation/${documentId}"]`
+  `a[href^="/contribute/moderation/${documentId}"]`
 
 test.beforeAll(async ({ playwright }, testInfo) => {
   const baseURL = testInfo.project.use.baseURL!
@@ -73,7 +73,7 @@ test.beforeAll(async ({ playwright }, testInfo) => {
   const { data: others } = await strapiRead<{
     data: { documentId: string }[]
   }>(
-    "/api/libraries?pagination[pageSize]=1&pagination[start]=1&sort[0]=id:asc&fields[0]=documentId"
+    "/api/libraries?pagination[pageSize]=1&pagination[page]=2&sort[0]=id:asc&fields[0]=documentId"
   )
   if (!others?.[0]?.documentId)
     throw new Error("Need a second published library for the refusal check")
@@ -120,15 +120,15 @@ test("a librarian connects, tests and sends an iCal feed for review", async ({
   await page.waitForURL(/\/staff\/[a-z0-9._-]+\/events\/connect/, NAVIGATION)
 
   await page.getByText("Calendar feed (.ics)", { exact: true }).click()
-  const addressField = page.getByLabel("Calendar address")
+  const addressField = page.getByLabel("Calendar address", { exact: true })
   await setSecretValue(addressField, ICS_URL!)
 
+  const connect = page.getByRole("button", { name: "Connect", exact: true })
+  await expect(connect).toBeDisabled()
   await page.getByRole("button", { name: "Test connection" }).click()
-  await expect(
-    page.getByText("Connected: we could read your events.")
-  ).toBeVisible(NAVIGATION)
+  await expect(connect).toBeEnabled(NAVIGATION)
 
-  await page.getByRole("button", { name: "Send for review" }).click()
+  await connect.click()
   await page.waitForURL(/\/staff\/[a-z0-9._-]+\/events(\?|$)/, NAVIGATION)
   await expect(page.getByText("Waiting for review")).toBeVisible(NAVIGATION)
 
@@ -148,11 +148,9 @@ test("a Moderator sees the masked test result, never the address, and approves",
   const page = await pageAs(browser, moderator, baseURL!)
   browserContexts.push(page.context())
 
-  await page.goto("/contribute/moderation", NAVIGATION)
+  await page.goto("/contribute/moderation?category=libraries", NAVIGATION)
   await page.waitForLoadState("networkidle")
-  // Event Feed submissions are in the Index queue.
-  const queueSelect = page.getByLabel("Queue")
-  if (await queueSelect.isVisible()) await queueSelect.selectOption("index")
+  // The Libraries category includes event-feed requests.
 
   const row = page
     .locator("tr")
@@ -161,7 +159,7 @@ test("a Moderator sees the masked test result, never the address, and approves",
   await expect(row.getByText("Event feed")).toBeVisible()
   await row.locator(reviewLink(feedSubmissionId)).click()
   await page.waitForURL(
-    new RegExp(`/contribute/moderation/${feedSubmissionId}$`),
+    (url) => url.pathname === `/contribute/moderation/${feedSubmissionId}`,
     NAVIGATION
   )
 
@@ -173,7 +171,9 @@ test("a Moderator sees the masked test result, never the address, and approves",
   if (path !== "/") expect(html).not.toContain(path)
 
   await page.getByRole("button", { name: "Approve and activate" }).click()
-  await expect(page.getByText(/^Approved\.?$/)).toBeVisible(NAVIGATION)
+  await expect(page.getByText("Approved", { exact: true })).toBeVisible(
+    NAVIGATION
+  )
 })
 
 test("the librarian sees the feed active, pauses it and disconnects it", async ({
@@ -190,7 +190,35 @@ test("the librarian sees the feed active, pauses it and disconnects it", async (
     NAVIGATION
   )
 
-  await page.getByRole("button", { name: "Pause" }).click()
+  async function action(name: string, path: string) {
+    const response = page.waitForResponse(
+      (res) => res.url().endsWith(path) && res.request().method() === "POST"
+    )
+    await page.getByRole("button", { name, exact: true }).click()
+    expect((await response).status()).toBe(200)
+  }
+  // Connecting already tests the credential. Respect the server's native
+  // half-minute cooldown before testing the saved connection again.
+  const feeds = await librarian.get("/api/contribute/event-feeds")
+  expect(feeds.ok()).toBe(true)
+  const { data } = await feeds.json()
+  const lastTestedAt = data.libraries
+    .flatMap((entry: { feeds: { lastTestedAt: string }[] }) => entry.feeds)
+    .map((feed: { lastTestedAt: string }) => Date.parse(feed.lastTestedAt))
+  expect(lastTestedAt).toHaveLength(1)
+  await expect
+    .poll(() => Date.now() - lastTestedAt[0], { timeout: 35_000 })
+    .toBeGreaterThanOrEqual(30_000)
+  await action("Test", "/test")
+  await action("Pause", "/pause")
+  await expect(page.getByText("Paused", { exact: true })).toBeVisible(
+    NAVIGATION
+  )
+  await action("Resume", "/resume")
+  await expect(page.getByText("Active", { exact: true })).toBeVisible(
+    NAVIGATION
+  )
+  await action("Pause", "/pause")
   await expect(page.getByText("Paused", { exact: true })).toBeVisible(
     NAVIGATION
   )
@@ -200,7 +228,9 @@ test("the librarian sees the feed active, pauses it and disconnects it", async (
   await expect(dialog).toBeVisible(NAVIGATION)
   await dialog.getByRole("button", { name: "Disconnect" }).click()
   await expect(dialog).toBeHidden(NAVIGATION)
-  await expect(page.getByText("No event feeds yet.")).toBeVisible(NAVIGATION)
+  await expect(
+    page.getByText("Nothing connected yet", { exact: true })
+  ).toBeVisible(NAVIGATION)
 })
 
 test("a direct write for a library the librarian doesn't claim is refused", async () => {

@@ -21,6 +21,29 @@ export async function purgeBillingMetadata(pool: Pool, now = new Date()) {
       [billingConfig().mode, erasedCutoff]
     )
     const ids = accounts.rows.map((row) => row.user_id)
+    const archivedTeams = await client.query<{ id: string }>(
+      "select id from team_billing_accounts where mode=$1 and archived_at<$2 order by archived_at limit 100 for update skip locked",
+      [billingConfig().mode, erasedCutoff]
+    )
+    const teamIds = archivedTeams.rows.map((row) => row.id)
+    await client.query(
+      "delete from team_billing_erasing_users where erased_at<$1",
+      [erasedCutoff]
+    )
+    if (teamIds.length) {
+      await client.query(
+        "delete from team_billing_memberships where account_id=any($1::uuid[])",
+        [teamIds]
+      )
+      await client.query(
+        "delete from team_billing_attempts where account_id=any($1::uuid[])",
+        [teamIds]
+      )
+      await client.query(
+        "delete from team_billing_accounts where id=any($1::uuid[])",
+        [teamIds]
+      )
+    }
     if (ids.length) {
       await client.query(
         "delete from billing_plan_changes where user_id=any($1::text[])",

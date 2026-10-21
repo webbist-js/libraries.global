@@ -10,7 +10,14 @@ export function StaffAreaTabs({
   teamId,
   adding = false,
 }: {
-  readonly active: "overview" | "team" | "api" | "new" | "invite" | "claim"
+  readonly active:
+    | "overview"
+    | "team"
+    | "billing"
+    | "api"
+    | "new"
+    | "invite"
+    | "claim"
   readonly teamId?: string
   readonly adding?: boolean
 }) {
@@ -30,6 +37,12 @@ export function StaffAreaTabs({
             label: t("membersLibraries"),
             href: `/staff/team${query}`,
             icon: "mdi:account-group-outline",
+          },
+          {
+            id: "billing",
+            label: t("billing"),
+            href: `/staff/team/billing${query}`,
+            icon: "mdi:credit-card-outline",
           },
           {
             id: "api",

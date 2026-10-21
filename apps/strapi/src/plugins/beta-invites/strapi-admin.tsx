@@ -18,11 +18,12 @@ function BetaIcon() {
 export default {
   register(app: any) {
     app.addMenuLink({
-      to: "/plugins/beta-invites",
+      to: "plugins/beta-invites",
       icon: BetaIcon,
       intlLabel: { id: "beta-invites.name", defaultMessage: "Beta invites" },
       permissions: [{ action: "plugin::beta-invites.manage", subject: null }],
-      Component: async () => (await import("./admin/App")).App,
+      Component: () =>
+        import("./admin/App").then(({ App }) => ({ default: App })),
     })
   },
   bootstrap() {},

@@ -41,8 +41,12 @@ jobs:
           cp apps/strapi/.env.example apps/strapi/.env
           cp apps/ui/.env.local.example apps/ui/.env.local
 
+      # Workspace exports point to dist files; clean runners have no local dev artifacts.
+      - name: Build workspace libraries
+        run: pnpm exec turbo run build --filter='./packages/*' --concurrency=1
+
       - name: Run linter
-        run: pnpm lint
+        run: pnpm lint:ratchet
 
       - name: Check css/md formatting
         run: pnpm format:check
@@ -69,6 +73,17 @@ jobs:
 
       - name: Typecheck UI including tests
         run: pnpm --filter @repo/ui typecheck
+
+      - name: Install Chromium for public smoke checks
+        run: pnpm --filter @repo/tests-playwright exec playwright install --with-deps chromium
+
+      - name: Check hydrated public page shells and Events search
+        env:
+          QA_SMOKE: "1"
+        run: pnpm --filter @repo/tests-playwright exec playwright test --project=smoke
+
+      - name: Typecheck Strapi admin plugins
+        run: pnpm --filter @repo/strapi exec tsc -p tsconfig.admin.json
 
       - name: Build Strapi
         run: pnpm build:strapi

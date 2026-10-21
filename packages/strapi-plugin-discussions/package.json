@@ -49,6 +49,7 @@
   ],
   "scripts": {
     "build": "node scripts/export-contracts.cjs && strapi-plugin build",
+    "lint": "eslint -c ../../eslint.config.mjs './**/*.{js,ts,jsx,tsx,cjs,mjs}'",
     "test": "vitest run --config vitest.config.ts",
     "test:acceptance": "node tests/acceptance.cjs",
     "typecheck": "tsc --noEmit",
@@ -58,13 +59,17 @@
     "sharp": "0.35.4"
   },
   "devDependencies": {
+    "@strapi/design-system": "^2.2.4",
     "@strapi/sdk-plugin": "5.4.0",
     "@types/node": "^22",
     "@types/react": "^18",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "typescript": "^5",
     "vitest": "4.1.11"
   },
   "peerDependencies": {
+    "@strapi/design-system": "^2.2.4",
     "@strapi/strapi": ">=5.57.0 <6",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"

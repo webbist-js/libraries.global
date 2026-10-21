@@ -14,6 +14,11 @@ export const env = createEnv({
    * require them to be present at build time, which is not always desired or possible (see README).
    */
   server: {
+    TEAM_BILLING_ENABLED: optionalZodBoolean(),
+    STRIPE_PRICE_TEAM_SEAT_ANNUAL: z.string().optional(),
+    STRIPE_PRICE_TEAM_PUBLIC_SEAT_ANNUAL: z.string().optional(),
+    STRIPE_PORTAL_CONFIGURATION_TEAM: z.string().optional(),
+    STRIPE_PORTAL_CONFIGURATION_TEAM_PUBLIC: z.string().optional(),
     PRO_ENABLED: optionalZodBoolean(),
     BILLING_ENV: z.enum(["sandbox", "live"]).optional(),
     STRIPE_MANAGED_PAYMENTS_ENABLED: optionalZodBoolean(),
@@ -87,6 +92,14 @@ export const env = createEnv({
    * You'll get type errors if not all variables from `server` & `client` are included here.
    */
   runtimeEnv: {
+    TEAM_BILLING_ENABLED: process.env.TEAM_BILLING_ENABLED,
+    STRIPE_PRICE_TEAM_SEAT_ANNUAL: process.env.STRIPE_PRICE_TEAM_SEAT_ANNUAL,
+    STRIPE_PRICE_TEAM_PUBLIC_SEAT_ANNUAL:
+      process.env.STRIPE_PRICE_TEAM_PUBLIC_SEAT_ANNUAL,
+    STRIPE_PORTAL_CONFIGURATION_TEAM:
+      process.env.STRIPE_PORTAL_CONFIGURATION_TEAM,
+    STRIPE_PORTAL_CONFIGURATION_TEAM_PUBLIC:
+      process.env.STRIPE_PORTAL_CONFIGURATION_TEAM_PUBLIC,
     PRO_ENABLED: process.env.PRO_ENABLED,
     BILLING_ENV: process.env.BILLING_ENV,
     STRIPE_MANAGED_PAYMENTS_ENABLED:

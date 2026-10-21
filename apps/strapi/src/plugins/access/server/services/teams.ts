@@ -8,12 +8,13 @@ import {
   upsertAffiliation,
 } from "../../../../utils/affiliations"
 import { notifySessionInvalidated } from "../../../../utils/role-grants"
-import { AFFILIATION_UID } from "../../../../utils/staff"
+import { AFFILIATION_UID, resolveStaff } from "../../../../utils/staff"
 import {
   loadTeamMemberships,
   MAX_TEAM_LIBRARIES,
   TEAM_MEMBER_UID,
   TEAM_UID,
+  teamIsActive,
 } from "../../../../utils/team-access"
 import { emailConfigured } from "../../../content-moderation/server/utils/email-config"
 import { AccessError, isDocumentId, isEmail } from "../utils/admin"
@@ -103,6 +104,9 @@ export type TeamView = {
   viewerRole: TeamRole | "admin" | null
   organiserNames: string[]
   createdAt: string | null
+  publicServiceApproved?: boolean
+  pendingSeats?: number | null
+  billingSuspended?: boolean
 }
 
 export type TeamSummary = {
@@ -114,11 +118,17 @@ export type TeamSummary = {
   status: "active" | "lapsed"
   expiresAt: string | null
   verified: boolean
+  selfService?: boolean
   organiserName: string | null
   libraryDocumentIds: string[]
 }
 
 type TeamRow = {
+  pendingSeats?: number | null
+  billingSuspended?: boolean | null
+  publicServiceApproved?: boolean | null
+  billingMembership?: { accessUntil?: string | null; paidSeats?: number } | null
+  billingMode?: string | null
   documentId: string
   name?: string | null
   slug?: string | null
@@ -173,6 +183,11 @@ const isTeamRole = (v: unknown): v is TeamRole =>
   v === "organiser" || v === "member"
 
 const TEAM_FIELDS = [
+  "pendingSeats",
+  "billingSuspended",
+  "publicServiceApproved",
+  "billingMode",
+  "billingMembership",
   "documentId",
   "name",
   "slug",
@@ -238,6 +253,7 @@ export function parseTeamInput(
         expiresAt?: string | null
         notes?: string | null
         status?: "active" | "lapsed"
+        publicServiceApproved?: boolean
       }
     }
   | { ok: false; message: string } {
@@ -251,6 +267,7 @@ export function parseTeamInput(
     expiresAt?: string | null
     notes?: string | null
     status?: "active" | "lapsed"
+    publicServiceApproved?: boolean
   } = {}
 
   if (b.name !== undefined || !partial) {
@@ -309,6 +326,11 @@ export function parseTeamInput(
     if (b.status !== "active" && b.status !== "lapsed")
       return { ok: false, message: "Status must be active or lapsed." }
     value.status = b.status
+  }
+  if (b.publicServiceApproved !== undefined) {
+    if (typeof b.publicServiceApproved !== "boolean")
+      return { ok: false, message: "Discount eligibility must be a boolean." }
+    value.publicServiceApproved = b.publicServiceApproved
   }
 
   return { ok: true, value }
@@ -369,10 +391,6 @@ export default ({ strapi }: { strapi: any }) => {
 
     return row
   }
-
-  const teamIsActive = (team: TeamRow) =>
-    team.status !== "lapsed" &&
-    (!team.expiresAt || Date.parse(team.expiresAt) > Date.now())
 
   /** Team-sourced affiliations for these member rows, by member. */
   async function assignmentsOf(
@@ -471,8 +489,12 @@ export default ({ strapi }: { strapi: any }) => {
       slug: team.slug ?? "",
       seats: team.seats ?? 0,
       used: rows.length,
-      status: team.status === "lapsed" ? "lapsed" : "active",
+      status: teamIsActive(team) ? "active" : "lapsed",
+      billingSuspended:
+        viewer.role === "admin" ? team.billingSuspended === true : undefined,
       source: team.source === "checkout" ? "checkout" : "admin",
+      publicServiceApproved: team.publicServiceApproved === true,
+      pendingSeats: team.pendingSeats ?? null,
       verifiedAt: team.verifiedAt ?? null,
       expiresAt: team.expiresAt ?? null,
       notes: viewer.role === "admin" ? (team.notes ?? null) : null,
@@ -737,6 +759,49 @@ export default ({ strapi }: { strapi: any }) => {
     return rows.length
   }
 
+  async function paidBillingUpdate(
+    team: TeamRow,
+    input: {
+      seats?: number
+      expiresAt?: string | null
+      status?: "active" | "lapsed"
+    }
+  ) {
+    if (team.source !== "checkout") return {}
+    if (input.seats !== undefined || input.expiresAt !== undefined)
+      throw new AccessError(409, "team_seats_managed_by_billing")
+    if (input.status === undefined) return {}
+    const membership = team.billingMembership
+    const paid = Boolean(
+      membership?.accessUntil && Date.parse(membership.accessUntil) > Date.now()
+    )
+    const fits =
+      (await memberRows(team.documentId)).length <= (membership?.paidSeats ?? 0)
+
+    return {
+      billingSuspended: input.status === "lapsed",
+      status: input.status === "active" && paid && fits ? "active" : "lapsed",
+    }
+  }
+
+  async function requireNewLibraryOwners(
+    team: TeamRow,
+    next: TeamLibrary[],
+    baUserId: string
+  ) {
+    if (!team.verifiedAt) return
+    const previous = new Set(
+      (team.libraries ?? []).map((library) => library.documentId)
+    )
+    for (const library of next.filter(
+      (library) => !previous.has(library.documentId)
+    )) {
+      const staff = await resolveStaff(strapi, baUserId, library.documentId)
+      if (staff?.staffRole !== "owner")
+        throw new AccessError(403, "library_verification_required")
+    }
+  }
+
   return {
     /** Admin: Teams, newest first, optionally matched on name. */
     async list(q = ""): Promise<Omit<TeamView, "members" | "notes">[]> {
@@ -822,6 +887,7 @@ export default ({ strapi }: { strapi: any }) => {
         expiresAt?: string | null
         notes?: string | null
         verified?: boolean
+        publicServiceApproved?: boolean
       },
       adminId: string | number
     ): Promise<TeamView> {
@@ -853,6 +919,7 @@ export default ({ strapi }: { strapi: any }) => {
           expiresAt: input.expiresAt ?? null,
           notes: input.notes ?? null,
           createdByAdmin: `admin:${adminId}`,
+          publicServiceApproved: input.publicServiceApproved === true,
           libraries: {
             set: libraries.map((l) => ({ documentId: l.documentId })),
           },
@@ -882,6 +949,7 @@ export default ({ strapi }: { strapi: any }) => {
         expiresAt?: string | null
         notes?: string | null
         status?: "active" | "lapsed"
+        publicServiceApproved?: boolean
       },
       adminId: string | number
     ): Promise<TeamView> {
@@ -893,6 +961,9 @@ export default ({ strapi }: { strapi: any }) => {
         if (input.expiresAt !== undefined) data.expiresAt = input.expiresAt
         if (input.notes !== undefined) data.notes = input.notes
         if (input.status !== undefined) data.status = input.status
+        if (input.publicServiceApproved !== undefined)
+          data.publicServiceApproved = input.publicServiceApproved
+        Object.assign(data, await paidBillingUpdate(team, input))
         let dropped: string[] = []
         if (input.libraryDocumentIds !== undefined) {
           const next = await librariesByIds(input.libraryDocumentIds)
@@ -968,6 +1039,45 @@ export default ({ strapi }: { strapi: any }) => {
       return me
     },
 
+    /** Organisers configure their organisation; covered Libraries confer no verification. */
+    async configure(
+      teamId: string,
+      input: { name?: string; libraryDocumentIds?: string[] },
+      actor: Extract<Actor, { kind: "user" }>
+    ) {
+      const parsed = parseTeamInput(input, true)
+      if (!parsed.ok) throw new AccessError(400, "invalid_team_details")
+
+      return teamTransaction(strapi, teamId, async () => {
+        await this.requireOrganiser(teamId, actor.baUserId)
+        const team = await teamOf(teamId)
+        const next = await librariesByIds(
+          parsed.value.libraryDocumentIds ??
+            (team.libraries ?? []).map((l) => l.documentId)
+        )
+        const old = new Set((team.libraries ?? []).map((l) => l.documentId))
+        await requireNewLibraryOwners(team, next, actor.baUserId)
+        const keep = new Set(next.map((l) => l.documentId))
+        const removed = [...old].filter((id) => !keep.has(id))
+        if (removed.length)
+          for (const member of await memberRows(teamId))
+            for (const id of removed) await dropAccess(member, actor, id)
+        await teams().update({
+          documentId: teamId,
+          data: {
+            ...(parsed.value.name ? { name: parsed.value.name } : {}),
+            libraries: { set: next.map((l) => ({ documentId: l.documentId })) },
+          },
+        })
+        await notifySessionInvalidated(strapi, actor.baUserId)
+
+        return view(await teamOf(teamId), {
+          baUserId: actor.baUserId,
+          role: "organiser",
+        })
+      })
+    },
+
     /**
      * Invites by email, with a seat held from now. Seats: active + invited
      * rows must stay within `seats` (409 `no_seats`). One row per email per
@@ -1012,7 +1122,11 @@ export default ({ strapi }: { strapi: any }) => {
         if (existing?.status === "invited")
           throw new AccessError(409, "invite_already_pending")
         const used = rows.filter((r) => r.status !== "removed").length
-        if (used >= (team.seats ?? 0)) throw new AccessError(409, "no_seats")
+        if (
+          used >=
+          Math.min(team.seats ?? 0, team.pendingSeats ?? team.seats ?? 0)
+        )
+          throw new AccessError(409, "no_seats")
         const data = {
           email,
           teamRole: role,
@@ -1540,6 +1654,7 @@ export default ({ strapi }: { strapi: any }) => {
           status: m.status,
           expiresAt: m.expiresAt,
           verified: m.verified,
+          ...(m.selfService ? { selfService: true } : {}),
           organiserName:
             (organiser?.baUserId && names.get(organiser.baUserId)) ||
             (organiser?.email ? mask(organiser.email) : null),
@@ -1657,7 +1772,8 @@ export default ({ strapi }: { strapi: any }) => {
         fields: ["documentId", "baUserId", "status"],
         populate: {
           team: {
-            fields: ["documentId", "status", "expiresAt"],
+            // Billing mode is private; nested field selection rejects it.
+            // Keep this trusted row internal and return only the claim context.
             populate: { libraries: { fields: ["documentId"] } },
           },
         },
@@ -1691,21 +1807,59 @@ export default ({ strapi }: { strapi: any }) => {
             ...(email ? [{ email: { $eqi: email.trim().toLowerCase() } }] : []),
           ],
         },
-        fields: ["documentId", "status"],
+        fields: ["documentId", "status", "teamRole", "baUserId"],
+        populate: { team: { fields: ["documentId", "source"] } },
         limit: 100,
       })) as MemberRow[]
-      for (const row of rows)
-        await members().update({
-          documentId: row.documentId,
-          data: {
-            baUserId: null,
-            email: `erased-${row.documentId}@invalid`,
-            status: "removed",
-            removedAt: now(),
-            tokenHash: null,
-            preassign: null,
-          },
-        })
+      for (const row of [...rows].sort((a, b) =>
+        (a.team?.documentId ?? "").localeCompare(b.team?.documentId ?? "")
+      )) {
+        const erase = async () => {
+          const current = row.team?.documentId
+            ? await memberOf(row.team.documentId, row.documentId)
+            : row
+          const currentTeam = row.team?.documentId
+            ? await teamOf(row.team.documentId)
+            : null
+          if (
+            current.baUserId !== baUserId &&
+            !(
+              current.status === "invited" &&
+              email &&
+              current.email?.toLowerCase() === email.trim().toLowerCase()
+            )
+          )
+            return
+          if (
+            currentTeam?.source === "checkout" &&
+            current.status === "active" &&
+            current.teamRole === "organiser"
+          ) {
+            const others = (await memberRows(row.team.documentId)).filter(
+              (member) =>
+                member.status === "active" &&
+                member.teamRole === "organiser" &&
+                member.baUserId !== baUserId
+            )
+            if (!others.length)
+              throw new AccessError(409, "transfer_team_before_deletion")
+          }
+          await members().update({
+            documentId: row.documentId,
+            data: {
+              baUserId: null,
+              email: `erased-${row.documentId}@invalid`,
+              status: "removed",
+              removedAt: now(),
+              tokenHash: null,
+              preassign: null,
+            },
+          })
+        }
+        await (row.team?.documentId
+          ? teamTransaction(strapi, row.team.documentId, erase)
+          : erase())
+      }
     },
   }
 }

@@ -1,12 +1,20 @@
-// apps/strapi/src/plugins/events/admin/src/components/PendingReviewList.tsx
-import { useFetchClient } from "@strapi/strapi/admin"
 import {
-  type CSSProperties,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react"
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  Flex,
+  Loader,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  Typography,
+} from "@strapi/design-system"
+import { useFetchClient } from "@strapi/strapi/admin"
+import { useEffect, useRef, useState } from "react"
 
 type PendingEvent = {
   documentId: string
@@ -15,380 +23,266 @@ type PendingEvent = {
   libraryEntityRef?: string
   sourceProvider?: string
   url?: string
-  venueMatchConfidence?: number
-  venueName?: string
-  matchedLibraryName?: string
 }
-
-const thStyle: CSSProperties = {
-  textAlign: "left",
-  padding: "8px 12px",
-  fontSize: "11px",
-  fontWeight: 600,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  color: "#666687",
-  whiteSpace: "nowrap",
-  borderBottom: "2px solid #f0f0ff",
-}
-
-const tdStyle: CSSProperties = {
-  padding: "10px 12px",
-  fontSize: "12px",
-  color: "#32324d",
-  verticalAlign: "middle",
-  borderBottom: "1px solid #f6f6f9",
-}
-
-const PROVIDER_COLORS: Record<string, string> = {
-  eventbrite: "#ff6060",
-  ical: "#1b7c3a",
-  custom_ical: "#1b7c3a",
-  meetup: "#e8174b",
-  google_events: "#4285f4",
-  facebook_events: "#1877f2",
-  librarycloud: "#0c75af",
-}
-
-function ProviderBadge({ provider }: { provider: string }) {
-  const color = PROVIDER_COLORS[provider] ?? "#8e8ea9"
-
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 7px",
-        borderRadius: "4px",
-        fontSize: "10px",
-        fontWeight: 700,
-        background: color + "18",
-        color,
-        border: `1px solid ${color}40`,
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
-      }}
-    >
-      {provider.replace("_", " ")}
-    </span>
-  )
-}
-
-function ConfidenceBadge({ confidence }: { confidence?: number }) {
-  if (confidence === undefined)
-    return <span style={{ color: "#c0c0cf" }}>—</span>
-  const pct = Math.round(confidence * 100)
-  const color = pct >= 80 ? "#1b7c3a" : pct >= 50 ? "#d97706" : "#d02b20"
-
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 7px",
-        borderRadius: "100px",
-        fontSize: "11px",
-        fontWeight: 600,
-        background: color + "15",
-        color,
-        border: `1px solid ${color}30`,
-      }}
-    >
-      {pct}%
-    </span>
-  )
-}
-
-function formatDate(iso?: string) {
-  if (!iso) return "—"
-
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+type Queue = {
+  data: PendingEvent[]
+  meta: { total: number; page: number; pageSize: number }
 }
 
 export function PendingReviewList({
   onCountChange,
+  canReview = false,
 }: {
   onCountChange?: (count: number) => void
+  canReview?: boolean
 }) {
-  const { get, patch } = useFetchClient()
-  const [events, setEvents] = useState<PendingEvent[]>([])
+  const { get, put } = useFetchClient()
+  const [result, setResult] = useState<Queue | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
-    {}
-  )
-  const [fadingOut, setFadingOut] = useState<Set<string>>(new Set())
-
-  const onCountChangeRef = useRef(onCountChange)
-  onCountChangeRef.current = onCountChange
-
-  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
-
+  const [page, setPage] = useState(1)
+  const [revision, setRevision] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const [discard, setDiscard] = useState<PendingEvent | null>(null)
+  const notify = useRef(onCountChange)
+  notify.current = onCountChange
   useEffect(() => {
-    return () => {
-      timersRef.current.forEach(clearTimeout)
-    }
-  }, [])
-
-  const loadEvents = useCallback(async () => {
+    const controller = new AbortController()
     setLoading(true)
     setError(null)
-    try {
-      const { data } = await get("/events/admin/pending-review")
-      const items = Array.isArray((data as any)?.data)
-        ? (data as any).data
-        : Array.isArray(data)
-          ? data
-          : []
-      setEvents(items as PendingEvent[])
-      onCountChangeRef.current?.(items.length)
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to load pending review queue.")
-    } finally {
-      setLoading(false)
-    }
-  }, [get])
+    get<Queue>(`/events/admin/pending-review?page=${page}&limit=20`, {
+      signal: controller.signal,
+    })
+      .then(({ data }) => {
+        if (controller.signal.aborted) return
+        if (!data.data.length && page > 1) {
+          setPage((value) => value - 1)
 
-  useEffect(() => {
-    void loadEvents()
-  }, [loadEvents])
+          return
+        }
+        setResult(data)
+        notify.current?.(data.meta.total)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setError("The event queue couldn't be loaded. Try Refresh queue.")
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
-  const handleAction = async (
-    documentId: string,
-    action: "approve" | "discard"
-  ) => {
+    return () => controller.abort()
+  }, [get, page, revision])
+  const decide = async (event: PendingEvent, action: "approve" | "discard") => {
+    if (busy) return
+    setBusy(true)
     setError(null)
-    setActionLoading((prev) => ({ ...prev, [documentId]: true }))
     try {
-      await patch(`/events/admin/pending-review/${documentId}`, { action })
-      setFadingOut((prev) => new Set(prev).add(documentId))
-      const timer = setTimeout(() => {
-        setEvents((prev) => {
-          const updated = prev.filter((e) => e.documentId !== documentId)
-          onCountChangeRef.current?.(updated.length)
-
-          return updated
-        })
-        setFadingOut((prev) => {
-          const next = new Set(prev)
-          next.delete(documentId)
-
-          return next
-        })
-        setActionLoading((prev) => {
-          const next = { ...prev }
-          delete next[documentId]
-
-          return next
-        })
-        timersRef.current.delete(timer)
-      }, 350)
-      timersRef.current.add(timer)
-    } catch (err: any) {
-      setError(`Action failed: ${err?.message ?? "unknown error"}`)
-      setActionLoading((prev) => ({ ...prev, [documentId]: false }))
+      await put(`/events/admin/pending-review/${event.documentId}`, { action })
+      setDiscard(null)
+      setRevision((value) => value + 1)
+    } catch {
+      setError(
+        "The review action couldn't be saved. The event is still in the queue; try again."
+      )
+    } finally {
+      setBusy(false)
     }
   }
+  const rows = result?.data ?? []
+  const pages = Math.max(1, Math.ceil((result?.meta.total ?? 0) / 20))
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "16px",
-        }}
-      >
-        <p
-          style={{
-            margin: 0,
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "#32324d",
-          }}
+    <Flex direction="column" alignItems="stretch" gap={5}>
+      <Flex justifyContent="space-between" gap={4} wrap="wrap">
+        <Box>
+          <Typography tag="h2" variant="delta">
+            Events awaiting review
+          </Typography>
+          <Typography tag="p" textColor="neutral600" paddingTop={2}>
+            Check the source and matched library before publishing.
+          </Typography>
+        </Box>
+        <Button
+          variant="secondary"
+          disabled={loading || busy}
+          onClick={() => setRevision((value) => value + 1)}
         >
-          Pending Review Queue
-        </p>
-        <button
-          onClick={() => {
-            void loadEvents()
-          }}
-          style={{
-            padding: "6px 12px",
-            fontSize: "12px",
-            fontWeight: 500,
-            background: "#fff",
-            border: "1px solid #dcdce4",
-            borderRadius: "6px",
-            cursor: "pointer",
-            color: "#32324d",
-          }}
-        >
-          ↻ Refresh
-        </button>
-      </div>
-
+          Refresh queue
+        </Button>
+      </Flex>
       {error && (
-        <div
-          style={{
-            padding: "12px 16px",
-            background: "#ffeaea",
-            border: "1px solid #f5c0be",
-            borderRadius: "8px",
-            fontSize: "13px",
-            color: "#d02b20",
-            marginBottom: "16px",
-          }}
+        <Alert
+          variant="danger"
+          title="Queue unavailable"
+          closeLabel="Dismiss"
+          onClose={() => setError(null)}
         >
           {error}
-        </div>
+        </Alert>
       )}
-
-      {loading && (
-        <p style={{ color: "#8e8ea9", fontSize: "13px" }}>Loading…</p>
-      )}
-
-      {!loading && events.length === 0 && (
-        <div
-          style={{
-            padding: "48px 24px",
-            textAlign: "center",
-            background: "#fff",
-            border: "1px solid #dcdce4",
-            borderRadius: "8px",
-          }}
-        >
-          <div style={{ fontSize: "28px", marginBottom: "8px" }}>✓</div>
-          <p style={{ fontSize: "14px", color: "#666687", margin: 0 }}>
-            Queue is clear — no events pending review.
-          </p>
-        </div>
-      )}
-
-      {!loading && events.length > 0 && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #dcdce4",
-            borderRadius: "8px",
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
+      {loading ? (
+        <Loader>Loading event queue</Loader>
+      ) : rows.length === 0 && !error ? (
+        <Box background="neutral0" hasRadius padding={8}>
+          <Typography tag="h3" variant="delta">
+            All caught up
+          </Typography>
+          <Typography tag="p" textColor="neutral600" paddingTop={3}>
+            No imported events are waiting for review.
+          </Typography>
+        </Box>
+      ) : (
+        <Box style={{ overflowX: "auto" }}>
+          <Table
+            colCount={canReview ? 5 : 4}
+            rowCount={rows.length}
+            aria-label="Events awaiting review"
+          >
+            <Thead>
+              <Tr>
                 {[
                   "Event",
-                  "Venue",
-                  "Matched Library",
-                  "Confidence",
-                  "Date",
-                  "Actions",
-                ].map((h) => (
-                  <th key={h} style={thStyle}>
-                    {h}
-                  </th>
+                  "Library",
+                  "Starts",
+                  "Source",
+                  ...(canReview ? ["Actions"] : []),
+                ].map((label) => (
+                  <Th key={label}>
+                    <Typography variant="sigma">{label}</Typography>
+                  </Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((ev) => (
-                <tr
-                  key={ev.documentId}
-                  style={{
-                    opacity: fadingOut.has(ev.documentId) ? 0 : 1,
-                    transition: "opacity 0.35s",
-                  }}
-                >
-                  <td style={tdStyle}>
-                    <div style={{ fontWeight: 600, marginBottom: "3px" }}>
-                      {ev.title}
-                    </div>
-                    <ProviderBadge provider={ev.sourceProvider ?? "unknown"} />
-                  </td>
-                  <td style={tdStyle}>{ev.venueName ?? "—"}</td>
-                  <td style={tdStyle}>
-                    {ev.matchedLibraryName ? (
-                      <div>
-                        <div style={{ fontWeight: 500 }}>
-                          {ev.matchedLibraryName}
-                        </div>
-                        {ev.libraryEntityRef && (
-                          <div
-                            style={{
-                              fontSize: "11px",
-                              fontFamily: "monospace",
-                              color: "#8e8ea9",
-                            }}
-                          >
-                            {ev.libraryEntityRef}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      "—"
+              </Tr>
+            </Thead>
+            <Tbody>
+              {rows.map((event) => (
+                <Tr key={event.documentId}>
+                  <Td>
+                    <Typography>{event.title}</Typography>
+                    {event.url && /^https?:\/\//i.test(event.url) && (
+                      <Typography tag="p" paddingTop={2}>
+                        <a
+                          href={event.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View source
+                        </a>
+                      </Typography>
                     )}
-                  </td>
-                  <td style={tdStyle}>
-                    <ConfidenceBadge confidence={ev.venueMatchConfidence} />
-                  </td>
-                  <td style={tdStyle}>{formatDate(ev.startTime)}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      <button
-                        onClick={() =>
-                          void handleAction(ev.documentId, "approve")
-                        }
-                        disabled={actionLoading[ev.documentId]}
-                        style={{
-                          padding: "5px 10px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          background: "#eafbf2",
-                          color: "#1b7c3a",
-                          border: "1px solid #a5dfc0",
-                          borderRadius: "5px",
-                          cursor: actionLoading[ev.documentId]
-                            ? "not-allowed"
-                            : "pointer",
-                          opacity: actionLoading[ev.documentId] ? 0.5 : 1,
-                        }}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() =>
-                          void handleAction(ev.documentId, "discard")
-                        }
-                        disabled={actionLoading[ev.documentId]}
-                        style={{
-                          padding: "5px 10px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          background: "#ffeaea",
-                          color: "#d02b20",
-                          border: "1px solid #f5c0be",
-                          borderRadius: "5px",
-                          cursor: actionLoading[ev.documentId]
-                            ? "not-allowed"
-                            : "pointer",
-                          opacity: actionLoading[ev.documentId] ? 0.5 : 1,
-                        }}
-                      >
-                        Discard
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  </Td>
+                  <Td>
+                    <Typography>
+                      {event.libraryEntityRef ?? "No library matched"}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography textColor="neutral600">
+                      {event.startTime
+                        ? new Date(event.startTime).toLocaleString()
+                        : "—"}
+                    </Typography>
+                  </Td>
+                  <Td>
+                    <Typography>{event.sourceProvider ?? "—"}</Typography>
+                  </Td>
+                  {canReview && (
+                    <Td>
+                      <Flex gap={2}>
+                        <Button
+                          size="S"
+                          disabled={busy}
+                          onClick={() => void decide(event, "approve")}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="S"
+                          variant="danger-light"
+                          disabled={busy}
+                          onClick={() => setDiscard(event)}
+                        >
+                          Discard
+                        </Button>
+                      </Flex>
+                    </Td>
+                  )}
+                </Tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </Tbody>
+          </Table>
+        </Box>
       )}
-    </div>
+      {pages > 1 && (
+        <Flex justifyContent="space-between" gap={4}>
+          <Button
+            variant="secondary"
+            disabled={loading || busy || page === 1}
+            onClick={() => setPage((value) => value - 1)}
+          >
+            Previous
+          </Button>
+          <Typography textColor="neutral600">
+            Page {page} of {pages}
+          </Typography>
+          <Button
+            variant="secondary"
+            disabled={loading || busy || page >= pages}
+            onClick={() => setPage((value) => value + 1)}
+          >
+            Next
+          </Button>
+        </Flex>
+      )}
+      <Dialog.Root
+        open={!!discard}
+        onOpenChange={(open) => {
+          if (!open && !busy) setDiscard(null)
+        }}
+      >
+        <Dialog.Content>
+          <Dialog.Header>Discard imported event</Dialog.Header>
+          <Dialog.Body>
+            <Box>
+              <Dialog.Description>
+                Remove “{discard?.title}” from the review queue? This deletes
+                the imported event.
+              </Dialog.Description>
+              {error && (
+                <Typography
+                  tag="p"
+                  role="alert"
+                  textColor="danger600"
+                  paddingTop={3}
+                >
+                  {error}
+                </Typography>
+              )}
+            </Box>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Dialog.Cancel>
+              <Button
+                variant="tertiary"
+                disabled={busy}
+                onClick={() => setDiscard(null)}
+              >
+                Cancel
+              </Button>
+            </Dialog.Cancel>
+            <Button
+              variant="danger"
+              loading={busy}
+              disabled={busy}
+              onClick={() => {
+                if (discard) void decide(discard, "discard")
+              }}
+            >
+              Discard event
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Root>
+    </Flex>
   )
 }

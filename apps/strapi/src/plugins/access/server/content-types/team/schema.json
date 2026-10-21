@@ -19,6 +19,22 @@
     }
   },
   "attributes": {
+    "billingAccountId": { "type": "string", "unique": true, "private": true },
+    "billingMode": {
+      "type": "enumeration",
+      "enum": ["sandbox", "live"],
+      "private": true
+    },
+    "billingRevision": { "type": "integer", "default": 0, "private": true },
+    "billingMembership": { "type": "json", "private": true },
+    "billingSuspended": {
+      "type": "boolean",
+      "default": false,
+      "private": true
+    },
+    "billingArchived": { "type": "boolean", "default": false, "private": true },
+    "pendingSeats": { "type": "integer", "min": 1 },
+    "publicServiceApproved": { "type": "boolean", "default": false },
     "name": {
       "type": "string",
       "required": true

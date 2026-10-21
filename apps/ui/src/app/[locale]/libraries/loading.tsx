@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 import { getLocale, getTranslations } from "next-intl/server"
 import { Suspense } from "react"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -16,7 +17,7 @@ export default async function LibrariesLoading() {
       <Suspense fallback={<div className="h-14 shrink-0" />}>
         <GlobalHeader locale={locale as Locale} />
       </Suspense>
-      <main className="flex flex-1 flex-col" aria-busy="true">
+      <MainContent className="flex flex-1 flex-col" aria-busy="true">
         <span role="status" className="sr-only">
           {t("loading_results")}
         </span>
@@ -63,7 +64,7 @@ export default async function LibrariesLoading() {
             <FindSkeletonGrid />
           </div>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

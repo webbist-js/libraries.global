@@ -30,6 +30,11 @@ import { EmptyDocuments } from "@strapi/icons/symbols"
 import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
+import {
+  PluginPage,
+  PluginModalContent,
+  FormGrid,
+} from "../../../../../admin/components/PluginUI"
 import { type AccessSection, PluginNav } from "../components/PluginNav"
 import {
   apiError,
@@ -143,330 +148,332 @@ export function PlansPage({
   )
 
   return (
-    <Layouts.Root>
-      <Layouts.Header
-        title="Plans"
-        subtitle="Complimentary plans and Pro verifications. Plans never change a role."
-        primaryAction={
-          <Flex gap={2}>
-            <Button
-              variant="secondary"
-              startIcon={<ArrowClockwise />}
-              onClick={() => void load(query.trim())}
-              loading={loading}
-            >
-              Refresh
-            </Button>
-            <Button startIcon={<Plus />} onClick={() => setAdding(true)}>
-              {tab === "grants" ? "Grant a plan" : "Add a verification"}
-            </Button>
-          </Flex>
-        }
-      />
-      <Layouts.Content>
-        <PluginNav current="plans" allowed={allowed} />
-        {error && (
-          <Box paddingBottom={4}>
-            <Alert
-              variant="danger"
-              title="Something went wrong"
-              closeLabel="Dismiss"
-              onClose={() => setError(null)}
-            >
-              {error}
-            </Alert>
-          </Box>
-        )}
-        <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
-          <Box width="32rem" paddingBottom={4}>
-            <Searchbar
-              name="plans-search"
-              size="S"
-              value={query}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setQuery(e.target.value)
-              }
-              onClear={() => setQuery("")}
-              clearLabel="Clear search"
-              placeholder="Filter by Better Auth id or email"
-            >
-              Filter plans
-            </Searchbar>
-          </Box>
-          <Tabs.Root
-            value={tab}
-            onValueChange={(v: string) => setTab(v as Tab)}
-          >
-            <Tabs.List aria-label="Plan kinds">
-              <Tabs.Trigger value="grants">
-                Plan grants ({grants.length})
-              </Tabs.Trigger>
-              <Tabs.Trigger value="verifications">
-                Verifications ({verifications.length})
-              </Tabs.Trigger>
-            </Tabs.List>
-            <Tabs.Content value="grants">
-              <Box paddingTop={4}>
-                {loading && grants.length === 0 ? (
-                  <Flex justifyContent="center" padding={8}>
-                    <Loader>Loading plans</Loader>
-                  </Flex>
-                ) : grants.length === 0 ? (
-                  empty("plan grants")
-                ) : (
-                  <Table colCount={7} rowCount={grants.length + 1}>
-                    <Thead>
-                      <Tr>
-                        <Th>
-                          <Typography variant="sigma">Person</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Plan</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Source</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Status</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Expires</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Reason</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Actions</Typography>
-                        </Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {grants.map((g) => (
-                        <Tr key={g.documentId}>
-                          <Td>
-                            <Typography fontWeight="semiBold">
-                              {g.name ?? g.baUserId}
-                            </Typography>
-                            {g.name && (
-                              <Typography
-                                variant="pi"
-                                textColor="neutral600"
-                                tag="p"
-                              >
-                                {g.baUserId}
-                              </Typography>
-                            )}
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {PLAN_LABELS[g.plan] ?? g.plan}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {GRANT_SOURCE_LABELS[g.source ?? ""] ??
-                                g.source ??
-                                "—"}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <Status
-                              variant={ROW_STATUS_META[g.status].variant}
-                              size="S"
-                            >
-                              {ROW_STATUS_META[g.status].label}
-                            </Status>
-                          </Td>
-                          <Td>
-                            <Typography>{dateCell(g.expiresAt)}</Typography>
-                          </Td>
-                          <Td>
-                            <Typography
-                              variant="pi"
-                              ellipsis
-                              style={{ maxWidth: "24rem" }}
-                            >
-                              {g.reason ?? "—"}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            {g.status === "active" && (
-                              <IconButton
-                                label={`Revoke ${PLAN_LABELS[g.plan] ?? g.plan} for ${g.name ?? g.baUserId}`}
-                                variant="danger-light"
-                                onClick={() =>
-                                  setRevoking({
-                                    kind: "grants",
-                                    documentId: g.documentId,
-                                    label: `${PLAN_LABELS[g.plan] ?? g.plan} for ${g.name ?? g.baUserId}`,
-                                  })
-                                }
-                              >
-                                <Trash />
-                              </IconButton>
-                            )}
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                )}
-              </Box>
-            </Tabs.Content>
-            <Tabs.Content value="verifications">
-              <Box paddingTop={4}>
-                {loading && verifications.length === 0 ? (
-                  <Flex justifyContent="center" padding={8}>
-                    <Loader>Loading verifications</Loader>
-                  </Flex>
-                ) : verifications.length === 0 ? (
-                  empty("verifications")
-                ) : (
-                  <Table colCount={6} rowCount={verifications.length + 1}>
-                    <Thead>
-                      <Tr>
-                        <Th>
-                          <Typography variant="sigma">Person</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Kind</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">
-                            Verified email
-                          </Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Status</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Expires</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Actions</Typography>
-                        </Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {verifications.map((v) => (
-                        <Tr key={v.documentId}>
-                          <Td>
-                            <Typography fontWeight="semiBold">
-                              {v.name ?? v.baUserId}
-                            </Typography>
-                            {v.name && (
-                              <Typography
-                                variant="pi"
-                                textColor="neutral600"
-                                tag="p"
-                              >
-                                {v.baUserId}
-                              </Typography>
-                            )}
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {VERIFICATION_KIND_LABELS[v.kind] ?? v.kind}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <Typography>{v.verifiedEmail ?? "—"}</Typography>
-                          </Td>
-                          <Td>
-                            <Status
-                              variant={ROW_STATUS_META[v.status].variant}
-                              size="S"
-                            >
-                              {ROW_STATUS_META[v.status].label}
-                            </Status>
-                          </Td>
-                          <Td>
-                            <Typography>{dateCell(v.expiresAt)}</Typography>
-                          </Td>
-                          <Td>
-                            {v.status === "active" && (
-                              <IconButton
-                                label={`Revoke the verification for ${v.name ?? v.baUserId}`}
-                                variant="danger-light"
-                                onClick={() =>
-                                  setRevoking({
-                                    kind: "verifications",
-                                    documentId: v.documentId,
-                                    label: `the ${VERIFICATION_KIND_LABELS[v.kind] ?? v.kind} verification for ${v.name ?? v.baUserId}`,
-                                  })
-                                }
-                              >
-                                <Trash />
-                              </IconButton>
-                            )}
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                )}
-              </Box>
-            </Tabs.Content>
-          </Tabs.Root>
-        </Box>
-      </Layouts.Content>
-      {adding && (
-        <AddPlanModal
-          kind={tab}
-          onClose={() => setAdding(false)}
-          onSaved={() => {
-            setAdding(false)
-            void load(query.trim())
-          }}
-        />
-      )}
-      <Dialog.Root
-        open={revoking !== null}
-        onOpenChange={(open) => !open && setRevoking(null)}
-      >
-        <Dialog.Content>
-          <Dialog.Header>Revoke {revoking?.label}?</Dialog.Header>
-          <Dialog.Body>
-            <Flex direction="column" alignItems="stretch" gap={3}>
-              <Typography>
-                It ends now. The row stays with the reason, and the person’s
-                session refreshes within a minute.
-              </Typography>
-              <Field.Root
-                name="revokeReason"
-                required
-                hint={`${revokeReason.trim().length} of ${REASON_MAX} characters.`}
-              >
-                <Field.Label>Reason</Field.Label>
-                <Textarea
-                  value={revokeReason}
-                  maxLength={REASON_MAX}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    setRevokeReason(e.target.value)
-                  }
-                />
-                <Field.Hint />
-              </Field.Root>
-            </Flex>
-          </Dialog.Body>
-          <Dialog.Footer>
-            <Dialog.Cancel>
-              <Button variant="tertiary">Keep</Button>
-            </Dialog.Cancel>
-            <Dialog.Action>
+    <PluginPage>
+      <Layouts.Root>
+        <Layouts.Header
+          title="Plans"
+          subtitle="Complimentary plans and Pro verifications. Plans never change a role."
+          primaryAction={
+            <Flex gap={2}>
               <Button
-                variant="danger-light"
-                loading={busy}
-                disabled={!revokeReason.trim()}
-                onClick={() => void revoke()}
+                variant="secondary"
+                startIcon={<ArrowClockwise />}
+                onClick={() => void load(query.trim())}
+                loading={loading}
               >
-                Revoke
+                Refresh
               </Button>
-            </Dialog.Action>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
-    </Layouts.Root>
+              <Button startIcon={<Plus />} onClick={() => setAdding(true)}>
+                {tab === "grants" ? "Grant a plan" : "Add a verification"}
+              </Button>
+            </Flex>
+          }
+        />
+        <Layouts.Content>
+          <PluginNav current="plans" allowed={allowed} />
+          {error && (
+            <Box paddingBottom={4}>
+              <Alert
+                variant="danger"
+                title="Something went wrong"
+                closeLabel="Dismiss"
+                onClose={() => setError(null)}
+              >
+                {error}
+              </Alert>
+            </Box>
+          )}
+          <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
+            <Box width="32rem" paddingBottom={4}>
+              <Searchbar
+                name="plans-search"
+                size="S"
+                value={query}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setQuery(e.target.value)
+                }
+                onClear={() => setQuery("")}
+                clearLabel="Clear search"
+                placeholder="Filter by Better Auth id or email"
+              >
+                Filter plans
+              </Searchbar>
+            </Box>
+            <Tabs.Root
+              value={tab}
+              onValueChange={(v: string) => setTab(v as Tab)}
+            >
+              <Tabs.List aria-label="Plan kinds">
+                <Tabs.Trigger value="grants">
+                  Plan grants ({grants.length})
+                </Tabs.Trigger>
+                <Tabs.Trigger value="verifications">
+                  Verifications ({verifications.length})
+                </Tabs.Trigger>
+              </Tabs.List>
+              <Tabs.Content value="grants">
+                <Box paddingTop={4}>
+                  {loading && grants.length === 0 ? (
+                    <Flex justifyContent="center" padding={8}>
+                      <Loader>Loading plans</Loader>
+                    </Flex>
+                  ) : grants.length === 0 ? (
+                    empty("plan grants")
+                  ) : (
+                    <Table colCount={7} rowCount={grants.length + 1}>
+                      <Thead>
+                        <Tr>
+                          <Th>
+                            <Typography variant="sigma">Person</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Plan</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Source</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Status</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Expires</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Reason</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Actions</Typography>
+                          </Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {grants.map((g) => (
+                          <Tr key={g.documentId}>
+                            <Td>
+                              <Typography fontWeight="semiBold">
+                                {g.name ?? g.baUserId}
+                              </Typography>
+                              {g.name && (
+                                <Typography
+                                  variant="pi"
+                                  textColor="neutral600"
+                                  tag="p"
+                                >
+                                  {g.baUserId}
+                                </Typography>
+                              )}
+                            </Td>
+                            <Td>
+                              <Typography>
+                                {PLAN_LABELS[g.plan] ?? g.plan}
+                              </Typography>
+                            </Td>
+                            <Td>
+                              <Typography>
+                                {GRANT_SOURCE_LABELS[g.source ?? ""] ??
+                                  g.source ??
+                                  "—"}
+                              </Typography>
+                            </Td>
+                            <Td>
+                              <Status
+                                variant={ROW_STATUS_META[g.status].variant}
+                                size="S"
+                              >
+                                {ROW_STATUS_META[g.status].label}
+                              </Status>
+                            </Td>
+                            <Td>
+                              <Typography>{dateCell(g.expiresAt)}</Typography>
+                            </Td>
+                            <Td>
+                              <Typography
+                                variant="pi"
+                                ellipsis
+                                style={{ maxWidth: "24rem" }}
+                              >
+                                {g.reason ?? "—"}
+                              </Typography>
+                            </Td>
+                            <Td>
+                              {g.status === "active" && (
+                                <IconButton
+                                  label={`Revoke ${PLAN_LABELS[g.plan] ?? g.plan} for ${g.name ?? g.baUserId}`}
+                                  variant="danger-light"
+                                  onClick={() =>
+                                    setRevoking({
+                                      kind: "grants",
+                                      documentId: g.documentId,
+                                      label: `${PLAN_LABELS[g.plan] ?? g.plan} for ${g.name ?? g.baUserId}`,
+                                    })
+                                  }
+                                >
+                                  <Trash />
+                                </IconButton>
+                              )}
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  )}
+                </Box>
+              </Tabs.Content>
+              <Tabs.Content value="verifications">
+                <Box paddingTop={4}>
+                  {loading && verifications.length === 0 ? (
+                    <Flex justifyContent="center" padding={8}>
+                      <Loader>Loading verifications</Loader>
+                    </Flex>
+                  ) : verifications.length === 0 ? (
+                    empty("verifications")
+                  ) : (
+                    <Table colCount={6} rowCount={verifications.length + 1}>
+                      <Thead>
+                        <Tr>
+                          <Th>
+                            <Typography variant="sigma">Person</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Kind</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">
+                              Verified email
+                            </Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Status</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Expires</Typography>
+                          </Th>
+                          <Th>
+                            <Typography variant="sigma">Actions</Typography>
+                          </Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {verifications.map((v) => (
+                          <Tr key={v.documentId}>
+                            <Td>
+                              <Typography fontWeight="semiBold">
+                                {v.name ?? v.baUserId}
+                              </Typography>
+                              {v.name && (
+                                <Typography
+                                  variant="pi"
+                                  textColor="neutral600"
+                                  tag="p"
+                                >
+                                  {v.baUserId}
+                                </Typography>
+                              )}
+                            </Td>
+                            <Td>
+                              <Typography>
+                                {VERIFICATION_KIND_LABELS[v.kind] ?? v.kind}
+                              </Typography>
+                            </Td>
+                            <Td>
+                              <Typography>{v.verifiedEmail ?? "—"}</Typography>
+                            </Td>
+                            <Td>
+                              <Status
+                                variant={ROW_STATUS_META[v.status].variant}
+                                size="S"
+                              >
+                                {ROW_STATUS_META[v.status].label}
+                              </Status>
+                            </Td>
+                            <Td>
+                              <Typography>{dateCell(v.expiresAt)}</Typography>
+                            </Td>
+                            <Td>
+                              {v.status === "active" && (
+                                <IconButton
+                                  label={`Revoke the verification for ${v.name ?? v.baUserId}`}
+                                  variant="danger-light"
+                                  onClick={() =>
+                                    setRevoking({
+                                      kind: "verifications",
+                                      documentId: v.documentId,
+                                      label: `the ${VERIFICATION_KIND_LABELS[v.kind] ?? v.kind} verification for ${v.name ?? v.baUserId}`,
+                                    })
+                                  }
+                                >
+                                  <Trash />
+                                </IconButton>
+                              )}
+                            </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  )}
+                </Box>
+              </Tabs.Content>
+            </Tabs.Root>
+          </Box>
+        </Layouts.Content>
+        {adding && (
+          <AddPlanModal
+            kind={tab}
+            onClose={() => setAdding(false)}
+            onSaved={() => {
+              setAdding(false)
+              void load(query.trim())
+            }}
+          />
+        )}
+        <Dialog.Root
+          open={revoking !== null}
+          onOpenChange={(open) => !open && setRevoking(null)}
+        >
+          <Dialog.Content>
+            <Dialog.Header>Revoke {revoking?.label}?</Dialog.Header>
+            <Dialog.Body>
+              <Flex direction="column" alignItems="stretch" gap={3}>
+                <Typography>
+                  It ends now. The row stays with the reason, and the person’s
+                  session refreshes within a minute.
+                </Typography>
+                <Field.Root
+                  name="revokeReason"
+                  required
+                  hint={`${revokeReason.trim().length} of ${REASON_MAX} characters.`}
+                >
+                  <Field.Label>Reason</Field.Label>
+                  <Textarea
+                    value={revokeReason}
+                    maxLength={REASON_MAX}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setRevokeReason(e.target.value)
+                    }
+                  />
+                  <Field.Hint />
+                </Field.Root>
+              </Flex>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Dialog.Cancel>
+                <Button variant="tertiary">Keep</Button>
+              </Dialog.Cancel>
+              <Dialog.Action>
+                <Button
+                  variant="danger-light"
+                  loading={busy}
+                  disabled={!revokeReason.trim()}
+                  onClick={() => void revoke()}
+                >
+                  Revoke
+                </Button>
+              </Dialog.Action>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Root>
+      </Layouts.Root>
+    </PluginPage>
   )
 }
 
@@ -531,7 +538,7 @@ function AddPlanModal({
 
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
-      <Modal.Content>
+      <PluginModalContent style={{ maxWidth: 760 }}>
         <Modal.Header>
           <Modal.Title>
             {kind === "grants" ? "Grant a plan" : "Add a verification"}
@@ -542,7 +549,7 @@ function AddPlanModal({
             <Field.Root
               name="person"
               required
-              hint="A Better Auth id (from their profile), or the email their submissions were sent from."
+              hint="Use an email from their submissions, or copy their account ID from People."
             >
               <Field.Label>Person</Field.Label>
               <TextInput
@@ -550,13 +557,13 @@ function AddPlanModal({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setPerson(e.target.value)
                 }
-                placeholder="id or email"
+                placeholder="Email address or account ID"
               />
               <Field.Hint />
             </Field.Root>
             {kind === "grants" ? (
-              <Flex gap={4} wrap="wrap">
-                <Box width="12rem">
+              <FormGrid>
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root name="plan" required>
                     <Field.Label>Plan</Field.Label>
                     <SingleSelect
@@ -571,7 +578,7 @@ function AddPlanModal({
                     </SingleSelect>
                   </Field.Root>
                 </Box>
-                <Box width="14rem">
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root name="source">
                     <Field.Label>Source</Field.Label>
                     <SingleSelect
@@ -588,10 +595,10 @@ function AddPlanModal({
                     </SingleSelect>
                   </Field.Root>
                 </Box>
-              </Flex>
+              </FormGrid>
             ) : (
-              <Flex gap={4} wrap="wrap">
-                <Box width="14rem">
+              <FormGrid>
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root name="kind" required>
                     <Field.Label>Kind</Field.Label>
                     <SingleSelect
@@ -608,7 +615,7 @@ function AddPlanModal({
                     </SingleSelect>
                   </Field.Root>
                 </Box>
-                <Box width="20rem">
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root
                     name="verifiedEmail"
                     hint="The institutional email you checked."
@@ -624,9 +631,9 @@ function AddPlanModal({
                     <Field.Hint />
                   </Field.Root>
                 </Box>
-              </Flex>
+              </FormGrid>
             )}
-            <Box width="14rem">
+            <Box style={{ minWidth: 0, width: "100%", maxWidth: 340 }}>
               <Field.Root name="expiresAt" hint="Leave empty for no end.">
                 <Field.Label>Expires (optional)</Field.Label>
                 <DatePicker
@@ -677,7 +684,7 @@ function AddPlanModal({
             {kind === "grants" ? "Grant" : "Add"}
           </Button>
         </Modal.Footer>
-      </Modal.Content>
+      </PluginModalContent>
     </Modal.Root>
   )
 }

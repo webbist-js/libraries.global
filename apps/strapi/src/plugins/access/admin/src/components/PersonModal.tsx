@@ -13,13 +13,7 @@ import {
   SingleSelect,
   SingleSelectOption,
   Status,
-  Table,
-  Tbody,
-  Td,
   Textarea,
-  Th,
-  Thead,
-  Tr,
   Typography,
 } from "@strapi/design-system"
 import { ArrowRight, Plus, Trash } from "@strapi/icons"
@@ -42,6 +36,10 @@ import {
   usesLocale,
   usesQueue,
 } from "./peopleMeta"
+import {
+  PluginModalContent,
+  FormGrid,
+} from "../../../../../admin/components/PluginUI"
 import { formatDateTime } from "../../../../content-moderation/admin/src/components/submissionMeta"
 import {
   KeyValueGrid,
@@ -57,6 +55,108 @@ function GrantStatusPill({ status }: { status: GrantRow["status"] }) {
     <Status variant={meta.variant} size="S">
       <Typography>{meta.label}</Typography>
     </Status>
+  )
+}
+
+function RoleGrantCard({
+  grant,
+  busy,
+  onRevoke,
+}: {
+  readonly grant: GrantRow
+  readonly busy: boolean
+  readonly onRevoke: (grant: GrantRow) => void
+}) {
+  const scope =
+    [
+      usesQueue(grant.role) ? (QUEUE_LABELS[grant.queue] ?? grant.queue) : null,
+      usesLocale(grant.role) ? (grant.locale ?? "Any language") : null,
+    ]
+      .filter(Boolean)
+      .join(" · ") || "Everywhere"
+
+  return (
+    <Box background="neutral0" borderColor="neutral200" padding={5} hasRadius>
+      <Flex
+        gap={3}
+        justifyContent="space-between"
+        alignItems="flex-start"
+        wrap="wrap"
+      >
+        <Box style={{ minWidth: 0, flex: "1 1 220px" }}>
+          <Typography tag="h3" variant="delta" textColor="neutral800">
+            {ROLE_LABELS[grant.role] ?? grant.role}
+          </Typography>
+          <Typography tag="p" textColor="neutral600" paddingTop={2}>
+            {scope}
+          </Typography>
+        </Box>
+        <Flex gap={3} wrap="wrap">
+          <GrantStatusPill status={grant.status} />
+          {grant.status === "active" ? (
+            <Button
+              size="S"
+              variant="danger-light"
+              startIcon={<Trash />}
+              onClick={() => onRevoke(grant)}
+              disabled={busy}
+              aria-label={`Revoke ${ROLE_LABELS[grant.role] ?? grant.role}`}
+            >
+              Revoke
+            </Button>
+          ) : null}
+        </Flex>
+      </Flex>
+      <Box paddingTop={4}>
+        <KeyValueGrid
+          rows={[
+            {
+              label: "Granted",
+              value: grant.createdAt
+                ? formatDateTime(grant.createdAt)
+                : "Not recorded",
+            },
+            {
+              label: grant.status === "revoked" ? "Ended" : "Expires",
+              value: grant.expiresAt
+                ? formatDateTime(grant.expiresAt)
+                : "No expiry",
+            },
+            {
+              label: "Source",
+              value:
+                SOURCE_LABELS[grant.source ?? ""] ??
+                grant.source ??
+                "Not recorded",
+            },
+          ]}
+        />
+      </Box>
+      {grant.reason ? (
+        <Box background="neutral100" padding={4} marginTop={4} hasRadius>
+          <details>
+            <summary style={{ cursor: "pointer" }}>
+              <Typography tag="span" variant="pi" fontWeight="semiBold">
+                Grant note and history
+              </Typography>
+            </summary>
+            <Typography
+              tag="p"
+              variant="pi"
+              textColor="neutral600"
+              paddingTop={3}
+              style={{
+                whiteSpace: "pre-wrap",
+                overflowWrap: "anywhere",
+                lineHeight: 1.6,
+              }}
+            >
+              {grant.reason}
+            </Typography>
+          </details>
+        </Box>
+      ) : null}
+    </Box>
   )
 }
 
@@ -112,8 +212,8 @@ function AddRoleForm({
   return (
     <Box background="neutral100" padding={4} hasRadius>
       <Flex direction="column" alignItems="stretch" gap={4}>
-        <Flex gap={4} wrap="wrap" alignItems="flex-start">
-          <Box width="16rem">
+        <FormGrid>
+          <Box>
             <Field.Root name="role" required>
               <Field.Label>Role</Field.Label>
               <SingleSelect
@@ -130,7 +230,7 @@ function AddRoleForm({
             </Field.Root>
           </Box>
           {usesQueue(role) && (
-            <Box width="14rem">
+            <Box>
               <Field.Root name="queue" hint="What they may review.">
                 <Field.Label>Queue</Field.Label>
                 <SingleSelect
@@ -148,7 +248,7 @@ function AddRoleForm({
             </Box>
           )}
           {usesLocale(role) && (
-            <Box width="14rem">
+            <Box>
               <Field.Root name="scopeLocale">
                 <Field.Label>Language</Field.Label>
                 <SingleSelect
@@ -167,8 +267,11 @@ function AddRoleForm({
               </Field.Root>
             </Box>
           )}
-          <Box width="14rem">
-            <Field.Root name="expiresAt" hint="Leave empty to keep it.">
+          <Box>
+            <Field.Root
+              name="expiresAt"
+              hint="No expiry date means ongoing access."
+            >
               <Field.Label>Expires (optional)</Field.Label>
               <DatePicker
                 value={expires}
@@ -180,7 +283,7 @@ function AddRoleForm({
               <Field.Hint />
             </Field.Root>
           </Box>
-        </Flex>
+        </FormGrid>
         <Field.Root
           name="reason"
           required
@@ -324,7 +427,7 @@ export function PersonModal({
 
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
-      <Modal.Content>
+      <PluginModalContent>
         <Modal.Header>
           <Flex gap={2} alignItems="center" wrap="wrap">
             <Modal.Title>{person ? nameOf(person) : "Person"}</Modal.Title>
@@ -362,7 +465,7 @@ export function PersonModal({
                     },
                     {
                       label: "Email",
-                      value: person.email ?? "Not known (no submissions yet)",
+                      value: person.email ?? "No submission email recorded",
                     },
                     {
                       label: "Role",
@@ -404,118 +507,25 @@ export function PersonModal({
                 </Box>
               )}
               <Divider />
-              <Section title="Roles">
+              <Section title={`Roles (${person.grants.length})`}>
                 {person.grants.length === 0 ? (
                   <Typography textColor="neutral600">
                     No roles yet. They’re a reader until someone grants one.
                   </Typography>
                 ) : (
-                  <Table colCount={7} rowCount={person.grants.length + 1}>
-                    <Thead>
-                      <Tr>
-                        <Th>
-                          <Typography variant="sigma">Role</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Scope</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Source</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Granted</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Expires</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Status</Typography>
-                        </Th>
-                        <Th>
-                          <Typography variant="sigma">Action</Typography>
-                        </Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {person.grants.map((g) => (
-                        <Tr key={g.documentId}>
-                          <Td>
-                            <Flex
-                              direction="column"
-                              alignItems="flex-start"
-                              gap={0}
-                            >
-                              <Typography fontWeight="semiBold">
-                                {ROLE_LABELS[g.role] ?? g.role}
-                              </Typography>
-                              {g.reason && (
-                                <Typography
-                                  variant="pi"
-                                  textColor="neutral600"
-                                  title={g.reason}
-                                  style={{ whiteSpace: "pre-line" }}
-                                >
-                                  {g.reason.length > 160
-                                    ? `${g.reason.slice(0, 160)}…`
-                                    : g.reason}
-                                </Typography>
-                              )}
-                            </Flex>
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {[
-                                usesQueue(g.role)
-                                  ? (QUEUE_LABELS[g.queue] ?? g.queue)
-                                  : null,
-                                usesLocale(g.role)
-                                  ? (g.locale ?? "Any language")
-                                  : null,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ") || "Everywhere"}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {SOURCE_LABELS[g.source ?? ""] ?? g.source ?? "—"}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {g.createdAt ? formatDateTime(g.createdAt) : "—"}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <Typography>
-                              {g.expiresAt
-                                ? formatDateTime(g.expiresAt)
-                                : "Never"}
-                            </Typography>
-                          </Td>
-                          <Td>
-                            <GrantStatusPill status={g.status} />
-                          </Td>
-                          <Td>
-                            {g.status === "active" && (
-                              <Button
-                                size="S"
-                                variant="danger-light"
-                                startIcon={<Trash />}
-                                onClick={() => {
-                                  setRevoking(g)
-                                  setRevokeReason("")
-                                }}
-                                disabled={busy}
-                              >
-                                Revoke
-                              </Button>
-                            )}
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
+                  <Flex direction="column" alignItems="stretch" gap={4}>
+                    {person.grants.map((grant) => (
+                      <RoleGrantCard
+                        key={grant.documentId}
+                        grant={grant}
+                        busy={busy}
+                        onRevoke={(selected) => {
+                          setRevoking(selected)
+                          setRevokeReason("")
+                        }}
+                      />
+                    ))}
+                  </Flex>
                 )}
               </Section>
               {revoking && (
@@ -585,7 +595,7 @@ export function PersonModal({
             <Button variant="tertiary">Close</Button>
           </Modal.Close>
         </Modal.Footer>
-      </Modal.Content>
+      </PluginModalContent>
     </Modal.Root>
   )
 }

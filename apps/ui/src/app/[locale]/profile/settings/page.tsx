@@ -8,6 +8,7 @@ import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/Profi
 import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { PageHero } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { avatarSrc } from "@/lib/avatar"
@@ -49,7 +50,7 @@ export default async function ProfileSettingsPage({
     <>
       <GlobalHeader locale={locale as Locale} />
       <AccountGuard mode="identity" expectedScope={session.user.id}>
-        <div
+        <MainContent
           className="relative isolate flex min-h-screen w-full flex-col"
           style={{ background: T.bg.void, color: T.ink.base }}
         >
@@ -79,7 +80,7 @@ export default async function ProfileSettingsPage({
             avatarUrl={avatarSrc(profile?.avatar)}
             imageUploadsEnabled={Boolean(process.env.STRAPI_UPLOAD_API_KEY)}
           />
-        </div>
+        </MainContent>
       </AccountGuard>
     </>
   )

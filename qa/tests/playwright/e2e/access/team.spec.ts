@@ -294,18 +294,27 @@ test("a Moderator removes a Team-assigned staff member; anyone else is refused",
   const path = `/api/moderation/staff/${affiliationId}/remove`
   // Organisers and readers hold no Moderation Scope.
   expect(
-    (await organiser.post(path, { headers: { origin: baseURL } })).status()
+    (
+      await organiser.post(path, { headers: { origin: baseURL }, data: {} })
+    ).status()
   ).toBe(403)
   expect(
-    (await reader.post(path, { headers: { origin: baseURL } })).status()
+    (
+      await reader.post(path, { headers: { origin: baseURL }, data: {} })
+    ).status()
   ).toBe(403)
 
-  const removed = await moderator.post(path, { headers: { origin: baseURL } })
+  const removed = await moderator.post(path, {
+    headers: { origin: baseURL },
+    data: {},
+  })
   expect(removed.status(), await removed.text()).toBe(200)
   expect(await removed.json()).toMatchObject({ data: { removed: true } })
   // Gone: a second removal finds nothing.
   expect(
-    (await moderator.post(path, { headers: { origin: baseURL } })).status()
+    (
+      await moderator.post(path, { headers: { origin: baseURL }, data: {} })
+    ).status()
   ).toBe(404)
 
   await expectStaffStatus(mobileId, 404)

@@ -33,6 +33,7 @@
     "postinstall": "pnpm run setup:apps",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
+    "lint:ratchet": "node scripts/lint-ratchet.mjs",
     "prepare": "husky",
     "setup:apps": "find . -name '*.example' -exec sh -c 'cp -n \"$1\" \"${1%.example}\"' _ {} \\;",
     "start:strapi": "turbo run start --filter=@repo/strapi",
@@ -71,13 +72,17 @@
   },
   "pnpm": {
     "overrides": {
+      "@tiptap/pm@>=3.0.0>prosemirror-view": "1.42.3",
+      "@tiptap/pm@>=3.0.0>prosemirror-model": "1.25.12",
       "@types/react": "19.2.9",
       "@types/react-dom": "19.2.3",
-      "react-use>js-cookie": "3.0.7",
       "better-auth@1.7.7>defu": "6.1.5",
-      "@tiptap/pm@>=3.0.0>prosemirror-model": "1.25.12",
-      "@tiptap/pm@>=3.0.0>prosemirror-view": "1.42.3",
-      "eslint@9.39.2>minimatch": "3.1.5"
+      "eslint@9.39.2>minimatch": "3.1.5",
+      "react-use>js-cookie": "3.0.7"
+    },
+    "patchedDependencies": {
+      "better-auth@1.7.7": "patches/better-auth@1.7.7.patch",
+      "strapi-plugin-meilisearch@0.16.5": "patches/strapi-plugin-meilisearch@0.16.5.patch"
     },
     "packageExtensions": {
       "@hookform/resolvers": {
@@ -85,10 +90,6 @@
           "zod": "*"
         }
       }
-    },
-    "patchedDependencies": {
-      "strapi-plugin-meilisearch@0.16.5": "patches/strapi-plugin-meilisearch@0.16.5.patch",
-      "better-auth@1.7.7": "patches/better-auth@1.7.7.patch"
     }
   }
 }

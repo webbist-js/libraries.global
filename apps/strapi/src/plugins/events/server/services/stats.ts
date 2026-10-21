@@ -4,15 +4,6 @@ import type { Core } from "@strapi/strapi"
 
 import { PUBLIC_EVENT_STATUSES, dowHourSql } from "../utils/query"
 
-const EMPTY: EventsStats = {
-  totalEvents: 0,
-  totalThisWeek: 0,
-  totalThisMonth: 0,
-  percentFree: 0,
-  peakSlot: null,
-  peakCount: 0,
-}
-
 const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 export async function computeEventStats(
@@ -77,6 +68,6 @@ export async function computeEventStats(
   } catch (err) {
     strapi.log.error("[events] computeEventStats failed", err)
 
-    return { ...EMPTY }
+    throw err
   }
 }

@@ -85,26 +85,18 @@ STRAPI_REST_READONLY_API_KEY
 STRAPI_REST_CUSTOM_API_KEY
 ```
 
-### User JWT Authentication (Private)
+### Session-authenticated operations
 
-```typescript
-// Server-side: reads from cookies via getSessionSSR()
-const session = await getSessionSSR(await headers())
-const jwt = session?.user?.strapiJWT
-
-// Client-side: fetches from /api/auth/session
-const { data: session } = await getSessionCSR()
-const jwt = session?.user?.strapiJWT
-```
+Use dedicated Next.js routes for account, contribution, staff and moderation operations. They resolve the Better Auth session on the server and call the permissioned Strapi bridge. `PrivateStrapiClient` does not obtain a JWT from that session. See [Authentication](./authentication.md) for the current boundary.
 
 ### createStrapiAuthHeader()
 
-Utility that automatically selects the correct auth strategy:
+Compatibility utility for explicit content API authentication:
 
 ```typescript
 const authHeader = await createStrapiAuthHeader({
   isReadOnly: true, // use readonly API key
-  isPrivate: false, // use API key (not user JWT)
+  isPrivate: false, // public content API token; not a user credential
 })
 // Returns: { Authorization: "Bearer <token>" }
 ```
@@ -126,7 +118,7 @@ Proxies hide sensitive information from the client.
 **`apps/ui/src/app/api/private-proxy/[...slug]/route.ts`**
 
 - Hides `STRAPI_URL` from client
-- Passes through user's Authorization header
+- Compatibility route for an explicitly supplied Authorization header; it does not turn a Better Auth cookie into CMS authority
 - Validates endpoints against allowlist
 
 ### Endpoint Allowlist
@@ -134,22 +126,8 @@ Proxies hide sensitive information from the client.
 **`request-auth.ts`**
 
 ```typescript
-const ALLOWED_STRAPI_ENDPOINTS: Record<string, string[]> = {
-  GET: [
-    "api/pages",
-    "api/footer",
-    "api/navbar",
-    "api/users/me",
-    "api/auth/local",
-  ],
-  POST: [
-    "api/subscribers",
-    "api/auth/local/register",
-    "api/auth/forgot-password",
-    "api/auth/reset-password",
-    "api/auth/change-password",
-  ],
-}
+// The actual allowlist lives in request-auth.ts. It permits read-only
+// published browse endpoints. Generic POST/account/auth routes are refused.
 ```
 
 Requests to unlisted endpoints return 403 Forbidden.
