@@ -24,6 +24,7 @@ import {
 } from "@/components/docs/DocsSectionsExplorer"
 import { DocsSectionTabs } from "@/components/docs/DocsSectionTabs"
 import { SearchField } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { SectionNavigation } from "@/components/ds/SectionNavigation"
 import { Container } from "@/components/elementary/Container"
@@ -222,7 +223,7 @@ export function DocsPage({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale} />
-      <main className="relative z-10 flex-1">
+      <MainContent className="relative z-10 flex-1">
         <PageHero
           breadcrumb={[
             { label: tUi("home"), href: "/" },
@@ -492,7 +493,7 @@ export function DocsPage({
             </aside>
           </div>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

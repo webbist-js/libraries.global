@@ -20,17 +20,14 @@ function RewardsIcon() {
 export default {
   register(app: any) {
     app.addMenuLink({
-      to: `/plugins/rewards`,
+      to: `plugins/rewards`,
       icon: RewardsIcon,
       intlLabel: {
         id: "rewards.plugin.name",
         defaultMessage: "Rewards",
       },
-      Component: async () => {
-        const { App } = await import("./admin/src/index")
-
-        return App
-      },
+      Component: () =>
+        import("./admin/src/index").then(({ App }) => ({ default: App })),
     })
   },
   bootstrap() {},

@@ -81,7 +81,7 @@ describe("PLANS", () => {
         expect(item.text.endsWith(" (coming soon)")).toBe(item.kind === "soon")
   })
 
-  it("never offers checkout: paid plans are coming soon, Team is a chat", () => {
+  it("keeps personal catalogue defaults gated and offers self-service Team setup", () => {
     expect(plan("supporter").cta).toMatchObject({
       kind: "soon",
       label: "Coming soon",
@@ -91,10 +91,10 @@ describe("PLANS", () => {
       label: "Coming soon",
     })
     expect(plan("team").cta).toMatchObject({
-      kind: "contact",
-      label: "Talk to us",
+      kind: "signup",
+      label: "Create your Team",
+      href: "/staff/team/new",
     })
-    expect(plan("team").cta.href).toMatch(/^mailto:[^?]+@libraries\.global\?/)
     expect(plan("free").cta).toMatchObject({
       kind: "signup",
       href: "/auth/register?callbackUrl=/contribute/membership",
@@ -143,8 +143,8 @@ describe("showPlanCta", () => {
     expect(showPlanCta(planCard("public"), "public")).toBe(false)
   })
 
-  it("keeps 'talk to us' for Team members, who may want more seats", () => {
-    expect(showPlanCta(planCard("team"), "team")).toBe(true)
+  it("hides Team signup for existing members while offering it to visitors", () => {
+    expect(showPlanCta(planCard("team"), "team")).toBe(false)
     expect(showPlanCta(planCard("team"), undefined)).toBe(true)
   })
 })

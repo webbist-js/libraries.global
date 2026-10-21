@@ -24,14 +24,11 @@ function CalendarIcon() {
 export default {
   register(app: any) {
     app.addMenuLink({
-      to: `/plugins/events`,
+      to: `plugins/events`,
       icon: CalendarIcon,
       intlLabel: { id: "events.plugin.name", defaultMessage: "Events" },
-      Component: async () => {
-        const { App } = await import("./admin/src/index")
-
-        return App
-      },
+      Component: () =>
+        import("./admin/src/index").then(({ App }) => ({ default: App })),
     })
   },
   bootstrap() {},

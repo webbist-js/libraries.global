@@ -789,6 +789,7 @@ export default {
       expiresAt: string | null
       status: "active" | "lapsed"
       organiserName: string | null
+      selfService?: boolean
     }[] =
       (await strapi
         .plugin("access")
@@ -858,6 +859,7 @@ export default {
         slug: t.slug,
         role: t.role,
         libraryCount: t.libraryCount,
+        ...(t.selfService ? { selfService: true } : {}),
         libraryDocumentIds: t.libraryDocumentIds,
         expiresAt: t.expiresAt,
         status: t.status,

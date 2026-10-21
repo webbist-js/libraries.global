@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { render, screen } from "@/test/render"
+import { fireEvent, render, screen, waitFor } from "@/test/render"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -62,6 +62,43 @@ const BASE: FeedView = {
 }
 
 describe("FeedRow", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it.each([
+    ["Pause", "active", null, "/pause"],
+    ["Resume", "paused", "library", "/resume"],
+    ["Test", "active", null, "/test"],
+  ] as const)(
+    "sends valid JSON when using %s",
+    async (action, status, pausedReason, path) => {
+      const request = vi.fn(async (_url: string, init: RequestInit) => {
+        // These no-argument actions still use the JSON-only write proxy.
+        expect(new Headers(init.headers).get("content-type")).toBe(
+          "application/json"
+        )
+        expect(JSON.parse(String(init.body))).toEqual({})
+
+        return Response.json({ data: { result: "ok" } })
+      })
+      vi.stubGlobal("fetch", request)
+      render(
+        <ul>
+          <FeedRow
+            feed={{ ...BASE, status, pausedReason }}
+            libraryDocumentId="lib1"
+            librarySlug="central-library"
+            libraryName="Central Library"
+          />
+        </ul>
+      )
+      fireEvent.click(screen.getByRole("button", { name: action }))
+      await waitFor(() => expect(request).toHaveResolved())
+      expect(request.mock.calls[0]?.[0]).toBe(
+        `/api/contribute/event-feeds/${BASE.documentId}${path}`
+      )
+    }
+  )
+
   it("shows Replace details for an active feed with no pending review", () => {
     render(
       <ul>

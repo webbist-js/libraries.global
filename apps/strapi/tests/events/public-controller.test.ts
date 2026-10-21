@@ -83,6 +83,129 @@ const ctxFor = (
 })
 
 describe("public events controller", () => {
+  it.each([
+    "providerBreakdown",
+    "topLibraries",
+    "categoryBreakdown",
+    "dailyVolume",
+    "heatmap",
+  ] as const)("%s aggregates apply public visibility", async (handler) => {
+    const { strapi } = seedStrapi()
+    const connection = strapi.db.connection
+    const predicates: unknown[][] = []
+    const wrapped = vi.fn((...args: unknown[]) => {
+      const builder = connection(...args)
+      builder.orderBy = () => builder
+      builder.limit = () => builder
+      builder.groupByRaw = () => builder
+      const whereIn = builder.whereIn
+      builder.whereIn = (...values: unknown[]) => {
+        predicates.push(values)
+
+        return whereIn(...values)
+      }
+
+      return builder
+    })
+    Object.assign(wrapped, { raw: (sql: string) => sql })
+    strapi.db.connection = wrapped
+    const ctx = ctxFor()
+    await eventsControllerFactory({ strapi })[handler](ctx)
+    expect(predicates).toContainEqual(["status", [...PUBLIC_EVENT_STATUSES]])
+    expect(ctx.status).toBe(200)
+  })
+  it("country analytics joins current geographic relations and counts only public events", async () => {
+    const joins: unknown[][] = []
+    const whereIn = vi.fn()
+    const query: Record<string, unknown> = {}
+    for (const method of [
+      "select",
+      "countDistinct",
+      "where",
+      "whereNotNull",
+      "groupBy",
+      "orderBy",
+    ])
+      query[method] = vi.fn(() => query)
+    query.join = (...args: unknown[]) => {
+      joins.push(args)
+
+      return query
+    }
+    query.whereIn = (...args: unknown[]) => {
+      whereIn(...args)
+
+      return query
+    }
+    // Model the Knex query builder’s awaitable result.
+    // eslint-disable-next-line unicorn/no-thenable
+    query.then = (resolve: (rows: unknown[]) => unknown) =>
+      Promise.resolve([{ countryCode: "GB", count: "3" }]).then(resolve)
+    const metadata = {
+      [EVENT]: {
+        tableName: "ev_events",
+        attributes: {
+          library: {
+            joinTable: {
+              name: "event_library_link",
+              joinColumn: { name: "event_id" },
+              inverseJoinColumn: { name: "library_id" },
+            },
+          },
+        },
+      },
+      [LIBRARY]: {
+        tableName: "libraries",
+        attributes: {
+          country: {
+            joinTable: {
+              name: "library_country_link",
+              joinColumn: { name: "library_id" },
+              inverseJoinColumn: { name: "country_id" },
+            },
+          },
+        },
+      },
+      "api::country.country": {
+        tableName: "countries",
+        attributes: { iso2: { columnName: "iso_2" } },
+      },
+    }
+    const strapi = {
+      db: {
+        connection: () => query,
+        metadata: { get: (uid: keyof typeof metadata) => metadata[uid] },
+      },
+      log: { error: vi.fn() },
+    }
+    const ctx = ctxFor()
+    await eventsControllerFactory({ strapi }).countryBreakdown(ctx)
+    expect(query.select).toHaveBeenCalledWith("country.iso_2 as countryCode")
+    expect(query.groupBy).toHaveBeenCalledWith("country.iso_2")
+    expect(ctx.status).toBe(200)
+    expect(ctx.body).toEqual([{ countryCode: "GB", count: 3 }])
+    expect(joins).toHaveLength(4)
+    expect(joins[2]).toEqual([
+      "library_country_link as lc",
+      "lc.library_id",
+      "library.id",
+    ])
+    expect(whereIn).toHaveBeenCalledWith("event.status", [
+      "upcoming",
+      "ongoing",
+    ])
+    expect(query.whereNotNull).toHaveBeenCalledWith("library.published_at")
+  })
+  it("reports failed analytics as unavailable instead of zero", async () => {
+    const { strapi } = seedStrapi()
+    strapi.db.connection = () => {
+      throw new Error("offline")
+    }
+    const ctx = ctxFor()
+    await eventsControllerFactory({ strapi }).categoryBreakdown(ctx)
+    expect(ctx.status).toBe(503)
+    expect(ctx.body).toEqual({ error: "Event analytics unavailable" })
+  })
   it("library: public filters, bounded start/limit, stable sort, safe fields, array type ignored", async () => {
     const { strapi } = seedStrapi()
     const controller = eventsControllerFactory({ strapi })
@@ -193,22 +316,80 @@ describe("public events controller", () => {
     expect(call.filters.eventType).toEqual({ $in: ["talk", "workshop"] })
   })
 
-  it("location and topLibraries read only published libraries", async () => {
-    const { strapi } = seedStrapi()
+  it("scopes geographic results and totals through direct published library relations beyond 500 libraries", async () => {
+    const library = (
+      country: string,
+      region: string,
+      publishedAt: string | null = future(-1)
+    ) => ({
+      name: "A library",
+      slug: "a-library",
+      publishedAt,
+      country: { iso2: country },
+      region: { slug: region },
+    })
+    const base = {
+      title: "Public event",
+      startTime: future(2),
+      pendingReview: false,
+      status: "upcoming",
+    }
+    const { strapi } = makeFakeStrapi({
+      [EVENT]: [
+        ...Array.from({ length: 600 }, (_, i) => ({
+          ...base,
+          documentId: `gb-${i}`,
+          library: library("GB", "england"),
+        })),
+        { ...base, documentId: "gb-scot", library: library("GB", "scotland") },
+        { ...base, documentId: "cz", library: library("CZ", "prague") },
+        {
+          ...base,
+          documentId: "draft-lib",
+          library: library("GB", "england", null),
+        },
+        {
+          ...base,
+          documentId: "cancelled",
+          status: "cancelled",
+          library: library("GB", "england"),
+        },
+      ],
+    })
     const controller = eventsControllerFactory({ strapi })
-
-    // The fake can't resolve dotted relation filters; no location filter
-    // means every seeded library matches, which is enough to check the read.
-    await controller.location(ctxFor({ country: ["not-a-string"] }))
-    const [libCall] = findManyCalls(strapi, LIBRARY)
-    expect(libCall.status).toBe("published")
-    expect(libCall.filters).toEqual({})
-    expect(libCall).not.toHaveProperty("pagination")
-    expect(libCall.limit).toBe(500)
-
-    const [evCall] = findManyCalls(strapi, EVENT)
-    expect(evCall.filters.pendingReview).toBe(false)
-    expect(evCall.fields).toEqual(PUBLIC_EVENT_FIELDS)
+    const england = ctxFor({
+      countryCode: "gb",
+      regionSlug: "england",
+      page: "6",
+      limit: "100",
+    })
+    await controller.global(england)
+    expect(england.body).toMatchObject({ total: 600, page: 6, pageSize: 100 })
+    expect(
+      (england.body as { events: { documentId: string }[] }).events
+    ).toHaveLength(100)
+    expect(
+      (england.body as { events: { documentId: string }[] }).events.every(
+        (event) => event.documentId.startsWith("gb-")
+      )
+    ).toBe(true)
+    const czech = ctxFor({ countryCode: "CZ", regionSlug: "prague" })
+    await controller.global(czech)
+    expect(
+      (czech.body as { events: { documentId: string }[] }).events.map(
+        (event) => event.documentId
+      )
+    ).toEqual(["cz"])
+    expect((czech.body as { total: number }).total).toBe(1)
+    const empty = ctxFor({ countryCode: "CZ", regionSlug: "england" })
+    await controller.global(empty)
+    expect(empty.body).toMatchObject({ events: [], total: 0 })
+    const legacy = ctxFor({ region: "prague" })
+    await controller.location(legacy)
+    expect(
+      (legacy.body as { documentId: string }[]).map((event) => event.documentId)
+    ).toEqual(["cz"])
+    expect(findManyCalls(strapi, LIBRARY)).toHaveLength(0)
   })
 
   it("icsLibrary and icsGlobal only publish public events", async () => {

@@ -8,6 +8,7 @@ import {
   editingLocaleFrom,
 } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
+import { MainContent } from "@/components/ds/MainContent"
 import {
   fetchArticleLocales,
   loadArticleForEditor,
@@ -113,7 +114,7 @@ export default async function EditKnowledgeArticlePage({
         }
       />
       {report ? (
-        <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+        <MainContent className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
           <ReportProblemForm
             slug={slug}
             contentLocale={article.locale}
@@ -121,7 +122,7 @@ export default async function EditKnowledgeArticlePage({
             editHref={ARTICLE_KIND_META.knowledge.editPath(slug)}
             canEdit={userIsArticleEditor(session.user, "knowledge")}
           />
-        </main>
+        </MainContent>
       ) : (
         <ArticleEditorShell
           key={`${article.documentId}:${article.locale}:${requestedDraft ?? "fresh"}`}

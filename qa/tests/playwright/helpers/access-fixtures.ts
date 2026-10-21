@@ -532,7 +532,10 @@ export async function signedInApi(
   baseURL: string,
   key: string
 ): Promise<APIRequestContext> {
-  const api = await request.newContext({ baseURL })
+  const api = await request.newContext({
+    baseURL,
+    extraHTTPHeaders: { Origin: new URL(baseURL).origin },
+  })
   const res = await signIn(api, baseURL, key)
   if (!res.ok()) {
     await api.dispose()

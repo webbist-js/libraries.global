@@ -1,9 +1,12 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { userHeaders } from "@/lib/bridge-user-headers"
 import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
+import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -61,6 +64,8 @@ function extractDomain(url: string): string {
 }
 
 export async function POST(req: Request) {
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -73,26 +78,31 @@ export async function POST(req: Request) {
   const limit = await limiter.check(session.user.id)
   if (!limit.ok) return rateLimitResponse(limit)
 
-  let body: {
-    libraryEntityRef: string
-    libraryName: string
-    libraryWebsite?: string
-    role?: string
-    department?: string
-  }
-  try {
-    body = (await req.json()) as typeof body
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
-
-  const { libraryEntityRef, libraryName, libraryWebsite, role, department } =
-    body
-  if (!libraryEntityRef || !libraryName)
+  const parsed = await readTypedJson(
+    req,
+    16384,
+    z
+      .object({
+        libraryEntityRef: z
+          .string()
+          .trim()
+          .min(1)
+          .max(255)
+          .regex(/^[a-zA-Z0-9._:-]+$/),
+        libraryName: z.string().trim().min(1).max(500),
+        libraryWebsite: z.string().trim().max(2048).optional(),
+        role: z.string().trim().max(200).optional(),
+        department: z.string().trim().max(200).optional(),
+      })
+      .strict()
+  )
+  if (!parsed.ok)
     return NextResponse.json(
-      { error: "libraryEntityRef and libraryName are required" },
-      { status: 400 }
+      { error: "Invalid request body" },
+      { status: parsed.status }
     )
+  const { libraryEntityRef, libraryName, libraryWebsite, role, department } =
+    parsed.body
 
   // Block duplicate claims — check if user already has an affiliation for this library
   const existingRes = await fetch(

@@ -77,7 +77,7 @@ export const isStrapiEndpointAllowed = (
 
 /**
  * Create Strapi authorization header based on the request type.
- * If the request is private, it retrieves the user token from Better Auth session.
+ * The legacy private branch supplies no session credential. New account calls use dedicated bridge routes.
  * If the request is public, it uses the appropriate API token based on read-only status.
  */
 export const createStrapiAuthHeader = async ({
@@ -111,11 +111,9 @@ export const formatStrapiAuthorizationHeader = (token?: string) => {
 }
 
 /**
- * Get user-permission token from the Better Auth session.
- *
- * Auth is now handled natively by Strapi's Better Auth plugin via session
- * cookies — there is no separate Strapi JWT to forward. Returns undefined
- * so callers fall back to the public API token.
+ * Legacy compatibility hook. Better Auth runs in Next.js; it does not mint
+ * a Strapi JWT. Returning undefined supplies no Authorization header, and
+ * does not fall back to a content token or confer any user permissions.
  */
 const getStrapiUserTokenFromBetterAuth = async (): Promise<
   string | undefined

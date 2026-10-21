@@ -24,7 +24,16 @@ describe("minimal billing retention", () => {
       "sandbox",
       new Date("2026-10-12T00:00:00Z"),
     ])
-    expect(query.mock.calls[3]?.[1]).toEqual([["erased_owner"]])
+    expect(
+      query.mock.calls.find(([sql]) =>
+        sql.startsWith("delete from billing_plan_changes")
+      )?.[1]
+    ).toEqual([["erased_owner"]])
+    expect(
+      query.mock.calls.find(([sql]) =>
+        sql.startsWith("select id from team_billing_accounts")
+      )?.[0]
+    ).toContain("archived_at<$2")
     expect(query.mock.calls.at(-1)?.[0]).toBe("COMMIT")
     expect(release).toHaveBeenCalled()
   })

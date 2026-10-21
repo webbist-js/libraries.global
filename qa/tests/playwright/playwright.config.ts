@@ -17,6 +17,9 @@ const mobileViewportsEnabled =
 // for with `--project=access`. The flag is mirrored into the env because
 // workers re-load this config without the CLI arguments.
 const argv = process.argv
+// Workers reload this file without the runner's CLI arguments.
+if (argv.includes("--project=admin")) process.env.QA_ADMIN_PROJECT = "1"
+if (argv.includes("--project=smoke")) process.env.QA_SMOKE = "1"
 if (
   argv.some(
     (a, i) =>
@@ -26,7 +29,11 @@ if (
 )
   process.env.PLAYWRIGHT_ACCESS_PROJECT = "1"
 const accessProjectEnabled = process.env.PLAYWRIGHT_ACCESS_PROJECT === "1"
-const ACCESS_SPECS = ["e2e/access/**"]
+// Playwright's failure DOM context includes password input values. Never
+// attach it to an authenticated fixture run, even with traces disabled.
+if (accessProjectEnabled || process.env.QA_ADMIN_PROJECT === "1")
+  process.env.PLAYWRIGHT_NO_COPY_PROMPT = "1"
+const ACCESS_SPECS = ["e2e/access/**", "admin/**", "smoke/**"]
 
 const projects: Project[] = [
   {
@@ -82,6 +89,44 @@ if (accessProjectEnabled) {
       // A trace would record the fixture password in the sign-in POST
       // bodies. `--trace on` still overrides this for a local debug run.
       trace: "off",
+      video: "off",
+      screenshot: "off",
+    },
+  })
+}
+
+const smokeEnabled =
+  process.env.QA_SMOKE === "1" || argv.includes("--project=smoke")
+const smokePort = Number(process.env.QA_SMOKE_PORT ?? "3101")
+if (!Number.isInteger(smokePort) || smokePort < 1024 || smokePort > 65535)
+  throw new Error("QA_SMOKE_PORT must be an unprivileged local port")
+const smokeOrigin = `http://localhost:${smokePort}`
+if (smokeEnabled)
+  projects.push({
+    name: "smoke",
+    testMatch: ["smoke/**/*.spec.ts"],
+    use: {
+      ...devices["Desktop Chrome"],
+      baseURL: smokeOrigin,
+      trace: "off",
+    },
+  })
+if (process.env.QA_ADMIN_PROJECT === "1" || argv.includes("--project=admin")) {
+  const admin = new URL(process.env.QA_STRAPI_URL ?? "http://127.0.0.1:1337")
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(admin.hostname))
+    throw new Error("Admin QA is restricted to a local fixture CMS")
+  projects.push({
+    name: "admin",
+    testMatch: ["admin/**/*.spec.ts"],
+    workers: 1,
+    fullyParallel: false,
+    retries: 0,
+    use: {
+      ...devices["Desktop Chrome"],
+      baseURL: admin.origin,
+      trace: "off",
+      video: "off",
+      screenshot: "off",
     },
   })
 }
@@ -100,6 +145,22 @@ projects.push({
 
 export default defineConfig({
   testDir: ".",
+  updateSnapshots: "none",
+  ...(smokeEnabled
+    ? {
+        webServer: {
+          command: `pnpm --filter @repo/ui start --hostname localhost --port ${smokePort}`,
+          url: `${smokeOrigin}/events`,
+          timeout: 120000,
+          reuseExistingServer: !process.env.CI,
+          env: {
+            BETA_GATE_ENABLED: "false",
+            APP_PUBLIC_URL: smokeOrigin,
+            STRAPI_URL: "http://127.0.0.1:65534",
+          },
+        },
+      }
+    : {}),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

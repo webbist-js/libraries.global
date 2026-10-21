@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import {
@@ -42,14 +42,37 @@ function KeyValueTile({
 
 function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("eventListing")
+  const locale = useLocale()
 
   const start = new Date(event.startTime)
-  const month = start.toLocaleDateString("en-GB", { month: "short" })
-  const weekday = start.toLocaleDateString("en-GB", { weekday: "short" })
-  const when = event.allDay
-    ? `${weekday} ${start.getDate()} ${month}, all day`
-    : `${weekday} ${start.getDate()} ${month}, ${formatTime(event.startTime)} (${event.timezone.split("/")[0] === "Europe" ? "UK time" : event.timezone})`
-  const provider = providerLabel(event.sourceProvider)
+  const zone = event.allDay ? "UTC" : event.timezone
+  const month = start.toLocaleDateString(locale, {
+    month: "short",
+    timeZone: zone,
+  })
+  const weekday = start.toLocaleDateString(locale, {
+    weekday: "short",
+    timeZone: zone,
+  })
+  const day = start.toLocaleDateString(locale, {
+    day: "numeric",
+    timeZone: zone,
+  })
+  const when =
+    start.toLocaleDateString(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      timeZone: zone,
+    }) +
+    (event.allDay
+      ? `, ${t("allday")}`
+      : `, ${formatTime(event.startTime, locale, zone)} (${zone})`)
+  const provider =
+    providerLabel(event.sourceProvider) === "Library calendar"
+      ? t("libraryCalendar")
+      : providerLabel(event.sourceProvider)
   const libraryPath = libraryPathOf(event)
 
   return (
@@ -75,9 +98,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             className="size-6"
             aria-hidden="true"
           />
-          <p className="m-0 max-w-[26ch] text-[14px]">
-            Event photo from the organiser
-          </p>
+          <p className="m-0 max-w-[26ch] text-[14px]">{t("photo")}</p>
         </div>
       )}
 
@@ -98,7 +119,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
               className="text-[30px] leading-none"
               style={{ fontFamily: T.font.serif, color: T.ink.base }}
             >
-              {start.getDate()}
+              {day}
             </span>
             <span className="text-[12px]" style={{ color: T.ink.dim }}>
               {weekday}
@@ -119,7 +140,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             </h3>
             {event.library_name ? (
               <p className="m-0 mt-1 text-[15px]" style={{ color: T.ink.dim }}>
-                at{" "}
+                {t("at")}{" "}
                 {libraryPath ? (
                   <GlobalLink
                     href={libraryPath}
@@ -148,19 +169,12 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
           </p>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           <KeyValueTile label={tUi("when")} value={when} />
           <KeyValueTile
             label={tUi("price")}
-            value={
-              event.isFree
-                ? "Free"
-                : event.priceMin != null
-                  ? `£${event.priceMin}`
-                  : "See website"
-            }
+            value={event.isFree ? tUi("free") : t("seeWebsite")}
           />
-          <KeyValueTile label={tUi("format")} value="In person" />
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-3">
@@ -171,7 +185,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[15px] font-semibold text-white transition-colors"
             style={{ background: T.accent.primary }}
           >
-            Book on {provider}
+            {t("book", { provider })}
             <Icon
               icon="mdi:arrow-top-right"
               className="size-4"
@@ -197,7 +211,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             {tUi("add_to_calendar")}
           </a>
           <span className="text-[14px]" style={{ color: T.ink.low }}>
-            Listing from {provider}
+            {t("listingFrom", { provider })}
           </span>
         </div>
       </div>
@@ -212,6 +226,7 @@ export function EventsWeekCarousel({
 }) {
   const tUi = useUiTranslations("ui")
 
+  const t = useUiTranslations("eventListing")
   const [index, setIndex] = useState(0)
   if (events.length === 0) return null
   const current = events[Math.min(index, events.length - 1)]!
@@ -228,12 +243,15 @@ export function EventsWeekCarousel({
             color: T.ink.base,
           }}
         >
-          Coming up this week
+          {t("thisWeek")}
         </h2>
         {events.length > 1 ? (
           <div className="flex items-center gap-2.5">
             <span className="text-[14px]" style={{ color: T.ink.dim }}>
-              {index + 1} of {events.length}
+              {t("pageOf", {
+                page: Math.min(index, events.length - 1) + 1,
+                pages: events.length,
+              })}
             </span>
             <button
               type="button"

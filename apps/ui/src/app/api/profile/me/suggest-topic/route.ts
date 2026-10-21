@@ -1,9 +1,12 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { userHeaders } from "@/lib/bridge-user-headers"
 import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
+import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -15,6 +18,8 @@ const limiter = createRateLimiter({
 })
 
 export async function POST(req: Request) {
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -27,17 +32,17 @@ export async function POST(req: Request) {
   const limit = await limiter.check(session.user.id)
   if (!limit.ok) return rateLimitResponse(limit)
 
-  let body: { name?: string }
-  try {
-    body = (await req.json()) as { name?: string }
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
-  const { name } = body
-  if (!name?.trim() || name.trim().length < 2)
-    return NextResponse.json({ error: "Topic name too short" }, { status: 400 })
-  if (name.trim().length > 100)
-    return NextResponse.json({ error: "Topic name too long" }, { status: 400 })
+  const parsed = await readTypedJson(
+    req,
+    4096,
+    z.object({ name: z.string().trim().min(2).max(100) }).strict()
+  )
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const { name } = parsed.body
 
   // Check for duplicates
   const topicRes = await fetch(`${STRAPI}/api/topics/approved`, {

@@ -1,9 +1,11 @@
 // @vitest-environment happy-dom
 import { timetableHash, type MobileTimetable } from "@repo/shared-data"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
@@ -13,6 +15,7 @@ import {
 
 const mocks = vi.hoisted(() => ({
   create: vi.fn(),
+  save: vi.fn(),
   timetable: vi.fn(),
   resume: vi.fn(),
 }))
@@ -30,7 +33,7 @@ vi.mock("@/lib/navigation", () => ({
 }))
 vi.mock("@/hooks/useSubmissions", () => ({
   useCreateSubmission: () => ({ mutate: mocks.create, isPending: false }),
-  useSaveDraft: () => ({ mutate: vi.fn() }),
+  useSaveDraft: () => ({ mutate: mocks.save }),
   useFinalizeDraft: () => ({ mutate: vi.fn(), isPending: false }),
   useResumeDraft: () => ({ data: mocks.resume() }),
 }))
@@ -123,6 +126,14 @@ const context = { notices: [], timezone: "Europe/London", today: "2026-10-08" }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.create.mockImplementation((_payload, callbacks) => {
+    callbacks?.onSuccess?.({ documentId: "draft-local" })
+    callbacks?.onSettled?.()
+  })
+  mocks.save.mockImplementation((_payload, callbacks) => {
+    callbacks?.onSuccess?.()
+    callbacks?.onSettled?.()
+  })
   mocks.resume.mockReturnValue(undefined)
   vi.stubGlobal(
     "fetch",
@@ -346,4 +357,104 @@ describe("the shared mobile library wizard", () => {
       .closest("fieldset")
     expect(fieldset?.disabled).toBe(true)
   })
+})
+
+it("saves within a step, keeps failed edits recoverable, and warns before leaving", async () => {
+  mocks.create.mockImplementation((_payload, callbacks) => {
+    callbacks.onError(new Error("offline"))
+    callbacks.onSettled()
+  })
+  setup("improve")
+  fireEvent.click(screen.getByRole("button", { name: "Change arrival" }))
+  await screen.findByRole("button", { name: "Retry saving" }, { timeout: 2000 })
+  expect(screen.getByRole("alert").textContent).toContain("could not be saved")
+  const leave = new Event("beforeunload", { cancelable: true })
+  window.dispatchEvent(leave)
+  expect(leave.defaultPrevented).toBe(true)
+  mocks.create.mockImplementation((_payload, callbacks) => {
+    callbacks.onSuccess({ documentId: "draft-recovered" })
+    callbacks.onSettled()
+  })
+  fireEvent.click(screen.getByRole("button", { name: "Retry saving" }))
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull())
+  const savedLeave = new Event("beforeunload", { cancelable: true })
+  window.dispatchEvent(savedLeave)
+  expect(savedLeave.defaultPrevented).toBe(false)
+})
+
+it("serialises draft creation and saves the latest queued edit using the created ID", async () => {
+  let pending:
+    | {
+        onSuccess: (value: { documentId: string }) => void
+        onSettled: () => void
+      }
+    | undefined
+  mocks.create.mockImplementation((_payload, callbacks) => {
+    pending = callbacks
+  })
+  setup("improve")
+  fireEvent.click(screen.getByRole("button", { name: "Change arrival" }))
+  await waitFor(() => expect(mocks.create).toHaveBeenCalledOnce(), {
+    timeout: 2000,
+  })
+  fireEvent.click(screen.getByRole("button", { name: "Next: Visit & access" }))
+  fireEvent.change(screen.getByLabelText("Accessibility notes"), {
+    target: { value: "Latest queued edit" },
+  })
+  await act(async () => {
+    pending!.onSuccess({ documentId: "single-draft" })
+    pending!.onSettled()
+  })
+  await waitFor(
+    () =>
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "single-draft",
+          draftData: expect.objectContaining({
+            accessibilityNotes: "Latest queued edit",
+          }),
+        }),
+        expect.anything()
+      ),
+    { timeout: 2000 }
+  )
+  expect(mocks.create).toHaveBeenCalledOnce()
+})
+
+it("recovers unsaved Back/Forward work after remounting without exposing it to another account client", () => {
+  const clientA = new QueryClient()
+  const clientB = new QueryClient()
+  const editor = (client: QueryClient) =>
+    render(
+      <QueryClientProvider client={client}>
+        <IndexRecordWizard
+          mode="improve"
+          target={target}
+          initialData={initialData}
+          initialStep={3}
+          timetableContext={context}
+        />
+      </QueryClientProvider>
+    )
+  const first = editor(clientA)
+  fireEvent.click(screen.getByRole("button", { name: "Change arrival" }))
+  first.unmount()
+  const otherAccount = editor(clientB)
+  expect(
+    screen.queryByRole("heading", { name: "Recover unsaved edits" })
+  ).toBeNull()
+  otherAccount.unmount()
+  editor(clientA)
+  expect(
+    screen.getByRole("heading", { name: "Recover unsaved edits" })
+  ).toBeTruthy()
+  fireEvent.click(screen.getByRole("button", { name: "Restore edits" }))
+  expect(mocks.timetable.mock.lastCall?.[0].value.visits[0].arrive).toBe(
+    "09:15"
+  )
+  expect(
+    screen.queryByRole("heading", { name: "Recover unsaved edits" })
+  ).toBeNull()
+  clientA.clear()
+  clientB.clear()
 })

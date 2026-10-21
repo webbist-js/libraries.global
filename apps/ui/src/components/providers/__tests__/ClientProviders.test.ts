@@ -8,6 +8,9 @@ vi.mock("@/components/global/NavigationProgress", () => ({
 }))
 vi.mock("@/hooks/useTranslatedZod", () => ({ useTranslatedZod: () => {} }))
 vi.mock("@/lib/general-helpers", () => ({ setupLibraries: () => {} }))
+vi.mock("@/lib/access-client", () => ({
+  useHydratedSession: () => ({ data: null }),
+}))
 vi.mock("@/components/notifications/NotificationProvider", () => ({
   NotificationProvider: ({ children }: { children: React.ReactNode }) =>
     children,

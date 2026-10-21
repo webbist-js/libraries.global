@@ -23,14 +23,11 @@ function AccessIcon() {
 export default {
   register(app: any) {
     app.addMenuLink({
-      to: `/plugins/access`,
+      to: `plugins/access`,
       icon: AccessIcon,
       intlLabel: { id: "access.plugin.name", defaultMessage: "Access" },
-      Component: async () => {
-        const { App } = await import("./admin/src/index")
-
-        return App
-      },
+      Component: () =>
+        import("./admin/src/index").then(({ App }) => ({ default: App })),
     })
   },
   bootstrap() {},

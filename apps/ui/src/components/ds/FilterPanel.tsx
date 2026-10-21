@@ -46,9 +46,9 @@ const LEGEND_ICON_PROPS = {
  * it, so the two line up.
  */
 export function FilterPanelHeader({
-  title = "Filters",
+  title,
   onReset,
-  resetLabel = "Reset",
+  resetLabel,
   sidebar,
 }: {
   readonly title?: string
@@ -65,7 +65,9 @@ export function FilterPanelHeader({
     <div
       className={`flex min-h-11 items-center gap-2 ${inDrawer ? "justify-end" : "justify-between"}`}
     >
-      {inDrawer ? null : <h2 className="m-0 text-[20px] font-bold">{title}</h2>}
+      {inDrawer ? null : (
+        <h2 className="m-0 text-[20px] font-bold">{title ?? tUi("filters")}</h2>
+      )}
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -73,7 +75,7 @@ export function FilterPanelHeader({
           className="min-h-10 cursor-pointer rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
           style={{ color: T.ink.dim, textUnderlineOffset: 3 }}
         >
-          {resetLabel}
+          {resetLabel ?? tUi("reset")}
         </button>
         {sidebar ? (
           <button
@@ -112,7 +114,7 @@ export function FilterHelper({
   return (
     <p
       className="mt-1.5 mb-0 text-[13px] leading-[1.4]"
-      style={{ color: T.ink.low }}
+      style={{ color: T.ink.dim }}
     >
       {children}
     </p>

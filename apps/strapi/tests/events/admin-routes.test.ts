@@ -29,6 +29,9 @@ describe("events admin routes", () => {
   })
 
   it("reads need read, credential writes need manage-credentials, review needs review", () => {
+    expect(perm(byPath("GET", "/admin/libraries"))).toEqual([
+      "plugin::events.manage-credentials",
+    ])
     expect(perm(byPath("GET", "/admin/credentials"))).toEqual([
       "plugin::events.read",
     ])
@@ -55,7 +58,7 @@ describe("events admin routes", () => {
       ])
     }
 
-    expect(perm(byPath("PATCH", "/admin/pending-review/:documentId"))).toEqual([
+    expect(perm(byPath("PUT", "/admin/pending-review/:documentId"))).toEqual([
       "plugin::events.review",
     ])
   })

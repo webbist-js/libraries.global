@@ -1,57 +1,84 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import Link from "next/link"
+import type { GlobalEventsResponse, GridEvent } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { T } from "@/lib/design-tokens"
-
-interface StripEvent {
-  documentId: string
-  title: string
-  startTime: string
-  allDay: boolean
-  eventType: string
-  isFree: boolean
-  libraryEntityRef?: string | null
-}
+import { Link } from "@/lib/navigation"
 
 interface LocationEventsStripProps {
   countryCode?: string
+  countrySlug?: string
   regionSlug?: string
   locationLabel: string
 }
 
 export function LocationEventsStrip({
   countryCode,
+  countrySlug,
   regionSlug,
   locationLabel,
 }: LocationEventsStripProps) {
   const tUi = useUiTranslations("ui")
 
-  const [events, setEvents] = useState<StripEvent[]>([])
+  const t = useUiTranslations("eventBrowse")
+  const [events, setEvents] = useState<GridEvent[]>([])
+  const [error, setError] = useState(false)
+  const [revision, setRevision] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const controller = new AbortController()
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+    setEvents([])
+    setError(false)
     const params = new URLSearchParams({
       from: new Date().toISOString(),
       to: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       limit: "6",
     })
-    if (countryCode) params.set("countryCode", countryCode)
+    if (countrySlug) params.set("country", countrySlug)
+    else if (countryCode) params.set("countryCode", countryCode)
     if (regionSlug) params.set("regionSlug", regionSlug)
 
-    fetch(`/api/public-proxy/api/events/global?${params.toString()}`)
-      .then((r) => r.json())
-      .then((data: StripEvent[]) => {
-        setEvents(Array.isArray(data) ? data : [])
-        setLoading(false)
+    fetch(`/api/public-proxy/api/events/global?${params.toString()}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Events unavailable")
+        const data = (await response.json()) as GlobalEventsResponse
+        if (!Array.isArray(data.events))
+          throw new Error("Invalid events response")
+        if (!controller.signal.aborted) setEvents(data.events)
       })
-      .catch(() => setLoading(false))
-  }, [countryCode, regionSlug])
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
+    return () => controller.abort()
+  }, [countryCode, countrySlug, regionSlug, revision])
+
+  if (error)
+    return (
+      <div role="status" className="text-muted-foreground text-sm">
+        {t("loadError")}{" "}
+        <button
+          type="button"
+          className="underline"
+          onClick={() => setRevision((value) => value + 1)}
+        >
+          {t("retry")}
+        </button>
+      </div>
+    )
   if (loading || events.length === 0) return null
 
   return (
@@ -68,7 +95,7 @@ export function LocationEventsStrip({
               color: T.ink.faint,
             }}
           >
-            Upcoming
+            {t("upcoming")}
           </span>
           <h3
             style={{
@@ -78,10 +105,7 @@ export function LocationEventsStrip({
               color: T.ink.base,
             }}
           >
-            Events in{" "}
-            <em style={{ fontStyle: "italic", color: T.ink.dim }}>
-              {locationLabel}.
-            </em>
+            {t("inLocation", { location: locationLabel })}
           </h3>
         </div>
         <Link
@@ -96,7 +120,7 @@ export function LocationEventsStrip({
             textDecoration: "none",
           }}
         >
-          Programme
+          {t("programme")}
           <Icon icon="mdi:arrow-right" className="size-3" />
         </Link>
       </div>
@@ -120,7 +144,7 @@ export function LocationEventsStrip({
                   color: T.ink.faint,
                 }}
               >
-                {event.isFree ? tUi("free") : "Ticketed"}
+                {event.isFree ? tUi("free") : t("ticketed")}
               </span>
             </div>
             <p
@@ -134,7 +158,7 @@ export function LocationEventsStrip({
             >
               {event.title}
             </p>
-            {event.libraryEntityRef ? (
+            {event.libraryName ? (
               <p
                 style={{
                   fontFamily: T.font.mono,
@@ -144,7 +168,7 @@ export function LocationEventsStrip({
                   color: T.ink.faint,
                 }}
               >
-                {event.libraryEntityRef}
+                {event.libraryName}
               </p>
             ) : null}
           </Link>

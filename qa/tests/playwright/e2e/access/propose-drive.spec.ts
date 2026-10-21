@@ -216,13 +216,16 @@ test("a Moderator finds the proposal in the queue and sees its counts", async ({
   browserContexts.push(page.context())
 
   await page.goto(
-    `/contribute/moderation?type=drive_proposal&q=${encodeURIComponent(token)}`,
+    `/contribute/moderation?category=drives&q=${encodeURIComponent(token)}`,
     NAVIGATION
   )
-  const row = page.locator(`a[href$="/contribute/moderation/${proposalId}"]`)
+  const row = page.locator(`a[href^="/contribute/moderation/${proposalId}"]`)
   await expect(row).toBeVisible(NAVIGATION)
   await row.click()
-  await page.waitForURL(`**/contribute/moderation/${proposalId}`, NAVIGATION)
+  await page.waitForURL(
+    (url) => url.pathname === `/contribute/moderation/${proposalId}`,
+    NAVIGATION
+  )
 
   await expect(
     page.getByRole("heading", {

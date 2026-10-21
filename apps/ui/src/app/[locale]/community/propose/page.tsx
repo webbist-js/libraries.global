@@ -12,6 +12,7 @@ import {
   PROPOSE_FLOW,
 } from "@/components/drives/DriveFlowPills"
 import { Notice } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalLink from "@/components/global/GlobalLink"
 import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -92,7 +93,7 @@ export default async function ProposeDrivePage({
     const signIn = `/auth/signin?callbackUrl=${encodeURIComponent(proposeHref(prefill))}`
 
     return page(
-      <main className={MAIN}>
+      <MainContent className={MAIN}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:gap-6">
           <div className="min-w-0">
             <Notice
@@ -113,7 +114,7 @@ export default async function ProposeDrivePage({
             </Notice>
           </div>
         </div>
-      </main>
+      </MainContent>
     )
   }
 
@@ -132,7 +133,7 @@ export default async function ProposeDrivePage({
 
   return page(
     <AccountGuard expectedScope={contributionAccountScope(user)}>
-      <main className={MAIN}>
+      <MainContent className={MAIN}>
         <DriveBuilder
           mode="propose"
           initial={initial}
@@ -145,7 +146,7 @@ export default async function ProposeDrivePage({
             open: standing.open ? { title: standing.open.title } : null,
           }}
         />
-      </main>
+      </MainContent>
     </AccountGuard>
   )
 }

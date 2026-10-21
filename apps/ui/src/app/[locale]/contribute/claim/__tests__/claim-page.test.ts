@@ -23,7 +23,7 @@ vi.mock("@/components/staff/knowledge-links", () => ({
 }))
 vi.mock("next-intl/server", () => ({
   getLocale: async () => "fr",
-  getTranslations: async () => (key: string) => key,
+  getTranslations: async () => String,
 }))
 vi.mock("@/lib/access-server", () => ({ sessionTeamsOf: () => [] }))
 vi.mock("@/components/ds/PageHero", () => ({ PageHero: () => null }))

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { useMembershipContent } from "@/lib/localized-plans"
 import type { PlanCard, PlanInclude } from "@/lib/plans"
 
 const SOON_SUFFIX = " (coming soon)"
@@ -13,13 +14,15 @@ export function includeLabel(item: PlanInclude): string {
     : item.text
 }
 
-export function ComingSoonChip({ label = "Coming soon" }: { label?: string }) {
+export function ComingSoonChip({ label }: { label?: string }) {
+  const m = useMembershipContent()
+
   return (
     <span
       className="ml-1 inline-flex w-fit items-center rounded-full px-2 py-px align-[1px] text-[12px] leading-[1.4] font-semibold whitespace-nowrap"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
-      {label}
+      {label ?? m("copy.soon")}
     </span>
   )
 }
@@ -55,13 +58,15 @@ export function IncludeItem({ item }: { readonly item: PlanInclude }) {
 }
 
 export function CurrentPlanBadge() {
+  const m = useMembershipContent()
+
   return (
     <span
       className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-semibold text-white"
       style={{ background: T.accent.primary }}
     >
       <Icon aria-hidden="true" height={14} icon="mdi:check" width={14} />
-      Your plan
+      {m("copy.current")}
     </span>
   )
 }
@@ -73,6 +78,7 @@ export function PlanFeatures({
   readonly plan: PlanCard
   readonly children?: ReactNode
 }) {
+  const m = useMembershipContent()
   const live = plan.includes.filter((item) => item.kind === "feature")
   const notes = plan.includes.filter((item) => item.kind === "note")
 
@@ -81,7 +87,7 @@ export function PlanFeatures({
       className="flex flex-col gap-3 border-t pt-5"
       style={{ borderColor: T.border.divider }}
     >
-      <p className="m-0 text-[13.5px] font-bold">Included now</p>
+      <p className="m-0 text-[13.5px] font-bold">{m("copy.includedNow")}</p>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {live.map((item) => (
           <IncludeItem key={item.text} item={item} />

@@ -4704,6 +4704,21 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
     }
   }
   attributes: {
+    billingAccountId: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    billingArchived: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
+    billingMembership: Schema.Attribute.JSON & Schema.Attribute.Private
+    billingMode: Schema.Attribute.Enumeration<["sandbox", "live"]> &
+      Schema.Attribute.Private
+    billingRevision: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<0>
+    billingSuspended: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4718,6 +4733,15 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
     notes: Schema.Attribute.Text & Schema.Attribute.Private
+    pendingSeats: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1
+        },
+        number
+      >
+    publicServiceApproved: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
     seats: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<

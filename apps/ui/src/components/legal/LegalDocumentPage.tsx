@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import { MainContent } from "@/components/ds/MainContent"
 import { parseHeroText } from "@/components/ds/PageHero"
 import { SectionNavigation } from "@/components/ds/SectionNavigation"
 import { SectionTabs } from "@/components/ds/SectionTabs"
@@ -107,7 +108,7 @@ export function LegalDocumentPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main className="relative z-10 flex-1">
+      <MainContent className="relative z-10 flex-1">
         {/* ── Hero band + document tabs ── */}
         <section
           className="border-b"
@@ -453,7 +454,7 @@ export function LegalDocumentPage({
             </article>
           </div>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

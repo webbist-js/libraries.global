@@ -35,6 +35,218 @@ const ERRORS: Record<string, string> = {
   team_inactive: "Your Team is inactive. Contact us to renew it.",
 }
 
+type KeyChange = { action: "rotate" | "revoke"; keyId: string; name: string }
+function TeamKeyList({
+  data,
+  now,
+  secret,
+  locale,
+  pending,
+  setConfirmation,
+}: {
+  data: ApiDashboard
+  now: number
+  secret: string | null
+  locale: string
+  pending: boolean
+  setConfirmation: (change: KeyChange | null) => void
+}) {
+  const t = useTranslations("teamApiKeys")
+  const count = (value: number) => new Intl.NumberFormat(locale).format(value)
+
+  return (
+    <>
+      {" "}
+      {data.keys.length ? (
+        <ul className="m-0 grid list-none gap-3 p-0">
+          {data.keys.map((key) => {
+            const expired = Boolean(
+              key.expiresAt && Date.parse(key.expiresAt) <= now
+            )
+            const status = key.revokedAt
+              ? "Revoked"
+              : expired
+                ? "Expired"
+                : "Active"
+
+            return (
+              <li
+                key={key.id}
+                className={
+                  "min-w-0 rounded-2xl border border-(--t-border-line) p-4 " +
+                  (status === "Active"
+                    ? "bg-(--t-bg-deep)"
+                    : "bg-(--t-bg-surface)")
+                }
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="m-0 text-[16px] font-semibold break-words">
+                        {key.name}
+                      </h3>
+                      <Badge
+                        label={status}
+                        color={status === "Active" ? "ok" : "dim"}
+                        dot={status === "Active"}
+                      />
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <code
+                        translate="no"
+                        className="rounded bg-(--t-bg-muted) px-2 py-0.5 font-mono text-[13px] break-all"
+                      >
+                        {key.prefix}…
+                      </code>
+                      {key.scopes.map((scope) => (
+                        <span
+                          key={scope}
+                          translate="no"
+                          className="rounded-full border border-(--t-border-line) px-2 py-0.5 font-mono text-[13px] text-(--t-ink-dim)"
+                        >
+                          {scope}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {data.organiser && !key.revokedAt ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="surface"
+                        size="pill"
+                        className="px-3.5 py-2 text-[14px]"
+                        disabled={
+                          pending || !data.active || expired || Boolean(secret)
+                        }
+                        onClick={() =>
+                          setConfirmation({
+                            action: "rotate",
+                            keyId: key.id,
+                            name: key.name,
+                          })
+                        }
+                      >
+                        Regenerate
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="surface"
+                        size="pill"
+                        className="px-3.5 py-2 text-[14px] text-(--t-accent-danger)"
+                        disabled={pending}
+                        onClick={() =>
+                          setConfirmation({
+                            action: "revoke",
+                            keyId: key.id,
+                            name: key.name,
+                          })
+                        }
+                      >
+                        Revoke
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+                <p className="mt-3 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                  {count(key.requests)} requests ·{" "}
+                  {formatApiBytes(key.bytes, locale)} this month ·{" "}
+                  {key.lastUsedAt
+                    ? "Last used " +
+                      new Date(key.lastUsedAt).toLocaleString(locale)
+                    : "Never used"}
+                  {key.expiresAt
+                    ? " · Expires " +
+                      new Date(key.expiresAt).toLocaleDateString(locale)
+                    : " · No expiry"}
+                </p>
+              </li>
+            )
+          })}
+        </ul>
+      ) : secret ? null : (
+        <div className="flex items-start gap-4 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 sm:p-6">
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-(--t-bg-deep) text-(--t-accent-primary)">
+            <Icon aria-hidden="true" icon="mdi:key-outline" width={23} />
+          </span>
+          <div className="min-w-0">
+            <h3 className="m-0 font-serif text-[24px] leading-tight">
+              {t("emptyTitle")}
+            </h3>
+            <p className="mt-2 mb-0 max-w-[65ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+              {t(
+                !data.organiser
+                  ? "emptyMember"
+                  : data.active
+                    ? "emptyOrganiser"
+                    : "emptyInactive"
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function KeyChangeConfirmation({
+  confirmation,
+  pending,
+  request,
+  onCancel,
+}: {
+  confirmation: KeyChange | null
+  pending: boolean
+  request: (body: unknown) => void
+  onCancel: () => void
+}) {
+  if (!confirmation) return null
+
+  return (
+    <div
+      className="mt-5 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) p-5"
+      role="group"
+      aria-label="Confirm key change"
+    >
+      <p className="m-0 text-[16px] font-semibold">
+        {confirmation.action === "rotate"
+          ? "Regenerate " + confirmation.name + "?"
+          : "Revoke " + confirmation.name + "?"}
+      </p>
+      <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+        {confirmation.action === "rotate"
+          ? "The old key will stop working immediately. Update every application using it."
+          : "Applications using it will stop working."}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button
+          type="button"
+          variant="primary"
+          size="pill"
+          disabled={pending}
+          onClick={() =>
+            request({
+              action: confirmation.action,
+              keyId: confirmation.keyId,
+            })
+          }
+        >
+          Confirm
+        </Button>
+        <Button
+          type="button"
+          variant="surface"
+          size="pill"
+          disabled={pending}
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 export function TeamApiDashboard({
   initial,
   teams,
@@ -52,11 +264,7 @@ export function TeamApiDashboard({
   const [keyCreationOpen, setKeyCreationOpen] = useState(false)
   const secretRef = useRef<HTMLDivElement>(null)
   const t = useTranslations("teamApiKeys")
-  const [confirmation, setConfirmation] = useState<{
-    action: "rotate" | "revoke"
-    keyId: string
-    name: string
-  } | null>(null)
+  const [confirmation, setConfirmation] = useState<KeyChange | null>(null)
   const [pending, startTransition] = useTransition()
   const locale = useLocale(),
     router = useRouter()
@@ -126,7 +334,6 @@ export function TeamApiDashboard({
       }
     })
 
-  const count = (value: number) => new Intl.NumberFormat(locale).format(value)
   const activeKeys = data.keys.filter(
     (key) =>
       !key.revokedAt && (!key.expiresAt || Date.parse(key.expiresAt) > now)
@@ -295,137 +502,14 @@ export function TeamApiDashboard({
             </div>
           </div>
         ) : null}
-        {data.keys.length ? (
-          <ul className="m-0 grid list-none gap-3 p-0">
-            {data.keys.map((key) => {
-              const expired = Boolean(
-                key.expiresAt && Date.parse(key.expiresAt) <= now
-              )
-              const status = key.revokedAt
-                ? "Revoked"
-                : expired
-                  ? "Expired"
-                  : "Active"
-
-              return (
-                <li
-                  key={key.id}
-                  className={
-                    "min-w-0 rounded-2xl border border-(--t-border-line) p-4 " +
-                    (status === "Active"
-                      ? "bg-(--t-bg-deep)"
-                      : "bg-(--t-bg-surface)")
-                  }
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="m-0 text-[16px] font-semibold break-words">
-                          {key.name}
-                        </h3>
-                        <Badge
-                          label={status}
-                          color={status === "Active" ? "ok" : "dim"}
-                          dot={status === "Active"}
-                        />
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <code
-                          translate="no"
-                          className="rounded bg-(--t-bg-muted) px-2 py-0.5 font-mono text-[13px] break-all"
-                        >
-                          {key.prefix}…
-                        </code>
-                        {key.scopes.map((scope) => (
-                          <span
-                            key={scope}
-                            translate="no"
-                            className="rounded-full border border-(--t-border-line) px-2 py-0.5 font-mono text-[13px] text-(--t-ink-dim)"
-                          >
-                            {scope}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    {data.organiser && !key.revokedAt ? (
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="surface"
-                          size="pill"
-                          className="px-3.5 py-2 text-[14px]"
-                          disabled={
-                            pending ||
-                            !data.active ||
-                            expired ||
-                            Boolean(secret)
-                          }
-                          onClick={() =>
-                            setConfirmation({
-                              action: "rotate",
-                              keyId: key.id,
-                              name: key.name,
-                            })
-                          }
-                        >
-                          Regenerate
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="surface"
-                          size="pill"
-                          className="px-3.5 py-2 text-[14px] text-(--t-accent-danger)"
-                          disabled={pending}
-                          onClick={() =>
-                            setConfirmation({
-                              action: "revoke",
-                              keyId: key.id,
-                              name: key.name,
-                            })
-                          }
-                        >
-                          Revoke
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                  <p className="mt-3 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
-                    {count(key.requests)} requests ·{" "}
-                    {formatApiBytes(key.bytes, locale)} this month ·{" "}
-                    {key.lastUsedAt
-                      ? "Last used " +
-                        new Date(key.lastUsedAt).toLocaleString(locale)
-                      : "Never used"}
-                    {key.expiresAt
-                      ? " · Expires " +
-                        new Date(key.expiresAt).toLocaleDateString(locale)
-                      : " · No expiry"}
-                  </p>
-                </li>
-              )
-            })}
-          </ul>
-        ) : secret ? null : (
-          <div className="flex items-start gap-4 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 sm:p-6">
-            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-(--t-bg-deep) text-(--t-accent-primary)">
-              <Icon aria-hidden="true" icon="mdi:key-outline" width={23} />
-            </span>
-            <div className="min-w-0">
-              <h3 className="m-0 font-serif text-[24px] leading-tight">
-                {t("emptyTitle")}
-              </h3>
-              <p className="mt-2 mb-0 max-w-[65ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
-                {t(
-                  !data.organiser
-                    ? "emptyMember"
-                    : data.active
-                      ? "emptyOrganiser"
-                      : "emptyInactive"
-                )}
-              </p>
-            </div>
-          </div>
-        )}
+        <TeamKeyList
+          data={data}
+          now={now}
+          secret={secret}
+          locale={locale}
+          pending={pending}
+          setConfirmation={setConfirmation}
+        />
         {data.organiser && data.active && atLimit ? (
           <p
             role="status"
@@ -434,49 +518,12 @@ export function TeamApiDashboard({
             {t("atLimit", { count: data.limits.keys })}
           </p>
         ) : null}
-        {confirmation ? (
-          <div
-            className="mt-5 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) p-5"
-            role="group"
-            aria-label="Confirm key change"
-          >
-            <p className="m-0 text-[16px] font-semibold">
-              {confirmation.action === "rotate"
-                ? "Regenerate " + confirmation.name + "?"
-                : "Revoke " + confirmation.name + "?"}
-            </p>
-            <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
-              {confirmation.action === "rotate"
-                ? "The old key will stop working immediately. Update every application using it."
-                : "Applications using it will stop working."}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="primary"
-                size="pill"
-                disabled={pending}
-                onClick={() =>
-                  request({
-                    action: confirmation.action,
-                    keyId: confirmation.keyId,
-                  })
-                }
-              >
-                Confirm
-              </Button>
-              <Button
-                type="button"
-                variant="surface"
-                size="pill"
-                disabled={pending}
-                onClick={() => setConfirmation(null)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : null}
+        <KeyChangeConfirmation
+          confirmation={confirmation}
+          pending={pending}
+          request={request}
+          onCancel={() => setConfirmation(null)}
+        />
       </StaffPanel>
       <ApiGuidePanel />
     </div>

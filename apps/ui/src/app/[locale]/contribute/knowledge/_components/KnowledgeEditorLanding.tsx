@@ -11,6 +11,7 @@ import {
 } from "@/components/contribute/article-editor/article.types"
 import { Badge } from "@/components/ds/Badge"
 import { EmptyState } from "@/components/ds/EmptyState"
+import { MainContent } from "@/components/ds/MainContent"
 import { SearchField } from "@/components/ds/SearchField"
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
 import { SelectField } from "@/components/ds/SelectField"
@@ -208,7 +209,7 @@ export function KnowledgeEditorLanding({
   }
 
   return (
-    <main className="mx-auto grid w-full max-w-[1360px] gap-10 px-4 py-8 sm:px-8 lg:py-10">
+    <MainContent className="mx-auto grid w-full max-w-[1360px] gap-10 px-4 py-8 sm:px-8 lg:py-10">
       <section aria-labelledby="start-writing" className="grid gap-4">
         <h2
           id="start-writing"
@@ -601,6 +602,6 @@ export function KnowledgeEditorLanding({
             </Button>
           )}
       </section>
-    </main>
+    </MainContent>
   )
 }

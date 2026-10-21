@@ -10,6 +10,7 @@ import {
 import styles from "@/components/beta/beta.module.css"
 import { BetaFooter } from "@/components/beta/BetaFooter"
 import { BetaForms } from "@/components/beta/BetaForms"
+import { MainContent } from "@/components/ds/MainContent"
 import {
   BETA_COOKIE,
   betaConfigured,
@@ -58,7 +59,7 @@ export default async function BetaPage({
         </a>
         <span className={styles.badge}>{t("badge")}</span>
       </header>
-      <main className={styles.main}>
+      <MainContent className={styles.main}>
         <section className={styles.introduction}>
           <h1>
             {t("headlineFirst")}
@@ -75,7 +76,7 @@ export default async function BetaPage({
           </ul>
         </section>
         <BetaForms next={next} locale={locale} available={betaConfigured()} />
-      </main>
+      </MainContent>
       <BetaFooter locale={locale} />
     </div>
   )

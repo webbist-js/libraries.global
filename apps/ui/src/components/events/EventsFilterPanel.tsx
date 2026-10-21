@@ -14,9 +14,11 @@ import {
   type TimeSlot,
   type WhenScope,
   DEFAULT_EVENTS_FILTERS,
-  TIME_SLOT_LABEL,
 } from "@/components/events/event-display"
-import { EVENT_TYPE_META } from "@/components/events/EventTypeChip"
+import {
+  EVENT_TYPE_META,
+  type EventTypeKey,
+} from "@/components/events/EventTypeChip"
 
 const WHEN_OPTIONS: { value: WhenScope; label: string }[] = [
   { value: "any", label: "Any time" },
@@ -55,6 +57,7 @@ export function EventsFilterPanel({
   readonly freeCount: number
 }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("eventListing")
 
   const toggleType = (type: string) => {
     const types = filters.types.includes(type)
@@ -71,10 +74,8 @@ export function EventsFilterPanel({
   }
 
   // Only offer types that exist in the data (or are selected)
-  const typeOptions = Object.entries(EVENT_TYPE_META).filter(
-    ([key]) =>
-      key !== "other" &&
-      ((typeCounts.get(key) ?? 0) > 0 || filters.types.includes(key))
+  const typeOptions = (Object.keys(EVENT_TYPE_META) as EventTypeKey[]).filter(
+    (key) => (typeCounts.get(key) ?? 0) > 0 || filters.types.includes(key)
   )
 
   return (
@@ -98,7 +99,17 @@ export function EventsFilterPanel({
             key={option.value}
             type="radio"
             name="events-when"
-            label={option.label}
+            label={t(
+              (
+                {
+                  any: "any",
+                  today: "today",
+                  weekend: "weekend",
+                  "7d": "next7",
+                  "30d": "next30",
+                } as const
+              )[option.value]
+            )}
             checked={filters.when === option.value}
             onChange={() => onChange({ ...filters, when: option.value })}
           />
@@ -110,14 +121,14 @@ export function EventsFilterPanel({
         icon={<path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v5H4zM13 14h7v5h-7z" />}
       >
         {typeOptions.length === 0 ? (
-          <FilterHelper>Types appear as events are listed.</FilterHelper>
+          <FilterHelper>{t("typesHint")}</FilterHelper>
         ) : (
-          typeOptions.map(([key, meta]) => (
+          typeOptions.map((key) => (
             <FilterOption
               key={key}
               type="checkbox"
               name="events-type"
-              label={meta.label}
+              label={t(`types.${key}`)}
               count={typeCounts.get(key) ?? 0}
               checked={filters.types.includes(key)}
               onChange={() => toggleType(key)}
@@ -140,7 +151,7 @@ export function EventsFilterPanel({
             key={slot}
             type="checkbox"
             name="events-time"
-            label={TIME_SLOT_LABEL[slot]}
+            label={t(slot)}
             count={timeCounts.get(slot) ?? 0}
             checked={filters.times.includes(slot)}
             onChange={() => toggleTime(slot)}

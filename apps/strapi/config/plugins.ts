@@ -1,6 +1,7 @@
 import {
   DRIVE_MAX_TASKS,
   libraryTypeName,
+  eventTimeSlot,
   type LibraryNotice,
 } from "@repo/shared-data"
 
@@ -112,6 +113,7 @@ export default ({ env }) => {
         // per-type config through `contentTypes[uid].modelName`, never the UID.
         event: {
           settings: {
+            pagination: { maxTotalHits: 100_000 },
             searchableAttributes: [
               "title",
               "summary",
@@ -121,6 +123,7 @@ export default ({ env }) => {
             ],
             filterableAttributes: [
               "eventType",
+              "timeSlot",
               "isFree",
               "status",
               "startTimestamp",
@@ -133,7 +136,10 @@ export default ({ env }) => {
             displayedAttributes: EVENT_DISPLAYED,
           },
           entriesQuery: {
-            fields: EVENT_FIELDS,
+            // Events have no publishedAt: the plugin’s generic publication gate
+            // must defer to the explicit event visibility predicate below.
+            status: "draft",
+            fields: [...EVENT_FIELDS, "pendingReview"],
             populate: {
               library: {
                 fields: ["name", "slug", "city"],
@@ -145,6 +151,12 @@ export default ({ env }) => {
               },
             },
           },
+          filterEntry({ entry }: { entry: Record<string, unknown> }) {
+            return (
+              entry.pendingReview === false &&
+              (entry.status === "upcoming" || entry.status === "ongoing")
+            )
+          },
           transformEntry({ entry }: { entry: Record<string, unknown> }) {
             const library = asRecord(entry.library)
             const country = asRecord(library?.country)
@@ -153,6 +165,7 @@ export default ({ env }) => {
 
             return {
               ...pick(entry, EVENT_DOC_KEYS),
+              timeSlot: eventTimeSlot(entry),
               library_name: library?.name ?? null,
               library_slug: library?.slug ?? null,
               library_city: library?.city ?? null,
@@ -332,6 +345,7 @@ export default ({ env }) => {
         init: {
           sendDefaultPii: false,
           beforeSend: scrubSentryEvent,
+          beforeSendTransaction: scrubSentryEvent,
         },
       },
     },
@@ -464,6 +478,7 @@ const EVENT_FIELDS = [
 const EVENT_DOC_KEYS = ["id", ...EVENT_FIELDS]
 const EVENT_DISPLAYED = [
   ...EVENT_DOC_KEYS,
+  "timeSlot",
   "startTimestamp",
   "library_name",
   "library_slug",

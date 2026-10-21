@@ -8,6 +8,7 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
 import type { BreadcrumbItem } from "@/components/ds"
+import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -114,9 +115,9 @@ export function LibraryDetailPage({
         style={{ background: T.bg.void, color: T.ink.base }}
       >
         <GlobalHeader locale={locale} />
-        <main className="flex flex-1 items-center justify-center">
+        <MainContent className="flex flex-1 items-center justify-center">
           <p style={{ color: T.ink.dim }}>Library not found.</p>
-        </main>
+        </MainContent>
       </div>
     )
   }
@@ -243,7 +244,7 @@ export function LibraryDetailPage({
         path={path}
         record={verifyRecordOf(library)}
       >
-        <main id="main" className="flex-1">
+        <MainContent id="main" className="flex-1">
           <LibraryHero
             contribution={
               <LibraryFeaturedContribution
@@ -440,7 +441,7 @@ export function LibraryDetailPage({
               </aside>
             </div>
           </Container>
-        </main>
+        </MainContent>
       </LibraryCorrectionProvider>
     </div>
   )

@@ -15,6 +15,51 @@ interface TestEvent {
 }
 
 describe("scrubSentryEvent", () => {
+  it("removes credentials from the complete event and transaction envelope", () => {
+    const canary = "CANARY_CREDENTIAL_SHOULD_NEVER_LEAVE_APP"
+    const event = {
+      request: { url: `/auth/reset-password?token=${canary}#private` },
+      breadcrumbs: [
+        {
+          category: "navigation",
+          data: { from: `/auth/reset-password?token=${canary}`, to: "/" },
+        },
+        {
+          category: "fetch",
+          data: { url: `https://example.org/callback?code=${canary}` },
+        },
+        { category: "console", data: { arguments: [canary] } },
+      ],
+      spans: [
+        {
+          data: {
+            "http.url": `/callback?code=${canary}`,
+            "db.statement": canary,
+          },
+        },
+      ],
+      extra: {
+        nested: [{ apiKey: canary, authorization: `Bearer ${canary}` }],
+      },
+      contexts: { feed: { credentials: { token: canary }, status: "failed" } },
+      exception: {
+        values: [
+          { value: `Failed https://example.org/callback?code=${canary}` },
+        ],
+      },
+      user: {
+        id: "user-1",
+        email: "private@example.org",
+        ip_address: "192.0.2.1",
+      },
+    }
+    const result = scrubSentryEvent(event)
+    expect(JSON.stringify(result)).not.toContain(canary)
+    expect(JSON.stringify(result)).not.toContain("private@example.org")
+    expect(result.user).toEqual({ id: "user-1" })
+    expect(result.contexts.feed.status).toBe("failed")
+    expect(result.request.url).toBe("/auth/reset-password")
+  })
   it("drops the body, cookies and query string, and keeps only the user-agent header", () => {
     const event: TestEvent = {
       request: {
@@ -72,4 +117,33 @@ describe("scrubSentryEvent", () => {
 
     expect(scrubSentryEvent(event).request?.url).toBe("not-a-url")
   })
+})
+
+it("drops console payloads and redacts bearer-link path segments throughout an envelope", () => {
+  const event = {
+    request: { url: "https://example.test/" },
+    message: "Failed opening /staff/team/join/SYNTHETIC_PATH_ONLY",
+    breadcrumbs: [
+      {
+        category: "console",
+        message: "SYNTHETIC_CONSOLE_ONLY",
+        data: { arguments: ["SYNTHETIC_CONSOLE_ONLY"] },
+      },
+      {
+        category: "navigation",
+        data: {
+          to: "/reset-password/SYNTHETIC_RESET_ONLY?token=SYNTHETIC_QUERY_ONLY",
+        },
+      },
+    ],
+  }
+  const result = JSON.stringify(scrubSentryEvent(event))
+  for (const secret of [
+    "SYNTHETIC_PATH_ONLY",
+    "SYNTHETIC_CONSOLE_ONLY",
+    "SYNTHETIC_RESET_ONLY",
+    "SYNTHETIC_QUERY_ONLY",
+  ])
+    expect(result).not.toContain(secret)
+  expect(result).toContain("[Filtered]")
 })

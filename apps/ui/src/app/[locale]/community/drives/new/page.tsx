@@ -4,6 +4,7 @@ import { AccountGuard } from "@/components/auth/AccountGuard"
 import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
 import { BOARD_FLOW, DriveFlowPills } from "@/components/drives/DriveFlowPills"
+import { MainContent } from "@/components/ds/MainContent"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { T } from "@/lib/design-tokens"
 import { drivePlaceRefs } from "@/lib/drives/drive-view"
@@ -58,14 +59,14 @@ export default async function NewDrivePage({
         >
           <DriveFlowPills steps={BOARD_FLOW} />
         </CommunitySectionHeader>
-        <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+        <MainContent className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
           <DriveBuilder
             initial={builderStateFromPrefill(prefill, names, "board")}
             locale={locale}
             userId={user.id}
             restoreDraft={prefillQuery(prefill) === ""}
           />
-        </main>
+        </MainContent>
       </div>
     </AccountGuard>
   )

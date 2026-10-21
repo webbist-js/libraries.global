@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 
 import { CheckoutFlow } from "@/components/billing/CheckoutFlow"
+import { MainContent } from "@/components/ds/MainContent"
 import { getSessionSSR } from "@/lib/auth-server"
 
 export const metadata = {
@@ -28,7 +29,7 @@ export default async function CheckoutPage({
       : undefined
 
   return (
-    <main className="mx-auto my-6 max-w-6xl overflow-hidden rounded-3xl border bg-white sm:my-10">
+    <MainContent className="mx-auto my-6 max-w-6xl overflow-hidden rounded-3xl border bg-white sm:my-10">
       <CheckoutFlow
         user={
           user
@@ -46,6 +47,6 @@ export default async function CheckoutPage({
         attempt={attempt}
         cancelled={params.cancelled === "1"}
       />
-    </main>
+    </MainContent>
   )
 }

@@ -6,7 +6,7 @@ import { Container } from "@/components/elementary/Container"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamApiDashboard } from "@/components/staff/TeamApiDashboard"
-import { sessionTeamsOf } from "@/lib/access-server"
+import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { getSessionSSR } from "@/lib/auth-server"
 import { BillingError } from "@/lib/billing/config"
@@ -24,10 +24,10 @@ export default async function TeamApiPage({
     searchParams,
   ])
   if (!session?.user) redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteam%2Fapi")
-  const teams = sessionTeamsOf(session.user)
+  const teams = preferredTeams(sessionTeamsOf(session.user))
   const chosen = query.team
     ? teams.find((team) => team.id === query.team)
-    : (teams.find((team) => team.role === "organiser") ?? teams[0])
+    : teams[0]
   if (!chosen) notFound()
   let data = null
   let detail: TeamDetail | null = null
@@ -68,7 +68,13 @@ export default async function TeamApiPage({
           <TeamApiDashboard
             key={data.teamId}
             initial={data}
-            teams={teams.map((team) => ({ id: team.id, name: team.name }))}
+            teams={teams.map((team) => ({
+              id: team.id,
+              name:
+                team.status === "lapsed"
+                  ? `${team.name} (inactive)`
+                  : team.name,
+            }))}
             confirming={query.payment === "confirming"}
           />
         ) : (

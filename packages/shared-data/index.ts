@@ -199,3 +199,5 @@ export * from "./profile-target"
 export * from "./library-types"
 
 export * from "./suggestion-review"
+export * from "./telemetry"
+export * from "./event-time"

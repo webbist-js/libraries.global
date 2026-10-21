@@ -98,6 +98,92 @@ describe("Team pricing content", () => {
     ).toBeNull()
   })
 
+  it.each(["en", "fr", "cs"] as const)(
+    "adds repeatable Team management and handover guidance in %s",
+    (locale) => {
+      const article = {
+        slug: "teams-for-library-services",
+        body: [
+          {
+            __component: "content.rich-text",
+            body: [
+              {
+                type: "paragraph",
+                children: [
+                  {
+                    type: "text",
+                    text: {
+                      en: "Ask us about Team for your service from Membership.",
+                      fr: "Renseignez-vous sur l'offre « Équipe » pour votre service.",
+                      cs: "O zřízení týmu pro vaši organizaci nás můžete požádat.",
+                    }[locale],
+                  },
+                ],
+              },
+              {
+                type: "paragraph",
+                children: [
+                  {
+                    type: "link",
+                    url: "/existing-guide",
+                    children: [{ type: "text", text: "Existing guide" }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }
+      const body = pricingGuideBody(article, locale)!
+      expect(JSON.stringify(body)).toContain("Stripe")
+      expect(JSON.stringify(body)).toContain("/staff/team/new")
+      expect(JSON.stringify(body)).toContain("/existing-guide")
+      expect(pricingGuideBody({ ...article, body }, locale)).toEqual(body)
+    }
+  )
+
+  it("keeps cancellation contacts while covering Team purchases and organisation ownership", () => {
+    const contact = {
+      heading: "Contact",
+      body: [
+        {
+          type: "paragraph",
+          children: [{ type: "text", text: "Existing contact address" }],
+        },
+      ],
+    }
+    const cancellation = pricingLegalSections({
+      slug: "cancellation-refunds",
+      sections: [
+        contact,
+        {
+          heading: "Model cancellation form",
+          body: [
+            {
+              type: "paragraph",
+              children: [{ type: "text", text: "Service: [Supporter or Pro]" }],
+            },
+          ],
+        },
+      ],
+    })!
+    expect(cancellation[0]).toEqual(contact)
+    expect(JSON.stringify(cancellation)).toContain(
+      "[Supporter, Pro, Team or Team API add-on]"
+    )
+    const membership = pricingLegalSections({
+      slug: "membership",
+      sections: [contact],
+    })!
+    expect(membership[0]).toEqual(contact)
+    expect(JSON.stringify(membership)).toContain(
+      "organisation and are managed by its Organisers"
+    )
+    expect(JSON.stringify(membership)).toContain(
+      "deleting the original purchaser does not cancel them"
+    )
+  })
+
   it("preserves contact and cancellation terms when changing pricing", () => {
     const untouched = {
       heading: "Contact",
@@ -121,5 +207,20 @@ describe("Team pricing content", () => {
       sections.filter((s) => s.heading === "Team API add-on")
     ).toHaveLength(1)
     expect(JSON.stringify(sections)).toContain("£5 monthly or £50 yearly")
+    expect(JSON.stringify(sections)).toContain(
+      "Self-service Team subscriptions"
+    )
+    expect(JSON.stringify(sections)).toContain("five seats")
+    const cancellation = pricingLegalSections({
+      slug: "cancellation-refunds",
+      sections: [untouched],
+    })!
+    expect(cancellation[0]).toEqual(untouched)
+    expect(JSON.stringify(cancellation)).toContain(
+      "Manage Team billing and seats"
+    )
+    expect(JSON.stringify(cancellation)).toContain(
+      "cancel the API add-on separately"
+    )
   })
 })

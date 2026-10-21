@@ -52,6 +52,8 @@ export type TeamSummary = {
 }
 
 export type Team = TeamSummary & {
+  publicServiceApproved?: boolean
+  billingSuspended?: boolean
   notes: string | null
   members: TeamMember[]
   organiserNames: string[]

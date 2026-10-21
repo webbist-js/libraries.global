@@ -60,15 +60,15 @@ See [Strapi API Client](./strapi-api-client.md) for details.
 
 Dual i18n system:
 
-| System      | Purpose    | Location                    |
-| ----------- | ---------- | --------------------------- |
-| next-intl   | UI strings | `src/locales/{locale}.json` |
-| Strapi i18n | Content    | `locale` query parameter    |
+| System      | Purpose    | Location                 |
+| ----------- | ---------- | ------------------------ |
+| next-intl   | UI strings | `locales/{locale}.json`  |
+| Strapi i18n | Content    | `locale` query parameter |
 
 ## Authentication
 
 - **Better Auth v1**: Session management (cookies)
-- **Strapi JWT**: Stored in session as `user.strapiJWT`, used for private API calls
+- **Server bridge**: Dedicated Next.js routes resolve the cookie session and send trusted identity headers to permissioned Strapi endpoints; no Strapi JWT is exposed in the public session.
 
 ## Environment Variables
 
@@ -78,6 +78,6 @@ Files bootstrapped from `.example` files on `pnpm install`.
 
 ## Pages Hierarchy
 
-Pages use parent-child relations for URL structure. `fullPath` auto-generated from slug chain.
+Public place routes follow Continent → Country → Region → Library. Area is optional metadata and adds no URL segment. The starter-kit fullPath job queue has been removed; current route loaders define the published paths.
 
 See [Pages Hierarchy](./pages-hierarchy.md) for workflow.

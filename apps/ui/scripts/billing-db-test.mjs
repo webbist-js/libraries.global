@@ -29,8 +29,11 @@ const result = spawnSync(
     "exec",
     "vitest",
     "run",
+    "--maxWorkers=1",
+    "--no-file-parallelism",
     "src/lib/billing/__tests__/database.integration.test.ts",
     "src/lib/team-api/__tests__/database.integration.test.ts",
+    "src/lib/team-billing/__tests__/database.integration.test.ts",
   ],
   { stdio: "inherit", env: { ...process.env, BILLING_DB_TEST: "true" } }
 )

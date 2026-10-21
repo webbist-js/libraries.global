@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 import { use } from "react"
 
+import { MainContent } from "@/components/ds/MainContent"
 import StrapiStructuredData from "@/components/page-builder/components/seo-utilities/StrapiStructuredData"
 import { fetchPage } from "@/lib/strapi-api/content/server"
 import { cn } from "@/lib/styles"
@@ -33,7 +34,7 @@ export default function StrapiPageView({ params, searchParams }: Props) {
     <>
       <StrapiStructuredData structuredData={data?.seo?.structuredData} />
 
-      <main className={cn("flex w-full flex-col overflow-hidden")} />
+      <MainContent className={cn("flex w-full flex-col overflow-hidden")} />
     </>
   )
 }

@@ -5,6 +5,7 @@ import type { Locale } from "next-intl"
 import { Suspense } from "react"
 
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { FIND_CONTRIBUTE_PROMPT } from "@/components/home/homepage.content"
 import FinalCtaSection from "@/components/home/sections/FinalCtaSection"
@@ -104,7 +105,7 @@ export default async function FindLibraryRoute(props: {
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <GlobalHeader locale={locale as Locale} />
-      <main className="flex flex-1 flex-col">
+      <MainContent className="flex flex-1 flex-col">
         <Suspense>
           <FindLibraryPage
             initial={initial}
@@ -129,7 +130,7 @@ export default async function FindLibraryRoute(props: {
             }
           />
         </Suspense>
-      </main>
+      </MainContent>
     </div>
   )
 }

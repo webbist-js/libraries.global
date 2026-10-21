@@ -1,6 +1,7 @@
 import { useLocale, useTranslations } from "next-intl"
 import { Suspense, type ReactNode } from "react"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { SectionNavigation } from "@/components/ds/SectionNavigation"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
@@ -25,11 +26,11 @@ export function EditorialLoading({
       <div role="status" className="sr-only">
         {t("loading")}
       </div>
-      <main aria-busy="true" className="relative z-10 flex-1">
+      <MainContent aria-busy="true" className="relative z-10 flex-1">
         <div aria-hidden="true" className="motion-reduce:[&_*]:animate-none">
           {children}
         </div>
-      </main>
+      </MainContent>
     </div>
   )
 }

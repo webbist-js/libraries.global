@@ -12,19 +12,21 @@ import {
 } from "@/app/[locale]/contribute/_components/membership/PlanCompareMobile"
 import { PlanToggle } from "@/app/[locale]/contribute/_components/membership/PlanToggle"
 import { T } from "@/lib/design-tokens"
+import {
+  useMembershipContent,
+  useMembershipGroups,
+  useMembershipPlan,
+  useMembershipShortPrice,
+  useMembershipSummary,
+} from "@/lib/localized-plans"
 import pricing from "@/lib/membership-pricing.json"
 import {
   availableNow,
   COMPARE_PLANS,
   type CompareGroup,
-  compareGroups,
-  compareGroupSummary,
-  shortPrice,
 } from "@/lib/plan-compare"
-import { planCard, type PlanCardKey } from "@/lib/plans"
+import type { PlanCardKey } from "@/lib/plans"
 
-const GROUPS = compareGroups()
-const NOW = availableNow(GROUPS)
 /** Lead with the differences between memberships; free basics remain available. */
 const OPEN_BY_DEFAULT = ["supporting", "atlas"]
 const PRO_TINT = "#F6F5FE"
@@ -39,6 +41,8 @@ function GroupHeader({
   readonly open: boolean
   readonly onToggle: () => void
 }) {
+  const compareGroupSummary = useMembershipSummary()
+
   return (
     <tr>
       <th
@@ -85,6 +89,11 @@ function GroupHeader({
 export function PlanCompareTable({
   currentPlan,
 }: { readonly currentPlan?: string } = {}) {
+  const m = useMembershipContent()
+  const planCard = useMembershipPlan()
+  const shortPrice = useMembershipShortPrice()
+  const GROUPS = useMembershipGroups()
+  const NOW = availableNow(GROUPS)
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("membershipCompare")
 
@@ -196,12 +205,12 @@ export function PlanCompareTable({
       <div
         className="hidden overflow-x-auto rounded-[22px] border bg-white [contain:paint] md:block"
         role="region"
-        aria-label="What each plan includes"
+        aria-label={m("copy.includes")}
         tabIndex={0}
         style={{ borderColor: T.border.line }}
       >
         <table className="w-full min-w-[720px] border-collapse text-[15px]">
-          <caption className="sr-only">What each plan includes</caption>
+          <caption className="sr-only">{m("copy.includes")}</caption>
           <thead>
             <tr>
               <th
@@ -209,7 +218,7 @@ export function PlanCompareTable({
                 scope="col"
                 style={{ borderColor: T.border.line, color: T.ink.dim }}
               >
-                Feature
+                {m("copy.feature")}
               </th>
               {COMPARE_PLANS.map((key) => {
                 const plan = planCard(key)
@@ -238,16 +247,18 @@ export function PlanCompareTable({
                       </span>
                       <span className="text-[12px] font-medium text-(--t-ink-dim)">
                         {shortPrice(plan.price)}
-                        {key === "team" ? " ex VAT" : ""}
+                        {key === "team" ? ` ${m("copy.exVat")}` : ""}
                       </span>
                       {key === "team" ? (
                         <span className="text-[11px] font-normal text-(--t-ink-dim)">
-                          Standard · {pricing.team.includedSeats} seats
+                          {m("copy.teamSeats", {
+                            count: pricing.team.includedSeats,
+                          })}
                         </span>
                       ) : null}
                       {key === currentPlan ? (
                         <span className="text-[11px] font-semibold text-(--t-accent-primary)">
-                          Your plan
+                          {m("copy.current")}
                         </span>
                       ) : null}
                     </button>

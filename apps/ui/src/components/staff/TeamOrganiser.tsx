@@ -16,6 +16,8 @@ import { staffRequest } from "@/lib/staff/client"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import type { TeamDetail, TeamMemberRow, TeamRole } from "@/lib/staff/types"
 
+import { TeamConfiguration } from "./TeamConfiguration"
+
 type Confirmation = {
   title: string
   body: string
@@ -91,7 +93,10 @@ export function TeamOrganiser({
   const staffOf = new Set(mine.map((l) => l.id))
   const libraryName = (id: string) =>
     team.libraries.find((l) => l.documentId === id)?.name ?? "Library"
-  const seatsLeft = Math.max(0, team.seats - team.used)
+  const seatsLeft = Math.max(
+    0,
+    Math.min(team.seats, team.pendingSeats ?? team.seats) - team.used
+  )
   const active =
     team.status === "active" &&
     (!team.expiresAt || Date.parse(team.expiresAt) > Date.now())
@@ -452,6 +457,11 @@ export function TeamOrganiser({
           <Card
             id="team-libraries"
             title="Libraries covered"
+            footer={
+              organiser && team.libraries.length > 0 ? (
+                <TeamConfiguration team={team} label="Manage libraries" />
+              ) : undefined
+            }
             aside={
               <span className="text-[14px] text-(--t-ink-dim)">
                 {team.libraries.length}
@@ -513,12 +523,13 @@ export function TeamOrganiser({
                   <strong className="text-(--t-ink-base)">
                     No libraries yet.
                   </strong>{" "}
-                  The site team adds libraries to the Team. Once added,
-                  organisers can give members access to each one.
+                  {organiser
+                    ? "Choose the libraries your Team covers, then assign members. Staff authority is checked separately."
+                    : "Your organiser can add libraries and assign your access."}
                 </p>
-                <Button asChild variant="surface" size="pill">
-                  <a href={TEAM_CONTACT_HREF}>Ask to add libraries</a>
-                </Button>
+                {organiser ? (
+                  <TeamConfiguration team={team} label="Add libraries" />
+                ) : null}
               </div>
             )}
           </Card>
@@ -527,6 +538,7 @@ export function TeamOrganiser({
           <Card
             compact
             title="Team details"
+            footer={organiser ? <TeamConfiguration team={team} /> : undefined}
             aside={
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
@@ -629,15 +641,24 @@ export function TeamOrganiser({
             >
               {seatsLeft === 0 ? (
                 <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-                  Every seat is taken. Remove someone, or ask the site team to
-                  add seats to {team.name}.{" "}
-                  <a
-                    href={TEAM_CONTACT_HREF}
-                    className={CONTACT_LINK}
-                    style={{ color: T.accent.primary }}
-                  >
-                    Contact the site team
-                  </a>
+                  Every available seat is taken. Remove a member or invitation,
+                  or add seats.{" "}
+                  {team.source === "checkout" ? (
+                    <Link
+                      href={`/staff/team/billing?team=${team.documentId}`}
+                      className={CONTACT_LINK}
+                    >
+                      Manage billing and seats
+                    </Link>
+                  ) : (
+                    <a
+                      href={TEAM_CONTACT_HREF}
+                      className={CONTACT_LINK}
+                      style={{ color: T.accent.primary }}
+                    >
+                      Contact the site team
+                    </a>
+                  )}
                 </p>
               ) : (
                 <form

@@ -317,8 +317,6 @@ export function FindLibraryPage({
         />
       </PageHero>
 
-      {contributeBand}
-
       {/* Main two-column area */}
       <Container className="flex flex-1 items-start gap-8 pt-8 pb-[88px]">
         {/* Sidebar — sticky on desktop, can be hidden */}
@@ -348,6 +346,7 @@ export function FindLibraryPage({
 
         {/* Results */}
         <section aria-label={tUi("results")} className="min-w-0 flex-1">
+          <h2 className="sr-only">{tUi("results")}</h2>
           <FindResultsControls
             state={state}
             total={total}
@@ -517,6 +516,7 @@ export function FindLibraryPage({
           ) : null}
         </section>
       </Container>
+      {contributeBand}
     </>
   )
 }
