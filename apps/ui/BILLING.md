@@ -6,6 +6,8 @@ The application and sandbox catalogue are ready for acceptance. The owner's init
 
 ## Delivered plans
 
+Self-service annual Team signup, settlement, seat quantities and Portal management are described in [TEAM-BILLING.md](TEAM-BILLING.md). The organisation owns billing; personal membership and the monthly API add-on remain separate. Existing invoice agreements are preserved. The new purchase flag defaults off until its deployment and owned sandbox acceptance are complete.
+
 The separate paid Team API add-on has its own Team-owned checkout, keys, durable quotas and staff usage dashboard. Its catalogue, limits, endpoints and deployment commands are described in [TEAM-API.md](TEAM-API.md). It does not change personal memberships or staff authority.
 
 | Plan      | Tax-inclusive base GBP                                                                        | Tools                                                                                                   |

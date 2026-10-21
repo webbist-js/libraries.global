@@ -18,9 +18,10 @@ import {
 } from "@strapi/design-system"
 import { ArrowClockwise, Eye } from "@strapi/icons"
 import { EmptyDocuments } from "@strapi/icons/symbols"
-import { Page, Layouts, useFetchClient } from "@strapi/strapi/admin"
+import { Layouts, useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
+import { PluginPage } from "../../../../../admin/components/PluginUI"
 import {
   errorMessage,
   nameOf,
@@ -84,7 +85,7 @@ export function PeoplePage({
   }, [query, searched, load])
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="People"
@@ -183,7 +184,10 @@ export function PeoplePage({
                     <Th>
                       <Typography
                         variant="sigma"
-                        style={{ position: "absolute", clip: "rect(0 0 0 0)" }}
+                        style={{
+                          position: "absolute",
+                          clip: "rect(0 0 0 0)",
+                        }}
                       >
                         Actions
                       </Typography>
@@ -258,6 +262,6 @@ export function PeoplePage({
           onChanged={() => void load(searched)}
         />
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }

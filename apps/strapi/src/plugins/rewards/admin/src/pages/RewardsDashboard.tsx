@@ -27,6 +27,8 @@ import {
 } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { PluginPage } from "../../../../../admin/components/PluginUI"
+
 type PointEvent = {
   id: number
   baUserId: string
@@ -702,7 +704,7 @@ function ReadyRewards() {
   if (!allowedActions.canRead) return <Page.NoPermissions />
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="Rewards"
@@ -739,7 +741,7 @@ function ReadyRewards() {
           </Flex>
         </Layouts.Content>
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }
 function Summary({ revision }: { revision: number }) {

@@ -11,6 +11,7 @@ import {
   pricingLegalSections,
   stripComponentIds,
 } from "./team-pricing-content.mjs"
+import { teamServiceLegalMetadata } from "./team-service-content.mjs"
 
 const args = new Set(process.argv.slice(2))
 const target = args.has("--local") ? "local" : "production"
@@ -86,6 +87,7 @@ for (const doc of legal) {
   if (doc.status === "modified")
     throw new Error(`Unpublished edits need review: ${doc.slug}`)
   before.push({ type: "legal-document", locale: "en", doc })
+  const version = doc.slug === "terms" ? "1.1" : "1.2"
   plans.push({
     type: "legal-document",
     locale: "en",
@@ -93,20 +95,27 @@ for (const doc of legal) {
     data: {
       title: doc.title,
       slug: doc.slug,
+      ...teamServiceLegalMetadata({
+        ...doc,
+        summaryPoints: stripComponentIds(doc.summaryPoints),
+      }),
       sections,
       revisions: [
         ...stripComponentIds(doc.revisions ?? []).filter(
-          (r) => r.version !== "1.1"
+          (r) => r.version !== version
         ),
         {
-          version: "1.1",
-          date: "2026-10-13",
+          version,
+          date: "2026-10-21",
+          changesUrl: null,
           summary:
-            doc.slug === "privacy"
-              ? "Documented private Team API key and usage records and their retention."
-              : doc.slug === "cancellation-refunds"
-                ? "Clarified separate Team API renewal and cancellation controls."
-                : "Updated Team prices and public-library discount; documented the separate Team API add-on and its usage limits. Personal founding prices are unchanged.",
+            doc.slug === "terms"
+              ? "Clarified organisation-owned Team billing, Organiser handover and individual beta invitations."
+              : doc.slug === "privacy"
+                ? "Documented organisation-owned Team subscriptions, seat and consent records and financial retention."
+                : doc.slug === "cancellation-refunds"
+                  ? "Documented self-service Team renewal, seat changes, account transfer and separate API cancellation."
+                  : "Added self-service annual Team subscriptions, payment-confirmed seats and renewal management. Team verification and personal founding prices are unchanged.",
         },
       ],
     },

@@ -4,7 +4,11 @@ import { validate } from "@strapi/utils"
 import { afterEach, expect, it, vi } from "vitest"
 
 import createTeams from "../../src/plugins/access/server/services/teams"
-import { TEAM_MEMBER_UID, TEAM_UID } from "../../src/utils/team-access"
+import {
+  loadTeamMemberships,
+  TEAM_MEMBER_UID,
+  TEAM_UID,
+} from "../../src/utils/team-access"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
 import librarySchema from "../../src/api/library/content-types/library/schema.json"
@@ -14,7 +18,7 @@ import memberSchema from "../../src/plugins/access/server/content-types/team-mem
 
 afterEach(() => vi.unstubAllGlobals())
 
-it("loads an invite preview through Strapi's real nested-query validation", async () => {
+it("loads membership and invitation projections through Strapi's real nested-query validation", async () => {
   vi.stubGlobal("strapi", { config: { get: () => [] } })
   const token = "a".repeat(64)
   const team = {
@@ -23,10 +27,30 @@ it("loads an invite preview through Strapi's real nested-query validation", asyn
     status: "active",
     expiresAt: null,
     notes: "Private administrator notes",
+    source: "checkout",
+    billingMode: process.env.BILLING_ENV === "live" ? "live" : "sandbox",
     libraries: [],
   }
   const fake = makeFakeStrapi({
     [TEAM_MEMBER_UID]: [
+      {
+        documentId: "active000000000000000001",
+        baUserId: "fixture_user",
+        teamRole: "organiser",
+        status: "active",
+        team,
+      },
+      {
+        documentId: "othermode000000000000001",
+        baUserId: "fixture_user",
+        teamRole: "member",
+        status: "active",
+        team: {
+          ...team,
+          documentId: "otherteam000000000000001",
+          billingMode: team.billingMode === "live" ? "sandbox" : "live",
+        },
+      },
       {
         documentId: "teammember00000000000001",
         email: "organiser@example.test",
@@ -80,6 +104,16 @@ it("loads an invite preview through Strapi's real nested-query validation", asyn
       },
     }
   })
+  const memberships = await loadTeamMemberships(fake.strapi, "fixture_user")
+  expect(memberships).toHaveLength(2)
+  expect(memberships[0]).toMatchObject({
+    name: "API acceptance",
+    status: "active",
+    teamRole: "organiser",
+  })
+  expect(memberships[1]).toMatchObject({ status: "lapsed" })
+  expect(memberships[0]).not.toHaveProperty("billingMode")
+  expect(memberships[0]).not.toHaveProperty("notes")
   const teams = createTeams({ strapi: fake.strapi })
 
   await expect(

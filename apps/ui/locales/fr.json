@@ -2344,7 +2344,7 @@
     "lead": "Soutenez l’index ouvert avec une adhésion personnelle, ou offrez les outils Pro à tout votre réseau de bibliothèques avec Team.",
     "personalBilling": "Supporter et Pro peuvent être réglés au mois ou à l’année.",
     "organisations": "Pour les organisations",
-    "invoicedYearly": "Facturation annuelle",
+    "invoicedYearly": "Abonnement annuel",
     "teamLead": "Pro pour votre équipe, avec un espace pour organiser le personnel et les bibliothèques dont il s’occupe. Acheté par réseau de bibliothèques.",
     "estimateTeam": "Estimez votre offre Team",
     "estimateLead": "Choisissez votre type de service et le nombre de personnes ayant besoin d’un accès.",
@@ -2365,12 +2365,16 @@
     "firstSeats": "Les {count} premières places",
     "eachExtra": "Chaque place supplémentaire",
     "annualAmount": "{amount} / an",
-    "discountNote": "L’éligibilité du service de bibliothèques publiques sera confirmée avec votre devis. La réduction s’applique uniquement aux places Team.",
-    "confirmQuote": "Nous confirmerons votre devis et votre facture. Aucune carte nécessaire.",
+    "discountNote": "L’éligibilité des services de bibliothèques publiques est confirmée séparément avant le paiement à tarif réduit. La réduction concerne uniquement les places Team.",
+    "confirmQuote": "Créez votre équipe et payez chaque année via Stripe. L’accès payant commence après confirmation.",
     "apiLabel": "Option API",
     "monthlyAmount": "{amount} / mois",
     "apiSeparate": "L’API est facturée séparément ; elle n’est incluse ni dans cette estimation ni dans la réduction pour les services de bibliothèques publiques.",
-    "checkEligibility": "Vous avez peut-être droit à Pro gratuitement — vérifier les conditions"
+    "checkEligibility": "Vous avez peut-être droit à Pro gratuitement — vérifier les conditions",
+    "manageTeam": "Gérer votre équipe",
+    "yourTeam": "Votre équipe",
+    "existingTeamLead": "Gérez vos membres, bibliothèques et abonnement annuel dans votre espace d’équipe.",
+    "teamBilling": "Facturation et places"
   },
   "membershipCompare": {
     "lead": "Découvrez les fonctionnalités disponibles aujourd’hui. Celles marquées « Bientôt » sont encore prévues.",
@@ -2638,7 +2642,7 @@
       "team": {
         "name": "Équipe",
         "who": "Les réseaux de bibliothèques, collectivités, universités et cabinets de conseil",
-        "cta": "Contactez-nous",
+        "cta": "Créer votre équipe",
         "includes": {
           "0": "Pro pour chaque membre de l’équipe",
           "1": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
@@ -2649,7 +2653,7 @@
           "6": "Mises à jour groupées depuis un tableur",
           "7": "Un outil de recherche de bibliothèques intégrable",
           "8": "Des quotas supérieurs pour l’option API",
-          "9": "Nous configurons l’équipe, ses bibliothèques et ses places. Votre responsable invite ensuite ses collègues et les affecte aux bibliothèques."
+          "9": "Créez votre équipe en ligne, choisissez les places et payez chaque année via Stripe. Le responsable invite les collègues et attribue les bibliothèques ; les droits du personnel sont vérifiés séparément."
         }
       }
     },
@@ -2775,7 +2779,7 @@
     "faq": {
       "0": {
         "q": "La TVA est-elle ajoutée lors du paiement ?",
-        "a": "Les prix de base Soutien et Pro sont en GBP, taxes comprises. Stripe confirme la taxe applicable, la devise locale et le total récurrent avant le paiement. L’offre Équipe fait l’objet d’un devis et d’une facture séparés, hors TVA lorsque cela est indiqué."
+        "a": "Les prix de base Soutien et Pro sont en GBP, taxes comprises. Stripe confirme la taxe applicable, la devise locale et le total récurrent avant le paiement. L’offre Équipe est un abonnement annuel via Stripe, hors TVA lorsque cela est indiqué."
       },
       "1": {
         "q": "Puis-je annuler ?",
@@ -2783,7 +2787,7 @@
       },
       "2": {
         "q": "Comment fonctionne l’offre Équipe ?",
-        "a": "L’offre Équipe est achetée par réseau de bibliothèques. Nous configurons ses places et ses bibliothèques. Un responsable invite les collègues et les affecte comme propriétaires ou éditeurs ; chaque place inclut Pro. Les affectations des équipes vérifiées donnent immédiatement accès aux outils du personnel ; les autres sont examinées par un modérateur."
+        "a": "Créez votre équipe en ligne, choisissez les places et payez chaque année via Stripe. L’équipe est activée après confirmation du paiement. Un responsable invite les collègues et les affecte comme propriétaires ou éditeurs ; chaque place inclut Pro. Les affectations des équipes vérifiées donnent immédiatement accès aux outils du personnel ; les autres sont examinées par un modérateur."
       },
       "3": {
         "q": "Que comprend l’offre Soutien ?",
@@ -2830,7 +2834,8 @@
     "claimStepReviewDetail": "Une fois approuvée, la bibliothèque apparaît ici.",
     "howClaimsWork": "Comment fonctionne la vérification",
     "noLibraryAssignments": "Aucune bibliothèque attribuée",
-    "teamLinks": "Espaces d’équipe"
+    "teamLinks": "Espaces d’équipe",
+    "billing": "Facturation et places"
   },
   "teamApiKeys": {
     "title": "Clés API",

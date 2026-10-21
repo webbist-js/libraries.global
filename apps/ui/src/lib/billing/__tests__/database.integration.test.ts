@@ -84,6 +84,12 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
       )
     )
     await pool.query(
+      await readFile(
+        new URL("../../../../scripts/team-billing-schema.sql", import.meta.url),
+        "utf8"
+      )
+    )
+    await pool.query(
       'create table "user" (id text primary key, "emailVerified" boolean)'
     )
     await pool.query('insert into "user" values($1,true)', [buyer.id])

@@ -12,6 +12,7 @@ export default ({ env }) => {
   }
 
   return {
+    autoOpen: env.bool("STRAPI_ADMIN_AUTO_OPEN", false),
     forgotPassword: {
       from: env("EMAIL_FROM"),
       replyTo: env("EMAIL_REPLY_TO"),

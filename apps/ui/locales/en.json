@@ -2344,7 +2344,7 @@
     "lead": "Support the open index with a personal membership, or bring Pro tools to your whole library service with Team.",
     "personalBilling": "Supporter and Pro can be paid monthly or yearly.",
     "organisations": "For organisations",
-    "invoicedYearly": "Invoiced yearly",
+    "invoicedYearly": "Billed yearly",
     "teamLead": "Pro for your people, with one place to organise staff and the libraries they look after. Bought per library service.",
     "estimateTeam": "Estimate your Team",
     "estimateLead": "Choose your service type and how many people need access.",
@@ -2365,12 +2365,16 @@
     "firstSeats": "First {count} seats",
     "eachExtra": "Each extra seat",
     "annualAmount": "{amount} / year",
-    "discountNote": "Public library service eligibility is confirmed with your quote. The discount applies to Team seats only.",
-    "confirmQuote": "We’ll confirm your quote and invoice. No card needed.",
+    "discountNote": "Public-library-service eligibility is confirmed separately before discounted checkout. The discount applies to Team seats only.",
+    "confirmQuote": "Create your Team and pay yearly through Stripe. Paid access starts after confirmation.",
     "apiLabel": "Optional API add-on",
     "monthlyAmount": "{amount} / month",
     "apiSeparate": "API billed separately; not included in this estimate or the public library service discount.",
-    "checkEligibility": "You may qualify for Pro free — check eligibility"
+    "checkEligibility": "You may qualify for Pro free — check eligibility",
+    "manageTeam": "Manage your Team",
+    "yourTeam": "Your Team",
+    "existingTeamLead": "Manage your members, libraries and annual membership from your Team workspace.",
+    "teamBilling": "Billing and seats"
   },
   "membershipCompare": {
     "lead": "See what’s available today. Features marked “Soon” are still on the roadmap.",
@@ -2638,7 +2642,7 @@
       "team": {
         "name": "Team",
         "who": "Library services, councils, universities and consultancies",
-        "cta": "Talk to us",
+        "cta": "Create your Team",
         "includes": {
           "0": "Pro for every seat",
           "1": "Team organiser: assign staff to your libraries",
@@ -2649,7 +2653,7 @@
           "6": "Bulk updates from a spreadsheet",
           "7": "An embeddable library finder",
           "8": "Higher allowances for the API add-on",
-          "9": "We set up the Team, its libraries and its seats. Your team organiser then invites colleagues and assigns them to your libraries."
+          "9": "Create your Team online, choose seats and pay yearly through Stripe. Your organiser invites colleagues and assigns Libraries; staff authority is verified separately."
         }
       }
     },
@@ -2775,7 +2779,7 @@
     "faq": {
       "0": {
         "q": "Is VAT added at checkout?",
-        "a": "Supporter and Pro use tax-inclusive GBP base prices. Stripe confirms the applicable tax, local currency and final recurring total before you pay. Team is quoted and invoiced separately, excluding VAT where stated."
+        "a": "Supporter and Pro use tax-inclusive GBP base prices. Stripe confirms the applicable tax, local currency and final recurring total before you pay. Team is billed yearly through Stripe, excluding VAT where stated."
       },
       "1": {
         "q": "Can I cancel?",
@@ -2783,7 +2787,7 @@
       },
       "2": {
         "q": "How does Team work?",
-        "a": "Team is purchased per library service. We set up its seats and libraries. A team organiser invites colleagues and assigns library owners or editors; each seat includes Pro. Assignments in verified teams grant staff access immediately; others require moderator review."
+        "a": "Create a Team online, choose seats and pay yearly through Stripe. Your Team is activated after payment is confirmed. A team organiser invites colleagues and assigns library owners or editors; each seat includes Pro. Assignments in verified teams grant staff access immediately; others require moderator review."
       },
       "3": {
         "q": "What does Supporter include?",
@@ -2830,7 +2834,8 @@
     "claimStepReviewDetail": "Once approved, the library appears here.",
     "howClaimsWork": "How claims work",
     "noLibraryAssignments": "No libraries assigned yet",
-    "teamLinks": "Team workspaces"
+    "teamLinks": "Team workspaces",
+    "billing": "Billing & seats"
   },
   "teamApiKeys": {
     "title": "API keys",

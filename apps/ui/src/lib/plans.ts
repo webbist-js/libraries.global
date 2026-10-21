@@ -198,11 +198,11 @@ const TEAM_INCLUDES: PlanInclude[] = [
     (i) => i.kind === "soon" && i.text !== TEAM_TRAFFIC.text
   ),
   note(
-    "We set up the Team, its libraries and its seats. Your team organiser then invites colleagues and assigns them to your libraries."
+    "Create your Team online, choose seats and pay yearly through Stripe. Your organiser invites colleagues and assigns Libraries; staff authority is verified separately."
   ),
 ]
 
-/** "Ask about Team for your service": a mailto until checkout exists. */
+/** Contact for Library verification and existing Team agreements. */
 export const TEAM_CONTACT_HREF = `mailto:${CONTACT_EMAIL}?subject=Team%20plan`
 
 export const PLANS: readonly PlanCard[] = [
@@ -288,7 +288,7 @@ export const PLANS: readonly PlanCard[] = [
     },
     who: "Library services, councils, universities and consultancies",
     includes: TEAM_INCLUDES,
-    cta: { kind: "contact", label: "Talk to us", href: TEAM_CONTACT_HREF },
+    cta: { kind: "signup", label: "Create your Team", href: "/staff/team/new" },
   },
 ]
 

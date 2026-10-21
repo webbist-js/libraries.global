@@ -9,7 +9,7 @@ import {
 } from "@/app/[locale]/contribute/_components/membership/PlanStatusBanner"
 import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
-import { staffLibrariesOf } from "@/lib/access-server"
+import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { billingConfig } from "@/lib/billing/config"
 import { hasManagedMembership } from "@/lib/billing/current-membership"
@@ -102,6 +102,7 @@ export default async function MembershipPage() {
             isStaff={isStaff}
           />
           <MembershipPlans
+            teams={sessionTeamsOf(user)}
             currentPlan={currentPlan}
             billingAvailable={billingConfig().enabled}
             supporterApproved={billingConfig().supporterApproved}

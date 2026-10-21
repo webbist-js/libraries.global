@@ -24,6 +24,16 @@ pnpm typecheck        # Typecheck all workspaces
 
 See [Commands reference](apps/docs/docs/commands.md) for full command reference.
 
+## Local development resources
+
+Reuse the existing Docker PostgreSQL database and running applications. At any
+one time, run at most one Next.js server and one Strapi server across all
+checkouts. Check the existing processes and ports before starting anything;
+never start another stack, database or schema for routine development or tests.
+Run finite checks sequentially, cap Node memory and use one test worker. Avoid
+watch-mode checks and extra browser instances. Stop only processes you started,
+and clean those up when their check finishes.
+
 ## Type Generation (Critical)
 
 After ANY Strapi schema change:

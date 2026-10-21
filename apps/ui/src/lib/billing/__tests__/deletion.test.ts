@@ -19,6 +19,9 @@ vi.mock("../provider", () => ({
     checkout: { sessions: { retrieve: f.retrieve, expire: f.expire } },
   }),
 }))
+vi.mock("@/lib/team-billing/manage", () => ({
+  guardTeamBillingDeletion: vi.fn(),
+}))
 import { stopBillingBeforeDeletion } from "../deletion"
 
 const pool = {

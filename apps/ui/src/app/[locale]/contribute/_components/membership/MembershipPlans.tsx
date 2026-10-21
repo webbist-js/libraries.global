@@ -6,6 +6,7 @@ import { useState } from "react"
 
 import { CheckoutButton } from "@/components/billing/CheckoutButton"
 import GlobalLink from "@/components/global/GlobalLink"
+import type { SessionTeam } from "@/lib/access-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { useMembershipContent, useMembershipPlan } from "@/lib/localized-plans"
 import { splitPrice, yearlySavingMonths } from "@/lib/plan-compare"
@@ -179,13 +180,15 @@ function PlanColumn({
   )
 }
 
-/** Personal memberships share a billing period; Team is an annual enquiry. */
+/** Personal memberships share a billing period; Team has separate annual billing. */
 export function MembershipPlans({
   currentPlan,
+  teams = [],
   billingAvailable = false,
   supporterApproved = false,
   checkoutUser = null,
 }: {
+  readonly teams?: SessionTeam[]
   readonly currentPlan: string
   readonly billingAvailable?: boolean
   readonly supporterApproved?: boolean
@@ -287,7 +290,7 @@ export function MembershipPlans({
             }
           />
         ))}
-        <TeamPlan current={currentPlan === "team"} />
+        <TeamPlan current={currentPlan === "team"} teams={teams} />
       </ul>
       <p
         className="m-0 mt-4 flex items-start gap-2 text-[13.5px] leading-[1.6]"

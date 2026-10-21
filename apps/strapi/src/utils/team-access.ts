@@ -17,6 +17,21 @@ export const MAX_TEAMS_PER_USER = 10
 /** Most libraries a Team may cover. */
 export const MAX_TEAM_LIBRARIES = 200
 
+export function teamIsActive(team: {
+  status?: string | null
+  expiresAt?: string | null
+  source?: string | null
+  billingMode?: string | null
+}) {
+  return (
+    team.status === "active" &&
+    (!team.expiresAt || Date.parse(team.expiresAt) > Date.now()) &&
+    (team.source !== "checkout" ||
+      team.billingMode ===
+        (process.env.BILLING_ENV === "live" ? "live" : "sandbox"))
+  )
+}
+
 export type TeamMembership = {
   memberDocumentId: string
   teamDocumentId: string
@@ -26,6 +41,7 @@ export type TeamMembership = {
   status: "active" | "lapsed"
   expiresAt: string | null
   verified: boolean
+  selfService?: boolean
   libraryDocumentIds: string[]
 }
 
@@ -39,6 +55,8 @@ type MemberRow = {
     status?: string | null
     expiresAt?: string | null
     verifiedAt?: string | null
+    source?: string | null
+    billingMode?: string | null
     libraries?: { documentId?: string }[] | null
   } | null
 }
@@ -58,14 +76,8 @@ export async function loadTeamMemberships(
     fields: ["documentId", "teamRole"],
     populate: {
       team: {
-        fields: [
-          "documentId",
-          "name",
-          "slug",
-          "status",
-          "expiresAt",
-          "verifiedAt",
-        ],
+        // Trusted internal query: private fields cannot be named in a nested
+        // populate. Only the explicit public projection below leaves this helper.
         populate: { libraries: { fields: ["documentId"] } },
       },
     },
@@ -84,9 +96,16 @@ export async function loadTeamMemberships(
         name: team.name ?? "Team",
         slug: team.slug ?? "",
         teamRole: row.teamRole === "organiser" ? "organiser" : "member",
-        status: team.status === "lapsed" ? "lapsed" : "active",
+        status:
+          team.status === "lapsed" ||
+          (team.source === "checkout" &&
+            team.billingMode !==
+              (process.env.BILLING_ENV === "live" ? "live" : "sandbox"))
+            ? "lapsed"
+            : "active",
         expiresAt: team.expiresAt ?? null,
         verified: !!team.verifiedAt,
+        ...(team.source === "checkout" ? { selfService: true } : {}),
         libraryDocumentIds: (team.libraries ?? [])
           .map((l) => l.documentId)
           .filter((id): id is string => typeof id === "string" && id.length > 0)

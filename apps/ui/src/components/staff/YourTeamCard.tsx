@@ -7,6 +7,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ds"
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { useStaff } from "@/lib/access-client"
+import { preferredTeams } from "@/lib/access-server"
 import { Link } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import type { TeamSummary } from "@/lib/staff/types"
@@ -16,16 +17,17 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
   const t = useTranslations("staffWorkspace")
   const { teams: sessionTeams, libraries, ready } = useStaff()
   const [now] = useState(() => Date.now())
-  const rows: TeamSummary[] =
+  const rows: TeamSummary[] = preferredTeams(
     teams ??
-    sessionTeams.map((team) => ({
-      ...team,
-      status: "active",
-      expiresAt: null,
-      verified: false,
-      organiserName: null,
-      libraryDocumentIds: [],
-    }))
+      sessionTeams.map((team) => ({
+        ...team,
+        status: team.status ?? "lapsed",
+        expiresAt: team.expiresAt ?? null,
+        verified: false,
+        organiserName: null,
+        libraryDocumentIds: [],
+      }))
+  )
   if ((!teams && !ready) || rows.length === 0) return null
 
   return (
@@ -76,6 +78,15 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                   className="flex min-h-14 items-center justify-between gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("apiAccess")}
+                  <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+                </Link>
+                <Link
+                  href={
+                    "/staff/team/billing?team=" + encodeURIComponent(team.id)
+                  }
+                  className="flex min-h-14 items-center justify-between gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
+                >
+                  {t("billing")}
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
                 </Link>
               </div>

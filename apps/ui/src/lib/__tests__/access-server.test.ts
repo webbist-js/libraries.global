@@ -10,6 +10,7 @@ import {
   requireStaff,
   sessionCapabilities,
   sessionTeamsOf,
+  preferredTeams,
   staffLibrariesOf,
   teamLibraryIdsOf,
 } from "../access-server"
@@ -193,4 +194,43 @@ describe("access-server", () => {
     expect(requireStaff(editor, "libA", "seeTeam")).toBeNull()
     expect(requireStaff(editor, "libA", "manageTeam")?.status).toBe(403)
   })
+})
+
+it("prefers a paid current Team over an earlier unfinished signup", () => {
+  const unfinished = {
+    id: "draft",
+    name: "Team",
+    slug: "team",
+    role: "organiser" as const,
+    libraryCount: 0,
+    status: "lapsed" as const,
+    expiresAt: null,
+  }
+  const active = { ...unfinished, id: "paid", status: "active" as const }
+  expect(preferredTeams([unfinished, active]).map((team) => team.id)).toEqual([
+    "paid",
+    "draft",
+  ])
+  const expired = {
+    ...active,
+    id: "expired",
+    expiresAt: "2020-01-01T00:00:00Z",
+  }
+  expect(preferredTeams([expired, active])[0]?.id).toBe("paid")
+})
+
+it("prefers active self-service Teams to legacy test agreements", () => {
+  const legacy = {
+    id: "legacy",
+    name: "Team",
+    slug: "team",
+    role: "organiser" as const,
+    libraryCount: 0,
+    status: "active" as const,
+  }
+  const paid = { ...legacy, id: "paid", selfService: true }
+  expect(preferredTeams([legacy, paid])[0]?.id).toBe("paid")
+  expect(preferredTeams([{ ...paid, status: "lapsed" }, legacy])[0]?.id).toBe(
+    "legacy"
+  )
 })

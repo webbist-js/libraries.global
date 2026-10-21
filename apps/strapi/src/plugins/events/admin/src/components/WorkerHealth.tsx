@@ -9,6 +9,19 @@ import {
 } from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
 import { useEffect, useRef, useState } from "react"
+import { styled } from "styled-components"
+
+import { FormGrid } from "../../../../../admin/components/PluginUI"
+
+const WorkerSummary = styled(FormGrid)`
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  @media (max-width: 1000px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
 
 type Status = "idle" | "running" | "offline"
 type Health = {
@@ -86,7 +99,12 @@ export function WorkerHealth({
 
   return (
     <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
-      <Flex justifyContent="space-between" gap={4} paddingBottom={5}>
+      <Flex
+        justifyContent="space-between"
+        gap={4}
+        paddingBottom={5}
+        wrap="wrap"
+      >
         <Typography tag="h2" variant="delta">
           Sync worker
         </Typography>
@@ -131,15 +149,9 @@ export function WorkerHealth({
               Check the worker service and its configured health address.
             </Alert>
           )}
-          <Box tag="dl">
+          <WorkerSummary tag="dl" style={{ margin: 0 }}>
             {rows.map(([label, value]) => (
-              <Box
-                key={label}
-                paddingTop={3}
-                paddingBottom={3}
-                borderColor="neutral200"
-                style={{ borderBottomWidth: 1, borderBottomStyle: "solid" }}
-              >
+              <Box key={label} padding={4} background="neutral100" hasRadius>
                 <Typography tag="dt" variant="sigma" textColor="neutral600">
                   {label}
                 </Typography>
@@ -147,13 +159,17 @@ export function WorkerHealth({
                   tag="dd"
                   paddingTop={2}
                   textColor="neutral800"
-                  style={{ overflowWrap: "anywhere" }}
+                  style={{
+                    overflowWrap: "anywhere",
+                    margin: 0,
+                    lineHeight: 1.5,
+                  }}
                 >
                   {value}
                 </Typography>
               </Box>
             ))}
-          </Box>
+          </WorkerSummary>
         </Flex>
       )}
     </Box>

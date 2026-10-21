@@ -32,6 +32,7 @@ export async function GET() {
     let memberships: unknown[] = []
     let membershipChanges: unknown[] = []
     let membershipConsents: unknown[] = []
+    let teamMembershipConsents: unknown[] = []
     try {
       memberships = (
         await authDbPool.query(
@@ -51,6 +52,12 @@ export async function GET() {
           [user.id]
         )
       ).rows
+      teamMembershipConsents = (
+        await authDbPool.query(
+          "select a.team_id,t.price_id,t.seats,t.terms_version,t.created_at,t.state from team_billing_attempts t join team_billing_accounts a on a.id=t.account_id where t.actor_id=$1 order by t.created_at",
+          [user.id]
+        )
+      ).rows
     } catch (error) {
       if ((error as { code?: string }).code !== "42P01") throw error
     }
@@ -58,6 +65,7 @@ export async function GET() {
       memberships,
       membershipChanges,
       membershipConsents,
+      teamMembershipConsents,
       exportedAt: new Date().toISOString(),
       account: {
         email: user.email,

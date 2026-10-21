@@ -19,6 +19,7 @@ import { useEffect, useState } from "react"
 
 import { CredentialForm } from "./CredentialForm"
 import { RevealCredentialButton } from "./RevealCredentialButton"
+import { PluginEmptyState } from "../../../../../admin/components/PluginUI"
 
 type Library = {
   documentId: string
@@ -318,7 +319,7 @@ export function CredentialList() {
           <Button variant="tertiary" disabled={loading} onClick={refresh}>
             Refresh
           </Button>
-          {canManage && (
+          {canManage && (rows.length > 0 || loading || error) && (
             <Button onClick={() => setEditing(null)}>Add credential</Button>
           )}
         </Flex>
@@ -339,19 +340,15 @@ export function CredentialList() {
       {loading ? (
         <Loader>Loading credentials</Loader>
       ) : rows.length === 0 && !error ? (
-        <Box padding={8} background="neutral0" hasRadius>
-          <Typography tag="h3" variant="delta">
-            Connect your first event source
-          </Typography>
-          <Typography tag="p" textColor="neutral600" paddingTop={3}>
-            Library calendars and ticketing feeds keep the programme up to date.
-          </Typography>
-          {canManage && (
-            <Box paddingTop={5}>
+        <PluginEmptyState
+          title="Connect your first event source"
+          description="Add a library calendar or ticketing feed. You can test its connection and review imported events here."
+          action={
+            canManage ? (
               <Button onClick={() => setEditing(null)}>Add credential</Button>
-            </Box>
-          )}
-        </Box>
+            ) : undefined
+          }
+        />
       ) : (
         <div
           style={{

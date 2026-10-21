@@ -329,6 +329,6 @@ _Avoid_: drive request
 
 ## Pricing and content operations
 
-The agreed amounts are in `apps/ui/src/lib/membership-pricing.json`: Supporter £3/£30, founding Pro £5/£50, future standard Pro £8/£80 after Reach ships, Team £600/year for five seats and £120 per additional seat (ex VAT), with a 20% public-library-service discount. Team API is a separate £15/month add-on. Existing subscriptions keep their original Price IDs. See `apps/ui/PRICING.md`.
+The agreed amounts are in `apps/ui/src/lib/membership-pricing.json`: Supporter £3/£30, founding Pro £5/£50, future standard Pro £8/£80 after Reach ships, Team £600/year for five seats and £120 per additional seat (ex VAT), with a 20% public-library-service discount. New Teams use self-service annual subscriptions when enabled; settled payment provisions seats, while staff authority and discount eligibility are assessed separately. Existing invoice agreements are preserved. Team API is a separate £15/month add-on. Existing subscriptions keep their original Price IDs. See `apps/ui/PRICING.md` and `apps/ui/TEAM-BILLING.md`.
 
 Routine content work targets production; feature work uses local explicitly. Local and production CMS Admin Tokens have server-specific permissions. Local MCP is enabled; production uses the existing private Content Manager API while MCP remains disabled. Connections and credential names are documented in `apps/strapi/CONTENT-OPERATIONS.md`; credentials are never committed.

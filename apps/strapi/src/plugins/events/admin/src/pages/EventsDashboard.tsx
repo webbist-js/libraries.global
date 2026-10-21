@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react"
 
 import { ProviderAnalytics } from "./ProviderAnalytics"
+import { PluginPage } from "../../../../../admin/components/PluginUI"
 import { CredentialList } from "../components/CredentialList"
 import { ImportRunList } from "../components/ImportRunList"
 import { PendingReviewList } from "../components/PendingReviewList"
@@ -97,7 +98,7 @@ function EventsContent({
   }, [get, revision])
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="Events"
@@ -131,7 +132,11 @@ function EventsContent({
             >
               <Tabs.List
                 aria-label="Events management"
-                style={{ minWidth: "max-content", whiteSpace: "nowrap" }}
+                style={{
+                  width: "max-content",
+                  minWidth: "max-content",
+                  whiteSpace: "nowrap",
+                }}
               >
                 <Tabs.Trigger value="credentials">Credentials</Tabs.Trigger>
                 <Tabs.Trigger value="runs">Imports</Tabs.Trigger>
@@ -207,6 +212,6 @@ function EventsContent({
           </Tabs.Root>
         </Layouts.Content>
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }

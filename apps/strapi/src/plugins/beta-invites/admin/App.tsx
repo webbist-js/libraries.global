@@ -27,6 +27,13 @@ import {
 } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import {
+  PluginPage,
+  PluginEmptyState,
+  StatsGrid,
+  FormGrid,
+} from "../../../admin/components/PluginUI"
+
 type Row = {
   id: string
   email: string
@@ -204,7 +211,7 @@ function Dashboard() {
   }
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="Beta invites"
@@ -231,22 +238,29 @@ function Dashboard() {
               browser access. Sent means accepted by the email provider.
             </Typography>
           </Box>
-          <Flex gap={3} wrap="wrap" paddingBottom={5}>
+          <StatsGrid>
             {Object.entries(labels).map(([key, label]) => (
               <Box
                 key={key}
                 background="neutral0"
                 padding={4}
                 hasRadius
-                shadow="tableShadow"
+                borderColor="neutral200"
               >
-                <Typography variant="beta">
-                  {result.counts[key] ?? 0}
+                <Typography
+                  tag="p"
+                  variant="alpha"
+                  textColor="neutral800"
+                  paddingBottom={2}
+                >
+                  {loading ? "—" : (result.counts[key] ?? 0)}
                 </Typography>
-                <Typography textColor="neutral600"> {label}</Typography>
+                <Typography variant="pi" textColor="neutral600">
+                  {label}
+                </Typography>
               </Box>
             ))}
-          </Flex>
+          </StatsGrid>
           {error && (
             <Box paddingBottom={4}>
               <Alert
@@ -272,8 +286,16 @@ function Dashboard() {
             </Box>
           )}
           <Box background="neutral0" padding={6} hasRadius shadow="tableShadow">
-            <Flex gap={4} wrap="wrap" paddingBottom={5} alignItems="flex-end">
-              <Box width="30rem">
+            <FormGrid paddingBottom={5}>
+              <Box style={{ minWidth: 0 }}>
+                <Typography
+                  tag="p"
+                  variant="pi"
+                  fontWeight="bold"
+                  paddingBottom={1}
+                >
+                  Search
+                </Typography>
                 <Searchbar
                   name="beta-search"
                   value={q}
@@ -327,11 +349,22 @@ function Dashboard() {
                   ))}
                 </SingleSelect>
               </Field.Root>
-            </Flex>
+            </FormGrid>
             {loading && result.data.length === 0 ? (
               <Loader>Loading invitations</Loader>
             ) : result.data.length === 0 ? (
-              <Typography>No beta requests match these filters.</Typography>
+              <PluginEmptyState
+                title={
+                  q.trim() || status !== "all" || locale !== "all"
+                    ? "No matching requests"
+                    : "No beta requests yet"
+                }
+                description={
+                  q.trim() || status !== "all" || locale !== "all"
+                    ? "Try a different email, language or status to find a request."
+                    : "New access requests will appear here. Review a request before sending its invitation."
+                }
+              />
             ) : (
               <Table colCount={6} rowCount={result.data.length + 1}>
                 <Thead>
@@ -605,6 +638,6 @@ function Dashboard() {
           </Modal.Root>
         )}
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }

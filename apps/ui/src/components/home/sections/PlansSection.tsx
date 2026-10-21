@@ -3,7 +3,7 @@ import type { SectionIntro } from "@/components/home/homepage.types"
 import SectionHeader from "@/components/home/sections/SectionHeader"
 import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
-import { PLAN_TEASERS, planCard, TEAM_CONTACT_HREF } from "@/lib/plans"
+import { PLAN_TEASERS, planCard } from "@/lib/plans"
 
 type Teaser = (typeof PLAN_TEASERS)[number]
 
@@ -22,7 +22,7 @@ function teaserCta(
     case "pro":
       return { label: "See Pro", href: "/contribute/membership" }
     case "team":
-      return { label: "Talk to us", href: TEAM_CONTACT_HREF }
+      return { label: "Create your Team", href: "/staff/team/new" }
   }
 }
 

@@ -4,7 +4,7 @@ const pounds = (pence) => `£${pence / 100}`
 const discounted = (pence) =>
   pence * (1 - pricing.team.publicServiceDiscountPercent / 100)
 
-export const teamPricingText = `Team costs ${pounds(pricing.team.year)}/year for ${pricing.team.includedSeats} seats, with additional seats at ${pounds(pricing.team.extraSeatYear)}/year each, excluding VAT. Public library services receive ${pricing.team.publicServiceDiscountPercent}% off: ${pounds(discounted(pricing.team.year))}/year for ${pricing.team.includedSeats} seats and ${pounds(discounted(pricing.team.extraSeatYear))}/year per additional seat, excluding VAT. Teams are quoted and invoiced yearly; we set up the Team and its seats after payment is confirmed. Payment never verifies a Team or grants library staff authority.`
+export const teamPricingText = `Team costs ${pounds(pricing.team.year)}/year for ${pricing.team.includedSeats} seats, with additional seats at ${pounds(pricing.team.extraSeatYear)}/year each, excluding VAT. Public library services receive ${pricing.team.publicServiceDiscountPercent}% off: ${pounds(discounted(pricing.team.year))}/year for ${pricing.team.includedSeats} seats and ${pounds(discounted(pricing.team.extraSeatYear))}/year per additional seat, excluding VAT. When self-service Team purchases are available, create a Team online and subscribe yearly through Stripe. The subscription uses a five-seat minimum and renews annually until cancelled. The approved public-library-service discount is selected by the server; checking a service-type estimate does not grant eligibility. Existing invoice agreements keep their agreed terms. Payment never verifies a Team or grants library staff authority.`
 export const proPricingText = `Pro's founding price remains ${pounds(pricing.pro.founding.month)}/month or ${pounds(pricing.pro.founding.year)}/year while the membership continues. The standard price will be ${pounds(pricing.pro.standard.month)}/month or ${pounds(pricing.pro.standard.year)}/year once Reach ships; it is not offered before those tools are available.`
 
 const paragraph = (text) => ({
@@ -49,7 +49,7 @@ export function membershipLegalContent(
       heroTitle: "Membership *terms.*",
       slug: "membership",
       navLabel: "Membership",
-      lead: "Terms for Supporter, Pro and Team API digital tools, recurring payments and access.",
+      lead: "Terms for Supporter, Pro, Team and Team API digital tools, recurring payments and access.",
       order: 3,
       summaryPoints: [
         { text: "Library facts and community participation remain free." },
@@ -61,6 +61,13 @@ export function membershipLegalContent(
         },
       ],
       sections: [
+        section(
+          "Self-service Team subscriptions",
+          "Team billing and seat management belong to the organisation.",
+          "Create a Team at /staff/team/new, choose at least five seats and accept the Team terms before Stripe Checkout. Confirmed settled payment activates the Team and its paid seat allowance; a checkout return or an unpaid subscription does not grant access. The purchaser becomes its Organiser and can invite colleagues and select covered Libraries. Payment never verifies Library authority.",
+          "Organisers manage invoices, payment details, annual renewal cancellation and seat quantities from Team billing. Stripe shows the exact proration before a seat increase. Additional access starts only after the matching payment is confirmed. Reductions start at renewal; remove excess members and invitations before the reduction takes effect. Invitations reserve seats and cannot exceed a scheduled lower allowance. A Team with more occupied seats than its paid allowance has access suspended until an organiser removes excess seats or pays for more, then refreshes payment status. A failed renewal may receive up to seven days of grace from the original failure; retries do not extend it.",
+          "Every Team needs an active Organiser. Before deleting the last Organiser's account, transfer that role to another active member or discard an unused Team from Team billing. Discarding closes open checkouts and is unavailable while the Team has an ongoing subscription or paid period, another active member, or an ongoing API subscription. Team and API renewals remain separate. Existing annual invoice agreements are preserved and require an arranged migration to subscription billing."
+        ),
         section(
           "Team API add-on",
           "API access is a separate recurring purchase for an active Team, with shared usage limits.",
@@ -102,7 +109,7 @@ export function membershipLegalContent(
           "Starting access",
           "Request immediate access without waiving statutory rights.",
           "By checking the membership consent and continuing, you request that the tools become available immediately after payment is confirmed. This request does not waive statutory cancellation or other consumer rights. Access begins only after the matching invoice is settled and the application has synchronized confirmation; an unpaid purchase or upgrade grants no new tools.",
-          "Your verified account owns the membership. Financial confirmations are sent by Stripe; Libraries Global sends a separate access notice. If confirmation is delayed, check Membership & billing and contact support rather than creating another payment."
+          "Your verified account owns a personal Supporter or Pro membership. Team and Team API subscriptions belong to the organisation and are managed by its Organisers. Financial confirmations are sent by Stripe; Libraries Global sends a separate access notice. If confirmation is delayed, check the relevant personal or Team billing page and contact support rather than creating another payment."
         ),
         section(
           "Changing plans and stopping renewal",
@@ -126,7 +133,7 @@ export function membershipLegalContent(
         section(
           "Account deletion and financial records",
           "Billing is stopped before account erasure.",
-          "Account deletion first cancels subscriptions and expires open checkout sessions. If that cannot be confirmed, deletion is refused until billing is reconciled. Completed event references are removed after 90 days. Minimal account/payment reference bindings are removed six years after account erasure by daily housekeeping; they prevent late events from recreating access. Stripe handles its own financial records and any separate deletion request under its privacy terms.",
+          "Account deletion first cancels personal subscriptions and expires personal checkout sessions. If that cannot be confirmed, deletion is refused until billing is reconciled. Before the last active Team Organiser deletes their account, another active member must become Organiser or an eligible unused Team must be discarded. A Team with another Organiser keeps its organisation-owned subscriptions; deleting the original purchaser does not cancel them. Completed event references are removed after 90 days. Minimal account/payment reference bindings are removed six years after account erasure by daily housekeeping; they prevent late events from recreating access. Stripe handles its own financial records and any separate deletion request under its privacy terms.",
           linkedParagraph(
             "Our ",
             { text: "privacy notice", url: "/legal/privacy" },
@@ -167,6 +174,7 @@ export function membershipLegalContent(
           "Use Membership & billing in Settings.",
           "Sign in to the account that bought the membership, open Settings → Membership & billing → Manage membership, and use Stripe's cancellation controls. You can also manage renewal through Link using your financial confirmation if you cannot enter our app. You do not need to delete your account or contact us just to stop renewal. Check the effective date and retain the confirmation. Settled tools normally remain available to the paid period end."
         ),
+        teamSubscriptionCancellationSection,
         teamApiCancellationSection,
         section(
           "Request a refund or exercise statutory cancellation rights",
@@ -200,7 +208,7 @@ export function membershipLegalContent(
           "Optional example for statutory cancellation; no form is needed to stop renewal in Settings.",
           "You do not need to fill in this form to stop future renewals. Use Settings → Membership & billing → Manage membership for that. The example below is an optional way to tell us that you are exercising a statutory cancellation right for the membership purchase. You can instead email a clear statement in your own words. Stopping renewal through the billing controls does not automatically request a refund of a payment already made.",
           `To ${operator}, postal contact: ${contact}; email: ${contactEmail}.`,
-          "I give notice that I cancel my contract for the following membership service: [Supporter, Pro or Team API add-on].",
+          "I give notice that I cancel my contract for the following membership service: [Supporter, Pro, Team or Team API add-on].",
           "Ordered on: [date]. Name: [your name]. Address: [your address]. Account email and order reference: [details]. Date: [date]. Signature: [only if sent on paper]."
         ),
         section(
@@ -239,10 +247,17 @@ export const billingPrivacySection = section(
   "Stripe's merchant-of-record service is independently responsible for its transaction, fraud, tax and financial-record processing. Account erasure stops billing first. Completed event references are removed after 90 days. Minimal account/payment reference bindings are removed six years after account erasure by daily housekeeping. Unresolved retry work is retained until reconciled. These references cannot sign you in or recreate paid access. Essential access notices do not enrol you in marketing."
 )
 
+export const teamSubscriptionCancellationSection = section(
+  "Annual Team subscriptions",
+  "Organisers manage Team renewal and seats from Team billing.",
+  "Open /staff/team/billing for the correct Team and choose Manage Team billing and seats to cancel annual renewal, update payment details or view invoices. Access normally continues through the settled paid period. A cancellation stops future renewals; it does not automatically request a refund. Use the refund and statutory cancellation routes below for that request.",
+  "Stripe shows the charge before you confirm a seat increase. Increased access begins after payment is confirmed. Seat reductions start at renewal; remove excess members and invitations before that date. Team and API subscriptions are separate: cancel the API add-on separately when it is no longer needed. Existing invoice agreements retain their agreed cancellation terms."
+)
+
 export const teamApiPrivacySection = section(
   "Team API keys and usage",
   "Private key records and usage counters support the Team API add-on.",
-  "When Team API access is available, we store the Team reference, key hash and display prefix, scopes, expiry, creation/regeneration/revocation audit and last use. The full key is shown once and is not retained. Team billing uses the Team name, organiser's verified email and private Team/payment references; the API subscription belongs to the Team separately from a person's membership.",
+  "When Team API access is available, we store the Team reference, key hash and display prefix, scopes, expiry, creation/regeneration/revocation audit and last use. The full key is shown once and is not retained. Team billing uses the Team name, organiser's verified email, creator and consenting actor references, accepted terms version, seat quantities and private Team/payment references. Team and API subscriptions belong to the organisation separately from a person's membership. Transferring an Organiser role does not transfer a personal membership or change the organisation's payment method. Archived Team financial bindings are retained for six years; unresolved retry work is retained until reconciled.",
   "Usage records contain the Team/key reference, endpoint category, time, outcome and uncompressed JSON response-byte count. They support shared allowances and the staff usage dashboard. Detailed request records are retained for 90 days; monthly totals and key audit events are retained longer. Raw keys, search text, request bodies and IP addresses are not retained in these usage records. Usage is private to the Team and does not change community roles, points or staff authority."
 )
 

@@ -95,6 +95,12 @@ describe.skipIf(!enabled)("Team API database concurrency and billing", () => {
         "utf8"
       )
     )
+    await pool.query(
+      await readFile(
+        new URL("../../../../scripts/team-billing-schema.sql", import.meta.url),
+        "utf8"
+      )
+    )
   })
   afterAll(async () => {
     await pool?.end()

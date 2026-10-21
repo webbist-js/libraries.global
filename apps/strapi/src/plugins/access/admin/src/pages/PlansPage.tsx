@@ -27,14 +27,14 @@ import {
 } from "@strapi/design-system"
 import { ArrowClockwise, Plus, Trash } from "@strapi/icons"
 import { EmptyDocuments } from "@strapi/icons/symbols"
-import {
-  Page,
-  Layouts,
-  useFetchClient,
-  useNotification,
-} from "@strapi/strapi/admin"
+import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
+import {
+  PluginPage,
+  PluginModalContent,
+  FormGrid,
+} from "../../../../../admin/components/PluginUI"
 import { type AccessSection, PluginNav } from "../components/PluginNav"
 import {
   apiError,
@@ -148,7 +148,7 @@ export function PlansPage({
   )
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="Plans"
@@ -473,7 +473,7 @@ export function PlansPage({
           </Dialog.Content>
         </Dialog.Root>
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }
 
@@ -538,7 +538,7 @@ function AddPlanModal({
 
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
-      <Modal.Content>
+      <PluginModalContent style={{ maxWidth: 760 }}>
         <Modal.Header>
           <Modal.Title>
             {kind === "grants" ? "Grant a plan" : "Add a verification"}
@@ -549,7 +549,7 @@ function AddPlanModal({
             <Field.Root
               name="person"
               required
-              hint="A Better Auth id (from their profile), or the email their submissions were sent from."
+              hint="Use an email from their submissions, or copy their account ID from People."
             >
               <Field.Label>Person</Field.Label>
               <TextInput
@@ -557,13 +557,13 @@ function AddPlanModal({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setPerson(e.target.value)
                 }
-                placeholder="id or email"
+                placeholder="Email address or account ID"
               />
               <Field.Hint />
             </Field.Root>
             {kind === "grants" ? (
-              <Flex gap={4} wrap="wrap">
-                <Box width="12rem">
+              <FormGrid>
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root name="plan" required>
                     <Field.Label>Plan</Field.Label>
                     <SingleSelect
@@ -578,7 +578,7 @@ function AddPlanModal({
                     </SingleSelect>
                   </Field.Root>
                 </Box>
-                <Box width="14rem">
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root name="source">
                     <Field.Label>Source</Field.Label>
                     <SingleSelect
@@ -595,10 +595,10 @@ function AddPlanModal({
                     </SingleSelect>
                   </Field.Root>
                 </Box>
-              </Flex>
+              </FormGrid>
             ) : (
-              <Flex gap={4} wrap="wrap">
-                <Box width="14rem">
+              <FormGrid>
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root name="kind" required>
                     <Field.Label>Kind</Field.Label>
                     <SingleSelect
@@ -615,7 +615,7 @@ function AddPlanModal({
                     </SingleSelect>
                   </Field.Root>
                 </Box>
-                <Box width="20rem">
+                <Box style={{ minWidth: 0 }}>
                   <Field.Root
                     name="verifiedEmail"
                     hint="The institutional email you checked."
@@ -631,9 +631,9 @@ function AddPlanModal({
                     <Field.Hint />
                   </Field.Root>
                 </Box>
-              </Flex>
+              </FormGrid>
             )}
-            <Box width="14rem">
+            <Box style={{ minWidth: 0, width: "100%", maxWidth: 340 }}>
               <Field.Root name="expiresAt" hint="Leave empty for no end.">
                 <Field.Label>Expires (optional)</Field.Label>
                 <DatePicker
@@ -684,7 +684,7 @@ function AddPlanModal({
             {kind === "grants" ? "Grant" : "Add"}
           </Button>
         </Modal.Footer>
-      </Modal.Content>
+      </PluginModalContent>
     </Modal.Root>
   )
 }

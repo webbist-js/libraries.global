@@ -2344,7 +2344,7 @@
     "lead": "Podpořte otevřený rejstřík osobním členstvím nebo zpřístupněte nástroje Pro celé knihovní službě prostřednictvím Team.",
     "personalBilling": "Členství Supporter a Pro lze platit měsíčně nebo ročně.",
     "organisations": "Pro organizace",
-    "invoicedYearly": "Roční fakturace",
+    "invoicedYearly": "Roční předplatné",
     "teamLead": "Pro pro vaše kolegy a jedno místo pro správu personálu a knihoven, o které se starají. Pořizuje se pro celou knihovní službu.",
     "estimateTeam": "Odhad ceny Team",
     "estimateLead": "Vyberte typ služby a počet lidí, kteří potřebují přístup.",
@@ -2365,12 +2365,16 @@
     "firstSeats": "Prvních {count} míst",
     "eachExtra": "Každé další místo",
     "annualAmount": "{amount} / rok",
-    "discountNote": "Oprávnění veřejné knihovní služby bude potvrzeno v nabídce. Sleva se vztahuje pouze na místa Team.",
-    "confirmQuote": "Potvrdíme vám nabídku i fakturu. Platební karta není potřeba.",
+    "discountNote": "Nárok veřejné knihovní služby na slevu se ověřuje samostatně před platbou se slevou. Sleva platí pouze pro místa Team.",
+    "confirmQuote": "Vytvořte tým a plaťte ročně přes Stripe. Placený přístup začne po potvrzení platby.",
     "apiLabel": "Volitelný doplněk API",
     "monthlyAmount": "{amount} / měsíc",
     "apiSeparate": "API se účtuje samostatně; není zahrnuto v tomto odhadu ani ve slevě pro veřejné knihovní služby.",
-    "checkEligibility": "Možná máte nárok na Pro zdarma — ověřit podmínky"
+    "checkEligibility": "Možná máte nárok na Pro zdarma — ověřit podmínky",
+    "manageTeam": "Spravovat tým",
+    "yourTeam": "Váš tým",
+    "existingTeamLead": "Spravujte členy, knihovny a roční členství v týmovém prostoru.",
+    "teamBilling": "Fakturace a místa"
   },
   "membershipCompare": {
     "lead": "Podívejte se, co je dostupné dnes. Funkce označené „Brzy“ se teprve připravují.",
@@ -2638,7 +2642,7 @@
       "team": {
         "name": "Tým",
         "who": "Knihovní sítě, samosprávy, univerzity a poradenské společnosti",
-        "cta": "Kontaktujte nás",
+        "cta": "Vytvořit tým",
         "includes": {
           "0": "Pro pro každé místo v týmu",
           "1": "Správce týmu: přiřazování pracovníků ke knihovnám",
@@ -2649,7 +2653,7 @@
           "6": "Hromadné aktualizace z tabulky",
           "7": "Vložitelný vyhledávač knihoven",
           "8": "Vyšší limity doplňku API",
-          "9": "Nastavíme tým, jeho knihovny a místa. Správce týmu poté pozve kolegy a přiřadí je ke knihovnám."
+          "9": "Vytvořte tým online, vyberte místa a plaťte ročně přes Stripe. Správce pozve kolegy a přiřadí knihovny; oprávnění pracovníků se ověřují samostatně."
         }
       }
     },
@@ -2830,7 +2834,8 @@
     "claimStepReviewDetail": "Po schválení se zde knihovna zobrazí.",
     "howClaimsWork": "Jak ověření funguje",
     "noLibraryAssignments": "Zatím žádné přiřazené knihovny",
-    "teamLinks": "Týmové prostory"
+    "teamLinks": "Týmové prostory",
+    "billing": "Fakturace a místa"
   },
   "teamApiKeys": {
     "title": "Klíče API",

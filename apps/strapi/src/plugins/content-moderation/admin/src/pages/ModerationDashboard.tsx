@@ -21,15 +21,11 @@ import {
 } from "@strapi/design-system"
 import { ArrowClockwise, Eye } from "@strapi/icons"
 import { EmptyDocuments } from "@strapi/icons/symbols"
-import {
-  Page,
-  Layouts,
-  useFetchClient,
-  useNotification,
-} from "@strapi/strapi/admin"
+import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
+import { PluginPage } from "../../../../../admin/components/PluginUI"
 import { ReviewModal, StatusPill, TypeBadge } from "../components/ReviewModal"
 import {
   articleDecisionErrorMessage,
@@ -159,7 +155,7 @@ export function ModerationDashboard() {
   const pageCount = Math.max(1, Math.ceil(total / 50))
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="Moderation queue"
@@ -485,6 +481,6 @@ export function ModerationDashboard() {
           onDecide={decide}
         />
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }

@@ -19,9 +19,10 @@ import {
 } from "@strapi/design-system"
 import { ArrowClockwise, Eye, Plus } from "@strapi/icons"
 import { EmptyDocuments } from "@strapi/icons/symbols"
-import { Page, Layouts, useFetchClient } from "@strapi/strapi/admin"
+import { Layouts, useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
+import { PluginPage } from "../../../../../admin/components/PluginUI"
 import { type AccessSection, PluginNav } from "../components/PluginNav"
 import { TeamDetailModal } from "../components/TeamDetailModal"
 import { TeamModal } from "../components/TeamModal"
@@ -91,7 +92,7 @@ export function TeamsPage({
   }
 
   return (
-    <Page.Main>
+    <PluginPage>
       <Layouts.Root>
         <Layouts.Header
           title="Teams"
@@ -269,6 +270,6 @@ export function TeamsPage({
           />
         )}
       </Layouts.Root>
-    </Page.Main>
+    </PluginPage>
   )
 }

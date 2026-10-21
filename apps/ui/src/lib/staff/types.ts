@@ -122,6 +122,9 @@ export type TeamLibrary = {
 
 /** `GET /api/staff/team/[teamId]`: the organiser's (or a member's) view. */
 export type TeamDetail = {
+  pendingSeats?: number | null
+  source?: "admin" | "checkout"
+  publicServiceApproved?: boolean
   documentId: string
   name: string
   slug: string
@@ -138,6 +141,7 @@ export type TeamDetail = {
 
 /** `GET /api/staff/team`: the viewer's Teams. */
 export type TeamSummary = {
+  selfService?: boolean
   id: string
   name: string
   slug: string

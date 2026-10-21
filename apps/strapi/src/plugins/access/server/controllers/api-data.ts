@@ -1,6 +1,7 @@
 import { isLibraryEntityRef, libraryTypeName } from "@repo/shared-data"
 
 import { isValidServiceSecret } from "../../../../utils/service-secret"
+import { teamIsActive } from "../../../../utils/team-access"
 import { AccessError, isDocumentId } from "../utils/admin"
 
 // Only the application gateway calls these routes. They never trust a user or
@@ -64,14 +65,12 @@ export default ({ strapi }: { strapi: any }) => {
       if (!isDocumentId(ctx.params.id)) throw new AccessError(404, "not_found")
       const team = await strapi.documents("plugin::access.team").findOne({
         documentId: ctx.params.id,
-        fields: ["status", "expiresAt"],
+        fields: ["status", "expiresAt", "source", "billingMode"],
       })
       if (!team) throw new AccessError(404, "not_found")
 
       return {
-        active:
-          team.status === "active" &&
-          (!team.expiresAt || Date.parse(team.expiresAt) > Date.now()),
+        active: teamIsActive(team),
       }
     }),
     libraries: wrap(async (ctx) => {

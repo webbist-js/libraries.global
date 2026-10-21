@@ -25,6 +25,9 @@ vi.mock("@/lib/access-client", () => ({
 }))
 vi.mock("@/lib/staff/client", () => ({ staffRequest: mocks.request }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
+vi.mock("@/components/billing/useMembershipRefresh", () => ({
+  useMembershipRefresh: () => mocks.refresh,
+}))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("next-intl", async (importOriginal) => ({
   ...(await importOriginal<typeof NextIntl>()),
@@ -294,7 +297,7 @@ describe("TeamOrganiser (organiser)", () => {
   it("says when every seat is taken", () => {
     render(organiser({ used: 5 }))
     expect(screen.getByText("0 seats left")).toBeTruthy()
-    expect(screen.getByText(/Every seat is taken/)).toBeTruthy()
+    expect(screen.getByText(/Every available seat is taken/)).toBeTruthy()
     expect(screen.queryByLabelText("Email")).toBeNull()
   })
 

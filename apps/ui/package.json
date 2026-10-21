@@ -22,6 +22,8 @@
     "start": "next start",
     "team-api:check": "node scripts/team-api-setup.mjs",
     "team-api:setup": "node scripts/team-api-setup.mjs --apply",
+    "team-billing:check": "node scripts/team-billing-setup.mjs",
+    "team-billing:setup": "node scripts/team-billing-setup.mjs --apply",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -133,10 +135,10 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "happy-dom": "^20.9.0",
     "postcss": "^8.4.47",
+    "strapi-plugin-discussions": "workspace:*",
     "tailwindcss": "^4.0.9",
     "typescript": "^5",
-    "vitest": "4.1.11",
-    "strapi-plugin-discussions": "workspace:*"
+    "vitest": "4.1.11"
   },
   "trustedDependencies": [
     "sharp"

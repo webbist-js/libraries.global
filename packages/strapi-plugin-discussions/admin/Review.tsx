@@ -94,6 +94,44 @@ const EMPTY_REVIEW: ReviewDraft = {
   profanityException: false,
   exceptionReason: "",
 }
+function DiscussionEmpty({
+  title,
+  children,
+  loading,
+  loadingTitle,
+}: {
+  title: string
+  children: React.ReactNode
+  loading: boolean
+  loadingTitle: string
+}) {
+  return (
+    <Box
+      background="neutral100"
+      borderColor="neutral200"
+      padding={7}
+      marginTop={4}
+      marginBottom={3}
+      hasRadius
+      style={{ textAlign: "center" }}
+    >
+      <Box style={{ maxWidth: 520, marginInline: "auto" }}>
+        <Typography tag="h3" variant="delta" textColor="neutral800">
+          {loading ? loadingTitle : title}
+        </Typography>
+        <Typography
+          tag="p"
+          textColor="neutral600"
+          paddingTop={3}
+          style={{ lineHeight: 1.6 }}
+        >
+          {loading ? "Please wait while the latest records load." : children}
+        </Typography>
+      </Box>
+    </Box>
+  )
+}
+
 function ReviewNotes({
   id,
   value,
@@ -381,7 +419,15 @@ function ReviewContent() {
   if (!allowedActions.canRead) return <Page.NoPermissions />
 
   return (
-    <Page.Main>
+    <Page.Main
+      style={{
+        width: "100%",
+        maxWidth: 1520,
+        minWidth: 0,
+        marginInline: "auto",
+        paddingBottom: 32,
+      }}
+    >
       <Layouts.Root>
         <Layouts.Header
           title="Discussions"
@@ -428,7 +474,11 @@ function ReviewContent() {
             >
               <Tabs.List
                 aria-label="Discussion management"
-                style={{ minWidth: "max-content", whiteSpace: "nowrap" }}
+                style={{
+                  width: "max-content",
+                  minWidth: "max-content",
+                  whiteSpace: "nowrap",
+                }}
               >
                 <Tabs.Trigger value="revisions">Revisions</Tabs.Trigger>
                 <Tabs.Trigger value="reports">Reports</Tabs.Trigger>
@@ -451,15 +501,14 @@ function ReviewContent() {
                     Pending revisions
                   </Typography>
                   {!revisions.length && (
-                    <Typography
-                      tag="p"
-                      textColor="neutral600"
-                      paddingBottom={3}
+                    <DiscussionEmpty
+                      loading={busy}
+                      loadingTitle="Loading proposals…"
+                      title="No pending revisions"
                     >
-                      {busy
-                        ? "Loading proposals…"
-                        : "No pending proposals on this page."}
-                    </Typography>
+                      New proposals will appear here for review. Approved and
+                      returned proposals leave this queue.
+                    </DiscussionEmpty>
                   )}
                   {revisions.map((revision) => {
                     const {
@@ -742,15 +791,14 @@ function ReviewContent() {
                     Open reports
                   </Typography>
                   {!reports.length && (
-                    <Typography
-                      tag="p"
-                      textColor="neutral600"
-                      paddingBottom={3}
+                    <DiscussionEmpty
+                      loading={busy}
+                      loadingTitle="Loading reports…"
+                      title="No open reports"
                     >
-                      {busy
-                        ? "Loading reports…"
-                        : "No open reports on this page."}
-                    </Typography>
+                      Reported discussions and replies appear here. Review the
+                      content before resolving a report.
+                    </DiscussionEmpty>
                   )}
                   {reports.map((report) => {
                     const { note, feedback } = reviewFor(`report:${report.id}`)
@@ -907,9 +955,14 @@ function ReviewContent() {
                     </SingleSelect>
                   </Field.Root>
                   {!threads.length && (
-                    <Typography textColor="neutral600">
-                      {busy ? "Loading threads…" : "No threads in this state."}
-                    </Typography>
+                    <DiscussionEmpty
+                      loading={busy}
+                      loadingTitle="Loading threads…"
+                      title="No threads in this state"
+                    >
+                      Choose another publication state to find an existing
+                      discussion.
+                    </DiscussionEmpty>
                   )}
                   {threads.map((thread) => {
                     const { note, feedback } = reviewFor(`thread:${thread.id}`)
@@ -1054,13 +1107,14 @@ function ReviewContent() {
                     They do not ban a host account from other services.
                   </Typography>
                   {!sanctions.length && (
-                    <Typography
-                      tag="p"
-                      textColor="neutral600"
-                      paddingBottom={3}
+                    <DiscussionEmpty
+                      loading={busy}
+                      loadingTitle="Loading restrictions…"
+                      title="No active restrictions"
                     >
-                      No active discussion restrictions on this page.
-                    </Typography>
+                      Discussion restrictions and appeals will appear here when
+                      there is something to review.
+                    </DiscussionEmpty>
                   )}
                   {sanctions.map((sanction) => {
                     const { note, feedback } = reviewFor(
@@ -1192,11 +1246,14 @@ function ReviewContent() {
                     Subjects
                   </Typography>
                   {!subjects.length && (
-                    <Typography textColor="neutral600">
-                      {busy
-                        ? "Loading subjects…"
-                        : "No subjects yet. Create one to start a discussion space."}
-                    </Typography>
+                    <DiscussionEmpty
+                      loading={busy}
+                      loadingTitle="Loading subjects…"
+                      title="No subjects yet"
+                    >
+                      Create a subject below to give people a place to start a
+                      discussion.
+                    </DiscussionEmpty>
                   )}
                   <Box tag="ul" padding={0} style={{ listStyle: "none" }}>
                     {subjects.map((subject) => (

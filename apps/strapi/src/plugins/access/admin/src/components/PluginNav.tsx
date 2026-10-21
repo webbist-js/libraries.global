@@ -27,7 +27,7 @@ export function PluginNav({
   return (
     <Box paddingBottom={4}>
       <nav aria-label="Access sections">
-        <Flex gap={2}>
+        <Flex gap={2} wrap="wrap">
           {visible.map((l) => (
             <LinkButton
               key={l.id}
