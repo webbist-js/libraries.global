@@ -38,10 +38,10 @@ Full workflow: [Page Builder docs](../docs/docs/page-builder.md)
 import { PrivateStrapiClient, PublicStrapiClient } from "@/lib/strapi-api"
 ```
 
-| Client                | Auth     | Use Case               |
-| --------------------- | -------- | ---------------------- |
-| `PublicStrapiClient`  | API key  | Read-only content      |
-| `PrivateStrapiClient` | User JWT | Authenticated requests |
+| Client                | Auth                 | Use Case                                                               |
+| --------------------- | -------------------- | ---------------------------------------------------------------------- |
+| `PublicStrapiClient`  | API key              | Read-only content                                                      |
+| `PrivateStrapiClient` | Explicit legacy auth | Compatibility only; use dedicated bridge routes for account operations |
 
 **Client-side:** Use `useProxy: true` option.
 
@@ -57,14 +57,14 @@ Full reference: [Strapi API Client docs](../docs/docs/strapi-api-client.md)
 ## Authentication
 
 - **Better Auth v1**: Session management
-- **Strapi JWT**: Stored as `session.user.strapiJWT`
+- **Server bridge**: Dedicated Next.js routes resolve the Better Auth session; Strapi verifies trusted server headers and rechecks access. No Strapi JWT or service secret is exposed in the browser.
 
 ```typescript
 // Server
 const session = await getSessionSSR(await headers())
 
 // Client
-const { data: session } = await getSessionCSR()
+const { data: session } = useHydratedSession()
 ```
 
 Full reference: [Authentication docs](../docs/docs/authentication.md)
@@ -82,7 +82,7 @@ Use skill: `/create-content-component`, or do it manually
 
 - [Page Builder](../docs/docs/page-builder.md) — Full component workflow
 - [Strapi API Client](../docs/docs/strapi-api-client.md) — Fetching content
-- [Authentication](../docs/docs/authentication.md) — Better Auth + Strapi JWT
+- [Authentication](../docs/docs/authentication.md) — Better Auth sessions + server bridge
 - [Strapi Types](../docs/docs/strapi-types-usage.md) — Type utilities
 
 <!-- BEGIN:nextjs-agent-rules -->

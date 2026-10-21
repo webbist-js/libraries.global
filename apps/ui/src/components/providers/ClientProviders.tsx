@@ -3,17 +3,45 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ThemeProvider } from "next-themes"
 import type React from "react"
+import { useEffect, useState } from "react"
 import { z } from "zod"
 
 import { NavigationProgress } from "@/components/global/NavigationProgress"
 import { NotificationProvider } from "@/components/notifications/NotificationProvider"
 import { useTranslatedZod } from "@/hooks/useTranslatedZod"
+import { useHydratedSession } from "@/lib/access-client"
 import { setupLibraries } from "@/lib/general-helpers"
 
 // Setup libraries in client environment
 setupLibraries()
 
-const queryClient = new QueryClient()
+function ScopedQueries({ children }: { children: React.ReactNode }) {
+  // One client is owned by this provider’s mounted lifetime.
+  // eslint-disable-next-line react/hook-use-state
+  const [queryClient] = useState(() => new QueryClient())
+  useEffect(
+    () => () => {
+      queryClient.cancelQueries()
+      queryClient.clear()
+    },
+    [queryClient]
+  )
+
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
+
+function SessionQueries({ children }: { children: React.ReactNode }) {
+  const { data } = useHydratedSession()
+
+  // Replacing the provider discards private data synchronously on account change.
+  return (
+    <ScopedQueries key={data?.user?.id ?? "anonymous"}>
+      {children}
+    </ScopedQueries>
+  )
+}
 
 export function ClientProviders({
   children,
@@ -40,13 +68,13 @@ export function ClientProviders({
         enableSystem={false}
         nonce={nonce}
       >
-        <QueryClientProvider client={queryClient}>
+        <SessionQueries>
           {liveConsole ? (
             children
           ) : (
             <NotificationProvider>{children}</NotificationProvider>
           )}
-        </QueryClientProvider>
+        </SessionQueries>
       </ThemeProvider>
     </>
   )

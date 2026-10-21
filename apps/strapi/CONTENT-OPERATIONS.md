@@ -30,6 +30,18 @@ The script checks for unpublished edits, preserves unrelated content and creates
 
 The production API guides distinguish closed-beta Stripe Test mode from live purchases. Update availability copy only after the deployed checkout passes owned acceptance. Existing published articles keep their section, links, author, media and other metadata.
 
+The self-service Team rollout also corrects the existing Team, staff-area and
+account-deletion guides in English, French and Czech. It keeps detailed pricing
+in the canonical plans and Team guides, removes obsolete copies from related
+articles, and explains organisation ownership, seat changes and Organiser
+handover. General terms record the descriptive changes as version 1.1; Team
+membership, privacy and cancellation changes use version 1.2. Historical
+accepted purchase versions remain unchanged; new accounts record general terms
+version 1.1 without rewriting existing account consent. Preserve the published versions
+while staging production drafts until the matching application release passes
+acceptance. When local MCP is explicitly requested, use its discovered content
+tools and publish/read back there; production continues to use private REST.
+
 ## Team API onboarding guides
 
 The signup walkthrough and request reference live in the production Knowledge Data & API section, linked from the existing API, Team and plans articles.

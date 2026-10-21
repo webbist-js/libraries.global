@@ -16,7 +16,9 @@
     "playwright-interactive-mode": "playwright test e2e --ui",
     "playwright-seo-tests": "playwright test seo/seo.spec.ts",
     "playwright-visual-tests": "playwright test visual/visual.spec.ts",
-    "seed:access": "tsx helpers/seed-access-fixtures.ts"
+    "seed:access": "tsx helpers/seed-access-fixtures.ts",
+    "seed:audit-content": "node helpers/seed-audit-content.cjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@axe-core/playwright": "^4.10.2",

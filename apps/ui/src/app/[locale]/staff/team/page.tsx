@@ -10,7 +10,7 @@ import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamOrganiser } from "@/components/staff/TeamOrganiser"
-import { sessionTeamsOf } from "@/lib/access-server"
+import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import type { TeamDetail } from "@/lib/staff/types"
@@ -35,12 +35,10 @@ export default async function TeamOrganiserPage({
     getSessionSSR(await headers()),
   ])
   if (!session?.user) redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteam")
-  const teams = sessionTeamsOf(session.user)
+  const teams = preferredTeams(sessionTeamsOf(session.user))
   if (teams.length === 0) notFound()
   const { team: wanted } = await searchParams
-  const ordered = [...teams].sort((a, b) =>
-    a.role === b.role ? 0 : a.role === "organiser" ? -1 : 1
-  )
+  const ordered = teams
   const chosen =
     (wanted && isDocumentIdParam(wanted)
       ? ordered.find((t) => t.id === wanted)
@@ -79,7 +77,7 @@ export default async function TeamOrganiserPage({
         lead={
           organiser
             ? "Invite colleagues, give them staff access on your libraries and choose their level. Changes take effect at once."
-            : `${team?.name ?? chosen.name} gives you Pro and staff access on its libraries. Ask ${team?.organiserNames.join(" or ") || "your organiser"} to change your access.`
+            : `${team?.name ?? chosen.name} provides Pro while active. Library staff access requires verification. Ask ${team?.organiserNames.join(" or ") || "your organiser"} to change your access.`
         }
       >
         <LearnMoreLink slug={KNOWLEDGE_SLUGS.teams} locale={locale as Locale} />
@@ -92,7 +90,10 @@ export default async function TeamOrganiserPage({
             team={team}
             others={ordered
               .filter((t) => t.id !== team.documentId)
-              .map((t) => ({ id: t.id, name: t.name }))}
+              .map((t) => ({
+                id: t.id,
+                name: t.status === "lapsed" ? `${t.name} (inactive)` : t.name,
+              }))}
           />
         )}
       </Container>

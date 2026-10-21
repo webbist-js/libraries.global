@@ -12,6 +12,10 @@ import {
   reconcileApiBilling,
 } from "@/lib/team-api/billing"
 import { maintainApiUsage } from "@/lib/team-api/store"
+import {
+  refreshTeamSubscription,
+  reconcileTeamBilling,
+} from "@/lib/team-billing/sync"
 
 import { BillingError, billingConfig } from "./config"
 import { withBillingLock } from "./database"
@@ -181,6 +185,11 @@ export async function refreshSubscription(
     })
     if (subscription.livemode !== (billingConfig().mode === "live"))
       throw new BillingError("subscription_environment_mismatch")
+    if (subscription.metadata.lg_team_billing_id) {
+      await refreshTeamSubscription(pool, stripe, id, reversal)
+
+      return
+    }
     if (subscription.metadata.lg_api_team_id) {
       await refreshApiSubscription(pool, stripe, id, reversal)
 
@@ -388,6 +397,7 @@ export async function runBillingWorker(pool: Pool, stripe: Stripe) {
     )
     failed += fresh.failed
     synced += fresh.synced
+    failed += await reconcileTeamBilling(pool, stripe, () => withinBudget(40))
     failed += await reconcileApiBilling(pool, stripe, () => withinBudget(45))
     await maintainApiUsage(pool)
     await client.query(
@@ -395,7 +405,7 @@ export async function runBillingWorker(pool: Pool, stripe: Stripe) {
     )
 
     const backlog = await client.query<{ events: string; projections: string }>(
-      "select (select count(*) from billing_events where state='pending') as events,(select count(*) from billing_memberships where synced_revision<revision) as projections"
+      "select (select count(*) from billing_events where state='pending') as events,((select count(*) from billing_memberships where synced_revision<revision)+(select count(*) from team_billing_memberships m join team_billing_accounts a on a.current_subscription_id=m.subscription_id where m.synced_revision<m.revision)) as projections"
     )
 
     return {

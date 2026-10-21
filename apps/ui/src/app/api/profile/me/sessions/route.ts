@@ -1,7 +1,10 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { auth } from "@/lib/auth"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
+import { readTypedJson } from "@/lib/typed-json"
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -31,11 +34,23 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { id } = (await req.json().catch(() => ({}))) as { id?: string }
+  const parsed = await readTypedJson(
+    req,
+    4096,
+    z.object({ id: z.string().min(1).max(255).optional() }).strict()
+  )
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const { id } = parsed.body
 
   if (!id) {
     await auth.api.revokeOtherSessions({ headers: await headers() })

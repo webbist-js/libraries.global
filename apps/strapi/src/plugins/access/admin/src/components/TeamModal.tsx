@@ -19,6 +19,10 @@ import { useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
 
 import { apiError, type Team, type TeamLibrary } from "./teamsMeta"
+import {
+  PluginModalContent,
+  FormGrid,
+} from "../../../../../admin/components/PluginUI"
 
 /**
  * Create or edit a Team: name, seats, the libraries it covers (search by
@@ -42,7 +46,14 @@ export function TeamModal({
     team?.libraries ?? []
   )
   const [verified, setVerified] = useState(!!team?.verifiedAt)
-  const [lapsed, setLapsed] = useState(team?.status === "lapsed")
+  const [lapsed, setLapsed] = useState(
+    team?.source === "checkout"
+      ? team.billingSuspended === true
+      : team?.status === "lapsed"
+  )
+  const [publicServiceApproved, setPublicServiceApproved] = useState(
+    team?.publicServiceApproved === true
+  )
   const [expires, setExpires] = useState<Date | undefined>(
     team?.expiresAt ? new Date(team.expiresAt) : undefined
   )
@@ -94,9 +105,11 @@ export function TeamModal({
     setError(null)
     const body = {
       name: name.trim(),
-      seats,
+      ...(team?.source === "checkout"
+        ? {}
+        : { seats, expiresAt: expires ? expires.toISOString() : null }),
       libraryDocumentIds: libraries.map((l) => l.documentId),
-      expiresAt: expires ? expires.toISOString() : null,
+      publicServiceApproved,
       notes: notes.trim() || null,
       ...(team ? { status: lapsed ? "lapsed" : "active" } : { verified }),
     }
@@ -132,7 +145,7 @@ export function TeamModal({
 
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
-      <Modal.Content>
+      <PluginModalContent>
         <Modal.Header>
           <Modal.Title>{team ? `Edit ${team.name}` : "New team"}</Modal.Title>
         </Modal.Header>
@@ -149,8 +162,8 @@ export function TeamModal({
                 placeholder="e.g. Devon Libraries"
               />
             </Field.Root>
-            <Flex gap={4} alignItems="flex-start" wrap="wrap">
-              <Box width="12rem">
+            <FormGrid>
+              <Box style={{ flex: "1 1 240px", minWidth: 0 }}>
                 <Field.Root
                   name="seats"
                   required
@@ -158,6 +171,7 @@ export function TeamModal({
                 >
                   <Field.Label>Seats</Field.Label>
                   <NumberInput
+                    disabled={team?.source === "checkout"}
                     value={seats}
                     onValueChange={(v?: number) => setSeats(v ?? 1)}
                     step={1}
@@ -165,10 +179,11 @@ export function TeamModal({
                   <Field.Hint />
                 </Field.Root>
               </Box>
-              <Box width="14rem">
+              <Box style={{ flex: "1 1 240px", minWidth: 0 }}>
                 <Field.Root name="expiresAt" hint="Leave empty for no end.">
                   <Field.Label>Expires (optional)</Field.Label>
                   <DatePicker
+                    disabled={team?.source === "checkout"}
                     value={expires}
                     onChange={(d: Date | undefined) => setExpires(d)}
                     onClear={() => setExpires(undefined)}
@@ -178,7 +193,7 @@ export function TeamModal({
                   <Field.Hint />
                 </Field.Root>
               </Box>
-            </Flex>
+            </FormGrid>
             <Field.Root
               name="libraries"
               hint="The libraries the organiser may assign staff to. Removing one ends every Team-created staff row at it."
@@ -242,10 +257,21 @@ export function TeamModal({
                     setLapsed(v === true)
                   }
                 >
-                  Lapsed: members keep their rows but lose Pro and Team
+                  {team.source === "checkout"
+                    ? "Suspend Team access independently of billing"
+                    : "Lapsed: members keep their rows but lose Pro and Team"}
                 </Checkbox>
               )}
             </Flex>
+            <Checkbox
+              checked={publicServiceApproved}
+              onCheckedChange={(v: boolean | "indeterminate") =>
+                setPublicServiceApproved(v === true)
+              }
+            >
+              Public-library-service discount eligibility confirmed (new
+              subscriptions only)
+            </Checkbox>
             <Field.Root
               name="notes"
               hint="Admin only; never shown to the team."
@@ -280,7 +306,7 @@ export function TeamModal({
             {team ? "Save" : "Create team"}
           </Button>
         </Modal.Footer>
-      </Modal.Content>
+      </PluginModalContent>
     </Modal.Root>
   )
 }

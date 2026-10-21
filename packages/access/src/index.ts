@@ -1,5 +1,6 @@
 export * from "./capabilities"
 export * from "./billing"
+export * from "./team-billing"
 export * from "./entitlements"
 export * from "./limits"
 export * from "./roles"

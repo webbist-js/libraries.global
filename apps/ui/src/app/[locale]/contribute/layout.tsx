@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 
 import { ContributionAccountGuard } from "@/components/contribute/ContributionAccountGuard"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
@@ -28,13 +29,13 @@ export default async function ContributeLayout({
   return (
     <>
       <GlobalHeader locale={locale as Locale} />
-      <div style={{ background: T.bg.void }}>
+      <MainContent style={{ background: T.bg.void }}>
         <ContributionAccountGuard
           expectedScope={contributionAccountScope(session?.user)}
         >
           {children}
         </ContributionAccountGuard>
-      </div>
+      </MainContent>
     </>
   )
 }

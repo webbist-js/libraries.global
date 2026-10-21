@@ -73,21 +73,27 @@ export function activeContributeTab(pathname: string): string | null {
 /** The Contribute section's tabs, on the bottom edge of its hero band. */
 export function ContributeNavBar() {
   const tUi = useUiTranslations("ui")
+  const tNav = useUiTranslations("contributeNav")
 
   const pathname = usePathname()
   const { has, ready } = useCapabilities()
   // The Knowledge editor is for editors; everyone else gets the role
   // application under the same tab (the editor pages redirect there too).
   const applyForEditor = ready && !isArticleEditor(has)
-  const tabs: SectionTab[] = NAV_ITEMS.map((t) =>
-    t.id === "knowledge" && applyForEditor
-      ? { ...t, href: EDITOR_APPLY_HREF }
-      : t
-  )
+  const tabs: SectionTab[] = NAV_ITEMS.map((tab) => ({
+    ...tab,
+    label: tNav(tab.id),
+    ...(tab.id === "knowledge" && applyForEditor
+      ? { href: EDITOR_APPLY_HREF }
+      : {}),
+  }))
   // Moderation sits before Membership, after the contributor's own tabs.
   if (has("moderate.queue")) {
     const at = tabs.findIndex((t) => t.id === "membership")
-    tabs.splice(at === -1 ? tabs.length : at, 0, MODERATION_TAB)
+    tabs.splice(at === -1 ? tabs.length : at, 0, {
+      ...MODERATION_TAB,
+      label: tNav("moderation"),
+    })
   }
 
   return (

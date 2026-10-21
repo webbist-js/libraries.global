@@ -15,6 +15,28 @@ function badRequest(ctx: any, err: any) {
 }
 
 export default ({ strapi }: { strapi: any }) => ({
+  async searchLibraries(ctx: {
+    query?: { q?: unknown }
+    status?: number
+    body?: unknown
+  }) {
+    const q = typeof ctx.query?.q === "string" ? ctx.query.q.trim() : ""
+    if (q.length < 2 || q.length > 100) {
+      ctx.status = 400
+      ctx.body = { error: "Search must contain 2–100 characters" }
+
+      return
+    }
+    ctx.body = {
+      data: await strapi.documents("api::library.library").findMany({
+        filters: { name: { $containsi: q } },
+        fields: ["name", "entityRef"],
+        status: "published",
+        limit: 10,
+        sort: ["name:asc", "id:asc"],
+      }),
+    }
+  },
   async listCredentials(ctx: any) {
     ctx.body = await credentials(strapi).findAll()
   },
@@ -120,15 +142,20 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async listRuns(ctx: any) {
-    const { start, limit } = pageWindow(ctx.query as Record<string, unknown>, {
-      def: 20,
-      max: 100,
-    })
-    ctx.body = await strapi.documents("plugin::events.import-run").findMany({
+    const { start, limit, page } = pageWindow(
+      ctx.query as Record<string, unknown>,
+      {
+        def: 20,
+        max: 100,
+      }
+    )
+    const rows = await strapi.documents("plugin::events.import-run").findMany({
       sort: ["startedAt:desc", "id:desc"],
       start,
       limit,
     })
+    const total = await strapi.documents("plugin::events.import-run").count({})
+    ctx.body = { data: rows, meta: { total, page, pageSize: limit } }
   },
 
   async getRun(ctx: any) {
@@ -172,10 +199,13 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async listPendingReview(ctx: any) {
-    const { start, limit } = pageWindow(ctx.query as Record<string, unknown>, {
-      def: 20,
-      max: 100,
-    })
+    const { start, limit, page } = pageWindow(
+      ctx.query as Record<string, unknown>,
+      {
+        def: 20,
+        max: 100,
+      }
+    )
     const results = await strapi.documents("plugin::events.event").findMany({
       filters: { pendingReview: true },
       sort: ["startTime:asc", "id:asc"],
@@ -189,7 +219,10 @@ export default ({ strapi }: { strapi: any }) => ({
         "url",
       ],
     })
-    ctx.body = results
+    const total = await strapi
+      .documents("plugin::events.event")
+      .count({ filters: { pendingReview: true } })
+    ctx.body = { data: results, meta: { total, page, pageSize: limit } }
   },
 
   async reviewEvent(ctx: any) {

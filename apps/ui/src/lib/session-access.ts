@@ -124,6 +124,9 @@ export function buildSessionAccess(
       slug: t.slug,
       role: t.role,
       libraryCount: t.libraryCount,
+      ...(t.selfService ? { selfService: true } : {}),
+      status: t.status,
+      expiresAt: t.expiresAt,
     })),
     teamLibraryIds: [...ent.teamLibraryIds],
   }

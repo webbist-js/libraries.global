@@ -1,9 +1,12 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { createRateLimiter, rateLimitResponse } from "@/lib/rate-limit"
+import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
+import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -57,7 +60,11 @@ export async function GET(req: Request) {
     `${STRAPI}/api/auth-bridge/follow-status?${params.toString()}`,
     { headers: { "X-Service-Secret": SECRET }, cache: "no-store" }
   )
-  if (!res.ok) return NextResponse.json({ following: false })
+  if (!res.ok)
+    return NextResponse.json(
+      { error: "Follow status unavailable" },
+      { status: 503 }
+    )
 
   const json = await res.json()
 
@@ -65,6 +72,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!isSameOrigin(req, process.env.APP_PUBLIC_URL))
+    return sameOriginResponse()
   if (!SECRET) return missingSecret()
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
@@ -73,21 +82,27 @@ export async function POST(req: Request) {
   const limit = await limiter.check(session.user.id)
   if (!limit.ok) return rateLimitResponse(limit)
 
-  let body: {
-    libraryDocumentId?: unknown
-    driveDocumentId?: unknown
-    action?: unknown
-  }
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
-  }
-
-  const input: typeof body = body && typeof body === "object" ? body : {}
-  const { action, libraryDocumentId, driveDocumentId } = input
-  if (action !== "follow" && action !== "unfollow")
-    return NextResponse.json({ error: "Missing action" }, { status: 400 })
+  const parsed = await readTypedJson(
+    req,
+    4096,
+    z
+      .object({
+        libraryDocumentId: z.string().refine(isDocumentIdParam).optional(),
+        driveDocumentId: z.string().refine(isDocumentIdParam).optional(),
+        action: z.enum(["follow", "unfollow"]),
+      })
+      .strict()
+      .refine(
+        (body) =>
+          Boolean(body.libraryDocumentId) !== Boolean(body.driveDocumentId)
+      )
+  )
+  if (!parsed.ok)
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: parsed.status }
+    )
+  const { action, libraryDocumentId, driveDocumentId } = parsed.body
   const target = followTargetOf(libraryDocumentId, driveDocumentId)
   if (!target) return badTarget()
 

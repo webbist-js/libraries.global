@@ -334,11 +334,7 @@ export function AboutStory({
         </Container>
       </section>
 
-      <section
-        id="take-part"
-        className="about-section about-contribute"
-        aria-labelledby="final-cta-title"
-      >
+      <section id="take-part" className="about-section about-contribute">
         <Container>
           <FinalCtaSection
             contained

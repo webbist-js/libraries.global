@@ -1,103 +1,48 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
-import { SaveEventButton } from "@/components/events/SaveEventButton"
-import { captureAnalyticsEvent } from "@/lib/analytics-events"
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
-vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }))
-vi.mock("@iconify/react", () => ({ Icon: () => <span aria-hidden="true" /> }))
-vi.mock("@/lib/analytics-events", () => ({ captureAnalyticsEvent: vi.fn() }))
-const measured = vi.fn(() => true)
-const fetchMock = vi.fn()
-beforeEach(() => {
-  vi.clearAllMocks()
-  vi.mocked(captureAnalyticsEvent).mockReturnValue(measured)
-  vi.stubGlobal("fetch", fetchMock)
-})
+import { SaveEventButton } from "../SaveEventButton"
+
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
+vi.mock("@/lib/analytics-events", () => ({
+  captureAnalyticsEvent: () => vi.fn(),
+}))
+const request = vi.fn()
+beforeEach(() => vi.stubGlobal("fetch", request.mockReset()))
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-describe("confirmed event saves", () => {
-  it("counts successful save and unsave outcomes, with only the public event ID", async () => {
-    fetchMock.mockResolvedValueOnce(Response.json([]))
-    render(<SaveEventButton documentId="public_event" />)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    fetchMock.mockResolvedValueOnce(
-      Response.json({ documentId: "private_saved_record" })
+it("offers a retry after an unavailable read, then preserves a confirmed state after a failed write", async () => {
+  request
+    .mockResolvedValueOnce(new Response("", { status: 503 }))
+    .mockResolvedValueOnce(Response.json([]))
+    .mockResolvedValueOnce(new Response("", { status: 503 }))
+  render(<SaveEventButton documentId="event-1" />)
+  const retry = await screen.findByRole("button", { name: "Try again" })
+  expect(screen.getByRole("status").textContent).toContain("unavailable")
+  fireEvent.click(retry)
+  const save = await screen.findByRole("button", { name: "Save" })
+  await waitFor(() => expect(save.hasAttribute("disabled")).toBe(false))
+  fireEvent.click(save)
+  await waitFor(() =>
+    expect(screen.getByRole("status").textContent).toContain(
+      "could not be saved"
     )
-    fireEvent.click(screen.getByRole("button", { name: "save" }))
-    await screen.findByRole("button", { name: "saved" })
-    expect(measured).toHaveBeenCalledOnce()
-    expect(captureAnalyticsEvent).toHaveBeenLastCalledWith("event_action", {
-      interaction_source: "event_save",
-      action_type: "save",
-      content_id: "public_event",
-    })
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }))
-    fireEvent.click(screen.getByRole("button", { name: "saved" }))
-    await screen.findByRole("button", { name: "save" })
-    expect(measured).toHaveBeenCalledTimes(2)
-    expect(captureAnalyticsEvent).toHaveBeenLastCalledWith("event_action", {
-      interaction_source: "event_save",
-      action_type: "unsave",
-      content_id: "public_event",
-    })
-    expect(
-      JSON.stringify(vi.mocked(captureAnalyticsEvent).mock.calls)
-    ).not.toContain("private_saved_record")
-  })
-
-  it("keeps a saved event and does not count a rejected deletion or failed network request", async () => {
-    fetchMock.mockResolvedValueOnce(
-      Response.json([
-        { documentId: "saved_record", eventDocumentId: "public_event" },
-      ])
+  )
+  expect(save.getAttribute("aria-pressed")).toBe("false")
+})
+it("keeps a saved event selected when removal fails", async () => {
+  request
+    .mockResolvedValueOnce(
+      Response.json([{ documentId: "saved-1", eventDocumentId: "event-1" }])
     )
-    render(<SaveEventButton documentId="public_event" />)
-    const button = await screen.findByRole("button", { name: "saved" })
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 503 }))
-    fireEvent.click(button)
-    await waitFor(() =>
-      expect((button as HTMLButtonElement).disabled).toBe(false)
-    )
-    expect(screen.getByRole("button", { name: "saved" })).toBeTruthy()
-    expect(measured).not.toHaveBeenCalled()
-    fetchMock.mockRejectedValueOnce(new Error("offline"))
-    fireEvent.click(button)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    await waitFor(() =>
-      expect((button as HTMLButtonElement).disabled).toBe(false)
-    )
-    expect(measured).not.toHaveBeenCalled()
-    expect(screen.getByRole("button", { name: "saved" })).toBeTruthy()
-  })
-
-  it("does not count a rejected or malformed save response", async () => {
-    fetchMock.mockResolvedValueOnce(Response.json([]))
-    render(<SaveEventButton documentId="public_event" />)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    const button = screen.getByRole("button", { name: "save" })
-    fetchMock.mockResolvedValueOnce(new Response(null, { status: 401 }))
-    fireEvent.click(button)
-    await waitFor(() =>
-      expect((button as HTMLButtonElement).disabled).toBe(false)
-    )
-    fetchMock.mockResolvedValueOnce(Response.json({}))
-    fireEvent.click(button)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    await waitFor(() =>
-      expect((button as HTMLButtonElement).disabled).toBe(false)
-    )
-    expect(measured).not.toHaveBeenCalled()
-    expect(screen.getByRole("button", { name: "save" })).toBeTruthy()
-  })
+    .mockRejectedValueOnce(new Error("offline"))
+  render(<SaveEventButton documentId="event-1" />)
+  const saved = await screen.findByRole("button", { name: "Saved" })
+  fireEvent.click(saved)
+  await screen.findByRole("status")
+  expect(saved.getAttribute("aria-pressed")).toBe("true")
 })

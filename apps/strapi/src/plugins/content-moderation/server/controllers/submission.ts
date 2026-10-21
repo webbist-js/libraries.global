@@ -101,8 +101,8 @@ export default ({ strapi }: { strapi: any }) => ({
     const submissions = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .findAll(status)
-    ctx.body = { data: submissions }
+      .findPage(status, ctx.query)
+    ctx.body = submissions
   },
 
   // GET /api/content-moderation/locales  (content-api route, public)

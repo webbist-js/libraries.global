@@ -8,6 +8,7 @@ vi.mock("next/headers", () => ({
 }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }))
 
+vi.stubEnv("APP_PUBLIC_URL", "http://localhost")
 vi.stubEnv("STRAPI_URL", "http://strapi.test")
 vi.stubEnv("STRAPI_BRIDGE_SECRET", "s3cret")
 
@@ -20,7 +21,10 @@ const post = (body: unknown) =>
   POST(
     new Request("http://localhost/api/profile/me/follow", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "http://localhost",
+      },
       body: JSON.stringify(body),
     })
   )
@@ -141,4 +145,44 @@ describe("GET /api/profile/me/follow", () => {
     ).toBe(400)
     expect(fetchMock).not.toHaveBeenCalled()
   })
+})
+
+describe("write boundary", () => {
+  it.each([null, [], 42, { name: 42 }, { unexpected: true }])(
+    "rejects malformed payload %j without an upstream write",
+    async (body) => {
+      getSession.mockResolvedValue({
+        user: { id: "validation-user", email: "reader@example.org" },
+      })
+      fetchMock.mockClear()
+      expect((await post(body)).status).toBe(400)
+      expect(fetchMock).not.toHaveBeenCalled()
+    }
+  )
+  it("refuses cross-site writes", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/profile/me/follow", {
+        method: "POST",
+        headers: {
+          Origin: "https://other.example",
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      })
+    )
+    expect(response.status).toBe(403)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+  it("caps request size", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "size-user", email: "reader@example.org" },
+    })
+    expect((await post({ padding: "x".repeat(17000) })).status).toBe(413)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+it("reports unavailable follow status instead of unfollowed", async () => {
+  fetchMock.mockResolvedValue(new Response(null, { status: 503 }))
+  expect((await get(`driveDocumentId=${DRIVE_ID}`)).status).toBe(503)
 })

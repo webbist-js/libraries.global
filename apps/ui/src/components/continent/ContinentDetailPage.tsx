@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { DrivesHere } from "@/components/drives/DrivesHere"
+import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import {
@@ -72,9 +73,9 @@ export async function ContinentDetailPage({
         style={{ background: T.bg.void, color: T.ink.base }}
       >
         <GlobalHeader locale={locale} />
-        <main className="flex flex-1 items-center justify-center">
+        <MainContent className="flex flex-1 items-center justify-center">
           <p style={{ color: T.ink.dim }}>Continent not found.</p>
-        </main>
+        </MainContent>
       </div>
     )
   }
@@ -125,7 +126,7 @@ export async function ContinentDetailPage({
     >
       <GlobalHeader locale={locale} />
 
-      <main id="main" className="relative z-10 flex-1">
+      <MainContent id="main" className="relative z-10 flex-1">
         <LocationHero
           untranslatedLocale={untranslatedLocale}
           breadcrumbLabels={{ [slug]: name }}
@@ -322,7 +323,7 @@ export async function ContinentDetailPage({
             />
           </div>
         </Container>
-      </main>
+      </MainContent>
     </div>
   )
 }

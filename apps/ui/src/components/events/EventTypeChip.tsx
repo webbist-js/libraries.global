@@ -1,11 +1,9 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { eventTypeTint } from "@/components/events/event-display"
 
-export const EVENT_TYPE_META: Record<
-  string,
-  { label: string; icon: string; color: string }
-> = {
+export const EVENT_TYPE_META = {
   talk: {
     label: "Talk",
     icon: "mdi:microphone-outline",
@@ -63,13 +61,19 @@ export const EVENT_TYPE_META: Record<
   },
 }
 
+export type EventTypeKey = keyof typeof EVENT_TYPE_META
+export function eventTypeKey(type: string): EventTypeKey {
+  return Object.hasOwn(EVENT_TYPE_META, type) ? (type as EventTypeKey) : "other"
+}
+
 interface EventTypeChipProps {
   readonly type: string
   readonly size?: "xs" | "sm"
 }
 
 export function EventTypeChip({ type, size = "sm" }: EventTypeChipProps) {
-  const meta = EVENT_TYPE_META[type] ?? EVENT_TYPE_META.other!
+  const t = useTranslations("eventListing.types")
+  const meta = EVENT_TYPE_META[eventTypeKey(type)]
   const tint = eventTypeTint(type)
 
   return (
@@ -86,7 +90,7 @@ export function EventTypeChip({ type, size = "sm" }: EventTypeChipProps) {
         icon={meta.icon}
         className={size === "xs" ? "size-3" : "size-3.5"}
       />
-      {meta.label}
+      {t(eventTypeKey(type))}
     </span>
   )
 }

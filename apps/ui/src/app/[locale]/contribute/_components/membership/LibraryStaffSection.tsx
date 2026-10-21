@@ -6,33 +6,10 @@ import { T, TYPE_TINT } from "@/lib/design-tokens"
 
 import { ComingSoonChip } from "./PlanBits"
 
-const CLAIM_STEPS = [
-  {
-    title: "Claim your library",
-    body: "From the library’s page, with your work email.",
-  },
-  {
-    title: "We check with the library",
-    body: "Usually within 5 working days.",
-  },
-  {
-    title: "Your staff tools switch on",
-    body: "In the Staff area, for that library only.",
-  },
-] as const
-
 type StaffBenefit = {
   readonly label: string
   readonly badge?: "mobile" | "soon"
 }
-
-const STAFF_BENEFITS: readonly StaffBenefit[] = [
-  { label: "Edit your library’s record directly" },
-  { label: "Post notices and closures" },
-  { label: "See and answer suggested changes" },
-  { label: "Keep a timetable and go live", badge: "mobile" },
-  { label: "Pro, free while you’re verified" },
-]
 
 function Benefits({ items }: { readonly items: readonly StaffBenefit[] }) {
   const tUi = useUiTranslations("ui")
@@ -81,6 +58,11 @@ export function LibraryStaffSection({
   readonly isStaff: boolean
 }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("membershipStaff")
+  const benefits: StaffBenefit[] = ([0, 1, 2, 3, 4] as const).map((index) => ({
+    label: t(`benefit${index}`),
+    ...(index === 3 ? { badge: "mobile" as const } : {}),
+  }))
 
   return (
     <section
@@ -90,26 +72,25 @@ export function LibraryStaffSection({
     >
       <div className="flex flex-col items-start gap-4">
         <span className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold">
-          For library staff
+          {t("eyebrow")}
         </span>
         <h2
           id="library-staff-h"
           className="m-0 text-[clamp(28px,3vw,36px)] leading-[1.1] tracking-[-0.015em]"
           style={{ fontFamily: T.font.serif, fontWeight: 500 }}
         >
-          Look after your library’s record,{" "}
-          <em className="text-(--t-accent-primary)">free.</em>
+          {t.rich("title", {
+            em: (chunks) => (
+              <em className="text-(--t-accent-primary)">{chunks}</em>
+            ),
+          })}
         </h2>
         <p className="m-0 text-[14.5px] leading-[1.6] text-(--t-ink-dim)">
-          Staff tools come from verification. Paying never makes you a verified
-          librarian, and verified librarians never have to pay.
+          {t("lead")}
         </p>
         <ol className="m-0 flex list-none flex-col gap-2 p-0">
-          {CLAIM_STEPS.map((step, index) => (
-            <li
-              key={step.title}
-              className="flex gap-2 text-[13.5px] leading-[1.5]"
-            >
+          {([0, 1, 2] as const).map((index) => (
+            <li key={index} className="flex gap-2 text-[13.5px] leading-[1.5]">
               <span
                 aria-hidden="true"
                 className="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-white text-[11px] font-bold text-(--t-accent-primary)"
@@ -117,8 +98,10 @@ export function LibraryStaffSection({
                 {index + 1}
               </span>
               <span>
-                <strong>{step.title}.</strong>{" "}
-                <span className="text-(--t-ink-dim)">{step.body}</span>
+                <strong>{t(`step${index}Title`)}.</strong>{" "}
+                <span className="text-(--t-ink-dim)">
+                  {t(`step${index}Body`)}
+                </span>
               </span>
             </li>
           ))}
@@ -128,13 +111,13 @@ export function LibraryStaffSection({
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[14px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4"
             href={isStaff ? "/staff" : "/contribute/claim"}
           >
-            {isStaff ? "Open the staff area" : "Claim your library"}
+            {isStaff ? t("openStaff") : t("claim")}
           </GlobalLink>
           <a
             href="#plan-team"
             className="inline-flex min-h-11 items-center text-[13px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
           >
-            Running a whole service? See Team
+            {t("team")}
           </a>
         </div>
       </div>
@@ -144,12 +127,17 @@ export function LibraryStaffSection({
           <span className="text-(--t-accent-ok)">{tUi("free")}</span>
         </div>
         <p className="m-0 text-[13.5px] leading-relaxed text-(--t-ink-dim)">
-          For each library you’re approved for.
+          {t("eachLibrary")}
         </p>
-        <Benefits items={STAFF_BENEFITS} />
+        <Benefits items={benefits} />
+        <GlobalLink
+          href="#get-pro-free"
+          className="text-sm font-semibold underline"
+        >
+          {t("proRequest")}
+        </GlobalLink>
         <p className="m-0 mt-auto border-t border-(--t-divider) pt-3 text-[12.5px] leading-[1.6] text-(--t-ink-dim)">
-          A verified record means a member of staff looks after its details; it
-          never means the library endorses Libraries Global.
+          {t("endorsement")}
         </p>
       </div>
     </section>

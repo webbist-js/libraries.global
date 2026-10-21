@@ -4,11 +4,22 @@ import {
   type EventProviderKey,
   type FeedTestCode,
 } from "@repo/shared-data"
-import { useFetchClient } from "@strapi/strapi/admin"
-import { useCallback, useEffect, useState } from "react"
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Dialog,
+  Flex,
+  Loader,
+  Typography,
+} from "@strapi/design-system"
+import { useFetchClient, useRBAC } from "@strapi/strapi/admin"
+import { useEffect, useState } from "react"
 
 import { CredentialForm } from "./CredentialForm"
 import { RevealCredentialButton } from "./RevealCredentialButton"
+import { PluginEmptyState } from "../../../../../admin/components/PluginUI"
 
 type Library = {
   documentId: string
@@ -32,7 +43,7 @@ type Credential = {
   libraries?: Library[]
   lastSyncAt?: string
   lastSyncEventCount?: number
-  lastSyncError?: string
+  lastErrorMessage?: string
 }
 
 function statusLabel(cred: Credential): string {
@@ -44,518 +55,330 @@ function statusLabel(cred: Credential): string {
   return "Draft"
 }
 
-function statusColor(cred: Credential): string {
-  if (cred.status === "active") return "#1b7c3a"
-  if (cred.status === "paused") return "#d02b20"
-  if (cred.status === "pending") return "#945a00"
-
-  return "#666687"
-}
-
-const PROVIDER_COLORS: Record<string, string> = {
-  eventbrite: "#ff6060",
-  ical: "#1b7c3a",
-  ticketsource: "#0c75af",
-  wegottickets: "#e8174b",
-  spydus: "#4285f4",
-  solus: "#8a3f22",
-  aspen: "#4a3f8c",
-}
-
-function ProviderBadge({ provider }: { provider: EventProviderKey }) {
-  const color = PROVIDER_COLORS[provider] ?? "#8e8ea9"
-
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 7px",
-        borderRadius: "4px",
-        fontSize: "10px",
-        fontWeight: 700,
-        background: color + "18",
-        color,
-        border: `1px solid ${color}40`,
-        textTransform: "uppercase" as const,
-        letterSpacing: "0.05em",
-      }}
-    >
-      {EVENT_PROVIDERS[provider]?.label ?? provider}
-    </span>
-  )
-}
-
-function formatDate(iso?: string) {
-  if (!iso) return null
-
-  return new Date(iso).toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
+const PERMISSIONS = [
+  { action: "plugin::events.manage-credentials", subject: null },
+]
+const date = (value?: string | null) =>
+  value ? new Date(value).toLocaleString() : "Not yet"
 function CredentialCard({
   cred,
+  canManage,
   onEdit,
-  onDeleted,
+  onChanged,
 }: {
   cred: Credential
-  onEdit: (cred: Credential) => void
-  onDeleted: () => void
+  canManage: boolean
+  onEdit: () => void
+  onChanged: () => void
 }) {
-  const { del, post } = useFetchClient()
-  const [testResult, setTestResult] = useState<{
-    ok: boolean
-    message?: string
-    error?: string
-  } | null>(null)
-  const [testLoading, setTestLoading] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
-
-  const hasError = !!cred.lastSyncError
-
-  const handleTest = async () => {
-    setTestLoading(true)
-    setTestResult(null)
+  const { post, del } = useFetchClient()
+  const [testing, setTesting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(
+    null
+  )
+  const test = async () => {
+    setTesting(true)
+    setMessage(null)
     try {
-      const { data } = await post(
+      const { data } = await post<{ result?: FeedTestCode }>(
         `/events/admin/credentials/${cred.documentId}/test`,
         {}
       )
-      const body = data as { result?: FeedTestCode; error?: string }
-      setTestResult(
-        body.result === "ok"
-          ? { ok: true, message: FEED_TEST_LABEL.ok }
-          : {
-              ok: false,
-              error: body.result
-                ? FEED_TEST_LABEL[body.result]
-                : (body.error ?? "Test failed"),
-            }
-      )
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Test failed"
-      setTestResult({ ok: false, error: message })
+      setMessage({
+        ok: data.result === "ok",
+        text: data.result
+          ? FEED_TEST_LABEL[data.result]
+          : "Test unavailable. Try again.",
+      })
+    } catch {
+      setMessage({
+        ok: false,
+        text: "Couldn’t test this connection. Try again.",
+      })
     } finally {
-      setTestLoading(false)
+      setTesting(false)
     }
   }
-
-  const handleDelete = async () => {
-    if (!confirm(`Delete credential "${cred.label}"? This cannot be undone.`))
-      return
-    setDeleteLoading(true)
+  const remove = async () => {
+    setDeleting(true)
+    setMessage(null)
     try {
       await del(`/events/admin/credentials/${cred.documentId}`)
-      onDeleted()
+      setConfirmDelete(false)
+      onChanged()
     } catch {
-      alert("Delete failed — check server logs.")
+      setMessage({
+        ok: false,
+        text: "Couldn’t delete this credential. Try again.",
+      })
     } finally {
-      setDeleteLoading(false)
+      setDeleting(false)
     }
   }
 
-  const libraryNames =
-    cred.libraries && cred.libraries.length > 0
-      ? cred.libraries.length === 1
-        ? cred.libraries[0]!.name
-        : `${cred.libraries.length} libraries linked`
-      : "No libraries linked"
-
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #dcdce4",
-        borderLeft: `4px solid ${hasError ? "#d02b20" : "#1b7c3a"}`,
-        borderRadius: "8px",
-        padding: "16px 18px",
-        boxShadow: "0 1px 4px rgba(33,33,52,0.06)",
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-      }}
+    <Box
+      background="neutral0"
+      padding={6}
+      hasRadius
+      shadow="tableShadow"
+      style={{ minWidth: 0 }}
     >
-      {/* Header */}
-      <div>
-        <p
-          style={{
-            margin: "0 0 4px",
-            fontSize: "14px",
-            fontWeight: 700,
-            color: "#32324d",
-          }}
-        >
+      <Flex direction="column" alignItems="stretch" gap={4}>
+        <Typography tag="h3" variant="delta">
           {cred.label}
-        </p>
-        <div
-          style={{
-            display: "flex",
-            gap: "6px",
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <ProviderBadge provider={cred.provider} />
-          <span
-            style={{
-              fontSize: "11px",
-              color: "#8e8ea9",
-              textTransform: "uppercase" as const,
-              letterSpacing: "0.06em",
-            }}
-          >
-            {cred.scope}
-          </span>
-          <span
-            style={{
-              fontSize: "10px",
-              fontWeight: 600,
-              color: statusColor(cred),
-              background: `${statusColor(cred)}18`,
-              border: `1px solid ${statusColor(cred)}40`,
-              borderRadius: "4px",
-              padding: "1px 6px",
-            }}
-          >
-            {statusLabel(cred)}
-          </span>
-          <span
-            style={{
-              fontSize: "10px",
-              fontWeight: 600,
-              color: "#666687",
-              background: "#f0f0ff",
-              border: "1px solid #dcdce4",
-              borderRadius: "4px",
-              padding: "1px 6px",
-              textTransform: "uppercase" as const,
-            }}
-          >
-            {cred.source === "library" ? "Library" : "Admin"}
-          </span>
+        </Typography>
+        <Flex gap={2} wrap="wrap">
+          <Badge>
+            {EVENT_PROVIDERS[cred.provider]?.label ?? cred.provider}
+          </Badge>
+          <Badge>{statusLabel(cred)}</Badge>
+          <Badge>
+            {cred.source === "library"
+              ? "Library connected"
+              : "Admin connected"}
+          </Badge>
           {cred.pendingSubmissionDocumentId && (
-            <span
-              style={{
-                fontSize: "10px",
-                fontWeight: 600,
-                color: "#945a00",
-                background: "#fff3d9",
-                border: "1px solid #ffd27a",
-                borderRadius: "4px",
-                padding: "1px 6px",
+            <Badge>Replacement in review</Badge>
+          )}
+        </Flex>
+        <Typography textColor="neutral600">
+          {cred.libraries?.length
+            ? cred.libraries.map((library) => library.name).join(", ")
+            : "No libraries linked"}{" "}
+          · {cred.scope === "group" ? "Group feed" : "Single-library feed"}
+        </Typography>
+        <Box background="neutral100" padding={4} hasRadius>
+          <Typography tag="p" textColor="neutral600">
+            Last test:{" "}
+            {cred.lastTestResult
+              ? FEED_TEST_LABEL[cred.lastTestResult]
+              : "Not tested"}{" "}
+            · {date(cred.lastTestedAt)}
+          </Typography>
+          <Typography tag="p" textColor="neutral600" paddingTop={2}>
+            Last sync: {date(cred.lastSyncAt)}
+            {cred.lastSyncEventCount !== undefined
+              ? ` · ${cred.lastSyncEventCount} events`
+              : ""}
+          </Typography>
+        </Box>
+        {cred.lastErrorMessage && (
+          <Typography
+            tag="p"
+            textColor="danger600"
+            style={{ overflowWrap: "anywhere" }}
+          >
+            {cred.lastErrorMessage}
+          </Typography>
+        )}
+        {message && (
+          <Typography
+            tag="p"
+            role={message.ok ? "status" : "alert"}
+            textColor={message.ok ? "success600" : "danger600"}
+          >
+            {message.text}
+          </Typography>
+        )}
+        <Flex gap={2} wrap="wrap">
+          {canManage && (
+            <>
+              <Button variant="secondary" size="S" onClick={onEdit}>
+                Edit
+              </Button>
+              <Button
+                variant="tertiary"
+                size="S"
+                loading={testing}
+                disabled={testing || deleting}
+                onClick={() => void test()}
+              >
+                Test connection
+              </Button>
+            </>
+          )}
+          <RevealCredentialButton documentId={cred.documentId} slot="current" />
+          {cred.pendingHints && (
+            <RevealCredentialButton
+              documentId={cred.documentId}
+              slot="pending"
+            />
+          )}
+          {canManage && (
+            <Button
+              variant="danger-light"
+              size="S"
+              disabled={testing || deleting}
+              onClick={() => {
+                setMessage(null)
+                setConfirmDelete(true)
               }}
             >
-              Pending replacement
-            </span>
+              Delete
+            </Button>
           )}
-        </div>
-      </div>
-
-      {/* Libraries */}
-      <p style={{ margin: 0, fontSize: "12px", color: "#666687" }}>
-        {libraryNames}
-      </p>
-
-      {/* Last test */}
-      <p style={{ margin: 0, fontSize: "11px", color: "#8e8ea9" }}>
-        Last test:{" "}
-        {cred.lastTestResult
-          ? `${FEED_TEST_LABEL[cred.lastTestResult]}${
-              cred.lastTestedAt ? ` · ${formatDate(cred.lastTestedAt)}` : ""
-            }`
-          : "Not tested yet"}
-      </p>
-
-      {/* Last sync info */}
-      {cred.lastSyncAt && (
-        <p style={{ margin: 0, fontSize: "11px", color: "#8e8ea9" }}>
-          Last sync: {formatDate(cred.lastSyncAt)}
-          {cred.lastSyncEventCount !== undefined &&
-            ` · ${cred.lastSyncEventCount} events`}
-        </p>
-      )}
-      {cred.lastSyncError && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: "11px",
-            color: "#d02b20",
-            wordBreak: "break-word",
-          }}
-        >
-          {cred.lastSyncError}
-        </p>
-      )}
-
-      {/* Test result */}
-      {testResult && (
-        <p
-          style={{
-            margin: 0,
-            fontSize: "11px",
-            color: testResult.ok ? "#1b7c3a" : "#d02b20",
-          }}
-        >
-          {testResult.ok
-            ? `✓ ${testResult.message ?? "Connection OK"}`
-            : `✗ ${testResult.error ?? "Test failed"}`}
-        </p>
-      )}
-
-      {/* Actions */}
-      <div style={{ display: "flex", gap: "6px", marginTop: "4px" }}>
-        <button
-          onClick={() => onEdit(cred)}
-          style={{
-            padding: "5px 10px",
-            fontSize: "11px",
-            fontWeight: 600,
-            background: "#f0f0ff",
-            color: "#4945ff",
-            border: "1px solid #c4c4ff",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => void handleTest()}
-          disabled={testLoading}
-          style={{
-            padding: "5px 10px",
-            fontSize: "11px",
-            fontWeight: 600,
-            background: "#fff",
-            color: "#666687",
-            border: "1px solid #dcdce4",
-            borderRadius: "5px",
-            cursor: testLoading ? "not-allowed" : "pointer",
-            opacity: testLoading ? 0.5 : 1,
-          }}
-        >
-          {testLoading ? "Testing…" : "Test"}
-        </button>
-        <RevealCredentialButton documentId={cred.documentId} slot="current" />
-        {cred.pendingHints ? (
-          <RevealCredentialButton documentId={cred.documentId} slot="pending" />
-        ) : null}
-        <button
-          onClick={() => void handleDelete()}
-          disabled={deleteLoading}
-          style={{
-            padding: "5px 10px",
-            fontSize: "11px",
-            fontWeight: 600,
-            background: "#ffeaea",
-            color: "#d02b20",
-            border: "1px solid #f5c0be",
-            borderRadius: "5px",
-            cursor: deleteLoading ? "not-allowed" : "pointer",
-            opacity: deleteLoading ? 0.5 : 1,
-            marginLeft: "auto",
-          }}
-        >
-          Delete
-        </button>
-      </div>
-    </div>
+        </Flex>
+      </Flex>
+      <Dialog.Root
+        open={confirmDelete}
+        onOpenChange={(open) => {
+          if (!deleting) setConfirmDelete(open)
+        }}
+      >
+        <Dialog.Content>
+          <Dialog.Header>Delete credential</Dialog.Header>
+          <Dialog.Body>
+            <Box>
+              <Dialog.Description>
+                Delete “{cred.label}”? Its stored credentials will be removed
+                and this feed will stop syncing.
+              </Dialog.Description>
+              {message && !message.ok && (
+                <Typography
+                  tag="p"
+                  role="alert"
+                  textColor="danger600"
+                  paddingTop={3}
+                >
+                  {message.text}
+                </Typography>
+              )}
+            </Box>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Dialog.Cancel>
+              <Button
+                variant="tertiary"
+                disabled={deleting}
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+            </Dialog.Cancel>
+            <Button
+              variant="danger"
+              disabled={deleting}
+              loading={deleting}
+              onClick={() => void remove()}
+            >
+              Delete credential
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog.Root>
+    </Box>
   )
 }
 
 export function CredentialList() {
   const { get } = useFetchClient()
-  const [credentials, setCredentials] = useState<Credential[]>([])
+  const { allowedActions } = useRBAC(PERMISSIONS)
+  const canManage = !!allowedActions.canManageCredentials
+  const [rows, setRows] = useState<Credential[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [formOpen, setFormOpen] = useState(false)
-  const [editTarget, setEditTarget] = useState<Credential | null>(null)
-
-  const loadCredentials = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const { data } = await get("/events/admin/credentials")
-      const items = Array.isArray((data as any)?.data)
-        ? (data as any).data
-        : Array.isArray(data)
-          ? data
-          : []
-      setCredentials(items as Credential[])
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Failed to load credentials."
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [get])
-
+  const [error, setError] = useState(false)
+  const [revision, setRevision] = useState(0)
+  const [editing, setEditing] = useState<Credential | null | undefined>()
   useEffect(() => {
-    void loadCredentials()
-  }, [loadCredentials])
+    const controller = new AbortController()
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+    setError(false)
+    get("/events/admin/credentials", { signal: controller.signal })
+      .then(({ data }) => {
+        if (!Array.isArray(data)) throw new Error("Invalid credential response")
+        if (!controller.signal.aborted) setRows(data)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setError(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
-  const openCreate = () => {
-    setEditTarget(null)
-    setFormOpen(true)
-  }
-
-  const openEdit = (cred: Credential) => {
-    setEditTarget(cred)
-    setFormOpen(true)
-  }
-
-  const handleSaved = () => {
-    setFormOpen(false)
-    setEditTarget(null)
-    void loadCredentials()
-  }
+    return () => controller.abort()
+  }, [get, revision])
+  const refresh = () => setRevision((value) => value + 1)
 
   return (
-    <div>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-        }}
-      >
-        <p
-          style={{
-            margin: 0,
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "#32324d",
-          }}
-        >
-          Event Source Credentials
-        </p>
-        <button
-          onClick={openCreate}
-          style={{
-            padding: "8px 16px",
-            fontSize: "13px",
-            fontWeight: 600,
-            background: "#4945ff",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          + Add Credential
-        </button>
-      </div>
-
+    <Flex direction="column" alignItems="stretch" gap={5}>
+      <Flex justifyContent="space-between" gap={3} wrap="wrap">
+        <Box>
+          <Typography tag="h2" variant="delta">
+            Source credentials
+          </Typography>
+          <Typography tag="p" textColor="neutral600" paddingTop={2}>
+            Connect feeds, check their health and manage stored credentials.
+          </Typography>
+        </Box>
+        <Flex gap={2}>
+          <Button variant="tertiary" disabled={loading} onClick={refresh}>
+            Refresh
+          </Button>
+          {canManage && (rows.length > 0 || loading || error) && (
+            <Button onClick={() => setEditing(null)}>Add credential</Button>
+          )}
+        </Flex>
+      </Flex>
       {error && (
-        <div
-          style={{
-            padding: "12px 16px",
-            background: "#ffeaea",
-            border: "1px solid #f5c0be",
-            borderRadius: "8px",
-            fontSize: "13px",
-            color: "#d02b20",
-            marginBottom: "16px",
-          }}
+        <Alert
+          variant="danger"
+          title="Couldn’t load credentials"
+          closeLabel="Retry"
+          onClose={refresh}
         >
-          {error}
-        </div>
+          Your feeds could not be loaded.{" "}
+          <Button variant="tertiary" onClick={refresh}>
+            Try again
+          </Button>
+        </Alert>
       )}
-
-      {loading && (
-        <p style={{ color: "#8e8ea9", fontSize: "13px" }}>Loading…</p>
-      )}
-
-      {!loading && credentials.length === 0 && !error && (
-        <div
-          style={{
-            padding: "48px 24px",
-            textAlign: "center",
-            background: "#fff",
-            border: "1px dashed #dcdce4",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
-          onClick={openCreate}
-        >
-          <div style={{ fontSize: "28px", marginBottom: "8px" }}>+</div>
-          <p style={{ fontSize: "13px", color: "#666687", margin: 0 }}>
-            No credentials yet — click to add one
-          </p>
-        </div>
-      )}
-
-      {!loading && credentials.length > 0 && (
+      {loading ? (
+        <Loader>Loading credentials</Loader>
+      ) : rows.length === 0 && !error ? (
+        <PluginEmptyState
+          title="Connect your first event source"
+          description="Add a library calendar or ticketing feed. You can test its connection and review imported events here."
+          action={
+            canManage ? (
+              <Button onClick={() => setEditing(null)}>Add credential</Button>
+            ) : undefined
+          }
+        />
+      ) : (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "16px",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(100%, 32rem), 1fr))",
+            gap: "2rem",
           }}
         >
-          {credentials.map((cred) => (
+          {rows.map((cred) => (
             <CredentialCard
               key={cred.documentId}
               cred={cred}
-              onEdit={openEdit}
-              onDeleted={() => void loadCredentials()}
+              canManage={canManage}
+              onEdit={() => setEditing(cred)}
+              onChanged={refresh}
             />
           ))}
-
-          {/* Add card */}
-          <div
-            onClick={openCreate}
-            style={{
-              background: "#fff",
-              border: "1px dashed #dcdce4",
-              borderRadius: "8px",
-              padding: "16px 18px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              cursor: "pointer",
-              minHeight: "120px",
-              color: "#8e8ea9",
-              fontSize: "13px",
-              fontWeight: 500,
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget
-              el.style.borderColor = "#4945ff"
-              el.style.color = "#4945ff"
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget
-              el.style.borderColor = "#dcdce4"
-              el.style.color = "#8e8ea9"
-            }}
-          >
-            <span style={{ fontSize: "24px" }}>+</span>
-            Add Credential
-          </div>
         </div>
       )}
-
-      {/* Modal */}
-      {formOpen && (
+      {editing !== undefined && (
         <CredentialForm
-          credential={editTarget}
-          onSaved={handleSaved}
-          onCancel={() => {
-            setFormOpen(false)
-            setEditTarget(null)
+          credential={editing}
+          onSaved={() => {
+            setEditing(undefined)
+            refresh()
           }}
+          onCancel={() => setEditing(undefined)}
         />
       )}
-    </div>
+    </Flex>
   )
 }

@@ -46,8 +46,8 @@ it("estimates annual Team seats, scopes the public-service discount and keeps AP
   expect(team.getByText("£480")).toBeTruthy()
   expect((remove as HTMLButtonElement).disabled).toBe(true)
   expect(
-    team.getByRole("link", { name: "Talk to us" }).getAttribute("href")
-  ).toBe("mailto:info@libraries.global?subject=Team%20plan")
+    team.getByRole("link", { name: "Create your Team" }).getAttribute("href")
+  ).toBe("/staff/team/new?seats=5")
 })
 
 it("switches personal prices and checkout intervals with keyboard focus following the selected radio", () => {
@@ -112,7 +112,7 @@ it("keeps Team enquiries available for current Team members", () => {
   render(<MembershipPlans currentPlan="team" />)
   const team = within(screen.getByRole("listitem", { name: "Team" }))
   expect(team.getByText("Your plan")).toBeTruthy()
-  expect(team.getByRole("link", { name: "Talk to us" })).toBeTruthy()
+  expect(team.getByRole("link", { name: "Create your Team" })).toBeTruthy()
 })
 
 it("reveals planned features independently without adding them to the included list", () => {
@@ -154,7 +154,9 @@ it("keeps service choices keyboard accessible and the quote separate from person
   expect(quote.getByText("£480")).toBeTruthy()
   expect(quote.getByText("£15 / month")).toBeTruthy()
   expect(
-    quote.getByText(/eligibility is confirmed with your quote/)
+    quote.getByText(
+      /eligibility is confirmed separately before discounted checkout/
+    )
   ).toBeTruthy()
   expect(
     quote.getByText(
@@ -165,7 +167,9 @@ it("keeps service choices keyboard accessible and the quote separate from person
   expect(document.activeElement).toBe(standard)
   expect(quote.getByText("£600")).toBeTruthy()
   expect(
-    quote.queryByText(/eligibility is confirmed with your quote/)
+    quote.queryByText(
+      /eligibility is confirmed separately before discounted checkout/
+    )
   ).toBeNull()
 })
 
@@ -202,4 +206,27 @@ it("keeps complimentary access in one summary and preserves the option to suppor
   expect(
     screen.queryByRole("button", { name: "Checkout pro month" })
   ).toBeNull()
+})
+
+it("offers Team management to a Pro subscriber who already belongs to a Team", () => {
+  render(
+    <MembershipPlans
+      currentPlan="pro"
+      teams={[
+        {
+          id: "paid-team",
+          name: "LibrariesGlobal",
+          slug: "librariesglobal",
+          role: "organiser",
+          libraryCount: 0,
+          status: "active",
+          expiresAt: null,
+        },
+      ]}
+    />
+  )
+  expect(
+    screen.getByRole("link", { name: "Manage your Team" }).getAttribute("href")
+  ).toBe("/staff/team?team=paid-team")
+  expect(screen.queryByRole("link", { name: "Create your Team" })).toBeNull()
 })

@@ -8,6 +8,7 @@ vi.mock("next/headers", () => ({
 }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }))
 
+vi.stubEnv("APP_PUBLIC_URL", "http://localhost")
 vi.stubEnv("STRAPI_URL", "http://strapi.test")
 vi.stubEnv("STRAPI_BRIDGE_SECRET", "s3cret")
 
@@ -17,7 +18,10 @@ const post = (body: unknown) =>
   POST(
     new Request("http://localhost/api/profile/me/suggest-topic", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "http://localhost",
+      },
       body: JSON.stringify(body),
     })
   )
@@ -92,5 +96,40 @@ describe("POST /api/profile/me/suggest-topic", () => {
       expect((await post({ name: `Topic ${i}` })).status).toBe(200)
 
     expect((await post({ name: "Topic 31" })).status).toBe(429)
+  })
+})
+
+describe("write boundary", () => {
+  it.each([null, [], 42, { name: 42 }, { unexpected: true }])(
+    "rejects malformed payload %j without an upstream write",
+    async (body) => {
+      getSession.mockResolvedValue({
+        user: { id: "validation-user", email: "reader@example.org" },
+      })
+      fetchMock.mockClear()
+      expect((await post(body)).status).toBe(400)
+      expect(fetchMock).not.toHaveBeenCalled()
+    }
+  )
+  it("refuses cross-site writes", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/profile/me/suggest-topic", {
+        method: "POST",
+        headers: {
+          Origin: "https://other.example",
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      })
+    )
+    expect(response.status).toBe(403)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+  it("caps request size", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "size-user", email: "reader@example.org" },
+    })
+    expect((await post({ padding: "x".repeat(17000) })).status).toBe(413)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

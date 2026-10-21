@@ -64,6 +64,22 @@ export default ({ strapi }: { strapi: any }) => {
     detail: wrap((ctx, user) =>
       teams().detail(teamId(ctx), { baUserId: user.id })
     ),
+    configure: wrap((ctx, user) => {
+      if (ctx.request.header["x-ba-email-verified"] !== "true")
+        throw new AccessError(403, "email_verification_required")
+      const body = ctx.request.body ?? {}
+
+      return teams().configure(
+        teamId(ctx),
+        { name: body.name, libraryDocumentIds: body.libraryDocumentIds },
+        actor(user)
+      )
+    }),
+    libraries: wrap(async (ctx) => ({
+      libraries: await teams().searchLibraries(
+        typeof ctx.query.q === "string" ? ctx.query.q : ""
+      ),
+    })),
 
     // POST /teams/:id/invites  { email, teamRole?, preassign? }
     // → 201 { member, emailSent }: the seat is held even when no email

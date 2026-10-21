@@ -37,7 +37,13 @@ export function CheckoutHeader({ sandbox }: { readonly sandbox?: boolean }) {
   )
 }
 
-export function CheckoutSteps({ step }: { readonly step: "plan" | "details" }) {
+export function CheckoutSteps({
+  step,
+  labels,
+}: {
+  readonly step: "plan" | "details"
+  readonly labels?: readonly [string, string, string]
+}) {
   const t = useTranslations("billing")
 
   return (
@@ -78,7 +84,7 @@ export function CheckoutSteps({ step }: { readonly step: "plan" | "details" }) {
               )}
             </span>
             <span className={current || complete ? "" : "text-(--t-ink-dim)"}>
-              {t(value)}
+              {labels?.[index] ?? t(value)}
             </span>
             {index < 2 ? (
               <span

@@ -1,4 +1,9 @@
-import { expect, type Locator, type Page } from "@playwright/test"
+import {
+  expect,
+  type Locator,
+  type Page,
+  type Response,
+} from "@playwright/test"
 
 import {
   fixturePassword,
@@ -13,6 +18,18 @@ export const NAVIGATION = { timeout: 60_000 }
 
 /** The username field's visible label, the whole of its accessible name. */
 export const USERNAME_LABEL = "Username Required"
+
+/** Next may already have streamed a 200 shell before notFound() resolves.
+ * Assert the denied document and robots policy as well as its transport status. */
+export async function expectMissingPage(page: Page, response: Response | null) {
+  expect([200, 404]).toContain(response?.status())
+  await expect(
+    page.getByRole("heading", { level: 1, name: /We couldn.t find/ })
+  ).toBeVisible(NAVIGATION)
+  await expect(
+    page.locator('meta[name="robots"][content*="noindex"]').first()
+  ).toBeAttached()
+}
 
 /**
  * Sets a secret through the input's native value setter, not fill():

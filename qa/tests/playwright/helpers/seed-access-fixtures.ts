@@ -258,10 +258,12 @@ async function convergePassword(
 async function runWriter(plan: PlanItem[]): Promise<WriterOutput> {
   const { stdout } = await promisify(execFile)(process.execPath, [WRITER], {
     cwd: STRAPI_APP_DIR,
-    // Minimal env: Strapi must read its own apps/strapi/.env, not ours.
+    // Minimal env: read the CMS environment, with an optional isolated local
+    // fixture environment. The writer validates its resolved database host.
     env: {
       PATH: process.env.PATH,
       HOME: process.env.HOME,
+      ENV_PATH: process.env.ACCESS_STRAPI_ENV_PATH,
       ACCESS_SEED_PLAN: JSON.stringify(
         plan.map((item) => ({
           baUserId: item.baUserId,

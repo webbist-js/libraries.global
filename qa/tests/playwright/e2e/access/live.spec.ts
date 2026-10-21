@@ -146,11 +146,13 @@ test("the Go live tab shows today's route and the QR tile", async ({
     today.getByRole("img", { name: "Open your live console on your phone" })
   ).toBeVisible()
   await expect(
-    today.getByText("Scan with your phone’s camera to open the console.")
+    today.getByText(
+      "Scan to open the console on your phone. Staff sign-in required."
+    )
   ).toBeVisible()
   // Mobile tabs are present in the shell.
   const tabs = page.getByRole("navigation", { name: "Staff area" })
-  await expect(tabs.getByRole("link", { name: /^Timetable/ })).toBeVisible()
+  await expect(tabs.getByRole("link", { name: /^Edit record/ })).toBeVisible()
   await expect(tabs.getByRole("link", { name: /^Go live/ })).toBeVisible()
 })
 

@@ -6,14 +6,15 @@ import { useId } from "react"
 
 import { PlanCompareCell } from "@/app/[locale]/contribute/_components/membership/PlanCompareCell"
 import { T } from "@/lib/design-tokens"
-import pricing from "@/lib/membership-pricing.json"
 import {
-  COMPARE_PLANS,
-  compareGroupSummary,
-  shortPrice,
-  type CompareGroup,
-} from "@/lib/plan-compare"
-import { planCard, type PlanCardKey } from "@/lib/plans"
+  useMembershipContent,
+  useMembershipPlan,
+  useMembershipShortPrice,
+  useMembershipSummary,
+} from "@/lib/localized-plans"
+import pricing from "@/lib/membership-pricing.json"
+import { COMPARE_PLANS, type CompareGroup } from "@/lib/plan-compare"
+import type { PlanCardKey } from "@/lib/plans"
 
 /** The two mobile plan choices live alongside the shared comparison controls. */
 export function PlanCompareSelectors({
@@ -27,6 +28,7 @@ export function PlanCompareSelectors({
   readonly onSelected: (key: PlanCardKey) => void
   readonly onBaseline: (key: PlanCardKey) => void
 }) {
+  const planCard = useMembershipPlan()
   const controlId = useId()
   const t = useTranslations("membershipCompare")
 
@@ -86,10 +88,14 @@ export function PlanCompareMobile({
   readonly selected: PlanCardKey
   readonly baseline: PlanCardKey
 }) {
+  const m = useMembershipContent()
+  const planCard = useMembershipPlan()
+  const shortPrice = useMembershipShortPrice()
+  const compareGroupSummary = useMembershipSummary()
   const columns = [baseline, selected]
 
   return (
-    <div className="md:hidden" role="region" aria-label="Compare two plans">
+    <div className="md:hidden" role="region" aria-label={m("copy.compareTwo")}>
       <div className="overflow-hidden rounded-[20px] border border-(--t-border-line) bg-white">
         {groups.map((group) => {
           const expanded = open.has(group.id)
@@ -128,8 +134,11 @@ export function PlanCompareMobile({
               <div hidden={!expanded} id={id}>
                 <table className="w-full table-fixed border-collapse text-[13px]">
                   <caption className="sr-only">
-                    {group.title}: {planCard(baseline).name} and{" "}
-                    {planCard(selected).name}
+                    {m("copy.comparisonCaption", {
+                      group: group.title,
+                      first: planCard(baseline).name,
+                      second: planCard(selected).name,
+                    })}
                   </caption>
                   <thead>
                     <tr>
@@ -137,7 +146,7 @@ export function PlanCompareMobile({
                         className="w-[48%] px-3 py-3 text-left text-[12px] text-(--t-ink-dim)"
                         scope="col"
                       >
-                        Feature
+                        {m("copy.feature")}
                       </th>
                       {columns.map((key) => (
                         <th
@@ -155,11 +164,13 @@ export function PlanCompareMobile({
                           </span>
                           <span className="mt-1 block text-[11px] text-(--t-ink-dim)">
                             {shortPrice(planCard(key).price)}
-                            {key === "team" ? " ex VAT" : ""}
+                            {key === "team" ? ` ${m("copy.exVat")}` : ""}
                           </span>
                           {key === "team" ? (
                             <span className="mt-1 block text-[10px] font-normal text-(--t-ink-dim)">
-                              Standard · {pricing.team.includedSeats} seats
+                              {m("copy.teamSeats", {
+                                count: pricing.team.includedSeats,
+                              })}
                             </span>
                           ) : null}
                         </th>

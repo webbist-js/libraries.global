@@ -3,10 +3,10 @@ const assert = require("node:assert/strict")
 const cp = require("node:child_process")
 const crypto = require("node:crypto")
 const fs = require("node:fs")
-const { Readable } = require("node:stream")
 const { createRequire } = require("node:module")
 const os = require("node:os")
 const path = require("node:path")
+const { Readable } = require("node:stream")
 
 const appModules = process.env.DISCUSSIONS_ACCEPTANCE_MODULES
 if (!appModules)

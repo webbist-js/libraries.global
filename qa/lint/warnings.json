@@ -1,0 +1,2401 @@
+{
+  "version": 1,
+  "files": {
+    "apps/strapi/config/cron-tasks.ts": {
+      "@typescript-eslint/no-explicit-any": 12
+    },
+    "apps/strapi/config/middlewares.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/database/migrations/shared/hot-path-index-sql.js": {
+      "sonarjs/slow-regex": 2
+    },
+    "apps/strapi/database/migrations/shared/library-sources.js": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/database/migrations/shared/library-types.js": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/database/migrations/shared/population-storage.js": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/scripts/check-library-audit-compaction.cjs": {
+      "no-console": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "apps/strapi/scripts/check-library-sources-migration.cjs": {
+      "no-console": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "apps/strapi/scripts/check-library-types-migration.cjs": {
+      "no-console": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "apps/strapi/scripts/compact-library-audit-baselines.cjs": {
+      "no-console": 1,
+      "sonarjs/cognitive-complexity": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "apps/strapi/scripts/discussions-guide-content.mjs": {
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/scripts/events-rekey.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/scripts/export-subscribers.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/scripts/go-live-cleanup.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/scripts/ingests/_shared/directory-fields.ts": {
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/scripts/ingests/_shared/directory.ts": {
+      "@typescript-eslint/no-explicit-any": 8,
+      "unicorn/consistent-destructuring": 8
+    },
+    "apps/strapi/scripts/ingests/_shared/execute.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-destructuring": 1
+    },
+    "apps/strapi/scripts/ingests/_shared/json-source.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/scripts/ingests/_shared/pipeline.ts": {
+      "unicorn/consistent-destructuring": 2
+    },
+    "apps/strapi/scripts/ingests/_shared/places.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/scripts/ingests/_shared/population.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/scripts/ingests/australia/libraries/ingest.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/scripts/ingests/australia/libraries/map.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/scripts/ingests/finland/kirjastot-fi/geography.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/scripts/ingests/finland/kirjastot-fi/map.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "sonarjs/slow-regex": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/scripts/ingests/finland/kirjastot-fi/source.ts": {
+      "@typescript-eslint/no-explicit-any": 9
+    },
+    "apps/strapi/scripts/ingests/france/culture/ingest.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/scripts/ingests/france/culture/map.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/scripts/ingests/nordics/geography.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/scripts/ingests/nordics/map.ts": {
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/scripts/ingests/nordics/source.ts": {
+      "@typescript-eslint/no-explicit-any": 24,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/scripts/migrate-library-types.cjs": {
+      "no-console": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "apps/strapi/scripts/opening-schedule-upgrade.cjs": {
+      "no-console": 1,
+      "sonarjs/cognitive-complexity": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "apps/strapi/scripts/publish-ready-libraries.cjs": {
+      "no-console": 4,
+      "sonarjs/cognitive-complexity": 2,
+      "turbo/no-undeclared-env-vars": 7
+    },
+    "apps/strapi/scripts/refresh-library-projections.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/scripts/repair-library-geography.cjs": {
+      "no-console": 3,
+      "sonarjs/cognitive-complexity": 1,
+      "turbo/no-undeclared-env-vars": 6,
+      "unicorn/consistent-destructuring": 1
+    },
+    "apps/strapi/scripts/seed-mobile-stops.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/scripts/translate-editorial-content.ts": {
+      "@typescript-eslint/no-explicit-any": 30,
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/scripts/translate-site-content.ts": {
+      "@typescript-eslint/no-explicit-any": 11
+    },
+    "apps/strapi/scripts/update-notification-docs.ts": {
+      "@typescript-eslint/no-explicit-any": 14
+    },
+    "apps/strapi/src/admin/custom-fields/location-picker/Input.tsx": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "unicorn/prefer-logical-operator-over-ternary": 1
+    },
+    "apps/strapi/src/admin/custom-fields/mobile-timetable/Input.tsx": {
+      "react/no-array-index-key": 2,
+      "sonarjs/no-nested-functions": 3
+    },
+    "apps/strapi/src/admin/custom-fields/opening-times/Input.tsx": {
+      "sonarjs/no-nested-functions": 3
+    },
+    "apps/strapi/src/admin/custom-fields/opening-times/OpeningScheduleOverrides.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/no-nested-functions": 3
+    },
+    "apps/strapi/src/api/article-change/controllers/article-change.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/article-change/services/article-change.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/atlas/controllers/atlas.ts": {
+      "@typescript-eslint/no-explicit-any": 14
+    },
+    "apps/strapi/src/api/auth-bridge/controllers/auth-bridge.ts": {
+      "@typescript-eslint/no-explicit-any": 35,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-duplicate-string": 2
+    },
+    "apps/strapi/src/api/blog-article/controllers/blog-article.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/api/category/controllers/category.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/api/drive-credit/controllers/drive-credit.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/drive-credit/services/drive-credit.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/drive-hold/controllers/drive-hold.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/drive-hold/services/drive-hold.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/drive/controllers/drive.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/src/api/drive/services/drive.ts": {
+      "@typescript-eslint/no-explicit-any": 17,
+      "sonarjs/cognitive-complexity": 3,
+      "sonarjs/slow-regex": 1,
+      "sonarjs/todo-tag": 1
+    },
+    "apps/strapi/src/api/footer/middlewares/populate-footer.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/api/homepage/middlewares/populate-homepage.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/api/library-affiliation/content-types/library-affiliation/lifecycles.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/api/library-change/controllers/library-change.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/library-change/services/library-change.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/library-notice/content-types/library-notice/lifecycles.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/api/library-notice/controllers/library-notice.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/api/library/controllers/library-export.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/library/controllers/library-followers.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/mobile/controllers/mobile.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/api/notification/controllers/notification.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/api/notification/services/notification.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "sonarjs/cognitive-complexity": 4
+    },
+    "apps/strapi/src/api/page/middlewares/populate-page.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/api/paid-membership/controllers/paid-membership.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "unicorn/consistent-destructuring": 1
+    },
+    "apps/strapi/src/api/region/controllers/region.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/api/role-grant/controllers/role-grant.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/role-grant/services/role-grant.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/saved-event/controllers/saved-event.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/api/subscriber/controllers/subscriber.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/src/api/subscriber/services/email-preferences.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/api/supporters/controllers/supporters.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/api/topic/controllers/topic.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/api/topic/services/topic.ts": {
+      "@typescript-eslint/no-explicit-any": 10
+    },
+    "apps/strapi/src/api/user-profile/controllers/user-profile.ts": {
+      "@typescript-eslint/no-explicit-any": 38
+    },
+    "apps/strapi/src/api/wiki-article/controllers/wiki-article.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/api/wiki-section/controllers/wiki-section.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/documentMiddlewares/article-discovery.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "sonarjs/cognitive-complexity": 2,
+      "unicorn/consistent-destructuring": 12
+    },
+    "apps/strapi/src/documentMiddlewares/atlas-outbox.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/src/documentMiddlewares/change-records.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "unicorn/consistent-destructuring": 9
+    },
+    "apps/strapi/src/documentMiddlewares/library-publish-places.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/documentMiddlewares/mobile-timetable.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/index.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/lifeCycles/articlePrivacy.ts": {
+      "@typescript-eslint/no-explicit-any": 26,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/lifeCycles/entityRef.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/lifeCycles/roleGrant.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/middlewares/beta-gate.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/middlewares/strip-draft-status.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/access/admin/src/components/PersonModal.tsx": {
+      "react/hook-use-state": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/access/admin/src/components/TeamDetailModal.tsx": {
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/strapi/src/plugins/access/server/bootstrap.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/access/server/controllers/api-data.ts": {
+      "@typescript-eslint/no-explicit-any": 9,
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/access/server/controllers/people.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/src/plugins/access/server/controllers/plans.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/strapi/src/plugins/access/server/controllers/team-api.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "unicorn/consistent-function-scoping": 4
+    },
+    "apps/strapi/src/plugins/access/server/controllers/teams.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/strapi/src/plugins/access/server/routes/admin.ts": {
+      "sonarjs/no-duplicate-string": 1
+    },
+    "apps/strapi/src/plugins/access/server/services/people.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/access/server/services/plans.ts": {
+      "@typescript-eslint/no-explicit-any": 9
+    },
+    "apps/strapi/src/plugins/access/server/services/teams.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "sonarjs/cognitive-complexity": 2,
+      "sonarjs/slow-regex": 1,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/src/plugins/access/server/utils/admin.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/src/plugins/access/strapi-admin.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/access/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/beta-invites/admin/App.tsx": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "react-hooks/exhaustive-deps": 1
+    },
+    "apps/strapi/src/plugins/beta-invites/server/controller.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "unicorn/consistent-function-scoping": 4
+    },
+    "apps/strapi/src/plugins/beta-invites/server/service.ts": {
+      "@typescript-eslint/no-explicit-any": 9
+    },
+    "apps/strapi/src/plugins/beta-invites/strapi-admin.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/beta-invites/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/RecordChangesPanel.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/ReviewModal.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/SubmissionPanels.tsx": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "react/no-array-index-key": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/SuggestionRoundPanel.tsx": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/SuggestionsPanel.tsx": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "sonarjs/cognitive-complexity": 3
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/TimetableReviewPanel.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/WikiEditDiffPanel.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/components/submissionMeta.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/admin/src/pages/ModerationDashboard.tsx": {
+      "react-hooks/exhaustive-deps": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/controllers/moderation.ts": {
+      "@typescript-eslint/no-explicit-any": 33,
+      "sonarjs/cognitive-complexity": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/controllers/option-suggestion.ts": {
+      "@typescript-eslint/no-explicit-any": 12,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/controllers/staff.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/controllers/submission.ts": {
+      "@typescript-eslint/no-explicit-any": 30,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-duplicate-string": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/controllers/upload.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/services/history.ts": {
+      "@typescript-eslint/no-explicit-any": 13,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/services/moderation.ts": {
+      "@typescript-eslint/no-explicit-any": 30,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/services/notifications.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/plugins/content-moderation/server/services/staff.ts": {
+      "@typescript-eslint/no-explicit-any": 18,
+      "sonarjs/cognitive-complexity": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/services/submission-policy.ts": {
+      "@typescript-eslint/no-explicit-any": 14,
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-destructuring": 37
+    },
+    "apps/strapi/src/plugins/content-moderation/server/services/submission.ts": {
+      "@typescript-eslint/no-explicit-any": 47,
+      "sonarjs/cognitive-complexity": 5,
+      "sonarjs/no-duplicate-string": 1,
+      "sonarjs/no-nested-functions": 11,
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/article-apply.ts": {
+      "@typescript-eslint/no-explicit-any": 18,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/slow-regex": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/documents-all.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/drive-proposal.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/facility-answers.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/feed-review.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/library-photo.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/library-record.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/library-verify.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/locales.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/option-suggestions.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "sonarjs/cognitive-complexity": 4
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/params.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/publish-guard.ts": {
+      "@typescript-eslint/no-explicit-any": 12,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/record-review.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/reviewer.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/staff-library-creation.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/staff-review-hint.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/submission-summary.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/suggestion-catalogue.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/suggestion-discussions.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/suggestion-rounds.ts": {
+      "@typescript-eslint/no-explicit-any": 10
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/target-labels.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/topic-suggestion.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/upload-reservations.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/uploads.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/server/utils/wiki-body.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/strapi-admin.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/content-moderation/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/events/server/controllers/admin.ts": {
+      "@typescript-eslint/no-explicit-any": 21,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/src/plugins/events/server/controllers/events.ts": {
+      "@typescript-eslint/no-explicit-any": 26
+    },
+    "apps/strapi/src/plugins/events/server/controllers/feeds.ts": {
+      "@typescript-eslint/no-explicit-any": 18,
+      "turbo/no-undeclared-env-vars": 1,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/src/plugins/events/server/cron.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/src/plugins/events/server/services/credentials.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/src/plugins/events/server/services/feed-oauth.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "apps/strapi/src/plugins/events/server/services/feeds.ts": {
+      "@typescript-eslint/no-explicit-any": 14,
+      "unicorn/consistent-destructuring": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/events/server/utils/credential-events.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/events/server/utils/ensure-event-indexes.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/events/server/utils/feed-access.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/events/server/utils/ics.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/events/server/utils/query.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/events/strapi-admin.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/events/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/library-staff/server/controller.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/plugins/library-staff/server/drawer-controller.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/library-staff/server/drawer-service.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/plugins/library-staff/server/notices-controller.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/library-staff/server/notices-service.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "sonarjs/no-nested-functions": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/library-staff/server/service.ts": {
+      "@typescript-eslint/no-explicit-any": 11,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/plugins/library-staff/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/mobile-libraries/server/controller.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/strapi/src/plugins/mobile-libraries/server/domain.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/plugins/mobile-libraries/server/service.ts": {
+      "@typescript-eslint/no-explicit-any": 22,
+      "sonarjs/cognitive-complexity": 2,
+      "sonarjs/no-nested-functions": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/plugins/mobile-libraries/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/rewards/server/controllers/rewards.ts": {
+      "@typescript-eslint/no-explicit-any": 11
+    },
+    "apps/strapi/src/plugins/rewards/server/services/badges.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/rewards/server/services/leaderboard.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/src/plugins/rewards/server/services/points.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/plugins/rewards/server/services/snapshot.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/rewards/server/utils/contributor-number.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/plugins/rewards/server/utils/leader-lock.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/plugins/rewards/strapi-admin.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/plugins/rewards/strapi-server.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/seeds/datasets.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/seeds/legal-documents.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/seeds/mobile-facilities.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/affiliations.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/article-attribution.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/src/utils/article-browse.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/utils/article-content.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/src/utils/article-facet-ancestry.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/article-relations.ts": {
+      "@typescript-eslint/no-explicit-any": 32,
+      "sonarjs/cognitive-complexity": 4
+    },
+    "apps/strapi/src/utils/atlas-json.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/atlas-outbox.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/src/utils/atlas-read-store.ts": {
+      "@typescript-eslint/no-explicit-any": 16
+    },
+    "apps/strapi/src/utils/atlas-source.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/billing-notice.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/board.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/change-context.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/utils/change-diff.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/discussions-host.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/src/utils/drive-discussions.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/src/utils/drive-library.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/utils/email-recipients.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/entitlement-inputs.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/src/utils/erase-account.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/leader-lock.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/utils/library-access-plan-copy.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/src/utils/library-completeness.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/library-notices.ts": {
+      "@typescript-eslint/no-explicit-any": 9,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/strapi/src/utils/library-search-fields.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/library-tally.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/library-type-catalogue.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/src/utils/local-population-ingest.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/utils/meili-centroid.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/src/utils/meili-count.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/src/utils/meilisearch-search-key.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/src/utils/mobile-stop-index.ts": {
+      "@typescript-eslint/no-explicit-any": 12,
+      "sonarjs/cognitive-complexity": 1,
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "apps/strapi/src/utils/mobile-timetable.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/opening-schedule-refresh.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "apps/strapi/src/utils/paid-membership.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/population-ingest.ts": {
+      "@typescript-eslint/no-explicit-any": 12
+    },
+    "apps/strapi/src/utils/public-article-locales.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/utils/public-author-badges.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/role-grants.ts": {
+      "@typescript-eslint/no-explicit-any": 10
+    },
+    "apps/strapi/src/utils/service-secret.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/staff-lifecycle.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/src/utils/staff-notifications.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/src/utils/staff.ts": {
+      "@typescript-eslint/no-explicit-any": 10
+    },
+    "apps/strapi/src/utils/supporters.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/src/utils/team-access.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/src/utils/username.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/src/utils/weekly-community-report.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/tests/access/private-identity.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/access/teams-cover.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/access/teams-query.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/access/teams.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/app.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/article-discovery-publication.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/tests/article-facet-ancestry.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/article-privacy-worker.test.ts": {
+      "@typescript-eslint/no-explicit-any": 33,
+      "sonarjs/no-nested-functions": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/article-published-locales.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/article-publishing-security.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/article-relation-locales.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/atlas-jsonb.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/atlas-source.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/atlas-transaction.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/tests/auth-bridge-affiliation.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/tests/auth-bridge-follow.test.ts": {
+      "@typescript-eslint/no-explicit-any": 12,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/auth-bridge-sync-user.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/beta-gate.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/beta-invites.test.ts": {
+      "@typescript-eslint/no-explicit-any": 13
+    },
+    "apps/strapi/tests/blog-article-controller.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/tests/change-context.test.ts": {
+      "unicorn/consistent-function-scoping": 5
+    },
+    "apps/strapi/tests/change-records-middleware.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-destructuring": 1
+    },
+    "apps/strapi/tests/community-publishing.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "turbo/no-undeclared-env-vars": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/admin-routes.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/content-moderation/apply-failures.test.ts": {
+      "@typescript-eslint/no-explicit-any": 17,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/apply-targets.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/approve-once.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/content-moderation/approved-correction-read.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/tests/content-moderation/article-apply.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/content-moderation/article-relations.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 20,
+      "turbo/no-undeclared-env-vars": 1,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/tests/content-moderation/claim-approved-email.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/tests/content-moderation/drafts.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/content-moderation/event-feed-apply.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8,
+      "turbo/no-undeclared-env-vars": 1,
+      "unicorn/consistent-destructuring": 2
+    },
+    "apps/strapi/tests/content-moderation/facility-answers.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/tests/content-moderation/history.test.ts": {
+      "@typescript-eslint/no-explicit-any": 34,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 6,
+      "unicorn/consistent-function-scoping": 5
+    },
+    "apps/strapi/tests/content-moderation/library-photo.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/content-moderation/library-record.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/tests/content-moderation/library-sources.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/locale.test.ts": {
+      "@typescript-eslint/no-explicit-any": 13,
+      "unicorn/consistent-function-scoping": 5
+    },
+    "apps/strapi/tests/content-moderation/moderation-api.test.ts": {
+      "@typescript-eslint/no-explicit-any": 53,
+      "unicorn/consistent-function-scoping": 5
+    },
+    "apps/strapi/tests/content-moderation/notifications.test.ts": {
+      "@typescript-eslint/no-explicit-any": 14,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/option-suggestions.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/policy-wiring.test.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/strapi/tests/content-moderation/privacy-trust.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/content-moderation/public-attribution.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/tests/content-moderation/record-review.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/content-moderation/review-events.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/content-moderation/role-application.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "unicorn/consistent-function-scoping": 6
+    },
+    "apps/strapi/tests/content-moderation/staff-library-creation.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/tests/content-moderation/staff-list.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/content-moderation/stats.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/content-moderation/submission-quota.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/suggestion-rounds.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/content-moderation/topic-suggestion.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/content-moderation/upload-reservations.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 9,
+      "turbo/no-undeclared-env-vars": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/upload-reservations.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/upload-usage.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/content-moderation/withdraw.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/discussions-host.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/drive-api.test.ts": {
+      "@typescript-eslint/no-explicit-any": 35
+    },
+    "apps/strapi/tests/drive-conversations.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/drive-credits.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/drive-lifecycle.test.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "sonarjs/todo-tag": 3
+    },
+    "apps/strapi/tests/drive-mine.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/ensure-unique-indexes.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/entity-ref-lifecycle.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/erase-account.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/event-providers-registry.test.ts": {
+      "sonarjs/no-hardcoded-passwords": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/events/admin-controller.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/events/admin-routes.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/events/credential-crypto.test.ts": {
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "apps/strapi/tests/events/credential-schema.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/events/credentials.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "apps/strapi/tests/events/ensure-event-indexes.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/events/feed-oauth.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "turbo/no-undeclared-env-vars": 4
+    },
+    "apps/strapi/tests/events/feeds-controller.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/events/feeds.test.ts": {
+      "@typescript-eslint/no-explicit-any": 59,
+      "turbo/no-undeclared-env-vars": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/events/public-controller.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/events/query.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/go-live-cleanup.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/tests/helpers/atlas-fixture.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/strapi/tests/helpers/fake-strapi.ts": {
+      "@typescript-eslint/no-explicit-any": 34,
+      "sonarjs/cognitive-complexity": 2,
+      "sonarjs/no-nested-functions": 4,
+      "sonarjs/slow-regex": 1,
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/strapi/tests/ingests/directories.test.ts": {
+      "@typescript-eslint/no-explicit-any": 9
+    },
+    "apps/strapi/tests/ingests/gazetteer-core.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/ingests/gazetteer-data.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/ingests/pipeline.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/library-aggregates.test.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/tests/library-by-slug.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/tests/library-completeness.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/library-controller.test.ts": {
+      "@typescript-eslint/no-explicit-any": 9
+    },
+    "apps/strapi/tests/library-export.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/tests/library-followers.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/library-location-counts.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/library-notices.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/library-staff-drawer.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/library-type-relation.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/libraryon-mapper.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/local-population-ingest.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/location-controllers.test.ts": {
+      "@typescript-eslint/no-explicit-any": 9
+    },
+    "apps/strapi/tests/meilisearch-config.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/mobile-live-start.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/mobile-live.test.ts": {
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/tests/mobile-stop-index.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/mobile-timetable-input.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/notification-delivery.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/paid-membership.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/populate-middlewares.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/population-ingest.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/population-storage-reader.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/strapi/tests/profile-appearance.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/read-status.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/region-library-ids.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/region-slugs.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/tests/rewards/award-transaction.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/rewards/award.test.ts": {
+      "@typescript-eslint/no-explicit-any": 14,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/tests/rewards/badges.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "sonarjs/no-nested-functions": 2,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/strapi/tests/rewards/contributor-number.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/strapi/tests/rewards/controller.test.ts": {
+      "@typescript-eslint/no-explicit-any": 22,
+      "sonarjs/no-nested-functions": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/rewards/earned-pro-hold.test.ts": {
+      "@typescript-eslint/no-explicit-any": 13,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/strapi/tests/rewards/leader-lock.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/rewards/leaderboard-cache.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/rewards/leaderboard.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/rewards/schemas.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/strapi/tests/rewards/snapshot.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/role-grants.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/session-profile.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/staff-overview-health.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "apps/strapi/tests/staff-publish.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/strapi/tests/staff.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/strip-draft-status.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/strapi/tests/subscriber.test.ts": {
+      "@typescript-eslint/no-explicit-any": 8
+    },
+    "apps/strapi/tests/supporters.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/strapi/tests/user-profile-badges.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7,
+      "unicorn/consistent-function-scoping": 4
+    },
+    "apps/strapi/tests/user-profile-followed-drives.test.ts": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "apps/strapi/tests/user-profile-followers.test.ts": {
+      "@typescript-eslint/no-explicit-any": 5
+    },
+    "apps/strapi/tests/world-countries.test.ts": {
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/ui/scripts/email-smoke.mjs": {
+      "sonarjs/slow-regex": 1
+    },
+    "apps/ui/src/app/[locale]/auth/_components/__tests__/native-submit.test.ts": {
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/ui/src/app/[locale]/auth/_components/pending-email.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/community/supporters/_components/SupportersDirectory.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/index/[slug]/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/index/_components/FindLibraryFirst.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/index/_components/__tests__/FindLibraryFirst.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/knowledge/[slug]/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/knowledge/__tests__/editor-locale-param.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/knowledge/_components/KnowledgeEditorLanding.tsx": {
+      "react/jsx-handler-names": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/app/[locale]/contribute/knowledge/_components/__tests__/KnowledgeEditorLanding.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/knowledge/apply/page.tsx": {
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/ui/src/app/[locale]/contribute/knowledge/new/page.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/moderation/[documentId]/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/moderation/__tests__/moderation-pages.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/moderation/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/moderation/staff/[libraryId]/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/submissions/_components/DiscussionWork.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/submissions/_components/SubmissionsShell.tab.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "sonarjs/no-identical-functions": 1
+    },
+    "apps/ui/src/app/[locale]/contribute/submissions/_components/submissionContinue.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/live/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/[username]/_components/ContributionHeatmap.tsx": {
+      "react/no-array-index-key": 2
+    },
+    "apps/ui/src/app/[locale]/profile/[username]/_components/ProfileHero.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/[username]/_components/ProfileTabNav.tsx": {
+      "unicorn/prefer-logical-operator-over-ternary": 1
+    },
+    "apps/ui/src/app/[locale]/profile/[username]/_components/sections/BadgesSection.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/[username]/_components/sections/OverviewSection.tsx": {
+      "react/hook-use-state": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/[username]/layout.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/settings/_components/MembershipBillingSection.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/settings/_components/SettingsShell.tsx": {
+      "react/jsx-handler-names": 1
+    },
+    "apps/ui/src/app/[locale]/profile/settings/_components/SignInSecuritySection.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/profile/settings/_components/__tests__/MembershipBillingSection.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/staff/[slug]/_components/TeamManager.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/app/[locale]/staff/[slug]/_components/TrafficPreview.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/staff/team/join/[token]/_components/TeamJoin.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/atlas/changes/route.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/api/beta/access/__tests__/route.test.ts": {
+      "sonarjs/no-hardcoded-passwords": 1
+    },
+    "apps/ui/src/app/api/contribute/event-feeds/eventbrite/callback/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/drives/places/__tests__/route.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/api/drives/preview/__tests__/route.test.ts": {
+      "sonarjs/slow-regex": 1
+    },
+    "apps/ui/src/app/api/drives/preview/route.ts": {
+      "sonarjs/todo-tag": 1
+    },
+    "apps/ui/src/app/api/email/preferences/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/export/atlas/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/notifications/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/profile/me/claim-library/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/profile/me/newsletter/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/profile/me/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/api/relations/[type]/__tests__/route.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/api/relations/[type]/route.ts": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/app/api/revalidate/route.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/ui/src/app/api/search/[...path]/route.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/about/AboutGlobeExplorer.tsx": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 2
+    },
+    "apps/ui/src/components/about/AboutGlobePickingLayer.tsx": {
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/ui/src/components/about/AboutHero.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/about/__tests__/AboutExperience.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/about/__tests__/AboutGlobeExplorer.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/articles/ArticleDiscoveryFilters.tsx": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/ui/src/components/articles/ArticleReaderActions.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/components/articles/ArticleReaderActions.tsx": {
+      "react/jsx-handler-names": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/AtlasAccessAnalysis.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/AtlasAccessibilityAnalysis.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/atlas/AtlasBottomBar.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/atlas/AtlasEdgeStates.tsx": {
+      "react/jsx-handler-names": 2
+    },
+    "apps/ui/src/components/atlas/AtlasExplorer.tsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/AtlasFiltersTab.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/AtlasLayersTab.tsx": {
+      "sonarjs/cognitive-complexity": 3
+    },
+    "apps/ui/src/components/atlas/AtlasLibraryPanel.tsx": {
+      "@next/next/no-img-element": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/AtlasListView.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/AtlasMap.tsx": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 6,
+      "unicorn/consistent-destructuring": 11
+    },
+    "apps/ui/src/components/atlas/AtlasMobileSearch.tsx": {
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/ui/src/components/atlas/AtlasPerCapita.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/atlas/AtlasSearchTab.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/atlas/AtlasStopPanel.tsx": {
+      "react/hook-use-state": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/__tests__/AtlasExplorer.provider.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 6,
+      "react-hooks/exhaustive-deps": 1
+    },
+    "apps/ui/src/components/atlas/__tests__/atlas-data-client.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/ui/src/components/atlas/__tests__/atlas-scalable-renderer.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/ui/src/components/atlas/atlas-access-analysis.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/atlas/atlas-per-capita-renderer.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-destructuring": 2
+    },
+    "apps/ui/src/components/atlas/atlas-scalable-renderer.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/atlas-ui.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/atlas/atlas.logic.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "sonarjs/cognitive-complexity": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/billing/CheckoutFlow.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/billing/CheckoutFlow.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/blog/ArticleBodyBlocks.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/blog/BlogArticlePage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/blog/journalLanding.helpers.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/community/SuggestOptionForm.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/community/SuggestionConversation.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/community/__tests__/SuggestionConversation.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/ui/src/components/contact/ContactModal.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/continent/ContinentDetailPage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/contribute/ContributionWizard.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/contribute/LibraryPicker.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/contribute/RoleApplicationForm.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/ui/src/components/contribute/article-editor/ArticleEditorShell.tsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "react/jsx-handler-names": 1,
+      "sonarjs/cognitive-complexity": 4,
+      "sonarjs/no-nested-functions": 1,
+      "unicorn/consistent-destructuring": 7,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/contribute/article-editor/ArticleSidebar.tsx": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 2
+    },
+    "apps/ui/src/components/contribute/article-editor/__tests__/ArticleEditor.image.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/components/contribute/article-editor/__tests__/ArticleEditorShell.locale.test.ts": {
+      "unicorn/consistent-function-scoping": 3
+    },
+    "apps/ui/src/components/contribute/article-editor/__tests__/ArticleReadiness.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/components/contribute/article-editor/articleBlocks.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/ui/src/components/contribute/article-editor/articleBlocks.ts": {
+      "sonarjs/cognitive-complexity": 4
+    },
+    "apps/ui/src/components/contribute/article-editor/articleDraft.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/contribute/correction.logic.ts": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/contribute/wizard.logic.ts": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/country/CountryDetailPage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/AttachedDiscussion.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionComposer.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionFeed.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/ui/src/components/discussions/DiscussionFeed.tsx": {
+      "react-hooks/exhaustive-deps": 2,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionFeedItem.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionPresentation.tsx": {
+      "@next/next/no-img-element": 2,
+      "react/no-array-index-key": 2
+    },
+    "apps/ui/src/components/discussions/DiscussionRecordCard.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionThread.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionThreadSidebar.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/discussions/DiscussionsBoard.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/docs/DocsArticlePage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/docs/DocsPage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveBoardActions.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveBuilder.tsx": {
+      "react/hook-use-state": 1,
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/drives/DriveBuilderRail.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveCard.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveDates.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveTaskList.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveTaskPanel.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/drives/DriveTaskRow.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/DriveTitle.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/drives/PlaceSearch.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/drives/__tests__/DriveCard.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/drives/__tests__/DriveProgressSummary.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/drives/__tests__/builder.logic.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/drives/builder.logic.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/ds/Badge.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/ds/DiffCard.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/ds/Drawer.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/ds/EditorialSection.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/ds/FilterPanel.tsx": {
+      "react/jsx-handler-names": 2
+    },
+    "apps/ui/src/components/ds/IndexPager.tsx": {
+      "react/no-array-index-key": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/ds/LocationContributeCTA.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/ds/MetaRow.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/ds/PageHero.tsx": {
+      "react/no-array-index-key": 2,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/editorial/EditorialDrawer.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/event-feeds/ConnectFeedForm.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/event-feeds/FeedRow.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/event-feeds/__tests__/feed-copy.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/components/events/EventTimeline.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/events/EventsPageClient.tsx": {
+      "react/hook-use-state": 1
+    },
+    "apps/ui/src/components/global/GlobalLoggedUserMenu.tsx": {
+      "@next/next/no-img-element": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/global/GlobalMobileMenu.tsx": {
+      "react-hooks/exhaustive-deps": 1
+    },
+    "apps/ui/src/components/global/NavigationProgress.tsx": {
+      "react-hooks/exhaustive-deps": 2
+    },
+    "apps/ui/src/components/global/__tests__/GlobalNavbarAuthSection.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "apps/ui/src/components/home/KnowledgeGlobeCanvas.tsx": {
+      "react-hooks/exhaustive-deps": 2,
+      "react/hook-use-state": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/index-page/FindControls.tsx": {
+      "react/jsx-handler-names": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/index-page/FindFilterSidebar.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/index-page/FindLibraryPage.tsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/index-page/find-helpers.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library-editor/ImageUploadEditor.tsx": {
+      "@next/next/no-img-element": 1
+    },
+    "apps/ui/src/components/library-editor/IndexRecordWizard.tsx": {
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-destructuring": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library-editor/LocationLookup.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library-editor/LocationPinMap.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library-editor/OpeningScheduleOverrides.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/no-nested-functions": 3
+    },
+    "apps/ui/src/components/library-editor/SocialLinksEditor.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/library-editor/SourceRecordsEditor.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/library-editor/StaffPublishControls.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library-editor/StepLocation.tsx": {
+      "react/hook-use-state": 1,
+      "react/jsx-handler-names": 3,
+      "unicorn/consistent-destructuring": 5
+    },
+    "apps/ui/src/components/library-editor/__tests__/LocationLookup.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library-editor/__tests__/LocationPinMap.test.ts": {
+      "sonarjs/no-identical-functions": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library-index/types.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryAdditionalDetails.tsx": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/slow-regex": 2
+    },
+    "apps/ui/src/components/library/LibraryArea.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryChangeTimeline.tsx": {
+      "react/no-array-index-key": 2,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 5
+    },
+    "apps/ui/src/components/library/LibraryDetailPage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryEvents.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryFacilityAnswers.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/library/LibraryFeaturedContribution.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryHero.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryHeroMap.tsx": {
+      "react/hook-use-state": 1,
+      "sonarjs/no-nested-functions": 1
+    },
+    "apps/ui/src/components/library/LibraryHeroMedia.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/library/LibraryHoursTable.tsx": {
+      "react/no-array-index-key": 3,
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/ui/src/components/library/LibraryReachTeaser.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/library/LibrarySections.tsx": {
+      "react/no-array-index-key": 5,
+      "sonarjs/cognitive-complexity": 4,
+      "sonarjs/slow-regex": 1
+    },
+    "apps/ui/src/components/library/StrapiBlocksContent.tsx": {
+      "react/no-array-index-key": 5
+    },
+    "apps/ui/src/components/library/__tests__/LibraryChangeTimeline.test.ts": {
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/ui/src/components/library/__tests__/LibraryVisitSection.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/library/__tests__/library-notices-effects.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/components/location/LocationChildBrowser.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/location/LocationContributionBanner.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/location/LocationHeroMap.tsx": {
+      "react/hook-use-state": 1,
+      "sonarjs/no-nested-functions": 6
+    },
+    "apps/ui/src/components/location/PlaceContributionCard.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/location/PlaceInsights.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/location/location-page.helpers.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/mobile/HomeLibraryPicker.tsx": {
+      "sonarjs/redundant-type-aliases": 1
+    },
+    "apps/ui/src/components/mobile/MobileHeroFacts.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/mobile/MobilePlaceStops.tsx": {
+      "react-hooks/exhaustive-deps": 1
+    },
+    "apps/ui/src/components/mobile/MobileRouteMap.tsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 7
+    },
+    "apps/ui/src/components/mobile/StopsTimesSection.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/mobile/TimetableEditor.tsx": {
+      "react/no-array-index-key": 5,
+      "sonarjs/cognitive-complexity": 3,
+      "sonarjs/no-nested-functions": 2
+    },
+    "apps/ui/src/components/mobile/live-copy.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/mobile/live/ConsolePreview.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/mobile/live/GoLiveToday.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/mobile/live/LiveConsole.tsx": {
+      "react/hook-use-state": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/mobile/live/LiveConsoleScreens.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/mobile/live/__tests__/ConsolePreview.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/moderation/ArticleReviewPanel.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/moderation/ClaimPanel.tsx": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/moderation/DriveProposalPanel.tsx": {
+      "react/no-array-index-key": 4,
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-destructuring": 5
+    },
+    "apps/ui/src/components/moderation/ModerationQueue.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/moderation/RecordChangesTable.tsx": {
+      "react/no-array-index-key": 1
+    },
+    "apps/ui/src/components/moderation/ReviewDecisionForm.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/moderation/RoleApplicationPanel.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/moderation/__tests__/EventFeedPanel.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/components/moderation/__tests__/ModerationQueue.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/notifications/NotificationInbox.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/notifications/__tests__/NotificationInbox.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/ui/src/components/notifications/__tests__/NotificationProvider.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/ui/src/components/profile-form/ProfileSections.tsx": {
+      "react/jsx-handler-names": 7
+    },
+    "apps/ui/src/components/providers/__tests__/CookieConsent.test.tsx": {
+      "unicorn/no-document-cookie": 4
+    },
+    "apps/ui/src/components/region/RegionDetailPage.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/region/RegionLibraryIndex.tsx": {
+      "react-hooks/exhaustive-deps": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/components/settings/__tests__/CountryCombobox.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/staff/LibraryNoticeForm.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/staff/StaffDrawer.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/staff/StaffNotices.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/staff/TeamApiPanels.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/components/staff/TeamOrganiser.tsx": {
+      "sonarjs/cognitive-complexity": 2,
+      "sonarjs/no-nested-functions": 2
+    },
+    "apps/ui/src/components/staff/YourTeamCard.tsx": {
+      "react/hook-use-state": 1
+    },
+    "apps/ui/src/env.mjs": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/ui/src/hooks/useMounted.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/about-globe-server.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/analytics-clicks.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/atlas-export.test.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "apps/ui/src/lib/__tests__/atlas-library-access.test.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/__tests__/atlas-query.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "turbo/no-undeclared-env-vars": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/auth-proof.test.ts": {
+      "sonarjs/no-hardcoded-passwords": 2
+    },
+    "apps/ui/src/lib/__tests__/discussions-proxy.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/event-feed-proxy.test.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/ui/src/lib/__tests__/moderation-proxy.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/owned-upload-adapters.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/__tests__/rate-limit.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/article-filter-state.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/article-helpers.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/atlas-backend.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "apps/ui/src/lib/atlas-export.ts": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/lib/atlas-query.ts": {
+      "@typescript-eslint/no-explicit-any": 10,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/lib/auth.ts": {
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "apps/ui/src/lib/beta/__tests__/access.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/billing/checkout.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/billing/events.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/billing/plan-change.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/billing/plan-schedule.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/billing/projection.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/community/suggestions.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/discussions-proxy.ts": {
+      "sonarjs/cognitive-complexity": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/drives/drive-board-server.ts": {
+      "sonarjs/cognitive-complexity": 2,
+      "sonarjs/todo-tag": 1
+    },
+    "apps/ui/src/lib/drives/drive-progress.ts": {
+      "sonarjs/todo-tag": 1
+    },
+    "apps/ui/src/lib/event-feed-proxy.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/find-search.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/geocode/photon.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/ui/src/lib/iso-continent.ts": {
+      "sonarjs/no-duplicate-string": 2
+    },
+    "apps/ui/src/lib/meilisearch.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-destructuring": 1
+    },
+    "apps/ui/src/lib/mobile-live/proxy.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/mobile-stop-search.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/mobile/calendar.ts": {
+      "unicorn/consistent-destructuring": 9,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/mobile/route-itineraries.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/proxies/__tests__/mobile-app-proxy.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/proxies/__tests__/staffPathname.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/lib/seo/json-ld.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/seo/metadata.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/slow-regex": 5,
+      "unicorn/consistent-destructuring": 4
+    },
+    "apps/ui/src/lib/sitemap/entries.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/staff-proxy.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "apps/ui/src/lib/strapi-api/content/library-area.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/strapi-api/content/server.ts": {
+      "@typescript-eslint/no-explicit-any": 21
+    },
+    "apps/ui/src/lib/subscriptions.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/lib/team-api/__tests__/database.integration.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/lib/team-api/billing.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/proxy.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/eslint-config/src/configs/sonarjs.js": {
+      "sonarjs/no-hardcoded-passwords": 1
+    },
+    "packages/shared-data/article-browse.ts": {
+      "sonarjs/cognitive-complexity": 2
+    },
+    "packages/shared-data/atlas/contracts.ts": {
+      "sonarjs/redundant-type-aliases": 1
+    },
+    "packages/shared-data/atlas/filters.ts": {
+      "sonarjs/cognitive-complexity": 3,
+      "unicorn/consistent-destructuring": 13
+    },
+    "packages/shared-data/atlas/hours.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/shared-data/atlas/local-boundaries.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/shared-data/atlas/projection.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "packages/shared-data/atlas/requests.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/shared-data/content-safety.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/shared-data/drives.ts": {
+      "sonarjs/cognitive-complexity": 3
+    },
+    "packages/shared-data/email.ts": {
+      "unicorn/consistent-destructuring": 2
+    },
+    "packages/shared-data/event-providers.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/shared-data/local-population.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "packages/shared-data/mobile-timetable/import.ts": {
+      "sonarjs/cognitive-complexity": 2,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "packages/shared-data/mobile-timetable/live-state.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "unicorn/consistent-destructuring": 1
+    },
+    "packages/shared-data/mobile-timetable/validate.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/shared-data/moderation-presentation.ts": {
+      "sonarjs/cognitive-complexity": 4,
+      "unicorn/consistent-function-scoping": 2
+    },
+    "packages/shared-data/opening-schedule.ts": {
+      "sonarjs/cognitive-complexity": 1,
+      "sonarjs/no-nested-functions": 1,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "packages/shared-data/population.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "packages/shared-data/tests/opening-schedule.test.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "packages/strapi-plugin-discussions/admin/Review.tsx": {
+      "@typescript-eslint/no-explicit-any": 6
+    },
+    "packages/strapi-plugin-discussions/examples/plugins-custom-identity.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "packages/strapi-plugin-discussions/examples/plugins-users-permissions.ts": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "packages/strapi-plugin-discussions/server/config.ts": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/strapi-plugin-discussions/server/content-types.ts": {
+      "@typescript-eslint/no-explicit-any": 2
+    },
+    "packages/strapi-plugin-discussions/server/context-links.ts": {
+      "@typescript-eslint/no-explicit-any": 32,
+      "sonarjs/cognitive-complexity": 4,
+      "sonarjs/no-duplicate-string": 1
+    },
+    "packages/strapi-plugin-discussions/server/contracts.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "packages/strapi-plugin-discussions/server/controllers.ts": {
+      "@typescript-eslint/no-explicit-any": 25
+    },
+    "packages/strapi-plugin-discussions/server/identity.ts": {
+      "@typescript-eslint/no-explicit-any": 4,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/strapi-plugin-discussions/server/index.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "packages/strapi-plugin-discussions/server/media.ts": {
+      "@typescript-eslint/no-explicit-any": 4
+    },
+    "packages/strapi-plugin-discussions/server/permissions.ts": {
+      "@typescript-eslint/no-explicit-any": 8,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/strapi-plugin-discussions/server/service.ts": {
+      "@typescript-eslint/no-explicit-any": 119,
+      "sonarjs/cognitive-complexity": 8,
+      "sonarjs/no-nested-functions": 1,
+      "unicorn/consistent-function-scoping": 3
+    },
+    "packages/strapi-plugin-discussions/server/upload-admission.ts": {
+      "@typescript-eslint/no-explicit-any": 3,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "packages/strapi-plugin-discussions/server/validation.ts": {
+      "@typescript-eslint/no-explicit-any": 3
+    },
+    "packages/strapi-plugin-discussions/strapi-admin.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "packages/strapi-plugin-discussions/tests/acceptance.cjs": {
+      "no-console": 1,
+      "turbo/no-undeclared-env-vars": 4
+    },
+    "packages/strapi-plugin-discussions/tests/context-links.test.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "packages/strapi-plugin-discussions/tests/discussions.test.ts": {
+      "@typescript-eslint/no-explicit-any": 14
+    },
+    "packages/strapi-plugin-discussions/tests/enhancements.test.ts": {
+      "@typescript-eslint/no-explicit-any": 23,
+      "sonarjs/no-nested-functions": 1
+    },
+    "packages/strapi-plugin-discussions/tests/harness.ts": {
+      "@typescript-eslint/no-explicit-any": 23,
+      "sonarjs/no-nested-functions": 2,
+      "unicorn/consistent-function-scoping": 1
+    },
+    "packages/strapi-plugin-discussions/types/index.d.ts": {
+      "@typescript-eslint/no-explicit-any": 7
+    },
+    "qa/tests/playwright/axe/axe-test.ts": {
+      "import-x/no-unresolved": 1,
+      "sonarjs/cognitive-complexity": 1
+    },
+    "qa/tests/playwright/e2e/access/event-feeds.spec.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "qa/tests/playwright/e2e/access/moderation.spec.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "qa/tests/playwright/e2e/access/propose-drive.spec.ts": {
+      "sonarjs/slow-regex": 3,
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "qa/tests/playwright/e2e/access/role-application.spec.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "qa/tests/playwright/e2e/access/role-matrix.spec.ts": {
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "qa/tests/playwright/e2e/beta.spec.ts": {
+      "turbo/no-undeclared-env-vars": 4
+    },
+    "qa/tests/playwright/helpers/access-fixtures.ts": {
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "qa/tests/playwright/helpers/auth-db.ts": {
+      "turbo/no-undeclared-env-vars": 1
+    },
+    "qa/tests/playwright/helpers/seed-access-fixtures.ts": {
+      "no-console": 8,
+      "sonarjs/cognitive-complexity": 1,
+      "turbo/no-undeclared-env-vars": 5
+    },
+    "qa/tests/playwright/helpers/strapi-access-writer.cjs": {
+      "sonarjs/cognitive-complexity": 2,
+      "turbo/no-undeclared-env-vars": 2
+    },
+    "qa/tests/playwright/seo/seo.spec.ts": {
+      "import-x/no-unresolved": 1
+    }
+  }
+}

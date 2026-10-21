@@ -1,13 +1,15 @@
 import { Icon } from "@iconify/react"
 import type { Metadata } from "next"
+import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import {
   MembershipRecognition,
   PlanStatusBanner,
 } from "@/app/[locale]/contribute/_components/membership/PlanStatusBanner"
+import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
-import { staffLibrariesOf } from "@/lib/access-server"
+import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { billingConfig } from "@/lib/billing/config"
 import { hasManagedMembership } from "@/lib/billing/current-membership"
@@ -28,26 +30,26 @@ import { ProFreeRoutes } from "../_components/membership/ProFreeRoutes"
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: Locale }>
 }): Promise<Metadata> {
   const { locale } = await params
 
+  const m = await getUiTranslations({
+    locale,
+    namespace: "membershipContent.copy",
+  })
+
   return buildMetadata({
-    title: "Plans and Pro",
-    description:
-      "Library facts are free, always. Membership keeps the index running; Pro and Team add Library access population comparisons and other analysis tools. See the plans and the ways to get Pro free.",
+    title: m("metaTitle"),
+    description: m("metaDescription"),
     path: "contribute/membership",
     locale,
   })
 }
 
-const PROMISES = [
-  "No ads, ever",
-  "Money never buys trust",
-  "Open data stays open",
-]
-
 export default async function MembershipPage() {
+  const m = await getUiTranslations("membershipContent.copy")
+  const PROMISES = [m("promiseAds"), m("promiseTrust"), m("promiseData")]
   const tUi = await getUiTranslations("ui")
 
   const session = await getContributionSession()
@@ -63,11 +65,11 @@ export default async function MembershipPage() {
       : false
 
   return (
-    <main style={{ background: T.bg.void, color: T.ink.base }}>
+    <MainContent style={{ background: T.bg.void, color: T.ink.base }}>
       <ContributeSectionHeader
         section={tUi("membership")}
-        title="Plans and *Pro*"
-        lead="Libraries Global is free to use. Optional memberships support open library data and add history, export and analysis tools."
+        title={m("title")}
+        lead={m("lead")}
       >
         <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
           {PROMISES.map((text) => (
@@ -100,6 +102,7 @@ export default async function MembershipPage() {
             isStaff={isStaff}
           />
           <MembershipPlans
+            teams={sessionTeamsOf(user)}
             currentPlan={currentPlan}
             billingAvailable={billingConfig().enabled}
             supporterApproved={billingConfig().supporterApproved}
@@ -129,6 +132,6 @@ export default async function MembershipPage() {
         <ProFaq />
         <MembershipPolicies />
       </Container>
-    </main>
+    </MainContent>
   )
 }

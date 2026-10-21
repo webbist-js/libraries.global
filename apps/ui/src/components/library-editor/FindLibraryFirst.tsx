@@ -158,6 +158,172 @@ function RecordRow({
   )
 }
 
+function searchStatus(
+  loading: boolean,
+  failed: boolean,
+  hasSearched: boolean,
+  count: number
+) {
+  const status = loading
+    ? "Searching…"
+    : failed
+      ? "Search is unavailable. Try again before adding a record."
+      : hasSearched
+        ? `${count} matching librar${count === 1 ? "y" : "ies"}`
+        : "Type 2 or more letters to search"
+
+  return status
+}
+
+function SearchResultsHeader({
+  claiming,
+  hasSearched,
+  loading,
+  failed,
+  status,
+}: {
+  claiming: boolean
+  hasSearched: boolean
+  loading: boolean
+  failed: boolean
+  status: string
+}) {
+  const tUi = useUiTranslations("ui")
+
+  return (
+    <div
+      className={cn(
+        "mt-5 mb-4 flex flex-wrap items-baseline gap-2",
+        claiming && !hasSearched && !loading && !failed
+          ? "justify-start"
+          : "justify-between"
+      )}
+    >
+      {!claiming || hasSearched || loading || failed ? (
+        <h3 className="m-0 text-[16px] font-semibold">
+          {hasSearched
+            ? tUi("results")
+            : claiming
+              ? "Your library"
+              : "Records that need help"}
+        </h3>
+      ) : null}
+      <p
+        id="index-status"
+        role="status"
+        className="m-0 text-[14px] text-(--t-ink-dim)"
+      >
+        {status}
+      </p>
+    </div>
+  )
+}
+
+type SearchResultProps = {
+  results: readonly LibrarySearchHit[]
+  claiming: boolean
+  onChooseLibrary?: (library: LibrarySearchHit) => void
+}
+function FoundLibraryResults({
+  results,
+  claiming,
+  onChooseLibrary,
+}: SearchResultProps) {
+  const tClaim = useUiTranslations("libraryClaim")
+  if (!results.length)
+    return (
+      <Notice icon="mdi:magnify" tone="info" title="No matching library found">
+        <p className="m-0">
+          Try another name or spelling before adding a new record.
+        </p>
+      </Notice>
+    )
+
+  return (
+    <ul className="m-0 flex list-none flex-col gap-3 p-0">
+      {results.map((hit) => (
+        <RecordRow
+          key={hit.id}
+          name={hit.name}
+          meta={[
+            hit.libraryType ? `${hit.libraryType} library` : null,
+            [hit.city, hit.country_name].filter(Boolean).join(", "),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          libraryType={hit.libraryType}
+          gaps={[]}
+          slug={hit.slug}
+          pageHref={
+            claiming
+              ? `/contribute/claim?librarySlug=${encodeURIComponent(hit.slug)}&libraryName=${encodeURIComponent(hit.name)}&libraryDocumentId=${encodeURIComponent(hit.documentId)}&libraryEntityRef=${encodeURIComponent(hit.entityRef ?? "")}`
+              : undefined
+          }
+          onClaim={
+            claiming && onChooseLibrary ? () => onChooseLibrary(hit) : undefined
+          }
+          claimLabel={tClaim("claimThis")}
+        />
+      ))}
+    </ul>
+  )
+}
+
+function LibrarySearchResults({
+  results,
+  claiming,
+  onChooseLibrary,
+  hasSearched,
+  loading,
+  failed,
+  needsHelp,
+}: SearchResultProps & {
+  hasSearched: boolean
+  loading: boolean
+  failed: boolean
+  needsHelp: readonly RecordNeedingHelp[]
+}) {
+  if (hasSearched)
+    return (
+      <FoundLibraryResults
+        results={results}
+        claiming={claiming}
+        onChooseLibrary={onChooseLibrary}
+      />
+    )
+  if (loading || failed || claiming) return null
+  if (!needsHelp.length)
+    return (
+      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        No suggested records are available right now. Search for a library to
+        improve.
+      </p>
+    )
+
+  return (
+    <ul className="m-0 flex list-none flex-col gap-3 p-0">
+      {needsHelp.map((record) => (
+        <RecordRow
+          key={record.documentId}
+          name={record.name}
+          meta={[
+            record.libraryType ? `${record.libraryType} library` : null,
+            record.place,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          libraryType={record.libraryType}
+          gaps={record.missing
+            .map((key) => GAP_LABELS[key])
+            .filter((label): label is string => !!label)
+            .slice(0, 3)}
+          slug={record.slug}
+        />
+      ))}
+    </ul>
+  )
+}
+
 /**
  * The Index editor's front door: search the index, improve a record that's
  * there, or add a new library when it isn't. Shows a handful of published
@@ -245,13 +411,7 @@ export function FindLibraryFirst({
     }
   }, [query, locale, attempt])
   const canAdd = query.trim().length >= 2 && hasSearched && !failed && !loading
-  const status = loading
-    ? "Searching…"
-    : failed
-      ? "Search is unavailable. Try again before adding a record."
-      : hasSearched
-        ? `${results.length} matching librar${results.length === 1 ? "y" : "ies"}`
-        : "Type 2 or more letters to search"
+  const status = searchStatus(loading, failed, hasSearched, results.length)
 
   return (
     <div>
@@ -291,31 +451,13 @@ export function FindLibraryFirst({
           }}
         />
       </div>
-      <div
-        className={cn(
-          "mt-5 mb-4 flex flex-wrap items-baseline gap-2",
-          claiming && !hasSearched && !loading && !failed
-            ? "justify-start"
-            : "justify-between"
-        )}
-      >
-        {!claiming || hasSearched || loading || failed ? (
-          <h3 className="m-0 text-[16px] font-semibold">
-            {hasSearched
-              ? tUi("results")
-              : claiming
-                ? "Your library"
-                : "Records that need help"}
-          </h3>
-        ) : null}
-        <p
-          id="index-status"
-          role="status"
-          className="m-0 text-[14px] text-(--t-ink-dim)"
-        >
-          {status}
-        </p>
-      </div>
+      <SearchResultsHeader
+        claiming={claiming}
+        hasSearched={hasSearched}
+        loading={loading}
+        failed={failed}
+        status={status}
+      />
       {failed && (
         <div role="alert" className="mb-5">
           <Notice
@@ -343,74 +485,15 @@ export function FindLibraryFirst({
         </div>
       )}
 
-      {hasSearched ? (
-        results.length > 0 ? (
-          <ul className="m-0 flex list-none flex-col gap-3 p-0">
-            {results.map((hit) => (
-              <RecordRow
-                key={hit.id}
-                name={hit.name}
-                meta={[
-                  hit.libraryType ? `${hit.libraryType} library` : null,
-                  [hit.city, hit.country_name].filter(Boolean).join(", "),
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-                libraryType={hit.libraryType}
-                gaps={[]}
-                slug={hit.slug}
-                pageHref={
-                  claiming
-                    ? `/contribute/claim?librarySlug=${encodeURIComponent(hit.slug)}&libraryName=${encodeURIComponent(hit.name)}&libraryDocumentId=${encodeURIComponent(hit.documentId)}&libraryEntityRef=${encodeURIComponent(hit.entityRef ?? "")}`
-                    : undefined
-                }
-                onClaim={
-                  claiming && onChooseLibrary
-                    ? () => onChooseLibrary(hit)
-                    : undefined
-                }
-                claimLabel={tClaim("claimThis")}
-              />
-            ))}
-          </ul>
-        ) : (
-          <Notice
-            icon="mdi:magnify"
-            tone="info"
-            title="No matching library found"
-          >
-            <p className="m-0">
-              Try another name or spelling before adding a new record.
-            </p>
-          </Notice>
-        )
-      ) : loading || failed || claiming ? null : needsHelp.length > 0 ? (
-        <ul className="m-0 flex list-none flex-col gap-3 p-0">
-          {needsHelp.map((record) => (
-            <RecordRow
-              key={record.documentId}
-              name={record.name}
-              meta={[
-                record.libraryType ? `${record.libraryType} library` : null,
-                record.place,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-              libraryType={record.libraryType}
-              gaps={record.missing
-                .map((key) => GAP_LABELS[key])
-                .filter((label): label is string => !!label)
-                .slice(0, 3)}
-              slug={record.slug}
-            />
-          ))}
-        </ul>
-      ) : (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-          No suggested records are available right now. Search for a library to
-          improve.
-        </p>
-      )}
+      <LibrarySearchResults
+        results={results}
+        claiming={claiming}
+        onChooseLibrary={onChooseLibrary}
+        hasSearched={hasSearched}
+        loading={loading}
+        failed={failed}
+        needsHelp={needsHelp}
+      />
 
       {/* Not listed? */}
       <div

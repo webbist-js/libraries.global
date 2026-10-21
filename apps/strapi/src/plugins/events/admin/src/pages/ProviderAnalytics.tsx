@@ -10,6 +10,7 @@ import {
   Tr,
   Typography,
 } from "@strapi/design-system"
+import { useFetchClient } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
 
 interface CredentialRow {
@@ -25,21 +26,35 @@ interface CredentialRow {
 }
 
 export function ProviderAnalytics() {
+  const { get } = useFetchClient()
   const [rows, setRows] = useState<CredentialRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [revision, setRevision] = useState(0)
 
   useEffect(() => {
-    fetch("/api/events/admin/credentials", {
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    })
-      .then((r) => r.json())
-      .then((res: CredentialRow[]) => {
-        setRows(Array.isArray(res) ? res : [])
-        setLoading(false)
+    let current = true
+    // Reset the external request state when its identity changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+    setError(false)
+    get("/events/admin/credentials")
+      .then(({ data }) => {
+        if (!Array.isArray(data))
+          throw new Error("Invalid credentials response")
+        if (current) setRows(data as CredentialRow[])
       })
-      .catch(() => setLoading(false))
-  }, [])
+      .catch(() => {
+        if (current) setError(true)
+      })
+      .finally(() => {
+        if (current) setLoading(false)
+      })
+
+    return () => {
+      current = false
+    }
+  }, [get, revision])
 
   function syncStatusColor(
     row: CredentialRow
@@ -62,16 +77,31 @@ export function ProviderAnalytics() {
   }
 
   return (
-    <Box padding={8} background="neutral100">
+    <Box style={{ overflowX: "auto" }}>
       <Flex justifyContent="space-between" alignItems="center" marginBottom={6}>
-        <Typography variant="alpha">Event Credentials</Typography>
-        <Button variant="default" onClick={() => window.location.reload()}>
+        <Typography tag="h2" variant="delta">
+          Provider analytics
+        </Typography>
+        <Button
+          variant="default"
+          onClick={() => setRevision((value) => value + 1)}
+          disabled={loading}
+        >
           Refresh
         </Button>
       </Flex>
 
-      {loading ? (
+      {error ? (
+        <Typography role="alert" textColor="danger600">
+          Couldn’t load provider analytics. Try Refresh.
+        </Typography>
+      ) : loading ? (
         <Typography>Loading…</Typography>
+      ) : rows.length === 0 ? (
+        <Typography textColor="neutral600">
+          No event credentials yet. Add a feed in Credentials to start syncing
+          events.
+        </Typography>
       ) : (
         <Table colCount={5} rowCount={rows.length}>
           <Thead>

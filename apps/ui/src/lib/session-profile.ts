@@ -41,6 +41,7 @@ export type SessionProfileTeam = {
   expiresAt: string | null
   status: "active" | "lapsed"
   organiserName: string | null
+  selfService?: boolean
 }
 export const SESSION_PROFILE_MAX_TEAMS = 10
 
@@ -107,6 +108,7 @@ const Body = z.object({
         expiresAt: z.string().nullable(),
         status: z.enum(["active", "lapsed"]),
         organiserName: z.string().nullable().optional(),
+        selfService: z.boolean().optional(),
       })
     )
     .max(SESSION_PROFILE_MAX_TEAMS)

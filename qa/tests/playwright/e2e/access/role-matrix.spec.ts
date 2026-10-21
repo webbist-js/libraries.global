@@ -197,7 +197,10 @@ const contexts = new Map<string, APIRequestContext>()
 async function signedIn(baseURL: string, key: string) {
   const cached = contexts.get(key)
   if (cached) return cached
-  const api = await request.newContext({ baseURL })
+  const api = await request.newContext({
+    baseURL,
+    extraHTTPHeaders: { Origin: new URL(baseURL).origin },
+  })
   const res = await signIn(api, baseURL, key)
   if (!res.ok()) {
     await api.dispose()
@@ -213,27 +216,53 @@ test.afterAll(async () => {
   contexts.clear()
 })
 
-// The export probe needs one real library. The atlas feed is a GeoJSON
-// FeatureCollection whose features carry the library's documentId as
-// properties.id, which is what the export takes. Read once per worker.
-let atlasLibraryId: string | undefined
-
-async function oneAtlasLibraryId(api: APIRequestContext): Promise<string> {
-  if (atlasLibraryId) return atlasLibraryId
+// Scope the current Atlas export API to one synthetic library's coordinates.
+// This tests actual exported rows, not just the plan gate or a header-only file.
+let exportScope: Record<string, unknown> | undefined
+async function exportBody(api: APIRequestContext) {
+  if (exportScope) return exportScope
   const res = await api.get("/api/public-proxy/api/libraries/atlas")
   expect(res.status()).toBe(200)
   const feed = (await res.json()) as {
-    features?: { properties?: { id?: unknown } }[]
+    features?: { geometry?: { coordinates?: number[] } }[]
   }
-  const id = feed.features?.[0]?.properties?.id
-  if (typeof id !== "string" || !/^[a-z0-9]{20,32}$/.test(id))
-    throw new Error("The atlas feed has no library documentId to export")
-  atlasLibraryId = id
+  const coordinates = feed.features?.[0]?.geometry?.coordinates
+  if (
+    !coordinates ||
+    coordinates.length !== 2 ||
+    !coordinates.every(Number.isFinite)
+  )
+    throw new Error("The synthetic atlas feed needs a located library")
+  const [lng, lat] = coordinates
+  exportScope = {
+    schemaVersion: 1,
+    format: "csv",
+    sort: "name",
+    centre: { lat, lng },
+    scope: {
+      bbox: {
+        west: lng - 0.00001,
+        east: lng + 0.00001,
+        south: lat - 0.00001,
+        north: lat + 0.00001,
+      },
+      filters: {
+        types: [],
+        opening: "any",
+        atDay: 6,
+        atMinutes: 720,
+        operators: [],
+        facilities: [],
+        events: false,
+        catalogue: false,
+        founded: null,
+      },
+      accessibility: { enabled: false, selected: [], view: "matches" },
+    },
+  }
 
-  return id
+  return exportScope
 }
-
-const exportBody = (ids: string[]) => ({ format: "csv", ids })
 
 /**
  * The records of an RFC 4180 CSV. Each ends with CRLF, except a CRLF inside
@@ -260,7 +289,10 @@ test.describe("access role matrix (API)", () => {
   test("anonymous: no session, gated routes refuse with 401", async ({
     baseURL,
   }) => {
-    const api = await request.newContext({ baseURL })
+    const api = await request.newContext({
+      baseURL,
+      extraHTTPHeaders: { Origin: new URL(baseURL).origin },
+    })
     try {
       const s = await (await api.get("/api/auth/get-session")).json()
       expect(s?.user ?? null).toBeNull()
@@ -271,7 +303,7 @@ test.describe("access role matrix (API)", () => {
         401
       )
       const exported = await api.post("/api/export/atlas", {
-        data: exportBody([await oneAtlasLibraryId(api)]),
+        data: await exportBody(api),
       })
       expect(exported.status()).toBe(401)
     } finally {
@@ -402,7 +434,7 @@ test.describe("access plan matrix (API)", () => {
       expect(user.limits.exportRows).toBe(row.exportRows)
 
       const res = await api.post("/api/export/atlas", {
-        data: exportBody([await oneAtlasLibraryId(api)]),
+        data: await exportBody(api),
       })
       if (row.canExport) {
         expect(res.status()).toBe(200)

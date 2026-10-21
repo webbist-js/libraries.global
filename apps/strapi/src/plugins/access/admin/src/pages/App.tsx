@@ -1,4 +1,4 @@
-import { Page, useRBAC } from "@strapi/strapi/admin"
+import { Page, useAuth, useRBAC } from "@strapi/strapi/admin"
 import { Navigate, Route, Routes } from "react-router-dom"
 
 import { PeoplePage } from "./PeoplePage"
@@ -19,7 +19,19 @@ const PERMISSIONS = [
  * beside it, each behind its own permission.
  */
 export function App() {
-  const { allowedActions, isLoading } = useRBAC(PERMISSIONS)
+  const loading = useAuth("Access", (state) => state.isLoading)
+  const permissions = useAuth("Access", (state) => state.permissions)
+  const user = useAuth("Access", (state) => state.user)
+  // Strapi 5's useRBAC does not recheck an unchanged permission list after
+  // auth finishes. Mount it only when ready and remount on permission changes.
+  if (loading) return <Page.Loading />
+
+  return <ReadyApp key={`${user?.id}:${JSON.stringify(permissions)}`} />
+}
+
+function ReadyApp() {
+  const { allowedActions, isLoading, error } = useRBAC(PERMISSIONS)
+  if (error) return <Page.Error />
   const allowed: Record<AccessSection, boolean> = {
     people: !!allowedActions.canManageRoles,
     teams: !!allowedActions.canManageTeams,

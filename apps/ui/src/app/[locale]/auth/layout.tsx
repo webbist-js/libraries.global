@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { MainContent } from "@/components/ds/MainContent"
 import { T } from "@/lib/design-tokens"
 
 export const metadata: Metadata = {
@@ -16,11 +17,11 @@ export default async function AuthLayout({
   setRequestLocale(locale)
 
   return (
-    <div
+    <MainContent
       className="relative isolate flex min-h-screen w-full"
       style={{ background: T.bg.space, color: T.ink.base }}
     >
       {children}
-    </div>
+    </MainContent>
   )
 }

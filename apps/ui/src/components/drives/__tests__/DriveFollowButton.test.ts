@@ -144,7 +144,63 @@ describe("DriveFollowButton", () => {
         .getAttribute("aria-pressed")
     ).toBe("false")
     expect(screen.getByRole("status").textContent).toBe(
-      "Couldn’t update your follow. Try again."
+      "Your follow preference could not be saved. Please try again."
     )
   })
+})
+
+it.each(["unavailable", "network", "invalid"])(
+  "keeps an unknown follow status recoverable after a %s lookup",
+  async (failure) => {
+    fetchMock.mockImplementationOnce(() =>
+      failure === "network"
+        ? Promise.reject(new Error("offline"))
+        : Promise.resolve(
+            failure === "invalid"
+              ? Response.json({})
+              : new Response("", { status: 503 })
+          )
+    )
+    fetchMock.mockResolvedValue(Response.json({ following: true }))
+    renderButton()
+    const retry = await screen.findByRole("button", { name: "Try again" })
+    expect(retry.getAttribute("aria-pressed")).toBeNull()
+    expect(screen.getByRole("status").textContent).toContain(
+      "Follow status could not be loaded"
+    )
+    fireEvent.click(retry)
+    await screen.findByRole("button", { name: "Following" })
+    expect(
+      fetchMock.mock.calls.every(([, init]) => init?.method !== "POST")
+    ).toBe(true)
+  }
+)
+it("ignores a delayed lookup after changing accounts", async () => {
+  let resolve!: (response: Response) => void
+  fetchMock
+    .mockImplementationOnce(
+      () =>
+        new Promise<Response>((done) => {
+          resolve = done
+        })
+    )
+    .mockResolvedValue(Response.json({ following: true }))
+  const view = renderButton()
+  session.value = { data: { user: { id: "u2" } }, isPending: false }
+  view.rerender(
+    createElement(DriveFollowButton, {
+      driveDocumentId: DRIVE_ID,
+      driveSlug: "ohio-hours",
+      driveTitle: "Ohio hours",
+    })
+  )
+  await screen.findByRole("button", { name: "Following" })
+  await act(async () => {
+    resolve(Response.json({ following: false }))
+  })
+  expect(
+    screen
+      .getByRole("button", { name: "Following" })
+      .getAttribute("aria-pressed")
+  ).toBe("true")
 })

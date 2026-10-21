@@ -1,3 +1,5 @@
+import { eventTimeSlot } from "@repo/shared-data"
+
 import type { EventSearchHit } from "@/lib/meilisearch"
 
 // ── v2 type tints — [bg, fg] pairs aligned with the library-type tint system ──
@@ -69,12 +71,7 @@ export const TIME_SLOT_LABEL: Record<TimeSlot, string> = {
 }
 
 export function timeSlotOf(hit: EventSearchHit): TimeSlot {
-  if (hit.allDay) return "allday"
-  const hour = new Date(hit.startTime).getHours()
-  if (hour < 12) return "morning"
-  if (hour < 18) return "afternoon"
-
-  return "evening"
+  return eventTimeSlot(hit)
 }
 
 /** The upcoming weekend (through Sunday 23:59). If today is Sat/Sun, that's this weekend. */
@@ -126,8 +123,13 @@ export function matchesSearch(hit: EventSearchHit, query: string): boolean {
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 
-export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-GB", {
+export function formatTime(
+  iso: string,
+  locale = "en-GB",
+  timeZone?: string
+): string {
+  return new Date(iso).toLocaleTimeString(locale, {
+    timeZone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -135,9 +137,13 @@ export function formatTime(iso: string): string {
 }
 
 /** "Tomorrow, Saturday 26 September" / "Today, …" / "Tuesday 29 September" */
-export function agendaGroupLabel(dateKey: string, now: Date): string {
+export function agendaGroupLabel(
+  dateKey: string,
+  now: Date,
+  locale = "en-GB"
+): string {
   const date = new Date(`${dateKey}T12:00:00`)
-  const long = date.toLocaleDateString("en-GB", {
+  const long = date.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -147,8 +153,13 @@ export function agendaGroupLabel(dateKey: string, now: Date): string {
   const that = new Date(date)
   that.setHours(0, 0, 0, 0)
   const diffDays = Math.round((that.getTime() - today.getTime()) / 86_400_000)
-  if (diffDays === 0) return `Today, ${long}`
-  if (diffDays === 1) return `Tomorrow, ${long}`
+  if (diffDays === 0 || diffDays === 1) {
+    const relative = new Intl.RelativeTimeFormat(locale, {
+      numeric: "auto",
+    }).format(diffDays, "day")
+
+    return `${relative[0]!.toLocaleUpperCase(locale)}${relative.slice(1)}, ${long}`
+  }
 
   return long
 }

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -76,10 +77,11 @@ function UserRow({ user }: { user: FollowedUser }) {
 // ── FollowedUsersGrid ─────────────────────────────────────────────────────────
 
 export function FollowedUsersGrid({ users }: { users: FollowedUser[] }) {
+  const t = useTranslations("ui")
   if (users.length === 0) {
     return (
       <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
-        Following other contributors is coming soon.
+        {t("not_following_contributors")}
       </p>
     )
   }

@@ -4,6 +4,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { builderStateFromDrive } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
+import { MainContent } from "@/components/ds/MainContent"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { T } from "@/lib/design-tokens"
 import {
@@ -65,7 +66,7 @@ export default async function EditDrivePage({ params }: { params: Params }) {
           title={`Edit *${title}*`}
           lead="Changes show on the drive’s page and the Noticeboard as soon as they’re saved."
         />
-        <main className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
+        <MainContent className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
           <DriveBuilder
             initial={initial}
             locale={locale}
@@ -75,7 +76,7 @@ export default async function EditDrivePage({ params }: { params: Params }) {
               status: drive.status,
             }}
           />
-        </main>
+        </MainContent>
       </div>
     </AccountGuard>
   )

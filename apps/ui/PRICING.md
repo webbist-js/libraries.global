@@ -12,7 +12,7 @@ The agreed catalogue is in `src/lib/membership-pricing.json`. Static plan cards,
 | Public-library-service Team | £480/year; additional seats £96/year  | Excluding VAT; 20% discount on Team items only                    |
 | Team API add-on             | £15/month, billed separately          | Tax-inclusive base GBP                                            |
 
-Team is an annual enquiry/invoice offer. There is no self-service Team checkout or automatic Stripe-to-Team seat fulfilment. After confirming the invoice, an administrator creates or renews the Team, its covered libraries and seats. Verification is assessed separately. Existing agreed Team contracts keep their quoted terms; these prices apply to new quotes. API subscriptions have their own Team customer binding and never buy staff authority.
+New Teams use self-service annual Stripe subscriptions when enabled. `/staff/team/new` creates an inactive Team; settled payment activates its seats and the purchaser becomes its Organiser. The subscription uses one £120 annual seat item with a five-seat minimum, or £96 after public-library-service eligibility is confirmed separately. Organisers manage renewal, seat quantities and invoices online. Existing agreed invoice Teams keep their quoted terms and are not converted automatically. Verification is assessed separately. API subscriptions have their own Team customer binding and never buy staff authority. See [Team billing](TEAM-BILLING.md).
 
 ## Stripe catalogue
 
@@ -31,11 +31,12 @@ For a Team invoice, use one base item plus the number of additional seats. Six s
 
 ## Code and content to release together
 
-- Ship the static pricing JSON/plan copy and consent version 1.1. Existing personal paid snapshots and their original Price IDs remain valid.
+- Ship the static pricing JSON/plan copy, Team consent version 1.2 and the existing personal/API offer consent version 1.1. Existing personal paid snapshots and their original Price IDs remain valid.
 - Ship the complete Team API UI, machine routes, private CMS access-plugin routes and billing-worker accounting from `TEAM-API.md`. UI and CMS must agree on the bridge routes.
-- Apply `billing:migrate` to the application/auth PostgreSQL database. It adds the Team API tables without changing Strapi content schemas.
+- Ship the self-service Team flow and worker from `TEAM-BILLING.md`, build the Access plugin and generate Strapi types. The CMS Team schema includes private payment bindings and projections.
+- Apply `billing:migrate` to the application/auth PostgreSQL database. It installs the personal, Team API and Team seat billing tables transactionally.
 - Configure the matching-mode API Price and portal IDs from the prepared catalogue. Keep runtime credentials private and preserve separate sandbox/live bindings.
-- Publish terms version 1.1 and the matching Knowledge copy. [Content operations](../strapi/CONTENT-OPERATIONS.md) documents production and local targets.
+- Publish terms version 1.2 and the matching Knowledge copy before enabling Team seat purchases. Preserve historical revisions and accepted offer versions. [Content operations](../strapi/CONTENT-OPERATIONS.md) documents production and local targets.
 - Complete the owned sandbox purchase, key lifecycle, usage, limits and cancellation checks before live activation. Production Knowledge guides distinguish Stripe Test mode from live purchases and record temporary checkout restrictions.
 - Prepare personal live portals/webhooks through the existing billing runbook after its acceptance requirements are met. Preparing the pricing catalogue does not satisfy settlement or Managed Payments activation checks.
 - Promote the accepted UI/CMS/worker release using the deployment runbook, then update the production API availability copy when purchases are enabled.

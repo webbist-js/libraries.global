@@ -38,6 +38,26 @@ function bridgeErrorEvent() {
 }
 
 describe("scrubSentryEvent", () => {
+  it("scrubs query strings, breadcrumbs, spans and nested credential values", () => {
+    const canary = "CANARY_CREDENTIAL_SHOULD_NEVER_LEAVE_CMS"
+    const event = {
+      request: {
+        url: `https://example.org/callback?code=${canary}`,
+        query_string: `code=${canary}`,
+        headers: { "x-custom-secret": canary },
+      },
+      breadcrumbs: [
+        { data: { from: `/callback?code=${canary}`, arguments: [canary] } },
+      ],
+      spans: [{ data: { "url.full": `https://example.org/?token=${canary}` } }],
+      extra: { nested: [{ credentials: { apiKey: canary } }] },
+    }
+    const result = scrubSentryEvent(event)
+    expect(JSON.stringify(result)).not.toContain(canary)
+    expect(result.request.url).toBe("https://example.org/callback")
+    expect(result.request).not.toHaveProperty("query_string")
+    expect(result.request.headers).toEqual({})
+  })
   it("removes secret, auth and identity headers regardless of case", () => {
     const out = scrubSentryEvent(bridgeErrorEvent())
     const headerKeys = Object.keys(out.request!.headers!).map((k) =>

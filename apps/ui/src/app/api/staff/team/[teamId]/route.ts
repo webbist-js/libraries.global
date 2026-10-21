@@ -21,3 +21,22 @@ export async function GET(
     bodyKeys: [],
   })
 }
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ teamId: string }> }
+) {
+  const { teamId } = await params
+  if (!isDocumentIdParam(teamId))
+    return Response.json({ error: "Not found" }, { status: 404 })
+
+  return proxyStaff(req, {
+    base: "access",
+    path: `teams/${teamId}`,
+    libraryDocumentId: null,
+    action: null,
+    method: "PUT",
+    limiter: "write",
+    bodyKeys: ["name", "libraryDocumentIds"],
+  })
+}

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { AccountGuard } from "@/components/auth/AccountGuard"
+import { MainContent } from "@/components/ds/MainContent"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
@@ -193,9 +194,9 @@ export default async function ProfileLayout({
               />
             }
           />
-          <main className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
+          <MainContent className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
             {children}
-          </main>
+          </MainContent>
         </div>
       </AccountGuard>
     </>

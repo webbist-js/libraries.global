@@ -38,7 +38,9 @@ type IndexConfig = {
     fields?: unknown
     populate?: Record<string, PopulateNode>
     locale?: string
+    status?: string
   }
+  filterEntry?: (args: { entry: Record<string, unknown> }) => boolean
   transformEntry?: (args: {
     entry: Record<string, unknown>
   }) => Record<string, unknown>
@@ -311,7 +313,7 @@ const FIXTURES: Record<IndexName, Record<string, unknown>> = {
     priceMin: null,
     priceMax: null,
     capacity: 40,
-    status: "scheduled",
+    status: "upcoming",
     pendingReview: false,
     importedAt: "2026-09-01T00:00:00.000Z",
     lastSeenAt: "2026-09-02T00:00:00.000Z",
@@ -742,4 +744,29 @@ describe("scripts/seed-meilisearch.ts", () => {
 
 it("does not expose a separate population index", () => {
   expect(meili).not.toHaveProperty("population-observation")
+})
+
+it("never puts pending review events in the public search projection", () => {
+  expect(meili.event.filterEntry!({ entry: { pendingReview: true } })).toBe(
+    false
+  )
+  expect(meili.event.filterEntry!({ entry: {} })).toBe(false)
+  expect(
+    meili.event.filterEntry!({
+      entry: { pendingReview: false, status: "upcoming" },
+    })
+  ).toBe(true)
+})
+
+it("handles a non-draft/publish event model with an explicit public-status filter", () => {
+  expect(meili.event.entriesQuery?.status).toBe("draft")
+  for (const status of ["cancelled", "postponed", undefined])
+    expect(
+      meili.event.filterEntry!({ entry: { pendingReview: false, status } })
+    ).toBe(false)
+  expect(
+    meili.event.filterEntry!({
+      entry: { pendingReview: false, status: "ongoing" },
+    })
+  ).toBe(true)
 })

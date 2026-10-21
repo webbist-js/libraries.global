@@ -8,6 +8,14 @@ const route = (method: string, path: string, action: string) => ({
 })
 
 export default [
+  ...["create", "context", "sync", "deletionCheck", "discard"].map(
+    (action) => ({
+      method: "POST",
+      path: `/billing/${action}`,
+      handler: `team-billing.${action}`,
+      config: { auth: false },
+    })
+  ),
   {
     method: "GET",
     path: "/api/teams/:id/status",
@@ -27,9 +35,11 @@ export default [
     config: { auth: false },
   },
   route("GET", "/teams/mine", "mine"),
+  route("GET", "/team-libraries", "libraries"),
   route("GET", "/teams/join/:token", "preview"),
   route("POST", "/teams/join/:token/accept", "accept"),
   route("GET", "/teams/:id", "detail"),
+  route("PUT", "/teams/:id", "configure"),
   route("POST", "/teams/:id/invites", "invite"),
   route("POST", "/teams/:id/invites/:memberId/resend", "resendInvite"),
   route("DELETE", "/teams/:id/invites/:memberId", "revokeInvite"),

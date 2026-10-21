@@ -229,7 +229,11 @@ export function EventModal() {
               className="mt-auto flex flex-wrap items-center gap-3 border-t pt-5"
               style={{ borderColor: T.border.line }}
             >
-              <SaveEventButton documentId={event.documentId} size="sm" />
+              <SaveEventButton
+                key={event.documentId}
+                documentId={event.documentId}
+                size="sm"
+              />
 
               {linkUrl && (
                 <a

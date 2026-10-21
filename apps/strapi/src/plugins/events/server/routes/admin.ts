@@ -15,6 +15,12 @@ const can = (action: EventsAdminAction) => [
 export default [
   {
     method: "GET",
+    path: "/admin/libraries",
+    handler: "admin.searchLibraries",
+    config: { policies: can("manage-credentials") },
+  },
+  {
+    method: "GET",
     path: "/admin/credentials",
     handler: "admin.listCredentials",
     config: { policies: can("read") },
@@ -80,7 +86,7 @@ export default [
     config: { policies: can("read") },
   },
   {
-    method: "PATCH",
+    method: "PUT",
     path: "/admin/pending-review/:documentId",
     handler: "admin.reviewEvent",
     config: { policies: can("review") },

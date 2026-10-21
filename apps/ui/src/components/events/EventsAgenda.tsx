@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 
 import {
   agendaGroupLabel,
@@ -11,7 +11,10 @@ import {
   libraryPathOf,
   providerLabel,
 } from "@/components/events/event-display"
-import { EVENT_TYPE_META } from "@/components/events/EventTypeChip"
+import {
+  EVENT_TYPE_META,
+  eventTypeKey,
+} from "@/components/events/EventTypeChip"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { EventSearchHit } from "@/lib/meilisearch"
@@ -41,8 +44,10 @@ function Chip({
 
 function AgendaRow({ event }: { readonly event: EventSearchHit }) {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("eventListing")
+  const locale = useLocale()
 
-  const meta = EVENT_TYPE_META[event.eventType] ?? EVENT_TYPE_META.other!
+  const meta = EVENT_TYPE_META[eventTypeKey(event.eventType)]
   const tint = eventTypeTint(event.eventType)
   const libraryPath = libraryPathOf(event)
 
@@ -53,7 +58,9 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
         className="w-[52px] shrink-0 pt-0.5 text-[14px] font-semibold tabular-nums"
         style={{ color: T.ink.base }}
       >
-        {event.allDay ? "All day" : formatTime(event.startTime)}
+        {event.allDay
+          ? t("allday")
+          : formatTime(event.startTime, locale, event.timezone)}
       </span>
 
       {/* Type icon */}
@@ -100,17 +107,10 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
         ) : null}
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           <Chip bg={tint.bg} fg={tint.fg}>
-            {meta.label}
+            {t(`types.${eventTypeKey(event.eventType)}`)}
           </Chip>
           <Chip bg="var(--t-bg-muted)" fg="var(--t-ink-dim)">
-            {event.isFree
-              ? tUi("free")
-              : event.priceMin != null
-                ? `£${event.priceMin}`
-                : "See website"}
-          </Chip>
-          <Chip bg="var(--t-bg-muted)" fg="var(--t-ink-dim)">
-            In person
+            {event.isFree ? tUi("free") : t("seeWebsite")}
           </Chip>
         </div>
       </div>
@@ -120,7 +120,12 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
         className="hidden shrink-0 pt-0.5 text-[13px] sm:block"
         style={{ color: T.ink.low }}
       >
-        via {providerLabel(event.sourceProvider)}
+        {t("via", {
+          provider:
+            providerLabel(event.sourceProvider) === "Library calendar"
+              ? t("libraryCalendar")
+              : providerLabel(event.sourceProvider),
+        })}
       </span>
     </li>
   )
@@ -140,6 +145,7 @@ export function EventsAgenda({
   readonly onReset?: () => void
 }) {
   const t = useUiTranslations("eventListing")
+  const locale = useLocale()
   if (loading) {
     return (
       <div aria-busy="true" className="flex flex-col gap-3">
@@ -177,17 +183,13 @@ export function EventsAgenda({
             color: T.ink.base,
           }}
         >
-          {totalUnfiltered === 0
-            ? t("emptyTitle")
-            : "No events match these filters"}
+          {totalUnfiltered === 0 ? t("emptyTitle") : t("noMatches")}
         </h3>
         <p
           className="mx-auto mt-2 mb-0 max-w-[48ch] text-[16px]"
           style={{ color: T.ink.dim }}
         >
-          {totalUnfiltered === 0
-            ? t("emptyLead")
-            : "Try widening the date range or clearing a filter."}
+          {totalUnfiltered === 0 ? t("emptyLead") : t("widen")}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {totalUnfiltered === 0 ? (
@@ -225,7 +227,10 @@ export function EventsAgenda({
   return (
     <div className="flex flex-col gap-6">
       {groups.map((group) => (
-        <section key={group.key} aria-label={agendaGroupLabel(group.key, now)}>
+        <section
+          key={group.key}
+          aria-label={agendaGroupLabel(group.key, now, locale)}
+        >
           <h3
             className="m-0 mb-2.5 text-[22px]"
             style={{
@@ -234,7 +239,7 @@ export function EventsAgenda({
               color: T.ink.base,
             }}
           >
-            {agendaGroupLabel(group.key, now)}
+            {agendaGroupLabel(group.key, now, locale)}
           </h3>
           <ul
             className="m-0 list-none divide-y divide-(--t-divider) rounded-[18px] border p-0"

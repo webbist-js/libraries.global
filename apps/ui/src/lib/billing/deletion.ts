@@ -2,6 +2,8 @@ import "server-only"
 
 import type { Pool } from "pg"
 
+import { guardTeamBillingDeletion } from "@/lib/team-billing/manage"
+
 import { BillingError, billingConfig } from "./config"
 import { withBillingLock } from "./database"
 import { billingStripe } from "./provider"
@@ -10,6 +12,7 @@ import { billingStripe } from "./provider"
 export async function stopBillingBeforeDeletion(pool: Pool, userId: string) {
   try {
     await withBillingLock(pool, `user:${userId}`, async (client) => {
+      await guardTeamBillingDeletion(pool, userId)
       const accounts = await client.query<{
         customer_id: string | null
         erased_at: Date | null
@@ -73,6 +76,14 @@ export async function stopBillingBeforeDeletion(pool: Pool, userId: string) {
     })
   } catch (error) {
     if ((error as { code?: string }).code === "42P01") return // Billing has never been deployed.
+    if (
+      error instanceof BillingError &&
+      [
+        "transfer_team_before_deletion",
+        "team_signup_needs_reconciliation",
+      ].includes(error.code)
+    )
+      throw error
     throw new BillingError("cancel_membership_before_deletion", 503)
   }
 }

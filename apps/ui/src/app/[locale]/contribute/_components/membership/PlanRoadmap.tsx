@@ -4,16 +4,19 @@ import { Icon } from "@iconify/react"
 import { useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
-import type { PlanCard, PlanCardKey } from "@/lib/plans"
+import { useMembershipContent } from "@/lib/localized-plans"
+import type { PlanCard } from "@/lib/plans"
 
 import { includeLabel } from "./PlanBits"
 
-const ROADMAP_SUMMARY: Partial<Record<PlanCardKey, string>> = {
-  pro: "Analysis layers, reach tools, library watching and side-by-side comparison.",
-  team: "Traffic reports, a shared workspace, bulk updates, an embeddable finder and higher API allowances.",
-}
-
 export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
+  const m = useMembershipContent()
+  const summary =
+    plan.key === "pro"
+      ? m("copy.roadmapPro")
+      : plan.key === "team"
+        ? m("copy.roadmapTeam")
+        : null
   const [open, setOpen] = useState(false)
   const listId = useId()
   const soon = plan.includes.filter((item) => item.kind === "soon")
@@ -33,7 +36,7 @@ export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
           width={16}
         />
         <p className="m-0 flex-1 text-[14px] font-semibold">
-          On the roadmap{" "}
+          {m("copy.roadmap")}{" "}
           <span className="font-medium" style={{ color: T.ink.dim }}>
             {soon.length}
           </span>
@@ -41,21 +44,24 @@ export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
         <button
           aria-controls={listId}
           aria-expanded={open}
-          aria-label={`Show ${open ? "less" : "all"} ${plan.name} roadmap features`}
+          aria-label={m("copy.roadmapLabel", {
+            expanded: open ? "yes" : "no",
+            plan: plan.name,
+          })}
           className="min-h-11 text-[13.5px] font-semibold underline underline-offset-[3px] focus-visible:outline-2 focus-visible:outline-offset-2"
           onClick={() => setOpen((value) => !value)}
           style={{ color: T.accent.primary }}
           type="button"
         >
-          {open ? "Show less" : "Show all"}
+          {open ? m("copy.showLess") : m("copy.showAll")}
         </button>
       </div>
-      {ROADMAP_SUMMARY[plan.key] ? (
+      {summary ? (
         <p
           className="m-0 mt-1.5 text-[13.5px] leading-[1.5]"
           style={{ color: T.ink.dim }}
         >
-          {ROADMAP_SUMMARY[plan.key]}
+          {summary}
         </p>
       ) : null}
       <ul
