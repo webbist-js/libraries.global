@@ -41,6 +41,10 @@ jobs:
           cp apps/strapi/.env.example apps/strapi/.env
           cp apps/ui/.env.local.example apps/ui/.env.local
 
+      # Workspace exports point to dist files; clean runners have no local dev artifacts.
+      - name: Build workspace libraries
+        run: pnpm exec turbo run build --filter='./packages/*' --concurrency=1
+
       - name: Run linter
         run: pnpm lint:ratchet
 
