@@ -92,6 +92,48 @@ const copy = {
   },
 }
 
+// The staff UI no longer displays illustrative traffic numbers.
+const trafficCopy = [
+  {
+    before: [
+      " will show who visits your page and what they searched for. It is coming soon; until then it shows sample numbers, labelled as such, including for Team members.",
+      " will provide aggregate visits and public-page actions from visitors who accept analytics. It will not reveal visitor identities or raw search text. Library-specific Staff reporting is still being built; until it is connected, clearly labelled sample figures remain visible, including for Team members.",
+    ],
+    after:
+      " will provide aggregate visits and public-page actions from visitors who accept analytics. It will not reveal visitor identities or raw search text. Library-specific reporting is not connected yet: the Staff area shows a coming-soon notice, without traffic figures, including for Team members.",
+  },
+  {
+    before: [
+      " Cette section indiquera qui consulte votre page et ce qu'ils ont recherché. Elle sera bientôt disponible ; en attendant, elle affiche des chiffres à titre d'exemple (signalés comme tels), y compris pour les membres de l'équipe.",
+      " présentera des visites et des actions agrégées sur les pages publiques, pour les visiteurs qui acceptent l’analytique. Il ne révélera ni leur identité ni le texte de leurs recherches. Les rapports propres à chaque bibliothèque sont encore en cours de développement ; en attendant leur connexion, des chiffres clairement signalés comme exemples restent affichés, y compris pour les membres Team.",
+    ],
+    after:
+      " présentera des visites et des actions agrégées sur les pages publiques, pour les visiteurs qui acceptent l’analytique. Il ne révélera ni leur identité ni le texte de leurs recherches. Les rapports propres à chaque bibliothèque ne sont pas encore connectés : l’espace Personnel affiche un avis de disponibilité prochaine, sans chiffres de fréquentation, y compris pour les membres Team.",
+  },
+  {
+    before: [
+      " Zobrazí, kdo navštěvuje vaši stránku a co hledal. Tato funkce se připravuje; do té doby se zobrazují ukázková čísla (patřičně označená), a to i pro členy týmu.",
+      " bude zobrazovat souhrnné návštěvy a akce na veřejné stránce od návštěvníků, kteří přijali analytiku. Neodhalí totožnost návštěvníků ani text jejich vyhledávání. Přehled pro jednotlivé knihovny se stále připravuje; do jeho zapojení se i členům Team zobrazují zřetelně označené ukázkové údaje.",
+    ],
+    after:
+      " bude zobrazovat souhrnné návštěvy a akce na veřejné stránce od návštěvníků, kteří přijali analytiku. Neodhalí totožnost návštěvníků ani text jejich vyhledávání. Přehled pro jednotlivé knihovny zatím není zapojen: sekce pro zaměstnance zobrazuje oznámení o připravované funkci, bez údajů o návštěvnosti, a to i členům Team.",
+  },
+  {
+    before: [
+      "Přehledy provozu budou k dispozici brzy; do té doby se zobrazují ukázková data.",
+    ],
+    after:
+      "Přehledy návštěvnosti se připravují. Dokud nebudou zapojeny, nezobrazují se žádná čísla, a to ani členům Team.",
+  },
+]
+const correctTrafficText = (value) => {
+  for (const entry of trafficCopy)
+    for (const before of entry.before)
+      value = value.replace(before, entry.after)
+
+  return value
+}
+
 const mapText = (value, replace) => {
   if (Array.isArray(value)) return value.map((item) => mapText(item, replace))
   if (!value || typeof value !== "object") return value
@@ -124,13 +166,16 @@ export function teamServiceGuideBody(doc, locale) {
     "teams-for-library-services",
     "plans-and-pro",
     "staff-area",
+    "plans-and-staff-access",
     "deleting-your-account",
   ])
   if (!affected.has(doc.slug)) return null
   let body = mapText(doc.body ?? [], (value) =>
-    value.replace(
-      "Team is quoted separately.",
-      "Team has a separate annual subscription; its Organisers manage it from the Team workspace."
+    correctTrafficText(
+      value.replace(
+        "Team is quoted separately.",
+        "Team has a separate annual subscription; its Organisers manage it from the Team workspace."
+      )
     )
   )
   if (doc.slug === "teams-for-library-services") {
