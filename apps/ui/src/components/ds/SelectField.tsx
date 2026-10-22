@@ -100,7 +100,8 @@ export function SelectField({
         collisionPadding={pill ? 16 : undefined}
         className={cn(
           "rounded-xl border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base)",
-          pill && [DROPDOWN_PANEL, DROPDOWN_SELECT_POSITION, "w-[240px] p-1"]
+          pill && [DROPDOWN_PANEL, DROPDOWN_SELECT_POSITION, "w-[240px] p-1"],
+          "z-[100]"
         )}
       >
         {options.map((option) => (

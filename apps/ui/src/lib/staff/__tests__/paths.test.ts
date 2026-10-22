@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest"
 
-import { isStaffSlugParam, staffLibraryHref } from "../paths"
+import { isStaffSlugParam, staffLibraryHref, teamWorkspaceHref } from "../paths"
 
 describe("staff URLs", () => {
+  it("retains the locale and billing continuation without a Team selector", () => {
+    const query = { team: "legacy", payment: "updated", seats: "10" }
+    expect(teamWorkspaceHref("/billing", "fr", query)).toBe(
+      "/fr/staff/teams/billing?payment=updated&seats=10"
+    )
+    expect(teamWorkspaceHref("", "en")).toBe("/staff/teams")
+  })
   it("uses and encodes the library's slug, with deep links intact", () => {
     expect(staffLibraryHref("central-library", "/edit?step=hours")).toBe(
       "/staff/central-library/edit?step=hours"

@@ -267,7 +267,7 @@ describe("TeamManager with Team cover", () => {
     ).toBeTruthy()
     expect(
       screen.getByRole("link", { name: "Team organiser" }).getAttribute("href")
-    ).toBe("/staff/team")
+    ).toBe("/staff/teams")
     fireEvent.click(screen.getByRole("button", { name: "Send invite" }))
     await waitFor(() =>
       expect(mocks.request).toHaveBeenCalledWith(

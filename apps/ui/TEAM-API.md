@@ -1,12 +1,12 @@
 # Team API add-on
 
-The add-on belongs to a Team, separately from personal memberships and Team Seats. Team Organisers buy and manage it at `/staff/team/api?team=DOCUMENT_ID`; members can inspect usage. Payment never grants staff authority or access to personal or protected data.
+The add-on belongs to a Team, separately from personal memberships and Team Seats. Team Organisers buy and manage it at `/staff/teams/api`; members can inspect usage. Payment never grants staff authority or access to personal or protected data.
 
 Create a new Team through the [self-service annual Team flow](TEAM-BILLING.md) when enabled. Team Checkout activates seats after payment confirmation; it does not purchase the separate API add-on. Existing invoice Teams retain their agreed terms.
 
 ## Price and allowances
 
-The proposed monthly price is £15, tax-inclusive in the base GBP catalogue. The actual displayed and charged price comes from the configured Stripe Price. The default offer includes 100,000 successful requests, 10 GiB of uncompressed response data, 60 attempts per minute shared across the Team, five concurrent requests and five active keys. Each response is capped at 256 KiB and lists at 100 records. There are no automatic overage charges.
+The proposed monthly price is £15, tax-inclusive in the base GBP catalogue. The actual displayed and charged price comes from the configured Stripe Price. The default offer includes 100,000 successful requests, 10 GiB of uncompressed response data, 60 attempts per minute shared across the Team, five concurrent requests and unlimited API keys. Each response is capped at 256 KiB and lists at 100 records. The 100,000 requests and 10 GiB are one monthly pool for the whole Team, across every key and application, rather than allowances per key, person or seat. Adding or regenerating keys never increases or resets the pool. There are no automatic overage charges.
 
 At 100,000 requests per month, average API demand is about 0.039 requests/second. A sizing assumption of 50 ms of total CPU work per request would consume about 1.39 CPU-hours per month; this is not a measured benchmark. £15 is a starting commercial estimate. Monitor latency, database size, retained usage history and peak capacity before raising allowances. The operator's hosting costs and capacity records are private.
 
@@ -57,3 +57,9 @@ Team API customers, attempts and subscription projections are separate from pers
 5. Keep the existing authenticated minute billing timer running. Confirm an actual owned sandbox checkout, settlement, cancellation and Portal recovery before live activation. A successful fixture test does not confirm a provider payment or its eligibility.
 
 `pnpm --filter @repo/ui billing:db:test` runs personal, Team API and Team seat concurrency/settlement tests sequentially in generated local schemas and removes them afterward; it refuses remote databases. Unit and component coverage is under `src/lib/team-api`, `src/components/staff/__tests__/TeamApiDashboard.test.tsx` and `apps/strapi/tests/access/api-data.test.ts`.
+
+## API credentials and planned resources
+
+Key count is unlimited. Purchase snapshots created before this change may contain a numeric `limits.keys`; the server upgrades that field to `null` on read without changing stored payment evidence or usage limits. Key creation and regeneration retain the shared server-side mutation rate limiter. Key management lists 50 rows per page, returns the total active count separately and never truncates access to older keys. Usage, rate and concurrency limits are enforced per Team across keys and instances.
+
+“Coming soon” in the dashboard describes proposals, not callable routes or included subscription features. The proposed GET resources are Library opening hours for a date/time zone, public Events filtered by place and date, a cursor-based feed of published Library changes/removals, and stable facility/service filter metadata with translations. See `src/lib/team-api/roadmap.ts`. Public data, bounded pagination and separate read scopes must be defined before any endpoint is enabled; no delivery date is promised.

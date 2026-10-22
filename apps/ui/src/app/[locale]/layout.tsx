@@ -11,6 +11,7 @@ import {
 } from "next-intl/server"
 
 import { BetaFeedback } from "@/components/beta/BetaFeedback"
+import { BetaWelcomeMount } from "@/components/beta/BetaWelcomeMount"
 import { ContactModalProvider } from "@/components/contact/ContactModalProvider"
 import { StickyPageLayout } from "@/components/ds/StickyPageLayout"
 import { EditorialDrawerMount } from "@/components/editorial/EditorialDrawerMount"
@@ -189,7 +190,12 @@ export default async function RootLayout({
                 {!liveConsole && <StaffDrawerMount />}
                 {!liveConsole && <EditorialDrawerMount />}
                 {betaEnabled() && !liveConsole && (
-                  <BetaFeedback label={tUi("feedback")} />
+                  <>
+                    <BetaFeedback label={tUi("feedback")} />
+                    <BetaWelcomeMount
+                      sandbox={process.env.BILLING_ENV !== "live"}
+                    />
+                  </>
                 )}
               </EventModalProvider>
             </ClientProviders>

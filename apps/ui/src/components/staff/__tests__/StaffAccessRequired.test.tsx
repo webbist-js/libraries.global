@@ -103,7 +103,7 @@ describe("staff access page", () => {
         .getByRole("link", { name: "View your submissions" })
         .getAttribute("href")
     ).toBe("/contribute/submissions")
-    expect(document.querySelector('a[href^="/staff/team"]')).toBeNull()
+    expect(document.querySelector('a[href^="/staff/teams"]')).toBeNull()
     expect(
       screen
         .getByRole("link", { name: "Start your claim" })

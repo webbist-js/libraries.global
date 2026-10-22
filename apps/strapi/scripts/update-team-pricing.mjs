@@ -87,7 +87,7 @@ for (const doc of legal) {
   if (doc.status === "modified")
     throw new Error(`Unpublished edits need review: ${doc.slug}`)
   before.push({ type: "legal-document", locale: "en", doc })
-  const version = doc.slug === "terms" ? "1.1" : "1.2"
+  const version = doc.slug === "terms" ? "1.1" : "1.3"
   plans.push({
     type: "legal-document",
     locale: "en",
@@ -106,7 +106,7 @@ for (const doc of legal) {
         ),
         {
           version,
-          date: "2026-10-21",
+          date: "2026-10-22",
           changesUrl: null,
           summary:
             doc.slug === "terms"
@@ -114,8 +114,8 @@ for (const doc of legal) {
               : doc.slug === "privacy"
                 ? "Documented organisation-owned Team subscriptions, seat and consent records and financial retention."
                 : doc.slug === "cancellation-refunds"
-                  ? "Documented self-service Team renewal, seat changes, account transfer and separate API cancellation."
-                  : "Added self-service annual Team subscriptions, payment-confirmed seats and renewal management. Team verification and personal founding prices are unchanged.",
+                  ? "Updated the Team billing workspace link. Cancellation rights and pricing remain unchanged."
+                  : "Clarified one Team per account, unlimited API keys and the shared Team API allowance. Annual pricing, verification and historical purchase consent remain unchanged.",
         },
       ],
     },

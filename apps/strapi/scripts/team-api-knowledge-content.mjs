@@ -69,9 +69,9 @@ export function apiOnboardingArticles(sectionId) {
             text(" · "),
             link("Membership and Team enquiries", "/contribute/membership"),
             text(" · "),
-            link("Your Team", "/staff/team"),
+            link("Your Team", "/staff/teams"),
             text(" · "),
-            link("API access", "/staff/team/api"),
+            link("API access", "/staff/teams/api"),
           ],
         }),
         rich(
@@ -90,14 +90,14 @@ export function apiOnboardingArticles(sectionId) {
             "If your library service already has a Team, ask its organiser to invite you and give you the organiser role if you will manage the API. Open the Team invitation, sign in with the invited address and accept it. An ordinary Team member can inspect API usage but cannot subscribe or create, regenerate or revoke keys."
           ),
           p(
-            "When Team purchases are available, open /staff/team/new, enter your Team name, choose at least five seats and subscribe yearly through Stripe. You become its Organiser. Team access starts after payment is confirmed. Invite colleagues and choose covered Libraries from Your Team; payment does not verify Library authority. Manage payment, renewal and seat changes from Team billing. Existing invoice agreements retain their agreed terms. Registering an account or buying personal Pro alone does not create a Team."
+            "When Team purchases are available, open /staff/teams/new, enter your Team name, choose at least five seats and subscribe yearly through Stripe. You become its Organiser. Team access starts after payment is confirmed. Invite colleagues and choose covered Libraries from Your Team; payment does not verify Library authority. Manage payment, renewal and seat changes from Team billing. Existing invoice agreements retain their agreed terms. Registering an account or buying personal Pro alone does not create a Team."
           ),
           p(
             "For new quotes, Team costs £600/year excluding VAT for five seats, plus £120/year per additional seat. Eligible public-library services receive 20% off Team items (£480 and £96 respectively). Existing contracts keep their agreed terms. During beta, use the owned sandbox Team checkout when enabled. The separate API checkout does not provision a Team. Public-service discount eligibility is confirmed separately before discounted Team checkout."
           ),
           h("3. Open the Team API dashboard"),
           p(
-            "Open /staff/team, select the correct Team, then choose API access and usage. You can also open /staff/team/api and select the Team there. If you belong to several Teams, check the selector before creating a key or changing billing. The address may include ?team= followed by your Team's document identifier."
+            "Each account belongs to one Team. Open /staff/teams for Members & libraries, Billing & seats and API access, or go directly to /staff/teams/api. These pages use your membership and do not require a Team identifier in the URL. Ask your Organiser for more seats when colleagues join; creating another Team is not a way to increase the API allowance."
           ),
           p(
             "If you see a page-not-found response, check that your invitation was accepted and that you signed in with the invited email. If you see usage without purchase or key controls, ask an organiser to change your Team role. Staff access to a Library alone does not make you a Team Organiser."
@@ -258,9 +258,13 @@ console.log(library.name, library.sourceRecords);`
           p(
             "Each sourceRecords entry can include dataset, recordId, retrievedAt, url, label, role, fields and datasetCredit. A datasetCredit contains key, publisher, licence, licenceUrl, attribution, redistribution and licenceStatus where known. Preserve meta.attribution and the relevant source credits. API access does not replace source-specific licences or redistribution restrictions. A missing dataset credit or unknown licence does not grant permission to redistribute."
           ),
+          h("Coming soon: proposed API resources"),
+          p(
+            "We are scoping read-only endpoints for date-specific Library opening hours, public Events by place and date, a cursor-based feed of published Library updates and removals, and translated facility/service filter metadata. These endpoints are not callable yet or included in the current subscription. Paths and scope may change; no delivery date is promised."
+          ),
           h("Shared limits and response headers"),
           p(
-            "Default limits: 100,000 successful requests and 10 GiB of response data per calendar month, 60 authenticated attempts per minute, five concurrent requests, five active keys, 256 KiB per response and at most 100 records per page. Your dashboard shows the limits saved for your subscription. Every key shares the Team limits; creating or regenerating a key does not reset them. There are no automatic overage charges."
+            "Default limits: 100,000 successful requests and 10 GiB of response data per calendar month, 60 authenticated attempts per minute, five concurrent requests, unlimited API keys, 256 KiB per response and at most 100 records per page. Your dashboard shows the limits saved for your subscription. Every key shares the Team limits; creating or regenerating a key does not reset them. There are no automatic overage charges."
           ),
           p(
             "The month resets at 00:00 UTC on its first day, independently of the payment anniversary. Successful responses, including repeated requests and cache hits, consume allowance. Bytes measure UTF-8 JSON before compression; separate media downloads are excluded. In-flight reservations can temporarily raise dashboard counters. Failures release their monthly reservation, but authenticated attempts still affect rate limits."
@@ -349,7 +353,7 @@ export function updateApiGuide(doc) {
           child.startsWith(
             "The Team API add-on is available to invited testers"
           )
-            ? "The Team API add-on runs in Stripe Test mode during the closed beta. Its catalogue price is £15/month for an active Team, with 100,000 successful requests and 10 GiB of uncompressed JSON per calendar month and up to five active keys. Beta test payments make no real charge. See Current API availability above before starting a subscription."
+            ? "The Team API add-on runs in Stripe Test mode during the closed beta. Its catalogue price is £15/month for an active Team, with 100,000 successful requests and 10 GiB of uncompressed JSON per calendar month and unlimited API keys. Beta test payments make no real charge. See Current API availability above before starting a subscription."
             : replace(child),
         ])
       )

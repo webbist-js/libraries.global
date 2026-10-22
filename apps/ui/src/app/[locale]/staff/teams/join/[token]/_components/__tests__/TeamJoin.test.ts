@@ -65,6 +65,27 @@ beforeEach(() => {
     },
   })
 })
+
+it("explains the one-Team rule before trying to accept a second invitation", () => {
+  render(
+    createElement(TeamJoin, {
+      token: "tok1",
+      invite: invite(),
+      emailVerified: true,
+      existingTeamName: "LibrariesGlobal",
+    })
+  )
+  expect(screen.getByText("Your account already has a Team")).toBeTruthy()
+  expect(
+    screen.getByRole("link", { name: "Open your Team" }).getAttribute("href")
+  ).toBe("/staff/teams")
+  const button = screen.getByRole("button", {
+    name: "Join Kent Libraries",
+  }) as HTMLButtonElement
+  expect(button.disabled).toBe(true)
+  fireEvent.click(button)
+  expect(mocks.request).not.toHaveBeenCalled()
+})
 afterEach(() => {
   cleanup()
   mocks.request.mockReset()
@@ -144,7 +165,7 @@ describe("TeamJoin", () => {
       screen
         .getByRole("link", { name: "Open the Team organiser" })
         .getAttribute("href")
-    ).toBe("/staff/team?team=t1")
+    ).toBe("/staff/teams")
     expect(screen.queryByRole("alert")).toBeNull()
     expect(mocks.refresh).not.toHaveBeenCalled()
   })
@@ -225,7 +246,7 @@ describe("TeamJoin", () => {
       screen
         .getByRole("link", { name: "Open the Team organiser" })
         .getAttribute("href")
-    ).toBe("/staff/team?team=team%20%26%201")
+    ).toBe("/staff/teams")
     expect(
       screen.queryByRole("button", { name: "Join Kent Libraries" })
     ).toBeNull()

@@ -24,7 +24,7 @@ export default async function StaffNotFound() {
   const slug = pathname?.split(/[/?#]/)[2]
   const session = await getSessionSSR(await headers())
   let library: ClaimableStaffLibrary | undefined
-  if (slug && slug !== "team" && isStaffSlugParam(slug)) {
+  if (slug && !["team", "teams"].includes(slug) && isStaffSlugParam(slug)) {
     const result = (await PublicStrapiClient.fetchMany(
       "api::library.library",
       {

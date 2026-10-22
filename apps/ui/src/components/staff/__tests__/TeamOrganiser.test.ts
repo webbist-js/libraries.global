@@ -33,7 +33,7 @@ vi.mock("next-intl", async (importOriginal) => ({
   ...(await importOriginal<typeof NextIntl>()),
   useLocale: () => "en-GB",
 }))
-vi.mock("next/navigation", () => ({ usePathname: () => "/staff/team" }))
+vi.mock("next/navigation", () => ({ usePathname: () => "/staff/teams" }))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
 
@@ -47,7 +47,7 @@ vi.mock("@/lib/navigation", async () => {
       children?: React.ReactNode
     }) => h("a", { href, ...rest }, children),
     useRouter: () => ({ push: vi.fn(), refresh: mocks.refresh }),
-    usePathname: () => "/staff/team",
+    usePathname: () => "/staff/teams",
     redirect: vi.fn(),
     formatHref: (href: string) => href,
     isAppLink: () => true,
@@ -133,10 +133,8 @@ const team = (over: Partial<TeamDetail> = {}): TeamDetail => ({
   organiserNames: ["Ann"],
   ...over,
 })
-const organiser = (
-  over: Partial<TeamDetail> = {},
-  others: { id: string; name: string }[] = []
-) => createElement(TeamOrganiser, { team: team(over), others })
+const organiser = (over: Partial<TeamDetail> = {}) =>
+  createElement(TeamOrganiser, { team: team(over) })
 
 beforeEach(() => {
   mocks.request.mockResolvedValue({})
@@ -149,7 +147,7 @@ afterEach(() => {
 
 describe("TeamOrganiser (organiser)", () => {
   it("shows the team, its seats, the libraries covered and where the viewer is staff", () => {
-    render(organiser({}, [{ id: "t2", name: "Sussex Libraries" }]))
+    render(organiser())
     expect(screen.getByRole("heading", { name: "Team details" })).toBeTruthy()
     expect(screen.getByText("Seats").parentElement?.textContent).toContain(
       "2 of 5"
@@ -170,11 +168,7 @@ describe("TeamOrganiser (organiser)", () => {
       screen.getByRole("link", { name: "Open Staff area" }).getAttribute("href")
     ).toBe("/staff/maidstone-library")
     expect(screen.getByText("You’re not assigned here")).toBeTruthy()
-    expect(
-      screen
-        .getByRole("link", { name: "Sussex Libraries" })
-        .getAttribute("href")
-    ).toBe("/staff/team?team=t2")
+    expect(screen.queryByText("Your other teams:")).toBeNull()
   })
 
   it("lists members with their role, status, assignments and actions", () => {

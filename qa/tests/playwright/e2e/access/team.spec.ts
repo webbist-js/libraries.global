@@ -150,7 +150,7 @@ test("the organiser sees the Team's members and seats", async ({ browser }) => {
 
   const page = await pageAs(browser, organiser, baseURL)
   browserContexts.push(page.context())
-  await page.goto("/staff/team", NAVIGATION)
+  await page.goto("/staff/teams", NAVIGATION)
   // The organiser's hero: a "Team organiser" eyebrow pill above the Team's
   // name as the plain h1.
   await expect(
@@ -211,7 +211,7 @@ test("inviting by email adds a pending seat, and a full Team answers 409 no_seat
 
   const page = await pageAs(browser, organiser, baseURL)
   browserContexts.push(page.context())
-  await page.goto("/staff/team", NAVIGATION)
+  await page.goto("/staff/teams", NAVIGATION)
   await expect(
     page.getByText(`access-invitee-${STAMP}-1@example.test`).first()
   ).toBeVisible(NAVIGATION)
@@ -273,7 +273,7 @@ test("a member sees the Team read only; a reader finds no Team page", async ({
 
   const page = await pageAs(browser, member, baseURL)
   browserContexts.push(page.context())
-  await page.goto("/staff/team", NAVIGATION)
+  await page.goto("/staff/teams", NAVIGATION)
   await expect(
     page.getByRole("heading", { level: 1, name: "Your team" })
   ).toBeVisible(NAVIGATION)
@@ -282,7 +282,7 @@ test("a member sees the Team read only; a reader finds no Team page", async ({
 
   const asReader = await pageAs(browser, reader, baseURL)
   browserContexts.push(asReader.context())
-  const res = await asReader.goto("/staff/team", NAVIGATION)
+  const res = await asReader.goto("/staff/teams", NAVIGATION)
   expect(res?.status()).toBe(404)
   expect((await reader.get(`/api/staff/team/${teamId}`)).status()).toBe(404)
 })

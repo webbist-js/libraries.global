@@ -19,7 +19,7 @@ describe("Team API onboarding publication", () => {
               children: [
                 {
                   type: "link",
-                  url: "/staff/team",
+                  url: "/staff/teams",
                   children: [{ type: "text", text: "Existing guide" }],
                 },
               ],
@@ -69,7 +69,7 @@ describe("Team API onboarding publication", () => {
     const all = JSON.stringify(articles)
     for (const required of [
       "/auth/register",
-      "/staff/team/api",
+      "/staff/teams/api",
       "search:read",
       "libraries:read",
       "meta.nextCursor",

@@ -193,7 +193,7 @@ describe("teams.invite and its email", () => {
     expect(result.emailSent).toBe(true)
     const mail = services["email.email"].send.mock.calls[0]![0]
     expect(mail.text).toMatch(
-      /https:\/\/staging\.example\/staff\/team\/join\/[a-f0-9]{64}/
+      /https:\/\/staging\.example\/staff\/teams\/join\/[a-f0-9]{64}/
     )
   })
 
@@ -218,7 +218,7 @@ describe("teams.invite and its email", () => {
       "Olive Organiser invited you to join Kent Libraries."
     )
     expect(mail.text).toContain("You'll be given staff access to Library A.")
-    expect(mail.text).toContain("https://libraries.example/staff/team/join/")
+    expect(mail.text).toContain("https://libraries.example/staff/teams/join/")
 
     // The join page names the library and links its staff page by slug
     // (`preview.preassign.libraryName`, `librarySlug`).

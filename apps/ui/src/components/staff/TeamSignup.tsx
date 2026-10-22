@@ -57,8 +57,8 @@ export function TeamSignup({
           const result = await response.json()
           if (!response.ok)
             throw new Error(
-              result.error === "team_limit_reached"
-                ? "You have reached the Team limit. Open an existing Team or discard an unused one."
+              result.error === "team_membership_exists"
+                ? "Your account already belongs to a Team. Open your Team to manage members or add seats."
                 : "The Team could not be created. Retry with the same name."
             )
           setTeam({ id: result.teamId, name: choice.name })
@@ -136,10 +136,7 @@ export function TeamSignup({
             {team ? "Continue to payment" : "Create your Team"}
           </Button>
           {team ? (
-            <Link
-              className={STAFF_LINK}
-              href={`/staff/team/billing?team=${team.id}`}
-            >
+            <Link className={STAFF_LINK} href="/staff/teams/billing">
               Open Team billing
             </Link>
           ) : (
@@ -153,7 +150,7 @@ export function TeamSignup({
         open={open}
         onOpenChange={(value) => {
           setOpen(value)
-          if (!value && team) router.push(`/staff/team/billing?team=${team.id}`)
+          if (!value && team) router.push(`/staff/teams/billing`)
         }}
         initialSeats={initialSeats}
         teamName={team?.name}
