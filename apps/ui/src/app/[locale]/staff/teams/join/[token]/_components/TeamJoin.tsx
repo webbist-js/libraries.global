@@ -21,11 +21,13 @@ export function TeamJoin({
   token,
   invite,
   emailVerified,
+  existingTeamName,
   guides = [],
 }: {
   readonly token: string
   readonly invite: TeamInvitePreview
   readonly emailVerified: boolean
+  readonly existingTeamName?: string
   readonly guides?: readonly GuideLink[]
 }) {
   const t = useTranslations("teamInvitation")
@@ -35,7 +37,10 @@ export function TeamJoin({
   const [error, setError] = useState("")
   const [joined, setJoined] = useState<TeamSummary | null>(null)
   const blocked =
-    invite.status !== "open" || !invite.emailMatches || !emailVerified
+    invite.status !== "open" ||
+    !invite.emailMatches ||
+    !emailVerified ||
+    Boolean(existingTeamName)
   const preassign = invite.preassign
   const libraryLabel = preassign
     ? (preassign.libraryName ??
@@ -108,11 +113,7 @@ export function TeamJoin({
               </Link>
             ) : null}
             <Link
-              href={
-                organiser
-                  ? "/staff/team?team=" + encodeURIComponent(joined.id)
-                  : "/staff"
-              }
+              href={organiser ? "/staff/teams" : "/staff"}
               className={libraryReady ? OUTLINED : PRIMARY}
             >
               {t(organiser ? "openTeam" : "openStaff")}
@@ -163,6 +164,23 @@ export function TeamJoin({
             {t(organiser ? "organiserDetail" : "memberDetail")}
           </p>
           <div className="mt-6 space-y-4">
+            {existingTeamName ? (
+              <Notice
+                icon="mdi:account-group-outline"
+                tone="info"
+                title={t("existingTitle")}
+              >
+                <p className="m-0">
+                  {t("existingDetail", { team: existingTeamName })}
+                </p>
+                <Link
+                  href="/staff/teams"
+                  className={`inline-flex min-h-11 items-center ${STAFF_LINK}`}
+                >
+                  {t("existingAction")}
+                </Link>
+              </Notice>
+            ) : null}
             {invite.status === "expired" ? (
               <Notice
                 icon="mdi:clock-alert-outline"

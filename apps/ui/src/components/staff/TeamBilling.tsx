@@ -536,7 +536,7 @@ export function TeamBilling({
             Members and pending invitations each use one seat, including your
             Organiser seat.
           </p>
-          <Link className={STAFF_LINK} href={`/staff/team?team=${data.teamId}`}>
+          <Link className={STAFF_LINK} href="/staff/teams">
             Manage members and libraries
           </Link>
         </StaffPanel>
@@ -555,10 +555,7 @@ export function TeamBilling({
             {money(pricing.teamApi.month)} a month. Manage its subscription
             separately if your Team ends.
           </p>
-          <Link
-            className={STAFF_LINK}
-            href={`/staff/team/api?team=${data.teamId}`}
-          >
+          <Link className={STAFF_LINK} href="/staff/teams/api">
             API access and usage
           </Link>
         </StaffPanel>

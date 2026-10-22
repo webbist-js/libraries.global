@@ -115,7 +115,7 @@ describe("production analytics", () => {
   it("does not load a tag when consent is granted on a private page", () => {
     const { browser, append } = fixture(
       "https://libraries.global",
-      "/staff/team"
+      "/staff/teams"
     )
     installGoogleAnalytics(browser)!.setConsent(true)
     expect(append).not.toHaveBeenCalled()

@@ -30,7 +30,7 @@ export function apiConfig() {
     ),
     perMinute: integer(process.env.TEAM_API_REQUESTS_PER_MINUTE, 60, 10_000),
     concurrency: integer(process.env.TEAM_API_CONCURRENCY, 5, 100),
-    keys: integer(process.env.TEAM_API_MAX_KEYS, 5, 50),
+    keys: null,
     responseBytes: integer(
       process.env.TEAM_API_RESPONSE_BYTES,
       256 * 1024,

@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto"
 
 import type { StaffRole } from "@repo/access"
 import { libraryTypeName, emailTemplate } from "@repo/shared-data"
+import type { Core } from "@strapi/strapi"
 
 import {
   grantVerifiedLibrarian,
@@ -214,20 +215,39 @@ const MEMBER_FIELDS = [
 const LIBRARY_FIELDS = ["documentId", "name", "slug"]
 const LIBRARY_POPULATE = { libraryType: { fields: ["name"] } }
 
-/** Serialise every write to one Team. */
+/** Serialize writes under one transaction; account locks precede Team locks. */
 export async function teamTransaction<T>(
-  strapi: any,
-  teamId: string,
+  strapi: Core.Strapi,
+  teamId: string | readonly string[],
   work: () => Promise<T>
 ): Promise<T> {
-  return strapi.db.transaction(async ({ trx }: any) => {
+  return strapi.db.transaction(async ({ trx }) => {
     if (typeof trx?.raw === "function")
-      await trx.raw("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", [
-        `access-team:${teamId}`,
-      ])
+      for (const id of typeof teamId === "string" ? [teamId] : teamId)
+        await trx.raw("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", [
+          `access-team:${id}`,
+        ])
 
     return work()
   })
+}
+
+/** Called under the account membership lock by both signup and invite acceptance. */
+export async function requireNoOtherTeam(
+  strapi: Core.Strapi,
+  baUserId: string,
+  teamId?: string
+) {
+  const existing = await strapi.documents(TEAM_MEMBER_UID).findMany({
+    filters: {
+      baUserId: { $eq: baUserId },
+      status: { $eq: "active" },
+      ...(teamId ? { team: { documentId: { $ne: teamId } } } : {}),
+    },
+    fields: ["documentId"],
+    limit: 1,
+  })
+  if (existing.length) throw new AccessError(409, "team_membership_exists")
 }
 
 function parsePreassign(v: unknown): Preassign | null {
@@ -1173,7 +1193,7 @@ export default ({ strapi }: { strapi: any }) => {
           teamName: row.team.name ?? "your team",
           role,
           libraryName,
-          link: new URL(`/staff/team/join/${token}`, base),
+          link: new URL(`/staff/teams/join/${token}`, base),
         })
         emailSent = await sendMail(email, mail.subject, mail.text)
       } else
@@ -1234,7 +1254,7 @@ export default ({ strapi }: { strapi: any }) => {
               (l) => l.documentId === pre.libraryDocumentId
             )?.name) ||
           null,
-        link: new URL(`/staff/team/join/${token}`, base),
+        link: new URL(`/staff/teams/join/${token}`, base),
       })
       const emailSent = await sendMail(
         (row.email ?? "").toLowerCase(),
@@ -1269,7 +1289,7 @@ export default ({ strapi }: { strapi: any }) => {
       })
     },
 
-    /** What `/staff/team/join/[token]` shows before accepting. */
+    /** What `/staff/teams/join/[token]` shows before accepting. */
     async preview(token: string, viewerEmail: string) {
       const row = await this.byToken(token)
       const team = row.team!
@@ -1343,61 +1363,69 @@ export default ({ strapi }: { strapi: any }) => {
     ): Promise<TeamSummary> {
       const found = await this.byToken(token)
       const teamId = found.team!.documentId
-      const result = await teamTransaction(strapi, teamId, async () => {
-        const row = await this.byToken(token)
-        const team = await teamOf(teamId)
-        if (!teamIsActive(team)) throw new AccessError(409, "team_inactive")
-        if (
-          !row.invitedAt ||
-          Date.now() - Date.parse(row.invitedAt) > INVITE_TTL_DAYS * 86_400_000
-        )
-          throw new AccessError(409, "invite_unavailable")
-        if ((row.email ?? "").toLowerCase() !== user.email.trim().toLowerCase())
-          throw new AccessError(403, "email_mismatch")
-        const already = await membershipOf(teamId, user.id)
-        if (already) {
-          await members().update({
-            documentId: row.documentId,
-            data: { status: "removed", removedAt: now(), tokenHash: null },
-          })
+      const result = await teamTransaction(
+        strapi,
+        [`membership:${user.id}`, teamId],
+        async () => {
+          const row = await this.byToken(token)
+          const team = await teamOf(teamId)
+          if (!teamIsActive(team)) throw new AccessError(409, "team_inactive")
+          if (
+            !row.invitedAt ||
+            Date.now() - Date.parse(row.invitedAt) >
+              INVITE_TTL_DAYS * 86_400_000
+          )
+            throw new AccessError(409, "invite_unavailable")
+          if (
+            (row.email ?? "").toLowerCase() !== user.email.trim().toLowerCase()
+          )
+            throw new AccessError(403, "email_mismatch")
+          await requireNoOtherTeam(strapi, user.id, teamId)
+          const already = await membershipOf(teamId, user.id)
+          if (already) {
+            await members().update({
+              documentId: row.documentId,
+              data: { status: "removed", removedAt: now(), tokenHash: null },
+            })
 
-          return { member: already, team, applied: null as string | null }
-        }
-        const member = (await members().update({
-          documentId: row.documentId,
-          data: {
-            baUserId: user.id,
-            status: "active",
-            acceptedAt: now(),
-            tokenHash: null,
-          },
-        })) as MemberRow
-        let applied: string | null = null
-        const pre = parsePreassign(row.preassign)
-        if (pre) {
-          try {
-            applied = await grantAccess(
-              team,
-              { ...member, baUserId: user.id, email: row.email },
-              pre.libraryDocumentId,
-              pre.staffRole,
-              {
-                kind: "user",
-                baUserId: user.id,
-                email: user.email,
-                name: user.name,
-              }
-            )
-          } catch (err) {
-            strapi.log.warn(
-              `[access] pre-assignment for member ${member.documentId} failed`,
-              err
-            )
+            return { member: already, team, applied: null as string | null }
           }
-        }
+          const member = (await members().update({
+            documentId: row.documentId,
+            data: {
+              baUserId: user.id,
+              status: "active",
+              acceptedAt: now(),
+              tokenHash: null,
+            },
+          })) as MemberRow
+          let applied: string | null = null
+          const pre = parsePreassign(row.preassign)
+          if (pre) {
+            try {
+              applied = await grantAccess(
+                team,
+                { ...member, baUserId: user.id, email: row.email },
+                pre.libraryDocumentId,
+                pre.staffRole,
+                {
+                  kind: "user",
+                  baUserId: user.id,
+                  email: user.email,
+                  name: user.name,
+                }
+              )
+            } catch (err) {
+              strapi.log.warn(
+                `[access] pre-assignment for member ${member.documentId} failed`,
+                err
+              )
+            }
+          }
 
-        return { member, team, applied }
-      })
+          return { member, team, applied }
+        }
+      )
       await notifySessionInvalidated(strapi, user.id)
       const [summary] = await this.listMine(user.id, teamId)
 

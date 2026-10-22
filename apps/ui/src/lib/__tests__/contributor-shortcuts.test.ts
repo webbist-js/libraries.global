@@ -188,36 +188,32 @@ describe("buildContributeMenu", () => {
     expect(menu.work[0]?.links[1]?.href).toBe("/staff/d%2Fe/edit")
   })
 
-  it("gives a Team organiser without a library the team card with a staff area line", () => {
+  it("gives the Organiser one Team card with direct workspace destinations", () => {
     const menu = buildContributeMenu({
       status: "signedIn",
       capabilities: SIGNED_IN,
-      teams: [
-        { id: "t1", role: "organiser" },
-        { id: "t2", role: "member" },
-      ],
+      teams: [{ id: "t1", name: "LibrariesGlobal", role: "organiser" }],
     })
     expect(keys(menu.work)).toEqual(["team"])
     expect(links(menu.work[0])).toEqual([
-      ["Manage your team", "/staff/team"],
-      ["Staff area", "/staff"],
+      ["Members & libraries", "/staff/teams"],
+      ["API access", "/staff/teams/api"],
+      ["Billing & seats", "/staff/teams/billing"],
     ])
-    expect(menu.work[0]?.links.map((l) => l.sub)).toEqual([
-      "Organiser · 2 teams",
-      "No library assigned yet",
-    ])
+    expect(menu.work[0]?.description).toBe("LibrariesGlobal · Organiser")
   })
-
-  it("gives a Team member with a library the plain team link only", () => {
+  it("gives a member Library and API access without Organiser billing actions", () => {
     const menu = buildContributeMenu({
       status: "signedIn",
       capabilities: ["staff.area"],
       claimedLibraries: [LIBRARIES[0]!],
-      teams: [{ id: "t1", role: "member" }],
+      teams: [{ id: "t1", name: "LibrariesGlobal", role: "member" }],
     })
     expect(keys(menu.work)).toEqual(["libraries", "team"])
-    expect(links(menu.work[1])).toEqual([["Your team", "/staff/team"]])
-    expect(menu.work[1]?.links[0]?.sub).toBe("Member")
+    expect(links(menu.work[1])).toEqual([
+      ["Members & libraries", "/staff/teams"],
+      ["API access", "/staff/teams/api"],
+    ])
   })
 
   it("gives editors their own Knowledge and Journal cards", () => {

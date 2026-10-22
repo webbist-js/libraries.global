@@ -205,25 +205,26 @@ function Card({
 }) {
   const titleId = useId()
   const publishing = card.key === "knowledge" || card.key === "journal"
+  const compactActions = publishing || card.key === "team"
   const hasHeading = !hideHeading && card.key !== "hub"
   // The hub is always available in the panel header.
   const links = card.links.filter((link) => link.href !== "/contribute")
 
   return (
     <li
-      className={`flex min-w-0 flex-col gap-2.5 ${columns ? "" : "py-3 first:pt-0 last:pb-0"}`}
+      className={`flex min-w-0 flex-col gap-2.5 ${columns ? "rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-3" : "py-3 first:pt-0 last:pb-0"}`}
     >
       {hasHeading ? (
-        <div className="flex items-start gap-2.5 px-1">
+        <div className="flex items-center gap-3 px-1">
           <CardMonogram icon={card.icon} tint={card.tint} size={30} />
           <div className="min-w-0 flex-1">
             <h4
               id={titleId}
-              className="m-0 text-[14px] leading-tight font-bold text-(--t-ink-base)"
+              className="m-0 text-[14px] leading-6 font-bold text-(--t-ink-base)"
             >
               {card.title}
             </h4>
-            <p className="m-0 mt-1 text-[14px] leading-snug text-(--t-ink-dim)">
+            <p className="m-0 mt-0.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
               {card.description}
             </p>
           </div>
@@ -250,7 +251,7 @@ function Card({
         <ul
           aria-labelledby={hasHeading ? titleId : groupHeadingId}
           className={
-            publishing
+            compactActions
               ? "m-0 flex list-none flex-wrap gap-2 p-0"
               : card.key === "hub"
                 ? "m-0 grid list-none gap-1 p-0 sm:grid-cols-2"
@@ -259,7 +260,7 @@ function Card({
         >
           {links.map((link) => (
             <li key={`${link.href}:${link.label}`}>
-              {publishing ? (
+              {compactActions ? (
                 <GlobalLink
                   href={link.href}
                   onClick={onNavigate}
@@ -268,9 +269,15 @@ function Card({
                   <Icon
                     aria-hidden
                     icon={
-                      link.href.includes("/new")
-                        ? "mdi:plus"
-                        : "mdi:pencil-outline"
+                      card.key === "team"
+                        ? link.href.endsWith("/api")
+                          ? "mdi:code-tags"
+                          : link.href.endsWith("/billing")
+                            ? "mdi:credit-card-outline"
+                            : "mdi:account-group-outline"
+                        : link.href.includes("/new")
+                          ? "mdi:plus"
+                          : "mdi:pencil-outline"
                     }
                     width={14}
                     height={14}
@@ -311,7 +318,7 @@ function CardGroup({
     >
       <h3
         id={titleId}
-        className="m-0 mb-3 font-serif text-[23px] leading-tight tracking-[-0.02em] text-(--t-ink-base)"
+        className="m-0 mb-4 font-serif text-[23px] leading-tight tracking-[-0.02em] text-(--t-ink-base)"
       >
         {title}
       </h3>

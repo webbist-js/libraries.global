@@ -53,7 +53,11 @@ export async function GET(req: Request, { params }: Params) {
     const { teamId } = await params
     const team = await requireApiTeam(teamId, user)
 
-    return billingJson(await apiDashboard(authDbPool, team))
+    const offset = new URL(req.url).searchParams.get("keyOffset") ?? "0"
+    if (!/^\d{1,9}$/.test(offset))
+      throw new BillingError("invalid_api_action", 400)
+
+    return billingJson(await apiDashboard(authDbPool, team, Number(offset)))
   } catch (error) {
     return billingFailure(error)
   }

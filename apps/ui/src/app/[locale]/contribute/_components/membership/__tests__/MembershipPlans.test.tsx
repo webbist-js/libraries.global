@@ -47,7 +47,7 @@ it("estimates annual Team seats, scopes the public-service discount and keeps AP
   expect((remove as HTMLButtonElement).disabled).toBe(true)
   expect(
     team.getByRole("link", { name: "Create your Team" }).getAttribute("href")
-  ).toBe("/staff/team/new?seats=5")
+  ).toBe("/staff/teams/new?seats=5")
 })
 
 it("switches personal prices and checkout intervals with keyboard focus following the selected radio", () => {
@@ -227,6 +227,6 @@ it("offers Team management to a Pro subscriber who already belongs to a Team", (
   )
   expect(
     screen.getByRole("link", { name: "Manage your Team" }).getAttribute("href")
-  ).toBe("/staff/team?team=paid-team")
+  ).toBe("/staff/teams")
   expect(screen.queryByRole("link", { name: "Create your Team" })).toBeNull()
 })

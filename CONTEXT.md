@@ -89,11 +89,11 @@ A library service's organisation on the site, bought per service (`plugin::acces
 _Avoid_: organisation (alone), workspace, group, team plan (the Plan is what a Team gives its members)
 
 **Team Member**:
-A person's row in a Team (`plugin::access.team-member`): their email, Better Auth id once they accept, a team role of `organiser` or `member`, and a status of `invited`, `active` or `removed`. Invited by email, accepted by signing in with that address; a member holds a Team Seat but no Staff access until assigned to a Library. Removal deletes only the affiliations the Team created.
+A person's row in their one Team (`plugin::access.team-member`): their email, Better Auth id once they accept, a team role of `organiser` or `member`, and a status of `invited`, `active` or `removed`. An account can have one active membership row across Teams, even while its Team is lapsed or awaiting payment. Moving Teams requires removal from the previous Team and Organiser handover where needed. Invited by email, accepted by signing in with that address; a member holds a Team Seat but no Staff access until assigned to a Library. Removal deletes only the affiliations the Team created.
 _Avoid_: seat (that is the capacity), staff (that is per Library), employee
 
 **Team Organiser**:
-The Team Member with `teamRole: organiser`. Invites colleagues by email (optionally pre-assigning them to a Library), resends and revokes invites, changes team roles, assigns and unassigns members to the Team's Libraries as owner or editor, and removes members, from `/staff/team`. Other members see that page read only. The organiser's trust comes from the Team's verification, not from their Plan.
+The Team Member with `teamRole: organiser`. Invites colleagues by email (optionally pre-assigning them to a Library), resends and revokes invites, changes team roles, assigns and unassigns members to the Team's Libraries as owner or editor, and removes members, from `/staff/teams`. Other members see that page read only. The organiser's trust comes from the Team's verification, not from their Plan.
 _Avoid_: admin, team owner, manager
 
 **Team Seat**:
@@ -101,11 +101,11 @@ One place in a Team's capacity (`seats`, default 5). Active and invited members 
 _Avoid_: licence, user slot
 
 **Team API Add-on**:
-A separate recurring API purchase owned by an active Team. Its organisers manage named API Keys and billing in `/staff/team/api`; members can inspect usage. Settled payment gives versioned access to published public Library search and records, with a shared monthly request and response-data allowance. It gives no Staff access, Capability, user session or protected data. Limits are recorded with the purchase; creating or regenerating keys never resets usage.
+A separate recurring API purchase owned by an active Team. Its organisers manage named API Keys and billing in `/staff/teams/api`; members can inspect usage. Settled payment gives versioned access to published public Library search and records, with a shared monthly request and response-data allowance. It gives no Staff access, Capability, user session or protected data. Limits are recorded with the purchase; creating or regenerating keys never resets usage.
 _Avoid_: personal API subscription, paid staff permission
 
 **API Key**:
-A Team-owned machine credential for selected public API operations. The full value is shown once; only its digest and display prefix are retained. An organiser can regenerate or revoke it. Each key shares the Team API Add-on's allowances; its creator is an audit actor, not the identity of API requests.
+A Team-owned machine credential for selected public API operations. The full value is shown once; only its digest and display prefix are retained. An organiser can regenerate or revoke it. Key count is unlimited. The default 100,000 successful requests and 10 GiB response data are one shared monthly Team pool across keys and members, not a per-key or per-seat allowance. Each key shares the Team API Add-on's allowances; its creator is an audit actor, not the identity of API requests.
 _Avoid_: user token, Strapi token, Meilisearch key (those are separate upstream credentials)
 
 **Library Notice**:

@@ -8,7 +8,7 @@ function cleanUrl(value: string): string {
   const path = value.split(/[?#]/, 1)[0] ?? ""
 
   return path
-    .replaceAll(/(\/staff\/team\/join\/)[^/]+/gi, `$1${FILTERED}`)
+    .replaceAll(/(\/staff\/teams?\/join\/)[^/]+/gi, `$1${FILTERED}`)
     .replaceAll(
       /(\/(?:reset-password|magic-link|verify-email)\/)[^/]+/gi,
       `$1${FILTERED}`
@@ -26,7 +26,7 @@ function cleanText(value: string, key: string): string {
 
   return text
     .replaceAll(
-      /\/(?:staff\/team\/join|reset-password|magic-link|verify-email)\/[^\s?#<>"']+/gi,
+      /\/(?:staff\/teams?\/join|reset-password|magic-link|verify-email)\/[^\s?#<>"']+/gi,
       cleanUrl
     )
     .replaceAll(/\bBearer\s+[^\s,;"']+/gi, `Bearer ${FILTERED}`)

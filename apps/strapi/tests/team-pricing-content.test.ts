@@ -6,8 +6,26 @@ import {
   pricingGuideBody,
   pricingLegalSections,
 } from "../scripts/team-pricing-content.mjs"
+import { canonicalTeamContent } from "../scripts/team-service-content.mjs"
 
 describe("Team pricing content", () => {
+  it("canonicalizes Team links while preserving payment return fields, locale and unrelated URLs", () => {
+    const nodes = [
+      {
+        url: "/fr/staff/team/billing?team=old&payment=confirming#seats",
+        children: [{ text: "Open /staff/team/new." }],
+      },
+      { url: "https://elsewhere.example/staff/team?team=old" },
+      { url: "/api/staff/team/id" },
+    ]
+    const fixed = canonicalTeamContent(nodes)
+    expect(fixed[0]).toEqual({
+      url: "/fr/staff/teams/billing?payment=confirming#seats",
+      children: [{ text: "Open /staff/teams/new." }],
+    })
+    expect(fixed.slice(1)).toEqual(nodes.slice(1))
+    expect(canonicalTeamContent(fixed)).toEqual(fixed)
+  })
   it("uses entityRef in new API guides and corrects only obsolete endpoint prose", () => {
     const fresh = apiKnowledgeArticle("section-fixture")
     expect(JSON.stringify(fresh.body)).toContain(
@@ -30,7 +48,7 @@ describe("Team pricing content", () => {
                 },
                 {
                   type: "link",
-                  url: "/staff/team/api",
+                  url: "/staff/teams/api",
                   children: [{ type: "text", text: "Manage API keys" }],
                 },
               ],
@@ -64,7 +82,7 @@ describe("Team pricing content", () => {
               children: [
                 {
                   type: "link",
-                  url: "/staff/team",
+                  url: "/staff/teams",
                   children: [{ type: "text", text: "Existing staff guidance" }],
                 },
               ],
@@ -136,7 +154,7 @@ describe("Team pricing content", () => {
       }
       const body = pricingGuideBody(article, locale)!
       expect(JSON.stringify(body)).toContain("Stripe")
-      expect(JSON.stringify(body)).toContain("/staff/team/new")
+      expect(JSON.stringify(body)).toContain("/staff/teams/new")
       expect(JSON.stringify(body)).toContain("/existing-guide")
       expect(pricingGuideBody({ ...article, body }, locale)).toEqual(body)
     }

@@ -1,16 +1,18 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
+import { getLocale } from "next-intl/server"
 
 import { Badge, PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamApiDashboard } from "@/components/staff/TeamApiDashboard"
+import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflict"
 import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { getSessionSSR } from "@/lib/auth-server"
 import { BillingError } from "@/lib/billing/config"
-import type { TeamDetail } from "@/lib/staff/types"
+import { teamWorkspaceHref } from "@/lib/staff/paths"
 import { apiDashboard } from "@/lib/team-api/dashboard"
 import { requireApiTeam } from "@/lib/team-api/team"
 
@@ -23,17 +25,19 @@ export default async function TeamApiPage({
     getSessionSSR(await headers()),
     searchParams,
   ])
-  if (!session?.user) redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteam%2Fapi")
+  if (!session?.user)
+    redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteams%2Fapi")
+  if (query.team) {
+    const locale = await getLocale()
+    redirect(teamWorkspaceHref("/api", locale, query))
+  }
   const teams = preferredTeams(sessionTeamsOf(session.user))
-  const chosen = query.team
-    ? teams.find((team) => team.id === query.team)
-    : teams[0]
-  if (!chosen) notFound()
+  if (teams.length > 1) return <TeamMembershipConflict />
+  const chosen = teams[0]
+  if (!chosen) redirect("/staff/teams")
   let data = null
-  let detail: TeamDetail | null = null
   try {
     const team = await requireApiTeam(chosen.id, session.user)
-    detail = team
     data = await apiDashboard(authDbPool, team)
   } catch (error) {
     if (error instanceof BillingError && error.status === 404) notFound()
@@ -45,36 +49,31 @@ export default async function TeamApiPage({
         staff
         breadcrumb={[
           { label: "Staff area", href: "/staff" },
-          { label: "Your Team", href: `/staff/team?team=${chosen.id}` },
+          { label: chosen.name, href: "/staff/teams" },
           { label: "API access" },
         ]}
         eyebrow="Team API add-on"
-        title={detail?.name ?? chosen.name}
+        title="API access"
         plainTitle
         chips={
-          detail ? (
+          data ? (
             <Badge
-              label={detail.verifiedAt ? "Verified" : "Not yet verified"}
-              color={detail.verifiedAt ? "ok" : "warn"}
-              icon={detail.verifiedAt ? "mdi:check" : "mdi:clock-outline"}
+              label={
+                data.active ? "API add-on active" : "API add-on not active"
+              }
+              color={data.active ? "ok" : "warn"}
+              icon="mdi:code-tags"
             />
           ) : undefined
         }
         tabs={<StaffAreaTabs active="api" teamId={chosen.id} />}
-        lead="Connect your own applications to public Library search and records. Manage keys and see how much your Team uses."
+        lead="Connect applications to public Library data. Every key shares your Team’s monthly request and response-data allowance."
       />
       <Container className="py-10">
         {data ? (
           <TeamApiDashboard
             key={data.teamId}
             initial={data}
-            teams={teams.map((team) => ({
-              id: team.id,
-              name:
-                team.status === "lapsed"
-                  ? `${team.name} (inactive)`
-                  : team.name,
-            }))}
             confirming={query.payment === "confirming"}
           />
         ) : (

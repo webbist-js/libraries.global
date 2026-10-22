@@ -4,6 +4,7 @@ import { StaffPanel } from "@/components/staff/StaffPanel"
 import { TeamApiSubscribeDialog } from "@/components/staff/TeamApiSubscribeDialog"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/lib/navigation"
+import { API_ROADMAP } from "@/lib/team-api/roadmap"
 import type { ApiDashboard } from "@/lib/team-api/types"
 
 export const formatApiBytes = (n: number, locale: string) => {
@@ -139,7 +140,13 @@ export function ApiSubscriptionPanel({
         {!data.teamActive ? (
           <p role="status">
             Your Team is inactive. Keys cannot make requests until the Team is
-            renewed.
+            renewed.{" "}
+            <Link
+              href="/staff/teams/billing"
+              className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
+            >
+              Open Team billing
+            </Link>
           </p>
         ) : null}
         {data.membership?.revoked ? (
@@ -155,14 +162,16 @@ export function ApiSubscriptionPanel({
             {count(data.limits.requests)} successful requests and{" "}
             {formatApiBytes(data.limits.bytes, locale)} of response data each
             calendar month; {count(data.limits.perMinute)} requests per minute,{" "}
-            {data.limits.concurrency} at once, and up to {data.limits.keys}{" "}
-            keys. There are no automatic overage charges.
+            {data.limits.concurrency} at once across the Team. Create as many
+            keys as you need; they all use this shared pool. There are no
+            automatic overage charges.
           </p>
         ) : (
           <p className="m-0">
             {count(data.limits.requests)} successful requests and{" "}
             {formatApiBytes(data.limits.bytes, locale)} of response data each
-            calendar month.
+            calendar month, shared across unlimited keys and everyone in your
+            Team. Adding keys or seats does not increase this pool.
           </p>
         )}
       </div>
@@ -302,6 +311,11 @@ export function ApiUsagePanel({
         </p>
       }
     >
+      <p className="mt-0 mb-5 text-[15px] leading-relaxed text-(--t-ink-dim)">
+        One shared pool for {data.teamName}: every key and application uses the
+        same monthly allowance. Adding keys or members does not increase or
+        reset it.
+      </p>
       <div className="grid gap-4 sm:grid-cols-2">
         {metrics.map((metric) => (
           <div
@@ -375,8 +389,8 @@ export function ApiUsagePanel({
       </p>
       <p className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
         {count(data.limits.perMinute)} requests per minute ·{" "}
-        {data.limits.concurrency} at once · up to {data.limits.keys} active keys
-        · no automatic overage charges.
+        {data.limits.concurrency} at once across the Team · unlimited keys · no
+        automatic overage charges.
       </p>
       {data.endpoints.length ? (
         <div className="mt-6">
@@ -530,6 +544,41 @@ export function ApiGuidePanel() {
           </div>
         </div>
       </div>
+      <section
+        aria-labelledby="api-coming-soon"
+        className="mt-7 border-t border-(--t-border-line) pt-6"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <h3 id="api-coming-soon" className="m-0 font-serif text-2xl">
+            More ways to use library data
+          </h3>
+          <Badge label="Coming soon" color="dim" />
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-(--t-ink-dim)">
+          Proposed read-only APIs for public data. These endpoints are not
+          available yet; paths and scope may change. They are not included in
+          the current subscription.
+        </p>
+        <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
+          {API_ROADMAP.map((item) => (
+            <li
+              key={item.path}
+              className="min-w-0 rounded-2xl border border-(--t-border-line) p-4"
+            >
+              <h4 className="m-0 text-sm font-semibold">{item.title}</h4>
+              <code
+                translate="no"
+                className="mt-2 block font-mono text-xs break-all text-(--t-accent-primary)"
+              >
+                GET {item.path}
+              </code>
+              <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                {item.detail}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
     </StaffPanel>
   )
 }

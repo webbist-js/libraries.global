@@ -41,6 +41,12 @@ const OAUTH_NOTICE: Record<string, { title: string; message: string }> = {
   },
 }
 
+function oauthNotice(value: string | string[] | undefined) {
+  const key = Array.isArray(value) ? value[0] : value
+
+  return key ? (OAUTH_NOTICE[key] ?? OAUTH_NOTICE.failed) : null
+}
+
 /**
  * Your libraries as cards, "Claim another library", and for team members
  * a "Your team" card. With exactly one library and no team, straight to it,
@@ -63,10 +69,7 @@ export default async function StaffLibrariesPage({
   const teams = sessionTeamsOf(session.user)
   if (!libraries.length && !teams.length)
     return <StaffAccessRequired signedIn />
-  const oauthParam = Array.isArray(query.oauth) ? query.oauth[0] : query.oauth
-  const oauth = oauthParam
-    ? (OAUTH_NOTICE[oauthParam] ?? OAUTH_NOTICE.failed)
-    : null
+  const oauth = oauthNotice(query.oauth)
   if (!oauth && libraries.length === 1 && teams.length === 0)
     redirect(staffLibraryHref(libraries[0]!.slug))
   const [summaries, teamsResult] = await Promise.all([
@@ -84,6 +87,9 @@ export default async function StaffLibrariesPage({
       : Promise.resolve(null),
   ])
   const teamRows = teamsResult?.body?.teams
+  const canAddLibrary =
+    libraries.length > 0 ||
+    Boolean(teamRows?.some((team) => team.verified && isActiveTeam(team)))
 
   return (
     <>
@@ -97,10 +103,7 @@ export default async function StaffLibrariesPage({
           <StaffAreaTabs
             active="overview"
             teamId={teams[0]?.id}
-            adding={
-              libraries.length > 0 ||
-              teamRows?.some((team) => team.verified && isActiveTeam(team))
-            }
+            adding={canAddLibrary}
           />
         }
       >
@@ -119,8 +122,7 @@ export default async function StaffLibrariesPage({
             />
             Claim another library
           </Link>
-          {(libraries.length > 0 ||
-            teamRows?.some((team) => team.verified && isActiveTeam(team))) && (
+          {canAddLibrary && (
             <Link
               href="/staff/new"
               className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
@@ -359,15 +361,15 @@ export default async function StaffLibrariesPage({
                     color: T.ink.base,
                   }}
                 >
-                  Keep your library’s page up to date
+                  Connect your first Library
                 </h2>
                 <p
                   className="m-0 mb-4 max-w-[52ch] text-[15px]"
                   style={{ color: T.ink.dim }}
                 >
-                  An approved Library Claim gives you staff access. A moderator
-                  checks each claim. Your Team organiser can also assign you to
-                  a library covered by your Team.
+                  {teams[0]?.role === "organiser"
+                    ? "Your Team membership and Library staff access are separate. Claim a Library you work with, then add it to your Team under Members & libraries and assign colleagues. A moderator checks your claim; payment does not grant staff authority."
+                    : "Your Team organiser can assign you to a covered Library. You can also claim a Library you work with yourself. A moderator checks each claim before staff access is granted."}
                 </p>
                 <StaffClaimSteps />
                 <Link

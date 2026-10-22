@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 
 import { SectionTabs, type SectionTab } from "@/components/ds/SectionTabs"
 
-/** Shared staff destinations; a Team selection survives navigation. */
+/** Shared destinations for the account’s Team and Library staff access. */
 export function StaffAreaTabs({
   active,
   teamId,
@@ -22,7 +22,6 @@ export function StaffAreaTabs({
   readonly adding?: boolean
 }) {
   const t = useTranslations("staffWorkspace")
-  const query = teamId ? `?team=${encodeURIComponent(teamId)}` : ""
   const tabs: SectionTab[] = [
     {
       id: "overview",
@@ -35,19 +34,19 @@ export function StaffAreaTabs({
           {
             id: "team",
             label: t("membersLibraries"),
-            href: `/staff/team${query}`,
+            href: `/staff/teams`,
             icon: "mdi:account-group-outline",
           },
           {
             id: "billing",
             label: t("billing"),
-            href: `/staff/team/billing${query}`,
+            href: `/staff/teams/billing`,
             icon: "mdi:credit-card-outline",
           },
           {
             id: "api",
             label: t("apiAccess"),
-            href: `/staff/team/api${query}`,
+            href: `/staff/teams/api`,
             icon: "mdi:code-tags",
           },
         ]

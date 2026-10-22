@@ -433,7 +433,7 @@ describe("StaffDrawer", () => {
     ).toBe("mdi:chart-bar")
     expect(
       screen.getByRole("link", { name: "Team organiser" }).getAttribute("href")
-    ).toBe("/staff/team")
+    ).toBe("/staff/teams")
   })
 
   it("says when the page's library isn't one of the viewer's, and offers to claim it", async () => {

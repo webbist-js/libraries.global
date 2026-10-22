@@ -13,12 +13,13 @@ import type { ApiDashboard } from "./types"
 
 export async function apiDashboard(
   pool: Pool,
-  team: TeamDetail
+  team: TeamDetail,
+  keyOffset = 0
 ): Promise<ApiDashboard> {
   const config = apiConfig()
   const [membership, usage, attempts, price] = await Promise.all([
     apiMembership(pool, team.documentId),
-    apiUsage(pool, team.documentId),
+    apiUsage(pool, team.documentId, keyOffset),
     pool.query(
       "select 1 from team_api_attempts where team_id=$1 and state in ('preparing','open') limit 1",
       [team.documentId]
