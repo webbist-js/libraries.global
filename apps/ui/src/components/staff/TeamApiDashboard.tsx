@@ -6,11 +6,9 @@ import { useEffect, useRef, useState, useTransition } from "react"
 
 import { Badge } from "@/components/ds/Badge"
 import { Notice } from "@/components/ds/Notice"
-import { SelectField } from "@/components/ds/SelectField"
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { TeamApiKeyDialog } from "@/components/staff/TeamApiKeyDialog"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "@/lib/navigation"
 import type { ApiDashboard } from "@/lib/team-api/types"
 
 import {
@@ -33,6 +31,75 @@ const ERRORS: Record<string, string> = {
     "Your payment is being confirmed. This page will update when it is ready.",
   too_many_requests: "Please wait a minute before trying again.",
   team_inactive: "Your Team is inactive. Contact us to renew it.",
+}
+
+function activeApiKeyCount(data: ApiDashboard, now: number) {
+  return (
+    data.keyPage?.activeCount ??
+    data.keys.filter(
+      (key) =>
+        !key.revokedAt && (!key.expiresAt || Date.parse(key.expiresAt) > now)
+    ).length
+  )
+}
+
+function hasApiUsage(data: ApiDashboard) {
+  return Boolean(
+    data.active ||
+    data.membership ||
+    data.days.length ||
+    data.usage.requests ||
+    data.usage.bytes
+  )
+}
+function hasApiKeys(data: ApiDashboard) {
+  return Boolean(data.active || data.membership || data.keys.length)
+}
+function canCreateApiKeys(data: ApiDashboard) {
+  return data.organiser && data.active
+}
+
+function KeyPagination({
+  page,
+  count,
+  pending,
+  onPage,
+}: {
+  page: ApiDashboard["keyPage"]
+  count: number
+  pending: boolean
+  onPage: (offset: number) => void
+}) {
+  if (!page || (page.offset === 0 && !page.hasMore)) return null
+
+  return (
+    <nav
+      aria-label="API key pages"
+      className="mt-4 flex flex-wrap items-center justify-between gap-3"
+    >
+      <span className="text-sm text-(--t-ink-dim)">
+        Keys {page.offset + 1}–{page.offset + count}
+      </span>
+      <div className="flex gap-2">
+        <Button
+          variant="surface"
+          size="pill"
+          disabled={pending || page.offset === 0}
+          onClick={() => onPage(Math.max(0, page.offset - 50))}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="surface"
+          size="pill"
+          disabled={pending || !page.hasMore}
+          onClick={() => onPage(page.offset + 50)}
+        >
+          Next
+        </Button>
+      </div>
+    </nav>
+  )
 }
 
 type KeyChange = { action: "rotate" | "revoke"; keyId: string; name: string }
@@ -249,11 +316,9 @@ function KeyChangeConfirmation({
 
 export function TeamApiDashboard({
   initial,
-  teams,
   confirming,
 }: {
   readonly initial: ApiDashboard
-  readonly teams: { id: string; name: string }[]
   readonly confirming: boolean
 }) {
   const [data, setData] = useState(initial)
@@ -266,8 +331,7 @@ export function TeamApiDashboard({
   const t = useTranslations("teamApiKeys")
   const [confirmation, setConfirmation] = useState<KeyChange | null>(null)
   const [pending, startTransition] = useTransition()
-  const locale = useLocale(),
-    router = useRouter()
+  const locale = useLocale()
   const endpoint = `/api/staff/team/${data.teamId}/api`
 
   useEffect(() => {
@@ -287,8 +351,10 @@ export function TeamApiDashboard({
     }
   }, [confirming, data.active, data.pendingPayment, endpoint])
 
-  const refresh = async () => {
-    const response = await fetch(endpoint, { cache: "no-store" })
+  const refresh = async (keyOffset = data.keyPage?.offset ?? 0) => {
+    const response = await fetch(`${endpoint}?keyOffset=${keyOffset}`, {
+      cache: "no-store",
+    })
     if (!response.ok)
       throw new Error("Could not refresh API usage. Try again shortly.")
     setData((await response.json()) as ApiDashboard)
@@ -334,11 +400,9 @@ export function TeamApiDashboard({
       }
     })
 
-  const activeKeys = data.keys.filter(
-    (key) =>
-      !key.revokedAt && (!key.expiresAt || Date.parse(key.expiresAt) > now)
-  ).length
-  const atLimit = activeKeys >= data.limits.keys
+  const activeKeys = activeApiKeyCount(data, now)
+  const showUsage = hasApiUsage(data)
+  const showKeys = hasApiKeys(data)
   const subscription = (
     <ApiSubscriptionPanel
       data={data}
@@ -362,23 +426,6 @@ export function TeamApiDashboard({
           </p>
         )}
         <div className="flex min-w-0 flex-wrap items-center gap-3">
-          {teams.length > 1 ? (
-            <div className="w-full sm:w-60">
-              <SelectField
-                label="Team"
-                value={data.teamId}
-                options={teams.map((team) => ({
-                  value: team.id,
-                  label: team.name,
-                }))}
-                onValueChange={(value) =>
-                  router.push(
-                    "/staff/team/api?team=" + encodeURIComponent(value)
-                  )
-                }
-              />
-            </div>
-          ) : null}
           <Button
             type="button"
             variant="surface"
@@ -417,114 +464,122 @@ export function TeamApiDashboard({
         </Notice>
       ) : null}
       {!data.active ? subscription : null}
-      <ApiUsagePanel data={data} locale={locale} />
-      <StaffPanel
-        title={t("title")}
-        id="api-keys"
-        aside={
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-(--t-bg-surface) px-3 py-1.5 text-[14px] text-(--t-ink-dim) tabular-nums">
-              {t("activeCount", { count: activeKeys, limit: data.limits.keys })}
-            </span>
-            {data.organiser && data.active ? (
-              <TeamApiKeyDialog
-                open={keyCreationOpen}
-                onOpenChange={(open) => {
-                  setKeyCreationOpen(open)
-                  setError("")
-                }}
-                pending={pending}
-                disabled={Boolean(secret) || atLimit}
-                error={error}
-                onCreate={(draft) => {
-                  if (pending || secret || atLimit) return
+      {showUsage ? <ApiUsagePanel data={data} locale={locale} /> : null}
+      {showKeys ? (
+        <StaffPanel
+          title={t("title")}
+          id="api-keys"
+          aside={
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-(--t-bg-surface) px-3 py-1.5 text-[14px] text-(--t-ink-dim) tabular-nums">
+                {t("activeCount", { count: activeKeys })}
+              </span>
+              {canCreateApiKeys(data) ? (
+                <TeamApiKeyDialog
+                  open={keyCreationOpen}
+                  onOpenChange={(open) => {
+                    setKeyCreationOpen(open)
+                    setError("")
+                  }}
+                  pending={pending}
+                  disabled={Boolean(secret)}
+                  error={error}
+                  onCreate={(draft) => {
+                    if (pending || secret) return
 
-                  request({ action: "create", ...draft })
-                }}
-                focusSecret={() => {
-                  if (!secretRef.current) return false
-                  secretRef.current.focus()
+                    request({ action: "create", ...draft })
+                  }}
+                  focusSecret={() => {
+                    if (!secretRef.current) return false
+                    secretRef.current.focus()
 
-                  return true
-                }}
-              />
-            ) : null}
-          </div>
-        }
-      >
-        <p className="mt-0 mb-5 max-w-[70ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
-          {t("intro")}
-        </p>
-        {secret ? (
-          <div
-            ref={secretRef}
-            tabIndex={-1}
-            className="mb-5 rounded-2xl border border-(--t-accent-primary)/25 bg-(--t-accent-primary)/5 p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) sm:p-5"
-            role="status"
-          >
-            <p className="mt-0 mb-3 text-[16px] font-semibold">
-              {t("copyNow")}
-            </p>
-            <code
-              translate="no"
-              className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-[14px] break-all select-all"
-            >
-              {secret}
-            </code>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="primary"
-                size="pill"
-                onClick={() =>
-                  navigator.clipboard
-                    .writeText(secret)
-                    .then(() => setCopied(true))
-                    .catch(() =>
-                      setError("Select the key above and copy it manually.")
-                    )
-                }
-              >
-                <Icon
-                  aria-hidden="true"
-                  icon={copied ? "mdi:check" : "mdi:content-copy"}
+                    return true
+                  }}
                 />
-                {t(copied ? "copied" : "copyKey")}
-              </Button>
-              <Button
-                type="button"
-                variant="surface"
-                size="pill"
-                onClick={() => setSecret(null)}
-              >
-                {t("saved")}
-              </Button>
+              ) : null}
             </div>
-          </div>
-        ) : null}
-        <TeamKeyList
-          data={data}
-          now={now}
-          secret={secret}
-          locale={locale}
-          pending={pending}
-          setConfirmation={setConfirmation}
-        />
-        {data.organiser && data.active && atLimit ? (
-          <p
-            role="status"
-            className="mt-4 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)"
-          >
-            {t("atLimit", { count: data.limits.keys })}
+          }
+        >
+          <p className="mt-0 mb-5 max-w-[70ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+            {t("intro")}
           </p>
-        ) : null}
-        <KeyChangeConfirmation
-          confirmation={confirmation}
-          pending={pending}
-          request={request}
-          onCancel={() => setConfirmation(null)}
-        />
-      </StaffPanel>
+          {secret ? (
+            <div
+              ref={secretRef}
+              tabIndex={-1}
+              className="mb-5 rounded-2xl border border-(--t-accent-primary)/25 bg-(--t-accent-primary)/5 p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) sm:p-5"
+              role="status"
+            >
+              <p className="mt-0 mb-3 text-[16px] font-semibold">
+                {t("copyNow")}
+              </p>
+              <code
+                translate="no"
+                className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-[14px] break-all select-all"
+              >
+                {secret}
+              </code>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="pill"
+                  onClick={() =>
+                    navigator.clipboard
+                      .writeText(secret)
+                      .then(() => setCopied(true))
+                      .catch(() =>
+                        setError("Select the key above and copy it manually.")
+                      )
+                  }
+                >
+                  <Icon
+                    aria-hidden="true"
+                    icon={copied ? "mdi:check" : "mdi:content-copy"}
+                  />
+                  {t(copied ? "copied" : "copyKey")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="surface"
+                  size="pill"
+                  onClick={() => setSecret(null)}
+                >
+                  {t("saved")}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+          <TeamKeyList
+            data={data}
+            now={now}
+            secret={secret}
+            locale={locale}
+            pending={pending}
+            setConfirmation={setConfirmation}
+          />
+          <KeyPagination
+            page={data.keyPage}
+            count={data.keys.length}
+            pending={pending}
+            onPage={(offset) =>
+              startTransition(async () => {
+                try {
+                  await refresh(offset)
+                } catch {
+                  setError("Could not load keys. Try again.")
+                }
+              })
+            }
+          />
+          <KeyChangeConfirmation
+            confirmation={confirmation}
+            pending={pending}
+            request={request}
+            onCancel={() => setConfirmation(null)}
+          />
+        </StaffPanel>
+      ) : null}
       <ApiGuidePanel />
     </div>
   )

@@ -61,13 +61,7 @@ const Card = StaffPanel
  * "Libraries for {name}", saved as a single request. Members (not
  * organisers) get the same view read only.
  */
-export function TeamOrganiser({
-  team,
-  others,
-}: {
-  readonly team: TeamDetail
-  readonly others: { id: string; name: string }[]
-}) {
+export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
   const tUi = useUiTranslations("ui")
 
   const router = useRouter()
@@ -610,23 +604,6 @@ export function TeamOrganiser({
                 </dd>
               </div>
             </dl>
-            {others.length ? (
-              <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
-                Your other teams:{" "}
-                {others.map((t, i) => (
-                  <span key={t.id}>
-                    {i > 0 ? ", " : ""}
-                    <Link
-                      href={`/staff/team?team=${t.id}`}
-                      className="font-semibold underline"
-                      style={{ color: T.accent.primary }}
-                    >
-                      {t.name}
-                    </Link>
-                  </span>
-                ))}
-              </p>
-            ) : null}
           </Card>
 
           {organiser ? (
@@ -644,10 +621,7 @@ export function TeamOrganiser({
                   Every available seat is taken. Remove a member or invitation,
                   or add seats.{" "}
                   {team.source === "checkout" ? (
-                    <Link
-                      href={`/staff/team/billing?team=${team.documentId}`}
-                      className={CONTACT_LINK}
-                    >
+                    <Link href="/staff/teams/billing" className={CONTACT_LINK}>
                       Manage billing and seats
                     </Link>
                   ) : (

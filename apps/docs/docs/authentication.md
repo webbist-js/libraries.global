@@ -47,3 +47,18 @@ Admin plugins use `useFetchClient` and registered admin routes, whose policies r
 The checked-in environment examples document variable names and placeholders. Runtime values and operator access details belong outside Git. Use `APP_PUBLIC_URL` for the accepted browser origin, `BETTER_AUTH_SECRET` for Better Auth and the server's configured bridge credentials for CMS calls.
 
 Relevant checks include account route validation/origin tests, account-switch cache tests, access-role acceptance tests and the Strapi plugin interaction tests. Provider callbacks and billing acceptance require isolated local or sandbox fixtures; they must not send real invitations or charge live accounts.
+
+## Beta welcome
+
+The protected beta shell mounts a welcome dialog after the session has loaded.
+It introduces search, contributions, Team subscriptions, the API and the existing
+Feedback form. Test-card instructions are shown only for sandbox billing; the
+copy makes the pre-launch data wipe explicit. The public beta entrance, sign-in,
+live console and active Team checkout pages are kept clear of the welcome.
+
+Dismissal is functional session storage (`lg.beta-welcome.v1`), scoped to the
+current account or guest. A new tab/account or thirty minutes away starts a new
+visit; ordinary route changes and reloads retain dismissal. When browser storage
+is unavailable, the mounted visit retains its dismissal in memory. The dialog
+loads lazily and uses the shared accessible modal. Closing it does not accept
+terms, subscribe to anything or send feedback.

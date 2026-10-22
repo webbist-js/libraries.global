@@ -1,10 +1,10 @@
 # Self-service Team subscriptions
 
-New Teams start at `/staff/team/new`. A verified account creates an inactive organisation and becomes its Organiser. The organiser chooses seats, accepts Team terms version 1.2 and continues to Stripe Managed Payments Checkout. Settled invoice lines activate seats; the return page and subscription status alone grant nothing. The API add-on remains a separate monthly subscription.
+New Teams start at `/staff/teams/new`. A verified account creates an inactive organisation and becomes its Organiser. The organiser chooses seats, accepts Team terms version 1.2 and continues to Stripe Managed Payments Checkout. Settled invoice lines activate seats; the return page and subscription status alone grant nothing. The API add-on remains a separate monthly subscription.
 
 ## Onboard a Team with API access
 
-1. Sign up, verify your email and finish your profile. Open `/staff/team/new`, enter the organisation's name, choose seats and continue to billing. The Team is saved before payment, so you can return to it without creating another.
+1. Sign up, verify your email and finish your profile. Open `/staff/teams/new`, enter the organisation's name, choose seats and continue to billing. The Team is saved before payment, so you can return to it without creating another.
 2. Review the annual total and accept the membership terms. Complete Stripe Checkout. In beta, use Stripe test payment details. The Team billing page shows whether payment and activation are still pending; use **Refresh payment status** if confirmation takes time.
 3. Open **Members and Libraries**. Add the Libraries your Team covers, then invite colleagues by email. Each invitation reserves a seat. Colleagues accept their invitation using a verified account with that email address. Promote another active colleague to Organiser so someone else can manage the Team if you leave.
 4. Arrange verification of Library authority through the existing Library access process. Paying for a Team does not grant verified owner or editor permissions. An Organiser can manage Team billing without verified Library authority.
@@ -16,9 +16,11 @@ Use **Manage Team billing and seats** for invoices, payment details, seat change
 ## Team workspaces
 
 The membership card opens an existing Team instead of offering another signup.
-Default selection prefers active self-service Teams, then other active Teams;
-explicit Team links keep their selection. Inactive setups remain available for
-resuming payment or discarding, without concealing paid Teams with the same name.
+An account has one active membership row across all Teams, including lapsed or unpaid Teams. Signup and invitation acceptance take the same PostgreSQL account advisory lock before checking membership. Buying more seats expands the current Team; it does not create another membership. The original purchaser may create another Team after handing over and leaving, because billing history is not current membership.
+
+The canonical workspace is `/staff/teams`, with `/billing` and `/api` tabs. Existing `/staff/team/...` invitations and Stripe return URLs redirect to the canonical pages, preserving payment status and seat requests while dropping the old Team selector. Resource APIs still carry a Team ID and check current membership and authority on every request.
+
+Legacy duplicate memberships must be reconciled explicitly. Do not choose one silently, cancel subscriptions, remove the last Organiser or erase Library assignments automatically. The UI shows a membership check until an operator resolves duplicates; server readers retain legacy rows for the audit. Keep the Team’s billing and API subscriptions under review before retiring a membership.
 
 Members and libraries, billing and seats, and API access share the staff area’s
 navigation and panels. The checkout uses the same accessible dialog and progress
@@ -63,6 +65,6 @@ Paid projections and checkout capabilities remain private. Consent exports inclu
 
 ## Validation
 
-`pnpm --filter @repo/ui billing:db:test` runs personal/API/Team concurrency, settlement and retry tests in generated local PostgreSQL schemas, then removes them. It refuses remote database hosts. Route tests cover browser-selected billing/authority fields, invalid quantities and organiser checks. CMS tests cover inactive signup, replay ordering, mode separation, operator suspension, capacity recovery and account-transfer requirements. Component checks cover consent, the purchase gate, member visibility and pending payment.
+`pnpm --filter @repo/ui billing:db:test` creates temporary PostgreSQL schemas for isolated concurrency and settlement checks. Do not run it against the shared local development database. Use an approved isolated CI environment for these checks; routine local checks reuse the existing stack and run unit/route tests with one worker. Route tests cover browser-selected billing/authority fields, invalid quantities and organiser checks. CMS tests cover inactive signup, replay ordering, mode separation, operator suspension, capacity recovery and account-transfer requirements. Component checks cover consent, the purchase gate, member visibility and pending payment.
 
 Owned sandbox acceptance must also verify the full account → Team → hosted checkout → settlement → CMS activation path, a paid increase, scheduled reduction/undo, renewal failure/recovery, cancellation, API eligibility and payment management while inactive. Test provider/device requirements honestly; fixture tests do not prove a real provider payment or live eligibility. Run the existing minute billing worker throughout acceptance, including when new purchases are disabled.

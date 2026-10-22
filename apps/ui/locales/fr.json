@@ -2834,13 +2834,13 @@
     "claimStepReviewDetail": "Une fois approuvée, la bibliothèque apparaît ici.",
     "howClaimsWork": "Comment fonctionne la vérification",
     "noLibraryAssignments": "Aucune bibliothèque attribuée",
-    "teamLinks": "Espaces d’équipe",
+    "teamLinks": "Votre équipe",
     "billing": "Facturation et places"
   },
   "teamApiKeys": {
     "title": "Clés API",
     "intro": "Utilisez une clé distincte pour chaque application. Les clés permettent uniquement de lire les données publiées des bibliothèques.",
-    "activeCount": "{count} sur {limit} actives",
+    "activeCount": "{count} actives · clés illimitées",
     "create": "Créer une clé",
     "creating": "Création de la clé…",
     "createTitle": "Créer une clé API",
@@ -2861,7 +2861,6 @@
     "emptyOrganiser": "Créez votre première clé lorsque vous serez prêt à connecter une application.",
     "emptyMember": "L’organisateur de votre équipe crée et gère les clés. Vous pouvez consulter ici l’utilisation de l’API.",
     "emptyInactive": "Activez l’accès à l’API pour votre équipe afin de créer des clés.",
-    "atLimit": "Les {count} emplacements sont utilisés. Révoquez une clé inutilisée avant d’en créer une autre.",
     "copyNow": "Copiez cette clé maintenant. Elle ne sera plus affichée.",
     "copyKey": "Copier la clé",
     "copied": "Copiée",
@@ -2881,7 +2880,7 @@
     "responseData": "Données de réponse",
     "rate": "{count} requêtes par minute",
     "concurrency": "{count} requêtes simultanées",
-    "keys": "Jusqu’à {count} clés actives",
+    "keys": "Clés API illimitées ; un quota partagé par équipe",
     "noOverage": "Aucun dépassement n’est facturé automatiquement.",
     "consent": "J’accepte les <membership>conditions d’adhésion</membership>, la <refunds>politique d’annulation et de remboursement</refunds> et les limites de l’API indiquées ici, et demande l’accès dès confirmation du paiement.",
     "subscribe": "Souscrire à l’accès à l’API",
@@ -2938,7 +2937,10 @@
     "guidesTitle": "Des guides pour bien commencer",
     "browseGuides": "Parcourir les guides de Connaissances",
     "helpDetail": "Besoin d’aide avec l’invitation ? Contactez la personne qui vous a invité, ou",
-    "askCommunity": "posez votre question dans Discussions."
+    "askCommunity": "posez votre question dans Discussions.",
+    "existingTitle": "Votre compte a déjà une équipe",
+    "existingDetail": "Vous appartenez à {team}. Un compte ne peut rejoindre qu’une seule équipe. Demandez le retrait de votre adhésion avant d’en rejoindre une autre ; un responsable doit d’abord transmettre ses responsabilités.",
+    "existingAction": "Ouvrir votre équipe"
   },
   "staffOnboarding": {
     "eyebrow": "Personnel de bibliothèque",
@@ -3039,5 +3041,35 @@
       "researcher": "Chercheur / Universitaire",
       "other": "Autre"
     }
+  },
+  "betaWelcome": {
+    "badge": "Bêta fermée",
+    "title": "Bienvenue dans la bêta.",
+    "intro": "Aidez-nous à préparer Libraries Global pour tout le monde. Explorez, essayez les fonctionnalités et dites-nous ce qui ne fonctionne pas.",
+    "tryTitle": "Quelques idées de test",
+    "exploreTitle": "Trouvez une bibliothèque",
+    "exploreBody": "Explorez l’Atlas, essayez les filtres et consultez les profils publics.",
+    "contributeTitle": "Contribuez",
+    "contributeBody": "Proposez une correction, répondez aux questions d’accessibilité ou lancez une discussion.",
+    "teamTitle": "Essayez les offres et votre équipe",
+    "teamBody": "Testez les abonnements disponibles, invitez des collègues et découvrez l’espace du personnel. L’accès du personnel exige toujours une vérification.",
+    "apiTitle": "Connectez une application",
+    "apiBody": "Essayez l’API bêta avec une option API d’équipe active. Les clés partagent un quota mensuel par équipe.",
+    "paymentTitle": "Paiement de test",
+    "paymentBody": "Vous pouvez essayer les offres et abonnements disponibles. Le paiement bêta utilise le mode test de Stripe : aucun paiement réel n’est effectué.",
+    "cardLabel": "Carte de test Stripe",
+    "cardDetails": "Expiration : une date future · CVC : 3 chiffres quelconques. Utilisez des coordonnées de facturation fictives.",
+    "copyCard": "Copier la carte de test",
+    "copied": "Copié",
+    "copyFailed": "Sélectionnez et copiez le numéro ci-dessus.",
+    "testOnly": "Utilisez cette carte uniquement si le paiement indique le mode test. Ne saisissez pas de vraie carte.",
+    "stripeGuide": "Guide de test Stripe",
+    "paymentsOff": "Les tests de paiement ne sont pas disponibles dans cet environnement. Explorez les autres fonctionnalités de la bêta.",
+    "resetTitle": "Les données bêta seront effacées avant le lancement",
+    "resetBody": "Les comptes, contributions, équipes et abonnements de test ne seront pas conservés. Gardez une copie de ce que vous souhaitez sauvegarder.",
+    "feedbackBody": "Attendez-vous à des bugs et à des détails inachevés. Utilisez l’onglet Commentaires sur le bord de la page pour signaler les problèmes ou proposer des idées. Décrivez le résultat attendu et ce qui s’est passé.",
+    "start": "Commencer les tests",
+    "feedback": "Envoyer un commentaire",
+    "apiGuide": "Démarrage API"
   }
 }

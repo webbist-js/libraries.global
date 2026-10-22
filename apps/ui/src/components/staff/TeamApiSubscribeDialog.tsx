@@ -145,7 +145,7 @@ export function TeamApiSubscribeDialog({
               <li>
                 {t("concurrency", { count: count(data.limits.concurrency) })}
               </li>
-              <li>{t("keys", { count: count(data.limits.keys) })}</li>
+              <li>{t("keys")}</li>
             </ul>
             <p className="mt-3 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
               {t("noOverage")}

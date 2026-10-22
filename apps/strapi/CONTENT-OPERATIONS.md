@@ -35,8 +35,11 @@ account-deletion guides in English, French and Czech. It keeps detailed pricing
 in the canonical plans and Team guides, removes obsolete copies from related
 articles, and explains organisation ownership, seat changes and Organiser
 handover. General terms record the descriptive changes as version 1.1; Team
-membership, privacy and cancellation changes use version 1.2. Historical
-accepted purchase versions remain unchanged; new accounts record general terms
+membership, privacy and cancellation changes use version 1.2. The single-Team refinement records membership document revision 1.3, describing
+one Team per account and unlimited API keys with one shared allowance. Cancellation document revision 1.3 updates its Team billing link. These are
+descriptive document revisions; personal/API offer consent stays at 1.1 and the
+annual Team offer at 1.2 because prices and settled purchase evidence are unchanged.
+Historical accepted purchase versions remain unchanged; new accounts record general terms
 version 1.1 without rewriting existing account consent. Preserve the published versions
 while staging production drafts until the matching application release passes
 acceptance. When local MCP is explicitly requested, use its discovered content

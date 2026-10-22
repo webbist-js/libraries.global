@@ -3,7 +3,14 @@ import * as React from "react"
 import { createElement as h } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@/test/render"
 
 Object.assign(globalThis, { React })
 
@@ -66,6 +73,37 @@ const bodies = () =>
   fetchMock.mock.calls.map(([, init]) => JSON.parse(String(init.body)))
 
 describe("LibraryFacilityAnswers", () => {
+  it("selects and remembers Not sure without submitting it as an absence", async () => {
+    show()
+    const question = within(screen.getByRole("group", { name: "Hearing loop" }))
+    fireEvent.click(question.getByRole("button", { name: "Not sure" }))
+    expect(
+      question
+        .getByRole("button", { name: "Not sure" })
+        .getAttribute("aria-pressed")
+    ).toBe("true")
+    expect(
+      question.getByRole("button", { name: "Yes" }).getAttribute("aria-pressed")
+    ).toBe("false")
+    expect(screen.queryByRole("button", { name: "Send for review" })).toBeNull()
+    cleanup()
+    render(
+      h(LibraryFacilityAnswers, {
+        rows,
+        librarySlug: "nailsea",
+        libraryName: "Nailsea Library",
+        libraryPath: "/nailsea",
+      })
+    )
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole("group", { name: "Hearing loop" }))
+          .getByRole("button", { name: "Not sure" })
+          .getAttribute("aria-pressed")
+      ).toBe("true")
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
   it("sends as before on the library page, with no drive", async () => {
     fetchMock.mockResolvedValue(Response.json({ data: {} }))
     const onSent = show()

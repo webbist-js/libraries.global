@@ -6,7 +6,8 @@ export type ApiLimits = {
   bytes: number
   perMinute: number
   concurrency: number
-  keys: number
+  /** null means unlimited credentials; usage limits remain pooled per Team. */
+  keys: number | null
   responseBytes: number
 }
 
@@ -48,6 +49,7 @@ export type ApiDashboard = {
   price: { unitAmount: number; currency: string } | null
   limits: ApiLimits
   usage: { requests: number; bytes: number; resetsAt: string }
+  keyPage?: { offset: number; hasMore: boolean; activeCount: number }
   keys: ApiKeyView[]
   days: { day: string; requests: number; bytes: number; errors: number }[]
   endpoints: {

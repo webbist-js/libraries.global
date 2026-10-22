@@ -22,7 +22,7 @@ function teaserCta(
     case "pro":
       return { label: "See Pro", href: "/contribute/membership" }
     case "team":
-      return { label: "Create your Team", href: "/staff/team/new" }
+      return { label: "Create your Team", href: "/staff/teams/new" }
   }
 }
 

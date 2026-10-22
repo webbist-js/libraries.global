@@ -2834,13 +2834,13 @@
     "claimStepReviewDetail": "Once approved, the library appears here.",
     "howClaimsWork": "How claims work",
     "noLibraryAssignments": "No libraries assigned yet",
-    "teamLinks": "Team workspaces",
+    "teamLinks": "Your Team",
     "billing": "Billing & seats"
   },
   "teamApiKeys": {
     "title": "API keys",
     "intro": "Use a separate key for each application. Keys can only read published library data.",
-    "activeCount": "{count} of {limit} active",
+    "activeCount": "{count} active · unlimited keys",
     "create": "Create key",
     "creating": "Creating key…",
     "createTitle": "Create an API key",
@@ -2861,7 +2861,6 @@
     "emptyOrganiser": "Create your first key when you’re ready to connect an application.",
     "emptyMember": "Your Team organiser creates and manages keys. You can view API usage here.",
     "emptyInactive": "Activate API access for your Team to start creating keys.",
-    "atLimit": "All {count} key slots are in use. Revoke an unused key before creating another.",
     "copyNow": "Copy this key now. It will not be shown again.",
     "copyKey": "Copy key",
     "copied": "Copied",
@@ -2881,7 +2880,7 @@
     "responseData": "Response data",
     "rate": "{count} requests per minute",
     "concurrency": "{count} requests at once",
-    "keys": "Up to {count} active keys",
+    "keys": "Unlimited API keys; one shared Team allowance",
     "noOverage": "There are no automatic overage charges.",
     "consent": "I agree to the <membership>membership terms</membership>, <refunds>cancellation and refund policy</refunds>, and the API limits shown here, and request access as soon as payment is confirmed.",
     "subscribe": "Subscribe to API access",
@@ -2938,7 +2937,10 @@
     "guidesTitle": "Guides to get you started",
     "browseGuides": "Browse Knowledge guides",
     "helpDetail": "Need help with the invitation? Contact the person who invited you, or",
-    "askCommunity": "ask in Discussions."
+    "askCommunity": "ask in Discussions.",
+    "existingTitle": "Your account already has a Team",
+    "existingDetail": "You belong to {team}. Each account can join one Team. Ask its Organiser to remove your membership before joining another; an Organiser must first hand over their responsibilities.",
+    "existingAction": "Open your Team"
   },
   "staffOnboarding": {
     "eyebrow": "Library staff",
@@ -3039,5 +3041,35 @@
       "researcher": "Researcher / Academic",
       "other": "Other"
     }
+  },
+  "betaWelcome": {
+    "badge": "Closed beta",
+    "title": "Welcome to the beta.",
+    "intro": "Help us make Libraries Global ready for everyone. Explore, try things out and tell us where something feels wrong.",
+    "tryTitle": "A few things to try",
+    "exploreTitle": "Find a library",
+    "exploreBody": "Search the Atlas, try the filters and browse public profiles.",
+    "contributeTitle": "Make a contribution",
+    "contributeBody": "Suggest a correction, answer accessibility questions or start a discussion.",
+    "teamTitle": "Try plans and your Team",
+    "teamBody": "Test subscriptions, invite colleagues and manage Library work. Staff access still needs verification.",
+    "apiTitle": "Connect an application",
+    "apiBody": "Try the beta API with an active Team add-on. Keys share one monthly Team allowance.",
+    "paymentTitle": "Test checkout",
+    "paymentBody": "You can try available plans and subscriptions. Beta checkout uses Stripe Test mode: no real payment is taken.",
+    "cardLabel": "Stripe test card",
+    "cardDetails": "Expiry: any future date · CVC: any 3 digits. Use test billing details.",
+    "copyCard": "Copy test card",
+    "copied": "Copied",
+    "copyFailed": "Select and copy the number above.",
+    "testOnly": "Use this card only when checkout says Test mode. Don’t enter real card details.",
+    "stripeGuide": "Stripe testing guide",
+    "paymentsOff": "Payment testing is unavailable in this environment. Please explore the other beta features.",
+    "resetTitle": "Beta data will be wiped before launch",
+    "resetBody": "Accounts, contributions, Teams and test subscriptions won’t carry over. Keep a separate copy of anything you want to save.",
+    "feedbackBody": "Expect bugs and unfinished details. Use the Feedback tab on the edge of the page to report what happened, what you expected, or an idea to improve the beta.",
+    "start": "Start testing",
+    "feedback": "Send feedback",
+    "apiGuide": "API quickstart"
   }
 }

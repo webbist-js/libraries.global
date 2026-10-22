@@ -34,11 +34,13 @@ export async function apiMembership(db: Queryable, teamId: string) {
     [teamId]
   )
 
-  return (
+  const membership =
     result.rows.find((row) => apiAccessActive(row.snapshot))?.snapshot ??
-    result.rows[0]?.snapshot ??
-    null
-  )
+    result.rows[0]?.snapshot
+
+  return membership
+    ? { ...membership, limits: { ...membership.limits, keys: null } }
+    : null
 }
 
 async function transaction<T>(
@@ -78,12 +80,6 @@ export async function createApiKey(
     const membership = await apiMembership(client, teamId)
     if (!apiAccessActive(membership))
       throw new BillingError("api_addon_required", 403)
-    const count = await client.query<{ count: string }>(
-      "select count(*) from team_api_keys where team_id=$1 and revoked_at is null and (expires_at is null or expires_at>now())",
-      [teamId]
-    )
-    if (Number(count.rows[0]?.count) >= membership!.limits.keys)
-      throw new BillingError("api_key_limit_reached", 409)
     const secret = token(),
       id = randomUUID()
     await client.query(
@@ -305,45 +301,50 @@ export async function finishApiRequest(
   })
 }
 
-export async function apiUsage(pool: Pool, teamId: string) {
+export async function apiUsage(pool: Pool, teamId: string, keyOffset = 0) {
   const month = apiMonth()
   const today = Date.parse(new Date().toISOString().slice(0, 10))
   const windowStart = new Date(today - 29 * 86_400_000)
-  const [usage, keys, days, endpoints, activation] = await Promise.all([
-    pool.query<{ requests: string; bytes: string }>(
-      "select requests,bytes from team_api_usage where team_id=$1 and month=$2",
-      [teamId, month.start]
-    ),
-    pool.query<KeyRow & { requests: string; bytes: string }>(
-      "select k.*,count(r.id) filter(where r.status between 200 and 299) as requests,coalesce(sum(r.response_bytes),0) as bytes from team_api_keys k left join team_api_requests r on r.key_id=k.id and r.month=$2 where k.team_id=$1 group by k.id order by (k.revoked_at is null and (k.expires_at is null or k.expires_at>now())) desc,k.created_at desc limit 100",
-      [teamId, month.start]
-    ),
-    pool.query<{
-      day: string
-      requests: string
-      bytes: string
-      errors: string
-    }>(
-      "select to_char(started_at at time zone 'UTC','YYYY-MM-DD') as day,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and started_at>=$2 and state='complete' group by day order by day",
-      [teamId, windowStart]
-    ),
-    pool.query<{
-      endpoint: string
-      requests: string
-      bytes: string
-      errors: string
-    }>(
-      "select endpoint,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and month=$2 and state='complete' group by endpoint order by endpoint",
-      [teamId, month.start]
-    ),
-    // Legacy paid snapshots predate startedAt; the API account is their earliest
-    // known start. A checkout alone must not generate usage history.
-    pool.query<{ started_at: Date | null }>(
-      "select min(coalesce((m.snapshot->>'startedAt')::timestamptz,a.created_at)) as started_at from team_api_memberships m join team_api_accounts a on a.team_id=m.team_id where m.team_id=$1 and m.snapshot->>'paidThrough' is not null",
-      [teamId]
-    ),
-  ])
-  const keyViews: ApiKeyView[] = keys.rows.map((key) => ({
+  const [usage, keys, days, endpoints, activation, activeKeys] =
+    await Promise.all([
+      pool.query<{ requests: string; bytes: string }>(
+        "select requests,bytes from team_api_usage where team_id=$1 and month=$2",
+        [teamId, month.start]
+      ),
+      pool.query<KeyRow & { requests: string; bytes: string }>(
+        "select k.*,count(r.id) filter(where r.status between 200 and 299) as requests,coalesce(sum(r.response_bytes),0) as bytes from team_api_keys k left join team_api_requests r on r.key_id=k.id and r.month=$2 where k.team_id=$1 group by k.id order by (k.revoked_at is null and (k.expires_at is null or k.expires_at>now())) desc,k.created_at desc,k.id desc limit 51 offset $3",
+        [teamId, month.start, keyOffset]
+      ),
+      pool.query<{
+        day: string
+        requests: string
+        bytes: string
+        errors: string
+      }>(
+        "select to_char(started_at at time zone 'UTC','YYYY-MM-DD') as day,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and started_at>=$2 and state='complete' group by day order by day",
+        [teamId, windowStart]
+      ),
+      pool.query<{
+        endpoint: string
+        requests: string
+        bytes: string
+        errors: string
+      }>(
+        "select endpoint,count(*) filter(where status between 200 and 299) as requests,coalesce(sum(response_bytes),0) as bytes,count(*) filter(where status>=400) as errors from team_api_requests where team_id=$1 and month=$2 and state='complete' group by endpoint order by endpoint",
+        [teamId, month.start]
+      ),
+      // Legacy paid snapshots predate startedAt; the API account is their earliest
+      // known start. A checkout alone must not generate usage history.
+      pool.query<{ started_at: Date | null }>(
+        "select min(coalesce((m.snapshot->>'startedAt')::timestamptz,a.created_at)) as started_at from team_api_memberships m join team_api_accounts a on a.team_id=m.team_id where m.team_id=$1 and m.snapshot->>'paidThrough' is not null",
+        [teamId]
+      ),
+      pool.query<{ count: string }>(
+        "select count(*) from team_api_keys where team_id=$1 and revoked_at is null and (expires_at is null or expires_at>now())",
+        [teamId]
+      ),
+    ])
+  const keyViews: ApiKeyView[] = keys.rows.slice(0, 50).map((key) => ({
     id: key.id,
     name: key.name,
     prefix: key.prefix,
@@ -383,6 +384,11 @@ export async function apiUsage(pool: Pool, teamId: string) {
       resetsAt: month.end.toISOString(),
     },
     keys: keyViews,
+    keyPage: {
+      offset: keyOffset,
+      hasMore: keys.rows.length > 50,
+      activeCount: Number(activeKeys.rows[0]?.count ?? 0),
+    },
     days: calendar,
     endpoints: endpoints.rows.map((row) => ({
       ...row,

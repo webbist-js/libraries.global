@@ -10,6 +10,7 @@ import {
 } from "@/components/staff/knowledge-links"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
+import { sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import type { TeamInvitePreview } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
@@ -37,7 +38,7 @@ export default async function TeamJoinPage({
   const session = await getSessionSSR(await headers())
   if (!session?.user)
     redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/staff/team/join/${token}`)}`
+      `/auth/signin?callbackUrl=${encodeURIComponent(`/staff/teams/join/${token}`)}`
     )
   const [result, ...guideResults] = await Promise.all([
     fetchStaff<TeamInvitePreview>(
@@ -77,6 +78,7 @@ export default async function TeamJoinPage({
             token={token}
             invite={invite}
             emailVerified={session.user.emailVerified === true}
+            existingTeamName={sessionTeamsOf(session.user)[0]?.name}
             guides={guides}
           />
         ) : (

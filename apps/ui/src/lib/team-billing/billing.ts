@@ -90,12 +90,9 @@ export async function createSelfServiceTeam(
     )
       throw new BillingError("team_signup_conflict", 409)
     if (!account) {
-      const count = await client.query<{ count: string }>(
-        "select count(*) from team_billing_accounts where creator_id=$1 and archived_at is null",
-        [buyer.id]
-      )
-      if (Number(count.rows[0]?.count) >= 10)
-        throw new BillingError("team_limit_reached", 409)
+      // The CMS checks current membership under the same account lock as
+      // invitation acceptance. Past purchases created by someone who has
+      // handed over and left a Team must not prevent joining a new one.
       account = (
         await client.query<TeamBillingAccount>(
           "insert into team_billing_accounts(id,creator_id,name,mode) values($1,$2,$3,$4) returning *",
@@ -322,7 +319,7 @@ export async function teamCheckout(
           )
         ).rows[0]!
       }
-      const back = `${config.origin}${attempt.locale === "en" ? "" : `/${attempt.locale}`}/staff/team/billing?team=${teamId}`
+      const back = `${config.origin}${attempt.locale === "en" ? "" : `/${attempt.locale}`}/staff/teams/billing`
       const metadata = {
         lg_team_billing_id: account.id,
         lg_team_id: teamId,
@@ -337,8 +334,8 @@ export async function teamCheckout(
         client_reference_id: account.id,
         metadata,
         subscription_data: { metadata },
-        success_url: `${back}&payment=confirming`,
-        cancel_url: `${back}&payment=cancelled`,
+        success_url: `${back}?payment=confirming`,
+        cancel_url: `${back}?payment=cancelled`,
       }
       const session = await stripe.checkout.sessions.create(params, {
         idempotencyKey: `lg-team-checkout:${attempt.id}`,
@@ -423,7 +420,7 @@ export async function teamPortal(
     customer: account.customer_id,
     configuration: portalId,
     locale: locale as "en" | "fr" | "cs",
-    return_url: `${config.origin}${locale === "en" ? "" : `/${locale}`}/staff/team/billing?team=${teamId}&payment=updated`,
+    return_url: `${config.origin}${locale === "en" ? "" : `/${locale}`}/staff/teams/billing?payment=updated`,
   })
 
   return { url: providerUrl(session.url, ["billing.stripe.com"]) }

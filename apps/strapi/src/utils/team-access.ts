@@ -12,8 +12,11 @@ import { resolveUserEntitlements } from "./entitlement-inputs"
 export const TEAM_UID = "plugin::access.team"
 export const TEAM_MEMBER_UID = "plugin::access.team-member"
 
-/** Most Teams one person's session carries. */
-export const MAX_TEAMS_PER_USER = 10
+/** One account holds one seat, including while its Team is lapsed. */
+export const MAX_TEAMS_PER_USER = 1
+/** Read legacy duplicates until an operator reconciles them; never hide billing responsibility. */
+const MEMBERSHIP_READ_LIMIT = 11
+
 /** Most libraries a Team may cover. */
 export const MAX_TEAM_LIBRARIES = 200
 
@@ -82,7 +85,7 @@ export async function loadTeamMemberships(
       },
     },
     sort: "id:asc",
-    limit: MAX_TEAMS_PER_USER,
+    limit: MEMBERSHIP_READ_LIMIT,
   })) as MemberRow[]
 
   return rows.flatMap((row): TeamMembership[] => {

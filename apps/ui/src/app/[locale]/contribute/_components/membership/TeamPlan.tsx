@@ -106,7 +106,7 @@ export function TeamPlan({
             </div>
             <Link
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-3 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
-              href={`/staff/team?team=${encodeURIComponent(existing.id)}`}
+              href="/staff/teams"
             >
               <Icon aria-hidden icon="mdi:account-group-outline" width={18} />
               {t("manageTeam")}
@@ -114,13 +114,13 @@ export function TeamPlan({
             <div className="mt-auto grid gap-3 border-t border-(--t-border-line) pt-5 text-[14px] font-semibold text-(--t-accent-primary)">
               <Link
                 className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4"
-                href={`/staff/team/billing?team=${encodeURIComponent(existing.id)}`}
+                href="/staff/teams/billing"
               >
                 {t("teamBilling")}
               </Link>
               <Link
                 className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4"
-                href={`/staff/team/api?team=${encodeURIComponent(existing.id)}`}
+                href="/staff/teams/api"
               >
                 {t("apiLabel")}
               </Link>
@@ -243,7 +243,7 @@ export function TeamPlan({
               ) : null}
               <Link
                 className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
-                href={`/staff/team/new?seats=${seats}`}
+                href={`/staff/teams/new?seats=${seats}`}
               >
                 <Icon
                   aria-hidden

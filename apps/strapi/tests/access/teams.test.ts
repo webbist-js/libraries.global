@@ -2,7 +2,9 @@ import { createHash, randomBytes } from "node:crypto"
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import createTeams from "../../src/plugins/access/server/services/teams"
+import createTeams, {
+  teamTransaction,
+} from "../../src/plugins/access/server/services/teams"
 import { AFFILIATION_UID } from "../../src/utils/staff"
 import {
   hasLibraryFeature,
@@ -133,6 +135,51 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe("team seats and invites", () => {
+  it("takes the account and Team locks in order inside one transaction", async () => {
+    const raw = vi.fn()
+    const transaction = vi.fn(async (work) => work({ trx: { raw } }))
+    const work = vi.fn().mockResolvedValue("accepted")
+    expect(
+      await teamTransaction(
+        { db: { transaction } },
+        ["membership:reader", TEAM],
+        work
+      )
+    ).toBe("accepted")
+    expect(transaction).toHaveBeenCalledOnce()
+    expect(raw.mock.calls.map(([, values]) => values)).toEqual([
+      ["access-team:membership:reader"],
+      [`access-team:${TEAM}`],
+    ])
+    expect(work).toHaveBeenCalledOnce()
+  })
+  it("does not accept another Team while an account holds a seat, including on a lapsed Team", async () => {
+    const { teams, store } = setup()
+    const other = team({
+      documentId: "team00000000000000000002",
+      status: "lapsed",
+    })
+    store[TEAM_UID]!.push(other)
+    store[TEAM_MEMBER_UID]!.push(
+      member(
+        "othermember0000000000001",
+        "new",
+        "new@example.org",
+        "member",
+        "active",
+        other
+      )
+    )
+    await teams.invite(TEAM, "new@example.org", "member", undefined, organiser)
+    const invite = store[TEAM_MEMBER_UID]!.find((r) => r.status === "invited")!
+    const token = "a".repeat(64)
+    invite.tokenHash = sha256(token)
+    await expect(
+      teams.accept(token, { id: "new", email: "new@example.org", name: "New" })
+    ).rejects.toMatchObject({ status: 409, code: "team_membership_exists" })
+    expect(invite.status).toBe("invited")
+    expect(invite.tokenHash).toBe(sha256(token))
+  })
   it("holds a seat per invite, emails a hashed link, and refuses the invite past the seat count", async () => {
     const { teams, store, services } = setup()
     const invited = await teams.invite(

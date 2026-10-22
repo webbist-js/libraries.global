@@ -88,6 +88,19 @@ beforeEach(() => {
   vi.stubEnv("STRAPI_BRIDGE_SECRET", "")
 })
 describe("Team billing bridge", () => {
+  it("refuses a second Team even when the existing Team is lapsed", async () => {
+    const { billing, store } = setup()
+    await expect(
+      billing.create({
+        accountId: "11111111-1111-1111-1111-111111111111",
+        mode: "sandbox",
+        baUserId: "owner",
+        name: "Another",
+        email: "owner@example.invalid",
+      })
+    ).rejects.toThrow("team_membership_exists")
+    expect(store[TEAM_UID]).toHaveLength(1)
+  })
   it("applies paid access without changing verification or staff roles", async () => {
     const { billing, store } = setup()
     await billing.sync({
@@ -194,6 +207,7 @@ describe("Team billing bridge", () => {
   })
   it("creates an inactive organisation and organiser exactly once", async () => {
     const { billing, store } = setup()
+    store[TEAM_MEMBER_UID] = []
     const id = "11111111-1111-4111-8111-111111111111"
     const input = {
       accountId: id,
