@@ -119,10 +119,15 @@ describe("scrubSentryEvent", () => {
   })
 })
 
-it("drops console payloads and redacts bearer-link path segments throughout an envelope", () => {
+it.each([
+  "/staff/team/join/SYNTHETIC_PATH_ONLY",
+  "/staff/teams/join/SYNTHETIC_PATH_ONLY",
+  "/fr/staff/teams/join/SYNTHETIC_PATH_ONLY",
+  "/api/staff/team/join/SYNTHETIC_PATH_ONLY/accept",
+])("redacts invitation credentials in %s throughout an envelope", (path) => {
   const event = {
-    request: { url: "https://example.test/" },
-    message: "Failed opening /staff/teams/join/SYNTHETIC_PATH_ONLY",
+    request: { url: `https://example.test${path}?token=SYNTHETIC_QUERY_ONLY` },
+    message: `Failed opening ${path}`,
     breadcrumbs: [
       {
         category: "console",

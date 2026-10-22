@@ -58,6 +58,9 @@ vi.mock("@/lib/strapi-api/content/server", () => ({
   fetchLegalDocuments,
 }))
 vi.mock("@/components/beta/BetaFeedback", () => ({ BetaFeedback: () => null }))
+vi.mock("@/components/beta/BetaWelcomeMount", () => ({
+  BetaWelcomeMount: () => null,
+}))
 vi.mock("@/components/contact/ContactModalProvider", () => ({
   ContactModalProvider: ({ children }: { children: ReactNode }) => children,
 }))
