@@ -288,7 +288,11 @@ export const PLANS: readonly PlanCard[] = [
     },
     who: "Library services, councils, universities and consultancies",
     includes: TEAM_INCLUDES,
-    cta: { kind: "signup", label: "Create your Team", href: "/staff/team/new" },
+    cta: {
+      kind: "signup",
+      label: "Create your Team",
+      href: "/staff/teams/new",
+    },
   },
 ]
 

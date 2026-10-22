@@ -29,6 +29,21 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
       }))
   )
   if ((!teams && !ready) || rows.length === 0) return null
+  if (rows.length > 1)
+    return (
+      <StaffPanel title="Your Team" compact>
+        <p className="text-sm leading-relaxed text-(--t-ink-dim)">
+          Your account has older memberships to reconcile before opening its
+          Team workspace.
+        </p>
+        <Link
+          href="/staff/teams"
+          className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
+        >
+          Check Team membership
+        </Link>
+      </StaffPanel>
+    )
 
   return (
     <StaffPanel id="your-team" title={t("teamLinks")} compact>
@@ -59,7 +74,7 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
               </p>
               <div className="divide-y divide-(--t-border-line) border-y border-(--t-border-line)">
                 <Link
-                  href={"/staff/team?team=" + encodeURIComponent(team.id)}
+                  href="/staff/teams"
                   className="flex min-h-14 flex-wrap items-center gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   <span className="min-w-0 flex-1">
@@ -74,16 +89,14 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
                 </Link>
                 <Link
-                  href={"/staff/team/api?team=" + encodeURIComponent(team.id)}
+                  href="/staff/teams/api"
                   className="flex min-h-14 items-center justify-between gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("apiAccess")}
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
                 </Link>
                 <Link
-                  href={
-                    "/staff/team/billing?team=" + encodeURIComponent(team.id)
-                  }
+                  href="/staff/teams/billing"
                   className="flex min-h-14 items-center justify-between gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("billing")}

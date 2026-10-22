@@ -9,6 +9,7 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
+import { fetchPublicProfile as fetchProfile } from "@/lib/public-profile-server"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 import type { UserProfile } from "@/lib/types/profile"
@@ -19,32 +20,6 @@ import { ProfileTabNav } from "./_components/ProfileTabNav"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
-
-async function fetchProfile(
-  username: string,
-  opts?: { ownerBaUserId?: string; viewerBaUserId?: string }
-): Promise<UserProfile | "private" | null> {
-  try {
-    let url = `${STRAPI}/api/user-profiles/by-username/${encodeURIComponent(username)}`
-    const reqHeaders: Record<string, string> = {}
-    if (BRIDGE_SECRET && (opts?.ownerBaUserId ?? opts?.viewerBaUserId)) {
-      const params = new URLSearchParams()
-      if (opts?.ownerBaUserId) params.set("ownerBaUserId", opts.ownerBaUserId)
-      if (opts?.viewerBaUserId)
-        params.set("viewerBaUserId", opts.viewerBaUserId)
-      url += `?${params.toString()}`
-      reqHeaders["X-Service-Secret"] = BRIDGE_SECRET
-    }
-    const res = await fetch(url, { cache: "no-store", headers: reqHeaders })
-    if (res.status === 403) return "private"
-    if (!res.ok) return null
-    const json = (await res.json()) as { data: UserProfile }
-
-    return json.data
-  } catch {
-    return null
-  }
-}
 
 async function fetchContributionCount(username: string): Promise<number> {
   if (!BRIDGE_SECRET) return 0

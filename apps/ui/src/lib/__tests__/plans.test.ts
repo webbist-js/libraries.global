@@ -93,7 +93,7 @@ describe("PLANS", () => {
     expect(plan("team").cta).toMatchObject({
       kind: "signup",
       label: "Create your Team",
-      href: "/staff/team/new",
+      href: "/staff/teams/new",
     })
     expect(plan("free").cta).toMatchObject({
       kind: "signup",

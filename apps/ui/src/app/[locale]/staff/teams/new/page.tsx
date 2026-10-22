@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { PageHero } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { TeamSignup } from "@/components/staff/TeamSignup"
+import { sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { teamBillingConfig } from "@/lib/team-billing/config"
 import { MAX_TEAM_SEATS, MIN_TEAM_SEATS } from "@/lib/team-billing/types"
@@ -26,8 +27,10 @@ export default async function NewTeamPage({
       : MIN_TEAM_SEATS
   if (!session?.user)
     redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/staff/team/new?seats=${initialSeats}`)}`
+      `/auth/signin?callbackUrl=${encodeURIComponent(`/staff/teams/new?seats=${initialSeats}`)}`
     )
+
+  if (sessionTeamsOf(session.user).length) redirect("/staff/teams")
 
   return (
     <>

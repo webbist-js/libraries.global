@@ -8,17 +8,48 @@ const heading = (value) => ({
 })
 const rich = (...body) => ({ __component: "content.rich-text", body })
 
+/** Upgrade relative workspace links, preserving locale and checkout continuation. */
+export function canonicalTeamContent(value, field = "") {
+  if (Array.isArray(value))
+    return value.map((child) => canonicalTeamContent(child, field))
+  if (value && typeof value === "object")
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        canonicalTeamContent(child, key),
+      ])
+    )
+  if (typeof value !== "string") return value
+  if (
+    field === "url" &&
+    /^\/(?:[a-z]{2}\/)?staff\/teams?(?:[/?#]|$)/.test(value)
+  ) {
+    const url = new URL(value, "https://knowledge.invalid")
+    url.pathname = url.pathname.replace(/\/staff\/team(?=\/|$)/, "/staff/teams")
+    url.searchParams.delete("team")
+
+    return `${url.pathname}${url.search}${url.hash}`
+  }
+
+  return field === "text"
+    ? value.replaceAll(
+        /(?<!\/api)\/staff\/team(?=[/\s.,;:]|$)/g,
+        "/staff/teams"
+      )
+    : value
+}
+
 const copy = {
   en: {
     setupPrefix: "Ask us about Team for your service",
     setup:
-      "When Team signup is enabled, sign in with a verified account and choose Create a Team on the Membership page, or open /staff/team/new. Name your organisation, choose at least five seats, review the annual total and accept the Team terms. Continue to Stripe's hosted checkout for billing, tax and payment details. You become the Organiser; the Team and its seats activate after payment is confirmed. During the closed beta, use Stripe test payment details only: no real payment is taken. Personal Pro is separate and does not create a Team.",
+      "When Team signup is enabled, sign in with a verified account and choose Create a Team on the Membership page, or open /staff/teams/new. Name your organisation, choose at least five seats, review the annual total and accept the Team terms. Continue to Stripe's hosted checkout for billing, tax and payment details. You become the Organiser; the Team and its seats activate after payment is confirmed. During the closed beta, use Stripe test payment details only: no real payment is taken. Personal Pro is separate and does not create a Team.",
     capacityPrefix: "Invitations count against the seats.",
     capacity:
       "Active members and pending invitations occupy seats. If every seat is taken, remove an unused member or invitation, or open Billing & seats to purchase more. Checking a public-library-service option requests an eligibility review; it does not approve a discount or verify Library authority.",
     workspaceHeading: "Your Team workspace",
     workspace:
-      "Open Staff area and choose the Team you want to manage. Members & libraries, API access and Billing & seats keep the same Team selected. If you have several Teams, check its name before changing members, keys or billing. An existing Team has management links rather than another signup. Members can view their Team; Organisers manage it.",
+      "Each account belongs to one Team, including while that Team is lapsed or awaiting payment. Open /staff/teams for Members & libraries, API access and Billing & seats. The pages use your membership automatically. Add seats to the existing Team when it grows. Before moving to another Team, ask an Organiser to remove your membership; an Organiser must first hand over responsibility. Members can view their Team; Organisers manage it.",
     libraries:
       "Organisers can change the Team name and its covered Libraries from Members & libraries. Verification remains a separate review. An unverified Team's staff assignments are claims awaiting moderation. To add another Library to an already verified Team, the Organiser must have verified Owner access to that Library. Removing a Library ends staff affiliations created there by this Team; separately approved claims are preserved.",
     billingHeading: "Annual billing and seat changes",
@@ -34,18 +65,18 @@ const copy = {
       "Team billing belongs to the organisation, not to the Organiser's personal account. Before deleting the last active Organiser's account, promote another active member to Organiser or discard an eligible unused setup from Team billing. Account deletion is refused until this is resolved. A Team with another Organiser keeps its subscription and other members. Team financial references and your own purchase-consent records follow the retention periods in the privacy notice.",
     staffHeading: "Team workspaces and billing",
     staff:
-      "You can have a Team workspace before any Library staff claim is approved. From Staff area, select your Team for Members & libraries, API access and Billing & seats. Organisers manage membership and annual billing; ordinary members can view their Team. Creating or paying for a Team does not approve staff access. The Teams for library services guide explains signup, Library verification, seat changes and handover.",
+      "You can have a Team workspace before any Library staff claim is approved. Each account belongs to one Team. Open /staff/teams for Members & libraries, API access and Billing & seats; no Team selector is needed. Organisers manage membership and annual billing; ordinary members can view their Team. Creating or paying for a Team does not approve staff access. The Teams for library services guide explains signup, Library verification, seat changes and handover.",
   },
   fr: {
     setupPrefix: "Renseignez-vous sur l'offre « Équipe »",
     setup:
-      "Lorsque l'inscription Team est activée, connectez-vous avec un compte dont l'adresse e-mail est vérifiée et choisissez de créer une équipe sur la page Adhésion, ou ouvrez /staff/team/new. Indiquez le nom de l'organisation, choisissez au moins cinq places, vérifiez le total annuel et acceptez les conditions Team. Stripe recueille les coordonnées de facturation et les informations fiscales et de paiement. Vous devenez responsable ; l'équipe et ses places sont activées après confirmation du paiement. Pendant la bêta fermée, utilisez uniquement les moyens de paiement de test Stripe : aucun débit réel n'est effectué. Un abonnement Pro personnel ne crée pas d'équipe.",
+      "Lorsque l'inscription Team est activée, connectez-vous avec un compte dont l'adresse e-mail est vérifiée et choisissez de créer une équipe sur la page Adhésion, ou ouvrez /staff/teams/new. Indiquez le nom de l'organisation, choisissez au moins cinq places, vérifiez le total annuel et acceptez les conditions Team. Stripe recueille les coordonnées de facturation et les informations fiscales et de paiement. Vous devenez responsable ; l'équipe et ses places sont activées après confirmation du paiement. Pendant la bêta fermée, utilisez uniquement les moyens de paiement de test Stripe : aucun débit réel n'est effectué. Un abonnement Pro personnel ne crée pas d'équipe.",
     capacityPrefix: "Les invitations sont comptabilisées",
     capacity:
       "Les membres actifs et les invitations en attente occupent des places. Si toutes les places sont prises, retirez un membre ou une invitation inutilisée, ou achetez des places dans la facturation Team. Choisir le type service de bibliothèque publique demande un contrôle d'éligibilité ; cela n'accorde ni réduction ni vérification de l'autorité sur une bibliothèque.",
     workspaceHeading: "L'espace de votre équipe",
     workspace:
-      "Dans l'espace Personnel, choisissez l'équipe à gérer. Les pages Membres et bibliothèques, Accès API et Facturation et places conservent cette sélection. Vérifiez le nom de l'équipe avant toute modification si vous appartenez à plusieurs équipes. Une équipe existante propose ses liens de gestion. Les membres peuvent la consulter ; les responsables la gèrent.",
+      "Un compte appartient à une seule équipe, même si elle est inactive ou en attente de paiement. Ouvrez /staff/teams pour les membres, les bibliothèques, l’API et la facturation : votre équipe est reconnue automatiquement. Ajoutez des places à cette équipe pour accueillir des collègues. Avant de changer d’équipe, demandez le retrait de votre adhésion ; un responsable doit d’abord transmettre ses responsabilités.",
     libraries:
       "Les responsables peuvent modifier le nom et les bibliothèques couvertes. La vérification reste distincte : les affectations d'une équipe non vérifiée attendent une modération. Pour ajouter une bibliothèque à une équipe déjà vérifiée, le responsable doit en être propriétaire vérifié. Retirer une bibliothèque met fin aux accès créés par cette équipe ; les demandes d'accès approuvées séparément sont conservées.",
     billingHeading: "Facturation annuelle et places",
@@ -66,13 +97,13 @@ const copy = {
   cs: {
     setupPrefix: "O zřízení týmu pro vaši organizaci",
     setup:
-      "Když je registrace Team zapnutá, přihlaste se účtem s ověřeným e-mailem a na stránce Členství zvolte vytvoření týmu nebo otevřete /staff/team/new. Zadejte název organizace, vyberte alespoň pět míst, zkontrolujte roční cenu a přijměte podmínky Team. Fakturační, daňové a platební údaje zadáte na stránce Stripe. Stanete se organizátorem; tým a jeho místa se aktivují po potvrzení platby. V uzavřené betě používejte pouze testovací platební údaje Stripe, bez skutečné platby. Osobní předplatné Pro tým nevytváří.",
+      "Když je registrace Team zapnutá, přihlaste se účtem s ověřeným e-mailem a na stránce Členství zvolte vytvoření týmu nebo otevřete /staff/teams/new. Zadejte název organizace, vyberte alespoň pět míst, zkontrolujte roční cenu a přijměte podmínky Team. Fakturační, daňové a platební údaje zadáte na stránce Stripe. Stanete se organizátorem; tým a jeho místa se aktivují po potvrzení platby. V uzavřené betě používejte pouze testovací platební údaje Stripe, bez skutečné platby. Osobní předplatné Pro tým nevytváří.",
     capacityPrefix: "Pozvánky se započítávají",
     capacity:
       "Aktivní členové a čekající pozvánky obsazují místa. Pokud jsou všechna obsazena, odeberte nepoužívaného člena nebo pozvánku, případně kupte další místa ve fakturaci týmu. Volba veřejné knihovní služby žádá o kontrolu nároku; sama neposkytuje slevu ani ověření oprávnění ke knihovně.",
     workspaceHeading: "Pracovní prostor týmu",
     workspace:
-      "V sekci pro zaměstnance vyberte tým, který chcete spravovat. Stránky Členové a knihovny, Přístup k API a Fakturace a místa zachovají výběr týmu. Pokud patříte do více týmů, před změnou členů, klíčů nebo plateb zkontrolujte jeho název. Existující tým nabízí odkazy na správu. Členové tým prohlížejí; organizátoři jej spravují.",
+      "Jeden účet patří do jednoho týmu, i když je tým neaktivní nebo čeká na platbu. Na /staff/teams najdete členy, knihovny, API a fakturaci; tým se určí automaticky. Pro další kolegy přidejte místa ve stávajícím týmu. Před přechodem do jiného týmu požádejte organizátora o odebrání členství; organizátor musí nejprve předat svou odpovědnost.",
     libraries:
       "Organizátoři mohou změnit název a zahrnuté knihovny. Ověření je samostatné: přiřazení neověřeného týmu čekají na moderátora. Pro přidání knihovny do již ověřeného týmu musí mít organizátor ověřené oprávnění vlastníka této knihovny. Odebrání knihovny ukončí oprávnění vytvořená tímto týmem; samostatně schválené žádosti zůstávají.",
     billingHeading: "Roční fakturace a změny počtu míst",
@@ -194,7 +225,7 @@ export function teamServiceGuideBody(doc, locale) {
   if (doc.slug === "deleting-your-account")
     upsert(body, c.deletionHeading, c.deletion)
 
-  return body
+  return canonicalTeamContent(body)
 }
 
 export function teamServiceLegalSections(doc) {

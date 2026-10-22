@@ -3,13 +3,9 @@ import { isDeepStrictEqual } from "node:util"
 import { isPaidTeamMembership, type PaidTeamMembership } from "@repo/access"
 import type { Core } from "@strapi/strapi"
 
-import { teamTransaction } from "./teams"
+import { teamTransaction, requireNoOtherTeam } from "./teams"
 import { notifySessionInvalidated } from "../../../../utils/role-grants"
-import {
-  TEAM_MEMBER_UID,
-  TEAM_UID,
-  MAX_TEAMS_PER_USER,
-} from "../../../../utils/team-access"
+import { TEAM_MEMBER_UID, TEAM_UID } from "../../../../utils/team-access"
 import { AccessError, isDocumentId } from "../utils/admin"
 
 const mode = () => (process.env.BILLING_ENV === "live" ? "live" : "sandbox")
@@ -139,7 +135,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
         body: notice.capacityBlocked
           ? "Your members and invitations exceed the paid seat allowance. Remove excess seats or increase the allowance, then refresh payment status."
           : "Open Team billing to check paid seats, renewal and payment status. Team verification and Library staff authority are assessed separately.",
-        href: `/staff/team/billing?team=${team.documentId}`,
+        href: `/staff/teams/billing`,
       })
     }
   }
@@ -161,69 +157,68 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       )
         throw new AccessError(400, "invalid_team_signup")
 
-      return teamTransaction(strapi, `signup:${input.baUserId}`, async () => {
-        const profile = await strapi.db
-          .query("api::user-profile.user-profile")
-          .findOne({ where: { baUserId: input.baUserId } })
-        if (!profile || String(profile.username ?? "").startsWith("deleted-"))
-          throw new AccessError(410, "team_profile_missing")
-        const [existing] = await teams().findMany({
-          filters: { billingAccountId: input.accountId },
-          limit: 1,
-        })
-        if (existing) {
-          if (existing.billingMode !== mode())
-            throw new AccessError(409, "billing_environment_mismatch")
-          await teamService().requireOrganiser(
-            existing.documentId,
-            input.baUserId
+      return teamTransaction(
+        strapi,
+        `membership:${input.baUserId}`,
+        async () => {
+          const profile = await strapi.db
+            .query("api::user-profile.user-profile")
+            .findOne({ where: { baUserId: input.baUserId } })
+          if (!profile || String(profile.username ?? "").startsWith("deleted-"))
+            throw new AccessError(410, "team_profile_missing")
+          const [existing] = await teams().findMany({
+            filters: { billingAccountId: input.accountId },
+            limit: 1,
+          })
+          if (existing) {
+            if (existing.billingMode !== mode())
+              throw new AccessError(409, "billing_environment_mismatch")
+            await teamService().requireOrganiser(
+              existing.documentId,
+              input.baUserId
+            )
+
+            return { teamId: existing.documentId }
+          }
+          await requireNoOtherTeam(strapi, input.baUserId)
+          const created = await teamService().create(
+            { name: input.name.trim(), seats: 5 },
+            "self-service"
           )
+          await teams().update({
+            documentId: created.documentId,
+            data: {
+              source: "checkout",
+              status: "lapsed",
+              expiresAt: new Date(0).toISOString(),
+              billingAccountId: input.accountId,
+              billingMode: mode(),
+              billingRevision: 0,
+              verifiedAt: null,
+              publicServiceApproved: false,
+              ...(input.publicServiceRequested
+                ? {
+                    notes:
+                      "Public-library-service eligibility check requested during signup.",
+                  }
+                : {}),
+            },
+          })
+          await members().create({
+            data: {
+              team: { connect: [{ documentId: created.documentId }] },
+              baUserId: input.baUserId,
+              email: input.email.trim().toLowerCase(),
+              teamRole: "organiser",
+              status: "active",
+              acceptedAt: new Date().toISOString(),
+              invitedBy: input.baUserId,
+            },
+          })
 
-          return { teamId: existing.documentId }
+          return { teamId: created.documentId }
         }
-        const owned = await members().findMany({
-          filters: { baUserId: input.baUserId, status: "active" },
-          limit: MAX_TEAMS_PER_USER,
-        })
-        if (owned.length >= MAX_TEAMS_PER_USER)
-          throw new AccessError(409, "team_limit_reached")
-        const created = await teamService().create(
-          { name: input.name.trim(), seats: 5 },
-          "self-service"
-        )
-        await teams().update({
-          documentId: created.documentId,
-          data: {
-            source: "checkout",
-            status: "lapsed",
-            expiresAt: new Date(0).toISOString(),
-            billingAccountId: input.accountId,
-            billingMode: mode(),
-            billingRevision: 0,
-            verifiedAt: null,
-            publicServiceApproved: false,
-            ...(input.publicServiceRequested
-              ? {
-                  notes:
-                    "Public-library-service eligibility check requested during signup.",
-                }
-              : {}),
-          },
-        })
-        await members().create({
-          data: {
-            team: { connect: [{ documentId: created.documentId }] },
-            baUserId: input.baUserId,
-            email: input.email.trim().toLowerCase(),
-            teamRole: "organiser",
-            status: "active",
-            acceptedAt: new Date().toISOString(),
-            invitedBy: input.baUserId,
-          },
-        })
-
-        return { teamId: created.documentId }
-      })
+      )
     },
     async context(input: ContextInput) {
       const team = await teamOf(input?.teamId)
@@ -303,7 +298,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
           teamRole: "organiser",
         },
         populate: { team: true },
-        limit: MAX_TEAMS_PER_USER,
+        limit: 11,
       })
       for (const member of mine) {
         if (member.team?.source !== "checkout") continue

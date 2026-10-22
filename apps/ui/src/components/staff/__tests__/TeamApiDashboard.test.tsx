@@ -38,7 +38,7 @@ const initial: ApiDashboard = {
     bytes: 10 * 1024 ** 3,
     perMinute: 60,
     concurrency: 5,
-    keys: 5,
+    keys: null,
     responseBytes: 262144,
   },
   usage: { requests: 0, bytes: 0, resetsAt: "2026-11-01T00:00:00Z" },
@@ -53,11 +53,27 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 describe("Team API staff dashboard", () => {
+  it("introduces the API before purchase without empty usage charts or credential controls", () => {
+    render(
+      <TeamApiDashboard
+        initial={{ ...initial, active: false }}
+        confirming={false}
+      />
+    )
+    expect(
+      screen.getByRole("heading", { name: "Your API add-on" })
+    ).toBeTruthy()
+    expect(screen.queryByRole("heading", { name: "This month" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
+    expect(
+      screen.getByRole("heading", { name: "More ways to use library data" })
+    ).toBeTruthy()
+    expect(screen.getByText("Coming soon")).toBeTruthy()
+  })
   it("lets members inspect usage without key or billing mutations", () => {
     render(
       <TeamApiDashboard
         initial={{ ...initial, organiser: false }}
-        teams={[]}
         confirming={false}
       />
     )
@@ -71,7 +87,6 @@ describe("Team API staff dashboard", () => {
     render(
       <TeamApiDashboard
         initial={{ ...initial, active: false }}
-        teams={[]}
         confirming={false}
       />
     )
@@ -99,7 +114,6 @@ describe("Team API staff dashboard", () => {
     render(
       <TeamApiDashboard
         initial={{ ...initial, active: false }}
-        teams={[]}
         confirming={false}
       />
     )
@@ -131,7 +145,6 @@ describe("Team API staff dashboard", () => {
     render(
       <TeamApiDashboard
         initial={{ ...initial, active: false }}
-        teams={[]}
         confirming={false}
       />
     )
@@ -158,7 +171,6 @@ describe("Team API staff dashboard", () => {
     render(
       <TeamApiDashboard
         initial={{ ...initial, active: false, pendingPayment: true }}
-        teams={[]}
         confirming
       />
     )
@@ -173,7 +185,7 @@ describe("Team API staff dashboard", () => {
       .mockResolvedValueOnce(Response.json({ id: "key", secret }))
       .mockResolvedValueOnce(Response.json(initial))
     vi.stubGlobal("fetch", fetcher)
-    render(<TeamApiDashboard initial={initial} teams={[]} confirming={false} />)
+    render(<TeamApiDashboard initial={initial} confirming={false} />)
     expect(screen.queryByRole("textbox", { name: "Name" })).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: "Create key" }))
     fireEvent.change(screen.getByRole("textbox", { name: "Name" }), {
@@ -204,7 +216,7 @@ describe("Team API staff dashboard", () => {
         Response.json({ error: "fixture_stop" }, { status: 400 })
       )
     vi.stubGlobal("fetch", fetcher)
-    render(<TeamApiDashboard initial={initial} teams={[]} confirming={false} />)
+    render(<TeamApiDashboard initial={initial} confirming={false} />)
     fireEvent.click(screen.getByRole("button", { name: "Create key" }))
     const dialog = screen.getByRole("dialog", { name: "Create an API key" })
     const create = within(dialog).getByRole("button", {
@@ -245,7 +257,7 @@ describe("Team API staff dashboard", () => {
   it("can dismiss key creation without issuing a key", () => {
     const fetcher = vi.fn<typeof fetch>()
     vi.stubGlobal("fetch", fetcher)
-    render(<TeamApiDashboard initial={initial} teams={[]} confirming={false} />)
+    render(<TeamApiDashboard initial={initial} confirming={false} />)
     fireEvent.click(screen.getByRole("button", { name: "Create key" }))
     fireEvent.click(
       within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" })
@@ -276,7 +288,6 @@ describe("Team API staff dashboard", () => {
     render(
       <TeamApiDashboard
         initial={{ ...initial, keys: [key] }}
-        teams={[]}
         confirming={false}
       />
     )
@@ -299,7 +310,6 @@ describe("Team API staff dashboard", () => {
             { day: "2026-10-20", requests: 500, bytes: 1024 ** 2, errors: 3 },
           ],
         }}
-        teams={[]}
         confirming={false}
       />
     )
@@ -324,7 +334,7 @@ describe("Team API staff dashboard", () => {
     ).toBe("true")
   })
 
-  it("counts only active keys toward the limit and prevents creating beyond it", () => {
+  it("counts active keys and allows more credentials without enlarging the Team pool", () => {
     const key = {
       id: "key-1",
       name: "Council site",
@@ -352,15 +362,14 @@ describe("Team API staff dashboard", () => {
             },
           ],
         }}
-        teams={[]}
         confirming={false}
       />
     )
-    expect(screen.getByText("1 of 1 active")).toBeTruthy()
+    expect(screen.getByText("1 active · unlimited keys")).toBeTruthy()
     expect(
       (screen.getByRole("button", { name: "Create key" }) as HTMLButtonElement)
         .disabled
-    ).toBe(true)
+    ).toBe(false)
     const regenerate = screen.getAllByRole("button", {
       name: "Regenerate",
     }) as HTMLButtonElement[]

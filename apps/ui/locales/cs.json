@@ -2834,13 +2834,13 @@
     "claimStepReviewDetail": "Po schválení se zde knihovna zobrazí.",
     "howClaimsWork": "Jak ověření funguje",
     "noLibraryAssignments": "Zatím žádné přiřazené knihovny",
-    "teamLinks": "Týmové prostory",
+    "teamLinks": "Váš tým",
     "billing": "Fakturace a místa"
   },
   "teamApiKeys": {
     "title": "Klíče API",
     "intro": "Pro každou aplikaci použijte samostatný klíč. Klíče umožňují pouze čtení zveřejněných údajů o knihovnách.",
-    "activeCount": "{count} z {limit} aktivních",
+    "activeCount": "{count} aktivních · neomezený počet klíčů",
     "create": "Vytvořit klíč",
     "creating": "Vytváření klíče…",
     "createTitle": "Vytvořit klíč API",
@@ -2861,7 +2861,6 @@
     "emptyOrganiser": "Až budete chtít připojit aplikaci, vytvořte svůj první klíč.",
     "emptyMember": "Klíče vytváří a spravuje organizátor týmu. Zde si můžete prohlédnout využití API.",
     "emptyInactive": "Chcete-li vytvářet klíče, aktivujte přístup k API pro svůj tým.",
-    "atLimit": "Všech {count} míst pro klíče je obsazeno. Před vytvořením dalšího klíče zrušte některý nepoužívaný.",
     "copyNow": "Zkopírujte klíč nyní. Znovu se nezobrazí.",
     "copyKey": "Zkopírovat klíč",
     "copied": "Zkopírováno",
@@ -2881,7 +2880,7 @@
     "responseData": "Data odpovědí",
     "rate": "{count} požadavků za minutu",
     "concurrency": "{count} souběžných požadavků",
-    "keys": "Až {count} aktivních klíčů",
+    "keys": "Neomezený počet API klíčů; jeden sdílený týmový limit",
     "noOverage": "Za překročení limitů se automaticky neúčtují žádné poplatky.",
     "consent": "Souhlasím s <membership>podmínkami členství</membership>, <refunds>pravidly zrušení a vrácení peněz</refunds> a zde uvedenými limity API a žádám o zpřístupnění ihned po potvrzení platby.",
     "subscribe": "Předplatit přístup k API",
@@ -2938,7 +2937,10 @@
     "guidesTitle": "Průvodci pro začátek",
     "browseGuides": "Procházet průvodce ve Znalostech",
     "helpDetail": "Potřebujete pomoci s pozvánkou? Obraťte se na osobu, která vás pozvala, nebo",
-    "askCommunity": "se zeptejte v diskusích."
+    "askCommunity": "se zeptejte v diskusích.",
+    "existingTitle": "Váš účet už má tým",
+    "existingDetail": "Patříte do týmu {team}. Účet může být členem jednoho týmu. Před vstupem do jiného požádejte organizátora o odebrání členství; organizátor musí nejprve předat svou odpovědnost.",
+    "existingAction": "Otevřít svůj tým"
   },
   "staffOnboarding": {
     "eyebrow": "Pracovníci knihovny",
@@ -3039,5 +3041,35 @@
       "researcher": "Výzkumník / akademický pracovník",
       "other": "Jiná"
     }
+  },
+  "betaWelcome": {
+    "badge": "Uzavřená beta",
+    "title": "Vítejte v betě.",
+    "intro": "Pomozte nám připravit Libraries Global pro všechny. Prozkoumejte web, vyzkoušejte funkce a dejte nám vědět, co nefunguje.",
+    "tryTitle": "Co můžete vyzkoušet",
+    "exploreTitle": "Najděte knihovnu",
+    "exploreBody": "Prozkoumejte Atlas, vyzkoušejte filtry a veřejné profily.",
+    "contributeTitle": "Přispějte",
+    "contributeBody": "Navrhněte opravu, odpovězte na otázky o přístupnosti nebo založte diskusi.",
+    "teamTitle": "Vyzkoušejte plány a svůj tým",
+    "teamBody": "Otestujte dostupná předplatná, pozvěte kolegy a prozkoumejte sekci pro zaměstnance. Přístup ke knihovnám stále vyžaduje ověření.",
+    "apiTitle": "Připojte aplikaci",
+    "apiBody": "Vyzkoušejte beta API s aktivním týmovým doplňkem. Klíče sdílejí jeden měsíční limit týmu.",
+    "paymentTitle": "Testovací platba",
+    "paymentBody": "Můžete vyzkoušet dostupné plány a předplatná. Beta používá testovací režim Stripe: skutečné peníze se nestrhávají.",
+    "cardLabel": "Testovací karta Stripe",
+    "cardDetails": "Platnost: libovolné budoucí datum · CVC: libovolné 3 číslice. Použijte testovací fakturační údaje.",
+    "copyCard": "Zkopírovat testovací kartu",
+    "copied": "Zkopírováno",
+    "copyFailed": "Označte a zkopírujte číslo výše.",
+    "testOnly": "Tuto kartu použijte pouze v testovacím režimu. Nezadávejte skutečné platební údaje.",
+    "stripeGuide": "Průvodce testováním Stripe",
+    "paymentsOff": "Testování plateb není v tomto prostředí dostupné. Vyzkoušejte ostatní beta funkce.",
+    "resetTitle": "Data bety budou před spuštěním smazána",
+    "resetBody": "Účty, příspěvky, týmy ani testovací předplatná se nepřevedou. Uchovejte si kopii všeho, co chcete zachovat.",
+    "feedbackBody": "Počítejte s chybami a nedokončenými detaily. Pomocí záložky Zpětná vazba na okraji stránky nahlaste problémy, nejasné kroky nebo nápady. Popište očekávaný výsledek a co se skutečně stalo.",
+    "start": "Začít testovat",
+    "feedback": "Odeslat zpětnou vazbu",
+    "apiGuide": "Začínáme s API"
   }
 }

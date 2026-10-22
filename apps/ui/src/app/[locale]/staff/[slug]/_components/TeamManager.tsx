@@ -472,7 +472,7 @@ export function TeamManager({
                   {team.verified ? "" : " (a moderator checks it first)"}.
                   Manage every library’s staff in the{" "}
                   <Link
-                    href="/staff/team"
+                    href="/staff/teams"
                     className="font-semibold underline"
                     style={{ color: T.accent.primary }}
                   >

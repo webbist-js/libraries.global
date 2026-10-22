@@ -67,7 +67,11 @@ export type ShortcutLibrary = {
 }
 
 /** A Team the viewer belongs to, from the session (`sessionTeamsOf`). */
-export type ShortcutTeam = { id: string; role: "organiser" | "member" }
+export type ShortcutTeam = {
+  id: string
+  role: "organiser" | "member"
+  name?: string
+}
 
 /** `GET /api/drives/featured`. */
 export type FeaturedDriveSummary = {
@@ -181,36 +185,23 @@ function librariesCard(
 }
 
 /** Team members and organisers, with or without a staff affiliation. */
-function teamCard(
-  teams: readonly ShortcutTeam[],
-  hasLibraries: boolean
-): ContributorCard {
-  const organiser = teams.some((t) => t.role === "organiser")
-  const links: ContributorLink[] = [
-    {
-      label: organiser ? "Manage your team" : "Your team",
-      href: "/staff/team",
-      sub: organiser
-        ? teams.length > 1
-          ? `Organiser · ${teams.length} teams`
-          : "Organiser"
-        : "Member",
-    },
-  ]
-  if (!hasLibraries)
-    links.push({
-      label: "Staff area",
-      href: "/staff",
-      sub: "No library assigned yet",
-    })
+function teamCard(teams: readonly ShortcutTeam[]): ContributorCard {
+  const team = teams[0]!
+  const organiser = team.role === "organiser"
 
   return {
     key: "team",
-    title: "Your team",
-    description: "Colleagues and library assignments.",
+    title: "Your Team",
+    description: `${team.name ?? "Colleagues and library assignments"} · ${organiser ? "Organiser" : "Member"}`,
     icon: "mdi:account-group-outline",
     tint: "academic",
-    links,
+    links: [
+      { label: "Members & libraries", href: "/staff/teams" },
+      { label: "API access", href: "/staff/teams/api" },
+      ...(organiser
+        ? [{ label: "Billing & seats", href: "/staff/teams/billing" }]
+        : []),
+    ],
   }
 }
 
@@ -408,7 +399,7 @@ export function buildContributeMenu({
       ? librariesCard(claimedLibraries, selectedLibraryId, counts.suggestions)
       : null
     if (libraries) work.push(libraries)
-    if (teams.length > 0) work.push(teamCard(teams, libraries !== null))
+    if (teams.length > 0) work.push(teamCard(teams))
     if (caps.has("docs.directEdit")) work.push(KNOWLEDGE_CARD)
     if (caps.has("journal.directEdit")) work.push(JOURNAL_CARD)
     if (caps.has("moderate.queue"))

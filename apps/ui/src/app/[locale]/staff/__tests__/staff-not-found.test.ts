@@ -71,8 +71,8 @@ describe("denied staff page", () => {
   })
 
   it.each([
-    "/staff/team",
-    "/staff/team/join/tok1",
+    "/staff/teams",
+    "/staff/teams/join/tok1",
     "/staff/bad%2Fslug",
     "/staff/-leading",
     `/staff/${"a".repeat(256)}`,

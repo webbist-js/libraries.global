@@ -13,7 +13,7 @@ import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
-type Answer = "yes" | "no"
+type Answer = "yes" | "no" | "unsure"
 
 const storageKey = (slug: string) => `library.facility-answers.${slug}`
 
@@ -104,7 +104,10 @@ export function LibraryFacilityAnswers({
   const open = new Set(
     rows.filter((r) => r.state === "unknown").map((r) => r.label)
   )
-  const pending = Object.entries(answers).filter(([label]) => open.has(label))
+  const pending = Object.entries(answers).filter(
+    (entry): entry is [string, "yes" | "no"] =>
+      open.has(entry[0]) && (entry[1] === "yes" || entry[1] === "no")
+  )
   const count = pending.length
 
   const send = async (withDrive = true) => {
@@ -232,7 +235,7 @@ export function LibraryFacilityAnswers({
             }
           >
             <span className="sr-only">Not recorded. </span>
-            {(["yes", "no"] as const).map((a) => {
+            {(["yes", "no", "unsure"] as const).map((a) => {
               const on = picked === a
 
               return (
@@ -249,26 +252,14 @@ export function LibraryFacilityAnswers({
                     color: on ? "#fff" : T.ink.base,
                   }}
                 >
-                  {a === "yes" ? tUi("yes") : tUi("no")}
+                  {a === "unsure"
+                    ? "Not sure"
+                    : a === "yes"
+                      ? tUi("yes")
+                      : tUi("no")}
                 </button>
               )
             })}
-            <button
-              type="button"
-              disabled={locked}
-              onClick={() => {
-                setAnswers((previous) => {
-                  const next = { ...previous }
-                  delete next[label]
-                  writeSaved(librarySlug, next)
-
-                  return next
-                })
-              }}
-              className={answerPill}
-            >
-              Not sure
-            </button>
           </span>
         )}
       </li>

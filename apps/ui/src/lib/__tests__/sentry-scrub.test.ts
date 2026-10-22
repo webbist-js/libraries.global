@@ -122,7 +122,7 @@ describe("scrubSentryEvent", () => {
 it("drops console payloads and redacts bearer-link path segments throughout an envelope", () => {
   const event = {
     request: { url: "https://example.test/" },
-    message: "Failed opening /staff/team/join/SYNTHETIC_PATH_ONLY",
+    message: "Failed opening /staff/teams/join/SYNTHETIC_PATH_ONLY",
     breadcrumbs: [
       {
         category: "console",

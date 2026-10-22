@@ -9,17 +9,31 @@ import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
+import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflict"
 import { TeamOrganiser } from "@/components/staff/TeamOrganiser"
 import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
-import { isDocumentIdParam } from "@/lib/bridge-params"
+import { teamWorkspaceHref } from "@/lib/staff/paths"
 import type { TeamDetail } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
+
+function teamLead(
+  team: TeamDetail | null | undefined,
+  name: string,
+  organiser: boolean
+) {
+  if (!organiser)
+    return `${team?.name ?? name} provides Pro while active. Library staff access requires verification. Ask ${team?.organiserNames.join(" or ") || "your organiser"} to change your access.`
+
+  return team?.verifiedAt
+    ? "Invite colleagues, assign them to your Libraries and manage their access. Add seats from Billing & seats when your Team grows."
+    : "Invite colleagues and manage your Team’s Libraries. Library assignments need a moderator’s approval until your Team is verified. Payment does not verify Library authority."
+}
 
 /**
  * The Team organiser: the Team's seats, libraries and members, with
  * invites, team roles, per-library assignments and removal for organisers.
- * Members see it read only. `?team=` picks one of several Teams.
+ * Members see it read only. The account has one Team; no selection is carried in the URL.
  */
 export default async function TeamOrganiserPage({
   params,
@@ -34,15 +48,12 @@ export default async function TeamOrganiserPage({
     params,
     getSessionSSR(await headers()),
   ])
-  if (!session?.user) redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteam")
+  if (!session?.user) redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteams")
   const teams = preferredTeams(sessionTeamsOf(session.user))
-  if (teams.length === 0) notFound()
-  const { team: wanted } = await searchParams
-  const ordered = teams
-  const chosen =
-    (wanted && isDocumentIdParam(wanted)
-      ? ordered.find((t) => t.id === wanted)
-      : null) ?? ordered[0]!
+  if (teams.length === 0) redirect("/staff")
+  if (teams.length > 1) return <TeamMembershipConflict />
+  if ((await searchParams).team) redirect(teamWorkspaceHref("", locale))
+  const chosen = teams[0]!
   const result = await fetchStaff<TeamDetail>(
     session.user,
     `teams/${chosen.id}`,
@@ -74,11 +85,7 @@ export default async function TeamOrganiserPage({
           ) : undefined
         }
         tabs={<StaffAreaTabs active="team" teamId={chosen.id} />}
-        lead={
-          organiser
-            ? "Invite colleagues, give them staff access on your libraries and choose their level. Changes take effect at once."
-            : `${team?.name ?? chosen.name} provides Pro while active. Library staff access requires verification. Ask ${team?.organiserNames.join(" or ") || "your organiser"} to change your access.`
-        }
+        lead={teamLead(team, chosen.name, organiser)}
       >
         <LearnMoreLink slug={KNOWLEDGE_SLUGS.teams} locale={locale as Locale} />
       </PageHero>
@@ -86,15 +93,7 @@ export default async function TeamOrganiserPage({
         {result.status !== 200 || !team ? (
           <StaffLoadError what="The team" status={result.status} />
         ) : (
-          <TeamOrganiser
-            team={team}
-            others={ordered
-              .filter((t) => t.id !== team.documentId)
-              .map((t) => ({
-                id: t.id,
-                name: t.status === "lapsed" ? `${t.name} (inactive)` : t.name,
-              }))}
-          />
+          <TeamOrganiser team={team} />
         )}
       </Container>
     </>

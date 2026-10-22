@@ -478,7 +478,7 @@ export function StaffDrawer() {
           />
           {organises ? (
             <DrawerAction
-              href="/staff/team"
+              href="/staff/teams"
               icon="mdi:account-multiple-plus-outline"
               label={tUi("team_organiser")}
               onClick={closeStaffDrawer}

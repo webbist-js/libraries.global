@@ -110,13 +110,13 @@ describe.skipIf(!enabled)("Team API database concurrency and billing", () => {
       await admin.end()
     }
   })
-  it("requires paid coverage, caps keys under races, and stores only digests", async () => {
+  it("requires paid coverage, allows concurrent credentials, and stores only digests", async () => {
     const team = await paidTeam({ keys: 1 })
     const results = await Promise.allSettled([
       createApiKey(pool, team, "organiser", keyInput),
       createApiKey(pool, team, "organiser", keyInput),
     ])
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1)
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(2)
     const key = results.find((r) => r.status === "fulfilled")!
     if (key.status !== "fulfilled") throw new Error("Expected key")
     const stored = (

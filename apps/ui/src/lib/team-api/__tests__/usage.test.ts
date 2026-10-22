@@ -18,6 +18,48 @@ function database(startedAt: string | null, days: unknown[] = []) {
 }
 
 describe("Team API usage history", () => {
+  it("keeps keys beyond the first page reachable while totals remain Team-wide", async () => {
+    const keys = Array.from({ length: 53 }, (_, index) => ({
+      id: `key-${index}`,
+      name: `Application ${index}`,
+      prefix: `prefix-${index}`,
+      scopes: ["libraries:read"],
+      created_at: new Date("2026-10-20T13:00:00Z"),
+      expires_at: null,
+      last_used_at: null,
+      revoked_at: null,
+      requests: "1",
+      bytes: "1024",
+    }))
+    const pool = {
+      query: vi.fn(async (sql: string, values: unknown[]) => ({
+        rows: sql.includes("select k.*")
+          ? keys.slice(Number(values[2]), Number(values[2]) + 51)
+          : sql.startsWith("select count(*)")
+            ? [{ count: "53" }]
+            : sql.startsWith("select requests,bytes")
+              ? [{ requests: "53", bytes: "54272" }]
+              : [],
+      })),
+    } as unknown as Pool
+    const first = await apiUsage(pool, "team")
+    const next = await apiUsage(pool, "team", 50)
+    expect(first.keys).toHaveLength(50)
+    expect(first.keyPage).toEqual({ offset: 0, hasMore: true, activeCount: 53 })
+    expect(next.keys.map((key) => key.id)).toEqual([
+      "key-50",
+      "key-51",
+      "key-52",
+    ])
+    expect(next.keyPage).toEqual({
+      offset: 50,
+      hasMore: false,
+      activeCount: 53,
+    })
+    expect(next.usage).toEqual(first.usage)
+    expect(next.usage.requests).toBe(53)
+  })
+
   it("starts on the UTC day API access began, without inventing earlier zero rows", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-10-20T14:00:00Z"))
     const result = await apiUsage(database("2026-10-20T13:00:00Z"), "team")

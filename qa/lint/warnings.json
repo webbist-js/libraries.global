@@ -1415,7 +1415,7 @@
     "apps/ui/src/app/[locale]/staff/[slug]/_components/TrafficPreview.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/ui/src/app/[locale]/staff/team/join/[token]/_components/TeamJoin.tsx": {
+    "apps/ui/src/app/[locale]/staff/teams/join/[token]/_components/TeamJoin.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/api/atlas/changes/route.ts": {
