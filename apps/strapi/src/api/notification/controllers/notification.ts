@@ -1,3 +1,4 @@
+import { internalNotifications } from "../../../utils/internal-notifications/service"
 import {
   bridgeBaUserId,
   isValidServiceSecret,
@@ -19,6 +20,12 @@ export default {
     ctx.set("Cache-Control", "private, no-store")
     const { action, baUserId } = ctx.request.body ?? {}
     const service = strapi.service(UID)
+    if (action === "internalRun")
+      return ctx.send(await internalNotifications(strapi).run())
+    if (action === "internalStatus")
+      return ctx.send(await internalNotifications(strapi).status())
+    if (action === "internalRetry")
+      return ctx.send(await internalNotifications(strapi).retry())
     if (action === "betaInvites") {
       await strapi.plugin("beta-invites").service("invites").prune()
 

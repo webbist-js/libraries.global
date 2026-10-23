@@ -33,6 +33,21 @@ describe("purgeExpiredAuthRecords", () => {
       rateLimits: 0,
     })
   })
+
+  it("removes activity older than 30 days when the optional event table exists", async () => {
+    const query = vi
+      .fn()
+      .mockImplementation(async (sql: string) =>
+        sql.includes("to_regclass")
+          ? { rowCount: 1, rows: [{ name: "internal_activity_events" }] }
+          : { rowCount: 0 }
+      )
+    await purgeExpiredAuthRecords({ query }, new Date("2026-10-23T03:00:00Z"))
+    expect(query).toHaveBeenCalledWith(
+      "delete from internal_activity_events where created_at < $1",
+      [new Date("2026-09-23T03:00:00Z")]
+    )
+  })
 })
 
 describe("isCronRequest", () => {

@@ -27,6 +27,7 @@ import { ensureHotPathIndexes } from "./utils/ensure-hot-path-indexes"
 import { ensureNotificationIndexes } from "./utils/ensure-notification-indexes"
 import { ensureSubscriberIndex } from "./utils/ensure-subscriber-index"
 import { ensureUniqueIndexes } from "./utils/ensure-unique-indexes"
+import { ensureInternalNotificationIndexes } from "./utils/internal-notifications/service"
 import { backfillLibraryCompleteness } from "./utils/library-completeness"
 import {
   seedLibraryTypes,
@@ -143,6 +144,7 @@ export default {
     await ensureUniqueIndexes(strapi)
     await ensureSubscriberIndex(strapi)
     await ensureNotificationIndexes(strapi)
+    await ensureInternalNotificationIndexes(strapi)
 
     // E1 fresh-DB follow-up for the hot-path indexes migration, same reason.
     await ensureHotPathIndexes(strapi)

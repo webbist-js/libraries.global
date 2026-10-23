@@ -15,6 +15,9 @@ async function main() {
       "follows",
       "announcements",
       "deliver",
+      "internalRun",
+      "internalStatus",
+      "internalRetry",
     ].includes(action)
   )
     throw new Error(
