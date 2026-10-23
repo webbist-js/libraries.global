@@ -14,6 +14,7 @@ const MACHINE_PATHS = new Set([
   "/api/preview",
   "/api/internal/session/invalidate",
   "/api/internal/notifications/recipients",
+  "/api/internal/notifications/activity",
   "/api/email/preferences",
 ])
 const AUTH_CALLBACKS = new Set([

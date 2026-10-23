@@ -16,6 +16,7 @@ import {
 } from "../../../utils/affiliations"
 import { loadPlanRows } from "../../../utils/entitlement-inputs"
 import { eraseAccount } from "../../../utils/erase-account"
+import { internalNotifications } from "../../../utils/internal-notifications/service"
 import { activeGrants } from "../../../utils/role-grants"
 import { isValidServiceSecret } from "../../../utils/service-secret"
 import { loadStaffClaims } from "../../../utils/staff"
@@ -776,6 +777,16 @@ export default {
       // are plan grants; the two never mix.
       activeGrants(strapi, baUserId),
     ])
+
+    if (profile && process.env.INTERNAL_NOTIFICATIONS_ENABLED === "true") {
+      try {
+        await internalNotifications(strapi).active(baUserId)
+      } catch {
+        strapi.log.warn(
+          "[internal-notifications] Could not record beta activity"
+        )
+      }
+    }
 
     // Teams (R2-B): active memberships, with each Team's libraries, so the
     // session resolves Pro (source `team`) and `teamLibraryIds` itself.

@@ -86,6 +86,19 @@ export async function eraseAccount(
           }
         : { baUserId },
     })
+    await strapi.db
+      .query("api::internal-notification.internal-notification")
+      .updateMany({
+        where: { actorId: baUserId },
+        data: {
+          actorId: null,
+          title: null,
+          detail: null,
+          href: null,
+          state: "expired",
+          lastError: null,
+        },
+      })
     await strapi.plugin("mobile-libraries")?.service("live")?.eraseFor(baUserId)
     await strapi
       .plugin("discussions")
