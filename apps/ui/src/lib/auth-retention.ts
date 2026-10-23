@@ -38,6 +38,16 @@ export async function purgeExpiredAuthRecords(
     'delete from "rateLimit" where "lastRequest" < $1',
     [rateLimitCutoff]
   )
+  // Optional until the explicit internal activity migration has been applied.
+  const activityTable = (await db.query(
+    "select to_regclass('internal_activity_events') as name",
+    []
+  )) as { rows?: { name: string | null }[]; rowCount: number | null }
+  if (activityTable.rows?.[0]?.name)
+    await db.query(
+      "delete from internal_activity_events where created_at < $1",
+      [new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)]
+    )
 
   return {
     sessions: sessions.rowCount ?? 0,
