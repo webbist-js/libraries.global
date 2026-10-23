@@ -2571,6 +2571,61 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
   }
 }
 
+export interface ApiInternalNotificationInternalNotification
+  extends Struct.CollectionTypeSchema {
+  collectionName: "internal_notifications"
+  info: {
+    displayName: "Internal notification"
+    pluralName: "internal-notifications"
+    singularName: "internal-notification"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    actorId: Schema.Attribute.String & Schema.Attribute.Private
+    attempts: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    detail: Schema.Attribute.Text & Schema.Attribute.Private
+    eventAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    eventKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    href: Schema.Attribute.String & Schema.Attribute.Private
+    kind: Schema.Attribute.String & Schema.Attribute.Required
+    lastError: Schema.Attribute.String & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::internal-notification.internal-notification"
+    > &
+      Schema.Attribute.Private
+    nextAttemptAt: Schema.Attribute.DateTime
+    publishedAt: Schema.Attribute.DateTime
+    sentAt: Schema.Attribute.DateTime
+    state: Schema.Attribute.Enumeration<
+      ["pending", "sent", "failed", "expired"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"pending">
+    title: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiLegalDocumentLegalDocument
   extends Struct.CollectionTypeSchema {
   collectionName: "legal_documents"
@@ -7392,6 +7447,7 @@ declare module "@strapi/strapi" {
       "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
+      "api::internal-notification.internal-notification": ApiInternalNotificationInternalNotification
       "api::legal-document.legal-document": ApiLegalDocumentLegalDocument
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library-change.library-change": ApiLibraryChangeLibraryChange

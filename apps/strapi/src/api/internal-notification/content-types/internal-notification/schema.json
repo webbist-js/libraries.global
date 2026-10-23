@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "internal_notifications",
+  "info": {
+    "singularName": "internal-notification",
+    "pluralName": "internal-notifications",
+    "displayName": "Internal notification"
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {
+    "content-manager": { "visible": false },
+    "content-type-builder": { "visible": false }
+  },
+  "attributes": {
+    "eventKey": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "private": true
+    },
+    "kind": { "type": "string", "required": true },
+    "title": { "type": "string", "private": true },
+    "detail": { "type": "text", "private": true },
+    "href": { "type": "string", "private": true },
+    "actorId": { "type": "string", "private": true },
+    "eventAt": { "type": "datetime", "required": true },
+    "state": {
+      "type": "enumeration",
+      "enum": ["pending", "sent", "failed", "expired"],
+      "default": "pending",
+      "required": true
+    },
+    "attempts": { "type": "integer", "default": 0 },
+    "nextAttemptAt": { "type": "datetime" },
+    "sentAt": { "type": "datetime" },
+    "lastError": { "type": "string", "private": true }
+  }
+}
