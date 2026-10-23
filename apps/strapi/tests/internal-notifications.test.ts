@@ -117,3 +117,21 @@ describe("delivery", () => {
     expect(error.message).toBe("slack_unreachable")
   })
 })
+
+it("preserves full multiline feedback in safe bounded blocks, including emoji at chunk boundaries", () => {
+  const detail = "a".repeat(2899) + "😀\n<!channel> " + "b".repeat(6500)
+  const payload = slackMessage(
+    { ...event, kind: "product_feedback", detail },
+    "test"
+  )
+  const sections = payload.blocks.filter(
+    (block) => block.type === "section"
+  ) as { text: { type: string; text: string } }[]
+  expect(sections.map((section) => section.text.text).join("")).toBe(detail)
+  for (const section of sections) {
+    expect(section.text.type).toBe("plain_text")
+    expect(section.text.text.length).toBeLessThanOrEqual(2900)
+  }
+  expect(payload.mrkdwn).toBe(false)
+  expect(payload.text).not.toContain("<!channel>")
+})

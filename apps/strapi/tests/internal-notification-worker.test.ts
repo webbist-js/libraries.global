@@ -53,7 +53,10 @@ beforeEach(() => {
     "SLACK_INTERNAL_WEBHOOK_URL",
     "https://hooks.slack.com/services/T123/B123/fixture"
   )
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("ok")))
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockImplementation(async () => new Response("ok"))
+  )
   vi.mocked(collectAuthEvents).mockResolvedValue(undefined)
 })
 afterEach(() => {
@@ -129,4 +132,94 @@ it("dry runs collect events without posting or marking anything sent", async () 
   ).toMatchObject({ dryRun: true, sent: 0 })
   expect(fetch).not.toHaveBeenCalled()
   expect(save).not.toHaveBeenCalled()
+})
+
+const feedbackRow = {
+  ...row,
+  id: 2,
+  kind: "product_feedback",
+  eventKey: "feedback:reference",
+}
+it("routes feedback to its dedicated webhook and leaves activity on its existing destination", async () => {
+  vi.stubEnv(
+    "SLACK_FEEDBACK_WEBHOOK_URL",
+    "https://hooks.slack.com/services/T123/B456/feedback"
+  )
+  const { strapi, find } = fixture()
+  find.mockResolvedValue([feedbackRow, row])
+  expect(
+    await internalNotifications(strapi).run(new Date("2026-10-23T12:00:00Z"))
+  ).toMatchObject({ sent: 2, failed: 0 })
+  expect(vi.mocked(fetch).mock.calls.map((call) => call[0])).toEqual([
+    "https://hooks.slack.com/services/T123/B456/feedback",
+    "https://hooks.slack.com/services/T123/B123/fixture",
+  ])
+})
+it("never sends feedback to the activity channel when its own webhook is missing", async () => {
+  vi.stubEnv("SLACK_FEEDBACK_WEBHOOK_URL", "")
+  const { strapi, find, storeValue, save } = fixture()
+  find.mockResolvedValue([feedbackRow, row])
+  expect(
+    await internalNotifications(strapi).run(new Date("2026-10-23T12:00:00Z"))
+  ).toMatchObject({ sent: 1, failed: 1 })
+  expect(fetch).toHaveBeenCalledTimes(1)
+  expect(storeValue["cooldown-feedback"].until).toBe(Number.MAX_SAFE_INTEGER)
+  expect(storeValue.cooldown).toBeUndefined()
+  expect(save).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({
+        lastError: "slack_destination_unconfigured",
+      }),
+    })
+  )
+})
+it("isolates feedback throttling and continues activity delivery in the same run", async () => {
+  vi.stubEnv(
+    "SLACK_FEEDBACK_WEBHOOK_URL",
+    "https://hooks.slack.com/services/T123/B456/feedback"
+  )
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockImplementation(
+        async (url) =>
+          new Response(
+            String(url).endsWith("/feedback") ? "" : "ok",
+            String(url).endsWith("/feedback")
+              ? { status: 429, headers: { "retry-after": "120" } }
+              : undefined
+          )
+      )
+  )
+  const { strapi, find, storeValue } = fixture()
+  find.mockResolvedValue([feedbackRow, row])
+  expect(
+    await internalNotifications(strapi).run(new Date("2026-10-23T12:00:00Z"))
+  ).toMatchObject({ sent: 1, deferred: 1 })
+  expect(storeValue["cooldown-feedback"].until).toBeGreaterThan(Date.now())
+  expect(storeValue.cooldown).toBeUndefined()
+  await internalNotifications(strapi).run(new Date("2026-10-23T12:01:00Z"))
+  expect(find).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({ kind: { $ne: "product_feedback" } }),
+    })
+  )
+})
+it("can deliver feedback while the activity channel is paused", async () => {
+  vi.stubEnv(
+    "SLACK_FEEDBACK_WEBHOOK_URL",
+    "https://hooks.slack.com/services/T123/B456/feedback"
+  )
+  const { strapi, find, storeValue } = fixture()
+  find.mockResolvedValue([feedbackRow])
+  storeValue.cooldown = { until: Number.MAX_SAFE_INTEGER }
+  expect(
+    await internalNotifications(strapi).run(new Date("2026-10-23T12:00:00Z"))
+  ).toMatchObject({ sent: 1 })
+  expect(find).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({ kind: "product_feedback" }),
+    })
+  )
 })
