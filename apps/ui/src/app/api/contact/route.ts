@@ -6,6 +6,7 @@ import { sameOriginRequest } from "@/lib/beta/access"
 import { readJsonCapped } from "@/lib/bridge-params"
 import { sendContactNotification } from "@/lib/contact/email"
 import { contactSubmissionSchema } from "@/lib/contact/schema"
+import { queueFeedbackNotification } from "@/lib/contact/slack"
 import {
   clientIp,
   createRateLimiter,
@@ -48,7 +49,14 @@ export async function POST(req: Request) {
     .replaceAll(/[\r\n]/g, " ")
     .slice(0, 512)
   try {
-    await sendContactNotification(body.data, userAgent, reference)
+    const queued = await queueFeedbackNotification(body.data, reference)
+    try {
+      await sendContactNotification(body.data, userAgent, reference)
+    } catch {
+      // Persisted feedback is accepted even when its email copy is unavailable.
+      // Contact-only requests still require their existing email delivery.
+      if (!queued) throw new Error("Contact delivery unavailable")
+    }
 
     return NextResponse.json(
       { ok: true, reference },
