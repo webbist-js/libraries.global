@@ -1,0 +1,10 @@
+# Native wheels keep raster processing and routing out of the Node/UI bundles.
+rasterio>=1.4,<2
+shapely>=2.1,<3
+pyproj>=3.7,<4
+pyvalhalla>=3.6,<4
+osmium>=4.1,<5
+jsonschema>=4.26,<5
+# Official boundary archives and the NISRA legacy workbook (read data only).
+pyshp>=3.0,<4
+xlrd>=2.0,<3

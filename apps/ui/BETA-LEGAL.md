@@ -2,7 +2,7 @@
 
 The beta entrance links to `/legal/beta`, a temporary CMS document covering invitation access, access-request privacy, feedback and essential cookies. The waitlist links directly to `/legal/beta#privacy`. Labels and paths use the visitor's locale; the document currently uses the existing English content fallback for Czech and French.
 
-The notice supplements the standard site policies. It does not replace account terms, membership terms or cancellation/refund rights. Standard legal URLs remain readable without the beta password, including links in existing emails.
+The notice supplements the standard site policies. It does not replace account terms, membership terms or cancellation/refund rights. Standard legal URLs remain readable without a beta invitation pass, including links in existing emails.
 
 ## Layout and navigation
 
@@ -14,9 +14,9 @@ After entry, legal pages use the normal site providers, header and footer. The p
 
 ## CMS publication
 
-The approved public operator details come from `BILLING_LEGAL_OPERATOR`, `BILLING_LEGAL_POSTAL_ADDRESS` and `BILLING_LEGAL_EMAIL` in the private Strapi environment. The script requires all three and never prints them or copies private mail configuration automatically.
+Public operator details come from `BILLING_LEGAL_OPERATOR`, `BILLING_LEGAL_POSTAL_ADDRESS` and `BILLING_LEGAL_EMAIL` in the private Strapi environment. The script requires all three and never prints them or copies private mail configuration automatically.
 
-From the repository root:
+The `update-beta-legal.mjs` helper is a local feature migration. For routine production revisions, follow [CMS content operations](../strapi/CONTENT-OPERATIONS.md). To inspect the local migration, run from the repository root:
 
 ```sh
 node --experimental-transform-types apps/strapi/scripts/update-beta-legal.mjs
@@ -27,7 +27,9 @@ The first command previews. The second backs up the existing beta document to a 
 
 Edit the notice when the entrance, waitlist or data practices change. For an ordinary content revision, use a new version/date and retain the previous revision. Review waitlist records when invitations end; remove data no longer needed and retain only necessary withdrawal/suppression evidence. Provider-held records need their own deletion controls, as stated in the privacy notice.
 
-Revision identifiers are numbers such as `1.0`; publication dates have their own field. The current beta, terms, privacy, cookies, membership and cancellation/refund releases are version 1.0, dated 12 October 2026. `normalize-legal-versions.mjs` corrects the earlier date-based identifiers through MCP without changing policy copy or recorded consents. Run it with `node --experimental-transform-types apps/strapi/scripts/normalize-legal-versions.mjs` to preview, then add `--apply` to update and republish the affected documents. It backs up existing records and refuses to publish documents with unrelated pending edits. The publication scripts also use numbered versions so a rerun cannot restore the mistaken labels.
+Revision identifiers are numbers such as `1.0`; publication dates have their own field. Check the selected CMS document and current content/consent constants for the revision required by a release. Policy document revisions, purchase offer consent and historical recorded acceptance are separate; do not overwrite historical consent when publishing descriptive changes.
+
+`normalize-legal-versions.mjs` is a local correction tool for earlier date-based identifiers. Review its target records before applying it; it does not determine the current production revision. Preserve unrelated drafts and revision history through the content operations workflow.
 
 ## Retiring the gate
 
@@ -41,9 +43,5 @@ Regression coverage checks accepted, forged and expired passes; exact GET/HEAD l
 pnpm --filter @repo/ui test src/lib/proxies/__tests__/betaGate.test.ts 'src/app/[locale]/__tests__/layout-locale.test.tsx' src/lib/strapi-api/content/__tests__/legal-navigation.test.ts src/components/beta/__tests__/BetaFooter.test.tsx src/components/global/__tests__/GlobalHeader-public.test.tsx
 pnpm --filter @repo/ui typecheck
 ```
-
-The frontend dev server was intentionally left stopped at the user's request. Source/render tests and the production build can run without restarting it.
-
-Verified on 12 October 2026: all 44 focused checks passed, frontend typechecking passed, scoped lint had no errors, and the isolated production build completed all 259 pages. The published English CMS detail matched the notice text and approved contact details through the read-only endpoint.
 
 Individual beta invitations store issuance, delivery and redemption records against the access request. The beta cookie references the accepted invitation, so operators can revoke that browser pass. See `../strapi/BETA-INVITES.md` for the current access and correspondence workflow.

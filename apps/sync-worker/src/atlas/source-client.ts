@@ -111,12 +111,14 @@ export class AtlasSourceClient {
   async scan(
     after: number,
     upper?: number,
-    limit: number = ATLAS_LIMITS.backfillBatch
+    limit: number = ATLAS_LIMITS.backfillBatch,
+    country?: string
   ): Promise<SourcePage> {
     const query = new URLSearchParams({
       after: String(after),
       limit: String(limit),
       ...(upper === undefined ? {} : { upper: String(upper) }),
+      ...(country === undefined ? {} : { country }),
     })
     let page: any
     try {
@@ -124,7 +126,7 @@ export class AtlasSourceClient {
     } catch (error) {
       if (!(error instanceof AtlasSourceWindow) || limit === 1) throw error
 
-      return this.scan(after, upper, Math.ceil(limit / 2))
+      return this.scan(after, upper, Math.ceil(limit / 2), country)
     }
     if (
       !Array.isArray(page.rows) ||

@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-const { send } = vi.hoisted(() => ({ send: vi.fn() }))
+const { send, queue } = vi.hoisted(() => ({ send: vi.fn(), queue: vi.fn() }))
 vi.mock("@/lib/contact/email", () => ({ sendContactNotification: send }))
+vi.mock("@/lib/contact/slack", () => ({ queueFeedbackNotification: queue }))
 import { POST } from "../route"
 
 let address = 0
@@ -32,6 +33,7 @@ const request = (body: unknown, headers: Record<string, string> = {}) =>
 beforeEach(() => {
   vi.clearAllMocks()
   send.mockResolvedValue(undefined)
+  queue.mockResolvedValue(false)
 })
 afterEach(() => vi.unstubAllEnvs())
 
@@ -169,6 +171,7 @@ describe("website contact delivery", () => {
       (await POST(request({ ...contact, website: "https://spam.test" }))).status
     ).toBe(200)
     expect(send).not.toHaveBeenCalled()
+    expect(queue).not.toHaveBeenCalled()
   })
   it("preserves a provider failure instead of claiming the message was sent", async () => {
     send.mockRejectedValue(new Error("SMTP unavailable"))
@@ -183,4 +186,43 @@ describe("website contact delivery", () => {
     expect(limited.headers.get("retry-after")).toBeTruthy()
     expect(send).toHaveBeenCalledTimes(5)
   })
+})
+
+it("persists feedback before sending its email copy and accepts it if SMTP fails", async () => {
+  queue.mockResolvedValue(true)
+  send.mockRejectedValue(new Error("SMTP unavailable"))
+  const response = await POST(
+    request({
+      mode: "feedback",
+      topic: "problem",
+      task: "find_library",
+      outcome: "no",
+      message: "The map filter did not include the expected Library.",
+      context: { page: "/map", locale: "en" },
+    })
+  )
+  expect(response.status).toBe(200)
+  const { reference } = await response.json()
+  expect(queue).toHaveBeenCalledWith(
+    expect.objectContaining({ mode: "feedback" }),
+    reference
+  )
+  expect(queue.mock.invocationCallOrder[0]).toBeLessThan(
+    send.mock.invocationCallOrder[0]!
+  )
+})
+it("does not acknowledge feedback when the enabled durable queue cannot persist it", async () => {
+  queue.mockRejectedValue(new Error("Database unavailable"))
+  const response = await POST(
+    request({
+      mode: "feedback",
+      topic: "idea",
+      task: "explore",
+      outcome: "partly",
+      message: "Please make it easier to compare the map layers.",
+      context: { page: "/map", locale: "en" },
+    })
+  )
+  expect(response.status).toBe(503)
+  expect(send).not.toHaveBeenCalled()
 })

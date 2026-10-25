@@ -177,3 +177,49 @@ describe("StaffLibraryEntry", () => {
     expect(screen.getByRole("link", { name: /Go live/ })).toBeTruthy()
   })
 })
+
+describe("compact visitor rail staff controls", () => {
+  it("uses the same edit and live permissions as the full staff card", () => {
+    const view = render(
+      createElement(StaffLibraryEntry, {
+        ...props,
+        compact: true,
+        libraryType: "Mobile",
+      })
+    )
+    expect(
+      screen.queryByRole("link", { name: /Open the Staff area/ })
+    ).toBeNull()
+    view.unmount()
+    staff.can.add(`edit:${ID}`)
+    const editable = render(
+      createElement(StaffLibraryEntry, {
+        ...props,
+        compact: true,
+        libraryType: "Mobile",
+      })
+    )
+    expect(
+      screen
+        .getByRole("link", { name: /Open the Staff area/ })
+        .getAttribute("href")
+    ).toBe("/staff/central-library")
+    expect(screen.queryByRole("link", { name: /Go live/ })).toBeNull()
+    editable.unmount()
+    staff.can.add(`goLive:${ID}`)
+    render(
+      createElement(StaffLibraryEntry, {
+        ...props,
+        compact: true,
+        libraryType: "Mobile",
+        hasActiveFeed: true,
+      })
+    )
+    expect(
+      screen.getByRole("link", { name: /Go live/ }).getAttribute("href")
+    ).toBe(`/live/${ID}`)
+    expect(
+      screen.queryByRole("link", { name: /Connect an event feed/ })
+    ).toBeNull()
+  })
+})

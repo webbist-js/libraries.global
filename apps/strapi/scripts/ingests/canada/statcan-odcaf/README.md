@@ -1,0 +1,31 @@
+# Canada: ODCAF library subset, version 1.0
+
+```sh
+pnpm ingest --dataset=ca-statcan-odcaf
+pnpm ingest --dataset=ca-statcan-odcaf --check-cms
+pnpm ingest --dataset=ca-statcan-odcaf --apply --limit=5
+pnpm ingest --dataset=ca-statcan-odcaf --apply --concurrency=4
+pnpm ingest --dataset=ca-statcan-odcaf --snapshot=scripts/ingests/canada/statcan-odcaf/.cache
+```
+
+Run from `apps/strapi`; Python 3 is also required to read the publisher's ZIP. The default maps the complete file without CMS writes. `--check-cms` checks existing geography, source identities and slug collisions. `--apply` creates drafts; reruns skip existing Source Records. `--refresh` fetches again; `--snapshot` replays offline.
+
+[Statistics Canada](https://www.statcan.gc.ca/en/lode/databases/odcaf) publishes [ODCAF v1.0](https://www150.statcan.gc.ca/n1/en/pub/21-26-0001/2020001/ODCAF_V1.0.zip) under the [Open Government Licence – Canada](https://open.canada.ca/en/open-government-licence-canada). Its sources were collected January–July 2020. This is a historical, incomplete national baseline. The report explicitly lists represented and unrepresented provinces/territories. It does not establish current operation or complete North American coverage.
+
+The release contains 7,972 cultural-facility records and 169 source descriptions. Only an evidenced library subset is eligible. The combined `library or archives` category is insufficient on its own. Museum-association entries require individual review and are skipped. Ontario's provincial statistics identify systems and may represent offices, so those records are skipped; eligible Ontario branches from municipal sources remain. Headquarters and mobile bases are excluded.
+
+The JSON cache retains the complete ZIP as base64, its request URL and retrieval date. The run report records the snapshot checksum and the original ZIP checksum. Archive SHA-256 is pinned to `648714793d1b5513cfc2b3cf455b4ac0a5a350579f2164dfea1d0fa239468c39`; changed bytes require release review. The parser reads only the two named CSV members, decodes Windows-1252 and validates full counts and unique IDs. `Data_Sources.csv` stays in the retained archive with the original publishers' credits and licence links.
+
+| Source                                                    | Library field                 | Rule                                                                                                                                                                                                                                   |
+| --------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Index`                                                   | Source Record ID, slug suffix | `v1.0-<Index>`; generated indices are stable only inside this pinned release.                                                                                                                                                          |
+| `Facility_Name`                                           | `name`                        | Preserve names and French accents; omit missing/overlong names.                                                                                                                                                                        |
+| `ODCAF_Facility_Type`, `Source_Facility_Type`, `Provider` | Eligibility, `libraryType`    | Require library evidence or a known branch-directory provider. Public type requires explicit public-library evidence or a public-directory provider; explicit university names map to University; other evidenced libraries use Other. |
+| `Prov_Terr`, `PRUID`, `CSDUID`                            | Country, Region               | Cross-check official province and census code prefixes. Use existing Atlas province/territory relations.                                                                                                                               |
+| `CSD_Name`                                                | `city`                        | Prefer the census subdivision over inconsistent source city text; record disagreement as a warning.                                                                                                                                    |
+| `Source_Format_Address`, `Postal_Code`                    | `streetAddress`, `postalCode` | Omit `..` missing-value markers and invalid/overlong fields; normalize postal spacing.                                                                                                                                                 |
+| `Latitude`, `Longitude`                                   | `location`                    | Require both finite coordinates inside Canadian bounds; otherwise omit the pin with a warning.                                                                                                                                         |
+
+Census subdivisions do not identify the Atlas's county/district Areas, so the adapter assigns only Country and Region. It creates no places or population. Operator, contact, website and opening-hours fields remain unspecified. Publication and search reseeding are separate operations. Keep the cache and `.runs/` evidence for every published import; upgrading to another ODCAF release needs identity reconciliation first.
+
+Validation on 24 October 2026 accepted 2,368 libraries: 2,028 Public, 337 Other and three University records. Local CMS preflight found no geography conflicts. Of the eligible records, 446 have no usable coordinates. The subset covers Alberta, British Columbia, Manitoba, New Brunswick, Newfoundland and Labrador, Nova Scotia, Ontario, Quebec and Saskatchewan. Prince Edward Island, Northwest Territories, Nunavut and Yukon have no eligible records. A five-draft smoke import passed source, country/region and publication-state read-back checks.

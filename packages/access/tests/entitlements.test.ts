@@ -30,6 +30,7 @@ describe("Supporter digital tools plan", () => {
     ])
     expect(can(ent, "atlas.analysis")).toBe(false)
     expect(ent.limits).toEqual({
+      analysisRunsPerHour: 0,
       savedViews: 3,
       savedSearches: 3,
       exportRows: 500,

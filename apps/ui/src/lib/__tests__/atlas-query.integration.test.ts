@@ -53,6 +53,28 @@ const scope = (filters: Partial<AtlasScope["filters"]> = {}): AtlasScope => ({
   bbox: { west: -180, east: 180, south: -90, north: 90 },
 })
 describe("Atlas completeness guards", () => {
+  it("keeps place discovery inside the selected network", async () => {
+    const search = vi.fn().mockResolvedValue({
+      hits: [],
+      estimatedTotalHits: 0,
+    })
+    const engine = new AtlasQueryEngine(
+      { state: async () => state, search, bridge: vi.fn() },
+      state,
+      now
+    )
+    const result = await engine.search({
+      schemaVersion: 1,
+      purpose: "search",
+      scope: scope({ networks: ["one"], catalogue: true }),
+      q: "Cardiff",
+    })
+    expect(result.places).toEqual([])
+    expect(search).toHaveBeenCalledTimes(4)
+    for (const [query] of search.mock.calls)
+      expect(query.filter).toContain('network_ids = "one"')
+  })
+
   it("uses exact facets beyond the hit window and rejects missing counts", () => {
     expect(
       atlasExactTotal(

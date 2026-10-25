@@ -1,133 +1,85 @@
-# Membership billing runbook
+# Membership billing
 
-Stripe Managed Payments hosts Checkout, financial confirmations and payment management. Better Auth owns identity; Strapi owns private access projections, complimentary grants, Teams and notifications. Membership never changes community roles, trust, points, moderation or staff authority. Libraries Global’s operator remains the service seller; Stripe Managed Payments is merchant of record for transactions, not seller of record. Stripe handles payment operations and indirect taxes, while service delivery and applicable consumer obligations remain with the operator. Link’s refund policy overrides a more restrictive seller policy. [Managed Payments service terms, sections 2.1(a) and 3.3](https://stripe.com/legal/ssa-services-terms).
+The billing implementation uses hosted Stripe Managed Payments, durable owned checkout attempts, invoice settlement and private Strapi access projections. Better Auth owns account identity. Membership changes tools and limits; it never grants community roles, trust, moderation or library staff authority.
 
-The application and sandbox catalogue are ready for acceptance. The owner's initial Pro annual purchase has settled and synchronized to Strapi. Initial Supporter settlement, declined/3DS/wallet paths and production acceptance still need completion. Live preparation remains separate from sandbox testing and requires a confirmed production URL.
+This guide describes implementation and repeatable checks. Provider account readiness, enabled flags, purchase evidence, approvals and deployment results belong in private operator storage.
 
-## Delivered plans
+## Plans and ownership
 
-Self-service annual Team signup, settlement, seat quantities and Portal management are described in [TEAM-BILLING.md](TEAM-BILLING.md). The organisation owns billing; personal membership and the monthly API add-on remain separate. Existing invoice agreements are preserved. The new purchase flag defaults off until its deployment and owned sandbox acceptance are complete.
+Read [Pricing](PRICING.md) and `src/lib/membership-pricing.json` for the catalogue. Supporter includes detailed history and exports up to 500 libraries; Pro includes delivered analysis and 10,000-row exports. Team's library-scoped tools have a 50,000-row cap. Do not sell unfinished features or silently replace founding Price IDs.
 
-The separate paid Team API add-on has its own Team-owned checkout, keys, durable quotas and staff usage dashboard. Its catalogue, limits, endpoints and deployment commands are described in [TEAM-API.md](TEAM-API.md). It does not change personal memberships or staff authority.
+Personal membership, [Team seats](TEAM-BILLING.md) and the separate [Team API add-on](TEAM-API.md) have independent customer bindings, attempts and paid projections. Settled payment, rather than an optimistic checkout return, activates access.
 
-| Plan      | Tax-inclusive base GBP                                                                        | Tools                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Free      | Free                                                                                          | Records, individual downloads, contributions, following, saved events and separate opt-in weekly emails |
-| Supporter | £3 monthly / £30 yearly                                                                       | Detailed history; Atlas CSV/GeoJSON exports up to 500 libraries per download; optional recognition      |
-| Pro       | £5 monthly / £50 yearly, founding                                                             | Supporter tools; exports up to 10,000; delivered population comparisons                                 |
-| Team      | £600/year ex VAT for 5 seats; extra seats £120/year. Public-library services receive 20% off. | Existing Pro seats and library-scoped permissions; 50,000-row export cap                                |
+## Checkout and plan changes
 
-Saved views/searches and private notes are not delivered benefits. Unfinished analysis tools remain Coming soon. Founding prices are immutable; preserve settled Price IDs and do not silently replace cohorts. Stripe confirms tax and any local-currency charge. Application amounts use the base billing currency; financial confirmations show the customer charge.
+Verified accounts create owned customer/attempt records before provider calls. Per-owner PostgreSQL locks and stable idempotency keys protect retries. Prices, quantities, customers and return destinations are server-selected. Payment details remain on the hosted page.
 
-Both sandbox products now describe digital tools, are active and use eligible SaaS personal-use candidate tax code `txcd_10103000`. The legacy `STRIPE_SUPPORTER_APPROVED` flag now confirms this delivered digital offer/classification. No special patronage approval has been invented. Confirm live Managed Payments activation and classification before enabling purchases. [Eligibility](https://docs.stripe.com/payments/managed-payments/eligibility).
+A bounded signed webhook records references before acknowledging delivery. The worker refetches provider state and verifies environment, customer, subscription and settled invoice coverage. The return page waits for both payment and Strapi acknowledgement before refreshing the existing session. A pending or unpaid initial purchase grants nothing; a failed upgrade preserves the already-settled lower plan.
 
-## Purchase, access and changes
+Paid upgrades use the provider's proration review. Reductions and shorter intervals are reviewed in Settings and start at the paid period end with no charge today. Durable plan-change intents recover interrupted schedule creation. Undo removes a future change; the worker releases the schedule after its target phase starts. Future selections never grant access.
 
-Verified accounts create owned customers and durable attempts before Stripe calls. Per-owner PostgreSQL locks and stable idempotency keys protect retries. Customers, prices, quantities and access grants never come from the browser. Hosted sessions require retrieved `managed_payments.enabled=true`; the app has no card/CVC fields or custom wallet buttons. Eligible cards, Apple Pay, Google Pay and Link appear on Stripe's page.
+Separate restricted Pro, Supporter and recovery Portal configurations constrain allowed plan changes. Cancellation preserves settled access through the paid period. A failed renewal's grace period is bounded from the first failure. Refund/dispute holds affect paid access independently of complimentary sources.
 
-A signed, bounded webhook stores references before acknowledgement. The worker refetches provider state, verifies the original owned Managed Payments binding and projects settled invoice coverage. Return status waits for both payment and Strapi acknowledgement. Unpaid first purchases grant nothing; an unpaid Pro upgrade preserves a still-paid Supporter period. Renewal grace is seven days from the first failure, without resetting on retries. Current-period full refunds/disputes hold paid access; independent complimentary access remains.
+Account erasure stops subscriptions and open checkout sessions before clearing bindings. Uncertain cancellation blocks erasure. Completed attempts discard capability URLs. Retention is bounded and preserves pending work; user exports omit payment credentials and capability links.
 
-Paid upgrades continue to Stripe's exact proration review and confirmation. Lower plans and shorter intervals are reviewed in Settings and start at the paid period end, with no charge today. Durable `billing_plan_changes` intents survive interrupted calls. Settings provides Undo before the future phase starts. The worker resumes preparation and releases the schedule once its target phase begins, permitting later changes. Future choices never grant access.
+## Local sandbox checks
 
-Stripe Portal schedules reductions only within one product. Three configurations protect the separate products: Pro permits only Pro prices; Supporter permits its prices and paid Pro upgrades; recovery permits billing/payment updates, invoices and cancellation while disabling plan changes. [Portal limitation](https://docs.stripe.com/customer-management/configure-portal).
+Follow [Local acceptance](BILLING-LOCAL-TESTS.md). Reuse the existing database and apps. Helpers read the configured local origin; listener, worker and UI must agree on its port. Do not start another Next.js or Strapi server.
 
-Settings distinguishes paid membership from effective access and displays confirming, active, ended, failed-payment and suspended states. It includes masked payment details, billing details, invoices/PDFs and founding status. Stripe billing-email edits do not change the sign-in email. Recognition remains in Privacy; private/limited profiles are never publicly credited.
-
-Account erasure stops subscriptions and open sessions first and refuses uncertain cancellation. Successful/expired attempts discard capability URLs. User exports include membership snapshots, consent records and scheduled-change history without card data or capability links. Daily retention removes completed/ignored event references after 90 days and erased bindings after six years, in bounded batches; pending work and live accounts remain.
-
-## Local sandbox and checks
-
-For the owner’s browser acceptance steps, test cards and restart instructions, use [BILLING-LOCAL-TESTS.md](BILLING-LOCAL-TESTS.md). `billing:sandbox:watch` runs the local worker every five seconds while its terminal remains open.
-
-Safe IDs are in [billing-sandbox-catalogue.json](scripts/billing-sandbox-catalogue.json). The helper uses private `STRIPE_SANDBOX` from Strapi's ignored environment and never substitutes a live key.
-
-```bash
-pnpm --filter @repo/access build
-pnpm --filter @repo/ui billing:sandbox:configure
-pnpm --filter @repo/ui billing:migrate
+```sh
 pnpm --filter @repo/ui billing:check
-pnpm --filter @repo/ui billing:sandbox:listen
-# Start/restart after the listener saves its private signing secret.
-pnpm --filter @repo/ui dev --port 3000
 pnpm --filter @repo/ui billing:sandbox:work
 ```
 
-Run the worker again if projections remain pending. Local development has no Vercel scheduler. CLI signing secrets differ from deployed endpoint secrets. Unowned synthetic events cannot grant access. Fixture profiles stay private and reserved `.invalid` recipients are excluded from SMTP delivery.
+`billing:check` inspects the configured catalogue. `billing:sandbox:work` processes a finite local worker pass; use it when testing delayed projection recovery. The sandbox listener saves its signing secret privately. Changing an origin or signing secret requires the relevant existing process to reload its configuration.
 
-The listener and worker default to `APP_PUBLIC_URL` in the private UI environment; the example above uses `http://localhost:3000`, with matching `NEXT_PUBLIC_APP_URL`. Restart helpers when changing ports, and clear or update explicit forwarding/worker origin overrides. A stopped app or wrong forwarding port prevents timely confirmation even though Stripe has paid the invoice.
+Focused checks, run sequentially with bounded memory and one worker:
 
-Checkout keeps polling through delayed synchronization and transient failures, using slower checks after the initial 30 seconds. On verified readiness it refetches the existing reactive session with `disableCookieCache: true` and refreshes server UI. That flag also bypasses the per-process Strapi profile cache for that authenticated user; no plan or role is accepted from the browser. Acknowledged billing sync invalidates the local profile cache, and the worker attempts to sync projections created during the same run before its existing time budget expires. Settings keeps pending paid purchases visible and refreshes membership/access automatically. Existing paid/refund/mode/ownership guards remain authoritative.
-
-```bash
-pnpm --filter @repo/access test
-pnpm --filter @repo/ui test src/lib/billing src/app/api/billing src/components/billing
-pnpm --filter @repo/ui billing:db:test
-pnpm --filter @repo/strapi test tests/paid-membership.test.ts tests/billing-notice.test.ts tests/email-recipients.test.ts
+```sh
+NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @repo/ui test src/lib/billing src/app/api/billing src/components/billing --maxWorkers=1
+NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @repo/strapi test tests/paid-membership.test.ts tests/billing-notice.test.ts tests/email-recipients.test.ts --maxWorkers=1
 ```
 
-The database suite refuses remote URLs and creates/drops an isolated local schema. Source tests verify both CSV/GeoJSON caps, server-selected exports, ownership/mode/origin/body guards, settlement, replay, recovery, notices, profile visibility and retention. Typecheck and production build pass after repairing pre-existing blockers.
+`billing:db:test` creates temporary PostgreSQL schemas. Run it only in an approved isolated CI/acceptance environment, never against the shared development database. Mocks and fixture projections do not establish provider/device acceptance.
 
-Real sandbox evidence includes the previously settled Pro monthly/yearly purchase and annual proration, plus authenticated cross-product scheduling/undo with no extra invoice and one Strapi notice per revision. The two new initial purchases remain awaiting human completion. Physical wallets, bank authentication, decline and mailbox delivery require honest provider/device evidence; do not mark them passed from mocks.
+## Configuration and deployment
 
-Test card: `4242 4242 4242 4242`; future expiry; CVC `123`. Insufficient funds: `4000 0000 0000 9995`. Authentication: `4000 0025 0000 3155`. Enter these only into Stripe-hosted sandbox fields. [Stripe test details](https://docs.stripe.com/testing).
+Keep sandbox and live bindings separate. UI and CMS `BILLING_ENV` must match; changing a populated database's mode does not convert its provider records. Package versions come from `package.json`/the lockfile; the provider API version and event allowlist come from `src/lib/billing/`.
 
-## Deployment and live MCP
+The checked-in environment examples describe names and placeholders for runtime keys, webhook signing secrets, Price IDs, Portal configurations, bridge credentials, job authentication and public origins. Keep values and generated account-specific catalogue manifests ignored. Disabling new purchases must leave reconciliation and existing billing management available.
 
-Use separate sandbox/production auth and Strapi databases; changing a populated database's mode does not convert customers. UI and Strapi `BILLING_ENV` must match. Runtime is `stripe@22.0.0`, pinned API `2026-03-25.dahlia`, with patched Better Auth `1.4.18`.
+A release must apply the billing migration, ship matching shared access/CMS/UI/worker code and configure authenticated billing and retention jobs. `vercel.json` applies only when running on that platform; another host needs its own installed scheduler. Verify signatures, mode, retries, pending-event age, projection lag and alerts before activation.
 
-Private configuration is documented in `.env.local.example`: runtime key, endpoint secret, four prices, three Portal configurations, bridge credential, cron secret, fixed public origin and backend URL. Purchase/Managed Payments/Supporter confirmation flags default false. Stopping new purchases leaves recovery and reconciliation running.
+The live preparation helper defaults to inspection:
 
-Deploy shared access code, migrate billing, and deploy the private Strapi sync, UI/webhook and worker. Generate Strapi types after schema changes; this shuffle changes shared access types and the billing database, not Strapi schemas. Vercel schedules billing each minute and retention daily. Other hosts, including the proposed DigitalOcean setup, need equivalent authenticated jobs; `vercel.json` does not schedule work there. Monitor worker failures, pending counts, oldest pending event, projection lag and reconciliation health; connect operational alerts before enabling purchases.
-
-For public paid launch, remove closed-beta barriers. Link also provides renewal management through financial confirmations if app access is unavailable. Confirm service URL/DNS/HTTPS and current public legal pages before activating checkout.
-
-The official MCP setup helper is read-only by default:
-
-```bash
+```sh
 node apps/ui/scripts/billing-live.mjs --origin https://YOUR_PRODUCTION_HOST
-# After both owned sandbox purchases and access projections pass:
-node apps/ui/scripts/billing-live.mjs --origin https://YOUR_PRODUCTION_HOST --apply --sandbox-accepted
-# After installing the endpoint signing secret in the deployed app:
-node apps/ui/scripts/billing-live.mjs --origin https://YOUR_PRODUCTION_HOST --apply --sandbox-accepted --verify-receiver
 ```
 
-It prepares two digital products, four immutable prices and three restricted Portal configurations, reusing stable IDs/lookups/names and refusing mismatched objects. It can register the pinned webhook once legal pages and the deployed handler are reachable, including a handler awaiting its first signing secret. The optional signed probe validates the receiver's secret/mode without a charge or access grant. It does not prove database/worker/Strapi health; verify those separately.
+After owned sandbox acceptance, its `--apply --sandbox-accepted` mode prepares matching catalogue/Portal/webhook objects. The optional `--verify-receiver` probe checks the deployed signature boundary without granting access or charging an account. It does not establish database, worker or CMS health. Review the helper and current provider requirements before using it; authentication and signing-secret recovery stay in private operator configuration.
 
-The safe manifest contains no keys. Deployment values are saved to ignored `.scratch/billing-live.env` with permissions `0600`; live flags remain false. If MCP redacts a newly created endpoint signing secret, retrieve it privately from the Dashboard. Confirm Managed Payments terms/activation, classification, support contacts/refund escalation, deployment health, legal details and email delivery before enabling flags. Charges/payouts being enabled alone does not prove these requirements.
+Catalogue preparation, code deployment, public opening and live purchase activation are separate operations. Preserve the beta gate and sandbox billing during routine releases. See [Release helpers](../../scripts/release/README.md) for generic promotion requirements.
 
-Stripe MCP stops accepting ordinary untagged keys after 31 October 2026. Use installed OAuth or an Agent-tagged key for continued helper access; the normal Stripe runtime API is separate. [Official MCP guide](https://docs.stripe.com/mcp).
+## Webhooks, notices and email
 
-## Webhooks, notices and emails
+`BILLING_EVENTS` in `src/lib/billing/events.ts` allowlists lifecycle events. Only the exact billing webhook route bypasses the beta/basic-auth gate; raw signature, body-size and environment checks still apply.
 
-`BILLING_EVENTS` in `src/lib/billing/events.ts` allowlists checkout, subscription, invoice, refund/dispute and schedule lifecycle events. Only exact `POST /api/billing/webhook` bypasses beta/basic-auth; signature and environment checks remain mandatory. Missing/oversized signature headers are rejected before a bounded raw body is read.
+Strapi enqueues access notices transactionally with each accepted projection revision. Repeated or older revisions do not duplicate notices. Notices use essential delivery and do not opt anyone into marketing. Financial receipts, invoices and provider payment-recovery messages are separate from application access notifications.
 
-Strapi writes `billing_update` transactionally with each projection revision. Activation, changes, scheduled reductions/undo, cancellation/resumption, recovery and access ending have templates. Ordinary renewal does not repeat a welcome. First failure is inbox-only because Stripe owns recovery emails. Link sends financial receipts, invoices and refund confirmations; sandbox financial emails are not sent automatically. [Managed Payments flow](https://docs.stripe.com/payments/managed-payments/how-it-works).
+Use offline previews first:
 
-```bash
-# Offline HTML/text examples; no mail sent.
-pnpm --filter @repo/ui email:check --suite --preview-dir /tmp/libraries-billing-email-previews
-# Verify SMTP/TLS/credentials without sending.
-pnpm --filter @repo/ui email:check
-# Deliberate resend to the authorized test inbox: eleven billing samples.
-pnpm --filter @repo/ui email:check --billing --to info@libraries.global
-pnpm --filter @repo/ui email:check --suite --only verification --to info@libraries.global
+```sh
+pnpm --filter @repo/ui email:check --billing --preview-dir /tmp/libraries-billing-previews
 ```
 
-All 43 previews render and Brevo SMTP verification passes. On 12 October 2026, the server accepted all eleven application billing samples plus the checkout account-verification sample for `info@libraries.global`, as explicitly requested. SMTP acceptance and mailbox delivery are separate; inspect received authentication headers and links. App notices use English; billing controls are EN/FR/CS and English-only legal policies are labelled. Membership does not enrol anyone in marketing.
+A real delivery check needs an explicitly authorized recipient. Record SMTP acceptance separately from mailbox receipt, rendering and authentication-header checks; retain that evidence privately. See [Notifications](../strapi/NOTIFICATIONS.md).
 
-## Knowledge, legal and recovery
+## Content and recovery
 
-[BILLING-HELP.md](BILLING-HELP.md) is the customer guide. `apps/strapi/scripts/update-billing-docs.mjs` preserves unrelated content, backs up before writes, updates existing knowledge articles in EN/FR/CS and updates general terms/privacy/cookies. Membership terms and cancellation/refund policy, including a model cancellation form, were published in the configured CMS on 12 October 2026. The owner confirmed Alexander Bennett and info@libraries.global, then explicitly authorised the email-footer postal address for public use. That address is saved in the ignored Strapi environment as BILLING_LEGAL_POSTAL_ADDRESS; no private address is copied automatically. The policies link to each other and appear in legal navigation, checkout and the membership page. The existing legal reader provides section anchors and print/save controls. Policies currently use English; FR/CS routes display the English fallback with its language note.
+[Customer help](BILLING-HELP.md) describes the user flow. [CMS content operations](../strapi/CONTENT-OPERATIONS.md) defines the environment and publication workflow; the older `update-billing-docs.mjs` helper is a local feature migration, not the routine production publication path.
 
-```bash
-node --experimental-transform-types apps/strapi/scripts/update-billing-docs.mjs
-node --experimental-transform-types apps/strapi/scripts/update-billing-docs.mjs --apply
-# Update only these two policies; preserves other content and earlier revisions.
-node --experimental-transform-types apps/strapi/scripts/update-billing-docs.mjs --legal-only --apply
-```
+Published policy revisions, purchase consent versions and accepted historical snapshots are distinct. Check `src/lib/membership-pricing.json`, the current checkout consent constants and the CMS publication before releasing changes. Preserve earlier consent evidence. Do not copy a dated legal version or jurisdiction-specific claim from an old launch report into a new release.
 
-Current UK guidance provides a normal 14-day initial online-service cancellation period and requires an express request for early service. Immediate access does not automatically waive rights. There is no blanket automatic full refund after every renewal. [Distance-selling requirements](https://www.gov.uk/online-and-distance-selling-for-businesses/distance-selling), [Consumer Contracts Regulations](https://www.legislation.gov.uk/uksi/2013/3134). Public terms must match the application's recorded version before live checkout opens. Membership and Team API consent use version 1.1, published on 13 October 2026 with the Team pricing, usage/privacy and separate API cancellation updates. The earlier 1.0 policy remains part of the revision history. Earlier stored consents labelled 2026-10-12 remain evidence for that release and are not rewritten. UK subscription reforms were subsequently announced for January 2027; verify commencement, provider reminders and any renewal cooling-off requirements before launch/renewals under that regime. The policy preserves any statutory rights that apply to renewals rather than excluding them. [Latest government announcement, 9 August 2026](https://www.gov.uk/government/news/pm-starts-roll-out-of-everyday-fixes-on-the-cost-of-living-ending-rip-off-discounts-and-subscription-traps).
+Retry interrupted provider work with the same owned binding. Reconcile before retrying beyond the provider's idempotency retention. Replay original event IDs and refetch current state. Missing non-erased profiles require repair; only a recorded erased-account tombstone can acknowledge the corresponding gone response. Refund/dispute holds require provider evidence and an operator audit record.
 
-Retry with the same binding/selection after timeouts. After 23 hours with unresolved creation, reconcile before retrying because provider idempotency retention is finite. Events/projections back off durably; replay original event IDs and refetch current state. An erased-profile 410 is acknowledged only with a local tombstone; missing non-erased profiles need repair. Refund/dispute holds require explicit operator reconciliation with provider evidence and an audit record; no customer hold-reset or self-service refund endpoint exists. Changed periods or expired idempotency windows remain pending for operator reconciliation.
-
-Keep keys, cookies, signing secrets, capability links and fixture backups out of source, logs and shared reports. See the launch review for verified evidence and remaining external dependencies.
+Keep keys, cookies, signing secrets, capability links, fixture identities and recovery evidence out of source and shared reports.

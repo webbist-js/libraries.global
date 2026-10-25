@@ -1,9 +1,19 @@
 import { createHash, timingSafeEqual } from "node:crypto"
 
 import { ATLAS_LIMITS, atlasLocalGeography } from "@repo/shared-data"
+import type { Core } from "@strapi/strapi"
 
+import {
+  analysisService,
+  requestAtlasReach,
+} from "../../../utils/atlas-analysis"
 import { atlasJson } from "../../../utils/atlas-json"
+import {
+  atlasNetworkCatalogue,
+  requestAtlasNetworkReach,
+} from "../../../utils/atlas-network-analysis"
 import { atlasEnabled } from "../../../utils/atlas-outbox"
+import { atlasPopulationContext } from "../../../utils/atlas-population-context"
 import {
   atlasArchivePage,
   atlasChanges,
@@ -23,7 +33,7 @@ import {
 } from "../../../utils/population-ingest"
 import { isValidServiceSecret } from "../../../utils/service-secret"
 
-function authorize(ctx: any): boolean {
+function authorize(ctx: Core.Strapi["server"]["app"]["context"]): boolean {
   const token = process.env.ATLAS_SERVICE_TOKEN
   const headers = ctx.request?.headers ?? {}
   const provided = headers["x-atlas-token"]
@@ -61,8 +71,129 @@ function integer(value: unknown, fallback: number): number {
   return number
 }
 
-export default ({ strapi }: { strapi: any }) => ({
-  async ingestPopulation(ctx: any) {
+export default ({ strapi }: { strapi: Core.Strapi }) => ({
+  async populationContext(ctx: Core.Strapi["server"]["app"]["context"]) {
+    if (!authorize(ctx)) return
+    if (
+      Object.keys(ctx.query).some((key) => key !== "country") ||
+      typeof ctx.query.country !== "string"
+    )
+      return ctx.badRequest("Invalid population country")
+    try {
+      ctx.body = await atlasPopulationContext(strapi, ctx.query.country)
+    } catch (error) {
+      if (error instanceof RangeError)
+        return ctx.badRequest("Unsupported population country")
+      ctx.status = 503
+      ctx.body = { error: "Population observations unavailable" }
+    }
+  },
+  async context(ctx: Core.Strapi["server"]["app"]["context"]) {
+    if (!authorize(ctx)) return
+    const query = ctx.query ?? {}
+    if (
+      Object.entries(query).some(
+        ([key, value]) =>
+          ![
+            "kind",
+            "release",
+            "z",
+            "x",
+            "y",
+            "q",
+            "offset",
+            "lng",
+            "lat",
+          ].includes(key) ||
+          typeof value !== "string" ||
+          value.length > 100
+      )
+    )
+      return ctx.badRequest("Invalid context request")
+    try {
+      ctx.body = await analysisService(
+        `/context?${new URLSearchParams(query as Record<string, string>)}`
+      )
+    } catch {
+      ctx.status = 503
+      ctx.body = { error: "Map context is temporarily unavailable" }
+    }
+  },
+  async reach(ctx: Core.Strapi["server"]["app"]["context"]) {
+    if (!authorize(ctx)) return
+    const body = ctx.request.body ?? {}
+    if (
+      Object.keys(body).some(
+        (key) => !["request", "userKey", "hourlyLimit"].includes(key)
+      ) ||
+      typeof body.userKey !== "string" ||
+      !/^[a-f0-9]{64}$/.test(body.userKey) ||
+      !Number.isInteger(body.hourlyLimit) ||
+      body.hourlyLimit < 1 ||
+      body.hourlyLimit > 100
+    ) {
+      return ctx.badRequest("Invalid analysis request")
+    }
+    try {
+      const result = await requestAtlasReach(
+        strapi,
+        body.request,
+        body.userKey,
+        body.hourlyLimit
+      )
+      ctx.status = result.status
+      ctx.body = result.body
+    } catch (error) {
+      if (error instanceof RangeError)
+        return ctx.badRequest("Invalid Reach input")
+      strapi.log.warn("[atlas-reach] Analysis dependency unavailable")
+      ctx.status = 503
+      ctx.body = { error: "Analysis is temporarily unavailable" }
+    }
+  },
+  async networkReach(ctx: Core.Strapi["server"]["app"]["context"]) {
+    if (!authorize(ctx)) return
+    const body = ctx.request.body ?? {}
+    if (
+      Object.keys(body).some(
+        (key) => !["request", "userKey", "hourlyLimit"].includes(key)
+      ) ||
+      typeof body.userKey !== "string" ||
+      !/^[a-f0-9]{64}$/.test(body.userKey) ||
+      !Number.isInteger(body.hourlyLimit) ||
+      body.hourlyLimit < 1 ||
+      body.hourlyLimit > 100
+    ) {
+      return ctx.badRequest("Invalid analysis request")
+    }
+    try {
+      const result = await requestAtlasNetworkReach(
+        strapi,
+        body.request,
+        body.userKey,
+        body.hourlyLimit
+      )
+      ctx.status = result.status
+      ctx.body = result.body
+    } catch (error) {
+      if (error instanceof RangeError)
+        return ctx.badRequest("Invalid Reach input")
+      strapi.log.warn("[atlas-reach] Analysis dependency unavailable")
+      ctx.status = 503
+      ctx.body = { error: "Analysis is temporarily unavailable" }
+    }
+  },
+  async networks(ctx: Core.Strapi["server"]["app"]["context"]) {
+    if (!authorize(ctx)) return
+    try {
+      ctx.body = await atlasNetworkCatalogue(strapi, ctx.query ?? {})
+    } catch (error) {
+      if (error instanceof RangeError || error instanceof SyntaxError)
+        return ctx.badRequest("Invalid service search")
+      throw error
+    }
+  },
+  async ingestPopulation(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
     if (
@@ -76,13 +207,13 @@ export default ({ strapi }: { strapi: any }) => ({
     }
     ctx.body = await ingestPopulation(strapi, { dryRun: body.dryRun })
   },
-  async syncPlanCopy(ctx: any) {
+  async syncPlanCopy(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     if (Object.keys(ctx.request.body ?? {}).length)
       return ctx.badRequest("Plan copy sync takes no parameters")
     ctx.body = await syncLibraryAccessPlanCopy(strapi)
   },
-  async localPopulation(ctx: any) {
+  async localPopulation(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     if (Object.keys(ctx.query).length)
       return ctx.badRequest("Local metadata takes no query parameters")
@@ -93,7 +224,7 @@ export default ({ strapi }: { strapi: any }) => ({
       populationVersion: populationVersion(observations),
     }
   },
-  async ingestLocalPopulation(ctx: any) {
+  async ingestLocalPopulation(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
     if (
@@ -103,7 +234,7 @@ export default ({ strapi }: { strapi: any }) => ({
       return ctx.badRequest("Invalid local population import")
     ctx.body = await ingestLocalPopulation(strapi, { dryRun: body.dryRun })
   },
-  async countries(ctx: any) {
+  async countries(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     if (Object.keys(ctx.query).length) {
       ctx.status = 400
@@ -134,7 +265,7 @@ export default ({ strapi }: { strapi: any }) => ({
       populationVersion: populationVersion(observations),
     }
   },
-  async library(ctx: any) {
+  async library(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const { key, locale } = ctx.query
     if (
@@ -156,7 +287,7 @@ export default ({ strapi }: { strapi: any }) => ({
       .documents("api::library.library")
       .findFirst({
         status: "published",
-        locale: locale ?? canonical,
+        locale: (locale as string | undefined) ?? canonical,
         filters: { $or: [{ documentId: key }, { slug: key }] },
         fields: ["documentId"],
       })
@@ -176,7 +307,7 @@ export default ({ strapi }: { strapi: any }) => ({
     }
     ctx.body = { source: rows[0].source }
   },
-  async exportValidation(ctx: any) {
+  async exportValidation(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     try {
       ctx.body = await atlasExportJournal(
@@ -193,7 +324,7 @@ export default ({ strapi }: { strapi: any }) => ({
       throw error
     }
   },
-  async changes(ctx: any) {
+  async changes(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     try {
       ctx.body = await atlasChanges(
@@ -210,7 +341,7 @@ export default ({ strapi }: { strapi: any }) => ({
       throw error
     }
   },
-  async archive(ctx: any) {
+  async archive(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     try {
       if (
@@ -235,18 +366,26 @@ export default ({ strapi }: { strapi: any }) => ({
       throw error
     }
   },
-  async scan(ctx: any) {
+  async scan(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     try {
       if (
         Object.keys(ctx.query).some(
-          (key) => !["after", "upper", "limit"].includes(key)
+          (key) => !["after", "upper", "limit", "country"].includes(key)
         )
       )
         throw new RangeError("Unknown source field")
       const after = integer(ctx.query.after, 0),
         limit = integer(ctx.query.limit, ATLAS_LIMITS.backfillBatch)
       const locale = process.env.ATLAS_CANONICAL_LOCALE ?? "en"
+      const country = ctx.query.country
+      if (
+        country !== undefined &&
+        (typeof country !== "string" ||
+          !/^[A-Z]{2}(?:-[A-Z]{3})?$/.test(country))
+      )
+        throw new RangeError("Invalid source country")
+      const countryFilter = country ? { country: { iso2: country } } : {}
       const upper =
         ctx.query.upper === undefined
           ? ((
@@ -254,13 +393,14 @@ export default ({ strapi }: { strapi: any }) => ({
                 status: "published",
                 locale,
                 fields: ["id"],
+                filters: countryFilter,
                 sort: "id:desc",
               })
             )?.id ?? 0)
           : integer(ctx.query.upper, 0)
       const rows = await atlasSourceRows(
         strapi,
-        { id: { $gt: after, $lte: upper } },
+        { ...countryFilter, id: { $gt: after, $lte: upper } },
         limit,
         locale
       )
@@ -284,7 +424,7 @@ export default ({ strapi }: { strapi: any }) => ({
       throw error
     }
   },
-  async batch(ctx: any) {
+  async batch(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const body = ctx.request.body
     const ids = body?.documentIds
@@ -335,7 +475,7 @@ export default ({ strapi }: { strapi: any }) => ({
       throw error
     }
   },
-  async state(ctx: any) {
+  async state(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const state = await strapi.db
       .connection("atlas_state")
@@ -347,7 +487,13 @@ export default ({ strapi }: { strapi: any }) => ({
       .whereNotNull("clock_due")
       .min("clock_due as due")
       .first()
+    const pending = await strapi.db
+      .connection("atlas_outbox")
+      .whereNull("finished_at")
+      .count("id as count")
+      .first()
     ctx.body = {
+      pendingProjection: Number(pending?.count ?? 0),
       schemaVersion: 1,
       projectionRevision: String(state.projection_revision),
       indexedThrough: String(state.indexed_through),

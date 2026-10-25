@@ -114,6 +114,7 @@ export type AnalyticsParameters = {
     | "mobile"
     | "population"
     | "deprivation"
+    | "carAccess"
     | "transit"
     | "schools"
     | "reach"
@@ -181,6 +182,7 @@ const ENUMS: Record<string, readonly string[]> = {
     "mobile",
     "population",
     "deprivation",
+    "carAccess",
     "transit",
     "schools",
     "reach",

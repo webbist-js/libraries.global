@@ -168,13 +168,15 @@ it("separates area exploration, comparison and provenance while preserving selec
       "6 matching libraries out of 60 indexed before filters"
     )
   ).toBeTruthy()
-  fireEvent.click(screen.getByRole("tab", { name: "Data" }))
+  fireEvent.click(screen.getByRole("button", { name: "About" }))
   expect(screen.getByText(/library index is incomplete/)).toBeTruthy()
   expect(screen.getByText(/Boundary version:/)).toBeTruthy()
-  expect(screen.queryByRole("table")).toBeNull()
+  fireEvent.keyDown(document, { key: "Escape" })
+  fireEvent.click(screen.getByRole("button", { name: "Download" }))
   expect(
     screen.getByRole("button", { name: "Download area comparison CSV" })
   ).toBeTruthy()
+  fireEvent.keyDown(document, { key: "Escape" })
   fireEvent.click(screen.getByRole("button", { name: "Close analysis" }))
   expect(analysis.onClose).toHaveBeenCalled()
   expect(accessValue(accessResponse.areas[2]!, "peoplePerLibrary")).toBe(
@@ -183,6 +185,39 @@ it("separates area exploration, comparison and provenance while preserving selec
   expect(accessValue(accessResponse.areas[1]!, "peoplePerLibrary")).toBe(
     "No data"
   )
+})
+it("puts analysis navigation and results before settings, and keeps keyboard tab navigation working", () => {
+  render(
+    <AtlasAccessAnalysis {...analysis} settings={<p>Analysis controls</p>} />
+  )
+  const tabs = screen.getByRole("tablist", { name: "Library access analysis" })
+  const results = screen.getByRole("tabpanel", { name: "Overview" })
+  const settings = screen.getByText("Analysis controls")
+  expect(
+    tabs.compareDocumentPosition(results) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy()
+  expect(
+    results.compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy()
+  expect(
+    within(results).getByRole("region", { name: "Selected analysis area" })
+  ).toBeTruthy()
+
+  fireEvent.keyDown(screen.getByRole("tab", { name: "Overview" }), {
+    key: "End",
+  })
+  expect(
+    screen.getByRole("tab", { name: "Compare" }).getAttribute("aria-selected")
+  ).toBe("true")
+  expect(screen.getByRole("table")).toBeTruthy()
+  expect(document.activeElement).toBe(
+    screen.getByRole("tab", { name: "Compare" })
+  )
+  expect(
+    screen
+      .getByRole("tabpanel", { name: "Compare" })
+      .compareDocumentPosition(settings) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy()
 })
 it("distinguishes unindexed areas, filtered zeros, loading and failure", () => {
   const { rerender } = render(
@@ -243,9 +278,9 @@ it("scopes analysis to visible whole areas without hiding other areas from the t
   )
   expect(screen.getByText(/1 country intersecting the map view/)).toBeTruthy()
   expect(screen.queryByRole("button", { name: /United States/ })).toBeNull()
-  fireEvent.change(screen.getByRole("combobox", { name: "Analysis scope" }), {
-    target: { value: "all" },
-  })
+  fireEvent.click(screen.getByText("Settings"))
+  fireEvent.click(screen.getByRole("combobox", { name: "Analysis scope" }))
+  fireEvent.click(screen.getByRole("option", { name: "All areas" }))
   fireEvent.click(screen.getByRole("tab", { name: "Compare" }))
   expect(screen.getByText(/2 countries in the comparison/)).toBeTruthy()
   expect(screen.getByRole("button", { name: /United States/ })).toBeTruthy()
@@ -307,13 +342,13 @@ it("preserves table search and selected metric when switching tasks, with a boun
     })
   )
   expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(26)
-  expect(
-    (screen.getByRole("combobox", { name: "Order" }) as HTMLSelectElement).value
-  ).toBe("desc")
+  expect(screen.getByRole("combobox", { name: "Order" }).textContent).toContain(
+    "Highest first"
+  )
   fireEvent.change(screen.getByRole("searchbox", { name: "Search areas" }), {
     target: { value: "Area 01" },
   })
-  fireEvent.click(screen.getByRole("tab", { name: "Data" }))
+  fireEvent.click(screen.getByRole("tab", { name: "Overview" }))
   fireEvent.click(screen.getByRole("tab", { name: "Compare" }))
   expect(
     (

@@ -373,7 +373,9 @@
     "heroImage": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": ["images"],
+      "allowedTypes": [
+        "images"
+      ],
       "pluginOptions": {
         "i18n": {
           "localized": false
@@ -383,7 +385,9 @@
     "gallery": {
       "type": "media",
       "multiple": true,
-      "allowedTypes": ["images"],
+      "allowedTypes": [
+        "images"
+      ],
       "pluginOptions": {
         "i18n": {
           "localized": false
@@ -625,6 +629,17 @@
     "hasStaff": {
       "type": "boolean",
       "default": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "networks": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::library-network.library-network",
+      "inversedBy": "libraries",
       "pluginOptions": {
         "i18n": {
           "localized": false

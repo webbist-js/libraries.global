@@ -1,0 +1,14 @@
+{
+  "key": "mx-sic-rnbp",
+  "name": "Mexico: National Network of Public Libraries (SIC)",
+  "publisher": "Sistema de Información Cultural / Secretaría de Cultura, México",
+  "sourceUrl": "https://sic.cultura.gob.mx/datos.php?table=rnbp",
+  "licence": "SIC open-data reuse terms (attribution required)",
+  "licenceUrl": "https://sic.cultura.gob.mx/datos.php",
+  "licenceStatus": "stated_by_publisher",
+  "redistribution": "permitted_with_attribution",
+  "attribution": "Directorio de bibliotecas de la Red Nacional de Bibliotecas Públicas, publicado por el Sistema de Información Cultural/Secretaría de Cultura, México. https://sic.cultura.gob.mx/datos.php?table=rnbp. Consulted on the retrieval date recorded in each Source Record. Libraries Global decodes text, normalizes fields and matches existing state/municipality geography.",
+  "coverage": "Mexico's National Network of Public Libraries across all 32 states. Includes the network directory only; it is not a census of academic, private or specialist libraries.",
+  "importMechanism": "pnpm ingest --dataset=mx-sic-rnbp; complete cached JSON download, stable rnbp_id identities, existing country/state/municipality relations and resumable draft writes.",
+  "notes": "The publisher permits copying, publication, adaptation and commercial reuse with attribution. The download page lists 2025-02-07; individual record modification dates vary. Current operation is unknown. Collection numbers are not record IDs. Total del Municipio is a geographic placeholder, not a city name. Opening hours, personal contacts, unverified founding dates and population are omitted. Source URLs and retrieval dates remain on every imported record."
+}

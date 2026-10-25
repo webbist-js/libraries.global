@@ -59,11 +59,15 @@ const typeLine = (libraryType: string | null, city: string | null) =>
     .join(" · ")
 
 export function LibraryAreaSection({
+  libraryId,
   libraryName,
   regionName,
   area,
   addHref = "/contribute/index/new",
+  showReach = true,
 }: {
+  readonly showReach?: boolean
+  readonly libraryId?: string
   readonly libraryName: string
   readonly regionName?: string | null
   readonly area: LibraryAreaData
@@ -200,15 +204,17 @@ export function LibraryAreaSection({
         </p>
       )}
 
-      <details
-        className="mt-5 border-t pt-2"
-        style={{ borderColor: T.border.line }}
-      >
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
-          Explore travel-time reach
-        </summary>
-        <LibraryReachTeaser />
-      </details>
+      {showReach ? (
+        <details
+          className="mt-5 border-t pt-2"
+          style={{ borderColor: T.border.line }}
+        >
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
+            Explore travel-time reach
+          </summary>
+          <LibraryReachTeaser libraryId={libraryId} />
+        </details>
+      ) : null}
     </LibrarySectionCard>
   )
 }

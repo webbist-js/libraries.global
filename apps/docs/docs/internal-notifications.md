@@ -70,3 +70,28 @@ also clears associated local payloads. Slack messages follow the private
 channel/workspace's own access and retention settings; incoming webhooks cannot
 delete previously posted messages. Keep channel membership restricted and set
 its retention policy to suit the operational purpose.
+
+## Product feedback
+
+With `INTERNAL_FEEDBACK_ENABLED=true` in the UI, validated feedback forms persist
+`product_feedback` events in the existing internal notification table before
+returning success. UI and CMS must share the application database, and internal
+notifications must be enabled. No new schema is needed. The existing CMS worker
+then delivers these events to `SLACK_FEEDBACK_WEBHOOK_URL`, a separate private
+channel webhook held only by the CMS. Feedback never falls back to the activity
+channel when its destination is missing. Both settings are disabled or empty by
+default.
+
+Slack receives the full feedback message, reproduction steps, product answers,
+query-free page path, locale and a support reference. It omits the visitor's
+name, email and automatic browser/device context. Long messages are split into
+bounded plain-text sections below [Slack’s text-object limit](https://docs.slack.dev/reference/block-kit/composition-objects/text-object/); Slack markup and mentions remain disabled. The
+original email copy is still attempted. If email fails after the queue write,
+the form remains accepted because the feedback is saved. If queue persistence
+fails while feedback notifications are enabled, the form returns an error so
+the visitor can retry. Ordinary contact enquiries retain email-only delivery.
+
+Feedback and activity have independent channel cooldowns. A throttled, missing
+or broken feedback webhook does not pause activity delivery. `internalRetry`
+clears both pauses after an operator fixes the destination. Feedback payloads
+follow the existing 30-day local retention; Slack follows channel retention.

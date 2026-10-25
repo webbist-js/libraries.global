@@ -1,6 +1,6 @@
 # Notifications and email
 
-Implementation review: 11 October 2026. This describes the running implementation, including the weekly email split agreed during the review.
+This guide describes notification behavior, consent boundaries, template ownership and repeatable checks. Delivery results and environment-specific acceptance records belong in private operator storage.
 
 ## In-app triggers
 
@@ -65,7 +65,7 @@ Both require a new explicit opt-in recorded with a consent timestamp. They have 
 | Beta waitlist acknowledgment/invitation                       | No acknowledgment email. An admin's Send invite action queues a localized single-use invitation; the Beta invites dashboard records sending, acceptance and revocation. Successful beta entry creates no account. |
 | Delivery smoke check                                          | Only the explicit CLI `--to` destination; labeled test content.                                                                                                                                                   |
 
-Essential access and requested sign-in messages do not use optional email settings or an unsubscribe footer. Optional queued account emails carry a visible category-specific unsubscribe link and RFC 8058 one-click headers. Confirmation and unsubscribe pages require neither sign-in nor the beta password. Opening a link is read-only; the user action/one-click POST applies the change. Guest confirmations are cancelled if consent is withdrawn before sending. Recipients and preferences are checked again at delivery time. Queued messages for deleted accounts are skipped or erased.
+Essential access and requested sign-in messages do not use optional email settings or an unsubscribe footer. Optional queued account emails carry a visible category-specific unsubscribe link and RFC 8058 one-click headers. Confirmation and unsubscribe pages require neither sign-in nor a beta invitation pass. Opening a link is read-only; the user action/one-click POST applies the change. Guest confirmations are cancelled if consent is withdrawn before sending. Recipients and preferences are checked again at delivery time. Queued messages for deleted accounts are skipped or erased.
 
 The old Strapi end-user activation lifecycle is unregistered; Better Auth owns end-user credentials. Support/feedback links use the monitored `info@libraries.global` mailbox. These mailto links do not automatically create a support ticket or send an acknowledgment.
 
@@ -84,7 +84,7 @@ pnpm --filter @repo/strapi notifications:check report
 pnpm --filter @repo/strapi notifications:check announcements
 pnpm --filter @repo/strapi notifications:check deliver
 pnpm --filter @repo/ui email:check
-pnpm --filter @repo/ui email:check --to info@libraries.global
+pnpm --filter @repo/ui email:check --to "$TEST_EMAIL"
 ```
 
 `status` and `previewReport` are read-only. Other operations run the real jobs and can queue or send messages to eligible users. Manual weekly runs use the last completed UTC week, even on Sunday. They cannot force a quiet week to send. The operations route requires the private service secret and is never exposed by a Next.js browser proxy.
@@ -99,13 +99,11 @@ App notifications are purged after 90 days by the daily 03:30 UTC job. Account d
 
 Regression tests cover every live preference on/off, independent weekly/product consent, quiet weeks, weekly boundaries, public-only report content, field-batch deduplication, repeat delivery, retries, deleted accounts, read ownership, operator authentication, newsletter confirmation/unsubscribe, announcements, retention, badge awards, staff permissions, role expiry, moderation, drive closure and event-feed failures. UI checks cover one shared observer, silent initial load, gesture-gated new-entry sound, sound-off behavior, profile navigation and email preference actions.
 
-Remaining feature gaps are not exposed as pretend settings: submission reply threads, event reminders, followed-contributor posts, library notice-expiry reminders, staff operations summaries, separate tier-change alerts, account security-change notifications and deletion receipts. Pro instant library email alerts remain planned. Billing receipts depend on a future payment integration. Staff membership/permissions, role application decisions and role expiry are covered now. Manual role-grant creation/revocation has no separate receipt. Missing role-expiry notices during a CMS outage longer than 48 hours need a later recovery strategy.
+Remaining feature gaps are not exposed as pretend settings: submission reply threads, event reminders, followed-contributor posts, library notice-expiry reminders, staff operations summaries, separate tier-change alerts, account security-change notifications and deletion receipts. Pro instant library email alerts remain planned. Financial receipts are owned by the existing Stripe/Link billing integration; application access notices are described below. Staff membership/permissions, role application decisions and role expiry are covered now. Manual role-grant creation/revocation has no separate receipt. Missing role-expiry notices during a CMS outage longer than 48 hours need a later recovery strategy.
 
 Before broad email marketing, implement authenticated Brevo bounce/complaint/unsubscribe webhooks and contact sync, including provider-side erasure. Until then export only active confirmed newsletter subscribers, preserve Brevo suppression lists and reconcile campaign unsubscribes before another import. Do not re-import withdrawn contacts as subscribed. The app's optional category links remain independent; Brevo blocklisting may suppress a whole sender/channel. Check provider tracking settings before launch, especially for credential emails. Provider delivery logs and tracking redirects are provider-controlled; the application does not report opens/clicks or claim those settings have been disabled.
 
-Local CMS legal and Knowledge content was updated through its MCP server: terms, privacy, cookies, accessibility, account/profile guide, review guide, badges, plans and account deletion. These database edits are local content; export/transfer reviewed documents as part of the content deployment. The update script makes a private backup and only publishes a revised entry if that entry already had a published version. Both weekly runtime flags are enabled locally. Brevo accepted the two labeled weekly delivery samples through the actual queue/worker at the approved info address, with zero retries; the test account and its records were deleted afterward. The focused verification passed 228 backend and 15 UI tests, both app typechecks and desktop/mobile browser checks. A read-only count after cleanup found zero opted-in weekly recipients; no batch email run was needed.
-
-Provider instructions are in `docs/email-setup.md`. References: [Brevo domain authentication](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC), [transactional reports](https://help.brevo.com/hc/en-us/articles/208858829-Review-your-transactional-email-reports), [transactional webhooks](https://developers.brevo.com/docs/transactional-webhooks), [Namecheap Private Email DNS](https://www.namecheap.com/support/knowledgebase/article.aspx/1340/2176/namecheap-private-email-records-for-domains-with-thirdparty-dns/).
+Environment-specific provider setup and delivery evidence belong in the private operator runbook. Public references: [Brevo domain authentication](https://help.brevo.com/hc/en-us/articles/12163873383186-Authenticate-your-domain-with-Brevo-Brevo-code-DKIM-DMARC), [transactional reports](https://help.brevo.com/hc/en-us/articles/208858829-Review-your-transactional-email-reports) and [transactional webhooks](https://developers.brevo.com/docs/transactional-webhooks).
 
 ## Template editing matrix
 
@@ -144,7 +142,7 @@ After editing shared templates, run `pnpm --filter @repo/shared-data build`. Aft
 
 The email shell uses inline styling, presentation tables, a 640px Outlook fallback, system fonts, explicit background/text colors, a hidden preheader and a text alternative. Rounded corners may become square in older clients; the layout and actions still work. No remote images, external fonts, JavaScript, tracking pixel or CSS-only essential content is required. The fallback action label omits a credential query string while retaining the full URL in the link and text alternative. Browser previews are not an Outlook/Gmail rendering certification: review the delivered samples in the mail clients your audience uses.
 
-`EMAIL_POSTAL_ADDRESS` is configured in **both** local envs with the approved address. Set the same public address in production envs and Brevo’s campaign sender details. `EMAIL_FROM`, `EMAIL_REPLY_TO` and `APP_PUBLIC_URL` remain server-only configuration; use the production URL in deployment. No postal placeholder is sent. The live optional queue footer has category-specific withdrawal, preferences, privacy and the postal address. Essential account/service messages do not pretend to offer an optional unsubscribe.
+Set `EMAIL_POSTAL_ADDRESS` to the operator's public sender address in each selected environment and the campaign provider's sender details. Keep configuration values in private environment files. `EMAIL_FROM`, `EMAIL_REPLY_TO` and `APP_PUBLIC_URL` remain server-only configuration; use the production URL in deployment. No postal placeholder is sent. The live optional queue footer has category-specific withdrawal, preferences, privacy and the postal address. Essential account/service messages do not pretend to offer an optional unsubscribe.
 
 [RFC 8058](https://www.rfc-editor.org/rfc/rfc8058) specifies the one-click POST headers used by the live queue; verify that your provider’s DKIM signature covers those headers. The visible link opens a read-only confirmation page. Sample controls deliberately open Settings instead of carrying real signed subscription tokens, and sample sends have no one-click headers. They must not be used to validate the production unsubscribe endpoint. Postal sender details and visible withdrawal controls also support campaign requirements such as the [FTC’s commercial-email guidance](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business); review the laws applying to your audience when launching campaigns.
 
@@ -154,19 +152,15 @@ The email shell uses inline styling, presentation tables, a 640px Outlook fallba
 # Offline: no SMTP connection, queue write, signup or subscription.
 pnpm --filter @repo/ui email:check --suite --preview-dir /tmp/libraries-email-previews
 
-# Explicitly sends one of every sample type to the chosen mailbox.
-pnpm --filter @repo/ui email:check --suite --to info@libraries.global
+# Set TEST_EMAIL only to an explicitly authorized recipient before sending.
+pnpm --filter @repo/ui email:check --suite --to "$TEST_EMAIL"
 
 # Preview/send a single type after an edit (use IDs from the matrix).
 pnpm --filter @repo/ui email:check --suite --only weekly-community --preview-dir /tmp/libraries-email-previews
-pnpm --filter @repo/ui email:check --suite --only weekly-community --to info@libraries.global
+pnpm --filter @repo/ui email:check --suite --only weekly-community --to "$TEST_EMAIL"
 ```
 
-Previews include `index.html`, one HTML and text file per sample, and `manifest.json`. All sample subjects start with `Delivery sample`, all content is fictional, and credential / opt-out actions are inactive. Sending the suite does not opt in the recipient, generate real invitations, advance moderation or run a broadcast job. Brevo accepted all 32 samples to the approved `info@libraries.global` address on 11 October 2026; mailbox receipt remains a recipient check.
-
-### Small UI action audit
-
-Promoted clear standalone actions to buttons: inbox Settings, Mark all as read, empty-state Follow libraries / Make a contribution, clear-filter / retry actions, the Settings inbox shortcut and sound preview, and Find libraries in the profile’s empty following list. Links that navigate remain anchors styled through the shared Button component. Per-notification actions, library names, reading links and dense editorial text remain ordinary links to keep scanning easy. Broad button restyling across the site is not required for this change.
+Previews include `index.html`, one HTML and text file per sample, and `manifest.json`. All sample subjects start with `Delivery sample`, all content is fictional, and credential / opt-out actions are inactive. Sending the suite does not opt in the recipient, generate real invitations, advance moderation or run a broadcast job. A preview is not a delivery result. Record provider acceptance, mailbox receipt and authentication-header checks separately in private acceptance evidence.
 
 ## Utility pages and email-link states
 
@@ -184,23 +178,17 @@ The shared web layout is `apps/ui/src/components/utility/UtilityPage.tsx`: warm 
 | Missing application page                        | `apps/ui/src/app/[locale]/not-found.tsx`; `apps/ui/locales/{en,cs}.json` | Locale-aware GET search passes `q` to the existing library finder; useful navigation remains available.                                                                                                      |
 | Application error                               | `apps/ui/src/app/[locale]/error.tsx`; same locale files                  | Retry invokes the real boundary reset. Homepage and the project mailbox are available. Only an actual error digest is shown as a reference; stack traces and invented “nothing was lost” claims are omitted. |
 
-The mockups guide the presentation. Separate Journal subscription toggles, quarterly community reports, a generic 24-hour link lifetime, unsubscribe-all authority, instant undo and a fictional featured article are not added. Newsletter remains at most monthly; library digest and community report remain separate weekly opt-ins in Profile Settings. Each withdrawal link authorizes only its existing category. Auth headings opt into the utility layout through `AuthHeading`’s `layout="utility"`; ordinary sign-in and registration keep their existing form layout.
+The monthly newsletter, weekly library digest and weekly community report remain separate opt-ins. Each withdrawal link authorizes only its existing category. Auth headings select the utility layout through `AuthHeading`'s `layout="utility"`; ordinary sign-in and registration keep their form layout.
 
-### Verification of the redesign — 11 October 2026
+### Verification
 
-All 32 HTML/text sample pairs were checked at 390px and 1000px with no horizontal overflow, executable scripts or unsafe action URLs. Brevo accepted all 32 explicit sample sends; the samples do not change a real account or subscription. Access, Library Staff, Mobile Libraries and Content Moderation plugins were rebuilt for their live senders.
+Run the focused notification/email tests for changed templates and senders. Generate offline HTML/text previews and inspect narrow/wide layouts, links, plaintext alternatives and unsafe markup. A provider delivery check requires an explicitly authorized recipient. Do not treat browser previews as email-client certification or SMTP acceptance as inbox delivery.
 
-Local browser checks covered empty/populated notification lists at desktop and mobile sizes, category/date groups, avatar and dropdown counts, individual/all read actions, independent community-report consent and sound preview. Utility checks covered newsletter confirmation, confirmed state, category withdrawal, withdrawn state, unavailable links, account-link recovery and 404 search wiring. Email-action visual fixtures mocked the API and did not create subscribers or send emails. No browser exceptions or horizontal overflow occurred. The isolated account, notifications and temporary session file were deleted after the checks.
-
-Focused tests cover email HTML safety and text alternatives, notification delivery and consent, moderation, subscriber and team flows, mobile link behavior, inbox states, read failures, scanner-safe email actions and native auth form submissions. Both application typechecks pass. The broader existing suites still contain unrelated environment/mock failures; these changes are not recorded as a clean full-suite run. Previews do not replace checking the delivered emails in Outlook, Gmail and mobile mail clients.
-
-The final focused run passed 109 backend, 48 UI and 5 shared-data tests (162 total). Scoped lint reported no errors; backend complexity/type warnings remain. Both app typechecks passed. An anonymous legal-page check caught and fixed the standard header trying to use application query providers in the public beta shell.
+Use controlled fixtures for consent, category withdrawal, essential delivery, deduplication, read state, account switching and expired-link checks. Keep fixture identities, temporary session state, delivery logs and screenshots with identifying data in private acceptance storage.
 
 Public legal/utility layouts receive the same explicit public runtime configuration as the normal layout (`NODE_ENV`, `APP_PUBLIC_URL` and the two existing UI debug flags). This keeps internal links and content wrappers consistent during hydration without installing application providers or exposing private settings. New email footers link directly to `/legal/privacy`; the legacy `/privacy` redirect is also readable during beta so older emails continue to work.
 
 Utility actions and their footer use localized native anchors (`UtilityLink`). They perform a full navigation across the public-shell/app boundary, so a layout cached by the Next.js router cannot carry the provider-free email layout into a signed-in app page. Disabling the beta gate restores the ordinary app layout and navigation on legal pages.
-
-The final anonymous browser run passed for email actions and Terms, Privacy and Cookies, with one main landmark, no horizontal overflow and no hydration or browser exceptions. Expired account links show their local status icon immediately. The UI was restarted after its dev worker began returning plain HTTP 500 responses; both local apps remain available for review. Invalid email links offer direct contact at `info@libraries.global` as well as the signed-in settings route.
 
 ## Managed Payments membership notices
 
@@ -210,4 +198,4 @@ The application sends membership-ready, cancellation/resumption, payment-recover
 
 Stripe Managed Payments owns financial receipts, invoices, refund/credit confirmations and subscription financial reminders. Configure the appropriate Dashboard email settings and verify Link's sender; do not duplicate these as app emails. Sandbox financial receipts are not sent automatically. App billing previews are fictional, use the existing HTML/text email shell, and appear as `billing-*` samples in `apps/ui/scripts/email-samples.mjs`. Offline preview generation sends no email.
 
-See [billing setup, webhook events and acceptance](../ui/BILLING.md). The purchase flag does not disable projection recovery or essential delivery. A real sandbox monthly purchase and a paid monthly-to-yearly change have been verified through signed events and private Strapi projection. Billing notices have offline HTML/text previews; actual billing-email delivery remains unverified.
+See [billing setup, webhook events and acceptance](../ui/BILLING.md). The purchase flag does not disable projection recovery or essential delivery. Use offline billing previews for template checks; record actual settlement and email-delivery evidence privately.

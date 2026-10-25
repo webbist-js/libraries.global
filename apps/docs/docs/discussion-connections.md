@@ -1,6 +1,6 @@
 # Discussions across the platform
 
-Implemented locally, 17 October 2026. One original conversation can appear on a Library, one or more Drives and the Discussions directory. Its authors, messages, reactions, images, subscriptions and review decisions remain attached to that same thread.
+One original conversation can appear on a Library, one or more Drives and the Discussions directory. Its authors, messages, reactions, images, subscriptions and review decisions remain attached to that same thread.
 
 ## Delivered touchpoints
 
@@ -68,7 +68,5 @@ Conversation-to-Drive prefill shortcuts and Journal wrap-up shortcuts remain a l
 ## Verification
 
 Behavioural coverage includes one thread across multiple contexts, another author’s thread, private subject/draft-context isolation, owner recovery, staff proposals and rejection feedback, self-review denial, stale versions, competing links/featured swaps, active-Drive filters, erasure, and unchanged notification fan-out. Host tests cover live Board/target permissions and atomic Drive rollback. UI checks cover combined filters, shared thread URLs, language defaults, disabled feeds and account-authority changes.
-
-Local validation: 66 standalone plugin tests, 130 host tests and 141 targeted UI/proxy/builder tests passed. Plugin, Strapi and UI TypeScript checks passed; the affected plugin builds and schema type generation completed. Live local PostgreSQL checks verified rollback, simultaneous duplicate linking, guest feed projection and active-Drive discovery. Desktop captures cover the Drive, Library, Noticeboard, filtered directory and Drive editor.
 
 Independent packed-host marketplace acceptance remains a release check; local implementation does not publish the plugin or deploy production.

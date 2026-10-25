@@ -16,6 +16,7 @@ import {
 } from "@/components/atlas/atlas-access-analysis"
 import { ACCESS_GAP } from "@/components/atlas/atlas-map.style"
 import { Icon } from "@/components/atlas/atlas-ui"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 
 export function AccessCompare({
@@ -69,16 +70,16 @@ export function AccessCompare({
         className="grid gap-3"
         style={{
           gridTemplateColumns:
-            "repeat(auto-fit, minmax(min(100%, 145px), 1fr))",
+            "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
         }}
       >
         <label className="flex min-w-0 flex-col gap-2 text-[14px] font-bold">
           {tUi("sort_by")}{" "}
-          <select
+          <SelectField
+            label={tUi("sort_by")}
             value={sort}
-            onChange={(event) => {
-              const value = event.target.value as AreaSort
-              setSort(value)
+            onValueChange={(value) => {
+              setSort(value as AreaSort)
               setDirection(
                 value === "rate"
                   ? "provisionLow"
@@ -88,36 +89,36 @@ export function AccessCompare({
               )
               setPage(0)
             }}
-            className="min-h-[48px] w-full min-w-0 rounded-2xl border bg-white px-2 text-[14px] font-normal focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
-            style={{ borderColor: T.border.hi }}
-          >
-            <option value="rate">
-              {metric === "per100k"
-                ? "Libraries per 100k"
-                : "People per library"}
-            </option>
-            <option value="name">Area name</option>
-            <option value="libraries">Matching libraries</option>
-          </select>
+            options={[
+              {
+                value: "rate",
+                label:
+                  metric === "per100k"
+                    ? "Libraries per 100k"
+                    : "People per library",
+              },
+              { value: "name", label: "Area name" },
+              { value: "libraries", label: "Matching libraries" },
+            ]}
+          />
         </label>
         <label className="flex min-w-0 flex-col gap-2 text-[14px] font-bold">
           Order
-          <select
+          <SelectField
+            label="Order"
             value={resolvedDirection}
-            onChange={(event) => {
-              setDirection(event.target.value as SortDirection)
+            onValueChange={(value) => {
+              setDirection(value as SortDirection)
               setPage(0)
             }}
-            className="min-h-[48px] w-full min-w-0 rounded-2xl border bg-white px-2 text-[14px] font-normal focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
-            style={{ borderColor: T.border.hi }}
-          >
-            <option value="asc">
-              {sort === "name" ? "A–Z" : "Lowest first"}
-            </option>
-            <option value="desc">
-              {sort === "name" ? "Z–A" : "Highest first"}
-            </option>
-          </select>
+            options={[
+              { value: "asc", label: sort === "name" ? "A–Z" : "Lowest first" },
+              {
+                value: "desc",
+                label: sort === "name" ? "Z–A" : "Highest first",
+              },
+            ]}
+          />
         </label>
       </div>
       <label className="flex flex-col gap-2 text-[14px] font-bold">

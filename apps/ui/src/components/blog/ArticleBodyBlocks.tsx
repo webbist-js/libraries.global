@@ -70,7 +70,7 @@ export function ArticleBodyBlocks({
                   block.fullWidth ? "-mx-6 sm:-mx-10" : ""
                 )}
               >
-                <div className="relative aspect-video w-full">
+                <div className="w-full">
                   <Image
                     src={imgUrl}
                     alt={
@@ -80,8 +80,10 @@ export function ArticleBodyBlocks({
                       block.caption ??
                       ""
                     }
-                    fill
-                    className="object-cover"
+                    width={block.image.width ?? 1600}
+                    height={block.image.height ?? 900}
+                    sizes="(max-width: 1023px) 100vw, 800px"
+                    className="h-auto w-full"
                   />
                 </div>
                 {block.caption ? (

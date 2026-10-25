@@ -44,7 +44,7 @@ Atlas typing/autocomplete, passive camera movements, automatic view fallbacks an
 
 Use `pushAnalyticsEvent` for immediate explicit actions, `captureAnalyticsEvent` before async operations and `analyticsAttributes` for selected server-rendered links/buttons or search forms. Add event names/fields and fixed values to `src/lib/analytics-events.ts` before using them; do not add generic click, form or URL extraction. `prepare` is a controller method used by the async helper.
 
-The direct Google tag is currently the only collection owner. Each accepted action produces one `gtag("event", name, sanitizedParameters)` and this consented data-layer envelope:
+GTM owns collection. Each accepted action queues one sanitized data-layer event in this form; the app does not send a parallel direct Google analytics event:
 
 ```js
 window.dataLayer.push(
@@ -94,4 +94,4 @@ Before production activation, verify a consent-refused visit sends no tag or eve
 5. In a fresh beta browser, verify no Google request/storage before consent or after rejection. Accept once: verify one sanitized page view and each sampled action once. Change public routes/locales; visit private routes; withdraw and reload; verify no later collection and no analytics cookies. Repeat a saved rejection and cross-tab withdrawal. Confirm mobile layout and keyboard access.
 6. Confirm representative consented events in GA DebugView/Realtime, then use the read-only MCP for bounded report checks after processing. Empty reports do not establish zero platform usage. Record exact source/container revisions and evidence privately.
 
-The GA property’s current retention settings were read through the Admin API: event data two months, user data fourteen months, with user-data retention reset on new activity. Aggregate reports can be retained differently. Verify these settings again when publishing the notice; cookie expiry and GA data retention are separate controls.
+Verify the selected property's event/user retention and reset behavior before publishing a disclosure. Record configuration reads privately and state the accepted values in the CMS notice. Aggregate reporting, cookie expiry and GA data retention are separate controls; a previous configuration read is not proof of current settings.

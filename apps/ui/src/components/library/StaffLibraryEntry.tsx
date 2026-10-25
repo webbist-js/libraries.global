@@ -27,6 +27,7 @@ const ON_DARK_LOW = `color-mix(in srgb, ${T.bg.deep} 70%, transparent)`
  * and client markup only agree if neither reads it before mount.
  */
 export function StaffLibraryEntry(props: {
+  readonly compact?: boolean
   readonly libraryDocumentId: string
   readonly librarySlug: string
   readonly libraryName: string
@@ -56,6 +57,18 @@ export function StaffLibraryEntry(props: {
         ?.libraryType) === "Mobile"
   const canGoLive = mobile && staff.can("goLive", props.libraryDocumentId)
   const base = staffLibraryHref(props.librarySlug)
+
+  if (props.compact)
+    return (
+      <CompactStaffTools
+        canGoLive={canGoLive}
+        mobile={mobile}
+        base={base}
+        locale={locale}
+        libraryDocumentId={props.libraryDocumentId}
+        hasActiveFeed={props.hasActiveFeed}
+      />
+    )
 
   return (
     <section
@@ -145,5 +158,62 @@ export function StaffLibraryEntry(props: {
         )}
       </div>
     </section>
+  )
+}
+
+function CompactStaffTools({
+  canGoLive,
+  mobile,
+  base,
+  locale,
+  libraryDocumentId,
+  hasActiveFeed,
+}: {
+  canGoLive: boolean
+  mobile: boolean
+  base: string
+  locale: string
+  libraryDocumentId: string
+  hasActiveFeed?: boolean | null
+}) {
+  const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
+
+  return (
+    <div
+      className="mt-3 flex flex-col items-start gap-1 border-t pt-3"
+      style={{ borderColor: T.border.line }}
+    >
+      <p className="m-0 text-xs font-semibold" style={{ color: T.ink.dim }}>
+        {tPage("staffTools")}
+      </p>
+      {canGoLive ? (
+        <Link
+          href={mobileConsoleHref(libraryDocumentId, locale)}
+          className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+        >
+          {tUi("go_live")}
+        </Link>
+      ) : null}
+      <Link
+        href={base}
+        className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+      >
+        {tUi("open_the_staff_area")}
+      </Link>
+      {!hasActiveFeed ? (
+        <Link
+          href={`${base}/events/connect`}
+          className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+        >
+          {tPage("connectEvents")}
+        </Link>
+      ) : null}
+      {mobile && !canGoLive ? (
+        <p className="m-0 text-xs" style={{ color: T.ink.dim }}>
+          {tPage("livePermission")}
+        </p>
+      ) : null}
+    </div>
   )
 }

@@ -1,0 +1,946 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Atlas Reach v1 contracts",
+  "$comment": "All references are local. Runtime checks additionally enforce finite numbers, closed valid rings, bounded vertices/bytes, topology, nested bands and nondecreasing cumulative resident counts. Unknown population is null.",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "libraryId",
+        "mode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "libraryId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+        },
+        "mode": {
+          "enum": [
+            "walking",
+            "cycling"
+          ]
+        },
+        "retry": {
+          "type": "boolean"
+        }
+      }
+    },
+    "job": {
+      "type": "object",
+      "required": [
+        "libraryId",
+        "coordinateHash",
+        "mode",
+        "lat",
+        "lng",
+        "country",
+        "release"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "libraryId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+        },
+        "coordinateHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mode": {
+          "enum": [
+            "walking",
+            "cycling"
+          ]
+        },
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lng": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(?:-[A-Z]{3})?$"
+        },
+        "release": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]{1,128}$"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "state",
+        "libraryId",
+        "coordinateHash",
+        "mode",
+        "calculatedAt",
+        "method",
+        "snapDistanceMetres",
+        "network",
+        "population",
+        "warnings",
+        "contours"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "state": {
+          "enum": [
+            "ready",
+            "partial"
+          ]
+        },
+        "libraryId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+        },
+        "coordinateHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16,64}$"
+        },
+        "mode": {
+          "enum": [
+            "walking",
+            "cycling"
+          ]
+        },
+        "calculatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "method": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "snapDistanceMetres": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "network": {
+          "$ref": "#/$defs/provenance"
+        },
+        "population": {
+          "$ref": "#/$defs/provenance"
+        },
+        "warnings": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "contours": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/contour"
+          },
+          "prefixItems": [
+            {
+              "properties": {
+                "minutes": {
+                  "const": 5
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 10
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 15
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 30
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "ready"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "contours": {
+                "items": {
+                  "properties": {
+                    "residents": {
+                      "type": "number"
+                    },
+                    "coveredFraction": {
+                      "const": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "release",
+        "source",
+        "sourceUrl",
+        "licence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "release": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]{1,128}$"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "pattern": "^https?://"
+        },
+        "licence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100
+        }
+      }
+    },
+    "contour": {
+      "type": "object",
+      "required": [
+        "minutes",
+        "residents",
+        "coveredFraction",
+        "geometry"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "minutes": {
+          "enum": [
+            5,
+            10,
+            15,
+            30
+          ]
+        },
+        "residents": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "coveredFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "geometry": {
+          "$ref": "#/$defs/geometry"
+        }
+      }
+    },
+    "geometry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "Polygon"
+            },
+            "coordinates": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/ring"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "MultiPolygon"
+            },
+            "coordinates": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/ring"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "position": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        }
+      ]
+    },
+    "ring": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/position"
+      }
+    },
+    "networkJob": {
+      "type": "object",
+      "required": [
+        "kind",
+        "networkId",
+        "networkName",
+        "areaCode",
+        "selectionHash",
+        "mode",
+        "release",
+        "members",
+        "excludedLibraries",
+        "areaVersion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "network"
+        },
+        "networkId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$"
+        },
+        "networkName": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "areaCode": {
+          "type": "string",
+          "pattern": "^[EWSN]\\d{8}$"
+        },
+        "selectionHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "mode": {
+          "enum": [
+            "walking",
+            "cycling"
+          ]
+        },
+        "release": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]{1,128}$"
+        },
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": [
+              "libraryId",
+              "coordinateHash",
+              "lat",
+              "lng",
+              "country"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "libraryId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+              },
+              "coordinateHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "lat": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "lng": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "country": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}(?:-[A-Z]{3})?$"
+              }
+            }
+          }
+        },
+        "excludedLibraries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "areaVersion": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16,64}$"
+        },
+        "areaCodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 361,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[EWSN]\\d{8}$"
+          }
+        },
+        "communityRelease": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^community-gb-(eng|wls|sct|nir)-[a-f0-9]{16}$"
+        }
+      }
+    },
+    "networkResult": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "state",
+        "libraryId",
+        "coordinateHash",
+        "mode",
+        "calculatedAt",
+        "method",
+        "snapDistanceMetres",
+        "network",
+        "population",
+        "warnings",
+        "contours",
+        "kind",
+        "networkId",
+        "networkName",
+        "areaCode",
+        "selectionHash",
+        "excludedLibraries",
+        "selectedLibraries",
+        "unavailableLibraries",
+        "totalResidents"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "state": {
+          "enum": [
+            "ready",
+            "partial"
+          ]
+        },
+        "libraryId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,100}$"
+        },
+        "coordinateHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16,64}$"
+        },
+        "mode": {
+          "enum": [
+            "walking",
+            "cycling"
+          ]
+        },
+        "calculatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "method": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "snapDistanceMetres": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "network": {
+          "$ref": "#/$defs/provenance"
+        },
+        "population": {
+          "$ref": "#/$defs/provenance"
+        },
+        "warnings": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "contours": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "minutes",
+              "residents",
+              "coveredFraction",
+              "geometry",
+              "percent",
+              "outsideResidents",
+              "empty",
+              "gapGeometry"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "minutes": {
+                "enum": [
+                  5,
+                  10,
+                  15,
+                  30
+                ]
+              },
+              "residents": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "coveredFraction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "geometry": {
+                "$ref": "#/$defs/geometry"
+              },
+              "percent": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              },
+              "outsideResidents": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "empty": {
+                "type": "boolean"
+              },
+              "gapGeometry": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/geometry"
+                  }
+                ]
+              }
+            }
+          },
+          "prefixItems": [
+            {
+              "properties": {
+                "minutes": {
+                  "const": 5
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 10
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 15
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 30
+                }
+              }
+            }
+          ]
+        },
+        "kind": {
+          "const": "network"
+        },
+        "networkId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$"
+        },
+        "networkName": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "areaCode": {
+          "type": "string",
+          "pattern": "^[EWSN]\\d{8}$"
+        },
+        "selectionHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "excludedLibraries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selectedLibraries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "unavailableLibraries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "totalResidents": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "areaCodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 361,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[EWSN]\\d{8}$"
+          }
+        },
+        "community": {
+          "type": "object",
+          "required": [
+            "schemaVersion",
+            "state"
+          ],
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "state": {
+              "enum": [
+                "ready",
+                "unavailable",
+                "incomplete",
+                "insufficient"
+              ]
+            },
+            "method": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "release": {
+              "type": "object",
+              "required": [
+                "id",
+                "country",
+                "name",
+                "edition",
+                "year",
+                "boundary",
+                "sourceUrl",
+                "licence",
+                "assetSha256",
+                "domain",
+                "geometryMethod"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^community-gb-(eng|wls|sct|nir)-[a-f0-9]{16}$"
+                },
+                "country": {
+                  "enum": [
+                    "GB-ENG",
+                    "GB-WLS",
+                    "GB-SCT",
+                    "GB-NIR"
+                  ]
+                },
+                "assetSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "domain": {
+                  "const": "overall"
+                },
+                "year": {
+                  "type": "integer",
+                  "minimum": 1900,
+                  "maximum": 2100
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "edition": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "boundary": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "sourceUrl": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "licence": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "geometryMethod": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            },
+            "groups": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "$ref": "#/$defs/communityGroup"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "state": {
+                    "const": "ready"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "method",
+                  "release",
+                  "groups"
+                ],
+                "properties": {
+                  "method": {
+                    "const": "deprivation-partition-equal-area-v1"
+                  }
+                }
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "groups"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "communityBand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minutes",
+        "residents",
+        "outsideResidents",
+        "percent",
+        "shareOfOutside"
+      ],
+      "properties": {
+        "minutes": {
+          "enum": [
+            5,
+            10,
+            15,
+            30
+          ]
+        },
+        "residents": {
+          "type": "number",
+          "minimum": 0
+        },
+        "outsideResidents": {
+          "type": "number",
+          "minimum": 0
+        },
+        "percent": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "shareOfOutside": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "communityGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quintile",
+        "totalResidents",
+        "contours"
+      ],
+      "properties": {
+        "quintile": {
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            null
+          ]
+        },
+        "totalResidents": {
+          "type": "number",
+          "minimum": 0
+        },
+        "contours": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/communityBand"
+          },
+          "prefixItems": [
+            {
+              "properties": {
+                "minutes": {
+                  "const": 5
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 10
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 15
+                }
+              }
+            },
+            {
+              "properties": {
+                "minutes": {
+                  "const": 30
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

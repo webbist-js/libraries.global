@@ -1,5 +1,7 @@
 import {
   atlasAccessColor,
+  atlasPopulationDensityColor,
+  type AtlasPopulationDensityResponse,
   type AtlasLibraryAccessResponse,
   ATLAS_PER_CAPITA_NO_DATA,
   type AtlasPerCapitaResponse,
@@ -18,8 +20,11 @@ const PATTERN = "library-access-few-records"
 export class AtlasPerCapitaRenderer {
   private key = ""
   private archive: string | null = null
-  private response: AtlasPerCapitaResponse | AtlasLibraryAccessResponse | null =
-    null
+  private response:
+    | AtlasPerCapitaResponse
+    | AtlasLibraryAccessResponse
+    | AtlasPopulationDensityResponse
+    | null = null
 
   constructor(
     private readonly map: MapLibreMap,
@@ -27,7 +32,11 @@ export class AtlasPerCapitaRenderer {
   ) {}
 
   update(
-    response: AtlasPerCapitaResponse | AtlasLibraryAccessResponse | null,
+    response:
+      | AtlasPerCapitaResponse
+      | AtlasLibraryAccessResponse
+      | AtlasPopulationDensityResponse
+      | null,
     opacity: number,
     selected: string | null
   ) {
@@ -41,7 +50,11 @@ export class AtlasPerCapitaRenderer {
     }
     const { geometry } = response
     const property = "property" in geometry ? geometry.property : "iso3"
-    const key = `${geometry.type}:${geometry.url}`
+    const vectorLayer =
+      "sourceLayer" in geometry
+        ? (geometry.sourceLayer ?? "countries")
+        : "countries"
+    const key = `${geometry.type}:${geometry.url}:${vectorLayer}`
     if (key !== this.key) {
       this.destroy()
       this.response = response
@@ -64,9 +77,13 @@ export class AtlasPerCapitaRenderer {
         .getStyle()
         .layers?.find(
           (layer) =>
-            ["mobile-route-lines", "heat", "pins", "clusters"].includes(
-              layer.id
-            ) || layer.id.startsWith("scalable-")
+            [
+              "atlas-reach-fill",
+              "mobile-route-lines",
+              "heat",
+              "pins",
+              "clusters",
+            ].includes(layer.id) || layer.id.startsWith("scalable-")
         )?.id
       if (!this.map.hasImage(PATTERN)) {
         const pixels = new Uint8Array(8 * 8 * 4)
@@ -81,7 +98,7 @@ export class AtlasPerCapitaRenderer {
         this.map.addImage(PATTERN, { width: 8, height: 8, data: pixels })
       }
       const sourceLayer =
-        geometry.type === "pmtiles" ? { "source-layer": "countries" } : {}
+        geometry.type === "pmtiles" ? { "source-layer": vectorLayer } : {}
       this.map.addLayer(
         {
           id: FILL,
@@ -149,12 +166,17 @@ export class AtlasPerCapitaRenderer {
         {
           source: SOURCE,
           id: "id" in country ? String(country.id) : country.iso3,
-          ...(geometry.type === "pmtiles" ? { sourceLayer: "countries" } : {}),
+          ...(geometry.type === "pmtiles" ? { sourceLayer: vectorLayer } : {}),
         },
         {
-          color: atlasAccessColor(country.per100k),
+          color:
+            "peoplePerKm2" in country
+              ? atlasPopulationDensityColor(country.peoplePerKm2)
+              : atlasAccessColor(country.per100k),
           fewRecords:
-            country.status === "available" && country.indexedCount < 5,
+            "indexedCount" in country &&
+            country.status === "available" &&
+            country.indexedCount < 5,
           selected: ("id" in country ? country.id : country.iso3) === selected,
         }
       )

@@ -2,7 +2,7 @@
 
 Review and publish these targeted additions to the existing English cookie, privacy and beta documents before activating collection. Preserve operator/contact details, unrelated sections, translations and revision history. Czech/French currently use the existing English legal-content fallback. Record the new revision and actual publication date in Strapi; do not overwrite earlier revisions.
 
-The currently published cookie notice says there is no analytics and no banner. It also promises advance notice of material changes. Review that promise before activation; this draft does not remove it or decide whether a particular change is material. Existing account and billing consents are separate from the new optional analytics choice.
+Read the selected CMS publication before applying this draft. Correct any remaining claims of no analytics or no banner. Preserve and review any advance-notice promise for material changes before activation; this draft does not remove that promise or decide whether a particular change is material. Existing account and billing consents are separate from the new optional analytics choice.
 
 ## Optional analytics — shared disclosure
 
@@ -12,7 +12,7 @@ Analytics events contain page paths without query strings/fragments, categorical
 
 Choose **Reject analytics** or **Accept analytics** in the banner. Use **Cookie choices** to change your choice or withdraw it at any time. Withdrawal stops collection, clears analytics cookies and reloads the page to unload Google code. Necessary account and beta-access storage is preserved. Your first-party preference, `lg.analytics-consent.v1`, contains the choice and expiry, with no account or visitor identifier, and is remembered for 180 days.
 
-After a grant, `_ga` and `_ga_8M465CHXJ6` distinguish consented browser activity. Their configured lifetime is up to 180 days without rolling renewal. The GA property currently retains event data for two months and user data for fourteen months; user-data retention resets on new activity. Aggregate reporting has separate retention rules. Verify those property and cookie settings at publication. See [Google’s data handling](https://policies.google.com/privacy) and [Analytics retention controls](https://support.google.com/analytics/answer/7667196).
+After a grant, `_ga` and `_ga_8M465CHXJ6` distinguish consented browser activity. Their configured lifetime is up to 180 days without rolling renewal. The published notice must state the event/user retention and reset behavior verified for the selected property. Insert those reviewed values before publication; aggregate reporting has separate retention rules. Verify property and cookie settings together rather than copying a past account configuration. See [Google’s data handling](https://policies.google.com/privacy) and [Analytics retention controls](https://support.google.com/analytics/answer/7667196).
 
 ## Targeted corrections
 

@@ -50,7 +50,7 @@ See [uploads](uploads.md) for bounded multipart parsing, reservations, ownership
 
 ## Validation
 
-Unit suites cover body round trips, privacy, browse predicates, ownership, conflict handling, resubmissions, gateway boundaries and presentation parity. Opt-in PostgreSQL checks require a disposable local `community_publishing_*` database:
+Unit suites cover body round trips, privacy, browse predicates, ownership, conflict handling, resubmissions, gateway boundaries and presentation parity. Opt-in PostgreSQL checks require an approved isolated CI/acceptance environment with a disposable `community_publishing_*` database. They must not create extra services or schemas alongside the shared development stack. In that pre-provisioned environment:
 
 ```sh
 cd apps/strapi

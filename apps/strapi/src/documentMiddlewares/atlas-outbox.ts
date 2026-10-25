@@ -11,6 +11,7 @@ const MUTATIONS = new Set([
   "discardDraft",
 ])
 const FANOUT: Record<string, Record<string, string>> = {
+  "api::library-network.library-network": { field: "network_ids" },
   "api::continent.continent": { field: "continent_id" },
   "api::country.country": { field: "country_id" },
   "api::region.region": { field: "region_id" },
@@ -76,6 +77,31 @@ export function registerAtlasOutboxMiddleware({
             [...new Set([beforeOwner, afterOwner].filter(Boolean))].map(
               (entityId) => ({ kind: "document", entityId })
             ),
+            trx
+          )
+        }
+        if (
+          context.uid === "api::library-network.library-network" &&
+          id &&
+          context.params?.data?.libraries
+        ) {
+          const members = await strapi.documents(LIBRARY).findMany({
+            filters: { networks: { documentId: id } },
+            status: "published",
+            locale: process.env.ATLAS_CANONICAL_LOCALE ?? "en",
+            fields: ["documentId"],
+            limit: 501,
+          })
+          if (members.length > 500)
+            throw new RangeError(
+              "Use the bounded import for network membership edits above 500 Libraries"
+            )
+          await enqueueAtlasJobs(
+            strapi,
+            members.map((member: { documentId: string }) => ({
+              kind: "document",
+              entityId: member.documentId,
+            })),
             trx
           )
         }

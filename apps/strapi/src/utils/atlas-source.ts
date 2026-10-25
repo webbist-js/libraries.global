@@ -27,8 +27,9 @@ export const ATLAS_SOURCE_FIELDS = [
   "hasActiveFeed",
   "catalogueUrl",
   "mobileTimetable",
-]
+] as const
 const POPULATE = {
+  networks: { fields: ["documentId", "name", "slug"] },
   libraryType: { fields: ["name"] },
   ...Object.fromEntries(
     ["continent", "country", "region", "area"].map((field) => [
@@ -77,6 +78,7 @@ export function atlasSourceDto(
       row.mobileTimetable === null || row.mobileTimetable === undefined
         ? null
         : { present: true },
+    networks: (row.networks ?? []).map(place),
     continent: place(row.continent),
     country: place(row.country),
     region: place(row.region),

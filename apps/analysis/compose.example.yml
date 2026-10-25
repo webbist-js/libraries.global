@@ -1,0 +1,13 @@
+services:
+  analysis:
+    build: .
+    environment:
+      ANALYSIS_SERVICE_TOKEN: ${ANALYSIS_SERVICE_TOKEN:?Set a private analysis token}
+      ANALYSIS_CACHE_BYTES: 268435456
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:3102:3102"
+    cpus: 1
+    mem_limit: 2g
+    restart: unless-stopped

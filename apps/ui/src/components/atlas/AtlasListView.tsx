@@ -4,6 +4,7 @@ import type { AtlasListResponse, AtlasScope } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
 import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
@@ -148,16 +149,17 @@ export function AtlasListView({
         </div>
         <label className="flex items-center gap-2 text-[14px] font-semibold">
           Sort
-          <select
+          <SelectField
+            label="Sort"
             value={sort}
-            onChange={(e) => changeSort(e.target.value as SortKey)}
-            className="h-9 rounded-full border bg-white px-3 text-[14px]"
-            style={{ borderColor: T.border.hi }}
-          >
-            <option value="distance">Nearest the centre</option>
-            <option value="name">{tUi("name")}</option>
-            <option value="place">Place</option>
-          </select>
+            onValueChange={(value) => changeSort(value as SortKey)}
+            options={[
+              { value: "distance", label: "Nearest the centre" },
+              { value: "name", label: tUi("name") },
+              { value: "place", label: "Place" },
+            ]}
+            className="min-w-[155px]"
+          />
         </label>
         <AtlasExportButton
           libraries={sorted}

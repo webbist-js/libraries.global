@@ -33,9 +33,6 @@ export function LibraryAmenitiesSection({
             id={kind === "amenity" ? "facilities" : "services"}
             title={kind === "amenity" ? "Facilities" : "Services"}
             iconPath={LIB_ICONS.book}
-            titleClassName={
-              kind === "service" ? "text-[30px] sm:text-[34px]" : undefined
-            }
           >
             {kind === "service" ? (
               <>

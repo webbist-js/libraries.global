@@ -2,6 +2,7 @@ import "server-only"
 
 import { NextResponse } from "next/server"
 
+import { imageFilename } from "./image-filename"
 import { toSafeImageFile, type SniffedImageType } from "./image-upload"
 import { isSameOrigin, sameOriginResponse } from "./same-origin"
 import { readUploadFile } from "./upload-body"
@@ -119,13 +120,7 @@ export async function uploadOwnedImage(
     Array.isArray(uploaded) && uploaded.length === 1
       ? (uploaded[0] as { id?: unknown; url?: unknown })
       : null
-  if (
-    !file ||
-    !Number.isSafeInteger(file.id) ||
-    Number(file.id) < 1 ||
-    typeof file.url !== "string" ||
-    !file.url
-  )
+  if (!usableUploadedFile(file))
     return {
       ok: false,
       response: NextResponse.json(
@@ -134,7 +129,21 @@ export async function uploadOwnedImage(
       ),
     }
   const fileId = Number(file.id)
-  if (!(await completeUploadReservation(user.id, reservationId, fileId))) {
+  // Keep the reservation-bound storage name until ownership is verified.
+  // Only then may the CMS assign the writer's chosen media-library name.
+  const displayName = uploadDisplayName(
+    options.purpose,
+    parsed.file.name,
+    safeFile.type
+  )
+  if (
+    !(await completeUploadReservation(
+      user.id,
+      reservationId,
+      fileId,
+      displayName
+    ))
+  ) {
     const cleaned = await cancelUploadReservation(
       user.id,
       reservationId,
@@ -156,4 +165,24 @@ export async function uploadOwnedImage(
   }
 
   return { ok: true, file: { id: fileId, url: file.url } }
+}
+
+function usableUploadedFile(
+  file: { id?: unknown; url?: unknown } | null
+): file is { id: number; url: string } {
+  return Boolean(
+    file &&
+    Number.isSafeInteger(file.id) &&
+    Number(file.id) > 0 &&
+    typeof file.url === "string" &&
+    file.url
+  )
+}
+
+function uploadDisplayName(
+  purpose: UploadPurpose,
+  filename: string,
+  type: string
+) {
+  return purpose === "submission" ? imageFilename(filename, type) : undefined
 }

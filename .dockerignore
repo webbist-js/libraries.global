@@ -20,6 +20,8 @@ docs
 apps/strapi/public/uploads
 apps/strapi/data
 apps/strapi/backup
+# Native analysis has its own image and mounted data volume.
+apps/analysis
 **/.cache
 **/.turbo
 **/coverage

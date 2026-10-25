@@ -28,6 +28,8 @@ it("updates only plan copy, keeps edits and links, and does not duplicate the fe
   const copy = libraryAccessPlanBlocks(body)
   expect(JSON.stringify(body)).toContain("Two Pro features")
   expect(JSON.stringify(copy)).toContain("Library access compares")
+  expect(JSON.stringify(copy)).toContain("Travel-time reach estimates")
+  expect(JSON.stringify(copy)).toContain("2020, separately from the 2024")
   expect(JSON.stringify(copy)).toContain("My unpublished edit.")
   expect(JSON.stringify(copy)).toContain("/contribute/membership")
   expect(JSON.stringify(copy)).not.toContain("per-capita, deprivation")

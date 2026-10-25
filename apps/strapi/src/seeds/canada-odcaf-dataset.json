@@ -1,0 +1,14 @@
+{
+  "key": "ca-statcan-odcaf",
+  "name": "Canada: Open Database of Cultural and Art Facilities, library subset (v1.0)",
+  "publisher": "Statistics Canada, Linkable Open Data Environment",
+  "sourceUrl": "https://www.statcan.gc.ca/en/lode/databases/odcaf",
+  "licence": "Open Government Licence – Canada",
+  "licenceUrl": "https://open.canada.ca/en/open-government-licence-canada",
+  "licenceStatus": "stated_by_publisher",
+  "redistribution": "permitted_with_attribution",
+  "attribution": "Contains information licensed under the Open Government Licence – Canada. Library locations adapted from Statistics Canada's Open Database of Cultural and Art Facilities, Version 1.0 (2020), compiled from provincial, territorial, municipal and association sources credited in the archive's Data_Sources.csv. Libraries Global filters institution types and normalizes location fields; this adaptation is not endorsed by Statistics Canada.",
+  "coverage": "Historical Canadian library locations collected January–July 2020. Partial national baseline; reports list represented and missing provinces/territories. Archives and Ontario library-system statistical records are excluded.",
+  "importMechanism": "pnpm ingest --dataset=ca-statcan-odcaf; checksum-pinned ZIP retained in a replayable JSON snapshot, Windows-1252 CSV decoding, version-qualified Index identities and resumable library draft writes against existing provinces/territories.",
+  "notes": "ODCAF's combined library or archives category does not establish a library. The mapper requires library evidence and excludes museum-association records, headquarters and mobile bases. Ontario's statistical source describes systems rather than visitor branches. Index is generated for v1.0 and must not be reused for another release. Census subdivisions are not Atlas county/district Areas, so placement stops at province/territory. Current operation, hours, operators and contacts are unknown. The publisher warns that coverage is incomplete and classification/geolocation errors are possible."
+}

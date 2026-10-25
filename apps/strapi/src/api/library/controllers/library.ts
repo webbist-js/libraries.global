@@ -39,6 +39,7 @@ interface AtlasSource {
   closedYear?: string | null
   hasActiveFeed?: boolean | null
   catalogueUrl?: string | null
+  networks?: { documentId: string }[] | null
   completeness?: number | null
   continent?: { slug?: string } | null
   country?: { slug?: string; name?: string } | null
@@ -73,6 +74,7 @@ function toAtlasProperties(l: AtlasSource, notices: LibraryNotice[] = []) {
     type: libraryTypeName(l.libraryType) ?? "Other",
     status: l.operationalStatus ?? "unknown",
     operator: l.operatorType ?? null,
+    networkIds: (l.networks ?? []).map((network) => network.documentId),
     city: l.city ?? null,
     country: l.country?.name ?? null,
     region: l.region?.name ?? null,
@@ -216,6 +218,7 @@ export default factories.createCoreController(
                 "completeness",
               ] as never,
               populate: {
+                networks: { fields: ["documentId"] },
                 libraryType: { fields: ["name"] },
                 continent: { fields: ["slug"] },
                 country: { fields: ["slug", "name"] },

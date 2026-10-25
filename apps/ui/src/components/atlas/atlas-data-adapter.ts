@@ -37,6 +37,7 @@ const base = (): Pick<
 export function atlasListLibrary(row: AtlasListRow): AtlasLibrary {
   return {
     ...base(),
+    networkIds: "network_ids" in row ? (row.network_ids as string[]) : [],
     id: row.documentId,
     slug: row.slug,
     name: row.name,
@@ -67,6 +68,7 @@ export function atlasPointLibrary(
 
   return {
     ...base(),
+    networkIds: (p.nw ?? "").split(",").filter(Boolean),
     id: p.i,
     slug: p.s,
     name: p.n,
@@ -100,6 +102,7 @@ export function atlasProjectionLibrary(row: AtlasProjection): AtlasLibrary {
 
   return {
     ...base(),
+    networkIds: "network_ids" in row ? (row.network_ids as string[]) : [],
     id: row.documentId,
     slug: row.slug,
     name: row.name,

@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!requirements.txt
+!*.py
+!profiles
+!profiles/*.json
+!contracts
+!contracts/*.json
