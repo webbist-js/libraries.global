@@ -215,3 +215,39 @@ it("requires a chosen time for an expanded rural service before native or cache 
   })
   expect(connection.mock.calls).toEqual([["atlas_records"]])
 })
+
+it("reports missing reporting geography as a data limitation rather than a plan allowance", async () => {
+  const query = {
+    where: () => query,
+    whereIn: () => query,
+    select: () => query,
+    limit: async () => [],
+  }
+  const connection = vi.fn(() => query)
+  const strapi = {
+    db: { connection },
+    documents: (uid: string) =>
+      uid.includes("library-network")
+        ? { findOne: async () => network }
+        : { findMany: async () => rows },
+  }
+  const result = await requestAtlasNetworkReach(
+    strapi,
+    {
+      schemaVersion: 1,
+      networkId: "one",
+      mode: "walking",
+      scope: {
+        filters: emptyAtlasFilters(),
+        accessibility: { enabled: false, selected: [], view: "matches" },
+      },
+    },
+    "a".repeat(64),
+    20
+  )
+  expect(result.body).toMatchObject({
+    state: "unsupported",
+    message: expect.stringContaining("supported reporting boundaries"),
+  })
+  expect(connection.mock.calls).toEqual([["atlas_records"]])
+})

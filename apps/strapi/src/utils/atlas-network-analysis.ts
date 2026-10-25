@@ -192,6 +192,8 @@ function selectionProblem(
   capacity: AtlasReachCapacity,
   minutes: number | undefined
 ): string | null {
+  if (!selection.available)
+    return "This service needs mapped libraries and supported reporting boundaries before coverage can be calculated."
   const limit = atlasNetworkReachLimit(selection, capacity)
   if (limit === "libraries")
     return `Local Reach supports at most ${ATLAS_REACH_MAX_SERVICE_LIBRARIES * capacity} eligible libraries. Choose a smaller service or one library.`
@@ -202,8 +204,6 @@ function selectionProblem(
     minutes === undefined
   )
     return "Choose one travel time for this larger service. Changing the time requires another calculation."
-  if (!selection.available)
-    return "This service needs mapped libraries and supported reporting boundaries before coverage can be calculated."
 
   return null
 }

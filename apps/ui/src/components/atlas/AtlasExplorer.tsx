@@ -834,11 +834,11 @@ export function AtlasExplorer({
       ? (data.generation?.viewport.populations.listed?.exactTotal ?? null)
       : inView.length
   )
-  const serviceReachLimit = networkSelection.selected
+  const serviceReachLimit = networkSelection.selected?.available
     ? atlasNetworkReachLimit(networkSelection.selected, capacity)
     : null
   const networkReachLimit = serviceReachLimit
-  const networkSingleTime = networkSelection.selected
+  const networkSingleTime = networkSelection.selected?.available
     ? atlasNetworkReachMode(networkSelection.selected, capacity) === "single"
     : false
   const zoomToLocalReach = () => {
@@ -909,6 +909,7 @@ export function AtlasExplorer({
   const networkReach = useNetworkReach(
     networkDraft,
     hydrated &&
+      networkDraft !== null &&
       usableLayers.includes("reach") &&
       reachScope === "network" &&
       !networkReachLimit
