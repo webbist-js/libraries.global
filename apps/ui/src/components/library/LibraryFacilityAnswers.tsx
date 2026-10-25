@@ -72,6 +72,7 @@ export function LibraryFacilityAnswers({
   readonly onSent?: () => void
 }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
 
   const { data: session, isPending } = authClient.useSession()
   const [answers, setAnswers] = useState<Record<string, Answer>>({})
@@ -253,7 +254,7 @@ export function LibraryFacilityAnswers({
                   }}
                 >
                   {a === "unsure"
-                    ? "Not sure"
+                    ? tPage("notSure")
                     : a === "yes"
                       ? tUi("yes")
                       : tUi("no")}
@@ -269,54 +270,69 @@ export function LibraryFacilityAnswers({
   return (
     <div>
       {grouped ? (
-        rows.some((row) => row.state !== "unknown") ? (
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="m-0 mb-3 text-[14px] font-semibold">Access</h3>
-              <ul className="m-0 list-none p-0">
-                {rows
-                  .filter(
-                    (row) =>
-                      row.category === "accessibility" &&
-                      row.state !== "unknown"
-                  )
-                  .map(renderRow)}
-              </ul>
+        <div className="grid gap-5">
+          {rows.some((row) => row.state !== "unknown") ? (
+            <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+              {(["accessibility", "amenity"] as const).map((category) => {
+                const known = rows.filter(
+                  (row) => row.category === category && row.state !== "unknown"
+                )
+
+                return known.length ? (
+                  <div key={category}>
+                    <h3 className="m-0 mb-2 text-sm font-semibold">
+                      {tPage(
+                        category === "accessibility" ? "access" : "facilities"
+                      )}
+                    </h3>
+                    <ul className="m-0 list-none p-0">
+                      {known.map(renderRow)}
+                    </ul>
+                  </div>
+                ) : null
+              })}
             </div>
-            <div>
-              <h3 className="m-0 mb-3 text-[14px] font-semibold">Facilities</h3>
-              <ul className="m-0 list-none p-0">
+          ) : null}
+          {rows.some((row) => row.state === "unknown") ? (
+            <div
+              className="rounded-2xl border p-4 sm:p-5"
+              style={{ borderColor: T.border.line, background: T.bg.space }}
+            >
+              <h3 className="m-0 text-base font-semibold">
+                {tPage("questionsTitle")}
+              </h3>
+              <p
+                className="mt-1 mb-3 text-sm leading-relaxed"
+                style={{ color: T.ink.dim }}
+              >
+                {tPage("questionsIntro")}
+              </p>
+              <ul className="m-0 grid list-none gap-x-4 p-0 sm:grid-cols-2">
                 {rows
-                  .filter(
-                    (row) =>
-                      row.category === "amenity" && row.state !== "unknown"
-                  )
+                  .filter((row) => row.state === "unknown")
+                  .slice(0, 3)
                   .map(renderRow)}
               </ul>
-              {rows.some((row) => row.state === "unknown") ? (
-                <>
-                  <h3 className="mt-5 mb-2 text-[14px] font-semibold">
-                    Not recorded yet
-                  </h3>
-                  <ul className="m-0 list-none p-0">
+              {rows.filter((row) => row.state === "unknown").length > 3 ? (
+                <details>
+                  <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold underline underline-offset-4">
+                    {tPage("moreQuestions", {
+                      count:
+                        rows.filter((row) => row.state === "unknown").length -
+                        3,
+                    })}
+                  </summary>
+                  <ul className="m-0 grid list-none gap-x-4 p-0 sm:grid-cols-2">
                     {rows
                       .filter((row) => row.state === "unknown")
+                      .slice(3)
                       .map(renderRow)}
                   </ul>
-                </>
+                </details>
               ) : null}
             </div>
-          </div>
-        ) : (
-          <div>
-            <h3 className="m-0 mb-3 text-[14px] font-semibold">
-              Not recorded yet
-            </h3>
-            <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
-              {rows.map(renderRow)}
-            </ul>
-          </div>
-        )
+          ) : null}
+        </div>
       ) : (
         <ul className="m-0 grid list-none gap-x-6 p-0 md:grid-cols-2">
           {rows.map(renderRow)}

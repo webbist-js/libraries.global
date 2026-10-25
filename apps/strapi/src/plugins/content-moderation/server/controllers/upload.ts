@@ -48,7 +48,14 @@ export default ({ strapi }: { strapi: any }) => {
       ),
     complete: (ctx: any) =>
       handle(ctx, (userId, body) =>
-        completeUpload(strapi, userId, reservationId(body), Number(body.fileId))
+        completeUpload(
+          strapi,
+          userId,
+          reservationId(body),
+          Number(body.fileId),
+          undefined,
+          body.displayName
+        )
       ),
     cancel: (ctx: any) =>
       handle(ctx, (userId, body) =>

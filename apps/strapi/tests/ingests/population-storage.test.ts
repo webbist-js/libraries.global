@@ -79,3 +79,25 @@ it("continues to fill GSS codes for UK population imports", async () => {
     expect.objectContaining({ gss_code: "E09000001" })
   )
 })
+
+it("preserves current placement codes when a historical population uses older boundaries", async () => {
+  const update = vi.fn()
+  const knex = vi.fn(() => ({ where: vi.fn().mockReturnThis(), update }))
+  await storage.storePopulationPlan(knex, [
+    {
+      observation: storage.normalizeObservation(estimate("E08000016", 2024)),
+      owner: {
+        table: "areas",
+        place: {
+          document_id: "barnsley",
+          gss_code: "E08000038",
+          population_estimates: [],
+        },
+      },
+    },
+  ])
+  expect(update).toHaveBeenCalledWith(
+    expect.objectContaining({ population_reporting_code: "E08000016" })
+  )
+  expect(update.mock.calls[0]![0]).not.toHaveProperty("gss_code")
+})

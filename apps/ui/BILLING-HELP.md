@@ -2,7 +2,7 @@
 
 Every library record, individual record download, contribution, follow and saved event remains free. The weekly library digest and community report are separate free opt-ins. A membership never changes your community role, reputation, review process or staff access.
 
-Supporter costs £3 per month or £30 per year and adds detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download. Pro costs £5 per month or £50 per year at the current founding price. It includes Supporter tools, exports of up to 10,000 libraries and delivered population comparisons. Future analysis features are labelled coming soon. Team pricing is agreed and invoiced separately; Team is not part of personal checkout.
+Supporter costs £3 per month or £30 per year and adds detailed library change history and Atlas CSV/GeoJSON exports of up to 500 libraries per download. Pro costs £5 per month or £50 per year at the current founding price. It includes Supporter tools, exports of up to 10,000 libraries and delivered population comparisons. Future analysis features are labelled coming soon. Team has a separate annual subscription and organisation billing flow when enabled; existing invoice agreements are preserved. See [Team billing](TEAM-BILLING.md). Team is not part of personal checkout.
 
 ## Buying a membership
 
@@ -10,7 +10,7 @@ Choose a plan and billing interval on the Membership page. Sign in or create a f
 
 Stripe Managed Payments hosts the payment page. The prices above are tax-inclusive base GBP prices; Stripe confirms tax, any local currency conversion and the final recurring total before payment. Eligible payment methods, including Apple Pay or Google Pay when available, appear on Stripe's page. Libraries Global never receives your full card details or CVC.
 
-Alexander Bennett, the operator of Libraries Global, is the seller and supplier of the membership service. Stripe Managed Payments is merchant of record for the payment transaction; this does not replace Libraries Global as the service seller. Stripe sends financial receipts and invoices. Libraries Global separately confirms membership access. Payment confirmation can take a short time while the signed notification is checked. If confirmation is delayed, check Settings rather than paying again.
+The Libraries Global operator identified in the published terms is the seller and supplier of the membership service. Stripe Managed Payments is merchant of record for the payment transaction; this does not replace Libraries Global as the service seller. Stripe sends financial receipts and invoices. Libraries Global separately confirms membership access. Payment confirmation can take a short time while the signed notification is checked. If confirmation is delayed, check Settings rather than paying again.
 
 ## Membership and billing in Settings
 

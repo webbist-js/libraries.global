@@ -1,5 +1,5 @@
 import type * as Preset from "@docusaurus/preset-classic"
-import type { Config } from "@docusaurus/types"
+import type { Config, Plugin } from "@docusaurus/types"
 import { themes as prismThemes } from "prism-react-renderer"
 
 const url = process.env.DOCUSAURUS_URL ?? "https://libraries.global"
@@ -7,27 +7,42 @@ const baseUrl = process.env.DOCUSAURUS_BASE_URL ?? "/"
 
 const config: Config = {
   plugins: [
+    function quietWebpackProgress(): Plugin {
+      return {
+        name: "quiet-webpack-progress",
+        configureWebpack(webpackConfig) {
+          // Docusaurus 3.9's webpackbar passes options rejected by webpack 5.109.
+          // Keep compilation/checks intact while omitting the cosmetic reporter.
+          return {
+            mergeStrategy: { plugins: "replace" },
+            plugins: webpackConfig.plugins?.filter(
+              (plugin) => plugin?.constructor.name !== "WebpackBarPlugin"
+            ),
+          }
+        },
+      }
+    },
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
         hashed: true,
         indexDocs: true,
         indexBlog: false,
-        docsRouteBasePath: "/",
+        docsRouteBasePath: "/docs",
       },
     ],
   ],
   organizationName: "libraries-global",
   projectName: "libraries-global",
   title: "Libraries Global",
-  tagline: "Enterprise-grade Strapi v5 + Next.js",
+  tagline: "Developer documentation for Libraries Global",
   url,
   baseUrl,
-  onBrokenLinks: "warn",
+  onBrokenLinks: "throw",
   favicon: undefined,
   markdown: {
     hooks: {
-      onBrokenMarkdownLinks: "warn",
+      onBrokenMarkdownLinks: "throw",
     },
   },
 
@@ -43,18 +58,8 @@ const config: Config = {
         docs: {
           sidebarPath: "./sidebars.ts",
           editUrl:
-            "https://github.com/webbist-js/libraries.global/edit/main/apps/docs/",
-          lastVersion: "3.1.1",
-          versions: {
-            current: {
-              label: "Current",
-              path: "latest",
-            },
-            "3.1.1": {
-              label: "3.1.1",
-              path: "",
-            },
-          },
+            "https://github.com/webbist-js/libraries.global/edit/dev/apps/docs/",
+          routeBasePath: "docs",
         },
         blog: false,
         theme: {
@@ -66,17 +71,13 @@ const config: Config = {
 
   themeConfig: {
     navbar: {
-      title: "Strapi Next Starter",
+      title: "Libraries Global Docs",
       items: [
         {
           type: "docSidebar",
           sidebarId: "docs",
           position: "left",
           label: "Docs",
-        },
-        {
-          type: "docsVersionDropdown",
-          position: "right",
         },
       ],
     },

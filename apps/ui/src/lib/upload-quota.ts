@@ -98,12 +98,14 @@ export async function reserveUploadQuota(
 export async function completeUploadReservation(
   userId: string,
   reservationId: string,
-  fileId: number
+  fileId: number,
+  displayName?: string
 ): Promise<boolean> {
   for (let attempt = 0; attempt < 3; attempt++) {
     const response = await bridge(userId, "/complete", {
       reservationId,
       fileId,
+      ...(displayName ? { displayName } : {}),
     })
     if (response?.ok) {
       try {

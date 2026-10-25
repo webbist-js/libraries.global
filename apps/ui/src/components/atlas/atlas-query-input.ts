@@ -9,6 +9,7 @@ export function atlasBuildingFilters(
 ): AtlasScope["filters"] {
   return {
     types: filters.types,
+    ...(filters.networks?.length ? { networks: filters.networks } : {}),
     opening: filters.opening,
     atDay: filters.atDay,
     atMinutes: filters.atMinutes,

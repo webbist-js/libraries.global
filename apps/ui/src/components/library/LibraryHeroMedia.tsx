@@ -1,8 +1,10 @@
 "use client"
 
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 
+import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
 type Photo = { url: string; alt?: string | null; caption?: string | null }
@@ -15,7 +17,11 @@ export function LibraryHeroMedia({
   tourUrl,
   map,
   mapLabel = "Map",
+  atlasHref,
+  photoAction,
 }: {
+  readonly atlasHref?: string | null
+  readonly photoAction?: ReactNode
   readonly photo: string | null
   readonly name: string
   readonly caption?: string | null
@@ -24,6 +30,7 @@ export function LibraryHeroMedia({
   readonly map: ReactNode
   readonly mapLabel?: string
 }) {
+  const t = useTranslations("libraryPage")
   const photos = [
     ...(photo ? [{ url: photo, alt: name, caption }] : []),
     ...gallery.filter((item) => item.url !== photo),
@@ -90,9 +97,19 @@ export function LibraryHeroMedia({
               src={current.url}
               alt={current.alt || name}
               fill
+              loading="eager"
               sizes="(max-width: 1024px) 100vw, 45vw"
               className="object-cover"
             />
+            {atlasHref ? (
+              <GlobalLink
+                href={atlasHref}
+                className="absolute bottom-4 left-4 inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold shadow-sm"
+                style={{ borderColor: T.border.line }}
+              >
+                {t("openAtlas")} ↗
+              </GlobalLink>
+            ) : null}
           </div>
           {current.caption ? (
             <figcaption className="mt-2 text-xs" style={{ color: T.ink.dim }}>
@@ -130,7 +147,12 @@ export function LibraryHeroMedia({
           ) : null}
         </figure>
       ) : (
-        map
+        <div className="relative">
+          {map}
+          {photoAction ? (
+            <div className="absolute top-4 right-4 z-1">{photoAction}</div>
+          ) : null}
+        </div>
       )}
     </div>
   )

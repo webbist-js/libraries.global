@@ -52,6 +52,21 @@ describe("Atlas bounded source bridge", () => {
     await controller.scan(context())
     expect(strapi.documents).not.toHaveBeenCalled()
   })
+  it("rejects direct Reach requests without both private bridge credentials", async () => {
+    const strapi = { documents: vi.fn() }
+    const controller = createController({ strapi })
+    for (const header of ["x-service-secret", "x-atlas-token"] as const) {
+      const ctx = context({
+        request: { schemaVersion: 1, libraryId: "one", mode: "walking" },
+        userKey: "a".repeat(64),
+        hourlyLimit: 100,
+      })
+      ctx.request.headers[header] = ""
+      await controller.reach(ctx)
+      expect(ctx.status).toBe(401)
+    }
+    expect(strapi.documents).not.toHaveBeenCalled()
+  })
   it("decodes Strapi raw JSONB state before returning the query contract", async () => {
     const dictionary = { version: "jsonb-test", entries: [] }
     const manifest = { buildId: "test-build" }
@@ -65,20 +80,31 @@ describe("Atlas bounded source bridge", () => {
       manifest: JSON.stringify(manifest),
       heartbeat_at: null,
     }
-    const chain: any = {
+    const chain = {
       where: () => chain,
       whereNotNull: () => chain,
       min: () => chain,
       first: async () => state,
     }
+    const pending: any = {
+      whereNull: () => pending,
+      count: () => pending,
+      first: async () => ({ count: "2" }),
+    }
     const controller = createController({
-      strapi: { db: { connection: () => chain } },
+      strapi: {
+        db: {
+          connection: (table: string) =>
+            table === "atlas_outbox" ? pending : chain,
+        },
+      },
     })
     const ctx = context()
     await controller.state(ctx)
     expect(ctx.body.dictionary).toEqual(dictionary)
     expect(ctx.body.manifest).toEqual(manifest)
     expect(ctx.body.indexedThrough).toBe("2")
+    expect(ctx.body.pendingProjection).toBe(2)
   })
   it("rejects duplicate/oversized batches and raw source query options", async () => {
     const strapi = { documents: vi.fn() },
@@ -97,6 +123,32 @@ describe("Atlas bounded source bridge", () => {
     await controller.scan(ctx)
     expect(ctx.status).toBe(400)
     expect(strapi.documents).not.toHaveBeenCalled()
+  })
+  it("scopes both the canonical scan cursor and its rows to the requested country", async () => {
+    const library = {
+      findFirst: vi.fn(async () => ({ id: 100 })),
+      findMany: vi.fn(async () => []),
+    }
+    const controller = createController({
+      strapi: { documents: () => library },
+    })
+    const ctx = context()
+    ctx.query = { after: "0", limit: "200", country: "GB-ENG" }
+    await controller.scan(ctx)
+    expect(ctx.status).toBe(200)
+    expect(ctx.body).toEqual({ rows: [], upper: 100, next: null })
+    expect(library.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "published",
+        locale: "en",
+        filters: { country: { iso2: "GB-ENG" } },
+      })
+    )
+    expect(library.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: { country: { iso2: "GB-ENG" }, id: { $gt: 0, $lte: 100 } },
+      })
+    )
   })
   it("emits only public fields, with timetable presence rather than contents", () => {
     const source = atlasSourceDto(row)

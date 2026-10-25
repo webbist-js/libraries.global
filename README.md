@@ -21,9 +21,9 @@ This is a pnpm workspace run with Turborepo.
 | Path                                                                     | What it is                                                                                                                                                                     |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `apps/ui`                                                                | Next.js 16 site (App Router, React 19, Tailwind CSS v4, next-intl). Better Auth runs here too. [README](./apps/ui/README.md)                                                   |
-| `apps/strapi`                                                            | Strapi 5 CMS on Postgres, with four local plugins: `content-moderation`, `events`, `rewards`, `topics`. [README](./apps/strapi/README.md)                                      |
+| `apps/strapi`                                                            | Strapi 5 CMS on Postgres, with content, access, staff, event and moderation plugins. [README](./apps/strapi/README.md)                                                         |
 | `apps/sync-worker`                                                       | Node service that pulls library events from Eventbrite, Spydus, Solus, Aspen, iCal feeds, TicketSource and WeGotTickets, matches them to libraries and writes them to Postgres |
-| `apps/docs`                                                              | Docusaurus developer docs inherited from the starter. Mostly not yet rewritten for this project                                                                                |
+| `apps/docs`                                                              | Current developer documentation for architecture, authentication, content models and workspace commands                                                                        |
 | `packages/access`                                                        | Contributor roles, capabilities, entitlements and limits, shared by the UI and Strapi                                                                                          |
 | `packages/events-crypto`                                                 | AES-256-GCM encryption for event provider credentials, shared by Strapi and the sync worker                                                                                    |
 | `packages/strapi-types`                                                  | TypeScript types generated from the Strapi schemas. [README](./packages/strapi-types/README.md)                                                                                |
@@ -34,7 +34,7 @@ This is a pnpm workspace run with Turborepo.
 
 ## How the pieces fit
 
-- Next.js server components fetch content from the Strapi REST API with a read-only token. Client components get data as props and never call Strapi directly.
+- Next.js server components fetch content from the Strapi REST API with a read-only token. Client components receive props or call bounded Next.js routes; credentials stay on the server.
 - Better Auth runs in the Next.js app and keeps its tables in the same Postgres database as Strapi. When a user signs up, Next.js creates the matching Strapi user through the `auth-bridge` API, signed with `STRAPI_BRIDGE_SECRET`.
 - Strapi indexes published content into Meilisearch. Browsers use the gated Next.js `/api/search` proxy; the private search host and search-only credential are server inputs.
 - The sync worker reads provider credentials from Postgres, decrypts them with `@repo/events-crypto`, and upserts events on a cron schedule. Strapi calls it to test credentials (`WORKER_URL`, `WORKER_SECRET`).
@@ -42,6 +42,8 @@ This is a pnpm workspace run with Turborepo.
 The domain language (Library, Area, Operational Status, Event and so on) is defined in [CONTEXT.md](./CONTEXT.md), and contributor-facing architecture is documented in [the developer docs](./apps/docs/docs/architecture.md). Maintainer plans and release acceptance records are private.
 
 ## Local development
+
+Reuse existing local services before starting anything. Across checkouts, run at most one Next.js server and one Strapi server with the existing Docker PostgreSQL database. Run finite checks sequentially with bounded Node memory and one test worker.
 
 ### Prerequisites
 
@@ -143,7 +145,7 @@ node apps/strapi/scripts/seed-meilisearch.mjs
 Run from the repo root.
 
 ```sh
-pnpm dev              # all apps in watch mode
+pnpm dev              # workspace development tasks; start only what the task needs
 pnpm dev:ui           # Next.js only
 pnpm dev:strapi       # Postgres + Strapi
 pnpm build            # build everything
@@ -163,7 +165,7 @@ After changing a Strapi schema, regenerate the types so the UI sees the change:
 pnpm -F @repo/strapi generate:types
 ```
 
-The Playwright suites need a running site and browsers (`pnpm -F @repo/tests-playwright exec playwright install --with-deps`). Then run `pnpm tests:playwright:e2e:test`, `tests:playwright:axe`, `tests:playwright:seo` or `tests:playwright:visual`. See [qa/tests/README.md](./qa/tests/README.md).
+The Playwright suites need their documented fixtures and browsers. Use one worker, check whether the selected project starts a frontend, and follow the [browser acceptance guide](./qa/tests/playwright/README.md) before running it.
 
 ## Conventions
 
@@ -207,6 +209,8 @@ GitHub receives a scoped registry writer through the `production-images` environ
 | [CLAUDE.md](./CLAUDE.md), [AGENTS.md](./AGENTS.md)   | Contributor and agent conventions          |
 
 Private plans, host runbooks and operational acceptance records are kept by maintainers.
+
+Developer guides track the current source in `apps/docs/docs/`. Keep environment-specific setup, approvals, fixture identities, import results and acceptance evidence in private operator storage. `pnpm build:docs` checks the docs site, including broken links; retained starter snapshots are not a source of current behavior.
 
 ## Contributing
 

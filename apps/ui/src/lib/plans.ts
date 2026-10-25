@@ -73,9 +73,8 @@ export const PRO_FEATURE_COPY: Record<
     status: "soon",
   },
   "atlas.analysis": {
-    label:
-      "Travel-time reach, draw-to-analyse, coverage gaps and service coverage",
-    status: "soon",
+    label: "Travel-time reach: walking and cycling catchments across the UK",
+    status: "live",
   },
   "atlas.compare": { label: "Compare two areas", status: "soon" },
   "index.export": {
@@ -377,7 +376,7 @@ export const PLAN_TEASERS: readonly {
     key: "pro",
     tagline: "Free for regular contributors",
     summary:
-      "Library access compares libraries per resident across countries and UK local areas. Atlas export is included; Reach is on the way.",
+      "Compare libraries with population, explore walking and cycling catchments across the UK, and export Atlas results.",
   },
   {
     key: "team",

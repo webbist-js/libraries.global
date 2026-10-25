@@ -1,6 +1,36 @@
 export default {
   routes: [
     {
+      method: "GET",
+      path: "/atlas/population/context",
+      handler: "atlas.populationContext",
+      config: { auth: false },
+    },
+    {
+      method: "GET",
+      path: "/atlas/context",
+      handler: "atlas.context",
+      config: { auth: false },
+    },
+    {
+      method: "GET",
+      path: "/atlas/networks",
+      handler: "atlas.networks",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/atlas/network-reach",
+      handler: "atlas.networkReach",
+      config: { auth: false },
+    },
+    {
+      method: "POST",
+      path: "/atlas/reach",
+      handler: "atlas.reach",
+      config: { auth: false },
+    },
+    {
       method: "POST",
       path: "/atlas/plans/sync",
       handler: "atlas.syncPlanCopy",

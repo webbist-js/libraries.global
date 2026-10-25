@@ -1,10 +1,10 @@
 # Local membership acceptance
 
-Open [local membership](http://localhost:3000/contribute/membership). The current local UI, Strapi, Stripe sandbox listener and billing worker are running. Reload the page to pick up the flow changes. These are sandbox purchases; use Stripe test details.
+Use the existing local UI and Strapi with the selected sandbox configuration. Open `/contribute/membership` on that UI origin. Check processes and ports before starting helpers; run at most one Next.js and one Strapi server across checkouts. These are sandbox purchases using explicitly controlled test accounts.
 
 ## Start again after a restart
 
-Run from the repository root. Start Strapi and its database as usual. Configure/check the sandbox before starting the UI:
+Run from the repository root. Reuse the existing Docker PostgreSQL database and apps. Configure/check the selected sandbox; reload an existing process only when its inputs change:
 
 ```bash
 pnpm --filter @repo/access build
@@ -15,24 +15,20 @@ pnpm --filter @repo/ui billing:check
 
 The check must report `mode: sandbox`, four matching prices and three matching portal policies. The helper only accepts the sandbox key/catalogue; it does not copy production credentials. Keep environment files private.
 
-Set `APP_PUBLIC_URL` and `NEXT_PUBLIC_APP_URL` in the private UI environment to `http://localhost:3000`. The listener and worker read this origin by default. Leave these running in three separate terminals:
+Set `APP_PUBLIC_URL` and `NEXT_PUBLIC_APP_URL` in the private UI environment to the existing local origin (for example `http://localhost:3000`). The listener and worker read this origin by default. Start a listener only if none is already serving that sandbox:
 
 ```bash
 # 1: wait for “Sandbox listener ready”. It saves the signing secret privately.
 pnpm --filter @repo/ui billing:sandbox:listen
 ```
 
-```bash
-# 2: start after listener readiness; restart if its signing secret changes.
-NEXT_DIST_DIR=.next/billing-review pnpm --filter @repo/ui dev --port 3000
-```
+After listener readiness, reload the existing UI only if it needs the new signing secret. Process a finite worker pass after the test action:
 
 ```bash
-# 3: process payments and Strapi projections every five seconds.
-pnpm --filter @repo/ui billing:sandbox:watch
+pnpm --filter @repo/ui billing:sandbox:work
 ```
 
-Ctrl-C stops each process. Without the worker, Stripe can show a successful payment while the application is still confirming membership. A one-off pass is also available with `billing:sandbox:work`.
+Without processing, Stripe can show a successful payment while the application is still confirming membership. Stop any listener started for this check when acceptance finishes. Avoid a watch worker for routine finite validation.
 
 If you choose another port, update both public-origin values, start the UI on that port and restart both helpers. Check the listener's printed forwarding URL. Explicit `BILLING_FORWARD_URL` and `BILLING_LOCAL_ORIGIN` overrides take precedence and must match that port; old background helpers keep their earlier origin until restarted. A production domain is not needed for local card tests.
 
@@ -53,7 +49,7 @@ Test at least one initial purchase for each plan; use further fresh accounts if 
 
 1. Check the plan cards, interval control, feature list and matching order summary. Try switching to yearly in the summary and returning to monthly. Check at a narrow viewport and 200% browser zoom; verify the modal scrolls and Escape restores focus to its trigger.
 2. Continue to Details. Confirm the account email. Public credit starts off; the Supporter mark can be hidden. Checkout must not change profile visibility.
-3. Read/accept the recurring membership consent. Continue must remain disabled until accepted. The membership/refund policies are now published in the configured CMS with the confirmed contact details. Open both links and check section navigation and Print / Save to PDF. Confirm the deployed production site serves the same version before live launch.
+3. Read/accept the recurring membership consent. Continue must remain disabled until accepted. Verify the membership/refund links serve the reviewed policies and current public contact details. Open both links and check section navigation and Print / Save to PDF. Confirm the deployed production site serves the same version before live launch.
 4. Continue to the Stripe-hosted page. Confirm **Test mode** there. Use `4242 4242 4242 4242`, expiry `12/34`, CVC `123` and your test billing address. Complete any Stripe verification shown. Stripe confirms the final tax/local-currency total; the application shows base GBP.
 5. Return to the application in the same signed-in browser. Wait for “Thank you” after webhook processing and Strapi acknowledgement. Do not pay again because confirmation is slow. Check the listener reports HTTP 200 and the worker reports no failures/pending work.
 6. Open Settings → Membership & billing. Confirm plan, interval, status, paid period, masked payment method and invoice/PDF. Check the activation notice in the account’s notifications and email inbox.
@@ -77,33 +73,20 @@ Stripe test transactions do not move funds. Official [test cards and authenticat
 
 Apple Pay/Google Pay visibility depends on Stripe and the eligible browser/device/wallet. Record those tests separately; a successful card test does not prove a wallet test. Future renewals, grace expiry and refunds/disputes need dedicated sandbox lifecycle tests; scheduling a change alone does not prove its later transition.
 
-## Email samples already sent
+## Email acceptance
 
-On 12 October 2026, SMTP accepted the eleven application billing samples below for **info@libraries.global**, plus the account-verification sample. Subjects start `[Delivery sample: …]`; their actions are examples and do not change accounts.
+Generate offline HTML/text previews before requesting a delivery check:
 
-- Pro and Supporter activation.
-- Upgrade to Pro, downgrade to Supporter and billing-interval change.
-- Scheduled change and Undo.
-- Cancellation, resumption, payment recovery and access ending.
-- New-account email verification.
-
-Check both inbox and spam, mobile/desktop presentation, plain-text content, links and authentication headers. SMTP acceptance is recorded; mailbox delivery still needs your confirmation. Application notices currently use English.
-
-Stripe/Link owns receipts, invoices, refund confirmations and payment-recovery emails. These were not fabricated or sent through our SMTP templates. Managed Payments financial emails come from Link; Stripe does not automatically deliver test-environment financial emails. See [Managed Payments email ownership](https://docs.stripe.com/payments/managed-payments/how-it-works). Inspect the actual provider messages through its supported testing tools before live acceptance.
-
-Offline previews and deliberate resends:
-
-```bash
+```sh
 pnpm --filter @repo/ui email:check --billing --preview-dir /tmp/libraries-checkout-email-review
-# Explicit send: eleven billing examples, not the entire notification suite.
-pnpm --filter @repo/ui email:check --billing --to info@libraries.global
-pnpm --filter @repo/ui email:check --suite --only verification --to info@libraries.global
 ```
 
-## Evidence and current limits
+Cover activation, upgrades, reductions, interval changes, scheduled changes/Undo, cancellation, recovery, access ending and account verification. Check plain text, links, desktop/mobile rendering and email-client behavior.
 
-Checkout component tests cover all four plan/interval request selections, explicit consent, recognition defaults, annual selection, step focus, canceled returns and pending acknowledgement. Earlier integration evidence covers a settled Pro purchase, annual proration, authenticated scheduled downgrade/Undo and the Strapi notification pipeline.
+A real send requires an explicitly authorized recipient. Record SMTP acceptance, mailbox delivery and authentication-header checks separately in private acceptance evidence. Application notices and provider financial messages have different senders and test controls; inspect the actual provider output through its supported sandbox tools.
 
-Fresh initial Supporter/Pro settlement and wallet/decline/authentication acceptance remain manual checks. The browser automation tool rejected inspection of the local page during this spacing review; the layout changes were compared against saved browser screenshots and the supplied references, then checked with component tests, lint, typecheck and a production build. New rendered geometry and browser zoom are not claimed as verified.
+## Evidence and release limits
 
-Production purchases remain off. Public legal details, deployed origin/webhook/worker and live Stripe preparation remain separate requirements in [BILLING-REVIEW.md](BILLING-REVIEW.md).
+Source tests cover plan/interval selection, consent, recognition defaults, step focus, canceled returns, ownership and pending acknowledgement. They do not prove real payment settlement, bank authentication, wallets, email delivery or browser geometry.
+
+Record the selected commit, environment, controlled fixture inventory and actual outcomes privately. A skipped or unavailable check remains pending. Complete the applicable card/decline/authentication/device journeys, access caps, scheduled-change lifecycle and recovery checks before enabling the corresponding live flow. See [Billing](BILLING.md), [Team billing](TEAM-BILLING.md) and the [release contract](../../scripts/release/README.md).

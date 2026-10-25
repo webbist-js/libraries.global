@@ -181,6 +181,9 @@ export * from "./atlas/per-capita"
 export * from "./population"
 
 export * from "./atlas/library-access"
+export * from "./atlas/geometry"
+export * from "./atlas/reach"
+export * from "./atlas/population-density"
 export * from "./local-population"
 export * from "./email"
 export * from "./beta-email"
@@ -201,3 +204,8 @@ export * from "./library-types"
 export * from "./suggestion-review"
 export * from "./telemetry"
 export * from "./event-time"
+
+export * from "./atlas/network-reach"
+export * from "./atlas/reach-limits"
+
+export * from "./atlas/reach-insights"

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { tiptapToDynamicZone } from "../../../ui/src/components/contribute/article-editor/articleBlocks"
 import createService from "../../src/plugins/content-moderation/server/services/submission"
 import createPolicy from "../../src/plugins/content-moderation/server/services/submission-policy"
 import {
@@ -344,6 +345,58 @@ describe("article points come from draftData and the target, never from fields",
     )
     expect(stored?.resultDocumentId).toBe(created!.documentId)
     expect((result as any).data.resultDocumentId).toBe(created!.documentId)
+  })
+
+  it("preserves uploaded Journal images, alt text and credit when a moderator approves and publishes", async () => {
+    const sub = {
+      documentId: "s0000000000000000000053",
+      submissionType: "blog_submission",
+      status: "pending",
+      submittedByUserId: "u1",
+      fields: {},
+      draftData: {
+        kind: "new_article",
+        locale: "en",
+        title: "An illustrated story",
+        body: tiptapToDynamicZone({
+          type: "doc",
+          content: [
+            {
+              type: "image",
+              attrs: {
+                imageId: 77,
+                src: "/uploads/reading-room.webp",
+                alt: "Readers sharing books",
+                caption: "Photo by Ada",
+              },
+            },
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "A story." }],
+            },
+          ],
+        }),
+      },
+    }
+    const { strapi, store, svc } = approve(sub, "reader")
+    const result = await svc.updateStatus(
+      sub.documentId,
+      "approved",
+      REVIEWER,
+      undefined,
+      { publish: true }
+    )
+    expect(result).toHaveProperty("data.status", "approved")
+    expect(store[BLOG][0].body[0]).toEqual({
+      __component: "content.image-block",
+      image: 77,
+      alternativeText: "Readers sharing books",
+      caption: "Photo by Ada",
+      fullWidth: false,
+    })
+    expect(strapi.documents(BLOG).create).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "published" })
+    )
   })
 
   it("a translation is one whose locale has no version yet", async () => {

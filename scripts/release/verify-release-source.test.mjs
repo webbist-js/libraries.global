@@ -13,6 +13,7 @@ const names = [
   "Analyze (javascript-typescript)",
   "Analyze (python)",
   "Analyze (actions)",
+  "Native analysis checks",
 ]
 const checks = () =>
   names.map((name, index) => ({
@@ -114,5 +115,16 @@ test("waits for missing checks but fails completed unsuccessful checks", () => {
 test("dev remains an integration branch and cannot publish production", () => {
   assert.throws(() =>
     assertProtectedSource("webbist-js/libraries.global", "refs/heads/dev", sha)
+  )
+})
+
+test("waits for the native runtime build and tests before publishing", () => {
+  const missing = checks().filter(
+    (check) => check.name !== "Native analysis checks"
+  )
+  assert.equal(releaseChecksState(missing, sha), "pending")
+  assert.throws(
+    () => assertPassingChecks(missing, sha),
+    /Native analysis checks/
   )
 })

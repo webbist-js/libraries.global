@@ -2,7 +2,7 @@
 
 import { effectiveLibraryHours, noticeLocalDate } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useContext, type ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import {
@@ -15,8 +15,10 @@ import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
+import { atlasExternalUrl } from "./atlas-links"
 import { Icon, tintOfGroup, TypeBadge } from "./atlas-ui"
 import { type AtlasLibrary, OPERATOR_GROUPS, typeGroupOf } from "./atlas.logic"
+import { AtlasAnalysisPanelContext } from "./AtlasAnalysisHeader"
 
 interface LibraryDetail {
   summary?: string | null
@@ -30,7 +32,10 @@ interface LibraryDetail {
 
 const detailCache = new Map<string, LibraryDetail>()
 
-async function fetchDetail(id: string): Promise<LibraryDetail | null> {
+async function fetchDetail(
+  id: string,
+  signal: AbortSignal
+): Promise<LibraryDetail | null> {
   const hit = detailCache.get(id)
   if (hit) return hit
   const params = new URLSearchParams({
@@ -44,7 +49,9 @@ async function fetchDetail(id: string): Promise<LibraryDetail | null> {
     "populate[heroImage][fields][0]": "url",
     "populate[heroImage][fields][1]": "alternativeText",
   })
-  const res = await fetch(`/api/public-proxy/api/libraries?${params}`)
+  const res = await fetch(`/api/public-proxy/api/libraries?${params}`, {
+    signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+  })
   if (!res.ok) return null
   const json = (await res.json()) as { data?: LibraryDetail[] }
   const detail = json.data?.[0] ?? null
@@ -73,13 +80,19 @@ export function AtlasLibraryPanel({
   library,
   onClose,
   compact = false,
+  onReach,
+  reachPrompt,
 }: {
   readonly library: AtlasLibrary
   readonly onClose: () => void
   /** Mobile sheet: no photo, fewer rows. */
   readonly compact?: boolean
+  readonly onReach?: () => void
+  readonly reachPrompt?: ReactNode
 }) {
   const tUi = useUiTranslations("ui")
+  const inInspect = useContext(AtlasAnalysisPanelContext)
+  const tInspect = useUiTranslations("atlasInspect")
 
   const [detail, setDetail] = useState<LibraryDetail | null>(
     detailCache.get(library.id) ?? null
@@ -89,13 +102,15 @@ export function AtlasLibraryPanel({
   // The parent keys this panel by library id, so state starts fresh per library.
   useEffect(() => {
     let alive = true
-    fetchDetail(library.id)
+    const controller = new AbortController()
+    fetchDetail(library.id, controller.signal)
       .catch(() => null)
       .then((d) => alive && setDetail(d))
       .finally(() => alive && setLoading(false))
 
     return () => {
       alive = false
+      controller.abort()
     }
   }, [library.id])
 
@@ -126,7 +141,9 @@ export function AtlasLibraryPanel({
   const facilities = [...library.services, ...library.access].slice(0, 6)
   const closedForGood = library.status === "permanently_closed"
   const updated = relative(detail?.updatedAt)
-  const catalogueHref = library.path ? (detail?.catalogueUrl ?? null) : null
+  const catalogueHref = library.path
+    ? atlasExternalUrl(detail?.catalogueUrl)
+    : null
   const pending = loading && !detail
 
   const statusBox =
@@ -169,6 +186,8 @@ export function AtlasLibraryPanel({
             <img
               src={img}
               alt={detail?.heroImage?.alternativeText ?? ""}
+              width={400}
+              height={150}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -191,15 +210,17 @@ export function AtlasLibraryPanel({
               <span className="text-[13px] font-semibold">No photo yet</span>
             </div>
           )}
-          <button
-            type="button"
-            aria-label={tUi("close")}
-            onClick={onClose}
-            className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-white"
-            style={{ color: T.ink.base }}
-          >
-            <Icon name="x" size={18} />
-          </button>
+          {!inInspect ? (
+            <button
+              type="button"
+              aria-label={tUi("close")}
+              onClick={onClose}
+              className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-white"
+              style={{ color: T.ink.base }}
+            >
+              <Icon name="x" size={18} />
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -216,7 +237,7 @@ export function AtlasLibraryPanel({
               {operator.label}
             </span>
           ) : null}
-          {compact ? (
+          {compact && !inInspect ? (
             <button
               type="button"
               aria-label={tUi("close")}
@@ -229,12 +250,14 @@ export function AtlasLibraryPanel({
         </div>
 
         <div>
-          <h2
-            className="m-0 text-[30px] leading-[1.05] sm:text-[32px]"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            {library.name}
-          </h2>
+          {!inInspect ? (
+            <h2
+              className="m-0 text-[30px] leading-[1.05] sm:text-[32px]"
+              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+            >
+              {library.name}
+            </h2>
+          ) : null}
           {!compact && pending ? (
             <div className="mt-2 grid gap-2" aria-hidden="true">
               <Skeleton className="h-3 w-full rounded-full bg-(--t-border-line)" />
@@ -250,6 +273,19 @@ export function AtlasLibraryPanel({
           ) : null}
         </div>
 
+        {onReach &&
+        !closedForGood &&
+        library.type !== "Mobile" &&
+        library.type !== "Digital" ? (
+          <button
+            type="button"
+            onClick={onReach}
+            className="min-h-11 w-full rounded-xl border px-4 py-3 text-sm font-semibold"
+          >
+            {tInspect("reachFromHere")}
+          </button>
+        ) : null}
+        {reachPrompt}
         {closedForGood ? (
           <div
             className="flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-[15px] font-semibold"
@@ -375,11 +411,13 @@ export function AtlasLibraryPanel({
           ) : null}
           {!compact ? (
             <p
-              className="m-0 text-center text-[13px]"
+              className="m-0 flex flex-col gap-1 text-left text-[13px] leading-relaxed"
               style={{ color: T.ink.dim }}
             >
-              Community maintained{updated ? ` · updated ${updated}` : ""} ·{" "}
-              {library.complete}% complete
+              <span>
+                Community maintained{updated ? ` · updated ${updated}` : ""}
+              </span>
+              <span>{library.complete}% complete</span>
             </p>
           ) : null}
         </div>

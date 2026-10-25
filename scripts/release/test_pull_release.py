@@ -10,7 +10,7 @@ release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(release)
 COMMIT = "a" * 40
 REGISTRY = "registry.digitalocean.com/example-registry"
-MANIFEST = {"schema": 2, "repository": release.REPOSITORY, "commit": COMMIT,
+MANIFEST = {"schema": 3, "repository": release.REPOSITORY, "commit": COMMIT,
             "images": {name: f"{name}@sha256:{'b' * 64}" for name in release.VARIABLES}}
 
 
@@ -35,6 +35,18 @@ class SourceTests(unittest.TestCase):
     def test_exact_successful_main_publisher(self):
         selected = release.candidate(fixture().__getitem__)
         self.assertEqual(selected, {"manifest": MANIFEST, "run": "100:2"})
+
+    def test_native_check_is_required_and_legacy_manifests_remain_readable(self):
+        data = fixture()
+        checks = data[f"commits/{COMMIT}/check-runs?per_page=100&filter=all"]["check_runs"]
+        data[f"commits/{COMMIT}/check-runs?per_page=100&filter=all"]["check_runs"] = [c for c in checks if c["name"] != "Native analysis checks"]
+        self.assertIsNone(release.candidate(data.__getitem__))
+        data = fixture()
+        legacy = copy.deepcopy(MANIFEST)
+        legacy["schema"] = 2
+        del legacy["images"]["analysis"]
+        data[f"commits/{COMMIT}/check-runs?per_page=100&filter=all"]["check_runs"][-1]["output"]["summary"] = json.dumps(legacy)
+        self.assertEqual(release.candidate(data.__getitem__)["manifest"], legacy)
 
     def test_failed_latest_check_and_unfinished_run_do_not_deploy(self):
         data = fixture()
@@ -67,7 +79,7 @@ class SourceTests(unittest.TestCase):
 
     def test_data_changes_divergence_and_truncation_require_acceptance(self):
         self.assertFalse(release.needs_acceptance({"status": "ahead", "files": [{"filename": "apps/ui/src/components/about/Globe.tsx"}]}))
-        for name in ["apps/strapi/src/index.ts", "pnpm-lock.yaml", "apps/ui/src/lib/auth.ts",
+        for name in ["apps/strapi/src/index.ts", "apps/analysis/server.py", "pnpm-lock.yaml", "apps/ui/src/lib/auth.ts",
                      "apps/ui/src/lib/billing/database.ts", "packages/shared-data/index.ts"]:
             self.assertTrue(release.needs_acceptance({"status": "ahead", "files": [{"filename": name}]}))
             self.assertTrue(release.needs_acceptance({"status": "ahead", "files": [{"filename": "moved.ts", "previous_filename": name}]}))
@@ -93,7 +105,8 @@ class PromotionTests(unittest.TestCase):
     def run_command(self, args, _root, _docker_config):
         self.commands.append(args)
         if args[1:3] == ["image", "inspect"]:
-            return json.dumps([{"Architecture": "amd64", "Config": {"User": "node", "Labels": {"org.opencontainers.image.revision": COMMIT}}}])
+            user = "analysis" if "/analysis@" in args[-1] else "node"
+            return json.dumps([{"Architecture": "amd64", "Config": {"User": user, "Labels": {"org.opencontainers.image.revision": COMMIT}}}])
         return ""
 
     def test_success_pins_digests_records_source_and_preserves_runtime(self):
@@ -124,6 +137,24 @@ class PromotionTests(unittest.TestCase):
         self.assertFalse((self.root / "automated-release.json").exists())
         starts = [command for command in self.commands if "up" in command]
         self.assertEqual(len(starts), 2)
+        self.assertIn("analysis", starts[0])
+        self.assertNotIn("analysis", starts[1])
+        stops = [command for command in self.commands if "stop" in command]
+        self.assertEqual(len(stops), 1)
+        self.assertEqual(stops[0][-3:], ["stop", "analysis-worker", "analysis"])
+        self.assertLess(self.commands.index(stops[0]), self.commands.index(starts[1]))
+
+    def test_root_native_image_is_rejected_before_switching(self):
+        def root_native(args, root, config):
+            result = self.run_command(args, root, config)
+            if args[1:3] == ["image", "inspect"] and "/analysis@" in args[-1]:
+                info = json.loads(result)
+                info[0]["Config"]["User"] = "root"
+                return json.dumps(info)
+            return result
+        with self.assertRaisesRegex(RuntimeError, "verification"):
+            release.promote(self.config, self.selected, fixture().__getitem__, root_native)
+        self.assertEqual((self.root / "release.env").read_text(), self.previous)
 
     def test_newer_main_or_failed_pull_leaves_current_release_untouched(self):
         data = fixture()

@@ -1,132 +1,56 @@
-# Strapi Types
+# Strapi types
 
-The `@repo/strapi-types` package provides auto-generated TypeScript types from Strapi schemas for type-safe content handling across the monorepo.
+`@repo/strapi-types` exposes generated CMS schema declarations and Strapi utility types to the frontend and other workspaces.
 
 ## Regeneration
 
-After ANY Strapi schema change, regenerate types from the root AGENTS.md instructions.
+After any Strapi schema change, run from the repository root:
 
-## Package Structure
-
-```
-packages/strapi-types/
-├── generated/  →  symlink to apps/strapi/types/generated/
-├── index.ts
-└── package.json
+```sh
+pnpm --filter @repo/strapi generate:types
 ```
 
-Types are generated in Strapi and symlinked to the package for monorepo-wide imports.
+Strapi writes to `apps/strapi/types/generated/`; `packages/strapi-types/generated` is a symlink to that directory. The package entry point is `packages/strapi-types/src/index.ts`. If a checkout cannot use symlinks, follow the package README's copy workflow and run `sync-types` after regeneration.
 
-## Key Type Utilities
+## Data and query types
 
 ```typescript
-import { Data, FindFirst, FindMany, Result, UID } from "@repo/strapi-types"
+import type { Data, FindMany, Result, UID } from "@repo/strapi-types"
+
+type Page = Data.ContentType<"api::page.page">
+type Callout = Data.Component<"content.callout">
+type ComponentUID = UID.Component
+
+const params = {
+  locale: "en",
+  pagination: { page: 1, pageSize: 10 },
+  populate: { seo: true },
+} satisfies FindMany<"api::page.page">
+
+type PopulatedPage = Result<"api::page.page", typeof params>
 ```
 
-| Type                      | Purpose                         | Example                                                     |
-| ------------------------- | ------------------------------- | ----------------------------------------------------------- |
-| `UID.ContentType`         | Union of all content type UIDs  | `"api::page.page"`                                          |
-| `UID.Component`           | Union of all component UIDs     | `"sections.hero"`                                           |
-| `Data.ContentType<"uid">` | Full content type data          | `Data.ContentType<"api::page.page">`                        |
-| `Data.Component<"uid">`   | Full component data             | `Data.Component<"sections.hero">`                           |
-| `Result<"uid", params>`   | Response shape after population | `Result<"api::page.page", { populate: { content: true } }>` |
-| `FindFirst<uid>`          | Query params for single doc     | `FindFirst<"api::page.page">`                               |
-| `FindMany<uid>`           | Query params for multiple docs  | `FindMany<"api::page.page">`                                |
+Use current schema UIDs and fields. The Page model does not have a content dynamic zone; article `body` fields use `content.*` blocks. Avoid examples based on removed starter components such as `sections.hero`.
 
-## Usage in Page Builder Components
+## API response types
+
+Client methods return an envelope, not a bare record/array:
 
 ```typescript
-import { Data } from "@repo/strapi-types"
-
-interface StrapiHeroProps {
-  readonly component: Data.Component<"sections.hero">
-}
-
-export function StrapiHero({ component }: StrapiHeroProps) {
-  // component.title, component.subTitle, etc. are fully typed
-  return (
-    <section>
-      <h1>{component.title}</h1>
-      {component.subTitle && <p>{component.subTitle}</p>}
-    </section>
-  )
-}
-```
-
-## Usage in API Calls
-
-```typescript
-import { FindMany, Result, UID } from "@repo/strapi-types"
-
 import { PublicStrapiClient } from "@/lib/strapi-api"
 
-// Type-safe query params
-const params: FindMany<"api::page.page"> = {
-  locale: "en",
-  filters: { slug: { $startsWith: "blog" } },
-  populate: { content: true, seo: true },
-}
-
-// Type-safe response
-const pages: Result<"api::page.page", typeof params>[] =
-  await PublicStrapiClient.fetchMany("api::page.page", params)
+const response = await PublicStrapiClient.fetchMany("api::page.page", params)
+const pages = response.data
 ```
 
-## UID Unions
+`Result` reflects the selected/populated shape. Required schema attributes can still be absent from a response because of fields, publication state, authorization or controller projection. Handle optional/null values at the boundary. A generated content type is not a public DTO: explicitly select safe fields for browser responses.
 
-Use for type-safe component registries:
+## Dynamic zones
 
-```typescript
-import { UID } from "@repo/strapi-types"
+Article body items identify their component with `__component`. Follow the existing shared article renderer and editor validation when extending blocks. Narrow to a supported UID before reading its fields; regenerate types after changing a component or allowed dynamic-zone list.
 
-const PageContentComponents: {
-  [K in UID.Component]?: React.ComponentType<any>
-} = {
-  "sections.hero": StrapiHero,
-  "sections.faq": StrapiFaq,
-}
-```
+## Troubleshooting
 
-## Handling Dynamic Zones
+Missing autocomplete or incorrect field shapes can indicate stale generated declarations, a broken symlink, an outdated copy or an unpopulated field. Check those causes before widening types or adding casts. Schema changes must include their generated declarations.
 
-Dynamic zone items have a `__component` field with the UID:
-
-```typescript
-import { Data, UID } from "@repo/strapi-types"
-
-type DynamicZoneItem = Data.Component<UID.Component> & {
-  __component: UID.Component
-}
-
-function renderComponent(item: DynamicZoneItem) {
-  switch (item.__component) {
-    case "sections.hero":
-      return <StrapiHero component={item as Data.Component<"sections.hero">} />
-    case "sections.faq":
-      return <StrapiFaq component={item as Data.Component<"sections.faq">} />
-    default:
-      return null
-  }
-}
-```
-
-## When Types Are Stale
-
-Symptoms of forgetting to regenerate:
-
-- TypeScript errors about missing properties
-- Runtime undefined values for fields that exist in Strapi
-- IDE autocomplete missing new fields
-
-Always regenerate when:
-
-- Adding/removing content types
-- Adding/removing components
-- Changing component attributes
-- Changing content type attributes
-- Modifying relations between types
-
-## Related Documentation
-
-- [Page Builder](./page-builder.md) — Component registry using these types
-- [Strapi API Client](./strapi-api-client.md) — API calls with type-safe params
+See [Page builder](page-builder.md), [Strapi API client](strapi-api-client.md) and the [types package README](https://github.com/webbist-js/libraries.global/blob/dev/packages/strapi-types/README.md).

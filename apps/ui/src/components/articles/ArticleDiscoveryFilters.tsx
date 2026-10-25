@@ -64,10 +64,13 @@ export function ArticleDiscoveryFilters({
   discovery,
   kind,
   compact = false,
+  toolbar = false,
 }: {
   readonly discovery: ArticleBrowseResult
   readonly kind: "journal" | "knowledge"
   readonly compact?: boolean
+  /** Expose controls and chips as separate items in the host's flex layout. */
+  readonly toolbar?: boolean
 }) {
   const params = useSearchParams()
   const encoded = params.toString()
@@ -279,12 +282,20 @@ export function ArticleDiscoveryFilters({
     <div
       aria-busy={pending}
       className={
-        compact
-          ? "shrink-0 border-t border-(--t-divider) py-[6px] lg:border-t-0"
-          : "mt-5 rounded-[22px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 sm:p-4"
+        compact && toolbar
+          ? "contents"
+          : compact
+            ? "shrink-0 border-t border-(--t-divider) py-[6px] lg:border-t-0"
+            : "mt-5 rounded-[22px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 sm:p-4"
       }
     >
-      <div className="flex flex-wrap items-center gap-3">
+      <div
+        className={
+          toolbar
+            ? "flex shrink-0 items-center gap-3 py-[6px]"
+            : "flex flex-wrap items-center gap-3"
+        }
+      >
         {compact ? (
           <SelectField
             appearance="pill"
@@ -569,10 +580,14 @@ export function ArticleDiscoveryFilters({
       {chips.length > 0 ? (
         <ul
           aria-label={t("selectedFilters")}
-          className="mt-3 mb-0 flex list-none flex-wrap gap-2 border-t border-(--t-border-line) pt-3 pl-0"
+          className={
+            toolbar
+              ? "order-last m-0 flex shrink-0 list-none flex-nowrap items-center gap-2 p-0 lg:w-full lg:flex-wrap lg:border-t lg:border-(--t-divider) lg:py-3"
+              : "mt-3 mb-0 flex list-none flex-wrap gap-2 border-t border-(--t-border-line) pt-3 pl-0"
+          }
         >
           {chips.map(({ key, value, label }) => (
-            <li key={`${key}:${value}`}>
+            <li key={`${key}:${value}`} className="max-w-full shrink-0">
               <button
                 type="button"
                 aria-label={t("removeFilter", { facet: t(key), value: label })}
@@ -584,13 +599,18 @@ export function ArticleDiscoveryFilters({
                     )
                   )
                 }
-                className="min-h-9 cursor-pointer rounded-full px-3 py-1 text-sm hover:brightness-95"
+                className="inline-flex min-h-9 max-w-full cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-left text-sm hover:brightness-95"
                 style={{
                   background: T.accent.chip,
                   color: T.accent.primaryHover,
                 }}
               >
-                {label} ×
+                <span className="min-w-0 [overflow-wrap:anywhere]">
+                  {label}
+                </span>
+                <span aria-hidden="true" className="shrink-0">
+                  ×
+                </span>
               </button>
             </li>
           ))}

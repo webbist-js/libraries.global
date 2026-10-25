@@ -1,0 +1,50 @@
+{
+  "id": "northern-ireland",
+  "country": "GB-NIR",
+  "originBounds": [
+    -8.3,
+    53.95,
+    -5.3,
+    55.4
+  ],
+  "network": {
+    "url": "https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf",
+    "maxBytes": 1073741824,
+    "minimumBuildFreeBytes": 8589934592,
+    "source": "OpenStreetMap contributors \u00b7 Geofabrik Ireland/Northern Ireland extract",
+    "sourceUrl": "https://download.geofabrik.de/europe/ireland-and-northern-ireland.html",
+    "licence": "ODbL 1.0"
+  },
+  "population": {
+    "id": "ghsl-2020-r2023a-100m",
+    "url": "https://jrc-ghsl.s3.eu-central-1.amazonaws.com/ghs-pop/r2023a/54009/100m/2020/GHS_POP_E2020_GLOBE_R2023A_54009_100_V1_0.tif",
+    "bounds": [
+      -9,
+      49,
+      3,
+      61
+    ],
+    "source": "GHS-POP R2023A \u00b7 native population grid",
+    "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+    "licence": "CC BY 4.0",
+    "year": 2020
+  },
+  "canary": {
+    "lat": 54.6031,
+    "lng": -5.9317
+  },
+  "countries": [
+    "GB-NIR"
+  ],
+  "replacesProfiles": [],
+  "canaries": [
+    {
+      "lat": 54.6031,
+      "lng": -5.9317
+    },
+    {
+      "lat": 54.174,
+      "lng": -6.339
+    }
+  ]
+}

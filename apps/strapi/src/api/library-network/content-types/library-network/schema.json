@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "library_networks",
+  "info": {
+    "singularName": "library-network",
+    "pluralName": "library-networks",
+    "displayName": "Library Network",
+    "description": "A sourced institutional grouping, independent of Team accounts."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": ["library_service", "university_system", "consortium"],
+      "required": true,
+      "default": "library_service"
+    },
+    "sourceKey": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "website": {
+      "type": "string"
+    },
+    "sourceUrl": {
+      "type": "string"
+    },
+    "lastVerifiedAt": {
+      "type": "datetime"
+    },
+    "countries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::country.country"
+    },
+    "libraries": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::library.library",
+      "mappedBy": "networks"
+    }
+  }
+}

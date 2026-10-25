@@ -6,20 +6,19 @@ import {
 } from "@repo/shared-data"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
-import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
 import type { BreadcrumbItem } from "@/components/ds"
 import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import GlobalHeader from "@/components/global/GlobalHeader"
-import GlobalLink from "@/components/global/GlobalLink"
 import { CurrentLibraryMarker } from "@/components/library/CurrentLibraryMarker"
-import { facilityRows } from "@/components/library/facility-rows"
 import { LibrariesOnTheMove } from "@/components/library/LibrariesOnTheMove"
 import { LIBRARY_ANCHORS } from "@/components/library/library-anchors"
 import { toLatLng } from "@/components/library/library-page.helpers"
+import { libraryPresentation } from "@/components/library/library-presentation"
 import { LibraryAmenitiesSection } from "@/components/library/LibraryAdditionalDetails"
 import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
 import { LibraryAreaSection } from "@/components/library/LibraryArea"
+import { LibraryCommunity } from "@/components/library/LibraryCommunity"
 import {
   LibraryCorrectionProvider,
   OpenCorrectionLink,
@@ -28,25 +27,21 @@ import { LibraryEvents } from "@/components/library/LibraryEvents"
 import { LibraryFeaturedContribution } from "@/components/library/LibraryFeaturedContribution"
 import type { TranslateLocale } from "@/components/library/LibraryHelpPanel"
 import { LibraryHero } from "@/components/library/LibraryHero"
+import { LibraryMissingDetails } from "@/components/library/LibraryMissingDetails"
 import { LibraryNoticeBanners } from "@/components/library/LibraryNoticeBanners"
+import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"
 import {
   LIB_ICONS,
   LibrarySectionCard,
 } from "@/components/library/LibrarySectionCard"
 import {
-  hasCollections,
   LibraryChangesSection,
   LibraryCollectionsSection,
-  LibraryEventsEmpty,
   LibraryFacilitiesSection,
   LibraryVisitSection,
 } from "@/components/library/LibrarySections"
-import {
-  LibraryClaimNote,
-  LibraryLinksPanel,
-  LibraryRecordPanel,
-  LibraryTasksPanel,
-} from "@/components/library/LibrarySidebar"
+import { LibraryRecordPanel } from "@/components/library/LibrarySidebar"
+import { LibraryVisitRail } from "@/components/library/LibraryVisitRail"
 import { verifyRecordOf } from "@/components/library/verify.logic"
 import { StopsTimesSection } from "@/components/mobile/StopsTimesSection"
 import { placeAddHref } from "@/lib/contribution-place"
@@ -64,6 +59,7 @@ import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 const NO_AREA: LibraryAreaData = {
   neighbours: [],
+  neighboursUnavailable: true,
   regionTotal: null,
   withinRadius: null,
   sundays: null,
@@ -105,7 +101,7 @@ export function LibraryDetailPage({
   translateLocales = [],
 }: LibraryDetailPageProps) {
   const tUi = useUiTranslations("ui")
-  const tDiscovery = useUiTranslations("discovery")
+  const tPage = useUiTranslations("libraryPage")
 
   if (library) library = { ...library, notices } as PopulatedLibraryData
   if (!library) {
@@ -181,14 +177,25 @@ export function LibraryDetailPage({
     { label: library.name ?? "" },
   ]
 
-  const facilities = facilityRows(library)
-  const unanswered = facilities.filter((r) => r.state === "unknown")
-  const hasAccess =
-    libraryTypeName(library.libraryType) !== "Digital" ||
-    facilities.some((row) => row.category === "accessibility") ||
-    Boolean(rec.accessibilityNotes)
-  const hasFeed = Boolean(rec.hasActiveFeed)
-  const collectionsFull = hasCollections(library)
+  const presentation = libraryPresentation(library, area)
+  const {
+    mobile,
+    digital,
+    hasAccess,
+    hasServices,
+    hasAbout,
+    hasEvents,
+    hasNearby,
+    hasReach,
+    missing,
+    checklist,
+    unanswered,
+  } = presentation
+  const addHref = placeAddHref({
+    continent: library.continent?.slug ?? undefined,
+    country: library.country?.slug ?? undefined,
+    region: library.region?.slug ?? undefined,
+  })
   const mapNeighbours = area.neighbours.flatMap((n) =>
     n.lat !== null && n.lng !== null
       ? [{ id: n.id, name: n.name, href: n.href, lat: n.lat, lng: n.lng }]
@@ -196,39 +203,42 @@ export function LibraryDetailPage({
   )
 
   const anchors = [
-    libraryTypeName(library.libraryType) === "Mobile"
-      ? LIBRARY_ANCHORS.stops
-      : LIBRARY_ANCHORS.visit,
+    {
+      ...(mobile ? LIBRARY_ANCHORS.stops : LIBRARY_ANCHORS.visit),
+      label: tPage(mobile ? "stops" : digital ? "onlineAccess" : "visit"),
+    },
     ...(hasAccess
-      ? [{ ...LIBRARY_ANCHORS.access, label: "Accessibility & facilities" }]
+      ? [{ ...LIBRARY_ANCHORS.access, label: tPage("accessFacilities") }]
       : []),
-    ...(facilities.some((row) => row.category === "service") ||
-    library.languagesServed?.length ||
-    library.classificationSystem
-      ? [LIBRARY_ANCHORS.services]
+    ...(hasServices
+      ? [{ ...LIBRARY_ANCHORS.services, label: tPage("services") }]
       : []),
-    ...(collectionsFull
+    ...(hasAbout
+      ? [{ href: "#about", label: tPage("about"), icon: LIB_ICONS.book }]
+      : []),
+    ...(hasEvents ? [{ ...LIBRARY_ANCHORS.events, label: tUi("events") }] : []),
+    ...(mobile || hasNearby
       ? [
           {
-            href: "#about",
-            label: "About and collections",
-            icon: LIB_ICONS.book,
+            ...LIBRARY_ANCHORS.area,
+            label: tPage(mobile ? "baseReturns" : "nearby"),
           },
         ]
       : []),
-    LIBRARY_ANCHORS.events,
-    ...(libraryTypeName(library.libraryType) === "Digital"
-      ? []
-      : [
+    ...(missing.length
+      ? [
           {
-            ...LIBRARY_ANCHORS.area,
-            label:
-              libraryTypeName(library.libraryType) === "Mobile"
-                ? "Base and returns"
-                : "Nearby",
+            href: "#missing",
+            label: tPage("notRecorded"),
+            icon: LIB_ICONS.pencil,
           },
-        ]),
-    { ...LIBRARY_ANCHORS.changes, label: "Sources & reuse" },
+        ]
+      : []),
+    ...(hasReach && !hasNearby
+      ? [{ href: "#reach", label: tPage("reach"), icon: LIB_ICONS.map }]
+      : []),
+    { ...LIBRARY_ANCHORS.changes, label: tPage("sourcesReuse") },
+    { href: "#community", label: tPage("community"), icon: LIB_ICONS.people },
   ]
 
   return (
@@ -261,9 +271,11 @@ export function LibraryDetailPage({
                   timezone:
                     typeof rec.timezone === "string" ? rec.timezone : null,
                 }}
-                unanswered={
-                  unanswered.filter((row) => row.category !== "service").length
-                }
+                unanswered={unanswered}
+                gaps={checklist.items
+                  .filter((item) => !item.done)
+                  .map((item) => item.key)}
+                translateLocales={translateLocales}
                 hasHours={
                   libraryTypeName(library.libraryType) === "Mobile"
                     ? Boolean(
@@ -272,13 +284,13 @@ export function LibraryDetailPage({
                       )
                     : hasOpeningHours(library.openingTimes)
                 }
-                hasPhoto={Boolean(heroUrl)}
+                hasPhoto={Boolean(heroUrl || library.gallery?.length)}
                 path={path}
               />
             }
             coords={coords}
             crumbs={crumbs}
-            hasPhoto={Boolean(heroUrl)}
+            hasPhoto={Boolean(heroUrl || library.gallery?.length)}
             library={library}
             neighbours={mapNeighbours}
             untranslatedLocale={untranslatedLocale}
@@ -288,8 +300,14 @@ export function LibraryDetailPage({
           <LibraryAnchorNav items={anchors} />
 
           <Container className="pt-7 pb-22">
-            <div className="flex flex-wrap items-start gap-6">
-              <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+              <aside
+                aria-label={tPage("planVisit")}
+                className="lg:sticky lg:top-(--sticky-content-top) lg:col-start-2 lg:row-start-1 lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
+              >
+                <LibraryVisitRail library={library} />
+              </aside>
+              <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
                 {libraryTypeName(library.libraryType) === "Mobile" ? (
                   <StopsTimesSection
                     slug={library.slug ?? undefined}
@@ -319,39 +337,22 @@ export function LibraryDetailPage({
                 {hasAccess ? (
                   <LibraryFacilitiesSection library={library} path={path} />
                 ) : null}
-                <LibraryAmenitiesSection
-                  library={library}
-                  includeAmenities={!hasAccess}
-                />
+                {hasServices ? (
+                  <LibraryAmenitiesSection
+                    library={library}
+                    includeAmenities={!hasAccess}
+                  />
+                ) : null}
                 {libraryTypeName(library.libraryType) !== "Mobile" &&
                 library.mobileLibraries?.length ? (
                   <LibrariesOnTheMove libraries={library.mobileLibraries} />
                 ) : null}
 
-                {collectionsFull ? (
-                  <LibraryCollectionsSection
-                    library={library}
-                    footer={
-                      !hasFeed ? (
-                        <LibraryEventsEmpty
-                          inline
-                          documentId={library.documentId}
-                          libraryName={library.name ?? ""}
-                          librarySlug={library.slug ?? ""}
-                        />
-                      ) : undefined
-                    }
-                  />
-                ) : null}
-                {!hasFeed && !collectionsFull ? (
-                  <LibraryEventsEmpty
-                    documentId={library.documentId}
-                    libraryName={library.name ?? ""}
-                    librarySlug={library.slug ?? ""}
-                  />
+                {hasAbout ? (
+                  <LibraryCollectionsSection library={library} />
                 ) : null}
 
-                {hasFeed ? (
+                {hasEvents ? (
                   <LibrarySectionCard
                     id="events"
                     title={tUi("events")}
@@ -380,65 +381,53 @@ export function LibraryDetailPage({
                       Suggest return arrangements
                     </OpenCorrectionLink>
                   </LibrarySectionCard>
-                ) : libraryTypeName(library.libraryType) ===
-                  "Digital" ? null : (
+                ) : hasNearby ? (
                   <LibraryAreaSection
-                    addHref={placeAddHref({
-                      continent: library.continent?.slug ?? undefined,
-                      country: library.country?.slug ?? undefined,
-                      region: library.region?.slug ?? undefined,
-                    })}
+                    libraryId={library.documentId}
+                    addHref={addHref}
+                    showReach={hasReach}
                     area={area}
                     libraryName={library.name ?? "This library"}
                     regionName={library.region?.name}
                   />
-                )}
+                ) : null}
+                <LibraryMissingDetails
+                  library={library}
+                  missing={missing}
+                  addHref={addHref}
+                />
+                {hasReach && !hasNearby ? (
+                  <LibrarySectionCard
+                    id="reach"
+                    title={tPage("reach")}
+                    iconPath={LIB_ICONS.map}
+                  >
+                    <LibraryReachTeaser
+                      libraryId={library.documentId}
+                      embedded
+                    />
+                  </LibrarySectionCard>
+                ) : null}
                 <LibraryChangesSection
                   library={library}
+                  recordStatus={
+                    <LibraryRecordPanel
+                      library={library}
+                      followers={followers}
+                      embedded
+                    />
+                  }
                   history={history}
                   stats={historyStats}
                   datasets={datasets}
                   reuseUrl={publicCanonicalUrl(canonicalUrl ?? path)}
                 />
-                <DiscussionFeed
-                  target={{
-                    uid: "api::library.library",
-                    documentId: library.documentId,
-                    locale: contentLocale,
-                  }}
-                  subjectSlug="library-life"
+                <LibraryCommunity
+                  id={library.documentId}
+                  locale={locale}
+                  contentLocale={contentLocale}
                 />
               </div>
-
-              <aside
-                aria-label={tUi("about_this_record")}
-                className="flex flex-[1_1_280px] flex-col gap-4 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
-              >
-                <LibraryRecordPanel followers={followers} library={library} />
-                <GlobalLink
-                  className="mt-4 block rounded-xl border p-4 text-sm font-semibold"
-                  href={`/contribute/knowledge/new?type=journal&library=${encodeURIComponent(library.documentId)}`}
-                  style={{ borderColor: T.border.line }}
-                >
-                  {tDiscovery("writeLibrary")}
-                </GlobalLink>
-                <GlobalLink
-                  className="mt-2 block text-sm underline"
-                  href={`/journal?origin=all&library=${encodeURIComponent(library.documentId)}`}
-                >
-                  {tDiscovery("readLibrary")}
-                </GlobalLink>
-                <LibraryTasksPanel
-                  facilityQuestions={
-                    unanswered.filter((row) => row.category !== "service")
-                      .length
-                  }
-                  library={library}
-                  translateLocales={translateLocales}
-                />
-                <LibraryLinksPanel library={library} />
-                <LibraryClaimNote library={library} />
-              </aside>
             </div>
           </Container>
         </MainContent>

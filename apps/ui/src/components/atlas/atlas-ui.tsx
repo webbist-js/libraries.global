@@ -272,11 +272,11 @@ export function Switch({
       style={{
         background:
           variant === "layer"
-            ? disabled
-              ? T.bg.muted
-              : checked
-                ? T.accent.primary
-                : T.border.hi
+            ? checked
+              ? T.accent.primary
+              : disabled
+                ? "transparent"
+                : T.bg.deep
             : checked
               ? T.accent.primary
               : locked || disabled
@@ -284,15 +284,18 @@ export function Switch({
                 : "#fff",
         border:
           variant === "layer"
-            ? "1.5px solid transparent"
+            ? checked
+              ? "1.5px solid transparent"
+              : `1.5px ${disabled ? "dashed" : "solid"} ${disabled ? T.border.hi : "#8A8799"}`
             : `1.5px ${locked || disabled ? "dashed" : "solid"} ${checked ? T.accent.primary : "#8A8799"}`,
       }}
     >
       <i
-        className="absolute top-[3px] h-[15px] w-[15px] rounded-full transition-[left] motion-reduce:transition-none"
+        className="absolute top-[3px] left-[3px] h-[15px] w-[15px] rounded-full transition-transform duration-150 ease-out motion-reduce:transition-none"
         style={{
-          left: checked ? 19 : 3,
-          background: variant === "layer" || checked ? "#fff" : "#8A8799",
+          transform: checked ? "translateX(16px)" : "translateX(0)",
+          background: checked ? "#fff" : "#8A8799",
+          opacity: variant === "layer" && disabled && !checked ? 0 : 1,
         }}
       />
     </button>

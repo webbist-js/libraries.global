@@ -52,8 +52,10 @@ export async function executeDirectoryIngest(options: {
   libraries: DirectoryLibrary[]
   skipped: Omit<RunLogEntry, "status">[]
   details?: Record<string, unknown>
+  /** Explicit, uniquely reconciled legacy identities; never name-only matches. */
+  existingMatches?: Map<string, string>
 }) {
-  const { args, directory, dataset, libraries, inputs } = options
+  const { args, directory, dataset, libraries, inputs, retrievedAt } = options
   const apply = flag(args, "apply")
   if (apply && flag(args, "dry-run"))
     throw new Error("Choose --apply or --dry-run")
@@ -184,11 +186,13 @@ export async function executeDirectoryIngest(options: {
           )
         : undefined
       if (row.areaName && !area) {
-        const other = matchDirectoryPlace(
-          areas.filter(
-            (place) => (place.country as any)?.documentId === country.documentId
-          ),
-          row.areaName
+        // This is an existence check, not a request to select another parent.
+        // Repeated names in other regions still establish a placement conflict.
+        const other = areas.some(
+          (place) =>
+            (place.country as any)?.documentId === country.documentId &&
+            directoryPlaceKey(String(place.name)) ===
+              directoryPlaceKey(row.areaName!)
         )
         if (other) {
           log.add({
@@ -244,6 +248,11 @@ export async function executeDirectoryIngest(options: {
         throw new Error(`REST and database disagree on ${table}`)
     }
     const existing = await client.librariesBySourceRecord(dataset)
+    for (const [recordId, documentId] of options.existingMatches ?? []) {
+      if (existing.has(recordId) && existing.get(recordId) !== documentId)
+        throw new Error(`Conflicting source identity ${recordId}`)
+      existing.set(recordId, documentId)
+    }
     await checkLibrarySlugs(client, ready, existing)
     report.cmsChecked = true
     report.existing = ready.filter((row) => existing.has(row.recordId)).length
@@ -281,7 +290,7 @@ export async function executeDirectoryIngest(options: {
       dataset,
       records: ready,
       existing,
-      retrievedAt: options.retrievedAt,
+      retrievedAt: retrievedAt,
       log,
       limit,
       concurrency,
@@ -312,7 +321,17 @@ export async function executeDirectoryIngest(options: {
       await database.client.releaseConnection(connection)
     }
     await database?.destroy()
-    const { placement: _placement, input: _input, ...summary } = report
+    const {
+      placement: _placement,
+      input: _input,
+      proposedUpdates,
+      absentSourceRecords,
+      ...summary
+    } = report
+    if (Array.isArray(proposedUpdates))
+      summary.proposedUpdates = proposedUpdates.length
+    if (Array.isArray(absentSourceRecords))
+      summary.absentSourceRecords = absentSourceRecords.length
     console.log(JSON.stringify({ ...summary, reportPath, logPath }, null, 2))
   }
 }

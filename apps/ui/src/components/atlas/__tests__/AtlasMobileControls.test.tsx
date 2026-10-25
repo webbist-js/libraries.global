@@ -1,16 +1,26 @@
 // @vitest-environment happy-dom
+import type { AtlasCountsResponse } from "@repo/shared-data"
 import type * as NextIntl from "next-intl"
 import { useState } from "react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
-import { cleanup, act, fireEvent, render, screen, waitFor } from "@/test/render"
+import {
+  cleanup,
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@/test/render"
 
 import { type AtlasFilters, EMPTY_FILTERS } from "../atlas.logic"
 import { AtlasFiltersTab } from "../AtlasFiltersTab"
 import { AtlasSearchTab } from "../AtlasSearchTab"
 
 const { multiSearch } = vi.hoisted(() => ({ multiSearch: vi.fn() }))
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("next-intl", async (importOriginal) => ({
   ...(await importOriginal<typeof NextIntl>()),
   useLocale: () => "en",
@@ -71,6 +81,61 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+})
+
+it("prioritises available access features and retains selected features when closing feature search", () => {
+  const search = vi.fn()
+  function Fixture() {
+    const [filters, setFilters] = useState<AtlasFilters>(EMPTY_FILTERS)
+
+    return (
+      <AtlasFiltersTab
+        filters={filters}
+        onChange={setFilters}
+        libraries={[]}
+        matchCount={1}
+        now={new Date()}
+        onShowResults={() => {}}
+        onFacilitySearch={search}
+        serverCounts={
+          {
+            typeGroups: {},
+            operatorGroups: {},
+            foundedRange: null,
+            events: 0,
+            catalogue: 0,
+            facilities: [
+              "Book lending",
+              "Wi-Fi",
+              "Public computers",
+              "Accessible toilets",
+              "Step-free access",
+            ].map((name) => ({ name, count: 1 })),
+          } as AtlasCountsResponse
+        }
+      />
+    )
+  }
+  render(<Fixture />)
+  expect(
+    screen.getByRole("checkbox", { name: /^Step-free access/ })
+  ).toBeTruthy()
+  expect(screen.queryByRole("checkbox", { name: /^Book lending/ })).toBeNull()
+  expect(screen.queryByRole("searchbox")).toBeNull()
+  fireEvent.click(screen.getByRole("button", { name: "Show 1 more" }))
+  fireEvent.click(screen.getByRole("checkbox", { name: /^Book lending/ }))
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "Book" } })
+  expect(search).toHaveBeenLastCalledWith("Book")
+  fireEvent.click(screen.getByRole("button", { name: "Show fewer" }))
+  expect(search).toHaveBeenLastCalledWith("")
+  expect(
+    (
+      screen.getByRole("checkbox", {
+        name: /^Book lending/,
+      }) as HTMLInputElement
+    ).checked
+  ).toBe(true)
+  expect(screen.queryByRole("searchbox")).toBeNull()
 })
 
 it("does not report an empty atlas when mobile search fails", async () => {
@@ -148,22 +213,36 @@ it("lets readers choose the mobile type, recurrence and sharing independently an
     )
   }
   render(<Harness />)
-  fireEvent.click(screen.getByRole("button", { name: /^Mobile\b/ }))
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Library type" })).getByRole(
+      "button",
+      { name: /^Mobile\b/ }
+    )
+  )
+  fireEvent.click(screen.getByRole("button", { name: "More filters" }))
+  fireEvent.click(screen.getByRole("button", { name: "Mobile library stops" }))
   fireEvent.click(screen.getByRole("button", { name: "Every 2 weeks" }))
   fireEvent.click(
     screen.getByRole("checkbox", { name: "Shares live updates 2" })
   )
   expect(screen.getByText("3 filters active")).toBeTruthy()
   expect(enable).toHaveBeenCalledTimes(3)
+  fireEvent.click(screen.getByRole("button", { name: "Mobile library stops" }))
+  const closed = screen.getByRole("button", {
+    name: "Mobile library stops 2 selected",
+  })
+  expect(closed.getAttribute("aria-expanded")).toBe("false")
+  fireEvent.click(closed)
   expect(
     (
       screen.getByRole("checkbox", {
-        name: /Step-free stop/,
+        name: "Shares live updates 2",
       }) as HTMLInputElement
-    ).disabled
+    ).checked
   ).toBe(true)
-  fireEvent.click(screen.getByRole("button", { name: "Clear all" }))
-  expect(screen.getByText("No filters")).toBeTruthy()
+  expect(screen.queryByRole("checkbox", { name: /Step-free stop/ })).toBeNull()
+  fireEvent.click(screen.getByRole("button", { name: "Reset" }))
+  expect(screen.queryByText("3 filters active")).toBeNull()
   expect(
     screen
       .getByRole("button", { name: "Every 2 weeks" })

@@ -24,7 +24,7 @@
     "team-api:setup": "node scripts/team-api-setup.mjs --apply",
     "team-billing:check": "node scripts/team-billing-setup.mjs",
     "team-billing:setup": "node scripts/team-billing-setup.mjs --apply",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=1",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },

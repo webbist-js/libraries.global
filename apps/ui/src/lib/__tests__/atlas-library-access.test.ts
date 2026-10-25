@@ -132,3 +132,95 @@ it.each([{ clipped: true }, { stale: true }, { wrongYear: true }])(
     ).rejects.toThrow()
   }
 )
+
+it("keeps the country comparison independent of newer mainland population metadata", async () => {
+  const backend = fixture()
+  vi.mocked(backend.bridge).mockResolvedValue({
+    populationVersion: "world-bank-fixture-2024",
+    observations: [
+      {
+        key: "fixture:FIN:2024",
+        level: "country",
+        reportingCode: "FIN",
+        iso2: "FI",
+        name: "Finland",
+        population: 5600000,
+        year: 2024,
+        source: "World Bank fixture",
+        sourceUrl: "https://example.com/population",
+        licence: "CC BY 4.0",
+        retrievedAt: "2026-10-09T00:00:00Z",
+        method: "direct",
+      },
+    ],
+    countries: [
+      {
+        documentId: "finland",
+        iso2: "FI",
+        iso3: "FIN",
+        populationReportingCode: "FIN-mainland",
+        populationYear: 2025,
+        populationCount: "5622045",
+        populationSource: "Statistics Finland",
+      },
+      {
+        documentId: "aland",
+        iso2: "AX",
+        iso3: null,
+        populationReportingCode: "ALA",
+        populationYear: 2025,
+        populationCount: "30836",
+        populationSource: "Statistics Finland",
+      },
+    ],
+  })
+  vi.mocked(backend.search).mockImplementation(async (query) => {
+    const missing = String(query.filter).includes("country_id IS NULL")
+    const countryCounts: Record<string, number> = missing
+      ? {}
+      : { finland: 6, aland: 2 }
+
+    return {
+      hits: [],
+      estimatedTotalHits: missing ? 0 : 8,
+      facetDistribution: {
+        locale: { en: missing ? 0 : 8 },
+        country_id: countryCounts,
+      },
+    }
+  })
+  const response = await new AtlasQueryEngine(
+    backend,
+    state,
+    new Date("2026-10-09T12:00:00Z")
+  ).libraryAccess({
+    schemaVersion: 1,
+    purpose: "libraryAccess",
+    level: "countries",
+    scope,
+  })
+  expect(response.areas.find((area) => area.id === "FIN")).toMatchObject({
+    population: 5600000,
+    populationYear: 2024,
+    libraryCount: 6,
+    indexedCount: 6,
+    status: "available",
+    per100k: (6 / 5600000) * 100000,
+    peoplePerLibrary: 5600000 / 6,
+  })
+  // A newer country-page estimate must not fill a gap in the comparison year.
+  expect(response.areas.find((area) => area.id === "ALA")).toMatchObject({
+    population: null,
+    libraryCount: 2,
+    status: "missing_population",
+    per100k: null,
+    peoplePerLibrary: null,
+  })
+  expect(response.exactTotal).toBe(8)
+  expect(response.unmappedLibraries).toBe(0)
+  expect(response.summary).toMatchObject({
+    libraryCount: 6,
+    population: 5600000,
+    countries: 1,
+  })
+})

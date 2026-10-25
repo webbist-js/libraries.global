@@ -65,7 +65,7 @@ const FEATURES: {
   },
   {
     title: "Reach analysis",
-    text: "Who lives within a 15-minute walk, ride or bus trip",
+    text: "Residents within walking and cycling catchments · England",
     access: "pro",
     Icon: Target,
     live: PRO_FEATURE_COPY["atlas.analysis"].status === "live",

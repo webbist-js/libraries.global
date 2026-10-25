@@ -4,7 +4,8 @@ import { pathToFileURL } from "node:url"
 
 const REPOSITORY = "webbist-js/libraries.global"
 
-export const SERVICES = ["ui", "strapi", "worker"]
+export const SERVICES = ["ui", "strapi", "worker", "analysis"]
+const LEGACY_SERVICES = ["ui", "strapi", "worker"]
 const SHA = /^[a-f0-9]{40}$/
 const DIGEST = /^sha256:[a-f0-9]{64}$/
 
@@ -36,27 +37,28 @@ export function createPublicManifest(commit, registry, references) {
     })
   )
 
-  return { schema: 2, repository: REPOSITORY, commit, images }
+  return { schema: 3, repository: REPOSITORY, commit, images }
 }
 
 export function resolvePrivateReferences(manifest, registry) {
   assertRegistry(registry)
+  const services = manifest?.schema === 2 ? LEGACY_SERVICES : SERVICES
   if (
     Object.keys(manifest ?? {})
       .sort()
       .join(",") !== "commit,images,repository,schema" ||
-    manifest?.schema !== 2 ||
+    ![2, 3].includes(manifest?.schema) ||
     manifest.repository !== REPOSITORY ||
     !SHA.test(manifest.commit ?? "") ||
     Object.keys(manifest.images ?? {})
       .sort()
-      .join(",") !== [...SERVICES].sort().join(",")
+      .join(",") !== [...services].sort().join(",")
   ) {
     throw new Error("Invalid public image manifest.")
   }
 
   return Object.fromEntries(
-    SERVICES.map((service) => {
+    services.map((service) => {
       const reference = manifest.images[service]
       const prefix = `${service}@`
       if (

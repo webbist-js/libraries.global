@@ -1,0 +1,173 @@
+/* motion-site · profile: product-ui · patterns: panel continuity, crossfade, press */
+
+/* Existing site fonts, surfaces and easing. No root snapshot: never freeze the map. */
+html[data-atlas-transition] {
+  view-transition-name: none;
+}
+
+html[data-atlas-transition]::view-transition {
+  pointer-events: none;
+}
+
+html[data-atlas-transition]::view-transition-group(*) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-out);
+}
+
+html[data-atlas-transition]::view-transition-old(*) {
+  animation-duration: 100ms;
+  animation-timing-function: var(--ease-out);
+}
+
+html[data-atlas-transition]::view-transition-new(*) {
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-out);
+}
+
+.atlas-motion-card {
+  view-transition-class: atlas-card;
+}
+
+/* Keep typography at its natural size while the card's snapshot bounds move. */
+html[data-atlas-transition]::view-transition-old(.atlas-card),
+html[data-atlas-transition]::view-transition-new(.atlas-card) {
+  object-fit: none;
+  object-position: top left;
+  overflow: clip;
+}
+
+.atlas-motion button,
+.atlas-motion [role="tab"],
+.atlas-motion [role="switch"] {
+  transition:
+    transform 120ms var(--ease-out),
+    background-color 140ms var(--ease-out),
+    color 140ms var(--ease-out);
+}
+
+.atlas-motion button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.atlas-motion [data-atlas-chevron] {
+  transition: transform 180ms var(--ease-out);
+}
+
+.atlas-motion [data-atlas-reveal] {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+@starting-style {
+  .atlas-motion [data-atlas-reveal] {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* A short, quiet pulse settles to a static skeleton during longer calculations. */
+.atlas-loading [data-slot="skeleton"] {
+  animation: atlas-loading-pulse 1200ms var(--ease-in-out) 3;
+}
+
+@keyframes atlas-loading-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .atlas-motion [role="tab"]:hover,
+  .atlas-motion [data-atlas-card-trigger]:hover {
+    background-color: var(--t-bg-selected);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-atlas-transition]::view-transition-group(*),
+  html[data-atlas-transition]::view-transition-old(*),
+  html[data-atlas-transition]::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .atlas-motion button,
+  .atlas-motion [role="tab"],
+  .atlas-motion [role="switch"],
+  .atlas-motion [data-atlas-chevron],
+  .atlas-motion [data-atlas-reveal] {
+    transition: none;
+  }
+
+  .atlas-motion button:active:not(:disabled),
+  .atlas-motion [data-atlas-reveal] {
+    transform: none;
+  }
+
+  .atlas-loading [data-slot="skeleton"] {
+    animation: none;
+  }
+
+  @starting-style {
+    .atlas-motion [data-atlas-reveal] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+.atlas-inspect-tabs {
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-border-hi) transparent;
+  overscroll-behavior: contain;
+}
+.atlas-overlay-chips {
+  scrollbar-width: none;
+}
+.atlas-explore-tabs {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.atlas-motion button:focus-visible,
+.atlas-motion summary:focus-visible {
+  outline: 3px solid var(--t-accent-primary);
+  outline-offset: -3px;
+}
+.atlas-status {
+  container-type: inline-size;
+}
+@media (max-width: 1439px) {
+  .atlas-status-count {
+    max-width: 140px;
+  }
+  .atlas-status-count p {
+    font-size: 12px;
+  }
+}
+@media (max-width: 1199px) {
+  .atlas-overlay-chips {
+    display: none;
+  }
+}
+
+.atlas-rail-feedback button {
+  width: 44px;
+  padding-inline: 0;
+  font-size: 0;
+}
+.atlas-rail-feedback button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.atlas-inspect-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-border-hi) transparent;
+}
+
+.atlas-tool-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-border-hi) transparent;
+}

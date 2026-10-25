@@ -3,7 +3,6 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { announceFollow } from "@/components/library/follow-events"
-import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { useFollowTarget } from "@/hooks/useFollowTarget"
 import { useMounted } from "@/hooks/useMounted"
@@ -37,33 +36,24 @@ export function LibraryHeroActions({
   libraryDocumentId,
   directionsUrl,
   website,
-  catalogueUrl,
 }: {
   readonly directionsUrl?: string | null
   readonly website?: string | null
-  readonly catalogueUrl?: string | null
   readonly librarySlug: string
   readonly libraryName: string
   readonly libraryDocumentId: string
 }) {
-  const tUi = useUiTranslations("ui")
-
-  const { open } = useCorrectionDrawer()
+  const t = useUiTranslations("libraryPage")
 
   return (
     <div className="flex flex-wrap gap-2">
       {[
         {
           href: directionsUrl,
-          title: "Get directions",
+          title: t("directions"),
           action: "directions" as const,
         },
-        { href: website, title: "Website", action: "website" as const },
-        {
-          href: catalogueUrl,
-          title: "Catalogue",
-          action: "catalogue" as const,
-        },
+        { href: website, title: t("website"), action: "website" as const },
       ]
         .filter((item) => item.href)
         .slice(0, 3)
@@ -93,20 +83,6 @@ export function LibraryHeroActions({
         libraryDocumentId={libraryDocumentId}
         libraryName={libraryName}
       />
-      <button
-        type="button"
-        onClick={() => open()}
-        style={{
-          ...pillBase,
-          border: 0,
-          background: T.bg.deep,
-          color: T.ink.base,
-        }}
-        className="transition-colors hover:!bg-(--t-bg-surface)"
-      >
-        <LibIcon d={LIB_ICONS.pencil} />
-        {tUi("suggest_a_correction")}
-      </button>
     </div>
   )
 }

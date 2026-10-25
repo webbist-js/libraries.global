@@ -1,6 +1,6 @@
 # Mobile library console
 
-Production uses `https://mobile.libraries.global/`. A vehicle opens at
+With `MOBILE_APP_URL=https://mobile.libraries.global`, the application serves the console on that public origin. A vehicle opens at
 `/<library-document-id>`, or `/cs/<library-document-id>` and
 `/fr/<library-document-id>` for translated UI. The main site keeps public
 library pages, timetables, staff settings and account management.
@@ -11,9 +11,8 @@ The UI validates that the mobile origin is the `mobile` child of that account
 domain and uses HTTPS. No runtime values need to be baked into an image.
 With the setting absent, local development continues to use `/live`.
 
-The configured production main site returns 404 for `/live` and its locale
-variants. There are no compatibility redirects or installed-app migrations;
-this change is being made before external beta users join.
+When that mobile origin is configured, the main site returns 404 for `/live` and its locale
+variants. There are no compatibility redirects or installed-app migrations in this implementation. Account for existing installations before changing the origin.
 
 ## Accounts and access
 
@@ -44,18 +43,7 @@ controls are omitted.
 
 ## Domain and release
 
-Add a Namecheap CNAME record named `mobile`, pointing to `libraries.global`.
-The existing gateway can obtain its certificate and serve a temporary 503
-response until the application release is accepted. No new Droplet, database
-or public CMS endpoint is required.
-
-At release, route the new hostname to the existing UI listener in the gateway:
-
-```caddyfile
-mobile.libraries.global {
-    reverse_proxy 127.0.0.1:3000
-}
-```
+The mobile origin needs HTTPS and routing to the accepted UI runtime. DNS provider settings, gateway listeners, certificate installation and rollout commands belong in the private operator runbook. This document describes the application contract; it does not establish that a host is configured or accepted.
 
 Feature PRs merge into `dev`. Production promotion follows a separately
 scheduled, reviewed merge into `main`. Authentication and CMS changes require

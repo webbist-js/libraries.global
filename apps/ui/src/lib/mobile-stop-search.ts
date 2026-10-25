@@ -50,7 +50,12 @@ export type MobileViewport = {
 
 export type MobileStopFilters = Pick<
   AtlasFilters,
-  "opening" | "atDay" | "atMinutes" | "mobileFrequency" | "mobileSharesLive"
+  | "networks"
+  | "opening"
+  | "atDay"
+  | "atMinutes"
+  | "mobileFrequency"
+  | "mobileSharesLive"
 >
 
 /** Vehicle updates take precedence over the published visit times. */
@@ -125,6 +130,8 @@ export async function searchMobileViewport(
   const index = meiliClient.index("mobile-stop"),
     base = viewportFilter(bounds)
   let filter = base
+  if (filters?.networks?.length)
+    filter += ` AND network_ids IN ${JSON.stringify(filters.networks)}`
   if (filters?.mobileFrequency?.length)
     filter += ` AND frequencies IN [${filters.mobileFrequency.map((value) => JSON.stringify(value)).join(",")}]`
   if (filters?.mobileSharesLive) filter += " AND shares_live = true"

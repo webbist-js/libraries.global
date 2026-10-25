@@ -24,6 +24,7 @@ import {
   hasStaffingDetail,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
+import { hasLibraryAbout } from "@/components/library/library-presentation"
 import { LibraryAboutDisclosure } from "@/components/library/LibraryAboutDisclosure"
 import { LibraryChangeTimeline } from "@/components/library/LibraryChangeTimeline"
 import { LibraryCopyButton } from "@/components/library/LibraryCopyButton"
@@ -176,6 +177,7 @@ function HoursNote({
 
 export function LibraryVisitSection({ library }: { readonly library: Lib }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
 
   const rec = asRecord(library)
   const coords = formatCoordinates(
@@ -236,7 +238,33 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
       iconPath={LIB_ICONS.pin}
     >
       <div className="grid gap-x-8 gap-y-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="md:order-2">
+        <div className="min-w-0">
+          <h3
+            className="m-0 mb-1 text-[15px] font-bold"
+            style={{ color: T.ink.base }}
+          >
+            {tUi("opening_hours")}{" "}
+            {timezone ? (
+              <span className="font-normal" style={{ color: T.ink.dim }}>
+                {timezone}
+              </span>
+            ) : null}
+          </h3>
+          <LibraryHoursTable
+            compact
+            openingTimes={openingTimes}
+            timezone={timezone}
+            notices={rec.notices as LibraryNotice[] | undefined}
+          />
+          <HoursNote
+            canVerify={confirmable.includes("hours")}
+            checkedAt={sectionCheckedAt(library, "hours")}
+            hasHours={hasHours}
+            manyRanges={manyRanges}
+            staffing={staffing}
+          />
+        </div>
+        <div className="min-w-0">
           <h3
             className="m-0 mb-2 text-[15px] font-bold"
             style={{ color: T.ink.base }}
@@ -316,18 +344,26 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             ) : null
           )}
           {library.phone || library.email ? (
-            <p className="mt-4 flex flex-wrap gap-4 text-sm">
-              {library.phone ? (
-                <a className={LINK} href={`tel:${library.phone}`}>
-                  {library.phone}
-                </a>
-              ) : null}
-              {library.email ? (
-                <a className={LINK} href={`mailto:${library.email}`}>
-                  {library.email}
-                </a>
-              ) : null}
-            </p>
+            <div className="mt-5">
+              <h3 className="m-0 text-[15px] font-bold">{tPage("contact")}</h3>
+              <p className="mt-4 flex flex-wrap gap-4 text-sm">
+                {library.phone ? (
+                  <a className={LINK} href={`tel:${library.phone}`}>
+                    {library.phone}
+                  </a>
+                ) : null}
+                {library.email ? (
+                  <a className={LINK} href={`mailto:${library.email}`}>
+                    {library.email}
+                  </a>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
+          {nearestStation || transitInfo ? (
+            <h3 className="mt-5 mb-0 text-[15px] font-bold">
+              {tPage("gettingThere")}
+            </h3>
           ) : null}
           {nearestStation ? (
             <p className="mt-4 mb-0 flex gap-2 text-[14.5px] leading-normal">
@@ -346,32 +382,6 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             </p>
           ) : null}
         </div>
-
-        <div className="order-first md:order-1">
-          <h3
-            className="m-0 mb-1 text-[15px] font-bold"
-            style={{ color: T.ink.base }}
-          >
-            {tUi("opening_hours")}{" "}
-            {timezone ? (
-              <span className="font-normal" style={{ color: T.ink.dim }}>
-                {timezone}
-              </span>
-            ) : null}
-          </h3>
-          <LibraryHoursTable
-            openingTimes={openingTimes}
-            timezone={timezone}
-            notices={rec.notices as LibraryNotice[] | undefined}
-          />
-          <HoursNote
-            canVerify={confirmable.includes("hours")}
-            checkedAt={sectionCheckedAt(library, "hours")}
-            hasHours={hasHours}
-            manyRanges={manyRanges}
-            staffing={staffing}
-          />
-        </div>
       </div>
     </LibrarySectionCard>
   )
@@ -387,6 +397,7 @@ export function LibraryFacilitiesSection({
   readonly path: string
 }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
 
   const rec = asRecord(library)
   const rows = facilityRows(library).filter((row) => row.category !== "service")
@@ -394,9 +405,9 @@ export function LibraryFacilitiesSection({
   const known = rows.filter((row) => row.state !== "unknown").length
   const intro =
     known === 0 ? (
-      "None of these are documented yet. Know the answer? Tap Yes or No."
+      tPage("noFacilities")
     ) : unknown > 0 ? (
-      `${known} of ${rows.length} answered. “Not recorded” means no one has told us yet, not that it’s unavailable. Know an answer? Choose Yes, No or Not sure.`
+      tPage("recordedDetails", { known, total: rows.length })
     ) : (
       <>
         Spotted something wrong?{" "}
@@ -412,8 +423,8 @@ export function LibraryFacilitiesSection({
       id="access"
       title={
         libraryTypeName(library.libraryType) === "Mobile"
-          ? "Onboard accessibility and facilities"
-          : "Accessibility & facilities"
+          ? tPage("onboardAccess")
+          : tPage("accessFacilities")
       }
       iconPath={LIB_ICONS.access}
       intro={intro}
@@ -553,22 +564,7 @@ export function LibraryHistorySection({ library }: { readonly library: Lib }) {
 
 /** Whether the Collections section has anything to show beyond its prompt. */
 export function hasCollections(library: Lib): boolean {
-  const rec = asRecord(library)
-  const description = library.description as unknown[] | null
-
-  return (
-    Boolean(library.summary) ||
-    (Array.isArray(description) && description.length > 0) ||
-    ((rec.collectionStats as unknown[] | null)?.length ?? 0) > 0 ||
-    ((rec.libraryStats as unknown[] | null)?.length ?? 0) > 0 ||
-    Boolean(rec.catalogueUrl) ||
-    Boolean(rec.iiifEndpoint) ||
-    Boolean(rec.buildingInfo) ||
-    Boolean(rec.architect) ||
-    Boolean(rec.operatorName) ||
-    Boolean(rec.operatorType) ||
-    historyEntries(library).length > 0
-  )
+  return hasLibraryAbout(library)
 }
 
 export function LibraryCollectionsSection({
@@ -579,6 +575,7 @@ export function LibraryCollectionsSection({
   readonly library: Lib
 }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
 
   const rec = asRecord(library)
 
@@ -653,6 +650,14 @@ export function LibraryCollectionsSection({
   }
   const hasLongBuilding = buildingPreview !== buildingInfo
   const hasMore = hasDescription || hasLongBuilding
+  const figureBudget = Math.max(0, 6 - timeline.length)
+  const visibleCollections = collectionStats.slice(0, figureBudget)
+  const visibleLibraryStats = libraryStats.slice(
+    0,
+    Math.max(0, figureBudget - visibleCollections.length)
+  )
+  const moreFigures =
+    collectionStats.length + libraryStats.length > figureBudget
   const visitorsOnly =
     libraryStats.length > 0 &&
     libraryStats.every((stat) =>
@@ -662,8 +667,7 @@ export function LibraryCollectionsSection({
   return (
     <LibrarySectionCard
       id="about"
-      title="About and collections"
-      titleClassName="text-[30px] sm:text-[34px]"
+      title={tPage("about")}
       iconPath={LIB_ICONS.book}
       tone="neutral"
     >
@@ -711,12 +715,12 @@ export function LibraryCollectionsSection({
           </ol>
         ) : null}
 
-        {collectionStats.length > 0 ? (
+        {visibleCollections.length > 0 ? (
           <dl
             aria-label="Collection figures"
             className="m-0 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {collectionStats.map((stat, index) => (
+            {visibleCollections.map((stat, index) => (
               <div
                 key={index}
                 className="flex flex-col rounded-[14px] px-3.5 py-3"
@@ -786,7 +790,7 @@ export function LibraryCollectionsSection({
           </dl>
         ) : null}
 
-        {libraryStats.length > 0 ? (
+        {visibleLibraryStats.length > 0 ? (
           <section
             aria-label={visitorsOnly ? "Visitors" : "Library figures"}
             className="border-t pt-4"
@@ -796,7 +800,7 @@ export function LibraryCollectionsSection({
               {visitorsOnly ? "Visitors" : "Library figures"}
             </h3>
             <dl className="m-0 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-              {libraryStats.map((stat, index) => (
+              {visibleLibraryStats.map((stat, index) => (
                 <div key={index}>
                   <dt
                     className="text-[14px] font-medium"
@@ -824,6 +828,50 @@ export function LibraryCollectionsSection({
           </section>
         ) : null}
 
+        {moreFigures ? (
+          <details
+            className="border-t pt-2"
+            style={{ borderColor: T.border.line }}
+          >
+            <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold underline underline-offset-4">
+              {tPage("allFigures", {
+                count: collectionStats.length + libraryStats.length,
+              })}
+            </summary>
+            <dl className="m-0 grid gap-3 sm:grid-cols-2">
+              {[
+                ...collectionStats.map((stat) => ({
+                  label: stat.category ?? tPage("collectionFigure"),
+                  value: stat.value,
+                  note: stat.description,
+                })),
+                ...libraryStats,
+              ].map((stat) => (
+                <div
+                  key={`${stat.label}:${stat.value}:${stat.note ?? ""}`}
+                  className="rounded-xl p-3"
+                  style={{ background: T.bg.surface }}
+                >
+                  <dt className="text-sm font-semibold">{stat.label}</dt>
+                  <dd
+                    className="m-0 mt-1 text-xl"
+                    style={{ fontFamily: T.font.serif }}
+                  >
+                    {stat.value}
+                  </dd>
+                  {stat.note ? (
+                    <dd
+                      className="m-0 mt-1 text-xs leading-relaxed"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {stat.note}
+                    </dd>
+                  ) : null}
+                </div>
+              ))}
+            </dl>
+          </details>
+        ) : null}
         {hasMore || catalogueUrl || iiifEndpoint ? (
           <LibraryAboutDisclosure
             title={
@@ -974,7 +1022,9 @@ export function LibraryChangesSection({
   stats = null,
   datasets = [],
   reuseUrl,
+  recordStatus,
 }: {
+  readonly recordStatus?: React.ReactNode
   readonly library: Lib
   readonly reuseUrl?: string
   /** Page 1 of the Change Batches; null when Strapi couldn't answer. */
@@ -984,6 +1034,7 @@ export function LibraryChangesSection({
   readonly datasets?: DatasetRecord[]
 }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
   const formatter = useFormatter()
   const rec = asRecord(library)
   const sourceRecords = (rec.sourceRecords ?? []) as LibrarySourceRecord[]
@@ -1040,12 +1091,24 @@ export function LibraryChangesSection({
   return (
     <LibrarySectionCard
       id="changes"
-      title={reuseUrl ? "Sources and reuse" : tUi("history_and_sources")}
+      title={reuseUrl ? tPage("sourcesReuse") : tUi("history_and_sources")}
       iconPath={LIB_ICONS.clock}
       tone="neutral"
     >
-      <div className={reuseUrl ? "grid items-start gap-6 md:grid-cols-2" : ""}>
-        <div>
+      <div
+        className={
+          reuseUrl
+            ? `grid grid-cols-1 items-start gap-6 ${recordStatus ? "xl:grid-cols-3" : "md:grid-cols-2"}`
+            : ""
+        }
+      >
+        {recordStatus}
+        <div className="min-w-0">
+          {recordStatus ? (
+            <h3 className="m-0 mb-3 text-[15px] font-bold">
+              {tPage("sourceCredits")}
+            </h3>
+          ) : null}
           {references.length ? (
             <ul className="m-0 grid list-none gap-4 p-0">
               {references.map((reference, index) => {
@@ -1260,18 +1323,18 @@ export function LibraryChangesSection({
           ) : null}
 
           {history && hasChanges ? (
-            <div className="mt-5">
-              <h3
-                className="m-0 pb-2 text-[15px] font-semibold"
+            <details className="mt-5">
+              <summary
+                className="m-0 min-h-11 cursor-pointer py-3 text-[15px] font-semibold"
                 style={{ color: T.ink.base }}
               >
                 {tUi("history_recent_changes")}
-              </h3>
+              </summary>
               <LibraryChangeTimeline
                 documentId={library.documentId}
                 initial={history}
               />
-            </div>
+            </details>
           ) : (
             <p className="m-0 mt-4 text-[13px]" style={{ color: T.ink.dim }}>
               {tUi(
@@ -1308,6 +1371,7 @@ export function LibraryReuseSection({
   readonly url: string
 }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
 
   const rec = asRecord(library)
   const citation = buildCitation({
@@ -1320,13 +1384,15 @@ export function LibraryReuseSection({
   })
   const recordHref = `/api/libraries/${encodeURIComponent(library.slug ?? "")}/record`
 
+  const Heading = embedded ? "h3" : "h2"
+
   return (
     <section
       id="reuse"
       aria-labelledby="reuse-h"
       className={
         embedded
-          ? "grid scroll-mt-32 gap-4"
+          ? "grid min-w-0 scroll-mt-32 grid-cols-1 gap-4 [overflow-wrap:anywhere]"
           : "grid scroll-mt-32 gap-6 rounded-3xl p-5 sm:p-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:items-center"
       }
       style={
@@ -1336,21 +1402,21 @@ export function LibraryReuseSection({
       }
     >
       <div>
-        <h2
+        <Heading
           id="reuse-h"
           className={
             embedded
-              ? "sr-only"
+              ? "m-0 text-[15px] font-bold"
               : "m-0 text-[26px] leading-tight sm:text-[28px]"
           }
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
+            fontFamily: embedded ? T.font.sans : T.font.serif,
+            fontWeight: embedded ? 700 : 500,
             color: T.ink.base,
           }}
         >
-          Cite or reuse this record
-        </h2>
+          {embedded ? tPage("reuse") : "Cite or reuse this record"}
+        </Heading>
         <p
           className="mt-2 mb-0 text-[14.5px] leading-normal"
           style={{ color: T.ink.dim }}

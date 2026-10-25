@@ -2,6 +2,8 @@
 
 import type {
   AtlasLibraryAccessResponse,
+  AtlasPopulationDensityResponse,
+  AtlasReachResult,
   PublicLiveState,
 } from "@repo/shared-data"
 import type { Point } from "geojson"
@@ -10,11 +12,13 @@ import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 
+import type { AtlasContextRelease } from "@/lib/atlas-context"
 import { T } from "@/lib/design-tokens"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
+import { AtlasContextRenderer } from "./atlas-context-renderer"
 import type { AtlasGeneration } from "./atlas-data-client"
 import {
   addPinImages,
@@ -26,6 +30,7 @@ import {
 } from "./atlas-map.style"
 import { AtlasPerCapitaRenderer } from "./atlas-per-capita-renderer"
 import { atlasProtocol } from "./atlas-pmtiles"
+import { AtlasReachRenderer } from "./atlas-reach-renderer"
 import { AtlasScalableRenderer } from "./atlas-scalable-renderer"
 import {
   type AtlasLibrary,
@@ -53,7 +58,7 @@ export interface AtlasView {
 }
 
 export interface AtlasMapHandle {
-  fitBounds: (bounds: Bounds) => void
+  fitBounds: (bounds: Bounds, minimumZoom?: number) => void
   flyTo: (lat: number, lng: number, zoom?: number) => void
   fitTo: (libs: AtlasLibrary[]) => void
   zoomBy: (delta: number) => void
@@ -61,7 +66,16 @@ export interface AtlasMapHandle {
 }
 
 interface AtlasMapProps {
+  contextRelease?: AtlasContextRelease | null
+  contextOpacity?: number
+  onContextPoint?: (location: { lng: number; lat: number }) => void
+  onContextError?: () => void
+  reach?: AtlasReachResult | null
+  reachMinutes?: number
+  reachOpacity?: number
   perCapita?: AtlasLibraryAccessResponse | null
+  populationDensity?: AtlasPopulationDensityResponse | null
+  populationOpacity?: number
   perCapitaOpacity?: number
   selectedCountry?: string | null
   onCountrySelect?: (iso3: string) => void
@@ -80,7 +94,12 @@ interface AtlasMapProps {
   projection: "globe" | "flat"
   initialView: { lat: number; lng: number; zoom: number } | null
   /** Left/right panel widths, so fitTo keeps results out from under them. */
-  padding: { left: number; right: number; bottom: number }
+  padding: {
+    left: number
+    right: number
+    bottom: number
+    bottomFraction?: number
+  }
   onSelect: (id: string | null) => void
   onView: (view: AtlasView) => void
   onReady: () => void
@@ -95,6 +114,19 @@ interface AtlasMapProps {
   mobileOpacity?: number
   now?: Date
   onStopSelect?: (id: string) => void
+}
+
+function fitPadding(map: MapLibreMap, padding: AtlasMapProps["padding"]) {
+  return {
+    top: 90,
+    left: padding.left + 40,
+    right: padding.right + 40,
+    bottom:
+      Math.max(
+        padding.bottom,
+        map.getContainer().clientHeight * (padding.bottomFraction ?? 0)
+      ) + 40,
+  }
 }
 
 function toGeoJSON(libs: AtlasLibrary[], accessibility: string[] = []) {
@@ -149,30 +181,37 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     const meMarker = useRef<Marker | null>(null)
     const scalableRenderer = useRef<AtlasScalableRenderer | null>(null)
     const perCapitaRenderer = useRef<AtlasPerCapitaRenderer | null>(null)
+    const reachRenderer = useRef<AtlasReachRenderer | null>(null)
+    const contextRenderer = useRef<AtlasContextRenderer | null>(null)
     // Latest props for event handlers registered once.
     const latest = useRef(props)
     latest.current = props
 
     useImperativeHandle(ref, () => ({
-      fitBounds(bounds) {
+      fitBounds(bounds, minimumZoom) {
+        const map = mapRef.current
+        if (!map) return
         const east = bounds.east < bounds.west ? bounds.east + 360 : bounds.east
-        const { left, right, bottom } = latest.current.padding
-        mapRef.current?.fitBounds(
-          [
-            [bounds.west, bounds.south],
-            [east, bounds.north],
-          ],
-          {
-            padding: {
-              top: 90,
-              left: left + 40,
-              right: right + 40,
-              bottom: bottom + 40,
-            },
-            maxZoom: 14,
-            duration: reducedMotion() ? 0 : 900,
-          }
-        )
+        const area: [[number, number], [number, number]] = [
+          [bounds.west, bounds.south],
+          [east, bounds.north],
+        ]
+        const options = {
+          padding: fitPadding(map, latest.current.padding),
+          maxZoom: 14,
+          duration: reducedMotion() ? 0 : 900,
+        }
+        const camera =
+          minimumZoom === undefined ? null : map.cameraForBounds(area, options)
+        map.fitBounds(area, {
+          ...options,
+          ...(minimumZoom === undefined
+            ? {}
+            : {
+                zoom: Math.max(minimumZoom, camera?.zoom ?? minimumZoom),
+                minZoom: minimumZoom,
+              }),
+        })
       },
       flyTo(lat, lng, zoom = 12) {
         mapRef.current?.flyTo({
@@ -185,7 +224,6 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       fitTo(libs) {
         const map = mapRef.current
         if (!map || libs.length === 0) return
-        const { left, right, bottom } = latest.current.padding
         if (libs.length === 1) {
           const [l] = libs
           map.flyTo({
@@ -212,12 +250,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             [e, n],
           ],
           {
-            padding: {
-              top: 90,
-              left: left + 40,
-              right: right + 40,
-              bottom: bottom + 40,
-            },
+            padding: fitPadding(map, latest.current.padding),
             maxZoom: 13,
             duration: reducedMotion() ? 0 : 900,
           }
@@ -301,6 +334,11 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         map.touchZoomRotate.disableRotation()
 
         map.on("error", (e) => {
+          if ((e as { sourceId?: string }).sourceId === "atlas-context") {
+            latest.current.onContextError?.()
+
+            return
+          }
           if (
             readyRef.current &&
             (e as { sourceId?: string }).sourceId === "per-capita-countries"
@@ -713,6 +751,14 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
               ),
             })[0]
             if (!hit && perCapitaRenderer.current?.click(e.point)) return
+            if (!hit && latest.current.contextRelease) {
+              latest.current.onContextPoint?.({
+                lng: e.lngLat.lng,
+                lat: e.lngLat.lat,
+              })
+
+              return
+            }
             latest.current.onSelect(hit ? (hit.properties.id as string) : null)
           })
           for (const l of [
@@ -753,6 +799,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           syncLayers()
           syncMarkers()
           syncPerCapita()
+          syncContext()
+          syncReach()
           report()
           latest.current.onReady()
         })
@@ -768,6 +816,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         scalableRenderer.current = null
         perCapitaRenderer.current?.destroy()
         perCapitaRenderer.current = null
+        reachRenderer.current?.destroy()
+        reachRenderer.current = null
+        contextRenderer.current?.destroy()
+        contextRenderer.current = null
         mapRef.current?.remove()
         mapRef.current = null
         readyRef.current = false
@@ -775,18 +827,53 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     }, [])
 
     // ── Sync helpers (read latest props) ────────────────────────────────────
+    function syncContext() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      contextRenderer.current ??= new AtlasContextRenderer(map)
+      contextRenderer.current.update(
+        latest.current.contextRelease ?? null,
+        latest.current.contextOpacity ?? 0.7
+      )
+    }
+    function syncReach() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      reachRenderer.current ??= new AtlasReachRenderer(map)
+      reachRenderer.current.update(
+        latest.current.layers.includes("reach")
+          ? (latest.current.reach ?? null)
+          : null,
+        latest.current.reachMinutes ?? 15,
+        latest.current.reachOpacity ?? 0.7,
+        Boolean(
+          latest.current.contextRelease ||
+          (latest.current.layers.includes("population") &&
+            latest.current.populationDensity)
+        )
+      )
+    }
     function syncPerCapita() {
       const map = mapRef.current
       if (!map || !readyRef.current) return
-      if (!perCapitaRenderer.current && !latest.current.perCapita) return
+      if (
+        !perCapitaRenderer.current &&
+        !latest.current.perCapita &&
+        !latest.current.populationDensity
+      )
+        return
       perCapitaRenderer.current ??= new AtlasPerCapitaRenderer(map, (iso3) =>
         latest.current.onCountrySelect?.(iso3)
       )
       perCapitaRenderer.current.update(
-        latest.current.layers.includes("perCapita")
-          ? (latest.current.perCapita ?? null)
-          : null,
-        latest.current.perCapitaOpacity ?? 0.55,
+        latest.current.layers.includes("population")
+          ? (latest.current.populationDensity ?? null)
+          : latest.current.layers.includes("perCapita")
+            ? (latest.current.perCapita ?? null)
+            : null,
+        latest.current.layers.includes("population")
+          ? (latest.current.populationOpacity ?? 0.7)
+          : (latest.current.perCapitaOpacity ?? 0.55),
         latest.current.selectedCountry ?? null
       )
     }
@@ -1028,8 +1115,19 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     ])
     useEffect(syncPerCapita, [
       props.perCapita,
+      props.populationDensity,
+      props.populationOpacity,
       props.perCapitaOpacity,
       props.selectedCountry,
+      props.layers,
+    ])
+    useEffect(syncContext, [props.contextRelease, props.contextOpacity])
+    useEffect(syncReach, [
+      props.contextRelease,
+      props.populationDensity,
+      props.reach,
+      props.reachMinutes,
+      props.reachOpacity,
       props.layers,
     ])
     useEffect(syncMobileData, [

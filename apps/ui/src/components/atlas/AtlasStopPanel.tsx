@@ -11,7 +11,7 @@ import {
   type PublicLiveState,
 } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useContext } from "react"
 
 import { StatusBadge } from "@/components/ds/StatusBadge"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -23,6 +23,8 @@ import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import { loadStopTimetable, type MobileStopHit } from "@/lib/mobile-stop-search"
 import { timeAgo, weekdayCopy, weekdayName } from "@/lib/staff/format"
+
+import { AtlasAnalysisPanelContext } from "./AtlasAnalysisHeader"
 
 export function AtlasStopPanel({
   stop,
@@ -36,6 +38,7 @@ export function AtlasStopPanel({
   readonly onClose: () => void
 }) {
   const tUi = useUiTranslations("ui")
+  const inInspect = useContext(AtlasAnalysisPanelContext)
 
   const [loaded, setLibrary] = useState<PublicMobileTimetable | null>(null)
   const [failedId, setFailedId] = useState<string | null>(null)
@@ -99,30 +102,37 @@ export function AtlasStopPanel({
       style={{ color: T.ink.base }}
     >
       <header className="relative">
-        <div className="min-h-10 pr-14">
-          <span
-            className="inline-flex min-h-6 items-center gap-2 rounded-full px-3 py-1 text-[13px] font-bold"
-            style={{ background: TYPE_TINT.public.bg, color: T.map.stopRing }}
-          >
-            <Icon aria-hidden="true" icon="mdi:bus-side" width={16} />
-            Mobile library stop
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={tUi("close_stop_panel")}
-          className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
-          style={{ borderColor: T.border.line, color: T.ink.base }}
-        >
-          <Icon aria-hidden="true" icon="mdi:close" width={20} />
-        </button>
-        <h2
-          className="mt-2 mb-0 text-[32px] leading-[1.15]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
-          {stop.name}
-        </h2>
+        {!inInspect ? (
+          <>
+            <div className="min-h-10 pr-14">
+              <span
+                className="inline-flex min-h-6 items-center gap-2 rounded-full px-3 py-1 text-[13px] font-bold"
+                style={{
+                  background: TYPE_TINT.public.bg,
+                  color: T.map.stopRing,
+                }}
+              >
+                <Icon aria-hidden="true" icon="mdi:bus-side" width={16} />
+                Mobile library stop
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={tUi("close_stop_panel")}
+              className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
+              style={{ borderColor: T.border.line, color: T.ink.base }}
+            >
+              <Icon aria-hidden="true" icon="mdi:close" width={20} />
+            </button>
+            <h2
+              className="mt-2 mb-0 text-[32px] leading-[1.15]"
+              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+            >
+              {stop.name}
+            </h2>
+          </>
+        ) : null}
         <p className="mt-2 mb-0" style={{ color: T.ink.dim }}>
           {stop.where || "No landmark added yet."}
         </p>

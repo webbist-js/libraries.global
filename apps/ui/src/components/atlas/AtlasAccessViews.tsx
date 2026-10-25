@@ -108,7 +108,7 @@ function AccessKey({
   )
 }
 
-function AreaDetails({
+export function AreaDetails({
   area,
   metric,
   onFit,
@@ -234,9 +234,6 @@ export function AccessOverview({
   return (
     <>
       <AccessKey areas={analysisAreas} metric={metric} />
-      {area ? (
-        <AreaDetails area={area} metric={metric} onFit={onFit} compact />
-      ) : null}
       <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
         This compares recorded libraries with the people living in each area. It
         doesn’t show whether people can reach a library, and low figures can

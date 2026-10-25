@@ -46,12 +46,15 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/release/worker-context.mjs
-          for service in ui strapi worker; do
+          for service in ui strapi worker analysis; do
             app="$service"
             context=.
             if [ "$service" = worker ]; then
               app=sync-worker
               context="$RUNNER_TEMP/worker-context"
+            fi
+            if [ "$service" = analysis ]; then
+              context=apps/analysis
             fi
             image="$REGISTRY/$service:git-$GITHUB_SHA"
             if manifest_result=$(docker manifest inspect "$image" 2>&1); then

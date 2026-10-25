@@ -162,10 +162,15 @@ describe("layers", () => {
     expect(layerAccess(layerDef("density"), "public")).toBe("available")
     expect(layerAccess(layerDef("complete"), "public")).toBe("signin")
     expect(layerAccess(layerDef("complete"), "free")).toBe("available")
-    expect(layerAccess(layerDef("deprivation"), "free")).toBe("soon")
+    expect(layerAccess(layerDef("deprivation"), "free")).toBe("pro")
+    expect(layerAccess(layerDef("carAccess"), "pro")).toBe("available")
     expect(layerAccess(layerDef("mobile"), "public")).toBe("available")
+    expect(layerAccess(layerDef("population"), "public")).toBe("signin")
+    expect(layerAccess(layerDef("population"), "free")).toBe("available")
+    expect(layerAccess(layerDef("reach"), "public")).toBe("pro")
+    expect(layerAccess(layerDef("reach"), "free")).toBe("pro")
+    expect(layerAccess(layerDef("reach"), "pro")).toBe("available")
     // Readiness wins, so no plan can unlock an unbuilt layer.
-    expect(layerAccess(layerDef("population"), "public")).toBe("soon")
     expect(layerAccess(layerDef("transit"), "free")).toBe("soon")
     expect(layerAccess(layerDef("transit"), "pro")).toBe("soon")
   })
@@ -177,6 +182,19 @@ describe("layers", () => {
     })
     expect(toggleLayer(["density"], "density")).toEqual({
       layers: [],
+      replaced: null,
+    })
+  })
+  it("keeps Reach above one replaceable context background", () => {
+    expect(toggleLayer(["pins", "reach"], "population")).toEqual({
+      layers: ["pins", "reach", "population"],
+      replaced: null,
+    })
+    expect(toggleLayer(["pins", "reach", "population"], "deprivation")).toEqual(
+      { layers: ["pins", "reach", "deprivation"], replaced: "population" }
+    )
+    expect(toggleLayer(["pins", "deprivation"], "reach")).toEqual({
+      layers: ["pins", "deprivation", "reach"],
       replaced: null,
     })
   })

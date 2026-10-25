@@ -1,247 +1,44 @@
-# Page Builder
+# Page builder
 
-The page builder enables content editors to compose pages from reusable components in Strapi, which are automatically rendered by the Next.js frontend.
+The original starter's generic page builder has been retired. This document describes the remaining component infrastructure and the active article block workflow.
 
-## Architecture
+## Current content models
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Strapi CMS                                     │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ Page (api::page.page)                                               │    │
-│  │  └─ content: dynamiczone                                            │    │
-│  │       ├─ sections.hero                                              │    │
-│  │       ├─ sections.faq                                               │    │
-│  │       ├─ forms.contact-form                                         │    │
-│  │       └─ ...                                                        │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                    │                                        │
-│                          documentMiddlewares/page.ts                        │
-│                          (deep population rules)                            │
-└────────────────────────────────────│────────────────────────────────────────┘
-                                     │ REST API
-                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Next.js Frontend                                 │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ StrapiPage (page.tsx)                                                │    │
-│  │  └─ maps __component UID → React component                          │    │
-│  │       ├─ sections.hero      → StrapiHero                            │    │
-│  │       ├─ sections.faq       → StrapiFaq                             │    │
-│  │       ├─ forms.contact-form → StrapiContactForm                     │    │
-│  │       └─ ...                                                        │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+The CMS Page collection contains title, slug and SEO only. It has no page content dynamic zone, hierarchy relations or `fullPath`. The frontend has explicit routes rather than a generic CMS catch-all renderer.
 
-**Data flow:**
+Knowledge (`api::wiki-article.wiki-article`) and Journal (`api::blog-article.blog-article`) articles have a localized `body` dynamic zone. Both currently permit `content.rich-text`, `content.image-block`, `content.code-block`, `content.quote-block` and `content.callout`. Their shared renderer is `apps/ui/src/components/blog/ArticleBodyBlocks.tsx`.
 
-1. Editor adds components to page's `content` dynamic zone in Strapi admin
-2. Page is fetched via REST API with deep population (handled by middleware)
-3. `StrapiPage` iterates over `content` array
-4. Each item's `__component` UID is matched against `PageContentComponents` registry
-5. Matching React component renders with full component data as props
+The legacy `apps/ui/src/components/page-builder/index.tsx` registry retains CKEditor and TipTap utility renderers. It is not the registry for article body blocks. Add to it only when the requested feature actually uses that legacy rendering path.
 
-## Component Registry
+## Naming and types
 
-The mapping between Strapi component UIDs and React components is defined in:
+Component UIDs follow `category.kebab-case`; the schema lives at `apps/strapi/src/components/{category}/{name}.json`. Preserve existing collection names. A new component's collection name must be distinct from existing components.
 
-**`apps/ui/src/components/page-builder/index.tsx`**
-
-```ts
-export const PageContentComponents: {
-  [K in UID.Component]?: React.ComponentType<any>
-} = {
-  // Utilities
-  "utilities.ck-editor-content": StrapiCkEditorContent,
-
-  // Sections
-  "sections.hero": StrapiHero,
-  "sections.faq": StrapiFaq,
-  "sections.carousel": StrapiCarousel,
-  // ...
-
-  // Forms
-  "forms.contact-form": StrapiContactForm,
-  "forms.newsletter-form": StrapiNewsletterForm,
-  // ...
-}
-```
-
-Components are grouped by category (matching Strapi's component folder structure).
-
-## Naming Conventions
-
-| Element               | Pattern                                    | Example                                                                  |
-| --------------------- | ------------------------------------------ | ------------------------------------------------------------------------ |
-| Strapi UID            | `category.kebab-case`                      | `sections.hero`                                                          |
-| Strapi schema file    | `{name}.json`                              | `apps/strapi/src/components/sections/hero.json`                          |
-| Strapi collectionName | `components_{category}_{name_underscored}` | `components_sections_hero`                                               |
-| React component       | `Strapi{PascalCase}`                       | `StrapiHero`                                                             |
-| React file            | `Strapi{PascalCase}.tsx`                   | `apps/ui/src/components/page-builder/components/sections/StrapiHero.tsx` |
-
-## Props Typing
-
-React components receive their data via a `component` prop, typed using the `Data.Component` utility from `@repo/strapi-types`:
+For example, `content.callout` is typed as:
 
 ```typescript
-import { Data } from "@repo/strapi-types"
+import type { Data } from "@repo/strapi-types"
 
-export function StrapiHero({
-  component,
-}: {
-  readonly component: Data.Component<"sections.hero">
-}) {
-  return (
-    <section>
-      <h1>{component.title}</h1>
-      {component.subTitle && <h2>{component.subTitle}</h2>}
-      {/* ... */}
-    </section>
-  )
-}
+type Callout = Data.Component<"content.callout">
 ```
 
-The generic parameter is the Strapi component UID (e.g., `"sections.hero"`). This provides full type safety for all attributes defined in the component schema.
+Use real fields from the schema (`type`, optional `title`, and `body` for a callout). Do not copy the starter's nonexistent `sections.hero` schema into examples or new code.
 
-**After changing Strapi schemas, regenerate types:**
+## Population rules
 
-```bash
-cd apps/strapi && pnpm generate:types
-```
+Inspect the feature's actual controller/loader and population configuration. Article detail/browse paths have publication and privacy rules; adding a relation to a component must not expose private account or draft fields.
 
-## Population Rules
+`apps/strapi/src/populateDynamicZone/index.ts` retains a utility that loads per-component population files. Its presence does not imply every content type uses it. The old `documentMiddlewares/page.ts` hook is absent. Do not assume a `populateDynamicZone` query parameter will populate a new field unless its active server path implements that behavior.
 
-Dynamic zone content requires explicit population of nested relations and components. This is handled by a document middleware.
+For nested relations/media, reuse the feature's existing explicit populate shape. Scalar fields do not need relation population. Preserve published-only projections and bounded relation sizes.
 
-**`apps/strapi/src/documentMiddlewares/page.ts`**
+## Adding new components
 
-The middleware intercepts `findMany` queries for pages and applies deep population rules via the `on` pattern:
+1. Identify the owning content type, field and renderer. Reuse an existing component when it fits.
+2. Create or update the component schema. If it belongs in an article body, update both relevant article schemas and their accepted block validation; do not edit a nonexistent Page `content` field.
+3. Update the feature's loader, public projection, editor, renderer and any export/search representation that handles the block. Article submissions and direct CMS edits must round-trip the same supported data.
+4. After any schema change, run `pnpm --filter @repo/strapi generate:types` from the repository root.
+5. Use the generated types and existing design-system primitives. Add meaningful content; avoid starter placeholder helpers.
+6. Run focused validation for body round trips, draft/public separation and the new block's behavior. Reuse running services under the resource rules in root `AGENTS.md`.
 
-This schema is automatically generated by `apps/strapi/src/populateDynamicZone` files and `documentMiddleware` mapping function which adds required populate schema to each component from dynamic zone.
-
-```typescript
-const pagePopulateObject = {
-  content: {
-    on: {
-      "sections.hero": {
-        populate: {
-          links: true,
-          image: { populate: { media: true } },
-          steps: true,
-        },
-      },
-      "sections.cta": { populate: { link: true } },
-      "utilities.ck-editor-content": true, // no nested relations
-      "sections.container": {
-        populate: {
-          content: {
-            on: {
-              // recursive population for nested dynamic zones
-              "sections.hero": {
-                /* ... */
-              },
-            },
-          },
-        },
-      },
-      // ...
-    },
-  },
-}
-```
-
-**Key patterns:**
-
-- Use `true` for components without nested relations
-- Use `{ populate: { fieldName: true } }` for simple nested components
-- Use `{ populate: { fieldName: { populate: { media: true } } } }` for media fields
-- Containers support recursive `on` patterns for nested dynamic zones
-
-**Triggering the middleware:**
-
-Requests must include `populateDynamicZone` parameter:
-
-```typescript
-await PublicStrapiClient.fetchOneByFullPath("api::page.page", fullPath, {
-  locale,
-  populate: { seo: true },
-  populateDynamicZone: { content: true }, // triggers middleware
-  pagination: { page: 1, pageSize: 1 },
-})
-```
-
-## Page Rendering
-
-The rendering logic lives inline in the `StrapiPage` component:
-
-**`apps/ui/src/app/[locale]/[[...rest]]/page.tsx`**
-
-```typescript
-export default function StrapiPage(props: PageProps<"/[locale]/[[...rest]]">) {
-  const params = use(props.params)
-  const locale = params.locale as Locale
-
-  const fullPath = ROOT_PAGE_PATH + (params.rest ?? []).join("/")
-  const response = use(fetchPage(fullPath, locale))
-  const data = response?.data
-
-  if (data?.content == null) {
-    notFound()
-  }
-
-  const { content, ...restPageData } = data
-
-  return (
-    <>
-      <StrapiStructuredData structuredData={data?.seo?.structuredData} />
-      <main>
-        {content
-          .filter((comp) => comp != null)
-          .map((comp) => {
-            const Component = PageContentComponents[comp.__component]
-
-            if (Component == null) {
-              console.warn(`Unknown component "${comp.__component}"`)
-              return <div>Component not implemented</div>
-            }
-
-            return (
-              <ErrorBoundary key={`${comp.__component}-${comp.id}`}>
-                <Component
-                  component={comp}
-                  pageParams={params}
-                  page={restPageData}
-                />
-              </ErrorBoundary>
-            )
-          })}
-      </main>
-    </>
-  )
-}
-```
-
-Each component is wrapped in an `ErrorBoundary` to prevent a single component error from breaking the entire page. Components also receive `pageParams` and `page` props in addition to the `component` data.
-
-## Adding New Components
-
-Use the `create-content-component` skill:
-
-```
-/create-content-component
-```
-
-Or follow these manual steps:
-
-1. Create Strapi schema: `apps/strapi/src/components/{category}/{name}.json`
-2. Register in page dynamic zone: `apps/strapi/src/api/page/content-types/page/schema.json`
-3. Add population files: `apps/strapi/src/populateDynamicZone`
-4. Create React component: `apps/ui/src/components/page-builder/components/{category}/Strapi{Name}.tsx`
-5. Register in `PageContentComponents`: `apps/ui/src/components/page-builder/index.tsx`
-6. Generate types: `cd apps/strapi && pnpm generate:types`
-
-## Related Documentation
-
-- [Pages Hierarchy](./pages-hierarchy.md) — URL structure and slug management
-- [Strapi API Client](./strapi-api-client.md) — fetching content from Strapi
+The repository's `create-content-component` skill follows this workflow. See [Community publishing](community-publishing.md), [Strapi schemas](strapi-schemas.md) and [Strapi types](strapi-types-usage.md).
