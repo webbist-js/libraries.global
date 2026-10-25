@@ -188,7 +188,7 @@
     "exportGeojson": "Export GeoJSON",
     "exportUnavailable": "The export is unavailable. Try again.",
     "reachUnroutable": "We couldn't find reliable walking or cycling routes to this library's map location.",
-    "reachUnsupported": "Reach isn't available for this library yet. We support fixed-location libraries in England, Wales, Scotland and Northern Ireland where routing and population data are available. Planned and permanently closed libraries are excluded.",
+    "reachUnsupported": "Reach isn't available for this library yet. We support fixed-location libraries in England, Wales, Scotland and Northern Ireland where routing and population data are available. Planned, temporarily closed and permanently closed libraries are excluded.",
     "openReach": "Open Reach in the Atlas",
     "reachAvailability": "Explore walking and cycling journeys to libraries across the UK.",
     "reachAccessMessage": "Pro and Team include Reach analysis. Library facts remain free.",
