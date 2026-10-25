@@ -8,6 +8,19 @@ from cache import read_artifact, write_artifact, prune_artifacts
 
 
 class CacheTests(unittest.TestCase):
+    def test_rejects_cache_directories_linked_outside_the_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "cache"
+            root.mkdir()
+            outside = Path(directory) / "cache-other"
+            outside.mkdir()
+            (root / "results").symlink_to(outside, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                read_artifact(root, "results", "a" * 64)
+            with self.assertRaises(ValueError):
+                write_artifact(root, "results", "a" * 64, {"value": 1})
+            self.assertEqual(list(outside.iterdir()), [])
+
     def test_rejects_paths_and_non_digest_cache_keys(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

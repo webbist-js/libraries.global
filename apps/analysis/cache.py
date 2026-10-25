@@ -1,6 +1,7 @@
 """Bounded compressed artifacts; routing and resident totals have separate keys."""
 import gzip
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -11,7 +12,11 @@ MAX_BYTES = 2 * 1024 * 1024
 def artifact_path(root: Path, kind: str, key: str) -> Path:
     if kind not in {"routes", "results"} or not re.fullmatch(r"[a-f0-9]{64}", key):
         raise ValueError("Invalid artifact cache key")
-    return root / kind / key[:2] / f"{key}.json.gz"
+    base = os.path.realpath(root)
+    destination = os.path.realpath(root / kind / key[:2] / f"{key}.json.gz")
+    if not destination.startswith(base + os.sep):
+        raise ValueError("Artifact path leaves the cache root")
+    return Path(destination)
 
 
 def read_artifact(root: Path, kind: str, key: str):
