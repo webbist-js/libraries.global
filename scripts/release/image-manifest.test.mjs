@@ -18,15 +18,34 @@ const references = () =>
 
 test("public artifact contains only the source and service digests", () => {
   const manifest = createPublicManifest(commit, registry, references())
-  assert.equal(manifest.schema, 2)
+  assert.equal(manifest.schema, 3)
   assert.equal(manifest.commit, commit)
   assert.deepEqual(manifest.images, {
     ui: `ui@${digest}`,
     strapi: `strapi@${digest}`,
     worker: `worker@${digest}`,
+    analysis: `analysis@${digest}`,
   })
   assert.doesNotMatch(JSON.stringify(manifest), /registry/)
   assert.deepEqual(resolvePrivateReferences(manifest, registry), references())
+})
+
+test("legacy manifests remain readable for recovery without accepting extra services", () => {
+  const legacy = createPublicManifest(commit, registry, references())
+  legacy.schema = 2
+  delete legacy.images.analysis
+  const expected = references()
+  delete expected.analysis
+  assert.deepEqual(resolvePrivateReferences(legacy, registry), expected)
+  assert.throws(() =>
+    resolvePrivateReferences(
+      {
+        ...legacy,
+        images: { ...legacy.images, analysis: `analysis@${digest}` },
+      },
+      registry
+    )
+  )
 })
 
 test("rejects image tags, wrong registries, wrong services and malformed digests", () => {

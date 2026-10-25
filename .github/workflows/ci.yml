@@ -23,6 +23,18 @@ env:
   BETTER_AUTH_SECRET: dummy-ci-secret-not-for-runtime-only
 
 jobs:
+  native_analysis:
+    name: Native analysis checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and test the isolated native runtime
+        run: docker build --tag atlas-analysis-ci apps/analysis
+
   build_and_verify:
     name: Install, Lint, Test and Build
     runs-on: ubuntu-24.04
