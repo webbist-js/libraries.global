@@ -8,6 +8,19 @@ from cache import read_artifact, write_artifact, prune_artifacts
 
 
 class CacheTests(unittest.TestCase):
+    def test_rejects_paths_and_non_digest_cache_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for kind, key in [("../escape", "a" * 64), ("results", "../escape"),
+                              ("results", "a" * 63), ("routes", "G" * 64),
+                              ("results", "a" * 64 + "\n")]:
+                with self.subTest(kind=kind, key=key):
+                    with self.assertRaises(ValueError):
+                        read_artifact(root, kind, key)
+                    with self.assertRaises(ValueError):
+                        write_artifact(root, kind, key, {"value": 1})
+            self.assertEqual(list(root.iterdir()), [])
+
     def test_route_optimization_cannot_evict_all_user_visible_results(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

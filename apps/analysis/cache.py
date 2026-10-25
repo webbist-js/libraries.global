@@ -1,14 +1,21 @@
 """Bounded compressed artifacts; routing and resident totals have separate keys."""
 import gzip
 import json
+import re
 import time
 from pathlib import Path
 
 MAX_BYTES = 2 * 1024 * 1024
 
 
+def artifact_path(root: Path, kind: str, key: str) -> Path:
+    if kind not in {"routes", "results"} or not re.fullmatch(r"[a-f0-9]{64}", key):
+        raise ValueError("Invalid artifact cache key")
+    return root / kind / key[:2] / f"{key}.json.gz"
+
+
 def read_artifact(root: Path, kind: str, key: str):
-    file = root / kind / key[:2] / f"{key}.json.gz"
+    file = artifact_path(root, kind, key)
     try:
         if file.stat().st_mtime < time.time() - 7 * 86400:
             return None
@@ -23,16 +30,17 @@ def read_artifact(root: Path, kind: str, key: str):
 
 
 def write_artifact(root: Path, kind: str, key: str, value):
+    destination = artifact_path(root, kind, key)
     data = json.dumps(value, separators=(",", ":"), allow_nan=False).encode()
     if len(data) > MAX_BYTES:
         raise ValueError("Geometry exceeds artifact budget")
-    directory = root / kind / key[:2]
+    directory = destination.parent
     directory.mkdir(parents=True, exist_ok=True)
-    temporary = directory / f"{key}.tmp"
+    temporary = destination.with_suffix(".tmp")
     with temporary.open("wb") as file:
         file.write(gzip.compress(data, compresslevel=6, mtime=0))
     temporary.chmod(0o600)
-    temporary.replace(directory / f"{key}.json.gz")
+    temporary.replace(destination)
 
 
 def prune_artifacts(root: Path, max_bytes: int):

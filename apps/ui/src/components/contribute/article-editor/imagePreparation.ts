@@ -7,6 +7,11 @@ export type ImageCrop = ImageDimensions & { x: number; y: number }
 export const clampPosition = (value: number) =>
   Math.min(100, Math.max(0, value))
 
+/** Keep local previews on object URLs and escape URL metacharacters. */
+export function imagePreviewUrl(url: string): string | undefined {
+  return url.startsWith("blob:") ? encodeURI(url) : undefined
+}
+
 /** Use the same source rectangle for the preview and the uploaded pixels. */
 export function imageCrop(
   size: ImageDimensions,

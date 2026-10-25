@@ -3,11 +3,31 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { imageFilename } from "@/lib/image-filename"
 
-import { imageCrop, prepareArticleImage } from "./imagePreparation"
+import {
+  imageCrop,
+  imagePreviewUrl,
+  prepareArticleImage,
+} from "./imagePreparation"
 
 afterEach(() => vi.restoreAllMocks())
 
 describe("article image preparation", () => {
+  it("limits local previews to object URLs and encodes HTML metacharacters", () => {
+    expect(imagePreviewUrl("blob:https://example.test/image-id")).toBe(
+      "blob:https://example.test/image-id"
+    )
+    expect(imagePreviewUrl('blob:https://example.test/<image>"')).toBe(
+      "blob:https://example.test/%3Cimage%3E%22"
+    )
+    for (const url of [
+      // eslint-disable-next-line sonarjs/code-eval -- asserting it is rejected, never executed
+      "javascript:alert(1)",
+      "data:text/html,<svg>",
+      "https://example.test/image",
+    ])
+      expect(imagePreviewUrl(url)).toBeUndefined()
+  })
+
   it("preserves the original and crops and positions within source bounds", () => {
     const size = { width: 400, height: 200 }
     expect(imageCrop(size, null, 3, { x: 100, y: 0 })).toEqual({

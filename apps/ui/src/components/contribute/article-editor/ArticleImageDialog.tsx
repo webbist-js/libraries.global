@@ -15,6 +15,7 @@ import {
 import {
   clampPosition,
   imageCrop,
+  imagePreviewUrl,
   prepareArticleImage,
   type ImageDimensions,
   type ImagePosition,
@@ -208,7 +209,7 @@ export function ArticleImageDialog({
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         ref={imageRef}
-                        src={preview}
+                        src={imagePreviewUrl(preview)}
                         alt={alt || t("preview")}
                         draggable={false}
                         className="absolute max-w-none select-none"
