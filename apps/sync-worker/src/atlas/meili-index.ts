@@ -21,6 +21,7 @@ export const atlasIndexSettings = {
     "type_group",
     "status",
     "operator_group",
+    "network_ids",
     "facility_codes",
     "access_codes",
     "has_access",

@@ -124,6 +124,7 @@ export interface AtlasLibrarySource {
   accessibility?: readonly AtlasOption[]
   services?: readonly AtlasOption[]
   amenities?: readonly AtlasOption[]
+  networks?: readonly AtlasPlace[]
   notices?: readonly LibraryNotice[]
 }
 
@@ -151,6 +152,7 @@ export type AtlasProjection = AtlasOpeningFields &
     slug: string
     path: string | null
     type_group: AtlasTypeGroup
+    network_ids?: string[]
     operator_group: AtlasOperatorGroup | null
     status: string
     listed: boolean
@@ -195,6 +197,7 @@ export type AtlasProjection = AtlasOpeningFields &
   }
 
 export interface AtlasFilters {
+  networks?: string[]
   types: AtlasTypeGroup[]
   opening: "any" | "now" | "staff_now" | "at"
   atDay: number
@@ -295,6 +298,7 @@ export interface AtlasDensityGrid {
   cells: { id: string; total: number }[]
 }
 export interface AtlasTileProperties {
+  nw?: string
   i: string
   s: string
   n: string

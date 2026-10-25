@@ -74,6 +74,7 @@ const POINT_FIELDS = [
   "latitude",
   "type_group",
   "operator_group",
+  "network_ids",
   "status",
   "listed",
   "continent_id",
@@ -198,6 +199,13 @@ export function atlasListRow(
 const world = (scope: AtlasScope): AtlasScope => ({
   filters: scope.filters,
   accessibility: { ...scope.accessibility, enabled: false },
+})
+// Place discovery and facet inventories remain within an institutional selection.
+const discoveryFilters = (scope: AtlasScope): AtlasScope["filters"] => ({
+  ...emptyAtlasFilters(),
+  ...(scope.filters.networks?.length
+    ? { networks: scope.filters.networks }
+    : {}),
 })
 const fold = (text: string): string =>
   text.normalize("NFKD").replaceAll(/\p{M}/gu, "").trim().toLowerCase()
@@ -362,13 +370,9 @@ export class AtlasQueryEngine {
       )
         throw new Error("Invalid Atlas country identity")
       identities.add(country.documentId)
+      // Country pages may use newer, differently scoped population estimates.
+      // This fixed-year comparison joins ISO identities to its own observations.
       const code = populationCountryCode(country, COUNTRY_IDENTITIES)?.code
-      if (
-        country.populationReportingCode &&
-        code &&
-        country.populationReportingCode !== code
-      )
-        throw new Error("Conflicting Atlas population reporting code")
       if (code && byIso3.has(code)) join.set(country.documentId, code)
     }
     const sum = (counts: Record<string, number>) => {
@@ -941,7 +945,7 @@ export class AtlasQueryEngine {
     request: Extract<AtlasQueryRequest, { purpose: "counts" }>
   ): Promise<AtlasCountsResponse> {
     const scope = world(request.scope),
-      global: AtlasScope = { ...scope, filters: emptyAtlasFilters() }
+      global: AtlasScope = { ...scope, filters: discoveryFilters(scope) }
     const inventory = await this.backend.search({
       filter: this.filter(global),
       facets: ["locale", "facility_codes", "type_group", "operator_group"],
@@ -1273,7 +1277,7 @@ export class AtlasQueryEngine {
           q: request.q,
           attributesToSearchOn: [nameField],
           distinct: idField,
-          filter: this.filter({ ...scope, filters: emptyAtlasFilters() }),
+          filter: this.filter({ ...scope, filters: discoveryFilters(scope) }),
           limit: 12,
           attributesToRetrieve: [idField, nameField],
         })
@@ -1302,7 +1306,7 @@ export class AtlasQueryEngine {
         ...place,
         exactTotal: await this.count({
           ...scope,
-          filters: emptyAtlasFilters(),
+          filters: discoveryFilters(scope),
           place: { level: place.level, id: place.id },
         }),
       }),

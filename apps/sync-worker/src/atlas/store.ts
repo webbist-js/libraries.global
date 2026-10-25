@@ -289,9 +289,14 @@ export class AtlasStore {
       const { field, optionKind, after = 0 } = job.payload
       if (
         field &&
-        !["continent_id", "country_id", "region_id", "area_id", "all"].includes(
-          field
-        )
+        ![
+          "continent_id",
+          "country_id",
+          "region_id",
+          "area_id",
+          "network_ids",
+          "all",
+        ].includes(field)
       )
         throw new Error("Invalid fan-out field")
       if (optionKind && !["access", "service", "amenity"].includes(optionKind))
@@ -299,7 +304,7 @@ export class AtlasStore {
       if ((!field && !optionKind) || !Number.isSafeInteger(after) || after < 0)
         throw new Error("Invalid fan-out job")
       const contains = field
-        ? { [field]: job.entity_id }
+        ? { [field]: field === "network_ids" ? [job.entity_id] : job.entity_id }
         : { facility_codes: [atlasOptionCode(optionKind!, job.entity_id)] }
       const rows = await trx("atlas_records")
         .where({ active: true })

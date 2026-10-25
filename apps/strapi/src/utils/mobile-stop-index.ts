@@ -22,6 +22,7 @@ export const MOBILE_STOP_SETTINGS = {
     "visit_keys",
     "cancelled_dates",
     "library_document_id",
+    "network_ids",
     "area_slug",
     "region_slug",
     "country_slug",
@@ -42,6 +43,7 @@ export const MOBILE_STOP_SETTINGS = {
     "library_slug",
     "library_path",
     "library_document_id",
+    "network_ids",
     "area_slug",
     "area_name",
     "region_slug",
@@ -103,6 +105,9 @@ export function mobileStopDocuments(
         library_name: library.name,
         library_slug: library.slug,
         library_document_id: library.documentId,
+        network_ids: (library.networks ?? []).map(
+          (network: any) => network.documentId
+        ),
         library_path: path.every(Boolean) ? `/${path.join("/")}` : null,
         area_slug: area?.slug ?? null,
         area_name: area?.name ?? null,
@@ -165,6 +170,7 @@ export async function syncMobileStops(strapi: any, id: string): Promise<void> {
         documentId: id,
         status: "published",
         populate: {
+          networks: { fields: ["documentId"] },
           continent: { fields: ["slug"] },
           country: { fields: ["slug"] },
           region: { fields: ["slug"] },
@@ -360,7 +366,7 @@ export async function refreshMobileAtLocalMidnight(
     // Read the preceding date too: notices that ended yesterday disappear from the public list today.
     const notices = await noticesForLibraries(
       strapi,
-      rows.map((row: any) => row.documentId),
+      rows.map((row: { documentId: string }) => row.documentId),
       new Date(now.getTime() - 86_400_000)
     )
     for (const row of rows) {

@@ -46,6 +46,16 @@ export function libraryAccessPlanBlocks(body: any[]): any[] {
         },
       ],
     })
+  if (!JSON.stringify(next).includes("Travel-time reach estimates"))
+    next.splice(2, 0, {
+      type: "paragraph",
+      children: [
+        {
+          type: "text",
+          text: "Travel-time reach estimates residents who could reach one supported physical library in England within 5, 10, 15 or 30 minutes on foot or by bicycle. Pro and Team include its map, resident bands and CSV/GeoJSON exports. The population grid refers to 2020, separately from the 2024 administrative figures. Population density is available to signed-in members across countries, UK districts and English county groups. Library facts remain free; deprivation, transit and combined catchment tools remain planned.",
+        },
+      ],
+    })
 
   return next
 }
