@@ -10,25 +10,19 @@ Always use `@/` prefix (maps to `src/`):
 import { Container } from "@/components/elementary/Container"
 ```
 
-## Page Builder Components
+## Content Components
 
-**Naming:** `Strapi{PascalCase}.tsx` in `components/page-builder/components/{category}/`
+Journal and Knowledge bodies use `content.*` components and the shared `components/blog/ArticleBodyBlocks.tsx` renderer. The old Page content zone and generic catch-all route are removed. Identify the owning feature before adding a component.
 
 **Props:** Use `Data.Component<"uid">` from `@repo/strapi-types`:
 
 ```typescript
 import { Data } from "@repo/strapi-types"
 
-export function StrapiHero({
-  component,
-}: {
-  readonly component: Data.Component<"sections.hero">
-}) {
-  return <section>{component.title}</section>
-}
+type Callout = Data.Component<"content.callout">
 ```
 
-**Registry:** `components/page-builder/index.tsx` maps UIDs to components.
+The legacy `components/page-builder/index.tsx` registry retains rich-text utility renderers. Extend it only for a feature that consumes that path; it is not the article body registry.
 
 Full workflow: [Page Builder docs](../docs/docs/page-builder.md)
 
@@ -75,8 +69,8 @@ Use skill: `/create-content-component`, or do it manually
 
 1. Create Strapi schema — see [apps/strapi/AGENTS.md](../strapi/AGENTS.md)
 2. Generate types (see root AGENTS.md)
-3. Create component: `components/page-builder/components/{category}/Strapi{Name}.tsx`
-4. Register in `PageContentComponents`
+3. Update the owning feature's editor, renderer and public projection
+4. Extend a registry only when that feature uses it
 
 ## Related Documentation
 

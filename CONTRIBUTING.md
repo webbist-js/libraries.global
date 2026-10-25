@@ -104,10 +104,10 @@ Enhancement suggestions are tracked as [Feature request GitHub issues](https://g
 
 ### Your First Code Contribution
 
-- Set up your environment — check the [Getting started](./README.md#-getting-started) section for prerequisites and setup instructions.
+- Set up your environment — check the [Getting started](./README.md#local-development) section for prerequisites and setup instructions.
 - Pick an issue — look for [issues labeled `good first issue` or `help-required`](https://github.com/webbist-js/libraries.global/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22%20label%3Ahelp-required).
 - Fork and branch — [fork the repository](https://github.com/webbist-js/libraries.global/fork) and create a branch from `dev`, the current default branch, and target `dev` with your pull request.
-- Follow conventions — check the for [commit message format](https://github.com/webbist-js/libraries.global?tab=readme-ov-file#commit-message-hook) and coding standards.
+- Follow conventions — read the [commit message format and coding standards](./README.md#conventions).
 - Open a PR — push your branch and open a pull request. Fill in the PR description based on the template and link the related issue (using `#ISSUE_NUMBER` format).
 
 ## Code review and releases

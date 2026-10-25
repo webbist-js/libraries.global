@@ -1,5 +1,7 @@
 import type { Core } from "@strapi/strapi"
 
+import canadaOdcaf from "./canada-odcaf-dataset.json"
+import mexicoSic from "./mexico-sic-dataset.json"
 import openStreetMap from "./openstreetmap-dataset.json"
 
 /**
@@ -33,6 +35,45 @@ export type DatasetSeed = {
 
 export const DATASET_SEED: DatasetSeed[] = [
   openStreetMap as DatasetSeed,
+  mexicoSic as DatasetSeed,
+  canadaOdcaf as DatasetSeed,
+  {
+    key: "openstreetmap-routing",
+    name: "OpenStreetMap walking and cycling network",
+    publisher: "OpenStreetMap contributors; extracts by Geofabrik",
+    sourceUrl: "https://download.geofabrik.de",
+    licence: "ODbL 1.0",
+    licenceUrl: "https://opendatacommons.org/licenses/odbl/1-0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Routing derived from © OpenStreetMap contributors, ODbL 1.0; regional extracts from Geofabrik.",
+    coverage:
+      "Configured regional routing extracts; the active analysis release defines origin coverage.",
+    importMechanism:
+      "Versioned OSM PBF snapshots and native Valhalla graph preparation through the Atlas data profile.",
+    notes:
+      "Network snapshots, engine/profile versions and coverage belong to immutable analysis releases. Walking estimates do not establish step-free access. Graphs are files, not CMS Library records.",
+  },
+  {
+    key: "ghsl-population",
+    name: "GHS-POP R2023A residential population grid",
+    publisher: "European Commission Joint Research Centre",
+    sourceUrl:
+      "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+    licence: "CC BY 4.0",
+    licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted_with_attribution",
+    attribution:
+      "Schiavina M., Freire S., Carioli A., MacManus K. (2023), GHS-POP R2023A, European Commission Joint Research Centre. Data accessed through the JRC-managed AWS Open Data distribution, CC BY 4.0.",
+    coverage:
+      "Global source; active analysis releases prepare only the required regional windows.",
+    importMechanism:
+      "Bounded HTTP-range reads from the JRC population count raster; versioned regional files and validated population intersections.",
+    notes:
+      "The initial Reach surface uses native 2020 estimates at 100 m in Mollweide coordinates. It does not overwrite ONS/World Bank administrative totals. Later projected epochs must be labelled as projections. Zero and NoData are distinct.",
+  },
   {
     key: "au-public-libraries",
     name: "Australian public lending library locations (2016–2018)",
@@ -232,7 +273,7 @@ export const DATASET_SEED: DatasetSeed[] = [
     coverage:
       "Public libraries in England, Scotland, Wales and Northern Ireland",
     importMechanism:
-      "apps/strapi/scripts/libraryon-ingest.ts, reading the public LibraryOn API (https://libraryon.org/cms/api) and mapping each record with scripts/field-mapper.ts",
+      "scripts/ingests/run.ts --dataset=libraryon --country=GB-ENG|GB-WLS|GB-SCT|GB-NIR: complete versioned API snapshots, current ONS district placement and reviewable refresh proposals. scripts/ingests/uk/libraryon-networks.ts adds sourced network memberships without replacing curated library facts.",
     notes:
       'The licence is the one stated in the libraryon.org site footer ("Except where otherwise noted, content on this site is licensed under a Creative Commons Attribution 4.0 International license"). Written confirmation that it covers the API has been requested but not yet received. Imported records carry a sourceRecords entry with dataset "libraryon", role "origin" and the URL of their original LibraryOn page.',
   },

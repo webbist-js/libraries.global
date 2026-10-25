@@ -1,0 +1,23 @@
+{
+  "id": "england",
+  "country": "GB-ENG",
+  "originBounds": [-6.5, 49.8, 2.1, 55.9],
+  "network": {
+    "url": "https://download.geofabrik.de/europe/united-kingdom-latest.osm.pbf",
+    "maxBytes": 3221225472,
+    "minimumBuildFreeBytes": 15032385536,
+    "source": "OpenStreetMap contributors · Geofabrik UK extract",
+    "sourceUrl": "https://download.geofabrik.de/europe/united-kingdom.html",
+    "licence": "ODbL 1.0"
+  },
+  "population": {
+    "id": "ghsl-2020-r2023a-100m",
+    "url": "https://jrc-ghsl.s3.eu-central-1.amazonaws.com/ghs-pop/r2023a/54009/100m/2020/GHS_POP_E2020_GLOBE_R2023A_54009_100_V1_0.tif",
+    "bounds": [-9, 49, 3, 61],
+    "source": "GHS-POP R2023A · native population grid",
+    "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+    "licence": "CC BY 4.0",
+    "year": 2020
+  },
+  "canary": {"lat": 51.5299, "lng": -0.1276}
+}

@@ -16,7 +16,7 @@ Libraries Global uses a Strapi v5 CMS, Next.js 16 frontend and independent sync 
 ## Essential Commands
 
 ```bash
-pnpm dev              # Start both apps (Docker required for DB)
+pnpm dev              # Workspace dev tasks; start only services the task needs
 pnpm build            # Build all
 pnpm lint             # ESLint all packages
 pnpm typecheck        # Typecheck all workspaces

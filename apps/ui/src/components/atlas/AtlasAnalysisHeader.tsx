@@ -1,10 +1,13 @@
 "use client"
 
 import { useTranslations as useUiTranslations } from "next-intl"
+import { createContext, useContext } from "react"
 
 import { OK } from "@/components/atlas/atlas-map.style"
 import { Icon } from "@/components/atlas/atlas-ui"
 import { T } from "@/lib/design-tokens"
+
+export const AtlasAnalysisPanelContext = createContext(false)
 
 export function AtlasAnalysisHeader({
   title,
@@ -26,6 +29,9 @@ export function AtlasAnalysisHeader({
   readonly badgeTone?: "area" | "pin"
 }) {
   const tUi = useUiTranslations("ui")
+  const panel = useContext(AtlasAnalysisPanelContext)
+
+  if (panel) return null
 
   return (
     <header

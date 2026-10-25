@@ -75,7 +75,7 @@ apps/strapi/scripts/ingests/**/.runs/
 # Local design audit logs.
 /.motion-site/log.json
 
-# Local agent context; public guidance lives in AGENTS.md and docs/.
+# Local agent context; public guidance lives in AGENTS.md and apps/docs/docs/.
 /.claude/context/
 
 # Python release helper caches

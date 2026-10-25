@@ -124,11 +124,7 @@ it("keeps location pins on and locks both controls while a marker layer needs th
   expect(pins().disabled).toBe(true)
   expect(screen.getByText("Needed by Accessibility")).toBeTruthy()
   expect(pins().getAttribute("aria-describedby")).toBe("atlas-pins-required")
-  const quickDisable = screen.getByRole("button", {
-    name: "Disable Library locations",
-  }) as HTMLButtonElement
-  expect(quickDisable.disabled).toBe(true)
-  fireEvent.click(quickDisable)
+  expect(screen.queryByRole("region", { name: "Active layers" })).toBeNull()
   fireEvent.click(pins())
   expect(pins().getAttribute("aria-checked")).toBe("true")
 
@@ -150,7 +146,7 @@ it("keeps location pins on and locks both controls while a marker layer needs th
   fireEvent.click(screen.getByRole("switch", { name: "Opening hours" }))
   expect(pins().disabled).toBe(true)
   expect(pins().getAttribute("aria-checked")).toBe("true")
-  fireEvent.click(screen.getByRole("button", { name: "Clear layers" }))
+  fireEvent.click(screen.getByRole("button", { name: "Turn all off" }))
   expect(screen.getByText("None on")).toBeTruthy()
   expect(pins().disabled).toBe(false)
   expect(pins().getAttribute("aria-checked")).toBe("false")
@@ -164,6 +160,32 @@ it("opens the analysis panel for signed-out readers without an inline dropdown o
   expect(sidebar.onAccessibilityAnalysis).toHaveBeenCalledTimes(2)
   expect(sidebar.onSignIn).not.toHaveBeenCalled()
   expect(screen.queryByRole("checkbox")).toBeNull()
+})
+it("opens an active layer from its label while keeping its explanation and switch independent", () => {
+  const onInspect = vi.fn()
+  render(
+    <AtlasLayersTab
+      {...sidebar}
+      tier="pro"
+      active={["pins", "population"]}
+      onInspect={onInspect}
+      summaries={{ population: "United Kingdom · GHS-POP 2020 · R2023A" }}
+    />
+  )
+  const open = screen.getByRole("button", { name: "Open Population density" })
+  expect(within(open).getByText("Population density")).toBeTruthy()
+  expect(within(open).getByText(/United Kingdom · GHS-POP/)).toBeTruthy()
+  expect(screen.queryByText("Open ›")).toBeNull()
+  fireEvent.click(open)
+  expect(onInspect).toHaveBeenCalledWith("population")
+  expect(sidebar.onToggle).not.toHaveBeenCalled()
+  fireEvent.click(
+    screen.getByRole("button", { name: "About Population density" })
+  )
+  expect(screen.getByText(/Compare official population averages/)).toBeTruthy()
+  expect(onInspect).toHaveBeenCalledOnce()
+  fireEvent.click(screen.getByRole("switch", { name: "Population density" }))
+  expect(sidebar.onToggle).toHaveBeenCalledWith("population")
 })
 it("lets signed-out visitors browse and search the analysis, while applying features still needs sign-in", () => {
   const onSelected = vi.fn(),
@@ -266,7 +288,7 @@ it("counts pins and mobile routes separately and keeps route controls independen
     { target: { value: "35" } }
   )
   expect(screen.getByText(/35%/)).toBeTruthy()
-  fireEvent.click(screen.getByRole("button", { name: "Clear layers" }))
+  fireEvent.click(screen.getByRole("button", { name: "Turn all off" }))
   expect(screen.getByText("None on")).toBeTruthy()
   expect(
     screen.queryByRole("slider", { name: "Mobile layer opacity" })
@@ -393,16 +415,16 @@ it("uses one active state for quick disable, catalogue switches and exclusive vi
     screen.queryByRole("button", { name: "Disable Library density" })
   ).toBeNull()
   expect(
-    screen.getByRole("button", { name: "Disable Events density" })
-  ).toBeTruthy()
+    screen
+      .getByRole("switch", { name: "Events density" })
+      .getAttribute("aria-checked")
+  ).toBe("true")
   expect(
     screen
       .getByRole("switch", { name: "Library density" })
       .getAttribute("aria-checked")
   ).toBe("false")
-  fireEvent.click(
-    screen.getByRole("button", { name: "Disable Events density" })
-  )
+  fireEvent.click(screen.getByRole("switch", { name: "Events density" }))
   expect(
     screen
       .getByRole("switch", { name: "Events density" })
@@ -413,4 +435,15 @@ it("uses one active state for quick disable, catalogue switches and exclusive vi
       .getByRole("switch", { name: "Library locations" })
       .getAttribute("aria-checked")
   ).toBe("true")
+})
+
+it("provides expandable help for the available Reach layer", () => {
+  render(<AtlasLayersTab {...sidebar} tier="pro" />)
+  const about = screen.getByRole("button", { name: "About Travel-time reach" })
+  expect(about.getAttribute("aria-expanded")).toBe("false")
+  fireEvent.click(about)
+  expect(about.getAttribute("aria-expanded")).toBe("true")
+  expect(
+    screen.getByText(/A service uses its mapped reporting area automatically/)
+  ).toBeTruthy()
 })

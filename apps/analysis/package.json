@@ -1,0 +1,10 @@
+{
+  "name": "@repo/analysis",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": ".venv/bin/python run.py",
+    "prepare:context": ".venv/bin/python prepare_context.py",
+    "prepare:community": ".venv/bin/python prepare_community.py"
+  }
+}

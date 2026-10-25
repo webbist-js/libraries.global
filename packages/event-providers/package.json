@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest run",
+    "test": "vitest run --minWorkers=1 --maxWorkers=1",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },

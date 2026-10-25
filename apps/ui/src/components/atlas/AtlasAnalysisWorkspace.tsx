@@ -13,7 +13,7 @@ export const ANALYSIS_TABS: { id: AnalysisTab; label: string }[] = [
   { id: "data", label: "Data" },
 ]
 
-/** Header, task navigation and optional context stay outside the scrolling results. */
+/** Keep task navigation visible, with results before the supporting settings. */
 export function AtlasAnalysisWorkspace({
   title,
   badge,
@@ -26,6 +26,7 @@ export function AtlasAnalysisWorkspace({
   onTab,
   tabs = ANALYSIS_TABS,
   context,
+  lead,
   footer,
   children,
 }: {
@@ -39,6 +40,7 @@ export function AtlasAnalysisWorkspace({
   readonly tab: AnalysisTab
   readonly onTab: (tab: AnalysisTab) => void
   readonly tabs?: readonly { id: AnalysisTab; label: string }[]
+  readonly lead?: ReactNode
   readonly context?: ReactNode
   readonly footer?: ReactNode
   readonly children: ReactNode
@@ -51,7 +53,7 @@ export function AtlasAnalysisWorkspace({
 
   return (
     <div
-      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      className="flex min-h-0 flex-1 flex-col overflow-clip"
       style={{ color: T.ink.base }}
     >
       <AtlasAnalysisHeader
@@ -70,7 +72,7 @@ export function AtlasAnalysisWorkspace({
           <div
             role="tablist"
             aria-label={`${title} analysis`}
-            className="grid shrink-0 grid-cols-4 border-b px-3"
+            className="grid shrink-0 grid-cols-4 border-b px-5"
             style={{
               borderColor: T.border.divider,
               gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))`,
@@ -113,26 +115,21 @@ export function AtlasAnalysisWorkspace({
               </button>
             ))}
           </div>
-          {context ? (
-            <div
-              className="shrink-0 border-b px-5 py-3 text-sm"
-              style={{
-                borderColor: T.border.divider,
-                background: T.bg.surface,
-              }}
-            >
-              {context}
-            </div>
-          ) : null}
           <div
             ref={content}
-            id={`${id}-content`}
-            role="tabpanel"
-            aria-labelledby={`${id}-${tab}`}
-            tabIndex={0}
-            className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto overscroll-contain p-5 focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+            className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-5 [&>*]:shrink-0"
           >
-            {children}
+            <div
+              id={`${id}-content`}
+              role="tabpanel"
+              aria-labelledby={`${id}-${tab}`}
+              tabIndex={0}
+              className="flex flex-col gap-5 focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+            >
+              {lead}
+              {children}
+            </div>
+            {context ? <div className="text-sm">{context}</div> : null}
           </div>
           {footer ? (
             <footer

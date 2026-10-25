@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { authClient } from "@/lib/auth-client"
@@ -7,6 +8,7 @@ import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 interface LibraryClaimButtonProps {
+  readonly compact?: boolean
   readonly libraryDocumentId: string
   readonly librarySlug: string
   readonly libraryName: string
@@ -18,11 +20,13 @@ interface LibraryClaimButtonProps {
  * (through sign-in when needed). Hidden for someone who already does.
  */
 export function LibraryClaimButton({
+  compact = false,
   libraryDocumentId,
   librarySlug,
   libraryName,
   libraryEntityRef,
 }: LibraryClaimButtonProps) {
+  const t = useTranslations("libraryPage")
   const refParam = libraryEntityRef
     ? `&libraryEntityRef=${encodeURIComponent(libraryEntityRef)}`
     : ""
@@ -46,6 +50,35 @@ export function LibraryClaimButton({
   if (sessionPending || isClaimed === null || isClaimed) return null
 
   const claimUrl = `/contribute/claim?librarySlug=${encodeURIComponent(librarySlug)}&libraryName=${encodeURIComponent(libraryName)}&libraryDocumentId=${encodeURIComponent(libraryDocumentId)}${refParam}`
+
+  if (compact)
+    return (
+      <div
+        className="mt-2 text-[13px] leading-relaxed"
+        style={{ color: T.ink.dim }}
+      >
+        <p className="m-0">
+          {t("workHere")}{" "}
+          <Link
+            href={
+              session?.user
+                ? claimUrl
+                : `/auth/signin?callbackUrl=${encodeURIComponent(claimUrl)}`
+            }
+            className="font-semibold underline underline-offset-4"
+            style={{ color: T.accent.primary }}
+          >
+            {t("claimRecord")}
+          </Link>
+        </p>
+        <details>
+          <summary className="min-h-11 cursor-pointer py-3 text-xs">
+            {t("aboutClaims")}
+          </summary>
+          <p className="mt-0">{t("claimNote")}</p>
+        </details>
+      </div>
+    )
 
   return (
     <p

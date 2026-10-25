@@ -292,7 +292,8 @@ async function storePopulationPlan(knex, plan) {
       Object.assign(data, derivedFields(latest, table))
     if (
       ["areas", "regions"].includes(table) &&
-      /^[ESWN]\d{8}$/.test(latest.reportingCode)
+      /^[ESWN]\d{8}$/.test(latest.reportingCode) &&
+      !place.gss_code
     )
       data.gss_code = latest.reportingCode
     await knex(table).where({ document_id: place.document_id }).update(data)

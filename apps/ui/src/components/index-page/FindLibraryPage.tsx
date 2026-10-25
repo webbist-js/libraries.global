@@ -65,7 +65,7 @@ export function FindLibraryPage({
   /** The server's search for this URL's own state; null when it failed. */
   initial: FindResult | null
   statsTotal: number
-  /** Rendered between the hero and the results. */
+  /** Rendered after the results, above the footer. */
   contributeBand?: ReactNode
   /** Open drives, for "There's a drive for this search". */
   drives?: readonly FindDrive[]
@@ -318,9 +318,9 @@ export function FindLibraryPage({
       </PageHero>
 
       {/* Main two-column area */}
-      <Container className="flex flex-1 items-start gap-8 pt-8 pb-[88px]">
-        {/* Sidebar — sticky on desktop, can be hidden */}
-        <FilterSidebar sidebar={filterSidebar}>
+      <Container className="flex flex-1 items-start gap-8 pt-8 pb-8 sm:pb-12">
+        {/* Desktop filters scroll with the page and can be hidden. */}
+        <FilterSidebar sidebar={filterSidebar} sticky={false}>
           <FindFilterSidebar
             state={state}
             facets={facets}

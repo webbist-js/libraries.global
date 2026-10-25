@@ -1,7 +1,6 @@
 // apps/ui/src/components/index-page/FindFilterSidebar.tsx
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import {
@@ -89,54 +88,6 @@ export function FindFilterSidebar({
   return (
     <div>
       <FilterPanelHeader onReset={onReset} sidebar={sidebar} />
-      <fieldset className="m-0 mt-4 mb-1 space-y-2 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-3">
-        <legend className="sr-only">Record options</legend>
-        {[
-          {
-            key: "staffNow" as const,
-            checked: state.staffNow ?? false,
-            icon: "mdi:account-check-outline",
-            title: "Staff on hand now",
-            detail: "Libraries with staff available now",
-          },
-          {
-            key: "includeInactive" as const,
-            checked: Boolean(state.includeInactive),
-            icon: "mdi:archive-outline",
-            title: "Include closed and planned",
-            detail: "Permanently closed and planned libraries",
-          },
-        ].map((option) => (
-          <label
-            key={option.key}
-            className={`flex min-h-16 cursor-pointer items-center gap-3 rounded-[14px] px-2.5 py-3 transition-colors hover:bg-(--t-bg-muted) ${option.checked ? "bg-(--t-accent-chip)" : ""}`}
-          >
-            <Icon
-              aria-hidden="true"
-              icon={option.icon}
-              width={19}
-              className="shrink-0 text-(--t-accent-primary)"
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block text-[14px] leading-snug font-semibold">
-                {option.title}
-              </span>
-              <span className="mt-1 block text-xs leading-relaxed text-(--t-ink-dim)">
-                {option.detail}
-              </span>
-            </span>
-            <input
-              type="checkbox"
-              name={option.key}
-              checked={option.checked}
-              onChange={(event) =>
-                onChange({ [option.key]: event.target.checked, page: 0 })
-              }
-              className="size-[18px] shrink-0 cursor-pointer accent-(--t-accent-primary)"
-            />
-          </label>
-        ))}
-      </fieldset>
 
       <FilterGroup
         title={tUi("opening_status")}
@@ -149,7 +100,7 @@ export function FindFilterSidebar({
         helper={
           facets.hoursKnownCount != null
             ? `${facets.hoursKnownCount} ${facets.hoursKnownCount === 1 ? "record has" : "records have"} opening hours`
-            : "Only records with recorded opening hours"
+            : "Open now needs recorded opening hours"
         }
       >
         <FilterOption
@@ -166,6 +117,15 @@ export function FindFilterSidebar({
           checked={state.openNow}
           count={facets.openNowCount}
           onChange={() => onChange({ openNow: true, page: 0 })}
+        />
+        <FilterOption
+          type="checkbox"
+          name="includeInactive"
+          label="Include closed and planned"
+          checked={Boolean(state.includeInactive)}
+          onChange={() =>
+            onChange({ includeInactive: !state.includeInactive, page: 0 })
+          }
         />
       </FilterGroup>
 
@@ -219,33 +179,38 @@ export function FindFilterSidebar({
         </FilterGroup>
       ) : null}
 
-      {serviceOptions.length > 0 ? (
-        <FilterGroup
-          title={tUi("facilities_services")}
-          defaultOpen={false}
-          icon={
-            <>
-              <path d="M5 12a7 7 0 0 1 14 0" />
-              <path d="M2 12h20M12 12v7" />
-            </>
-          }
-          helper="Documented for some records"
-        >
-          {serviceOptions.map(([name, count]) => (
-            <FilterOption
-              key={name}
-              type="checkbox"
-              name="services"
-              label={name}
-              checked={state.services.includes(name)}
-              count={count}
-              onChange={() =>
-                onChange({ services: toggleIn(state.services, name), page: 0 })
-              }
-            />
-          ))}
-        </FilterGroup>
-      ) : null}
+      <FilterGroup
+        title={tUi("facilities_services")}
+        defaultOpen={false}
+        icon={
+          <>
+            <path d="M5 12a7 7 0 0 1 14 0" />
+            <path d="M2 12h20M12 12v7" />
+          </>
+        }
+        helper="Documented for some records"
+      >
+        <FilterOption
+          type="checkbox"
+          name="staffNow"
+          label="Staff on hand now"
+          checked={state.staffNow ?? false}
+          onChange={() => onChange({ staffNow: !state.staffNow, page: 0 })}
+        />
+        {serviceOptions.map(([name, count]) => (
+          <FilterOption
+            key={name}
+            type="checkbox"
+            name="services"
+            label={name}
+            checked={state.services.includes(name)}
+            count={count}
+            onChange={() =>
+              onChange({ services: toggleIn(state.services, name), page: 0 })
+            }
+          />
+        ))}
+      </FilterGroup>
 
       <FilterGroup
         title={tUi("collections")}

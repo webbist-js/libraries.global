@@ -1,324 +1,82 @@
-# Strapi API Client
+# Strapi API client
 
-The Strapi API client provides a type-safe interface for fetching content from Strapi CMS. It implements a dual-client pattern with proxy routes for security.
+The frontend has typed CMS content clients and dedicated session-aware routes for account operations. Choose the request path from the feature's authority and privacy requirements.
 
-## Architecture
+## Published content
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Next.js Frontend                                 │
-│                                                                             │
-│  Server Components                     Client Components                    │
-│  ┌─────────────────────┐               ┌─────────────────────┐              │
-│  │ PublicStrapiClient  │               │ PublicStrapiClient  │              │
-│  │ PrivateStrapiClient │               │ (useProxy: true)    │              │
-│  └──────────┬──────────┘               └──────────┬──────────┘              │
-│             │ direct                              │                         │
-│             │                          ┌──────────▼──────────┐              │
-│             │                          │  /api/public-proxy  │              │
-│             │                          │  /api/private-proxy │              │
-│             │                          └──────────┬──────────┘              │
-└─────────────┼─────────────────────────────────────┼─────────────────────────┘
-              │                                     │
-              │           + Auth headers            │
-              ▼                                     ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Strapi CMS                                     │
-│                          /api/pages, /api/footer, etc.                      │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+`PublicStrapiClient`, exported from `apps/ui/src/lib/strapi-api/index.ts`, extends `BaseStrapiClient`. It uses the server's read-only content token for GET/HEAD and the custom content token for other methods. The latter does not turn a generic browser proxy into a write API.
 
-## Client Classes
-
-### BaseStrapiClient
-
-Abstract base class with shared fetch methods.
-
-**`apps/ui/src/lib/strapi-api/base.ts`**
-
-Key features:
-
-- Automatic locale handling
-- Response parsing and error handling
-- Configurable caching (dev: no cache, prod: 60s revalidation)
-- UID-to-endpoint mapping via `API_ENDPOINTS`
-
-### PublicClient
-
-For read operations using API key authentication.
-
-**`apps/ui/src/lib/strapi-api/public.ts`**
-
-- Uses `STRAPI_REST_READONLY_API_KEY` for GET/HEAD requests
-- Uses `STRAPI_REST_CUSTOM_API_KEY` for write operations
-- Supports proxy mode for client-side requests
-
-### PrivateClient
-
-For authenticated operations using user JWT tokens.
-
-**`apps/ui/src/lib/strapi-api/private.ts`**
-
-- Retrieves user JWT from Better Auth session
-- Supports direct JWT injection via `userJWT` option
-- Required for user-specific data and protected endpoints
-
-## Client Instances
-
-Pre-instantiated clients are exported from `apps/ui/src/lib/strapi-api/index.ts`:
+Use existing feature loaders in `apps/ui/src/lib/strapi-api/content/` when available. They define the required population, locale fallback and publication behavior.
 
 ```typescript
-import { PrivateStrapiClient, PublicStrapiClient } from "@/lib/strapi-api"
+import { PublicStrapiClient } from "@/lib/strapi-api"
+
+const response = await PublicStrapiClient.fetchOne(
+  "api::page.page",
+  documentId,
+  { locale: "en", populate: { seo: true } }
+)
+const page = response.data
 ```
 
-## Authentication Flow
+The Page model has title, slug and SEO only. It has no `content` or `fullPath` field.
 
-**`apps/ui/src/lib/strapi-api/request-auth.ts`**
+## Account operations
 
-### API Key Authentication (Public)
+Better Auth owns the public cookie session. Dedicated Next.js account, contribution, moderation and Staff routes resolve that session, validate the request and construct trusted bridge headers. Strapi rechecks authority. See [Authentication](authentication.md).
 
-```typescript
-// Read-only operations (GET, HEAD)
-STRAPI_REST_READONLY_API_KEY
+`PrivateStrapiClient` remains for explicit legacy authentication. It accepts an explicit `userJWT` option, but its default compatibility hook returns no token. It does not obtain a Strapi JWT from a Better Auth session. Do not use it to implement new account functionality.
 
-// Write operations (POST, PUT, DELETE)
-STRAPI_REST_CUSTOM_API_KEY
-```
+## Browser proxies
 
-### Session-authenticated operations
-
-Use dedicated Next.js routes for account, contribution, staff and moderation operations. They resolve the Better Auth session on the server and call the permissioned Strapi bridge. `PrivateStrapiClient` does not obtain a JWT from that session. See [Authentication](./authentication.md) for the current boundary.
-
-### createStrapiAuthHeader()
-
-Compatibility utility for explicit content API authentication:
+Client-side content calls use `useProxy: true` in the method's options argument:
 
 ```typescript
-const authHeader = await createStrapiAuthHeader({
-  isReadOnly: true, // use readonly API key
-  isPrivate: false, // public content API token; not a user credential
-})
-// Returns: { Authorization: "Bearer <token>" }
-```
-
-## Proxy Routes
-
-Proxies hide sensitive information from the client.
-
-### /api/public-proxy
-
-**`apps/ui/src/app/api/public-proxy/[...slug]/route.ts`**
-
-- Hides `STRAPI_URL` from client
-- Injects API key into requests
-- Validates endpoints against allowlist
-
-### /api/private-proxy
-
-**`apps/ui/src/app/api/private-proxy/[...slug]/route.ts`**
-
-- Hides `STRAPI_URL` from client
-- Compatibility route for an explicitly supplied Authorization header; it does not turn a Better Auth cookie into CMS authority
-- Validates endpoints against allowlist
-
-### Endpoint Allowlist
-
-**`request-auth.ts`**
-
-```typescript
-// The actual allowlist lives in request-auth.ts. It permits read-only
-// published browse endpoints. Generic POST/account/auth routes are refused.
-```
-
-Requests to unlisted endpoints return 403 Forbidden.
-
-## Fetch Methods
-
-### fetchOne()
-
-Fetch a single document by ID (collection types) or without ID (single types).
-
-```typescript
-// Single type (no ID)
-const navbar = await PublicStrapiClient.fetchOne(
-  "api::navbar.navbar",
+const response = await PublicStrapiClient.fetchMany(
+  "api::page.page",
+  { locale: "en", pagination: { page: 1, pageSize: 10 } },
   undefined,
-  { locale, populate: { links: true } }
+  { useProxy: true }
 )
-
-// Collection type (with ID)
-const page = await PublicStrapiClient.fetchOne("api::page.page", documentId, {
-  locale,
-  populate: { content: true },
-})
 ```
 
-### fetchMany()
+`fetchMany` has four arguments, so its options are fourth; `fetchOne` has an additional document-ID argument, making its options fifth. Check the method signature before copying a call.
 
-Fetch multiple documents with optional filters and pagination.
+The generic `/api/public-proxy` and `/api/private-proxy` routes validate paths through `request-auth.ts`. They allow selected published browse GETs and refuse generic account/authentication writes. A cookie alone does not give the private compatibility proxy CMS authority. Feature-specific gateways also constrain query parameters, response fields and result sizes.
 
-```typescript
-const pages = await PublicStrapiClient.fetchMany("api::page.page", {
-  locale,
-  filters: { slug: { $startsWith: "blog" } },
-  pagination: { page: 1, pageSize: 10 },
-})
-```
+## Methods and response envelopes
 
-### fetchAll()
+The implementations are in `apps/ui/src/lib/strapi-api/base.ts`; UID mappings are in `endpoints.ts`.
 
-Fetch all documents, automatically handling pagination.
+| Method                                                    | Purpose                                                        |
+| --------------------------------------------------------- | -------------------------------------------------------------- |
+| `fetchAPI(path, params, requestInit, options)`            | Custom endpoint with explicit response handling                |
+| `fetchOne(uid, documentId, params, requestInit, options)` | One collection entry or a single type                          |
+| `fetchMany(uid, params, requestInit, options)`            | One bounded page of entries                                    |
+| `fetchOneBySlug(uid, slug, params, requestInit, options)` | One entry selected by slug                                     |
+| `fetchAll(uid, params, requestInit, options)`             | Aggregate every page; use only for deliberately small datasets |
 
-```typescript
-const allPages = await PublicStrapiClient.fetchAll("api::page.page", {
-  locale,
-  fields: ["fullPath", "slug"],
-})
-```
+`fetchOneByFullPath` has been removed. Collection responses have `data` and `meta`; single responses have `data`. Do not treat the entire response as an array.
 
-Internally fetches pages of 100 items and aggregates results.
+The library catalogue must use bounded reads, keyset pagination, database counts and search/worker projections. `fetchAll` is not appropriate for catalogue-wide request handling.
 
-### fetchOneBySlug()
+## Caching
 
-Fetch a single document by its `slug` field.
+`DEFAULT_REVALIDATE_SECONDS` in `base.ts` defines the production default (currently 300 seconds). Development requests use zero revalidation. Requests include model/entry tags, invalidated through the feature's webhook or bridge path.
+
+Pass Next.js fetch options as `requestInit`, not the client-options argument:
 
 ```typescript
-const page = await PublicStrapiClient.fetchOneBySlug(
+await PublicStrapiClient.fetchOne(
   "api::page.page",
-  "about-us",
-  { locale }
+  documentId,
+  { locale: "en", populate: { seo: true } },
+  { next: { revalidate: 0 } }
 )
 ```
 
-### fetchOneByFullPath()
+Private responses must use their feature's uncached session-aware boundary. Account-scoped browser query keys must include identity and permission scope.
 
-Fetch a single document by its `fullPath` field (for hierarchical pages).
+## Extending an endpoint
 
-```typescript
-const page = await PublicStrapiClient.fetchOneByFullPath(
-  "api::page.page",
-  "/services/web-development",
-  {
-    locale,
-    populate: { seo: true },
-    populateDynamicZone: { content: true },
-  }
-)
-```
-
-## Caching Strategy
-
-Configured in `BaseStrapiClient.fetchAPI()`:
-
-| Environment | Behavior                             |
-| ----------- | ------------------------------------ |
-| Development | `revalidate: 0` (no cache)           |
-| Production  | `revalidate: 60` (60 second default) |
-
-Override per-request:
-
-```typescript
-await PublicStrapiClient.fetchOne(uid, id, params, {
-  next: { revalidate: 0 }, // disable cache
-})
-```
-
-## CustomFetchOptions
-
-```typescript
-interface CustomFetchOptions {
-  // Use proxy route (required for client components)
-  useProxy?: boolean
-
-  // Skip adding locale to query params
-  doNotAddLocaleQueryParams?: boolean
-
-  // Skip user authorization (PrivateClient only)
-  omitUserAuthorization?: boolean
-
-  // Provide JWT directly instead of fetching from session
-  userJWT?: string
-}
-```
-
-## Usage Examples
-
-### Server Component
-
-```typescript
-// apps/ui/src/lib/strapi-api/content/server.ts
-import { PublicStrapiClient } from "@/lib/strapi-api"
-
-export async function fetchPage(fullPath: string, locale: Locale) {
-  const dm = await draftMode()
-
-  return await PublicStrapiClient.fetchOneByFullPath(
-    "api::page.page",
-    fullPath,
-    {
-      locale,
-      status: dm.isEnabled ? "draft" : "published",
-      populate: { seo: true },
-      populateDynamicZone: { content: true },
-    }
-  )
-}
-```
-
-### Client Component with Proxy
-
-```typescript
-"use client"
-
-import { PublicStrapiClient } from "@/lib/strapi-api"
-
-async function fetchData() {
-  const data = await PublicStrapiClient.fetchMany(
-    "api::page.page",
-    { locale: "en" },
-    undefined,
-    { useProxy: true } // required for client-side
-  )
-  return data
-}
-```
-
-### Authenticated Request
-
-```typescript
-import { PrivateStrapiClient } from "@/lib/strapi-api"
-
-// User JWT is automatically retrieved from Better Auth session
-const userData = await PrivateStrapiClient.fetchOne("api::user.user", userId, {
-  locale,
-})
-```
-
-## Adding New Endpoints
-
-1. Add mapping in `API_ENDPOINTS`:
-
-```typescript
-// apps/ui/src/lib/strapi-api/base.ts
-export const API_ENDPOINTS: { [key in UID.ContentType]?: string } = {
-  "api::page.page": "/pages",
-  "api::footer.footer": "/footer",
-  "api::your-new-type.your-new-type": "/your-new-types", // add here
-}
-```
-
-2. Add to proxy allowlist if needed:
-
-```typescript
-// apps/ui/src/lib/strapi-api/request-auth.ts
-const ALLOWED_STRAPI_ENDPOINTS = {
-  GET: [
-    "api/your-new-types", // add here
-  ],
-}
-```
-
-## Related Documentation
-
-- [Page Builder](./page-builder.md) — how fetched content is rendered
-- [Pages Hierarchy](./pages-hierarchy.md) — URL structure and fullPath generation
+Add a UID mapping only for the content type actually served. For browser reads, review the feature's projection and query limits before extending an allowlist. Never expose raw user/profile, draft or financial records through a generic proxy. New authenticated operations need dedicated Next.js and permissioned Strapi routes, with focused authority and input-validation checks.

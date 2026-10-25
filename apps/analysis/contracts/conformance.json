@@ -1,0 +1,587 @@
+[
+  {
+    "name": "library lookup",
+    "contract": "request",
+    "valid": true,
+    "value": {
+      "schemaVersion": 1,
+      "libraryId": "contract-library",
+      "mode": "walking"
+    }
+  },
+  {
+    "name": "coordinates rejected",
+    "contract": "request",
+    "valid": false,
+    "value": {
+      "schemaVersion": 1,
+      "libraryId": "contract-library",
+      "mode": "walking",
+      "lat": 0
+    }
+  },
+  {
+    "name": "driving rejected",
+    "contract": "request",
+    "valid": false,
+    "value": {
+      "schemaVersion": 1,
+      "libraryId": "contract-library",
+      "mode": "driving"
+    }
+  },
+  {
+    "name": "complete four-band result including true zero",
+    "contract": "result",
+    "valid": true,
+    "value": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "libraryId": "contract-library",
+      "coordinateHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "walking",
+      "calculatedAt": "2026-10-24T00:00:00Z",
+      "method": "reverse-network-cumulative-v3",
+      "snapDistanceMetres": 0,
+      "network": {
+        "release": "osm-test",
+        "source": "OSM",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licence": "ODbL 1.0"
+      },
+      "population": {
+        "release": "ghsl-test",
+        "source": "GHS-POP",
+        "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+        "licence": "CC BY 4.0",
+        "year": 2020
+      },
+      "warnings": [],
+      "contours": [
+        {
+          "minutes": 5,
+          "residents": 0,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 10,
+          "residents": 100,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 15,
+          "residents": 200,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 30,
+          "residents": 300,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "partial coverage remains unknown",
+    "contract": "result",
+    "valid": true,
+    "value": {
+      "schemaVersion": 1,
+      "state": "partial",
+      "libraryId": "contract-library",
+      "coordinateHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "walking",
+      "calculatedAt": "2026-10-24T00:00:00Z",
+      "method": "reverse-network-cumulative-v3",
+      "snapDistanceMetres": 0,
+      "network": {
+        "release": "osm-test",
+        "source": "OSM",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licence": "ODbL 1.0"
+      },
+      "population": {
+        "release": "ghsl-test",
+        "source": "GHS-POP",
+        "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+        "licence": "CC BY 4.0",
+        "year": 2020
+      },
+      "warnings": [],
+      "contours": [
+        {
+          "minutes": 5,
+          "residents": 0,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 10,
+          "residents": 100,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 15,
+          "residents": 200,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 30,
+          "residents": null,
+          "coveredFraction": 0.99,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "ready cannot hide missing population",
+    "contract": "result",
+    "valid": false,
+    "value": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "libraryId": "contract-library",
+      "coordinateHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "walking",
+      "calculatedAt": "2026-10-24T00:00:00Z",
+      "method": "reverse-network-cumulative-v3",
+      "snapDistanceMetres": 0,
+      "network": {
+        "release": "osm-test",
+        "source": "OSM",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licence": "ODbL 1.0"
+      },
+      "population": {
+        "release": "ghsl-test",
+        "source": "GHS-POP",
+        "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+        "licence": "CC BY 4.0",
+        "year": 2020
+      },
+      "warnings": [],
+      "contours": [
+        {
+          "minutes": 5,
+          "residents": 0,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 10,
+          "residents": 100,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 15,
+          "residents": 200,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 30,
+          "residents": null,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "snap bounded to 100 metres",
+    "contract": "result",
+    "valid": false,
+    "value": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "libraryId": "contract-library",
+      "coordinateHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "walking",
+      "calculatedAt": "2026-10-24T00:00:00Z",
+      "method": "reverse-network-cumulative-v3",
+      "snapDistanceMetres": 101,
+      "network": {
+        "release": "osm-test",
+        "source": "OSM",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licence": "ODbL 1.0"
+      },
+      "population": {
+        "release": "ghsl-test",
+        "source": "GHS-POP",
+        "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+        "licence": "CC BY 4.0",
+        "year": 2020
+      },
+      "warnings": [],
+      "contours": [
+        {
+          "minutes": 5,
+          "residents": 0,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 10,
+          "residents": 100,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 15,
+          "residents": 200,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 30,
+          "residents": 300,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "missing band rejected",
+    "contract": "result",
+    "valid": false,
+    "value": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "libraryId": "contract-library",
+      "coordinateHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "walking",
+      "calculatedAt": "2026-10-24T00:00:00Z",
+      "method": "reverse-network-cumulative-v3",
+      "snapDistanceMetres": 0,
+      "network": {
+        "release": "osm-test",
+        "source": "OSM",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licence": "ODbL 1.0"
+      },
+      "population": {
+        "release": "ghsl-test",
+        "source": "GHS-POP",
+        "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+        "licence": "CC BY 4.0",
+        "year": 2020
+      },
+      "warnings": [],
+      "contours": [
+        {
+          "minutes": 10,
+          "residents": 100,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 15,
+          "residents": 200,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 30,
+          "residents": 300,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "unsupported source year rejected",
+    "contract": "result",
+    "valid": false,
+    "value": {
+      "schemaVersion": 1,
+      "state": "ready",
+      "libraryId": "contract-library",
+      "coordinateHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mode": "walking",
+      "calculatedAt": "2026-10-24T00:00:00Z",
+      "method": "reverse-network-cumulative-v3",
+      "snapDistanceMetres": 0,
+      "network": {
+        "release": "osm-test",
+        "source": "OSM",
+        "sourceUrl": "https://www.openstreetmap.org/copyright",
+        "licence": "ODbL 1.0"
+      },
+      "population": {
+        "release": "ghsl-test",
+        "source": "GHS-POP",
+        "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+        "licence": "CC BY 4.0",
+        "year": 2200
+      },
+      "warnings": [],
+      "contours": [
+        {
+          "minutes": 5,
+          "residents": 0,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 10,
+          "residents": 100,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 15,
+          "residents": 200,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        },
+        {
+          "minutes": 30,
+          "residents": 300,
+          "coveredFraction": 1,
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 0]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

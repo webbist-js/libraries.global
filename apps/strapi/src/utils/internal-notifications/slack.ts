@@ -15,33 +15,36 @@ export function notificationConfig() {
     throw new Error("Internal notification activation date is required")
   const dryRun = process.env.INTERNAL_NOTIFICATIONS_DRY_RUN === "true"
   const webhook = process.env.SLACK_INTERNAL_WEBHOOK_URL ?? ""
-  if (!dryRun) {
-    // Only Slack's fixed HTTPS endpoint; never follow a redirect with the credential.
-    let url: URL
-    try {
-      url = new URL(webhook)
-    } catch {
-      throw new Error("Invalid internal Slack webhook configuration")
-    }
-    if (
-      url.origin !== "https://hooks.slack.com" ||
-      !/^\/services\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9]+$/.test(
-        url.pathname
-      ) ||
-      url.search ||
-      url.hash ||
-      url.username ||
-      url.password
-    )
-      throw new Error("Invalid internal Slack webhook configuration")
-  }
+  if (!dryRun && !validSlackWebhook(webhook))
+    throw new Error("Invalid internal Slack webhook configuration")
 
   return {
     since: new Date(since).toISOString(),
     dryRun,
     webhook,
+    feedbackWebhook: process.env.SLACK_FEEDBACK_WEBHOOK_URL ?? "",
     environment:
       process.env.APP_ENV === "production" ? "production beta" : "development",
+  }
+}
+
+/** Validate destinations independently so feedback configuration cannot pause activity. */
+export function validSlackWebhook(value: string): boolean {
+  try {
+    const url = new URL(value)
+
+    return (
+      url.origin === "https://hooks.slack.com" &&
+      /^\/services\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/[A-Za-z0-9]+$/.test(
+        url.pathname
+      ) &&
+      !url.search &&
+      !url.hash &&
+      !url.username &&
+      !url.password
+    )
+  } catch {
+    return false
   }
 }
 
@@ -53,19 +56,45 @@ export function maskEmail(value: unknown): string {
 }
 
 /** Plain text blocks prevent user-controlled Slack markup, mentions and links. */
-const clean = (s: string, max: number) =>
-  s.replaceAll(/\p{Cc}/gu, " ").slice(0, max)
+const clean = (s: string, max: number, preserveLines = false) =>
+  Array.from(
+    s
+      .replaceAll(/\p{Cc}/gu, (character) =>
+        preserveLines && character === "\n" ? "\n" : " "
+      )
+      .slice(0, max),
+    (character) => {
+      const point = character.codePointAt(0)!
+
+      return point >= 0xd800 && point <= 0xdfff ? "\uFFFD" : character
+    }
+  ).join("")
 
 export function slackMessage(event: InternalEvent, environment: string) {
   const title = clean(event.title, 150)
-  const detail = clean(event.detail, 1000)
+  const detail = clean(
+    event.detail,
+    event.kind === "product_feedback" ? 12000 : 1000,
+    event.kind === "product_feedback"
+  )
   const context = `${environment} · ${new Date(event.eventAt).toISOString()}`
+  const sections = []
+  // Slack plain-text sections are limited to 3,000 characters. Preserve full
+  // feedback, reproduction steps and Atlas answers without enabling markup.
+  let remaining = detail
+  while (remaining) {
+    let end = Math.min(remaining.length, 2900)
+    if (end < remaining.length && remaining.codePointAt(end - 1)! > 0xffff)
+      end--
+    sections.push({
+      type: "section",
+      text: { type: "plain_text", text: remaining.slice(0, end), emoji: false },
+    })
+    remaining = remaining.slice(end)
+  }
   const blocks: Record<string, unknown>[] = [
     { type: "header", text: { type: "plain_text", text: title, emoji: false } },
-    {
-      type: "section",
-      text: { type: "plain_text", text: detail, emoji: false },
-    },
+    ...sections,
     {
       type: "context",
       elements: [{ type: "plain_text", text: context, emoji: false }],

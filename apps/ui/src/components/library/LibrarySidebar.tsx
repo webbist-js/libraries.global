@@ -5,10 +5,7 @@ import { libraryTypeName } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { facilityRows } from "@/components/library/facility-rows"
-import {
-  type OpeningTimesValue,
-  recordChecklist,
-} from "@/components/library/library-page.helpers"
+import { libraryChecklist } from "@/components/library/library-presentation"
 import {
   OpenCorrectionLink,
   OpenVerifyLink,
@@ -32,6 +29,8 @@ import {
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
+export { libraryChecklist } from "@/components/library/library-presentation"
+
 type Lib = PopulatedLibraryData
 const asRecord = (l: Lib) => l as unknown as Record<string, unknown>
 
@@ -41,42 +40,17 @@ const panelStyle = {
   border: `1px solid ${T.border.line}`,
 }
 
-/** The sidebar's checklist, shared by the record panel and the tasks. */
-export function libraryChecklist(library: Lib) {
-  const rec = asRecord(library)
-
-  return recordChecklist({
-    libraryType: libraryTypeName(library.libraryType),
-    mobileTimetable: rec.mobileTimetable,
-    homeLibrary: rec.homeLibrary,
-    heroImage: library.heroImage,
-    openingTimes: library.openingTimes as OpeningTimesValue | null,
-    streetAddress: library.streetAddress,
-    location: library.location,
-    accessibility: library.accessibility as unknown[] | null,
-    services: library.services as unknown[] | null,
-    amenities: library.amenities as unknown[] | null,
-    absentFacilities: rec.absentFacilities,
-    summary: library.summary,
-    description: library.description,
-    collectionStats: rec.collectionStats as unknown[] | null,
-    foundedYear: rec.foundedYear as string | null,
-    openedYear: rec.openedYear as string | null,
-    website: rec.website as string | null,
-    phone: rec.phone as string | null,
-    email: rec.email as string | null,
-  })
-}
-
 export function LibraryRecordPanel({
   library,
   followers = null,
+  embedded = false,
 }: {
   readonly library: Lib
+  readonly embedded?: boolean
   /** People following the library; null leaves the count out. */
   readonly followers?: number | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
 
   const rec = asRecord(library)
   const { done, total, items } = libraryChecklist(library)
@@ -85,15 +59,21 @@ export function LibraryRecordPanel({
     (row) => row.category !== "service"
   )
 
+  const Heading = embedded ? "h3" : "h2"
+
   return (
-    <section aria-labelledby="rec-h" className={PANEL} style={panelStyle}>
-      <h2
+    <section
+      aria-labelledby="rec-h"
+      className={embedded ? "min-w-0" : PANEL}
+      style={embedded ? undefined : panelStyle}
+    >
+      <Heading
         id="rec-h"
         className="m-0 mb-3 text-[15px] font-bold"
         style={{ color: T.ink.base }}
       >
-        {tUi("about_this_record")}
-      </h2>
+        {tPage("recordStatus")}
+      </Heading>
       <div
         className="flex gap-2.5 rounded-2xl px-3 py-2.5 text-[13.5px] leading-normal"
         style={{

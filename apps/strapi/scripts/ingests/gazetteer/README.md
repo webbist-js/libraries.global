@@ -2,7 +2,7 @@
 
 Sets each profiled Country's Place Labels, then adds the Regions and Areas that GeoNames (or a curated list) has and the atlas lacks. It only ever adds: nothing already in Strapi is renamed, moved or deleted.
 
-Spec: `docs/superpowers/specs/2026-10-04-place-labels-and-world-places-design.md` §6.
+The profiles, `run-rules.ts` and importer source define the mapping and reconciliation rules. Keep run-specific plans and results in ignored reports.
 
 ## What it does
 
@@ -118,7 +118,7 @@ Options:
 - `--country=A,B` — one comma-separated list of Country keys (`iso2`, or `GB-ENG` style); not a repeatable flag. A key that matches no Country is listed in the report's `unknownCountries`, printed as a warning, and makes the run exit 1 — every other requested key still runs, so it's a flag to a typo, not a reason to stop early.
 - `--step=labels,regions,areas` — run only these steps, as one comma-separated list. Default: all three. Any other value is rejected: the script prints the allowed values and exits before it reads anything from Strapi.
 
-Both env values are in `apps/strapi/.env`. `STRAPI_API_TOKEN` needs an `ingest-*` token with read and write access to Countries, Regions and Areas; without `STRAPI_BRIDGE_SECRET` Strapi ignores `?status=published` qualifiers and the client refuses to start (`scripts/strapi-client.ts`). Writes run at most 8 requests in flight.
+Supply scoped credentials through private environment inputs; checked-in examples contain names and placeholders only. `STRAPI_API_TOKEN` needs an `ingest-*` token with read and write access to Countries, Regions and Areas; without `STRAPI_BRIDGE_SECRET` Strapi ignores `?status=published` qualifiers and the client refuses to start (`scripts/strapi-client.ts`). Writes run at most 8 requests in flight.
 
 Each run writes a JSON report to `.runs/<ISO time>.json` (git-ignored) and prints one summary line per Country.
 
@@ -133,12 +133,12 @@ For each Country: the label changes made (or that a dry run would make); `labels
 - **Non-Latin names never match by name.** A source name in a script the matcher can't normalise to Latin letters compares as `""` and never matches an existing place. Whether that makes it a new place follows the same rule as any other unmatched source — only when the parent is empty, `fill` is on, or the parent is resumed — so it isn't always created fresh; where none of those hold, it's correctly left out and reported, like any other unmatched source. When it is created, it can duplicate a place already in Strapi under its local name.
 - **Names keep their own letters; slugs don't.** A Region or Area is named exactly as its source spells it, including diacritics ("Łódź Voivodeship", "Bavaria"). Its slug is the ASCII transliteration ("lodz-voivodeship").
 - **Shared names are allowed.** A Region and an Area, or two Areas, can have the same name — the atlas doesn't require unique names, only unique slugs. A repeated base slug gets a suffix (the Country's `iso2` for Regions, the parent Region's slug for Areas), and a slug still clashing after that gets a GeoNames id or GSS code appended. A US Area's slug always carries its state's admin1 code (`areaSlugSuffix: "admin1"`), whether or not it clashes, so it never shows up in `suffixedSlugs` even though the slug does differ from the plain name.
-- **Levels and labels outside the 44 countries already in the atlas, plus the US, are first guesses.** They haven't been checked place by place and may need a profile fix once reviewed.
+- **Unreviewed country profiles are provisional.** They haven't been checked place by place and may need a profile fix once reviewed.
 - **Latvia and Slovenia can't source Regions from GeoNames.** GeoNames level 1 for both is municipalities, but the atlas holds Latvia's five planning regions and Slovenia's twelve statistical regions instead — a different level GeoNames doesn't expose. Both profiles set `areaLevel: null` and import nothing; their Regions stay hand-maintained.
 
 ## Go-live runbook
 
 1. **Deploy first.** The `geonames_id` indexes on Region and Area (`HOT_PATH_INDEXES`) and the new schema fields this import writes — `geonamesId` and `sourceAttribution` on Region; `geonamesId`, `gssCode` and `sourceAttribution` on Area — must already be live before the import runs against that environment — this script doesn't create them.
-2. **Turn off the Strapi → `/api/revalidate` webhook for the run**, then trigger one revalidation by hand once it's done. Thousands of individual Region/Area creates would otherwise each fire the webhook.
+2. Review the bulk invalidation/load strategy with the operator before applying a large import. Verify that the selected release supports its intended revalidation behavior; retain environment-specific toggle commands and acceptance evidence in private operator storage.
 3. **Run `pnpm --filter @repo/strapi seed:meilisearch` after the import.** Find libraries reads library search facets (Region names, Place Labels) from the Meilisearch index, not Strapi directly, so new places and label edits don't show there until a reseed.
 4. A Place Label edited by hand in Strapi admin, same as an import-written one, only reaches Find libraries after that reseed.

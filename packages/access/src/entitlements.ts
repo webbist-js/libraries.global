@@ -28,7 +28,11 @@ export type Feature =
   | "api.key"
   | "library.team"
   | "library.traffic"
-export type Limit = "savedViews" | "savedSearches" | "exportRows"
+export type Limit =
+  | "savedViews"
+  | "savedSearches"
+  | "exportRows"
+  | "analysisRunsPerHour"
 
 export interface Entitlements {
   plan: PlanKey
@@ -127,26 +131,31 @@ const PLAN_FEATURES: Record<PlanKey, readonly Feature[]> = {
 
 const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
   public: {
+    analysisRunsPerHour: 0,
     savedViews: 0,
     savedSearches: 0,
     exportRows: 0,
   },
   free: {
+    analysisRunsPerHour: 0,
     savedViews: 3,
     savedSearches: 3,
     exportRows: 0,
   },
   supporter: {
+    analysisRunsPerHour: 0,
     savedViews: 3,
     savedSearches: 3,
     exportRows: 500,
   },
   pro: {
+    analysisRunsPerHour: 20,
     savedViews: 1000,
     savedSearches: 1000,
     exportRows: 10_000,
   },
   team: {
+    analysisRunsPerHour: 100,
     savedViews: 1000,
     savedSearches: 1000,
     exportRows: 50_000,

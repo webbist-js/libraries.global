@@ -53,7 +53,7 @@ Any user whose `wiki_edit` Submission has been approved on a given article. Stor
 _Avoid_: author (that is the original editorial attribution), editor
 
 **Blog**:
-Editorial and narrative content — stories, features, guest pieces — managed exclusively by editors and invited guest editors. Not community-editable; guest posts are submitted via the Submission system (`blog_submission`) and curated by editors. Users see it as the **Journal** (`/journal`); code and CMS keep the `blog` names.
+Editorial and narrative content — stories, features and community writing. Signed-in members can submit stories and revisions to their own work through `blog_submission`; Journal editors can revise other authors' work within their language grants. Publication follows scoped review. `publicationOrigin` distinguishes From the Index from community stories without changing authorship. Users see it as the **Journal** (`/journal`); code and CMS keep the `blog` names.
 _Avoid_: posts, news
 
 **Submission**:
@@ -169,7 +169,7 @@ A row that gives one person one Contributor Role, optionally scoped to a Moderat
 _Avoid_: permission, U&P role
 
 **Moderation Queue**:
-Where a Submission waits for review: `index` (library submissions), `knowledge` (Knowledge contributions), `journal` (Journal contributions) or `applications` (Role Applications). Every Submission type maps to exactly one queue.
+Where a Submission waits for review: `index` (library submissions), `knowledge` (Knowledge contributions), `journal` (Journal contributions) or `applications` (Role Applications), with `discussions` for the portable discussion review workflow. Every content-moderation Submission type maps to one queue; discussion records and immutable revisions have their own plugin lifecycle.
 _Avoid_: inbox, backlog
 
 **Moderation Scope**:
@@ -177,7 +177,7 @@ The (queue, locale) pairs a Moderator may review, one per `moderator` Role Grant
 _Avoid_: permission, remit
 
 **Role Application**:
-A Submission asking for a Knowledge or Journal editor role, for every language or only some, reviewed in the `applications` queue. Open to anyone with five accepted Submissions, no open application for that role and no grant that already covers it; never related to Plan, Tier or Points. Approval creates the Role Grants and awards no Points.
+A Submission asking for an editor or scoped moderator role, for every language or only some, reviewed in the `applications` queue. Moderators may request Index, Knowledge, Journal or Discussions; discussion applications have no article-section selection. Open to anyone with five accepted Submissions, no open application for that role and no grant that already covers it; never related to Plan, Tier or Points. Approval creates the Role Grants and awards no Points.
 _Avoid_: promotion, role request
 
 **Review Event**:
@@ -185,7 +185,7 @@ One Submission State transition: from, to, reviewer, note and when. Append-only;
 _Avoid_: comment, history (alone — too generic)
 
 **Change Record**:
-One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and retained as audit history. Account erasure clears actor and reviewer identifiers without deleting the public changes. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values are a Pro Entitlement (`library.history`).
+One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and retained as audit history. Account erasure clears actor and reviewer identifiers without deleting the public changes. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values require the Supporter-or-higher `library.history` Entitlement.
 _Avoid_: revision, audit log entry
 
 **Article Change**:
@@ -197,11 +197,11 @@ Something a signed-in user may do in the contribution system: submit a correctio
 _Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what a Plan gives)
 
 **Entitlement**:
-A Plan-gated feature or numeric limit, such as the `atlas.export` feature or the `exportRows` limit (free 0, pro 10 000, team 50 000). Resolved by `resolveEntitlements` in `@repo/access` from the user's Plan and always enforced on the server (`requireEntitlement`); UI locks only explain. The library-scoped features (`library.team`, `library.traffic`) are checked per Library with `canForLibrary` and hold only on the Libraries of the user's active Teams. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role or moderation: money never buys trust.
+A Plan-gated feature or numeric limit, such as the `atlas.export` feature or the `exportRows` limit (free 0, supporter 500, pro 10 000, team 50 000). Resolved by `resolveEntitlements` in `@repo/access` from the user's Plan and always enforced on the server (`requireEntitlement`); UI locks only explain. The library-scoped features (`library.team`, `library.traffic`) are checked per Library with `canForLibrary` and hold only on the Libraries of the user's active Teams. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role or moderation: money never buys trust.
 _Avoid_: capability, perk, permission
 
 **Plan**:
-A user's membership level, which decides their Entitlements: `public` (signed out), `free` (any account), `supporter` (patronage only, with Free's features and limits), `pro` and `team`. Resolved on the server for every session; when several Plan Sources apply, the highest Plan wins. Library facts are free on every Plan, including `public`.
+A user's membership level, which decides their Entitlements: `public` (signed out), `free` (any account), `supporter` (detailed library history and Atlas exports up to 500 libraries per download), `pro` and `team`. Resolved on the server for every session; when several Plan Sources apply, the highest Plan wins. Library facts are free on every Plan, including `public`.
 _Avoid_: tier (Tier is the Points ladder), subscription (only one way to hold a Plan)
 
 **Supporter recognition**:
@@ -209,7 +209,7 @@ Optional credit on `/community/supporters` and a Supporter mark on the profile, 
 _Avoid_: trust badge, paid role
 
 **Plan Source**:
-How a user holds their Plan: `team` (an active Team Seat: Pro, plus the library-scoped Team features on that Team's Libraries), `grant` (an admin Entitlement Grant, for example for press or partners), `verified` (a Pro Verification for library staff, students and charities), `earned` (Archivist Tier or above, plus a 90-day hold after dropping below) or `paid` (reserved: there is no checkout yet). `public` and `free` have the source `none`. At equal Plan, `paid` beats `team`, which beats `grant`, which beats `verified`, which beats `earned`. Grants and verifications live in the admin-only `entitlement-grant` and `pro-verification` collections, and Teams in the `access` plugin's `team` and `team-member` types.
+How a user holds their Plan: `team` (an active Team Seat: Pro, plus the library-scoped Team features on that Team's Libraries), `grant` (an admin Entitlement Grant, for example for press or partners), `verified` (a Pro Verification for library staff, students and charities), `earned` (Archivist Tier or above, plus a 90-day hold after dropping below) or `paid` (settled personal membership). `public` and `free` have the source `none`. At equal Plan, `paid` beats `team`, which beats `grant`, which beats `verified`, which beats `earned`. Grants and verifications live in the admin-only `entitlement-grant` and `pro-verification` collections, and Teams in the `access` plugin's `team` and `team-member` types.
 _Avoid_: reason, plan type
 
 **Collection Stat**:
@@ -318,17 +318,23 @@ _Avoid_: drive request
 > **Dev:** "A council has bought Team. Does that make its librarians staff of every branch?"
 > **Domain expert:** "No. Team is the council's **Team**: its **Team Organiser** invites people into **Team Seats**, which gives them Pro, and then assigns each one to a **Library** as owner or editor. On a verified Team that assignment is the **Staff Role**; on an unverified one it's a vouched **Library Claim** for a Moderator. Nobody is staff of a branch they haven't been assigned to, and the Team's **Plan** never changes who reviews what."
 
-## Flagged ambiguities
+## Model notes
 
 - The `library` relation on the Event schema is not marked `required`, but every Event must belong to a Library — this is a schema gap to fix.
 - `correction` and `library_edit` are both Submission types that change Library data. Resolved: `library_edit` is a comprehensive multi-field diff produced by the full edit wizard and requires a Library Claim; `correction` is a targeted single-issue report (category picker + freetext) available to any logged-in user with no claim required, produced by the inline correction CTA on library detail pages. Non-logged-in users see a "Sign in to suggest a correction" prompt. Approved staff use the full edit wizard in the Staff area. Their ordinary changes publish directly, while the sensitive fields in ADR-0006 become moderated `library_edit` requests.
-- `pendingReview` on Event is dead code — filtering happens at the import layer, not in Strapi. Candidate for removal.
-- Library `entityRef` auto-generation is not yet implemented (lifecycle hook exists for Country/Region/Area but not Library). The current format (`GB-BL-001`) in the CLAUDE.md is a relic of manual entry; the intended scheme is hierarchically composed from parent entityRefs + the Library's short name.
+- Event `pendingReview` is active: public event queries exclude pending records, and the Events admin review endpoints approve or discard them.
+- Library `entityRef` is generated by `apps/strapi/src/lifeCycles/entityRef.ts` from geographic slugs and the library slug, including Area when present. It is a colon-separated identifier; public URLs omit Area.
 
 - "public library" was used colloquially to mean _any library institution_ (not "open to the general public" or "publicly funded"). Resolved: **Library** covers all institutional types regardless of access model or funding source.
+
+## Atlas library networks
+
+A **Library Network** is a sourced institutional grouping, such as a public library service, university system or consortium. Libraries have non-localised many-to-many `networks` memberships. The network has a stable source key, name, kind, countries and source reference. Its identity is independent of geographic placement and of paid Teams; membership grants no staff authority.
+
+Network is a reusable Atlas filter. Network Reach combines the full analytical catchments of the selected published, mapped, fixed-location Libraries, then clips them to a service reporting area derived from all eligible mapped members, before filters apply. The default area unions the supported districts containing those members; it does not assert an official jurisdiction. Selecting a service focuses its bounding box. Unrelated reporting-area combinations are rejected. It integrates the union and the area's denominator against the same population edition. Missing routes or population remain explicit; incomplete results cannot establish population gaps. Saved analytical choices do not alter institutional memberships.
 
 ## Pricing and content operations
 
 The agreed amounts are in `apps/ui/src/lib/membership-pricing.json`: Supporter £3/£30, founding Pro £5/£50, future standard Pro £8/£80 after Reach ships, Team £600/year for five seats and £120 per additional seat (ex VAT), with a 20% public-library-service discount. New Teams use self-service annual subscriptions when enabled; settled payment provisions seats, while staff authority and discount eligibility are assessed separately. Existing invoice agreements are preserved. Team API is a separate £15/month add-on. Existing subscriptions keep their original Price IDs. See `apps/ui/PRICING.md` and `apps/ui/TEAM-BILLING.md`.
 
-Routine content work targets production; feature work uses local explicitly. Local and production CMS Admin Tokens have server-specific permissions. Local MCP is enabled; production uses the existing private Content Manager API while MCP remains disabled. Connections and credential names are documented in `apps/strapi/CONTENT-OPERATIONS.md`; credentials are never committed.
+Routine content work targets production; feature work uses local explicitly. Use the selected environment's authorized content workflow in `apps/strapi/CONTENT-OPERATIONS.md`. Connection details, enabled transports, credentials and environment-specific permissions belong in private operator storage.

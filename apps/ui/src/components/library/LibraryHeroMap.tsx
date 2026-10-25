@@ -145,7 +145,7 @@ export function LibraryHeroMap({
 
   return (
     <figure
-      className="relative m-0 h-[300px] overflow-hidden rounded-3xl sm:h-[360px] lg:h-full lg:min-h-[340px]"
+      className="relative m-0 aspect-[4/3] w-full overflow-hidden rounded-3xl"
       style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >
       <div
@@ -153,9 +153,14 @@ export function LibraryHeroMap({
         role="region"
         aria-busy={!ready && !failed}
         aria-label={`Map of ${name} and nearby libraries`}
-        // maplibre-gl.css makes the container position: relative, so size it
-        // explicitly rather than with inset-0.
-        style={{ width: "100%", height: "100%" }}
+        // Override MapLibre's relative positioning so the map fills the
+        // media frame even when its height comes from the aspect ratio.
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+        }}
       />
 
       {!ready && !failed ? <MapLoading /> : null}

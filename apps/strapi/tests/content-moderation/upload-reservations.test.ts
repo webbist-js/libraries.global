@@ -181,6 +181,88 @@ describe("durable shared upload reservations", () => {
     expect(store[RES][0].status).toBe("reserved")
   })
 
+  it("assigns the chosen name only after checking the reserved upload, and retries safely", async () => {
+    const { strapi, store } = harness()
+    const reservation = await reserveUpload(
+      strapi,
+      "writer",
+      100,
+      "submission",
+      now
+    )
+    bindFile(store, reservation.reservationId)
+    await completeUpload(
+      strapi,
+      "writer",
+      reservation.reservationId,
+      7,
+      now,
+      "Reading room.png"
+    )
+    expect(store[FILE][0].name).toBe("Reading room.png")
+    await completeUpload(
+      strapi,
+      "writer",
+      reservation.reservationId,
+      7,
+      now,
+      "Reading room.png"
+    )
+    expect(store[OWN]).toHaveLength(1)
+    expect(store[RES][0].status).toBe("completed")
+  })
+
+  it("rolls the name back with ownership when completion fails", async () => {
+    const { strapi, store } = harness()
+    const reservation = await reserveUpload(
+      strapi,
+      "writer",
+      100,
+      "submission",
+      now
+    )
+    bindFile(store, reservation.reservationId)
+    strapi
+      .documents(RES)
+      .update.mockRejectedValueOnce(new Error("database failure"))
+    await expect(
+      completeUpload(
+        strapi,
+        "writer",
+        reservation.reservationId,
+        7,
+        now,
+        "Reading room.png"
+      )
+    ).rejects.toThrow("database failure")
+    expect(store[FILE][0].name).toBe(`upload-${reservation.reservationId}.png`)
+    expect(store[OWN]).toEqual([])
+  })
+
+  it("never renames a file that does not match the writer's reservation", async () => {
+    const { strapi, store } = harness()
+    const reservation = await reserveUpload(
+      strapi,
+      "writer",
+      100,
+      "submission",
+      now
+    )
+    bindFile(store, "another-reservation")
+    await expect(
+      completeUpload(
+        strapi,
+        "writer",
+        reservation.reservationId,
+        7,
+        now,
+        "Reading room.png"
+      )
+    ).rejects.toMatchObject({ code: "upload_file_mismatch" })
+    expect(store[FILE][0].name).toBe("upload-another-reservation.png")
+    expect(store[OWN]).toEqual([])
+  })
+
   it("refuses cross-user completions and foreign file ownership", async () => {
     const { strapi, store } = harness({
       [OWN]: [

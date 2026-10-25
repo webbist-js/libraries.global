@@ -104,6 +104,11 @@ export function atlasMatchesProjection(
 ): boolean {
   const { scope, facilities, access } = resolved
   const { filters: f, accessibility: a } = scope
+  if (
+    f.networks?.length &&
+    !f.networks.some((id) => record.network_ids?.includes(id))
+  )
+    return false
   if (scope.bbox && !atlasInBounds(record._geo, scope.bbox)) return false
   if (scope.place && record[placeField[scope.place.level]] !== scope.place.id)
     return false
@@ -180,6 +185,10 @@ export function atlasMeiliFilter(
         ? "access_listed = true"
         : "listed = true",
   ]
+  if (f.networks?.length)
+    conditions.push(
+      `(${f.networks.map((id) => `network_ids = ${quote(id)}`).join(" OR ")})`
+    )
   if (scope.bbox) {
     conditions.push(
       `(${atlasBoundsRanges(scope.bbox)
@@ -238,6 +247,15 @@ export function atlasTileFilter(
       ? ["==", ["get", "st"], "permanently_closed"]
       : ["!=", ["get", "st"], "permanently_closed"],
   ]
+  if (f.networks?.length)
+    conditions.push([
+      "any",
+      ...f.networks.map((id) => [
+        "in",
+        `,${id},`,
+        ["coalesce", ["get", "nw"], ""],
+      ]),
+    ] as AtlasMapExpression)
   if (scope.place)
     conditions.push([
       "==",
@@ -341,6 +359,7 @@ export function parseAtlasScope(input: unknown): AtlasScope {
   const value = object(input, ["bbox", "place", "filters", "accessibility"])
   const f = object(value.filters, [
     "types",
+    "networks",
     "opening",
     "atDay",
     "atMinutes",
@@ -364,6 +383,16 @@ export function parseAtlasScope(input: unknown): AtlasScope {
   }
   const scope: AtlasScope = {
     filters: {
+      ...(f.networks === undefined
+        ? {}
+        : {
+            networks: strings(f.networks).map((id) => {
+              if (!/^[a-zA-Z0-9_-]{1,100}$/.test(id))
+                throw new RangeError("Invalid network ID")
+
+              return id
+            }),
+          }),
       types: strings(f.types).map((v) =>
         choice(
           v,

@@ -94,6 +94,7 @@ export async function seedMobileStops() {
       query.set(`fields[${i}]`, field)
     for (const relation of ["continent", "country", "region"])
       query.set(`populate[${relation}][fields][0]`, "slug")
+    query.set("populate[networks][fields][0]", "documentId")
     const result = await get(`/api/libraries?${query}`),
       rows = result.data ?? []
     // The list shape leaves the timetable out (1.8); read each vehicle's

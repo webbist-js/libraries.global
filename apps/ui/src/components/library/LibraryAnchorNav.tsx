@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 
 import { Container } from "@/components/elementary/Container"
 import type { AnchorItem } from "@/components/library/library-anchors"
-import { LibIcon } from "@/components/library/LibrarySectionCard"
 import { T } from "@/lib/design-tokens"
 
 /**
@@ -49,7 +48,7 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
       style={{ background: T.bg.space, borderColor: T.border.line }}
     >
       <Container>
-        <ul className="m-0 -mx-1 flex list-none gap-1 overflow-x-auto p-0 py-2 [scrollbar-width:none]">
+        <ul className="m-0 -mx-1 flex list-none gap-4 overflow-x-auto p-0 [scrollbar-width:none]">
           {items.map((item) => {
             const active = current === item.href
 
@@ -58,14 +57,12 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
                 <a
                   href={item.href}
                   aria-current={active ? "location" : undefined}
-                  className="flex min-h-11 items-center gap-[7px] rounded-full border px-3 py-1.5 text-[14px] font-medium whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+                  className="flex min-h-13 items-center gap-[7px] border-b-2 px-1 py-3 text-[14px] font-medium whitespace-nowrap no-underline transition-colors hover:text-(--t-accent-primary)"
                   style={{
-                    color: T.ink.base,
-                    background: active ? T.bg.deep : "transparent",
-                    borderColor: active ? T.border.line : "transparent",
+                    color: active ? T.accent.primary : T.ink.dim,
+                    borderColor: active ? T.accent.primary : "transparent",
                   }}
                 >
-                  <LibIcon d={item.icon} size={15} />
                   {item.label}
                   {item.pro ? (
                     <span

@@ -9,6 +9,7 @@ import {
   postToSlack,
   SlackDeliveryError,
   slackMessage,
+  validSlackWebhook,
   type InternalEvent,
 } from "./slack"
 import { withLeaderLock } from "../leader-lock"
@@ -16,6 +17,10 @@ import { withLeaderLock } from "../leader-lock"
 const TABLE = "internal_notifications"
 const UID = "api::internal-notification.internal-notification"
 const DAY = 86400000
+const destination = (kind: string) =>
+  kind === "product_feedback" ? "feedback" : "activity"
+const cooldownKey = (channel: string) =>
+  channel === "feedback" ? "cooldown-feedback" : "cooldown"
 
 export async function ensureInternalNotificationIndexes(strapi: Core.Strapi) {
   const db = strapi.db.connection
@@ -58,7 +63,11 @@ async function recordFailure(
     },
   })
   await strapi
-    .store({ type: "core", name: "internal-notifications", key: "cooldown" })
+    .store({
+      type: "core",
+      name: "internal-notifications",
+      key: cooldownKey(destination(row.kind)),
+    })
     .set({
       value: {
         until: failure.permanent
@@ -69,6 +78,28 @@ async function recordFailure(
     })
 
   return { terminal }
+}
+
+async function pausedChannels(strapi: Core.Strapi, now: Date) {
+  const blocked = new Set<string>()
+  for (const channel of ["activity", "feedback"]) {
+    const cooldown = strapi.store({
+      type: "core",
+      name: "internal-notifications",
+      key: cooldownKey(channel),
+    })
+    if (((await cooldown.get()) as { until?: number })?.until > now.getTime())
+      blocked.add(channel)
+  }
+
+  return blocked
+}
+
+function channelScope(blocked: Set<string>) {
+  if (blocked.has("activity")) return { kind: "product_feedback" }
+  if (blocked.has("feedback")) return { kind: { $ne: "product_feedback" } }
+
+  return {}
 }
 
 export function internalNotifications(strapi: Core.Strapi) {
@@ -100,7 +131,10 @@ export function internalNotifications(strapi: Core.Strapi) {
         event_key: event.eventKey,
         kind: event.kind,
         title: event.title.slice(0, 200),
-        detail: event.detail.slice(0, 1500),
+        detail: event.detail.slice(
+          0,
+          event.kind === "product_feedback" ? 12000 : 1500
+        ),
         href: event.href || null,
         actor_id: event.actorId || null,
         event_at: event.eventAt,
@@ -160,7 +194,15 @@ export function internalNotifications(strapi: Core.Strapi) {
       ...row,
       detail: `${who ? `${who} · ` : ""}${row.detail}`,
     }
-    await postToSlack(config.webhook, slackMessage(event, config.environment))
+    const webhook =
+      row.kind === "product_feedback" ? config.feedbackWebhook : config.webhook
+    if (!validSlackWebhook(webhook))
+      throw new SlackDeliveryError(
+        "slack_destination_unconfigured",
+        undefined,
+        true
+      )
+    await postToSlack(webhook, slackMessage(event, config.environment))
     await query().update({
       where: { id: row.id },
       data: {
@@ -169,6 +211,39 @@ export function internalNotifications(strapi: Core.Strapi) {
         lastError: null,
       },
     })
+  }
+
+  const deliverPending = async (
+    config: NonNullable<ReturnType<typeof notificationConfig>>,
+    now: Date,
+    report: { sent: number; failed: number; deferred: number }
+  ) => {
+    const blocked = await pausedChannels(strapi, now)
+    if (blocked.size === 2) return
+    const rows = await query().findMany({
+      where: {
+        ...channelScope(blocked),
+        state: "pending",
+        nextAttemptAt: { $lte: now.toISOString() },
+      },
+      orderBy: { id: "asc" },
+      limit: 20,
+    })
+    const deadline = Date.now() + 35000
+    for (const row of rows) {
+      if (Date.now() > deadline) break
+      if (blocked.has(destination(row.kind))) continue
+      try {
+        await deliver(row, config)
+        report.sent++
+        await setTimeout(1100)
+      } catch (error) {
+        const { terminal } = await recordFailure(strapi, row, error)
+        report.failed += terminal ? 1 : 0
+        report.deferred += terminal ? 0 : 1
+        blocked.add(destination(row.kind))
+      }
+    }
   }
 
   return {
@@ -198,13 +273,14 @@ export function internalNotifications(strapi: Core.Strapi) {
       }
     },
     async retry() {
-      await strapi
-        .store({
-          type: "core",
-          name: "internal-notifications",
-          key: "cooldown",
-        })
-        .set({ value: { until: 0 } })
+      for (const channel of ["activity", "feedback"])
+        await strapi
+          .store({
+            type: "core",
+            name: "internal-notifications",
+            key: cooldownKey(channel),
+          })
+          .set({ value: { until: 0 } })
 
       return query().updateMany({
         where: { state: "failed" },
@@ -257,38 +333,7 @@ export function internalNotifications(strapi: Core.Strapi) {
             lastError: null,
           },
         })
-        if (config.dryRun) return report
-        const cooldown = strapi.store({
-          type: "core",
-          name: "internal-notifications",
-          key: "cooldown",
-        })
-        if (
-          ((await cooldown.get()) as { until?: number })?.until > now.getTime()
-        )
-          return report
-        const rows = await query().findMany({
-          where: {
-            state: "pending",
-            nextAttemptAt: { $lte: now.toISOString() },
-          },
-          orderBy: { id: "asc" },
-          limit: 20,
-        })
-        const deadline = Date.now() + 35000
-        for (const row of rows) {
-          if (Date.now() > deadline) break
-          try {
-            await deliver(row, config)
-            report.sent++
-            await setTimeout(1100)
-          } catch (error) {
-            const { terminal } = await recordFailure(strapi, row, error)
-            report.failed += terminal ? 1 : 0
-            report.deferred += terminal ? 0 : 1
-            break
-          }
-        }
+        if (!config.dryRun) await deliverPending(config, now, report)
 
         return report
       })

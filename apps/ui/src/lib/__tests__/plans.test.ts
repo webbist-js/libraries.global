@@ -160,6 +160,7 @@ describe("PRO_FEATURE_COPY", () => {
       .filter(([, c]) => c.status === "live")
       .map(([f]) => f)
     expect(live.sort()).toEqual([
+      "atlas.analysis",
       "atlas.export",
       "library.history",
       "library.team",

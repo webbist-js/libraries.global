@@ -34,6 +34,8 @@
     "INTERNAL_NOTIFICATIONS_DRY_RUN",
     "INTERNAL_NOTIFICATIONS_SINCE",
     "SLACK_INTERNAL_WEBHOOK_URL",
+    "SLACK_FEEDBACK_WEBHOOK_URL",
+    "INTERNAL_FEEDBACK_ENABLED",
     "BETTER_AUTH_SECRET",
     "RECAPTCHA_SECRET_KEY",
     "NODE_OPTIONS",
@@ -59,6 +61,17 @@
     "ATLAS_CURSOR_SECRET",
     "ATLAS_DATABASE_URL",
     "ATLAS_SERVICE_TOKEN",
+    "ANALYSIS_SERVICE_URL",
+    "ANALYSIS_SERVICE_TOKEN",
+    "ANALYSIS_HOST",
+    "ANALYSIS_PORT",
+    "ANALYSIS_PYTHON",
+    "DOCUSAURUS_URL",
+    "DOCUSAURUS_BASE_URL",
+    "ANALYSIS_DATA_DIR",
+    "ANALYSIS_CACHE_BYTES",
+    "ANALYSIS_WORKER_HOST",
+    "ANALYSIS_WORKER_PORT",
     "ATLAS_WORKER_PORT",
     "ATLAS_WORKER_HOST",
     "ATLAS_BUILD_ENABLED",
@@ -235,6 +248,11 @@
     "playwright-visual-tests": {
       "cache": false,
       "persistent": false
+    },
+    "dev:analysis": {
+      "dependsOn": ["@repo/shared-data#build"],
+      "cache": false,
+      "persistent": true
     },
     "dev:atlas": {
       "dependsOn": ["@repo/shared-data#build"],

@@ -7,6 +7,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
+    "./atlas-population": {
+      "types": "./dist/atlas/population-geography.d.ts",
+      "import": "./dist/atlas/population-geography.js",
+      "require": "./dist/atlas/population-geography.js"
+    },
     "./atlas-local": {
       "types": "./dist/atlas/local-boundaries.d.ts",
       "import": "./dist/atlas/local-boundaries.js",
@@ -32,6 +37,7 @@
   },
   "typesVersions": {
     "*": {
+      "atlas-population": ["dist/atlas/population-geography.d.ts"],
       "atlas-local": [
         "dist/atlas/local-boundaries.d.ts"
       ]

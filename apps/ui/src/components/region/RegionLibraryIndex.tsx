@@ -342,7 +342,7 @@ export function RegionLibraryIndex({
         }}
       />
       <div className="flex items-start gap-7">
-        <FilterSidebar sidebar={sidebar}>
+        <FilterSidebar sidebar={sidebar} sticky={false}>
           {filterBody}
           {nearby ? <div className="mt-6">{nearby}</div> : null}
         </FilterSidebar>

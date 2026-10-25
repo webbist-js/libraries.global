@@ -20,15 +20,16 @@ from urllib.request import Request, urlopen
 
 REPOSITORY = "webbist-js/libraries.global"
 CHECKS = (
-    "Install, Lint, Test and Build", "Analyze (actions)",
+    "Install, Lint, Test and Build", "Native analysis checks", "Analyze (actions)",
     "Analyze (javascript-typescript)", "Analyze (python)",
 )
 SERVICES = {"cms": "strapi", "ui": "ui", "atlas": "worker", "events": "worker"}
-VARIABLES = {"strapi": "CMS_IMAGE", "ui": "UI_IMAGE", "worker": "WORKER_IMAGE"}
+ANALYSIS_SERVICES = {"analysis": "analysis", "analysis-worker": "worker"}
+VARIABLES = {"strapi": "CMS_IMAGE", "ui": "UI_IMAGE", "worker": "WORKER_IMAGE", "analysis": "ANALYSIS_IMAGE"}
 SHA = re.compile(r"[a-f0-9]{40}")
 DIGEST = re.compile(r"sha256:[a-f0-9]{64}")
 DATA_PATHS = (
-    "apps/strapi/", "apps/sync-worker/", "packages/", "patches/", "pnpm-lock.yaml", "pnpm-workspace.yaml",
+    "apps/strapi/", "apps/sync-worker/", "apps/analysis/", "packages/", "patches/", "pnpm-lock.yaml", "pnpm-workspace.yaml",
     "apps/ui/package.json", "apps/ui/src/lib/auth", "apps/ui/src/lib/billing/",
     "apps/ui/src/lib/team-api/", "apps/ui/src/lib/db", "apps/ui/src/lib/database",
     "apps/ui/src/app/api/auth/", "apps/ui/src/app/api/billing/",
@@ -37,6 +38,7 @@ DATA_PATHS = (
 RUNTIME_FILES = (
     "release.env", "app.compose.yml", "ui.production.env", "strapi.production.env",
     "atlas.production.env", "events.production.env", "web.env", "web.compose.yml",
+    "analysis.production.env", "analysis-worker.production.env",
     "web.Caddyfile", "database-ca.crt", "search-ca.crt",
 )
 
@@ -88,9 +90,10 @@ def candidate(fetch=github):
     if run.get("status") != "completed" or run.get("conclusion") != "success":
         return None
     manifest = json.loads(published["output"]["summary"])
+    expected_images = set(VARIABLES) if manifest.get("schema") == 3 else set(VARIABLES) - {"analysis"}
     if (set(manifest) != {"schema", "repository", "commit", "images"}
-            or manifest["schema"] != 2 or manifest["repository"] != REPOSITORY
-            or manifest["commit"] != commit or set(manifest["images"]) != set(VARIABLES)):
+            or manifest["schema"] not in (2, 3) or manifest["repository"] != REPOSITORY
+            or manifest["commit"] != commit or set(manifest["images"]) != expected_images):
         raise RuntimeError("Invalid production manifest")
     for service, reference in manifest["images"].items():
         if not reference.startswith(service + "@") or not DIGEST.fullmatch(reference.split("@", 1)[1]):
@@ -133,9 +136,17 @@ def command(args, root, docker_config, timeout=600):
     return result.stdout
 
 
+def compose_arguments(root, *args):
+    # Legacy recovery selects the original four-service profile. A new manifest
+    # explicitly opts into the two analysis services; never pull a fallback tag.
+    selected = (Path(root) / "release.env").read_text()
+    analysis = ["--profile", "analysis"] if any(line.startswith("ANALYSIS_IMAGE=") for line in selected.splitlines()) else []
+    return ["docker", "compose", "--env-file", "release.env", "-f", "app.compose.yml",
+            "--profile", "workers", *analysis, *args]
+
+
 def compose(root, docker_config, *args):
-    return command(["docker", "compose", "--env-file", "release.env", "-f", "app.compose.yml",
-                    "--profile", "workers", *args], root, docker_config)
+    return command(compose_arguments(root, *args), root, docker_config)
 
 
 def runtime_hashes(root):
@@ -157,7 +168,8 @@ def verify_running(root, docker_config, manifest):
     output = compose(root, docker_config, "ps", "--format", "json")
     rows = json.loads(output) if output.lstrip().startswith("[") else [json.loads(line) for line in output.splitlines() if line]
     by_service = {row["Service"]: row for row in rows}
-    for service, image in SERVICES.items():
+    services = {**SERVICES, **(ANALYSIS_SERVICES if "analysis" in manifest["images"] else {})}
+    for service, image in services.items():
         row = by_service.get(service, {})
         if row.get("State") != "running" or row.get("Health") != "healthy":
             raise RuntimeError("A production service is unhealthy")
@@ -183,10 +195,11 @@ def promote(config, selected, fetch=github, run=command, health=smoke, running=v
     release_file = root / "release.env"
     previous = release_file.read_text()
     before = runtime_hashes(root)
-    for reference in manifest["images"].values():
+    for service, reference in manifest["images"].items():
         run(["docker", "pull", "--platform", "linux/amd64", reference], root, docker_config)
         info = json.loads(run(["docker", "image", "inspect", reference], root, docker_config))[0]
-        if (info.get("Architecture") != "amd64" or info.get("Config", {}).get("User") != "node"
+        expected_user = "analysis" if service == "analysis" else "node"
+        if (info.get("Architecture") != "amd64" or info.get("Config", {}).get("User") != expected_user
                 or info.get("Config", {}).get("Labels", {}).get("org.opencontainers.image.revision") != commit):
             raise RuntimeError("Candidate image verification failed")
     # Recheck after downloading: a later main merge must supersede this build.
@@ -203,24 +216,29 @@ def promote(config, selected, fetch=github, run=command, health=smoke, running=v
     environment = "".join(f"{VARIABLES[service]}={reference}\n" for service, reference in manifest["images"].items())
     try:
         atomic_write(release_file, environment)
-        run(["docker", "compose", "--env-file", "release.env", "-f", "app.compose.yml", "--profile", "workers", "config", "--quiet"], root, docker_config)
-        run(["docker", "compose", "--env-file", "release.env", "-f", "app.compose.yml", "--profile", "workers", "up", "-d", "--wait", "--wait-timeout", "300"], root, docker_config)
+        run(compose_arguments(root, "config", "--quiet"), root, docker_config)
+        run(compose_arguments(root, "up", "-d", "--wait", "--wait-timeout", "300"), root, docker_config)
         running(root, docker_config, manifest)
         health(config)
         if runtime_hashes(root) != before:
             raise RuntimeError("Runtime settings changed during release")
     except Exception:
-        atomic_write(release_file, previous)
         try:
-            run(["docker", "compose", "--env-file", "release.env", "-f", "app.compose.yml", "--profile", "workers", "up", "-d", "--wait", "--wait-timeout", "300"], root, docker_config)
+            # Compose leaves newly disabled profiles running. Stop their queue
+            # writer before returning to a pre-analysis release and its database.
+            if "analysis" in manifest["images"] and not any(line.startswith("ANALYSIS_IMAGE=") for line in previous.splitlines()):
+                run(compose_arguments(root, "stop", "analysis-worker", "analysis"), root, docker_config)
+            atomic_write(release_file, previous)
+            run(compose_arguments(root, "up", "-d", "--wait", "--wait-timeout", "300"), root, docker_config)
             health(config)
         finally:
+            atomic_write(release_file, previous)
             raise PromotionFailed("Candidate failed; operator recovery is required") from None
     record = {**manifest, "publisher_run": selected["run"], "runtime_hashes": before,
               "deployed_at": datetime.now(timezone.utc).isoformat(), "smoke": "passed"}
     atomic_write(release / "manifest.json", json.dumps(record, indent=2) + "\n")
     atomic_write(root / "automated-release.json", json.dumps(record, indent=2) + "\n")
-    print(f"Released main commit {commit[:12]}; four services and HTTPS smoke passed.")
+    print(f"Released main commit {commit[:12]}; all selected services and HTTPS smoke passed.")
 
 
 def main():

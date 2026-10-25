@@ -2,8 +2,14 @@
 
 import { ATLAS_ACCESS_BINS, type AtlasAccessMetric } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useRef, type ReactNode } from "react"
+import type { ReactNode } from "react"
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import type { AtlasContextRelease } from "@/lib/atlas-context"
 import { T } from "@/lib/design-tokens"
 
 import { INDIGO } from "./atlas-map.style"
@@ -15,6 +21,7 @@ import {
   type AccessibilityView,
 } from "./atlas.logic"
 import { AccessibilitySwatch } from "./AtlasAccessibility"
+import { AtlasContextLegend } from "./AtlasContext"
 
 /** Legends for the pins and every active layer, in stacking order. */
 export function AtlasLegends({
@@ -23,6 +30,8 @@ export function AtlasLegends({
   accessibility = [],
   accessibilityView = "matches",
   accessMetric = "per100k",
+  context,
+  reach,
 }: {
   readonly groups: TypeGroupKey[]
   readonly layers: LayerId[]
@@ -30,12 +39,82 @@ export function AtlasLegends({
   readonly accessibilityView?: AccessibilityView
   readonly accessMetric?: AtlasAccessMetric
   readonly perCapitaYear?: number
+  readonly context?: AtlasContextRelease | null
+  readonly reach?: {
+    mode: string
+    minutes: number
+    year?: number | null
+    gaps: boolean
+    state?: string
+  }
 }) {
   const tUi = useUiTranslations("ui")
+  const tContext = useUiTranslations("atlasContext")
 
   const on = (id: LayerId) => layers.includes(id)
   const items: React.ReactNode[] = []
+  if (context || on("population")) {
+    const theme =
+      context?.theme === "deprivation" || context?.theme === "carAccess"
+        ? context.theme
+        : "population"
+    items.push(
+      <div key="context" className="w-60">
+        <p className="mt-0 mb-1 text-sm font-semibold">{tContext(theme)}</p>
+        <p className="mt-0 mb-3 text-xs text-(--t-ink-dim)">
+          {context?.edition ?? tContext("officialTotals")}
+        </p>
+        <AtlasContextLegend
+          theme={theme}
+          missing={context ? "transparent" : "grey"}
+        />
+      </div>
+    )
+  }
 
+  if (on("reach"))
+    items.push(
+      <KeyLegend
+        key="reach"
+        title={`Reach · ${reach?.mode === "cycling" ? "Cycling" : "Walking"} · ${reach?.minutes ?? 15} min`}
+        source={
+          reach?.year
+            ? `OSM routing · ${reach.year} population grid`
+            : "OSM routing · population year unavailable"
+        }
+        items={[
+          {
+            key: "catchment",
+            label:
+              reach?.state === "ready" || reach?.state === "partial"
+                ? "Modelled catchment · not observed use"
+                : reach?.state === "pending"
+                  ? "Calculating catchment"
+                  : "Catchment not available yet",
+            swatch: (
+              <i
+                className="inline-block h-3.5 w-4 rounded border-2"
+                style={{
+                  borderColor: INDIGO,
+                  background: "rgba(67,56,202,0.22)",
+                }}
+              />
+            ),
+          },
+          ...(reach?.gaps
+            ? [
+                {
+                  key: "beyond",
+                  label: `Beyond ${reach.minutes} minutes · reporting area`,
+                  swatch: (
+                    <i className="inline-block h-3.5 w-4 rounded bg-(--t-border-hi)" />
+                  ),
+                },
+              ]
+            : []),
+        ]}
+      />
+    )
   if (on("pins") && !on("complete") && !on("access") && groups.length > 0)
     items.push(
       <KeyLegend
@@ -250,17 +329,30 @@ export function AtlasLegends({
 export function AtlasCount({
   count,
   sub,
+  loading = false,
 }: {
   readonly count: number
+  readonly loading?: boolean
   readonly sub: string
 }) {
   return (
-    <p className="m-0 text-[15px] whitespace-nowrap" aria-live="polite">
+    <p
+      className="m-0 text-[15px] whitespace-nowrap"
+      aria-live="polite"
+      aria-busy={loading}
+    >
       <strong
         className="text-[22px] font-medium"
         style={{ fontFamily: T.font.serif }}
       >
-        {count.toLocaleString()}
+        {loading ? (
+          <>
+            <span aria-hidden="true">…</span>
+            <span className="sr-only">Loading result count</span>
+          </>
+        ) : (
+          count.toLocaleString()
+        )}
       </strong>{" "}
       {sub}
     </p>
@@ -295,15 +387,18 @@ export function AtlasMapLegend({
   metric,
   accessibilityView,
   children,
+  compact = false,
+  placement = "above",
 }: {
   readonly layers: readonly LayerId[]
   readonly metric: AtlasAccessMetric
   readonly accessibilityView: AccessibilityView
+  readonly placement?: "above" | "below"
+  readonly compact?: boolean
   readonly children: ReactNode
 }) {
   const tUi = useUiTranslations("ui")
 
-  const disclosure = useRef<HTMLDetailsElement>(null)
   const area = layers.includes("perCapita"),
     access = layers.includes("access")
   const heat = layers.includes("density") || layers.includes("events")
@@ -311,31 +406,29 @@ export function AtlasMapLegend({
 
   return (
     <div className="flex shrink-0 items-center gap-3">
-      <details
-        ref={disclosure}
-        className="relative"
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && disclosure.current?.open) {
-            disclosure.current.open = false
-            disclosure.current.querySelector("summary")?.focus()
-          }
-        }}
-      >
-        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-semibold">
-          <Icon name="layers" size={17} />
-          Map key
-          <Icon name="chevD" size={14} />
-        </summary>
-        <div
-          role="region"
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold"
+          >
+            <Icon name="layers" size={17} />
+            Map key
+            <Icon name="chevD" size={14} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side={placement === "above" ? "top" : "bottom"}
+          align="start"
+          collisionPadding={16}
+          sideOffset={12}
           aria-label={tUi("active_map_key")}
-          className="absolute bottom-[calc(100%+16px)] left-0 flex max-h-[45vh] w-[min(380px,calc(100vw-48px))] flex-col gap-4 overflow-auto rounded-2xl border bg-white p-4 shadow-lg"
-          style={{ borderColor: T.border.hi }}
+          className="z-[90] grid max-h-[min(55dvh,480px)] w-[min(640px,calc(100vw-32px))] gap-4 overflow-y-auto overscroll-contain rounded-2xl border-(--t-border-hi) bg-white p-5 shadow-lg sm:grid-cols-2"
         >
           {children}
-        </div>
-      </details>
-      {area ? (
+        </PopoverContent>
+      </Popover>
+      {!compact && area ? (
         <div
           aria-label={
             metric === "per100k"
@@ -362,7 +455,7 @@ export function AtlasMapLegend({
             <span>{metric === "per100k" ? "12+ / 100k" : "Up to 8.3k"}</span>
           </span>
         </div>
-      ) : access ? (
+      ) : !compact && access ? (
         <div className="flex flex-col gap-1 text-xs">
           <strong>{tUi("accessibility")}</strong>
           <span className="flex items-center gap-2">
@@ -379,7 +472,7 @@ export function AtlasMapLegend({
                 : "Confirmed only"}
           </span>
         </div>
-      ) : heat ? (
+      ) : !compact && heat ? (
         <RampLegend
           title={
             layers.includes("events")

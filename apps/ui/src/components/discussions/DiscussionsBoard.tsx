@@ -1,6 +1,6 @@
 "use client"
 
-import { MessagesSquare, Search } from "lucide-react"
+import { MessagesSquare, Search, ShieldCheck } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ds/EmptyState"
 import { SelectField } from "@/components/ds/SelectField"
 import { StepsCard } from "@/components/ds/StepsCard"
 import { Container } from "@/components/elementary/Container"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -651,22 +652,29 @@ function DiscussionsBoardPanel({
                     {t("followLead")}
                   </p>
                 )}
-                <button
+                <Button
                   type="button"
+                  variant="surface"
+                  size="pill"
                   onClick={() => changeFilters({ view: "following" })}
-                  className="mt-3 text-sm font-semibold underline underline-offset-4"
+                  className="mt-3"
                 >
                   {t("following")}
-                </button>
+                </Button>
               </section>
             )}
             {actor.canModerate && actor.ready && (
-              <Link
-                href="/contribute/moderation?tab=discussions"
-                className="text-sm font-semibold underline"
+              <Button
+                asChild
+                variant="surface"
+                size="pill"
+                className="border-dashed border-(--t-palette-coral-fg) bg-(--t-palette-coral-bg) text-(--t-palette-coral-fg) hover:bg-(--t-palette-coral-soft) focus-visible:ring-(--t-palette-coral-fg)/50"
               >
-                {t("moderation")}
-              </Link>
+                <Link href="/contribute/moderation?tab=discussions">
+                  <ShieldCheck aria-hidden="true" />
+                  {t("moderation")}
+                </Link>
+              </Button>
             )}
           </aside>
         </div>

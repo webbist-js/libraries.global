@@ -1,4 +1,5 @@
 import GlobalLink from "@/components/global/GlobalLink"
+import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
 
 type BlockTextNode = {
@@ -42,6 +43,15 @@ type BlockNode =
   | BlockListNode
   | { type: "quote"; children: BlockInlineNode[] }
   | { type: "code"; children: [{ type: "text"; text: string }] }
+  | {
+      type: "image"
+      image: {
+        url?: string
+        alternativeText?: string | null
+        width?: number
+        height?: number
+      }
+    }
 
 function renderInlineNode(node: BlockInlineNode, index: number) {
   if (node.type === "link") {
@@ -176,6 +186,30 @@ export function StrapiBlocksContent({
 
           case "list":
             return renderList(block, blockIndex)
+
+          case "image": {
+            // Older editor uploads were saved inside rich text. Keep those
+            // images visible as well as the dedicated media blocks.
+            const src = formatStrapiMediaUrlForClient(
+              typeof block.image?.url === "string" ? block.image.url : null
+            )
+            if (!src || !/^(https?:\/\/|\/(?!\/))/i.test(src)) return null
+
+            return (
+              // The URL can be a pasted image outside the Next image allowlist.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={`${src}:${block.image.alternativeText ?? ""}`}
+                src={src}
+                alt={block.image.alternativeText ?? ""}
+                width={block.image.width}
+                height={block.image.height}
+                loading="lazy"
+                decoding="async"
+                className="h-auto w-full rounded-2xl"
+              />
+            )
+          }
 
           case "quote":
             return (

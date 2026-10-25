@@ -92,6 +92,14 @@ describe("submission image upload", () => {
     expect((storedForm.get("files") as File).name).toBe(
       `upload-${reservationId}.png`
     )
+    const completed = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("/complete")
+    )!
+    expect(JSON.parse(completed[1].body)).toEqual({
+      reservationId,
+      fileId: 7,
+      displayName: "photo.png",
+    })
     expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
       "http://strapi.test/api/content-moderation/uploads/reservations",
       "http://strapi.test/api/upload",

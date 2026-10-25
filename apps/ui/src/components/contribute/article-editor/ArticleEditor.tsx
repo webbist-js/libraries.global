@@ -10,6 +10,7 @@ import { T } from "@/lib/design-tokens"
 
 import { ARTICLE_KIND_META, type ArticleKind } from "./article.types"
 import { CALLOUT_KINDS, type TiptapDoc } from "./articleBlocks"
+import { ArticleImageDialog } from "./ArticleImageDialog"
 import { articleExtensions } from "./extensions"
 
 export type UploadedImage = { id: number; url: string; alt?: string | null }
@@ -304,7 +305,6 @@ function Toolbar({
       style={{
         borderBottom: `1px solid ${T.border.line}`,
         background: T.bg.surface,
-        borderRadius: "24px 24px 0 0",
       }}
     >
       <ToolButton
@@ -455,7 +455,6 @@ export function ArticleEditor({
 }) {
   const tUi = useUiTranslations("ui")
   const tEditor = useUiTranslations("articleEditor")
-  const p = useUiTranslations("publishing")
   const w = useUiTranslations("writeWorkspace")
 
   const meta = ARTICLE_KIND_META[kind]
@@ -463,10 +462,7 @@ export function ArticleEditor({
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imageAlt, setImageAlt] = useState("")
-  const [imageCredit, setImageCredit] = useState("")
   const [openingImage, setOpeningImage] = useState(false)
-  const [imageError, setImageError] = useState(false)
   const titleRef = useRef<HTMLTextAreaElement>(null)
 
   const editor = useEditor({
@@ -486,7 +482,6 @@ export function ArticleEditor({
     lastKey.current = docKey
     editor.commands.setContent(doc, { emitUpdate: false })
     setImageFile(null)
-    setImageError(false)
   }, [editor, doc, docKey])
 
   useEffect(() => {
@@ -501,44 +496,42 @@ export function ArticleEditor({
     el.style.height = `${el.scrollHeight}px`
   }, [title])
 
-  async function handleFile(file: File | undefined) {
-    if (
-      !file ||
-      !editor ||
-      readOnly ||
-      !imageAlt.trim() ||
-      (openingImage && !imageCredit.trim())
-    )
-      return
+  async function insertImage(file: File, alt: string, credit: string) {
+    if (!editor || readOnly) return false
+    const uploadingDocument = lastKey.current
     setUploading(true)
     try {
       const uploaded = await uploadImage(file)
-      if (uploaded) {
+      if (
+        uploaded &&
+        !editor.isDestroyed &&
+        lastKey.current === uploadingDocument
+      ) {
         const attrs = {
           src: uploaded.url,
-          alt: imageAlt.trim(),
+          alt,
           imageId: uploaded.id,
-          caption: imageCredit.trim() || null,
+          caption: credit || null,
         }
+        // Insert the owned media ID with the node. A subsequent updateAttributes
+        // targets the text selection after the image and loses its metadata.
         if (openingImage)
-          editor
+          return editor
             .chain()
             .focus()
             .insertContentAt(0, { type: "image", attrs })
             .run()
-        else
-          editor
-            .chain()
-            .focus()
-            .setImage({ src: uploaded.url, alt: imageAlt.trim() })
-            .updateAttributes("image", attrs)
-            .run()
-        setImageFile(null)
-        setImageAlt("")
-        setImageError(false)
-      } else setImageError(true)
+
+        return editor
+          .chain()
+          .focus()
+          .insertContent({ type: "image", attrs })
+          .run()
+      }
+
+      return false
     } catch {
-      setImageError(true)
+      return false
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ""
@@ -575,7 +568,7 @@ export function ArticleEditor({
       {editor ? (
         <fieldset
           disabled={readOnly || uploading}
-          className="sticky top-(--sticky-content-top) z-20 m-0 min-w-0 border-0 bg-(--t-bg-deep) p-0"
+          className="sticky top-[calc(var(--sticky-header-height)+var(--sticky-navigation-height,0px))] z-20 m-0 min-w-0 border-0 bg-(--t-bg-deep) p-0"
         >
           <Toolbar
             editor={editor}
@@ -597,74 +590,25 @@ export function ArticleEditor({
         className="sr-only"
         aria-label={tUi("choose_an_image_to_insert")}
         onChange={(e) => {
-          setImageFile(e.target.files?.[0] ?? null)
-          setImageAlt("")
-          setImageCredit("")
-          setImageError(false)
+          const file = e.target.files?.[0]
+          e.currentTarget.value = ""
+          if (file) setImageFile(file)
         }}
       />
 
       {imageFile && (
-        <form
-          className="mx-6 mt-4 grid gap-3 rounded-xl border p-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void handleFile(imageFile)
+        <ArticleImageDialog
+          key={`${imageFile.name}:${imageFile.lastModified}:${imageFile.size}`}
+          file={imageFile}
+          requireCredit={openingImage}
+          readOnly={readOnly}
+          onClose={() => {
+            setImageFile(null)
+            editor?.commands.focus()
           }}
-        >
-          <p className="m-0 text-sm">{imageFile.name}</p>
-          <label className="grid gap-1 text-sm">
-            {tUi("alt_text")}
-            <input
-              value={imageAlt}
-              onChange={(event) => setImageAlt(event.target.value)}
-              required
-              maxLength={500}
-              disabled={uploading || readOnly}
-              className="min-h-[44px] rounded-xl border border-(--t-border-hi) px-3 py-2 text-[16px]"
-            />
-          </label>
-          <p className="m-0 text-xs text-(--t-ink-dim)">
-            {p("imageAltRequired")}
-          </p>
-          <label className="grid gap-1 text-[15px] font-semibold">
-            {w("imageCredit")}
-            <input
-              value={imageCredit}
-              onChange={(event) => setImageCredit(event.target.value)}
-              required={openingImage}
-              maxLength={500}
-              disabled={uploading || readOnly}
-              className="min-h-[44px] min-w-0 rounded-xl border border-(--t-border-hi) px-3 py-2 text-[16px] font-normal"
-            />
-          </label>
-          <div>
-            <button
-              type="submit"
-              disabled={
-                !imageAlt.trim() ||
-                (openingImage && !imageCredit.trim()) ||
-                uploading ||
-                readOnly
-              }
-              className="mr-3 underline"
-            >
-              {p("insertImage")}
-            </button>
-            <button
-              type="button"
-              disabled={uploading}
-              onClick={() => {
-                setImageFile(null)
-                if (fileRef.current) fileRef.current.value = ""
-              }}
-              className="underline"
-            >
-              {tUi("cancel")}
-            </button>
-          </div>
-          {imageError && <p role="alert">{p("imageFailed")}</p>}
-        </form>
+          onChooseAnother={() => fileRef.current?.click()}
+          onInsert={insertImage}
+        />
       )}
       <div className="px-6 pt-8 pb-10 sm:px-10">
         <span

@@ -2,10 +2,15 @@
 
 import {
   atlasLocalGeography,
+  atlasNetworkReachLimit,
+  atlasReachViewLimit,
+  ATLAS_REACH_MIN_ZOOM,
   type AtlasAccessMetric,
   type AtlasAccessLevel,
   type AtlasLibraryAccessResponse,
   type AtlasQueryRequest,
+  type AtlasPopulationLevel,
+  type AtlasReachMode,
 } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import {
@@ -18,13 +23,20 @@ import {
 } from "react"
 
 import type { AnalysisTab } from "@/components/atlas/AtlasAnalysisWorkspace"
+import { SelectField } from "@/components/ds/SelectField"
 import { useEntitlements } from "@/lib/access-client"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
 import { cn } from "@/lib/styles"
 
-import { atlasBuildingFilters } from "./atlas-query-input"
+import "./atlas-motion.css"
+
+import {
+  atlasAnalysisDrawers,
+  type AtlasAnalysisMode as AnalysisMode,
+} from "./atlas-analysis-panels"
+import { atlasBuildingFilters, atlasViewportCamera } from "./atlas-query-input"
 import { Icon, type IconName, PANEL_STYLE } from "./atlas-ui"
 import {
   activeFilterCount,
@@ -59,18 +71,38 @@ import {
   ViewToggle,
 } from "./AtlasBottomBar"
 import {
+  AtlasContextAnalysis,
+  useAtlasContextCatalogue,
+  useAtlasContextPoint,
+} from "./AtlasContext"
+import {
   AtlasBanner,
   AtlasLoading,
   AtlasNoMatch,
   AtlasToast,
 } from "./AtlasEdgeStates"
 import { AtlasFiltersTab } from "./AtlasFiltersTab"
-import { AtlasLayersTab } from "./AtlasLayersTab"
+import {
+  AtlasInspect,
+  AtlasInspectTools,
+  type AtlasInspectEntry,
+} from "./AtlasInspect"
+import { AtlasLayersTab, ABOUT } from "./AtlasLayersTab"
 import { AtlasLibraryPanel } from "./AtlasLibraryPanel"
 import { AtlasListView } from "./AtlasListView"
+import { AtlasLoadingSkeleton } from "./AtlasLoadingSkeleton"
 import { AtlasMap, type AtlasMapHandle, type AtlasView } from "./AtlasMap"
 import { AtlasMobileFilters, AtlasMobileStops } from "./AtlasMobileStops"
+import { useAtlasNetworkSelection } from "./AtlasNetworkPicker"
+import { AtlasNetworkReach, useNetworkReach } from "./AtlasNetworkReach"
+import { AtlasPerCapitaControls } from "./AtlasPerCapita"
 import { AtlasPlansSheet } from "./AtlasPlansSheet"
+import {
+  AtlasPopulationDensityAnalysis,
+  usePopulationDensity,
+  type AtlasPopulationDetail,
+} from "./AtlasPopulationDensity"
+import { AtlasReachAnalysis, useAtlasReach } from "./AtlasReach"
 import {
   AtlasSearchTab,
   buildPlaces,
@@ -79,14 +111,35 @@ import {
 } from "./AtlasSearchTab"
 import { AtlasStopPanel } from "./AtlasStopPanel"
 import { useAtlasData, useAtlasRequest } from "./useAtlasData"
+import { useAtlasDrawerSummaries } from "./useAtlasDrawerSummaries"
+import { useAtlasMotion } from "./useAtlasMotion"
 import { useMobileAtlas } from "./useMobileAtlas"
+
+import panelStyles from "./AtlasAnalysisStack.module.css"
 
 type Tab = "search" | "filter" | "layers"
 type SheetSize = "peek" | "half" | "full"
-type AnalysisMode = "libraryAccess" | "accessibility"
 
 const LEFT_W = 400
-const RIGHT_W = 380
+
+function populationCoverageBounds(level: AtlasPopulationLevel) {
+  if (level === "countries") return null
+  const areas = atlasLocalGeography.areas.filter(
+    (area) => level === "local" || area.code.startsWith("E")
+  )
+  if (!areas.length) return null
+
+  return areas.reduce(
+    (bounds, area) => ({
+      west: Math.min(bounds.west, area.bounds.west),
+      east: Math.max(bounds.east, area.bounds.east),
+      south: Math.min(bounds.south, area.bounds.south),
+      north: Math.max(bounds.north, area.bounds.north),
+    }),
+    { west: 180, east: -180, south: 90, north: -90 }
+  )
+}
+const RIGHT_W = 360
 const GAP = 16
 const RECENT_KEY = "atlas.recent"
 const HINT_KEY = "atlas.globeHintDismissed"
@@ -109,16 +162,16 @@ function writeStorage(key: string, value: unknown): void {
   }
 }
 
-function useIsMobile(): boolean {
+function useIsMobile(query = "(max-width: 1023px)"): boolean {
   const [mobile, setMobile] = useState(false)
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)")
+    const mq = window.matchMedia(query)
     const update = () => setMobile(mq.matches)
     update()
     mq.addEventListener("change", update)
 
     return () => mq.removeEventListener("change", update)
-  }, [])
+  }, [query])
 
   return mobile
 }
@@ -127,6 +180,28 @@ function useTier(): { tier: Tier; ready: boolean } {
   const { plan, ready } = useEntitlements()
 
   return { tier: tierForPlan(plan), ready }
+}
+
+function setAnalysisUrlParams(
+  params: URLSearchParams,
+  layers: LayerId[],
+  population: {
+    level: AtlasPopulationDetail
+    opacity: number
+    country: string
+  },
+  reach: { mode: AtlasReachMode; minutes: number }
+) {
+  if (layers.includes("population") && population.level !== "auto")
+    params.set("populationAreas", population.level)
+  if (layers.includes("population") && population.opacity !== 0.7)
+    params.set("populationOpacity", String(population.opacity))
+  if (layers.includes("population") && population.country !== "GB")
+    params.set("populationCountry", population.country)
+  if (layers.includes("reach")) {
+    params.set("reachMode", reach.mode)
+    params.set("reachMinutes", String(reach.minutes))
+  }
 }
 
 export function AtlasExplorer({
@@ -142,9 +217,16 @@ export function AtlasExplorer({
   readonly scalable?: boolean
 }) {
   const tUi = useUiTranslations("ui")
+  const tContext = useUiTranslations("atlasContext")
+  const tNetwork = useUiTranslations("atlasNetwork")
+  const tDrawers = useUiTranslations("atlasDrawers")
+  const tInspect = useUiTranslations("atlasInspect")
 
   const mapRef = useRef<AtlasMapHandle>(null)
+  const recentCameraId = useRef<string | null>(null)
   const isMobile = useIsMobile()
+  const narrow = useIsMobile("(max-width: 1439px)")
+  const animateAtlas = useAtlasMotion()
   const { tier, ready: entitlementsReady } = useTier()
 
   // ── State (hydrated from the URL after mount) ─────────────────────────────
@@ -174,15 +256,56 @@ export function AtlasExplorer({
   const [selectedStop, setSelectedStop] = useState<MobileStopHit | null>(null)
 
   const [tab, setTab] = useState<Tab>("search")
-  const [collapsed, setCollapsed] = useState(false)
+  const [userCollapsed, setUserCollapsed] = useState(false)
   const [query, setQuery] = useState("")
   const [hovered, setHovered] = useState<AtlasLibrary | null>(null)
   const [heatOpacity, setHeatOpacity] = useState(0.7)
   const [perCapitaOpacity, setPerCapitaOpacity] = useState(0.85)
+  const [populationLevel, setPopulationLevel] =
+    useState<AtlasPopulationDetail>("auto")
+  const [populationCountry, setPopulationCountry] = useState("GB")
+  const [contextReleaseId, setContextReleaseId] = useState("")
+  const [contextOpacity, setContextOpacity] = useState(0.7)
+  const [contextFailure, setContextFailure] = useState<string | null>(null)
+  const contextFocus = useRef(false)
+  const [contextLocation, setContextLocation] = useState<{
+    lng: number
+    lat: number
+  } | null>(null)
+  const [populationOpacity, setPopulationOpacity] = useState(0.7)
+  const networkSelection = useAtlasNetworkSelection(filters.networks?.[0] ?? "")
+  const [reachScope, setReachScope] = useState<"library" | "network">("library")
+  const [networkGaps, setNetworkGaps] = useState(false)
+  const [reachMode, setReachMode] = useState<AtlasReachMode>("walking")
+  const [reachMinutes, setReachMinutes] = useState(15)
+  const [reachOpacity, setReachOpacity] = useState(0.7)
   const [accessMetric, setAccessMetric] = useState<AtlasAccessMetric>("per100k")
   const [accessLevel, setAccessLevel] = useState<AtlasAccessLevel>("auto")
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode | null>(null)
-  const [analysisCollapsed, setAnalysisCollapsed] = useState(false)
+  const [inspectTarget, setInspectTarget] = useState<
+    "library" | "stop" | "mobile" | "density" | "events" | null
+  >(null)
+  const [inspectMinimised, setInspectMinimised] = useState(false)
+  const [mobileSurface, setMobileSurface] = useState<"explore" | "inspect">(
+    "explore"
+  )
+  const [leftPinned, setLeftPinned] = useState(false)
+  const [undoLayers, setUndoLayers] = useState<{
+    layers: LayerId[]
+    mode: AnalysisMode | null
+    target: typeof inspectTarget
+    message: string
+  } | null>(null)
+  const [locateFailed, setLocateFailed] = useState(false)
+  const [askReachScope, setAskReachScope] = useState(false)
+  const collapsed =
+    userCollapsed ||
+    (narrow &&
+      !leftPinned &&
+      !inspectMinimised &&
+      !list &&
+      Boolean(analysisMode || inspectTarget || selectedId || selectedStop))
+  const analysisRoot = useRef<HTMLDivElement>(null)
   const [libraryAccessTab, setLibraryAccessTab] =
     useState<AnalysisTab>("overview")
   const [layerSettings, setLayerSettings] = useState<LayerId | null>(null)
@@ -211,9 +334,39 @@ export function AtlasExplorer({
     setAccessibility(s.accessibility ?? [])
     setAccessibilityView(s.accessibilityView ?? "matches")
     const mode = params.get("visits")
-    if (mode === "today" || mode === "week" || mode === "live")
-      setMobileMode(mode)
+    if (["today", "week", "live"].includes(mode ?? ""))
+      setMobileMode(mode as MobileVisitFilter)
     setSelectedId(s.library)
+    const inspect = params.get("inspect")
+    if (["library", "mobile", "density", "events"].includes(inspect ?? ""))
+      setInspectTarget(inspect as "library" | "mobile" | "density" | "events")
+    else if (s.library && !params.get("analysis")) setInspectTarget("library")
+    setInspectMinimised(params.get("inspectMin") === "1")
+    if (
+      s.library ||
+      s.layers.some((layer) =>
+        [
+          "reach",
+          "perCapita",
+          "population",
+          "deprivation",
+          "carAccess",
+          "access",
+          "mobile",
+          "density",
+          "events",
+        ].includes(layer)
+      )
+    )
+      setMobileSurface("inspect")
+    if (!s.view) recentCameraId.current = s.library
+    const populationArea = params.get("populationArea")
+    if (
+      s.layers.includes("population") &&
+      populationArea &&
+      isPopulationArea(populationArea)
+    )
+      setSelectedCountry(populationArea)
     if (
       /^(?:[A-Z]{3}|[EWSN]\d{8})$/.test(
         params.get("accessArea") ?? params.get("countryComparison") ?? ""
@@ -222,23 +375,30 @@ export function AtlasExplorer({
       setSelectedCountry(
         params.get("accessArea") ?? params.get("countryComparison")
       )
-    setAccessMetric(
-      params.get("accessMetric") === "peoplePerLibrary"
-        ? "peoplePerLibrary"
-        : "per100k"
-    )
-    const areaLevel = params.get("accessAreas")
-    setAccessLevel(
-      areaLevel === "local" || areaLevel === "countries" ? areaLevel : "auto"
+    const settings = analysisUrlSettings(params)
+    setAccessMetric(settings.accessMetric)
+    setAccessLevel(settings.accessLevel)
+    setReachScope(settings.reachScope)
+    setReachMode(settings.reachMode)
+    setReachMinutes(settings.reachMinutes)
+    setPopulationLevel(settings.populationLevel)
+    setPopulationCountry(settings.populationCountry)
+    setContextReleaseId(settings.contextRelease)
+    setPopulationOpacity(settings.populationOpacity)
+    const initialDrawers = atlasAnalysisDrawers(
+      s.layers.reduce<LayerId[]>(
+        (active, id) => toggleLayer(active, id).layers,
+        []
+      ),
+      params.get("analysis") === "accessibility" ? "accessibility" : null
     )
     setAnalysisMode(
-      params.get("analysis") === "accessibility"
-        ? "accessibility"
-        : s.layers.includes("perCapita")
-          ? "libraryAccess"
-          : s.layers.includes("access")
-            ? "accessibility"
-            : null
+      initialAnalysisSelection(
+        initialDrawers,
+        params.get("analysis"),
+        s.library,
+        s.layers.includes("reach")
+      )
     )
     const shadingOpacity = Number(
       params.get("accessOpacity") ?? params.get("perCapitaOpacity") ?? "0.85"
@@ -296,11 +456,96 @@ export function AtlasExplorer({
   const usableLayers = useMemo(
     () =>
       withRequiredLibraryLocations(
-        layers.filter((id) => layerAccess(layerDef(id), tier) === "available")
+        layers
+          .filter((id) => layerAccess(layerDef(id), tier) === "available")
+          .reduce<
+            LayerId[]
+          >((active, id) => (active.includes(id) ? active : toggleLayer(active, id).layers), [])
       ),
     [layers, tier]
   )
   const accessView = view ?? initialView
+  const context = useAtlasContextCatalogue(
+    hydrated &&
+      usableLayers.some((id) =>
+        ["population", "deprivation", "carAccess"].includes(id)
+      )
+  )
+  const populationGrid =
+    context.releases.find(
+      (r) => r.theme === "population" && r.country === populationCountry
+    ) ?? null
+  const insidePopulation =
+    accessView &&
+    (populationCountry === "GB"
+      ? accessView.lng >= -9 &&
+        accessView.lng <= 3 &&
+        accessView.lat >= 49 &&
+        accessView.lat <= 61
+      : context.releases.some(
+          (r) =>
+            r.theme === "administrative" &&
+            r.country === populationCountry &&
+            accessView.lng >= r.bounds.west &&
+            accessView.lng <= r.bounds.east &&
+            accessView.lat >= r.bounds.south &&
+            accessView.lat <= r.bounds.north
+        ))
+  const resolvedPopulationLevel =
+    populationLevel === "auto"
+      ? insidePopulation && (accessView?.zoom ?? 0) >= 9 && populationGrid
+        ? "grid"
+        : insidePopulation && (accessView?.zoom ?? 0) >= 6
+          ? "local"
+          : "countries"
+      : populationLevel
+  const contextTheme = usableLayers.includes("deprivation")
+    ? "deprivation"
+    : usableLayers.includes("carAccess")
+      ? "carAccess"
+      : usableLayers.includes("population") &&
+          resolvedPopulationLevel === "grid"
+        ? "population"
+        : null
+  const contextChoices = context.releases.filter(
+    (r) => r.theme === contextTheme
+  )
+  const previousContextCountry = context.releases.find(
+    (r) => r.id === contextReleaseId
+  )?.country
+  const contextRelease =
+    contextTheme === "population"
+      ? populationGrid
+      : (contextChoices.find((r) => r.id === contextReleaseId) ??
+        contextChoices.find((r) => r.country === previousContextCountry) ??
+        contextChoices[0] ??
+        null)
+  const contextPoint = useAtlasContextPoint(contextRelease, contextLocation)
+  useEffect(() => {
+    if (
+      contextFocus.current &&
+      mapReady &&
+      contextRelease &&
+      contextTheme !== "population"
+    ) {
+      contextFocus.current = false
+      mapRef.current?.fitBounds(contextRelease.bounds)
+    }
+  }, [contextRelease, mapReady, contextTheme])
+  const contextFailed = Boolean(
+    contextFailure && contextFailure === contextRelease?.id
+  )
+  const retryContext = () => {
+    setContextFailure(null)
+    context.retry()
+  }
+  const population = usePopulationDensity(
+    hydrated &&
+      usableLayers.includes("population") &&
+      resolvedPopulationLevel !== "grid",
+    resolvedPopulationLevel === "grid" ? "local" : resolvedPopulationLevel,
+    populationCountry
+  )
   const resolvedAccessLevel =
     accessLevel === "auto"
       ? accessView &&
@@ -355,11 +600,14 @@ export function AtlasExplorer({
     : undefined
   const selectCountry = (iso3: string) => {
     setSelectedCountry(iso3 || null)
-    setSelectedId(null)
-    setSelectedStop(null)
-    setAnalysisMode("libraryAccess")
-    setAnalysisCollapsed(false)
-    if (isMobile) setSheet("half")
+    setInspectTarget(null)
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+    setAnalysisMode(
+      usableLayers.includes("population") ? "population" : "libraryAccess"
+    )
+
+    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
   }
   const mobiles = useMobileAtlas(
     view,
@@ -420,16 +668,31 @@ export function AtlasExplorer({
       )
       if (query) params.set("q", query)
       if (mobileMode !== "any") params.set("visits", mobileMode)
-      if (!mobileRouteLines) params.set("routeLines", "0")
-      if (mobileOpacity !== 1)
-        params.set("mobileOpacity", String(mobileOpacity))
-      if (selectedCountry) params.set("accessArea", selectedCountry)
-      if (perCapitaOpacity !== 0.85)
-        params.set("accessOpacity", String(perCapitaOpacity))
-      if (accessMetric !== "per100k") params.set("accessMetric", accessMetric)
-      if (accessLevel !== "auto") params.set("accessAreas", accessLevel)
-      if (analysisMode === "accessibility")
-        params.set("analysis", "accessibility")
+      setUrlValue(params, "routeLines", mobileRouteLines ? "1" : "0", "1")
+      setUrlValue(params, "mobileOpacity", mobileOpacity, 1)
+      if (selectedCountry)
+        params.set(
+          usableLayers.includes("population") ? "populationArea" : "accessArea",
+          selectedCountry
+        )
+      setUrlValue(params, "accessOpacity", perCapitaOpacity, 0.85)
+      setUrlValue(params, "accessMetric", accessMetric, "per100k")
+      setUrlValue(params, "accessAreas", accessLevel, "auto")
+      setAnalysisUrlParams(
+        params,
+        usableLayers,
+        {
+          level: populationLevel,
+          opacity: populationOpacity,
+          country: populationCountry,
+        },
+        { mode: reachMode, minutes: reachMinutes }
+      )
+      if (reachScope === "network") params.set("reachScope", "network")
+      if (contextReleaseId) params.set("contextRelease", contextReleaseId)
+      if (analysisMode) params.set("analysis", analysisMode)
+      if (inspectTarget) params.set("inspect", inspectTarget)
+      if (inspectMinimised) params.set("inspectMin", "1")
       const mobileQs = params.toString()
       window.history.replaceState(
         null,
@@ -459,11 +722,29 @@ export function AtlasExplorer({
     perCapitaOpacity,
     accessMetric,
     accessLevel,
+    populationLevel,
+    populationOpacity,
+    populationCountry,
+    contextReleaseId,
+    reachMode,
+    reachMinutes,
+    reachScope,
     analysisMode,
+    inspectTarget,
+    inspectMinimised,
   ])
 
   // ── Derived data ──────────────────────────────────────────────────────────
   const libs = useMemo(() => all ?? [], [all])
+  const networkLibraries = useMemo(
+    () =>
+      filters.networks?.length
+        ? libs.filter((library) =>
+            filters.networks!.some((id) => library.networkIds?.includes(id))
+          )
+        : libs,
+    [libs, filters.networks]
+  )
   const filtered = useMemo(
     () => (scalable ? data.listed : applyFilters(libs, filters, now)),
     [libs, filters, now, scalable, data.listed]
@@ -489,9 +770,9 @@ export function AtlasExplorer({
       scalable
         ? data.closures
         : usableLayers.includes("closures")
-          ? libs.filter((l) => l.status === "permanently_closed")
+          ? networkLibraries.filter((l) => l.status === "permanently_closed")
           : [],
-    [libs, usableLayers, scalable, data.closures]
+    [networkLibraries, usableLayers, scalable, data.closures]
   )
   const inView = useMemo(
     () => (view ? listed.filter((l) => inBounds(l, view.bounds)) : listed),
@@ -521,8 +802,11 @@ export function AtlasExplorer({
     [inView, scalable, filters.types]
   )
   const places = useMemo(
-    () => buildPlaces(libs.filter((l) => l.status !== "permanently_closed")),
-    [libs]
+    () =>
+      buildPlaces(
+        networkLibraries.filter((l) => l.status !== "permanently_closed")
+      ),
+    [networkLibraries]
   )
   const selected = useMemo(
     () =>
@@ -531,14 +815,174 @@ export function AtlasExplorer({
         : (libs.find((l) => l.id === selectedId) ?? null),
     [libs, selectedId, scalable, data.selected]
   )
-  const recentCameraId = useRef<string | null>(null)
+  const reachViewLimit = atlasReachViewLimit(
+    view?.zoom,
+    scalable
+      ? (data.generation?.viewport.populations.listed?.exactTotal ?? null)
+      : inView.length
+  )
+  const serviceReachLimit = networkSelection.selected
+    ? atlasNetworkReachLimit(networkSelection.selected)
+    : null
+  const networkReachLimit = serviceReachLimit ?? reachViewLimit
+  const zoomToLocalReach = () => {
+    const bounds =
+      reachScope === "network" ? networkSelection.selected?.bounds : null
+    mapRef.current?.flyTo(
+      bounds
+        ? (bounds.south + bounds.north) / 2
+        : (selected?.lat ?? view?.lat ?? 0),
+      bounds
+        ? (bounds.west + bounds.east) / 2
+        : (selected?.lng ?? view?.lng ?? 0),
+      Math.max(ATLAS_REACH_MIN_ZOOM, (view?.zoom ?? 0) + 1)
+    )
+  }
+  const libraryReach = useAtlasReach(
+    hydrated &&
+      usableLayers.includes("reach") &&
+      reachScope === "library" &&
+      !reachViewLimit,
+    selected?.id ?? null,
+    reachMode,
+    JSON.stringify([
+      selected?.lat,
+      selected?.lng,
+      selected?.status,
+      selected?.type,
+    ])
+  )
   useEffect(() => {
-    if (selected && recentCameraId.current === selected.id) {
-      if (selected.mapped !== false)
+    if (mapReady && networkSelection.selected?.bounds)
+      mapRef.current?.fitBounds(networkSelection.selected.bounds)
+  }, [mapReady, networkSelection.selected])
+  const networkDraft = useMemo(
+    () =>
+      filters.networks?.[0] && networkSelection.selected?.available
+        ? {
+            schemaVersion: 1 as const,
+            networkId: filters.networks[0],
+            ...(networkSelection.selected.areaCodes.length === 1
+              ? { areaCode: networkSelection.selected.areaCodes[0] }
+              : {}),
+            mode: reachMode,
+            scope: {
+              filters: atlasBuildingFilters(filters),
+              accessibility: {
+                enabled: usableLayers.includes("access"),
+                selected: accessibility,
+                view: accessibilityView,
+              },
+            },
+          }
+        : null,
+    [
+      filters,
+      networkSelection.selected,
+      reachMode,
+      usableLayers,
+      accessibility,
+      accessibilityView,
+    ]
+  )
+  const networkReach = useNetworkReach(
+    networkDraft,
+    hydrated &&
+      usableLayers.includes("reach") &&
+      reachScope === "network" &&
+      !networkReachLimit
+  )
+  const networkDisplayResult = useMemo(
+    () =>
+      networkReach.result?.state === "ready" && networkGaps
+        ? {
+            ...networkReach.result,
+            displayGaps: true,
+            contours: networkReach.result.contours.map((band) => ({
+              ...band,
+              empty: !band.gapGeometry,
+              geometry: band.gapGeometry ?? band.geometry,
+            })),
+          }
+        : networkReach.result,
+    [networkReach.result, networkGaps]
+  )
+  const reach =
+    reachScope === "network"
+      ? { ...libraryReach, result: networkDisplayResult }
+      : libraryReach
+  const reachEnabled = usableLayers.includes("reach")
+  useEffect(() => {
+    if (!reachEnabled) return
+    const nations: Record<string, string> = {
+      E: "GB-ENG",
+      W: "GB-WLS",
+      S: "GB-SCT",
+      N: "GB-NIR",
+      England: "GB-ENG",
+      Wales: "GB-WLS",
+      Scotland: "GB-SCT",
+      "Northern Ireland": "GB-NIR",
+    }
+    const prefixes = new Set(
+      networkSelection.selected?.areaCodes.map((code) => code[0])
+    )
+    const nation =
+      reachScope === "network"
+        ? prefixes.size === 1
+          ? nations[[...prefixes][0]!]
+          : null
+        : nations[selected?.country ?? ""]
+    if (!nation) return
+    const matching = context.releases.find(
+      (r) => r.theme === contextTheme && r.country === nation
+    )
+    if (matching) {
+      setContextReleaseId(matching.id)
+      setContextLocation(null)
+    }
+    if (usableLayers.includes("population")) setPopulationCountry("GB")
+    // Match the background when the service changes. A later explicit nation
+    // choice remains available for comparing neighbouring areas.
+  }, [
+    reachEnabled,
+    reachScope,
+    networkSelection.selected,
+    selected?.id,
+    selected?.country,
+    contextTheme,
+    context.releases,
+    usableLayers,
+  ])
+  useEffect(() => {
+    if (!mapReady || reachScope === "network") return
+    const geometry = reach.result?.contours.find(
+      (contour) => contour.minutes === reachMinutes
+    )?.geometry
+    if (!geometry) return
+    const positions =
+      geometry.type === "Polygon"
+        ? geometry.coordinates.flat()
+        : geometry.coordinates.flatMap((polygon) => polygon.flat())
+    const bounds = { west: 180, east: -180, south: 90, north: -90 }
+    for (const [lng, lat] of positions) {
+      bounds.west = Math.min(bounds.west, lng)
+      bounds.east = Math.max(bounds.east, lng)
+      bounds.south = Math.min(bounds.south, lat)
+      bounds.north = Math.max(bounds.north, lat)
+    }
+    mapRef.current?.fitBounds(bounds, ATLAS_REACH_MIN_ZOOM)
+  }, [reach.result, reachMinutes, mapReady, isMobile, reachScope])
+  useEffect(() => {
+    if (mapReady && selected && recentCameraId.current === selected.id) {
+      if (
+        selected.mapped !== false &&
+        !(usableLayers.includes("reach") && reach.result)
+      )
         mapRef.current?.flyTo(selected.lat, selected.lng, 14)
       recentCameraId.current = null
     }
-  }, [selected])
+  }, [selected, mapReady, usableLayers, reach.result])
   const filterCount = activeFilterCount(filters)
   const suggestions = useMemo(
     () =>
@@ -602,6 +1046,11 @@ export function AtlasExplorer({
         library_document_id: lib.id,
       })
       setSelectedId(lib.id)
+      setAskReachScope(false)
+      setInspectTarget("library")
+      setInspectMinimised(false)
+      setMobileSurface("inspect")
+
       setSelectedStop(null)
       setList(false)
       if (fly && lib.mapped !== false)
@@ -615,7 +1064,8 @@ export function AtlasExplorer({
             ? "Mobile library"
             : [lib.city, lib.region, lib.country].filter(Boolean).join(", "),
       })
-      if (isMobile) setSheet("half")
+      if (isMobile)
+        setSheet((current) => (current === "peek" ? "half" : current))
     },
     [remember, isMobile]
   )
@@ -644,6 +1094,12 @@ export function AtlasExplorer({
           library_document_id: id,
         })
       setSelectedId(id)
+      setAskReachScope(false)
+      if (id) {
+        setInspectTarget("library")
+        setInspectMinimised(false)
+        setMobileSurface("inspect")
+      }
       setSelectedStop(null)
       if (id && isMobile) setSheet("half")
     },
@@ -659,6 +1115,10 @@ export function AtlasExplorer({
       })
       setSelectedId(null)
       setSelectedStop(stop)
+      setAskReachScope(false)
+      setInspectTarget("stop")
+      setInspectMinimised(false)
+      setMobileSurface("inspect")
       setList(false)
       setFilters((current) =>
         current.types.length && !current.types.includes("mobile")
@@ -677,7 +1137,8 @@ export function AtlasExplorer({
       })
       if (fly && stop._geo)
         mapRef.current?.flyTo(stop._geo.lat, stop._geo.lng, 14)
-      if (isMobile) setSheet("half")
+      if (isMobile)
+        setSheet((current) => (current === "peek" ? "half" : current))
     },
     [isMobile, remember]
   )
@@ -693,26 +1154,39 @@ export function AtlasExplorer({
   const onToggleLayer = useCallback(
     (id: LayerId) => {
       const { layers: next, replaced: removed } = toggleLayer(usableLayers, id)
+      if (
+        (id === "deprivation" || id === "carAccess") &&
+        next.includes(id) &&
+        !next.includes("reach")
+      )
+        contextFocus.current = true
       pushAnalyticsEvent("atlas_action", {
         interaction_source: "atlas_layers",
         action_type: next.includes(id) ? "layer_on" : "layer_off",
         layer_name: id,
       })
       setLayers(next)
-      if ((id === "perCapita" || id === "access") && next.includes(id)) {
-        setAnalysisMode(id === "access" ? "accessibility" : "libraryAccess")
-        setAnalysisCollapsed(false)
-        setSelectedId(null)
-        setSelectedStop(null)
-        setList(false)
-        if (isMobile) setSheet("half")
-      } else if (
-        (analysisMode === "accessibility" &&
-          !next.includes("access") &&
-          (id === "access" || removed === "access")) ||
-        (analysisMode === "libraryAccess" && !next.includes("perCapita"))
+      const descriptor = atlasAnalysisDrawers(next).find(
+        (drawer) => drawer.layer === id
+      )
+      if (
+        next.includes(id) &&
+        (descriptor || ["mobile", "density", "events"].includes(id))
       ) {
-        setAnalysisMode(null)
+        if (descriptor) {
+          setAnalysisMode(descriptor.mode)
+          setInspectTarget(null)
+        } else setInspectTarget(id as "mobile" | "density" | "events")
+        setInspectMinimised(false)
+        setMobileSurface("inspect")
+        setLeftPinned(false)
+        setList(false)
+        if (isMobile)
+          setSheet((current) => (current === "peek" ? "half" : current))
+      } else if (
+        !atlasAnalysisDrawers(next).some(({ mode }) => mode === analysisMode)
+      ) {
+        setAnalysisMode(atlasAnalysisDrawers(next)[0]?.mode ?? null)
       }
       if (layerSettings && !next.includes(layerSettings)) setLayerSettings(null)
 
@@ -721,12 +1195,203 @@ export function AtlasExplorer({
     [usableLayers, isMobile, analysisMode, layerSettings]
   )
 
+  const closeAnalysis = () => {
+    setInspectMinimised(true)
+    setMobileSurface("explore")
+
+    requestAnimationFrame(() =>
+      analysisRoot.current?.focus({ preventScroll: true })
+    )
+  }
+
+  const openReach = () => {
+    if (reachScope === "network" && usableLayers.includes("reach")) {
+      setAskReachScope(true)
+
+      return
+    }
+    setAskReachScope(false)
+    setInspectTarget(null)
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+    setReachScope("library")
+    if (layerAccess(layerDef("reach"), tier) !== "available") {
+      setPlansOpen(true)
+
+      return
+    }
+    if (!usableLayers.includes("reach")) onToggleLayer("reach")
+    setAnalysisMode("reach")
+    setInspectTarget(null)
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+
+    setList(false)
+    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+  }
+  const populationCountries = [
+    { value: "GB", label: tUi("atlas_population_uk") },
+    ...context.releases
+      .filter((r) => r.theme === "administrative" && r.level === "local")
+      .map((r) => ({ value: r.country, label: r.name })),
+  ]
+  const changePopulationCountry = (country: string) => {
+    setPopulationCountry(country)
+    setSelectedCountry(null)
+    setContextLocation(null)
+    if (populationLevel === "grid" && country !== "GB")
+      setPopulationLevel("local")
+    const bounds =
+      country === "GB"
+        ? populationCoverageBounds("local")
+        : context.releases.find(
+            (r) => r.theme === "administrative" && r.country === country
+          )?.bounds
+    if (bounds) mapRef.current?.fitBounds(bounds)
+  }
+  const changePopulationDetail = (level: AtlasPopulationDetail) => {
+    setPopulationLevel(level)
+    setSelectedCountry(null)
+    setContextLocation(null)
+    const bounds =
+      level === "grid"
+        ? populationGrid?.bounds
+        : level === "local" || level === "regions"
+          ? populationCountry === "GB"
+            ? populationCoverageBounds(level)
+            : context.releases.find(
+                (r) =>
+                  r.theme === "administrative" &&
+                  r.country === populationCountry
+              )?.bounds
+          : null
+    if (bounds) mapRef.current?.fitBounds(bounds)
+  }
+  const openContextReach = () => {
+    if (layerAccess(layerDef("reach"), tier) !== "available") {
+      setPlansOpen(true)
+
+      return
+    }
+    if (!usableLayers.includes("reach")) onToggleLayer("reach")
+    setAnalysisMode("reach")
+    setInspectTarget(null)
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+
+    setList(false)
+    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+  }
+  const reachAnalysis = (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      {reachScope === "network" ? (
+        <AtlasNetworkReach
+          calculationLimit={networkReachLimit}
+          onZoomLocal={zoomToLocalReach}
+          onSingleLibrary={() => setReachScope("library")}
+          scopeControl={
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-(--t-ink-dim)">
+                {tNetwork("reachScope")}
+              </span>
+              <SelectField
+                label={tNetwork("reachScope")}
+                value={reachScope}
+                onValueChange={(value) =>
+                  setReachScope(value as "library" | "network")
+                }
+                options={[
+                  { value: "library", label: tNetwork("singleLibrary") },
+                  { value: "network", label: tNetwork("networkScope") },
+                ]}
+              />
+            </div>
+          }
+          opacity={reachOpacity}
+          onOpacity={setReachOpacity}
+          selection={networkSelection.selected}
+          selectionLoading={networkSelection.loading}
+          selectionError={networkSelection.error}
+          retrySelection={networkSelection.retry}
+          filterCount={
+            Math.max(
+              0,
+              activeFilterCount(filters) - (filters.networks?.length ? 1 : 0)
+            ) +
+            (usableLayers.includes("access") && accessibilityView !== "compare"
+              ? Math.max(1, accessibility.length)
+              : 0)
+          }
+          onClearFilters={() => {
+            setFilters((current) => ({
+              ...EMPTY_FILTERS,
+              networks: current.networks,
+            }))
+            setAccessibility([])
+            setAccessibilityView("compare")
+            networkReach.clear()
+          }}
+          networkId={filters.networks?.[0] ?? ""}
+          onNetwork={(id) =>
+            setFilters((current) => ({ ...current, networks: id ? [id] : [] }))
+          }
+          minutes={reachMinutes}
+          onMinutes={setReachMinutes}
+          mode={reachMode}
+          onMode={setReachMode}
+          gaps={networkGaps}
+          onGaps={setNetworkGaps}
+          response={networkReach.response}
+          stale={networkReach.stale}
+          calculate={networkReach.calculate}
+          canExport={tier === "pro"}
+        />
+      ) : (
+        <AtlasReachAnalysis
+          calculationLimit={reachViewLimit}
+          onZoomLocal={zoomToLocalReach}
+          scopeControl={
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-(--t-ink-dim)">
+                {tNetwork("reachScope")}
+              </span>
+              <SelectField
+                label={tNetwork("reachScope")}
+                value={reachScope}
+                onValueChange={(value) =>
+                  setReachScope(value as "library" | "network")
+                }
+                options={[
+                  { value: "library", label: tNetwork("singleLibrary") },
+                  { value: "network", label: tNetwork("networkScope") },
+                ]}
+              />
+            </div>
+          }
+          library={selected}
+          response={reach.response}
+          error={reach.error}
+          retry={reach.retry}
+          mode={reachMode}
+          onMode={setReachMode}
+          minutes={reachMinutes}
+          onMinutes={setReachMinutes}
+          opacity={reachOpacity}
+          onOpacity={setReachOpacity}
+          canExport={tier === "pro"}
+          collapsed={false}
+          onCollapse={closeAnalysis}
+          onClose={closeAnalysis}
+        />
+      )}
+    </div>
+  )
+
   const signInHref = useMemo(() => {
     if (typeof window === "undefined") return "/auth/signin"
 
     const params = new URLSearchParams(window.location.search)
-    if (analysisMode === "accessibility")
-      params.set("analysis", "accessibility")
+    if (analysisMode) params.set("analysis", analysisMode)
 
     return `/auth/signin?callbackUrl=${encodeURIComponent(`${window.location.pathname}?${params}`)}`
     // Recompute when state that shapes the URL changes.
@@ -752,6 +1417,63 @@ export function AtlasExplorer({
   }
 
   // ── Pieces shared by desktop and mobile ──────────────────────────────────
+  const drawerSummaries = useAtlasDrawerSummaries({
+    reach: {
+      scope: reachScope,
+      libraryName: selected?.name,
+      mode: reachMode,
+      minutes: reachMinutes,
+      result: libraryReach.result,
+      state:
+        reachScope === "network"
+          ? networkReach.response?.state
+          : libraryReach.response?.state,
+      stale: reachScope === "network" && networkReach.stale,
+    },
+    network: {
+      selection: networkSelection.selected,
+      result: networkReach.result,
+    },
+    population: {
+      grid: resolvedPopulationLevel === "grid" ? populationGrid : null,
+      area: population.data?.areas.find(({ id }) => id === selectedCountry),
+      level: resolvedPopulationLevel,
+      country: populationCountry,
+    },
+    context: { release: contextRelease, point: contextPoint.value },
+    accessibility: {
+      selected: accessibility,
+      coverage: accessibilityCoverage,
+      inView: Boolean(view),
+    },
+    libraryAccess: {
+      response: perCapita.value ?? null,
+      selected: selectedCountry,
+      metric: accessMetric,
+    },
+  })
+  const openInspectLayer = (layer: LayerId) => {
+    const drawer = atlasAnalysisDrawers([layer]).find(
+      (entry) => entry.layer === layer
+    )
+    if (drawer) {
+      setAnalysisMode(drawer.mode)
+      setInspectTarget(null)
+    } else if (["mobile", "density", "events"].includes(layer))
+      setInspectTarget(layer as "mobile" | "density" | "events")
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+    setLeftPinned(false)
+    setList(false)
+    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+  }
+  const layerSummaries: Partial<Record<LayerId, string>> = Object.fromEntries(
+    atlasAnalysisDrawers(usableLayers).map(({ layer, mode }) => [
+      layer,
+      drawerSummaries[mode].detail,
+    ])
+  )
+
   const tabContent = (
     <>
       {usableLayers.includes("mobile") ? (
@@ -791,7 +1513,7 @@ export function AtlasExplorer({
             setQuery("")
             setTab("layers")
           }}
-          onPickLibrary={(l) => selectLibrary(l)}
+          onPickLibrary={(l) => animateAtlas(() => selectLibrary(l))}
           onPickPlace={pickPlace}
           onPreset={(patch) => {
             setFilters((f) => ({ ...f, ...patch }))
@@ -837,6 +1559,11 @@ export function AtlasExplorer({
         </p>
       ) : tab === "filter" ? (
         <AtlasFiltersTab
+          onAccessibility={() => {
+            if (!usableLayers.includes("access")) onToggleLayer("access")
+            openInspectLayer("access")
+          }}
+          networkSelection={networkSelection.selected}
           filters={filters}
           onChange={(next) => {
             pushAnalyticsEvent("atlas_action", {
@@ -894,37 +1621,43 @@ export function AtlasExplorer({
         <AtlasLayersTab
           tier={tier}
           active={usableLayers}
+          onInspect={(id) => openInspectLayer(id)}
+          summaries={layerSummaries}
           accessibilityAnalysisOpen={
-            analysisMode === "accessibility" && !selectedId && !selectedStop
+            analysisMode === "accessibility" && !selectedStop
           }
           onAccessibilityAnalysis={() => {
-            if (
-              analysisMode === "accessibility" &&
-              !selectedId &&
-              !selectedStop
-            ) {
+            if (analysisMode === "accessibility" && !selectedStop) {
               setAnalysisMode(null)
 
               return
             }
             setAnalysisMode("accessibility")
-            setAnalysisCollapsed(false)
-            setSelectedId(null)
-            setSelectedStop(null)
+            setInspectTarget(null)
+            setInspectMinimised(false)
+            setMobileSurface("inspect")
+
             setList(false)
-            if (isMobile) setSheet("half")
+            if (isMobile)
+              setSheet((current) => (current === "peek" ? "half" : current))
           }}
           onToggle={onToggleLayer}
           onClear={() => {
+            setUndoLayers({
+              layers: usableLayers,
+              mode: analysisMode,
+              target: inspectTarget,
+              message: "All layers turned off",
+            })
             setLayers([])
             setAnalysisMode(null)
             setLayerSettings(null)
           }}
           settings={layerSettings}
-          onSettings={setLayerSettings}
+          onSettings={(id) => id && openInspectLayer(id)}
           onEventsFilter={() => {
             setTab("filter")
-            setCollapsed(false)
+            setUserCollapsed(false)
           }}
           heatOpacity={heatOpacity}
           onHeatOpacity={setHeatOpacity}
@@ -959,13 +1692,59 @@ export function AtlasExplorer({
               })),
             onAnalysis: () => {
               setList(false)
-              if (isMobile) setSheet("half")
+              if (isMobile)
+                setSheet((current) => (current === "peek" ? "half" : current))
               setAnalysisMode("libraryAccess")
-              setAnalysisCollapsed(false)
-              setSelectedId(null)
-              setSelectedStop(null)
-              if (isMobile) setSheet("half")
+
+              if (isMobile)
+                setSheet((current) => (current === "peek" ? "half" : current))
             },
+          }}
+          population={{
+            level: populationLevel,
+            onLevel: (level) => {
+              setPopulationLevel(level)
+              setSelectedCountry(null)
+              const bounds =
+                level === "grid"
+                  ? populationGrid?.bounds
+                  : level === "auto"
+                    ? null
+                    : populationCountry === "GB"
+                      ? populationCoverageBounds(level)
+                      : context.releases.find(
+                          (r) =>
+                            r.country === populationCountry &&
+                            r.theme === "administrative"
+                        )?.bounds
+              if (bounds) mapRef.current?.fitBounds(bounds)
+            },
+            country: populationCountry,
+            countries: populationCountries,
+            onCountry: changePopulationCountry,
+            gridAvailable: Boolean(populationGrid),
+            opacity: populationOpacity,
+            onOpacity: setPopulationOpacity,
+            onAnalysis: () => {
+              setAnalysisMode("population")
+              setInspectTarget(null)
+              setInspectMinimised(false)
+              setMobileSurface("inspect")
+
+              setList(false)
+              if (isMobile)
+                setSheet((current) => (current === "peek" ? "half" : current))
+            },
+          }}
+          onContextAnalysis={(id) => {
+            setAnalysisMode(id)
+            setInspectTarget(null)
+            setInspectMinimised(false)
+            setMobileSurface("inspect")
+
+            setList(false)
+            if (isMobile)
+              setSheet((current) => (current === "peek" ? "half" : current))
           }}
         />
       ) : null}
@@ -976,7 +1755,7 @@ export function AtlasExplorer({
     <div
       role="tablist"
       aria-label={tUi("explore")}
-      className="flex flex-1 gap-1"
+      className="atlas-explore-tabs flex min-w-0 flex-1 gap-1 overflow-x-auto"
     >
       {(
         [
@@ -1001,23 +1780,23 @@ export function AtlasExplorer({
             id={`atlas-tab-${key}`}
             aria-selected={on}
             aria-controls="atlas-tabpanel"
-            onClick={() => setTab(key)}
-            className="flex h-11 flex-1 items-center justify-center gap-[7px] rounded-full text-[15px] font-semibold"
+            onClick={() => animateAtlas(() => setTab(key))}
+            className="flex min-h-11 flex-[1_0_auto] items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap max-[350px]:gap-1 max-[350px]:px-1.5 max-[350px]:text-[13px]"
             style={
               on
                 ? {
                     background: "#fff",
-                    color: T.ink.base,
+                    color: T.accent.primary,
                     boxShadow: `inset 0 0 0 1px ${T.border.hi}`,
                   }
                 : { color: T.ink.dim }
             }
           >
-            <Icon name={icon} size={17} />
+            <Icon name={icon} size={16} />
             {label}
             {badge > 0 ? (
               <span
-                className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[12px] text-white"
+                className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs text-white tabular-nums"
                 style={{ background: T.accent.primary }}
               >
                 {badge}
@@ -1037,6 +1816,20 @@ export function AtlasExplorer({
       accessibility={accessibility}
       accessibilityView={accessibilityView}
       accessMetric={accessMetric}
+      context={contextRelease}
+      reach={{
+        mode: reachMode,
+        minutes: reachMinutes,
+        gaps: networkGaps,
+        state:
+          reachScope === "network"
+            ? networkReach.response?.state
+            : libraryReach.response?.state,
+        year:
+          reachScope === "network"
+            ? networkReach.result?.population.year
+            : libraryReach.result?.population.year,
+      }}
     />
   )
   const accessibilityCountLabel = usableLayers.includes("access")
@@ -1047,7 +1840,7 @@ export function AtlasExplorer({
         : "library records"
     : "libraries"
   const countSub = `${accessibilityCountLabel}${view ? " in view" : ""}${usableLayers.includes("mobile") ? ` · ${mobiles.total.toLocaleString()} stops${mobiles.zoomIn ? " · Zoom in" : ""}` : ""}`
-  const center = view ?? { lat: 30, lng: 10 }
+  const center = atlasViewportCamera(view).centre
 
   // Notices about the data, shown over the map or inside the list.
   const hasDataNotice =
@@ -1145,6 +1938,14 @@ export function AtlasExplorer({
             label: tUi("undo"),
             onClick: () => {
               setLayers(replaced.prev)
+              if (analysisMode) {
+                const restoredDrawers = atlasAnalysisDrawers(replaced.prev)
+                if (
+                  !restoredDrawers.some(({ mode }) => mode === analysisMode)
+                ) {
+                  setAnalysisMode(restoredDrawers[0]?.mode ?? null)
+                }
+              }
               setReplaced(null)
             },
           }}
@@ -1163,6 +1964,23 @@ export function AtlasExplorer({
     </>
   )
 
+  const analysisDrawers = atlasAnalysisDrawers(usableLayers, analysisMode)
+  const showingAnalysis =
+    !inspectTarget && analysisDrawers.some(({ mode }) => mode === analysisMode)
+  const activeDrawer = showingAnalysis ? (analysisMode ?? "") : ""
+  const hasDrawerNavigation =
+    Boolean(
+      analysisDrawers.length ||
+      selectedId ||
+      selectedStop ||
+      usableLayers.some((id) => ["mobile", "density", "events"].includes(id))
+    ) && !list
+  const drawerOpen = hasDrawerNavigation && !inspectMinimised
+  const mapRightEdge = drawerOpen
+    ? RIGHT_W + GAP * 2
+    : hasDrawerNavigation
+      ? 96
+      : GAP
   const map = hydrated ? (
     <AtlasMap
       ref={mapRef}
@@ -1176,6 +1994,28 @@ export function AtlasExplorer({
       accessibilityView={accessibilityView}
       heatOpacity={heatOpacity}
       perCapita={perCapitaGeometryError ? null : perCapita.value}
+      populationDensity={population.data}
+      contextRelease={contextRelease}
+      contextOpacity={
+        contextTheme === "population" ? populationOpacity : contextOpacity
+      }
+      onContextError={() => setContextFailure(contextRelease?.id ?? null)}
+      onContextPoint={(location) => {
+        setContextLocation(location)
+        setInspectTarget(null)
+        setInspectMinimised(false)
+        setMobileSurface("inspect")
+        setAnalysisMode(
+          contextTheme === "population" ? "population" : contextTheme
+        )
+
+        if (isMobile)
+          setSheet((current) => (current === "peek" ? "half" : current))
+      }}
+      reach={reach.result}
+      reachMinutes={reachMinutes}
+      reachOpacity={reachOpacity}
+      populationOpacity={populationOpacity}
       perCapitaOpacity={perCapitaOpacity}
       selectedCountry={selectedCountry}
       onCountrySelect={(id) => {
@@ -1201,10 +2041,12 @@ export function AtlasExplorer({
       }}
       padding={{
         left: isMobile || collapsed ? 0 : LEFT_W + GAP,
-        right: !isMobile && (selected || selectedStop) ? RIGHT_W + GAP : 0,
+        right: isMobile ? 0 : drawerOpen ? RIGHT_W + GAP : 0,
         bottom: isMobile ? 200 : 90,
+        bottomFraction:
+          isMobile && (selected || selectedStop || showingAnalysis) ? 0.52 : 0,
       }}
-      onSelect={onMapSelect}
+      onSelect={(id) => animateAtlas(() => onMapSelect(id))}
       onView={setView}
       onReady={() => setMapReady(true)}
       onError={(reason) => {
@@ -1227,578 +2069,908 @@ export function AtlasExplorer({
       />
     ) : null
 
-  const showingAnalysis =
-    (analysisMode === "accessibility" ||
-      (analysisMode === "libraryAccess" &&
-        usableLayers.includes("perCapita"))) &&
-    !selected &&
-    !selectedStop
-  const analysis =
-    analysisMode === "accessibility" ? (
-      <AtlasAccessibilityAnalysis
-        tier={tier}
-        enabled={usableLayers.includes("access")}
-        libraries={filtered}
-        selected={accessibility}
-        view={accessibilityView}
-        coverage={accessibilityCoverage}
-        scope={view ? "Records in view" : "Loaded records"}
-        serverOptions={
-          scalable ? (data.counts?.accessibility ?? []) : undefined
-        }
-        onSelected={setAccessibility}
-        onView={setAccessibilityView}
-        onEnable={() => onToggleLayer("access")}
-        onSignIn={signIn}
-        onList={() => {
-          setList(true)
-          if (isMobile) setSheet("full")
-        }}
-        onSeePlans={() => {
-          pushAnalyticsEvent("upgrade_prompt", {
-            interaction_source: "upgrade_prompt",
-            action_type: "open",
-          })
-          setPlansOpen(true)
-        }}
-        optionsLoading={scalable && !data.counts}
-        exportRequest={
-          scalable
-            ? {
-                schemaVersion: 1,
-                scope: {
-                  ...data.scope,
-                  accessibility: {
-                    enabled: true,
-                    selected: accessibility,
-                    view: accessibilityView,
-                  },
-                },
-                sort: "name",
-                centre: center,
-              }
-            : undefined
-        }
-        exportLibraries={
-          scalable
-            ? []
-            : accessibilityLibraries(
-                view
-                  ? filtered.filter((library) => inBounds(library, view.bounds))
-                  : filtered,
-                accessibility,
-                accessibilityView
-              )
-        }
-        collapsed={analysisCollapsed}
-        onCollapse={() => setAnalysisCollapsed(!analysisCollapsed)}
-        onClose={() => setAnalysisMode(null)}
-      />
-    ) : (
-      <AtlasAccessAnalysis
-        tab={libraryAccessTab}
-        onTab={setLibraryAccessTab}
-        viewBounds={view?.bounds}
-        response={perCapita.value}
-        metric={accessMetric}
-        selected={selectedCountry}
-        onSelect={selectCountry}
-        onFit={(id) => {
-          const bounds = perCapita.value?.areas.find(
-            (area) => area.id === id
-          )?.bounds
-          if (bounds) mapRef.current?.fitBounds(bounds)
-        }}
-        onClose={() => setAnalysisMode(null)}
-        onSettings={() => {
-          setLayerSettings("perCapita")
-          setTab("layers")
-          setCollapsed(false)
-          if (isMobile) {
-            setAnalysisMode(null)
-            setSheet("full")
-          }
-          requestAnimationFrame(() => {
-            document
-              .getElementById("atlas-layer-settings")
-              ?.scrollIntoView({ block: "nearest" })
-          })
-        }}
-        collapsed={analysisCollapsed}
-        onCollapse={() => setAnalysisCollapsed(!analysisCollapsed)}
-        error={perCapitaError}
-        onRetry={retryPerCapita}
-      />
-    )
+  const renderAnalysis = (mode: AnalysisMode) => {
+    switch (mode) {
+      case "reach":
+        return reachAnalysis
+      case "deprivation":
+      case "carAccess":
+        return (
+          <AtlasContextAnalysis
+            key={`${mode}:${contextRelease?.id}`}
+            theme={mode}
+            releases={contextChoices}
+            release={contextRelease}
+            onRelease={(id) => {
+              setContextReleaseId(id)
+              setContextLocation(null)
+              const release = contextChoices.find((r) => r.id === id)
+              if (release) mapRef.current?.fitBounds(release.bounds)
+            }}
+            point={contextPoint.value}
+            loading={context.loading || contextPoint.loading}
+            error={Boolean(
+              context.error || contextPoint.error || contextFailed
+            )}
+            retry={retryContext}
+            onArea={(bounds) => {
+              setContextLocation(null)
+              mapRef.current?.fitBounds(bounds)
+            }}
+            opacity={contextOpacity}
+            onOpacity={setContextOpacity}
+            onClose={closeAnalysis}
+            collapsed={false}
+            onCollapse={closeAnalysis}
+            reachActive={usableLayers.includes("reach")}
+            onReach={openContextReach}
+          />
+        )
+      case "population":
+        return (
+          <AtlasPopulationDensityAnalysis
+            response={population.data}
+            selected={selectedCountry}
+            onSelect={(id) => {
+              selectCountry(id)
+              const bounds = population.data?.areas.find(
+                (area) => area.id === id
+              )?.bounds
+              if (bounds) mapRef.current?.fitBounds(bounds)
+            }}
+            controls={{
+              level: populationLevel,
+              onLevel: changePopulationDetail,
+              country: populationCountry,
+              countries: populationCountries,
+              onCountry: changePopulationCountry,
+              gridAvailable: Boolean(populationGrid),
+              opacity: populationOpacity,
+              onOpacity: setPopulationOpacity,
+              resolvedLabel:
+                populationLevel === "auto"
+                  ? tContext(automaticPopulationLabel(resolvedPopulationLevel))
+                  : undefined,
+            }}
+            gridRelease={
+              resolvedPopulationLevel === "grid" ? populationGrid : null
+            }
+            gridPoint={contextPoint.value}
+            loading={
+              resolvedPopulationLevel === "grid" &&
+              (context.loading || contextPoint.loading)
+            }
+            error={populationAnalysisError({
+              grid: resolvedPopulationLevel === "grid",
+              contextError: Boolean(context.error || contextFailed),
+              loading: context.loading,
+              hasGrid: Boolean(populationGrid),
+              error: population.error,
+            })}
+            retry={
+              resolvedPopulationLevel === "grid"
+                ? retryContext
+                : population.retry
+            }
+            onReach={openContextReach}
+            reachActive={usableLayers.includes("reach")}
+            onClose={closeAnalysis}
+            collapsed={false}
+            onCollapse={closeAnalysis}
+          />
+        )
+      case "accessibility":
+        return (
+          <AtlasAccessibilityAnalysis
+            tier={tier}
+            enabled={usableLayers.includes("access")}
+            libraries={filtered}
+            selected={accessibility}
+            view={accessibilityView}
+            coverage={accessibilityCoverage}
+            scope={recordScopeLabel(Boolean(view))}
+            serverOptions={
+              scalable ? (data.counts?.accessibility ?? []) : undefined
+            }
+            onSelected={setAccessibility}
+            onView={setAccessibilityView}
+            onEnable={() => onToggleLayer("access")}
+            onSignIn={signIn}
+            onList={() => {
+              setList(true)
+              if (isMobile) setSheet("full")
+            }}
+            onSeePlans={() => {
+              pushAnalyticsEvent("upgrade_prompt", {
+                interaction_source: "upgrade_prompt",
+                action_type: "open",
+              })
+              setPlansOpen(true)
+            }}
+            optionsLoading={scalable && !data.counts}
+            exportRequest={
+              scalable
+                ? {
+                    schemaVersion: 1,
+                    scope: {
+                      ...data.scope,
+                      accessibility: {
+                        enabled: true,
+                        selected: accessibility,
+                        view: accessibilityView,
+                      },
+                    },
+                    sort: "name",
+                    centre: center,
+                  }
+                : undefined
+            }
+            exportLibraries={accessibilityExportLibraries(
+              scalable,
+              filtered,
+              view,
+              accessibility,
+              accessibilityView
+            )}
+            collapsed={false}
+            onCollapse={closeAnalysis}
+            onClose={closeAnalysis}
+          />
+        )
 
-  // ── Mobile ────────────────────────────────────────────────────────────────
+      default:
+        return (
+          <AtlasAccessAnalysis
+            tab={libraryAccessTab}
+            onTab={setLibraryAccessTab}
+            viewBounds={view?.bounds}
+            response={perCapita.value}
+            settings={
+              <AtlasPerCapitaControls
+                metric={accessMetric}
+                onMetric={setAccessMetric}
+                level={accessLevel}
+                onLevel={(value) => {
+                  setAccessLevel(value)
+                  setSelectedCountry(null)
+                }}
+                resolvedLevel={resolvedAccessLevel}
+                opacity={perCapitaOpacity}
+                onOpacity={setPerCapitaOpacity}
+                types={filters.types}
+                onTypes={(types) =>
+                  setFilters((value) => ({
+                    ...value,
+                    types: types as AtlasFilters["types"],
+                  }))
+                }
+                onAnalysis={() => {}}
+                showAnalysisLink={false}
+                showOpacity={false}
+              />
+            }
+            opacity={perCapitaOpacity}
+            onOpacity={setPerCapitaOpacity}
+            metric={accessMetric}
+            selected={selectedCountry}
+            onSelect={selectCountry}
+            onFit={(id) => {
+              const bounds = perCapita.value?.areas.find(
+                (area) => area.id === id
+              )?.bounds
+              if (bounds) mapRef.current?.fitBounds(bounds)
+            }}
+            onClose={closeAnalysis}
+            collapsed={false}
+            onCollapse={closeAnalysis}
+            error={perCapitaError}
+            onRetry={retryPerCapita}
+          />
+        )
+    }
+  }
+
+  const inspectEntries: AtlasInspectEntry[] = [
+    ...(scalable && selectedId && !selected
+      ? [
+          {
+            id: "library",
+            label: "Library",
+            title: "Selected library",
+            detail: data.selectionLoading
+              ? "Loading record…"
+              : "Record unavailable",
+            content: (
+              <div className="p-5">
+                {data.selectionLoading ? (
+                  <AtlasLoadingSkeleton
+                    label={tUi("loading_library_details")}
+                    compact
+                  />
+                ) : (
+                  <div role="alert">
+                    <p>
+                      {data.selectionError ??
+                        "The selected library is unavailable."}
+                    </p>
+                    <button
+                      type="button"
+                      className="min-h-11 font-semibold underline"
+                      onClick={() => data.retry()}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
+
+    ...(selected
+      ? [
+          {
+            id: "library",
+            label: selected.name.split(" ").slice(0, 2).join(" "),
+            title: selected.name,
+            detail: `${selected.type} library · ${[selected.city, selected.country].filter(Boolean).join(" · ")}`,
+            content: (
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <AtlasLibraryPanel
+                  key={selected.id}
+                  library={selected}
+                  compact={false}
+                  onReach={openReach}
+                  reachPrompt={
+                    askReachScope ? (
+                      <div
+                        role="status"
+                        className="mx-5 mb-5 space-y-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-sm"
+                      >
+                        <p className="m-0">
+                          Reach is set to{" "}
+                          {networkSelection.selected?.name ??
+                            "a library service"}
+                          . Switch to this library?
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAskReachScope(false)
+                              setReachScope("library")
+                              openInspectLayer("reach")
+                            }}
+                            className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 font-semibold text-white"
+                          >
+                            Switch to this library
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAskReachScope(false)}
+                            className="min-h-11 px-3 font-semibold"
+                          >
+                            Keep service
+                          </button>
+                        </div>
+                      </div>
+                    ) : null
+                  }
+                  onClose={() => setSelectedId(null)}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
+    ...(selectedStop
+      ? [
+          {
+            id: "stop",
+            label: "Stop",
+            title: selectedStop.name,
+            detail: `Mobile library · ${selectedStop.library_name}`,
+            content: (
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <AtlasStopPanel
+                  key={selectedStop.id}
+                  stop={selectedStop}
+                  live={mobiles.live[selectedStop.library_document_id]}
+                  now={now}
+                  onClose={() => setSelectedStop(null)}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
+    ...analysisDrawers.map(({ mode, layer }) => ({
+      id: mode,
+      layer: usableLayers.includes(layer) ? layer : undefined,
+      label: tDrawers(mode),
+      title: drawerSummaries[mode].heading ?? tDrawers(`${mode}Label`),
+      ...drawerSummaries[mode],
+      status:
+        mode === "reach" &&
+        (networkReach.stale || networkReach.response?.state === "pending")
+          ? networkReach.stale
+            ? "Update needed"
+            : "Calculating"
+          : undefined,
+      content: renderAnalysis(mode),
+    })),
+    ...(["mobile", "density", "events"] as const)
+      .filter((id) => usableLayers.includes(id))
+      .map((id) => ({
+        id,
+        layer: id,
+        label:
+          id === "mobile" ? "Routes" : id === "density" ? "Density" : "Events",
+        title: layerDef(id).name,
+        detail:
+          id === "mobile"
+            ? `In map view · ${mobiles.total.toLocaleString()} stops`
+            : "Relative concentration · recorded libraries",
+        metric: id === "mobile" ? mobiles.total.toLocaleString() : undefined,
+        content: (
+          <>
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 text-sm">
+              {id === "mobile" ? (
+                <>
+                  <p className="m-0 text-[36px] font-semibold text-(--t-accent-primary)">
+                    {mobiles.total.toLocaleString()}{" "}
+                    <span className="text-sm text-(--t-ink-dim)">stops</span>
+                  </p>
+                  <label className="flex min-h-11 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={mobileRouteLines}
+                      onChange={(event) =>
+                        setMobileRouteLines(event.target.checked)
+                      }
+                    />
+                    Show route lines
+                  </label>
+                  {stopList}
+                </>
+              ) : (
+                <>
+                  <div className="h-4 rounded-full bg-[linear-gradient(90deg,#fff1e6,#ec9f59,#c2410c)]" />
+                  <div className="flex justify-between text-xs text-(--t-ink-dim)">
+                    <span>Low</span>
+                    <span>High</span>
+                  </div>
+                  <p>{ABOUT[id]}</p>
+                </>
+              )}
+            </div>
+            <AtlasInspectTools
+              shading={id === "mobile" ? mobileOpacity : heatOpacity}
+              onShading={id === "mobile" ? setMobileOpacity : setHeatOpacity}
+              about={<p>{ABOUT[id]}</p>}
+            />
+          </>
+        ),
+      })),
+  ]
+  const inspectActive =
+    inspectEntries.find((entry) => entry.id === inspectTarget)?.id ??
+    inspectEntries.find((entry) => entry.id === activeDrawer)?.id ??
+    inspectEntries[0]?.id ??
+    ""
+  const selectInspect = (id: string) => {
+    const descriptor = analysisDrawers.find(({ mode }) => mode === id)
+    if (descriptor) {
+      setAnalysisMode(descriptor.mode)
+      setInspectTarget(null)
+    } else setInspectTarget(id as typeof inspectTarget)
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+    setLeftPinned(false)
+    setList(false)
+    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+  }
+  const removeInspect = (entry: AtlasInspectEntry) => {
+    if (entry.layer) {
+      setUndoLayers({
+        layers: usableLayers,
+        mode: analysisMode,
+        target: inspectTarget,
+        message: `${entry.label} turned off`,
+      })
+      onToggleLayer(entry.layer)
+    } else if (entry.id === "library") {
+      setSelectedId(null)
+      setAskReachScope(false)
+    } else if (entry.id === "stop") setSelectedStop(null)
+    else {
+      setAnalysisMode(null)
+      setInspectTarget(null)
+    }
+    if (entry.id === inspectTarget) setInspectTarget(null)
+    requestAnimationFrame(() =>
+      analysisRoot.current
+        ?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')
+        ?.focus({ preventScroll: true })
+    )
+  }
+  const analysisPanels = (
+    <AtlasInspect
+      entries={inspectEntries}
+      active={inspectActive}
+      minimised={inspectMinimised}
+      mobile={isMobile}
+      visible={!list && (!isMobile || mobileSurface === "inspect")}
+      onSelect={(id) => animateAtlas(() => selectInspect(id))}
+      onMinimise={() =>
+        animateAtlas(() => {
+          setInspectMinimised(true)
+          setMobileSurface("explore")
+          setLeftPinned(false)
+        })
+      }
+      onRemove={(entry) => animateAtlas(() => removeInspect(entry))}
+    />
+  )
+  const notices = (
+    <>
+      {overlays}
+      {undoLayers ? (
+        <AtlasToast
+          onDismiss={() => setUndoLayers(null)}
+          action={{
+            label: "Undo",
+            onClick: () => {
+              setLayers(undoLayers.layers)
+              setAnalysisMode(undoLayers.mode)
+              setInspectTarget(undoLayers.target)
+              setUndoLayers(null)
+            },
+          }}
+        >
+          {undoLayers.message}
+        </AtlasToast>
+      ) : null}
+      {locateFailed ? (
+        <AtlasToast onDismiss={() => setLocateFailed(false)}>
+          Location unavailable. Check your browser permissions and try again.
+        </AtlasToast>
+      ) : null}
+    </>
+  )
+  const locate = async () => {
+    const found = await mapRef.current?.locate()
+    setLocateFailed(found !== true)
+  }
+  const listView = (
+    <AtlasListView
+      key={scalable ? JSON.stringify(data.scope) : "legacy"}
+      remoteScope={scalable ? data.scope : undefined}
+      compact={isMobile}
+      notice={
+        <>
+          {dataNotices}
+          {stopList}
+          {usableLayers.includes("access") ? legends : null}
+          {inspectEntries.length ? (
+            <button
+              type="button"
+              className="min-h-11 font-semibold text-(--t-accent-primary)"
+              onClick={() => {
+                setList(false)
+                setMobileSurface("inspect")
+              }}
+            >
+              Back to map · {inspectEntries.length} Inspect views
+            </button>
+          ) : null}
+        </>
+      }
+      libraries={inView}
+      accessibility={
+        usableLayers.includes("access") ? accessibility : undefined
+      }
+      center={center}
+      now={now}
+      onHover={setHovered}
+      onShowMap={() => setList(false)}
+      onSeePlans={() => setPlansOpen(true)}
+    />
+  )
+  const projectionControls = (
+    <div
+      role="radiogroup"
+      aria-label={tUi("projection")}
+      className="flex min-w-16 flex-col gap-1 rounded-2xl p-1 text-xs font-semibold"
+      style={PANEL_STYLE}
+    >
+      {(
+        [
+          ["flat", "2D"],
+          ["globe", "Globe"],
+        ] as const
+      ).map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          role="radio"
+          aria-checked={projection === value}
+          onClick={() => setProjection(value)}
+          className="min-h-10 min-w-14 rounded-xl px-2.5 whitespace-nowrap text-(--t-ink-dim) hover:bg-(--t-bg-surface) aria-checked:bg-(--t-accent-chip) aria-checked:text-(--t-accent-primary)"
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+  const toolbar = (
+    <div className="atlas-status flex min-h-12 min-w-0 items-center gap-3 rounded-full border border-(--t-border-line) bg-white px-3 py-1 shadow-sm">
+      <AtlasMapLegend
+        layers={usableLayers}
+        metric={accessMetric}
+        accessibilityView={accessibilityView}
+        compact
+      >
+        {legends}
+      </AtlasMapLegend>
+      <div className="atlas-overlay-chips flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
+        {inspectEntries
+          .filter((entry) => entry.layer)
+          .map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              title={`Open ${entry.title} · ${entry.detail}`}
+              onClick={() => animateAtlas(() => selectInspect(entry.id))}
+              className="min-h-8 shrink-0 rounded-full bg-(--t-bg-surface) px-3 text-xs font-semibold aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
+              aria-pressed={inspectActive === entry.id && !inspectMinimised}
+            >
+              {entry.label}
+            </button>
+          ))}
+      </div>
+      <div className="atlas-status-count shrink-0">
+        <AtlasCount
+          count={resultCount ?? inView.length}
+          sub={countSub}
+          loading={scalable && !data.counts && !data.error}
+        />
+      </div>
+      <ViewToggle list={list} onChange={setList} />
+    </div>
+  )
+  const plans = plansOpen ? (
+    <AtlasPlansSheet
+      tier={tier}
+      signInHref={signInHref}
+      onClose={() => setPlansOpen(false)}
+    />
+  ) : null
+
   if (isMobile) {
-    const heights: Record<SheetSize, string> = {
-      peek: usableLayers.includes("access") ? "260px" : "188px",
-      half: "52%",
-      full: "calc(100% - 12px)",
-    }
-    const nextSize: Record<SheetSize, SheetSize> = {
-      peek: "half",
-      half: "full",
-      full: "peek",
-    }
-    // A selected library needs more than the peek height.
-    const size: SheetSize = list
+    const showInspect = mobileSurface === "inspect" && inspectEntries.length > 0
+    const size = list
       ? "full"
-      : (selected || selectedStop || showingAnalysis) && sheet === "peek"
+      : sheet === "peek" && showInspect && inspectEntries.length
         ? "half"
         : sheet
+    const heights: Record<SheetSize, string> = {
+      peek: "188px",
+      half: "54%",
+      full: "calc(100% - 12px)",
+    }
 
     return (
       <div
-        className="absolute inset-0 overflow-hidden"
+        ref={analysisRoot}
+        tabIndex={-1}
+        className="atlas-motion absolute inset-0 overflow-clip outline-none"
         data-hide-footer="true"
         style={{ background: T.bg.void }}
       >
         {map}
-        <div className="absolute top-3 right-3 z-20 flex flex-col gap-2.5">
-          <MapButtons
-            onZoomIn={() => mapRef.current?.zoomBy(1)}
-            onLocate={() => mapRef.current?.locate()}
-          />
-        </div>
-        {list ? null : (
-          <div className="pointer-events-none absolute inset-x-3 top-3 right-16 z-20 flex flex-col gap-2 [&>*]:pointer-events-auto">
-            {overlays}
-          </div>
-        )}
-        {noMatch && size === "peek" ? (
-          <div className="absolute inset-x-3 top-1/4 z-20 flex justify-center">
-            {noMatch}
-          </div>
+        {!list ? (
+          <>
+            <div className="absolute top-3 left-3 z-20 rounded-full border border-(--t-border-line) bg-white px-3">
+              <AtlasMapLegend
+                layers={usableLayers}
+                metric={accessMetric}
+                accessibilityView={accessibilityView}
+                compact
+                placement="below"
+              >
+                {legends}
+              </AtlasMapLegend>
+            </div>
+            <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+              <MapButtons
+                onZoomIn={() => mapRef.current?.zoomBy(1)}
+                onZoomOut={() => mapRef.current?.zoomBy(-1)}
+                onLocate={locate}
+              />
+              {projectionControls}
+            </div>
+            <div className="pointer-events-none absolute top-3 right-24 left-3 z-20 space-y-2 [&>*]:pointer-events-auto">
+              {notices}
+              {noMatch}
+            </div>
+          </>
         ) : null}
         <section
-          aria-label={tUi("explore_panel")}
-          className="absolute inset-x-0 bottom-0 z-30 flex flex-col rounded-t-3xl border-t bg-white transition-[height] motion-reduce:transition-none"
-          style={{ height: heights[size], borderColor: T.border.hi }}
+          aria-label="Explore panel"
+          className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-white pb-[env(safe-area-inset-bottom)]`}
+          style={{
+            height: heights[size],
+            viewTransitionName: "atlas-mobile-sheet",
+          }}
         >
           <button
             type="button"
             aria-label={`Panel size: ${size}. Change size`}
-            onClick={() => setSheet(nextSize[sheet])}
+            onClick={() =>
+              animateAtlas(() => setSheet(size === "full" ? "half" : "full"))
+            }
             className="flex h-6 shrink-0 items-center justify-center"
           >
-            <span
-              className="h-[5px] w-10 rounded-full"
-              style={{ background: "#BDB6AA" }}
-            />
+            <span className="h-[5px] w-10 rounded-full bg-(--t-border-hi)" />
           </button>
-          <div
-            className={`min-h-0 flex-1 ${showingAnalysis && !list ? "flex flex-col overflow-hidden" : "overflow-auto"}`}
+          <nav
+            aria-label="Atlas workspace"
+            className="flex shrink-0 items-center gap-1.5 border-b border-(--t-border-line) px-3 pb-2 max-[350px]:[&_svg]:hidden"
           >
-            {list ? (
-              <AtlasListView
-                key={scalable ? JSON.stringify(data.scope) : "legacy"}
-                remoteScope={scalable ? data.scope : undefined}
-                compact
-                notice={
-                  <>
-                    {dataNotices}
-                    {stopList}
-                    {usableLayers.includes("access") ? legends : null}
-                  </>
-                }
-                libraries={inView}
-                accessibility={
-                  usableLayers.includes("access") ? accessibility : undefined
-                }
-                center={center}
-                now={now}
-                onHover={setHovered}
-                onShowMap={() => {
-                  pushAnalyticsEvent("atlas_action", {
-                    interaction_source: "atlas_toolbar",
-                    action_type: "view",
-                    view_mode: "map",
-                  })
-                  setList(false)
-                }}
-                onSeePlans={() => {
-                  pushAnalyticsEvent("upgrade_prompt", {
-                    interaction_source: "upgrade_prompt",
-                    action_type: "open",
-                  })
-                  setPlansOpen(true)
-                }}
-              />
-            ) : selectedStop ? (
-              <AtlasStopPanel
-                key={selectedStop.id}
-                stop={selectedStop}
-                live={mobiles.live[selectedStop.library_document_id]}
-                now={now}
-                onClose={() => setSelectedStop(null)}
-              />
-            ) : selected ? (
-              <AtlasLibraryPanel
-                key={selected.id}
-                compact
-                library={selected}
-                onClose={() => setSelectedId(null)}
-              />
-            ) : showingAnalysis ? (
-              <div
-                id="atlas-analysis-panel"
-                className="flex min-h-0 flex-1 flex-col"
-              >
-                {analysis}
-              </div>
-            ) : size === "peek" ? (
-              <div className="flex flex-col gap-3 px-4 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTab("search")
-                    setSheet("half")
-                  }}
-                  className="flex h-12 items-center gap-2.5 rounded-[14px] border px-3.5 text-left text-[16px]"
-                  style={{ borderColor: T.border.hi, color: T.ink.dim }}
-                >
-                  <Icon name="search" size={20} color={T.ink.base} />
-                  {tUi("library_stop_or_place")}
-                </button>
-                <div className="flex items-center justify-between">
-                  <AtlasCount
-                    count={resultCount ?? inView.length}
-                    sub={countSub}
-                  />
-                  <ViewToggle
-                    list={list}
-                    onChange={(next) => {
-                      if (next !== list)
-                        pushAnalyticsEvent("atlas_action", {
-                          interaction_source: "atlas_toolbar",
-                          action_type: "view",
-                          view_mode: next ? "list" : "map",
-                        })
-                      setList(next)
-                    }}
-                  />
-                </div>
-                {usableLayers.includes("access") ? <div>{legends}</div> : null}
-              </div>
-            ) : (
-              <>
-                <div className="px-3 pb-2">{tabs}</div>
-                <div
-                  id="atlas-tabpanel"
-                  role="tabpanel"
-                  aria-labelledby={`atlas-tab-${tab}`}
-                  className="px-4 pb-6"
-                >
-                  {tabContent}
-                </div>
-              </>
-            )}
-          </div>
-          {feedbackPrompt ? (
-            <div
-              className="flex shrink-0 items-center justify-end border-t px-3"
-              style={{ borderColor: T.border.divider }}
+            <button
+              type="button"
+              aria-pressed={!showInspect && !list}
+              onClick={() => {
+                setList(false)
+                setMobileSurface("explore")
+                if (sheet === "peek") setSheet("half")
+              }}
+              className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
             >
+              Explore
+            </button>
+            <button
+              type="button"
+              disabled={!inspectEntries.length}
+              aria-pressed={showInspect && !list}
+              onClick={() => {
+                setList(false)
+                setMobileSurface("inspect")
+                setInspectMinimised(false)
+                if (sheet === "peek") setSheet("half")
+              }}
+              className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap disabled:opacity-40 aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
+            >
+              {tInspect("inspect")}
+              {inspectEntries.length ? ` · ${inspectEntries.length}` : ""}
+            </button>
+            <ViewToggle
+              list={list}
+              onChange={(value) => {
+                setList(value)
+                if (value) setSheet("full")
+              }}
+            />
+          </nav>
+          <div
+            hidden={!list}
+            className="min-h-0 flex-1 overflow-clip"
+            style={{ display: list ? "flex" : "none" }}
+          >
+            {list ? listView : null}
+          </div>
+          <div
+            hidden={list || showInspect}
+            className="flex min-h-0 flex-1 flex-col"
+            style={{
+              display: !list && !showInspect ? "flex" : "none",
+            }}
+          >
+            <div className="shrink-0 px-3 pt-2">{tabs}</div>
+            <div
+              id="atlas-tabpanel"
+              role="tabpanel"
+              aria-labelledby={`atlas-tab-${tab}`}
+              className={`min-h-0 flex-1 overflow-y-auto px-5 pt-4 ${tab === "filter" ? "pb-0" : "pb-5"}`}
+            >
+              {tabContent}
+            </div>
+            <div
+              className={`flex shrink-0 items-center gap-3 border-t border-(--t-border-line) px-3 ${tab === "filter" ? "justify-end" : "justify-between"}`}
+            >
+              {tab !== "filter" ? (
+                <AtlasCount
+                  count={resultCount ?? inView.length}
+                  sub={countSub}
+                  loading={scalable && !data.counts && !data.error}
+                />
+              ) : null}
               {feedbackPrompt}
             </div>
-          ) : null}
+          </div>
+          <div
+            id="atlas-analysis-panel"
+            hidden={list || !showInspect}
+            className="flex min-h-0 flex-1 flex-col"
+            style={{
+              display: !list && showInspect ? "flex" : "none",
+            }}
+          >
+            {analysisPanels}
+          </div>
         </section>
-        {plansOpen ? (
-          <AtlasPlansSheet
-            tier={tier}
-            signInHref={signInHref}
-            onClose={() => setPlansOpen(false)}
-          />
-        ) : null}
+        {plans}
       </div>
     )
   }
-
-  // ── Desktop ───────────────────────────────────────────────────────────────
-  const leftEdge = collapsed ? 72 + GAP * 2 : LEFT_W + GAP * 2
-  const rightEdge =
-    (selected || selectedStop || showingAnalysis) && !list
-      ? RIGHT_W + GAP * 2
-      : GAP
+  const leftEdge = collapsed ? 104 : LEFT_W + GAP * 2
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden"
+      ref={analysisRoot}
+      tabIndex={-1}
+      className="atlas-motion absolute inset-0 overflow-clip outline-none"
       data-hide-footer="true"
       style={{ background: T.bg.void }}
     >
       {map}
-
-      {collapsed ? (
-        <nav
-          aria-label={tUi("explore_panel")}
-          className="absolute top-4 bottom-4 left-4 z-20 flex w-[72px] flex-col items-center gap-1.5 rounded-[22px] pt-3.5"
-          style={PANEL_STYLE}
-        >
-          {(
-            [
-              ["search", tUi("search")],
-              ["filter", tUi("filters")],
-              ["layers", "Layers"],
-            ] as [Tab, string][]
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              aria-label={`Open ${label}`}
-              onClick={() => {
-                setTab(key)
-                setCollapsed(false)
-              }}
-              className="flex size-12 items-center justify-center rounded-[14px]"
-              style={
-                tab === key
-                  ? { background: T.accent.chip, color: "#3730A3" }
-                  : { color: T.ink.dim }
-              }
+      <aside
+        aria-label="Explore panel"
+        className={`${panelStyles.stack} absolute top-4 bottom-4 left-4 z-20 flex min-h-0 flex-col overflow-clip rounded-[22px] border border-(--t-border-line) bg-white shadow-[0_8px_24px_rgb(23_22_43/0.06)]`}
+        style={{
+          width: collapsed ? 72 : LEFT_W,
+          viewTransitionName: "atlas-sidebar",
+        }}
+      >
+        {collapsed ? (
+          <>
+            <nav
+              aria-label="Explore"
+              className="flex flex-col items-center gap-1.5 p-2 pt-3"
             >
-              <Icon name={key === "filter" ? "filter" : key} size={20} />
-            </button>
-          ))}
-        </nav>
-      ) : (
-        <section
-          aria-label={tUi("explore_panel")}
-          className="absolute top-4 bottom-4 left-4 z-20 flex flex-col overflow-hidden rounded-[22px]"
-          style={{ ...PANEL_STYLE, width: LEFT_W }}
-        >
-          <div
-            className="flex items-center gap-1 border-b p-2.5"
-            style={{ borderColor: T.border.divider, background: "#fff" }}
-          >
-            {tabs}
-            <button
-              type="button"
-              aria-label={tUi("collapse_panel")}
-              onClick={() => setCollapsed(true)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full border"
-              style={{ color: T.ink.base, borderColor: T.border.hi }}
-            >
-              <Icon name="chev" className="rotate-180" size={18} />
-            </button>
-          </div>
-          <div
-            id="atlas-tabpanel"
-            role="tabpanel"
-            aria-labelledby={`atlas-tab-${tab}`}
-            className="flex min-h-0 flex-1 flex-col overflow-auto px-5 pt-[18px] pb-4"
-          >
-            {tabContent}
-          </div>
-        </section>
-      )}
-
-      {showingAnalysis && !list ? (
-        <aside
-          id="atlas-analysis-panel"
-          aria-label={
-            analysisMode === "accessibility"
-              ? "Accessibility analysis"
-              : "Library access analysis"
-          }
-          className={`absolute top-4 right-4 z-20 flex flex-col overflow-hidden rounded-[22px] ${analysisCollapsed ? "" : "bottom-4"}`}
-          style={{ ...PANEL_STYLE, width: RIGHT_W }}
-        >
-          {analysis}
-        </aside>
-      ) : null}
-      {selectedStop && !list ? (
-        <aside
-          aria-label={tUi("selected_mobile_stop")}
-          className="absolute top-4 right-4 bottom-4 z-20 overflow-auto rounded-[22px]"
-          style={{ ...PANEL_STYLE, width: RIGHT_W }}
-        >
-          <AtlasStopPanel
-            key={selectedStop.id}
-            stop={selectedStop}
-            live={mobiles.live[selectedStop.library_document_id]}
-            now={now}
-            onClose={() => setSelectedStop(null)}
-          />
-        </aside>
-      ) : null}
-      {selected && !list ? (
-        <aside
-          aria-label={tUi("selected_library")}
-          className="absolute top-4 right-4 bottom-4 z-20 flex flex-col overflow-auto rounded-[22px]"
-          style={{ ...PANEL_STYLE, width: RIGHT_W }}
-        >
-          <AtlasLibraryPanel
-            key={selected.id}
-            library={selected}
-            onClose={() => setSelectedId(null)}
-          />
-        </aside>
-      ) : null}
-
-      {!list ? (
-        <div
-          className="absolute top-4 z-20 flex flex-col items-end gap-2.5"
-          style={{ right: rightEdge }}
-        >
-          <MapButtons
-            onZoomIn={() => mapRef.current?.zoomBy(1)}
-            onZoomOut={() => mapRef.current?.zoomBy(-1)}
-            onLocate={() => mapRef.current?.locate()}
-          />
-          <div
-            role="radiogroup"
-            aria-label={tUi("projection")}
-            className="flex flex-col gap-0.5 rounded-[14px] p-[3px]"
-            style={PANEL_STYLE}
-          >
-            {(
-              [
-                ["flat", "2D"],
-                ["globe", "Globe"],
-              ] as const
-            ).map(([v, label]) => (
-              <button
-                key={v}
-                type="button"
-                role="radio"
-                aria-checked={projection === v}
-                onClick={() => {
-                  if (projection !== v)
-                    pushAnalyticsEvent("atlas_action", {
-                      interaction_source: "atlas_toolbar",
-                      action_type: "projection",
-                      view_mode: v,
+              {(
+                [
+                  ["search", "Search"],
+                  ["filter", "Filters"],
+                  ["layers", "Layers"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-label={`Open ${label}`}
+                  onClick={() =>
+                    animateAtlas(() => {
+                      setTab(key)
+                      setUserCollapsed(false)
+                      setLeftPinned(true)
+                      if (narrow) setInspectMinimised(true)
                     })
-                  setProjection(v)
-                }}
-                className="flex h-9 w-[62px] items-center justify-center rounded-[10px] text-[13px] font-bold"
-                style={
-                  projection === v
-                    ? { background: T.accent.chip, color: "#3730A3" }
-                    : { color: T.ink.dim }
+                  }
+                  className="flex min-h-14 w-14 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold"
+                  style={{
+                    background: tab === key ? T.accent.chip : undefined,
+                    color: tab === key ? T.accent.primary : T.ink.dim,
+                  }}
+                >
+                  <Icon name={key === "filter" ? "filter" : key} size={19} />
+                  {label}
+                </button>
+              ))}
+            </nav>
+            <div className="atlas-rail-feedback mt-auto flex flex-col items-center gap-2 pb-3">
+              {feedbackPrompt}
+              <button
+                type="button"
+                aria-label="Expand Explore"
+                onClick={() =>
+                  animateAtlas(() => {
+                    setUserCollapsed(false)
+                    setLeftPinned(true)
+                    if (narrow) setInspectMinimised(true)
+                  })
                 }
+                className="flex min-h-11 w-12 items-center justify-center"
               >
-                {label}
+                <Icon name="chev" size={18} />
               </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {list ? null : (
-        <div
-          className="pointer-events-none absolute top-4 z-20 flex max-w-[560px] flex-col items-start gap-2 [&>*]:pointer-events-auto"
-          style={{ left: leftEdge, right: rightEdge + 90 }}
-        >
-          {overlays}
-        </div>
-      )}
-
-      {noMatch && !list ? (
-        <div
-          className="absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
-          style={{
-            left: `calc(${leftEdge}px + (100% - ${leftEdge + rightEdge}px) / 2)`,
-          }}
-        >
-          {noMatch}
-        </div>
-      ) : null}
-
-      {list ? (
-        <div
-          className="absolute top-4 bottom-4 z-20 flex flex-col overflow-hidden rounded-[22px]"
-          style={{ ...PANEL_STYLE, left: leftEdge, right: GAP }}
-        >
-          <div className="min-h-0 flex-1">
-            <AtlasListView
-              key={scalable ? JSON.stringify(data.scope) : "legacy"}
-              remoteScope={scalable ? data.scope : undefined}
-              notice={
-                <>
-                  {dataNotices}
-                  {stopList}
-                  {usableLayers.includes("access") ? legends : null}
-                </>
-              }
-              libraries={inView}
-              accessibility={
-                usableLayers.includes("access") ? accessibility : undefined
-              }
-              center={center}
-              now={now}
-              onHover={setHovered}
-              onShowMap={() => {
-                pushAnalyticsEvent("atlas_action", {
-                  interaction_source: "atlas_toolbar",
-                  action_type: "view",
-                  view_mode: "map",
-                })
-                setList(false)
-              }}
-              onSeePlans={() => {
-                pushAnalyticsEvent("upgrade_prompt", {
-                  interaction_source: "upgrade_prompt",
-                  action_type: "open",
-                })
-                setPlansOpen(true)
-              }}
-            />
-          </div>
-          {feedbackPrompt ? (
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex shrink-0 items-center gap-1 border-b border-(--t-divider) bg-(--t-bg-surface) p-2">
+              {tabs}
+              <button
+                type="button"
+                aria-label="Collapse panel"
+                onClick={() =>
+                  animateAtlas(() => {
+                    setUserCollapsed(true)
+                    setLeftPinned(false)
+                  })
+                }
+                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-(--t-border-hi) bg-white"
+              >
+                <Icon name="chev" className="rotate-180" size={17} />
+              </button>
+            </div>
             <div
-              className="flex shrink-0 items-center justify-end border-t px-3 py-2"
-              style={{ borderColor: T.border.divider }}
+              id="atlas-tabpanel"
+              role="tabpanel"
+              aria-labelledby={`atlas-tab-${tab}`}
+              className={`min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] ${tab === "filter" ? "pb-0" : "pb-5"}`}
+              style={{ viewTransitionName: "atlas-sidebar-content" }}
             >
+              {tabContent}
+            </div>
+            <div className="flex shrink-0 justify-end border-t border-(--t-border-line) px-3 py-1">
               {feedbackPrompt}
             </div>
-          ) : null}
-        </div>
-      ) : (
-        <div
-          className="absolute bottom-4 z-20 flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 rounded-[20px] py-2.5 pr-3 pl-[18px]"
-          style={{ ...PANEL_STYLE, left: leftEdge, right: rightEdge }}
+          </>
+        )}
+      </aside>
+      {inspectEntries.length ? (
+        <aside
+          id="atlas-analysis-panel"
+          aria-label="Inspect dock"
+          className="absolute top-4 right-4 bottom-4 z-20 flex min-h-0 flex-col"
+          style={{
+            width: inspectMinimised ? 64 : RIGHT_W,
+            display: list ? "none" : undefined,
+          }}
         >
-          <AtlasMapLegend
-            layers={usableLayers}
-            metric={accessMetric}
-            accessibilityView={accessibilityView}
-          >
-            {legends}
-          </AtlasMapLegend>
-          <span
-            className="w-px self-stretch"
-            style={{ background: T.border.divider }}
-          />
-          <AtlasCount count={resultCount ?? inView.length} sub={countSub} />
-          <span className="flex-1" />
-          {feedbackPrompt}
-          <ViewToggle
-            list={list}
-            onChange={(next) => {
-              if (next !== list)
-                pushAnalyticsEvent("atlas_action", {
-                  interaction_source: "atlas_toolbar",
-                  action_type: "view",
-                  view_mode: next ? "list" : "map",
-                })
-              setList(next)
-            }}
-          />
-        </div>
-      )}
-
-      {plansOpen ? (
-        <AtlasPlansSheet
-          tier={tier}
-          signInHref={signInHref}
-          onClose={() => setPlansOpen(false)}
-        />
+          {analysisPanels}
+        </aside>
       ) : null}
+      {!list ? (
+        <>
+          <div
+            className="absolute top-4 z-20 flex flex-col items-end gap-2"
+            style={{
+              right: mapRightEdge,
+              viewTransitionName: "atlas-map-controls",
+            }}
+          >
+            <MapButtons
+              onZoomIn={() => mapRef.current?.zoomBy(1)}
+              onZoomOut={() => mapRef.current?.zoomBy(-1)}
+              onLocate={locate}
+            />
+            {projectionControls}
+          </div>
+          <div
+            className="pointer-events-none absolute top-4 z-20 flex max-w-[560px] flex-col gap-2 [&>*]:pointer-events-auto"
+            style={{ left: leftEdge, right: mapRightEdge + 80 }}
+          >
+            {notices}
+          </div>
+          {noMatch ? (
+            <div
+              className="absolute top-1/2 z-20"
+              style={{ left: leftEdge + 16, right: mapRightEdge + 16 }}
+            >
+              {noMatch}
+            </div>
+          ) : null}
+          <div
+            className="absolute bottom-4 z-20 min-w-0"
+            style={{ left: leftEdge, right: mapRightEdge }}
+          >
+            {toolbar}
+          </div>
+        </>
+      ) : (
+        <section
+          aria-label="Library list"
+          className="absolute top-4 right-4 bottom-4 z-20 flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-(--t-border-line) bg-white"
+          style={{ left: leftEdge }}
+        >
+          {listView}
+        </section>
+      )}
+      {plans}
     </div>
   )
 }
@@ -1850,5 +3022,129 @@ function MapButtons({
         <Icon name="locate" size={20} />
       </button>
     </div>
+  )
+}
+
+function analysisUrlSettings(params: URLSearchParams): {
+  accessMetric: AtlasAccessMetric
+  accessLevel: AtlasAccessLevel
+  reachScope: "library" | "network"
+  reachMode: AtlasReachMode
+  reachMinutes: number
+  populationLevel: AtlasPopulationDetail
+  populationCountry: string
+  contextRelease: string
+  populationOpacity: number
+} {
+  const areaLevel = params.get("accessAreas")
+  const reachTime = Number(params.get("reachMinutes"))
+  const populationAreas = params.get("populationAreas") ?? ""
+  const country = params.get("populationCountry") ?? ""
+  const context = params.get("contextRelease") ?? ""
+  const opacity = Number(params.get("populationOpacity") ?? "0.7")
+
+  return {
+    accessMetric:
+      params.get("accessMetric") === "peoplePerLibrary"
+        ? ("peoplePerLibrary" as const)
+        : ("per100k" as const),
+    accessLevel:
+      areaLevel === "local" || areaLevel === "countries"
+        ? areaLevel
+        : ("auto" as const),
+    reachScope:
+      params.get("reachScope") === "network"
+        ? ("network" as const)
+        : ("library" as const),
+    reachMode:
+      params.get("reachMode") === "cycling"
+        ? ("cycling" as const)
+        : ("walking" as const),
+    reachMinutes: [5, 10, 15, 30].includes(reachTime) ? reachTime : 15,
+    populationLevel: ["auto", "countries", "regions", "local", "grid"].includes(
+      populationAreas
+    )
+      ? (populationAreas as AtlasPopulationDetail)
+      : ("auto" as const),
+    populationCountry: ["GB", "SE", "NO", "DK", "FI", "AX"].includes(country)
+      ? country
+      : "GB",
+    contextRelease: /^[a-z0-9-]{1,100}$/.test(context) ? context : "",
+    populationOpacity: Number.isFinite(opacity)
+      ? Math.max(0.1, Math.min(1, opacity))
+      : 0.7,
+  }
+}
+function setUrlValue(
+  params: URLSearchParams,
+  key: string,
+  value: string | number | boolean,
+  fallback: string | number | boolean
+) {
+  if (value !== fallback) params.set(key, String(value))
+}
+
+function automaticPopulationLabel(level: string) {
+  if (level === "grid") return "automaticGrid"
+  if (level === "countries") return "automaticCountries"
+
+  return "automaticLocal"
+}
+function populationAnalysisError({
+  grid,
+  contextError,
+  loading,
+  hasGrid,
+  error,
+}: {
+  grid: boolean
+  contextError: boolean
+  loading: boolean
+  hasGrid: boolean
+  error: string | null
+}) {
+  if (!grid) return error
+  if (contextError) return "Context unavailable"
+  if (!loading && !hasGrid) return "Grid not installed"
+
+  return null
+}
+function isPopulationArea(value: string) {
+  return (
+    /^(?:[A-Z]{3}|[EWSN]\d{8}|[a-z][a-z0-9-]{0,80})$/.test(value) ||
+    /^(?:\d{2,5}|[A-Z]{2}\d{2,3})$/.test(value)
+  )
+}
+
+function accessibilityExportLibraries(
+  scalable: boolean,
+  libraries: AtlasLibrary[],
+  view: AtlasView | null,
+  selected: string[],
+  mode: AccessibilityView
+) {
+  if (scalable) return []
+
+  return accessibilityLibraries(
+    view
+      ? libraries.filter((library) => inBounds(library, view.bounds))
+      : libraries,
+    selected,
+    mode
+  )
+}
+function recordScopeLabel(inView: boolean) {
+  return inView ? "Records in view" : "Loaded records"
+}
+
+function initialAnalysisSelection(
+  drawers: ReturnType<typeof atlasAnalysisDrawers>,
+  requested: string | null,
+  library: string | null,
+  reach: boolean
+) {
+  return (
+    drawers.find(({ mode }) => mode === requested)?.mode ??
+    (library && !reach ? null : (drawers[0]?.mode ?? null))
   )
 }

@@ -1,19 +1,24 @@
 "use client"
 
-import type { AtlasCountsResponse } from "@repo/shared-data"
+import type {
+  AtlasCountsResponse,
+  AtlasNetworkSelection,
+} from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useMemo, useState } from "react"
+import { useId, useMemo, useState } from "react"
 
+import { FilterGroup } from "@/components/ds/FilterPanel"
+import { SearchField } from "@/components/ds/SearchField"
+import { SegmentedControl } from "@/components/ds/SegmentedControl"
+import { SelectField } from "@/components/ds/SelectField"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { T } from "@/lib/design-tokens"
 
-import {
-  Chip,
-  Icon,
-  PinGlyph,
-  Segmented,
-  tintOfGroup,
-  YearRange,
-} from "./atlas-ui"
+import { Chip, Icon, YearRange } from "./atlas-ui"
 import {
   activeFilterCount,
   type AtlasFilters,
@@ -25,8 +30,8 @@ import {
   isListed,
   OPERATOR_GROUPS,
   TYPE_GROUPS,
-  type TypeGroupKey,
 } from "./atlas.logic"
+import { AtlasNetworkPicker } from "./AtlasNetworkPicker"
 
 const DAYS = [
   "Monday",
@@ -38,6 +43,16 @@ const DAYS = [
   "Sunday",
 ]
 const FACILITIES_SHOWN = 4
+function featurePriority(name: string) {
+  const value = name.toLowerCase().replaceAll(/[^a-z0-9]/g, "")
+  if (value.includes("stepfree") || value.includes("wheelchairaccess")) return 0
+  if (value.includes("accessibletoilet")) return 1
+  if (value.includes("publiccomputer") || value.includes("computeraccess"))
+    return 2
+  if (value.includes("wifi")) return 3
+
+  return 4
+}
 
 function toggle<V>(xs: V[], x: V): V[] {
   return xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]
@@ -45,6 +60,7 @@ function toggle<V>(xs: V[], x: V): V[] {
 
 export function AtlasFiltersTab({
   filters,
+  networkSelection,
   onChange,
   libraries,
   matchCount,
@@ -57,8 +73,10 @@ export function AtlasFiltersTab({
   mobileSharesLiveCount = 0,
   serverCounts,
   onFacilitySearch,
+  onAccessibility,
   onMoreFacilities,
 }: {
+  readonly networkSelection?: AtlasNetworkSelection | null
   readonly filters: AtlasFilters
   readonly onChange: (f: AtlasFilters) => void
   readonly libraries: AtlasLibrary[]
@@ -71,11 +89,16 @@ export function AtlasFiltersTab({
   readonly mobileCount?: number
   readonly mobileSharesLiveCount?: number
   readonly serverCounts?: AtlasCountsResponse
+  readonly onAccessibility?: () => void
   readonly onFacilitySearch?: (query: string) => void
   readonly onMoreFacilities?: () => void
 }) {
+  const t = useUiTranslations("atlasFilters")
   const tUi = useUiTranslations("ui")
+  const tNetwork = useUiTranslations("atlasNetwork")
 
+  const featureSearchId = useId()
+  const [featureQuery, setFeatureQuery] = useState("")
   const [allFacilities, setAllFacilities] = useState(false)
   const set = (patch: Partial<AtlasFilters>) =>
     onChange({ ...filters, ...patch })
@@ -112,6 +135,9 @@ export function AtlasFiltersTab({
     () =>
       serverCounts?.facilities ?? facilityOptions(libraries.filter(isListed)),
     [libraries, serverCounts]
+  )
+  const rankedFacilities = [...facilities].sort(
+    (a, b) => featurePriority(a.name) - featurePriority(b.name)
   )
   const facilityCount = (name: string) =>
     serverCounts
@@ -157,35 +183,55 @@ export function AtlasFiltersTab({
       libraries.some((l) => l.operator && g.values.includes(l.operator))
   )
   const facilityShown = allFacilities
-    ? facilities
+    ? rankedFacilities
     : [
-        ...facilities.slice(0, FACILITIES_SHOWN),
-        ...facilities
+        ...rankedFacilities.slice(0, FACILITIES_SHOWN),
+        ...rankedFacilities
           .slice(FACILITIES_SHOWN)
           .filter((f) => filters.facilities.includes(f.name)),
       ]
 
   return (
-    <div className="flex min-h-full flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <p className="m-0 text-[15px] font-bold">
-          {active === 0
-            ? "No filters"
-            : `${active} ${active === 1 ? "filter" : "filters"} active`}
-        </p>
-        {active > 0 ? (
+    <div className="flex min-h-full flex-col">
+      <div className="flex flex-col gap-2 pb-1">
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <h2
+            className="m-0 text-[30px] leading-tight"
+            style={{ fontFamily: T.font.serif }}
+          >
+            {tUi("filters")}
+          </h2>
           <button
             type="button"
             onClick={() => onChange(EMPTY_FILTERS)}
-            className="text-[14px] font-semibold underline underline-offset-[3px]"
-            style={{ color: "#3730A3" }}
+            className="min-h-11 text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
           >
-            Clear all
+            {tUi("reset")}
           </button>
-        ) : null}
+        </div>
+        <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
+          {active
+            ? tNetwork("filtersActive", { count: active })
+            : tNetwork("filterHint")}
+        </p>
       </div>
-
-      <Group legend="Library type">
+      <Group legend={t("service")} activeCount={filters.networks?.length ?? 0}>
+        <AtlasNetworkPicker
+          compact
+          value={filters.networks?.[0] ?? ""}
+          selected={networkSelection ?? null}
+          onChange={(id) => set({ networks: id ? [id] : [] })}
+        />
+        {networkSelection ? (
+          <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
+            {t("serviceSummary", {
+              area: networkSelection.areaName,
+              count: networkSelection.eligibleLibraries,
+            })}
+          </p>
+        ) : null}
+      </Group>
+      <Group legend="Library type" activeCount={filters.types.length}>
         <div className="flex flex-wrap gap-2">
           {typeOptions.map((g) => {
             const on = filters.types.includes(g.key)
@@ -194,14 +240,12 @@ export function AtlasFiltersTab({
               <Chip
                 key={g.key}
                 on={on}
-                tint={tintOfGroup(g.key as TypeGroupKey)}
                 onClick={() => {
                   set({ types: toggle(filters.types, g.key) })
                   if (g.key === "mobile" && !on) onEnableMobile?.()
                 }}
                 preserveGlyph
               >
-                <PinGlyph group={g.key} size={12} />
                 {g.label}
                 <span className="sr-only">
                   , {typeCounts.get(g.key)} libraries
@@ -212,17 +256,40 @@ export function AtlasFiltersTab({
         </div>
       </Group>
 
-      <Group legend="Opening">
-        <Segmented
+      <Group
+        legend="Opening"
+        activeCount={filters.opening === "any" ? 0 : 1}
+        headerAside={
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={t("openingHelp")}
+                className="flex size-7 items-center justify-center rounded-full border border-(--t-border-hi) text-xs text-(--t-ink-dim)"
+              >
+                i
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              aria-label={t("openingHelp")}
+              className="z-[90] w-[min(320px,calc(100vw-32px))] rounded-xl text-xs leading-relaxed text-(--t-ink-dim)"
+            >
+              {t("openingExplanation")}
+            </PopoverContent>
+          </Popover>
+        }
+      >
+        <SegmentedControl
+          layout="equal"
+          size="sm"
           label={tUi("opening")}
           value={filters.opening}
           onChange={(opening) => set({ opening })}
-          className="w-full rounded-[16px] [&>button]:min-h-11 [&>button]:px-2"
           options={[
             { value: "any", label: tUi("any_time") },
-            { value: "now", label: tUi("open_now"), icon: "clock" },
-            { value: "staff_now", label: "Staff on hand now", icon: "clock" },
-            { value: "at", label: "Open at…" },
+            { value: "now", label: tUi("open_now") },
+            { value: "staff_now", label: t("staffNow") },
+            { value: "at", label: t("openAt") },
           ]}
         />
         {filters.opening === "at" ? (
@@ -232,18 +299,15 @@ export function AtlasFiltersTab({
               style={{ color: T.ink.dim }}
             >
               Day
-              <select
-                value={filters.atDay}
-                onChange={(e) => set({ atDay: Number(e.target.value) })}
-                className="h-11 rounded-[14px] border bg-white px-3 text-[15px] font-medium"
-                style={{ borderColor: T.border.hi, color: T.ink.base }}
-              >
-                {DAYS.map((d, i) => (
-                  <option key={d} value={i}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+              <SelectField
+                label="Day"
+                value={String(filters.atDay)}
+                onValueChange={(value) => set({ atDay: Number(value) })}
+                options={DAYS.map((day, index) => ({
+                  value: String(index),
+                  label: day,
+                }))}
+              />
             </label>
             <label
               className="flex w-32 flex-col gap-1 text-[13px] font-semibold"
@@ -265,111 +329,38 @@ export function AtlasFiltersTab({
             </label>
           </div>
         ) : null}
-        <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
-          Libraries without recorded hours are left out. For mobile libraries,
-          open means a vehicle is at the stop, from live updates or its
-          timetable.
-        </p>
       </Group>
 
-      <fieldset
-        className="m-0 flex min-w-0 flex-col gap-3 rounded-[18px] border px-3.5 pt-2 pb-4"
-        style={{ background: T.bg.surface, borderColor: T.border.line }}
+      <Group
+        legend="Services & accessibility"
+        activeCount={
+          filters.facilities.length +
+          Number(filters.events) +
+          Number(filters.catalogue)
+        }
       >
-        <legend className="flex items-center gap-2 px-2 text-[15px] font-bold">
-          <Icon name="bus" size={18} color={T.map.stopRing} />
-          {tUi("mobile_library_stops")}
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              ["weekly", "Weekly"],
-              ["fortnightly", "Every 2 weeks"],
-              ["monthly", "Monthly"],
-            ] as const
-          ).map(([frequency, label]) => (
-            <Chip
-              key={frequency}
-              on={filters.mobileFrequency?.includes(frequency) ?? false}
-              onClick={() => {
-                set({
-                  mobileFrequency: toggle(
-                    filters.mobileFrequency ?? [],
-                    frequency
-                  ),
-                })
-                onEnableMobile?.()
-              }}
-            >
-              {label}
-            </Chip>
-          ))}
-        </div>
-        <label
-          className="flex min-h-11 items-center gap-2.5 text-[15px]"
-          style={{ color: T.ink.dim }}
-        >
-          <input type="checkbox" disabled className="size-5" />
-          Step-free stop
-          <span className="ml-auto text-[12px]">Not recorded yet</span>
-        </label>
-        <Check
-          label={tUi("shares_live_updates")}
-          checked={filters.mobileSharesLive ?? false}
-          count={mobileSharesLiveCount}
-          onChange={() => {
-            set({ mobileSharesLive: !filters.mobileSharesLive })
-            onEnableMobile?.()
-          }}
-        />
-        {!mobileEnabled ? (
-          <button
-            type="button"
-            onClick={onEnableMobile}
-            className="min-h-9 self-start font-semibold underline"
-            style={{ color: T.accent.primary }}
-          >
-            Show mobile stops on the map
-          </button>
-        ) : null}
-      </fieldset>
-
-      {operatorOptions.length > 0 ? (
-        <Group legend="Operated by">
-          <div className="flex flex-wrap gap-2">
-            {operatorOptions.map((g) => (
-              <Chip
-                key={g.key}
-                on={filters.operators.includes(g.key)}
-                onClick={() =>
-                  set({ operators: toggle(filters.operators, g.key) })
-                }
-              >
-                {g.label}
-                <span className="sr-only">
-                  , {operatorCounts.get(g.key)} libraries
-                </span>
-              </Chip>
-            ))}
-          </div>
-        </Group>
-      ) : null}
-
-      <Group legend="Services & accessibility">
-        {onFacilitySearch ? (
-          <input
-            type="search"
-            aria-label={tUi("search_services_and_accessibility")}
+        {onFacilitySearch && allFacilities ? (
+          <SearchField
+            id={featureSearchId}
+            size="sm"
+            label={tUi("search_services_and_accessibility")}
             placeholder={tUi("find_a_feature")}
-            maxLength={80}
-            onChange={(event) => {
-              onFacilitySearch(event.target.value)
-              setAllFacilities(true)
+            inputProps={{
+              value: featureQuery,
+              maxLength: 80,
+              onChange: (event) => {
+                setFeatureQuery(event.target.value)
+                onFacilitySearch(event.target.value)
+                setAllFacilities(true)
+              },
             }}
-            className="h-10 rounded-xl border px-3"
+            onClear={() => {
+              setFeatureQuery("")
+              onFacilitySearch("")
+            }}
           />
         ) : null}
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-0.5">
           {facilityShown.map((f) => (
             <Check
               key={f.name}
@@ -381,31 +372,19 @@ export function AtlasFiltersTab({
               }
             />
           ))}
-          <Check
-            label={tUi("has_upcoming_events")}
-            checked={filters.events}
-            count={
-              serverCounts?.events ??
-              countWith(libraries, filters, { events: true }, now)
-            }
-            onChange={() => set({ events: !filters.events })}
-          />
-          <Check
-            label={tUi("live_catalogue_link")}
-            checked={filters.catalogue}
-            count={
-              serverCounts?.catalogue ??
-              countWith(libraries, filters, { catalogue: true }, now)
-            }
-            onChange={() => set({ catalogue: !filters.catalogue })}
-          />
         </div>
         {facilities.length > FACILITIES_SHOWN ? (
           <button
             type="button"
             aria-expanded={allFacilities}
-            onClick={() => setAllFacilities((v) => !v)}
-            className="self-start text-[14px] font-semibold underline underline-offset-[3px]"
+            onClick={() => {
+              setAllFacilities((value) => !value)
+              if (allFacilities && featureQuery) {
+                setFeatureQuery("")
+                onFacilitySearch?.("")
+              }
+            }}
+            className="min-h-11 self-start text-sm font-semibold underline underline-offset-4"
             style={{ color: "#3730A3" }}
           >
             {allFacilities
@@ -426,58 +405,195 @@ export function AtlasFiltersTab({
         ) : null}
       </Group>
 
-      {years ? (
-        <Group
-          legend="Founded"
-          aside={
-            filters.founded
-              ? `${filters.founded[0]} – ${filters.founded[1]}`
-              : "Any year"
-          }
-        >
-          <YearRange
-            min={years[0]}
-            max={years[1]}
-            value={filters.founded ?? years}
-            onChange={(v) =>
-              set({
-                founded: v[0] === years[0] && v[1] === years[1] ? null : v,
-              })
-            }
-          />
-          <div
-            className="flex justify-between text-[14px]"
-            style={{ color: T.ink.dim }}
-          >
-            <span>{years[0]}</span>
-            <span>Today</span>
-          </div>
-          <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
-            Only libraries with a recorded founding year are shown when this is
-            set.
-          </p>
-        </Group>
-      ) : null}
-
-      <div
-        className="sticky bottom-0 -mx-4 mt-auto flex items-center gap-2.5 border-t bg-white px-4 pt-3 pb-1 md:-mx-5 md:px-5"
-        style={{ borderColor: T.border.divider }}
+      <p className="m-0 pb-4 text-xs leading-relaxed text-(--t-ink-dim)">
+        {t("featureExplanation")}{" "}
+        {onAccessibility ? (
+          <>
+            {t("featureLayerHint")}{" "}
+            <button
+              type="button"
+              onClick={onAccessibility}
+              className="min-h-8 font-semibold text-(--t-accent-primary) underline underline-offset-4"
+            >
+              {t("accessibilityLayer")}
+            </button>
+            .
+          </>
+        ) : null}
+      </p>
+      <Group
+        legend={t("moreFilters")}
+        collapsible
+        defaultOpen={Boolean(
+          filters.operators.length ||
+          filters.events ||
+          filters.catalogue ||
+          filters.founded ||
+          filters.mobileFrequency?.length ||
+          filters.mobileSharesLive
+        )}
+        activeCount={
+          filters.operators.length +
+          Number(filters.events) +
+          Number(filters.catalogue) +
+          Number(Boolean(filters.founded)) +
+          (filters.mobileFrequency?.length ?? 0) +
+          Number(filters.mobileSharesLive ?? false)
+        }
       >
-        <p className="m-0 flex-1 text-[15px]" aria-live="polite">
-          <strong
-            className="text-[22px] font-medium"
-            style={{ fontFamily: T.font.serif }}
+        <Check
+          label={tUi("has_upcoming_events")}
+          checked={filters.events}
+          count={
+            serverCounts?.events ??
+            countWith(libraries, filters, { events: true }, now)
+          }
+          onChange={() => set({ events: !filters.events })}
+        />
+        <Check
+          label={tUi("live_catalogue_link")}
+          checked={filters.catalogue}
+          count={
+            serverCounts?.catalogue ??
+            countWith(libraries, filters, { catalogue: true }, now)
+          }
+          onChange={() => set({ catalogue: !filters.catalogue })}
+        />
+        {operatorOptions.length > 0 ? (
+          <Group
+            collapsible
+            legend="Operated by"
+            activeCount={filters.operators.length}
+            defaultOpen={filters.operators.length > 0}
           >
-            {(matchCount + mobileCount).toLocaleString()}
+            <div className="flex flex-wrap gap-2">
+              {operatorOptions.map((g) => (
+                <Chip
+                  key={g.key}
+                  on={filters.operators.includes(g.key)}
+                  onClick={() =>
+                    set({ operators: toggle(filters.operators, g.key) })
+                  }
+                >
+                  {g.label}
+                  <span className="sr-only">
+                    , {operatorCounts.get(g.key)} libraries
+                  </span>
+                </Chip>
+              ))}
+            </div>
+          </Group>
+        ) : null}
+
+        {years ? (
+          <Group
+            collapsible
+            legend="Founded"
+            activeCount={filters.founded ? 1 : 0}
+            defaultOpen={Boolean(filters.founded)}
+            aside={
+              filters.founded
+                ? `${filters.founded[0]} – ${filters.founded[1]}`
+                : "Any year"
+            }
+          >
+            <YearRange
+              min={years[0]}
+              max={years[1]}
+              value={filters.founded ?? years}
+              onChange={(v) =>
+                set({
+                  founded: v[0] === years[0] && v[1] === years[1] ? null : v,
+                })
+              }
+            />
+            <div
+              className="flex justify-between text-[14px]"
+              style={{ color: T.ink.dim }}
+            >
+              <span>{years[0]}</span>
+              <span>Today</span>
+            </div>
+            <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+              Only libraries with a recorded founding year are shown when this
+              is set.
+            </p>
+          </Group>
+        ) : null}
+
+        <Group
+          collapsible
+          legend={tUi("mobile_library_stops")}
+          activeCount={
+            (filters.mobileFrequency?.length ?? 0) +
+            Number(filters.mobileSharesLive ?? false)
+          }
+          defaultOpen={Boolean(
+            filters.mobileFrequency?.length || filters.mobileSharesLive
+          )}
+        >
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ["weekly", "Weekly"],
+                ["fortnightly", "Every 2 weeks"],
+                ["monthly", "Monthly"],
+              ] as const
+            ).map(([frequency, label]) => (
+              <Chip
+                key={frequency}
+                on={filters.mobileFrequency?.includes(frequency) ?? false}
+                onClick={() => {
+                  set({
+                    mobileFrequency: toggle(
+                      filters.mobileFrequency ?? [],
+                      frequency
+                    ),
+                  })
+                  onEnableMobile?.()
+                }}
+              >
+                {label}
+              </Chip>
+            ))}
+          </div>
+          <Check
+            label={tUi("shares_live_updates")}
+            checked={filters.mobileSharesLive ?? false}
+            count={mobileSharesLiveCount}
+            onChange={() => {
+              set({ mobileSharesLive: !filters.mobileSharesLive })
+              onEnableMobile?.()
+            }}
+          />
+          {!mobileEnabled ? (
+            <button
+              type="button"
+              onClick={onEnableMobile}
+              className="min-h-9 self-start font-semibold underline"
+              style={{ color: T.accent.primary }}
+            >
+              Show mobile stops on the map
+            </button>
+          ) : null}
+        </Group>
+      </Group>
+
+      <div className="sticky bottom-0 -mx-5 mt-auto flex items-center gap-3 border-t border-(--t-border-line) bg-white px-5 py-4">
+        <p
+          className="m-0 min-w-0 flex-1 text-xs leading-5 text-(--t-ink-dim)"
+          aria-live="polite"
+        >
+          <strong className="font-semibold text-(--t-ink-base)">
+            {t("libraries", { count: matchCount })}
           </strong>{" "}
-          matches
-          {mobileCount ? ` · ${mobileCount.toLocaleString()} mobile stops` : ""}
+          · {t("stops", { count: mobileCount })}
         </p>
         <button
           type="button"
           onClick={onShowResults}
           disabled={matchCount + mobileCount === 0}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
+          className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
         >
           {showResultsLabel} results
         </button>
@@ -490,19 +606,44 @@ function Group({
   legend,
   aside,
   children,
+  defaultOpen = true,
+  activeCount = 0,
+  collapsible = false,
+  headerAside,
 }: {
   readonly legend: string
   readonly aside?: string
   readonly children: React.ReactNode
+  readonly defaultOpen?: boolean
+  readonly activeCount?: number
+  readonly collapsible?: boolean
+  readonly headerAside?: React.ReactNode
 }) {
+  if (!collapsible)
+    return (
+      <fieldset className="m-0 min-w-0 border-0 p-0 pt-5 pb-3">
+        <legend className="float-left mb-3 flex min-h-7 w-full items-center justify-between gap-3 p-0 text-sm font-semibold">
+          {legend}
+          {headerAside}
+        </legend>
+        <div className="clear-both flex min-w-0 flex-col gap-3">{children}</div>
+      </fieldset>
+    )
+
   return (
-    <fieldset className="m-0 flex min-w-0 flex-col gap-2 border-0 p-0">
-      <legend className="mb-2 flex w-full justify-between p-0 text-[15px] font-bold">
-        {legend}
-        {aside ? <span className="font-semibold">{aside}</span> : null}
-      </legend>
-      {children}
-    </fieldset>
+    <FilterGroup
+      title={legend}
+      spacing="comfortable"
+      activeCount={activeCount}
+      defaultOpen={defaultOpen}
+    >
+      <div className="flex min-w-0 flex-col gap-4">
+        {aside ? (
+          <p className="m-0 text-xs text-(--t-ink-dim)">{aside}</p>
+        ) : null}
+        {children}
+      </div>
+    </FilterGroup>
   )
 }
 
@@ -518,7 +659,7 @@ function Check({
   readonly onChange: () => void
 }) {
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px]">
+    <label className="-mx-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 text-sm hover:bg-(--t-bg-surface) has-checked:bg-(--t-bg-selected)">
       <input
         type="checkbox"
         checked={checked}
@@ -538,8 +679,11 @@ function Check({
           <Icon name="check" size={14} color="#fff" stroke={2.6} />
         ) : null}
       </span>
-      <span className="flex-1">{label}</span>
-      <span className="text-[13px]" style={{ color: T.ink.dim }}>
+      <span className="min-w-0 flex-1 leading-5">{label}</span>
+      <span
+        className="shrink-0 text-xs tabular-nums"
+        style={{ color: T.ink.dim }}
+      >
         {count.toLocaleString()}
       </span>
     </label>

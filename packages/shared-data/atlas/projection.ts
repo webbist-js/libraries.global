@@ -116,6 +116,9 @@ export function projectAtlasLibrary(
         : null,
     type_group: atlasTypeGroup(source.libraryType),
     operator_group: atlasOperatorGroup(source.operatorType),
+    network_ids: [
+      ...new Set((source.networks ?? []).map((network) => network.documentId)),
+    ].sort(),
     status: source.operationalStatus ?? "unknown",
     listed:
       source.operationalStatus !== "permanently_closed" &&
@@ -186,6 +189,7 @@ export function atlasPoint(record: AtlasProjection): AtlasPoint {
       n: Array.from(record.name).slice(0, 240).join(""),
       t: record.type_group,
       o: record.operator_group,
+      nw: wrapped(record.network_ids ?? []),
       st: record.status,
       v: record.listed || record.status === "permanently_closed",
       ct: record.continent_id,
