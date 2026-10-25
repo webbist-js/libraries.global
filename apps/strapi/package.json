@@ -29,8 +29,8 @@
     "seed:mobile-stops": "tsx scripts/seed-mobile-stops.ts",
     "start": "strapi start",
     "strapi": "strapi",
-    "test": "vitest run",
-    "test:unit": "vitest run --exclude tests/app.test.ts",
+    "test": "vitest run --maxWorkers=1",
+    "test:unit": "vitest run --exclude tests/app.test.ts --maxWorkers=1",
     "test:watch": "vitest",
     "transfer": "strapi transfer",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.admin.json"

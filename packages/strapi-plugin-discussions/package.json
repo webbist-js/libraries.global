@@ -50,7 +50,7 @@
   "scripts": {
     "build": "node scripts/export-contracts.cjs && strapi-plugin build",
     "lint": "eslint -c ../../eslint.config.mjs './**/*.{js,ts,jsx,tsx,cjs,mjs}'",
-    "test": "vitest run --config vitest.config.ts",
+    "test": "vitest run --config vitest.config.ts --maxWorkers=1",
     "test:acceptance": "node tests/acceptance.cjs",
     "typecheck": "tsc --noEmit",
     "verify": "strapi-plugin verify"
