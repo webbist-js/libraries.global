@@ -3377,7 +3377,9 @@
       },
       "nearby": {
         "title": "Knihovny v okolí",
-        "description": "V indexu zatím nejsou uvedeny další knihovny v okolí."
+        "description": "V indexu zatím nejsou uvedeny další knihovny v okolí.",
+        "locationDescription": "Doplňte polohu této knihovny na mapě, aby bylo možné najít knihovny v okolí.",
+        "locationAction": "Doplnit polohu"
       },
       "admission": {
         "title": "Vstup a členství",
