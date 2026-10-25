@@ -120,7 +120,9 @@ it("reveals planned features independently without adding them to the included l
   const proList = screen
     .getByText("Private notes on any library")
     .closest("ul")!
-  const teamList = screen.getByText("A shared service workspace").closest("ul")!
+  const teamList = screen
+    .getByText("Shared Atlas analysis workspace")
+    .closest("ul")!
   expect(proList.hidden).toBe(true)
   fireEvent.click(
     screen.getByRole("button", { name: "Show all Pro roadmap features" })

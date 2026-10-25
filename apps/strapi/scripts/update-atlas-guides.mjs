@@ -134,17 +134,27 @@ if (publish) {
   const entries = JSON.parse(
     readFileSync(new URL(checkpointName, folder), "utf8")
   )
+  // Check the whole batch before its first publication. A retry recognizes
+  // matching publications completed before a transport interruption.
   for (const entry of entries) {
+    assert.equal(digest(entry.data), entry.digest, "Staged payload changed")
     const value = await get(entry.model, entry.id)
-    assert.equal(
-      value.updatedAt,
-      entry.updatedAt,
-      "Draft changed after staging"
-    )
     verify(value, entry.data)
-    await api(`${base(entry.model)}/${entry.id}/actions/publish`, "POST", {})
+    if (value.status !== "published")
+      assert.equal(
+        value.updatedAt,
+        entry.updatedAt,
+        "Draft changed after staging"
+      )
+    entry.alreadyPublished = value.status === "published"
+  }
+  for (const entry of entries) {
+    if (!entry.alreadyPublished)
+      await api(`${base(entry.model)}/${entry.id}/actions/publish`, "POST", {})
     const live = await get(entry.model, entry.id, "published")
     verify(live, entry.data)
+    entry.alreadyPublished = true
+    save(checkpointName, entries)
     console.log(JSON.stringify({ published: entry.data.slug, verified: true }))
   }
   process.exit(0)

@@ -107,7 +107,10 @@ export const PRO_FEATURE_COPY: Record<
     label: "A personal calendar feed",
     status: "soon",
   },
-  "team.workspace": { label: "A shared service workspace", status: "soon" },
+  "team.workspace": {
+    label: "Shared Atlas analysis workspace",
+    status: "soon",
+  },
   "team.bulkUpload": {
     label: "Bulk updates from a spreadsheet",
     status: "soon",
