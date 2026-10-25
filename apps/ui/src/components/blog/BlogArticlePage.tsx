@@ -436,7 +436,7 @@ export function BlogArticlePage({
                 </div>
               ) : null}
 
-              <div className="mt-7 border-t border-(--t-divider) pt-5">
+              <div className="mt-7 mb-5 border-t border-(--t-divider) pt-5">
                 {/* Back link */}
                 <GlobalLink
                   href="/journal"

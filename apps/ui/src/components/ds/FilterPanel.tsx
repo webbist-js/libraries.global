@@ -155,14 +155,16 @@ export function FilterGroup({
   dimmed = false,
   defaultOpen = true,
   activeCount,
+  spacing = "default",
 }: {
   readonly title: string
-  readonly icon: React.ReactNode
+  readonly icon?: React.ReactNode
   readonly children?: React.ReactNode
   readonly helper?: React.ReactNode
   readonly dimmed?: boolean
   readonly defaultOpen?: boolean
   readonly activeCount?: number
+  readonly spacing?: "default" | "comfortable"
 }) {
   const options = Children.toArray(children)
   const activeFlags = options.map(isActiveOption)
@@ -179,7 +181,7 @@ export function FilterGroup({
 
   return (
     <fieldset
-      className="m-0 border-0 p-0 pt-4 pb-3"
+      className={`m-0 border-0 p-0 ${spacing === "comfortable" ? "pt-5 pb-5" : "pt-4 pb-3"}`}
       style={{ borderBottom: `1px solid ${T.border.divider}` }}
     >
       {/* float pulls the legend out of the border slot so the fieldset's
@@ -193,7 +195,7 @@ export function FilterGroup({
           className="flex min-h-10 w-full cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-[16px] font-semibold text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
           style={{ opacity: dimmed ? 0.55 : 1 }}
         >
-          <svg {...LEGEND_ICON_PROPS}>{icon}</svg>
+          {icon ? <svg {...LEGEND_ICON_PROPS}>{icon}</svg> : null}
           <span className="min-w-0 flex-1">{title}</span>
           {!open && active > 0 ? (
             <span
@@ -209,7 +211,7 @@ export function FilterGroup({
       <div
         id={bodyId}
         hidden={!open}
-        className="clear-both pt-1"
+        className={`clear-both ${spacing === "comfortable" ? "pt-3" : "pt-1"}`}
         style={{ opacity: dimmed ? 0.55 : 1 }}
       >
         <div className="flex flex-col">
@@ -459,16 +461,18 @@ export function useFilterSidebar(key: string): FilterSidebarState {
 }
 
 /**
- * The desktop sidebar: sticky under the header, never taller than the
- * viewport (it scrolls on its own), and hidden when collapsed. Mobile uses
- * FilterDrawer instead.
+ * Collapsible desktop sidebar. Sticky mode bounds its height and gives it
+ * a scroll area; disable it to let the filters scroll with the page.
+ * Mobile uses FilterDrawer instead.
  */
 export function FilterSidebar({
   sidebar,
   children,
+  sticky = true,
 }: {
   readonly sidebar: FilterSidebarState
   readonly children: ReactNode
+  readonly sticky?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -477,9 +481,10 @@ export function FilterSidebar({
       id={sidebar.sidebarId}
       aria-label={tUi("filters")}
       className={[
-        "scrollbar-thin sticky top-(--sticky-content-top) w-[290px] shrink-0 overflow-x-hidden overflow-y-auto overscroll-contain",
-        // Inner padding keeps focus rings clear of the scroll box's edge.
-        "-mx-1 max-h-(--sticky-content-max-height) px-1 pb-4",
+        "-mx-1 w-[290px] shrink-0 px-1 pb-4",
+        sticky
+          ? "scrollbar-thin sticky top-(--sticky-content-top) max-h-(--sticky-content-max-height) overflow-x-hidden overflow-y-auto overscroll-contain"
+          : "",
         sidebar.collapsed ? "hidden" : "hidden lg:block",
       ].join(" ")}
     >

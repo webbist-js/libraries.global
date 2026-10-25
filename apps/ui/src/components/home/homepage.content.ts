@@ -36,7 +36,7 @@ type HomepageDefaults = {
 
 export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
   heroEyebrow: "Open data · Open source · Free to use",
-  heroTitle: "Every library, *on one map.*",
+  heroTitle: "Every library, *one map.*",
   heroText:
     "An open record of the world’s libraries: find one near you, see how places are served, and help document the rest.",
 
