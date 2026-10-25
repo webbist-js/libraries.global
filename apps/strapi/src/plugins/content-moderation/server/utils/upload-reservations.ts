@@ -188,10 +188,17 @@ export async function completeUpload(
   userId: string,
   reservationId: string,
   fileId: number,
-  now = Date.now()
+  now = Date.now(),
+  displayName?: unknown
 ) {
   if (!Number.isSafeInteger(fileId) || fileId < 1)
     throw new UploadReservationError(400, "invalid_upload_file")
+  if (
+    displayName !== undefined &&
+    (typeof displayName !== "string" ||
+      !/^[\p{L}\p{N}_-][\p{L}\p{N}_ .-]{0,119}$/u.test(displayName))
+  )
+    throw new UploadReservationError(400, "invalid_upload_name")
   const initial = await readReservation(strapi, userId, reservationId)
 
   return locked(strapi, userId, initial.quotaDate, async () => {
@@ -234,6 +241,11 @@ export async function completeUpload(
       await strapi
         .documents(OWNERSHIP)
         .create({ data: { fileId, baUserId: userId } })
+    if (typeof displayName === "string")
+      await strapi.db.query(FILE).update({
+        where: { id: fileId },
+        data: { name: displayName },
+      })
     await strapi.documents(RESERVATIONS).update({
       documentId: reservation.documentId,
       data: { status: "completed", fileId },
