@@ -113,19 +113,21 @@ export default async function FindLibraryRoute(props: {
             drives={drives}
             contributeBand={
               showContribute ? (
-                <DismissiblePrompt
-                  prompt="find-contribute"
-                  signedIn={signedIn}
-                  className="mx-auto w-full max-w-[1360px] px-4 pt-8 sm:px-8"
-                >
-                  <FinalCtaSection
-                    compact
-                    band={FIND_CONTRIBUTE_PROMPT.band}
-                    benefits={FIND_CONTRIBUTE_PROMPT.benefits}
+                <div className="mx-auto w-full max-w-[1360px] px-4 pb-8 sm:px-8 sm:pb-12">
+                  <DismissiblePrompt
+                    prompt="find-contribute"
                     signedIn={signedIn}
-                    dismissLabel="Hide this"
-                  />
-                </DismissiblePrompt>
+                  >
+                    <FinalCtaSection
+                      compact
+                      contained
+                      band={FIND_CONTRIBUTE_PROMPT.band}
+                      benefits={FIND_CONTRIBUTE_PROMPT.benefits}
+                      signedIn={signedIn}
+                      dismissLabel="Hide this"
+                    />
+                  </DismissiblePrompt>
+                </div>
               ) : null
             }
           />

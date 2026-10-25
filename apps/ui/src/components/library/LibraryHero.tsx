@@ -5,10 +5,15 @@ import {
   type LibraryNotice,
   type TimetableNotice,
 } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
-import type { WizardLibrary } from "@/components/contribute/wizard.logic"
+import {
+  hubHref,
+  type WizardLibrary,
+} from "@/components/contribute/wizard.logic"
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
+import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { facilityRows } from "@/components/library/facility-rows"
 import type {
@@ -60,6 +65,7 @@ export function LibraryHero({
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
+  const t = useTranslations("libraryPage")
   const rec = library as unknown as Record<string, unknown>
   const mobile = libraryTypeName(library.libraryType) === "Mobile"
   const timetable = normalizeMobileTimetable(rec.mobileTimetable)
@@ -101,7 +107,7 @@ export function LibraryHero({
   ).length
   const checked = sectionCheckedAt(library, "hours")
   const facts = [
-    ...(!digital
+    ...(!digital && summariseWeek(openingTimes)
       ? [
           {
             icon: "mdi:clock-outline",
@@ -119,7 +125,7 @@ export function LibraryHero({
           },
         ]
       : []),
-    ...(!digital
+    ...(!digital && Boolean(rec.nearestStation)
       ? [
           {
             icon: "mdi:train",
@@ -132,7 +138,7 @@ export function LibraryHero({
           },
         ]
       : []),
-    ...(!digital
+    ...(!digital && accessRecorded > 0
       ? [
           {
             icon: "mdi:human",
@@ -147,19 +153,20 @@ export function LibraryHero({
           },
         ]
       : []),
-    {
-      icon: "mdi:card-account-details-outline",
-      label: digital ? "Online access" : "Admission",
-      value:
-        typeof rec.admissionInfo === "string" && rec.admissionInfo
-          ? clampDescription(
-              rec.admissionInfo.match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] ??
-                rec.admissionInfo,
+    ...(rec.admissionInfo
+      ? [
+          {
+            icon: "mdi:card-account-details-outline",
+            label: t(digital ? "onlineAccess" : "admission"),
+            value: clampDescription(
+              String(rec.admissionInfo).match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] ??
+                String(rec.admissionInfo),
               110
-            )!
-          : "Admission details not recorded",
-      href: "#visit",
-    },
+            )!,
+            href: "#visit",
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -194,7 +201,7 @@ export function LibraryHero({
             </div>
 
             <h1
-              className="m-0 max-w-[12ch] text-[clamp(44px,5.8vw,80px)] leading-[.95] tracking-[-0.03em] text-balance"
+              className="m-0 max-w-[20ch] text-[clamp(44px,5.8vw,80px)] leading-[.95] tracking-[-0.03em] text-balance"
               style={{
                 fontFamily: T.font.serif,
                 fontWeight: 500,
@@ -255,9 +262,6 @@ export function LibraryHero({
                     : directionsUrl
                 }
                 website={library.website}
-                catalogueUrl={
-                  typeof rec.catalogueUrl === "string" ? rec.catalogueUrl : null
-                }
                 libraryDocumentId={library.documentId ?? ""}
                 libraryName={library.name ?? ""}
                 librarySlug={library.slug ?? ""}
@@ -290,23 +294,68 @@ export function LibraryHero({
                     : ""}
                 </p>
               </div>
-            ) : (
-              <div className="mt-5 grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
+            ) : facts.length ? (
+              <div
+                className={
+                  facts.length <= 2
+                    ? "mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:gap-6"
+                    : "mt-5 grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2"
+                }
+                style={{ borderColor: T.border.line }}
+              >
                 {facts.map((fact) => (
                   <a
                     key={fact.label}
                     href={fact.href}
-                    className="block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+                    className={
+                      facts.length <= 2
+                        ? "flex min-h-11 min-w-0 flex-1 items-start gap-2 text-sm no-underline hover:underline"
+                        : "block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+                    }
                   >
-                    <FactCard {...fact} className="h-full" />
+                    {facts.length <= 2 ? (
+                      <>
+                        <Icon
+                          icon={fact.icon}
+                          width={18}
+                          className="mt-0.5 shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <span className="block font-semibold">
+                            {fact.label}
+                          </span>
+                          <span
+                            className="mt-0.5 block"
+                            style={{ color: T.ink.dim }}
+                          >
+                            {fact.value}
+                          </span>
+                        </span>
+                      </>
+                    ) : (
+                      <FactCard {...fact} className="h-full" />
+                    )}
                   </a>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="min-w-0">
             <LibraryHeroMedia
+              atlasHref={!mobile && !digital && coords ? atlasHref : null}
+              photoAction={
+                !library.heroImage?.url && !library.gallery?.length ? (
+                  <GlobalLink
+                    href={hubHref("photo", wizardLibrary)}
+                    className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold shadow-sm"
+                    style={{ borderColor: T.border.line }}
+                  >
+                    {t("addPhoto")}
+                  </GlobalLink>
+                ) : undefined
+              }
               photo={formatStrapiMediaUrl(library.heroImage?.url) ?? null}
               name={
                 library.heroImage?.alternativeText || library.name || "Library"

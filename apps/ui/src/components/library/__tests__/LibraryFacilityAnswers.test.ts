@@ -166,3 +166,56 @@ describe("LibraryFacilityAnswers", () => {
     ).toBeNull()
   })
 })
+
+describe("grouped questions on library pages", () => {
+  it("shows three questions first, keeps extra questions available, and avoids an empty Access heading", () => {
+    const moreRows = [
+      {
+        label: "Printing",
+        icon: "x",
+        category: "amenity" as const,
+        state: "yes" as const,
+      },
+      ...[
+        "Step-free entrance",
+        "Accessible toilets",
+        "Hearing loop",
+        "Quiet space",
+      ].map((label) => ({
+        label,
+        icon: "x",
+        category: "accessibility" as const,
+        state: "unknown" as const,
+      })),
+    ]
+    const { container } = render(
+      h(LibraryFacilityAnswers, {
+        rows: moreRows,
+        grouped: true,
+        librarySlug: "grouped",
+        libraryName: "Library",
+        libraryPath: "/library",
+      })
+    )
+    expect(screen.queryByRole("heading", { name: "Access" })).toBeNull()
+    expect(screen.getByRole("heading", { name: "Facilities" })).toBeTruthy()
+    const questions = container.querySelectorAll('li [role="group"]')
+    expect(questions.length).toBe(4)
+    expect(questions[2]?.closest("details")).toBeNull()
+    const details = questions[3]!.closest("details")!
+    expect(details.open).toBe(false)
+    fireEvent.click(screen.getByText("Show one more question"))
+    expect(details.open).toBe(true)
+    fireEvent.click(
+      within(screen.getByRole("group", { name: "Quiet space" })).getByRole(
+        "button",
+        { name: "Yes" }
+      )
+    )
+    expect(screen.getByRole("button", { name: "Send for review" })).toBeTruthy()
+    fireEvent.click(screen.getByText("Show one more question"))
+    expect(details.open).toBe(false)
+    expect(screen.getByRole("button", { name: "Send for review" })).toBeTruthy()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})

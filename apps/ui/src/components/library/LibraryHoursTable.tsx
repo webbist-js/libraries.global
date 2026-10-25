@@ -126,14 +126,17 @@ const MODE_DESCRIPTIONS: Record<string, string> = {
 /** A shared time axis, with each day’s individual opening periods written out. */
 export function LibraryHoursTable({
   openingTimes,
+  compact = false,
   timezone,
   notices = NO_NOTICES,
 }: {
+  readonly compact?: boolean
   readonly openingTimes: OpeningTimesValue | null
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
 }) {
   const tUi = useUiTranslations("ui")
+  const tPage = useUiTranslations("libraryPage")
   const locale = useLocale()
   const today = useToday(timezone)
   const recordedHours = hasOpeningHours(openingTimes)
@@ -193,18 +196,24 @@ export function LibraryHoursTable({
 
   return (
     <div>
-      <div
-        aria-hidden="true"
-        className="mb-2 flex justify-between px-3 text-[11px] tabular-nums"
-        style={{ color: T.ink.dim }}
-      >
-        <span>{hourLabel(window.startHour)}</span>
-        <span>{hourLabel((window.startHour + window.endHour) / 2)}</span>
-        <span>{hourLabel(window.endHour)}</span>
-      </div>
+      {!compact ? (
+        <div
+          aria-hidden="true"
+          className="mb-2 flex justify-between px-3 text-[11px] tabular-nums"
+          style={{ color: T.ink.dim }}
+        >
+          <span>{hourLabel(window.startHour)}</span>
+          <span>{hourLabel((window.startHour + window.endHour) / 2)}</span>
+          <span>{hourLabel(window.endHour)}</span>
+        </div>
+      ) : null}
       <ol
         aria-label={`Opening hours by day${timezone ? `, ${timezone} time` : ""}`}
-        className="m-0 list-none space-y-2 p-0"
+        className={
+          compact
+            ? "m-0 list-none space-y-1 p-0"
+            : "m-0 list-none space-y-2 p-0"
+        }
       >
         {DAY_ORDER.map((key) => {
           const day = days?.find((item) => item.day === key)
@@ -226,83 +235,142 @@ export function LibraryHoursTable({
           return (
             <li
               key={key}
-              className="rounded-2xl border px-3 py-3"
+              className={
+                compact
+                  ? "rounded-xl border px-3 py-2.5"
+                  : "rounded-2xl border px-3 py-3"
+              }
               style={{
                 background: isToday ? T.accent.chip : "transparent",
                 borderColor: isToday ? T.border.hi : "transparent",
               }}
             >
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[15px]">
-                <span className={isToday ? "font-bold" : "font-semibold"}>
-                  {weekdayName(key)}
-                  {isToday ? " (today)" : ""}
-                </span>
-                <span className="tabular-nums" style={{ color: T.ink.dim }}>
-                  {range}
-                </span>
-              </div>
-              <div
-                aria-hidden="true"
-                className="relative mt-2 h-2.5 overflow-hidden rounded-full border"
-                style={{ background: "#EEEAE2", borderColor: "#D8D3CA" }}
-              >
-                {frames.flatMap((frame, index) => {
-                  const left = timelinePercent(frame.startTime, window)
-                  const right = timelinePercent(frame.endTime, window)
-                  const spans: [number, number][] =
-                    frame.overnight || frame.endTime < frame.startTime
-                      ? [
-                          [left, 100],
-                          [0, right],
-                        ]
-                      : [[left, right]]
-
-                  return spans
-                    .filter(([start, end]) => end > start)
-                    .map(([start, end], segment) => (
-                      <span
-                        key={`${index}-${segment}`}
-                        className="absolute inset-y-0"
-                        style={{
-                          left: `${start}%`,
-                          width: `${end - start}%`,
-                          background:
-                            MODE_STYLES[frame.staffing ?? "open"] ??
-                            MODE_STYLES.open,
-                        }}
-                      />
-                    ))
-                })}
-              </div>
-              {frames.length > 0 ? (
-                <ul className="m-0 mt-2 list-none space-y-1 p-0 text-[14px]">
-                  {frames.map((frame, index) => (
-                    <li key={index}>
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                        <span className="tabular-nums">
-                          {frame.startTime}–{frame.endTime}
-                          {frame.overnight || frame.endTime < frame.startTime
-                            ? " · next day"
-                            : ""}
-                        </span>
-                        <span style={{ color: T.ink.dim }}>
-                          {OPENING_MODE_LABELS[
-                            (frame.staffing ?? "open") as OpeningTimesStaffing
-                          ] ?? "Open"}
-                        </span>
-                      </div>
-                      {frame.note ? (
-                        <p
-                          className="m-0 mt-0.5 text-[13px] leading-relaxed"
-                          style={{ color: T.ink.dim }}
+              {compact ? (
+                <div className="grid grid-cols-[minmax(80px,.85fr)_minmax(0,1.3fr)] gap-3 text-sm leading-relaxed">
+                  <span className={isToday ? "font-bold" : "font-semibold"}>
+                    {weekdayName(key)}
+                    {isToday ? (
+                      <span className="block text-xs font-normal">
+                        {tPage("today")}
+                      </span>
+                    ) : null}
+                  </span>
+                  {frames.length ? (
+                    <ul className="m-0 grid list-none gap-2 p-0 text-right">
+                      {frames.map((frame) => (
+                        <li
+                          key={`${frame.startTime}:${frame.endTime}:${frame.staffing ?? ""}`}
                         >
-                          {frame.note}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                          <span className="block tabular-nums">
+                            {frame.startTime}–{frame.endTime}
+                            {frame.overnight || frame.endTime < frame.startTime
+                              ? " · next day"
+                              : ""}
+                          </span>
+                          <span
+                            className="block text-xs"
+                            style={{ color: T.ink.dim }}
+                          >
+                            {OPENING_MODE_LABELS[
+                              (frame.staffing ?? "open") as OpeningTimesStaffing
+                            ] ?? "Open"}
+                          </span>
+                          {frame.note ? (
+                            <p
+                              className="m-0 mt-1 text-xs leading-relaxed"
+                              style={{ color: T.ink.dim }}
+                            >
+                              {frame.note}
+                            </p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-right" style={{ color: T.ink.dim }}>
+                      {tUi("closed")}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[15px]">
+                    <span className={isToday ? "font-bold" : "font-semibold"}>
+                      {weekdayName(key)}
+                      {isToday ? " (today)" : ""}
+                    </span>
+                    <span className="tabular-nums" style={{ color: T.ink.dim }}>
+                      {range}
+                    </span>
+                  </div>
+                  <div
+                    aria-hidden="true"
+                    className="relative mt-2 h-2.5 overflow-hidden rounded-full border"
+                    style={{ background: "#EEEAE2", borderColor: "#D8D3CA" }}
+                  >
+                    {frames.flatMap((frame, index) => {
+                      const left = timelinePercent(frame.startTime, window)
+                      const right = timelinePercent(frame.endTime, window)
+                      const spans: [number, number][] =
+                        frame.overnight || frame.endTime < frame.startTime
+                          ? [
+                              [left, 100],
+                              [0, right],
+                            ]
+                          : [[left, right]]
+
+                      return spans
+                        .filter(([start, end]) => end > start)
+                        .map(([start, end], segment) => (
+                          <span
+                            key={`${index}-${segment}`}
+                            className="absolute inset-y-0"
+                            style={{
+                              left: `${start}%`,
+                              width: `${end - start}%`,
+                              background:
+                                MODE_STYLES[frame.staffing ?? "open"] ??
+                                MODE_STYLES.open,
+                            }}
+                          />
+                        ))
+                    })}
+                  </div>
+                  {frames.length > 0 ? (
+                    <ul className="m-0 mt-2 list-none space-y-1 p-0 text-[14px]">
+                      {frames.map((frame) => (
+                        <li
+                          key={`${frame.startTime}:${frame.endTime}:${frame.staffing ?? ""}`}
+                        >
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                            <span className="tabular-nums">
+                              {frame.startTime}–{frame.endTime}
+                              {frame.overnight ||
+                              frame.endTime < frame.startTime
+                                ? " · next day"
+                                : ""}
+                            </span>
+                            <span style={{ color: T.ink.dim }}>
+                              {OPENING_MODE_LABELS[
+                                (frame.staffing ??
+                                  "open") as OpeningTimesStaffing
+                              ] ?? "Open"}
+                            </span>
+                          </div>
+                          {frame.note ? (
+                            <p
+                              className="m-0 mt-0.5 text-[13px] leading-relaxed"
+                              style={{ color: T.ink.dim }}
+                            >
+                              {frame.note}
+                            </p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </>
+              )}
             </li>
           )
         })}
@@ -454,21 +522,13 @@ export function LibraryTodayFact({
   )
   const dayName = today ? today.charAt(0).toUpperCase() + today.slice(1) : null
 
-  let value = "Hours not added yet"
-  if (fact?.closed && today) value = "Closed today"
-  else if (hasHours && today) {
-    const times = formatDayTimes(day ?? undefined)
-    const now =
-      status?.state === "open"
-        ? "open now"
-        : status?.state === "closed"
-          ? "closed now"
-          : null
-    value =
-      times === "Closed" ? "Closed today" : `${times}${now ? ` · ${now}` : ""}`
-  } else if (hasHours) {
-    value = "…"
-  }
+  const value = todayFactValue(
+    Boolean(fact?.closed),
+    today,
+    hasHours,
+    day,
+    status
+  )
 
   return (
     <FactCard
@@ -526,4 +586,30 @@ export function FactCard({
       </span>
     </div>
   )
+}
+
+function todayFactValue(
+  closed: boolean,
+  today: DayKey | null,
+  hasHours: boolean,
+  day: Parameters<typeof formatDayTimes>[0] | null,
+  status: ReturnType<typeof useOpenStatus>
+) {
+  let value = "Hours not added yet"
+  if (closed && today) value = "Closed today"
+  else if (hasHours && today) {
+    const times = formatDayTimes(day ?? undefined)
+    const now =
+      status?.state === "open"
+        ? "open now"
+        : status?.state === "closed"
+          ? "closed now"
+          : null
+    value =
+      times === "Closed" ? "Closed today" : `${times}${now ? ` · ${now}` : ""}`
+  } else if (hasHours) {
+    value = "…"
+  }
+
+  return value
 }
