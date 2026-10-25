@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url"
 
 export default {
-  test: { include: ["tests/**/*.test.ts"] },
+  test: { include: ["tests/**/*.test.ts"], minWorkers: 1, maxWorkers: 1 },
   resolve: {
     alias: [
       {

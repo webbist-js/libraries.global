@@ -162,9 +162,6 @@
     "apps/strapi/src/api/article-change/services/article-change.ts": {
       "@typescript-eslint/no-explicit-any": 1
     },
-    "apps/strapi/src/api/atlas/controllers/atlas.ts": {
-      "@typescript-eslint/no-explicit-any": 14
-    },
     "apps/strapi/src/api/auth-bridge/controllers/auth-bridge.ts": {
       "@typescript-eslint/no-explicit-any": 35,
       "sonarjs/cognitive-complexity": 1,
@@ -358,10 +355,10 @@
       "@typescript-eslint/no-explicit-any": 9
     },
     "apps/strapi/src/plugins/access/server/services/teams.ts": {
-      "@typescript-eslint/no-explicit-any": 10,
+      "@typescript-eslint/no-explicit-any": 8,
       "sonarjs/cognitive-complexity": 2,
       "sonarjs/slow-regex": 1,
-      "unicorn/consistent-function-scoping": 2
+      "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/src/plugins/access/server/utils/admin.ts": {
       "@typescript-eslint/no-explicit-any": 2,
@@ -1327,9 +1324,6 @@
     "apps/ui/src/app/[locale]/contribute/index/[slug]/page.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/ui/src/app/[locale]/contribute/index/_components/FindLibraryFirst.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/app/[locale]/contribute/index/_components/__tests__/FindLibraryFirst.test.tsx": {
       "@typescript-eslint/no-explicit-any": 1
     },
@@ -1514,7 +1508,7 @@
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/atlas/AtlasLayersTab.tsx": {
-      "sonarjs/cognitive-complexity": 3
+      "sonarjs/cognitive-complexity": 2
     },
     "apps/ui/src/components/atlas/AtlasLibraryPanel.tsx": {
       "@next/next/no-img-element": 1,
@@ -1542,7 +1536,7 @@
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/atlas/__tests__/AtlasExplorer.provider.test.tsx": {
-      "@typescript-eslint/no-explicit-any": 6,
+      "@typescript-eslint/no-explicit-any": 5,
       "react-hooks/exhaustive-deps": 1
     },
     "apps/ui/src/components/atlas/__tests__/atlas-data-client.test.ts": {
@@ -1622,9 +1616,6 @@
     "apps/ui/src/components/contribute/article-editor/ArticleSidebar.tsx": {
       "sonarjs/cognitive-complexity": 1,
       "sonarjs/no-nested-functions": 2
-    },
-    "apps/ui/src/components/contribute/article-editor/__tests__/ArticleEditor.image.test.tsx": {
-      "@typescript-eslint/no-explicit-any": 1
     },
     "apps/ui/src/components/contribute/article-editor/__tests__/ArticleEditorShell.locale.test.ts": {
       "unicorn/consistent-function-scoping": 3
@@ -1890,12 +1881,9 @@
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/library/LibraryHoursTable.tsx": {
-      "react/no-array-index-key": 3,
+      "react/no-array-index-key": 2,
       "sonarjs/cognitive-complexity": 1,
       "unicorn/consistent-function-scoping": 2
-    },
-    "apps/ui/src/components/library/LibraryReachTeaser.tsx": {
-      "react/no-array-index-key": 1
     },
     "apps/ui/src/components/library/LibrarySections.tsx": {
       "react/no-array-index-key": 5,
@@ -2104,7 +2092,7 @@
     },
     "apps/ui/src/lib/atlas-query.ts": {
       "@typescript-eslint/no-explicit-any": 10,
-      "sonarjs/cognitive-complexity": 2
+      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/lib/auth.ts": {
       "turbo/no-undeclared-env-vars": 2
@@ -2357,45 +2345,22 @@
       "@typescript-eslint/no-explicit-any": 7
     },
     "qa/tests/playwright/axe/axe-test.ts": {
-      "import-x/no-unresolved": 1,
       "sonarjs/cognitive-complexity": 1
-    },
-    "qa/tests/playwright/e2e/access/event-feeds.spec.ts": {
-      "turbo/no-undeclared-env-vars": 1
-    },
-    "qa/tests/playwright/e2e/access/moderation.spec.ts": {
-      "turbo/no-undeclared-env-vars": 1
     },
     "qa/tests/playwright/e2e/access/propose-drive.spec.ts": {
       "sonarjs/slow-regex": 3,
       "turbo/no-undeclared-env-vars": 2
     },
-    "qa/tests/playwright/e2e/access/role-application.spec.ts": {
-      "turbo/no-undeclared-env-vars": 1
-    },
-    "qa/tests/playwright/e2e/access/role-matrix.spec.ts": {
-      "turbo/no-undeclared-env-vars": 2
-    },
     "qa/tests/playwright/e2e/beta.spec.ts": {
       "turbo/no-undeclared-env-vars": 4
-    },
-    "qa/tests/playwright/helpers/access-fixtures.ts": {
-      "turbo/no-undeclared-env-vars": 2
-    },
-    "qa/tests/playwright/helpers/auth-db.ts": {
-      "turbo/no-undeclared-env-vars": 1
     },
     "qa/tests/playwright/helpers/seed-access-fixtures.ts": {
       "no-console": 8,
       "sonarjs/cognitive-complexity": 1,
-      "turbo/no-undeclared-env-vars": 5
-    },
-    "qa/tests/playwright/helpers/strapi-access-writer.cjs": {
-      "sonarjs/cognitive-complexity": 2,
       "turbo/no-undeclared-env-vars": 2
     },
-    "qa/tests/playwright/seo/seo.spec.ts": {
-      "import-x/no-unresolved": 1
+    "qa/tests/playwright/helpers/strapi-access-writer.cjs": {
+      "sonarjs/cognitive-complexity": 2
     }
   }
 }

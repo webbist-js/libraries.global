@@ -69,7 +69,7 @@ jobs:
       - name: Verify release source guards
         run: |
           pnpm exec eslint scripts/release/*.mjs
-          node --test scripts/release/*.test.mjs
+          node --test scripts/release/*.test.mjs scripts/atlas/*.test.mjs
           python3 -m unittest discover -s scripts/release -p 'test_*.py'
 
       # Includes the @repo/access type-level invariants and the Strapi unit
