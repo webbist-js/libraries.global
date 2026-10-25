@@ -72,7 +72,7 @@ export function mapCanadianLibrary(
     return "Museum-association library/archive entry requires individual institution review"
   const type = canadianText(row.Source_Facility_Type) ?? ""
   if (
-    /\b(?:bookmobile|bibliobus|mobile|hq|headquarters|administration)\b/i.test(
+    /\b(?:bookmobile|bibliobus|mobile|hq|headquarters|administration|administrative\s+(?:cent(?:re|er)|offices?|buildings?))\b/i.test(
       `${name} ${type}`
     )
   )
