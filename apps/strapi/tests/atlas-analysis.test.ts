@@ -26,6 +26,7 @@ it("rechecks the published canonical record before touching any job cache", asyn
     { libraryType: { name: "Mobile" }, location: { lat: 51, lng: 0 } },
     { libraryType: { name: "Digital" }, location: { lat: 51, lng: 0 } },
     { operationalStatus: "permanently_closed", location: { lat: 51, lng: 0 } },
+    { operationalStatus: "temporarily_closed", location: { lat: 51, lng: 0 } },
     { location: null },
     { location: { lat: 100, lng: 0 } },
   ]) {
@@ -36,6 +37,57 @@ it("rechecks the published canonical record before touching any job cache", asyn
   }
   expect(database).not.toHaveBeenCalled()
 })
+
+it.each([
+  ["CA", { lat: 51.64139, lng: -121.29562 }],
+  ["MX", { lat: 21.85783, lng: -102.25617 }],
+])(
+  "keeps an imported %s library usable without inventing Reach coverage or queuing work",
+  async (iso2, location) => {
+    const database = vi.fn()
+    const strapi = {
+      documents: vi.fn(() => ({
+        findOne: vi.fn().mockResolvedValue({
+          libraryType: { name: "Public" },
+          operationalStatus: "unknown",
+          country: { iso2 },
+          location,
+        }),
+      })),
+      db: { connection: database },
+    }
+    vi.stubEnv("ANALYSIS_SERVICE_URL", "http://analysis.test")
+    vi.stubEnv("ANALYSIS_SERVICE_TOKEN", "test-token")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json([
+          {
+            id: "uk-v1",
+            countries: ["GB-ENG", "GB-WLS", "GB-SCT"],
+            originBounds: [-9, 49, 3, 61],
+          },
+        ])
+      )
+    )
+
+    const response = await requestAtlasReach(
+      strapi,
+      request,
+      "a".repeat(64),
+      20
+    )
+    expect(response.status).toBe(200)
+    expect(response.body).toMatchObject({
+      libraryId: "one",
+      state: "unsupported",
+      message:
+        "Routing and population coverage is not installed for this Library.",
+    })
+    expect(response.body).not.toHaveProperty("contours")
+    expect(database).not.toHaveBeenCalled()
+  }
+)
 it("does not admit arbitrary coordinates or unsupported countries to the compute queue", async () => {
   const findOne = vi.fn().mockResolvedValue({
     libraryType: { name: "Public" },

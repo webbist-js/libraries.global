@@ -447,7 +447,8 @@ export function AccessData({
           </p>
           <p className="m-0">
             Counts follow your Filters, chosen library types and enabled
-            accessibility selection. Planned libraries and permanent closures
+            accessibility selection. Only published records with usable map
+            coordinates are counted. Planned libraries and permanent closures
             are excluded. Each mapped mobile service counts once at its depot,
             never once per stop.
           </p>

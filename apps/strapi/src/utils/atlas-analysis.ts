@@ -74,7 +74,9 @@ export async function requestAtlasReach(
   const coordinate = library.location as { lat: number; lng: number } | null
   if (
     ["Mobile", "Digital"].includes(library.libraryType?.name) ||
-    ["permanently_closed", "planned"].includes(library.operationalStatus) ||
+    ["permanently_closed", "temporarily_closed", "planned"].includes(
+      library.operationalStatus
+    ) ||
     !coordinate ||
     !Number.isFinite(coordinate.lat) ||
     !Number.isFinite(coordinate.lng) ||

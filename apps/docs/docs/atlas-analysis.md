@@ -71,6 +71,9 @@ The 2020 surface is not silently adjusted to the 2024 administrative estimates. 
 
 ## Runtime and storage
 
+See [Where Atlas data lives](atlas-data-storage.md) for the geographic schema
+fields, durable job tables, prepared files and cache responsibilities.
+
 ```mermaid
 flowchart LR
   Sources[Versioned source feeds] --> Prepare[Finite preparation jobs]
@@ -138,6 +141,10 @@ area picker and a resident grid. Automatic detail moves from country averages
 to local areas at zoom 6, then to the installed grid at zoom 9. A selected area
 fits the map to its boundary. The analysis panel owns these controls; library
 filters do not change the underlying population.
+
+Automatic detail follows the map. Its global area picker includes countries
+without installed local profiles; the separate supported-country selector appears
+only when choosing local or grid detail explicitly.
 
 The current administrative profiles cover countries worldwide, 361 UK districts,
 48 English county reporting groups, Sweden's 290 municipalities and 21 counties,

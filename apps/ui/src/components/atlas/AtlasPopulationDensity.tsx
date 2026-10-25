@@ -122,7 +122,7 @@ export function AtlasPopulationDensityControls({
           ]}
         />
       </label>
-      {level !== "countries" && countries && onCountry ? (
+      {level !== "countries" && level !== "auto" && countries && onCountry ? (
         <label className="flex flex-col gap-2 text-xs font-semibold text-(--t-ink-dim)">
           {context("country")}
           <SelectField
@@ -220,7 +220,7 @@ export function AtlasPopulationDensityAnalysis({
           />
           {controls ? (
             <AtlasInspectSettings
-              summary={`${controls.resolvedLabel ?? controls.level} · ${controls.country ?? ""}`}
+              summary={controls.resolvedLabel ?? controls.level}
             >
               <AtlasPopulationDensityControls
                 {...controls}

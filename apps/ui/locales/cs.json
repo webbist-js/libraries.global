@@ -188,7 +188,7 @@
     "exportGeojson": "Export GeoJSON",
     "exportUnavailable": "Export není dostupný. Zkuste to znovu.",
     "reachUnroutable": "K poloze této knihovny na mapě se nepodařilo najít spolehlivé pěší ani cyklistické trasy.",
-    "reachUnsupported": "Reach pro tuto knihovnu zatím není dostupný. Podporujeme knihovny s pevnou adresou v Anglii, Walesu, Skotsku a Severním Irsku, pokud jsou dostupná data. Plánované a trvale zavřené knihovny jsou vyloučeny.",
+    "reachUnsupported": "Reach pro tuto knihovnu zatím není dostupný. Podporujeme knihovny s pevnou adresou v Anglii, Walesu, Skotsku a Severním Irsku, pokud jsou dostupná data. Plánované, dočasně i trvale zavřené knihovny jsou vyloučeny.",
     "openReach": "Otevřít dostupnost v Atlasu",
     "reachAvailability": "Prozkoumejte pěší a cyklistické cesty ke knihovnám ve Spojeném království.",
     "reachAccessMessage": "Pro a Team zahrnují analýzu dostupnosti. Údaje o knihovnách zůstávají zdarma.",
@@ -3377,7 +3377,9 @@
       },
       "nearby": {
         "title": "Knihovny v okolí",
-        "description": "V indexu zatím nejsou uvedeny další knihovny v okolí."
+        "description": "V indexu zatím nejsou uvedeny další knihovny v okolí.",
+        "locationDescription": "Doplňte polohu této knihovny na mapě, aby bylo možné najít knihovny v okolí.",
+        "locationAction": "Doplnit polohu"
       },
       "admission": {
         "title": "Vstup a členství",

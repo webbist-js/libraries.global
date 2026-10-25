@@ -178,9 +178,9 @@ export function AtlasPerCapitaControls({
         </div>
       </fieldset>
       <p className="m-0 text-xs leading-relaxed" style={{ color: T.ink.dim }}>
-        Each mapped mobile service counts once at its depot, never once per
-        stop. Also follows your Filters. Planned libraries and permanent
-        closures are excluded.
+        Counts use published records with usable map pins. Each mobile service
+        counts once at its depot, never once per stop. Also follows your
+        Filters. Planned libraries and permanent closures are excluded.
       </p>
       {showOpacity ? (
         <label className="flex flex-col gap-2 font-semibold">
