@@ -10,6 +10,8 @@ ingests/
   australia/   Historical public libraries plus Queensland's 2026 directory
   france/      Culture ministry public-library addresses
   czechia/     National Library CADR directory
+  mexico/      SIC National Network of Public Libraries (all 32 states)
+  canada/      Statistics Canada ODCAF library subset (historical, partial coverage)
   usa/         states.ts (every US ingest), plus one folder per dataset
     imls-pls/
 ```
@@ -32,6 +34,8 @@ pnpm ingest --dataset=au-public-libraries --check-cms
 pnpm ingest --dataset=slq-directory --check-cms
 pnpm ingest --dataset=fr-culture-libraries --check-cms
 pnpm ingest --dataset=nkp-cadr --check-cms
+pnpm ingest --dataset=mx-sic-rnbp --check-cms
+pnpm ingest --dataset=ca-statcan-odcaf --check-cms
 
 # Existing adapters retain their own flags and mapping rules
 pnpm ingest --dataset=imls-pls --state=NY
@@ -41,7 +45,7 @@ pnpm ingest --dataset=gazetteer --country=CH
 
 Finland and the [Scandinavian adapters](nordics/README.md) run the full sequence through `_shared/execute.ts`: snapshot → validate geography and population → map every Library → compare with the CMS → create missing place drafts → enrich population → create missing Library drafts. The existing adapters are dispatched by the same runner; their write loops have not been migrated.
 
-Australia, France and Czechia use `_shared/directory.ts` when the existing place hierarchy is sufficient. It validates country and region parents, quarantines conflicting area assignments and reuses the same source identities and draft writer. These directories create no geographic places and change no population data. Each adapter README records the source vintage, licence, omissions and known conflicts.
+Australia, France, Czechia, [Mexico](mexico/sic-rnbp/README.md) and [Canada](canada/statcan-odcaf/README.md) use `_shared/directory.ts` when the existing place hierarchy is sufficient. It validates country and region parents, quarantines conflicting area assignments and reuses the same source identities and draft writer. Canada assigns provinces/territories only because its census subdivisions do not establish Atlas Areas. Its 2020 source is an incomplete national baseline; reports list coverage gaps and exclude archive/system records. Mexico covers the SIC public-library network, with explicit state aliases and municipality matching. These directories create no geographic places and change no population data. Each adapter README records the source vintage, licence, omissions and known conflicts.
 
 The shared helpers cover cached JSON snapshots with request metadata and SHA-256 checksums, complete paginated downloads, duplicate and slug checks, checkpoints after each Library write, and population storage on explicitly matched geographic documents. Existing Source Records are skipped, including when their Libraries have been edited by contributors. A failed create stops the run: re-running reconciles with the CMS instead of retrying a request that may already have committed. A Dataset lock prevents concurrent writes from the same Dataset; run the three Wikidata countries sequentially.
 

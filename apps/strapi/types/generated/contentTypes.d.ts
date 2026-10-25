@@ -2833,6 +2833,50 @@ export interface ApiLibraryChangeLibraryChange
   }
 }
 
+export interface ApiLibraryNetworkLibraryNetwork
+  extends Struct.CollectionTypeSchema {
+  collectionName: "library_networks"
+  info: {
+    description: "A sourced institutional grouping, independent of Team accounts."
+    displayName: "Library Network"
+    pluralName: "library-networks"
+    singularName: "library-network"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  attributes: {
+    countries: Schema.Attribute.Relation<"manyToMany", "api::country.country">
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    kind: Schema.Attribute.Enumeration<
+      ["library_service", "university_system", "consortium"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"library_service">
+    lastVerifiedAt: Schema.Attribute.DateTime
+    libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::library-network.library-network"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
+    sourceKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    sourceUrl: Schema.Attribute.String
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    website: Schema.Attribute.String
+  }
+}
+
 export interface ApiLibraryNoticeLibraryNotice
   extends Struct.CollectionTypeSchema {
   collectionName: "library_notices"
@@ -3268,6 +3312,15 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
         }
       }>
     nearestStation: Schema.Attribute.String
+    networks: Schema.Attribute.Relation<
+      "manyToMany",
+      "api::library-network.library-network"
+    > &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }>
     openedYear: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -7451,6 +7504,7 @@ declare module "@strapi/strapi" {
       "api::legal-document.legal-document": ApiLegalDocumentLegalDocument
       "api::library-affiliation.library-affiliation": ApiLibraryAffiliationLibraryAffiliation
       "api::library-change.library-change": ApiLibraryChangeLibraryChange
+      "api::library-network.library-network": ApiLibraryNetworkLibraryNetwork
       "api::library-notice.library-notice": ApiLibraryNoticeLibraryNotice
       "api::library-type.library-type": ApiLibraryTypeLibraryType
       "api::library.library": ApiLibraryLibrary
