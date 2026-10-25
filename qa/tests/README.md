@@ -2,6 +2,10 @@
 
 ## 🐞 Automated Testing Suite
 
+The [security regression checklist](security/README.md) covers authority, publication, uploads and billing invariants. Keep actual acceptance evidence private.
+
+Follow the [browser acceptance guide](playwright/README.md) for fixture and resource requirements. Reuse existing local services, run checks sequentially with bounded Node memory and pass `--workers=1` to Playwright. The smoke project starts a frontend; use CI or an available single-server slot. Interactive/watch modes are for explicitly requested interactive work, not routine checks.
+
 This directory contains an automated testing suite designed to ensure quality across functionality, accessibility, performance, and SEO.
 
 It can include different testing frameworks and tools depending on project needs, for example:
