@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { toLatLng } from "@/components/library/library-page.helpers"
 import type { libraryPresentation } from "@/components/library/library-presentation"
 import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryEventsEmptyAction } from "@/components/library/LibraryEventsEmptyAction"
@@ -22,6 +23,7 @@ export function LibraryMissingDetails({
 }) {
   const t = useTranslations("libraryPage")
   if (!missing.length) return null
+  const needsLocation = !toLatLng(library.location)
   const categories = {
     about: "Collections",
     transport: "Address or location",
@@ -54,7 +56,9 @@ export function LibraryMissingDetails({
                 className="m-0 mt-1 text-sm leading-relaxed"
                 style={{ color: T.ink.dim }}
               >
-                {t(`missing.${key}.description`)}
+                {key === "nearby" && needsLocation
+                  ? t("missing.nearby.locationDescription")
+                  : t(`missing.${key}.description`)}
               </p>
             </div>
             {key === "events" ? (
@@ -63,6 +67,13 @@ export function LibraryMissingDetails({
                 librarySlug={library.slug ?? ""}
                 libraryName={library.name ?? ""}
               />
+            ) : key === "nearby" && needsLocation ? (
+              <OpenCorrectionLink
+                category="Address or location"
+                className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+              >
+                {t("missing.nearby.locationAction")}
+              </OpenCorrectionLink>
             ) : key === "nearby" ? (
               <GlobalLink
                 href={addHref}
