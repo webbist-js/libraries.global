@@ -188,7 +188,7 @@
     "exportGeojson": "Exporter en GeoJSON",
     "exportUnavailable": "Export indisponible. Réessayez.",
     "reachUnroutable": "Nous n’avons pas trouvé d’itinéraires fiables à pied ou à vélo vers la position de cette bibliothèque sur la carte.",
-    "reachUnsupported": "Reach n’est pas encore disponible pour cette bibliothèque. Les bibliothèques fixes en Angleterre, au pays de Galles, en Écosse et en Irlande du Nord sont prises en charge lorsque les données sont disponibles. Les bibliothèques prévues ou fermées définitivement sont exclues.",
+    "reachUnsupported": "Reach n’est pas encore disponible pour cette bibliothèque. Les bibliothèques fixes en Angleterre, au pays de Galles, en Écosse et en Irlande du Nord sont prises en charge lorsque les données sont disponibles. Les bibliothèques prévues, fermées temporairement ou définitivement sont exclues.",
     "openReach": "Ouvrir cette analyse dans l’Atlas",
     "reachAvailability": "Explorez les trajets à pied et à vélo vers les bibliothèques du Royaume-Uni.",
     "reachAccessMessage": "Pro et Team incluent cette analyse. Les informations sur les bibliothèques restent gratuites.",

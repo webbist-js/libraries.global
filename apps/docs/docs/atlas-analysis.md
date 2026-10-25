@@ -71,6 +71,9 @@ The 2020 surface is not silently adjusted to the 2024 administrative estimates. 
 
 ## Runtime and storage
 
+See [Where Atlas data lives](atlas-data-storage.md) for the geographic schema
+fields, durable job tables, prepared files and cache responsibilities.
+
 ```mermaid
 flowchart LR
   Sources[Versioned source feeds] --> Prepare[Finite preparation jobs]
