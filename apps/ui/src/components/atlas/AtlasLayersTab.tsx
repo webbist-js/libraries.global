@@ -21,7 +21,12 @@ import {
 } from "@/components/atlas/AtlasPerCapita"
 import { T } from "@/lib/design-tokens"
 
-const ABOUT: Record<LayerId, string> = {
+import {
+  AtlasPopulationDensityControls,
+  type PopulationControlsProps,
+} from "./AtlasPopulationDensity"
+
+export const ABOUT: Record<LayerId, string> = {
   pins: "Library locations recorded in the index. The library-type key in Filters controls which types are shown.",
   density:
     "Where libraries cluster. Shown as a heatmap when zoomed out; individual libraries take over as you zoom in.",
@@ -39,7 +44,7 @@ const ABOUT: Record<LayerId, string> = {
   founded:
     "Colour libraries by recorded founding year. A founding date is not a complete history of openings, moves and closures; unknown dates stay visible separately.",
   reach:
-    "Estimate walking or cycling times along routes to recorded libraries, with a chosen time limit. Population within overlapping catchments would be counted once. Travel times are estimates, not guarantees of a step-free route.",
+    "Choose one library or a library service to estimate the residents within a 5, 10, 15 or 30-minute walk or bike ride. A service uses its mapped reporting area automatically; overlapping catchments count once. Atlas filters apply. Missing routes or population data remain unknown, and routes are not checked for step-free access.",
   coverageGaps:
     "Estimate the number and share of residents beyond a chosen travel time to a recorded library. This needs routing and gridded population data with source years shown. An incomplete library index can overstate gaps; missing records do not prove an area lacks a library.",
   serviceCoverage:
@@ -47,9 +52,11 @@ const ABOUT: Record<LayerId, string> = {
   mobile:
     "Stops and estimated driving routes in timetable order for the selected visit period. Road routes use OpenStreetMap; they may differ from the operator's route. Stops stay visible if routing is unavailable.",
   population:
-    "Resident population density from the Global Human Settlement Layer.",
+    "Compare official population averages across supported reporting areas, or explore the 100 m resident grid within them. Automatic detail follows map zoom. Source years stay visible. Library filters do not change population, and the shading can stay beneath Reach.",
   deprivation:
-    "Area deprivation indices for the UK nations (IMD, SIMD, WIMD), with source dates. Indices use different methods and should be compared within the same nation and edition.",
+    "Small-area deprivation in England (IMD 2025), Wales (WIMD 2025), Scotland (SIMD 2020v2) and Northern Ireland (NIMDM 2017). Compare areas within the same nation and edition. Show this beneath Reach to explore access in context; ranks do not measure individual residents or library use.",
+  carAccess:
+    "Share of households with no car or van available in Census 2021, for England and Wales. Compare walking and cycling reach with household transport constraints. These are household figures, not resident counts.",
   transit:
     "Public transport stops and lines from OpenStreetMap and GTFS feeds.",
   schools: "Schools from government registers.",
@@ -71,10 +78,16 @@ export function AtlasLayersTab({
   mobileOpacity = 1,
   onMobileOpacity,
   perCapita,
+  population,
+  onContextAnalysis,
   settings: controlledSettings,
   onSettings,
   onEventsFilter,
+  onInspect,
+  summaries,
 }: {
+  readonly onInspect?: (id: LayerId) => void
+  readonly summaries?: Partial<Record<LayerId, string>>
   readonly tier: Tier
   readonly active: LayerId[]
   readonly onAccessibilityAnalysis: () => void
@@ -90,6 +103,10 @@ export function AtlasLayersTab({
   readonly mobileOpacity?: number
   readonly onMobileOpacity?: (value: number) => void
   readonly perCapita?: LibraryAccessControlsProps
+  readonly population?: PopulationControlsProps & {
+    onAnalysis: () => void
+  }
+  readonly onContextAnalysis?: (id: "deprivation" | "carAccess") => void
   readonly settings?: LayerId | null
   readonly onSettings?: (layer: LayerId | null) => void
   readonly onEventsFilter?: () => void
@@ -105,6 +122,9 @@ export function AtlasLayersTab({
   const changeSettings = onSettings ?? setLocalSettings
   const configure = (id: LayerId) => {
     if (id === "access") return onAccessibilityAnalysis()
+    if (id === "population" && population) return population.onAnalysis()
+    if (id === "deprivation" || id === "carAccess")
+      return onContextAnalysis?.(id)
     changeSettings(settings === id ? null : id)
   }
   const toggle = (def: LayerDef) => {
@@ -170,21 +190,32 @@ export function AtlasLayersTab({
         ) : (
           <h4 className="m-0 text-sm font-bold">{configured.name} settings</h4>
         )}
-        <button
-          type="button"
-          onClick={() => changeSettings(null)}
-          aria-label={tUi("close_layer_settings")}
-          className="flex size-11 items-center justify-center rounded-full border"
-          style={{ borderColor: T.border.hi, color: T.accent.primary }}
-        >
-          <Icon
-            name={configured.id === "perCapita" ? "settings" : "x"}
-            size={17}
-          />
-        </button>
+        {configured.id !== "perCapita" ? (
+          <button
+            type="button"
+            onClick={() => changeSettings(null)}
+            aria-label={tUi("close_layer_settings")}
+            className="flex size-11 items-center justify-center rounded-full border"
+            style={{ borderColor: T.border.hi, color: T.accent.primary }}
+          >
+            <Icon name="x" size={17} />
+          </button>
+        ) : null}
       </div>
       {configured.id === "perCapita" && perCapita ? (
         <AtlasPerCapitaControls {...perCapita} showAnalysisLink={false} />
+      ) : null}
+      {configured.id === "population" && population ? (
+        <>
+          <AtlasPopulationDensityControls {...population} />
+          <button
+            type="button"
+            onClick={() => population.onAnalysis()}
+            className="min-h-11 font-semibold underline"
+          >
+            Analyse
+          </button>
+        </>
       ) : null}
       {configured.exclusive === "heat" ? (
         <label className="flex flex-col gap-2 text-sm">
@@ -269,7 +300,7 @@ export function AtlasLayersTab({
   ) : null
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-7">
       <div className="flex items-center justify-between gap-2">
         <h2
           className="m-0 text-[30px] leading-tight"
@@ -290,141 +321,65 @@ export function AtlasLayersTab({
             className="min-h-11 text-sm font-semibold underline"
             style={{ color: T.accent.primary }}
           >
-            Clear layers
+            Turn all off
           </button>
         ) : null}
       </div>
-      {active.length ? (
-        <section aria-labelledby="atlas-active-layers">
-          <h3
-            id="atlas-active-layers"
-            className="m-0 mb-2 text-sm font-bold"
-            style={{ color: T.ink.dim }}
-          >
-            Active layers
-          </h3>
-          <div
-            className="rounded-[20px] border px-2"
-            style={{ borderColor: T.border.hi, background: T.bg.surface }}
-          >
-            {active.map((id) => {
-              const def = layerDef(id),
-                locationRequirement =
-                  id === "pins" ? pinRequirement : undefined,
-                configurable =
-                  id === "access" ||
-                  id === "perCapita" ||
-                  id === "mobile" ||
-                  def.exclusive === "heat"
-
-              return (
-                <div
-                  key={id}
-                  className="flex min-h-14 items-center gap-2 border-b px-2 py-1 text-sm last:border-b-0"
-                  style={{ borderColor: T.border.divider }}
-                >
-                  <Icon name="check" size={15} color={T.accent.primary} />
-                  <span className="min-w-0 flex-1 font-semibold">
-                    {def.name}
-                  </span>
-                  {id === "perCapita" && perCapita ? (
-                    <button
-                      type="button"
-                      onClick={handleOpenAnalysis}
-                      className="min-h-9 rounded-full px-3 text-xs font-semibold"
-                      style={{ background: T.accent.primary, color: "#fff" }}
-                    >
-                      Analyse
-                    </button>
-                  ) : null}
-                  {configurable ? (
-                    <button
-                      type="button"
-                      onClick={() => configure(id)}
-                      aria-label={
-                        id === "access"
-                          ? accessibilityAnalysisOpen
-                            ? "Close accessibility analysis"
-                            : "Open accessibility analysis"
-                          : `Configure ${def.name}`
-                      }
-                      aria-expanded={
-                        id === "access"
-                          ? accessibilityAnalysisOpen
-                          : settings === id
-                      }
-                      aria-controls={
-                        id === "access"
-                          ? "atlas-analysis-panel"
-                          : "atlas-layer-settings"
-                      }
-                      className={
-                        id === "access"
-                          ? "min-h-9 shrink-0 rounded-full border bg-white px-3 text-xs font-semibold"
-                          : "flex size-9 shrink-0 items-center justify-center rounded-full border bg-white"
-                      }
-                      style={{ borderColor: T.border.hi }}
-                    >
-                      {id === "access" ? (
-                        "Features"
-                      ) : (
-                        <Icon
-                          name={id === "perCapita" ? "settings" : "filter"}
-                          size={17}
-                        />
-                      )}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => onToggle(id)}
-                    aria-label={`Disable ${def.name}`}
-                    aria-describedby={
-                      locationRequirement ? "atlas-pins-required" : undefined
-                    }
-                    disabled={Boolean(locationRequirement)}
-                    title={locationRequirement}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                  >
-                    <Icon name={locationRequirement ? "lock" : "x"} size={16} />
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      ) : null}
       {LAYER_GROUPS.map((group) => {
         const definitions = LAYERS.filter((layer) => layer.group === group.id)
         if (!definitions.length) return null
 
         return (
           <section key={group.id} aria-labelledby={`atlas-layers-${group.id}`}>
-            <div className="mb-2 flex items-start justify-between gap-2">
+            <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 border-b border-(--t-border-line) pb-2.5">
               <h3
                 id={`atlas-layers-${group.id}`}
-                className="m-0 text-sm font-bold"
+                className="m-0 text-xs leading-5 font-bold tracking-[0.055em] uppercase"
                 style={{ color: T.ink.dim }}
               >
                 {group.name}
               </h3>
-              {group.id === "coverage" ? (
+              {group.id === "characteristics" ||
+              group.id === "patterns" ||
+              group.id === "coverage" ||
+              group.id === "reference" ? (
                 <span
-                  className="text-right text-xs"
+                  className="max-w-[145px] text-xs leading-5"
                   style={{ color: T.ink.dim }}
                 >
-                  One area layer at a time
+                  {group.id === "characteristics"
+                    ? "One pin style at a time"
+                    : group.id === "patterns"
+                      ? "One heat layer at a time"
+                      : group.id === "reference"
+                        ? "One background layer at a time"
+                        : "Reach can overlay one background layer"}
                 </span>
               ) : null}
             </div>
-            <div
-              className="overflow-hidden rounded-[20px] border"
-              style={{ borderColor: T.border.hi, background: "#fff" }}
-            >
+            <div>
               {definitions.map((def) => (
                 <LayerRow
                   key={def.id}
                   def={def}
+                  summary={summaries?.[def.id]}
+                  onOpen={
+                    onInspect &&
+                    active.includes(def.id) &&
+                    [
+                      "reach",
+                      "perCapita",
+                      "population",
+                      "deprivation",
+                      "carAccess",
+                      "access",
+                      "mobile",
+                      "density",
+                      "events",
+                    ].includes(def.id)
+                      ? () => onInspect(def.id)
+                      : undefined
+                  }
                   access={layerAccess(def, tier)}
                   checked={def.ready && active.includes(def.id)}
                   pinRequirement={
@@ -440,8 +395,12 @@ export function AtlasLayersTab({
                   }
                   analysisOpen={accessibilityAnalysisOpen}
                   onConfigure={
+                    !onInspect &&
                     active.includes(def.id) &&
                     (def.id === "perCapita" ||
+                      def.id === "deprivation" ||
+                      def.id === "carAccess" ||
+                      def.id === "population" ||
                       def.id === "mobile" ||
                       def.exclusive === "heat")
                       ? () => configure(def.id)
@@ -457,8 +416,8 @@ export function AtlasLayersTab({
               <button
                 type="button"
                 onClick={onEventsFilter}
-                className="mt-4 flex min-h-20 w-full items-center justify-between gap-3 rounded-[20px] border p-4 text-left"
-                style={{ borderColor: T.border.hi }}
+                className="mt-1 flex min-h-16 w-full items-center justify-between gap-3 border-t py-3 text-left"
+                style={{ borderColor: T.border.divider }}
               >
                 <span className="text-sm font-semibold">
                   Events and activities
@@ -470,8 +429,8 @@ export function AtlasLayersTab({
                   </small>
                 </span>
                 <span
-                  className="shrink-0 rounded-full border px-3 py-2 text-xs font-semibold"
-                  style={{ color: T.accent.primary, borderColor: T.border.hi }}
+                  className="shrink-0 px-1 text-xs font-semibold underline underline-offset-4"
+                  style={{ color: T.accent.primary }}
                 >
                   {tUi("filters")} <span aria-hidden="true">→</span>
                 </span>
@@ -527,6 +486,8 @@ export function AtlasLayersTab({
 
 function LayerRow({
   def,
+  summary,
+  onOpen,
   access,
   checked,
   onToggle,
@@ -537,6 +498,8 @@ function LayerRow({
   settingsOpen,
   children,
 }: {
+  readonly summary?: string
+  readonly onOpen?: () => void
   readonly def: LayerDef
   readonly access: LayerAccess
   readonly checked: boolean
@@ -551,8 +514,29 @@ function LayerRow({
   const tUi = useUiTranslations("ui")
 
   const [about, setAbout] = useState(false)
-  const expandable =
-    !def.ready || def.id === "perCapita" || Boolean(onConfigure)
+  const expandable = !pinRequirement
+  const label = (
+    <span className="block min-w-0 flex-1">
+      <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 font-semibold">
+        <span>{def.name}</span>
+        {def.tier === "pro" ? <ProChip locked={false} soft /> : null}
+        {def.tier === "free" && def.ready ? (
+          <MutedChip>{tUi("account")}</MutedChip>
+        ) : null}
+        {!def.ready ? (
+          <span aria-label={`${def.name} availability`}>
+            <MutedChip>{tUi("coming_soon")}</MutedChip>
+          </span>
+        ) : null}
+      </span>
+      <span
+        id={pinRequirement ? "atlas-pins-required" : undefined}
+        className="mt-0.5 block text-xs leading-5 font-normal text-(--t-ink-dim)"
+      >
+        {pinRequirement ?? summary ?? def.sub}
+      </span>
+    </span>
+  )
 
   return (
     <div
@@ -560,7 +544,7 @@ function LayerRow({
       className="border-b last:border-b-0"
       style={{ borderColor: T.border.divider }}
     >
-      <div className="flex items-center gap-3 px-3 py-3">
+      <div className="flex items-center gap-2.5 py-3">
         <Switch
           checked={checked}
           onChange={onToggle}
@@ -570,65 +554,76 @@ function LayerRow({
           disabled={access === "soon" || Boolean(pinRequirement)}
           descriptionId={pinRequirement ? "atlas-pins-required" : undefined}
         />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
-            <span>{def.name}</span>
-            {def.tier === "pro" ? <ProChip locked={false} soft /> : null}
-          </div>
-          <p
-            id={pinRequirement ? "atlas-pins-required" : undefined}
-            className="mt-1 mb-0 text-xs leading-relaxed"
-            style={{ color: T.ink.dim }}
+        {onOpen ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={`Open ${def.name}`}
+            title={`Open ${def.name}`}
+            className="group flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl py-1 text-left"
           >
-            {pinRequirement ?? def.sub}
-          </p>
-          {!def.ready ? (
-            <div
-              className="mt-2 flex flex-wrap items-center gap-1.5"
-              aria-label={`${def.name} availability`}
+            {label}
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--t-accent-chip) text-(--t-accent-primary) group-hover:bg-(--t-bg-selected)">
+              <Icon name="panel" size={17} />
+            </span>
+          </button>
+        ) : (
+          label
+        )}
+        {pinRequirement ? (
+          <span
+            title={pinRequirement}
+            className="flex h-11 w-8 shrink-0 items-center justify-center text-(--t-ink-low)"
+          >
+            <Icon name="lock" size={15} />
+          </span>
+        ) : null}
+        <div className="flex shrink-0 items-center gap-0.5">
+          {expandable ? (
+            <button
+              type="button"
+              onClick={onConfigure ?? (() => setAbout(!about))}
+              aria-label={
+                onConfigure ? `Configure ${def.name}` : `About ${def.name}`
+              }
+              aria-expanded={Boolean(settingsOpen || about)}
+              aria-controls={
+                onConfigure
+                  ? "atlas-layer-settings"
+                  : `atlas-layer-about-${def.id}`
+              }
+              className="flex h-11 w-7 shrink-0 items-center justify-center rounded-full hover:bg-(--t-bg-surface)"
+              style={{ color: T.ink.dim }}
             >
-              <MutedChip>{tUi("coming_soon")}</MutedChip>
-            </div>
+              <Icon
+                name="chevD"
+                size={17}
+                className={settingsOpen || about ? "rotate-180" : ""}
+              />
+            </button>
+          ) : null}
+          {onAnalysis ? (
+            <button
+              type="button"
+              aria-label={
+                analysisOpen
+                  ? "Close accessibility analysis"
+                  : "Open accessibility analysis"
+              }
+              aria-expanded={analysisOpen}
+              aria-controls="atlas-analysis-panel"
+              onClick={onAnalysis}
+              className="flex h-11 w-8 shrink-0 items-center justify-center rounded-full hover:bg-(--t-bg-surface)"
+              style={{ color: T.ink.dim }}
+            >
+              <Icon name={analysisOpen ? "minus" : "plus"} size={17} />
+            </button>
           ) : null}
         </div>
-        {expandable ? (
-          <button
-            type="button"
-            onClick={onConfigure ?? (() => setAbout(!about))}
-            aria-label={
-              onConfigure ? `Configure ${def.name}` : `About ${def.name}`
-            }
-            aria-expanded={Boolean(settingsOpen || about)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full"
-            style={{ color: T.ink.dim }}
-          >
-            <Icon
-              name="chevD"
-              size={17}
-              className={settingsOpen || about ? "rotate-180" : ""}
-            />
-          </button>
-        ) : null}
-        {onAnalysis ? (
-          <button
-            type="button"
-            aria-label={
-              analysisOpen
-                ? "Close accessibility analysis"
-                : "Open accessibility analysis"
-            }
-            aria-expanded={analysisOpen}
-            aria-controls="atlas-analysis-panel"
-            onClick={onAnalysis}
-            className="flex size-9 shrink-0 items-center justify-center rounded-full"
-            style={{ color: T.ink.dim }}
-          >
-            <Icon name={analysisOpen ? "minus" : "plus"} size={17} />
-          </button>
-        ) : null}
       </div>
       {about && !settingsOpen ? (
         <p
+          id={`atlas-layer-about-${def.id}`}
           className="m-0 border-t px-4 py-3 text-sm leading-relaxed"
           style={{
             borderColor: T.border.divider,

@@ -202,6 +202,7 @@ export function useAtlasData(
   const [selection, setSelection] = useState<{
     key: string
     library: AtlasLibrary | null
+    revision: number
     error?: string
   } | null>(null)
   useEffect(() => {
@@ -209,7 +210,12 @@ export function useAtlasData(
     const controller = new AbortController()
     fetch(
       `/api/atlas/library?${new URLSearchParams({ key: selectedId, locale: document.documentElement.lang || "en" })}`,
-      { signal: controller.signal }
+      {
+        signal: AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(15000),
+        ]),
+      }
     )
       .then(async (r) => {
         if (!r.ok)
@@ -221,11 +227,19 @@ export function useAtlasData(
 
         return r.json()
       })
-      .then((data) => setSelection({ key: selectedId, library: data.library }))
+      .then((data) => {
+        if (!controller.signal.aborted)
+          setSelection({
+            key: selectedId,
+            revision: refresh,
+            library: data.library,
+          })
+      })
       .catch((reason) => {
         if (!controller.signal.aborted)
           setSelection({
             key: selectedId,
+            revision: refresh,
             library: null,
             error: reason.message,
           })
@@ -292,14 +306,28 @@ export function useAtlasData(
       error ??
       counts.error ??
       search.error ??
-      (selection?.key === selectedId ? selection.error : undefined),
+      (selection?.key === selectedId && selection.revision === refresh
+        ? selection.error
+        : undefined),
     counts: counts.value,
     suggestions: suggestions.value,
     searchLibraries: (search.value?.libraries ?? []).map(atlasListLibrary),
     places,
     listed,
     closures,
-    selected: selection?.key === selectedId ? selection.library : null,
+    selected:
+      selection?.key === selectedId && selection.revision === refresh
+        ? selection.library
+        : null,
+    selectionLoading: Boolean(
+      enabled &&
+      selectedId &&
+      (selection?.key !== selectedId || selection.revision !== refresh)
+    ),
+    selectionError:
+      selection?.key === selectedId && selection.revision === refresh
+        ? selection.error
+        : undefined,
     fit,
     now,
     onFacilitySearch: (value: string) => {

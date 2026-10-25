@@ -129,7 +129,7 @@ export function AtlasBanner({
 
   return (
     <div
-      className="flex items-center gap-3 rounded-[18px] border px-4 py-3.5"
+      className="grid grid-cols-[20px_minmax(0,1fr)] items-start gap-3 rounded-[18px] border px-4 py-3.5 sm:flex sm:items-center"
       style={{
         background: danger ? "#F6E3DA" : "#fff",
         borderColor: danger ? "#E4BFAE" : T.border.hi,
@@ -149,7 +149,7 @@ export function AtlasBanner({
         <button
           type="button"
           onClick={action.onClick}
-          className="inline-flex h-9 shrink-0 items-center rounded-full border bg-white px-3.5 text-[14px] font-semibold"
+          className="col-start-2 inline-flex min-h-11 shrink-0 items-center justify-self-start rounded-full border bg-white px-3.5 text-[14px] font-semibold"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
           {action.label}

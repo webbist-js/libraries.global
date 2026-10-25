@@ -6,7 +6,7 @@ import type {
   AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 
 import {
   accessAreaInView,
@@ -26,12 +26,17 @@ import {
   AccessOverview,
   AccessExplore,
   AccessData,
+  AreaDetails,
 } from "@/components/atlas/AtlasAccessViews"
 import {
   AtlasAnalysisWorkspace,
   type AnalysisTab,
 } from "@/components/atlas/AtlasAnalysisWorkspace"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
+
+import { AtlasInspectSettings, AtlasInspectTools } from "./AtlasInspect"
+import { AtlasLoadingSkeleton } from "./AtlasLoadingSkeleton"
 
 export {
   accessAreaInView,
@@ -48,6 +53,9 @@ export function AtlasAccessAnalysis({
   onFit,
   onClose,
   onSettings,
+  settings,
+  opacity,
+  onOpacity,
   collapsed,
   onCollapse,
   error,
@@ -62,7 +70,10 @@ export function AtlasAccessAnalysis({
   readonly onSelect: (id: string) => void
   readonly onFit: (id: string) => void
   readonly onClose: () => void
-  readonly onSettings: () => void
+  readonly onSettings?: () => void
+  readonly settings?: ReactNode
+  readonly opacity?: number
+  readonly onOpacity?: (value: number) => void
   readonly collapsed: boolean
   readonly onCollapse: () => void
   readonly error?: string
@@ -157,89 +168,76 @@ export function AtlasAccessAnalysis({
       description={`${metric === "per100k" ? "Libraries per 100k people" : "People per library"} · ${areaKind}`}
       {...{ collapsed, onCollapse, onClose, onSettings }}
       tab={tab}
+      lead={
+        area && tab !== "explore" ? (
+          <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4">
+            <AreaDetails area={area} metric={metric} onFit={onFit} compact />
+          </div>
+        ) : null
+      }
+      tabs={[
+        { id: "overview", label: "Overview" },
+        { id: "explore", label: "Explore" },
+        { id: "compare", label: "Compare" },
+      ]}
       onTab={changeTab}
       context={
         response ? (
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-3 text-[14px]">
-              <label className="flex items-center gap-2 font-semibold">
-                Scope
-                <select
-                  aria-label={tUi("analysis_scope")}
-                  value={viewBounds ? analysisScope : "all"}
-                  onChange={(event) => {
-                    setAnalysisScope(event.target.value as "view" | "all")
-                    setPage(0)
-                  }}
-                  className="min-h-[44px] max-w-[165px] rounded-xl border bg-white px-2 text-[14px] font-normal"
-                  style={{ borderColor: T.border.hi }}
-                >
-                  <option value="view" disabled={!viewBounds}>
-                    In map view
-                  </option>
-                  <option value="all">All areas</option>
-                </select>
-              </label>
-              <span style={{ color: T.ink.dim }}>
-                {analysisAreas.length.toLocaleString()} {scopeKind}
-              </span>
-            </div>
-            {area && tab !== "compare" ? (
-              <div
-                aria-label={tUi("selected_area_context")}
-                className="flex items-center justify-between gap-2"
-              >
-                <button
-                  type="button"
-                  onClick={() => changeTab("explore")}
-                  className="min-h-9 min-w-0 text-left font-semibold underline"
-                  style={{ color: T.accent.primary }}
-                >
-                  {area.name}
-                </button>
-                <span className="shrink-0 font-semibold">
-                  {accessValue(area, metric)}
+          <AtlasInspectSettings
+            summary={`${metric === "per100k" ? "Per 100k residents" : "Residents per library"} · ${areaKind} · ${analysisScope === "view" ? "In map view" : "All areas"}`}
+          >
+            {settings}
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-3 text-[14px]">
+                <label className="flex items-center gap-2 font-semibold">
+                  Scope
+                  <SelectField
+                    label={tUi("analysis_scope")}
+                    value={viewBounds ? analysisScope : "all"}
+                    onValueChange={(value) => {
+                      setAnalysisScope(value as "view" | "all")
+                      setPage(0)
+                    }}
+                    options={[
+                      {
+                        value: "view",
+                        label: "In map view",
+                        disabled: !viewBounds,
+                      },
+                      { value: "all", label: "All areas" },
+                    ]}
+                  />
+                </label>
+                <span style={{ color: T.ink.dim }}>
+                  {analysisAreas.length.toLocaleString()} {scopeKind}
                 </span>
               </div>
-            ) : null}
-          </div>
+              {area && tab !== "compare" ? (
+                <div
+                  aria-label={tUi("selected_area_context")}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <button
+                    type="button"
+                    onClick={() => changeTab("explore")}
+                    className="min-h-9 min-w-0 text-left font-semibold underline"
+                    style={{ color: T.accent.primary }}
+                  >
+                    {area.name}
+                  </button>
+                  <span className="shrink-0 font-semibold">
+                    {accessValue(area, metric)}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+          </AtlasInspectSettings>
         ) : undefined
       }
       footer={
-        response && tab === "data" ? (
-          <button
-            type="button"
-            className="min-h-11 w-full rounded-full border bg-white px-3 text-sm font-semibold"
-            style={{ color: T.ink.base, borderColor: T.border.hi }}
-            onClick={() => {
-              const url = URL.createObjectURL(
-                new Blob(
-                  [
-                    "\uFEFF",
-                    libraryAccessCsv(
-                      { ...response, areas: analysisAreas },
-                      { kind: analysisScope, bounds: viewBounds }
-                    ),
-                  ],
-                  {
-                    type: "text/csv;charset=utf-8",
-                  }
-                )
-              )
-              const link = document.createElement("a")
-              link.href = url
-              link.download = `library-access-${response.level}-${response.baseline.year}.csv`
-              document.body.append(link)
-              link.click()
-              link.remove()
-              setTimeout(() => URL.revokeObjectURL(url), 1000)
-            }}
-          >
-            Download area comparison CSV
-          </button>
-        ) : response &&
-          tab === "compare" &&
-          rows.length > ACCESS_COMPARE_PREVIEW_SIZE ? (
+        response &&
+        tab === "compare" &&
+        rows.length > ACCESS_COMPARE_PREVIEW_SIZE ? (
           <AccessCompareFooter
             total={rows.length}
             {...{ showAllAreas, setShowAllAreas, currentPage, setPage }}
@@ -259,9 +257,7 @@ export function AtlasAccessAnalysis({
           </button>
         </div>
       ) : !response ? (
-        <p role="status" className="m-0">
-          Loading library access…
-        </p>
+        <AtlasLoadingSkeleton label="Loading library access…" />
       ) : (
         <>
           {tab === "overview" ? (
@@ -323,7 +319,43 @@ export function AtlasAccessAnalysis({
               }}
             />
           ) : null}
-          {tab === "data" ? <AccessData {...{ response, area }} /> : null}
+          <AtlasInspectTools
+            shading={opacity}
+            onShading={onOpacity}
+            about={<AccessData {...{ response, area }} />}
+            downloads={
+              <button
+                type="button"
+                className="min-h-12 w-full rounded-xl border bg-white px-4 py-3 text-left text-sm font-semibold hover:bg-(--t-bg-surface)"
+                style={{ color: T.ink.base, borderColor: T.border.hi }}
+                onClick={() => {
+                  const url = URL.createObjectURL(
+                    new Blob(
+                      [
+                        "\uFEFF",
+                        libraryAccessCsv(
+                          { ...response, areas: analysisAreas },
+                          { kind: analysisScope, bounds: viewBounds }
+                        ),
+                      ],
+                      {
+                        type: "text/csv;charset=utf-8",
+                      }
+                    )
+                  )
+                  const link = document.createElement("a")
+                  link.href = url
+                  link.download = `library-access-${response.level}-${response.baseline.year}.csv`
+                  document.body.append(link)
+                  link.click()
+                  link.remove()
+                  setTimeout(() => URL.revokeObjectURL(url), 1000)
+                }}
+              >
+                Download area comparison CSV
+              </button>
+            }
+          />
         </>
       )}
     </AtlasAnalysisWorkspace>

@@ -78,6 +78,7 @@ export type LibraryAccessControlsProps = {
   types: string[]
   onTypes: (types: string[]) => void
   onAnalysis: () => void
+  showOpacity?: boolean
   showAnalysisLink?: boolean
 }
 
@@ -93,6 +94,7 @@ export function AtlasPerCapitaControls({
   onTypes,
   onAnalysis,
   showAnalysisLink = true,
+  showOpacity = true,
 }: LibraryAccessControlsProps) {
   const tUi = useUiTranslations("ui")
 
@@ -180,21 +182,23 @@ export function AtlasPerCapitaControls({
         stop. Also follows your Filters. Planned libraries and permanent
         closures are excluded.
       </p>
-      <label className="flex flex-col gap-2 font-semibold">
-        <span className="flex justify-between">
-          Opacity <span>{Math.round(opacity * 100)}%</span>
-        </span>
-        <input
-          className="w-full accent-(--t-accent-primary)"
-          type="range"
-          min={10}
-          max={90}
-          step={5}
-          value={Math.round(opacity * 100)}
-          onChange={(event) => onOpacity(Number(event.target.value) / 100)}
-          aria-label={tUi("library_access_opacity")}
-        />
-      </label>
+      {showOpacity ? (
+        <label className="flex flex-col gap-2 font-semibold">
+          <span className="flex justify-between">
+            Opacity <span>{Math.round(opacity * 100)}%</span>
+          </span>
+          <input
+            className="w-full accent-(--t-accent-primary)"
+            type="range"
+            min={10}
+            max={90}
+            step={5}
+            value={Math.round(opacity * 100)}
+            onChange={(event) => onOpacity(Number(event.target.value) / 100)}
+            aria-label={tUi("library_access_opacity")}
+          />
+        </label>
+      ) : null}
       {showAnalysisLink ? (
         <button
           type="button"

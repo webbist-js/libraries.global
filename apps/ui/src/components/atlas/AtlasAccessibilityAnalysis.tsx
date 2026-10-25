@@ -17,6 +17,8 @@ import { AtlasAnalysisHeader } from "@/components/atlas/AtlasAnalysisHeader"
 import { useAtlasExport } from "@/components/atlas/AtlasExportButton"
 import { T } from "@/lib/design-tokens"
 
+import { AtlasInspectTools } from "./AtlasInspect"
+
 const FEATURE_SHORTLIST = [
   "Step-free access",
   "Accessible toilets",
@@ -395,42 +397,63 @@ export function AtlasAccessibilityAnalysis({
             >
               List these libraries
             </button>
-            <button
-              type="button"
-              aria-busy={busy}
-              disabled={busy || (canExport && (shownCount === 0 || !summary))}
-              aria-describedby={!canExport ? `${id}-export-plan` : undefined}
-              onClick={() => {
-                if (!canExport) return (onSeePlans ?? onSignIn)()
-                void run(
-                  "csv",
-                  exportRequest ?? exportLibraries.map((library) => library.id)
-                )
-              }}
-              className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-50"
-              style={{ borderColor: T.border.hi }}
-            >
-              {busy ? "Downloading…" : "Download CSV"}{" "}
-              {!canExport ? <ProChip /> : null}
-            </button>
-            {!canExport ? (
-              <span id={`${id}-export-plan`} className="sr-only">
-                CSV downloads are included with Pro and Team.
-              </span>
-            ) : null}
-            {outcome ? (
-              <p
-                role="status"
-                className="m-0 w-full text-sm"
-                style={{
-                  color: outcome.tone === "error" ? T.accent.danger : T.ink.dim,
-                }}
-              >
-                {outcome.text}
-              </p>
-            ) : null}
           </div>
 
+          <AtlasInspectTools
+            about={
+              <p>
+                Filled pins confirm every chosen feature. Hollow pins mean our
+                record does not confirm every chosen feature. Missing
+                information does not mean a library is inaccessible. Check with
+                the library before visiting.
+              </p>
+            }
+            downloads={
+              <div className="space-y-3">
+                {" "}
+                <button
+                  type="button"
+                  aria-busy={busy}
+                  disabled={
+                    busy || (canExport && (shownCount === 0 || !summary))
+                  }
+                  aria-describedby={
+                    !canExport ? `${id}-export-plan` : undefined
+                  }
+                  onClick={() => {
+                    if (!canExport) return (onSeePlans ?? onSignIn)()
+                    void run(
+                      "csv",
+                      exportRequest ??
+                        exportLibraries.map((library) => library.id)
+                    )
+                  }}
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left text-sm font-semibold disabled:opacity-50"
+                  style={{ borderColor: T.border.hi }}
+                >
+                  {busy ? "Downloading…" : "Download CSV"}{" "}
+                  {!canExport ? <ProChip /> : null}
+                </button>
+                {!canExport ? (
+                  <span id={`${id}-export-plan`} className="sr-only">
+                    CSV downloads are included with Pro and Team.
+                  </span>
+                ) : null}
+                {outcome ? (
+                  <p
+                    role="status"
+                    className="m-0 w-full text-sm"
+                    style={{
+                      color:
+                        outcome.tone === "error" ? T.accent.danger : T.ink.dim,
+                    }}
+                  >
+                    {outcome.text}
+                  </p>
+                ) : null}
+              </div>
+            }
+          />
           {summary && summary.unconfirmed > 0 ? (
             <section
               className="flex flex-col gap-3 rounded-2xl border p-4 text-sm leading-relaxed"

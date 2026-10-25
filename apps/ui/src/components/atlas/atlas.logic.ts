@@ -17,6 +17,7 @@ import {
 /** Properties of one library feature from GET /api/libraries/atlas. */
 export interface AtlasLibrary {
   /** Compact server geometry has an ordinary-hours late classification. */
+  networkIds?: string[]
   atlasLate?: boolean
   /** Server evaluated effective hours, including Notices, for a bounded row. */
   atlasOpenNow?: OpenNow
@@ -359,6 +360,7 @@ export function accessibilityOptions(
 // ── Filters ─────────────────────────────────────────────────────────────────
 
 export interface AtlasFilters {
+  networks?: string[]
   types: TypeGroupKey[]
   opening: "any" | "now" | "staff_now" | "at"
   /** Used when opening is "at": day 0–6 (Mon–Sun) and minutes since midnight. */
@@ -391,6 +393,7 @@ export const EMPTY_FILTERS: AtlasFilters = {
 
 export function activeFilterCount(f: AtlasFilters): number {
   return (
+    (f.networks?.length ? 1 : 0) +
     (f.types.length > 0 ? 1 : 0) +
     (f.opening === "any" ? 0 : 1) +
     (f.operators.length > 0 ? 1 : 0) +
@@ -413,6 +416,11 @@ export function matches(
   f: AtlasFilters,
   now: Date
 ): boolean {
+  if (
+    f.networks?.length &&
+    !f.networks.some((id) => lib.networkIds?.includes(id))
+  )
+    return false
   if (f.types.length > 0 && !f.types.includes(typeGroupOf(lib.type)))
     return false
   if (f.opening === "staff_now") {
@@ -581,6 +589,7 @@ export type LayerId =
   | "mobile"
   | "population"
   | "deprivation"
+  | "carAccess"
   | "transit"
   | "schools"
   | "reach"
@@ -713,12 +722,12 @@ export const LAYERS: LayerDef[] = [
     sub: "Walking and cycling to a library",
     group: "coverage",
     tier: "pro",
-    ready: false,
-    exclusive: "area",
+    ready: true,
+    requiresPins: true,
   },
   {
     id: "coverageGaps",
-    name: "Underserved communities",
+    name: "Residents beyond reach",
     sub: "Population outside a chosen travel time",
     group: "coverage",
     tier: "pro",
@@ -737,19 +746,28 @@ export const LAYERS: LayerDef[] = [
   {
     id: "population",
     name: "Population density",
-    sub: "GHSL",
+    sub: "Area averages · grid where available",
     group: "reference",
     tier: "free",
-    ready: false,
+    ready: true,
     exclusive: "area",
   },
   {
     id: "deprivation",
     name: "Deprivation",
-    sub: "IMD · SIMD · WIMD",
+    sub: "IMD · WIMD · SIMD · NIMDM",
     group: "reference",
     tier: "pro",
-    ready: false,
+    ready: true,
+    exclusive: "area",
+  },
+  {
+    id: "carAccess",
+    name: "Households without a car",
+    sub: "Census 2021 · England and Wales",
+    group: "reference",
+    tier: "pro",
+    ready: true,
     exclusive: "area",
   },
   {
@@ -883,6 +901,13 @@ export function parseUrlState(params: URLSearchParams): AtlasUrlState {
         ? { lat: view[0]!, lng: view[1]!, zoom: view[2]! }
         : null,
     filters: {
+      ...(params.has("network")
+        ? {
+            networks: csv(params.get("network"))
+              .filter((id) => /^[a-zA-Z0-9_-]{1,100}$/.test(id))
+              .slice(0, 100),
+          }
+        : {}),
       types: csv(params.get("type")).filter((t): t is TypeGroupKey =>
         GROUP_KEYS.has(t as TypeGroupKey)
       ),
@@ -936,6 +961,7 @@ export function toUrlParams(s: AtlasUrlState): URLSearchParams {
       ].join(",")
     )
   const f = s.filters
+  if (f.networks?.length) p.set("network", f.networks.join(","))
   if (f.types.length) p.set("type", f.types.join(","))
   if (f.opening !== "any") p.set("open", f.opening)
   if (f.opening === "at") p.set("at", `${f.atDay},${f.atMinutes}`)

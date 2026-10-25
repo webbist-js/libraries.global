@@ -1,0 +1,25 @@
+.stack :global(.overflow-auto),
+.stack :global(.overflow-y-auto) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--t-border-hi) transparent;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.stack :global(.overflow-auto)::-webkit-scrollbar,
+.stack :global(.overflow-y-auto)::-webkit-scrollbar {
+  width: 8px;
+}
+
+.stack :global(.overflow-auto)::-webkit-scrollbar-thumb,
+.stack :global(.overflow-y-auto)::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--t-border-hi);
+  background-clip: padding-box;
+}
+
+.stack :global(.overflow-auto)::-webkit-scrollbar-thumb:hover,
+.stack :global(.overflow-y-auto)::-webkit-scrollbar-thumb:hover {
+  background-color: var(--t-ink-faint);
+}
