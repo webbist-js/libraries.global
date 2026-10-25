@@ -161,6 +161,8 @@ describe("PRO_FEATURE_COPY", () => {
       .map(([f]) => f)
     expect(live.sort()).toEqual([
       "atlas.analysis",
+      "atlas.compare",
+      "atlas.contextLayers",
       "atlas.export",
       "library.history",
       "library.team",

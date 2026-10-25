@@ -10,7 +10,7 @@ MAX_BYTES = 2 * 1024 * 1024
 
 
 def artifact_path(root: Path, kind: str, key: str) -> Path:
-    if kind not in {"routes", "results"} or not re.fullmatch(r"[a-f0-9]{64}", key):
+    if kind not in {"routes", "results", "population"} or not re.fullmatch(r"[a-f0-9]{64}", key):
         raise ValueError("Invalid artifact cache key")
     base = os.path.realpath(root)
     destination = os.path.realpath(root / kind / key[:2] / f"{key}.json.gz")
@@ -51,10 +51,10 @@ def write_artifact(root: Path, kind: str, key: str, value):
 def prune_artifacts(root: Path, max_bytes: int):
     files = []
     removed = 0
-    for temporary in [*root.glob("results/*/*.tmp"), *root.glob("routes/*/*.tmp")]:
+    for temporary in [file for kind in ("results", "routes", "population") for file in root.glob(f"{kind}/*/*.tmp")]:
         if temporary.stat().st_mtime < time.time() - 300:
             temporary.unlink(missing_ok=True)
-    for file in [*root.glob("results/*/*.json.gz"), *root.glob("routes/*/*.json.gz")]:
+    for file in [file for kind in ("results", "routes", "population") for file in root.glob(f"{kind}/*/*.json.gz")]:
         stat = file.stat()
         if stat.st_mtime < time.time() - 7 * 86400:
             file.unlink(missing_ok=True)

@@ -512,7 +512,7 @@ it("keeps the mobile sheet expanded and the service calculation when switching d
         name: "Calculate coverage",
       }) as HTMLButtonElement
     ).disabled
-  ).toBe(true)
+  ).toBe(false)
   await act(async () =>
     observed.map.onView({
       lat: 53.4,
@@ -602,7 +602,7 @@ it("keeps the mobile sheet expanded and the service calculation when switching d
         name: "Calculate coverage",
       }) as HTMLButtonElement
     ).disabled
-  ).toBe(true)
+  ).toBe(false)
   await act(async () => vi.advanceTimersByTimeAsync(10000))
   expect(calculationsSoFar()).toHaveLength(calls)
 })

@@ -156,13 +156,17 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     const body = ctx.request.body ?? {}
     if (
       Object.keys(body).some(
-        (key) => !["request", "userKey", "hourlyLimit"].includes(key)
+        (key) =>
+          !["request", "userKey", "hourlyLimit", "capacity"].includes(key)
       ) ||
       typeof body.userKey !== "string" ||
       !/^[a-f0-9]{64}$/.test(body.userKey) ||
       !Number.isInteger(body.hourlyLimit) ||
       body.hourlyLimit < 1 ||
-      body.hourlyLimit > 100
+      body.hourlyLimit > 100 ||
+      (body.capacity !== undefined &&
+        body.capacity !== 1 &&
+        body.capacity !== 2)
     ) {
       return ctx.badRequest("Invalid analysis request")
     }
@@ -171,7 +175,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         strapi,
         body.request,
         body.userKey,
-        body.hourlyLimit
+        body.hourlyLimit,
+        body.capacity ?? 1
       )
       ctx.status = result.status
       ctx.body = result.body

@@ -45,6 +45,14 @@ class CacheTests(unittest.TestCase):
             self.assertEqual(read_artifact(root, "results", key), {"residents": 42})
             self.assertIsNone(read_artifact(root, "routes", key))
 
+    def test_population_denominators_share_the_same_global_budget(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write_artifact(root, "population", "c" * 64, {"residents": 42})
+            self.assertEqual(read_artifact(root, "population", "c" * 64), {"residents": 42})
+            self.assertEqual(prune_artifacts(root, 0)["entries"], 0)
+            self.assertIsNone(read_artifact(root, "population", "c" * 64))
+
     def test_separate_keys_expiry_and_byte_budget(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

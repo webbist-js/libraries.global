@@ -142,9 +142,11 @@ def main():
                     if result is None:
                         result = calculate_network(engine, request, releases[0])
                     validate_contract("networkResult", result)
-                    base = {k: result[k] for k in ("schemaVersion", "state", "libraryId", "coordinateHash", "mode", "calculatedAt", "method", "snapDistanceMetres", "network", "population", "warnings", "contours")}
-                    base["contours"] = [{k:c[k] for k in ("minutes", "residents", "coveredFraction", "geometry")} for c in result["contours"]]
-                    validate_contract("result", base)
+                    # networkResult validates its own provenance/geometry and the
+                    # one-time or four-time contour shape. The single-library
+                    # result contract deliberately remains four-time only.
+                    if result.get("requestedMinutes") != request.get("minutes"):
+                        raise ValueError("Network result time changed")
                     write_artifact(root, "results", key, result)
                     prune()
                     self.send(200, {"state": "ready", "resultKey": key})

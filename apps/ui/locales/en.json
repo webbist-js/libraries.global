@@ -135,7 +135,9 @@
     "unknownGrid": "Grid resolution is not supplied in this result.",
     "networkSnap": "Each library needs a suitable mapped route within 100 metres of its recorded location. Individual snap distances are not retained in network results.",
     "coverageControls": "Coverage controls",
-    "changeService": "Change"
+    "changeService": "Change",
+    "singleTimeTitle": "Larger service: {minutes} minutes only",
+    "singleTimeExplanation": "To keep this calculation manageable, Reach generates only the selected travel time for this service. Choose Calculate coverage after changing the time. Smaller services include all four times."
   },
   "atlasAnalysis": {
     "surfaceCoverage": "Population data covers {percent}% of this area",
@@ -2831,7 +2833,8 @@
           "6": "Apply for Knowledge or Journal editing roles",
           "7": "Claim your library and use the free staff tools",
           "8": "3 saved views and 3 saved searches",
-          "9": "An opt-in weekly digest of followed libraries"
+          "9": "An opt-in weekly digest of followed libraries",
+          "10": "Population density: area averages and supported population grids"
         }
       },
       "supporter": {
@@ -2855,10 +2858,10 @@
         "includes": {
           "0": "Everything in Supporter",
           "1": "Export Atlas results as CSV or GeoJSON (up to {limit, number} libraries per download)",
-          "2": "Library access: population comparisons for countries and supported local areas",
-          "3": "Deprivation and transit layers",
-          "4": "Travel-time reach: walking and cycling catchments across the UK",
-          "5": "Compare two areas",
+          "2": "Deprivation and households without a car in supported UK areas",
+          "3": "Travel-time reach: walking and cycling catchments across the UK",
+          "4": "Compare Library access between two areas",
+          "5": "Library access: population comparisons for countries and supported local areas",
           "6": "Export search results with attribution",
           "7": "Alerts on saved searches",
           "8": "Compare up to six libraries side by side",
@@ -2866,7 +2869,9 @@
           "10": "Private notes on any library",
           "11": "Benchmark a service against similar ones",
           "12": "Export derived metrics",
-          "13": "A personal calendar feed"
+          "13": "A personal calendar feed",
+          "14": "Service Reach: up to 50 libraries and a 20,000 km² envelope, one travel time for larger areas",
+          "15": "Transit stops and lines"
         }
       },
       "team": {
@@ -2878,12 +2883,13 @@
           "1": "Team organiser: assign staff to your libraries",
           "2": "Choose who can go live for a mobile library",
           "3": "Optional API add-on with managed keys and usage reporting",
-          "4": "Traffic reports",
-          "5": "A shared service workspace",
-          "6": "Bulk updates from a spreadsheet",
-          "7": "An embeddable library finder",
-          "8": "Higher allowances for the API add-on",
-          "9": "Create your Team online, choose seats and pay yearly through Stripe. Your organiser invites colleagues and assigns Libraries; staff authority is verified separately."
+          "5": "Traffic reports",
+          "6": "A shared service workspace",
+          "7": "Bulk updates from a spreadsheet",
+          "8": "An embeddable library finder",
+          "9": "Higher allowances for the API add-on",
+          "10": "Create your Team online, choose seats and pay yearly through Stripe. Your organiser invites colleagues and assigns Libraries; staff authority is verified separately.",
+          "4": "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation"
         }
       }
     },
@@ -2916,9 +2922,9 @@
       "see-every-change-to-a-library-field-by-field": "See every change to a library, field by field",
       "atlas_export": "Export Atlas results as CSV or GeoJSON",
       "atlas_libraryAccess": "Library access: population comparisons for countries and supported local areas",
-      "atlas_contextLayers": "Deprivation and transit layers",
+      "atlas_contextLayers": "Deprivation and households without a car in supported UK areas",
       "atlas_analysis": "Travel-time reach: walking and cycling catchments across the UK",
-      "atlas_compare": "Compare two areas",
+      "atlas_compare": "Compare Library access between two areas",
       "data_benchmark": "Benchmark a service against similar ones",
       "data_explorerExport": "Export derived metrics",
       "library_history": "See every change to a library, field by field",
@@ -2941,7 +2947,12 @@
       "team_workspace": "A shared service workspace",
       "team_bulkUpload": "Bulk updates from a spreadsheet",
       "team_embed": "An embeddable library finder",
-      "api_key": "Higher allowances for the API add-on"
+      "api_key": "Higher allowances for the API add-on",
+      "atlas_reachArea": "Larger service Reach: maximum envelope (km²), one time per calculation",
+      "atlas_reachLibraries": "Service Reach: maximum eligible libraries",
+      "atlas_analysisHourly": "New Reach calculations per hour",
+      "atlas_transit": "Transit stops and lines",
+      "population-density-area-averages-and-supported-population-grids": "Population density: area averages and supported population grids"
     },
     "copy": {
       "title": "Plans and *Pro*",
@@ -3528,7 +3539,8 @@
     "populationMismatch": "Population uses the {year} modelled grid. Index editions and boundary years differ; this is a spatial comparison, not a same-year population survey.",
     "incompleteContext": "Community comparisons need complete routing and population coverage. No group percentages are shown for this incomplete calculation.",
     "insufficientContext": "The community calculation could not be reconciled within its data or processing limits. Group percentages are unavailable; the service reach result remains available.",
-    "unavailableContext": "A compatible analytical deprivation edition is not installed for this reporting area. A map overlay alone cannot provide this comparison."
+    "unavailableContext": "A compatible analytical deprivation edition is not installed for this reporting area. A map overlay alone cannot provide this comparison.",
+    "singleTimeDistribution": "This result covers {minutes} minutes only. Distinct journey-time bands need all four times, so they are not shown for this calculation."
   },
   "atlasInspect": {
     "inspect": "Inspect",

@@ -49,7 +49,7 @@ export const ATLAS_PER_CAPITA_LABEL =
   "Library access: population comparisons for countries and supported local areas"
 
 /** Pro's price after the founding offer, for the placeholders footnote. */
-export const PRO_STANDARD_PRICE_NOTE = `Pro’s standard price will be ${pounds(pricing.pro.standard.month)}/month or ${pounds(pricing.pro.standard.year)}/year once Reach ships; founding members keep ${pounds(pricing.pro.founding.month)}.`
+export const PRO_STANDARD_PRICE_NOTE = `Pro’s standard price will be ${pounds(pricing.pro.standard.month)}/month or ${pounds(pricing.pro.standard.year)}/year when the standard offer is introduced; it is not currently offered. Founding members keep ${pounds(pricing.pro.founding.month)}.`
 
 /** What each feature does, and whether it's built. Only built ones are "live". */
 export const PRO_FEATURE_COPY: Record<
@@ -69,14 +69,17 @@ export const PRO_FEATURE_COPY: Record<
     status: "live",
   },
   "atlas.contextLayers": {
-    label: "Deprivation and transit layers",
-    status: "soon",
+    label: "Deprivation and households without a car in supported UK areas",
+    status: "live",
   },
   "atlas.analysis": {
     label: "Travel-time reach: walking and cycling catchments across the UK",
     status: "live",
   },
-  "atlas.compare": { label: "Compare two areas", status: "soon" },
+  "atlas.compare": {
+    label: "Compare Library access between two areas",
+    status: "live",
+  },
   "index.export": {
     label: "Export search results with attribution",
     status: "soon",
@@ -192,6 +195,9 @@ const TEAM_INCLUDES: PlanInclude[] = [
   ...TEAM_FEATURES.filter((i) => i.kind === "feature"),
   feature("Choose who can go live for a mobile library"),
   feature("Optional API add-on with managed keys and usage reporting"),
+  feature(
+    "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation"
+  ),
   TEAM_TRAFFIC,
   ...TEAM_FEATURES.filter(
     (i) => i.kind === "soon" && i.text !== TEAM_TRAFFIC.text
@@ -237,6 +243,9 @@ export const PLANS: readonly PlanCard[] = [
       feature("Claim your library and use the free staff tools"),
       soon("3 saved views and 3 saved searches"),
       feature("An opt-in weekly digest of followed libraries"),
+      feature(
+        "Population density: area averages and supported population grids"
+      ),
     ],
     cta: {
       kind: "signup",
@@ -275,6 +284,10 @@ export const PLANS: readonly PlanCard[] = [
     includes: [
       feature("Everything in Supporter"),
       ...featureItems(PRO_UPGRADES, "pro"),
+      feature(
+        "Service Reach: up to 50 libraries and a 20,000 km² envelope, one travel time for larger areas"
+      ),
+      soon("Transit stops and lines"),
     ],
     cta: { kind: "soon", label: "Coming soon" },
   },

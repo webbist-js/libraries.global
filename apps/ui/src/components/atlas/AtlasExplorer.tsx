@@ -3,6 +3,9 @@
 import {
   atlasLocalGeography,
   atlasNetworkReachLimit,
+  atlasNetworkReachMode,
+  type AtlasReachCapacity,
+  type AtlasReachMinutes,
   atlasReachViewLimit,
   ATLAS_REACH_MIN_ZOOM,
   type AtlasAccessMetric,
@@ -176,10 +179,20 @@ function useIsMobile(query = "(max-width: 1023px)"): boolean {
   return mobile
 }
 
-function useTier(): { tier: Tier; ready: boolean } {
-  const { plan, ready } = useEntitlements()
+function useTier(): {
+  tier: Tier
+  ready: boolean
+  capacity: AtlasReachCapacity
+  plan: ReturnType<typeof useEntitlements>["plan"]
+} {
+  const { plan, ready, analysisAreaMultiplier } = useEntitlements()
 
-  return { tier: tierForPlan(plan), ready }
+  return {
+    tier: tierForPlan(plan),
+    ready,
+    capacity: analysisAreaMultiplier,
+    plan,
+  }
 }
 
 function setAnalysisUrlParams(
@@ -227,7 +240,7 @@ export function AtlasExplorer({
   const isMobile = useIsMobile()
   const narrow = useIsMobile("(max-width: 1439px)")
   const animateAtlas = useAtlasMotion()
-  const { tier, ready: entitlementsReady } = useTier()
+  const { tier, ready: entitlementsReady, capacity, plan } = useTier()
 
   // ── State (hydrated from the URL after mount) ─────────────────────────────
   const [hydrated, setHydrated] = useState(false)
@@ -822,9 +835,12 @@ export function AtlasExplorer({
       : inView.length
   )
   const serviceReachLimit = networkSelection.selected
-    ? atlasNetworkReachLimit(networkSelection.selected)
+    ? atlasNetworkReachLimit(networkSelection.selected, capacity)
     : null
-  const networkReachLimit = serviceReachLimit ?? reachViewLimit
+  const networkReachLimit = serviceReachLimit
+  const networkSingleTime = networkSelection.selected
+    ? atlasNetworkReachMode(networkSelection.selected, capacity) === "single"
+    : false
   const zoomToLocalReach = () => {
     const bounds =
       reachScope === "network" ? networkSelection.selected?.bounds : null
@@ -866,6 +882,9 @@ export function AtlasExplorer({
               ? { areaCode: networkSelection.selected.areaCodes[0] }
               : {}),
             mode: reachMode,
+            ...(networkSingleTime
+              ? { minutes: reachMinutes as AtlasReachMinutes }
+              : {}),
             scope: {
               filters: atlasBuildingFilters(filters),
               accessibility: {
@@ -879,6 +898,8 @@ export function AtlasExplorer({
     [
       filters,
       networkSelection.selected,
+      networkSingleTime,
+      reachMinutes,
       reachMode,
       usableLayers,
       accessibility,
@@ -1287,6 +1308,8 @@ export function AtlasExplorer({
       {reachScope === "network" ? (
         <AtlasNetworkReach
           calculationLimit={networkReachLimit}
+          singleTime={networkSingleTime}
+          capacity={capacity}
           onZoomLocal={zoomToLocalReach}
           onSingleLibrary={() => setReachScope("library")}
           scopeControl={
@@ -2643,6 +2666,7 @@ export function AtlasExplorer({
   const plans = plansOpen ? (
     <AtlasPlansSheet
       tier={tier}
+      currentPlan={capacity === 2 ? "team" : plan}
       signInHref={signInHref}
       onClose={() => setPlansOpen(false)}
     />

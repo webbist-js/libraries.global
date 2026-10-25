@@ -135,7 +135,9 @@
     "unknownGrid": "La résolution de la grille n’est pas fournie avec ce résultat.",
     "networkSnap": "Chaque bibliothèque doit avoir une voie adaptée à moins de 100 mètres de sa position enregistrée. Les distances de raccordement individuelles ne sont pas conservées dans les résultats du réseau.",
     "coverageControls": "Paramètres de couverture",
-    "changeService": "Modifier"
+    "changeService": "Modifier",
+    "singleTimeTitle": "Service étendu : {minutes} minutes uniquement",
+    "singleTimeExplanation": "Pour limiter le travail de calcul, Reach génère uniquement la durée choisie pour ce service. Après avoir changé la durée, choisissez Calculer la couverture. Les services plus petits incluent les quatre durées."
   },
   "atlasAnalysis": {
     "surfaceCoverage": "Les données de population couvrent {percent} % de cette zone",
@@ -2831,7 +2833,8 @@
           "6": "Demander un rôle de rédaction pour les connaissances ou le Journal",
           "7": "Revendiquer votre bibliothèque et utiliser les outils gratuits du personnel",
           "8": "3 vues et 3 recherches enregistrées",
-          "9": "Un récapitulatif hebdomadaire facultatif des bibliothèques suivies"
+          "9": "Un récapitulatif hebdomadaire facultatif des bibliothèques suivies",
+          "10": "Densité de population : moyennes par territoire et grilles disponibles"
         }
       },
       "supporter": {
@@ -2855,10 +2858,10 @@
         "includes": {
           "0": "Tout le contenu de l’offre Soutien",
           "1": "Exporter les résultats de l’Atlas en CSV ou GeoJSON (jusqu’à {limit, number} bibliothèques par téléchargement)",
-          "2": "Accès aux bibliothèques : comparaisons par population pour les pays et les territoires pris en charge",
-          "3": "Couches de défavorisation et de transports",
-          "4": "Zones accessibles à pied et à vélo en Angleterre",
-          "5": "Comparer deux territoires",
+          "2": "Défavorisation et ménages sans voiture dans les zones britanniques couvertes",
+          "3": "Zones accessibles à pied et à vélo en Angleterre",
+          "4": "Comparer l’accès aux bibliothèques entre deux territoires",
+          "5": "Accès aux bibliothèques : comparaisons par population pour les pays et les territoires pris en charge",
           "6": "Exporter les résultats de recherche avec attribution",
           "7": "Alertes sur les recherches enregistrées",
           "8": "Comparer jusqu’à six bibliothèques côte à côte",
@@ -2866,7 +2869,9 @@
           "10": "Notes privées sur toute bibliothèque",
           "11": "Comparer un service à des services similaires",
           "12": "Exporter les indicateurs calculés",
-          "13": "Un flux de calendrier personnel"
+          "13": "Un flux de calendrier personnel",
+          "14": "Portée du service : jusqu’à 50 bibliothèques et une emprise de 20 000 km², une seule durée pour les grandes zones",
+          "15": "Arrêts et lignes de transport"
         }
       },
       "team": {
@@ -2878,12 +2883,13 @@
           "1": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
           "2": "Choisir qui peut diffuser la position d’une bibliothèque mobile",
           "3": "Option API avec gestion des clés et suivi de l’utilisation",
-          "4": "Rapports de fréquentation",
-          "5": "Un espace de travail partagé pour le réseau",
-          "6": "Mises à jour groupées depuis un tableur",
-          "7": "Un outil de recherche de bibliothèques intégrable",
-          "8": "Des quotas supérieurs pour l’option API",
-          "9": "Créez votre équipe en ligne, choisissez les places et payez chaque année via Stripe. Le responsable invite les collègues et attribue les bibliothèques ; les droits du personnel sont vérifiés séparément."
+          "5": "Rapports de fréquentation",
+          "6": "Un espace de travail partagé pour le réseau",
+          "7": "Mises à jour groupées depuis un tableur",
+          "8": "Un outil de recherche de bibliothèques intégrable",
+          "9": "Des quotas supérieurs pour l’option API",
+          "10": "Créez votre équipe en ligne, choisissez les places et payez chaque année via Stripe. Le responsable invite les collègues et attribue les bibliothèques ; les droits du personnel sont vérifiés séparément.",
+          "4": "Portée étendue : jusqu’à 100 bibliothèques et une emprise de 40 000 km², une durée par calcul"
         }
       }
     },
@@ -2916,9 +2922,9 @@
       "see-every-change-to-a-library-field-by-field": "Voir chaque modification d’une bibliothèque, champ par champ",
       "atlas_export": "Exporter les résultats de l’Atlas en CSV ou GeoJSON",
       "atlas_libraryAccess": "Accès aux bibliothèques : comparaisons par population pour les pays et les territoires pris en charge",
-      "atlas_contextLayers": "Couches de défavorisation et de transports",
+      "atlas_contextLayers": "Défavorisation et ménages sans voiture dans les zones britanniques couvertes",
       "atlas_analysis": "Zones accessibles à pied et à vélo en Angleterre",
-      "atlas_compare": "Comparer deux territoires",
+      "atlas_compare": "Comparer l’accès aux bibliothèques entre deux territoires",
       "data_benchmark": "Comparer un service à des services similaires",
       "data_explorerExport": "Exporter les indicateurs calculés",
       "library_history": "Voir chaque modification d’une bibliothèque, champ par champ",
@@ -2941,7 +2947,12 @@
       "team_workspace": "Un espace de travail partagé pour le réseau",
       "team_bulkUpload": "Mises à jour groupées depuis un tableur",
       "team_embed": "Un outil de recherche de bibliothèques intégrable",
-      "api_key": "Des quotas supérieurs pour l’option API"
+      "api_key": "Des quotas supérieurs pour l’option API",
+      "atlas_reachArea": "Portée étendue : emprise maximale (km²), une durée par calcul",
+      "atlas_reachLibraries": "Portée du service : nombre maximal de bibliothèques admissibles",
+      "atlas_analysisHourly": "Nouveaux calculs de portée par heure",
+      "atlas_transit": "Arrêts et lignes de transport",
+      "population-density-area-averages-and-supported-population-grids": "Densité de population : moyennes par territoire et grilles disponibles"
     },
     "copy": {
       "title": "Offres et *Pro*",
@@ -3528,7 +3539,8 @@
     "populationMismatch": "La population utilise la grille modélisée de {year}. Les éditions des indices et les années des limites diffèrent ; il s’agit d’une comparaison spatiale, pas d’une enquête de population de la même année.",
     "incompleteContext": "Cette comparaison exige des données complètes de routage et de population. Aucun pourcentage par groupe n’est affiché pour ce calcul incomplet.",
     "insufficientContext": "Le calcul par groupe n’a pas pu être réconcilié dans les limites de données ou de traitement. Les pourcentages par groupe sont indisponibles ; le résultat global reste disponible.",
-    "unavailableContext": "Aucune édition analytique compatible n’est installée pour cette zone. Une couche cartographique seule ne permet pas cette comparaison."
+    "unavailableContext": "Aucune édition analytique compatible n’est installée pour cette zone. Une couche cartographique seule ne permet pas cette comparaison.",
+    "singleTimeDistribution": "Ce résultat couvre uniquement {minutes} minutes. Les tranches de temps distinctes nécessitent les quatre durées ; elles ne sont donc pas affichées pour ce calcul."
   },
   "atlasInspect": {
     "inspect": "Examiner",

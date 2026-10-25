@@ -10,9 +10,11 @@ import { Icon } from "./atlas-ui"
 
 export function AtlasReachLimitNotice({
   reason,
+  capacity = 1,
   onZoom,
   onSingleLibrary,
 }: {
+  readonly capacity?: 1 | 2
   readonly reason: "zoom" | "busy" | "libraries" | "area"
   readonly onZoom?: () => void
   readonly onSingleLibrary?: () => void
@@ -38,7 +40,7 @@ export function AtlasReachLimitNotice({
           {t(reason, {
             count:
               reason === "libraries"
-                ? ATLAS_REACH_MAX_SERVICE_LIBRARIES
+                ? ATLAS_REACH_MAX_SERVICE_LIBRARIES * capacity
                 : ATLAS_REACH_MAX_VISIBLE_LIBRARIES,
           })}
         </p>

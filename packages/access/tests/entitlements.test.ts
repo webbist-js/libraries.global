@@ -18,6 +18,29 @@ const base = (over: Partial<EntitlementInput> = {}): EntitlementInput => ({
   ...over,
 })
 
+it("gives active Team seats larger Reach without buying staff authority", () => {
+  const seat = {
+    libraryDocumentIds: ["one"],
+    expiresAt: days(1),
+    status: "active" as const,
+  }
+  const active = resolveEntitlements(base({ teams: [seat] }))
+  expect(active.plan).toBe("pro")
+  expect(active.limits.analysisAreaMultiplier).toBe(2)
+  expect(active.limits.analysisRunsPerHour).toBe(100)
+  expect(can(active, "team.workspace")).toBe(false)
+  for (const team of [
+    { ...seat, status: "lapsed" as const },
+    { ...seat, expiresAt: days(-1) },
+  ]) {
+    const expired = resolveEntitlements(
+      base({ teams: [team], grants: [{ plan: "pro", expiresAt: null }] })
+    )
+    expect(expired.limits.analysisAreaMultiplier).toBe(1)
+    expect(expired.limits.analysisRunsPerHour).toBe(20)
+  }
+})
+
 describe("Supporter digital tools plan", () => {
   it("includes history and small exports, retains free community access and expires", () => {
     const ent = resolveEntitlements(
@@ -31,6 +54,7 @@ describe("Supporter digital tools plan", () => {
     expect(can(ent, "atlas.analysis")).toBe(false)
     expect(ent.limits).toEqual({
       analysisRunsPerHour: 0,
+      analysisAreaMultiplier: 0,
       savedViews: 3,
       savedSearches: 3,
       exportRows: 500,

@@ -135,7 +135,9 @@
     "unknownGrid": "Rozlišení mřížky není u tohoto výsledku uvedeno.",
     "networkSnap": "Každá knihovna musí mít vhodnou mapovanou cestu do 100 metrů od zaznamenané polohy. Jednotlivé vzdálenosti napojení se ve výsledcích sítě neuchovávají.",
     "coverageControls": "Nastavení pokrytí",
-    "changeService": "Změnit"
+    "changeService": "Změnit",
+    "singleTimeTitle": "Větší síť: pouze {minutes} minut",
+    "singleTimeExplanation": "Aby výpočet zůstal zvládnutelný, Reach pro tuto síť zpracuje pouze zvolenou dobu cesty. Po změně doby zvolte Vypočítat pokrytí. Menší sítě zahrnují všechny čtyři časy."
   },
   "atlasAnalysis": {
     "surfaceCoverage": "Údaje o obyvatelstvu pokrývají {percent} % této oblasti",
@@ -2831,7 +2833,8 @@
           "6": "Žádost o redaktorskou roli ve znalostní bázi nebo časopisu",
           "7": "Přihlášení ke správě knihovny a bezplatné nástroje pro pracovníky",
           "8": "3 uložené pohledy a 3 uložená vyhledávání",
-          "9": "Volitelný týdenní přehled sledovaných knihoven"
+          "9": "Volitelný týdenní přehled sledovaných knihoven",
+          "10": "Hustota obyvatelstva: průměry za oblasti a dostupné populační rastry"
         }
       },
       "supporter": {
@@ -2855,10 +2858,10 @@
         "includes": {
           "0": "Vše z tarifu Podporovatel",
           "1": "Export výsledků Atlasu jako CSV nebo GeoJSON (až {limit, number} knihoven na stažení)",
-          "2": "Dostupnost knihoven: srovnání podle počtu obyvatel v zemích a podporovaných oblastech",
-          "3": "Vrstvy sociálního znevýhodnění a dopravy",
-          "4": "Spádové oblasti pěšky a na kole v Anglii",
-          "5": "Porovnání dvou oblastí",
+          "2": "Deprivace a domácnosti bez auta v podporovaných oblastech Spojeného království",
+          "3": "Spádové oblasti pěšky a na kole v Anglii",
+          "4": "Porovnání přístupu ke knihovnám mezi dvěma oblastmi",
+          "5": "Dostupnost knihoven: srovnání podle počtu obyvatel v zemích a podporovaných oblastech",
           "6": "Export výsledků vyhledávání s uvedením zdrojů",
           "7": "Upozornění na uložená vyhledávání",
           "8": "Porovnání až šesti knihoven vedle sebe",
@@ -2866,7 +2869,9 @@
           "10": "Soukromé poznámky ke kterékoli knihovně",
           "11": "Srovnání služby s podobnými službami",
           "12": "Export odvozených ukazatelů",
-          "13": "Osobní kalendářový kanál"
+          "13": "Osobní kalendářový kanál",
+          "14": "Dosah sítě: až 50 knihoven a obálka 20 000 km², u větších oblastí pouze jeden čas",
+          "15": "Zastávky a linky veřejné dopravy"
         }
       },
       "team": {
@@ -2878,12 +2883,13 @@
           "1": "Správce týmu: přiřazování pracovníků ke knihovnám",
           "2": "Volba, kdo může spustit živou polohu pojízdné knihovny",
           "3": "Volitelný doplněk API se správou klíčů a přehledem využití",
-          "4": "Přehledy návštěvnosti",
-          "5": "Sdílený pracovní prostor služby",
-          "6": "Hromadné aktualizace z tabulky",
-          "7": "Vložitelný vyhledávač knihoven",
-          "8": "Vyšší limity doplňku API",
-          "9": "Vytvořte tým online, vyberte místa a plaťte ročně přes Stripe. Správce pozve kolegy a přiřadí knihovny; oprávnění pracovníků se ověřují samostatně."
+          "5": "Přehledy návštěvnosti",
+          "6": "Sdílený pracovní prostor služby",
+          "7": "Hromadné aktualizace z tabulky",
+          "8": "Vložitelný vyhledávač knihoven",
+          "9": "Vyšší limity doplňku API",
+          "10": "Vytvořte tým online, vyberte místa a plaťte ročně přes Stripe. Správce pozve kolegy a přiřadí knihovny; oprávnění pracovníků se ověřují samostatně.",
+          "4": "Rozšířený dosah: až 100 knihoven a obálka 40 000 km², jeden čas na výpočet"
         }
       }
     },
@@ -2916,9 +2922,9 @@
       "see-every-change-to-a-library-field-by-field": "Historie všech změn knihovny po jednotlivých polích",
       "atlas_export": "Export výsledků Atlasu jako CSV nebo GeoJSON",
       "atlas_libraryAccess": "Dostupnost knihoven: srovnání podle počtu obyvatel v zemích a podporovaných oblastech",
-      "atlas_contextLayers": "Vrstvy sociálního znevýhodnění a dopravy",
+      "atlas_contextLayers": "Deprivace a domácnosti bez auta v podporovaných oblastech Spojeného království",
       "atlas_analysis": "Spádové oblasti pěšky a na kole v Anglii",
-      "atlas_compare": "Porovnání dvou oblastí",
+      "atlas_compare": "Porovnání přístupu ke knihovnám mezi dvěma oblastmi",
       "data_benchmark": "Srovnání služby s podobnými službami",
       "data_explorerExport": "Export odvozených ukazatelů",
       "library_history": "Historie všech změn knihovny po jednotlivých polích",
@@ -2941,7 +2947,12 @@
       "team_workspace": "Sdílený pracovní prostor služby",
       "team_bulkUpload": "Hromadné aktualizace z tabulky",
       "team_embed": "Vložitelný vyhledávač knihoven",
-      "api_key": "Vyšší limity doplňku API"
+      "api_key": "Vyšší limity doplňku API",
+      "atlas_reachArea": "Rozšířený dosah: maximální obálka (km²), jeden čas na výpočet",
+      "atlas_reachLibraries": "Dosah sítě: maximální počet způsobilých knihoven",
+      "atlas_analysisHourly": "Nové výpočty dosahu za hodinu",
+      "atlas_transit": "Zastávky a linky veřejné dopravy",
+      "population-density-area-averages-and-supported-population-grids": "Hustota obyvatelstva: průměry za oblasti a dostupné populační rastry"
     },
     "copy": {
       "title": "Tarify a *Pro*",
@@ -3528,7 +3539,8 @@
     "populationMismatch": "Populace používá modelovanou mřížku z roku {year}. Edice indexů a roky hranic se liší; jde o prostorové srovnání, nikoli populační průzkum ze stejného roku.",
     "incompleteContext": "Srovnání vyžaduje úplné trasy i populační data. Pro tento neúplný výpočet nejsou uvedena procenta skupin.",
     "insufficientContext": "Výpočet skupin nebylo možné ověřit v mezích dat nebo zpracování. Procenta skupin nejsou dostupná; výsledek dosahu služby zůstává dostupný.",
-    "unavailableContext": "Pro toto území není nainstalována kompatibilní analytická edice. Samotná mapová vrstva toto srovnání neposkytuje."
+    "unavailableContext": "Pro toto území není nainstalována kompatibilní analytická edice. Samotná mapová vrstva toto srovnání neposkytuje.",
+    "singleTimeDistribution": "Tento výsledek zahrnuje pouze {minutes} minut. Samostatná časová pásma vyžadují všechny čtyři časy, proto se u tohoto výpočtu nezobrazují."
   },
   "atlasInspect": {
     "inspect": "Podrobnosti",

@@ -17,6 +17,8 @@ export interface AtlasReachProvenance {
   year?: number
 }
 export interface AtlasReachResult {
+  /** Present only for an explicitly generated service time; never infer other bands. */
+  requestedMinutes?: AtlasReachMinutes
   schemaVersion: 1
   state: "ready" | "partial"
   libraryId: string
@@ -76,7 +78,10 @@ export function parseAtlasReachRequest(input: unknown): AtlasReachRequest {
   }
 }
 
-export function parseAtlasReachResult(input: unknown): AtlasReachResult {
+export function parseAtlasReachResult(
+  input: unknown,
+  allowSingleTime = false
+): AtlasReachResult {
   const r = input as AtlasReachResult
   parseAtlasReachRequest({
     schemaVersion: r?.schemaVersion,
@@ -93,7 +98,11 @@ export function parseAtlasReachResult(input: unknown): AtlasReachResult {
     r.snapDistanceMetres < 0 ||
     r.snapDistanceMetres > 100 ||
     !Array.isArray(r.contours) ||
-    r.contours.length !== 4 ||
+    (r.requestedMinutes === undefined
+      ? r.contours.length !== 4
+      : !allowSingleTime ||
+        !ATLAS_REACH_MINUTES.includes(r.requestedMinutes) ||
+        r.contours.length !== 1) ||
     !Array.isArray(r.warnings) ||
     r.warnings.length > 20 ||
     r.warnings.some((w) => typeof w !== "string" || w.length > 500)
@@ -117,7 +126,7 @@ export function parseAtlasReachResult(input: unknown): AtlasReachResult {
   let previous = 0
   r.contours.forEach((c, i) => {
     if (
-      c.minutes !== ATLAS_REACH_MINUTES[i] ||
+      c.minutes !== (r.requestedMinutes ?? ATLAS_REACH_MINUTES[i]) ||
       !Number.isFinite(c.coveredFraction) ||
       c.coveredFraction < 0 ||
       c.coveredFraction > 1 ||
