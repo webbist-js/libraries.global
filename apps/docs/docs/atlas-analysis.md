@@ -142,6 +142,10 @@ to local areas at zoom 6, then to the installed grid at zoom 9. A selected area
 fits the map to its boundary. The analysis panel owns these controls; library
 filters do not change the underlying population.
 
+Automatic detail follows the map. Its global area picker includes countries
+without installed local profiles; the separate supported-country selector appears
+only when choosing local or grid detail explicitly.
+
 The current administrative profiles cover countries worldwide, 361 UK districts,
 48 English county reporting groups, Sweden's 290 municipalities and 21 counties,
 mainland Finland's 292 municipalities and 18 regions, and Åland's 16 municipalities

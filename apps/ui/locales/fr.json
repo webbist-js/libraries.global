@@ -3377,7 +3377,9 @@
       },
       "nearby": {
         "title": "Bibliothèques à proximité",
-        "description": "L’index ne répertorie pas encore d’autres bibliothèques à proximité."
+        "description": "L’index ne répertorie pas encore d’autres bibliothèques à proximité.",
+        "locationDescription": "Ajoutez la position de cette bibliothèque sur la carte pour trouver les bibliothèques à proximité.",
+        "locationAction": "Ajouter la position"
       },
       "admission": {
         "title": "Accès et inscription",

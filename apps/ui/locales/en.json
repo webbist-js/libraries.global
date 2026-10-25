@@ -3377,7 +3377,9 @@
       },
       "nearby": {
         "title": "Nearby libraries",
-        "description": "No other libraries are listed nearby in the index yet."
+        "description": "No other libraries are listed nearby in the index yet.",
+        "locationDescription": "Add this library’s map location to find nearby libraries.",
+        "locationAction": "Add the location"
       },
       "admission": {
         "title": "Admission and membership",
