@@ -66,6 +66,7 @@ Changing coordinates, membership, filters, mode or data editions changes the rel
 ## Missing data
 
 - A missing pin leaves a Library available in the directory but unavailable as a fixed map/routing origin.
+- Library access rates use the mapped Atlas index. Published records without usable coordinates are excluded from those counts, even when their country is known. Population density remains independent of library records.
 - Unknown hours do not mean closed. An opening-time filter requires recorded schedule data; it does not model arrival-time opening during a Reach journey.
 - Missing building accessibility does not mean an inaccessible building. A walking route does not establish step-free access.
 - Missing official population leaves density/per-capita unavailable. It is not zero.
