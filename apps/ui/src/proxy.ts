@@ -28,6 +28,7 @@ import {
   betaShellRequest,
 } from "@/lib/proxies/betaGate"
 import { httpsRedirect } from "@/lib/proxies/httpsRedirect"
+import { knowledgeMarkdownRewrite } from "@/lib/proxies/knowledgeMarkdown"
 import {
   isMobileHost,
   mobileAppRoute,
@@ -114,9 +115,14 @@ export default async function proxy(originalReq: NextRequest) {
     return respond(NextResponse.next())
   }
 
+  const markdown = knowledgeMarkdownRewrite(req)
+  if (markdown) return respond(markdown)
+
   // Metadata and public files must retain their original, non-localised path.
   if (
     pathname === "/robots.txt" ||
+    pathname === "/openapi.json" ||
+    pathname === "/llms.txt" ||
     pathname.startsWith("/sitemap") ||
     /^\/(?:atlas|images)(?:\/|$)/.test(pathname) ||
     /^\/(?:favicon\.(?:ico|svg)|apple-touch-icon\.png|live-icon\.svg|live-offline\.html|live-sw\.js)$/.test(
