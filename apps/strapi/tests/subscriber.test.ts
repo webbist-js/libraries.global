@@ -103,6 +103,23 @@ describe("POST /subscribers (E6)", () => {
     expect(fake.store[SUBSCRIBER]).toHaveLength(1)
   })
 
+  it("records the current dispatch wording for new consent without changing existing consent", async () => {
+    const existingConsent = structuredClone(fake.store[SUBSCRIBER][0])
+    await controller.subscribe(
+      ctx({ email: "journal@example.org", source: "journal" })
+    )
+    expect(fake.store[SUBSCRIBER][1]).toMatchObject({
+      source: "journal",
+      consentVersion: "newsletter-journal-2026-10-25",
+      message:
+        "Agreed to receive project news and Journal articles by email, at most monthly.",
+    })
+    await controller.subscribe(
+      ctx({ email: "existing@example.org", source: "journal" })
+    )
+    expect(fake.store[SUBSCRIBER][0]).toEqual(existingConsent)
+  })
+
   it("dedupes case-insensitively and still answers ok", async () => {
     const c = ctx({ email: "existing@example.org" })
     await controller.subscribe(c)

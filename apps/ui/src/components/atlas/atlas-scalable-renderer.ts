@@ -112,7 +112,8 @@ export class AtlasScalableRenderer {
     }
     const pinZoom = (population: AtlasPopulation) =>
       population === "listed" &&
-      (active.includes("density") || active.includes("events"))
+      ((active.includes("density") && !generation.viewport.libraryDensity) ||
+        active.includes("events"))
         ? 8
         : 0
     const points = (
@@ -124,7 +125,9 @@ export class AtlasScalableRenderer {
     ) => {
       if (
         drawHeat &&
-        ((population === "listed" && active.includes("density")) ||
+        ((population === "listed" &&
+          active.includes("density") &&
+          !generation.viewport.libraryDensity) ||
           (population === "events" && active.includes("events")))
       )
         add(source, "heatmap", filter, heatmapPaint(heatOpacity), {}, layerName)
@@ -309,7 +312,9 @@ export class AtlasScalableRenderer {
       const heat =
         population === "events"
           ? active.includes("events")
-          : population === "listed" && active.includes("density")
+          : population === "listed" &&
+            active.includes("density") &&
+            !generation.viewport.libraryDensity
       if (heat) {
         const raw = `${source}-raw`
         this.map.addSource(raw, {

@@ -22,8 +22,11 @@ export function atlasCacheKey(
   now: Date
 ): string | null {
   if (
-    !["counts", "suggestions", "perCapita", "libraryAccess"].includes(
-      request.purpose
+    !(
+      ["counts", "suggestions", "perCapita", "libraryAccess"].includes(
+        request.purpose
+      ) ||
+      (request.purpose === "viewport" && request.libraryDensity)
     )
   )
     return null
@@ -39,6 +42,7 @@ export function atlasCacheKey(
         state.queryEpoch,
         state.dictionary.version,
         state.indexedThrough,
+        request.purpose === "viewport" ? state.manifest?.buildId : null,
         Math.floor(now.getTime() / 60000),
       ])
     )

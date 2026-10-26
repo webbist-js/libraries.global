@@ -31,10 +31,29 @@ export function atlasCityKey(
 }
 
 export function atlasKeysetFilter(
-  field: "name_sort" | "place_sort",
-  lastKey: string,
-  lastId: number
+  field: "name_sort" | "place_sort" | "completeness",
+  lastKey: string | number | null,
+  lastId: number,
+  descending = false
 ): string {
+  if (!Number.isSafeInteger(lastId) || lastId < 1)
+    throw new RangeError("Invalid Atlas continuation")
+  const operator = descending ? "<" : ">"
+  if (field === "completeness") {
+    const missing = "(completeness IS NULL OR completeness NOT EXISTS)"
+    if (lastKey === null) return `(${missing} AND atlas_id > ${lastId})`
+    if (
+      typeof lastKey !== "number" ||
+      !Number.isFinite(lastKey) ||
+      lastKey < 0 ||
+      lastKey > 100
+    )
+      throw new RangeError("Invalid Atlas continuation")
+
+    return `(${field} ${operator} ${lastKey} OR (${field} = ${lastKey} AND atlas_id > ${lastId}) OR ${missing})`
+  }
+  if (typeof lastKey !== "string")
+    throw new RangeError("Invalid Atlas continuation")
   const hex = lastKey.slice(1)
   let separators = 0
   for (let i = 0; i < hex.length; i += 2) {
@@ -52,5 +71,5 @@ export function atlasKeysetFilter(
     throw new RangeError("Invalid Atlas continuation")
   const key = JSON.stringify(lastKey)
 
-  return `(${field} > ${key} OR (${field} = ${key} AND atlas_id > ${lastId}))`
+  return `(${field} ${operator} ${key} OR (${field} = ${key} AND atlas_id > ${lastId}))`
 }

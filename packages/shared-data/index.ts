@@ -209,3 +209,5 @@ export * from "./atlas/network-reach"
 export * from "./atlas/reach-limits"
 
 export * from "./atlas/reach-insights"
+
+export * from "./atlas/library-density"

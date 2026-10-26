@@ -397,6 +397,7 @@ export function AtlasInspect({
               {selected.detail}
             </p>
             <h2
+              tabIndex={-1}
               className="m-0 mt-1 text-[28px] leading-tight text-(--t-ink-base)"
               style={{ fontFamily: T.font.serif }}
             >

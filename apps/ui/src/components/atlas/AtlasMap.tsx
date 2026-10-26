@@ -2,6 +2,9 @@
 
 import type {
   AtlasLibraryAccessResponse,
+  AtlasLibraryDensity,
+  AtlasDensitySettings,
+  AtlasDensitySelection,
   AtlasPopulationDensityResponse,
   AtlasReachResult,
   PublicLiveState,
@@ -20,6 +23,7 @@ import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
 import { AtlasContextRenderer } from "./atlas-context-renderer"
 import type { AtlasGeneration } from "./atlas-data-client"
+import { AtlasLibraryDensityRenderer } from "./atlas-library-density-renderer"
 import {
   addPinImages,
   accessibilityClusterStyle,
@@ -66,6 +70,10 @@ export interface AtlasMapHandle {
 }
 
 interface AtlasMapProps {
+  libraryDensity?: AtlasLibraryDensity | null
+  densitySettings?: AtlasDensitySettings
+  onDensitySelect?: (cell: AtlasDensitySelection) => void
+  densitySelection?: AtlasDensitySelection | null
   contextRelease?: AtlasContextRelease | null
   contextOpacity?: number
   onContextPoint?: (location: { lng: number; lat: number }) => void
@@ -181,6 +189,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     const meMarker = useRef<Marker | null>(null)
     const scalableRenderer = useRef<AtlasScalableRenderer | null>(null)
     const perCapitaRenderer = useRef<AtlasPerCapitaRenderer | null>(null)
+    const densityRenderer = useRef<AtlasLibraryDensityRenderer | null>(null)
     const reachRenderer = useRef<AtlasReachRenderer | null>(null)
     const contextRenderer = useRef<AtlasContextRenderer | null>(null)
     // Latest props for event handlers registered once.
@@ -349,7 +358,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           }
           if (
             readyRef.current &&
-            (e as { sourceId?: string }).sourceId?.startsWith("scalable-")
+            ((e as { sourceId?: string }).sourceId?.startsWith("scalable-") ||
+              (e as { sourceId?: string }).sourceId?.startsWith(
+                "library-density-"
+              ))
           )
             latest.current.onGeometryError?.()
           // Tile hiccups are recoverable; only a failed style load is fatal.
@@ -750,15 +762,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 (l) => map.getLayoutProperty(l, "visibility") !== "none"
               ),
             })[0]
-            if (!hit && perCapitaRenderer.current?.click(e.point)) return
-            if (!hit && latest.current.contextRelease) {
-              latest.current.onContextPoint?.({
-                lng: e.lngLat.lng,
-                lat: e.lngLat.lat,
-              })
-
-              return
-            }
+            if (!hit && inspectBackground(e.point, e.lngLat)) return
             latest.current.onSelect(hit ? (hit.properties.id as string) : null)
           })
           for (const l of [
@@ -801,6 +805,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           syncPerCapita()
           syncContext()
           syncReach()
+          syncDensity()
           report()
           latest.current.onReady()
         })
@@ -816,6 +821,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         scalableRenderer.current = null
         perCapitaRenderer.current?.destroy()
         perCapitaRenderer.current = null
+        densityRenderer.current?.destroy()
+        densityRenderer.current = null
         reachRenderer.current?.destroy()
         reachRenderer.current = null
         contextRenderer.current?.destroy()
@@ -827,6 +834,26 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     }, [])
 
     // ── Sync helpers (read latest props) ────────────────────────────────────
+    function syncDensity() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      densityRenderer.current ??= new AtlasLibraryDensityRenderer(map, (cell) =>
+        latest.current.onDensitySelect?.(cell)
+      )
+      densityRenderer.current.update(
+        latest.current.layers.includes("density")
+          ? (latest.current.libraryDensity ?? null)
+          : null,
+        latest.current.densitySettings ?? {
+          view: "grid",
+          detail: "auto",
+          scale: "fixed",
+          opacity: 0.65,
+          smoothing: 2,
+        }
+      )
+    }
+
     function syncContext() {
       const map = mapRef.current
       if (!map || !readyRef.current) return
@@ -919,15 +946,27 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         (map.getSource(`mobile-${source}`) as GeoJSONSource).setData(data)
     }
 
+    function inspectBackground(
+      point: MapLibre.PointLike,
+      location: { lng: number; lat: number }
+    ) {
+      if (densityRenderer.current?.click(point, location)) return true
+      if (perCapitaRenderer.current?.click(point)) return true
+      if (!latest.current.contextRelease) return false
+      latest.current.onContextPoint?.({ lng: location.lng, lat: location.lat })
+
+      return true
+    }
+
     function syncLayers() {
       const map = mapRef.current
       if (!map || !readyRef.current) return
-      const { layers, heatOpacity } = latest.current
+      const { layers, heatOpacity, libraryDensity } = latest.current
       const on = (id: LayerId) => layers.includes(id)
       const vis = (layer: string, show: boolean) =>
         map.setLayoutProperty(layer, "visibility", show ? "visible" : "none")
 
-      const heat = on("density") || on("events")
+      const heat = (on("density") && !libraryDensity) || on("events")
       vis("heat", heat)
       if (heat) {
         map.setFilter(
@@ -1113,6 +1152,18 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       props.layers,
       props.heatOpacity,
     ])
+    useEffect(syncDensity, [
+      props.libraryDensity,
+      props.densitySettings,
+      props.layers,
+    ])
+    useEffect(() => {
+      densityRenderer.current?.highlight(
+        props.layers.includes("density")
+          ? (props.densitySelection ?? null)
+          : null
+      )
+    }, [props.densitySelection, props.layers])
     useEffect(syncPerCapita, [
       props.perCapita,
       props.populationDensity,

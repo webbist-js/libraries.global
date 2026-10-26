@@ -19,4 +19,5 @@ COPY --from=tools /usr/local/bin/tippecanoe-decode /usr/local/bin/tippecanoe-dec
 COPY --from=tools /usr/local/bin/pmtiles /usr/local/bin/pmtiles
 COPY validate_archive.py /opt/atlas/validate_archive.py
 COPY validate_countries.py /opt/atlas/validate_countries.py
+COPY validate_density.py /opt/atlas/validate_density.py
 WORKDIR /data

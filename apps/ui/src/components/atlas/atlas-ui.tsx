@@ -44,6 +44,8 @@ const PATHS = {
   ext: "M14 4h6v6M20 4l-9 9M18 14v6H4V6h6",
   hist: "M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8M3 3v5h5M12 7v5l3 2",
   sort: "M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4",
+  sortUp: "M12 20V4M6 10l6-6 6 6",
+  sortDown: "M12 4v16M6 14l6 6 6-6",
   cmp: "M12 3v18M4 7h5M4 12h5M4 17h5M15 7h5M15 12h5M15 17h5",
   panel: "M4 5h16v14H4zM9 5v14",
   download: "M12 4v11M7 10l5 5 5-5M5 20h14",

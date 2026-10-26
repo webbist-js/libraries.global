@@ -1,5 +1,7 @@
 import {
   ATLAS_LIMITS,
+  ATLAS_DENSITY_MAX_ZOOM,
+  atlasDensityIndexProjection,
   ATLAS_OPEN_DAYS,
   ATLAS_OPEN_FRAMES_PER_DAY,
   atlasOpenField,
@@ -44,7 +46,7 @@ export const atlasIndexSettings = {
     "place_sort",
     "completeness",
     ...Array.from(
-      { length: ATLAS_LIMITS.maxCellZoom + 1 },
+      { length: ATLAS_DENSITY_MAX_ZOOM + 1 },
       (_, z) => `atlas_cell_${z}`
     ),
     ...["open", "regular_open", "staff_open"].flatMap((prefix) =>
@@ -67,6 +69,7 @@ export const atlasIndexSettings = {
     ),
   ],
   sortableAttributes: [
+    "completeness",
     "founded",
     "atlas_id",
     "name_sort",
@@ -188,7 +191,9 @@ export class AtlasMeiliIndex {
           const task = await this.request(
             `/indexes/${this.index}/documents${operation === "removedIds" ? "/delete-batch" : ""}`,
             "POST",
-            payload
+            operation === "upserts"
+              ? payload.map(atlasDensityIndexProjection)
+              : payload
           )
           taskIds[operation] = task.taskUid
           await this.store.db.transaction(async (trx) => {
