@@ -1,3 +1,8 @@
+import type {
+  AtlasDensityArchive,
+  AtlasDensityDetail,
+  AtlasLibraryDensity,
+} from "./library-density"
 import type { LibraryNotice } from "../library-notices"
 import type { AtlasLibraryAccessResponse } from "./library-access"
 import type { AtlasCountryTiles, AtlasPerCapitaResponse } from "./per-capita"
@@ -27,6 +32,7 @@ export const ATLAS_LIMITS = {
   queryBytes: 256 * 1024,
   placeKeyLength: 32 * 1024,
   maxCellZoom: 12,
+  maxDensityCellZoom: 20,
   maxTileZoom: 16,
   tileBytes: 500 * 1024,
   decodedTileBytes: 4 * 1024 * 1024,
@@ -56,7 +62,16 @@ export type AtlasTypeGroup = keyof typeof ATLAS_TYPE_GROUPS
 export type AtlasOperatorGroup = keyof typeof ATLAS_OPERATOR_GROUPS
 export type AtlasAccessibilityView = "matches" | "compare" | "gaps"
 export type AtlasPopulation = "listed" | "closures" | "events" | "late"
-export type AtlasSort = "name" | "place" | "distance"
+export const ATLAS_LIST_SORTS = [
+  "name",
+  "name_desc",
+  "place",
+  "place_desc",
+  "record",
+  "record_desc",
+  "distance",
+] as const
+export type AtlasSort = (typeof ATLAS_LIST_SORTS)[number]
 export type AtlasPlaceLevel =
   | "continent"
   | "country"
@@ -138,9 +153,34 @@ export type AtlasDayShort =
   | "sun"
 export type AtlasOpeningField =
   `${"open" | "regular_open" | "staff_open"}_${AtlasDayShort}_${number}_${"from" | "to"}`
-export type AtlasCellZoom = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+export type AtlasCellZoom =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
 export type AtlasOpeningFields = Partial<Record<AtlasOpeningField, number>>
-export type AtlasCellFields = Record<`atlas_cell_${AtlasCellZoom}`, string>
+export type AtlasCellFields = Record<
+  `atlas_cell_${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12}`,
+  string
+> &
+  Partial<Record<`atlas_cell_${AtlasCellZoom}`, string>>
 
 /** Flat public read model. This contains no media, staff data or timetable. */
 export type AtlasProjection = AtlasOpeningFields &
@@ -258,6 +298,10 @@ export type AtlasQueryRequest = RequestBase &
         drawingPreference: "auto" | "current"
         quality?: boolean
         density?: boolean
+        libraryDensity?: {
+          detail: AtlasDensityDetail
+          scale: "fixed" | "local"
+        }
       }
     | { purpose: "counts"; facilityQuery?: string; facilityAfter?: string }
     | { purpose: "suggestions" }
@@ -358,6 +402,7 @@ export type AtlasChangesResponse =
 
 export interface AtlasManifest {
   countryTiles?: AtlasCountryTiles
+  densityTiles?: AtlasDensityArchive
   schemaVersion: typeof ATLAS_SCHEMA_VERSION
   projectionVersion: typeof ATLAS_PROJECTION_VERSION
   dictionaryVersion: string
@@ -391,8 +436,8 @@ export interface AtlasCursorPayload {
   fingerprint: string
   queryEpoch: string
   dictionaryVersion: string
-  sort: "name" | "place"
-  lastKey: string
+  sort: Exclude<AtlasSort, "distance">
+  lastKey: AtlasProjection["name_sort" | "place_sort" | "completeness"]
   lastId: number
   evaluatedAt: string
   expiresAt: string
@@ -416,6 +461,7 @@ export interface AtlasListRow {
   completeness: number | null
 }
 export interface AtlasViewportResponse extends AtlasQueryMetadata {
+  libraryDensity?: AtlasLibraryDensity
   populations: Partial<Record<AtlasPopulation, AtlasViewportPopulation>>
   coverage?: AtlasCoverage
 }

@@ -32,6 +32,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Check density tile validation
+        run: python3 -m unittest discover -s qa/benchmarks/atlas -p 'test_validate_density.py'
       - name: Build and test the isolated native runtime
         run: docker build --tag atlas-analysis-ci apps/analysis
 

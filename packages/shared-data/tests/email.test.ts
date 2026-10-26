@@ -5,6 +5,48 @@ import { emailTemplate, withEmailPreferences } from "../email"
 import { mergeNotificationPreferences } from "../notification-preferences"
 
 describe("email templates", () => {
+  it("links account and service emails to notification settings by default", () => {
+    const email = emailTemplate({
+      title: "Your account",
+      body: "An account update.",
+      siteUrl: "https://app.example.org/",
+    })
+    expect(email.text).toContain(
+      "Notification settings: https://app.example.org/profile/settings#notifications"
+    )
+    expect(email.html).toContain(
+      'href="https://app.example.org/profile/settings#notifications"'
+    )
+    expect(email.html).not.toContain(">Unsubscribe<")
+  })
+
+  it("lets dispatch recipients unsubscribe without an account", () => {
+    const email = emailTemplate({
+      title: "The monthly dispatch",
+      body: "Project news and Journal articles.",
+      unsubscribeUrl:
+        "https://libraries.global/email/preferences?token=dispatch",
+    })
+    expect(email.text).toContain(
+      "Unsubscribe: https://libraries.global/email/preferences?token=dispatch"
+    )
+    expect(email.html).toContain(">Unsubscribe<")
+    expect(email.text).not.toContain("/profile/settings")
+  })
+
+  it("falls back to notification settings if a supplied control URL is unsafe", () => {
+    const email = emailTemplate({
+      title: "An update",
+      body: "Hello",
+      preferencesUrl: "javascript:alert(1)",
+      unsubscribeUrl: "javascript:alert(1)",
+    })
+    expect(email.text).toContain(
+      "Notification settings: https://libraries.global/profile/settings#notifications"
+    )
+    expect(email.html).not.toContain("javascript:")
+  })
+
   it("escapes contributor content and credentials in HTML and retains a text alternative", () => {
     const email = emailTemplate({
       title: "Your update",

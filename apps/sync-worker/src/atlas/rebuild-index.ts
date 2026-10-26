@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 
-import { ATLAS_LIMITS } from "@repo/shared-data"
+import { ATLAS_LIMITS, atlasDensityIndexProjection } from "@repo/shared-data"
 
 import type { AtlasMeiliIndex } from "./meili-index"
 import type { AtlasStore } from "./store"
@@ -198,7 +198,12 @@ export class AtlasIndexRebuild {
         const actual = await this.index.request(
           `/indexes/${stage}/documents/${encodeURIComponent(sample.document_id)}`
         )
-        if (!isDeepStrictEqual(actual, sample.projection))
+        if (
+          !isDeepStrictEqual(
+            actual,
+            atlasDensityIndexProjection(sample.projection)
+          )
+        )
           throw new Error("Atlas staging sample mismatch")
       }
       await this.submit(stage, [
@@ -273,7 +278,7 @@ export class AtlasIndexRebuild {
     const task = await this.index.request(
       `/indexes/${stage}/documents`,
       "POST",
-      rows
+      rows.map(atlasDensityIndexProjection)
     )
     await this.index.wait(task.taskUid)
   }

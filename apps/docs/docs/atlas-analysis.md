@@ -134,6 +134,80 @@ After this one-time setup, `pnpm dev` starts the application workspaces, Atlas p
 
 The root shortcuts `pnpm dev:analysis:service`, `pnpm dev:analysis` and `pnpm dev:atlas` remain available for starting individual missing processes. The service runs from `apps/analysis`, so its default `data` directory and local `.env` resolve consistently. Reuse an already running analysis service and worker when restarting only the UI.
 
+## Atlas list ordering
+
+The list defaults to name order and retains the selected order in the Atlas URL.
+Name, place and record completeness each support both directions. Their signed
+cursors use the sort value and a stable Atlas ID to continue through ties without
+duplicates. Unscored records appear last in either completeness order and are
+labelled “Not scored”. Exports use the same selected order. The worker enables
+`completeness` as a sortable attribute on existing and staging indexes.
+
+Nearest-centre ordering remains capped at 1,000 results. Its footer explains the
+cap and distinguishes that reachable set from the complete matching total;
+the other orders can continue through every matching record.
+
+Selecting a library row opens its Inspect drawer without moving the map or
+resetting the list's sort, page or scroll position. Desktop keeps the results
+beside the drawer; mobile offers “Back to results”. Closing the drawer returns
+keyboard focus to the selected row. Persistent “View library” and “Improve this
+record” actions link to the full page and existing Index editor respectively.
+The editor route retains its sign-in, staff routing and moderation rules.
+
+## Recorded library density
+
+Library density has its own renderer and analysis drawer, independent of pin
+clusters. The default grid shows recorded libraries per 100 km². Each count uses
+the full geographic cell area, including water, measured on a sphere. Mercator
+cells at the same resolution have different geographic areas at different
+latitudes; their screen area is never the denominator. This measure is separate
+from residents per km², libraries per resident and travel-time Reach.
+
+Automatic detail uses cell resolution `floor(map zoom) + 4`, bounded to 4–20.
+Preferred continental, regional, local and neighbourhood resolutions are 6, 10,
+14 and 18. Grid shading stays visible at street zoom; library locations are an
+independent overlay. A fixed scale uses 0, 0.1, 1, 5, 20 and 100 libraries per
+100 km², with values above 100 retaining the darkest colour. Local contrast
+stretches that scale to the highest intersecting cell value and labels the
+changed breaks. Smooth concentration uses the same grid with a relative kernel
+display; its colours do not claim numeric density. Inspection always reports
+the original cell count, area and unsmoothed rate.
+
+The Atlas archive build prepares sparse count grids from the same published
+point snapshot at every display zoom, 0–16. The separate `density.pmtiles`
+contains numeric cells and their centres, not pin cluster anchors or a dense
+global raster. Preparation retains one resolution at a time, with a one-million
+occupied-cell limit per resolution and a 1 GiB intermediate-file limit. The
+native validator inspects every tile, checks counts and geographic rates against
+the source, and rejects any dropped cell at any zoom. Existing tile byte and
+feature limits apply. Delivery, hashes and immutable publication are checked
+before the shared manifest pointer changes. Archive retention removes density
+with the rest of its generation. The tile-runner image includes
+`validate_density.py` beside the point and country validators.
+
+Only an unfiltered, automatic, fixed-scale request whose indexed revision
+exactly matches an unchanged archive snapshot can use prepared density. Changed
+coordinates, deletions, closures, filters or index generations use current counts
+instead. An old aggregate is never combined with an additions-only point overlay.
+Current queries snap outward to complete cells and include a three-cell halo so
+viewport edges do not truncate counts or smoothing. The visible-library total is
+still calculated within the actual viewport. A boundary cell can therefore
+contain more records than are visible inside the viewport.
+
+Current responses retain the 2,048 occupied-cell cap. Truncated facets cause a
+complete coarser resolution, with the change explained in the drawer. Bounded
+small selections use original point coordinates for finer cells. The additive
+index upgrade adds z13–20 cell fields; a normal staging index rebuild derives
+them from older projections without editing canonical CMS records. Before the
+upgrade, queries can fall back to the complete z0–12 fields. Density viewport
+responses use the existing bounded 15-second cache, keyed by filters, camera,
+settings, index revision, dictionary, generation and opening-time evaluation.
+
+The drawer owns presentation, preferred detail, smoothing distance, colour scale and opacity. Smoothing offers one, two or three cell widths, with an approximate distance at the map centre. These
+choices persist in Atlas URLs. Map key and drawer use one palette definition.
+Selecting a cell shows its count and area and offers a camera action. Missing
+records do not establish that an area has no library.
+
 ## Population and neighbourhood context
 
 Population now supports automatic detail, official area averages, a searchable

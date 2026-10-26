@@ -65,6 +65,29 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 describe("Atlas server-selected exports", () => {
+  it.each(["name_desc", "place_desc", "record", "record_desc"] as const)(
+    "exports the selected %s order",
+    async (sort) => {
+      const api = backend()
+      await selectAtlasExport(api, { ...request, sort }, 500, now)
+      const field = sort.startsWith("place")
+        ? "place_sort"
+        : sort.startsWith("record")
+          ? "completeness"
+          : "name_sort"
+      expect(api.search).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sort: [
+            `${field}:${sort.endsWith("_desc") ? "desc" : "asc"}`,
+            "atlas_id:asc",
+          ],
+        })
+      )
+      expect(
+        parseAtlasExport({ ...request, sort, format: "csv" }).request.sort
+      ).toBe(sort)
+    }
+  )
   it("enforces Supporter's 500 rows across server-selected scopes without truncation", async () => {
     const api = backend()
     const hits = Array.from({ length: 500 }, (_, i) => ({

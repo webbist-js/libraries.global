@@ -2,6 +2,9 @@
 
 import type {
   AtlasLibraryAccessResponse,
+  AtlasLibraryDensity,
+  AtlasDensitySettings,
+  AtlasDensitySelection,
   AtlasPopulationDensityResponse,
   AtlasReachResult,
   PublicLiveState,
@@ -20,6 +23,7 @@ import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
 import { AtlasContextRenderer } from "./atlas-context-renderer"
 import type { AtlasGeneration } from "./atlas-data-client"
+import { AtlasLibraryDensityRenderer } from "./atlas-library-density-renderer"
 import {
   addPinImages,
   accessibilityClusterStyle,
@@ -66,6 +70,10 @@ export interface AtlasMapHandle {
 }
 
 interface AtlasMapProps {
+  libraryDensity?: AtlasLibraryDensity | null
+  densitySettings?: AtlasDensitySettings
+  onDensitySelect?: (cell: AtlasDensitySelection) => void
+  densitySelection?: AtlasDensitySelection | null
   contextRelease?: AtlasContextRelease | null
   contextOpacity?: number
   onContextPoint?: (location: { lng: number; lat: number }) => void
@@ -181,6 +189,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     const meMarker = useRef<Marker | null>(null)
     const scalableRenderer = useRef<AtlasScalableRenderer | null>(null)
     const perCapitaRenderer = useRef<AtlasPerCapitaRenderer | null>(null)
+    const densityRenderer = useRef<AtlasLibraryDensityRenderer | null>(null)
     const reachRenderer = useRef<AtlasReachRenderer | null>(null)
     const contextRenderer = useRef<AtlasContextRenderer | null>(null)
     // Latest props for event handlers registered once.
@@ -349,7 +358,10 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           }
           if (
             readyRef.current &&
-            (e as { sourceId?: string }).sourceId?.startsWith("scalable-")
+            ((e as { sourceId?: string }).sourceId?.startsWith("scalable-") ||
+              (e as { sourceId?: string }).sourceId?.startsWith(
+                "library-density-"
+              ))
           )
             latest.current.onGeometryError?.()
           // Tile hiccups are recoverable; only a failed style load is fatal.
@@ -750,6 +762,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 (l) => map.getLayoutProperty(l, "visibility") !== "none"
               ),
             })[0]
+            if (!hit && densityRenderer.current?.click(e.point, e.lngLat))
+              return
             if (!hit && perCapitaRenderer.current?.click(e.point)) return
             if (!hit && latest.current.contextRelease) {
               latest.current.onContextPoint?.({
@@ -801,6 +815,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           syncPerCapita()
           syncContext()
           syncReach()
+          syncDensity()
           report()
           latest.current.onReady()
         })
@@ -816,6 +831,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         scalableRenderer.current = null
         perCapitaRenderer.current?.destroy()
         perCapitaRenderer.current = null
+        densityRenderer.current?.destroy()
+        densityRenderer.current = null
         reachRenderer.current?.destroy()
         reachRenderer.current = null
         contextRenderer.current?.destroy()
@@ -827,6 +844,26 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     }, [])
 
     // ── Sync helpers (read latest props) ────────────────────────────────────
+    function syncDensity() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      densityRenderer.current ??= new AtlasLibraryDensityRenderer(map, (cell) =>
+        latest.current.onDensitySelect?.(cell)
+      )
+      densityRenderer.current.update(
+        latest.current.layers.includes("density")
+          ? (latest.current.libraryDensity ?? null)
+          : null,
+        latest.current.densitySettings ?? {
+          view: "grid",
+          detail: "auto",
+          scale: "fixed",
+          opacity: 0.65,
+          smoothing: 2,
+        }
+      )
+    }
+
     function syncContext() {
       const map = mapRef.current
       if (!map || !readyRef.current) return
@@ -927,7 +964,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       const vis = (layer: string, show: boolean) =>
         map.setLayoutProperty(layer, "visibility", show ? "visible" : "none")
 
-      const heat = on("density") || on("events")
+      const heat =
+        (on("density") && !latest.current.libraryDensity) || on("events")
       vis("heat", heat)
       if (heat) {
         map.setFilter(
@@ -1113,6 +1151,18 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
       props.layers,
       props.heatOpacity,
     ])
+    useEffect(syncDensity, [
+      props.libraryDensity,
+      props.densitySettings,
+      props.layers,
+    ])
+    useEffect(() => {
+      densityRenderer.current?.highlight(
+        props.layers.includes("density")
+          ? (props.densitySelection ?? null)
+          : null
+      )
+    }, [props.densitySelection, props.layers])
     useEffect(syncPerCapita, [
       props.perCapita,
       props.populationDensity,

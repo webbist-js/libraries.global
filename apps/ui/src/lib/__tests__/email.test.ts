@@ -53,6 +53,8 @@ it("delivers existing account email through generic SMTP ahead of the sandbox", 
       to: "fixture@example.org",
       from: "sender@example.org",
       replyTo: "hello@example.org",
+      text: expect.stringContaining("/profile/settings#notifications"),
+      html: expect.stringContaining(">Notification settings<"),
     })
   )
 })
