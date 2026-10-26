@@ -762,17 +762,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 (l) => map.getLayoutProperty(l, "visibility") !== "none"
               ),
             })[0]
-            if (!hit && densityRenderer.current?.click(e.point, e.lngLat))
-              return
-            if (!hit && perCapitaRenderer.current?.click(e.point)) return
-            if (!hit && latest.current.contextRelease) {
-              latest.current.onContextPoint?.({
-                lng: e.lngLat.lng,
-                lat: e.lngLat.lat,
-              })
-
-              return
-            }
+            if (!hit && inspectBackground(e.point, e.lngLat)) return
             latest.current.onSelect(hit ? (hit.properties.id as string) : null)
           })
           for (const l of [
@@ -956,16 +946,27 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         (map.getSource(`mobile-${source}`) as GeoJSONSource).setData(data)
     }
 
+    function inspectBackground(
+      point: MapLibre.PointLike,
+      location: { lng: number; lat: number }
+    ) {
+      if (densityRenderer.current?.click(point, location)) return true
+      if (perCapitaRenderer.current?.click(point)) return true
+      if (!latest.current.contextRelease) return false
+      latest.current.onContextPoint?.({ lng: location.lng, lat: location.lat })
+
+      return true
+    }
+
     function syncLayers() {
       const map = mapRef.current
       if (!map || !readyRef.current) return
-      const { layers, heatOpacity } = latest.current
+      const { layers, heatOpacity, libraryDensity } = latest.current
       const on = (id: LayerId) => layers.includes(id)
       const vis = (layer: string, show: boolean) =>
         map.setLayoutProperty(layer, "visibility", show ? "visible" : "none")
 
-      const heat =
-        (on("density") && !latest.current.libraryDensity) || on("events")
+      const heat = (on("density") && !libraryDensity) || on("events")
       vis("heat", heat)
       if (heat) {
         map.setFilter(
