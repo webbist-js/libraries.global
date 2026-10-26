@@ -1,5 +1,6 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useEffect, useRef, useState, useTransition } from "react"
 
@@ -54,13 +55,18 @@ function PaidTeamDetails({
 }) {
   return (
     <>
-      <div className="mt-7 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-serif text-[clamp(36px,4vw,48px)] leading-tight tracking-tight">
-          {money(amount * membership.seats)}
-        </span>
-        <span className="text-[15px] text-(--t-ink-dim)">
-          per year, excluding VAT
-        </span>
+      <div className="mt-7 rounded-2xl bg-(--t-bg-surface) p-5">
+        <p className="mb-3 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
+          Annual Team membership
+        </p>
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="font-serif text-[clamp(36px,4vw,48px)] leading-tight tracking-tight">
+            {money(amount * membership.seats)}
+          </span>
+          <span className="text-[15px] text-(--t-ink-dim)">
+            per year, excluding VAT
+          </span>
+        </div>
       </div>
       <dl className="mt-6 mb-0 grid gap-4 border-y border-(--t-border-line) py-5 sm:grid-cols-2">
         <div>
@@ -521,7 +527,19 @@ export function TeamBilling({
         ) : null}
       </div>
       <aside className="min-w-0 space-y-6">
-        <StaffPanel id="team-seat-allowance" title="Your seats" compact>
+        <StaffPanel
+          id="team-seat-allowance"
+          title="Your seats"
+          compact
+          aside={
+            <Icon
+              aria-hidden
+              icon="mdi:account-group-outline"
+              width={22}
+              className="text-(--t-accent-primary)"
+            />
+          }
+        >
           <p className="mt-0 mb-3 flex items-baseline gap-2">
             <strong className="font-serif text-4xl font-medium">
               {data.used}
@@ -532,6 +550,21 @@ export function TeamBilling({
             </strong>
             <span className="text-[14px] text-(--t-ink-dim)">occupied</span>
           </p>
+          <div
+            role="progressbar"
+            aria-label="Team seats occupied"
+            aria-valuenow={data.used}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(data.used, data.seats)}
+            className="my-5 h-2 overflow-hidden rounded-full bg-(--t-bg-muted)"
+          >
+            <div
+              className="h-full rounded-full bg-(--t-accent-primary)"
+              style={{
+                width: `${Math.min(100, (data.used / Math.max(1, data.seats)) * 100)}%`,
+              }}
+            />
+          </div>
           <p className="text-[14px] leading-relaxed text-(--t-ink-dim)">
             Members and pending invitations each use one seat, including your
             Organiser seat.
@@ -540,7 +573,19 @@ export function TeamBilling({
             Manage members and libraries
           </Link>
         </StaffPanel>
-        <StaffPanel id="team-library-access" title="Library access" compact>
+        <StaffPanel
+          id="team-library-access"
+          title="Library access"
+          compact
+          aside={
+            <Icon
+              aria-hidden
+              icon="mdi:shield-check-outline"
+              width={22}
+              className="text-(--t-accent-primary)"
+            />
+          }
+        >
           <p className="mt-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
             Payment activates your membership. Library staff authority is
             checked separately before your Team can manage a library.
@@ -549,7 +594,19 @@ export function TeamBilling({
             Request library access
           </Link>
         </StaffPanel>
-        <StaffPanel id="team-api-billing" title="API add-on" compact>
+        <StaffPanel
+          id="team-api-billing"
+          title="API add-on"
+          compact
+          aside={
+            <Icon
+              aria-hidden
+              icon="mdi:code-tags"
+              width={22}
+              className="text-(--t-accent-primary)"
+            />
+          }
+        >
           <p className="mt-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
             Optional API access is billed separately at{" "}
             {money(pricing.teamApi.month)} a month. Manage its subscription

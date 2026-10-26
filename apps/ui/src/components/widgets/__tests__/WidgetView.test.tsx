@@ -66,6 +66,32 @@ const data = (type: PublicWidget["type"] = "finder"): PublicWidget => ({
 })
 
 describe("public widget states", () => {
+  it("compares group counts on a shared scale and uses a count-only table", () => {
+    const d = data("chart")
+    d.spec.groups = [
+      { id: "a", name: "City", libraryIds: ["one", "two"] },
+      { id: "b", name: "Rural", libraryIds: ["three"] },
+    ]
+    render(<WidgetView data={d} />)
+    expect(screen.getByText("1 library")).toBeTruthy()
+    const bars = screen.getAllByRole("img")
+    expect((bars[1]?.firstElementChild as HTMLElement).style.width).toBe("50%")
+    fireEvent.click(screen.getByRole("button", { name: "Show as table" }))
+    expect(
+      screen.getAllByRole("columnheader").map((cell) => cell.textContent)
+    ).toEqual(["Group", "Libraries"])
+  })
+  it("uses the same count scale for feature comparisons across unequal groups", () => {
+    const d = data("chart")
+    d.config.metric = "facility"
+    d.spec.groups = [
+      { id: "a", name: "City", libraryIds: ["one", "two"] },
+      { id: "b", name: "Rural", libraryIds: ["three"] },
+    ]
+    render(<WidgetView data={d} />)
+    const bars = screen.getAllByRole("img")
+    expect((bars[1]?.lastElementChild as HTMLElement).style.width).toBe("50%")
+  })
   it("keeps unmapped libraries in lists and supports search/empty-state recovery", () => {
     render(<WidgetView data={data()} />)
     expect(screen.getByText("Beta Library")).toBeTruthy()

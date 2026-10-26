@@ -32,6 +32,7 @@ export function PageHero({
   meta,
   lead,
   compact = false,
+  workspace = false,
   plainTitle = false,
   tabs,
   back,
@@ -70,6 +71,8 @@ export function PageHero({
   readonly lead?: ReactNode
   /** Tighter band + smaller title for task pages (forms, wizards). */
   readonly compact?: boolean
+  /** A small title bar for editors; keeps the preview and controls near the top. */
+  readonly workspace?: boolean
   /** Rendered under the lead in the right column (search field, status line). */
   readonly children?: ReactNode
   /** Put the lead and actions below the title, leaving the right slot for stats. */
@@ -97,6 +100,21 @@ export function PageHero({
    */
   readonly back?: { href: string; label: string }
 }) {
+  if (workspace)
+    return (
+      <WorkspaceHero
+        breadcrumb={breadcrumb}
+        title={plainTitle ? title : parseHeroText(title, emphasisTone)}
+        lead={lead}
+        meta={meta}
+        actions={actions}
+        footer={footer}
+        tabs={tabs}
+      >
+        {children}
+      </WorkspaceHero>
+    )
+
   return (
     <>
       <section
@@ -202,10 +220,10 @@ export function PageHero({
                   fontFamily: T.font.serif,
                   fontSize: displayTitle
                     ? "clamp(48px,6.5vw,88px)"
-                    : staff
-                      ? "clamp(40px,5.8vw,80px)"
-                      : compact
-                        ? "clamp(32px,3.6vw,46px)"
+                    : compact
+                      ? "clamp(32px,3.6vw,46px)"
+                      : staff
+                        ? "clamp(40px,5.8vw,80px)"
                         : leadPlacement === "left"
                           ? "clamp(48px,6.5vw,88px)"
                           : "clamp(40px,5vw,68px)",
@@ -252,6 +270,55 @@ export function PageHero({
             </div>
           ) : null}
           {footer ? <div className="lg:col-span-2">{footer}</div> : null}
+        </Container>
+      </section>
+      {tabs ? <SectionNavigation>{tabs}</SectionNavigation> : null}
+    </>
+  )
+}
+
+function WorkspaceHero({
+  breadcrumb,
+  title,
+  lead,
+  meta,
+  children,
+  actions,
+  footer,
+  tabs,
+}: {
+  readonly breadcrumb?: BreadcrumbItem[]
+  readonly title: ReactNode
+  readonly lead?: ReactNode
+  readonly meta?: ReactNode
+  readonly children?: ReactNode
+  readonly actions?: ReactNode
+  readonly footer?: ReactNode
+  readonly tabs?: ReactNode
+}) {
+  return (
+    <>
+      <section className="border-b border-(--t-border-line) bg-(--t-bg-space)">
+        <Container className="py-4 sm:py-5">
+          {breadcrumb?.length ? (
+            <div className="mb-3">
+              <Breadcrumb items={breadcrumb} />
+            </div>
+          ) : null}
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
+            <h1 className="m-0 min-w-0 font-serif text-[clamp(24px,2.4vw,32px)] leading-tight font-medium wrap-anywhere">
+              {title}
+            </h1>
+            {lead ? (
+              <p className="m-0 hidden max-w-md text-sm leading-relaxed text-(--t-ink-dim) sm:block">
+                {lead}
+              </p>
+            ) : null}
+          </div>
+          {meta}
+          {children}
+          {actions}
+          {footer}
         </Container>
       </section>
       {tabs ? <SectionNavigation>{tabs}</SectionNavigation> : null}

@@ -1,11 +1,13 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import type { TeamWidget } from "@repo/shared-data"
 import { useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
+import { EmptyState } from "@/components/ds/EmptyState"
 import { StaffPanel } from "@/components/staff/StaffPanel"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -43,10 +45,11 @@ export function WidgetManage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Badge
-          label={team.active ? widget.state : "Unavailable — Team inactive"}
-          color={widget.state === "live" && team.active ? "ok" : "warn"}
-        />
+        <p className="m-0 text-sm text-(--t-ink-dim)">
+          {!widget.publishedVersion
+            ? "Only your Team can see this draft."
+            : "Manage the version that visitors see and keep previous publications for reference."}
+        </p>
         <div className="flex flex-wrap gap-3">
           <Button
             variant="surface"
@@ -56,60 +59,17 @@ export function WidgetManage({
           >
             Duplicate as draft
           </Button>
-          {team.organiser ? (
-            <>
-              <Button
-                variant="surface"
-                size="pill"
-                disabled={
-                  busy || !widget.publishedVersion || widget.state === "paused"
-                }
-                onClick={() =>
-                  setConfirmation({
-                    action: "pause",
-                    title: "Pause this widget?",
-                  })
-                }
-              >
-                Pause
-              </Button>
-              <Button
-                variant="surface"
-                size="pill"
-                disabled={busy}
-                onClick={() =>
-                  setConfirmation({
-                    action: "unpublish",
-                    title: "Unpublish this widget?",
-                  })
-                }
-              >
-                Unpublish
-              </Button>
-              <Button
-                variant="surface"
-                size="pill"
-                disabled={busy}
-                onClick={() =>
-                  setConfirmation({
-                    action: "archive",
-                    title: "Archive this widget permanently?",
-                  })
-                }
-              >
-                Archive
-              </Button>
-            </>
-          ) : null}
         </div>
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <StaffPanel title="Publication history">
-          <p className="mb-5 text-sm text-(--t-ink-dim)">
-            Restoring copies a previous configuration and selection into a new
-            draft. Review and publish it to change the live widget. Showing the
-            latest 50 publications.
-          </p>
+          {widget.history.length ? (
+            <p className="mb-5 text-sm text-(--t-ink-dim)">
+              Restoring copies a previous configuration and selection into a new
+              draft. Review and publish it to change the live widget. Showing
+              the latest 50 publications.
+            </p>
+          ) : null}
           <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
             {widget.history.map((r) => (
               <li
@@ -151,24 +111,68 @@ export function WidgetManage({
               </li>
             ))}
           </ul>
-          {!widget.history.length ? <p>No publications yet.</p> : null}
-          <Link
-            href={`/staff/teams/widgets/${widget.documentId}/publish`}
-            className="mt-4 inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline"
-          >
-            Review and publish the draft
-          </Link>
+          {!widget.history.length ? (
+            <EmptyState
+              compact
+              icon="mdi:history"
+              lead="Your first publication starts here"
+              detail="Each publication will appear here, so you can restore an earlier design later."
+              action={
+                <Link
+                  className={buttonVariants({
+                    variant: "primary",
+                    size: "pill",
+                  })}
+                  href={`/staff/teams/widgets/${widget.documentId}/publish`}
+                >
+                  Review and publish the draft
+                </Link>
+              }
+            />
+          ) : null}
+          {widget.history.length ? (
+            <Link
+              href={`/staff/teams/widgets/${widget.documentId}/publish`}
+              className="mt-4 inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline"
+            >
+              Review and publish the draft
+            </Link>
+          ) : null}
         </StaffPanel>
         <StaffPanel title="Aggregate usage">
-          <p className="font-serif text-5xl">{widget.loads.toLocaleString()}</p>
-          <p className="mt-2 text-sm">
-            Widget data loads since creation. These are requests, not unique
-            visitors.
-          </p>
-          <p className="mt-5 text-sm">
-            {widget.blockedReports.toLocaleString()} browser reports of blocked
-            framing. Reports are incomplete and do not identify all attempted
-            embeds.
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-(--t-bg-surface) p-4">
+              <Icon
+                aria-hidden
+                icon="mdi:chart-line"
+                width={22}
+                className="mb-3 text-(--t-accent-primary)"
+              />
+              <p className="font-serif text-4xl tabular-nums">
+                {widget.loads.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
+                Data loads
+              </p>
+            </div>
+            <div className="rounded-2xl bg-(--t-bg-surface) p-4">
+              <Icon
+                aria-hidden
+                icon="mdi:shield-outline"
+                width={22}
+                className="mb-3 text-(--t-ink-dim)"
+              />
+              <p className="font-serif text-4xl tabular-nums">
+                {widget.blockedReports.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
+                Blocked reports
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-(--t-ink-dim)">
+            Totals since creation. Loads count data requests, rather than unique
+            visitors. Browser reports of blocked embeds may be incomplete.
           </p>
           <p className="mt-4 text-xs text-(--t-ink-dim)">
             No visitor identities, locations, searches or page URLs are stored
@@ -197,6 +201,14 @@ export function WidgetManage({
       </StaffPanel>
       {widget.publishedVersion > 0 ? (
         <WidgetEmbed widget={widget} siteUrl={siteUrl} />
+      ) : null}
+      {team.organiser ? (
+        <WidgetLifecycle
+          widget={widget}
+          busy={busy}
+          active={team.active}
+          onConfirm={setConfirmation}
+        />
       ) : null}
       <Dialog
         open={Boolean(confirmation)}
@@ -238,5 +250,83 @@ export function WidgetManage({
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function WidgetLifecycle({
+  widget,
+  busy,
+  onConfirm,
+  active,
+}: {
+  readonly active: boolean
+  readonly widget: TeamWidget
+  readonly busy: boolean
+  readonly onConfirm: (value: { action: string; title: string }) => void
+}) {
+  return (
+    <StaffPanel title="Widget lifecycle" compact>
+      <p className="mb-4 text-sm text-(--t-ink-dim)">
+        {widget.publishedVersion
+          ? "Pause or unpublish to take this widget offline. Archive it when you no longer need it."
+          : "This draft is private to your Team. Archive it if you no longer need it."}{" "}
+        Your publication history is retained.
+      </p>
+      <div className="flex flex-wrap gap-3">
+        {active && widget.state === "paused" ? (
+          <Link
+            className={buttonVariants({ variant: "surface", size: "pill" })}
+            href={`/staff/teams/widgets/${widget.documentId}/publish`}
+          >
+            Review & resume
+          </Link>
+        ) : null}
+        {widget.publishedVersion > 0 &&
+        widget.state !== "paused" &&
+        widget.state !== "unpublished" ? (
+          <Button
+            variant="surface"
+            size="pill"
+            disabled={busy}
+            onClick={() =>
+              onConfirm({
+                action: "pause",
+                title: "Pause this widget?",
+              })
+            }
+          >
+            Pause widget
+          </Button>
+        ) : null}
+        {widget.publishedVersion > 0 && widget.state !== "unpublished" ? (
+          <Button
+            variant="surface"
+            size="pill"
+            disabled={busy}
+            onClick={() =>
+              onConfirm({
+                action: "unpublish",
+                title: "Unpublish this widget?",
+              })
+            }
+          >
+            Unpublish
+          </Button>
+        ) : null}
+        <Button
+          variant="surface"
+          size="pill"
+          disabled={busy}
+          onClick={() =>
+            onConfirm({
+              action: "archive",
+              title: "Archive this widget permanently?",
+            })
+          }
+        >
+          Archive
+        </Button>
+      </div>
+    </StaffPanel>
   )
 }

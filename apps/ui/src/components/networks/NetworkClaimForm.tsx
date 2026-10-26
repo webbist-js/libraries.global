@@ -3,6 +3,9 @@ import type { NetworkClaimSnapshot } from "@repo/shared-data"
 import { useLocale } from "next-intl"
 import { useState, useTransition } from "react"
 
+import { ChoiceCard } from "@/components/ds/ChoiceCard"
+import { Notice } from "@/components/ds/Notice"
+import { SelectField } from "@/components/ds/SelectField"
 import { STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import { networkRequest } from "@/lib/networks/client"
@@ -35,6 +38,9 @@ export function NetworkClaimForm({
   const [attachTeam, setAttachTeam] = useState(
     initialRequest ? Boolean(initialRequest.teamId) : Boolean(teamId)
   )
+  const [staffRole, setStaffRole] = useState(
+    initialRequest?.staffRole ?? "editor"
+  )
   const management = intent === "management"
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -65,36 +71,52 @@ export function NetworkClaimForm({
   }
   if (done)
     return (
-      <p role="status">
-        Your grouped request is in the moderation queue. You can follow its
-        progress below and in Your submissions.
-      </p>
+      <div role="status">
+        <Notice
+          tone="info"
+          icon="mdi:check-circle-outline"
+          title="Request sent for review"
+        >
+          Follow its progress in Grouped requests or Your submissions. We’ll let
+          you know if more information is needed.
+        </Notice>
+      </div>
     )
 
   return (
     <form onSubmit={submit} className="space-y-5" aria-busy={pending}>
-      <label className="grid gap-2">
-        What would you like reviewed?
-        <select
-          value={intent}
-          onChange={(event) =>
-            setIntent(
-              event.target.value === "management" ? "management" : "employment"
-            )
-          }
-          className={STAFF_FIELD}
-          disabled={pending}
-        >
-          <option value="employment">
-            Verify that I work for this institution
-          </option>
+      <fieldset disabled={pending}>
+        <legend className="mb-3 text-sm font-semibold">
+          What would you like reviewed?
+        </legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ChoiceCard
+            name="request-intent"
+            value="employment"
+            checked={!management}
+            onChange={() => setIntent("employment")}
+            icon="mdi:account-check-outline"
+            tint={{ bg: "var(--t-accent-chip)", fg: "var(--t-accent-primary)" }}
+            title="Verify my affiliation"
+            hint="Confirm that you work for this service or network."
+          />
           {detail.network.kind !== "consortium" ? (
-            <option value="management">
-              Management access to its library records
-            </option>
+            <ChoiceCard
+              name="request-intent"
+              value="management"
+              checked={management}
+              onChange={() => setIntent("management")}
+              icon="mdi:shield-check-outline"
+              tint={{
+                bg: "var(--t-accent-chip)",
+                fg: "var(--t-accent-primary)",
+              }}
+              title="Manage library records"
+              hint="Request staff access to a reviewed set of libraries."
+            />
           ) : null}
-        </select>
-      </label>
+        </div>
+      </fieldset>
       <p className="text-sm text-(--t-ink-dim)">
         Employment verification confirms your affiliation. Management approval
         grants access only to the libraries a moderator approves. Evidence is
@@ -124,24 +146,29 @@ export function NetworkClaimForm({
         </label>
       </div>
       {management ? (
-        <label className="grid gap-2">
-          Requested responsibility
-          <select
+        <div className="grid gap-2">
+          <span>Requested responsibility</span>
+          <SelectField
+            label="Requested responsibility"
             name="staffRole"
-            defaultValue={initialRequest?.staffRole ?? "editor"}
-            className={STAFF_FIELD}
+            value={staffRole}
+            onValueChange={(value) =>
+              setStaffRole(value === "owner" ? "owner" : "editor")
+            }
+            options={[
+              { value: "editor", label: "Edit these library records" },
+              {
+                value: "owner",
+                label: "Manage staff and delegate access as an owner",
+              },
+            ]}
             disabled={pending}
-          >
-            <option value="editor">Edit these library records</option>
-            <option value="owner">
-              Manage staff and delegate access as an owner
-            </option>
-          </select>
-          <span className="text-sm">
+          />
+          <span className="text-sm text-(--t-ink-dim)">
             Editor access is the default. Owner responsibility requires an
             explicit moderator decision and reason.
           </span>
-        </label>
+        </div>
       ) : null}
       {management ? (
         <NetworkScope
@@ -181,6 +208,7 @@ export function NetworkClaimForm({
           <label className="flex min-h-11 items-center gap-3">
             <input
               type="checkbox"
+              className="size-4 accent-(--t-accent-primary)"
               checked={attachTeam}
               onChange={(event) => setAttachTeam(event.target.checked)}
               disabled={pending || Boolean(mandateId)}
@@ -201,6 +229,7 @@ export function NetworkClaimForm({
       <Button
         type="submit"
         variant="primary"
+        size="pill"
         disabled={pending || (management && !selected.length)}
       >
         {pending ? "Sending…" : "Send one request for review"}
@@ -277,6 +306,7 @@ function NetworkScope({
               <label className="flex min-h-11 items-center gap-3">
                 <input
                   type="checkbox"
+                  className="size-4 accent-(--t-accent-primary)"
                   checked={selected.includes(row.documentId)}
                   onChange={() => toggle(row.documentId)}
                 />

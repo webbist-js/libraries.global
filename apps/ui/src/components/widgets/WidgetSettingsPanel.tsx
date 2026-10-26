@@ -9,6 +9,7 @@ import {
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
+import { SelectField } from "@/components/ds/SelectField"
 import { Switch } from "@/components/ds/Switch"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { WidgetField } from "@/components/widgets/WidgetControls"
@@ -65,17 +66,16 @@ function formControls({ draft, team, busy, edit }: SettingsProps) {
     values: readonly string[]
   ) => (
     <WidgetField label={label}>
-      <select
-        className={STAFF_FIELD}
+      <SelectField
+        label={label}
         value={String(draft.config[key])}
-        onChange={(e) => config(key, e.target.value)}
-      >
-        {values.map((v) => (
-          <option key={v} value={v}>
-            {CHOICE_LABELS[v] ?? v}
-          </option>
-        ))}
-      </select>
+        onValueChange={(value) => config(key, value)}
+        options={values.map((value) => ({
+          value,
+          label: CHOICE_LABELS[value] ?? value,
+        }))}
+        disabled={!team.active || busy}
+      />
     </WidgetField>
   )
 
@@ -83,19 +83,47 @@ function formControls({ draft, team, busy, edit }: SettingsProps) {
 }
 
 function WidgetContentSettings(props: SettingsProps) {
-  const { draft, edit } = props
+  const { draft, edit, team, busy } = props
   const { config, choose, switches } = formControls(props)
 
   return (
     <div className="space-y-5">
-      <WidgetField label="Internal widget name">
-        <input
-          className={STAFF_FIELD}
-          value={draft.name}
-          maxLength={120}
-          onChange={(e) => edit({ name: e.target.value })}
-        />
-      </WidgetField>
+      {draft.type === "chart" || draft.type === "stat" ? (
+        <>
+          {choose("metric", "Metric", ["libraries", "facility"])}
+          {draft.config.metric === "facility" ? (
+            <WidgetField label="Recorded feature">
+              <SelectField
+                label="Recorded feature"
+                value={String(draft.config.facility)}
+                onValueChange={(value) => config("facility", Number(value))}
+                options={FACILITY_CHECKLIST.map((item, index) => ({
+                  value: String(index),
+                  label: item.label,
+                }))}
+                disabled={!team.active || busy}
+              />
+            </WidgetField>
+          ) : null}
+          {draft.config.metric === "facility"
+            ? choose("chartMode", "Show values as", ["count", "percentage"])
+            : null}
+          <p className="rounded-xl bg-(--t-bg-surface) p-3 text-xs leading-relaxed text-(--t-ink-dim)">
+            {draft.config.metric === "facility"
+              ? "Yes, no and not recorded stay separate. Percentages use only libraries with a recorded answer."
+              : "Counts show the number of libraries in each group. Choose a recorded feature to compare what those libraries offer."}
+          </p>
+          {draft.type === "chart"
+            ? choose("orientation", "Chart orientation", [
+                "horizontal",
+                "vertical",
+              ])
+            : null}
+        </>
+      ) : null}
+      <h3 className="border-b border-(--t-border-line) pb-3 text-sm font-semibold">
+        Title & introduction
+      </h3>
       <WidgetField label="Public title">
         <input
           className={STAFF_FIELD}
@@ -106,40 +134,57 @@ function WidgetContentSettings(props: SettingsProps) {
       </WidgetField>
       <WidgetField label="Introduction">
         <textarea
-          className={`${STAFF_FIELD} min-h-24`}
+          className={`${STAFF_FIELD} min-h-20`}
           maxLength={1000}
           value={draft.config.introduction}
           onChange={(e) => config("introduction", e.target.value)}
         />
       </WidgetField>
-      <WidgetField
-        label="Accessible description"
-        hint="Describe the purpose and population of this widget."
-      >
-        <textarea
-          className={`${STAFF_FIELD} min-h-24`}
-          maxLength={1500}
-          value={draft.config.description}
-          onChange={(e) => config("description", e.target.value)}
-        />
-      </WidgetField>
-      <WidgetField label="Content language">
-        <select
-          className={STAFF_FIELD}
-          value={draft.config.locale}
-          onChange={(e) => config("locale", e.target.value)}
-        >
-          {SUPPORTED_LOCALES.map((l) => (
-            <option key={l} value={l}>
-              {languageNames.of(l)}
-            </option>
-          ))}
-        </select>
-      </WidgetField>
-      <p className="text-xs text-(--t-ink-dim)">
-        Published translations are used where available; English fallback is
-        labelled on each record.
-      </p>
+      <details className="border-t border-(--t-border-line) pt-3">
+        <summary className="min-h-11 cursor-pointer text-sm font-semibold">
+          Language, accessibility & internal name
+        </summary>
+        <div className="space-y-5 pt-2">
+          <WidgetField
+            label="Internal widget name"
+            hint="Only your Team sees this."
+          >
+            <input
+              className={STAFF_FIELD}
+              value={draft.name}
+              maxLength={120}
+              onChange={(event) => edit({ name: event.target.value })}
+            />
+          </WidgetField>
+          <WidgetField
+            label="Accessible description"
+            hint="Describe the purpose and population of this widget."
+          >
+            <textarea
+              className={`${STAFF_FIELD} min-h-20`}
+              maxLength={1500}
+              value={draft.config.description}
+              onChange={(e) => config("description", e.target.value)}
+            />
+          </WidgetField>
+          <WidgetField label="Content language">
+            <SelectField
+              label="Content language"
+              value={draft.config.locale}
+              onValueChange={(value) => config("locale", value)}
+              options={SUPPORTED_LOCALES.map((value) => ({
+                value,
+                label: languageNames.of(value) ?? value,
+              }))}
+              disabled={!team.active || busy}
+            />
+          </WidgetField>
+          <p className="text-xs text-(--t-ink-dim)">
+            Published translations are used where available; English fallback is
+            labelled on each record.
+          </p>
+        </div>
+      </details>
       {draft.type === "directory" ? (
         <>
           {choose("directoryLayout", "Directory layout", ["cards", "list"])}
@@ -158,46 +203,26 @@ function WidgetContentSettings(props: SettingsProps) {
       {draft.type === "finder"
         ? choose("mapMode", "Default presentation", ["both", "map", "list"])
         : null}
-      {draft.type === "chart" || draft.type === "stat" ? (
-        <>
-          {choose("metric", "Metric", ["libraries", "facility"])}
-          {draft.config.metric === "facility" ? (
-            <WidgetField label="Recorded feature">
-              <select
-                className={STAFF_FIELD}
-                value={draft.config.facility}
-                onChange={(e) => config("facility", Number(e.target.value))}
-              >
-                {FACILITY_CHECKLIST.map((f, i) => (
-                  <option key={f.label} value={i}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
-            </WidgetField>
-          ) : null}
-          {choose("chartMode", "Values", ["count", "percentage"])}
-          {draft.type === "chart"
-            ? choose("orientation", "Chart orientation", [
-                "horizontal",
-                "vertical",
-              ])
-            : null}
-        </>
+      {draft.type === "finder" || draft.type === "directory" ? (
+        <details className="border-t border-(--t-border-line) pt-3">
+          <summary className="min-h-11 cursor-pointer text-sm font-semibold">
+            Library information
+          </summary>
+          {switches([
+            [
+              "showHours",
+              "Opening information",
+              "Regular recorded hours, with a link for temporary changes.",
+            ],
+            [
+              "showAccess",
+              "Accessibility information",
+              "Unknown values remain not recorded.",
+            ],
+            ["showLinks", "Links to original library records"],
+          ])}
+        </details>
       ) : null}
-      {switches([
-        [
-          "showHours",
-          "Opening information",
-          "Regular recorded hours, with a link for temporary changes.",
-        ],
-        [
-          "showAccess",
-          "Accessibility information",
-          "Unknown values remain not recorded.",
-        ],
-        ["showLinks", "Links to original library records"],
-      ])}
     </div>
   )
 }
@@ -318,19 +343,18 @@ export function WidgetSettingsPanel(props: SettingsProps) {
     <StaffPanel compact>
       <fieldset disabled={!team.active || busy} className="space-y-5">
         <WidgetField label="Widget type">
-          <select
-            className={STAFF_FIELD}
+          <SelectField
+            label="Widget type"
             value={draft.type}
-            onChange={(e) =>
-              edit({ type: e.target.value as typeof draft.type })
+            onValueChange={(value) =>
+              edit({ type: value as typeof draft.type })
             }
-          >
-            {WIDGET_TYPES.map((t) => (
-              <option value={t} key={t}>
-                {widgetTypeLabels[t]}
-              </option>
-            ))}
-          </select>
+            options={WIDGET_TYPES.map((value) => ({
+              value,
+              label: widgetTypeLabels[value],
+            }))}
+            disabled={!team.active || busy}
+          />
         </WidgetField>
         <SegmentedControl
           label="Widget settings"

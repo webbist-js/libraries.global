@@ -17,7 +17,11 @@ import {
 } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import { WidgetError, WidgetField } from "@/components/widgets/WidgetControls"
-import { widgetEmbedCode, type WidgetWorkspace } from "@/lib/widgets/client"
+import {
+  widgetEmbedCode,
+  widgetTypeLabels,
+  type WidgetWorkspace,
+} from "@/lib/widgets/client"
 
 export function OriginEditor({
   initial,
@@ -190,6 +194,34 @@ export function WidgetEmbed({
     </div>
   )
 }
+function libraryCount(count: number) {
+  return `${count} ${count === 1 ? "library" : "libraries"}`
+}
+
+function recordChecks(widget: TeamWidget, resolved: WidgetResolved | null) {
+  return [
+    {
+      applies: widget.type === "finder",
+      label:
+        widget.config.mapMode === "map" && !resolved?.diagnostics.mapped
+          ? "A map-only finder needs a mapped library. Choose map and list, or list only, to include libraries without coordinates."
+          : `${libraryCount(resolved?.diagnostics.missingCoordinates ?? 0)} missing coordinates — retained in lists and counts`,
+      tone: resolved?.diagnostics.missingCoordinates ? "warn" : "ok",
+      blocks:
+        widget.type === "finder" &&
+        widget.config.mapMode === "map" &&
+        !resolved?.diagnostics.mapped,
+    },
+    {
+      applies:
+        (widget.type === "finder" || widget.type === "directory") &&
+        widget.config.showHours,
+      label: `${libraryCount(resolved?.diagnostics.missingHours ?? 0)} without recorded hours — shown as not recorded`,
+      tone: resolved?.diagnostics.missingHours ? "warn" : "ok",
+      blocks: false,
+    },
+  ].filter((check) => check.applies)
+}
 function publicationChecks(
   widget: TeamWidget,
   resolved: WidgetResolved | null,
@@ -220,16 +252,7 @@ function publicationChecks(
       tone: resolved?.diagnostics.licenceIssues.length ? "warn" : "ok",
       blocks: Boolean(resolved?.diagnostics.licenceIssues.length),
     },
-    {
-      label: `${resolved?.diagnostics.missingCoordinates ?? 0} libraries missing coordinates — retained in lists and counts`,
-      tone: "warn",
-      blocks: false,
-    },
-    {
-      label: `${resolved?.diagnostics.missingHours ?? 0} libraries without recorded hours — shown as not recorded`,
-      tone: "warn",
-      blocks: false,
-    },
+    ...recordChecks(widget, resolved),
     {
       label:
         widget.selection?.spec.membership === "follow_sources"
@@ -248,6 +271,13 @@ function publicationChecks(
   ]
 
   return checks
+}
+
+function formatSetting(value: unknown) {
+  if (typeof value === "boolean") return value ? "On" : "Off"
+  if (value === "") return "Not set"
+
+  return String(value).replace(/^./, (letter) => letter.toUpperCase())
 }
 
 export function WidgetPublish({
@@ -283,12 +313,42 @@ export function WidgetPublish({
               JSON.stringify(widget.config[k as keyof typeof widget.config])
           )
           .map((k) => ({
-            label: k.replaceAll(/([A-Z])/g, " $1"),
-            now: String(live.config[k as keyof typeof live.config]),
-            suggested: String(widget.config[k as keyof typeof widget.config]),
+            label:
+              (
+                {
+                  hidePowered: "Hide Libraries Global branding",
+                  showHours: "Opening information",
+                  showAccess: "Accessibility information",
+                  showLinks: "Links to library records",
+                  showPublisher: "Publishing organisation",
+                  description: "Accessible description",
+                  mapMode: "Map presentation",
+                  chartMode: "Chart values",
+                  locale: "Content language",
+                  pageSize: "Libraries per page",
+                  facility: "Recorded feature",
+                  valueLabels: "Chart value labels",
+                  showTable: "Data table",
+                  locate: "Use my location",
+                  facilityFilter: "Step-free filter",
+                } as Record<string, string>
+              )[k] ??
+              k
+                .replaceAll(/([A-Z])/g, " $1")
+                .replace(/^./, (letter) => letter.toUpperCase()),
+            now: formatSetting(live.config[k as keyof typeof live.config]),
+            suggested: formatSetting(
+              widget.config[k as keyof typeof widget.config]
+            ),
           })),
         ...(live.type !== widget.type
-          ? [{ label: "Widget type", now: live.type, suggested: widget.type }]
+          ? [
+              {
+                label: "Widget type",
+                now: widgetTypeLabels[live.type],
+                suggested: widgetTypeLabels[widget.type],
+              },
+            ]
           : []),
         ...(JSON.stringify(live.spec) !== JSON.stringify(widget.selection?.spec)
           ? [
@@ -360,6 +420,15 @@ export function WidgetPublish({
           The hosted view can be opened directly. Framing is limited to these
           exact origins; removing an origin takes effect on the next load.
         </p>
+        {!origins.length ? (
+          <p
+            role="status"
+            className="mb-4 rounded-xl bg-(--t-bg-surface) p-3 text-sm"
+          >
+            Add the website where this widget will be embedded to enable
+            publication.
+          </p>
+        ) : null}
         <OriginEditor
           initial={widget.origins}
           onChange={setOrigins}

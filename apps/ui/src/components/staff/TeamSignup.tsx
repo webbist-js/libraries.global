@@ -1,9 +1,11 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
+import { Badge } from "@/components/ds/Badge"
 import {
   TeamNetworkChoice,
   type TeamNetworkSelection,
@@ -151,28 +153,46 @@ export function TeamSignup({
 
   return (
     <>
-      <StaffPanel title={team ? team.name : "Your Team, together"} compact>
-        <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
-          {team
-            ? "Your Team is saved. Complete annual billing when you’re ready to activate membership."
-            : "Start with five seats, invite colleagues and manage annual billing online."}
-        </p>
-        <div className="flex flex-wrap items-center gap-4">
-          <Button variant="primary" size="pill" onClick={() => setOpen(true)}>
-            {team ? "Continue to payment" : "Create your Team"}
-          </Button>
-          <ServiceManagementLink team={team} network={network} />
-          {team ? (
-            <Link className={STAFF_LINK} href="/staff/teams/billing">
-              Open Team billing
-            </Link>
-          ) : (
-            <Link className={STAFF_LINK} href="/staff">
-              Your staff workspace
-            </Link>
-          )}
-        </div>
-      </StaffPanel>
+      <div className="mx-auto max-w-3xl">
+        <StaffPanel title={team ? team.name : "Your Team, together"} compact>
+          <p className="mb-5 text-xs font-semibold tracking-wide text-(--t-accent-primary) uppercase">
+            Step 2 of 2 · Team & billing
+          </p>
+          <SignupCoverage network={network} />
+          <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
+            {team
+              ? "Your Team is saved. Complete annual billing when you’re ready to activate membership."
+              : "Start with five seats, invite colleagues and manage annual billing online."}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-4">
+            <Button variant="primary" size="pill" onClick={() => setOpen(true)}>
+              {team ? "Continue to payment" : "Create your Team"}
+            </Button>
+            <ServiceManagementLink team={team} network={network} />
+            {team ? (
+              <Link className={STAFF_LINK} href="/staff/teams/billing">
+                Open Team billing
+              </Link>
+            ) : (
+              <Link className={STAFF_LINK} href="/staff">
+                Your staff workspace
+              </Link>
+            )}
+          </div>
+          {!team ? (
+            <Button
+              className="mt-5 px-0"
+              variant="link"
+              onClick={() => {
+                setNetworkChosen(false)
+                setOpen(false)
+              }}
+            >
+              Change library selection
+            </Button>
+          ) : null}
+        </StaffPanel>
+      </div>
       <TeamCheckoutDialog
         open={open}
         onOpenChange={(value) => {
@@ -209,5 +229,33 @@ function ServiceManagementLink({
     >
       Request service management
     </Link>
+  )
+}
+
+function SignupCoverage({
+  network,
+}: {
+  readonly network: TeamNetworkSelection
+}) {
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-2xl bg-(--t-bg-surface) p-4">
+      <Icon
+        aria-hidden
+        icon="mdi:domain"
+        width={24}
+        className="text-(--t-accent-primary)"
+      />
+      <div className="min-w-0 flex-1">
+        <strong className="block text-sm">
+          {network?.network.name ?? "Choose libraries individually"}
+        </strong>
+        <p className="mt-1 text-xs text-(--t-ink-dim)">
+          {network
+            ? `${network.libraryDocumentIds.length} published libraries selected`
+            : "Add your libraries in the staff workspace after setup."}
+        </p>
+      </div>
+      <Badge color="aurora" label="Starting coverage" />
+    </div>
   )
 }

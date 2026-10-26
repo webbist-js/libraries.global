@@ -111,7 +111,10 @@ export function WidgetEditor({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <WidgetDraftStatus state={state} active={team.active} />
-        <nav className="flex flex-wrap gap-2" aria-label="Widget steps">
+        <nav
+          className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto"
+          aria-label="Widget steps"
+        >
           {(
             [
               ["build", "Build", ""],
@@ -121,6 +124,7 @@ export function WidgetEditor({
           ).map(([key, label, path]) => (
             <Button
               key={key}
+              className="min-w-0 px-3 text-[13px] sm:px-6 sm:text-[15px]"
               variant={mode === key ? "primary" : "surface"}
               size="pill"
               disabled={busy || phase === "saving" || phase === "conflict"}

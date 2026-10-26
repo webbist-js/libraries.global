@@ -309,7 +309,7 @@ function WidgetListPane({
       }
     >
       <ul
-        className={`m-0 grid list-none gap-3 p-0 ${type === "finder" ? "max-h-[520px] overflow-y-auto overscroll-contain" : ""} ${type === "directory" && c.directoryLayout === "cards" ? "@min-[640px]:grid-cols-2" : ""}`}
+        className={`m-0 grid list-none gap-3 p-0 ${type === "finder" ? "max-h-[420px] overflow-y-auto overscroll-contain" : ""} ${type === "directory" && c.directoryLayout === "cards" ? "@min-[640px]:grid-cols-2" : ""}`}
         aria-label={t("Selected libraries")}
       >
         {shown.map((r) => (

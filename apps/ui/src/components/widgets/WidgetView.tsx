@@ -36,11 +36,6 @@ export function WidgetView({
         padding: c.density === "compact" ? 16 : 24,
       }}
     >
-      {preview ? (
-        <p className="mb-2 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
-          Draft preview
-        </p>
-      ) : null}
       <header className="mb-5 space-y-2">
         <Heading
           id={`${id}-title`}

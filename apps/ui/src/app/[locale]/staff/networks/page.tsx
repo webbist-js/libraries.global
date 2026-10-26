@@ -27,7 +27,14 @@ export default async function NetworksWorkspacePage({
     <>
       <PageHero
         staff
+        compact
         title="Your *services & networks*"
+        eyebrow="Institutional access"
+        eyebrowIcon="mdi:domain"
+        breadcrumb={[
+          { label: "Staff area", href: "/staff" },
+          { label: "Services & networks" },
+        ]}
         lead="Review affiliations, request service management and follow grouped access updates."
         tabs={<StaffAreaTabs active="networks" teamId={teamId} />}
       />

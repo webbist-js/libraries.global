@@ -23,6 +23,18 @@ import { getSiteUrl } from "@/lib/seo/metadata"
 import { fetchStaff } from "@/lib/staff-proxy"
 
 type Mode = "overview" | "new" | "selection" | "build" | "publish" | "manage"
+const MODE_LEADS: Record<Mode, string> = {
+  overview:
+    "Your library data, on your website. Create maps, directories and charts that stay connected to published records.",
+  selection:
+    "Choose your libraries once. Reuse the selection across maps, directories and comparisons.",
+  new: "Choose a format, connect your libraries and make it your own.",
+  manage:
+    "Manage publication history, permitted websites and the life of your widget.",
+  publish: "Check your draft, publish it and add it to your website.",
+  build:
+    "Shape your widget and try it in the live preview. Changes save to your draft.",
+}
 type WorkspaceResponse = Awaited<ReturnType<typeof fetchStaff<WidgetWorkspace>>>
 type DetailResponse = Awaited<ReturnType<typeof fetchStaff<TeamWidget>>>
 function workspaceData(response: WorkspaceResponse) {
@@ -154,6 +166,8 @@ export async function WidgetsStaffPage({
     <>
       <PageHero
         staff
+        compact={mode !== "overview"}
+        workspace={mode !== "overview" && mode !== "new"}
         plainTitle
         title={page.title}
         eyebrow="Team widgets"
@@ -165,13 +179,19 @@ export async function WidgetsStaffPage({
             ? [{ label: "Widgets" }]
             : [
                 { label: "Widgets", href: "/staff/teams/widgets" },
-                { label: page.title },
+                ...(mode === "new" ? [{ label: page.title }] : []),
               ]),
         ]}
-        lead="Create maps, directories, comparisons and statistics from published library data. Save once, review, and embed on your website."
+        lead={MODE_LEADS[mode]}
         tabs={<StaffAreaTabs active="widgets" teamId={team.id} />}
       />
-      <Container className="py-8 sm:py-10">
+      <Container
+        className={
+          mode === "overview" || mode === "new"
+            ? "py-8 sm:py-10"
+            : "py-5 sm:py-6"
+        }
+      >
         <WidgetWorkspaceReady>
           <WorkspaceContent {...page} mode={mode} />
         </WidgetWorkspaceReady>

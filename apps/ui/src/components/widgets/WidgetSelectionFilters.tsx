@@ -6,7 +6,7 @@ import {
 } from "@repo/shared-data"
 import { useState } from "react"
 
-import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
+import { SelectField } from "@/components/ds/SelectField"
 import { Button } from "@/components/ui/button"
 import {
   CataloguePicker,
@@ -32,8 +32,11 @@ export function WidgetSelectionFilters({
   const resolution = { data: resolved }
 
   return (
-    <StaffPanel title="Filters" compact>
-      <div className="space-y-4">
+    <details className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
+      <summary className="min-h-11 cursor-pointer font-serif text-2xl">
+        Filter this selection
+      </summary>
+      <div className="space-y-4 pt-3">
         <p className="text-sm text-(--t-ink-dim)">
           Filters narrow every source, including manual additions. Add a
           filtered source to start from the wider catalogue.
@@ -73,58 +76,53 @@ export function WidgetSelectionFilters({
           />
         ) : null}
         <WidgetField label="Library type">
-          <select
-            className={STAFF_FIELD}
+          <SelectField
+            label="Library type"
             disabled={disabled}
             value={spec.filters.libraryType ?? ""}
-            onChange={(e) =>
+            onValueChange={(value) =>
               update({
                 ...spec,
-                filters: {
-                  ...spec.filters,
-                  libraryType: e.target.value || undefined,
-                },
+                filters: { ...spec.filters, libraryType: value || undefined },
               })
             }
-          >
-            <option value="">All types</option>
-            {[
-              "Public",
-              "Academic",
-              "National",
-              "School",
-              "Special",
-              "Community",
-              "Mobile",
-              "Digital",
-            ].map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "All types" },
+              ...[
+                "Public",
+                "Academic",
+                "National",
+                "School",
+                "Special",
+                "Community",
+                "Mobile",
+                "Digital",
+              ].map((value) => ({ value, label: value })),
+            ]}
+          />
         </WidgetField>
         <WidgetField label="Recorded facility">
-          <select
-            className={STAFF_FIELD}
+          <SelectField
+            label="Recorded facility"
             disabled={disabled}
-            value={spec.filters.facility ?? ""}
-            onChange={(e) =>
+            value={String(spec.filters.facility ?? "")}
+            onValueChange={(value) =>
               update({
                 ...spec,
                 filters: {
                   ...spec.filters,
-                  facility:
-                    e.target.value === "" ? undefined : Number(e.target.value),
+                  facility: value === "" ? undefined : Number(value),
                 },
               })
             }
-          >
-            <option value="">Any recorded state</option>
-            {FACILITY_CHECKLIST.map((c, i) => (
-              <option key={c.label} value={i}>
-                {c.label}: yes
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "Any recorded state" },
+              ...FACILITY_CHECKLIST.map((item, index) => ({
+                value: String(index),
+                label: `${item.label}: yes`,
+              })),
+            ]}
+          />
         </WidgetField>
         <Button
           variant="surface"
@@ -164,6 +162,6 @@ export function WidgetSelectionFilters({
           Clear filters and filtered source
         </Button>
       </div>
-    </StaffPanel>
+    </details>
   )
 }

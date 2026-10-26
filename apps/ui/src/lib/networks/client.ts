@@ -1,13 +1,15 @@
 export async function networkRequest<T>(
   path: string,
   method = "GET",
-  body?: unknown
+  body?: unknown,
+  signal?: AbortSignal
 ): Promise<T> {
   const response = await fetch(`/api/networks${path}`, {
     method,
     headers: { "Content-Type": "application/json" },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     cache: "no-store",
+    signal,
   })
   const json = await response.json()
   if (!response.ok)

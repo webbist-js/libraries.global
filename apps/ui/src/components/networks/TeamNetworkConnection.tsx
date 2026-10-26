@@ -1,4 +1,5 @@
 "use client"
+import { Icon } from "@iconify/react"
 import type { NetworkSummary } from "@repo/shared-data"
 import { useSearchParams } from "next/navigation"
 import { useState, useTransition, useEffect } from "react"
@@ -76,38 +77,47 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
   return (
     <details
       open={!!networkParam}
-      className="my-5 rounded-2xl border border-(--t-border-line) p-5"
+      className="group my-5 rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6"
     >
       <summary className="min-h-11 cursor-pointer font-semibold">
-        Connect a library service or network
+        <span className="inline-flex items-center gap-2">
+          <Icon
+            aria-hidden
+            icon="mdi:domain"
+            width={20}
+            className="text-(--t-accent-primary)"
+          />
+          {team.primaryNetwork
+            ? `Connected: ${team.primaryNetwork.name}`
+            : "Connect your library service"}
+        </span>
       </summary>
-      {team.primaryNetwork ? (
-        <p className="font-semibold">Connected to {team.primaryNetwork.name}</p>
-      ) : null}
-      <p className="my-4">
+      <p className="my-4 max-w-2xl text-sm text-(--t-ink-dim)">
         Connect your service for widget defaults. Confirm whether to add its
         current published libraries to Team coverage.
       </p>
       <NetworkPicker onSelect={setSelected} disabled={pending} />
       {selected ? (
-        <div className="mt-4 space-y-3">
+        <div className="mt-5 space-y-3 rounded-2xl bg-(--t-bg-surface) p-4 sm:p-5">
           <p className="font-semibold">{selected.name}</p>
           <label className="flex min-h-11 items-center gap-3">
             <input
               type="checkbox"
+              className="size-4 accent-(--t-accent-primary)"
               checked={addLibraries}
               onChange={(event) => setAddLibraries(event.target.checked)}
               disabled={pending}
             />
             Add its current libraries to Team coverage
           </label>
-          <p className="text-sm">
+          <p className="text-sm text-(--t-ink-dim)">
             Existing libraries remain. Future source additions require a
             separate coverage decision and a batch management review.
           </p>
           <Button
             type="button"
-            variant="surface"
+            variant="primary"
+            size="pill"
             disabled={pending}
             onClick={connect}
           >
@@ -121,7 +131,14 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
           </Link>
         </div>
       ) : null}
-      {message ? <p role="status">{message}</p> : null}
+      {message ? (
+        <p
+          role="status"
+          className="mt-4 rounded-xl bg-(--t-bg-surface) p-4 text-sm"
+        >
+          {message}
+        </p>
+      ) : null}
     </details>
   )
 }

@@ -1,7 +1,10 @@
 "use client"
+import { Icon } from "@iconify/react"
 import type { NetworkClaimSnapshot } from "@repo/shared-data"
 import { useEffect, useState, useRef, useCallback } from "react"
 
+import { Badge } from "@/components/ds/Badge"
+import { Notice } from "@/components/ds/Notice"
 import { NetworkClaimForm } from "@/components/networks/NetworkClaimForm"
 import { NetworkMandateCard } from "@/components/networks/NetworkMandateCard"
 import { NetworkPicker } from "@/components/networks/NetworkPicker"
@@ -12,6 +15,21 @@ import type {
   NetworkDetail,
   NetworkWorkspace as Workspace,
 } from "@/lib/networks/types"
+
+const reviewStatus = (status: string) =>
+  (
+    ({
+      needs_info: "More information needed",
+      pending: "Awaiting review",
+      submitted: "Awaiting review",
+      approved: "Approved",
+      verified: "Verified",
+      rejected: "Not approved",
+      revoked: "Revoked",
+      unverified: "Not verified",
+    }) as Record<string, string>
+  )[status] ??
+  status.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase())
 
 export function NetworkWorkspace({
   initialNetwork,
@@ -26,6 +44,7 @@ export function NetworkWorkspace({
     [detail, setDetail] = useState<NetworkDetail | null>(null),
     [ids, setIds] = useState<string[]>([]),
     [error, setError] = useState(""),
+    [loading, setLoading] = useState(false),
     [mandateId, setMandateId] = useState<string | null>(null)
   const [formInitial, setFormInitial] =
     useState<Partial<NetworkClaimSnapshot> | null>(null)
@@ -46,6 +65,7 @@ export function NetworkWorkspace({
       request?: Partial<NetworkClaimSnapshot>
     ) => {
       const sequence = ++selectionRequest.current
+      setLoading(true)
       try {
         setError("")
         const [next, scope] = await Promise.all([
@@ -77,6 +97,8 @@ export function NetworkWorkspace({
             ? failure.message
             : "Service scope unavailable."
         )
+      } finally {
+        if (sequence === selectionRequest.current) setLoading(false)
       }
     },
     [workspace, teamId]
@@ -118,17 +140,45 @@ export function NetworkWorkspace({
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
       <div className="space-y-6">
-        <StaffPanel title="Your service or network">
+        <StaffPanel title="Find your institution" compact>
+          <p className="mb-5 text-sm text-(--t-ink-dim)">
+            Connect your work with a library service or network. Choose an
+            institution to verify your affiliation or request management access.
+          </p>
           <NetworkPicker
             onSelect={(row) => {
               void choose(row.documentId)
             }}
           />
         </StaffPanel>
-        {error ? <p role="alert">{error}</p> : null}
-        {detail ? (
+        {error ? (
+          <div role="alert">
+            <Notice
+              title="Service unavailable"
+              tone="warn"
+              icon="mdi:alert-circle-outline"
+            >
+              {error}
+            </Notice>
+          </div>
+        ) : null}
+        {loading ? (
+          <p
+            role="status"
+            className="rounded-2xl bg-(--t-bg-muted) p-5 text-sm"
+          >
+            Loading service libraries…
+          </p>
+        ) : null}
+        {detail && !loading ? (
           <StaffPanel title={detail.network.name}>
-            <p>{ids.length} published libraries available for this request.</p>
+            <div className="mb-5 flex flex-wrap gap-2">
+              <Badge
+                color="aurora"
+                label={`${ids.length} published ${ids.length === 1 ? "library" : "libraries"}`}
+              />
+              <Badge color="dim" label="Evidence stays private" />
+            </div>
             <NetworkClaimForm
               key={`${detail.network.documentId}:${mandateId ?? "new"}:${formInitial?.submittedAt ?? ""}`}
               detail={detail}
@@ -155,8 +205,14 @@ export function NetworkWorkspace({
           />
         ))}
       </div>
-      <div className="space-y-6">
-        <StaffPanel title="Network affiliations">
+      <aside className="space-y-6">
+        <StaffPanel title="Your affiliations" compact>
+          {workspace && !workspace.affiliations.length ? (
+            <p className="mb-4 text-sm text-(--t-ink-dim)">
+              No affiliations yet. Verified connections can appear on your
+              profile when you choose to share them.
+            </p>
+          ) : null}
           {workspace?.affiliations.map((row) => (
             <div
               key={row.documentId}
@@ -164,7 +220,7 @@ export function NetworkWorkspace({
             >
               <h3 className="text-lg font-semibold">{row.network.name}</h3>
               <p>
-                {row.role} · {row.status}
+                {row.role} · {reviewStatus(row.status)}
               </p>
               <p className="text-sm">
                 {row.publicDisplay
@@ -177,7 +233,12 @@ export function NetworkWorkspace({
             Manage profile affiliations
           </Link>
         </StaffPanel>
-        <StaffPanel title="Grouped requests">
+        <StaffPanel title="Grouped requests" compact>
+          {workspace && !workspace.requests.length ? (
+            <p className="mb-4 text-sm text-(--t-ink-dim)">
+              Your service requests will appear here with their review status.
+            </p>
+          ) : null}
           {workspace?.requests.map((row) => (
             <div
               key={row.documentId}
@@ -185,8 +246,11 @@ export function NetworkWorkspace({
             >
               <h3 className="font-semibold">{row.fields.networkName}</h3>
               <p>
-                {row.fields.intent} · {row.status} ·{" "}
-                {row.fields.libraryIds.length} libraries
+                {row.fields.intent === "employment"
+                  ? "Affiliation"
+                  : "Management access"}{" "}
+                · {reviewStatus(row.status)} · {row.fields.libraryIds.length}{" "}
+                libraries
               </p>
               {row.reviewNote ? <p>{row.reviewNote}</p> : null}
               {row.status === "needs_info" ? (
@@ -211,18 +275,43 @@ export function NetworkWorkspace({
             Your submissions
           </Link>
         </StaffPanel>
-        <StaffPanel title="Different kinds of access">
-          <p>
-            Affiliation verifies your connection to an institution. A management
-            request reviews a fixed list of library records. A Team subscription
-            enables collaboration and widgets.
-          </p>
-          <p>
-            New libraries can appear on live public widgets before staff access
-            is reviewed. Approve new additions as one batch here.
-          </p>
+        <StaffPanel title="How access works" compact>
+          <ul className="m-0 list-none space-y-5 p-0">
+            {[
+              {
+                icon: "mdi:account-check-outline",
+                title: "Affiliation",
+                text: "Verifies your connection to an institution.",
+              },
+              {
+                icon: "mdi:shield-check-outline",
+                title: "Library management",
+                text: "Grants access to specific library records after review. New additions are reviewed together as a batch.",
+              },
+              {
+                icon: "mdi:account-group-outline",
+                title: "Team membership",
+                text: "Enables shared workspaces and widgets. Public maps can follow a service as its membership changes.",
+              },
+            ].map((item) => (
+              <li key={item.title} className="flex gap-3">
+                <Icon
+                  aria-hidden
+                  icon={item.icon}
+                  width={20}
+                  className="mt-1 shrink-0 text-(--t-accent-primary)"
+                />
+                <div>
+                  <strong className="text-sm">{item.title}</strong>
+                  <p className="mt-1 text-sm leading-relaxed text-(--t-ink-dim)">
+                    {item.text}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </StaffPanel>
-      </div>
+      </aside>
     </div>
   )
 }

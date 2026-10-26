@@ -20,10 +20,7 @@ export function WidgetChartBar({
   const vertical = c.orientation === "vertical"
   const axis = vertical ? "height" : "width"
 
-  const max =
-    c.metric === "libraries"
-      ? Math.max(1, ...metric.map((g) => g.total))
-      : Math.max(1, m.total)
+  const max = Math.max(1, ...metric.map((group) => group.total))
   const percent = c.chartMode === "percentage" && c.metric === "facility",
     value = percent ? (m.percentage ?? 0) : m.yes,
     denominator = percent ? 100 : max
@@ -42,7 +39,11 @@ export function WidgetChartBar({
       <div
         className={`flex overflow-hidden rounded-lg bg-(--t-bg-surface) ${vertical ? "h-40 flex-col-reverse" : "h-7"}`}
         role="img"
-        aria-label={barDescription(m, percent, c.locale)}
+        aria-label={
+          c.metric === "libraries"
+            ? `${m.id === "all" ? t(m.name) : m.name}: ${m.total} ${t(m.total === 1 ? "library" : "libraries")}`
+            : barDescription(m, percent, c.locale)
+        }
       >
         <span
           style={{
@@ -88,6 +89,8 @@ function barDescription(m: Series[number], percent: boolean, locale: string) {
 
 function barValueLabel(m: Series[number], c: WidgetConfig, percent: boolean) {
   const t = (text: string) => widgetCopy(c.locale, text)
+  if (c.metric === "libraries")
+    return `${m.total} ${t(m.total === 1 ? "library" : "libraries")}`
   const value = percent
     ? m.percentage === null
       ? t("Not recorded")

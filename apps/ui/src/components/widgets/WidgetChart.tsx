@@ -80,14 +80,17 @@ export function WidgetChart({
             </caption>
             <thead>
               <tr>
-                {[
-                  t("Group"),
-                  t("Libraries"),
-                  t("Yes"),
-                  t("No"),
-                  t("Not recorded"),
-                  t("% of recorded"),
-                ].map((h) => (
+                {(c.metric === "libraries"
+                  ? [t("Group"), t("Libraries")]
+                  : [
+                      t("Group"),
+                      t("Libraries"),
+                      t("Yes"),
+                      t("No"),
+                      t("Not recorded"),
+                      t("% of recorded"),
+                    ]
+                ).map((h) => (
                   <th key={h} scope="col" className="p-3">
                     {h}
                   </th>
@@ -101,14 +104,18 @@ export function WidgetChart({
                     {m.id === "all" ? t(m.name) : m.name}
                   </th>
                   <td className="p-3">{m.total}</td>
-                  <td className="p-3">{m.yes}</td>
-                  <td className="p-3">{m.no}</td>
-                  <td className="p-3">{m.unknown}</td>
-                  <td className="p-3">
-                    {m.percentage === null
-                      ? t("Not recorded")
-                      : `${m.percentage}% ${t("of")} ${m.recorded}`}
-                  </td>
+                  {c.metric === "facility" ? (
+                    <>
+                      <td className="p-3">{m.yes}</td>
+                      <td className="p-3">{m.no}</td>
+                      <td className="p-3">{m.unknown}</td>
+                      <td className="p-3">
+                        {m.percentage === null
+                          ? t("Not recorded")
+                          : `${m.percentage}% ${t("of")} ${m.recorded}`}
+                      </td>
+                    </>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

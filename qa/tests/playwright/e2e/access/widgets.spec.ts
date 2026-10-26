@@ -387,7 +387,14 @@ test("edits custom selections and groups, and renders the remaining widget types
       caret: "initial",
     })
 
-    const librarySearch = page.getByLabel("Add any published library", {
+    await page
+      .getByRole("button", {
+        name: "Add any published library Search libraries",
+        exact: true,
+      })
+      .click()
+    const librarySearch = page.getByRole("searchbox", {
+      name: "Search libraries",
       exact: true,
     })
     await librarySearch.fill("Access Fixture Second Library", {
@@ -404,24 +411,21 @@ test("edits custom selections and groups, and renders the remaining widget types
     await page
       .getByRole("radio", { name: "Fixed list", exact: true })
       .press("Space")
+    await page.getByRole("radio", { name: /2. Comparison groups/ }).check()
     await page
-      .getByRole("button", { name: "Add comparison group", exact: true })
+      .getByRole("button", { name: "Create first group", exact: true })
       .click()
+    await page.getByLabel("Group name", { exact: true }).fill("North branches")
     await page
-      .getByLabel("Group 1 name", { exact: true })
-      .fill("North branches")
-    await page
-      .getByRole("checkbox", { name: "North branches", exact: true })
+      .getByRole("group", { name: "Libraries in North branches", exact: true })
+      .getByRole("checkbox")
       .first()
       .check()
+    await page.getByRole("button", { name: "Add group", exact: true }).click()
+    await page.getByLabel("Group name", { exact: true }).fill("South branches")
     await page
-      .getByRole("button", { name: "Add comparison group", exact: true })
-      .click()
-    await page
-      .getByLabel("Group 2 name", { exact: true })
-      .fill("South branches")
-    await page
-      .getByRole("checkbox", { name: "South branches", exact: true })
+      .getByRole("group", { name: "Libraries in South branches", exact: true })
+      .getByRole("checkbox")
       .last()
       .check()
     await page

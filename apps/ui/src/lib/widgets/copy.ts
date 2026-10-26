@@ -56,6 +56,7 @@ const translations: Record<string, Record<string, string>> = {
       "Seřazeno podle vzdálenosti. Poloha zůstává pouze na této stránce.",
     "Location was not shared. Search by town instead.":
       "Poloha nebyla sdílena. Hledejte podle města.",
+    library: "knihovna",
     libraries: "knihoven",
     mapped: "na mapě",
     "missing coordinates": "bez souřadnic",
@@ -150,6 +151,7 @@ const translations: Record<string, Record<string, string>> = {
       "Trié par distance. Votre position reste uniquement sur cette page.",
     "Location was not shared. Search by town instead.":
       "Position non partagée. Recherchez plutôt une ville.",
+    library: "bibliothèque",
     libraries: "bibliothèques",
     mapped: "sur la carte",
     "missing coordinates": "sans coordonnées",

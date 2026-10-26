@@ -1,5 +1,6 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -11,6 +12,7 @@ import {
   CataloguePicker,
   WidgetError,
 } from "@/components/widgets/WidgetControls"
+import { WidgetThumbnail } from "@/components/widgets/WidgetThumbnail"
 import { Link } from "@/lib/navigation"
 import {
   widgetRequest,
@@ -68,8 +70,10 @@ export function WidgetsOverview({
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="m-0 text-(--t-ink-dim)">
-          {data.widgets.length} widgets · {data.selections.length} reusable
-          selections
+          {data.widgets.length}{" "}
+          {data.widgets.length === 1 ? "widget" : "widgets"} ·{" "}
+          {data.selections.length} reusable{" "}
+          {data.selections.length === 1 ? "selection" : "selections"}
         </p>
         <Badge label="Included with active Team access" color="aurora" />
         <Link
@@ -82,58 +86,74 @@ export function WidgetsOverview({
           Create widget
         </Link>
       </div>
-      <StaffPanel
-        title="Your library service"
-        aside={
-          team.primaryNetwork ? (
-            <Badge color="ok" label="Default source" />
-          ) : undefined
-        }
-      >
-        <p className="mb-4 text-sm text-(--t-ink-dim)">
-          {team.primaryNetwork
-            ? `${team.primaryNetwork.name} is the starting selection for new widgets.`
-            : "Connect a library service or network to use it as the default source. You can always choose libraries yourself."}{" "}
-          This connection uses public data and does not grant staff access. New
-          service libraries need batch review before management access expands.
-        </p>
+      <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5">
+        <div className="flex items-start gap-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-(--t-accent-chip) text-(--t-accent-primary)">
+            <Icon aria-hidden icon="mdi:domain" width={21} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
+              Default library source
+            </p>
+            <h2 className="text-base font-semibold">
+              {team.primaryNetwork?.name ?? "Your Team libraries"}
+            </h2>
+            <p className="mt-1 text-sm text-(--t-ink-dim)">
+              New widgets start here. You can choose a different selection for
+              each widget.
+            </p>
+          </div>
+          <Badge color="dim" label="Connected" />
+        </div>
         {team.organiser && team.active ? (
-          <>
-            <CataloguePicker
-              teamId={team.documentId}
-              kind="networks"
-              label="Find your library service or network"
-              onPick={setPendingNetwork}
-            />
-            {pendingNetwork ? (
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <strong>{pendingNetwork.name}</strong>
+          <details className="mt-3 pl-0 sm:pl-14">
+            <summary className="min-h-11 cursor-pointer text-sm font-semibold text-(--t-accent-primary)">
+              Change default source
+            </summary>
+            <div className="mt-3 space-y-3">
+              <p className="text-sm text-(--t-ink-dim)">
+                This chooses public data for new widgets. Management access is
+                reviewed separately.
+              </p>
+              <CataloguePicker
+                teamId={team.documentId}
+                kind="networks"
+                label="Find your library service or network"
+                onPick={setPendingNetwork}
+              />
+              {pendingNetwork ? (
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <strong>{pendingNetwork.name}</strong>
+                  <Button
+                    variant="primary"
+                    size="pill"
+                    disabled={busy}
+                    onClick={() => connect(pendingNetwork.documentId)}
+                  >
+                    Confirm default service
+                  </Button>
+                  <Button
+                    variant="link"
+                    onClick={() => setPendingNetwork(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : null}
+              {team.primaryNetwork ? (
                 <Button
-                  variant="primary"
-                  size="pill"
+                  variant="link"
+                  className="mt-3 min-h-11 px-0"
                   disabled={busy}
-                  onClick={() => connect(pendingNetwork.documentId)}
+                  onClick={() => connect(null)}
                 >
-                  Confirm default service
+                  Use manual setup as the default
                 </Button>
-                <Button variant="link" onClick={() => setPendingNetwork(null)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : null}
-            {team.primaryNetwork ? (
-              <Button
-                variant="link"
-                className="mt-3 min-h-11 px-0"
-                disabled={busy}
-                onClick={() => connect(null)}
-              >
-                Use manual setup as the default
-              </Button>
-            ) : null}
-          </>
+              ) : null}
+            </div>
+          </details>
         ) : null}
-      </StaffPanel>
+      </div>
       <StaffPanel title="Widgets">
         {!data.widgets.length ? (
           <EmptyState
@@ -155,26 +175,37 @@ export function WidgetsOverview({
             }
           />
         ) : (
-          <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
+          <ul className="m-0 list-none space-y-4 p-0">
             {data.widgets.map((w) => (
               <li
                 key={w.documentId}
-                className="flex flex-wrap items-center justify-between gap-4 py-5"
+                className="flex flex-wrap items-center gap-5 rounded-2xl border border-(--t-border-line) p-4 sm:p-5"
               >
-                <div className="min-w-0 space-y-2">
+                <div className="h-24 w-40 shrink-0">
+                  <WidgetThumbnail type={w.type} />
+                </div>
+                <div className="min-w-0 flex-1 space-y-2">
                   <Link
-                    className="text-lg font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                    className="text-lg font-semibold text-(--t-ink-base) hover:text-(--t-accent-primary)"
                     href={`/staff/teams/widgets/${w.documentId}`}
                   >
                     {w.name}
                   </Link>
                   <p className="m-0 text-sm text-(--t-ink-dim)">
-                    {widgetTypeLabels[w.type]} ·{" "}
-                    {w.selection?.name ?? "Selection unavailable"} · Updated{" "}
+                    {widgetTypeLabels[w.type]} · “{w.config.title}”
+                  </p>
+                  <p className="m-0 text-xs text-(--t-ink-dim)">
+                    Selection: {w.selection?.name ?? "Selection unavailable"} ·
+                    Updated{" "}
                     {new Intl.DateTimeFormat("en", {
                       dateStyle: "medium",
                       timeZone: "UTC",
                     }).format(new Date(w.updatedAt))}
+                  </p>
+                  <p className="m-0 text-xs text-(--t-ink-dim)">
+                    {w.origins.length
+                      ? `Allowed: ${w.origins.join(", ")}`
+                      : "No websites added yet"}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Badge
@@ -264,13 +295,24 @@ export function WidgetsOverview({
                     {s.name}
                   </Link>
                   <p className="mt-1 text-sm text-(--t-ink-dim)">
-                    v{s.version} ·{" "}
+                    {" "}
                     {s.spec.membership === "fixed"
                       ? "Fixed library identities"
                       : "Follows source membership"}{" "}
-                    · Used by {s.usedBy?.length ?? 0} widgets
+                    · Used by {s.usedBy?.length ?? 0}{" "}
+                    {(s.usedBy?.length ?? 0) === 1 ? "widget" : "widgets"}
                   </p>
                 </div>
+                <Link
+                  className={buttonVariants({
+                    variant: "surface",
+                    size: "pill",
+                  })}
+                  href={`/staff/teams/widgets/selections/${s.documentId}`}
+                >
+                  Edit selection
+                  <Icon aria-hidden icon="mdi:arrow-right" width={17} />
+                </Link>
               </li>
             ))}
           </ul>

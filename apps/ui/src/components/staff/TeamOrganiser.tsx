@@ -6,6 +6,7 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, SegmentedControl, Sheet } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { TeamNetworkConnection } from "@/components/networks/TeamNetworkConnection"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
@@ -295,35 +296,35 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                           dot
                         />
                         {organiser && !member.isYou ? (
-                          <label className="flex items-center gap-2 text-[14px]">
+                          <div className="flex items-center gap-2 text-[14px]">
                             <span className="sr-only">
                               Team role for {member.name ?? member.email}
                             </span>
-                            <select
+                            <SelectField
+                              label={`Team role for ${member.name ?? member.email}`}
                               value={member.teamRole}
                               disabled={busy}
-                              className={`${INPUT} text-[14px]`}
-                              style={{ borderColor: T.border.hi }}
-                              onChange={(event) =>
+                              onValueChange={(value) =>
                                 setConfirm({
                                   title:
-                                    event.target.value === "organiser"
+                                    value === "organiser"
                                       ? `Make ${member.name ?? member.email} an organiser?`
                                       : `Make ${member.name ?? member.email} a member?`,
                                   body:
-                                    event.target.value === "organiser"
+                                    value === "organiser"
                                       ? "Organisers invite colleagues, assign them to libraries and can remove anyone from the team."
                                       : "Members keep their seat and their library access, but can’t change the team.",
                                   path: `${base}/members/${member.documentId}`,
                                   method: "PUT",
-                                  payload: { teamRole: event.target.value },
+                                  payload: { teamRole: value },
                                 })
                               }
-                            >
-                              <option value="member">Member</option>
-                              <option value="organiser">Organiser</option>
-                            </select>
-                          </label>
+                              options={[
+                                { value: "member", label: "Member" },
+                                { value: "organiser", label: "Organiser" },
+                              ]}
+                            />
+                          </div>
                         ) : (
                           <Badge
                             label={
@@ -550,7 +551,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             )}
           </Card>
         </div>
-        <aside className="min-w-0 space-y-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain">
+        <aside className="min-w-0 space-y-6">
           <Card
             compact
             title="Team details"
@@ -704,42 +705,42 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       placeholder="colleague@library.example"
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                    Team role
-                    <select
+                  <div className="flex flex-col gap-2 text-[14px] font-semibold">
+                    <span>Team role</span>
+                    <SelectField
+                      label="Team role"
                       value={inviteRole}
-                      onChange={(event) =>
+                      disabled={busy}
+                      onValueChange={(value) =>
                         setInviteRole(
-                          event.target.value === "organiser"
-                            ? "organiser"
-                            : "member"
+                          value === "organiser" ? "organiser" : "member"
                         )
                       }
-                      className={INPUT}
-                      style={{ borderColor: T.border.hi }}
-                    >
-                      <option value="member">Member</option>
-                      <option value="organiser">
-                        Organiser (can manage this team)
-                      </option>
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-2 text-[14px] font-semibold">
-                    Give access to (optional)
-                    <select
+                      options={[
+                        { value: "member", label: "Member" },
+                        {
+                          value: "organiser",
+                          label: "Organiser (can manage this team)",
+                        },
+                      ]}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2 text-[14px] font-semibold">
+                    <span>Give access to (optional)</span>
+                    <SelectField
+                      label="Give access to (optional)"
                       value={inviteLibrary}
-                      onChange={(event) => setInviteLibrary(event.target.value)}
-                      className={INPUT}
-                      style={{ borderColor: T.border.hi }}
-                    >
-                      <option value={NONE}>No library yet</option>
-                      {team.libraries.map((l) => (
-                        <option key={l.documentId} value={l.documentId}>
-                          {l.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      disabled={busy}
+                      onValueChange={setInviteLibrary}
+                      options={[
+                        { value: NONE, label: "No library yet" },
+                        ...team.libraries.map((library) => ({
+                          value: library.documentId,
+                          label: library.name,
+                        })),
+                      ]}
+                    />
+                  </div>
                   {inviteLibrary !== NONE ? (
                     <div className="flex flex-col gap-2 text-[14px] font-semibold">
                       Level

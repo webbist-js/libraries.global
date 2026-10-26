@@ -186,12 +186,8 @@ describe("TeamOrganiser (organiser)", () => {
       screen.getAllByText("Organiser").some((el) => el.tagName !== "OPTION")
     ).toBe(true)
     expect(
-      (
-        screen.getByRole("combobox", {
-          name: "Team role for Bea",
-        }) as HTMLSelectElement
-      ).value
-    ).toBe("member")
+      screen.getByRole("combobox", { name: "Team role for Bea" }).textContent
+    ).toContain("Member")
     expect(
       screen.getByText(/bea@example.org · joined 2 Sep\w* 2026/)
     ).toBeTruthy()
@@ -271,9 +267,11 @@ describe("TeamOrganiser (organiser)", () => {
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "eve@example.org" },
     })
-    fireEvent.change(screen.getByLabelText("Give access to (optional)"), {
-      target: { value: L1 },
-    })
+    fireEvent.keyDown(
+      screen.getByRole("combobox", { name: "Give access to (optional)" }),
+      { key: "ArrowDown" }
+    )
+    fireEvent.click(screen.getByRole("option", { name: "Maidstone Library" }))
     const form = within(screen.getByLabelText("Email").closest("form")!)
     expect(form.getByRole("radio", { name: "Editor" })).toBeTruthy()
     expect(form.getByRole("radio", { name: "Owner" })).toBeTruthy()
@@ -287,6 +285,27 @@ describe("TeamOrganiser (organiser)", () => {
           teamRole: "member",
           preassign: { libraryDocumentId: L1, staffRole: "editor" },
         }
+      )
+    )
+  })
+
+  it("confirms a role change before updating the selected member", async () => {
+    render(organiser())
+    fireEvent.keyDown(
+      screen.getByRole("combobox", { name: "Team role for Bea" }),
+      { key: "ArrowDown" }
+    )
+    fireEvent.click(screen.getByRole("option", { name: "Organiser" }))
+    expect(
+      screen.getByRole("dialog", { name: "Make Bea an organiser?" })
+    ).toBeTruthy()
+    expect(mocks.request).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }))
+    await waitFor(() =>
+      expect(mocks.request).toHaveBeenCalledWith(
+        "/api/staff/team/t1/members/m2",
+        "PUT",
+        { teamRole: "organiser" }
       )
     )
   })

@@ -1,9 +1,15 @@
 "use client"
-import type { WidgetSelection } from "@repo/shared-data"
+import { Icon } from "@iconify/react"
+import type {
+  WidgetSelection,
+  WidgetResolved,
+  WidgetType,
+} from "@repo/shared-data"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
-import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
+import { SelectField } from "@/components/ds/SelectField"
+import { StaffPanel } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import type { useWidgetDraft } from "@/components/widgets/useWidgetDraft"
 import type { useWidgetResolution } from "@/components/widgets/useWidgetResolution"
@@ -23,6 +29,15 @@ type BuilderProps = {
   readonly siteUrl: string
 }
 
+function selectionSummary(data: WidgetResolved | null, type: WidgetType) {
+  if (!data) return "Resolving published data…"
+  const { selected, mapped, missingCoordinates } = data.diagnostics
+  if (type === "chart" || type === "stat")
+    return `${selected} published libraries`
+
+  return `${selected} selected · ${mapped} mapped${missingCoordinates ? ` · ${missingCoordinates} without coordinates` : ""}`
+}
+
 function WidgetBuilderSelection({
   workspace,
   state,
@@ -31,32 +46,26 @@ function WidgetBuilderSelection({
   busy,
 }: BuilderProps & { readonly mobileView: string }) {
   const team = workspace.team
-  const { draft, edit, phase } = state
+  const { draft, edit, phase, widget } = state
   const router = useRouter()
 
   return (
     <StaffPanel title="Library selection" compact>
-      <p className="font-semibold">
-        {selection?.name ?? "Selection unavailable"}
-      </p>
       <p className="mt-2 text-sm text-(--t-ink-dim)">
-        {resolution.data
-          ? `${resolution.data.diagnostics.selected} selected · ${resolution.data.diagnostics.mapped} mapped · ${resolution.data.diagnostics.missingCoordinates} missing coordinates`
-          : "Resolving published data…"}
+        {selectionSummary(resolution.data, draft.type)}
       </p>
       <fieldset disabled={!team.active || busy} className="mt-4">
         <WidgetField label="Use a selection">
-          <select
-            className={STAFF_FIELD}
+          <SelectField
+            label="Use a selection"
             value={draft.selectionId}
-            onChange={(e) => edit({ selectionId: e.target.value })}
-          >
-            {workspace.selections.map((s) => (
-              <option key={s.documentId} value={s.documentId}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            onValueChange={(selectionId) => edit({ selectionId })}
+            disabled={!team.active || busy}
+            options={workspace.selections.map((item) => ({
+              value: item.documentId,
+              label: item.name,
+            }))}
+          />
         </WidgetField>
       </fieldset>
       <Button
@@ -68,16 +77,39 @@ function WidgetBuilderSelection({
         onClick={async () => {
           if (phase !== "saved" && !(await state.save())) return
           router.push(
-            `/staff/teams/widgets/selections/${selection!.documentId}`
+            `/staff/teams/widgets/selections/${selection!.documentId}?widget=${widget.documentId}${draft.type === "chart" ? "&tab=groups" : ""}`
           )
         }}
       >
-        Edit sources, libraries and comparison groups
+        <Icon
+          aria-hidden
+          icon={draft.type === "chart" ? "mdi:chart-bar" : "mdi:pencil-outline"}
+          width={17}
+        />
+        {draft.type === "chart"
+          ? "Set up comparison groups"
+          : "Edit library selection"}
       </Button>
-      <p className="text-xs text-(--t-ink-dim)">
-        Public network membership can change automatically. Staff access to
-        additions requires batch approval.
-      </p>
+      {draft.type === "chart" ? (
+        <div className="mt-2 rounded-xl bg-(--t-bg-surface) p-3 text-sm">
+          <strong className="block">
+            {selection?.spec.groups.length
+              ? `${selection.spec.groups.length} comparison ${selection.spec.groups.length === 1 ? "group" : "groups"}`
+              : "Start with your comparison groups"}
+          </strong>
+          <p className="mt-1 text-xs text-(--t-ink-dim)">
+            {selection?.spec.groups.length
+              ? selection.spec.groups
+                  .map((group) => `${group.name} (${group.libraryIds.length})`)
+                  .join(" · ")
+              : "Create two or more named groups, then choose a metric below. Until then, the preview shows the whole selection."}
+          </p>
+        </div>
+      ) : (
+        <p className="text-xs text-(--t-ink-dim)">
+          This shared selection can also power your other widgets.
+        </p>
+      )}
     </StaffPanel>
   )
 }
@@ -97,22 +129,47 @@ function WidgetBuilderPreview({
 
   return (
     <div
-      className={`${mobileView === "preview" ? "block" : "hidden"} min-w-0 space-y-4 lg:block`}
+      className={`${mobileView === "preview" ? "block" : "hidden"} min-w-0 space-y-4 lg:sticky lg:top-(--sticky-content-top) lg:block`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <SegmentedControl
-          label="Preview width"
-          value={device}
-          onChange={setDevice}
-          options={[
-            { value: "desktop", label: "Desktop" },
-            { value: "tablet", label: "Tablet 720" },
-            { value: "phone", label: "Phone 360" },
-          ]}
-        />
+        <div className="hidden sm:block">
+          <SegmentedControl
+            label="Preview width"
+            value={device}
+            onChange={setDevice}
+            options={[
+              { value: "desktop", label: "Desktop" },
+              { value: "tablet", label: "Tablet" },
+              { value: "phone", label: "Phone" },
+            ]}
+          />
+        </div>
+        <span className="text-sm font-semibold text-(--t-ink-dim) sm:hidden">
+          Preview
+        </span>
         <Button variant="surface" size="pill" onClick={() => setRows(!rows)}>
-          {rows ? "Hide underlying rows" : "Inspect underlying rows"}
+          <Icon aria-hidden icon="mdi:table" width={17} />
+          {rows ? "Hide data" : "View data"}
         </Button>
+      </div>
+      <div className="flex items-center justify-between gap-3 px-1 text-xs text-(--t-ink-dim)">
+        <span className="font-semibold tracking-wide uppercase">
+          <span className="hidden sm:inline">Interactive </span>draft preview
+        </span>
+        <span role="status" className="hidden sm:inline">
+          {resolution.busy
+            ? "Updating…"
+            : (
+                {
+                  desktop: "Fits your website column",
+                  tablet: "Up to 720 px",
+                  phone: "Up to 360 px",
+                } as Record<string, string>
+              )[device]}
+        </span>
+        <span className="sm:hidden">
+          {resolution.busy ? "Updating…" : "Fits this screen"}
+        </span>
       </div>
       <WidgetError error={resolution.error} />
       {resolution.error ? (
@@ -125,14 +182,15 @@ function WidgetBuilderPreview({
         </Button>
       ) : null}
       <div
-        className="min-w-0 overflow-x-auto rounded-3xl bg-(--t-bg-muted) p-2 sm:p-5"
+        className="min-w-0 overflow-x-auto rounded-3xl bg-(--t-bg-muted) p-2 sm:p-4"
         aria-busy={resolution.busy}
       >
         <div
           className="mx-auto max-w-full"
           style={{
             width:
-              device === "phone" ? 360 : device === "tablet" ? 720 : "100%",
+              ({ phone: 360, tablet: 720 } as Record<string, number>)[device] ??
+              "100%",
           }}
         >
           {resolution.data && selection ? (
@@ -174,7 +232,7 @@ export function WidgetBuilder(props: BuilderProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-20 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-2 lg:hidden">
+      <div className="sticky top-(--sticky-content-top) z-20 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-2 lg:hidden">
         <SegmentedControl
           label="Builder view"
           value={mobileView}
@@ -186,7 +244,7 @@ export function WidgetBuilder(props: BuilderProps) {
           ]}
         />
       </div>
-      <div className="grid items-start gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+      <div className="grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div
           className={`${mobileView === "configure" ? "block" : "hidden"} space-y-5 lg:block`}
         >

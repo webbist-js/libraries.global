@@ -175,7 +175,7 @@ test("profile affiliation preferences save separately and consortia offer employ
       .getByRole("button", { name: "Send one request for review" })
       .click()
     await expect(
-      page.getByRole("status").filter({ hasText: "Your grouped request" })
+      page.getByRole("status").filter({ hasText: "Request sent for review" })
     ).toBeVisible()
     const employment = (await workspace()).requests.find(
       (row) => row.fields.networkId === networkId && row.status === "pending"
@@ -313,11 +313,17 @@ test("submits one owner request and moderates a frozen subset through the existi
     await page.goto(`/staff/networks?network=${networkId}`, {
       waitUntil: "domcontentloaded",
     })
-    await page
-      .getByLabel("What would you like reviewed?")
-      .selectOption("management")
+    await page.getByRole("radio", { name: /Manage library records/ }).check()
     await page.getByLabel("Your role", { exact: true }).fill("Service manager")
-    await page.getByLabel("Requested responsibility").selectOption("owner")
+    await page
+      .getByRole("combobox", { name: "Requested responsibility", exact: true })
+      .click()
+    await page
+      .getByRole("option", {
+        name: "Manage staff and delegate access as an owner",
+        exact: true,
+      })
+      .click()
     await page
       .getByLabel("Evidence URL (optional)")
       .fill("https://example.test/service-staff")
@@ -333,7 +339,7 @@ test("submits one owner request and moderates a frozen subset through the existi
       .getByRole("button", { name: "Send one request for review" })
       .click()
     await expect(
-      page.getByRole("status").filter({ hasText: "Your grouped request" })
+      page.getByRole("status").filter({ hasText: "Request sent for review" })
     ).toBeVisible()
     const requests = (await workspace()).requests.filter(
       (row) => row.fields.networkId === networkId && row.status === "pending"
@@ -439,7 +445,7 @@ test("revises the same needs-info case, connects Team coverage and defaults widg
       .getByRole("button", { name: "Send one request for review" })
       .click()
     await expect(
-      page.getByRole("status").filter({ hasText: "Your grouped request" })
+      page.getByRole("status").filter({ hasText: "Request sent for review" })
     ).toBeVisible()
     expect(
       (await workspace()).requests.find((row) => row.documentId === followupId)

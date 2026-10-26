@@ -1,4 +1,5 @@
 "use client"
+import { Icon } from "@iconify/react"
 import type { WidgetLibrary, WidgetConfig, WidgetType } from "@repo/shared-data"
 
 import { STAFF_LINK } from "@/components/staff/StaffPanel"
@@ -32,7 +33,7 @@ export function WidgetLibraryCard({
 
   return (
     <li
-      className="min-w-0 rounded-2xl border p-4"
+      className={`min-w-0 rounded-2xl border ${type === "finder" ? "p-3" : "p-4"}`}
       style={{
         borderColor:
           r.documentId === selected ? accent : "var(--t-border-line)",
@@ -40,40 +41,35 @@ export function WidgetLibraryCard({
       }}
     >
       {type === "finder" ? (
-        <button
-          type="button"
-          className="min-h-11 text-left text-[17px] font-semibold underline-offset-4 hover:underline focus-visible:outline-2"
-          aria-pressed={selected === r.documentId}
-          onClick={() => {
-            onSelect(r.documentId)
-          }}
-        >
-          {r.name}
-        </button>
+        <div className="flex items-start justify-between gap-2">
+          <button
+            type="button"
+            className="min-h-11 min-w-0 flex-1 text-left text-[15px] font-semibold underline-offset-4 hover:underline focus-visible:outline-2"
+            aria-pressed={selected === r.documentId}
+            onClick={() => {
+              onSelect(r.documentId)
+            }}
+          >
+            {r.name}
+          </button>
+          {c.showLinks && r.href ? (
+            <a
+              className="flex size-11 shrink-0 items-center justify-center rounded-full text-(--t-accent-primary) hover:bg-(--t-bg-surface) focus-visible:outline-2"
+              href={recordLink(r.href)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${t("View on Libraries Global")}: ${r.name} ${t("(new tab)")}`}
+            >
+              <Icon aria-hidden icon="mdi:open-in-new" width={16} />
+            </a>
+          ) : null}
+        </div>
       ) : (
         <h3 className="m-0 text-[17px] font-semibold">{r.name}</h3>
       )}
       <WidgetLibraryFacts r={r} c={c} type={type} />
       {c.showHours ? (
-        <details className="mt-2 text-sm">
-          <summary className="min-h-11 cursor-pointer py-2">
-            {r.hours.length
-              ? t("Regular recorded hours")
-              : t("Opening hours not recorded")}
-          </summary>
-          {r.hours.length ? (
-            <>
-              <ul className="list-none space-y-1 pl-0">
-                {r.hours.map((h) => (
-                  <li key={h}>{h}</li>
-                ))}
-              </ul>
-              <p className="mt-2">
-                {t("Check the library for temporary changes.")}
-              </p>
-            </>
-          ) : null}
-        </details>
+        <WidgetLibraryHours r={r} type={type} locale={c.locale} />
       ) : null}
       {c.showAccess ? (
         <p className="mt-2 text-sm">
@@ -83,7 +79,7 @@ export function WidgetLibraryCard({
             : t(r.facilities[0] ?? "unknown")}
         </p>
       ) : null}
-      {c.showLinks && r.href ? (
+      {type !== "finder" && c.showLinks && r.href ? (
         <a
           className={`${STAFF_LINK} mt-2 inline-flex min-h-11 items-center text-sm`}
           href={recordLink(r.href)}
@@ -117,7 +113,13 @@ function WidgetLibraryFacts({
       <p className="mt-1 text-sm text-(--t-ink-dim)">
         {r.address || r.city || t("Address not recorded")}
       </p>
-      <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
+      <p
+        className={
+          type === "finder"
+            ? "sr-only"
+            : "mt-1 text-xs font-semibold text-(--t-ink-dim)"
+        }
+      >
         {r.libraryType}
       </p>
       {r.libraryType === "Mobile" ? (
@@ -141,5 +143,39 @@ function WidgetLibraryFacts({
         </p>
       ) : null}
     </>
+  )
+}
+
+function WidgetLibraryHours({
+  r,
+  type,
+  locale,
+}: {
+  readonly r: WidgetLibrary
+  readonly type: WidgetType
+  readonly locale: string
+}) {
+  const t = (text: string) => widgetCopy(locale, text)
+
+  return (
+    <details className={`${type === "finder" ? "mt-0" : "mt-2"} text-sm`}>
+      <summary className="min-h-11 cursor-pointer py-2">
+        {r.hours.length
+          ? t("Regular recorded hours")
+          : t("Opening hours not recorded")}
+      </summary>
+      {r.hours.length ? (
+        <>
+          <ul className="list-none space-y-1 pl-0">
+            {r.hours.map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            {t("Check the library for temporary changes.")}
+          </p>
+        </>
+      ) : null}
+    </details>
   )
 }
