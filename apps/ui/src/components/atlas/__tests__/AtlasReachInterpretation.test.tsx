@@ -59,3 +59,11 @@ it("does not produce an exclusive distribution or narrative from incomplete rout
     "needs complete routing and population data"
   )
 })
+
+it("explains an intentional single-time result without inventing intervals or missing data", () => {
+  show({ ...result, requestedMinutes: 15, contours: [result.contours[2]!] })
+  expect(screen.getByText(/This result covers 15 minutes only/)).toBeTruthy()
+  expect(screen.queryByRole("radio", { name: "Distinct bands" })).toBeNull()
+  expect(screen.queryByText(/needs complete routing/)).toBeNull()
+  expect(screen.queryByText(/additional residents/)).toBeNull()
+})

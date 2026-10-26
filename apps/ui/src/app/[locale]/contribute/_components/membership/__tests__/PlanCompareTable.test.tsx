@@ -55,18 +55,18 @@ it("filters roadmap features across both layouts without losing the selected pla
     screen.getByRole("region", { name: "Compare two plans" })
   )
   expect(
-    full.getByRole("row", { name: /Deprivation and transit layers/ })
+    full.getByRole("row", { name: /Transit stops and lines/ })
   ).toBeTruthy()
   expect(
-    mobile.getByRole("row", { name: /Deprivation and transit layers/ })
+    mobile.getByRole("row", { name: /Transit stops and lines/ })
   ).toBeTruthy()
 
   fireEvent.click(controls.getByRole("radio", { name: "Available now" }))
   expect(
-    full.queryByRole("row", { name: /Deprivation and transit layers/ })
+    full.queryByRole("row", { name: /Transit stops and lines/ })
   ).toBeNull()
   expect(
-    mobile.queryByRole("row", { name: /Deprivation and transit layers/ })
+    mobile.queryByRole("row", { name: /Transit stops and lines/ })
   ).toBeNull()
   expect(
     full.getByRole("row", { name: /Export Atlas results as CSV/ })
@@ -80,7 +80,7 @@ it("filters roadmap features across both layouts without losing the selected pla
 
   fireEvent.click(controls.getByRole("radio", { name: "All features" }))
   expect(
-    mobile.getByRole("row", { name: /Deprivation and transit layers/ })
+    mobile.getByRole("row", { name: /Transit stops and lines/ })
   ).toBeTruthy()
 })
 

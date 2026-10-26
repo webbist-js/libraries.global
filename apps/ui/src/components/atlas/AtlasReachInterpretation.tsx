@@ -93,6 +93,12 @@ function ReachDistribution({
     "bands" | "cumulative"
   >("bands")
   const bands = atlasReachDistribution(result)
+  if (result.requestedMinutes !== undefined)
+    return (
+      <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
+        {t("singleTimeDistribution", { minutes: result.requestedMinutes })}
+      </p>
+    )
 
   return (
     <section aria-label={t("distribution")} className="flex flex-col gap-5">

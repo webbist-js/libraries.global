@@ -19,7 +19,7 @@ flowchart TD
     J --> Q[Analysis queue worker]
     Q --> N[Native routing and population analysis]
     F[Prepared files: OSM graphs, population rasters and analytical boundaries] --> N
-    N --> C[Compressed route and result cache]
+    N --> C[Compressed route, denominator and result cache]
     C --> API
     API --> U
     X --> U
@@ -59,7 +59,7 @@ The bridge resolves an eligible published Library or supported local service and
 
 The native service routes walking or cycling catchments for 5, 10, 15 and 30 minutes, then reads only the intersecting population-raster windows. Service coverage unions catchments before counting residents, so overlap is counted once. A percentage uses the same grid for its covered and reporting-area populations.
 
-Full-precision routes and user-visible results have separate compressed cache entries. Artifacts expire after seven days. The default total cache budget is 256 MiB, with pruning and a smaller route-cache allowance. The PostgreSQL job also has an expiry; a ready metadata row with an evicted artifact is not sufficient to return a result.
+Full-precision routes, reporting-area population denominators and user-visible results have separate compressed cache entries in the same total budget. Denominator identity includes the complete analytical area, boundary edition, population edition and files; changing travel time alone can reuse it. Network job identities include trusted capacity and the requested time (or all four). A selected-time result carries requestedMinutes and exactly one contour; it never fabricates distribution bands. Artifacts expire after seven days. The default total cache budget is 256 MiB, with pruning and a smaller route-cache allowance. The PostgreSQL job also has an expiry; a ready metadata row with an evicted artifact is not sufficient to return a result.
 
 Changing coordinates, membership, filters, mode or data editions changes the relevant identity or invalidates the job. A cache miss is recalculable; an imported Library never receives a permanent coverage value.
 

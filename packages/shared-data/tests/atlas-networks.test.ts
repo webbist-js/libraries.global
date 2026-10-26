@@ -85,6 +85,21 @@ it("rejects percentages and gaps that cannot be supported by the population tota
   expect(
     parseAtlasNetworkReachResult(result).contours[0]!.outsideResidents
   ).toBe(20)
+  const single = {
+    ...result,
+    requestedMinutes: 15,
+    contours: [result.contours[2]],
+  }
+  expect(parseAtlasNetworkReachResult(single).contours).toHaveLength(1)
+  expect(() =>
+    parseAtlasNetworkReachResult({ ...single, requestedMinutes: 30 })
+  ).toThrow()
+  expect(() =>
+    parseAtlasNetworkReachResult({ ...single, requestedMinutes: undefined })
+  ).toThrow()
+  expect(() =>
+    parseAtlasNetworkReachResult({ ...result, requestedMinutes: 15 })
+  ).toThrow()
   expect(() =>
     parseAtlasNetworkReachResult({
       ...result,

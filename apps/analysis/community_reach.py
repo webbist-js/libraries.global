@@ -64,14 +64,14 @@ def partition(area, pairs):
     return groups + [unknown]
 
 
-def aggregate(area, catchments, partitions, files, crs, expected_total, expected_bands):
+def aggregate(area, catchments, partitions, files, crs, expected_total, expected_bands, max_cells=MAX_CELLS):
     cells = 0
     def count(geometry):
         nonlocal cells
         if geometry.is_empty or geometry.area == 0:
             return 0.0
         geometry = polygonal(geometry)
-        result = count_population(mapping(geometry), files, max_cells=min(30_000_000, MAX_CELLS - cells), geometry_crs=crs)
+        result = count_population(mapping(geometry), files, max_cells=min(30_000_000, max_cells - cells), geometry_crs=crs)
         cells += result.cells_read
         if result.residents is None:
             raise ValueError("Incomplete community population surface")
@@ -104,7 +104,7 @@ def aggregate(area, catchments, partitions, files, crs, expected_total, expected
     return groups
 
 
-def calculate(root, release_id, area_wgs, catchments_wgs, files, total, bands, complete):
+def calculate(root, release_id, area_wgs, catchments_wgs, files, total, bands, complete, max_cells=MAX_CELLS):
     unavailable = {"schemaVersion": 1, "state": "unavailable"}
     if not release_id:
         return unavailable
@@ -122,7 +122,7 @@ def calculate(root, release_id, area_wgs, catchments_wgs, files, total, bands, c
         # RTree filters the national index before decoding full source geometries.
         candidates = indexed_shapes(root, release, area_wgs.bounds)
         pairs = [(make_valid(transform(projector, g)), p.get('value')) for g, p in candidates]
-        groups = aggregate(area, catchments, partition(area, pairs), files, crs, total, bands)
+        groups = aggregate(area, catchments, partition(area, pairs), files, crs, total, bands, max_cells=max_cells)
     except ValueError as error:
         # Optional context must not erase a valid base Reach calculation. No
         # partial category percentages escape if integration or budgets fail.

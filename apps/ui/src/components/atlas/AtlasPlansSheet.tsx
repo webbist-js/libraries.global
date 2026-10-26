@@ -47,6 +47,7 @@ type SheetRow = {
   id: string
   label: string
   cells: Record<string, CompareCell>
+  cellLabelIsExport?: boolean
   cellLabels?: Partial<Record<PlanCardKey, string>>
 }
 
@@ -84,7 +85,9 @@ function sheetRows(): SheetRow[] {
       "openLate",
       "closures",
     ]),
+    layerRow("Mobile library routes and stops", ["mobile"]),
     follow!,
+    layerRow("Population density and supported grids", ["population"]),
     layerRow("Accessibility, events and completeness layers", [
       "access",
       "events",
@@ -100,8 +103,10 @@ const ROWS = sheetRows()
 function SheetCell({
   cell,
   label,
+  isExport = false,
 }: {
   readonly cell: CompareCell
+  readonly isExport?: boolean
   readonly label?: string
 }) {
   const tUi = useUiTranslations("ui")
@@ -110,7 +115,9 @@ function SheetCell({
     return (
       <span className="font-semibold">
         {label}
-        <span className="sr-only"> libraries per download</span>
+        {isExport ? (
+          <span className="sr-only"> libraries per download</span>
+        ) : null}
       </span>
     )
 
@@ -229,14 +236,16 @@ function PlanCta({
 
 export function AtlasPlansSheet({
   tier,
+  currentPlan = tier,
   onClose,
   signInHref,
 }: {
   readonly tier: Tier
+  readonly currentPlan?: PlanCardKey
   readonly onClose: () => void
   readonly signInHref: string
 }) {
-  const current: PlanCardKey = tier
+  const current: PlanCardKey = currentPlan
 
   return (
     <Drawer
@@ -258,7 +267,7 @@ export function AtlasPlansSheet({
           style={{ color: T.ink.dim }}
         >
           Addresses, hours, services and every community record stay open to
-          everyone. Pro will pay for the analysis tools and licensed data that
+          everyone. Pro supports the analysis tools and data processing that
           cost money to run, and help keep the rest free.
         </p>
         <div
@@ -324,6 +333,7 @@ export function AtlasPlansSheet({
                       <SheetCell
                         cell={row.cells[p.key] ?? "no"}
                         label={row.cellLabels?.[p.key]}
+                        isExport={row.cellLabelIsExport}
                       />
                     </td>
                   ))}
@@ -379,7 +389,7 @@ export function AtlasPlansSheet({
                 Open source, open data.
               </strong>{" "}
               Library records are community-maintained open data, and the atlas
-              code will be published openly.
+              code is open source.
               {PRICES_ARE_PLACEHOLDERS ? " Prices are placeholders." : null}
             </span>
           </p>

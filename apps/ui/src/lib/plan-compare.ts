@@ -23,6 +23,7 @@ export type CompareRow = {
   id: string
   label: string
   cells: Record<PlanCardKey, CompareCell>
+  cellLabelIsExport?: boolean
   cellLabels?: Partial<Record<PlanCardKey, string>>
 }
 
@@ -53,6 +54,7 @@ const IS_POINTER = /^(Everything in |Pro for every seat)/
 /** Pro features get their own rows, so their include lines are skipped. */
 const FEATURE_LABELS = new Set([
   ATLAS_PER_CAPITA_LABEL,
+  "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation",
   ...Object.values(PRO_FEATURE_COPY).map((c) => c.label),
 ])
 
@@ -172,6 +174,7 @@ function featureRow(feature: Feature): CompareRow {
     },
     ...(feature === "atlas.export"
       ? {
+          cellLabelIsExport: true,
           cellLabels: Object.fromEntries(
             (["supporter", "pro", "team"] as const).map((plan) => [
               plan,
@@ -206,6 +209,33 @@ export function compareGroups(): CompareGroup[] {
       pro: featuresOf("pro").includes("atlas.analysis") ? "yes" : "no",
       team: featuresOf("team").includes("atlas.analysis") ? "yes" : "no",
     },
+  })
+
+  for (const [id, label, pro, team] of [
+    [
+      "atlas.reachArea",
+      "Larger service Reach: maximum envelope (km²), one time per calculation",
+      "20,000",
+      "40,000",
+    ],
+    [
+      "atlas.reachLibraries",
+      "Service Reach: maximum eligible libraries",
+      "50",
+      "100",
+    ],
+    ["atlas.analysisHourly", "New Reach calculations per hour", "20", "100"],
+  ])
+    byGroup.get("atlas")!.push({
+      id: id!,
+      label: label!,
+      cells: cellsFrom("pro", "yes"),
+      cellLabels: { pro, team },
+    })
+  byGroup.get("atlas")!.push({
+    id: "atlas.transit",
+    label: "Transit stops and lines",
+    cells: cellsFrom("pro", "soon"),
   })
 
   return GROUP_TITLES.map(([id, title]) => ({
@@ -263,6 +293,10 @@ export const ATLAS_SHEET_ROW_IDS = [
   "atlas.contextLayers",
   "atlas.analysis",
   "atlas.compare",
+  "atlas.reachArea",
+  "atlas.reachLibraries",
+  "atlas.analysisHourly",
+  "atlas.transit",
   "team.workspace",
 ] as const
 

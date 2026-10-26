@@ -52,6 +52,15 @@ const NOTE_COPY = new Map<
   ],
 ] as const)
 
+function validateReadyNetwork(
+  input: unknown,
+  request: AtlasNetworkReachRequest
+) {
+  const result = parseAtlasNetworkReachResult(input)
+  if (result.requestedMinutes !== request.minutes)
+    throw new Error("Mismatched network time")
+}
+
 export function useNetworkReach(
   draft: AtlasNetworkReachRequest | null,
   enabled: boolean
@@ -96,7 +105,7 @@ export function useNetworkReach(
         )
           throw new Error("Mismatched network response")
         if (["ready", "partial"].includes(data.state))
-          parseAtlasNetworkReachResult(data)
+          validateReadyNetwork(data, applied!.request)
         if (data.state === "pending" && Date.now() - started >= 300000)
           throw new Error(
             "The calculation is still queued. Calculate again to check its progress."
@@ -154,6 +163,8 @@ export function useNetworkReach(
 }
 
 type NetworkReachProps = {
+  singleTime?: boolean
+  capacity?: 1 | 2
   scopeControl?: ReactNode
   opacity?: number
   onOpacity?: (value: number) => void
@@ -183,6 +194,8 @@ type NetworkReachProps = {
 export function AtlasNetworkReach(props: NetworkReachProps) {
   const {
     selection,
+    singleTime,
+    capacity,
     minutes,
     onMinutes,
     response,
@@ -213,7 +226,7 @@ export function AtlasNetworkReach(props: NetworkReachProps) {
     )
     const link = document.createElement("a")
     link.href = url
-    link.download = `network-reach-${result.networkId}-${result.areaCode}.${format}`
+    link.download = `network-reach-${result.networkId}-${result.areaCode}-${minutes}min.${format}`
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -244,6 +257,7 @@ export function AtlasNetworkReach(props: NetworkReachProps) {
       {calculationLimit ? (
         <AtlasReachLimitNotice
           reason={calculationLimit}
+          capacity={capacity}
           onZoom={onZoomLocal}
           onSingleLibrary={onSingleLibrary}
         />
@@ -265,6 +279,17 @@ export function AtlasNetworkReach(props: NetworkReachProps) {
           label: `${value} min`,
         }))}
       />
+      {singleTime && !calculationLimit ? (
+        <p
+          role="status"
+          className="m-0 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) p-3 text-xs leading-relaxed text-(--t-ink-dim)"
+        >
+          <strong className="block text-(--t-ink-base)">
+            {t("singleTimeTitle", { minutes })}
+          </strong>
+          {t("singleTimeExplanation")}
+        </p>
+      ) : null}
       <NetworkReachControls {...props} result={result} />
       {response?.state === "pending" && !stale ? (
         <AtlasLoadingSkeleton label={t("pending")} compact />

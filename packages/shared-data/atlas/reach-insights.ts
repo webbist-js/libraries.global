@@ -172,7 +172,7 @@ export function validateAtlasCommunityReach(result: AtlasNetworkReachResult) {
       !Number.isFinite(group.totalResidents) ||
       group.totalResidents < 0 ||
       !Array.isArray(group.contours) ||
-      group.contours.length !== 4
+      group.contours.length !== result.contours.length
     )
       throw new RangeError("Invalid community group")
     let previous = 0

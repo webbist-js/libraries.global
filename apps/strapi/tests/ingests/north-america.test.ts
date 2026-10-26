@@ -246,6 +246,26 @@ describe("Canadian ODCAF mapping", () => {
       mapCanadianLibrary({ ...canada, ODCAF_Facility_Type: "museum" })
     ).toMatch(/Not a/)
   })
+  it.each(["Administrative Centre", "Library Administrative Office"])(
+    "rejects the administrative site %s even when its source type says library",
+    (name) => {
+      expect(
+        mapCanadianLibrary({
+          ...canada,
+          Facility_Name: name,
+          Source_Facility_Type: "public library",
+        })
+      ).toMatch(/administrative site/)
+    }
+  )
+  it("keeps a library named for an academic discipline", () => {
+    expect(
+      mapCanadianLibrary({
+        ...canada,
+        Facility_Name: "Administrative Sciences Library",
+      })
+    ).toMatchObject({ data: { name: "Administrative Sciences Library" } })
+  })
   it("requires library evidence when the source combines libraries and archives", () => {
     expect(
       mapCanadianLibrary({

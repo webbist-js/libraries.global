@@ -8,6 +8,28 @@ from population import PopulationCount
 
 
 class RoutingAvailabilityTests(unittest.TestCase):
+    def test_selected_time_reaches_the_router_and_has_a_separate_cache_key(self):
+        from shapely.geometry import box, mapping
+        from unittest.mock import Mock
+        class Actor:
+            def locate(self, request): return [{"edges":[{"distance":10}]}]
+            def isochrone(self, request):
+                self.request = request
+                return {"features":[{"properties":{"contour":c["time"]},"geometry":mapping(box(0,0,1,1))} for c in request["contours"]]}
+        with tempfile.TemporaryDirectory() as directory:
+            engine=ReachEngine(Path(directory))
+            actor=Actor()
+            with patch.object(engine,"router",return_value=actor) as router:
+                request={"lat":52,"lng":0,"mode":"walking","coordinateHash":"a"*64,"minutes":[15]}
+                release={"network":{"release":"one"}}
+                self.assertEqual(list(engine.full_contours(request,release)["geometries"]),[15])
+                self.assertEqual(actor.request["contours"],[{"time":15}])
+                engine.full_contours(request,release)
+                self.assertEqual(router.call_count,1)
+                engine.full_contours({**request,"minutes":[30]},release)
+                self.assertEqual(actor.request["contours"],[{"time":30}])
+                self.assertEqual(router.call_count,2)
+
     def test_profile_expansion_reuses_only_identical_analytical_inputs(self):
         request = {"libraryId":"one", "coordinateHash":"a"*64, "mode":"walking"}
         release = {"network":{"release":"graph1"}, "population":{"release":"population1", "year":2020}}

@@ -83,3 +83,23 @@ node apps/strapi/scripts/update-discussions-guides.mjs --publish
 ```
 
 Use `--local` explicitly for local development. Backups, previews and staging checkpoints stay under ignored `.scratch/discussions-guide-rollout/`. The script refuses unrelated drafts or content changed after staging. All three translations of the new guide share one document identity. Publication is separate from staging so the live guides do not advertise features before deployment.
+
+## Atlas guides and Journal roundup
+
+`atlas-knowledge-content.mjs` contains the reviewed Reach, population/context and partial-record guides, the Atlas roundup and corrections for existing English, French and Czech guides. The roundup uses the author's supplied Reddit examples; retain image credit, alt text and the population/routing source notes.
+
+```sh
+# Read production and save a private preview.
+node apps/strapi/scripts/update-atlas-guides.mjs
+
+# Correct already-deployed features and publish the guides/roundup.
+node apps/strapi/scripts/update-atlas-guides.mjs --publish-current
+
+# Stage expanded-capacity copy while preserving current publications.
+node apps/strapi/scripts/update-atlas-guides.mjs --stage
+
+# Only after the matching application release passes acceptance.
+ATLAS_CAPACITY_RELEASE_ACCEPTED=true node apps/strapi/scripts/update-atlas-guides.mjs --publish-staged
+```
+
+Use `--local` explicitly for feature fixtures. `CMS_ENV_FILE` can select a private credential file. `ATLAS_IMAGE_FILES_JSON` accepts the two locally inspected author-supplied screenshots for an initial publication; media IDs are checkpointed to avoid duplicate uploads. Backups, previews and staging checkpoints remain under ignored `.scratch/atlas-guides/`. The helper refuses unrelated drafts and changed staged content. Publishing content does not deploy native calculation code or enable billing. Expanded-capacity descriptions stay staged until the UI, CMS and native images agree and the release is accepted.

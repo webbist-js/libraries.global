@@ -17,6 +17,13 @@ from cache import read_artifact, write_artifact
 MINUTES = (5, 10, 15, 30)
 REACH_METHOD = "reverse-network-cumulative-v3; exact equal-area fractional population cells"
 
+
+def requested_times(request):
+    minutes = request.get("minutes", MINUTES)
+    if not isinstance(minutes, (list, tuple)) or tuple(minutes) not in [(m,) for m in MINUTES] + [MINUTES]:
+        raise ValueError("Invalid requested travel times")
+    return tuple(minutes)
+
 def compatible_result(candidate, request, release):
     return candidate is not None and all(candidate.get(field) == request[field] for field in ("libraryId", "coordinateHash", "mode")) and candidate.get("network") == release["network"] and candidate.get("population") == release["population"] and candidate.get("method") == REACH_METHOD
 
@@ -81,7 +88,8 @@ class ReachEngine:
         return self.actor
 
     def full_contours(self, request: dict, release: dict):
-        routing_key = hashlib.sha256(json.dumps([request["coordinateHash"], request["mode"], release["network"]["release"], "reverse-routing-v1-hard-ferries"], separators=(",", ":")).encode()).hexdigest()
+        minutes = requested_times(request)
+        routing_key = hashlib.sha256(json.dumps([request["coordinateHash"], request["mode"], release["network"]["release"], "reverse-routing-v2-selected-time", minutes], separators=(",", ":")).encode()).hexdigest()
         routing = read_artifact(self.root, "routes", routing_key)
         if routing is None:
             routing = self.route(request, release)
@@ -94,7 +102,7 @@ class ReachEngine:
         snap = routing["snap"]
         geometries = {int(minute): shape(geometry) for minute, geometry in routing["contours"].items()}
         previous = None
-        for minute in MINUTES:
+        for minute in minutes:
             geometry = geometries[minute]
             if not geometry.is_valid:
                 repaired = make_valid(geometry)
@@ -154,6 +162,7 @@ class ReachEngine:
                 "contours": contours}
 
     def route(self, request: dict, release: dict):
+        minutes = requested_times(request)
         lat, lng = request["lat"], request["lng"]
         actor = self.router(release)
         costing = "pedestrian" if request["mode"] == "walking" else "bicycle"
@@ -169,15 +178,15 @@ class ReachEngine:
                    "bicycle": {"cycling_speed": 15, "bicycle_type": "Hybrid", "use_ferry": 0, "exclude_ferries": True}}
         output = actor.isochrone({"locations": [location], "costing": costing, "costing_options": options,
                                   "reverse": True, "polygons": True, "denoise": 0,
-                                  "generalize": 0, "contours": [{"time": minute} for minute in MINUTES]})
+                                  "generalize": 0, "contours": [{"time": minute} for minute in minutes]})
         geometries = {int(feature["properties"]["contour"]): shape(feature["geometry"])
                       for feature in output["features"] if feature["geometry"]["type"] in {"Polygon", "MultiPolygon"}}
-        if set(geometries) != set(MINUTES):
+        if set(geometries) != set(minutes):
             return routing_unavailable("Routing did not return every requested catchment boundary.")
         unavailable = empty_contour_outcome({minute: mapping(geometry) for minute, geometry in geometries.items()})
         if unavailable:
             return unavailable
-        return {"snap": snap, "contours": {str(minute): mapping(geometries[minute]) for minute in MINUTES}}
+        return {"snap": snap, "contours": {str(minute): mapping(geometries[minute]) for minute in minutes}}
 
 
 def calculation_key(request: dict, release: dict) -> str:
