@@ -17,6 +17,50 @@ class Engine:
 
 
 class NetworkCoverageTest(unittest.TestCase):
+    @patch("network_reach.count_population")
+    def test_large_service_routes_and_counts_only_the_requested_time(self, count):
+        count.side_effect = self.count
+        with tempfile.TemporaryDirectory() as directory:
+            engine = Engine(Path(directory))
+            engine.full_contours = Mock(wraps=engine.full_contours)
+            result = coverage(engine, {**self.request,"minutes":15,"capacity":1}, self.release, mapping(box(0,0,7,10)))
+        self.assertEqual([c["minutes"] for c in result["contours"]], [15])
+        from contracts import validate_contract
+        validate_contract("networkResult", result)
+        with self.assertRaises(ValueError): validate_contract("networkResult", {**result,"requestedMinutes":30})
+        context_release = {"id":"community-gb-eng-"+"a"*16,"country":"GB-ENG","assetSha256":"a"*64,"domain":"overall","year":2020,
+                           "name":"Fixture","edition":"one","boundary":"fixture","sourceUrl":"https://example.test","licence":"CC0","geometryMethod":"exact"}
+        groups = [{"quintile": i+1 if i<5 else None,"totalResidents":0,"contours":[{"minutes":15,"residents":0,"outsideResidents":0,"percent":None,"shareOfOutside":None}]} for i in range(6)]
+        groups[0]["totalResidents"] = result["totalResidents"]
+        groups[0]["contours"][0].update(residents=result["contours"][0]["residents"], percent=100)
+        contextual = {**result,"community":{"schemaVersion":1,"state":"ready","method":"deprivation-partition-equal-area-v1","release":context_release,"groups":groups}}
+        validate_contract("networkResult", contextual)
+        groups[0]["contours"][0]["minutes"] = 30
+        with self.assertRaises(ValueError): validate_contract("networkResult", contextual)
+        self.assertEqual(result["requestedMinutes"],15)
+        self.assertEqual(count.call_count,2)
+        self.assertTrue(all(call.args[0]["minutes"]==[15] for call in engine.full_contours.call_args_list))
+
+    @patch("network_reach.count_population")
+    def test_selected_times_reuse_only_the_unchanged_population_denominator(self, count):
+        count.side_effect = self.count
+        with tempfile.TemporaryDirectory() as directory:
+            engine = Engine(Path(directory))
+            for minute in (15, 30):
+                coverage(engine, {**self.request, "minutes":minute}, self.release, mapping(box(0,0,7,10)))
+            self.assertEqual(count.call_count, 3)
+            coverage(engine, {**self.request, "minutes":15}, {**self.release,"population":{"release":"new"}}, mapping(box(0,0,7,10)))
+            self.assertEqual(count.call_count, 5)
+
+    def test_team_capacity_is_double_and_cannot_be_unbounded(self):
+        job={"kind":"network","networkId":"one","networkName":"One","areaCode":"E06000001","selectionHash":"a"*64,
+             "mode":"walking","release":"uk-v1","areaVersion":"a"*16,"excludedLibraries":0,"capacity":2,"minutes":15,
+             "members":[{"libraryId":str(i),"coordinateHash":"a"*64,"lat":52,"lng":0,"country":"GB-ENG"} for i in range(100)]}
+        validate_network_job(job)
+        for changed in [{**job,"capacity":3},{**job,"capacity":True},{**job,"minutes":20},
+                        {**job,"members":job["members"]+[{**job["members"][0],"libraryId":"extra"}]}]:
+            with self.assertRaises(ValueError): validate_network_job(changed)
+
     def test_display_rounding_repairs_collapsed_coastline_slivers(self):
         geometry = MultiPolygon([box(0,0,7,7),box(8,0,9,0.00000001)])
         displayed = shape(display_geometry(geometry))
@@ -52,7 +96,8 @@ class NetworkCoverageTest(unittest.TestCase):
     def setUp(self):
         self.request = {"networkId":"one", "networkName":"One", "areaCode":"E06000001", "selectionHash":"a"*64,
                         "mode":"walking", "members":[{"libraryId":"a"},{"libraryId":"b"}], "excludedLibraries":0}
-        self.release = {"populationFiles":[], "network":{}, "population":{}}
+        source={"release":"fixture","source":"Fixture","sourceUrl":"https://example.test","licence":"CC0","year":2020}
+        self.release = {"populationFiles":[], "network":source, "population":source}
 
     def count(self, geometry, *_args, **_kwargs):
         return PopulationCount(shape(geometry).area * 10, 1, 1)

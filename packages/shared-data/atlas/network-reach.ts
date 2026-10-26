@@ -4,6 +4,8 @@ import { parseAtlasPolygon, type AtlasPolygonGeometry } from "./geometry"
 import {
   parseAtlasReachResult,
   type AtlasReachMode,
+  type AtlasReachMinutes,
+  ATLAS_REACH_MINUTES,
   type AtlasReachResult,
 } from "./reach"
 import {
@@ -18,6 +20,7 @@ export interface AtlasNetworkReachRequest {
   mode: AtlasReachMode
   scope: AtlasScope
   retry?: boolean
+  minutes?: AtlasReachMinutes
 }
 export interface AtlasNetworkOption {
   documentId: string
@@ -98,6 +101,7 @@ export function parseAtlasNetworkReachRequest(
           "mode",
           "scope",
           "retry",
+          "minutes",
         ].includes(key)
     ) ||
     typeof r.networkId !== "string" ||
@@ -105,7 +109,8 @@ export function parseAtlasNetworkReachRequest(
     (r.areaCode !== undefined &&
       (typeof r.areaCode !== "string" || !/^[EWSN]\d{8}$/.test(r.areaCode))) ||
     !["walking", "cycling"].includes(r.mode) ||
-    (r.retry !== undefined && typeof r.retry !== "boolean")
+    (r.retry !== undefined && typeof r.retry !== "boolean") ||
+    (r.minutes !== undefined && !ATLAS_REACH_MINUTES.includes(r.minutes))
   )
     throw new RangeError("Invalid network Reach request")
   const scope = parseAtlasScope(r.scope)
@@ -118,7 +123,7 @@ export function parseAtlasNetworkReachResult(
   input: unknown
 ): AtlasNetworkReachResult {
   const r = input as AtlasNetworkReachResult
-  parseAtlasReachResult(r)
+  parseAtlasReachResult(r, true)
   if (
     r.areaCodes !== undefined &&
     (!Array.isArray(r.areaCodes) ||

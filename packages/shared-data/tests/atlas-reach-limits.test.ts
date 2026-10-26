@@ -2,11 +2,36 @@ import { expect, it } from "vitest"
 
 import {
   atlasNetworkReachLimit,
+  atlasNetworkReachMode,
   atlasReachBoundsAreLocal,
   atlasReachViewLimit,
 } from "../index"
 
 const local = { west: -3.2, east: -3, south: 53.3, north: 53.5 }
+it("admits rural services for one time and keeps Team capacity bounded", () => {
+  const service = {
+    eligibleLibraries: 30,
+    bounds: local,
+    areaCodes: ["S12000034"],
+  }
+  expect(atlasNetworkReachMode(service)).toBe("single")
+  expect(atlasNetworkReachLimit(service)).toBeNull()
+  expect(atlasNetworkReachMode({ ...service, eligibleLibraries: 75 })).toBe(
+    "libraries"
+  )
+  expect(atlasNetworkReachMode({ ...service, eligibleLibraries: 75 }, 2)).toBe(
+    "single"
+  )
+  expect(atlasNetworkReachMode({ ...service, eligibleLibraries: 101 }, 2)).toBe(
+    "libraries"
+  )
+  expect(
+    atlasNetworkReachMode(
+      { ...service, bounds: { west: -8, east: 2, south: 50, north: 60 } },
+      2
+    )
+  ).toBe("area")
+})
 it("requires local zoom and a bounded visible library count", () => {
   expect(atlasReachViewLimit(8, 429)).toBe("zoom")
   expect(atlasReachViewLimit(10.99, 1)).toBe("zoom")

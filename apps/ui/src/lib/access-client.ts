@@ -87,6 +87,10 @@ export function useEntitlements() {
 
   return {
     plan,
+    analysisAreaMultiplier:
+      data?.user?.limits?.analysisAreaMultiplier === 2
+        ? (2 as const)
+        : (1 as const),
     can,
     /**
      * Whether `feature` is unlocked for one library: `library.team` and

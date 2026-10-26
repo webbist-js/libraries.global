@@ -144,3 +144,37 @@ it("rejects ready metrics calculated for different filters", async () => {
   )
   expect((await POST(request())).status).toBe(503)
 })
+
+it("takes expanded capacity only from the authenticated session", async () => {
+  expect((await POST(request({ capacity: 2 }))).status).toBe(400)
+  fetcher.mockImplementation(async () =>
+    Response.json(
+      {
+        schemaVersion: 1,
+        networkId: "one",
+        areaCode: body.areaCode,
+        mode: "walking",
+        state: "pending",
+      },
+      { status: 202 }
+    )
+  )
+  expect((await POST(request({ minutes: 15 }))).status).toBe(202)
+  expect(JSON.parse(fetcher.mock.calls[0]![1].body)).toMatchObject({
+    capacity: 1,
+    request: { minutes: 15 },
+  })
+  session.mockResolvedValue({
+    user: {
+      id: "team",
+      features: ["atlas.analysis"],
+      limits: { analysisRunsPerHour: 100, analysisAreaMultiplier: 2 },
+    },
+  })
+  expect((await POST(request({ minutes: 30 }))).status).toBe(202)
+  expect(JSON.parse(fetcher.mock.calls[1]![1].body)).toMatchObject({
+    capacity: 2,
+    hourlyLimit: 100,
+    request: { minutes: 30 },
+  })
+})

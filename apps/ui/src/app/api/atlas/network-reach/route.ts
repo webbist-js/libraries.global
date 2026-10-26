@@ -82,7 +82,12 @@ export async function POST(req: Request) {
         "x-service-secret": secret,
         "x-atlas-token": token,
       },
-      body: JSON.stringify({ request, userKey, hourlyLimit }),
+      body: JSON.stringify({
+        request,
+        userKey,
+        hourlyLimit,
+        capacity: limits?.analysisAreaMultiplier === 2 ? 2 : 1,
+      }),
       signal: AbortSignal.any([req.signal, AbortSignal.timeout(25000)]),
     })
     const text = await readTextCapped(response, 3 * 1024 * 1024)
@@ -129,6 +134,8 @@ function validateResponse(input: unknown, request: AtlasNetworkReachRequest) {
     throw new Error("Mismatched Reach response")
   if (value.state === "ready" || value.state === "partial") {
     parseAtlasNetworkReachResult(value)
+    if (value.requestedMinutes !== request.minutes)
+      throw new Error("Mismatched Reach time")
     if (
       JSON.stringify(parseAtlasScope(value.scope)) !==
       JSON.stringify(parseAtlasScope(request.scope))

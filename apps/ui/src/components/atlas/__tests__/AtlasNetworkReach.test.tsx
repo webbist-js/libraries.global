@@ -353,3 +353,32 @@ it("aborts polling when leaving the local view", async () => {
   await act(async () => vi.advanceTimersByTimeAsync(10000))
   expect(fetcher).toHaveBeenCalledOnce()
 })
+
+it("requires another explicit calculation when an expanded service time changes", async () => {
+  const fetcher = vi.fn().mockResolvedValue(
+    Response.json({
+      networkId: "one",
+      areaCode: draft.areaCode,
+      mode: "walking",
+      state: "unsupported",
+    })
+  )
+  vi.stubGlobal("fetch", fetcher)
+  const hook = renderHook(
+    ({ minutes }: { minutes: 15 | 30 }) =>
+      useNetworkReach({ ...draft, minutes }, true),
+    { initialProps: { minutes: 15 as 15 | 30 } }
+  )
+  act(() => hook.result.current.calculate())
+  await waitFor(() =>
+    expect(hook.result.current.response?.state).toBe("unsupported")
+  )
+  hook.rerender({ minutes: 30 })
+  expect(hook.result.current.response).toBeNull()
+  expect(hook.result.current.result).toBeNull()
+  expect(hook.result.current.stale).toBe(true)
+  expect(fetcher).toHaveBeenCalledOnce()
+  act(() => hook.result.current.calculate())
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2))
+  expect(JSON.parse(fetcher.mock.calls[1]![1].body).minutes).toBe(30)
+})

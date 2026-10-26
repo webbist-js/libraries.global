@@ -33,6 +33,7 @@ export type Limit =
   | "savedSearches"
   | "exportRows"
   | "analysisRunsPerHour"
+  | "analysisAreaMultiplier"
 
 export interface Entitlements {
   plan: PlanKey
@@ -131,30 +132,35 @@ const PLAN_FEATURES: Record<PlanKey, readonly Feature[]> = {
 
 const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
   public: {
+    analysisAreaMultiplier: 0,
     analysisRunsPerHour: 0,
     savedViews: 0,
     savedSearches: 0,
     exportRows: 0,
   },
   free: {
+    analysisAreaMultiplier: 0,
     analysisRunsPerHour: 0,
     savedViews: 3,
     savedSearches: 3,
     exportRows: 0,
   },
   supporter: {
+    analysisAreaMultiplier: 0,
     analysisRunsPerHour: 0,
     savedViews: 3,
     savedSearches: 3,
     exportRows: 500,
   },
   pro: {
+    analysisAreaMultiplier: 1,
     analysisRunsPerHour: 20,
     savedViews: 1000,
     savedSearches: 1000,
     exportRows: 10_000,
   },
   team: {
+    analysisAreaMultiplier: 2,
     analysisRunsPerHour: 100,
     savedViews: 1000,
     savedSearches: 1000,
@@ -223,13 +229,22 @@ function paidPlan(
 function build(
   plan: PlanKey,
   source: PlanSource,
-  teamLibraryIds: ReadonlySet<string> = new Set()
+  teamLibraryIds: ReadonlySet<string> = new Set(),
+  activeTeam = false
 ): Entitlements {
   return {
     plan,
     source,
     features: new Set(PLAN_FEATURES[plan]),
-    limits: { ...PLAN_LIMITS[plan] },
+    limits: {
+      ...PLAN_LIMITS[plan],
+      ...(activeTeam
+        ? {
+            analysisAreaMultiplier: 2,
+            analysisRunsPerHour: PLAN_LIMITS.team.analysisRunsPerHour,
+          }
+        : {}),
+    },
     teamLibraryIds,
   }
 }
@@ -282,7 +297,7 @@ export function resolveEntitlements(i: EntitlementInput): Entitlements {
     candidates[0]
   )
 
-  return build(best.plan, best.source, teamLibraryIds)
+  return build(best.plan, best.source, teamLibraryIds, activeTeam)
 }
 
 export const can = (e: Entitlements, f: Feature): boolean => e.features.has(f)

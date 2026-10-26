@@ -5,11 +5,7 @@
   "$defs": {
     "request": {
       "type": "object",
-      "required": [
-        "schemaVersion",
-        "libraryId",
-        "mode"
-      ],
+      "required": ["schemaVersion", "libraryId", "mode"],
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
@@ -20,10 +16,7 @@
           "pattern": "^[a-zA-Z0-9_-]{1,100}$"
         },
         "mode": {
-          "enum": [
-            "walking",
-            "cycling"
-          ]
+          "enum": ["walking", "cycling"]
         },
         "retry": {
           "type": "boolean"
@@ -52,10 +45,7 @@
           "pattern": "^[a-f0-9]{64}$"
         },
         "mode": {
-          "enum": [
-            "walking",
-            "cycling"
-          ]
+          "enum": ["walking", "cycling"]
         },
         "lat": {
           "type": "number",
@@ -99,10 +89,7 @@
           "const": 1
         },
         "state": {
-          "enum": [
-            "ready",
-            "partial"
-          ]
+          "enum": ["ready", "partial"]
         },
         "libraryId": {
           "type": "string",
@@ -113,10 +100,7 @@
           "pattern": "^[a-f0-9]{16,64}$"
         },
         "mode": {
-          "enum": [
-            "walking",
-            "cycling"
-          ]
+          "enum": ["walking", "cycling"]
         },
         "calculatedAt": {
           "type": "string",
@@ -214,12 +198,7 @@
     },
     "provenance": {
       "type": "object",
-      "required": [
-        "release",
-        "source",
-        "sourceUrl",
-        "licence"
-      ],
+      "required": ["release", "source", "sourceUrl", "licence"],
       "additionalProperties": false,
       "properties": {
         "release": {
@@ -251,27 +230,14 @@
     },
     "contour": {
       "type": "object",
-      "required": [
-        "minutes",
-        "residents",
-        "coveredFraction",
-        "geometry"
-      ],
+      "required": ["minutes", "residents", "coveredFraction", "geometry"],
       "additionalProperties": false,
       "properties": {
         "minutes": {
-          "enum": [
-            5,
-            10,
-            15,
-            30
-          ]
+          "enum": [5, 10, 15, 30]
         },
         "residents": {
-          "type": [
-            "number",
-            "null"
-          ],
+          "type": ["number", "null"],
           "minimum": 0
         },
         "coveredFraction": {
@@ -288,10 +254,7 @@
       "oneOf": [
         {
           "type": "object",
-          "required": [
-            "type",
-            "coordinates"
-          ],
+          "required": ["type", "coordinates"],
           "additionalProperties": false,
           "properties": {
             "type": {
@@ -308,10 +271,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "type",
-            "coordinates"
-          ],
+          "required": ["type", "coordinates"],
           "additionalProperties": false,
           "properties": {
             "type": {
@@ -392,10 +352,7 @@
           "pattern": "^[a-f0-9]{64}$"
         },
         "mode": {
-          "enum": [
-            "walking",
-            "cycling"
-          ]
+          "enum": ["walking", "cycling"]
         },
         "release": {
           "type": "string",
@@ -404,7 +361,7 @@
         "members": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 50,
+          "maxItems": 100,
           "items": {
             "type": "object",
             "required": [
@@ -460,11 +417,16 @@
           }
         },
         "communityRelease": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "pattern": "^community-gb-(eng|wls|sct|nir)-[a-f0-9]{16}$"
+        },
+        "capacity": {
+          "type": "integer",
+          "enum": [1, 2]
+        },
+        "minutes": {
+          "type": "integer",
+          "enum": [5, 10, 15, 30]
         }
       }
     },
@@ -499,10 +461,7 @@
           "const": 1
         },
         "state": {
-          "enum": [
-            "ready",
-            "partial"
-          ]
+          "enum": ["ready", "partial"]
         },
         "libraryId": {
           "type": "string",
@@ -513,10 +472,7 @@
           "pattern": "^[a-f0-9]{16,64}$"
         },
         "mode": {
-          "enum": [
-            "walking",
-            "cycling"
-          ]
+          "enum": ["walking", "cycling"]
         },
         "calculatedAt": {
           "type": "string",
@@ -547,7 +503,7 @@
         },
         "contours": {
           "type": "array",
-          "minItems": 4,
+          "minItems": 1,
           "maxItems": 4,
           "items": {
             "type": "object",
@@ -564,18 +520,10 @@
             "additionalProperties": false,
             "properties": {
               "minutes": {
-                "enum": [
-                  5,
-                  10,
-                  15,
-                  30
-                ]
+                "enum": [5, 10, 15, 30]
               },
               "residents": {
-                "type": [
-                  "number",
-                  "null"
-                ],
+                "type": ["number", "null"],
                 "minimum": 0
               },
               "coveredFraction": {
@@ -587,18 +535,12 @@
                 "$ref": "#/$defs/geometry"
               },
               "percent": {
-                "type": [
-                  "number",
-                  "null"
-                ],
+                "type": ["number", "null"],
                 "minimum": 0,
                 "maximum": 100
               },
               "outsideResidents": {
-                "type": [
-                  "number",
-                  "null"
-                ],
+                "type": ["number", "null"],
                 "minimum": 0
               },
               "empty": {
@@ -615,37 +557,7 @@
                 ]
               }
             }
-          },
-          "prefixItems": [
-            {
-              "properties": {
-                "minutes": {
-                  "const": 5
-                }
-              }
-            },
-            {
-              "properties": {
-                "minutes": {
-                  "const": 10
-                }
-              }
-            },
-            {
-              "properties": {
-                "minutes": {
-                  "const": 15
-                }
-              }
-            },
-            {
-              "properties": {
-                "minutes": {
-                  "const": 30
-                }
-              }
-            }
-          ]
+          }
         },
         "kind": {
           "const": "network"
@@ -681,10 +593,7 @@
           "maximum": 250
         },
         "totalResidents": {
-          "type": [
-            "number",
-            "null"
-          ],
+          "type": ["number", "null"],
           "minimum": 0
         },
         "areaCodes": {
@@ -699,21 +608,13 @@
         },
         "community": {
           "type": "object",
-          "required": [
-            "schemaVersion",
-            "state"
-          ],
+          "required": ["schemaVersion", "state"],
           "properties": {
             "schemaVersion": {
               "const": 1
             },
             "state": {
-              "enum": [
-                "ready",
-                "unavailable",
-                "incomplete",
-                "insufficient"
-              ]
+              "enum": ["ready", "unavailable", "incomplete", "insufficient"]
             },
             "method": {
               "type": "string",
@@ -740,12 +641,7 @@
                   "pattern": "^community-gb-(eng|wls|sct|nir)-[a-f0-9]{16}$"
                 },
                 "country": {
-                  "enum": [
-                    "GB-ENG",
-                    "GB-WLS",
-                    "GB-SCT",
-                    "GB-NIR"
-                  ]
+                  "enum": ["GB-ENG", "GB-WLS", "GB-SCT", "GB-NIR"]
                 },
                 "assetSha256": {
                   "type": "string",
@@ -811,11 +707,7 @@
                 }
               },
               "then": {
-                "required": [
-                  "method",
-                  "release",
-                  "groups"
-                ],
+                "required": ["method", "release", "groups"],
                 "properties": {
                   "method": {
                     "const": "deprivation-partition-equal-area-v1"
@@ -824,15 +716,296 @@
               },
               "else": {
                 "not": {
-                  "required": [
-                    "groups"
-                  ]
+                  "required": ["groups"]
                 }
               }
             }
           ]
+        },
+        "requestedMinutes": {
+          "type": "integer",
+          "enum": [5, 10, 15, 30]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["requestedMinutes"]
+          },
+          "then": {
+            "properties": {
+              "contours": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "community": {
+                "properties": {
+                  "groups": {
+                    "items": {
+                      "properties": {
+                        "contours": {
+                          "minItems": 1,
+                          "maxItems": 1
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "contours": {
+                "minItems": 4,
+                "maxItems": 4,
+                "prefixItems": [
+                  {
+                    "properties": {
+                      "minutes": {
+                        "const": 5
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "minutes": {
+                        "const": 10
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "minutes": {
+                        "const": 15
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "minutes": {
+                        "const": 30
+                      }
+                    }
+                  }
+                ]
+              },
+              "community": {
+                "properties": {
+                  "groups": {
+                    "items": {
+                      "properties": {
+                        "contours": {
+                          "minItems": 4,
+                          "maxItems": 4,
+                          "prefixItems": [
+                            {
+                              "properties": {
+                                "minutes": {
+                                  "const": 5
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "minutes": {
+                                  "const": 10
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "minutes": {
+                                  "const": 15
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "minutes": {
+                                  "const": 30
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["requestedMinutes"],
+            "properties": {
+              "requestedMinutes": {
+                "const": 5
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "contours": {
+                "items": {
+                  "properties": {
+                    "minutes": {
+                      "const": 5
+                    }
+                  }
+                }
+              },
+              "community": {
+                "properties": {
+                  "groups": {
+                    "items": {
+                      "properties": {
+                        "contours": {
+                          "items": {
+                            "properties": {
+                              "minutes": {
+                                "const": 5
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["requestedMinutes"],
+            "properties": {
+              "requestedMinutes": {
+                "const": 10
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "contours": {
+                "items": {
+                  "properties": {
+                    "minutes": {
+                      "const": 10
+                    }
+                  }
+                }
+              },
+              "community": {
+                "properties": {
+                  "groups": {
+                    "items": {
+                      "properties": {
+                        "contours": {
+                          "items": {
+                            "properties": {
+                              "minutes": {
+                                "const": 10
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["requestedMinutes"],
+            "properties": {
+              "requestedMinutes": {
+                "const": 15
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "contours": {
+                "items": {
+                  "properties": {
+                    "minutes": {
+                      "const": 15
+                    }
+                  }
+                }
+              },
+              "community": {
+                "properties": {
+                  "groups": {
+                    "items": {
+                      "properties": {
+                        "contours": {
+                          "items": {
+                            "properties": {
+                              "minutes": {
+                                "const": 15
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["requestedMinutes"],
+            "properties": {
+              "requestedMinutes": {
+                "const": 30
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "contours": {
+                "items": {
+                  "properties": {
+                    "minutes": {
+                      "const": 30
+                    }
+                  }
+                }
+              },
+              "community": {
+                "properties": {
+                  "groups": {
+                    "items": {
+                      "properties": {
+                        "contours": {
+                          "items": {
+                            "properties": {
+                              "minutes": {
+                                "const": 30
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "communityBand": {
       "type": "object",
@@ -846,12 +1019,7 @@
       ],
       "properties": {
         "minutes": {
-          "enum": [
-            5,
-            10,
-            15,
-            30
-          ]
+          "enum": [5, 10, 15, 30]
         },
         "residents": {
           "type": "number",
@@ -862,18 +1030,12 @@
           "minimum": 0
         },
         "percent": {
-          "type": [
-            "number",
-            "null"
-          ],
+          "type": ["number", "null"],
           "minimum": 0,
           "maximum": 100
         },
         "shareOfOutside": {
-          "type": [
-            "number",
-            "null"
-          ],
+          "type": ["number", "null"],
           "minimum": 0,
           "maximum": 100
         }
@@ -882,21 +1044,10 @@
     "communityGroup": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "quintile",
-        "totalResidents",
-        "contours"
-      ],
+      "required": ["quintile", "totalResidents", "contours"],
       "properties": {
         "quintile": {
-          "enum": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            null
-          ]
+          "enum": [1, 2, 3, 4, 5, null]
         },
         "totalResidents": {
           "type": "number",
@@ -904,41 +1055,11 @@
         },
         "contours": {
           "type": "array",
-          "minItems": 4,
+          "minItems": 1,
           "maxItems": 4,
           "items": {
             "$ref": "#/$defs/communityBand"
-          },
-          "prefixItems": [
-            {
-              "properties": {
-                "minutes": {
-                  "const": 5
-                }
-              }
-            },
-            {
-              "properties": {
-                "minutes": {
-                  "const": 10
-                }
-              }
-            },
-            {
-              "properties": {
-                "minutes": {
-                  "const": 15
-                }
-              }
-            },
-            {
-              "properties": {
-                "minutes": {
-                  "const": 30
-                }
-              }
-            }
-          ]
+          }
         }
       }
     }

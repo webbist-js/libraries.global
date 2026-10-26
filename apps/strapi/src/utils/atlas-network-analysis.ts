@@ -5,6 +5,8 @@ import { createHash } from "node:crypto"
 import {
   atlasLocalGeography,
   atlasNetworkReachLimit,
+  atlasNetworkReachMode,
+  type AtlasReachCapacity,
   ATLAS_REACH_MAX_SERVICE_LIBRARIES,
   atlasMatchesProjection,
   atlasResolveScope,
@@ -38,8 +40,10 @@ export async function requestAtlasNetworkReach(
   strapi: Core.Strapi,
   input: unknown,
   userKey: string,
-  hourlyLimit: number
+  hourlyLimit: number,
+  capacity: AtlasReachCapacity = 1
 ) {
+  assertCapacity(capacity)
   const request = parseAtlasNetworkReachRequest(input)
   const network = await strapi
     .documents("api::library-network.library-network")
@@ -77,17 +81,20 @@ export async function requestAtlasNetworkReach(
       "unsupported",
       "This service is too large for local Reach. Choose one library instead."
     )
-  if (rows.filter(networkEligible).length > ATLAS_REACH_MAX_SERVICE_LIBRARIES)
+  if (
+    rows.filter(networkEligible).length >
+    ATLAS_REACH_MAX_SERVICE_LIBRARIES * capacity
+  )
     return state(
       "unsupported",
-      `Local Reach supports at most ${ATLAS_REACH_MAX_SERVICE_LIBRARIES} eligible libraries. Choose a smaller service or one library.`
+      `Local Reach supports at most ${ATLAS_REACH_MAX_SERVICE_LIBRARIES * capacity} eligible libraries. Choose a smaller service or one library.`
     )
   const selection = await networkSelection(
     strapi,
     network as AtlasNetworkOption,
     rows
   )
-  const problem = selectionProblem(selection)
+  const problem = selectionProblem(selection, capacity, request.minutes)
   if (problem) return state("unsupported", problem)
   if (request.areaCode && !selection.areaCodes.includes(request.areaCode))
     throw new RangeError("Reporting area is outside this service")
@@ -141,11 +148,15 @@ export async function requestAtlasNetworkReach(
     areaCodes,
     atlasLocalGeography.version,
     release.id,
-    "network-service-area-v4-local-limits",
+    "network-service-area-v5-selected-time",
+    capacity,
+    request.minutes ?? null,
     communityRelease,
   ])
   const payload = {
     kind: "network",
+    capacity,
+    ...(request.minutes !== undefined ? { minutes: request.minutes } : {}),
     networkId: request.networkId,
     networkName: network.name,
     areaCode,
@@ -171,14 +182,28 @@ export async function requestAtlasNetworkReach(
   })
 }
 
-function selectionProblem(selection: AtlasNetworkSelection): string | null {
-  const limit = atlasNetworkReachLimit(selection)
-  if (limit === "libraries")
-    return `Local Reach supports at most ${ATLAS_REACH_MAX_SERVICE_LIBRARIES} eligible libraries. Choose a smaller service or one library.`
-  if (limit)
-    return "This service or its reporting area exceeds the local Reach size limit. Choose one library instead."
+function assertCapacity(capacity: number) {
+  if (capacity !== 1 && capacity !== 2)
+    throw new RangeError("Invalid Reach capacity")
+}
+
+function selectionProblem(
+  selection: AtlasNetworkSelection,
+  capacity: AtlasReachCapacity,
+  minutes: number | undefined
+): string | null {
   if (!selection.available)
     return "This service needs mapped libraries and supported reporting boundaries before coverage can be calculated."
+  const limit = atlasNetworkReachLimit(selection, capacity)
+  if (limit === "libraries")
+    return `Local Reach supports at most ${ATLAS_REACH_MAX_SERVICE_LIBRARIES * capacity} eligible libraries. Choose a smaller service or one library.`
+  if (limit)
+    return "This service or its reporting area exceeds your Reach calculation allowance. Choose one library instead."
+  if (
+    atlasNetworkReachMode(selection, capacity) === "single" &&
+    minutes === undefined
+  )
+    return "Choose one travel time for this larger service. Changing the time requires another calculation."
 
   return null
 }
@@ -462,7 +487,8 @@ function verifyNetworkIdentity(
     result.selectionHash !== payload.selectionHash ||
     result.mode !== request.mode ||
     result.networkId !== request.networkId ||
-    result.areaCode !== payload.areaCode
+    result.areaCode !== payload.areaCode ||
+    result.requestedMinutes !== request.minutes
   )
     throw new Error("Mismatched network result")
 }

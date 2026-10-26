@@ -99,3 +99,21 @@ it("preserves GeoJSON features while adding versioned provenance and exports exa
     json.distribution.map((b: { residents: number }) => b.residents)
   ).toEqual([10, 15, 30, 35, 10])
 })
+
+it("exports only the generated time without inventing journey bands", () => {
+  const single = {
+    ...result,
+    requestedMinutes: 15 as const,
+    contours: [result.contours[2]!],
+  }
+  const json = JSON.parse(buildAtlasNetworkExport(single, 15, "json"))
+  expect(json.distribution).toBeNull()
+  expect(json.result.requestedMinutes).toBe(15)
+  expect(json.result.contours).toHaveLength(1)
+  expect(buildAtlasNetworkExport(single, 15, "csv").split("\r\n")).toHaveLength(
+    2
+  )
+  expect(
+    JSON.parse(buildAtlasNetworkExport(single, 15, "geojson")).features
+  ).toHaveLength(2)
+})
