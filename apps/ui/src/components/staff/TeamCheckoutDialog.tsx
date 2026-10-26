@@ -202,6 +202,7 @@ export function TeamCheckoutDialog({
   open,
   onOpenChange,
   initialSeats,
+  initialName,
   minimumSeats = MIN_TEAM_SEATS,
   teamName,
   discounted = false,
@@ -215,6 +216,7 @@ export function TeamCheckoutDialog({
   readonly open: boolean
   readonly onOpenChange: (open: boolean) => void
   readonly minimumSeats?: number
+  readonly initialName?: string
   readonly initialSeats: number
   readonly teamName?: string
   readonly discounted?: boolean
@@ -226,7 +228,7 @@ export function TeamCheckoutDialog({
   readonly onCheckout: (choice: TeamCheckoutChoice) => void
 }) {
   const [step, setStep] = useState<"plan" | "details">("plan")
-  const [name, setName] = useState(teamName ?? "")
+  const [name, setName] = useState(teamName ?? initialName ?? "")
   const [seats, setSeats] = useState(Math.max(minimumSeats, initialSeats))
   const [service, setService] = useState<"standard" | "public">(
     discounted ? "public" : "standard"

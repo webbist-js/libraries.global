@@ -52,6 +52,7 @@ export type TeamSummary = {
 }
 
 export type Team = TeamSummary & {
+  widgetBranding?: boolean
   publicServiceApproved?: boolean
   billingSuspended?: boolean
   notes: string | null

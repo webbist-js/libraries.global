@@ -33,7 +33,10 @@ vi.mock("next-intl", async (importOriginal) => ({
   ...(await importOriginal<typeof NextIntl>()),
   useLocale: () => "en-GB",
 }))
-vi.mock("next/navigation", () => ({ usePathname: () => "/staff/teams" }))
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/staff/teams",
+  useSearchParams: () => new URLSearchParams(),
+}))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
 
@@ -318,7 +321,7 @@ describe("TeamOrganiser (organiser)", () => {
     render(organiser({ verifiedAt: null }))
     expect(screen.getByText("Not yet verified")).toBeTruthy()
     expect(
-      screen.getByText(/Until the site team verifies Kent Libraries/)
+      screen.getByText(/Assignments within approved service delegation scopes/)
     ).toBeTruthy()
   })
 

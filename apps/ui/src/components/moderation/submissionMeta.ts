@@ -174,6 +174,7 @@ export const TYPE_COLORS: Record<string, BadgeColor> = {
   new_library: "ok",
   library_edit: "aurora",
   library_claim: "gold",
+  network_claim: "gold",
   wiki_edit: "violet",
   blog_submission: "ember",
   topic_suggestion: "dim",

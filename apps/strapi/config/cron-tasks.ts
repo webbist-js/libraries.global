@@ -1,6 +1,7 @@
-import type { Core } from "@strapi/strapi"
 // https://docs.strapi.io/dev-docs/configurations/cron
+import type { Core } from "@strapi/strapi"
 
+import { runNetworkFulfilment } from "../src/plugins/access/server/services/network-fulfilment"
 import { reviewRoundView } from "../src/plugins/content-moderation/server/utils/suggestion-rounds"
 import {
   handleAutoPaused,
@@ -74,6 +75,15 @@ const driveLifecycleJob = {
 }
 
 export default {
+  networkFulfilment: {
+    task: ({ strapi }: { strapi: Core.Strapi }) =>
+      withLeaderLock(strapi, 7_420_102, () =>
+        runNetworkFulfilment(strapi)
+      ).catch((error) =>
+        strapi.log.warn("[networks] Access fulfilment will retry", error)
+      ),
+    options: { rule: "*/10 * * * * *", tz: "Etc/UTC" },
+  },
   eventSearch: {
     task: ({ strapi }: { strapi: Core.Strapi }) =>
       refreshEventSearch(strapi).catch(() =>

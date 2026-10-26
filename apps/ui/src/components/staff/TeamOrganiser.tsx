@@ -6,6 +6,7 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, SegmentedControl, Sheet } from "@/components/ds"
+import { TeamNetworkConnection } from "@/components/networks/TeamNetworkConnection"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import { useStaff } from "@/lib/access-client"
@@ -191,19 +192,40 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         </Notice>
       ) : null}
 
+      {team.serviceScopes?.map((scope) => (
+        <Notice
+          key={scope.networkId}
+          tone="ok"
+          icon="mdi:shield-check-outline"
+          title={scope.name}
+        >
+          <p>
+            {scope.approvedLibraryIds.length} libraries approved for service
+            access · {scope.ownerLibraryIds.length} support staff delegation.{" "}
+            <a
+              href={`/staff/networks?network=${scope.networkId}`}
+              className={CONTACT_LINK}
+            >
+              Open service management
+            </a>
+          </p>
+        </Notice>
+      ))}
       {!team.verifiedAt ? (
         <Notice
           tone="warn"
           icon="mdi:clock-outline"
           title="Waiting for Team verification"
         >
-          Until the site team verifies {team.name}, each library assignment is
-          filed as a claim for a moderator to check.{" "}
+          Assignments within approved service delegation scopes can be applied
+          immediately. Other assignments are filed as claims for a moderator to
+          check.{" "}
           <a href={TEAM_CONTACT_HREF} className={CONTACT_LINK}>
             Contact the site team
           </a>
         </Notice>
       ) : null}
+      <TeamNetworkConnection team={team} />
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
         <div className="min-w-0 space-y-6">
           <Card

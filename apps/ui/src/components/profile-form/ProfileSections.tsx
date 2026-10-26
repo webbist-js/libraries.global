@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { ChoiceCard, Notice } from "@/components/ds"
+import { NetworkAffiliationEditor } from "@/components/networks/NetworkAffiliationEditor"
 import { AvatarUpload } from "@/components/settings/AvatarUpload"
 import { CountryCombobox } from "@/components/settings/CountryCombobox"
 import { InterestsChips } from "@/components/settings/InterestsChips"
@@ -448,6 +449,7 @@ export function AffiliationSection({
           Claim another library
         </button>
       ) : null}
+      <NetworkAffiliationEditor />
     </SectionCard>
   )
 }

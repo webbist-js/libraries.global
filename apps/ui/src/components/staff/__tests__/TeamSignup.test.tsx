@@ -40,6 +40,9 @@ it("saves a Team before billing, requires consent, and retries payment without a
       user={{ name: "Organiser", email: "organiser@example.test" }}
     />
   )
+  fireEvent.click(
+    screen.getByRole("button", { name: "Choose libraries myself" })
+  )
   fireEvent.change(screen.getByPlaceholderText("Bristol Libraries"), {
     target: { value: "Our libraries" },
   })

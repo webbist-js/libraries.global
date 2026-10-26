@@ -120,6 +120,18 @@ export function LibraryClaimWorkspace({
             </div>
           )}
         </StaffPanel>
+        <StaffPanel title="Manage a wider service?">
+          <p>
+            Request employment verification or management of a reviewed group of
+            libraries in one service claim.
+          </p>
+          <Link
+            className="font-semibold underline underline-offset-4"
+            href="/staff/networks"
+          >
+            Find your service or network
+          </Link>
+        </StaffPanel>
         <Notice icon="mdi:shield-check-outline" tone="info" title={t("after")}>
           <p className="m-0 max-w-[80ch]">{t("afterBody")}</p>
         </Notice>

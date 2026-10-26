@@ -3076,7 +3076,9 @@
     "howClaimsWork": "How claims work",
     "noLibraryAssignments": "No libraries assigned yet",
     "teamLinks": "Your Team",
-    "billing": "Billing & seats"
+    "billing": "Billing & seats",
+    "widgets": "Widgets",
+    "networks": "Services & networks"
   },
   "teamApiKeys": {
     "title": "API keys",

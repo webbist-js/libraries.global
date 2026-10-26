@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { ProfilePrivacyControls } from "@/app/[locale]/profile/[username]/_components/ProfilePrivacyControls"
 import GlobalLink from "@/components/global/GlobalLink"
+import { PublicNetworkAffiliations } from "@/components/networks/PublicNetworkAffiliations"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
@@ -79,6 +80,7 @@ export default async function ProfileOverviewPage({
     <>
       {isOwner ? <ProfileOverviewBanner profile={profile} /> : null}
       <OverviewSection profile={profile} isOwner={isOwner} />
+      <PublicNetworkAffiliations username={username} />
     </>
   )
 }

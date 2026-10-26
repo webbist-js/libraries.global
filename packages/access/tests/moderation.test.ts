@@ -58,12 +58,12 @@ describe("canModerate", () => {
   })
 })
 
-describe("canModerateApplication", () => {
-  const app = (locales: string[], submittedByUserId = "author") => ({
-    locales,
-    submittedByUserId,
-  })
+const app = (locales: string[], submittedByUserId = "author") => ({
+  locales,
+  submittedByUserId,
+})
 
+describe("canModerateApplication", () => {
   it("lets a moderator with no locale review every application", () => {
     for (const queue of ["all", "applications"] as const) {
       const c = caps([{ role: "moderator", queue, locale: null }])
@@ -116,6 +116,7 @@ describe("moderation queues", () => {
         "drive_proposal",
         "new_library",
         "library_claim",
+        "network_claim",
         "library_edit",
         "topic_suggestion",
         "event_feed",

@@ -67,6 +67,7 @@ export default async function StaffLibrariesPage({
   if (!session?.user) return <StaffAccessRequired />
   const libraries = staffLibrariesOf(session.user)
   const teams = sessionTeamsOf(session.user)
+  if (libraries.length >= 100) redirect("/staff/networks/libraries")
   if (!libraries.length && !teams.length)
     return <StaffAccessRequired signedIn />
   const oauth = oauthNotice(query.oauth)

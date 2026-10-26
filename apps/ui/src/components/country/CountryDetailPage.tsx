@@ -39,6 +39,7 @@ import { placeAddHref } from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
 import { proposeHref } from "@/lib/drives/propose-link"
+import { Link } from "@/lib/navigation"
 import type {
   PopulatedCountryData,
   PopulatedFeaturedLibraryData,
@@ -234,6 +235,14 @@ export function CountryDetailPage({
                 }))}
               />
             ) : null}
+            <p className="mb-6">
+              <Link
+                className="font-semibold underline underline-offset-4"
+                href={`${basePath}/library-services`}
+              >
+                Explore library services and networks in {name}
+              </Link>
+            </p>
             {regions.length > 0 ? (
               <LocationChildBrowser
                 id="regions"

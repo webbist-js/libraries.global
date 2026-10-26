@@ -339,7 +339,10 @@ export function makeFakeStrapi(
   const transaction = vi.fn(
     async (
       cb: (t: {
-        trx: { __fake: true }
+        trx: {
+          __fake: true
+          raw: (sql: string, bindings: string[]) => Promise<unknown>
+        }
         commit: () => Promise<void>
         rollback: () => Promise<void>
         onCommit: (fn: () => void) => void
@@ -355,7 +358,12 @@ export function makeFakeStrapi(
       txDepth += 1
       try {
         const res = await cb({
-          trx: { __fake: true },
+          trx: Object.defineProperty({ __fake: true }, "raw", {
+            value: vi.fn().mockResolvedValue(undefined),
+          }) as {
+            __fake: true
+            raw: (sql: string, bindings: string[]) => Promise<unknown>
+          },
           commit: async () => {},
           rollback: async () => {},
           onCommit: (fn) => commitCallbacks.push(fn),

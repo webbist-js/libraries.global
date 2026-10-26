@@ -18,7 +18,7 @@ export const MAX_TEAMS_PER_USER = 1
 const MEMBERSHIP_READ_LIMIT = 11
 
 /** Most libraries a Team may cover. */
-export const MAX_TEAM_LIBRARIES = 200
+export const MAX_TEAM_LIBRARIES = 2000
 
 export function teamIsActive(team: {
   status?: string | null

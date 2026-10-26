@@ -1,6 +1,7 @@
 import { refreshNoticeEffects } from "./library-notices"
 import { notifySessionInvalidated, syncDerivedRole } from "./role-grants"
 import { listStaff, loadStaffClaims } from "./staff"
+import { groupedStaffChanges } from "./staff-notification-scope"
 import { afterStaffCommit, notifyStaffChange } from "./staff-notifications"
 
 export async function onStaffChanged(
@@ -41,7 +42,7 @@ export async function onStaffChanged(
     `staff search refresh for ${input.libraryDocumentId}`,
     () => refreshNoticeEffects(strapi, input.libraryDocumentId)
   )
-  if (input.change === "removed")
+  if (input.change === "removed" && !groupedStaffChanges())
     await notifyStaffChange(
       strapi,
       input.baUserId,

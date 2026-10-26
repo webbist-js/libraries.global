@@ -43,6 +43,10 @@ const SECONDARY =
  */
 export function ReviewDecisionForm({
   documentId,
+  approvedLibraryIds,
+  approvedStaffRole,
+  requireApprovalNote = false,
+  approvalBlockedReason,
   status,
   submissionType,
   canPublish,
@@ -51,6 +55,10 @@ export function ReviewDecisionForm({
   driveDocumentId,
   returnTo,
 }: {
+  readonly approvedStaffRole?: "editor" | "owner"
+  readonly approvedLibraryIds?: string[]
+  readonly approvalBlockedReason?: string
+  readonly requireApprovalNote?: boolean
   readonly documentId: string
   readonly status: string
   readonly submissionType?: string
@@ -105,24 +113,9 @@ export function ReviewDecisionForm({
     }
   }, [done, driveDocumentId, documentId, returnTo])
 
-  const nextInDriveBlock =
-    done && driveDocumentId ? (
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-        {nextInDrive === "none" ? (
-          "No more in this drive."
-        ) : nextInDrive ? (
-          <Link
-            href={nextInDrive.href}
-            className="font-semibold underline-offset-2 hover:underline"
-            style={{ color: T.accent.primary }}
-          >
-            Next in this drive →
-          </Link>
-        ) : (
-          "Checking the drive…"
-        )}
-      </p>
-    ) : null
+  const nextInDriveBlock = (
+    <NextInDriveStatus show={!!done && !!driveDocumentId} next={nextInDrive} />
+  )
 
   if (!OPEN.has(status)) {
     const meta = statusMeta(status)
@@ -152,13 +145,14 @@ export function ReviewDecisionForm({
   async function decide(decision: Decision, publish = false) {
     if (!canApprove && decision !== "rejected") {
       setError(
-        "This timetable changed after the suggestion. Decline it so a new suggestion can be made."
+        approvalBlockedReason ??
+          "This timetable changed after the suggestion. Decline it so a new suggestion can be made."
       )
 
       return
     }
     const text = note.trim()
-    if (decision !== "approved" && !text) {
+    if ((decision !== "approved" || requireApprovalNote) && !text) {
       setError(
         "Write a note first: the contributor sees it and needs to know what to change."
       )
@@ -173,11 +167,15 @@ export function ReviewDecisionForm({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: decision,
-            ...(text ? { note: text } : {}),
-            ...(publish ? { publish: true } : {}),
-          }),
+          body: JSON.stringify(
+            decisionBody(
+              decision,
+              text,
+              publish,
+              approvedLibraryIds,
+              approvedStaffRole
+            )
+          ),
         }
       )
       const body: unknown = await res.json().catch(() => null)
@@ -353,4 +351,47 @@ export function ReviewDecisionForm({
       </div>
     </form>
   )
+}
+
+function NextInDriveStatus({
+  show,
+  next,
+}: {
+  readonly show: boolean
+  readonly next: NextInDrive
+}) {
+  if (!show) return null
+
+  return (
+    <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      {next === "none" ? (
+        "No more in this drive."
+      ) : next ? (
+        <Link
+          href={next.href}
+          className="font-semibold underline-offset-2 hover:underline"
+          style={{ color: T.accent.primary }}
+        >
+          Next in this drive →
+        </Link>
+      ) : (
+        "Checking the drive…"
+      )}
+    </p>
+  )
+}
+function decisionBody(
+  status: Decision,
+  note: string,
+  publish: boolean,
+  approvedLibraryIds?: string[],
+  approvedStaffRole?: "editor" | "owner"
+) {
+  return {
+    status,
+    ...(note ? { note } : {}),
+    ...(publish ? { publish: true } : {}),
+    ...(approvedLibraryIds ? { approvedLibraryIds } : {}),
+    ...(approvedStaffRole ? { approvedStaffRole } : {}),
+  }
 }

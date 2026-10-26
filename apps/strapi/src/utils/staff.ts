@@ -9,6 +9,7 @@ import {
 } from "@repo/access"
 
 import { claimAffiliationFilter } from "./affiliations"
+import { effectiveManagedAuthority } from "./authority-grants"
 import { activeGrants } from "./role-grants"
 
 export const AFFILIATION_UID = "api::library-affiliation.library-affiliation"
@@ -18,6 +19,7 @@ export type StaffMember = {
   staffRole: StaffRole
   canGoLive: boolean
   approvedAt: string
+  authorityManaged?: boolean
   jobTitle: string | null
   department: string | null
 }
@@ -55,6 +57,7 @@ function toMember(row: any): Omit<StaffMember, "staffRole"> & {
   staffRole: StaffRole | null
 } {
   return {
+    authorityManaged: row.authorityManaged === true,
     affiliationDocumentId: row.documentId,
     baUserId: row.baUserId,
     staffRole:
@@ -89,6 +92,7 @@ function levelsOf(
 }
 
 const STAFF_ROW_FIELDS = [
+  "authorityManaged",
   "documentId",
   "baUserId",
   "staffRole",
@@ -122,11 +126,16 @@ export async function resolveStaff(
   baUserId: string,
   libraryDocumentId: string
 ): Promise<StaffMember | null> {
-  return (
+  const member =
     (await listStaff(strapi, libraryDocumentId)).find(
       (row) => row.baUserId === baUserId
     ) ?? null
-  )
+  if (!member?.authorityManaged) return member
+  const current = (
+    await effectiveManagedAuthority(strapi, baUserId, [libraryDocumentId])
+  ).get(libraryDocumentId)
+
+  return current ? { ...member, ...current } : null
 }
 
 /**
@@ -178,16 +187,26 @@ export async function loadStaffClaims(
     byLibrary.set(id, [...(byLibrary.get(id) ?? []), row])
   }
 
+  const managed = rows.filter(
+    (row: { baUserId: string; authorityManaged?: boolean }) =>
+      row.baUserId === baUserId && row.authorityManaged
+  )
+  const effective = managed.length
+    ? await effectiveManagedAuthority(strapi, baUserId, ids)
+    : new Map()
+
   return ids.flatMap((id) => {
     const members = levelsOf(strapi, id, byLibrary.get(id) ?? [])
     const member = members.find((row) => row.baUserId === baUserId)
 
-    return member
+    const current = member?.authorityManaged ? effective.get(id) : member
+
+    return current
       ? [
           {
             libraryDocumentId: id,
-            staffRole: truncated ? ("editor" as const) : member.staffRole,
-            canGoLive: member.canGoLive,
+            staffRole: truncated ? ("editor" as const) : current.staffRole,
+            canGoLive: current.canGoLive,
           },
         ]
       : []

@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "access_widget_selections",
+  "info": {
+    "singularName": "widget-selection",
+    "pluralName": "widget-selections",
+    "displayName": "widget-selection"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.team"
+    },
+    "version": {
+      "type": "integer",
+      "default": 1
+    },
+    "spec": {
+      "type": "json",
+      "private": true
+    }
+  }
+}

@@ -16,7 +16,9 @@ export function atlasCohortRequest(req: NextRequest): {
     process.env.ATLAS_PROVIDER !== "scalable" ||
     percent === 0 ||
     percent === 100 ||
-    req.nextUrl.pathname.startsWith("/api/")
+    req.nextUrl.pathname.startsWith("/api/") ||
+    /^\/embed\/w\/[A-Za-z0-9_-]{24}\/?$/.test(req.nextUrl.pathname) ||
+    req.nextUrl.pathname === "/embed/resize.js"
   )
     return { request: req }
   const cohort = atlasCohortFromHeaders(req.headers)

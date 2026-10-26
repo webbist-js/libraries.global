@@ -14,7 +14,7 @@ export const REVIEW_CATEGORY_TYPES = {
     "topic_suggestion",
   ],
   articles: ["wiki_edit", "blog_submission"],
-  claims: ["library_claim"],
+  claims: ["library_claim", "network_claim"],
   drives: ["drive_proposal"],
   applications: ["role_application"],
 } as const satisfies Record<string, readonly SubmissionType[]>

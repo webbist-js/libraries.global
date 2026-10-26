@@ -4,6 +4,10 @@ import { useLocale } from "next-intl"
 import { useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
+import {
+  TeamNetworkChoice,
+  type TeamNetworkSelection,
+} from "@/components/networks/TeamNetworkChoice"
 import { Button } from "@/components/ui/button"
 import { Link, useRouter } from "@/lib/navigation"
 import { TEAM_TERMS_VERSION } from "@/lib/team-billing/types"
@@ -20,16 +24,20 @@ export function TeamSignup({
   initialSeats,
   sandbox,
   user,
+  initialNetwork,
 }: {
   readonly available: boolean
   readonly verified: boolean
   readonly initialSeats: number
   readonly sandbox: boolean
+  readonly initialNetwork?: string
   readonly user: { name: string; email: string }
 }) {
   const requestId = useRef(crypto.randomUUID())
   const [team, setTeam] = useState<{ id: string; name: string } | null>(null)
-  const [open, setOpen] = useState(true)
+  const [network, setNetwork] = useState<TeamNetworkSelection>(null)
+  const [networkChosen, setNetworkChosen] = useState(false)
+  const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
   const [pending, startTransition] = useTransition()
   const refresh = useMembershipRefresh()
@@ -50,6 +58,12 @@ export function TeamSignup({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               name: choice.name,
+              ...(network
+                ? {
+                    primaryNetworkId: network.network.documentId,
+                    libraryDocumentIds: network.libraryDocumentIds,
+                  }
+                : {}),
               requestId: requestId.current,
               publicServiceRequested: choice.publicServiceRequested,
             }),
@@ -123,6 +137,18 @@ export function TeamSignup({
       </StaffPanel>
     )
 
+  if (!networkChosen)
+    return (
+      <TeamNetworkChoice
+        initialNetwork={initialNetwork}
+        onChoose={(choice) => {
+          setNetwork(choice)
+          setNetworkChosen(true)
+          setOpen(true)
+        }}
+      />
+    )
+
   return (
     <>
       <StaffPanel title={team ? team.name : "Your Team, together"} compact>
@@ -135,6 +161,7 @@ export function TeamSignup({
           <Button variant="primary" size="pill" onClick={() => setOpen(true)}>
             {team ? "Continue to payment" : "Create your Team"}
           </Button>
+          <ServiceManagementLink team={team} network={network} />
           {team ? (
             <Link className={STAFF_LINK} href="/staff/teams/billing">
               Open Team billing
@@ -154,6 +181,7 @@ export function TeamSignup({
         }}
         initialSeats={initialSeats}
         teamName={team?.name}
+        initialName={network?.network.name}
         sandbox={sandbox}
         user={user}
         busy={pending}
@@ -162,5 +190,24 @@ export function TeamSignup({
         onCheckout={checkout}
       />
     </>
+  )
+}
+
+function ServiceManagementLink({
+  team,
+  network,
+}: {
+  readonly team: { id: string; name: string } | null
+  readonly network: TeamNetworkSelection
+}) {
+  if (!team || !network) return null
+
+  return (
+    <Link
+      className={STAFF_LINK}
+      href={`/staff/networks?network=${network.network.documentId}`}
+    >
+      Request service management
+    </Link>
   )
 }

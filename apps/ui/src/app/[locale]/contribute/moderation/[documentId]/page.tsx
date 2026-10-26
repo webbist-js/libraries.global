@@ -30,6 +30,7 @@ import {
   StatusBadge,
   VerificationPanel,
 } from "@/components/moderation"
+import { NetworkClaimReview } from "@/components/moderation/NetworkClaimReview"
 import { reviewReturnHref } from "@/components/moderation/queue-navigation"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
@@ -100,6 +101,12 @@ const PANELS: Record<
   string,
   (d: ModerationDetail, ctx: PanelContext) => ReactNode
 > = {
+  network_claim: (d) => (
+    <p>
+      A grouped {String(d.fields?.intent ?? "service")} request. Review its
+      frozen scope in the decision panel.
+    </p>
+  ),
   library_claim: (d) => (
     <ClaimPanel
       fields={d.fields}
@@ -382,26 +389,30 @@ export default async function ReviewSubmissionPage({
           className="flex flex-col gap-6 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
         >
           <Section title={tUi("your_decision")}>
-            <ReviewDecisionForm
-              canApprove={
-                !isStaleTimetableSuggestion(
-                  d.submissionType,
-                  d.fields,
-                  (
-                    d.review as {
-                      current?: Record<string, unknown>
-                    } | null
-                  )?.current?.mobileTimetable
-                )
-              }
-              documentId={d.documentId}
-              status={d.status}
-              submissionType={d.submissionType}
-              canPublish={d.canPublish}
-              reviewedAt={d.reviewedAt}
-              driveDocumentId={d.drive?.documentId ?? null}
-              returnTo={returnTo}
-            />
+            {d.submissionType === "network_claim" ? (
+              <NetworkClaimReview documentId={d.documentId} status={d.status} />
+            ) : (
+              <ReviewDecisionForm
+                canApprove={
+                  !isStaleTimetableSuggestion(
+                    d.submissionType,
+                    d.fields,
+                    (
+                      d.review as {
+                        current?: Record<string, unknown>
+                      } | null
+                    )?.current?.mobileTimetable
+                  )
+                }
+                documentId={d.documentId}
+                status={d.status}
+                submissionType={d.submissionType}
+                canPublish={d.canPublish}
+                reviewedAt={d.reviewedAt}
+                driveDocumentId={d.drive?.documentId ?? null}
+                returnTo={returnTo}
+              />
+            )}
           </Section>
           <Section title={tUi("history")}>
             {d.reviewNote && events.every((e) => !e.note) ? (

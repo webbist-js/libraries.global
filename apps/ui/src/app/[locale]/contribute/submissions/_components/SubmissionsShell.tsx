@@ -25,7 +25,7 @@ import { Link, usePathname, useRouter } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
 import { DiscussionWork } from "./DiscussionWork"
-import { continueLink } from "./submissionContinue"
+import { continueLink, continueHref } from "./submissionContinue"
 import { ContributeSectionHeader } from "../../_components/ContributeSectionHeader"
 
 const STATUS_FILTERS = [
@@ -259,7 +259,9 @@ export function SubmissionsShell({ username }: { username: string | null }) {
   const count = (status: Submission["status"]) =>
     submissions.filter((s) => s.status === status).length
 
-  const rowExtras = (s: Submission) => {
+  const rowExtras = (s: Submission) =>
+    networkSubmissionExtras(s) ?? ordinaryRowExtras(s)
+  const ordinaryRowExtras = (s: Submission) => {
     if (s.status === "draft" || s.status === "needs_info") {
       const next = continueLink(
         s,
@@ -477,4 +479,32 @@ export function SubmissionsShell({ username }: { username: string | null }) {
       </Tabs>
     </>
   )
+}
+
+function networkSubmissionExtras(submission: Submission) {
+  if (submission.submissionType !== "network_claim") return null
+
+  return {
+    ...(submission.reviewNote
+      ? {
+          note: {
+            text: submission.reviewNote,
+            tone:
+              submission.status === "rejected"
+                ? ("danger" as const)
+                : ("warn" as const),
+          },
+        }
+      : {}),
+    action: (
+      <Link
+        href={continueHref(submission)}
+        className="inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold"
+      >
+        {submission.status === "needs_info"
+          ? "Revise service request"
+          : "Open service request"}
+      </Link>
+    ),
+  }
 }

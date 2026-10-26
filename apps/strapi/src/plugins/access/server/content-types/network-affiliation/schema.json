@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "access_network_affiliations",
+  "info": {
+    "singularName": "network-affiliation",
+    "pluralName": "network-affiliations",
+    "displayName": "Network affiliation"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "baUserId": {
+      "type": "string",
+      "private": true,
+      "required": true
+    },
+    "network": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library-network.library-network"
+    },
+    "role": {
+      "type": "string"
+    },
+    "department": {
+      "type": "string"
+    },
+    "publicDisplay": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "declared",
+        "pending",
+        "verified",
+        "revoked"
+      ],
+      "default": "declared"
+    },
+    "submissionDocumentId": {
+      "type": "string",
+      "private": true
+    },
+    "verifiedAt": {
+      "type": "datetime"
+    },
+    "revokedAt": {
+      "type": "datetime",
+      "private": true
+    }
+  }
+}

@@ -36,6 +36,10 @@ const { OnboardingShell } = await import("../OnboardingShell")
 const USERNAME = "Username Required"
 
 function respond(url: string) {
+  if (url.startsWith("/api/networks/me"))
+    return Response.json({ affiliations: [], mandates: [], requests: [] })
+  if (url.startsWith("/api/networks"))
+    return Response.json({ networks: [], total: 0, page: 1, pageSize: 24 })
   if (url.startsWith("/api/topics"))
     return Response.json({ data: [{ documentId: "t1", name: "Manuscripts" }] })
   if (url.startsWith("/api/profile/check-username"))

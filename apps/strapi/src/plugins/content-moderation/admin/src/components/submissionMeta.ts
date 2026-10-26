@@ -95,6 +95,7 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   correction: { bg: "primary100", text: "primary600" },
   new_library: { bg: "success100", text: "success600" },
   library_edit: { bg: "primary100", text: "primary600" },
+  network_claim: { bg: "warning100", text: "warning600" },
   library_claim: { bg: "warning100", text: "warning600" },
   wiki_edit: { bg: "secondary100", text: "secondary600" },
   blog_submission: { bg: "alternative100", text: "alternative600" },

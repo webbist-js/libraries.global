@@ -2743,6 +2743,9 @@ export interface ApiLibraryAffiliationLibraryAffiliation
   }
   attributes: {
     approvedAt: Schema.Attribute.DateTime
+    authorityManaged: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
     baUserId: Schema.Attribute.String & Schema.Attribute.Required
     canGoLive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
     createdAt: Schema.Attribute.DateTime
@@ -2758,7 +2761,7 @@ export interface ApiLibraryAffiliationLibraryAffiliation
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     role: Schema.Attribute.String
-    source: Schema.Attribute.Enumeration<["claim", "team"]>
+    source: Schema.Attribute.Enumeration<["claim", "team", "network"]>
     staffRole: Schema.Attribute.Enumeration<["owner", "editor"]>
     teamMember: Schema.Attribute.Relation<
       "manyToOne",
@@ -2768,7 +2771,7 @@ export interface ApiLibraryAffiliationLibraryAffiliation
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     verificationMethod: Schema.Attribute.Enumeration<
-      ["email_domain", "vouching", "contact_us", "team"]
+      ["email_domain", "vouching", "contact_us", "team", "network"]
     > &
       Schema.Attribute.DefaultTo<"contact_us">
   }
@@ -2850,6 +2853,7 @@ export interface ApiLibraryNetworkLibraryNetwork
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    description: Schema.Attribute.Text
     kind: Schema.Attribute.Enumeration<
       ["library_service", "university_system", "consortium"]
     > &
@@ -2864,6 +2868,10 @@ export interface ApiLibraryNetworkLibraryNetwork
     > &
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
+    publicPageEnabled: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
+    publicPageReviewedAt: Schema.Attribute.DateTime
+    publicPageReviewedBy: Schema.Attribute.String & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
     sourceKey: Schema.Attribute.String &
@@ -4792,6 +4800,234 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface PluginAccessLibraryAuthorityGrant
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_library_authority_grants"
+  info: {
+    displayName: "Library authority grant"
+    pluralName: "library-authority-grants"
+    singularName: "library-authority-grant"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    approvedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    canGoLive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    grantKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    issuedBy: Schema.Attribute.String & Schema.Attribute.Private
+    legacyAffiliationDocumentId: Schema.Attribute.String &
+      Schema.Attribute.Private
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.library-authority-grant"
+    > &
+      Schema.Attribute.Private
+    mandateDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    revokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    sourceDocumentId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    sourceKind: Schema.Attribute.Enumeration<["claim", "team", "network"]> &
+      Schema.Attribute.Required
+    staffRole: Schema.Attribute.Enumeration<["owner", "editor"]> &
+      Schema.Attribute.DefaultTo<"editor">
+    status: Schema.Attribute.Enumeration<["active", "revoked"]> &
+      Schema.Attribute.DefaultTo<"active">
+    teamMemberDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessNetworkAffiliation
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_network_affiliations"
+  info: {
+    displayName: "Network affiliation"
+    pluralName: "network-affiliations"
+    singularName: "network-affiliation"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    department: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.network-affiliation"
+    > &
+      Schema.Attribute.Private
+    network: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-network.library-network"
+    >
+    publicDisplay: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    publishedAt: Schema.Attribute.DateTime
+    revokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    role: Schema.Attribute.String
+    status: Schema.Attribute.Enumeration<
+      ["declared", "pending", "verified", "revoked"]
+    > &
+      Schema.Attribute.DefaultTo<"declared">
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    verifiedAt: Schema.Attribute.DateTime
+  }
+}
+
+export interface PluginAccessNetworkMandate
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_network_mandates"
+  info: {
+    displayName: "Network management mandate"
+    pluralName: "network-mandates"
+    singularName: "network-mandate"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    approvedLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    fulfilment: Schema.Attribute.JSON & Schema.Attribute.Private
+    lastReconciledAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.network-mandate"
+    > &
+      Schema.Attribute.Private
+    membershipRevision: Schema.Attribute.String & Schema.Attribute.Private
+    network: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-network.library-network"
+    >
+    nextAttemptAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    ownerLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reviewedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    reviewedBy: Schema.Attribute.String & Schema.Attribute.Private
+    revocationReason: Schema.Attribute.Text & Schema.Attribute.Private
+    revokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    sourceLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    staffRole: Schema.Attribute.Enumeration<["editor", "owner"]> &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<"editor">
+    status: Schema.Attribute.Enumeration<["approved", "revoked"]> &
+      Schema.Attribute.DefaultTo<"approved">
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team"> &
+      Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
+  }
+}
+
+export interface PluginAccessNetworkMandateEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_network_mandate_events"
+  info: {
+    displayName: "Network mandate event"
+    pluralName: "network-mandate-events"
+    singularName: "network-mandate-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.Enumeration<
+      ["approved", "reconciled", "revoked"]
+    > &
+      Schema.Attribute.Private
+    actor: Schema.Attribute.String & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    libraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.network-mandate-event"
+    > &
+      Schema.Attribute.Private
+    mandate: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.network-mandate"
+    > &
+      Schema.Attribute.Private
+    ownerLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.Text & Schema.Attribute.Private
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.Private
+  }
+}
+
 export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
   collectionName: "teams"
   info: {
@@ -4848,6 +5084,10 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
         },
         number
       >
+    primaryNetwork: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-network.library-network"
+    >
     publicServiceApproved: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
@@ -4868,6 +5108,9 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     verifiedAt: Schema.Attribute.DateTime
+    widgetBranding: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
   }
 }
 
@@ -4923,6 +5166,188 @@ export interface PluginAccessTeamMember extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessWidget extends Struct.CollectionTypeSchema {
+  collectionName: "access_widgets"
+  info: {
+    displayName: "widget"
+    pluralName: "widgets"
+    singularName: "widget"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    blockedReports: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<0>
+    config: Schema.Attribute.JSON & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    draftVersion: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
+    hasChanges: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    loads: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<0>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    origins: Schema.Attribute.JSON & Schema.Attribute.Private
+    publicId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    publishedAt: Schema.Attribute.DateTime
+    publishedRelease: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.widget-release"
+    >
+    publishedVersion: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    reviewRequested: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
+    selection: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.widget-selection"
+    >
+    state: Schema.Attribute.Enumeration<
+      ["draft", "live", "paused", "unpublished", "archived"]
+    > &
+      Schema.Attribute.DefaultTo<"draft">
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    type: Schema.Attribute.Enumeration<["finder", "directory", "chart", "stat"]>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessWidgetAudit extends Struct.CollectionTypeSchema {
+  collectionName: "access_widget_audits"
+  info: {
+    displayName: "widget-audit"
+    pluralName: "widget-audits"
+    singularName: "widget-audit"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.String
+    actor: Schema.Attribute.String & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    details: Schema.Attribute.JSON & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget-audit"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    revision: Schema.Attribute.Integer
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    widget: Schema.Attribute.Relation<"manyToOne", "plugin::access.widget">
+  }
+}
+
+export interface PluginAccessWidgetRelease extends Struct.CollectionTypeSchema {
+  collectionName: "access_widget_releases"
+  info: {
+    displayName: "widget-release"
+    pluralName: "widget-releases"
+    singularName: "widget-release"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget-release"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    publisherId: Schema.Attribute.String & Schema.Attribute.Private
+    snapshot: Schema.Attribute.JSON & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.Required
+    widget: Schema.Attribute.Relation<"manyToOne", "plugin::access.widget">
+  }
+}
+
+export interface PluginAccessWidgetSelection
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_widget_selections"
+  info: {
+    displayName: "widget-selection"
+    pluralName: "widget-selections"
+    singularName: "widget-selection"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget-selection"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    spec: Schema.Attribute.JSON & Schema.Attribute.Private
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
   }
 }
 
@@ -5228,6 +5653,7 @@ export interface PluginContentModerationSubmission
         "topic_suggestion",
         "role_application",
         "drive_proposal",
+        "network_claim",
       ]
     > &
       Schema.Attribute.Required
@@ -5246,6 +5672,7 @@ export interface PluginContentModerationSubmission
         "user_profile",
         "topic",
         "drive",
+        "library_network",
       ]
     >
     targetSlug: Schema.Attribute.String
@@ -7524,8 +7951,16 @@ declare module "@strapi/strapi" {
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
+      "plugin::access.library-authority-grant": PluginAccessLibraryAuthorityGrant
+      "plugin::access.network-affiliation": PluginAccessNetworkAffiliation
+      "plugin::access.network-mandate": PluginAccessNetworkMandate
+      "plugin::access.network-mandate-event": PluginAccessNetworkMandateEvent
       "plugin::access.team": PluginAccessTeam
       "plugin::access.team-member": PluginAccessTeamMember
+      "plugin::access.widget": PluginAccessWidget
+      "plugin::access.widget-audit": PluginAccessWidgetAudit
+      "plugin::access.widget-release": PluginAccessWidgetRelease
+      "plugin::access.widget-selection": PluginAccessWidgetSelection
       "plugin::beta-invites.invitation": PluginBetaInvitesInvitation
       "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
       "plugin::content-moderation.option-vote": PluginContentModerationOptionVote

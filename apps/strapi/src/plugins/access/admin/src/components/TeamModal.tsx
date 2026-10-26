@@ -45,6 +45,9 @@ export function TeamModal({
   const [libraries, setLibraries] = useState<TeamLibrary[]>(
     team?.libraries ?? []
   )
+  const [widgetBranding, setWidgetBranding] = useState(
+    team?.widgetBranding === true
+  )
   const [verified, setVerified] = useState(!!team?.verifiedAt)
   const [lapsed, setLapsed] = useState(
     team?.source === "checkout"
@@ -127,6 +130,13 @@ export function TeamModal({
       } else {
         const { data } = await post("/access/teams", body)
         saved = (data as { data: Team }).data
+      }
+      if (saved.widgetBranding !== widgetBranding) {
+        const res = await post(
+          `/access/teams/${saved.documentId}/widget-branding`,
+          { enabled: widgetBranding }
+        )
+        saved = (res.data as { data: Team }).data
       }
       toggleNotification({
         type: "success",
@@ -271,6 +281,15 @@ export function TeamModal({
             >
               Public-library-service discount eligibility confirmed (new
               subscriptions only)
+            </Checkbox>
+            <Checkbox
+              checked={widgetBranding}
+              onCheckedChange={(v: boolean | "indeterminate") =>
+                setWidgetBranding(v === true)
+              }
+            >
+              Widget branding entitlement granted (source credits remain
+              mandatory)
             </Checkbox>
             <Field.Root
               name="notes"

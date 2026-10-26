@@ -15,6 +15,8 @@ export function StaffAreaTabs({
     | "team"
     | "billing"
     | "api"
+    | "widgets"
+    | "networks"
     | "new"
     | "invite"
     | "claim"
@@ -23,6 +25,12 @@ export function StaffAreaTabs({
 }) {
   const t = useTranslations("staffWorkspace")
   const tabs: SectionTab[] = [
+    {
+      id: "networks",
+      label: t("networks"),
+      href: "/staff/networks",
+      icon: "mdi:domain",
+    },
     {
       id: "overview",
       label: t("yourLibraries"),
@@ -42,6 +50,12 @@ export function StaffAreaTabs({
             label: t("billing"),
             href: `/staff/teams/billing`,
             icon: "mdi:credit-card-outline",
+          },
+          {
+            id: "widgets",
+            label: t("widgets"),
+            href: "/staff/teams/widgets",
+            icon: "mdi:widgets-outline",
           },
           {
             id: "api",

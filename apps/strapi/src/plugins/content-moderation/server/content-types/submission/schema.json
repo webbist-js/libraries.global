@@ -6,10 +6,16 @@
     "pluralName": "submissions",
     "displayName": "Submission"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "pluginOptions": {
-    "content-manager": { "visible": false },
-    "content-type-builder": { "visible": false }
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
   },
   "attributes": {
     "submissionType": {
@@ -25,14 +31,21 @@
         "blog_submission",
         "topic_suggestion",
         "role_application",
-        "drive_proposal"
+        "drive_proposal",
+        "network_claim"
       ]
     },
     "status": {
       "type": "enumeration",
       "required": true,
       "default": "draft",
-      "enum": ["draft", "pending", "approved", "rejected", "needs_info"]
+      "enum": [
+        "draft",
+        "pending",
+        "approved",
+        "rejected",
+        "needs_info"
+      ]
     },
     "targetEntityType": {
       "type": "enumeration",
@@ -45,26 +58,60 @@
         "blog_article",
         "user_profile",
         "topic",
-        "drive"
+        "drive",
+        "library_network"
       ]
     },
-    "targetDocumentId": { "type": "string" },
-    "targetSlug": { "type": "string" },
-    "fields": { "type": "json" },
-    "note": { "type": "text" },
-    "reviewNote": { "type": "text" },
+    "targetDocumentId": {
+      "type": "string"
+    },
+    "targetSlug": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "json"
+    },
+    "note": {
+      "type": "text"
+    },
+    "reviewNote": {
+      "type": "text"
+    },
     "verificationMethod": {
       "type": "enumeration",
-      "enum": ["email_domain", "vouching", "contact_us"]
+      "enum": [
+        "email_domain",
+        "vouching",
+        "contact_us"
+      ]
     },
-    "submittedByUserId": { "type": "string", "required": true },
-    "submittedByEmail": { "type": "string", "required": true },
-    "submittedByName": { "type": "string" },
-    "reviewedByUserId": { "type": "string" },
-    "reviewedAt": { "type": "datetime" },
-    "draftData": { "type": "json" },
-    "stepCompleted": { "type": "integer", "default": 0 },
-    "editSummary": { "type": "string" },
+    "submittedByUserId": {
+      "type": "string",
+      "required": true
+    },
+    "submittedByEmail": {
+      "type": "string",
+      "required": true
+    },
+    "submittedByName": {
+      "type": "string"
+    },
+    "reviewedByUserId": {
+      "type": "string"
+    },
+    "reviewedAt": {
+      "type": "datetime"
+    },
+    "draftData": {
+      "type": "json"
+    },
+    "stepCompleted": {
+      "type": "integer",
+      "default": 0
+    },
+    "editSummary": {
+      "type": "string"
+    },
     "evidenceType": {
       "type": "enumeration",
       "enum": [
@@ -77,12 +124,30 @@
         "other"
       ]
     },
-    "evidenceUrl": { "type": "string" },
-    "reviewerAssignedTo": { "type": "string" },
-    "resultDocumentId": { "type": "string" },
-    "contentLocale": { "type": "string", "default": "en" },
-    "driveDocumentId": { "type": "string" },
-    "payloadHash": { "type": "string", "private": true },
-    "draftRevision": { "type": "integer", "default": 0, "private": true }
+    "evidenceUrl": {
+      "type": "string"
+    },
+    "reviewerAssignedTo": {
+      "type": "string"
+    },
+    "resultDocumentId": {
+      "type": "string"
+    },
+    "contentLocale": {
+      "type": "string",
+      "default": "en"
+    },
+    "driveDocumentId": {
+      "type": "string"
+    },
+    "payloadHash": {
+      "type": "string",
+      "private": true
+    },
+    "draftRevision": {
+      "type": "integer",
+      "default": 0,
+      "private": true
+    }
   }
 }

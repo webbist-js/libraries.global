@@ -3076,7 +3076,9 @@
     "howClaimsWork": "Jak ověření funguje",
     "noLibraryAssignments": "Zatím žádné přiřazené knihovny",
     "teamLinks": "Váš tým",
-    "billing": "Fakturace a místa"
+    "billing": "Fakturace a místa",
+    "widgets": "Widgety",
+    "networks": "Služby a sítě"
   },
   "teamApiKeys": {
     "title": "Klíče API",

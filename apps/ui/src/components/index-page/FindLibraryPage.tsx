@@ -36,7 +36,7 @@ import {
   searchFind,
 } from "@/lib/find-search"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
-import { usePathname, useRouter } from "@/lib/navigation"
+import { Link, usePathname, useRouter } from "@/lib/navigation"
 
 import {
   type FindState,
@@ -315,6 +315,12 @@ export function FindLibraryPage({
           nearActive={state.nearLat != null}
           locating={locating}
         />
+        <Link
+          className="mt-4 inline-block font-semibold underline underline-offset-4"
+          href="/library-networks"
+        >
+          Explore library services and networks
+        </Link>
       </PageHero>
 
       {/* Main two-column area */}

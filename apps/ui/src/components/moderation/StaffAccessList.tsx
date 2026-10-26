@@ -12,7 +12,7 @@ export type StaffAccessRow = {
   affiliationDocumentId: string
   name: string
   staffRole: "owner" | "editor"
-  source: "claim" | "team" | null
+  source: "claim" | "team" | "network" | null
   approvedAt: string | null
   canRemove: boolean
 }
@@ -164,9 +164,11 @@ export function StaffAccessList({
                   <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
                     {row.source === "team"
                       ? "Assigned by a Team"
-                      : row.source === "claim"
-                        ? "Approved claim"
-                        : "Staff"}
+                      : row.source === "network"
+                        ? "Service mandate"
+                        : row.source === "claim"
+                          ? "Approved claim"
+                          : "Staff"}
                     {row.approvedAt ? ` · since ${date(row.approvedAt)}` : ""}
                   </p>
                 </div>

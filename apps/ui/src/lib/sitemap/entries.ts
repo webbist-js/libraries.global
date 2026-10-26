@@ -114,6 +114,8 @@ export function pathFor(
   const continent = row.continent?.slug ?? row.country?.continent?.slug
   const country = row.country?.slug
   switch (source) {
+    case "networks":
+      return row.slug ? `library-networks/${row.slug}` : null
     case "libraries":
       return continent && country && row.region?.slug && row.slug
         ? `${continent}/${country}/${row.region.slug}/${row.slug}`
@@ -149,6 +151,7 @@ const STATIC_ROUTES: {
   changeFrequency: SitemapEntry["changeFrequency"]
   priority: number
 }[] = [
+  { path: "library-networks", changeFrequency: "weekly", priority: 0.6 },
   { path: "", changeFrequency: "daily", priority: 1 },
   { path: "about", changeFrequency: "monthly", priority: 0.6 },
   { path: "libraries", changeFrequency: "daily", priority: 0.9 },

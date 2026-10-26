@@ -3076,7 +3076,9 @@
     "howClaimsWork": "Comment fonctionne la vérification",
     "noLibraryAssignments": "Aucune bibliothèque attribuée",
     "teamLinks": "Votre équipe",
-    "billing": "Facturation et places"
+    "billing": "Facturation et places",
+    "widgets": "Widgets",
+    "networks": "Services et réseaux"
   },
   "teamApiKeys": {
     "title": "Clés API",

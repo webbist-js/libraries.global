@@ -8,6 +8,181 @@ const route = (method: string, path: string, action: string) => ({
 })
 
 export default [
+  {
+    method: "GET",
+    path: "/networks/target",
+    handler: "networks.target",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/public/networks",
+    handler: "networks.publicList",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/public/networks/:id",
+    handler: "networks.publicDetail",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/public/network-affiliations/:id",
+    handler: "networks.publicAffiliations",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/networks",
+    handler: "networks.catalogue",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/networks/me",
+    handler: "networks.mine",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/networks/staff",
+    handler: "networks.staff",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/networks/:id",
+    handler: "networks.detail",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/networks/:id/scope",
+    handler: "networks.scope",
+    config: { auth: false },
+  },
+  {
+    method: "PUT",
+    path: "/networks/:id/affiliation",
+    handler: "networks.affiliation",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/networks/:id/claims",
+    handler: "networks.request",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/network-affiliations/:id/revoke",
+    handler: "networks.revokeAffiliation",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/network-claims/:id/review",
+    handler: "networks.review",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/network-mandates/:id/retry",
+    handler: "networks.retry",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/network-mandates/:id/reconcile",
+    handler: "networks.reconcile",
+    config: { auth: false },
+  },
+
+  {
+    method: "GET",
+    path: "/teams/:id/widgets",
+    handler: "widgets.workspace",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/teams/:id/widgets",
+    handler: "widgets.create",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/teams/:id/widgets/preview",
+    handler: "widgets.preview",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/teams/:id/widgets/catalogue",
+    handler: "widgets.catalogue",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/teams/:id/widgets/access-libraries",
+    handler: "widgets.accessLibraries",
+    config: { auth: false },
+  },
+  {
+    method: "PUT",
+    path: "/teams/:id/widgets/network",
+    handler: "widgets.primaryNetwork",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/teams/:id/widgets/selections",
+    handler: "widgets.selection",
+    config: { auth: false },
+  },
+  {
+    method: "PUT",
+    path: "/teams/:id/widgets/selections/:selectionId",
+    handler: "widgets.selection",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/teams/:id/widgets/:widgetId",
+    handler: "widgets.detail",
+    config: { auth: false },
+  },
+  {
+    method: "PUT",
+    path: "/teams/:id/widgets/:widgetId",
+    handler: "widgets.save",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/teams/:id/widgets/:widgetId/actions/:action",
+    handler: "widgets.action",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/widgets/public/:publicId/policy",
+    handler: "widgets.policy",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/widgets/public/:publicId/data",
+    handler: "widgets.data",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/widgets/public/:publicId/reports",
+    handler: "widgets.report",
+    config: { auth: false },
+  },
   ...["create", "context", "sync", "deletionCheck", "discard"].map(
     (action) => ({
       method: "POST",
