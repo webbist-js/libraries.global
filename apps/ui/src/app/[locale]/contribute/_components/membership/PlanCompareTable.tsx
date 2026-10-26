@@ -306,6 +306,7 @@ export function PlanCompareTable({
                         <PlanCompareCell
                           cell={row.cells[key]}
                           label={row.cellLabels?.[key]}
+                          isExport={row.cellLabelIsExport}
                         />
                       </td>
                     ))}

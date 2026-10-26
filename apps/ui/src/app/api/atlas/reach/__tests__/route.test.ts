@@ -85,12 +85,40 @@ it.each<{
     allowance: 100,
   },
   {
-    label: "an active Team member's personal Pro access",
+    label: "an active Team seat with Team analysis capacity",
     input: {
       signedIn: true,
       teams: [
         { status: "active", expiresAt: null, libraryDocumentIds: ["one"] },
       ],
+    },
+    status: 202,
+    allowance: 100,
+  },
+  {
+    label: "a lapsed Team member with independent Pro access",
+    input: {
+      signedIn: true,
+      teams: [
+        { status: "lapsed", expiresAt: null, libraryDocumentIds: ["one"] },
+      ],
+      grants: [{ plan: "pro", expiresAt: null }],
+    },
+    status: 202,
+    allowance: 20,
+  },
+  {
+    label: "an expired Team member with independent Pro access",
+    input: {
+      signedIn: true,
+      teams: [
+        {
+          status: "active",
+          expiresAt: "2026-10-23T12:00:00Z",
+          libraryDocumentIds: ["one"],
+        },
+      ],
+      grants: [{ plan: "pro", expiresAt: null }],
     },
     status: 202,
     allowance: 20,

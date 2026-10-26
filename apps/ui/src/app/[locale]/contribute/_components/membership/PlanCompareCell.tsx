@@ -9,8 +9,10 @@ import type { CompareCell } from "@/lib/plan-compare"
 export function PlanCompareCell({
   cell,
   label,
+  isExport = false,
 }: {
   readonly cell: CompareCell
+  readonly isExport?: boolean
   readonly label?: string
 }) {
   const m = useMembershipContent()
@@ -20,7 +22,9 @@ export function PlanCompareCell({
     return (
       <span className="font-semibold">
         {label}
-        <span className="sr-only"> {m("copy.perDownload")}</span>
+        {isExport ? (
+          <span className="sr-only"> {m("copy.perDownload")}</span>
+        ) : null}
       </span>
     )
 

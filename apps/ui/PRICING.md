@@ -2,15 +2,15 @@
 
 The agreed catalogue is in `src/lib/membership-pricing.json`. Static plan cards, Stripe preparation and CMS content generators read those amounts. Stripe confirms the actual checkout price and tax. A catalogue record does not enable purchases.
 
-| Offer                       | Price                                 | Tax treatment                                                     |
-| --------------------------- | ------------------------------------- | ----------------------------------------------------------------- |
-| Supporter                   | £3/month or £30/year                  | Tax-inclusive base GBP                                            |
-| Founding Pro                | £5/month or £50/year                  | Tax-inclusive base GBP; existing subscriptions retain their Price |
-| Future standard Pro         | £8/month or £80/year once Reach ships | Not offered or activated yet                                      |
-| Team, five seats            | £600/year                             | Excluding VAT                                                     |
-| Additional Team seat        | £120/year                             | Excluding VAT                                                     |
-| Public-library-service Team | £480/year; additional seats £96/year  | Excluding VAT; 20% discount on Team items only                    |
-| Team API add-on             | £15/month, billed separately          | Tax-inclusive base GBP                                            |
+| Offer                       | Price                                | Tax treatment                                                     |
+| --------------------------- | ------------------------------------ | ----------------------------------------------------------------- |
+| Supporter                   | £3/month or £30/year                 | Tax-inclusive base GBP                                            |
+| Founding Pro                | £5/month or £50/year                 | Tax-inclusive base GBP; existing subscriptions retain their Price |
+| Future standard Pro         | £8/month or £80/year (future offer)  | Not offered or activated yet                                      |
+| Team, five seats            | £600/year                            | Excluding VAT                                                     |
+| Additional Team seat        | £120/year                            | Excluding VAT                                                     |
+| Public-library-service Team | £480/year; additional seats £96/year | Excluding VAT; 20% discount on Team items only                    |
+| Team API add-on             | £15/month, billed separately         | Tax-inclusive base GBP                                            |
 
 New Teams use self-service annual Stripe subscriptions when enabled. `/staff/team/new` creates an inactive Team; settled payment activates its seats and the purchaser becomes its Organiser. The subscription uses one £120 annual seat item with a five-seat minimum, or £96 after public-library-service eligibility is confirmed separately. Organisers manage renewal, seat quantities and invoices online. Existing agreed invoice Teams keep their quoted terms and are not converted automatically. Verification is assessed separately. API subscriptions have their own Team customer binding and never buy staff authority. See [Team billing](TEAM-BILLING.md).
 
@@ -25,7 +25,7 @@ node apps/ui/scripts/pricing-catalogue.mjs --live
 node apps/ui/scripts/pricing-catalogue.mjs --live --apply
 ```
 
-Account-specific catalogue IDs are saved locally in Git-ignored `scripts/pricing-sandbox-catalogue.json` and `scripts/pricing-live-catalogue.json`. Personal founding prices remain unchanged. Standard Pro prices are not created or put in the portal before Reach is delivered.
+Account-specific catalogue IDs are saved locally in Git-ignored `scripts/pricing-sandbox-catalogue.json` and `scripts/pricing-live-catalogue.json`. Personal founding prices remain unchanged. Standard Pro prices are not created or put in the portal until a separate pricing decision enables that offer. Shipping Reach does not activate a price change.
 
 For a Team invoice, use one base item plus the number of additional seats. Six seats cost £720/year ex VAT, or £576 for an eligible public-library service. Apply the public-service coupon only after confirming eligibility; it is restricted to the Team base and additional-seat products. It does not discount Supporter, Pro or the API add-on. API usage is capped in the application, with no automatic Stripe overage charges.
 
@@ -42,3 +42,9 @@ For a Team invoice, use one base item plus the number of additional seats. Six s
 - Promote the accepted UI/CMS/worker release using the deployment runbook, then update the production API availability copy when purchases are enabled.
 
 The production CMS can be updated independently. The deployed static membership/Atlas prices change only when the new UI build is promoted. See `BILLING.md`, `BILLING-LOCAL-TESTS.md`, `TEAM-API.md` and the private `docs/operations/infrastructure/digitalocean/deployment.md` from the repository root for acceptance and deployment details.
+
+## Atlas analysis capacity
+
+Pro supports up to 50 eligible libraries per service, Team 100. Four-time calculations use conservative geographic envelopes of 2,500 km² / 75 km span for Pro and 5,000 km² / 150 km for Team. Larger services use only the selected time, up to 20,000 km² / 200 km span for Pro or 40,000 km² / 400 km for Team. Both the service and reporting envelope must fit; area is not land area. The hourly allowance is 20 new calculations for Pro or 100 for an active Team seat. Cache hits do not consume a new calculation. Changing the time for a larger service requires another calculation.
+
+An active Team seat receives the larger analysis allowance without changing its personal Pro plan or its Library editing permissions. Lapsed or expired seats fall back to any independently held plan. Transit, shared workspaces, benchmarking and traffic reports remain marked as planned. Deprivation, households without a car, Library access comparison and UK walking/cycling Reach are delivered; availability still depends on the required country datasets and mapped Library records. Checkout remains subject to the beta availability notice.

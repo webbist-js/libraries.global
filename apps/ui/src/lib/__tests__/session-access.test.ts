@@ -1,9 +1,11 @@
+import type { Limit } from "@repo/access"
 import { describe, expect, it } from "vitest"
 
 import { buildSessionAccess } from "../session-access"
 import type { SessionProfile } from "../session-profile"
 
-const FREE_LIMITS = {
+const FREE_LIMITS: Record<Limit, number> = {
+  analysisAreaMultiplier: 0,
   analysisRunsPerHour: 0,
   savedViews: 3,
   savedSearches: 3,
@@ -145,6 +147,8 @@ describe("buildSessionAccess", () => {
     })
     expect(a.plan).toBe("pro")
     expect(a.planSource).toBe("team")
+    expect(a.limits.analysisAreaMultiplier).toBe(2)
+    expect(a.limits.analysisRunsPerHour).toBe(100)
     expect(a.teamLibraryIds).toEqual(["libA", "libB"])
     expect(a.teams).toEqual([
       {

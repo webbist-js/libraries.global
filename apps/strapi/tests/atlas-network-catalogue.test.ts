@@ -165,7 +165,89 @@ it("rejects a large canonical reporting district even for one eligible origin", 
   )
   expect(response.body).toMatchObject({
     state: "unsupported",
-    message: expect.stringContaining("local Reach size limit"),
+    message: expect.stringContaining("Reach calculation allowance"),
+  })
+  expect(connection.mock.calls).toEqual([["atlas_records"]])
+})
+
+it("requires a chosen time for an expanded rural service before native or cache access", async () => {
+  const row = { ...rows[0], location: { lat: 57.2, lng: -2.5 } }
+  const query = {
+    where: () => query,
+    whereIn: () => query,
+    select: () => query,
+    limit: async () => [
+      {
+        projection: {
+          ...projections[0],
+          original_lat: 57.2,
+          original_lng: -2.5,
+          local_area_code: "S12000034",
+        },
+      },
+    ],
+  }
+  const connection = vi.fn(() => query)
+  const strapi = {
+    db: { connection },
+    documents: (uid: string) =>
+      uid.includes("library-network")
+        ? { findOne: async () => network }
+        : { findMany: async () => [row] },
+  }
+  const result = await requestAtlasNetworkReach(
+    strapi,
+    {
+      schemaVersion: 1,
+      networkId: "one",
+      mode: "walking",
+      scope: {
+        filters: emptyAtlasFilters(),
+        accessibility: { enabled: false, selected: [], view: "matches" },
+      },
+    },
+    "a".repeat(64),
+    20
+  )
+  expect(result.body).toMatchObject({
+    state: "unsupported",
+    message: expect.stringContaining("one travel time"),
+  })
+  expect(connection.mock.calls).toEqual([["atlas_records"]])
+})
+
+it("reports missing reporting geography as a data limitation rather than a plan allowance", async () => {
+  const query = {
+    where: () => query,
+    whereIn: () => query,
+    select: () => query,
+    limit: async () => [],
+  }
+  const connection = vi.fn(() => query)
+  const strapi = {
+    db: { connection },
+    documents: (uid: string) =>
+      uid.includes("library-network")
+        ? { findOne: async () => network }
+        : { findMany: async () => rows },
+  }
+  const result = await requestAtlasNetworkReach(
+    strapi,
+    {
+      schemaVersion: 1,
+      networkId: "one",
+      mode: "walking",
+      scope: {
+        filters: emptyAtlasFilters(),
+        accessibility: { enabled: false, selected: [], view: "matches" },
+      },
+    },
+    "a".repeat(64),
+    20
+  )
+  expect(result.body).toMatchObject({
+    state: "unsupported",
+    message: expect.stringContaining("supported reporting boundaries"),
   })
   expect(connection.mock.calls).toEqual([["atlas_records"]])
 })
