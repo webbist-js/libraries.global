@@ -4,6 +4,13 @@ import {
   DEFAULT_ATLAS_DENSITY,
   type AtlasLibraryDensity,
 } from "@repo/shared-data"
+import type { FeatureCollection, Geometry } from "geojson"
+import type {
+  GeoJSONSourceSpecification,
+  LayerSpecification,
+  Map as MapLibreMap,
+  SourceSpecification,
+} from "maplibre-gl"
 import { expect, it, vi } from "vitest"
 
 import { AtlasLibraryDensityRenderer } from "../atlas-library-density-renderer"
@@ -13,21 +20,24 @@ vi.mock("../atlas-pmtiles", () => ({
   releaseAtlasArchive: vi.fn(),
 }))
 function fixture() {
-  const sources = new Map<string, any>(),
-    layers = new Map<string, any>()
+  const sources = new Map<string, SourceSpecification>(),
+    layers = new Map<string, LayerSpecification>()
   const map = {
     getStyle: () => ({ layers: [{ id: "pins" }] }),
-    addSource: (id: string, source: any) => sources.set(id, source),
+    addSource: (id: string, source: SourceSpecification) =>
+      sources.set(id, source),
     getSource: (id: string) => sources.get(id),
     removeSource: (id: string) => sources.delete(id),
-    addLayer: (layer: any) => layers.set(layer.id, layer),
+    addLayer: (layer: LayerSpecification) => layers.set(layer.id, layer),
     getLayer: (id: string) => layers.get(id),
     removeLayer: (id: string) => layers.delete(id),
     isSourceLoaded: () => true,
     setPaintProperty: vi.fn(),
-    on: vi.fn(),
+    on: vi.fn<(event: string, callback: () => void) => void>(),
     off: vi.fn(),
-    queryRenderedFeatures: vi.fn(() => [] as any[]),
+    queryRenderedFeatures: vi.fn(
+      () => [] as { properties: { cell: string; total: number } }[]
+    ),
     getZoom: () => 18,
   }
   const select = vi.fn()
@@ -46,17 +56,24 @@ function fixture() {
     map,
     data,
     select,
-    renderer: new AtlasLibraryDensityRenderer(map as any, select),
+    renderer: new AtlasLibraryDensityRenderer(
+      map as unknown as MapLibreMap,
+      select
+    ),
   }
 }
 it("renders numeric geographic rates at street zoom without clusters or a zoom fade", () => {
   const f = fixture()
   f.renderer.update(f.data, DEFAULT_ATLAS_DENSITY)
-  const source = [...f.sources.values()][0]
+  const source = [...f.sources.values()][0] as GeoJSONSourceSpecification
   expect(source.cluster).toBeUndefined()
-  const cell = source.data.features.find(
-    (feature: any) => feature.geometry.type === "Polygon"
-  )
+  const data = source.data as FeatureCollection<
+    Geometry,
+    { cell: string; per100Km2: number }
+  >
+  const cell = data.features.find(
+    (feature) => feature.geometry.type === "Polygon"
+  )!
   expect(cell.properties.per100Km2).toBe(
     atlasDensityCell(cell.properties.cell, 3).per100Km2
   )

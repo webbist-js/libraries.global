@@ -65,20 +65,25 @@ function fixture({
     manifest,
   }
   const search = vi.fn(
-    async (body: Record<string, any>): Promise<AtlasSearchResult> => {
-      const field = (body.facets ?? []).find((field: string) =>
-        field.startsWith("atlas_cell_")
-      )
+    async (body: Record<string, unknown>): Promise<AtlasSearchResult> => {
+      const field = Array.isArray(body.facets)
+        ? body.facets.find(
+            (field): field is string =>
+              typeof field === "string" && field.startsWith("atlas_cell_")
+          )
+        : undefined
       const resolution = field ? Number(field.split("_").at(-1)) : 0
       if (field && oldIndex && resolution > 12)
         throw new Error("Index field not installed")
-      const total = body.filter.includes('status = "permanently_closed"')
+      const total = String(body.filter).includes(
+        'status = "permanently_closed"'
+      )
         ? 0
         : count
 
       return {
         hits:
-          body.limit > 0 && total > 0 && total <= 1000
+          Number(body.limit) > 0 && total > 0 && total <= 1000
             ? Array.from(
                 { length: total },
                 () =>
@@ -144,8 +149,10 @@ it("uses verified prepared counts only for an exactly matching unfiltered snapsh
     archive: archive.densityTiles,
   })
   expect(
-    f.search.mock.calls.some(([body]) =>
-      body.facets?.some((field: string) => field.startsWith("atlas_cell_"))
+    f.search.mock.calls.some(
+      ([body]) =>
+        Array.isArray(body.facets) &&
+        body.facets.some((field: string) => field.startsWith("atlas_cell_"))
     )
   ).toBe(false)
 })

@@ -228,6 +228,76 @@ const coverage = (base: number, all: number, any: number): AtlasCoverage => {
   }
 }
 
+const densityIsFiltered = (scope: AtlasScope): boolean => {
+  const f = scope.filters
+
+  return Boolean(
+    scope.place ||
+    scope.accessibility.enabled ||
+    f.types.length ||
+    f.operators.length ||
+    f.facilities.length ||
+    f.networks?.length ||
+    f.opening !== "any" ||
+    f.events ||
+    f.catalogue ||
+    f.founded
+  )
+}
+
+function validateDensityGeography(
+  cells: AtlasLibraryDensity["cells"],
+  resolution: number,
+  bounds: NonNullable<AtlasScope["bbox"]>
+) {
+  const ranges = atlasBoundsRanges(bounds)
+  for (const cell of cells) {
+    const parsed = atlasCell(cell.id)
+    if (
+      !cell.id.startsWith(`${resolution}/`) ||
+      atlasCellId(parsed.centre, resolution) !== cell.id ||
+      !ranges.some(
+        (b) =>
+          parsed.bounds.west <= b.east &&
+          parsed.bounds.east >= b.west &&
+          parsed.bounds.south <= b.north &&
+          parsed.bounds.north >= b.south
+      )
+    )
+      throw new Error("Invalid library density geography")
+  }
+}
+
+function listSortField(
+  sort: Extract<AtlasQueryRequest, { purpose: "list" }>["sort"]
+) {
+  if (sort.startsWith("place")) return "place_sort"
+  if (sort.startsWith("record")) return "completeness"
+
+  return "name_sort"
+}
+
+function densityMaximum(
+  cells: AtlasLibraryDensity["cells"],
+  bounds: NonNullable<AtlasScope["bbox"]>
+) {
+  const ranges = atlasBoundsRanges(bounds)
+
+  return cells.reduce((max, cell) => {
+    const value = atlasDensityCell(cell.id, cell.total)
+
+    return ranges.some(
+      (b) =>
+        value.bounds.west < b.east &&
+        value.bounds.east > b.west &&
+        value.bounds.south < b.north &&
+        value.bounds.north > b.south
+    )
+      ? Math.max(max, value.per100Km2)
+      : max
+  }, 0)
+}
+
 /** All map, controls and pagination share the same code/clock predicates. */
 export class AtlasQueryEngine {
   constructor(
@@ -845,6 +915,52 @@ export class AtlasQueryEngine {
     throw new Error("Atlas aggregates unavailable")
   }
 
+  private currentDensityArchive() {
+    const manifest = this.state.manifest
+    if (
+      manifest?.densityTiles?.version !== 1 ||
+      manifest.sourceStartRevision !== manifest.sourceEndRevision ||
+      manifest.sourceEndRevision !== this.state.indexedThrough ||
+      manifest.builtAgainstQueryEpoch !== this.state.queryEpoch ||
+      manifest.dictionaryVersion !== this.state.dictionary.version ||
+      manifest.canonicalLocale !== this.state.canonicalLocale
+    )
+      return null
+
+    return manifest.densityTiles
+  }
+
+  private async libraryDensityCells(
+    scope: AtlasScope,
+    resolution: number,
+    result: AtlasSearchResult
+  ) {
+    const total = this.total(result)
+    if (total > ATLAS_LIMITS.points) {
+      const cells = Object.entries(
+        result.facetDistribution?.[`atlas_cell_${resolution}`] ?? {}
+      ).map(([id, total]) => ({ id, total }))
+
+      return { total, cells }
+    }
+    const rows = await this.backend.search({
+      filter: this.filter(scope),
+      limit: ATLAS_LIMITS.points,
+      facets: ["locale"],
+      attributesToRetrieve: ["latitude", "longitude"],
+    })
+    if (this.total(rows) !== total || rows.hits.length !== total)
+      throw new Error("Concurrent Atlas density population changed; retry")
+
+    return {
+      total,
+      cells: atlasDensityCounts(
+        rows.hits.map((row) => ({ lat: row.latitude, lng: row.longitude })),
+        resolution
+      ),
+    }
+  }
+
   private async libraryDensity(
     request: Extract<AtlasQueryRequest, { purpose: "viewport" }>,
     exactTotal: number
@@ -855,8 +971,7 @@ export class AtlasQueryEngine {
       settings.detail
     )
     const base = { exactTotal, requestedResolution, coarsened: false }
-    const manifest = this.state.manifest
-    const f = request.scope.filters
+    const archive = this.currentDensityArchive()
     // Aggregates cannot use the point journal overlay: removals and moved
     // records must subtract from the old cells. Use a prepared surface only
     // when its stable snapshot still exactly matches the indexed generation.
@@ -864,29 +979,15 @@ export class AtlasQueryEngine {
       request.drawingPreference === "auto" &&
       settings.detail === "auto" &&
       settings.scale === "fixed" &&
-      manifest?.densityTiles?.version === 1 &&
-      manifest.sourceStartRevision === manifest.sourceEndRevision &&
-      manifest.sourceEndRevision === this.state.indexedThrough &&
-      manifest.builtAgainstQueryEpoch === this.state.queryEpoch &&
-      manifest.dictionaryVersion === this.state.dictionary.version &&
-      manifest.canonicalLocale === this.state.canonicalLocale &&
-      !request.scope.place &&
-      !request.scope.accessibility.enabled &&
-      !f.types.length &&
-      !f.operators.length &&
-      !f.facilities.length &&
-      !f.networks?.length &&
-      f.opening === "any" &&
-      !f.events &&
-      !f.catalogue &&
-      !f.founded
+      archive &&
+      !densityIsFiltered(request.scope)
     ) {
       return {
         ...base,
         mode: "tiles",
         resolution: requestedResolution,
         cells: [],
-        archive: manifest.densityTiles,
+        archive,
       }
     }
     for (let resolution = requestedResolution; resolution >= 0; resolution--) {
@@ -908,24 +1009,11 @@ export class AtlasQueryEngine {
           facets: ["locale"],
         })
       }
-      const total = this.total(result)
-      let cells = Object.entries(result.facetDistribution?.[field] ?? {}).map(
-        ([id, total]) => ({ id, total })
+      const { total, cells } = await this.libraryDensityCells(
+        scope,
+        resolution,
+        result
       )
-      if (total <= ATLAS_LIMITS.points) {
-        const rows = await this.backend.search({
-          filter: this.filter(scope),
-          limit: ATLAS_LIMITS.points,
-          facets: ["locale"],
-          attributesToRetrieve: ["latitude", "longitude"],
-        })
-        if (this.total(rows) !== total || rows.hits.length !== total)
-          throw new Error("Concurrent Atlas density population changed; retry")
-        cells = atlasDensityCounts(
-          rows.hits.map((row) => ({ lat: row.latitude, lng: row.longitude })),
-          resolution
-        )
-      }
       if (
         cells.some(
           (cell) => !Number.isSafeInteger(cell.total) || cell.total <= 0
@@ -937,35 +1025,8 @@ export class AtlasQueryEngine {
         cells.reduce((sum, cell) => sum + cell.total, 0) !== total
       )
         continue
-      for (const cell of cells) {
-        const parsed = atlasCell(cell.id)
-        if (
-          !cell.id.startsWith(`${resolution}/`) ||
-          atlasCellId(parsed.centre, resolution) !== cell.id ||
-          !atlasBoundsRanges(scope.bbox).some(
-            (b) =>
-              parsed.bounds.west <= b.east &&
-              parsed.bounds.east >= b.west &&
-              parsed.bounds.south <= b.north &&
-              parsed.bounds.north >= b.south
-          )
-        )
-          throw new Error("Invalid library density geography")
-      }
-      const ranges = atlasBoundsRanges(request.scope.bbox!)
-      const maxPer100Km2 = cells.reduce((max, cell) => {
-        const value = atlasDensityCell(cell.id, cell.total)
-
-        return ranges.some(
-          (b) =>
-            value.bounds.west < b.east &&
-            value.bounds.east > b.west &&
-            value.bounds.south < b.north &&
-            value.bounds.north > b.south
-        )
-          ? Math.max(max, value.per100Km2)
-          : max
-      }, 0)
+      validateDensityGeography(cells, resolution, scope.bbox)
+      const maxPer100Km2 = densityMaximum(cells, request.scope.bbox!)
 
       return {
         ...base,
@@ -977,6 +1038,26 @@ export class AtlasQueryEngine {
       }
     }
     throw new Error("Complete library density unavailable")
+  }
+
+  private async viewportCoverage(scope: AtlasScope) {
+    if (!scope.accessibility.enabled) return
+    const resolved = atlasResolveScope(scope, this.state.dictionary),
+      base = this.filter(scope, "listed", true)
+    const counts = await this.many(
+      [
+        base,
+        `${base} AND ${atlasAccessFilter(resolved)}`,
+        `${base} AND ${atlasAccessFilter(resolved, "any")}`,
+      ],
+      async (filter) =>
+        this.total(
+          await this.backend.search({ filter, limit: 0, facets: ["locale"] })
+        ),
+      3
+    )
+
+    return coverage(counts[0], counts[1], counts[2])
   }
 
   async viewport(
@@ -1056,24 +1137,7 @@ export class AtlasQueryEngine {
         points,
       }
     }
-    let summary: AtlasCoverage | undefined
-    if (request.scope.accessibility.enabled) {
-      const resolved = atlasResolveScope(request.scope, this.state.dictionary),
-        base = this.filter(request.scope, "listed", true)
-      const counts = await this.many(
-        [
-          base,
-          `${base} AND ${atlasAccessFilter(resolved)}`,
-          `${base} AND ${atlasAccessFilter(resolved, "any")}`,
-        ],
-        async (filter) =>
-          this.total(
-            await this.backend.search({ filter, limit: 0, facets: ["locale"] })
-          ),
-        3
-      )
-      summary = coverage(counts[0], counts[1], counts[2])
-    }
+    const summary = await this.viewportCoverage(request.scope)
 
     return {
       ...this.metadata(request),
@@ -1270,11 +1334,7 @@ export class AtlasQueryEngine {
   ): Promise<AtlasListResponse> {
     const metadata = this.metadata(request),
       distance = request.sort === "distance",
-      field = request.sort.startsWith("place")
-        ? "place_sort"
-        : request.sort.startsWith("record")
-          ? "completeness"
-          : "name_sort",
+      field = listSortField(request.sort),
       descending = request.sort.endsWith("_desc")
     let filter = this.filter(request.scope)
     if (request.cursor) {

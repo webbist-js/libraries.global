@@ -52,8 +52,11 @@ export class AtlasLibraryDensityRenderer {
     if (graph.archive) releaseAtlasArchive(graph.archive)
   }
 
-  update(data: AtlasLibraryDensity | null, settings: AtlasDensitySettings) {
-    const key = JSON.stringify(data)
+  private updateShading(
+    key: string,
+    data: AtlasLibraryDensity | null,
+    settings: AtlasDensitySettings
+  ) {
     if (
       !this.pending &&
       this.current &&
@@ -76,8 +79,15 @@ export class AtlasLibraryDensityRenderer {
         if (this.map.getLayer(`${source}-${suffix}`))
           this.map.setPaintProperty(`${source}-${suffix}`, property, opacity)
 
-      return
+      return true
     }
+
+    return false
+  }
+
+  update(data: AtlasLibraryDensity | null, settings: AtlasDensitySettings) {
+    const key = JSON.stringify(data)
+    if (this.updateShading(key, data, settings)) return
     if (this.commit) this.map.off("sourcedata", this.commit)
     this.commit = null
     this.remove(this.pending)

@@ -28,6 +28,10 @@ import { AtlasExportButton } from "./AtlasExportButton"
 import { useAtlasRequest } from "./useAtlasData"
 
 type SortKey = "name" | "place" | "record"
+type LibrarySelect = (
+  library: AtlasLibrary,
+  trigger: HTMLButtonElement | null
+) => void
 const PAGE = 20
 
 /**
@@ -55,10 +59,7 @@ export function AtlasListView({
   readonly center: { lat: number; lng: number }
   readonly now: Date
   readonly onHover: (lib: AtlasLibrary | null) => void
-  readonly onSelect: (
-    library: AtlasLibrary,
-    trigger: HTMLButtonElement | null
-  ) => void
+  readonly onSelect: LibrarySelect
   readonly selectedId?: string | null
   readonly onShowMap: () => void
   /** Opens the plans sheet from the Pro-locked export button. */
@@ -406,29 +407,12 @@ export function AtlasListView({
                       className="border-b px-3.5 py-3 text-left font-semibold"
                       style={{ borderColor: T.border.divider }}
                     >
-                      <button
-                        type="button"
-                        data-atlas-list-library
-                        title={t("inspectLibrary", { name: l.name })}
-                        aria-expanded={selectedId === l.id}
-                        aria-controls={
-                          selectedId === l.id
-                            ? "atlas-analysis-panel"
-                            : undefined
-                        }
-                        onClick={(event) => onSelect(l, event.currentTarget)}
-                        className="min-h-[36px] w-full text-left font-semibold hover:underline"
-                        style={{ color: T.ink.base }}
-                      >
-                        {l.name}
-                      </button>
-                      {compact ? (
-                        <span className="mt-1 block text-xs font-normal text-(--t-ink-dim)">
-                          {l.completenessKnown === false
-                            ? t("recordUnknown")
-                            : t("recordValue", { value: l.complete })}
-                        </span>
-                      ) : null}
+                      <LibraryName
+                        library={l}
+                        selected={selectedId === l.id}
+                        compact={compact}
+                        onSelect={onSelect}
+                      />
                     </th>
                     {!compact ? (
                       <td
@@ -582,6 +566,44 @@ export function AtlasListView({
         </div>
       ) : null}
     </section>
+  )
+}
+
+function LibraryName({
+  library,
+  selected,
+  compact,
+  onSelect,
+}: {
+  readonly library: AtlasLibrary
+  readonly selected: boolean
+  readonly compact: boolean
+  readonly onSelect: LibrarySelect
+}) {
+  const t = useUiTranslations("atlasList")
+
+  return (
+    <>
+      <button
+        type="button"
+        data-atlas-list-library
+        title={t("inspectLibrary", { name: library.name })}
+        aria-expanded={selected}
+        aria-controls={selected ? "atlas-analysis-panel" : undefined}
+        onClick={(event) => onSelect(library, event.currentTarget)}
+        className="min-h-[36px] w-full text-left font-semibold hover:underline"
+        style={{ color: T.ink.base }}
+      >
+        {library.name}
+      </button>
+      {compact ? (
+        <span className="mt-1 block text-xs font-normal text-(--t-ink-dim)">
+          {library.completenessKnown === false
+            ? t("recordUnknown")
+            : t("recordValue", { value: library.complete })}
+        </span>
+      ) : null}
+    </>
   )
 }
 
