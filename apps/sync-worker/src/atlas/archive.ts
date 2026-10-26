@@ -10,6 +10,7 @@ import { atlasPoint, type AtlasManifest } from "@repo/shared-data"
 import type { Knex } from "knex"
 
 import { buildAtlasCountryArchive } from "./country-archive"
+import { buildAtlasDensityArchive } from "./density-archive"
 
 export type AtlasNativeRunner = (
   command: string,
@@ -364,6 +365,24 @@ export async function buildAtlasArchive(
         combined
       )
     }
+    const density = await buildAtlasDensityArchive(
+      {
+        directory,
+        run,
+        validator: path.join(
+          path.dirname(options.validator),
+          "validate_density.py"
+        ),
+        url: new URL(
+          `atlas/${buildId}/density.pmtiles`,
+          options.publicBaseUrl.endsWith("/")
+            ? options.publicBaseUrl
+            : `${options.publicBaseUrl}/`
+        ).toString(),
+      },
+      combined
+    )
+    if (density) manifest.densityTiles = density
     if (options.countries) {
       manifest.countryTiles = await buildAtlasCountryArchive(
         {
@@ -399,6 +418,25 @@ export async function buildAtlasArchive(
       options.origin,
       combined
     )
+    if (manifest.densityTiles) {
+      await aws([
+        "s3",
+        "cp",
+        path.join(directory, "density.pmtiles"),
+        `s3://${options.bucket}/atlas/${buildId}/density.pmtiles`,
+        "--content-type",
+        "application/vnd.pmtiles",
+        "--cache-control",
+        "public,max-age=31536000,immutable",
+        "--only-show-errors",
+      ])
+      await verifyAtlasDelivery(
+        manifest.densityTiles.url,
+        manifest.densityTiles.archiveBytes,
+        options.origin,
+        combined
+      )
+    }
     if (manifest.countryTiles) {
       await aws([
         "s3",

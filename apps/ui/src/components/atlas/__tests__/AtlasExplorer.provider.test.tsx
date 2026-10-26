@@ -208,11 +208,13 @@ it("keeps the scalable provider, desktop/mobile lists and every list sort compat
     "fetch",
     vi.fn(async (url: string, init: any) => {
       seen.push(url)
-      if (url.startsWith("/api/atlas/library"))
+      if (url.startsWith("/api/atlas/library")) {
+        const key = new URL(url, "http://localhost").searchParams.get("key")
+
         return Response.json({
           library: {
-            id: "selected",
-            name: "Selected",
+            id: key ?? "selected",
+            name: key === "fixture-library" ? "Fixture library" : "Selected",
             hours: null,
             access: [],
             services: [],
@@ -223,6 +225,7 @@ it("keeps the scalable provider, desktop/mobile lists and every list sort compat
             notices: [],
           },
         })
+      }
       if (url === "/api/atlas/manifest")
         return Response.json({
           manifest: null,
@@ -350,34 +353,75 @@ it("keeps the scalable provider, desktop/mobile lists and every list sort compat
     await vi.advanceTimersByTimeAsync(1000)
   })
   expect(
-    screen.getByRole("rowheader", { name: "Fixture library" })
+    screen.getByRole("rowheader", { name: /^Fixture library/ })
   ).toBeTruthy()
   expect(
     screen.queryByText("Atlas data is temporarily unavailable.")
   ).toBeNull()
-  for (const sort of ["name", "place", "distance"]) {
+  for (const [sort, label] of Object.entries({
+    distance: "Nearest the centre",
+    name: "Name · A–Z",
+    name_desc: "Name · Z–A",
+    place: "Place · A–Z",
+    place_desc: "Place · Z–A",
+    record: "Least complete first",
+    record_desc: "Most complete first",
+  })) {
     fireEvent.click(screen.getByRole("combobox", { name: "Sort" }))
     fireEvent.click(
       screen.getByRole("option", {
-        name:
-          sort === "name"
-            ? "Name"
-            : sort === "place"
-              ? "Place"
-              : "Nearest the centre",
+        name: label,
       })
     )
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1000)
     })
     expect(
-      screen.getByRole("rowheader", { name: "Fixture library" })
+      screen.getByRole("rowheader", { name: /^Fixture library/ })
     ).toBeTruthy()
     expect(inputs).toContainEqual(
       expect.objectContaining({ purpose: "list", sort })
     )
   }
+  await act(async () => {
+    observed.map.onView({
+      lat: 1,
+      lng: 1,
+      zoom: 3,
+      bounds: { west: -2, east: 2, south: -2, north: 2 },
+    })
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  expect(screen.getByRole("combobox", { name: "Sort" }).textContent).toContain(
+    "Most complete first"
+  )
   expect(screen.getByRole("button", { name: "Atlas feedback" })).toBeTruthy()
+
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  const desktopLibrary = screen.getByRole("button", {
+    name: "Fixture library",
+  })
+  const desktopTable = screen.getByRole("table")
+  observed.flyTo.mockClear()
+  fireEvent.click(desktopLibrary)
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  expect(screen.getByRole("heading", { name: "Fixture library" })).toBeTruthy()
+  expect(screen.getByRole("table")).toBe(desktopTable)
+  expect(desktopLibrary.getAttribute("aria-expanded")).toBe("true")
+  expect(screen.getByRole("combobox", { name: "Sort" }).textContent).toContain(
+    "Most complete first"
+  )
+  expect(observed.flyTo).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole("button", { name: "Back to results" }))
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(100)
+  })
+  expect(screen.getByRole("table")).toBe(desktopTable)
+  expect(document.activeElement).toBe(desktopLibrary)
 
   atlas.unmount()
   window.history.replaceState(null, "", "/en/map?layers=pins")
@@ -413,8 +457,24 @@ it("keeps the scalable provider, desktop/mobile lists and every list sort compat
     await vi.advanceTimersByTimeAsync(1000)
   })
   expect(
-    screen.getByRole("rowheader", { name: "Fixture library" })
+    screen.getByRole("rowheader", { name: /^Fixture library/ })
   ).toBeTruthy()
+  const mobileLibrary = screen.getByRole("button", { name: "Fixture library" })
+  const mobileTable = screen.getByRole("table")
+  fireEvent.click(mobileLibrary)
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  expect(screen.getByRole("heading", { name: "Fixture library" })).toBeTruthy()
+  expect(mobileTable.isConnected).toBe(true)
+  expect(screen.queryByRole("table")).toBeNull()
+  fireEvent.click(screen.getByRole("button", { name: /^Inspect ·/ }))
+  fireEvent.click(screen.getByRole("button", { name: "Back to results" }))
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(100)
+  })
+  expect(screen.getByRole("table")).toBe(mobileTable)
+  expect(document.activeElement).toBe(mobileLibrary)
 })
 
 it("focuses a selected service's bounding box once and preserves the camera on later map movement", async () => {

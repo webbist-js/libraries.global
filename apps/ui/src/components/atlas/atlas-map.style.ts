@@ -2,6 +2,7 @@
 // layer paint. Canvas and MapLibre paint can't read CSS variables, so the hex
 // values below mirror the design tokens in styles/globals.css.
 
+import { ATLAS_DENSITY_COLORS } from "@repo/shared-data"
 import type {
   ExpressionSpecification,
   HeatmapLayerSpecification,
@@ -129,14 +130,7 @@ export const TYPE_SHAPE: Record<
 
 // Brand indigo: from the active-chip tint to the primary and hover accents.
 // Increasing darkness carries magnitude without introducing extra hues.
-const INDIGO_RAMP = [
-  "#ECEBFB",
-  "#C2BEEC",
-  "#9991DF",
-  "#6E65D5",
-  INDIGO,
-  "#3730A3",
-] as const
+const INDIGO_RAMP = ATLAS_DENSITY_COLORS
 
 /** Shared scale for continuous density and stepped record completeness. */
 export const RAMP = {

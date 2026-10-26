@@ -1,6 +1,11 @@
 "use client"
 
-import { ATLAS_ACCESS_BINS, type AtlasAccessMetric } from "@repo/shared-data"
+import {
+  ATLAS_ACCESS_BINS,
+  type AtlasAccessMetric,
+  type AtlasLibraryDensity,
+  type AtlasDensitySettings,
+} from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
@@ -22,6 +27,7 @@ import {
 } from "./atlas.logic"
 import { AccessibilitySwatch } from "./AtlasAccessibility"
 import { AtlasContextLegend } from "./AtlasContext"
+import { AtlasLibraryDensityLegend } from "./AtlasLibraryDensity"
 
 /** Legends for the pins and every active layer, in stacking order. */
 export function AtlasLegends({
@@ -30,6 +36,7 @@ export function AtlasLegends({
   accessibility = [],
   accessibilityView = "matches",
   accessMetric = "per100k",
+  density,
   context,
   reach,
 }: {
@@ -37,6 +44,10 @@ export function AtlasLegends({
   readonly layers: LayerId[]
   readonly accessibility?: string[]
   readonly accessibilityView?: AccessibilityView
+  readonly density?: {
+    data: AtlasLibraryDensity | null
+    settings: AtlasDensitySettings
+  }
   readonly accessMetric?: AtlasAccessMetric
   readonly perCapitaYear?: number
   readonly context?: AtlasContextRelease | null
@@ -128,16 +139,14 @@ export function AtlasLegends({
         }))}
       />
     )
-  if (on("density"))
+  if (on("density") && density)
     items.push(
-      <RampLegend
-        key="density"
-        title={tUi("library_density")}
-        source="Relative · community records"
-        ramp="heat"
-        ticks={["Low", "", "", "High"]}
-        width={150}
-      />
+      <div key="density" className="w-60">
+        <p className="mt-0 mb-3 text-sm font-semibold">
+          {tUi("library_density")}
+        </p>
+        <AtlasLibraryDensityLegend {...density} />
+      </div>
     )
   if (on("events"))
     items.push(

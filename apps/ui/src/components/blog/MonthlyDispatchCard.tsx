@@ -114,7 +114,15 @@ export function MonthlyDispatchCard() {
         style={{ color: T.ink.dim }}
       >
         {t.rich("dispatchNote", {
-          email: "legal@libraries.global",
+          notifications: (chunks) => (
+            <GlobalLink
+              className="underline underline-offset-[3px]"
+              href="/profile/settings#notifications"
+              style={{ color: T.accent.primary }}
+            >
+              {chunks}
+            </GlobalLink>
+          ),
           privacy: (chunks) => (
             <GlobalLink
               className="underline underline-offset-[3px]"

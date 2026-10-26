@@ -92,25 +92,28 @@ export async function selectAtlasExport(
   const engine = new AtlasQueryEngine(backend, state, now),
     base = engine.filter(request.scope)
   if ((await engine.count(request.scope)) > cap) throw new AtlasExportLimit(cap)
-  const field =
-    request.sort === "place"
-      ? "place_sort"
+  const field = request.sort.startsWith("place")
+    ? "place_sort"
+    : request.sort.startsWith("record")
+      ? "completeness"
       : request.sort === "distance"
         ? "atlas_id"
         : "name_sort"
+  const descending = request.sort.endsWith("_desc")
   const rows: AtlasProjection[] = []
   let continuation = "",
     allocated = 0
   while (rows.length <= cap) {
     const response = await backend.search({
       filter: `${base}${continuation ? ` AND ${continuation}` : ""}`,
-      sort: [`${field}:asc`, "atlas_id:asc"],
+      sort: [`${field}:${descending ? "desc" : "asc"}`, "atlas_id:asc"],
       limit: Math.min(ATLAS_LIMITS.exportBatch, cap + 1 - rows.length),
       attributesToRetrieve: [
         "documentId",
         "atlas_id",
         "name_sort",
         "place_sort",
+        "completeness",
         "latitude",
         "longitude",
       ],
@@ -125,7 +128,12 @@ export async function selectAtlasExport(
     continuation =
       field === "atlas_id"
         ? `atlas_id > ${last.atlas_id}`
-        : atlasKeysetFilter(field, last[field], last.atlas_id)
+        : atlasKeysetFilter(
+            field,
+            last[field] ?? null,
+            last.atlas_id,
+            descending
+          )
     if (response.hits.length < ATLAS_LIMITS.exportBatch) break
   }
   if (request.sort === "distance")

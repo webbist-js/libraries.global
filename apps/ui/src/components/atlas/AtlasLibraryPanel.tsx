@@ -19,6 +19,7 @@ import { atlasExternalUrl } from "./atlas-links"
 import { Icon, tintOfGroup, TypeBadge } from "./atlas-ui"
 import { type AtlasLibrary, OPERATOR_GROUPS, typeGroupOf } from "./atlas.logic"
 import { AtlasAnalysisPanelContext } from "./AtlasAnalysisHeader"
+import { AtlasInspectFooter } from "./AtlasInspect"
 
 interface LibraryDetail {
   summary?: string | null
@@ -93,6 +94,7 @@ export function AtlasLibraryPanel({
   const tUi = useUiTranslations("ui")
   const inInspect = useContext(AtlasAnalysisPanelContext)
   const tInspect = useUiTranslations("atlasInspect")
+  const tLibrary = useUiTranslations("atlasLibrary")
 
   const [detail, setDetail] = useState<LibraryDetail | null>(
     detailCache.get(library.id) ?? null
@@ -394,21 +396,6 @@ export function AtlasLibraryPanel({
         ) : null}
 
         <div className="mt-auto flex flex-col gap-2.5 pt-1">
-          {library.path ? (
-            <GlobalLink
-              href={library.path}
-              {...analyticsAttributes("select_content", {
-                interaction_source: "atlas_panel",
-                content_type: "library",
-                library_document_id: library.id,
-                view_mode: "map",
-              })}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
-            >
-              Open full record
-              <Icon name="chev" size={16} color="#fff" stroke={2.2} />
-            </GlobalLink>
-          ) : null}
           {!compact ? (
             <p
               className="m-0 flex flex-col gap-1 text-left text-[13px] leading-relaxed"
@@ -417,10 +404,48 @@ export function AtlasLibraryPanel({
               <span>
                 Community maintained{updated ? ` · updated ${updated}` : ""}
               </span>
-              <span>{library.complete}% complete</span>
+              <span>
+                {library.completenessKnown === false
+                  ? tLibrary("unscored")
+                  : tLibrary("completeness", { percent: library.complete })}
+              </span>
             </p>
           ) : null}
         </div>
+        <AtlasInspectFooter>
+          <div
+            className={`${inInspect ? "border-t border-(--t-border-line) bg-white p-4" : "mt-2"} grid gap-2`}
+          >
+            {library.path ? (
+              <GlobalLink
+                href={library.path}
+                {...analyticsAttributes("select_content", {
+                  interaction_source: "atlas_panel",
+                  content_type: "library",
+                  library_document_id: library.id,
+                })}
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-[15px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+              >
+                {tLibrary("viewLibrary")}
+                <Icon name="chev" size={16} color="#fff" stroke={2.2} />
+              </GlobalLink>
+            ) : null}
+            {library.slug ? (
+              <GlobalLink
+                href={`/contribute/index/${encodeURIComponent(library.slug)}`}
+                {...analyticsAttributes("correction_open", {
+                  interaction_source: "atlas_panel",
+                  action_type: "open",
+                  library_document_id: library.id,
+                })}
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-5 py-2 text-[15px] font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-surface)"
+              >
+                {tLibrary("improveRecord")}
+                <Icon name="chev" size={16} />
+              </GlobalLink>
+            ) : null}
+          </div>
+        </AtlasInspectFooter>
       </div>
     </div>
   )

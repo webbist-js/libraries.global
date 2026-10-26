@@ -48,6 +48,7 @@ export function atlasListLibrary(row: AtlasListRow): AtlasLibrary {
     atlasOpenNow: row.openNow,
     access: row.accessibility,
     complete: row.completeness ?? 0,
+    completenessKnown: typeof row.completeness === "number",
     city: row.city,
     country: row.country,
     region: row.region,
@@ -118,6 +119,7 @@ export function atlasProjectionLibrary(row: AtlasProjection): AtlasLibrary {
     hours: row.has_hours ? hours : null,
     founded: row.founded,
     complete: row.completeness ?? 0,
+    completenessKnown: typeof row.completeness === "number",
     events: row.has_events,
     catalogue: row.has_catalogue,
     operator: row.operator_group

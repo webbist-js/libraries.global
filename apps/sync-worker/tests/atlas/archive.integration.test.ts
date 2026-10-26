@@ -1,10 +1,10 @@
-import { createRequire } from "node:module"
-import path from "node:path"
 import { readFile, writeFile, readdir } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
+import path from "node:path"
 
-import knex, { type Knex } from "knex"
 import { projectAtlasLibrary } from "@repo/shared-data"
+import knex, { type Knex } from "knex"
 import {
   afterAll,
   afterEach,
@@ -179,7 +179,8 @@ describe.skipIf(!process.env.ATLAS_TEST_DATABASE_URL)(
         if (command === "python3")
           return JSON.stringify({ complete: true, sourceCount: 1 })
         if (command === "pmtiles" && args[0] === "convert")
-          await writeFile(path.join(cwd, "archive.pmtiles"), header)
+          await writeFile(path.join(cwd, args[2]), header)
+
         return ""
       }),
     })
@@ -201,7 +202,8 @@ describe.skipIf(!process.env.ATLAS_TEST_DATABASE_URL)(
         .mocked(config.runner!)
         .mock.calls.filter(([command]) => command === "aws")
       expect(uploads[0][1].join(" ")).toContain("archive.pmtiles")
-      expect(uploads[1][1].join(" ")).toContain("manifest.json")
+      expect(uploads[1][1].join(" ")).toContain("density.pmtiles")
+      expect(uploads[2][1].join(" ")).toContain("manifest.json")
       expect(
         await buildAtlasArchive(db, options(), new AbortController().signal)
       ).toBeNull()
@@ -228,6 +230,7 @@ describe.skipIf(!process.env.ATLAS_TEST_DATABASE_URL)(
           await db("atlas_state").update({
             query_epoch: "00000000-0000-4000-8000-000000000002",
           })
+
         return result
       }
       await expect(

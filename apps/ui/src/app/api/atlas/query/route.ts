@@ -1,5 +1,5 @@
 import { requireEntitlement } from "@/lib/access-server"
-import { createAtlasBackend } from "@/lib/atlas-backend"
+import { createAtlasBackend, type AtlasBackendState } from "@/lib/atlas-backend"
 import { AtlasCursorExpired } from "@/lib/atlas-cursor"
 import { AtlasQueryEngine } from "@/lib/atlas-query"
 import {
@@ -12,6 +12,31 @@ import { auth } from "@/lib/auth"
 
 export const runtime = "nodejs"
 export const maxDuration = 30
+
+function sameGeneration(before: AtlasBackendState, after: AtlasBackendState) {
+  return (
+    before.queryEpoch === after.queryEpoch &&
+    before.dictionary.version === after.dictionary.version &&
+    before.indexedThrough === after.indexedThrough &&
+    before.manifest?.buildId === after.manifest?.buildId
+  )
+}
+
+function queryError(error: unknown) {
+  if (error instanceof AtlasCursorExpired)
+    return Response.json({ error: error.message }, { status: 409 })
+
+  console.error(
+    "[atlas-query]",
+    error instanceof Error ? error.message : "Query failed"
+  )
+
+  return Response.json(
+    { error: "Atlas data is temporarily unavailable. Try again shortly." },
+    { status: 503 }
+  )
+}
+
 export async function POST(req: Request) {
   if (process.env.ATLAS_QUERY_ENABLED !== "true")
     return Response.json(
@@ -33,18 +58,15 @@ export async function POST(req: Request) {
       const state = await backend.state(),
         now = new Date(),
         key = atlasCacheKey(input.request, state, now),
+        cached = readAtlasCache(key),
         result =
-          readAtlasCache(key) ??
+          cached ??
           (await new AtlasQueryEngine(backend, state, now).execute(
             input.request
           )),
         after = await backend.state()
-      if (
-        state.queryEpoch === after.queryEpoch &&
-        state.dictionary.version === after.dictionary.version &&
-        state.indexedThrough === after.indexedThrough
-      ) {
-        writeAtlasCache(key, result)
+      if (sameGeneration(state, after)) {
+        if (!cached) writeAtlasCache(key, result)
 
         return Response.json(result, {
           headers: { "cache-control": "no-store" },
@@ -57,17 +79,6 @@ export async function POST(req: Request) {
       { status: 409 }
     )
   } catch (error) {
-    if (error instanceof AtlasCursorExpired)
-      return Response.json({ error: error.message }, { status: 409 })
-
-    console.error(
-      "[atlas-query]",
-      error instanceof Error ? error.message : "Query failed"
-    )
-
-    return Response.json(
-      { error: "Atlas data is temporarily unavailable. Try again shortly." },
-      { status: 503 }
-    )
+    return queryError(error)
   }
 }

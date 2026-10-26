@@ -48,6 +48,7 @@ export interface AtlasLibrary {
   services: string[]
   /** Record completeness, 0–100. */
   complete: number
+  completenessKnown?: boolean
   lat: number
   lng: number
 }
@@ -646,7 +647,7 @@ export const LAYERS: LayerDef[] = [
   {
     id: "density",
     name: "Library density",
-    sub: "Heatmap · all records",
+    sub: "Distribution · grid or smooth concentration",
     group: "patterns",
     tier: "public",
     ready: true,

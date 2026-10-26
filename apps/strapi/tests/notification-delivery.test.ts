@@ -171,6 +171,8 @@ describe("notification preference trigger matrix", () => {
       expect(send).toHaveBeenCalledOnce()
       const mail = send.mock.calls[0]![0] as any
       expect(mail.text).toContain("Unsubscribe:")
+      expect(mail.text).toContain("/profile/settings#notifications")
+      expect(mail.html).toContain(">Notification settings<")
       expect(mail.headers["List-Unsubscribe-Post"]).toBe(
         "List-Unsubscribe=One-Click"
       )
@@ -196,7 +198,15 @@ describe("notification preference trigger matrix", () => {
     await service.enqueue({ ...event, emailPreference: "transactional" })
     await service.deliver(new Date(Date.now() + 1000))
     expect(send).toHaveBeenCalledOnce()
-    expect((send.mock.calls[0]![0] as any).headers).toBeUndefined()
+    const mail = send.mock.calls[0]![0] as {
+      text: string
+      html: string
+      headers?: Record<string, string>
+    }
+    expect(mail.headers).toBeUndefined()
+    expect(mail.text).toContain("/profile/settings#notifications")
+    expect(mail.html).toContain(">Notification settings<")
+    expect(mail.html).not.toContain(">Unsubscribe<")
   })
   it("old planned preferences are not consent to a report or product emails", () => {
     expect(wantsActivityEmail({ weeklyReport: true }, "weeklyReport")).toBe(
@@ -617,6 +627,37 @@ it("isolates inbox reads and read receipts to their authenticated owner", async 
 })
 
 describe("newsletter confirmation and withdrawal", () => {
+  it("delivers a guest confirmation with an account-free unsubscribe link", async () => {
+    const { strapi, store, send, service } = setup()
+    const subscriber = {
+      documentId: "guest-subscription",
+      type: "newsletter",
+      email: "guest@example.org",
+      state: "pending_confirmation",
+      consentedAt: new Date().toISOString(),
+    }
+    store[SUBSCRIBER] = [subscriber]
+    const preferences = createEmailPreferences({ strapi })
+    await preferences.confirmRequest(subscriber)
+    await service.deliver(new Date(Date.now() + 1000))
+    expect(send).toHaveBeenCalledOnce()
+    const mail = send.mock.calls[0]![0] as { text: string; html: string }
+    const unsubscribe = mail.text.match(/Unsubscribe: (\S+)/)?.[1]
+    expect(unsubscribe).toBeTruthy()
+    const token = new URL(unsubscribe).searchParams.get("token")
+    expect(readEmailLink(token)).toMatchObject({
+      purpose: "newsletter_unsubscribe",
+      id: subscriber.documentId,
+    })
+    expect(mail.text).not.toContain("/profile/settings")
+    expect(mail.html).toContain(">Unsubscribe<")
+    expect(await preferences.action(token, true)).toMatchObject({
+      action: "unsubscribe",
+      purpose: "newsletter",
+    })
+    expect(store[SUBSCRIBER][0].state).toBe("unsubscribed")
+  })
+
   it("inspecting a link never opts in; confirmation requires its current consent version", async () => {
     const { strapi, store } = setup()
     store[SUBSCRIBER] = [

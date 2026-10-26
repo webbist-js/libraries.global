@@ -1,6 +1,8 @@
 import {
   ATLAS_LIMITS,
   ATLAS_SCHEMA_VERSION,
+  ATLAS_LIST_SORTS,
+  type AtlasSort,
   type AtlasCoordinate,
   type AtlasPopulation,
   type AtlasQueryRequest,
@@ -91,6 +93,7 @@ export function parseAtlasQueryRequest(input: unknown): AtlasQueryRequest {
         "drawingPreference",
         "quality",
         "density",
+        "libraryDensity",
       ]
       const populations = ["listed", "closures", "events", "late"]
       if (
@@ -124,19 +127,34 @@ export function parseAtlasQueryRequest(input: unknown): AtlasQueryRequest {
           throw new RangeError("Invalid Atlas density request")
         result.density = r.density
       }
+      if (r.libraryDensity !== undefined) {
+        const d = r.libraryDensity as Record<string, unknown>
+        if (
+          !d ||
+          typeof d !== "object" ||
+          Array.isArray(d) ||
+          Object.keys(d).some((key) => !["detail", "scale"].includes(key)) ||
+          !["auto", 6, 10, 14, 18].includes(d.detail as string | number) ||
+          !["fixed", "local"].includes(String(d.scale))
+        )
+          throw new RangeError("Invalid library density settings")
+        result.libraryDensity = {
+          detail: d.detail as NonNullable<
+            typeof result.libraryDensity
+          >["detail"],
+          scale: d.scale as "fixed" | "local",
+        }
+      }
       break
     }
     case "list":
-      if (
-        !scope.bbox ||
-        !["name", "place", "distance"].includes(String(r.sort))
-      )
+      if (!scope.bbox || !ATLAS_LIST_SORTS.includes(r.sort as AtlasSort))
         throw new RangeError("Invalid Atlas list scope or sort")
       keys = ["sort", "centre", "cursor", "page"]
       result = {
         ...base,
         purpose: "list",
-        sort: r.sort as "name" | "place" | "distance",
+        sort: r.sort as AtlasSort,
         centre: centre(r.centre),
       }
       if (r.sort === "distance") {
@@ -151,7 +169,7 @@ export function parseAtlasQueryRequest(input: unknown): AtlasQueryRequest {
           )
       } else {
         if (r.page !== undefined)
-          throw new RangeError("Name/place pagination requires a cursor")
+          throw new RangeError("Ordered pagination requires a cursor")
         if (r.cursor !== undefined)
           result.cursor = boundedString(r.cursor, ATLAS_LIMITS.cursorBytes)
       }
