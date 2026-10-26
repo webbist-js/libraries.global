@@ -10,6 +10,9 @@ test("pnpm dev schedules the Reach service and both Atlas workers", () => {
       cwd: fileURLToPath(new URL("../../", import.meta.url)),
       encoding: "utf8",
       timeout: 30000,
+      // The dry-run graph includes every workspace input and exceeds Node's
+      // default 1 MiB output cap as the repository grows.
+      maxBuffer: 8 * 1024 * 1024,
       env: { ...process.env, NODE_OPTIONS: "--max-old-space-size=2048" },
     })
   )
