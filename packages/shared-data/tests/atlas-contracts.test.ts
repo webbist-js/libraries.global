@@ -62,6 +62,30 @@ const openingTimes = {
 }
 
 describe("Atlas request contracts and canonical cursors", () => {
+  it("validates ascending and descending list sorts and safe numeric continuations", () => {
+    for (const sort of ["name_desc", "place_desc", "record", "record_desc"]) {
+      const request = parseAtlasQueryRequest({
+        schemaVersion: 1,
+        purpose: "list",
+        scope: { ...scope(), bbox: { west: -1, east: 1, south: -1, north: 1 } },
+        sort,
+        centre: { lat: 0, lng: 0 },
+      })
+      expect(request).toMatchObject({ sort })
+    }
+    expect(atlasKeysetFilter("completeness", 50, 21, true)).toBe(
+      "(completeness < 50 OR (completeness = 50 AND atlas_id > 21) OR (completeness IS NULL OR completeness NOT EXISTS))"
+    )
+    expect(atlasKeysetFilter("completeness", null, 21)).toBe(
+      "((completeness IS NULL OR completeness NOT EXISTS) AND atlas_id > 21)"
+    )
+    expect(
+      atlasKeysetFilter("name_sort", atlasNameSortKey("Z"), 21, true)
+    ).toContain("name_sort <")
+    for (const value of [Number.NaN, Infinity, -1, 101, "50 OR atlas_id > 0"]) {
+      expect(() => atlasKeysetFilter("completeness", value, 21)).toThrow()
+    }
+  })
   it("rejects raw filters, bad bounds, coercions and unknown or excessive selections", () => {
     expect(parseAtlasScope(scope())).toEqual(scope())
     expect(() =>

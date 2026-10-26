@@ -9,7 +9,7 @@ import sqlite3
 import sys
 import zlib
 
-ALLOWLIST = {"i", "s", "n", "t", "o", "st", "ct", "co", "r", "ar", "ci", "a", "f", "e", "c", "l", "y", "p"}
+ALLOWLIST = {"i", "s", "n", "t", "o", "st", "ct", "co", "r", "ar", "ci", "a", "f", "e", "c", "l", "y", "p", "v", "nw"}
 MAX_COMPRESSED = 512000
 MAX_DECODED = 4194304
 

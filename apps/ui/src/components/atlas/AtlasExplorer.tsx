@@ -2,6 +2,14 @@
 
 import {
   atlasLocalGeography,
+  atlasDensityFromPoints,
+  parseAtlasDensitySettings,
+  DEFAULT_ATLAS_DENSITY,
+  ATLAS_DENSITY_COLORS,
+  ATLAS_LIST_SORTS,
+  type AtlasSort,
+  type AtlasDensitySettings,
+  type AtlasDensitySelection,
   atlasNetworkReachLimit,
   atlasNetworkReachMode,
   type AtlasReachCapacity,
@@ -91,6 +99,7 @@ import {
   type AtlasInspectEntry,
 } from "./AtlasInspect"
 import { AtlasLayersTab, ABOUT } from "./AtlasLayersTab"
+import { AtlasLibraryDensity } from "./AtlasLibraryDensity"
 import { AtlasLibraryPanel } from "./AtlasLibraryPanel"
 import { AtlasListView } from "./AtlasListView"
 import { AtlasLoadingSkeleton } from "./AtlasLoadingSkeleton"
@@ -234,6 +243,7 @@ export function AtlasExplorer({
   const tNetwork = useUiTranslations("atlasNetwork")
   const tDrawers = useUiTranslations("atlasDrawers")
   const tInspect = useUiTranslations("atlasInspect")
+  const tList = useUiTranslations("atlasList")
 
   const mapRef = useRef<AtlasMapHandle>(null)
   const recentCameraId = useRef<string | null>(null)
@@ -256,6 +266,7 @@ export function AtlasExplorer({
     useState<AccessibilityView>("matches")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [list, setList] = useState(false)
+  const [listSort, setListSort] = useState<AtlasSort>("name")
   const [projection, setProjection] = useState<"globe" | "flat">("globe")
 
   const [all, setAll] = useState<AtlasLibrary[] | null>(null)
@@ -273,6 +284,14 @@ export function AtlasExplorer({
   const [query, setQuery] = useState("")
   const [hovered, setHovered] = useState<AtlasLibrary | null>(null)
   const [heatOpacity, setHeatOpacity] = useState(0.7)
+  const [densitySettings, setDensitySettings] = useState<AtlasDensitySettings>(
+    DEFAULT_ATLAS_DENSITY
+  )
+  const [densitySelection, setDensitySelection] = useState<{
+    cell: AtlasDensitySelection
+    data: string
+  } | null>(null)
+  const tDensity = useUiTranslations("atlasDensity")
   const [perCapitaOpacity, setPerCapitaOpacity] = useState(0.85)
   const [populationLevel, setPopulationLevel] =
     useState<AtlasPopulationDetail>("auto")
@@ -302,6 +321,12 @@ export function AtlasExplorer({
   const [mobileSurface, setMobileSurface] = useState<"explore" | "inspect">(
     "explore"
   )
+  const listLibraryOpen =
+    list &&
+    Boolean(selectedId) &&
+    inspectTarget === "library" &&
+    !inspectMinimised
+  const listReturnFocus = useRef<HTMLButtonElement | null>(null)
   const [leftPinned, setLeftPinned] = useState(false)
   const [undoLayers, setUndoLayers] = useState<{
     layers: LayerId[]
@@ -313,10 +338,10 @@ export function AtlasExplorer({
   const [askReachScope, setAskReachScope] = useState(false)
   const collapsed =
     userCollapsed ||
-    (narrow &&
+    ((narrow || listLibraryOpen) &&
       !leftPinned &&
       !inspectMinimised &&
-      !list &&
+      (!list || listLibraryOpen) &&
       Boolean(analysisMode || inspectTarget || selectedId || selectedStop))
   const analysisRoot = useRef<HTMLDivElement>(null)
   const [libraryAccessTab, setLibraryAccessTab] =
@@ -341,6 +366,7 @@ export function AtlasExplorer({
     const params = new URLSearchParams(window.location.search)
     const s = parseUrlState(params)
     setQuery(params.get("q") ?? "")
+    setDensitySettings(parseAtlasDensitySettings(params))
     setInitialView(s.view)
     setFilters(s.filters)
     setLayers(s.layers)
@@ -419,6 +445,8 @@ export function AtlasExplorer({
     if (Number.isFinite(shadingOpacity))
       setPerCapitaOpacity(Math.max(0.1, Math.min(0.9, shadingOpacity)))
     setList(s.list)
+    const listOrder = params.get("listSort") as AtlasSort
+    if (ATLAS_LIST_SORTS.includes(listOrder)) setListSort(listOrder)
     setProjection(s.projection)
     setMobileRouteLines(params.get("routeLines") !== "0")
     const opacity = Number(params.get("mobileOpacity") ?? "1")
@@ -639,7 +667,8 @@ export function AtlasExplorer({
     view,
     query,
     selectedId,
-    now
+    now,
+    densitySettings
   )
   useEffect(() => {
     if (scalable && data.generation) setAll([])
@@ -678,6 +707,27 @@ export function AtlasExplorer({
         usableLayers
           .map((layer) => (layer === "perCapita" ? "libraryAccess" : layer))
           .join(",")
+      )
+      setUrlValue(
+        params,
+        "densityView",
+        densitySettings.view,
+        DEFAULT_ATLAS_DENSITY.view
+      )
+      setUrlValue(params, "densityDetail", densitySettings.detail, "auto")
+      setUrlValue(params, "listSort", listSort, "name")
+      setUrlValue(params, "densityScale", densitySettings.scale, "fixed")
+      setUrlValue(
+        params,
+        "densityOpacity",
+        densitySettings.opacity,
+        DEFAULT_ATLAS_DENSITY.opacity
+      )
+      setUrlValue(
+        params,
+        "densitySmoothing",
+        densitySettings.smoothing,
+        DEFAULT_ATLAS_DENSITY.smoothing
       )
       if (query) params.set("q", query)
       if (mobileMode !== "any") params.set("visits", mobileMode)
@@ -731,6 +781,8 @@ export function AtlasExplorer({
     accessibilityView,
     mobileRouteLines,
     mobileOpacity,
+    densitySettings,
+    listSort,
     selectedCountry,
     perCapitaOpacity,
     accessMetric,
@@ -778,6 +830,43 @@ export function AtlasExplorer({
       data.listed,
     ]
   )
+  const densityData = useMemo(() => {
+    if (!usableLayers.includes("density")) return null
+    if (scalable) return data.generation?.viewport.libraryDensity ?? null
+    if (!all) return null
+    const camera = atlasViewportCamera(view)
+
+    return atlasDensityFromPoints(
+      listed
+        .filter((library) => library.mapped !== false)
+        .map((library) => ({ lat: library.lat, lng: library.lng })),
+      camera.bbox,
+      camera.zoom,
+      densitySettings.detail
+    )
+  }, [
+    usableLayers,
+    scalable,
+    data.generation,
+    all,
+    listed,
+    view,
+    densitySettings.detail,
+  ])
+  const densitySelectionKey = scalable
+    ? `${data.generation?.viewport.fingerprint}:${data.generation?.viewport.indexedThrough}:${densityData?.resolution}`
+    : JSON.stringify([
+        filters,
+        accessibility,
+        accessibilityView,
+        view,
+        densityData?.resolution,
+      ])
+  const selectedDensityCell =
+    densitySelection?.data === densitySelectionKey
+      ? densitySelection.cell
+      : null
+
   const closures = useMemo(
     () =>
       scalable
@@ -1091,6 +1180,54 @@ export function AtlasExplorer({
     },
     [remember, isMobile]
   )
+
+  const restoreListFocus = () =>
+    requestAnimationFrame(() => {
+      const trigger = listReturnFocus.current
+      if (trigger?.isConnected) trigger.focus({ preventScroll: true })
+      else
+        analysisRoot.current
+          ?.querySelector<HTMLButtonElement>("[data-atlas-list-library]")
+          ?.focus({ preventScroll: true })
+    })
+  const selectListLibrary = (
+    library: AtlasLibrary,
+    trigger: HTMLButtonElement | null
+  ) => {
+    listReturnFocus.current = trigger
+    pushAnalyticsEvent("select_content", {
+      interaction_source: "atlas_list",
+      content_type: "library",
+      library_document_id: library.id,
+    })
+    setSelectedId(library.id)
+    setSelectedStop(null)
+    setAskReachScope(false)
+    setInspectTarget("library")
+    setInspectMinimised(false)
+    setMobileSurface("inspect")
+    setLeftPinned(false)
+  }
+  const closeLibrary = () => {
+    setSelectedId(null)
+    setAskReachScope(false)
+    if (inspectTarget === "library") setInspectTarget(null)
+    if (list) {
+      setMobileSurface("explore")
+      restoreListFocus()
+    }
+  }
+
+  useEffect(() => {
+    if (!listLibraryOpen) return
+    const frame = requestAnimationFrame(() =>
+      analysisRoot.current
+        ?.querySelector<HTMLHeadingElement>("#atlas-analysis-panel h2")
+        ?.focus({ preventScroll: true })
+    )
+
+    return () => cancelAnimationFrame(frame)
+  }, [listLibraryOpen, selectedId, selected?.id])
 
   const pickPlace = useCallback(
     (p: Place) => {
@@ -1840,6 +1977,7 @@ export function AtlasExplorer({
       accessibility={accessibility}
       accessibilityView={accessibilityView}
       accessMetric={accessMetric}
+      density={{ data: densityData, settings: densitySettings }}
       context={contextRelease}
       reach={{
         mode: reachMode,
@@ -2017,6 +2155,17 @@ export function AtlasExplorer({
       accessibility={accessibility}
       accessibilityView={accessibilityView}
       heatOpacity={heatOpacity}
+      libraryDensity={densityData}
+      densitySettings={densitySettings}
+      densitySelection={selectedDensityCell}
+      onDensitySelect={(cell) => {
+        setDensitySelection({ cell, data: densitySelectionKey })
+        setInspectTarget("density")
+        setInspectMinimised(false)
+        setMobileSurface("inspect")
+        if (isMobile)
+          setSheet((current) => (current === "peek" ? "half" : current))
+      }}
       perCapita={perCapitaGeometryError ? null : perCapita.value}
       populationDensity={population.data}
       contextRelease={contextRelease}
@@ -2294,6 +2443,16 @@ export function AtlasExplorer({
     }
   }
 
+  const backToList = listLibraryOpen ? (
+    <button
+      type="button"
+      onClick={closeLibrary}
+      className="flex min-h-[40px] shrink-0 items-center gap-2 border-b border-(--t-border-line) px-5 py-2 text-left text-sm font-semibold text-(--t-accent-primary)"
+    >
+      <Icon name="chev" className="rotate-180" size={15} />
+      {tList("backToList")}
+    </button>
+  ) : null
   const inspectEntries: AtlasInspectEntry[] = [
     ...(scalable && selectedId && !selected
       ? [
@@ -2305,27 +2464,30 @@ export function AtlasExplorer({
               ? "Loading record…"
               : "Record unavailable",
             content: (
-              <div className="p-5">
-                {data.selectionLoading ? (
-                  <AtlasLoadingSkeleton
-                    label={tUi("loading_library_details")}
-                    compact
-                  />
-                ) : (
-                  <div role="alert">
-                    <p>
-                      {data.selectionError ??
-                        "The selected library is unavailable."}
-                    </p>
-                    <button
-                      type="button"
-                      className="min-h-11 font-semibold underline"
-                      onClick={() => data.retry()}
-                    >
-                      Try again
-                    </button>
-                  </div>
-                )}
+              <div className="flex min-h-0 flex-1 flex-col">
+                {backToList}
+                <div className="p-5">
+                  {data.selectionLoading ? (
+                    <AtlasLoadingSkeleton
+                      label={tUi("loading_library_details")}
+                      compact
+                    />
+                  ) : (
+                    <div role="alert">
+                      <p>
+                        {data.selectionError ??
+                          "The selected library is unavailable."}
+                      </p>
+                      <button
+                        type="button"
+                        className="min-h-11 font-semibold underline"
+                        onClick={() => data.retry()}
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ),
           },
@@ -2340,49 +2502,52 @@ export function AtlasExplorer({
             title: selected.name,
             detail: `${selected.type} library · ${[selected.city, selected.country].filter(Boolean).join(" · ")}`,
             content: (
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <AtlasLibraryPanel
-                  key={selected.id}
-                  library={selected}
-                  compact={false}
-                  onReach={openReach}
-                  reachPrompt={
-                    askReachScope ? (
-                      <div
-                        role="status"
-                        className="mx-5 mb-5 space-y-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-sm"
-                      >
-                        <p className="m-0">
-                          Reach is set to{" "}
-                          {networkSelection.selected?.name ??
-                            "a library service"}
-                          . Switch to this library?
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAskReachScope(false)
-                              setReachScope("library")
-                              openInspectLayer("reach")
-                            }}
-                            className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 font-semibold text-white"
-                          >
-                            Switch to this library
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAskReachScope(false)}
-                            className="min-h-11 px-3 font-semibold"
-                          >
-                            Keep service
-                          </button>
+              <div className="flex min-h-0 flex-1 flex-col">
+                {backToList}
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <AtlasLibraryPanel
+                    key={selected.id}
+                    library={selected}
+                    compact={false}
+                    onReach={openReach}
+                    reachPrompt={
+                      askReachScope ? (
+                        <div
+                          role="status"
+                          className="mx-5 mb-5 space-y-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-sm"
+                        >
+                          <p className="m-0">
+                            Reach is set to{" "}
+                            {networkSelection.selected?.name ??
+                              "a library service"}
+                            . Switch to this library?
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAskReachScope(false)
+                                setReachScope("library")
+                                openInspectLayer("reach")
+                              }}
+                              className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 font-semibold text-white"
+                            >
+                              Switch to this library
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAskReachScope(false)}
+                              className="min-h-11 px-3 font-semibold"
+                            >
+                              Keep service
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ) : null
-                  }
-                  onClose={() => setSelectedId(null)}
-                />
+                      ) : null
+                    }
+                    onClose={closeLibrary}
+                  />
+                </div>
               </div>
             ),
           },
@@ -2424,13 +2589,42 @@ export function AtlasExplorer({
           : undefined,
       content: renderAnalysis(mode),
     })),
-    ...(["mobile", "density", "events"] as const)
+    ...(usableLayers.includes("density")
+      ? [
+          {
+            id: "density",
+            layer: "density" as const,
+            label: tDensity("label"),
+            title: tDensity("title"),
+            detail: tDensity("description"),
+            metric: densityData?.exactTotal.toLocaleString(),
+            content: (
+              <AtlasLibraryDensity
+                data={densityData}
+                settings={densitySettings}
+                onSettings={setDensitySettings}
+                selected={selectedDensityCell}
+                pins={usableLayers.includes("pins")}
+                onPins={() => onToggleLayer("pins")}
+                onResults={(cell) => {
+                  mapRef.current?.fitBounds(cell.bounds)
+                }}
+                centre={{ lat: view?.lat ?? 30, lng: view?.lng ?? 10 }}
+                evaluatedAt={data.generation?.viewport.evaluatedAt}
+                loading={!densityData || (scalable && data.loading)}
+                error={data.error}
+                retry={scalable ? data.retry : load}
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(["mobile", "events"] as const)
       .filter((id) => usableLayers.includes(id))
       .map((id) => ({
         id,
         layer: id,
-        label:
-          id === "mobile" ? "Routes" : id === "density" ? "Density" : "Events",
+        label: id === "mobile" ? "Routes" : "Events",
         title: layerDef(id).name,
         detail:
           id === "mobile"
@@ -2460,7 +2654,12 @@ export function AtlasExplorer({
                 </>
               ) : (
                 <>
-                  <div className="h-4 rounded-full bg-[linear-gradient(90deg,#fff1e6,#ec9f59,#c2410c)]" />
+                  <div
+                    className="h-4 rounded-full"
+                    style={{
+                      background: `linear-gradient(90deg,${ATLAS_DENSITY_COLORS.join(",")})`,
+                    }}
+                  />
                   <div className="flex justify-between text-xs text-(--t-ink-dim)">
                     <span>Low</span>
                     <span>High</span>
@@ -2492,7 +2691,7 @@ export function AtlasExplorer({
     setInspectMinimised(false)
     setMobileSurface("inspect")
     setLeftPinned(false)
-    setList(false)
+    if (!(list && id === "library")) setList(false)
     if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
   }
   const removeInspect = (entry: AtlasInspectEntry) => {
@@ -2505,8 +2704,8 @@ export function AtlasExplorer({
       })
       onToggleLayer(entry.layer)
     } else if (entry.id === "library") {
-      setSelectedId(null)
-      setAskReachScope(false)
+      closeLibrary()
+      if (list) return
     } else if (entry.id === "stop") setSelectedStop(null)
     else {
       setAnalysisMode(null)
@@ -2525,13 +2724,16 @@ export function AtlasExplorer({
       active={inspectActive}
       minimised={inspectMinimised}
       mobile={isMobile}
-      visible={!list && (!isMobile || mobileSurface === "inspect")}
+      visible={
+        (!list || listLibraryOpen) && (!isMobile || mobileSurface === "inspect")
+      }
       onSelect={(id) => animateAtlas(() => selectInspect(id))}
       onMinimise={() =>
         animateAtlas(() => {
           setInspectMinimised(true)
           setMobileSurface("explore")
           setLeftPinned(false)
+          if (list) restoreListFocus()
         })
       }
       onRemove={(entry) => animateAtlas(() => removeInspect(entry))}
@@ -2571,25 +2773,28 @@ export function AtlasExplorer({
     <AtlasListView
       key={scalable ? JSON.stringify(data.scope) : "legacy"}
       remoteScope={scalable ? data.scope : undefined}
+      sort={listSort}
+      onSelect={selectListLibrary}
+      selectedId={listLibraryOpen ? selectedId : null}
+      onSortChange={setListSort}
+      onShowAnalysis={
+        inspectEntries.length
+          ? () => {
+              setList(false)
+              setInspectMinimised(false)
+              setMobileSurface("inspect")
+            }
+          : undefined
+      }
       compact={isMobile}
       notice={
-        <>
-          {dataNotices}
-          {stopList}
-          {usableLayers.includes("access") ? legends : null}
-          {inspectEntries.length ? (
-            <button
-              type="button"
-              className="min-h-11 font-semibold text-(--t-accent-primary)"
-              onClick={() => {
-                setList(false)
-                setMobileSurface("inspect")
-              }}
-            >
-              Back to map · {inspectEntries.length} Inspect views
-            </button>
-          ) : null}
-        </>
+        hasDataNotice || stopList || usableLayers.includes("access") ? (
+          <>
+            {dataNotices}
+            {stopList}
+            {usableLayers.includes("access") ? legends : null}
+          </>
+        ) : undefined
       }
       libraries={inView}
       accessibility={
@@ -2674,7 +2879,11 @@ export function AtlasExplorer({
   ) : null
 
   if (isMobile) {
-    const showInspect = mobileSurface === "inspect" && inspectEntries.length > 0
+    const showInspect =
+      mobileSurface === "inspect" &&
+      inspectEntries.length > 0 &&
+      (!list || listLibraryOpen)
+    const showList = list && !listLibraryOpen
     const size = list
       ? "full"
       : sheet === "peek" && showInspect && inspectEntries.length
@@ -2759,9 +2968,9 @@ export function AtlasExplorer({
             <button
               type="button"
               disabled={!inspectEntries.length}
-              aria-pressed={showInspect && !list}
+              aria-pressed={showInspect}
               onClick={() => {
-                setList(false)
+                if (!listLibraryOpen) setList(false)
                 setMobileSurface("inspect")
                 setInspectMinimised(false)
                 if (sheet === "peek") setSheet("half")
@@ -2775,14 +2984,19 @@ export function AtlasExplorer({
               list={list}
               onChange={(value) => {
                 setList(value)
-                if (value) setSheet("full")
+                if (value) {
+                  setSheet("full")
+                  setInspectMinimised(true)
+                  setMobileSurface("explore")
+                  restoreListFocus()
+                }
               }}
             />
           </nav>
           <div
-            hidden={!list}
+            hidden={!showList}
             className="min-h-0 flex-1 overflow-clip"
-            style={{ display: list ? "flex" : "none" }}
+            style={{ display: showList ? "flex" : "none" }}
           >
             {list ? listView : null}
           </div>
@@ -2817,10 +3031,10 @@ export function AtlasExplorer({
           </div>
           <div
             id="atlas-analysis-panel"
-            hidden={list || !showInspect}
+            hidden={!showInspect}
             className="flex min-h-0 flex-1 flex-col"
             style={{
-              display: !list && showInspect ? "flex" : "none",
+              display: showInspect ? "flex" : "none",
             }}
           >
             {analysisPanels}
@@ -2866,6 +3080,7 @@ export function AtlasExplorer({
                   key={key}
                   type="button"
                   aria-label={`Open ${label}`}
+                  aria-pressed={tab === key}
                   onClick={() =>
                     animateAtlas(() => {
                       setTab(key)
@@ -2874,7 +3089,7 @@ export function AtlasExplorer({
                       if (narrow) setInspectMinimised(true)
                     })
                   }
-                  className="flex min-h-14 w-14 flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold"
+                  className="flex min-h-[64px] w-[56px] shrink-0 flex-col items-center justify-center gap-2 rounded-xl px-1 py-3 text-[11px] leading-4 font-semibold"
                   style={{
                     background: tab === key ? T.accent.chip : undefined,
                     color: tab === key ? T.accent.primary : T.ink.dim,
@@ -2943,7 +3158,7 @@ export function AtlasExplorer({
           className="absolute top-4 right-4 bottom-4 z-20 flex min-h-0 flex-col"
           style={{
             width: inspectMinimised ? 64 : RIGHT_W,
-            display: list ? "none" : undefined,
+            display: list && !listLibraryOpen ? "none" : undefined,
           }}
         >
           {analysisPanels}
@@ -2990,7 +3205,10 @@ export function AtlasExplorer({
         <section
           aria-label="Library list"
           className="absolute top-4 right-4 bottom-4 z-20 flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-(--t-border-line) bg-white"
-          style={{ left: leftEdge }}
+          style={{
+            left: leftEdge,
+            right: listLibraryOpen ? RIGHT_W + GAP * 2 : GAP,
+          }}
         >
           {listView}
         </section>

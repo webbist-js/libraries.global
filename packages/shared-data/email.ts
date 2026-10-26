@@ -167,13 +167,17 @@ function emailFooter(
   const footer =
     input.footer ??
     "An independent, open-source project. Questions? Reply to this email."
-  const preferences = safeUrl(input.preferencesUrl)
   const unsubscribe = safeUrl(input.unsubscribeUrl)
+  // Dispatch recipients may not have an account. Every other email has a
+  // settings destination, including direct transactional and service emails.
+  const preferences =
+    safeUrl(input.preferencesUrl) ??
+    (unsubscribe ? undefined : base + "/profile/settings#notifications")
 
   return {
     text: [
       footer,
-      preferences ? `Manage email preferences: ${preferences}` : "",
+      preferences ? `Notification settings: ${preferences}` : "",
       unsubscribe ? `Unsubscribe: ${unsubscribe}` : "",
       `Privacy: ${base}/legal/privacy`,
       input.postalAddress ? `Libraries Global · ${input.postalAddress}` : "",
@@ -189,7 +193,7 @@ function emailFooter(
       .map(([label, href]) => link(base + href, label!, ink))
       .join(
         " &nbsp;·&nbsp; "
-      )}</td></tr><tr><td style="padding:18px 8px;border-top:1px solid ${line};font:12px/1.8 Arial,sans-serif;color:${muted}">${e(footer)}<br>${[preferences ? link(preferences, "Manage email preferences") : "", unsubscribe ? link(unsubscribe, "Unsubscribe") : "", link(base + "/legal/privacy", "Privacy")].filter(Boolean).join(" &nbsp;|&nbsp; ")}${input.postalAddress ? `<br>Libraries Global · ${e(input.postalAddress)}` : ""}</td></tr></table>`,
+      )}</td></tr><tr><td style="padding:18px 8px;border-top:1px solid ${line};font:12px/1.8 Arial,sans-serif;color:${muted}">${e(footer)}<br>${[preferences ? link(preferences, "Notification settings") : "", unsubscribe ? link(unsubscribe, "Unsubscribe") : "", link(base + "/legal/privacy", "Privacy")].filter(Boolean).join(" &nbsp;|&nbsp; ")}${input.postalAddress ? `<br>Libraries Global · ${e(input.postalAddress)}` : ""}</td></tr></table>`,
   }
 }
 

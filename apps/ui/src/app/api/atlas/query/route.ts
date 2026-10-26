@@ -33,8 +33,9 @@ export async function POST(req: Request) {
       const state = await backend.state(),
         now = new Date(),
         key = atlasCacheKey(input.request, state, now),
+        cached = readAtlasCache(key),
         result =
-          readAtlasCache(key) ??
+          cached ??
           (await new AtlasQueryEngine(backend, state, now).execute(
             input.request
           )),
@@ -42,9 +43,10 @@ export async function POST(req: Request) {
       if (
         state.queryEpoch === after.queryEpoch &&
         state.dictionary.version === after.dictionary.version &&
-        state.indexedThrough === after.indexedThrough
+        state.indexedThrough === after.indexedThrough &&
+        state.manifest?.buildId === after.manifest?.buildId
       ) {
-        writeAtlasCache(key, result)
+        if (!cached) writeAtlasCache(key, result)
 
         return Response.json(result, {
           headers: { "cache-control": "no-store" },

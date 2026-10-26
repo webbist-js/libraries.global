@@ -97,7 +97,7 @@ export function projectAtlasLibrary(
       "appointment_only",
     ].includes(source.operationalStatus ?? "")
   const cells = Object.fromEntries(
-    Array.from({ length: ATLAS_LIMITS.maxCellZoom + 1 }, (_, z) => [
+    Array.from({ length: ATLAS_LIMITS.maxDensityCellZoom + 1 }, (_, z) => [
       `atlas_cell_${z}`,
       atlasCellId(coordinate, z),
     ])

@@ -19,6 +19,12 @@ import {
   atlasAggregation,
   atlasCellsForBounds,
   atlasCell,
+  atlasCellId,
+  atlasDensityBounds,
+  atlasDensityCounts,
+  atlasDensityResolution,
+  atlasDensityCell,
+  type AtlasLibraryDensity,
   atlasBoundsRanges,
   atlasKeysetFilter,
   atlasLongitude,
@@ -36,6 +42,7 @@ import {
   emptyAtlasFilters,
   type AtlasAggregateCell,
   type AtlasCountsResponse,
+  type AtlasCursorPayload,
   type AtlasCoverage,
   type AtlasExtentResponse,
   type AtlasListResponse,
@@ -838,6 +845,140 @@ export class AtlasQueryEngine {
     throw new Error("Atlas aggregates unavailable")
   }
 
+  private async libraryDensity(
+    request: Extract<AtlasQueryRequest, { purpose: "viewport" }>,
+    exactTotal: number
+  ): Promise<AtlasLibraryDensity> {
+    const settings = request.libraryDensity!
+    const requestedResolution = atlasDensityResolution(
+      request.zoom,
+      settings.detail
+    )
+    const base = { exactTotal, requestedResolution, coarsened: false }
+    const manifest = this.state.manifest
+    const f = request.scope.filters
+    // Aggregates cannot use the point journal overlay: removals and moved
+    // records must subtract from the old cells. Use a prepared surface only
+    // when its stable snapshot still exactly matches the indexed generation.
+    if (
+      request.drawingPreference === "auto" &&
+      settings.detail === "auto" &&
+      settings.scale === "fixed" &&
+      manifest?.densityTiles?.version === 1 &&
+      manifest.sourceStartRevision === manifest.sourceEndRevision &&
+      manifest.sourceEndRevision === this.state.indexedThrough &&
+      manifest.builtAgainstQueryEpoch === this.state.queryEpoch &&
+      manifest.dictionaryVersion === this.state.dictionary.version &&
+      manifest.canonicalLocale === this.state.canonicalLocale &&
+      !request.scope.place &&
+      !request.scope.accessibility.enabled &&
+      !f.types.length &&
+      !f.operators.length &&
+      !f.facilities.length &&
+      !f.networks?.length &&
+      f.opening === "any" &&
+      !f.events &&
+      !f.catalogue &&
+      !f.founded
+    ) {
+      return {
+        ...base,
+        mode: "tiles",
+        resolution: requestedResolution,
+        cells: [],
+        archive: manifest.densityTiles,
+      }
+    }
+    for (let resolution = requestedResolution; resolution >= 0; resolution--) {
+      const scope = {
+        ...request.scope,
+        bbox: atlasDensityBounds(request.scope.bbox!, resolution),
+      }
+      const field = `atlas_cell_${resolution}`
+      let result: AtlasSearchResult
+      try {
+        result = await this.cellQuery(scope, "listed", field)
+      } catch (error) {
+        // During an additive index rollout, older indexes still have the
+        // original z0..12 fields. They remain a complete, labelled fallback.
+        if (resolution <= ATLAS_LIMITS.maxCellZoom) throw error
+        result = await this.backend.search({
+          filter: this.filter(scope),
+          limit: 0,
+          facets: ["locale"],
+        })
+      }
+      const total = this.total(result)
+      let cells = Object.entries(result.facetDistribution?.[field] ?? {}).map(
+        ([id, total]) => ({ id, total })
+      )
+      if (total <= ATLAS_LIMITS.points) {
+        const rows = await this.backend.search({
+          filter: this.filter(scope),
+          limit: ATLAS_LIMITS.points,
+          facets: ["locale"],
+          attributesToRetrieve: ["latitude", "longitude"],
+        })
+        if (this.total(rows) !== total || rows.hits.length !== total)
+          throw new Error("Concurrent Atlas density population changed; retry")
+        cells = atlasDensityCounts(
+          rows.hits.map((row) => ({ lat: row.latitude, lng: row.longitude })),
+          resolution
+        )
+      }
+      if (
+        cells.some(
+          (cell) => !Number.isSafeInteger(cell.total) || cell.total <= 0
+        )
+      )
+        throw new Error("Invalid library density count")
+      if (
+        cells.length > ATLAS_LIMITS.densityCells ||
+        cells.reduce((sum, cell) => sum + cell.total, 0) !== total
+      )
+        continue
+      for (const cell of cells) {
+        const parsed = atlasCell(cell.id)
+        if (
+          !cell.id.startsWith(`${resolution}/`) ||
+          atlasCellId(parsed.centre, resolution) !== cell.id ||
+          !atlasBoundsRanges(scope.bbox).some(
+            (b) =>
+              parsed.bounds.west <= b.east &&
+              parsed.bounds.east >= b.west &&
+              parsed.bounds.south <= b.north &&
+              parsed.bounds.north >= b.south
+          )
+        )
+          throw new Error("Invalid library density geography")
+      }
+      const ranges = atlasBoundsRanges(request.scope.bbox!)
+      const maxPer100Km2 = cells.reduce((max, cell) => {
+        const value = atlasDensityCell(cell.id, cell.total)
+
+        return ranges.some(
+          (b) =>
+            value.bounds.west < b.east &&
+            value.bounds.east > b.west &&
+            value.bounds.south < b.north &&
+            value.bounds.north > b.south
+        )
+          ? Math.max(max, value.per100Km2)
+          : max
+      }, 0)
+
+      return {
+        ...base,
+        mode: "cells",
+        resolution,
+        coarsened: resolution !== requestedResolution,
+        cells,
+        maxPer100Km2,
+      }
+    }
+    throw new Error("Complete library density unavailable")
+  }
+
   async viewport(
     request: Extract<AtlasQueryRequest, { purpose: "viewport" }>
   ): Promise<AtlasViewportResponse> {
@@ -937,6 +1078,15 @@ export class AtlasQueryEngine {
     return {
       ...this.metadata(request),
       populations,
+      ...(request.libraryDensity
+        ? {
+            libraryDensity: await this.libraryDensity(
+              request,
+              populations.listed?.exactTotal ??
+                (await this.count(request.scope))
+            ),
+          }
+        : {}),
       ...(summary ? { coverage: summary } : {}),
     }
   }
@@ -1120,7 +1270,12 @@ export class AtlasQueryEngine {
   ): Promise<AtlasListResponse> {
     const metadata = this.metadata(request),
       distance = request.sort === "distance",
-      field = request.sort === "place" ? "place_sort" : "name_sort"
+      field = request.sort.startsWith("place")
+        ? "place_sort"
+        : request.sort.startsWith("record")
+          ? "completeness"
+          : "name_sort",
+      descending = request.sort.endsWith("_desc")
     let filter = this.filter(request.scope)
     if (request.cursor) {
       const cursor = readAtlasCursor(
@@ -1129,11 +1284,11 @@ export class AtlasQueryEngine {
           fingerprint: metadata.fingerprint,
           queryEpoch: metadata.queryEpoch,
           dictionaryVersion: metadata.dictionaryVersion,
-          sort: request.sort as "name" | "place",
+          sort: request.sort as AtlasCursorPayload["sort"],
         },
         this.now
       )
-      filter += ` AND ${atlasKeysetFilter(field, cursor.lastKey, cursor.lastId)}`
+      filter += ` AND ${atlasKeysetFilter(field, cursor.lastKey, cursor.lastId, descending)}`
     }
     const page = request.page ?? 0,
       offset = distance ? page * ATLAS_LIMITS.listRows : 0
@@ -1144,7 +1299,7 @@ export class AtlasQueryEngine {
             `_geoPoint(${request.centre.lat},${atlasLongitude(request.centre.lng)}):asc`,
             "atlas_id:asc",
           ]
-        : [`${field}:asc`, "atlas_id:asc"],
+        : [`${field}:${descending ? "desc" : "asc"}`, "atlas_id:asc"],
       limit: Math.min(
         ATLAS_LIMITS.listRows + 1,
         ATLAS_LIMITS.reachableDistanceRows - offset
@@ -1185,8 +1340,8 @@ export class AtlasQueryEngine {
             fingerprint: metadata.fingerprint,
             queryEpoch: metadata.queryEpoch,
             dictionaryVersion: metadata.dictionaryVersion,
-            sort: request.sort as "name" | "place",
-            lastKey: last[field],
+            sort: request.sort as AtlasCursorPayload["sort"],
+            lastKey: last[field] ?? null,
             lastId: last.atlas_id,
             evaluatedAt: metadata.evaluatedAt,
             expiresAt: new Date(

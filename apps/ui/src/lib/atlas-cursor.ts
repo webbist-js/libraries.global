@@ -53,7 +53,13 @@ export function readAtlasCursor(
     ) ||
     !Number.isSafeInteger(payload.lastId) ||
     payload.lastId < 1 ||
-    typeof payload.lastKey !== "string" ||
+    (payload.sort.startsWith("record")
+      ? payload.lastKey !== null &&
+        (typeof payload.lastKey !== "number" ||
+          !Number.isFinite(payload.lastKey) ||
+          payload.lastKey < 0 ||
+          payload.lastKey > 100)
+      : typeof payload.lastKey !== "string") ||
     !Number.isFinite(Date.parse(payload.evaluatedAt)) ||
     !Number.isFinite(Date.parse(payload.expiresAt)) ||
     Date.parse(payload.expiresAt) <= now.getTime() ||

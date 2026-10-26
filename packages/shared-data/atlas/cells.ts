@@ -70,7 +70,7 @@ export function atlasInBounds(
 }
 
 function checkZoom(z: number): asserts z is AtlasCellZoom {
-  if (!Number.isInteger(z) || z < 0 || z > ATLAS_LIMITS.maxCellZoom)
+  if (!Number.isInteger(z) || z < 0 || z > ATLAS_LIMITS.maxDensityCellZoom)
     throw new RangeError("Invalid Atlas cell resolution")
 }
 const mercatorY = (lat: number): number => {

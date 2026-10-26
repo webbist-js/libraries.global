@@ -1,6 +1,7 @@
 "use client"
 
 import type {
+  AtlasDensitySettings,
   AtlasCountsResponse,
   AtlasExtentResponse,
   AtlasQueryRequest,
@@ -85,7 +86,8 @@ export function useAtlasData(
   view: AtlasView | null,
   query: string,
   selectedId: string | null,
-  now: Date
+  now: Date,
+  densitySettings?: AtlasDensitySettings
 ) {
   const [refresh, setRefresh] = useState(0),
     retry = useCallback(() => setRefresh((n) => n + 1), [])
@@ -129,11 +131,27 @@ export function useAtlasData(
       ],
       drawingPreference: forceCurrent ? "current" : "auto",
       quality: layers.includes("complete"),
-      density: layers.includes("density") || layers.includes("events"),
+      density: layers.includes("events"),
+      ...(layers.includes("density")
+        ? {
+            libraryDensity: {
+              detail: densitySettings?.detail ?? "auto",
+              scale: densitySettings?.scale ?? "fixed",
+            },
+          }
+        : {}),
     }),
-    [scope, view, layers, forceCurrent]
+    [
+      scope,
+      view,
+      layers,
+      forceCurrent,
+      densitySettings?.detail,
+      densitySettings?.scale,
+    ]
   )
   const key = JSON.stringify(viewportRequest)
+  const [generationKey, setGenerationKey] = useState<string | null>(null)
   const [generation, setGeneration] = useState<AtlasGeneration | null>(null),
     [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -148,6 +166,7 @@ export function useAtlasData(
         .then((value) => {
           if (!current.signal.aborted) {
             setGeneration(value)
+            setGenerationKey(key)
             setError(null)
           }
         })
@@ -297,6 +316,7 @@ export function useAtlasData(
     }))
 
   return {
+    loading: enabled && generationKey !== key,
     generation,
     scope,
     world,

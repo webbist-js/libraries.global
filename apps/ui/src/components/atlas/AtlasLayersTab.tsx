@@ -29,7 +29,7 @@ import {
 export const ABOUT: Record<LayerId, string> = {
   pins: "Library locations recorded in the index. The library-type key in Filters controls which types are shown.",
   density:
-    "Where libraries cluster. Shown as a heatmap when zoomed out; individual libraries take over as you zoom in.",
+    "Explore recorded library locations at every zoom. Inspect counts and libraries per 100 km² in the density grid, or choose smooth concentration. Detail, colour scale and library locations are controlled in the analysis drawer.",
   openLate:
     "Rings libraries whose recorded hours run past 19:00 on any day, or that open on Sundays.",
   closures:

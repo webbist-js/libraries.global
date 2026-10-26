@@ -18,6 +18,9 @@ import { subscriberRateLimiter } from "../rate-limit"
 const SUBSCRIBER = "api::subscriber.subscriber"
 const MAX_EMAIL_LENGTH = 254
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const CONSENT_VERSIONS: Record<string, string> = {
+  "newsletter-journal": "newsletter-journal-2026-10-25",
+}
 
 /** Allow collection fields only; identity and consent evidence are server-written. */
 function emailOf(body: unknown): string | null {
@@ -129,6 +132,8 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
       return ctx.badRequest("Invalid source")
     const locale = ctx.request.body.locale ?? "en"
     if (!isSupportedLocale(locale)) return ctx.badRequest("Invalid locale")
+    const consentVersion =
+      CONSENT_VERSIONS[`${type}-${source}`] ?? `${type}-${source}-2026-10-10`
     const baUserId =
       type === "newsletter" &&
       headers["x-ba-user-email"]?.toLowerCase() === email
@@ -174,12 +179,12 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
               communicationLocale: locale,
               baUserId,
               consentedAt: new Date().toISOString(),
-              consentVersion: `${type}-${source}-2026-10-10`,
+              consentVersion,
               message:
                 type === "beta_waitlist"
                   ? "Requested beta access only. No newsletter."
                   : source === "journal"
-                    ? "Agreed to receive new Journal articles by email, at most monthly."
+                    ? "Agreed to receive project news and Journal articles by email, at most monthly."
                     : `Signed up via the website footer on ${new Date().toISOString()}`,
             } as never,
           })
@@ -205,7 +210,7 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
               communicationLocale: locale,
               baUserId,
               consentedAt: new Date().toISOString(),
-              consentVersion: `${type}-${source}-2026-10-10`,
+              consentVersion,
             } as never,
           })
         } else if (
