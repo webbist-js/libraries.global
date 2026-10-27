@@ -9,7 +9,7 @@ import type { HealthRow } from "@/lib/staff/types"
 import { TONES } from "./Notice"
 
 const PILL =
-  "inline-flex min-h-11 shrink-0 items-center rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex min-h-11 shrink-0 items-center rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /**
  * The record-health card (sans heading, so the sidebar sits under the main
@@ -40,16 +40,16 @@ export function HealthList({
       <div className="flex items-baseline justify-between gap-4">
         <h2
           id="record-health-heading"
-          className="m-0 text-[18px] font-semibold"
+          className="type-panel-title m-0"
           style={{ color: T.ink.base }}
         >
           {title}
         </h2>
         {score ? (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             <span
               className="text-[26px] leading-none"
-              style={{ fontFamily: T.font.serif, color: T.ink.base }}
+              style={{ fontFamily: T.font.sans, color: T.ink.base }}
             >
               {score.done}
             </span>{" "}
@@ -85,12 +85,12 @@ export function HealthList({
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span
-                  className="text-[16px] font-semibold"
+                  className="text-base font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {row.label}
                 </span>
-                <span className="text-[13.5px]" style={{ color: T.ink.dim }}>
+                <span className="text-sm" style={{ color: T.ink.dim }}>
                   {row.note}
                 </span>
               </span>

@@ -32,7 +32,7 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
   if (rows.length > 1)
     return (
       <StaffPanel title="Your Team" compact>
-        <p className="text-sm leading-relaxed text-(--t-ink-dim)">
+        <p className="text-base leading-relaxed text-(--t-ink-dim)">
           Your account has older memberships to reconcile before opening its
           Team workspace.
         </p>
@@ -58,10 +58,10 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
 
           return (
             <li key={team.id} className="min-w-0">
-              <h3 className="m-0 font-serif text-[25px] leading-tight [overflow-wrap:anywhere] text-(--t-ink-base)">
+              <h3 className="type-card-title m-0 [overflow-wrap:anywhere] text-(--t-ink-base)">
                 {team.name}
               </h3>
-              <p className="mt-2 mb-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+              <p className="mt-2 mb-4 text-base leading-relaxed text-(--t-ink-dim)">
                 {team.role === "organiser"
                   ? "You organise it"
                   : team.organiserName
@@ -75,7 +75,7 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
               <div className="divide-y divide-(--t-border-line) border-y border-(--t-border-line)">
                 <Link
                   href="/staff/teams"
-                  className="flex min-h-14 flex-wrap items-center gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
+                  className="flex min-h-14 flex-wrap items-center gap-2 py-3 text-base font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   <span className="min-w-0 flex-1">
                     {t("membersLibraries")}
@@ -90,14 +90,14 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                 </Link>
                 <Link
                   href="/staff/teams/api"
-                  className="flex min-h-14 items-center justify-between gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
+                  className="flex min-h-14 items-center justify-between gap-2 py-3 text-base font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("apiAccess")}
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
                 </Link>
                 <Link
                   href="/staff/teams/billing"
-                  className="flex min-h-14 items-center justify-between gap-2 py-3 text-[15px] font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
+                  className="flex min-h-14 items-center justify-between gap-2 py-3 text-base font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("billing")}
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
@@ -109,7 +109,7 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                     <li key={lib.id}>
                       <Link
                         href={staffLibraryHref(lib.slug)}
-                        className="inline-flex min-h-11 items-center gap-2 text-[14px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                        className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-(--t-accent-primary) underline underline-offset-4"
                       >
                         <Icon
                           aria-hidden="true"

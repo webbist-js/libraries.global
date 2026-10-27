@@ -22,7 +22,7 @@ export function Pager({
             <p
               style={{
                 fontFamily: T.font.sans,
-                fontSize: "13px",
+                fontSize: "var(--type-body-small-size)",
                 fontWeight: 600,
                 color: T.ink.dim,
                 margin: "0 0 6px",
@@ -33,7 +33,7 @@ export function Pager({
             <p
               style={{
                 fontFamily: T.font.sans,
-                fontSize: "14px",
+                fontSize: "var(--type-body-small-size)",
                 color: T.ink.dim,
                 lineHeight: 1.3,
                 margin: 0,
@@ -52,7 +52,7 @@ export function Pager({
             <p
               style={{
                 fontFamily: T.font.sans,
-                fontSize: "13px",
+                fontSize: "var(--type-body-small-size)",
                 fontWeight: 600,
                 color: T.ink.dim,
                 margin: "0 0 6px",
@@ -63,7 +63,7 @@ export function Pager({
             <p
               style={{
                 fontFamily: T.font.sans,
-                fontSize: "14px",
+                fontSize: "var(--type-body-small-size)",
                 color: T.ink.dim,
                 lineHeight: 1.3,
                 margin: 0,

@@ -2,7 +2,6 @@ import { ArrowUpRight } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
 
 export async function MembershipPolicies() {
   const t = await getTranslations("billing")
@@ -13,11 +12,7 @@ export async function MembershipPolicies() {
       className="flex flex-col gap-5"
     >
       <div className="flex flex-col gap-2">
-        <h2
-          id="membership-policies-heading"
-          className="m-0 text-3xl"
-          style={{ fontFamily: T.font.serif }}
-        >
+        <h2 id="membership-policies-heading" className="type-h2 m-0">
           {t("legalHeading")}
         </h2>
         <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
@@ -47,7 +42,7 @@ export async function MembershipPolicies() {
               className="flex h-full items-start justify-between gap-4 rounded-2xl border border-(--t-border-line) bg-white p-6 hover:border-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4"
             >
               <div className="flex flex-col gap-2">
-                <h3 className="m-0 text-base font-semibold text-(--t-accent-primary)">
+                <h3 className="type-h3 m-0 text-(--t-accent-primary)">
                   {t(title)}
                 </h3>
                 <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">

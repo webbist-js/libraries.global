@@ -13,7 +13,7 @@ function splitEmphasis(text: string): { key: string; text: string }[] {
   return parts
 }
 
-/** Renders CMS copy where `*words*` become an italic accent. */
+/** Renders banner titles where `*words*` become an accent on their own line. */
 export function Emphasis({
   text,
   emStyle,
@@ -25,7 +25,7 @@ export function Emphasis({
     <>
       {splitEmphasis(text).map(({ key, text: part }) =>
         part.startsWith("*") && part.endsWith("*") ? (
-          <em key={key} style={{ fontWeight: 400, ...emStyle }}>
+          <em key={key} className="type-heading-accent" style={emStyle}>
             {part.slice(1, -1)}
           </em>
         ) : (

@@ -9,6 +9,7 @@ const RESERVED = new Set([
   "root",
   "api",
   "settings",
+  "membership",
   "profile",
   "deleted",
 ])

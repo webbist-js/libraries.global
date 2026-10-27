@@ -340,7 +340,7 @@ export function AboutGlobeExplorer({
             {preview ? (
               <div ref={tooltip} className="about-country-preview">
                 <span>{preview.iso2}</span>
-                <h3>{preview.name}</h3>
+                <h3 className="type-h3">{preview.name}</h3>
                 <p>
                   {preview.libraryCount === null
                     ? "Explore the country's record"
@@ -414,7 +414,7 @@ export function AboutGlobeExplorer({
                     </button>
                   </div>
                 </div>
-                <h2>{country.name}</h2>
+                <h2 className="type-panel-title">{country.name}</h2>
                 <div className="about-country-status">
                   {pinned ? (
                     <>
@@ -480,7 +480,7 @@ export function AboutGlobeExplorer({
                 ) : null}
                 {empty ? (
                   <div className="about-country-empty">
-                    <h3>Help start the record.</h3>
+                    <h3 className="type-h3">Help start the record.</h3>
                     <p>Local knowledge can help fill this gap in the index.</p>
                   </div>
                 ) : null}
@@ -509,7 +509,7 @@ export function AboutGlobeExplorer({
                 ) : null}
                 {hasRecords && types?.length ? (
                   <div className="about-country-types">
-                    <h3>By type</h3>
+                    <h3 className="type-h3">By type</h3>
                     <div className="about-country-type-bar" aria-hidden="true">
                       {types.map((entry) => (
                         <span
@@ -544,7 +544,7 @@ export function AboutGlobeExplorer({
                 ) : null}
                 {hasRecords && data?.featuredLibraries.length ? (
                   <div className="about-country-featured">
-                    <h3>Featured libraries</h3>
+                    <h3 className="type-h3">Featured libraries</h3>
                     <ul>
                       {data.featuredLibraries.map((library) => (
                         <li key={library.href ?? library.name}>

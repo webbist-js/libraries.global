@@ -218,7 +218,7 @@ export function DiscussionComposer({
     <div
       className={
         threadId || inlineSuggestion
-          ? "flex flex-wrap items-center gap-2.5 text-[13px] text-(--t-ink-dim)"
+          ? "flex flex-wrap items-center gap-2.5 text-sm text-(--t-ink-dim)"
           : "grid gap-1 text-sm font-semibold"
       }
     >
@@ -233,8 +233,8 @@ export function DiscussionComposer({
         required
         className={
           threadId || inlineSuggestion
-            ? "min-h-[44px] w-auto min-w-[132px] rounded-full border-(--t-border-hi) px-3.5 text-[14px] font-medium shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
-            : "mt-1 min-h-12 px-4 text-[16px] font-normal shadow-none"
+            ? "min-h-[44px] w-auto min-w-[132px] rounded-full border-(--t-border-hi) px-3.5 text-sm font-medium shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
+            : "mt-1 min-h-12 px-4 text-base font-normal shadow-none"
         }
         onValueChange={(value) => {
           setSelectedLanguage(value)
@@ -258,10 +258,10 @@ export function DiscussionComposer({
       onSubmit={(event) => submit(event)}
       className={
         embedded
-          ? "grid gap-5 border-t border-(--t-divider) pt-5 text-[16px] [--spacing:0.25rem]"
+          ? "grid gap-5 border-t border-(--t-divider) pt-5 text-base [--spacing:0.25rem]"
           : inlineSuggestion
-            ? "grid gap-3 text-[16px] [--spacing:0.25rem]"
-            : "grid gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[16px] [--spacing:0.25rem] sm:p-6"
+            ? "grid gap-3 text-base [--spacing:0.25rem]"
+            : "grid gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-base [--spacing:0.25rem] sm:p-6"
       }
     >
       <div
@@ -271,13 +271,7 @@ export function DiscussionComposer({
             : "flex items-center justify-between gap-3"
         }
       >
-        <h3
-          className={
-            inlineSuggestion
-              ? "m-0 text-base font-semibold"
-              : "m-0 font-serif text-[24px] leading-tight tracking-tight"
-          }
-        >
+        <h3 className="type-h3 m-0">
           {heading ?? (threadId ? t("joinConversation") : t("newThread"))}
         </h3>
         {onCancel && !embedded && (
@@ -304,7 +298,7 @@ export function DiscussionComposer({
               }}
               maxLength={250}
               required
-              className="mt-1 min-h-12 w-full min-w-0 rounded-xl border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-[16px] font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+              className="mt-1 min-h-12 w-full min-w-0 rounded-xl border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-base font-normal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
             />
           </label>
           {languageControl}
@@ -338,13 +332,13 @@ export function DiscussionComposer({
           rows={inlineSuggestion ? 3 : threadId ? 5 : 6}
           className={
             inlineSuggestion
-              ? "block field-sizing-fixed min-h-28 w-full rounded-[18px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-[16px] leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
-              : "mt-1 block field-sizing-fixed min-h-[140px] w-full rounded-[16px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-[16px] leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
+              ? "block field-sizing-fixed min-h-28 w-full rounded-[18px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-base leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-base dark:bg-(--t-bg-deep)"
+              : "mt-1 block field-sizing-fixed min-h-[140px] w-full rounded-[16px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-base leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-base dark:bg-(--t-bg-deep)"
           }
         />
       </label>
       {!inlineSuggestion && !embedded && (
-        <p className="m-0 flex items-start gap-1.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 flex items-start gap-1.5 text-sm leading-relaxed text-(--t-ink-dim)">
           <ShieldCheck size={15} className="mt-0.5 shrink-0" aria-hidden />
           {t("reviewLead")}
         </p>
@@ -360,7 +354,7 @@ export function DiscussionComposer({
                 aria-controls={picturesId}
                 disabled={busy || uploading}
                 onClick={() => setPicturesOpen((open) => !open)}
-                className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-[14px] font-medium text-(--t-ink-dim) hover:text-(--t-accent-primary) disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-sm font-medium text-(--t-ink-dim) hover:text-(--t-accent-primary) disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ImagePlus size={16} aria-hidden />
                 {t("addPictures")}

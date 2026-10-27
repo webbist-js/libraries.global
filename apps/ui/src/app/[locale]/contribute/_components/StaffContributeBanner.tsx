@@ -41,11 +41,11 @@ function MetricChip({
     >
       <span
         className="text-[29px] leading-none tabular-nums"
-        style={{ fontFamily: T.font.serif, color }}
+        style={{ fontFamily: T.font.sans, color }}
       >
         {value ?? "—"}
       </span>
-      <span className="text-[14px] font-semibold" style={{ color: T.ink.base }}>
+      <span className="text-sm font-semibold" style={{ color: T.ink.base }}>
         {label}
       </span>
     </span>
@@ -81,7 +81,7 @@ function ActionCard({
         {count != null && count > 0 ? (
           <span
             aria-label={`${count} ${count === 1 ? "suggestion" : "suggestions"} to review`}
-            className="flex size-8 items-center justify-center rounded-full text-[15px] font-semibold tabular-nums"
+            className="flex size-8 items-center justify-center rounded-full text-base font-semibold tabular-nums"
             style={{ background: T.accent.primary, color: "white" }}
           >
             {count}
@@ -90,15 +90,12 @@ function ActionCard({
       </span>
       <span className="flex flex-col gap-1">
         <span
-          className="text-[19px] leading-snug font-bold"
+          className="text-lg leading-snug font-bold"
           style={{ color: T.ink.base }}
         >
           {title}
         </span>
-        <span
-          className="text-[15px] leading-[1.5]"
-          style={{ color: T.ink.dim }}
-        >
+        <span className="text-base leading-[1.5]" style={{ color: T.ink.dim }}>
           {description}
         </span>
       </span>
@@ -176,7 +173,7 @@ export function StaffContributeBanner({
           <span className="relative max-w-full min-w-0">
             <select
               id={selectId}
-              className="min-h-11 w-full max-w-[320px] cursor-pointer appearance-none truncate rounded-full border py-2 pr-10 pl-4 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+              className="min-h-11 w-full max-w-[320px] cursor-pointer appearance-none truncate rounded-full border py-2 pr-10 pl-4 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
               style={{
                 background: T.bg.deep,
                 borderColor: T.border.hi,
@@ -204,8 +201,8 @@ export function StaffContributeBanner({
 
         <h2
           id={titleId}
-          className="m-0 mt-4 text-[clamp(30px,3.2vw,44px)] leading-[1.12] font-medium tracking-[-0.015em] break-words"
-          style={{ fontFamily: T.font.serif, color: T.ink.base }}
+          className="type-h2 m-0 mt-4 break-words"
+          style={{ color: T.ink.base }}
         >
           Look after{" "}
           <em className="font-normal" style={{ color: T.accent.primary }}>
@@ -213,7 +210,7 @@ export function StaffContributeBanner({
           </em>
         </h2>
         <p
-          className="mt-4 mb-0 max-w-[58ch] text-[16px] leading-[1.65]"
+          className="mt-4 mb-0 max-w-[58ch] text-base leading-[1.65]"
           style={{ color: T.ink.dim }}
         >
           Your changes to this record publish straight away. For other
@@ -254,7 +251,7 @@ export function StaffContributeBanner({
         {isError ? (
           <p
             role="status"
-            className="mt-3 mb-0 text-[14px]"
+            className="mt-3 mb-0 text-sm"
             style={{ color: T.ink.dim }}
           >
             {data
@@ -272,7 +269,7 @@ export function StaffContributeBanner({
         ) : null}
 
         <p
-          className="mt-7 mb-0 flex flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-[14px] xl:mt-auto xl:pt-8"
+          className="mt-7 mb-0 flex flex-wrap items-center gap-x-2 gap-y-1 pt-2 text-sm xl:mt-auto xl:pt-8"
           style={{ color: T.ink.dim }}
         >
           <Icon
@@ -286,7 +283,7 @@ export function StaffContributeBanner({
             {["Alt", "S"].map((key) => (
               <kbd
                 key={key}
-                className="rounded-md border px-2 py-0.5 text-[13px] font-semibold shadow-[0_1px_0_var(--t-border-hi)]"
+                className="rounded-md border px-2 py-0.5 text-sm font-semibold shadow-[0_1px_0_var(--t-border-hi)]"
                 style={{
                   background: T.bg.surface,
                   borderColor: T.border.hi,

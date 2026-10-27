@@ -131,10 +131,7 @@ export function PlanChangeDialog({
         style={{ background: T.bg.deep, color: T.ink.base }}
       >
         <DialogHeader className="shrink-0 gap-3 text-left">
-          <DialogTitle
-            className="m-0 pr-12 text-3xl leading-tight font-normal sm:text-4xl"
-            style={{ fontFamily: T.font.serif }}
-          >
+          <DialogTitle className="type-h2 m-0 pr-12">
             {t("changePlan")}
           </DialogTitle>
           <DialogDescription
@@ -216,7 +213,7 @@ export function PlanChangeDialog({
                     />
                     <span
                       className="text-3xl leading-none"
-                      style={{ fontFamily: T.font.serif }}
+                      style={{ fontFamily: T.font.sans }}
                     >
                       {t(value)}
                     </span>

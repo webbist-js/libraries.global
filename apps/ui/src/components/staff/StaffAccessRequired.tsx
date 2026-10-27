@@ -89,7 +89,7 @@ export function StaffAccessRequired({
             id="claim-staff-access"
             title={library ? t("claimThis") : t("claimYour")}
           >
-            <p className="m-0 max-w-[60ch] text-[17px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 max-w-[60ch] text-base leading-relaxed text-(--t-ink-dim)">
               {t("claimIntro")}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -107,7 +107,7 @@ export function StaffAccessRequired({
                 {library ? t("publicPage") : t("browse")}
               </Link>
             </div>
-            <p className="mt-6 mb-0 border-t border-(--t-border-line) pt-5 text-[15px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-6 mb-0 border-t border-(--t-border-line) pt-5 text-base leading-relaxed text-(--t-ink-dim)">
               {signedIn ? (
                 <>
                   {t("pendingHint")}{" "}
@@ -138,13 +138,13 @@ export function StaffAccessRequired({
               width={28}
               className="text-(--t-accent-primary)"
             />
-            <h2 className="mt-4 mb-3 font-serif text-[26px] leading-tight text-(--t-ink-base)">
+            <h2 className="type-panel-title mt-4 mb-3 text-(--t-ink-base)">
               {t("trustTitle")}
             </h2>
-            <p className="m-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
               {t("trustCopy")}
             </p>
-            <p className="mt-4 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-4 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
               {t("publicCopy")}
             </p>
           </aside>
@@ -158,11 +158,11 @@ export function StaffAccessRequired({
           <div className="mb-5 max-w-[65ch]">
             <h2
               id="staff-benefits-title"
-              className="m-0 font-serif text-[clamp(28px,3vw,38px)] leading-tight text-(--t-ink-base)"
+              className="type-h2 m-0 text-(--t-ink-base)"
             >
               {t("benefitsTitle")}
             </h2>
-            <p className="mt-3 mb-0 text-[16px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-3 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
               {t("benefitsIntro")}
             </p>
           </div>
@@ -172,10 +172,10 @@ export function StaffAccessRequired({
                 <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-(--t-accent-primary)/10 text-(--t-accent-primary)">
                   <Icon aria-hidden="true" icon={icon} width={23} />
                 </span>
-                <h3 className="mt-5 mb-2 font-serif text-[24px] leading-tight text-(--t-ink-base)">
+                <h3 className="type-h3 mt-5 mb-2 text-(--t-ink-base)">
                   {t(`${id}Title`)}
                 </h3>
-                <p className="m-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
                   {t(`${id}Copy`)}
                 </p>
               </StaffPanel>
@@ -193,21 +193,21 @@ export function StaffAccessRequired({
               <li key={id} className="min-w-0">
                 <span
                   aria-hidden="true"
-                  className="mb-4 inline-flex size-8 items-center justify-center rounded-full bg-(--t-accent-primary)/10 text-[14px] font-semibold text-(--t-accent-primary)"
+                  className="mb-4 inline-flex size-8 items-center justify-center rounded-full bg-(--t-accent-primary)/10 text-sm font-semibold text-(--t-accent-primary)"
                 >
                   {i + 1}
                 </span>
-                <h3 className="m-0 text-[17px] font-semibold text-(--t-ink-base)">
+                <h3 className="type-small-heading m-0 text-(--t-ink-base)">
                   {t(`${id}Title`)}
                 </h3>
-                <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                <p className="mt-2 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
                   {t(`${id}Copy`)}
                 </p>
               </li>
             ))}
           </ol>
           <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-t border-(--t-border-line) pt-6">
-            <p className="m-0 max-w-[60ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 max-w-[60ch] text-base leading-relaxed text-(--t-ink-dim)">
               {t("evidenceNote")}
             </p>
             <Link
@@ -229,7 +229,7 @@ export function StaffAccessRequired({
             <div className="divide-y divide-(--t-border-line)">
               {questions.map((id) => (
                 <details key={id} className="group py-4 first:pt-0 last:pb-0">
-                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-[16px] font-semibold text-(--t-ink-base) [&::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-(--t-ink-base) [&::-webkit-details-marker]:hidden">
                     {t(`${id}Question`)}
                     <Icon
                       aria-hidden="true"
@@ -238,7 +238,7 @@ export function StaffAccessRequired({
                       className="shrink-0 text-(--t-ink-dim) group-open:rotate-45"
                     />
                   </summary>
-                  <p className="mt-2 mb-0 max-w-[65ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+                  <p className="mt-2 mb-0 max-w-[65ch] text-base leading-relaxed text-(--t-ink-dim)">
                     {t(`${id}Answer`)}
                   </p>
                 </details>
@@ -246,10 +246,8 @@ export function StaffAccessRequired({
             </div>
           </StaffPanel>
           <aside className="rounded-3xl bg-(--t-ink-base) p-6 text-white sm:p-7">
-            <h2 className="m-0 font-serif text-[26px] leading-tight">
-              {t("helpTitle")}
-            </h2>
-            <p className="mt-3 mb-5 text-[15px] leading-relaxed text-white/80">
+            <h2 className="type-panel-title m-0">{t("helpTitle")}</h2>
+            <p className="mt-3 mb-5 text-base leading-relaxed text-white/80">
               {t("helpCopy")}
             </p>
             <Link

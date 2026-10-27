@@ -24,7 +24,7 @@ export async function LearnMoreLink({
   if (!link) return null
 
   return (
-    <p className={`m-0 text-[14px] ${className}`} style={{ color: T.ink.dim }}>
+    <p className={`m-0 text-sm ${className}`} style={{ color: T.ink.dim }}>
       Learn more:{" "}
       <Link
         href={link.href}

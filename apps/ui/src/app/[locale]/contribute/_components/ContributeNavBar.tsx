@@ -34,7 +34,7 @@ const NAV_ITEMS = [
   },
   {
     id: "membership",
-    href: "/contribute/membership",
+    href: "/profile/membership",
     label: "Membership",
     icon: "mdi:hand-heart-outline",
   },

@@ -27,7 +27,7 @@ import { SuggestionRoundControls } from "./SuggestionRoundControls"
 const PRIMARY = cn(buttonVariants({ variant: "primary", size: "pill" }))
 const SECONDARY = cn(buttonVariants({ variant: "surface", size: "pill" }))
 const FIELD =
-  "min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-[16px] font-normal text-(--t-ink-base)"
+  "min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-base font-normal text-(--t-ink-base)"
 
 const inputStyle: React.CSSProperties = {
   borderColor: T.border.hi,
@@ -67,7 +67,7 @@ function StatusChip({ status }: { readonly status: SuggestionStatus }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold"
       style={{ background: meta.bg, color: meta.fg }}
     >
       <Icon aria-hidden="true" icon={meta.icon} width={14} height={14} />
@@ -204,11 +204,9 @@ function SuggestionCard({
     >
       <div className="flex flex-col gap-3">
         <h2
-          className="m-0 text-[28px] leading-tight [overflow-wrap:anywhere]"
+          className="type-h2 m-0 [overflow-wrap:anywhere]"
           style={{
-            fontFamily: T.font.serif,
             color: T.ink.base,
-            fontWeight: 500,
           }}
         >
           {s.name}
@@ -222,12 +220,12 @@ function SuggestionCard({
         </div>
       </div>
       {s.publicationStatus === "pending" && (
-        <p className="m-0 rounded-xl bg-(--t-accent-chip) px-4 py-3 text-[14px] leading-relaxed font-medium text-(--t-accent-primary-hover)">
+        <p className="m-0 rounded-xl bg-(--t-accent-chip) px-4 py-3 text-sm leading-relaxed font-medium text-(--t-accent-primary-hover)">
           {t("publicationReview")}
         </p>
       )}
       {s.comparison && (
-        <div className="rounded-xl bg-(--t-bg-surface) p-4 text-[14px] leading-relaxed">
+        <div className="rounded-xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed">
           <strong>
             {t("comparisonTitle")}: {s.comparison.name}
           </strong>
@@ -236,13 +234,13 @@ function SuggestionCard({
       )}
       {s.description ? (
         <p
-          className="m-0 text-[16px] leading-relaxed [overflow-wrap:anywhere]"
+          className="m-0 text-base leading-relaxed [overflow-wrap:anywhere]"
           style={{ color: T.ink.base }}
         >
           {s.description}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-(--t-ink-dim)">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-(--t-ink-dim)">
         <span>
           <strong className="font-semibold text-(--t-ink-base)">
             {s.votes}
@@ -263,10 +261,7 @@ function SuggestionCard({
         </span>
       </div>
       {librariesLine(s) ? (
-        <p
-          className="m-0 text-[14px] leading-relaxed"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
           {librariesLine(s)}
         </p>
       ) : null}
@@ -279,7 +274,7 @@ function SuggestionCard({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={nameId}
-              className="text-[14px] font-semibold"
+              className="text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               Name if accepted
@@ -296,7 +291,7 @@ function SuggestionCard({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={noteId}
-              className="text-[14px] font-semibold"
+              className="text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               {t(
@@ -317,7 +312,7 @@ function SuggestionCard({
             />
             <span
               id={`${noteId}-hint`}
-              className="text-[14px] leading-relaxed"
+              className="text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               {t(
@@ -333,7 +328,7 @@ function SuggestionCard({
         )}
         {s.publicationStatus !== "pending" && (
           <details className="group rounded-2xl border border-(--t-border-line) px-4 py-1">
-            <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold text-(--t-ink-base) [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-base font-semibold text-(--t-ink-base) [&::-webkit-details-marker]:hidden">
               {t("featureDetails")}
               <Icon
                 aria-hidden
@@ -342,7 +337,7 @@ function SuggestionCard({
                 className="shrink-0 transition-transform group-open:rotate-180"
               />
             </summary>
-            <p className="mt-1 mb-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-1 mb-4 text-sm leading-relaxed text-(--t-ink-dim)">
               {t("featureDetailsHint")}
             </p>
             <div className="grid min-w-0 gap-4 pb-3 sm:grid-cols-2">
@@ -350,7 +345,7 @@ function SuggestionCard({
                 (key) => (
                   <label
                     key={key}
-                    className="grid min-w-0 content-start gap-2 text-[14px] font-semibold"
+                    className="grid min-w-0 content-start gap-2 text-sm font-semibold"
                   >
                     {t(
                       (
@@ -365,7 +360,7 @@ function SuggestionCard({
                     {key === "category" ? (
                       <SelectField
                         label={t("featureCategory")}
-                        className="min-h-[48px] text-[16px]"
+                        className="min-h-[48px] text-base"
                         value={feature.category}
                         onValueChange={(category) =>
                           setFeature((value) => ({ ...value, category }))
@@ -406,11 +401,11 @@ function SuggestionCard({
                   </label>
                 )
               )}
-              <label className="grid min-w-0 gap-2 text-[14px] font-semibold sm:col-span-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold sm:col-span-2">
                 {t("existingFeature")}
                 <SelectField
                   label={t("existingFeature")}
-                  className="min-h-[48px] text-[16px]"
+                  className="min-h-[48px] text-base"
                   value={existingOptionDocumentId}
                   onValueChange={setExistingOptionDocumentId}
                   options={[
@@ -428,7 +423,7 @@ function SuggestionCard({
         {error ? (
           <p
             role="alert"
-            className="m-0 text-[14px]"
+            className="m-0 text-sm"
             style={{ color: T.accent.danger }}
           >
             {error}
@@ -512,7 +507,7 @@ function SuggestionCard({
             <span className="inline-flex flex-wrap items-center gap-2">
               <span
                 role="alert"
-                className="text-[14px] font-semibold"
+                className="text-sm font-semibold"
                 style={{ color: T.accent.danger }}
               >
                 Remove this suggestion? This can’t be undone.
@@ -597,7 +592,7 @@ export function OptionSuggestionsBoard({
       <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
         <a
           href="#suggestion-review-schedule"
-          className="inline-flex min-h-[44px] items-center gap-2 self-start text-[15px] font-semibold text-(--t-accent-primary) underline underline-offset-4 lg:hidden"
+          className="inline-flex min-h-[44px] items-center gap-2 self-start text-base font-semibold text-(--t-accent-primary) underline underline-offset-4 lg:hidden"
         >
           Review schedule
           <Icon aria-hidden icon="mdi:arrow-down" width={17} />
@@ -617,7 +612,7 @@ export function OptionSuggestionsBoard({
                 type="button"
                 aria-pressed={active}
                 onClick={() => setFilter(f.id)}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-[15px] transition-colors"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 py-2 text-base transition-colors"
                 style={{
                   background: active ? T.ink.base : T.bg.deep,
                   color: active ? T.bg.deep : T.ink.dim,
@@ -628,7 +623,7 @@ export function OptionSuggestionsBoard({
               >
                 {f.label}
                 <span
-                  className="rounded-full px-2 text-[13px] font-semibold tabular-nums"
+                  className="rounded-full px-2 text-sm font-semibold tabular-nums"
                   style={{
                     background: active ? T.accent.chip : T.bg.muted,
                     color: active ? T.accent.primary : T.ink.dim,
@@ -643,7 +638,7 @@ export function OptionSuggestionsBoard({
         </div>
         <p
           aria-live="polite"
-          className="m-0 text-[14px]"
+          className="m-0 text-sm"
           style={{ color: T.ink.dim }}
         >
           {`${status ? `${status} ` : ""}${shown.length} suggestion${shown.length === 1 ? "" : "s"}.`}

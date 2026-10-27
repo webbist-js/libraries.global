@@ -23,12 +23,9 @@ export function JournalHeading({
 }) {
   return (
     <h2
-      className="m-0 text-[clamp(28px,3vw,38px)] leading-[1.05]"
+      className="type-h2 m-0"
       id={id}
       style={{
-        fontFamily: T.font.serif,
-        fontWeight: 500,
-        letterSpacing: "-0.02em",
         color: T.ink.base,
       }}
     >
@@ -68,7 +65,7 @@ export function JournalSectionBrowser({
             ),
           })}
         </JournalHeading>
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           {t("articlesInSections", {
             articles: t("articleCount", { count: total }),
             sections: t("sectionCount", { count: sections.length }),
@@ -107,7 +104,7 @@ export function JournalSectionBrowser({
                   <span
                     className="text-[24px] leading-none"
                     style={{
-                      fontFamily: T.font.serif,
+                      fontFamily: T.font.sans,
                       color: T.ink.base,
                     }}
                   >
@@ -118,14 +115,14 @@ export function JournalSectionBrowser({
                   </span>
                 </span>
                 <span
-                  className="mt-4 text-[15px] font-semibold"
+                  className="mt-4 text-base font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {section.name}
                 </span>
                 {section.description ? (
                   <span
-                    className="mt-1 text-[13px] leading-[1.45]"
+                    className="mt-1 text-sm leading-[1.45]"
                     style={{ color: T.ink.dim }}
                   >
                     {section.description}

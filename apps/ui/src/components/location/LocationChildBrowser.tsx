@@ -131,16 +131,12 @@ export function LocationChildBrowser({
     <section id={id} className="scroll-mt-24" aria-labelledby={`${id}-title`}>
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h2
-            id={`${id}-title`}
-            className="m-0 text-[clamp(30px,4vw,44px)] leading-tight"
-            style={{ fontFamily: T.font.serif }}
-          >
+          <h2 id={`${id}-title`} className="type-h2 m-0">
             {title}
           </h2>
           {description ? (
             <p
-              className="mt-3 max-w-[65ch] text-[15px] leading-relaxed"
+              className="mt-3 max-w-[65ch] text-base leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               {description}
@@ -246,7 +242,7 @@ export function LocationChildBrowser({
         {countsAvailable ? (
           <div
             className={
-              "hidden gap-4 border-b px-[22px] py-3 text-[13px] font-semibold sm:grid " +
+              "hidden gap-4 border-b px-[22px] py-3 text-sm font-semibold sm:grid " +
               columns
             }
             style={{
@@ -278,25 +274,25 @@ export function LocationChildBrowser({
                 <div className="min-w-0">
                   <GlobalLink
                     href={item.href}
-                    className="inline-flex min-h-11 items-center text-[20px] leading-tight hover:underline"
-                    style={{ fontFamily: T.font.serif }}
+                    className="inline-flex min-h-11 items-center text-xl leading-tight hover:underline"
+                    style={{ fontFamily: T.font.sans }}
                   >
                     {item.name}
                   </GlobalLink>
                   {item.subtitle && !hasCoverage ? (
-                    <p className="m-0 text-[12px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-xs" style={{ color: T.ink.dim }}>
                       {item.subtitle}
                     </p>
                   ) : null}
                 </div>
                 {hasCoverage ? (
-                  <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                  <span className="text-sm" style={{ color: T.ink.dim }}>
                     {item.coverage ?? "Unavailable"}
                   </span>
                 ) : null}
                 {countsAvailable ? (
                   <>
-                    <span className="text-[15px] font-semibold tabular-nums sm:text-right">
+                    <span className="text-base font-semibold tabular-nums sm:text-right">
                       {formatCount(item.count)}
                     </span>
                     {item.count > 0 ? (
@@ -316,7 +312,7 @@ export function LocationChildBrowser({
                             />
                           </span>
                           <span
-                            className="w-12 text-right text-[13px] tabular-nums"
+                            className="w-12 text-right text-sm tabular-nums"
                             style={{ color: T.ink.dim }}
                           >
                             {share > 0 && share < 0.1
@@ -340,7 +336,7 @@ export function LocationChildBrowser({
                       <GlobalLink
                         href={item.addHref ?? addHref}
                         aria-label={"Add the first library in " + item.name}
-                        className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border px-3 text-[13px] font-semibold no-underline hover:bg-(--t-bg-surface)"
+                        className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border px-3 text-sm font-semibold no-underline hover:bg-(--t-bg-surface)"
                         style={{ color: T.ink.base, borderColor: T.border.hi }}
                       >
                         Add a library
@@ -354,7 +350,7 @@ export function LocationChildBrowser({
         </ul>
         {preview ? (
           <div
-            className="flex flex-wrap items-center justify-between gap-3 border-t px-[22px] py-3 text-[14px]"
+            className="flex flex-wrap items-center justify-between gap-3 border-t px-[22px] py-3 text-sm"
             style={{ borderColor: T.border.line, color: T.ink.dim }}
           >
             <p className="m-0 flex-1">
@@ -377,7 +373,7 @@ export function LocationChildBrowser({
       </div>
       {countsAvailable && populated > 0 && view !== "empty" ? (
         <p
-          className="mt-4 text-[13px] leading-relaxed"
+          className="mt-4 text-sm leading-relaxed"
           style={{ color: T.ink.dim }}
         >
           Bars show how this index’s place-based records are spread across
@@ -391,15 +387,12 @@ export function LocationChildBrowser({
         >
           <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
             <div className="flex-1">
-              <h3
-                className="m-0 text-[28px] leading-tight"
-                style={{ fontFamily: T.font.serif }}
-              >
+              <h3 className="type-h3 m-0">
                 {formatCount(empty)} {empty === 1 ? noun.singular : noun.plural}{" "}
                 with no documented libraries yet
               </h3>
               <p
-                className="mt-1.5 mb-0 text-[15px] leading-[1.55]"
+                className="mt-1.5 mb-0 text-base leading-[1.55]"
                 style={{ color: T.ink.dim }}
               >
                 No one has added a library here yet — it doesn’t mean there are
@@ -428,7 +421,7 @@ export function LocationChildBrowser({
                 >
                   <GlobalLink
                     href={item.href}
-                    className="inline-flex min-h-11 items-center text-[15px] font-semibold underline underline-offset-3"
+                    className="inline-flex min-h-11 items-center text-base font-semibold underline underline-offset-3"
                     style={{ color: T.ink.base }}
                   >
                     {item.name}
@@ -436,7 +429,7 @@ export function LocationChildBrowser({
                   <GlobalLink
                     href={item.addHref ?? addHref}
                     aria-label={"Add the first library in " + item.name}
-                    className="inline-flex min-h-11 items-center justify-center rounded-full border px-3 text-[13px] font-semibold no-underline hover:bg-(--t-bg-surface)"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border px-3 text-sm font-semibold no-underline hover:bg-(--t-bg-surface)"
                     style={{ color: T.ink.base, borderColor: T.border.hi }}
                   >
                     Add a library

@@ -14,6 +14,8 @@ Writer section and place pickers choose each document's article language, config
 
 ## Writing and review
 
+Every Knowledge article has a Markdown representation at `/knowledge/{section}/{slug}.md`, with the same optional locale prefix and `contentLang` query as its HTML page. The export preserves the published body, public links and media, identifies its canonical HTML source, and redirects outdated section paths. It always reads published content, even when the requester has a CMS preview cookie. HTML article metadata advertises the Markdown alternate. `/llms.txt` lists every published Knowledge variant in the supported content languages, using paginated public catalogue reads; an unavailable or incomplete catalogue returns 503 rather than a partial list. CMS reads use the existing five-minute tagged cache and article/taxonomy invalidation. These routes retain beta and staging access rules.
+
 Signed-in members can draft Journal stories and propose revisions to their own stories. Journal editors can revise other authors' work in their granted languages. Knowledge direct editing remains scoped to Knowledge editors. Library staff roles do not confer article publication or discussion moderation authority.
 
 Drafts are private and resumable. Submitting freezes the review payload. A different, scoped moderator approves, requests changes or rejects it. Requested changes reopen a private draft; resubmitting creates another audited review snapshot. An approved revision keeps the original author; editors and translators receive contributor credit.

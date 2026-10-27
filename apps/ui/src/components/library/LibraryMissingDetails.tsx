@@ -49,9 +49,7 @@ export function LibraryMissingDetails({
             className="grid gap-x-5 gap-y-1 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
           >
             <div>
-              <h3 className="m-0 text-sm font-semibold">
-                {t(`missing.${key}.title`)}
-              </h3>
+              <h3 className="type-h3 m-0">{t(`missing.${key}.title`)}</h3>
               <p
                 className="m-0 mt-1 text-sm leading-relaxed"
                 style={{ color: T.ink.dim }}

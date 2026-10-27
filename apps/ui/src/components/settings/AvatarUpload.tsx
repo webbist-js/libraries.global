@@ -90,8 +90,8 @@ export function AvatarUpload({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: T.font.serif,
-          fontSize: "20px",
+          fontFamily: T.font.sans,
+          fontSize: "var(--type-body-xl-size)",
           fontWeight: 500,
           color: palette.fg,
           flexShrink: 0,
@@ -133,7 +133,7 @@ export function AvatarUpload({
             border: `1px solid ${T.border.hi}`,
             background: T.bg.deep,
             color: T.ink.base,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             fontWeight: 600,
             fontFamily: T.font.sans,
             cursor: uploading ? "not-allowed" : "pointer",
@@ -145,7 +145,7 @@ export function AvatarUpload({
         <p
           style={{
             margin: "6px 0 0",
-            fontSize: "13px",
+            fontSize: "var(--type-body-small-size)",
             color: T.ink.dim,
             fontFamily: T.font.sans,
           }}

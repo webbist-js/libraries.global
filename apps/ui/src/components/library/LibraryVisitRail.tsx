@@ -76,7 +76,7 @@ export function LibraryVisitRail({
       ? measure(linkActions[label as keyof typeof linkActions])
       : {}
   const action =
-    "flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm font-semibold no-underline hover:bg-(--t-bg-surface)"
+    "flex min-h-12 items-center justify-between gap-3 border-t border-(--t-border-line) py-3 text-base font-semibold underline underline-offset-4 hover:bg-(--t-bg-surface)"
 
   return (
     <section
@@ -84,11 +84,7 @@ export function LibraryVisitRail({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="visit-rail-heading"
     >
-      <h2
-        id="visit-rail-heading"
-        className="m-0 text-[22px] leading-tight"
-        style={{ fontFamily: T.font.serif }}
-      >
+      <h2 id="visit-rail-heading" className="type-panel-title m-0">
         {t(
           type === "Digital"
             ? "onlineAccess"
@@ -107,7 +103,7 @@ export function LibraryVisitRail({
           />
         </div>
       ) : null}
-      <div className="mt-3 grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
+      <div className="mt-4 grid">
         {type !== "Digital" && type !== "Mobile" && coords ? (
           <a
             className={action}
@@ -183,7 +179,7 @@ export function LibraryVisitRail({
       >
         <GlobalLink
           href="#contribute"
-          className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold no-underline hover:underline"
+          className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold no-underline hover:underline"
         >
           {t("improve")}{" "}
           <span

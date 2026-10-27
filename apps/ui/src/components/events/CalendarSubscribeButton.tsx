@@ -63,7 +63,7 @@ export function CalendarSubscribeButton({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "10px",
+                fontSize: "var(--type-caption-size)",
                 letterSpacing: ".1em",
               }}
             >
@@ -89,7 +89,7 @@ export function CalendarSubscribeButton({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "10px",
+                fontSize: "var(--type-caption-size)",
                 letterSpacing: ".1em",
               }}
             >

@@ -59,7 +59,7 @@ node apps/strapi/scripts/update-team-api-guides.mjs --apply
 
 Use `--local` explicitly for development. Private previews and backups stay under ignored `.scratch/team-api-guides/`. The helper refuses unpublished edits and concurrent changes. It does not provision Teams, create keys, contact testers, change billing flags or deploy code.
 
-The current rollout includes a temporary new-subscription checkout notice. Remove that notice from `team-api-knowledge-content.mjs` only after the matching UI release passes an owned sandbox checkout, settled-payment activation and first-key acceptance. Keep Stripe Test mode and live availability separate. A source regression test or synthetic paid fixture does not prove provider checkout.
+The current rollout includes a beta-verification notice. Sandbox checkout and settled-payment activation have passed owned testing; the copy must not describe checkout as blocked. Keep the qualification in `team-api-knowledge-content.mjs` until dashboard-created key, real request and usage acceptance also pass. Keep Stripe Test mode and live availability separate. A source regression test or synthetic paid fixture does not prove provider checkout or complete API acceptance.
 
 The older `update-billing-docs.mjs` script remains a local feature migration. It now preserves the current Team pricing section; use an explicit reviewed production update for editorial work.
 

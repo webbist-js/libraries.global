@@ -22,7 +22,7 @@ import {
 } from "./imagePreparation"
 
 const field =
-  "min-h-[44px] w-full rounded-xl border border-(--t-border-hi) bg-(--t-bg-deep) px-3 py-2 text-[16px] font-normal"
+  "min-h-[44px] w-full rounded-xl border border-(--t-border-hi) bg-(--t-bg-deep) px-3 py-2 text-base font-normal"
 const centered = { x: 50, y: 50 }
 
 export function ArticleImageDialog({
@@ -112,7 +112,7 @@ export function ArticleImageDialog({
           <DialogTitle
             ref={titleRef}
             tabIndex={-1}
-            className="text-2xl outline-none"
+            className="type-h2 outline-none"
           >
             {t("title")}
           </DialogTitle>

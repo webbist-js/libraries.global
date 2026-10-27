@@ -106,7 +106,7 @@ export function AtlasStopPanel({
           <>
             <div className="min-h-10 pr-14">
               <span
-                className="inline-flex min-h-6 items-center gap-2 rounded-full px-3 py-1 text-[13px] font-bold"
+                className="inline-flex min-h-6 items-center gap-2 rounded-full px-3 py-1 text-sm font-bold"
                 style={{
                   background: TYPE_TINT.public.bg,
                   color: T.map.stopRing,
@@ -125,12 +125,7 @@ export function AtlasStopPanel({
             >
               <Icon aria-hidden="true" icon="mdi:close" width={20} />
             </button>
-            <h2
-              className="mt-2 mb-0 text-[32px] leading-[1.15]"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
-              {stop.name}
-            </h2>
+            <h2 className="type-h2 mt-2 mb-0">{stop.name}</h2>
           </>
         ) : null}
         <p className="mt-2 mb-0" style={{ color: T.ink.dim }}>
@@ -183,14 +178,14 @@ export function AtlasStopPanel({
               </StatusBadge>
               <p className="m-0 text-base font-bold">{copy.sentence}</p>
               {updated ? (
-                <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+                <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                   Updated {updated} by the crew
                 </p>
               ) : null}
             </div>
           ) : null}
           <section aria-labelledby="atlas-stop-visits">
-            <h3 id="atlas-stop-visits" className="m-0 mb-2 text-base font-bold">
+            <h3 id="atlas-stop-visits" className="type-h3 m-0 mb-2">
               Visits to this stop
             </h3>
             {visits.length ? (
@@ -246,7 +241,7 @@ export function AtlasStopPanel({
             )}
           </section>
           <section aria-labelledby="atlas-stop-next">
-            <h3 id="atlas-stop-next" className="m-0 mb-1 text-base font-bold">
+            <h3 id="atlas-stop-next" className="type-h3 m-0 mb-1">
               Next visits
             </h3>
             {next.length ? (
@@ -293,7 +288,7 @@ export function AtlasStopPanel({
                       </div>
                       {visit.cancelledBy ? (
                         <p
-                          className="m-0 mt-1 text-[13px]"
+                          className="m-0 mt-1 text-sm"
                           style={{ color: T.accent.danger }}
                         >
                           Not stopping{reason ? ` · ${reason}` : ""}
@@ -312,7 +307,7 @@ export function AtlasStopPanel({
           <div className="flex flex-wrap gap-2 pt-1">
             <button
               type="button"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
               onClick={() => setDrawer(true)}
               {...analyticsAttributes("mobile_service_action", {
                 interaction_source: "atlas_panel",
@@ -333,7 +328,7 @@ export function AtlasStopPanel({
                 })}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-[15px] font-semibold hover:bg-(--t-bg-surface)"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-base font-semibold hover:bg-(--t-bg-surface)"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
               >
                 Directions

@@ -18,7 +18,7 @@ export type ContinentCount = { name: string; count: number }
 function MissingChip({ label }: { label: string }) {
   return (
     <span
-      className="rounded-full px-2.5 py-1 text-[12.5px] font-semibold"
+      className="rounded-full px-2.5 py-1 text-sm font-semibold"
       style={{ background: "var(--tint-special-bg)", color: T.accent.danger }}
     >
       Missing: {label}
@@ -47,12 +47,8 @@ export function RecordsThatNeedYou({
         <div>
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
             <h2
-              className="m-0"
+              className="type-h2 m-0"
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "clamp(26px,3vw,32px)",
-                fontWeight: 500,
-                letterSpacing: "-0.01em",
                 color: T.ink.base,
               }}
             >
@@ -60,7 +56,7 @@ export function RecordsThatNeedYou({
             </h2>
             <GlobalLink
               href="/libraries?needs=hours,photo,facilities&sort=gaps"
-              className="text-[14px] font-semibold underline underline-offset-[3px]"
+              className="text-sm font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
               See all incomplete records
@@ -86,13 +82,13 @@ export function RecordsThatNeedYou({
               >
                 <div className="min-w-0 flex-1">
                   <p
-                    className="m-0 text-[18px] font-medium"
-                    style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                    className="m-0 text-lg font-medium"
+                    style={{ fontFamily: T.font.sans, color: T.ink.base }}
                   >
                     {record.name}
                   </p>
                   <p
-                    className="mt-0.5 mb-2 text-[14px]"
+                    className="mt-0.5 mb-2 text-sm"
                     style={{ color: T.ink.dim }}
                   >
                     {record.place}
@@ -106,7 +102,7 @@ export function RecordsThatNeedYou({
 
                 <div className="w-[104px] shrink-0">
                   <p
-                    className="m-0 mb-1.5 text-right text-[13px] font-semibold"
+                    className="m-0 mb-1.5 text-right text-sm font-semibold"
                     style={{ color: T.ink.dim }}
                   >
                     {record.percent}% complete
@@ -132,7 +128,7 @@ export function RecordsThatNeedYou({
                     name: record.name,
                     place: record.place,
                   })}
-                  className="shrink-0 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+                  className="shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
                   style={{
                     borderColor: T.border.hi,
                     color: T.ink.base,
@@ -151,19 +147,11 @@ export function RecordsThatNeedYou({
           className="flex h-fit flex-col rounded-[20px] p-7"
           style={{ background: T.ink.base, color: "#fff" }}
         >
-          <h2
-            className="m-0"
-            style={{
-              fontFamily: T.font.serif,
-              fontSize: "24px",
-              fontWeight: 500,
-              letterSpacing: "-0.01em",
-            }}
-          >
+          <h2 className="type-h2 m-0">
             Most of the world isn&rsquo;t here yet
           </h2>
           <p
-            className="mt-3 mb-5 text-[14.5px] leading-[1.6]"
+            className="mt-3 mb-5 text-sm leading-[1.6]"
             style={{ color: "rgba(255,255,255,.72)" }}
           >
             {singleContinent
@@ -182,9 +170,9 @@ export function RecordsThatNeedYou({
                     : undefined
                 }
               >
-                <dt className="text-[15px]">{continent.name}</dt>
+                <dt className="text-base">{continent.name}</dt>
                 <dd
-                  className="m-0 text-[14px]"
+                  className="m-0 text-sm"
                   style={{
                     color:
                       continent.count > 0 ? "#fff" : "rgba(255,255,255,.55)",
@@ -201,7 +189,7 @@ export function RecordsThatNeedYou({
 
           <GlobalLink
             href="/contribute/index/new"
-            className="mt-5 self-start rounded-full px-5 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90"
+            className="mt-5 self-start rounded-full px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
             style={{ background: "#fff", color: T.ink.base }}
           >
             {singleContinent

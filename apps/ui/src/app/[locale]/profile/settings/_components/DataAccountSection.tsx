@@ -95,12 +95,12 @@ export function DataAccountSection({
         <div className="flex items-center justify-between gap-4 py-4">
           <div>
             <p
-              className="m-0 text-[15px] font-medium"
+              className="m-0 text-base font-medium"
               style={{ color: T.ink.base }}
             >
               Download your data
             </p>
-            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
               A JSON file of your profile, preferences and account details.
             </p>
           </div>
@@ -129,15 +129,12 @@ export function DataAccountSection({
             <div className="flex items-center justify-between gap-4 py-4">
               <div>
                 <p
-                  className="m-0 text-[15px] font-semibold"
+                  className="m-0 text-base font-semibold"
                   style={{ color: T.accent.danger }}
                 >
                   Hide profile and sign out
                 </p>
-                <p
-                  className="m-0 mt-0.5 text-[14px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
                   Makes your profile private and signs you out. Change your
                   email preferences above before signing out.
                 </p>
@@ -156,7 +153,7 @@ export function DataAccountSection({
             {deactivateConfirm ? (
               <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
                 <p
-                  className="m-0 max-w-[52ch] text-[14px] leading-[1.5]"
+                  className="m-0 max-w-[52ch] text-sm leading-[1.5]"
                   style={{ color: T.ink.dim }}
                 >
                   Your profile will be set to private and you&rsquo;ll be signed
@@ -195,15 +192,12 @@ export function DataAccountSection({
             <div className="flex items-center justify-between gap-4 py-4">
               <div>
                 <p
-                  className="m-0 text-[15px] font-semibold"
+                  className="m-0 text-base font-semibold"
                   style={{ color: T.accent.danger }}
                 >
                   Delete account
                 </p>
-                <p
-                  className="m-0 mt-0.5 text-[14px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
                   Permanently removes your account. Accepted contributions stay
                   in the index, credited to &ldquo;a former contributor&rdquo;.
                   This can&rsquo;t be undone.
@@ -229,7 +223,7 @@ export function DataAccountSection({
             {deleteConfirm ? (
               <div className="flex flex-col gap-3 pb-4">
                 <p
-                  className="m-0 text-[14px] leading-[1.5]"
+                  className="m-0 text-sm leading-[1.5]"
                   style={{ color: T.ink.dim }}
                 >
                   All personal data will be permanently removed. Type your email
@@ -241,7 +235,7 @@ export function DataAccountSection({
                     placeholder={sessionUser.email}
                     value={deleteInput}
                     onChange={(e) => setDeleteInput(e.target.value)}
-                    className="min-w-0 flex-1 rounded-[12px] border px-3.5 py-2 text-[14px]"
+                    className="min-w-0 flex-1 rounded-[12px] border px-3.5 py-2 text-sm"
                     style={{
                       borderColor: "var(--t-danger-edge)",
                       background: T.bg.deep,

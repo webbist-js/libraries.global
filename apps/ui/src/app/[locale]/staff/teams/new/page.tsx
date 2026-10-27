@@ -6,13 +6,15 @@ import { Container } from "@/components/elementary/Container"
 import { TeamSignup } from "@/components/staff/TeamSignup"
 import { sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
+import type { NetworkWorkspace } from "@/lib/networks/types"
+import { fetchStaff } from "@/lib/staff-proxy"
 import { teamBillingConfig } from "@/lib/team-billing/config"
 import { MAX_TEAM_SEATS, MIN_TEAM_SEATS } from "@/lib/team-billing/types"
 
 export default async function NewTeamPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ seats?: string }>
+  readonly searchParams: Promise<{ seats?: string; network?: string }>
 }) {
   const [session, query] = await Promise.all([
     getSessionSSR(await headers()),
@@ -27,10 +29,21 @@ export default async function NewTeamPage({
       : MIN_TEAM_SEATS
   if (!session?.user)
     redirect(
-      `/auth/signin?callbackUrl=${encodeURIComponent(`/staff/teams/new?seats=${initialSeats}`)}`
+      `/auth/signin?callbackUrl=${encodeURIComponent(`/staff/teams/new?seats=${initialSeats}${query.network ? `&network=${encodeURIComponent(query.network)}` : ""}`)}`
     )
 
-  if (sessionTeamsOf(session.user).length) redirect("/staff/teams")
+  if (sessionTeamsOf(session.user).length)
+    redirect(
+      `/staff/teams${query.network ? `?network=${encodeURIComponent(query.network)}` : ""}`
+    )
+
+  const affiliations = query.network
+    ? null
+    : await fetchStaff<NetworkWorkspace>(session.user, "networks/me", "access")
+  const initialNetwork =
+    query.network ??
+    affiliations?.body?.affiliations.find((row) => row.status === "verified")
+      ?.network.documentId
 
   return (
     <>
@@ -45,6 +58,7 @@ export default async function NewTeamPage({
           available={teamBillingConfig().purchasing}
           verified={session.user.emailVerified}
           initialSeats={initialSeats}
+          initialNetwork={initialNetwork}
           sandbox={teamBillingConfig().mode === "sandbox"}
           user={{ name: session.user.name, email: session.user.email }}
         />

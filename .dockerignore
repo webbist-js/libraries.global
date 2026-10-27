@@ -17,6 +17,8 @@ docs
 **/.env.*
 **/*.pem
 **/*.key
+# Strapi Enterprise credentials are injected at runtime.
+**/[Ll][Ii][Cc][Ee][Nn][Ss][Ee].[Tt][Xx][Tt]
 apps/strapi/public/uploads
 apps/strapi/data
 apps/strapi/backup

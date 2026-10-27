@@ -75,7 +75,7 @@ describe("Team API onboarding publication", () => {
       "meta.nextCursor",
       "encodeURIComponent",
       "Retry-After",
-      "temporarily unavailable",
+      "full API workflow is still undergoing beta verification",
     ])
       expect(all).toContain(required)
     expect(all).not.toContain("/api/v1/libraries/{documentId}")

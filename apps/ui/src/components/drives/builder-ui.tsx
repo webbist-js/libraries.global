@@ -22,7 +22,7 @@ export const input: React.CSSProperties = {
   border: `1px solid ${T.border.hi}`,
   background: T.bg.deep,
   color: T.ink.base,
-  fontSize: 16,
+  fontSize: "var(--type-body-size)",
   fontFamily: T.font.sans,
   width: "100%",
   boxSizing: "border-box",
@@ -39,25 +39,21 @@ export const cardStyle: React.CSSProperties = {
   border: `1px solid ${T.border.line}`,
 }
 export const cardTitle: React.CSSProperties = {
-  fontFamily: T.font.serif,
-  fontSize: 26,
-  fontWeight: 500,
-  letterSpacing: "-0.01em",
   color: T.ink.base,
 }
-export const legendClass = "m-0 p-0 text-[15px] font-semibold"
-export const hintClass = "mt-0.5 mb-3 text-[14px]"
+export const legendClass = "m-0 p-0 text-base font-semibold"
+export const hintClass = "mt-0.5 mb-3 text-sm"
 
 /** The side column's cards, as `RoleApplicationAside` draws them. */
 export const railCard = "rounded-[20px] p-5 sm:p-6"
-export const railTitleClass = "m-0 text-[16px] font-semibold"
+export const railTitleClass = "m-0 text-base font-semibold"
 
 export const PRIMARY =
-  "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
 export const SECONDARY =
-  "inline-flex cursor-pointer items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex cursor-pointer items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
 export const SECONDARY_LINK =
-  "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 export const secondaryStyle: React.CSSProperties = {
   background: T.bg.deep,
   border: `1px solid ${T.border.hi}`,
@@ -69,7 +65,7 @@ export const RING =
   "has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
 
 /** A pill that holds a real checkbox or radio. */
-export const CHIP = `inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-medium transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 ${RING}`
+export const CHIP = `inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 ${RING}`
 
 /** A chosen card or row: the indigo border on a wash of the chip colour. */
 export const chosenBackground =
@@ -134,7 +130,7 @@ export function Step({
         <span
           aria-hidden="true"
           data-done={done}
-          className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-[15px] font-bold"
+          className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-base font-bold"
           style={
             done
               ? {
@@ -148,7 +144,7 @@ export function Step({
           {done ? <Icon icon="mdi:check" width={18} height={18} /> : n}
         </span>
         <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="m-0" style={cardTitle}>
+          <h2 className="type-h2 m-0" style={cardTitle}>
             <span className="sr-only">
               Step {n}
               {done ? ", done" : ""}:{" "}
@@ -157,7 +153,7 @@ export function Step({
           </h2>
           {hint ? (
             <p
-              className="m-0 text-[15px] leading-[1.6]"
+              className="m-0 text-base leading-[1.6]"
               style={{ color: T.ink.dim }}
             >
               {hint}
@@ -197,7 +193,7 @@ export function Field({
   const hintLine = hint ? (
     <p
       id={hintId}
-      className={hintBelow ? "mt-2 mb-0 text-[14px]" : hintClass}
+      className={hintBelow ? "mt-2 mb-0 text-sm" : hintClass}
       style={{ color: T.ink.dim }}
     >
       {hint}
@@ -239,7 +235,7 @@ export function FieldMessage({
   return (
     <p
       id={`${fieldId(field)}-error`}
-      className="mt-2 mb-0 flex items-start gap-1.5 text-[14px] font-semibold"
+      className="mt-2 mb-0 flex items-start gap-1.5 text-sm font-semibold"
       style={{ color: T.accent.danger }}
     >
       <Icon
@@ -266,7 +262,7 @@ export function CharCount({
   return (
     <span
       id={id}
-      className="text-[13px] font-semibold"
+      className="text-sm font-semibold"
       style={{ color: length > max ? T.accent.danger : T.ink.dim }}
     >
       {fmt(length)} of {fmt(max)}
@@ -335,7 +331,7 @@ export function CheckChip({
         <>
           <span
             aria-hidden="true"
-            className="ml-0.5 rounded-full px-1.5 py-px text-[12px] font-semibold"
+            className="ml-0.5 rounded-full px-1.5 py-px text-xs font-semibold"
             style={{
               background: checked ? T.bg.deep : T.bg.muted,
               color: checked ? T.accent.primaryHover : T.ink.dim,
@@ -396,7 +392,7 @@ export function Segments<V extends string | number>({
           return (
             <label
               key={String(o.value)}
-              className={`inline-flex min-h-12 cursor-pointer items-center rounded-[14px] px-4 text-[15px] font-medium transition-colors ${RING}`}
+              className={`inline-flex min-h-12 cursor-pointer items-center rounded-[14px] px-4 text-base font-medium transition-colors ${RING}`}
               style={{
                 border: `1.5px solid ${chosen ? T.accent.primary : T.border.hi}`,
                 background: chosen ? T.accent.chip : T.bg.deep,
@@ -469,9 +465,9 @@ export function Disclosure({
             style={{ color: T.accent.primary }}
           />
         ) : null}
-        <span className="text-[15px] font-semibold">{title}</span>
+        <span className="text-base font-semibold">{title}</span>
         {hint ? (
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             {hint}
           </span>
         ) : null}

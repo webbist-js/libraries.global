@@ -40,20 +40,15 @@ export function ArticlePreview({
       }
     >
       <p
-        className="m-0 mb-3 text-[13px] font-semibold tracking-wide uppercase"
+        className="m-0 mb-3 text-sm font-semibold tracking-wide uppercase"
         style={{ color: T.ink.dim }}
       >
         {kind === "journal" ? tUi("journal") : tUi("knowledge")} ·{" "}
         {tUi("preview")}
       </p>
       <Heading
-        className="m-0"
+        className="type-panel-title m-0"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: compact ? "clamp(28px,2.5vw,36px)" : "clamp(34px,4vw,48px)",
-          fontWeight: 500,
-          lineHeight: 1.1,
-          letterSpacing: "-0.02em",
           color: title ? T.ink.base : T.ink.faint,
         }}
       >
@@ -63,8 +58,8 @@ export function ArticlePreview({
         <p
           className={
             compact
-              ? "mt-4 mb-0 text-[17px] leading-relaxed"
-              : "mt-4 mb-0 text-[19px] leading-[1.55]"
+              ? "mt-4 mb-0 text-base leading-relaxed"
+              : "mt-4 mb-0 text-lg leading-[1.55]"
           }
           style={{ color: T.ink.dim }}
         >
@@ -78,7 +73,7 @@ export function ArticlePreview({
       {blocks.length > 0 ? (
         <ArticleBodyBlocks blocks={blocks} />
       ) : (
-        <p className="m-0 text-[16px]" style={{ color: T.ink.faint }}>
+        <p className="m-0 text-base" style={{ color: T.ink.faint }}>
           {tUi("nothing_written_yet")}{" "}
         </p>
       )}

@@ -49,7 +49,7 @@ function ActionIcon({ action }: { readonly action: ActionMeta }) {
 function Minutes({ minutes }: { readonly minutes: number }) {
   return (
     <span
-      className="flex items-center gap-1.5 text-[14px]"
+      className="flex items-center gap-1.5 text-sm"
       style={{ color: T.ink.dim }}
     >
       <Icon
@@ -64,7 +64,7 @@ function Minutes({ minutes }: { readonly minutes: number }) {
 }
 
 const cardTitle: React.CSSProperties = {
-  fontFamily: T.font.serif,
+  fontFamily: T.font.sans,
   fontWeight: 500,
   lineHeight: 1.15,
   letterSpacing: "-0.01em",
@@ -160,7 +160,7 @@ export function HubActionChooser({
               style={{ background: T.bg.space }}
             >
               <p
-                className="m-0 flex flex-wrap items-center gap-x-2 px-1 text-[16px]"
+                className="m-0 flex flex-wrap items-center gap-x-2 px-1 text-base"
                 id={headingId}
               >
                 <Icon
@@ -192,7 +192,7 @@ export function HubActionChooser({
                         {action.title}
                       </span>
                       <span
-                        className="flex-1 text-[15px] leading-[1.5]"
+                        className="flex-1 text-base leading-[1.5]"
                         style={{ color: T.ink.dim }}
                       >
                         {action.description}
@@ -215,7 +215,7 @@ export function HubActionChooser({
                           {action.title}
                         </span>
                         <span
-                          className="text-[15px] leading-[1.5]"
+                          className="text-base leading-[1.5]"
                           style={{ color: T.ink.dim }}
                         >
                           {action.description}

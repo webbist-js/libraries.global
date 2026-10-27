@@ -216,7 +216,7 @@ export function AtlasSearchTab({
           onChange={(e) => onQuery(e.target.value)}
           placeholder={tUi("library_stop_or_place")}
           autoComplete="off"
-          className="h-full min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-(--t-ink-dim)"
+          className="h-full min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-(--t-ink-dim)"
           style={{ color: T.ink.base }}
         />
         {query ? (
@@ -249,7 +249,7 @@ export function AtlasSearchTab({
               !mobileStatus.pending &&
               !mobileStatus.failed &&
               mobileStatus.count === 0)) ? (
-            <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-base" style={{ color: T.ink.dim }}>
               Nothing in the atlas matches “{query.trim()}”. Try a town, region,
               stop or library name.
             </p>
@@ -371,14 +371,14 @@ export function AtlasSearchTab({
           ) : null}
           {presets.length > 0 || onMobilePreset ? (
             <div className="flex flex-col gap-2.5">
-              <p className="m-0 text-[14px] font-bold">Try</p>
+              <p className="m-0 text-sm font-bold">Try</p>
               <div className="flex flex-wrap gap-2">
                 {onMobilePreset ? (
                   <>
                     <button
                       type="button"
                       onClick={() => onMobilePreset("today")}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-[14px] font-semibold"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold"
                       style={{ borderColor: T.border.hi }}
                     >
                       <Icon name="bus" size={16} color={T.map.stopRing} />
@@ -387,7 +387,7 @@ export function AtlasSearchTab({
                     <button
                       type="button"
                       onClick={() => onMobilePreset("live")}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-[14px] font-semibold"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold"
                       style={{ borderColor: T.border.hi }}
                     >
                       <Icon name="bus" size={16} color={T.map.stopRing} />
@@ -400,7 +400,7 @@ export function AtlasSearchTab({
                     key={p.label}
                     type="button"
                     onClick={() => onPreset(p.patch)}
-                    className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-[14px] font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
+                    className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
                     style={{ borderColor: T.border.hi }}
                   >
                     {p.label}
@@ -422,10 +422,8 @@ export function AtlasSearchTab({
           <span className="mt-0.5" style={{ color: T.accent.primary }}>
             <Icon name="layers" size={20} />
           </span>
-          <span className="text-[14px] leading-normal">
-            <strong className="block text-[15px]">
-              Add context to the map
-            </strong>
+          <span className="text-sm leading-normal">
+            <strong className="block text-base">Add context to the map</strong>
             Density, opening hours and more live in the Layers tab.
           </span>
         </button>

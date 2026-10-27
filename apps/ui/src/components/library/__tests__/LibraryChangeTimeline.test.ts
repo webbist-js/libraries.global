@@ -130,9 +130,7 @@ describe("LibraryChangeTimeline", () => {
       "See what changed, field by field, with Supporter or Pro."
     )
     expect(lines).toHaveLength(1)
-    expect(lines[0]!.closest("a")!.getAttribute("href")).toBe(
-      "/contribute/membership"
-    )
+    expect(lines[0]!.closest("a")!.getAttribute("href")).toBe("/plans")
     expect(container.querySelector("[data-previous]")).toBe(null)
   })
 

@@ -15,10 +15,8 @@ export function StepsCard({
       aria-label={title}
       className="rounded-3xl bg-(--t-ink-base) p-6 text-white"
     >
-      <h2 className="m-0 font-serif text-[26px] leading-tight font-medium text-white">
-        {title}
-      </h2>
-      <ol className="mt-4 mb-0 grid list-none gap-4 p-0 text-[15px] leading-[1.6]">
+      <h2 className="type-panel-title m-0 text-white">{title}</h2>
+      <ol className="mt-4 mb-0 grid list-none gap-4 p-0 text-base leading-[1.6]">
         {steps.map((step, index) => (
           <li key={step.id} className="flex items-start gap-3">
             <span
@@ -34,7 +32,7 @@ export function StepsCard({
         ))}
       </ol>
       {footer && (
-        <div className="mt-4 text-[15px] font-bold text-white [&_a]:underline [&_a]:underline-offset-4">
+        <div className="mt-4 border-t border-white/20 pt-3 text-base font-semibold text-white [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center [&_a]:underline [&_a]:underline-offset-4">
           {footer}
         </div>
       )}

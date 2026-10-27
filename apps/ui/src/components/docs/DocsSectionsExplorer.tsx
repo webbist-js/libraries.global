@@ -30,7 +30,7 @@ export function DocsSectionsExplorer({
     <section aria-labelledby="docs-sections-heading">
       <h2
         id="docs-sections-heading"
-        className="m-0 mb-3 text-sm font-semibold text-(--t-ink-dim)"
+        className="type-small-heading m-0 mb-3 text-(--t-ink-dim)"
       >
         {t("allSections")}
       </h2>
@@ -76,10 +76,7 @@ function SectionCard({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-            <h3
-              id={`docs-${section.slug}`}
-              className="m-0 font-serif text-[24px] leading-tight font-medium"
-            >
+            <h3 id={`docs-${section.slug}`} className="type-h3 m-0">
               <GlobalLink
                 href={href}
                 className="transition-colors hover:text-(--t-accent-primary)"

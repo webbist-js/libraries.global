@@ -102,7 +102,7 @@ function MenuLink({
     >
       <Link
         href={href}
-        className="flex w-full items-center gap-3 px-2.5 py-2.5 text-[15px] font-medium"
+        className="flex w-full items-center gap-3 px-2.5 py-2.5 text-base font-medium"
         style={{ color: T.ink.base }}
       >
         <Icon
@@ -133,7 +133,6 @@ export function GlobalLoggedUserMenu({
   } | null
 }) {
   const tUi = useUiTranslations("ui")
-  const tContact = useUiTranslations("contactModal.contact")
   const { openContact } = useContactModal()
   const menuTrigger = useRef<HTMLButtonElement>(null)
   const supportSelected = useRef(false)
@@ -181,7 +180,7 @@ export function GlobalLoggedUserMenu({
             cursor: "pointer",
             transition: "background 150ms",
             fontFamily: T.font.sans,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             fontWeight: 600,
             color: T.ink.base,
           }}
@@ -238,13 +237,13 @@ export function GlobalLoggedUserMenu({
           />
           <div className="min-w-0 flex-1">
             <p
-              className="m-0 truncate text-[16px] font-semibold"
+              className="m-0 truncate text-base font-semibold"
               style={{ color: T.ink.base }}
             >
               {user.name || firstName}
             </p>
             <p
-              className="m-0 mt-0.5 truncate text-[14px]"
+              className="m-0 mt-0.5 truncate text-sm"
               style={{ color: T.ink.dim }}
             >
               {username ? `@${username}` : user.email}
@@ -321,11 +320,11 @@ export function GlobalLoggedUserMenu({
             {tUi("notifications")}{" "}
           </MenuLink>
           <MenuLink
-            href="/contribute/membership"
+            href="/profile/membership"
             icon="mdi:star-circle-outline"
             trailing={
               <span
-                className="ml-auto rounded-full px-2 py-0.5 text-[12px] font-semibold"
+                className="ml-auto rounded-full px-2 py-0.5 text-xs font-semibold"
                 style={{
                   background:
                     planName === "Free" ? T.bg.surface : T.accent.chip,
@@ -342,7 +341,7 @@ export function GlobalLoggedUserMenu({
           {hasMembershipSupport ? (
             <DropdownMenuItem
               aria-haspopup="dialog"
-              className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-2.5 py-2.5 text-[15px] font-medium focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-2.5 py-2.5 text-base font-medium focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
               onSelect={() => {
                 supportSelected.current = true
               }}
@@ -356,7 +355,7 @@ export function GlobalLoggedUserMenu({
                 className="shrink-0"
                 style={{ color: T.ink.dim }}
               />
-              <span>{tContact("types.membership_support")}</span>
+              <span>{tUi("support")}</span>
             </DropdownMenuItem>
           ) : null}
           <MenuLink href="/profile/settings" icon="mdi:cog-outline">

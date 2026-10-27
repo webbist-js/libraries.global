@@ -70,7 +70,7 @@ export function SelectField({
         className={cn(
           "min-h-11 w-full rounded-xl border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base)",
           pill &&
-            "min-h-[44px] w-auto min-w-[180px] gap-2.5 rounded-full px-4 text-[15px] font-semibold shadow-none transition-colors hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) data-[size=default]:h-[44px] [&_svg]:opacity-100",
+            "min-h-[44px] w-auto min-w-[180px] gap-2.5 rounded-full px-4 text-base font-semibold shadow-none transition-colors hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) data-[size=default]:h-[44px] [&_svg]:opacity-100",
           className
         )}
       >

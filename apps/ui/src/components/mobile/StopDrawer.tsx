@@ -76,12 +76,7 @@ export function StopDrawer({
                 </li>
               ))}
           </ul>
-          <h3
-            className="mt-4 mb-2 text-xl"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            Next visits
-          </h3>
+          <h3 className="type-h3 mt-4 mb-2">Next visits</h3>
           {next.length ? (
             <table className="w-full text-left">
               <caption className="sr-only">

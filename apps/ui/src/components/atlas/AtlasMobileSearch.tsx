@@ -125,13 +125,10 @@ export function AtlasMobileSearch({
                   />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold">
+                  <span className="block truncate text-base font-semibold">
                     {library.name}
                   </span>
-                  <span
-                    className="block text-[13px]"
-                    style={{ color: T.ink.dim }}
-                  >
+                  <span className="block text-sm" style={{ color: T.ink.dim }}>
                     {library.libraryType === "Mobile"
                       ? "Mobile library"
                       : tUi("library")}

@@ -404,7 +404,7 @@ function DiscussionThreadPanel({
       {footerAction}
       <Link
         href={`/community/discussions/${encodeURIComponent(id)}`}
-        className="inline-flex min-h-[36px] items-center gap-1 text-[13px] font-semibold text-(--t-ink-dim) hover:text-(--t-accent-primary) hover:underline"
+        className="inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-(--t-ink-dim) hover:text-(--t-accent-primary) hover:underline"
       >
         {t("openDiscussion")}
         <ArrowUpRight size={14} aria-hidden />
@@ -507,14 +507,14 @@ function DiscussionThreadPanel({
                 label={thread.subject?.name ?? t("threads")}
                 style={{ background: palette.bg, color: palette.fg }}
               />
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-(--t-bg-muted) px-3 py-1 text-[13px]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-(--t-bg-muted) px-3 py-1 text-sm">
                 <Languages size={13} aria-hidden />
                 {languageName(thread.language, languages, locale)}
               </span>
               {targetHref && thread.target && (
                 <a
                   href={targetHref}
-                  className="inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-[13px] text-(--t-accent-primary) hover:underline"
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm text-(--t-accent-primary) hover:underline"
                   style={{ background: palette.soft }}
                 >
                   <Link2 size={13} className="shrink-0" aria-hidden />
@@ -525,7 +525,7 @@ function DiscussionThreadPanel({
               )}
             </div>
             <h1
-              className="m-0 max-w-[25ch] font-serif text-[clamp(34px,4vw,52px)] leading-[1.1] font-semibold tracking-tight text-balance"
+              className="type-h1 m-0 max-w-[25ch] text-balance"
               lang={thread.language}
             >
               {thread.title ||
@@ -535,7 +535,7 @@ function DiscussionThreadPanel({
             </h1>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
               {thread.state === "visible" ? (
-                <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-(--t-ink-dim)">
+                <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-(--t-ink-dim)">
                   <span className="inline-flex items-center gap-1.5">
                     <UsersRound size={14} aria-hidden />
                     {t("peopleCount", {
@@ -669,7 +669,7 @@ function DiscussionThreadPanel({
             {thread.state === "visible" && (
               <section aria-label={t("replies")} className="grid gap-4">
                 {!inlineSuggestion && (
-                  <h2 className="m-0 text-xs font-bold tracking-wider text-(--t-ink-dim) uppercase">
+                  <h2 className="type-label m-0 text-(--t-ink-dim) uppercase">
                     {t("replyTotal", { count: replyCount })}
                   </h2>
                 )}
@@ -811,7 +811,7 @@ function DiscussionThreadPanel({
               (moderation.total !== 0 || Boolean(moderation.error)) && (
                 <section aria-label={t("waitingReview")} className="grid gap-3">
                   <header>
-                    <h2 className="m-0 text-[13px] font-bold tracking-wider text-[#875409] uppercase">
+                    <h2 className="type-label m-0 text-[#875409] uppercase">
                       <span
                         aria-hidden
                         className="mr-2 inline-block size-2 rounded-full bg-[#d88b18]"

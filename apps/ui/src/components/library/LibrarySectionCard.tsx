@@ -133,16 +133,10 @@ export function LibrarySectionCard({
         <div className="min-w-0">
           <h2
             id={`${id}-h`}
-            className={
-              titleClassName
-                ? `m-0 leading-tight ${titleClassName}`
-                : compact
-                  ? "m-0 text-[22px] leading-tight"
-                  : "m-0 text-[26px] leading-tight sm:text-[28px]"
-            }
+            className={`type-h2 ${
+              titleClassName ? `m-0 ${titleClassName} ` : "m-0"
+            }`}
             style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
               color: T.ink.base,
             }}
           >
@@ -150,7 +144,7 @@ export function LibrarySectionCard({
           </h2>
           {intro ? (
             <p
-              className="mt-1 mb-0 text-[14.5px] leading-normal"
+              className="mt-1 mb-0 text-sm leading-normal"
               style={{ color: T.ink.dim }}
             >
               {intro}

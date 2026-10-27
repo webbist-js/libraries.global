@@ -186,9 +186,7 @@ export function PlaceInsights({
         className="rounded-2xl border p-6"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
-        <h2 className="m-0 text-[28px]" style={{ fontFamily: T.font.serif }}>
-          The index in {name}
-        </h2>
+        <h2 className="type-h2 m-0">The index in {name}</h2>
         <p
           className="mt-3 mb-0 text-base leading-relaxed"
           style={{ color: T.ink.dim }}
@@ -238,15 +236,13 @@ export function PlaceInsights({
       </section>
     )
   const cardStyle = { background: T.bg.deep, borderColor: T.border.line }
-  const headingStyle = { fontFamily: T.font.serif, color: T.ink.base }
+  const headingStyle = {
+    color: T.ink.base,
+  }
 
   return (
     <section aria-labelledby={"insights-" + slug}>
-      <h2
-        id={"insights-" + slug}
-        className="m-0 text-[clamp(30px,4vw,40px)] leading-tight"
-        style={headingStyle}
-      >
+      <h2 id={"insights-" + slug} className="type-h2 m-0" style={headingStyle}>
         What the index shows for {name}
       </h2>
       <p
@@ -262,13 +258,10 @@ export function PlaceInsights({
           className="flex flex-col rounded-[22px] border p-6"
           style={cardStyle}
         >
-          <h3
-            className="m-0 mb-3 text-[26px] leading-tight"
-            style={headingStyle}
-          >
+          <h3 className="type-h3 m-0 mb-3" style={headingStyle}>
             Library types
           </h3>
-          <p className="mb-4 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="mb-4 text-sm" style={{ color: T.ink.dim }}>
             {small
               ? "Types recorded so far."
               : "Share of all " + number(total) + " documented libraries."}
@@ -300,7 +293,7 @@ export function PlaceInsights({
             </ul>
           )}
           <p
-            className="mt-auto mb-0 pt-4 text-[13px] leading-[1.5]"
+            className="mt-auto mb-0 pt-4 text-sm leading-[1.5]"
             style={{ color: T.ink.dim }}
           >
             Select a type to search it. A mobile library counts once, not once
@@ -311,10 +304,7 @@ export function PlaceInsights({
           className="flex flex-col rounded-[22px] border p-6"
           style={cardStyle}
         >
-          <h3
-            className="m-0 mb-3 text-[26px] leading-tight"
-            style={headingStyle}
-          >
+          <h3 className="type-h3 m-0 mb-3" style={headingStyle}>
             Where records are
           </h3>
           {!childrenAvailable || !typesAvailable ? (
@@ -377,7 +367,7 @@ export function PlaceInsights({
                 </GlobalLink>
               ) : null}
               <p
-                className="mt-auto mb-0 pt-4 text-[13px] leading-[1.5]"
+                className="mt-auto mb-0 pt-4 text-sm leading-[1.5]"
                 style={{ color: T.ink.dim }}
               >
                 Geographic shares exclude digital libraries.
@@ -394,13 +384,10 @@ export function PlaceInsights({
           className="flex flex-col rounded-[22px] border p-6"
           style={cardStyle}
         >
-          <h3
-            className="m-0 mb-3 text-[26px] leading-tight"
-            style={headingStyle}
-          >
+          <h3 className="type-h3 m-0 mb-3" style={headingStyle}>
             Missing details
           </h3>
-          <p className="mb-4 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="mb-4 text-sm" style={{ color: T.ink.dim }}>
             Records needing each detail, out of those it applies to.
           </p>
           {gapRows === null ? (
@@ -449,7 +436,7 @@ export function PlaceInsights({
                 </p>
               ) : null}
               <p
-                className="mt-auto mb-0 pt-4 text-[13px] leading-[1.5]"
+                className="mt-auto mb-0 pt-4 text-sm leading-[1.5]"
                 style={{ color: T.ink.dim }}
               >
                 One record may need several details. These counts overlap and

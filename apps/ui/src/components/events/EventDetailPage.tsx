@@ -74,8 +74,8 @@ function RelatedEventCard({ event }: { event: DetailEvent }) {
         <p
           className="line-clamp-2 leading-snug"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "0.95rem",
+            fontFamily: T.font.sans,
+            fontSize: "var(--type-body-size)",
             fontStyle: "italic",
             color: T.ink.base,
           }}
@@ -86,7 +86,7 @@ function RelatedEventCard({ event }: { event: DetailEvent }) {
           className="mt-1"
           style={{
             fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontSize: "var(--type-caption-size)",
             letterSpacing: ".1em",
             color: T.ink.faint,
           }}
@@ -171,7 +171,7 @@ export function EventDetailPage({
                   key={tag}
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "10px",
+                    fontSize: "var(--type-caption-size)",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -187,12 +187,8 @@ export function EventDetailPage({
 
             {/* Title */}
             <h1
+              className="type-h1"
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
-                fontWeight: 400,
                 color: T.ink.base,
               }}
             >
@@ -214,7 +210,7 @@ export function EventDetailPage({
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "11px",
+                    fontSize: "var(--type-caption-size)",
                     color: T.ink.dim,
                   }}
                 >
@@ -233,7 +229,7 @@ export function EventDetailPage({
                   <span
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "11px",
+                      fontSize: "var(--type-caption-size)",
                       color: T.ink.dim,
                     }}
                   >
@@ -254,7 +250,7 @@ export function EventDetailPage({
                   <span
                     style={{
                       fontFamily: T.font.mono,
-                      fontSize: "11px",
+                      fontSize: "var(--type-caption-size)",
                       color: T.ink.dim,
                     }}
                   >
@@ -276,7 +272,10 @@ export function EventDetailPage({
               <div className="mt-8">
                 <p
                   className="leading-relaxed whitespace-pre-line"
-                  style={{ color: T.ink.dim, fontSize: "1rem" }}
+                  style={{
+                    color: T.ink.dim,
+                    fontSize: "var(--type-body-size)",
+                  }}
                 >
                   {event.description}
                 </p>
@@ -329,7 +328,7 @@ export function EventDetailPage({
                   className="mb-4"
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "10px",
+                    fontSize: "var(--type-caption-size)",
                     letterSpacing: ".2em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -344,7 +343,7 @@ export function EventDetailPage({
                 </div>
                 <Link
                   href="/events"
-                  className="mt-4 inline-flex items-center gap-1.5 text-[11px] transition-colors duration-150 hover:text-(--t-accent-aurora)"
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs transition-colors duration-150 hover:text-(--t-accent-aurora)"
                   style={{
                     fontFamily: T.font.mono,
                     letterSpacing: ".12em",

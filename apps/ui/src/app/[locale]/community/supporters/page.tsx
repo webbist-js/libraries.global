@@ -69,14 +69,9 @@ const FAQ_PAIRS = [
 ] as const
 const FAQ = FAQ_PAIRS.map(([q, a]) => ({ q, a }))
 
-const heading = {
-  fontFamily: T.font.serif,
-  fontWeight: 500,
-  fontSize: "clamp(30px,3vw,42px)",
-  lineHeight: 1.1,
-}
+const heading = {}
 const pill =
-  "inline-flex items-center justify-center rounded-full border px-5 py-2.5 text-[14px] font-semibold no-underline"
+  "inline-flex items-center justify-center rounded-full border px-5 py-2.5 text-sm font-semibold no-underline"
 
 export default async function SupportersPage({
   params,
@@ -124,7 +119,7 @@ export default async function SupportersPage({
         actions={
           <div className="flex flex-wrap gap-2">
             <GlobalLink
-              href="/contribute/membership"
+              href="/plans"
               className={pill}
               style={{
                 background: T.accent.primary,
@@ -194,16 +189,8 @@ export default async function SupportersPage({
                 size="xl"
               />
               <div>
-                <h2
-                  className="m-0 text-[30px] leading-tight"
-                  style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-                >
-                  Thank you, {name}.
-                </h2>
-                <p
-                  className="mt-1 mb-0 text-[15px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <h2 className="type-h2 m-0">Thank you, {name}.</h2>
+                <p className="mt-1 mb-0 text-base" style={{ color: T.ink.dim }}>
                   {profile.profileVisibility === "public" &&
                   profile.username &&
                   profile.supporterListed !== false
@@ -230,7 +217,7 @@ export default async function SupportersPage({
           className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12"
         >
           <div>
-            <h2 id="supporter-benefits" className="m-0" style={heading}>
+            <h2 id="supporter-benefits" className="type-h2 m-0" style={heading}>
               What supporters get
             </h2>
             <ul className="mt-7 mb-0 flex list-none flex-col gap-6 p-0">
@@ -251,7 +238,7 @@ export default async function SupportersPage({
                     An optional Supporter mark
                   </p>
                   <p
-                    className="mt-1 mb-0 text-[15px]"
+                    className="mt-1 mb-0 text-base"
                     style={{ color: T.ink.dim }}
                   >
                     Shown beside your name on your profile. Hide it any time in
@@ -277,7 +264,7 @@ export default async function SupportersPage({
                 <div>
                   <p className="m-0 font-semibold">Credit on this page</p>
                   <p
-                    className="mt-1 mb-0 text-[15px]"
+                    className="mt-1 mb-0 text-base"
                     style={{ color: T.ink.dim }}
                   >
                     Your display name and, if your profile shows it, your
@@ -287,7 +274,7 @@ export default async function SupportersPage({
               </li>
             </ul>
             <p
-              className="mt-6 mb-0 max-w-xl border-t border-(--t-border-line) pt-5 text-[14px] leading-relaxed"
+              className="mt-6 mb-0 max-w-xl border-t border-(--t-border-line) pt-5 text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               That&apos;s all, on purpose. Supporting doesn&apos;t change what
@@ -300,7 +287,7 @@ export default async function SupportersPage({
             style={{ background: T.bg.space, borderColor: T.border.line }}
           >
             <p
-              className="mt-0 mb-4 text-[14px] font-semibold"
+              className="mt-0 mb-4 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               How the badge looks on a profile
@@ -313,14 +300,11 @@ export default async function SupportersPage({
               <div className="min-w-0">
                 <p
                   className="mt-0 mb-1 text-[28px] leading-tight"
-                  style={{ fontFamily: T.font.serif }}
+                  style={{ fontFamily: T.font.sans }}
                 >
                   Your name
                 </p>
-                <p
-                  className="mt-0 mb-2 text-[14px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <p className="mt-0 mb-2 text-sm" style={{ color: T.ink.dim }}>
                   @yourname · Your public location
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -334,7 +318,7 @@ export default async function SupportersPage({
               </div>
             </div>
             <p
-              className="mt-4 mb-0 text-[13px] leading-relaxed"
+              className="mt-4 mb-0 text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               The mark never shows how much someone pays. It&apos;s off your
@@ -350,19 +334,19 @@ export default async function SupportersPage({
         >
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 id="keeps-free" className="m-0" style={heading}>
+              <h2 id="keeps-free" className="type-h2 m-0" style={heading}>
                 What support keeps{" "}
                 <em className="ml-1" style={{ color: T.accent.primary }}>
                   free.
                 </em>
               </h2>
-              <p className="mt-2 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+              <p className="mt-2 mb-0 text-base" style={{ color: T.ink.dim }}>
                 For everyone, with or without a plan.
               </p>
             </div>
             <GlobalLink
-              href="/contribute/membership"
-              className="text-[14px] font-semibold underline underline-offset-4"
+              href="/plans"
+              className="text-sm font-semibold underline underline-offset-4"
               style={{ color: T.accent.primary }}
             >
               Compare all plans
@@ -391,14 +375,14 @@ export default async function SupportersPage({
                   />
                 </span>
                 <div className="min-w-0">
-                  <p className="m-0 flex flex-wrap items-center gap-1.5 text-[15px] leading-snug font-semibold">
+                  <p className="m-0 flex flex-wrap items-center gap-1.5 text-base leading-snug font-semibold">
                     {feature.title}
                     {feature.planned ? (
                       <Badge label={tUi("planned")} color="dim" />
                     ) : null}
                   </p>
                   <p
-                    className="mt-1.5 mb-0 text-[14px] leading-[1.5]"
+                    className="mt-1.5 mb-0 text-sm leading-[1.5]"
                     style={{ color: T.ink.dim }}
                   >
                     {feature.description}
@@ -429,14 +413,11 @@ export default async function SupportersPage({
           style={{ background: T.ink.base, color: T.bg.deep }}
         >
           <div>
-            <h2
-              className="m-0 text-[clamp(30px,4vw,46px)] leading-tight"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
+            <h2 className="type-h2 m-0">
               Add your name to the <em>list.</em>
             </h2>
             <p
-              className="mt-3 mb-0 max-w-xl text-[15px] leading-relaxed"
+              className="mt-3 mb-0 max-w-xl text-base leading-relaxed"
               style={{ color: T.ink.onDark }}
             >
               Supporter adds detailed library change history and exports of up
@@ -447,14 +428,14 @@ export default async function SupportersPage({
           </div>
           <div className="flex flex-wrap gap-2">
             <GlobalLink
-              href="/contribute/membership"
+              href="/plans"
               className={pill}
               style={{ background: T.bg.deep, color: T.ink.base }}
             >
               Become a supporter
             </GlobalLink>
             <GlobalLink
-              href="/contribute/membership"
+              href="/plans"
               className={pill}
               style={{ borderColor: T.ink.dim, color: T.bg.deep }}
             >

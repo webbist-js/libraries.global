@@ -10,7 +10,7 @@ import { driveHref } from "@/lib/drives/drive-view"
 import { Link } from "@/lib/navigation"
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-2 rounded-full border px-[18px] text-[15px] font-semibold no-underline transition-colors"
+  "inline-flex min-h-11 items-center gap-2 rounded-full border px-[18px] text-base font-semibold no-underline transition-colors"
 
 /**
  * "Follow drive" / "Following" on a drive's page: a toggle (`aria-pressed`)
@@ -111,7 +111,7 @@ export function DriveFollowButton({
       <span
         role="status"
         aria-live="polite"
-        className="text-[14px] font-semibold"
+        className="text-sm font-semibold"
         style={{ color: T.accent.danger }}
       >
         {feedback}

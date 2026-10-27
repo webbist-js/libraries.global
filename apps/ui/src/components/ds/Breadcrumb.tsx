@@ -94,7 +94,7 @@ export function Breadcrumb({
   return (
     <nav aria-label={tUi("breadcrumb")} className={className}>
       <ol
-        className="m-0 flex list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-[15px]"
+        className="m-0 flex list-none flex-wrap items-center gap-x-1.5 gap-y-1 p-0 text-base"
         style={{ fontFamily: T.font.sans }}
       >
         {items.map((item, i) => {

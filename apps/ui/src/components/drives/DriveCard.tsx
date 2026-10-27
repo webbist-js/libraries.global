@@ -48,7 +48,7 @@ export function DriveCard({
         {preview ? (
           opens ? (
             <span
-              className="text-[14px] font-semibold whitespace-nowrap"
+              className="text-sm font-semibold whitespace-nowrap"
               style={{ color: T.ink.dim }}
             >
               {tUi("opens")} {opens}
@@ -58,15 +58,7 @@ export function DriveCard({
           <DriveDates drive={drive} now={now} />
         )}
       </div>
-      <h3
-        className="m-0"
-        style={{
-          fontFamily: T.font.serif,
-          fontWeight: 500,
-          fontSize: 24,
-          lineHeight: 1.15,
-        }}
-      >
+      <h3 className="type-h3 m-0">
         {preview ? (
           <span style={{ color: T.ink.base }}>
             <DriveTitle title={drive.title} />
@@ -90,22 +82,19 @@ export function DriveCard({
       {place || source ? (
         <div className="flex flex-col gap-0.5">
           {place ? (
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               {place}
             </p>
           ) : null}
           {source ? (
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               {tUi("records_from")} {source}
             </p>
           ) : null}
         </div>
       ) : null}
       {preview && drive.summary ? (
-        <p
-          className="m-0 text-[14px] leading-[1.55]"
-          style={{ color: T.ink.base }}
-        >
+        <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.base }}>
           {drive.summary}
         </p>
       ) : null}
@@ -123,7 +112,7 @@ export function DriveCard({
                 style={{ width: `${progress.percent}%`, background: tint.fg }}
               />
             </span>
-            <span className="flex flex-wrap justify-between gap-x-3 text-[14px]">
+            <span className="flex flex-wrap justify-between gap-x-3 text-sm">
               <span style={{ color: T.ink.dim }}>
                 <strong style={{ color: T.ink.base }}>
                   {fmt(progress.done)}
@@ -136,7 +125,7 @@ export function DriveCard({
             </span>
           </>
         ) : (
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             Not counted yet
           </span>
         )}

@@ -27,7 +27,7 @@ const PLACES = ["continent", "country", "region", "area"] as const
 type Place = (typeof PLACES)[number]
 
 const SECONDARY =
-  "inline-flex items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2.5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
 
 const asRecord = (v: unknown) =>
   (v && typeof v === "object" && !Array.isArray(v) ? v : {}) as Record<
@@ -38,10 +38,7 @@ const idOf = (v: unknown) => (typeof v === "string" ? v : "")
 
 function GroupHeading({ children }: { children: string }) {
   return (
-    <h3
-      className="m-0 mb-2 text-[14px] font-semibold"
-      style={{ color: T.ink.dim }}
-    >
+    <h3 className="type-small-heading m-0 mb-2" style={{ color: T.ink.dim }}>
       {children}
     </h3>
   )
@@ -118,7 +115,7 @@ export function FieldsList({ fields: raw }: { readonly fields: unknown }) {
   const fields = asRecord(raw)
   if (Object.keys(fields).length === 0)
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         No details in this submission.
       </p>
     )
@@ -298,7 +295,7 @@ export function NewLibraryPanel({
         disabled={!editable || busy}
       >
         <legend
-          className="px-1 text-[15px] font-semibold"
+          className="px-1 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
           Where it goes in the atlas
@@ -315,7 +312,7 @@ export function NewLibraryPanel({
               {busy ? tUi("saving") : "Save location"}
             </button>
             {!complete ? (
-              <span className="text-[14px]" style={{ color: T.ink.dim }}>
+              <span className="text-sm" style={{ color: T.ink.dim }}>
                 Approve and publish needs a continent, country and region.
               </span>
             ) : null}
@@ -324,7 +321,7 @@ export function NewLibraryPanel({
         <p
           aria-live="polite"
           role={message && !message.ok ? "alert" : undefined}
-          className="m-0 text-[14px]"
+          className="m-0 text-sm"
           style={{ color: message?.ok ? T.accent.ok : T.accent.danger }}
         >
           {message?.text}

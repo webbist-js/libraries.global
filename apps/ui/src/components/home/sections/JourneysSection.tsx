@@ -46,11 +46,8 @@ export function JourneysSection({
                 className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 py-7 no-underline md:grid-cols-[minmax(0,1fr)_minmax(0,400px)_64px] md:gap-x-8 md:py-9"
               >
                 <span
-                  className="text-[clamp(34px,4.4vw,62px)] leading-none transition-colors group-hover:text-(--t-accent-primary)"
+                  className="type-display-compact transition-colors group-hover:text-(--t-accent-primary)"
                   style={{
-                    fontFamily: T.font.serif,
-                    fontWeight: 500,
-                    letterSpacing: "-0.02em",
                     color: T.ink.base,
                   }}
                 >
@@ -59,7 +56,7 @@ export function JourneysSection({
                 <span className="col-span-2 col-start-1 row-start-2 md:col-span-1 md:col-start-2 md:row-start-1">
                   {journey.eyebrow ? (
                     <span
-                      className="block text-[14px] font-semibold"
+                      className="block text-sm font-semibold"
                       style={{ color: TONE_COLOUR[journey.tone ?? "explore"] }}
                     >
                       {journey.eyebrow}
@@ -67,7 +64,7 @@ export function JourneysSection({
                   ) : null}
                   {journey.text ? (
                     <span
-                      className="mt-1 block text-[16px] leading-[1.6]"
+                      className="mt-1 block text-base leading-[1.6]"
                       style={{ color: T.ink.dim }}
                     >
                       {journey.text}

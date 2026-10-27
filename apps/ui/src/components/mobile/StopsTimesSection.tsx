@@ -154,9 +154,7 @@ export function StopsTimesSection({
       style={{ borderColor: T.border.line, background: T.bg.deep }}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="m-0 text-3xl" style={{ fontFamily: T.font.serif }}>
-          Stops and times
-        </h2>
+        <h2 className="type-h2 m-0">Stops and times</h2>
         {timetableUrl ? (
           <a
             href={timetableUrl}

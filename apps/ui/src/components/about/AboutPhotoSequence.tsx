@@ -170,7 +170,7 @@ export function AboutPhotoSequence({
                   </div>
                   <figcaption>
                     <p className="about-photo-place">{record.place}</p>
-                    <h3>{record.name}</h3>
+                    <h3 className="type-h3">{record.name}</h3>
                     {record.summary ? <p>{record.summary}</p> : null}
                     {record.href ? (
                       <GlobalLink
@@ -190,7 +190,7 @@ export function AboutPhotoSequence({
             <div className="about-photo-current">
               <div>
                 <p className="about-eyebrow">{library.place}</p>
-                <h3>{library.name}</h3>
+                <h3 className="type-h3">{library.name}</h3>
               </div>
               {library.href ? (
                 <GlobalLink href={library.href} className="about-text-link">

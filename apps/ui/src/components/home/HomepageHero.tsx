@@ -73,7 +73,7 @@ export function HomepageHero({
       <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pt-[clamp(48px,8vw,112px)] pb-[360px] sm:px-8 xl:py-6">
         <div className="max-w-[760px]">
           <p
-            className="mb-4 inline-flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-[14px] font-semibold"
+            className="hero-eyebrow inline-flex items-center gap-2 rounded-full border bg-white px-3.5 py-1.5 text-sm font-semibold"
             style={{ borderColor: T.border.line, color: T.ink.base }}
           >
             <span
@@ -87,14 +87,13 @@ export function HomepageHero({
             className="m-0 text-balance"
             style={{
               ...displayStyle("hero"),
-              fontSize: "clamp(60px, min(10vw, 12svh), 144px)",
               color: T.ink.base,
             }}
           >
             <Emphasis text={title} emStyle={{ color: T.accent.primary }} />
           </h1>
           <p
-            className="mt-[24px] max-w-[600px] text-[clamp(18px,1.6vw,21px)] leading-[1.6] text-pretty"
+            className="mt-[24px] max-w-[600px] text-(length:--type-lead-size) leading-[1.6] text-pretty"
             style={{ color: T.ink.dim }}
           >
             {text}

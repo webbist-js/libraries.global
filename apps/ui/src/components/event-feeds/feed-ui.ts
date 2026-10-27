@@ -6,11 +6,11 @@ import { T } from "@/lib/design-tokens"
 
 /** Indigo primary pill: Connect, Send for review. */
 export const PRIMARY_PILL =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
 
 /** White outlined pill: Test connection, Pause, Replace details, Cancel. */
 export const SECONDARY_PILL =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 
 export const secondaryPillStyle: React.CSSProperties = {
   borderColor: T.border.hi,

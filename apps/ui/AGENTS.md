@@ -41,6 +41,13 @@ import { PrivateStrapiClient, PublicStrapiClient } from "@/lib/strapi-api"
 
 Full reference: [Strapi API Client docs](../docs/docs/strapi-api-client.md)
 
+## Typography
+
+Use the shared heading and display roles in `src/styles/typography.css` and
+`T.type`; do not add local heading font sizes. Choose heading levels for the
+document outline and visual roles for their context. See
+[Typography](../docs/docs/typography.md) for the scale and examples.
+
 ## Internationalization
 
 | System      | Purpose    | Location                          |

@@ -42,7 +42,7 @@ export function LocationTabBar({ tabs, activeTabId }: LocationTabBarProps) {
               type="button"
               onClick={() => handleScrollTo(tab.id)}
               aria-current={isActive ? "true" : undefined}
-              className="rounded-full px-3.5 py-2 text-[15px] font-medium whitespace-nowrap transition-colors"
+              className="rounded-full px-3.5 py-2 text-base font-medium whitespace-nowrap transition-colors"
               style={{
                 color: isActive ? T.accent.primary : T.ink.base,
                 background: isActive ? T.accent.chip : "transparent",

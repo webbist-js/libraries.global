@@ -33,18 +33,18 @@ function LocationStatCard({
     >
       <span
         className="text-[34px] leading-none tracking-[-0.01em]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
+        style={{ fontFamily: T.font.sans, fontWeight: 500, color: T.ink.base }}
       >
         {stat.value}
       </span>
       <span
-        className="text-[13.5px] leading-[1.35] font-semibold"
+        className="text-sm leading-[1.35] font-semibold"
         style={{ color: T.ink.base }}
       >
         {stat.label}
       </span>
       {stat.note ? (
-        <span className="text-[12.5px]" style={{ color: T.ink.low }}>
+        <span className="text-sm" style={{ color: T.ink.low }}>
           {stat.note}
         </span>
       ) : null}
@@ -105,9 +105,9 @@ export function LocationHero({
         >
           <div className="min-w-0">
             {typeLabel ? (
-              <p className="m-0 mb-4">
+              <p className="hero-eyebrow mt-0">
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold"
                   style={{
                     background: T.bg.deep,
                     borderColor: T.border.line,
@@ -126,7 +126,7 @@ export function LocationHero({
                   {typeLabel}
                   {code ? (
                     <span
-                      className="text-[12px] font-medium"
+                      className="text-xs font-medium"
                       style={{ fontFamily: T.font.mono, color: T.ink.dim }}
                     >
                       {code}
@@ -137,10 +137,8 @@ export function LocationHero({
             ) : null}
 
             <h1
-              className="m-0 text-[clamp(48px,7vw,88px)] leading-[.92] tracking-[-0.03em] text-balance"
+              className="type-h1 m-0 text-balance"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
                 color: T.ink.base,
               }}
             >
@@ -153,7 +151,7 @@ export function LocationHero({
 
             {intro ? (
               <p
-                className="mt-4 mb-0 max-w-[58ch] text-[18px] leading-[1.6]"
+                className="mt-4 mb-0 max-w-[58ch] text-lg leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
                 {intro}
@@ -209,7 +207,7 @@ export function LocationHeroAction({
     <GlobalLink
       href={href}
       className={cn(
-        "inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-semibold transition-colors",
+        "inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-2.5 text-base font-semibold transition-colors",
         primary
           ? "bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)"
           : "border border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface)"
@@ -233,14 +231,11 @@ export function LocationSectionHeading({
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-      <h2
-        className="m-0 text-[28px] sm:text-[32px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
-      >
+      <h2 className="type-h2 m-0" style={{ color: T.ink.base }}>
         {title}
         {count ? (
           <span
-            className="ml-3 align-middle text-[15px]"
+            className="ml-3 align-middle text-base"
             style={{
               fontFamily: T.font.sans,
               color: T.ink.low,
@@ -253,7 +248,7 @@ export function LocationSectionHeading({
       </h2>
       {description ? (
         <p
-          className="m-0 max-w-[52ch] text-[15px] leading-[1.6]"
+          className="m-0 max-w-[52ch] text-base leading-[1.6]"
           style={{ color: T.ink.dim }}
         >
           {description}
@@ -270,14 +265,11 @@ export function LocationEmptyState({ name }: { readonly name: string }) {
       className="rounded-3xl px-8 py-12 text-center"
       style={{ border: `1px dashed ${T.border.hi}`, background: T.bg.deep }}
     >
-      <h3
-        className="m-0 text-[24px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
-      >
+      <h3 className="type-h3 m-0" style={{ color: T.ink.base }}>
         No records yet
       </h3>
       <p
-        className="mx-auto mt-2 mb-5 max-w-[46ch] text-[16px]"
+        className="mx-auto mt-2 mb-5 max-w-[46ch] text-base"
         style={{ color: T.ink.dim }}
       >
         We haven&rsquo;t documented any libraries in {name} yet. Know one? Help
@@ -285,7 +277,7 @@ export function LocationEmptyState({ name }: { readonly name: string }) {
       </p>
       <GlobalLink
         href="/contribute"
-        className="inline-flex items-center rounded-full bg-(--t-accent-primary) px-6 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+        className="inline-flex items-center rounded-full bg-(--t-accent-primary) px-6 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
       >
         Add a missing library
       </GlobalLink>

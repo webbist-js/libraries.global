@@ -18,13 +18,10 @@ export function ModerationOverview({
   return (
     <section aria-labelledby="review-overview" className="grid gap-5">
       <header>
-        <h2
-          id="review-overview"
-          className="m-0 font-serif text-[32px] leading-tight font-medium"
-        >
+        <h2 id="review-overview" className="type-h2 m-0">
           {t("overviewTitle")}
         </h2>
-        <p className="mt-2 mb-0 max-w-[75ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="mt-2 mb-0 max-w-[75ch] text-base leading-relaxed text-(--t-ink-dim)">
           {t("overviewLead")}
         </p>
       </header>
@@ -48,9 +45,7 @@ export function ModerationOverview({
                 <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">
                   <Icon size={20} aria-hidden />
                 </span>
-                <h3 className="m-0 font-serif text-[26px] leading-tight font-medium">
-                  {t(view.id)}
-                </h3>
+                <h3 className="type-h3 m-0">{t(view.id)}</h3>
               </div>
               <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
                 {t(`${view.id}Lead`)}
@@ -62,7 +57,7 @@ export function ModerationOverview({
                   </span>
                 ) : (
                   <>
-                    <span className="font-serif text-[36px] leading-none tabular-nums">
+                    <span className="font-sans text-[36px] leading-none tabular-nums">
                       {view.pending}
                     </span>
                     <span className="text-sm text-(--t-ink-dim)">

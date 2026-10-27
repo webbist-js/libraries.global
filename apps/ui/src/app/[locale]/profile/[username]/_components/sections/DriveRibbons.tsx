@@ -60,7 +60,7 @@ export function DriveRibbons({ username }: { readonly username: string }) {
         <SectionTitle as="h2" id="rc-drives">
           {tUi("drives")}
         </SectionTitle>
-        <span className="text-[15px]" style={{ color: T.ink.dim }}>
+        <span className="text-base" style={{ color: T.ink.dim }}>
           {drives.length} {drives.length === 1 ? "drive" : "drives"}
         </span>
       </div>
@@ -79,7 +79,7 @@ export function DriveRibbons({ username }: { readonly username: string }) {
               >
                 {drive.title}
               </Link>
-              <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                 {drive.tasks} accepted {drive.tasks === 1 ? "task" : "tasks"}
               </p>
             </div>

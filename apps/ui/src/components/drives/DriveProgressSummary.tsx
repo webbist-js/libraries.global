@@ -45,10 +45,10 @@ export function DriveProgressSummary({
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex flex-wrap items-baseline justify-between gap-x-5 gap-y-2">
-        <p id={textId} className="m-0 text-[16px] text-(--t-ink-dim)">
+        <p id={textId} className="m-0 text-base text-(--t-ink-dim)">
           <strong
             className="mr-2.5 text-[52px] leading-none font-medium text-(--t-ink-base)"
-            style={{ fontFamily: T.font.serif }}
+            style={{ fontFamily: T.font.sans }}
           >
             {fmt(done)}
           </strong>
@@ -58,7 +58,7 @@ export function DriveProgressSummary({
             phrase: gapPhrase,
           })}
         </p>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[15px] text-(--t-ink-dim)">
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-base text-(--t-ink-dim)">
           <span>
             <strong className="text-(--t-ink-base)">{percent}%</strong>{" "}
             {t("done")}
@@ -111,7 +111,7 @@ export function DriveProgressSummary({
           style={{ left: `${goal}%` }}
         />
         <span
-          className="absolute top-6 text-[13px] font-bold whitespace-nowrap text-(--t-ink-base)"
+          className="absolute top-6 text-sm font-bold whitespace-nowrap text-(--t-ink-base)"
           style={{
             left: `${goal}%`,
             transform:
@@ -125,7 +125,7 @@ export function DriveProgressSummary({
           {t("goal", { percent: goal, count: fmt(goalCount) })}
         </span>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[14px] text-(--t-ink-dim)">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm text-(--t-ink-dim)">
         <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-1 p-0">
           {[
             [t("published"), done, "#315f3b"],

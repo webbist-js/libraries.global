@@ -78,6 +78,6 @@ describe("SupporterPreferences", () => {
       screen
         .getByRole("link", { name: "Supporter mark settings" })
         .getAttribute("href")
-    ).toBe("/profile/settings#supporter-settings")
+    ).toBe("/profile/membership#recognition")
   })
 })

@@ -78,7 +78,7 @@ export function AppSelect({
               </SelectTrigger>
             </FormControl>
 
-            <SelectContent className={cn("max-h-40 overflow-y-auto")}>
+            <SelectContent className="max-h-40 overflow-y-auto">
               {options.map((option) => (
                 <SelectItem value={option.value} key={option.value}>
                   {option.label}

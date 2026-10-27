@@ -32,11 +32,9 @@ export const ArticleSourcePanel = memo(function ArticleSourcePanel({
       lang={article.locale}
     >
       <article className="px-5 py-6 [overflow-wrap:anywhere] sm:px-7 sm:py-7">
-        <h3 className="m-0 font-serif text-[clamp(28px,2.5vw,36px)] leading-tight font-medium">
-          {article.title}
-        </h3>
+        <h3 className="type-h3 m-0">{article.title}</h3>
         {article.summary && (
-          <p className="mt-4 mb-0 text-[17px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-4 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
             {article.summary}
           </p>
         )}

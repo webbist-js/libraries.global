@@ -42,7 +42,7 @@ export function betaGate(
     path.startsWith("/api/") ||
     req.headers.has("rsc") ||
     req.headers.has("next-router-prefetch") ||
-    /\.(?:xml|json|ics|csv|pmtiles|pbf|geojson)$/.test(path)
+    /\.(?:xml|json|md|ics|csv|pmtiles|pbf|geojson)$/.test(path)
   ) {
     return NextResponse.json(
       { error: "Beta access required" },

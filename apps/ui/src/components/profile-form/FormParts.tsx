@@ -15,7 +15,7 @@ export const fieldInput: React.CSSProperties = {
   border: `1px solid ${T.border.hi}`,
   background: T.bg.deep,
   color: T.ink.base,
-  fontSize: 16,
+  fontSize: "var(--type-body-size)",
   fontFamily: T.font.sans,
   width: "100%",
   boxSizing: "border-box",
@@ -26,7 +26,7 @@ export const fieldLabel: React.CSSProperties = {
   margin: "0 0 8px",
   padding: 0,
   fontFamily: T.font.sans,
-  fontSize: 15,
+  fontSize: "var(--type-body-size)",
   fontWeight: 600,
   color: T.ink.base,
 }
@@ -34,7 +34,7 @@ export const fieldLabel: React.CSSProperties = {
 export const fieldHint: React.CSSProperties = {
   margin: "6px 0 0",
   fontFamily: T.font.sans,
-  fontSize: 14,
+  fontSize: "var(--type-body-small-size)",
   lineHeight: 1.5,
   color: T.ink.dim,
 }
@@ -109,12 +109,8 @@ export function SectionCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2
           id={`${id}-title`}
-          className="m-0"
+          className="type-h2 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: 26,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >
@@ -129,7 +125,7 @@ export function SectionCard({
       {lead ? (
         <p
           id={`${id}-lead`}
-          className="mt-2 mb-0 max-w-[62ch] text-[15px] leading-[1.6]"
+          className="mt-2 mb-0 max-w-[62ch] text-base leading-[1.6]"
           style={{ color: T.ink.dim }}
         >
           {lead}

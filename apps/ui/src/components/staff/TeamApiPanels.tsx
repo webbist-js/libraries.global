@@ -60,7 +60,7 @@ export function ApiSubscriptionPanel({
         ? "Team inactive"
         : "API add-on not active"
   const summary = (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 text-[15px] text-(--t-ink-dim)">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 text-base text-(--t-ink-dim)">
       <Badge label={status} color={data.active ? "ok" : "warn"} dot />
       {data.membership ? (
         <span>
@@ -80,7 +80,7 @@ export function ApiSubscriptionPanel({
         <Button
           type="button"
           variant="link"
-          className="h-auto min-h-11 p-0 text-[15px] text-(--t-accent-primary) underline underline-offset-4"
+          className="h-auto min-h-11 p-0 text-base text-(--t-accent-primary) underline underline-offset-4"
           disabled={pending}
           onClick={() => request({ action: "portal", locale })}
         >
@@ -94,7 +94,7 @@ export function ApiSubscriptionPanel({
       <section aria-label="Your API add-on">
         {summary}
         {!data.organiser ? (
-          <p className="mt-2 mb-0 text-[14px] text-(--t-ink-dim)">
+          <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
             Team Organisers manage the subscription and API keys. You can view
             usage.
           </p>
@@ -110,7 +110,7 @@ export function ApiSubscriptionPanel({
         canSubscribe ? (
           <div className="flex flex-wrap items-center gap-3">
             {data.price ? (
-              <span className="text-[16px] font-semibold text-(--t-ink-base)">
+              <span className="text-base font-semibold text-(--t-ink-base)">
                 {money(data.price.unitAmount, data.price.currency, locale)} /
                 month
               </span>
@@ -129,7 +129,7 @@ export function ApiSubscriptionPanel({
       }
     >
       {summary}
-      <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-(--t-ink-dim)">
+      <div className="mt-4 space-y-3 text-base leading-relaxed text-(--t-ink-dim)">
         <p className="m-0">
           {data.pendingPayment || confirming
             ? "Payment confirmation is pending. Access starts after your payment is verified."
@@ -176,7 +176,7 @@ export function ApiSubscriptionPanel({
         )}
       </div>
       {!data.organiser ? (
-        <p className="mt-4 mb-0 text-[15px] text-(--t-ink-dim)">
+        <p className="mt-4 mb-0 text-base text-(--t-ink-dim)">
           Team Organisers manage the subscription and API keys. You can view
           usage.
         </p>
@@ -210,7 +210,7 @@ function UsageTable({
       aria-label={title}
       className="mt-3 max-h-[min(26rem,60dvh)] overflow-auto overscroll-contain rounded-2xl border border-(--t-border-line) outline-none focus-visible:ring-2 focus-visible:ring-(--t-accent-primary)"
     >
-      <table className="w-full text-left text-[14px] tabular-nums">
+      <table className="w-full text-left text-sm tabular-nums">
         <caption className="sr-only">{title}</caption>
         <thead className="sticky top-0 z-10 bg-(--t-bg-surface) text-(--t-ink-dim)">
           <tr>
@@ -306,12 +306,12 @@ export function ApiUsagePanel({
       title="This month"
       id="api-usage"
       aside={
-        <p className="m-0 text-[14px] text-(--t-ink-dim)">
+        <p className="m-0 text-sm text-(--t-ink-dim)">
           Resets {reset}, 00:00 UTC
         </p>
       }
     >
-      <p className="mt-0 mb-5 text-[15px] leading-relaxed text-(--t-ink-dim)">
+      <p className="mt-0 mb-5 text-base leading-relaxed text-(--t-ink-dim)">
         One shared pool for {data.teamName}: every key and application uses the
         same monthly allowance. Adding keys or members does not increase or
         reset it.
@@ -322,14 +322,12 @@ export function ApiUsagePanel({
             key={metric.title}
             className="min-w-0 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5"
           >
-            <h3 className="m-0 text-[15px] font-semibold text-(--t-ink-dim)">
+            <h3 className="type-small-heading m-0 text-(--t-ink-dim)">
               {metric.title}
             </h3>
             <p className="mt-2 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
-              <span className="font-serif text-[clamp(30px,3.5vw,42px)] leading-none">
-                {metric.display(metric.used)}
-              </span>
-              <span className="text-[14px] text-(--t-ink-dim)">
+              <span className="type-stat">{metric.display(metric.used)}</span>
+              <span className="text-sm text-(--t-ink-dim)">
                 of {metric.display(metric.limit)}
               </span>
             </p>
@@ -339,7 +337,7 @@ export function ApiUsagePanel({
               max={metric.limit}
               className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-(--t-border-line) [&::-moz-progress-bar]:bg-(--t-accent-primary) [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-(--t-accent-primary)"
             />
-            <p className="mt-2 mb-0 text-[14px] text-(--t-ink-dim)">
+            <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
               {metric.display(Math.max(0, metric.limit - metric.used))} left
               this month
             </p>
@@ -349,7 +347,7 @@ export function ApiUsagePanel({
       {data.warnings.length ? (
         <p
           role="status"
-          className="mt-5 rounded-xl bg-(--t-bg-surface) p-4 text-[15px] font-semibold"
+          className="mt-5 rounded-xl bg-(--t-bg-surface) p-4 text-base font-semibold"
         >
           Your Team has used at least 80% of its {data.warnings.join(" and ")}{" "}
           allowance.
@@ -382,19 +380,19 @@ export function ApiUsagePanel({
           }
         />
       </div>
-      <p className="mt-5 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="mt-5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         Response data is uncompressed JSON; media downloads aren’t counted.
         Totals include capacity reserved for requests still in progress. Failed
         responses don’t use your allowance.
       </p>
-      <p className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         {count(data.limits.perMinute)} requests per minute ·{" "}
         {data.limits.concurrency} at once across the Team · unlimited keys · no
         automatic overage charges.
       </p>
       {data.endpoints.length ? (
         <div className="mt-6">
-          <h3 className="m-0 text-[16px] font-semibold">Usage by API</h3>
+          <h3 className="type-small-heading m-0">Usage by API</h3>
           <UsageTable
             title="Usage by API"
             firstColumn="API"
@@ -440,17 +438,14 @@ export function ApiGuidePanel() {
     <StaffPanel id="api-guide">
       <div className="grid min-w-0 gap-7 lg:grid-cols-2">
         <div className="min-w-0">
-          <h2
-            id="api-guide-title"
-            className="m-0 font-serif text-[clamp(26px,2.8vw,34px)] leading-tight font-medium"
-          >
+          <h2 id="api-guide-title" className="type-h2 m-0">
             Using the API
           </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-3 text-base leading-relaxed text-(--t-ink-dim)">
             Keep keys in your application server’s environment. Requests use{" "}
             <code
               translate="no"
-              className="rounded bg-(--t-bg-muted) px-1 font-mono text-[13px] break-words text-(--t-ink-base)"
+              className="rounded bg-(--t-bg-muted) px-1 font-mono text-sm break-words text-(--t-ink-base)"
             >
               Authorization: Bearer YOUR_API_KEY
             </code>
@@ -470,18 +465,18 @@ export function ApiGuidePanel() {
                 <div className="min-w-0">
                   <code
                     translate="no"
-                    className="block font-mono text-[13px] break-all"
+                    className="block font-mono text-sm break-all"
                   >
                     {endpoint.path}
                   </code>
-                  <p className="mt-1 mb-0 text-[14px] text-(--t-ink-dim)">
+                  <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
                     {endpoint.detail}
                   </p>
                 </div>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-3 text-sm leading-relaxed text-(--t-ink-dim)">
             Encode the <code translate="no">entityRef</code> from a search or
             list as one path segment with{" "}
             <code translate="no">encodeURIComponent</code> (it contains colons).
@@ -506,22 +501,22 @@ export function ApiGuidePanel() {
           <div className="overflow-hidden rounded-2xl bg-(--t-ink-base) text-(--t-ink-on-dark)">
             <pre
               translate="no"
-              className="m-0 overflow-x-auto p-5 font-mono text-[13px] leading-[1.8]"
+              className="m-0 overflow-x-auto p-5 font-mono text-sm leading-[1.8]"
               tabIndex={0}
               aria-label="Example API request"
             >
               <code>{example}</code>
             </pre>
           </div>
-          <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
             Search filters: country, region, libraryType, operationalStatus and
             near (latitude, longitude and radius in metres).
           </p>
           <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5">
-            <h3 className="m-0 mb-3 text-[15px] font-semibold">
+            <h3 className="type-small-heading m-0 mb-3">
               When a request fails
             </h3>
-            <dl className="m-0 divide-y divide-(--t-border-line) text-[14px] leading-relaxed">
+            <dl className="m-0 divide-y divide-(--t-border-line) text-sm leading-relaxed">
               {[
                 ["401", "The key is invalid or has expired."],
                 [
@@ -538,7 +533,7 @@ export function ApiGuidePanel() {
                 </div>
               ))}
             </dl>
-            <p className="mt-3 mb-0 text-[14px] text-(--t-ink-dim)">
+            <p className="mt-3 mb-0 text-sm text-(--t-ink-dim)">
               Cache hits count as requests.
             </p>
           </div>
@@ -549,7 +544,7 @@ export function ApiGuidePanel() {
         className="mt-7 border-t border-(--t-border-line) pt-6"
       >
         <div className="flex flex-wrap items-center gap-3">
-          <h3 id="api-coming-soon" className="m-0 font-serif text-2xl">
+          <h3 id="api-coming-soon" className="type-h3 m-0">
             More ways to use library data
           </h3>
           <Badge label="Coming soon" color="dim" />
@@ -565,7 +560,7 @@ export function ApiGuidePanel() {
               key={item.path}
               className="min-w-0 rounded-2xl border border-(--t-border-line) p-4"
             >
-              <h4 className="m-0 text-sm font-semibold">{item.title}</h4>
+              <h4 className="type-h4 m-0">{item.title}</h4>
               <code
                 translate="no"
                 className="mt-2 block font-mono text-xs break-all text-(--t-accent-primary)"

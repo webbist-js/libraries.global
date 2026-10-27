@@ -112,6 +112,11 @@ export async function eraseAccount(
       where: { endedByBaUserId: baUserId },
       data: { endedByBaUserId: null },
     })
+    await strapi
+      .plugin("access")
+      ?.service("networks")
+      ?.prepareErasure?.(baUserId, erasedId)
+    await eraseNetworkIdentity(strapi, baUserId, erasedId)
     // Team seats: invites by email go, active rows are anonymised.
     await strapi
       .plugin("access")
@@ -245,6 +250,8 @@ export async function eraseAccount(
     })
     for (const uid of [
       AFFILIATION,
+      "plugin::access.network-affiliation",
+      "plugin::access.library-authority-grant",
       SUBMISSION_UPLOAD,
       "plugin::content-moderation.upload-reservation",
       SAVED_EVENT,
@@ -318,4 +325,35 @@ export async function eraseAccount(
   for (const file of filesToRemove) {
     await removeFile(strapi, file, `file ${(file as { id?: number }).id}`)
   }
+}
+
+async function eraseNetworkIdentity(
+  strapi: Parameters<typeof eraseAccount>[0],
+  userId: string,
+  erasedId: string
+) {
+  await strapi.db.query("plugin::access.network-mandate").updateMany({
+    where: { baUserId: userId },
+    data: { baUserId: erasedId, revocationReason: "Account deleted" },
+  })
+  await strapi.db.query("plugin::access.network-mandate").updateMany({
+    where: { reviewedBy: `ba:${userId}` },
+    data: { reviewedBy: null },
+  })
+  await strapi.db.query("plugin::access.network-mandate-event").updateMany({
+    where: { actor: { $in: [userId, `ba:${userId}`] } },
+    data: { actor: erasedId, reason: null },
+  })
+  await strapi.db.query("plugin::access.widget-audit").updateMany({
+    where: { actor: userId },
+    data: { actor: erasedId, details: null },
+  })
+  await strapi.db.query("plugin::access.widget-release").updateMany({
+    where: { publisherId: userId },
+    data: { publisherId: erasedId },
+  })
+  await strapi.db.query(SUBMISSION).updateMany({
+    where: { submissionType: "network_claim", submittedByUserId: userId },
+    data: { fields: null, draftData: null },
+  })
 }

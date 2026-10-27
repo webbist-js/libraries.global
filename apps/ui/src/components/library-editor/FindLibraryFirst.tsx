@@ -101,7 +101,7 @@ function RecordRow({
         <p
           className="m-0 break-words"
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: "22px",
             fontWeight: 500,
             color: T.ink.base,
@@ -111,7 +111,7 @@ function RecordRow({
           {name}
         </p>
         <p
-          className="mt-1 mb-0 text-[15px] leading-relaxed"
+          className="mt-1 mb-0 text-base leading-relaxed"
           style={{ color: T.ink.dim }}
         >
           {meta}
@@ -200,7 +200,7 @@ function SearchResultsHeader({
       )}
     >
       {!claiming || hasSearched || loading || failed ? (
-        <h3 className="m-0 text-[16px] font-semibold">
+        <h3 className="type-small-heading m-0">
           {hasSearched
             ? tUi("results")
             : claiming
@@ -211,7 +211,7 @@ function SearchResultsHeader({
       <p
         id="index-status"
         role="status"
-        className="m-0 text-[14px] text-(--t-ink-dim)"
+        className="m-0 text-sm text-(--t-ink-dim)"
       >
         {status}
       </p>
@@ -294,7 +294,7 @@ function LibrarySearchResults({
   if (loading || failed || claiming) return null
   if (!needsHelp.length)
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         No suggested records are available right now. Search for a library to
         improve.
       </p>
@@ -431,7 +431,7 @@ export function FindLibraryFirst({
         <label
           htmlFor="index-query"
           id="index-query-label"
-          className="mb-2 block text-[15px] font-semibold"
+          className="mb-2 block text-base font-semibold"
         >
           Library name, town or city
         </label>
@@ -506,12 +506,12 @@ export function FindLibraryFirst({
       >
         <div>
           <p
-            className="m-0 text-[17px] font-semibold"
+            className="m-0 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             Not listed?
           </p>
-          <p className="m-0 mt-0.5 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-0.5 text-base" style={{ color: T.ink.dim }}>
             {canAdd
               ? "Searched and didn’t find it? Add it as a new library."
               : "Search first. Then you can add it if it’s missing."}

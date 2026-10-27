@@ -97,14 +97,7 @@ export function DiscussionFeedItem({
       <div
         className={displayFeatured ? undefined : "min-w-0 flex-1 basis-[180px]"}
       >
-        <h3
-          className={cn(
-            "m-0",
-            displayFeatured
-              ? "font-serif text-[clamp(24px,2.6vw,32px)] leading-tight tracking-tight"
-              : "text-base leading-snug font-bold"
-          )}
-        >
+        <h3 className="type-h3 m-0">
           <Link
             href={`/community/discussions/${encodeURIComponent(thread.id)}`}
             lang={thread.language}

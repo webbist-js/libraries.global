@@ -14,7 +14,7 @@ import { Link, useRouter } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
 const OUTLINED =
-  "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border bg-white px-3 text-[13px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** Published service notices are independent of the timetable draft. */
 export function TimetableServiceNotices({
@@ -38,14 +38,11 @@ export function TimetableServiceNotices({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2
-              id="service-notices-heading"
-              className="m-0 text-[14px] font-semibold"
-            >
+            <h2 id="service-notices-heading" className="type-small-heading m-0">
               Service notices
             </h2>
             <p
-              className="m-0 mt-0.5 text-[12px] leading-relaxed"
+              className="m-0 mt-0.5 text-xs leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               Notices publish separately from the timetable and cancel visits
@@ -87,11 +84,11 @@ export function TimetableServiceNotices({
                   }
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] leading-relaxed">
+                  <span className="block text-sm leading-relaxed">
                     {n.message}
                   </span>
                   <span
-                    className="mt-0.5 block text-[11px]"
+                    className="mt-0.5 block text-xs"
                     style={{ color: T.ink.dim }}
                   >
                     {noticeDates(n)}
@@ -101,12 +98,12 @@ export function TimetableServiceNotices({
             ))}
           </ul>
         ) : (
-          <p className="m-0 mt-3 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-3 text-sm" style={{ color: T.ink.dim }}>
             No notices showing. The timetable runs as published.
           </p>
         )}
         {staff ? (
-          <p className="m-0 mt-3 text-[12px]">
+          <p className="m-0 mt-3 text-xs">
             <Link
               href={staffLibraryHref(staff.slug, "/notices")}
               className="font-semibold underline underline-offset-[3px]"

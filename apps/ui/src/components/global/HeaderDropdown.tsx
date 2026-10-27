@@ -67,8 +67,8 @@ export function HeaderDropdownContent(props: ContentProps) {
 
     return (
       <PopoverContent
-        {...content}
         {...POSITION}
+        {...content}
         className={cn(
           DROPDOWN_PANEL,
           "max-h-(--radix-popover-content-available-height)",

@@ -270,7 +270,7 @@ export function DiscussionRecordCard({
               (own &&
                 (record.pendingRevision?.title ||
                   record.latestRevision?.title))) && (
-              <h2 className="mt-3 text-xl font-semibold" lang={record.language}>
+              <h2 className="type-h2 mt-3" lang={record.language}>
                 {record.title ||
                   record.pendingRevision?.title ||
                   record.latestRevision?.title}
@@ -302,8 +302,8 @@ export function DiscussionRecordCard({
                 suggestionLayout
                   ? "mt-2 mb-2 text-base leading-relaxed break-words whitespace-pre-wrap"
                   : conversation
-                    ? "mt-3 mb-4 text-[16px] leading-[1.7] break-words whitespace-pre-wrap"
-                    : "max-w-[72ch] text-[17px] leading-relaxed break-words whitespace-pre-wrap"
+                    ? "mt-3 mb-4 text-base leading-[1.7] break-words whitespace-pre-wrap"
+                    : "max-w-[72ch] text-base leading-relaxed break-words whitespace-pre-wrap"
               }
             >
               {displayedBody}
@@ -346,7 +346,7 @@ export function DiscussionRecordCard({
                 className="mt-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4"
               >
                 <summary>{t("yourPending")}</summary>
-                <p className="max-w-[72ch] text-[17px] leading-relaxed break-words whitespace-pre-wrap">
+                <p className="max-w-[72ch] text-base leading-relaxed break-words whitespace-pre-wrap">
                   {record.pendingRevision.body}
                 </p>
                 <DiscussionImages images={record.pendingRevision.attachments} />

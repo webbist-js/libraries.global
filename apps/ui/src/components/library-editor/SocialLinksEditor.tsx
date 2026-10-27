@@ -70,7 +70,7 @@ export function SocialLinksEditor({
               border: `1px solid ${T.border.line}`,
               background: "transparent",
               color: T.ink.faint,
-              fontSize: "18px",
+              fontSize: "var(--type-body-large-size)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -92,7 +92,7 @@ export function SocialLinksEditor({
           background: "transparent",
           color: T.ink.dim,
           fontFamily: T.font.sans,
-          fontSize: "13px",
+          fontSize: "var(--type-body-small-size)",
           cursor: "pointer",
           alignSelf: "flex-start",
         }}

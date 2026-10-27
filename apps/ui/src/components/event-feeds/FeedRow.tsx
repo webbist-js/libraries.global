@@ -36,7 +36,7 @@ const PROVIDER_ICON: Record<string, string> = {
 
 const labelSx: React.CSSProperties = {
   fontFamily: T.font.sans,
-  fontSize: "12.5px",
+  fontSize: "var(--type-body-small-size)",
   fontWeight: 600,
   color: T.ink.dim,
   margin: 0,
@@ -44,7 +44,7 @@ const labelSx: React.CSSProperties = {
 
 const valueSx: React.CSSProperties = {
   fontFamily: T.font.sans,
-  fontSize: "14px",
+  fontSize: "var(--type-body-small-size)",
   color: T.ink.base,
   margin: "2px 0 0",
   overflowWrap: "anywhere",
@@ -210,7 +210,7 @@ export function FeedRow({
             <span
               style={{
                 fontFamily: T.font.sans,
-                fontSize: "15.5px",
+                fontSize: "var(--type-body-size)",
                 fontWeight: 600,
                 color: T.ink.base,
               }}
@@ -221,7 +221,7 @@ export function FeedRow({
               <span
                 style={{
                   fontFamily: T.font.sans,
-                  fontSize: "13.5px",
+                  fontSize: "var(--type-body-small-size)",
                   color: T.ink.dim,
                 }}
               >
@@ -296,7 +296,7 @@ export function FeedRow({
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             color: T.ink.dim,
             margin: 0,
           }}
@@ -392,7 +392,7 @@ export function FeedRow({
                 id={`disconnect-${feed.documentId}-title`}
                 style={{
                   fontFamily: T.font.sans,
-                  fontSize: "15.5px",
+                  fontSize: "var(--type-body-size)",
                   color: T.ink.base,
                   margin: 0,
                 }}
@@ -417,7 +417,7 @@ export function FeedRow({
                 </button>
                 <button
                   type="button"
-                  className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-danger) px-5 text-[14px] font-semibold text-white"
+                  className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-danger) px-5 text-sm font-semibold text-white"
                   onClick={disconnect}
                 >
                   Disconnect

@@ -393,11 +393,7 @@ function DriveTasksWorkspace({
         >
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-              <h2
-                id="drive-tasks-heading"
-                className="m-0 text-[clamp(32px,3.3vw,40px)] leading-tight font-medium"
-                style={{ fontFamily: T.font.serif }}
-              >
+              <h2 id="drive-tasks-heading" className="type-h2 m-0">
                 {t("pickLibrary")}
               </h2>
               <BackLink
@@ -417,7 +413,7 @@ function DriveTasksWorkspace({
             role="status"
             className={
               announcement.text
-                ? "text-[14px] font-semibold text-(--t-ink-base)"
+                ? "text-sm font-semibold text-(--t-ink-base)"
                 : "sr-only"
             }
           >
@@ -482,7 +478,7 @@ function DriveTasksWorkspace({
               aria-label={tUi("drive_updates")}
               className={
                 announcement.text
-                  ? "mt-0 mb-4 text-[14px] font-semibold text-(--t-ink-base)"
+                  ? "mt-0 mb-4 text-sm font-semibold text-(--t-ink-base)"
                   : "sr-only"
               }
             >

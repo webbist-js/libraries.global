@@ -103,7 +103,7 @@ function ReachDistribution({
   return (
     <section aria-label={t("distribution")} className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
-        <h3 className="m-0 text-sm font-semibold">{t("journeyTime")}</h3>
+        <h3 className="type-h3 m-0">{t("journeyTime")}</h3>
         <SegmentedControl
           layout="equal"
           label={t("distributionType")}
@@ -154,7 +154,7 @@ function ReachDistribution({
                 </div>
               </div>
             ))}
-            <p className="m-0 pt-1 text-[11px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 pt-1 text-xs leading-relaxed text-(--t-ink-dim)">
               {t("rounding")}
             </p>
           </figure>
@@ -223,7 +223,7 @@ function ReachCommunity({
   return (
     <section aria-label={t("who")} className="flex flex-col gap-4">
       <div>
-        <h3 className="m-0 text-sm font-semibold">{t("who")}</h3>
+        <h3 className="type-h3 m-0">{t("who")}</h3>
         <p className="mt-2 mb-0 text-xs leading-relaxed text-(--t-ink-dim)">
           {t("contextExplanation", { minutes })}
         </p>
@@ -233,7 +233,7 @@ function ReachCommunity({
           <p className="m-0 text-xs font-semibold">
             {community.release.name} · {community.release.edition}
           </p>
-          <p className="m-0 text-[11px] leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
             {t("groupExplanation")}
           </p>
           <figure className="m-0 space-y-4">
@@ -263,7 +263,7 @@ function ReachCommunity({
                       }}
                     />
                   </div>
-                  <p className="m-0 text-[11px] text-(--t-ink-dim)">
+                  <p className="m-0 text-xs text-(--t-ink-dim)">
                     {t("groupCounts", {
                       within: number(band.residents),
                       beyond: number(band.outsideResidents),
@@ -327,11 +327,11 @@ function ReachCommunity({
               </table>
             </div>
           </details>
-          <p className="m-0 text-[11px] leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
             {t("contextLimits")}
           </p>
           {community.release.country === "GB-SCT" ? (
-            <p className="m-0 text-[11px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
               {t("simdLimits")}
             </p>
           ) : null}

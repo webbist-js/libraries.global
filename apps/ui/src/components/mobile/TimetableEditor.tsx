@@ -71,12 +71,16 @@ const field = {
   fontSize: 14,
 }
 const OUTLINED =
-  "inline-flex min-h-10 items-center gap-1.5 rounded-full border bg-white px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 const PILL_ACTIVE =
-  "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold"
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
 const ICON_BUTTON =
   "inline-flex size-7 items-center justify-center rounded-[8px] border bg-white transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-40"
-const labelStyle = { fontSize: 13, fontWeight: 600, color: T.ink.base }
+const labelStyle = {
+  fontSize: "var(--type-body-small-size)",
+  fontWeight: 600,
+  color: T.ink.base,
+}
 const EPOCH_MONDAY = "1970-01-05"
 
 /** The Monday of the week holding `date`; the epoch Monday without one. */
@@ -111,7 +115,7 @@ function Chip({
 
   return (
     <span
-      className="inline-flex min-w-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] leading-tight font-semibold"
+      className="inline-flex min-w-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-xs leading-tight font-semibold"
       style={{ background: tint.bg, color: tint.fg }}
     >
       {icon ? <Icon aria-hidden="true" icon={icon} width={13} /> : null}
@@ -139,7 +143,7 @@ function TimetableAlert({
   return (
     <div
       role={tone === "danger" ? "alert" : "status"}
-      className="flex items-start gap-2 rounded-[10px] border px-3 py-2 text-[13px] leading-relaxed"
+      className="flex items-start gap-2 rounded-[10px] border px-3 py-2 text-sm leading-relaxed"
       style={{ background: tint.bg, borderColor: tint.border }}
     >
       <Icon
@@ -435,7 +439,7 @@ export function TimetableEditor({
           />
         </label>
         <p
-          className="m-0 min-h-10 min-w-32 flex-1 self-end py-2 text-[13px]"
+          className="m-0 min-h-10 min-w-32 flex-1 self-end py-2 text-sm"
           style={{ color: T.ink.dim }}
         >
           {tt.stops.length} {tt.stops.length === 1 ? "stop" : "stops"} ·{" "}
@@ -549,7 +553,7 @@ export function TimetableEditor({
                 return (
                   <label
                     key={d}
-                    className="flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-[8px] px-1 text-[13px] font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-(--t-accent-primary) has-focus-visible:outline-solid"
+                    className="flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-[8px] px-1 text-sm font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-(--t-accent-primary) has-focus-visible:outline-solid"
                     style={{ background: active ? T.bg.deep : undefined }}
                   >
                     <input
@@ -562,7 +566,7 @@ export function TimetableEditor({
                     />
                     {labels[WEEKDAYS.indexOf(d)]!.slice(0, 3)}
                     <span
-                      className="text-[11px] leading-tight font-normal"
+                      className="text-xs leading-tight font-normal"
                       style={{ color: T.ink.dim }}
                     >
                       {count} {count === 1 ? "stop" : "stops"}
@@ -575,7 +579,7 @@ export function TimetableEditor({
           <div className="flex justify-end">
             <button
               type="button"
-              className="inline-flex min-h-6 items-center text-[12px] font-semibold underline underline-offset-[3px]"
+              className="inline-flex min-h-6 items-center text-xs font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
               onClick={() => setWeekends(!weekends)}
             >
@@ -600,7 +604,7 @@ export function TimetableEditor({
             >
               <p className="m-0">
                 <strong>{LIBRARY_NOTICE_LABELS[n.type]}.</strong> {n.message}
-                <span className="text-[11px]" style={{ color: T.ink.dim }}>
+                <span className="text-xs" style={{ color: T.ink.dim }}>
                   {" "}
                   · {shortDate(n.from)}
                   {n.to ? ` – ${shortDate(n.to)}` : ""}
@@ -632,7 +636,7 @@ export function TimetableEditor({
                 className="flex flex-wrap items-center gap-3 rounded-[14px] border px-4 py-3"
                 style={{ borderColor: T.border.line, background: T.bg.deep }}
               >
-                <strong className="grow text-[15px]">{s.name}</strong>
+                <strong className="grow text-base">{s.name}</strong>
                 {count === 0 ? (
                   <Chip tone="warn" icon="mdi:alert-outline">
                     No visits
@@ -677,7 +681,7 @@ export function TimetableEditor({
             )
           })}
           {!tt.stops.length && (
-            <li className="text-[15px]" style={{ color: T.ink.dim }}>
+            <li className="text-base" style={{ color: T.ink.dim }}>
               No stops yet. Choose a week and a day to add the first one.
             </li>
           )}
@@ -686,8 +690,8 @@ export function TimetableEditor({
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div className="flex min-w-0 flex-col gap-3">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="m-0 text-[14px] font-semibold">{dayLabel}</h2>
-              <span className="text-[12px]" style={{ color: T.ink.dim }}>
+              <h2 className="type-small-heading m-0">{dayLabel}</h2>
+              <span className="text-xs" style={{ color: T.ink.dim }}>
                 In route order
               </span>
             </div>
@@ -721,7 +725,7 @@ export function TimetableEditor({
                   <li key={v.id} className="flex flex-col">
                     {previous ? (
                       <div
-                        className="ml-4 flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 border-l border-dashed py-1 pl-2 text-[11px]"
+                        className="ml-4 flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 border-l border-dashed py-1 pl-2 text-xs"
                         style={{
                           borderColor: T.map.route,
                           color: T.ink.dim,
@@ -752,7 +756,7 @@ export function TimetableEditor({
                       <div className="flex items-start gap-2.5 p-3">
                         <span
                           aria-hidden="true"
-                          className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-[7px] border text-[12px] font-bold tabular-nums"
+                          className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-[7px] border text-xs font-bold tabular-nums"
                           style={{
                             borderColor: overlaps
                               ? T.accent.danger
@@ -778,11 +782,11 @@ export function TimetableEditor({
                           onClick={() => setEditingStop(open ? null : v.stopId)}
                         >
                           <span className="flex flex-wrap items-baseline gap-x-2">
-                            <span className="text-[14px] font-semibold">
+                            <span className="text-sm font-semibold">
                               {stop?.name ?? "Unknown stop"}
                             </span>
                             <span
-                              className="text-[12px] font-semibold tabular-nums"
+                              className="text-xs font-semibold tabular-nums"
                               style={{ color: T.ink.dim }}
                             >
                               {v.arrive}–{v.depart}
@@ -790,7 +794,7 @@ export function TimetableEditor({
                           </span>
                           {stop?.where ? (
                             <span
-                              className="mt-0.5 block text-[12px] leading-tight"
+                              className="mt-0.5 block text-xs leading-tight"
                               style={{ color: T.ink.dim }}
                             >
                               {stop.where}
@@ -906,7 +910,7 @@ export function TimetableEditor({
                             </label>
                           </div>
                           <p
-                            className="m-0 text-[13.5px]"
+                            className="m-0 text-sm"
                             style={{ color: T.ink.dim }}
                           >
                             {stop.areaDocumentId
@@ -926,7 +930,7 @@ export function TimetableEditor({
                           </p>
                           <details className="group">
                             <summary
-                              className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-[14px] font-semibold"
+                              className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold"
                               style={{ color: T.accent.primary }}
                             >
                               <Icon
@@ -1076,7 +1080,7 @@ export function TimetableEditor({
                                     }}
                                   >
                                     <div className="grid grid-cols-3 gap-2">
-                                      <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold">
+                                      <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
                                         Day
                                         <select
                                           aria-label={`Day of the ${visitName} visit`}
@@ -1099,7 +1103,7 @@ export function TimetableEditor({
                                           ))}
                                         </select>
                                       </label>
-                                      <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold">
+                                      <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
                                         Arrives
                                         <input
                                           aria-label={`Arrives, ${visitName} visit`}
@@ -1118,7 +1122,7 @@ export function TimetableEditor({
                                           }
                                         />
                                       </label>
-                                      <label className="flex min-w-0 flex-col gap-1 text-[11px] font-semibold">
+                                      <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
                                         Leaves
                                         <input
                                           aria-label={`Leaves, ${visitName} visit`}
@@ -1137,7 +1141,7 @@ export function TimetableEditor({
                                           }
                                         />
                                       </label>
-                                      <label className="col-span-3 flex min-w-0 flex-col gap-1 text-[11px] font-semibold sm:col-span-2">
+                                      <label className="col-span-3 flex min-w-0 flex-col gap-1 text-xs font-semibold sm:col-span-2">
                                         Repeats
                                         <select
                                           aria-label={`Repeats, ${visitName} visit`}
@@ -1205,7 +1209,7 @@ export function TimetableEditor({
                                     </div>
                                     {termDates ? (
                                       <div
-                                        className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13.5px]"
+                                        className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm"
                                         style={{ color: T.ink.dim }}
                                       >
                                         <label className="inline-flex items-center gap-2">
@@ -1256,7 +1260,7 @@ export function TimetableEditor({
                                           <button
                                             key={date}
                                             type="button"
-                                            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-3 text-[13px] font-semibold hover:bg-(--t-bg-surface)"
+                                            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold hover:bg-(--t-bg-surface)"
                                             style={{
                                               borderColor: T.border.hi,
                                             }}
@@ -1339,7 +1343,7 @@ export function TimetableEditor({
                             </button>
                             <button
                               type="button"
-                              className="ml-auto inline-flex min-h-10 items-center text-[12px] font-semibold underline underline-offset-[3px]"
+                              className="ml-auto inline-flex min-h-10 items-center text-xs font-semibold underline underline-offset-[3px]"
                               style={{
                                 color: T.accent.danger,
                               }}
@@ -1356,7 +1360,7 @@ export function TimetableEditor({
               })}
             </ol>
             {!visits.length && (
-              <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                 No stops on {dayLabel} yet.
               </p>
             )}
@@ -1396,7 +1400,7 @@ export function TimetableEditor({
                 </label>
                 <button
                   type="button"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={
                     disabled ||
                     !stopName.trim() ||
@@ -1425,7 +1429,7 @@ export function TimetableEditor({
                   (s) => s.name.toLowerCase() === stopName.trim().toLowerCase()
                 ) && (
                   <p
-                    className="m-0 w-full text-[13.5px]"
+                    className="m-0 w-full text-sm"
                     style={{ color: T.ink.dim }}
                   >
                     {stopName.trim()} is already a stop. This adds a visit
@@ -1436,7 +1440,7 @@ export function TimetableEditor({
             ) : (
               <button
                 type="button"
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-dashed text-[13px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-dashed text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ borderColor: T.border.hi, color: T.accent.primary }}
                 disabled={disabled}
                 onClick={() => setAdding(true)}
@@ -1462,7 +1466,7 @@ export function TimetableEditor({
                   compact
                 />
                 <ul
-                  className="m-0 mt-2 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[13px]"
+                  className="m-0 mt-2 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-sm"
                   style={{ color: T.ink.dim }}
                   aria-label={tUi("map_legend")}
                 >
@@ -1519,18 +1523,15 @@ export function TimetableEditor({
         aria-labelledby="timetable-weeks-heading"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2
-            id="timetable-weeks-heading"
-            className="m-0 text-[14px] font-semibold"
-          >
+          <h2 id="timetable-weeks-heading" className="type-small-heading m-0">
             The next four weeks
           </h2>
-          <span className="text-[12px]" style={{ color: T.ink.dim }}>
+          <span className="text-xs" style={{ color: T.ink.dim }}>
             Select a day to edit it
           </span>
         </div>
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full table-fixed border-separate border-spacing-1 text-center text-[11px]">
+          <table className="w-full table-fixed border-separate border-spacing-1 text-center text-xs">
             <caption className="sr-only">
               Stops per day for the next four weeks, starting{" "}
               {shortDate(monday)}
@@ -1568,7 +1569,7 @@ export function TimetableEditor({
                   >
                     {shortDate(addDays(monday, i * 7)).slice(4)}
                     <span
-                      className="block text-[11px] font-normal"
+                      className="block text-xs font-normal"
                       style={{ color: T.ink.dim }}
                     >
                       Week {row[0]?.week ?? 1}
@@ -1609,10 +1610,10 @@ export function TimetableEditor({
                             setAllStops(false)
                           }}
                         >
-                          <span className="text-[13px] tabular-nums">
+                          <span className="text-sm tabular-nums">
                             {Number(cell.date.slice(-2))}
                           </span>
-                          <span className="text-[11px] font-normal">
+                          <span className="text-xs font-normal">
                             {cell.notRunning
                               ? "Not running"
                               : cell.stops
@@ -1629,7 +1630,7 @@ export function TimetableEditor({
           </table>
         </div>
         <ul
-          className="m-0 mt-2 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-[11px]"
+          className="m-0 mt-2 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-xs"
           style={{ color: T.ink.dim }}
           aria-label={tUi("calendar_legend")}
         >
@@ -1674,7 +1675,7 @@ export function TimetableEditor({
             </button>
             <button
               type="button"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-[14px] font-semibold text-white transition-colors"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-sm font-semibold text-white transition-colors"
               style={{ background: T.accent.danger }}
               onClick={confirmRemoveStop}
             >
@@ -1684,7 +1685,7 @@ export function TimetableEditor({
           </div>
         }
       >
-        <p className="m-0 text-[15px]">
+        <p className="m-0 text-base">
           {removing?.name ?? "This stop"} and every visit there (
           {tt.visits.filter((v) => v.stopId === removing?.id).length} in the
           cycle) come off the timetable. Nothing changes for the public until
@@ -1700,7 +1701,7 @@ export function TimetableEditor({
         footer={
           <button
             type="button"
-            className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
             disabled={
               disabled ||
               !imported?.imported ||

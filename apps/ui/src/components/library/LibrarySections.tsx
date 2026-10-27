@@ -114,7 +114,7 @@ function HoursNote({
 }) {
   return (
     <div
-      className="mt-4 rounded-xl p-4 text-[13px] leading-relaxed"
+      className="mt-4 rounded-xl p-4 text-sm leading-relaxed"
       style={{
         background:
           // eslint-disable-next-line react-hooks/purity -- This server component evaluates freshness at request time, with no client render.
@@ -240,7 +240,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
       <div className="grid gap-x-8 gap-y-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="min-w-0">
           <h3
-            className="m-0 mb-1 text-[15px] font-bold"
+            className="type-small-heading m-0 mb-1"
             style={{ color: T.ink.base }}
           >
             {tUi("opening_hours")}{" "}
@@ -266,14 +266,14 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
         </div>
         <div className="min-w-0">
           <h3
-            className="m-0 mb-2 text-[15px] font-bold"
+            className="type-small-heading m-0 mb-2"
             style={{ color: T.ink.base }}
           >
             {tUi("address")}{" "}
           </h3>
           {addressLines.length > 0 ? (
             <address
-              className="text-[15.5px] leading-relaxed not-italic"
+              className="text-base leading-relaxed not-italic"
               style={{ color: T.ink.base }}
             >
               {addressLines.map((line) => (
@@ -283,7 +283,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
               ))}
             </address>
           ) : (
-            <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-base" style={{ color: T.ink.dim }}>
               Address not added yet.{" "}
               <OpenCorrectionLink
                 category="Address or location"
@@ -295,7 +295,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
           )}
           {coords ? (
             <p
-              className="mt-2 mb-0 text-[12.5px]"
+              className="mt-2 mb-0 text-sm"
               style={{ fontFamily: T.font.mono, color: T.ink.dim }}
             >
               {coords}
@@ -306,7 +306,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
               <LibraryCopyButton text={addressLines.join(", ")} />
               {confirmable.includes("address") ? (
                 <OpenVerifyLink
-                  className={`${LINK} text-[14px]`}
+                  className={`${LINK} text-sm`}
                   sections={["address"]}
                 >
                   Still right?
@@ -345,7 +345,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
           )}
           {library.phone || library.email ? (
             <div className="mt-5">
-              <h3 className="m-0 text-[15px] font-bold">{tPage("contact")}</h3>
+              <h3 className="type-small-heading m-0">{tPage("contact")}</h3>
               <p className="mt-4 flex flex-wrap gap-4 text-sm">
                 {library.phone ? (
                   <a className={LINK} href={`tel:${library.phone}`}>
@@ -361,12 +361,12 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             </div>
           ) : null}
           {nearestStation || transitInfo ? (
-            <h3 className="mt-5 mb-0 text-[15px] font-bold">
+            <h3 className="type-small-heading mt-5 mb-0">
               {tPage("gettingThere")}
             </h3>
           ) : null}
           {nearestStation ? (
-            <p className="mt-4 mb-0 flex gap-2 text-[14.5px] leading-normal">
+            <p className="mt-4 mb-0 flex gap-2 text-sm leading-normal">
               <LibIcon d={LIB_ICONS.train} size={17} />
               <span>
                 <strong>Nearest station:</strong> {nearestStation}
@@ -374,7 +374,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             </p>
           ) : null}
           {transitInfo ? (
-            <p className="mt-3 mb-0 flex gap-2 text-[14.5px] leading-normal">
+            <p className="mt-3 mb-0 flex gap-2 text-sm leading-normal">
               <LibIcon d={LIB_ICONS.train} size={17} />
               <span>
                 <strong>Getting there:</strong> {transitInfo}
@@ -440,7 +440,7 @@ export function LibraryFacilitiesSection({
         librarySlug={library.slug ?? ""}
         rows={rows}
       />
-      <p className="mt-3 mb-0 text-[13.5px]" style={{ color: T.ink.dim }}>
+      <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
         {unknown > 0
           ? "Your answer goes to a reviewer before it’s shown. "
           : null}
@@ -490,7 +490,7 @@ export function historyEntries(
 }
 
 function CardAction({ children }: { readonly children: React.ReactNode }) {
-  return <div className="mt-auto pt-4 text-[14px]">{children}</div>
+  return <div className="mt-auto pt-4 text-sm">{children}</div>
 }
 
 export function LibraryHistorySection({ library }: { readonly library: Lib }) {
@@ -531,25 +531,20 @@ export function LibraryHistorySection({ library }: { readonly library: Lib }) {
                   <span
                     className="block text-[22px] leading-tight"
                     style={{
-                      fontFamily: T.font.serif,
+                      fontFamily: T.font.sans,
                       color: "var(--tint-special-fg)",
                     }}
                   >
                     {e.year}
                   </span>
                 ) : null}
-                <span className="block text-[14.5px] leading-snug">
-                  {e.text}
-                </span>
+                <span className="block text-sm leading-snug">{e.text}</span>
               </span>
             </li>
           ))}
         </ol>
       ) : (
-        <p
-          className="m-0 text-[14.5px] leading-normal"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm leading-normal" style={{ color: T.ink.dim }}>
           Not documented yet. When it opened, moved or was rebuilt all help.
         </p>
       )}
@@ -589,10 +584,7 @@ export function LibraryCollectionsSection({
         compact
         dashed
       >
-        <p
-          className="m-0 text-[14.5px] leading-normal"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm leading-normal" style={{ color: T.ink.dim }}>
           Not documented yet. Local studies, languages and special holdings are
           especially useful.
         </p>
@@ -674,7 +666,7 @@ export function LibraryCollectionsSection({
       <span id="collections" className="scroll-mt-24" />
       <div className="flex flex-col gap-[18px]">
         {summary ? (
-          <p className="m-0 max-w-[68ch] text-[17px] leading-[1.65] text-pretty">
+          <p className="m-0 max-w-[68ch] text-base leading-[1.65] text-pretty">
             {summary}
           </p>
         ) : null}
@@ -698,14 +690,14 @@ export function LibraryCollectionsSection({
                 <p
                   className="m-0 text-[24px] leading-tight"
                   style={{
-                    fontFamily: T.font.serif,
+                    fontFamily: T.font.sans,
                     color: "var(--tint-special-fg)",
                   }}
                 >
                   {entry.year}
                 </p>
                 <p
-                  className="mt-0.5 mb-0 text-[14px] leading-[1.5]"
+                  className="mt-0.5 mb-0 text-sm leading-[1.5]"
                   style={{ color: T.ink.dim }}
                 >
                   {entry.text}
@@ -727,20 +719,20 @@ export function LibraryCollectionsSection({
                 style={{ background: T.bg.surface }}
               >
                 <dt
-                  className="order-2 mt-0.5 text-[14px]"
+                  className="order-2 mt-0.5 text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   {stat.category ?? "Collection figure"}
                 </dt>
                 <dd
                   className="order-1 m-0 text-[26px] leading-tight"
-                  style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                  style={{ fontFamily: T.font.sans, color: T.ink.base }}
                 >
                   {stat.value}
                 </dd>
                 {!commonCollectionNote && stat.description ? (
                   <dd
-                    className="order-3 mt-2 mb-0 text-[13px] leading-normal"
+                    className="order-3 mt-2 mb-0 text-sm leading-normal"
                     style={{ color: T.ink.dim }}
                   >
                     {stat.description}
@@ -752,7 +744,7 @@ export function LibraryCollectionsSection({
         ) : null}
         {commonCollectionNote ? (
           <p
-            className="m-0 text-[13px] leading-normal"
+            className="m-0 text-sm leading-normal"
             style={{ color: T.ink.dim }}
           >
             {commonCollectionNote}
@@ -762,7 +754,7 @@ export function LibraryCollectionsSection({
         {buildingInfo || architect || operator ? (
           <dl
             id="building"
-            className={`m-0 grid scroll-mt-24 grid-cols-1 gap-3.5 text-[15px] leading-[1.5] ${operator && (buildingInfo || architect) ? "sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
+            className={`m-0 grid scroll-mt-24 grid-cols-1 gap-3.5 text-base leading-[1.5] ${operator && (buildingInfo || architect) ? "sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
           >
             {buildingInfo || architect ? (
               <div>
@@ -796,27 +788,27 @@ export function LibraryCollectionsSection({
             className="border-t pt-4"
             style={{ borderColor: T.border.divider }}
           >
-            <h3 className="m-0 mb-3 text-[15px] font-semibold">
+            <h3 className="type-small-heading m-0 mb-3">
               {visitorsOnly ? "Visitors" : "Library figures"}
             </h3>
             <dl className="m-0 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
               {visibleLibraryStats.map((stat, index) => (
                 <div key={index}>
                   <dt
-                    className="text-[14px] font-medium"
+                    className="text-sm font-medium"
                     style={{ color: T.ink.dim }}
                   >
                     {stat.label}
                   </dt>
                   <dd
                     className="m-0 mt-1 text-[23px] leading-tight"
-                    style={{ fontFamily: T.font.serif }}
+                    style={{ fontFamily: T.font.sans }}
                   >
                     {stat.value}
                   </dd>
                   {stat.note ? (
                     <dd
-                      className="m-0 mt-1 text-[12.5px] leading-relaxed"
+                      className="m-0 mt-1 text-sm leading-relaxed"
                       style={{ color: T.ink.dim }}
                     >
                       {stat.note}
@@ -855,7 +847,7 @@ export function LibraryCollectionsSection({
                   <dt className="text-sm font-semibold">{stat.label}</dt>
                   <dd
                     className="m-0 mt-1 text-xl"
-                    style={{ fontFamily: T.font.serif }}
+                    style={{ fontFamily: T.font.sans }}
                   >
                     {stat.value}
                   </dd>
@@ -902,7 +894,7 @@ export function LibraryCollectionsSection({
                 {hasLongBuilding ? (
                   <div className={hasDescription ? "mb-5" : undefined}>
                     <h3
-                      className="mt-0 mb-2 text-[16px] font-semibold"
+                      className="type-small-heading mt-0 mb-2"
                       style={{ color: T.ink.base }}
                     >
                       The building
@@ -957,7 +949,7 @@ export function LibraryEventsEmpty({
     return (
       <div
         id="events"
-        className="flex scroll-mt-32 flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[15px]"
+        className="flex scroll-mt-32 flex-wrap items-center justify-between gap-x-4 gap-y-2 text-base"
         style={{ color: T.ink.dim }}
       >
         <p className="m-0">
@@ -967,7 +959,7 @@ export function LibraryEventsEmpty({
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <OpenCorrectionLink
             category="Something else"
-            className="inline-flex min-h-11 items-center text-[14px] underline underline-offset-[3px]"
+            className="inline-flex min-h-11 items-center text-sm underline underline-offset-[3px]"
           >
             Add a key date
           </OpenCorrectionLink>
@@ -990,10 +982,7 @@ export function LibraryEventsEmpty({
       compact
       dashed
     >
-      <p
-        className="m-0 text-[14.5px] leading-normal"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-sm leading-normal" style={{ color: T.ink.dim }}>
         No events listed yet. Staff can connect the library&rsquo;s events
         calendar from the staff area.
       </p>
@@ -1105,7 +1094,7 @@ export function LibraryChangesSection({
         {recordStatus}
         <div className="min-w-0">
           {recordStatus ? (
-            <h3 className="m-0 mb-3 text-[15px] font-bold">
+            <h3 className="type-small-heading m-0 mb-3">
               {tPage("sourceCredits")}
             </h3>
           ) : null}
@@ -1163,7 +1152,7 @@ export function LibraryChangesSection({
                   <li key={index} className="min-w-0">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                       <p
-                        className="m-0 text-[16px] font-semibold"
+                        className="m-0 text-base font-semibold"
                         style={{ color: T.ink.base }}
                       >
                         {url ? (
@@ -1180,24 +1169,21 @@ export function LibraryChangesSection({
                         )}
                       </p>
                       {index === 0 && added ? (
-                        <p
-                          className="m-0 text-[13px]"
-                          style={{ color: T.ink.dim }}
-                        >
+                        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                           {added}
                         </p>
                       ) : null}
                     </div>
                     {showCredit && credit?.attribution ? (
                       <p
-                        className="m-0 mt-1 text-[14px] leading-normal"
+                        className="m-0 mt-1 text-sm leading-normal"
                         style={{ color: T.ink.dim }}
                       >
                         {credit.attribution}
                       </p>
                     ) : showCredit && (credit?.publisher || licence) ? (
                       <p
-                        className="m-0 mt-1 text-[14px]"
+                        className="m-0 mt-1 text-sm"
                         style={{ color: T.ink.dim }}
                       >
                         {credit?.publisher}
@@ -1207,7 +1193,7 @@ export function LibraryChangesSection({
                     ) : null}
                     {details ? (
                       <details
-                        className="mt-1.5 text-[13px]"
+                        className="mt-1.5 text-sm"
                         style={{ color: T.ink.dim }}
                       >
                         <summary className="w-fit cursor-pointer underline underline-offset-2">
@@ -1250,7 +1236,7 @@ export function LibraryChangesSection({
               })}
             </ul>
           ) : (
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               {[added, tUi("history_source_missing")]
                 .filter(Boolean)
                 .join(" · ")}
@@ -1263,7 +1249,7 @@ export function LibraryChangesSection({
           >
             <div className="min-w-0">
               <p
-                className="m-0 text-[14px] font-semibold"
+                className="m-0 text-sm font-semibold"
                 style={{ color: checkedDate ? T.accent.ok : T.ink.base }}
               >
                 {checkedDate
@@ -1271,15 +1257,12 @@ export function LibraryChangesSection({
                   : tUi("history_not_checked")}
               </p>
               {!checkedDate ? (
-                <p
-                  className="m-0 mt-0.5 text-[13px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
                   {tUi("history_check_help")}
                 </p>
               ) : null}
             </div>
-            <OpenCorrectionLink className="shrink-0 rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white! hover:bg-(--t-accent-primary-hover)">
+            <OpenCorrectionLink className="shrink-0 rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white! hover:bg-(--t-accent-primary-hover)">
               {tUi("suggest_a_correction")}
             </OpenCorrectionLink>
           </div>
@@ -1287,7 +1270,7 @@ export function LibraryChangesSection({
           {showActivity ? (
             <details className="mt-5">
               <summary
-                className="w-fit cursor-pointer text-[14px] font-semibold"
+                className="w-fit cursor-pointer text-sm font-semibold"
                 style={{ color: T.ink.dim }}
               >
                 {tUi("history_activity")}
@@ -1300,7 +1283,7 @@ export function LibraryChangesSection({
                 {most.length ? (
                   <div className="md:pb-8">
                     <h3
-                      className="m-0 text-[14px] font-semibold"
+                      className="type-small-heading m-0"
                       style={{ color: T.ink.base }}
                     >
                       {tUi("history_most_updated")}
@@ -1309,7 +1292,7 @@ export function LibraryChangesSection({
                       {most.map((field) => (
                         <li
                           key={field.field}
-                          className="rounded-full px-3 py-1 text-[13px]"
+                          className="rounded-full px-3 py-1 text-sm"
                           style={{ background: T.bg.muted, color: T.ink.base }}
                         >
                           {field.label} · {field.count}
@@ -1325,7 +1308,7 @@ export function LibraryChangesSection({
           {history && hasChanges ? (
             <details className="mt-5">
               <summary
-                className="m-0 min-h-11 cursor-pointer py-3 text-[15px] font-semibold"
+                className="m-0 min-h-11 cursor-pointer py-3 text-base font-semibold"
                 style={{ color: T.ink.base }}
               >
                 {tUi("history_recent_changes")}
@@ -1336,7 +1319,7 @@ export function LibraryChangesSection({
               />
             </details>
           ) : (
-            <p className="m-0 mt-4 text-[13px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-4 text-sm" style={{ color: T.ink.dim }}>
               {tUi(
                 !history
                   ? "history_changes_unavailable"
@@ -1358,7 +1341,7 @@ export function LibraryChangesSection({
 // ── Cite or reuse ────────────────────────────────────────────────────────────
 
 const REUSE_PILL =
-  "inline-flex items-center gap-1.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex items-center gap-1.5 rounded-full border bg-white px-4 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 export function LibraryReuseSection({
   library,
@@ -1404,21 +1387,15 @@ export function LibraryReuseSection({
       <div>
         <Heading
           id="reuse-h"
-          className={
-            embedded
-              ? "m-0 text-[15px] font-bold"
-              : "m-0 text-[26px] leading-tight sm:text-[28px]"
-          }
+          className="type-panel-title m-0"
           style={{
-            fontFamily: embedded ? T.font.sans : T.font.serif,
-            fontWeight: embedded ? 700 : 500,
             color: T.ink.base,
           }}
         >
           {embedded ? tPage("reuse") : "Cite or reuse this record"}
         </Heading>
         <p
-          className="mt-2 mb-0 text-[14.5px] leading-normal"
+          className="mt-2 mb-0 text-sm leading-normal"
           style={{ color: T.ink.dim }}
         >
           Open data under{" "}
@@ -1461,7 +1438,7 @@ export function LibraryReuseSection({
         style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
       >
         <blockquote
-          className="m-0 text-[14px] leading-relaxed wrap-break-word"
+          className="m-0 text-sm leading-relaxed wrap-break-word"
           style={{ color: T.ink.base }}
         >
           {citation}

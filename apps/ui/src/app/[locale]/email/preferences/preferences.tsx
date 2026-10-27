@@ -237,9 +237,7 @@ function EmailActionContent({
           >
             While you wait for the next issue
           </p>
-          <h2 className="mt-2 text-2xl" style={{ fontFamily: T.font.serif }}>
-            Stories from the world’s libraries
-          </h2>
+          <h2 className="type-h2 mt-2">Stories from the world’s libraries</h2>
           <UtilityLink
             href="/journal"
             className="mt-3 inline-block font-semibold underline underline-offset-4"

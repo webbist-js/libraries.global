@@ -136,7 +136,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
       >
         <span
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: "24px",
             lineHeight: 1,
             color: T.accent.aurora,
@@ -148,7 +148,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontSize: "var(--type-caption-size)",
             letterSpacing: ".18em",
             textTransform: "uppercase",
             color: T.ink.low,
@@ -170,14 +170,14 @@ function EventCard({ event }: { event: LibraryEvent }) {
           </p>
           {event.summary ? (
             <p
-              className="mt-0.5 line-clamp-1 text-[12px]"
+              className="mt-0.5 line-clamp-1 text-xs"
               style={{ color: T.ink.low }}
             >
               {event.summary}
             </p>
           ) : null}
           <p
-            className="mt-1.5 text-[11px]"
+            className="mt-1.5 text-xs"
             style={{ color: T.ink.faint, fontFamily: T.font.mono }}
           >
             {formatEventDate(event.startTime, event.endTime, event.allDay)}
@@ -191,7 +191,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
             className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.low,
@@ -208,7 +208,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
             className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: event.isFree ? T.accent.ok : T.accent.ember,
@@ -334,7 +334,7 @@ export function LibraryEvents({
         <span
           style={{
             fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontSize: "var(--type-caption-size)",
             letterSpacing: ".22em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -346,7 +346,7 @@ export function LibraryEvents({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               color: T.ink.faint,
             }}
           >
@@ -358,7 +358,7 @@ export function LibraryEvents({
             className="inline-flex items-center gap-1.5"
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.ok,
@@ -393,7 +393,7 @@ export function LibraryEvents({
               key={f.value}
               type="button"
               onClick={() => setTypeFilter(f.value)}
-              className="rounded-full border px-3 py-1 text-[11px] transition-all duration-150"
+              className="rounded-full border px-3 py-1 text-xs transition-all duration-150"
               style={{
                 fontFamily: T.font.mono,
                 letterSpacing: ".1em",
@@ -423,7 +423,7 @@ export function LibraryEvents({
             <button
               type="button"
               onClick={() => setFreeOnly((v) => !v)}
-              className="rounded-full border px-3 py-1 text-[11px] transition-all duration-150"
+              className="rounded-full border px-3 py-1 text-xs transition-all duration-150"
               style={{
                 fontFamily: T.font.mono,
                 letterSpacing: ".1em",
@@ -445,7 +445,7 @@ export function LibraryEvents({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "11px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -463,7 +463,7 @@ export function LibraryEvents({
           <p
             style={{
               fontFamily: T.font.mono,
-              fontSize: "11px",
+              fontSize: "var(--type-caption-size)",
               color: T.ink.faint,
             }}
           >
@@ -478,8 +478,8 @@ export function LibraryEvents({
           />
           <p
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "18px",
+              fontFamily: T.font.sans,
+              fontSize: "var(--type-body-large-size)",
               color: T.ink.dim,
             }}
           >

@@ -27,11 +27,11 @@ function KeyValueTile({
       className="rounded-[12px] px-4 py-3"
       style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >
-      <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         {label}
       </p>
       <p
-        className="m-0 mt-0.5 text-[15px] font-semibold"
+        className="m-0 mt-0.5 text-base font-semibold"
         style={{ color: T.ink.base }}
       >
         {value}
@@ -98,7 +98,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             className="size-6"
             aria-hidden="true"
           />
-          <p className="m-0 max-w-[26ch] text-[14px]">{t("photo")}</p>
+          <p className="m-0 max-w-[26ch] text-sm">{t("photo")}</p>
         </div>
       )}
 
@@ -110,18 +110,18 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             style={{ borderColor: T.border.line, background: T.bg.deep }}
           >
             <span
-              className="text-[13px] font-semibold"
+              className="text-sm font-semibold"
               style={{ color: T.accent.ember }}
             >
               {month}
             </span>
             <span
               className="text-[30px] leading-none"
-              style={{ fontFamily: T.font.serif, color: T.ink.base }}
+              style={{ fontFamily: T.font.sans, color: T.ink.base }}
             >
               {day}
             </span>
-            <span className="text-[12px]" style={{ color: T.ink.dim }}>
+            <span className="text-xs" style={{ color: T.ink.dim }}>
               {weekday}
             </span>
           </div>
@@ -129,17 +129,15 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
           <div className="min-w-0">
             <EventTypeChip type={event.eventType} />
             <h3
-              className="m-0 mt-1.5 text-[26px] leading-[1.15]"
+              className="type-h3 m-0 mt-1.5"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
                 color: T.ink.base,
               }}
             >
               {event.title}
             </h3>
             {event.library_name ? (
-              <p className="m-0 mt-1 text-[15px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 mt-1 text-base" style={{ color: T.ink.dim }}>
                 {t("at")}{" "}
                 {libraryPath ? (
                   <GlobalLink
@@ -162,7 +160,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
 
         {event.summary ? (
           <p
-            className="m-0 text-[15px] leading-[1.55]"
+            className="m-0 text-base leading-[1.55]"
             style={{ color: T.ink.dim }}
           >
             {event.summary}
@@ -182,7 +180,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             href={event.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[15px] font-semibold text-white transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-base font-semibold text-white transition-colors"
             style={{ background: T.accent.primary }}
           >
             {t("book", { provider })}
@@ -196,7 +194,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             href={addToCalendarUrl(event)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
+            className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-base font-semibold transition-colors hover:bg-(--t-bg-muted)"
             style={{
               borderColor: T.border.hi,
               background: T.bg.deep,
@@ -210,7 +208,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             />
             {tUi("add_to_calendar")}
           </a>
-          <span className="text-[14px]" style={{ color: T.ink.low }}>
+          <span className="text-sm" style={{ color: T.ink.low }}>
             {t("listingFrom", { provider })}
           </span>
         </div>
@@ -236,10 +234,8 @@ export function EventsWeekCarousel({
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2
           id="events-week-heading"
-          className="m-0 text-[28px]"
+          className="type-h2 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -247,7 +243,7 @@ export function EventsWeekCarousel({
         </h2>
         {events.length > 1 ? (
           <div className="flex items-center gap-2.5">
-            <span className="text-[14px]" style={{ color: T.ink.dim }}>
+            <span className="text-sm" style={{ color: T.ink.dim }}>
               {t("pageOf", {
                 page: Math.min(index, events.length - 1) + 1,
                 pages: events.length,

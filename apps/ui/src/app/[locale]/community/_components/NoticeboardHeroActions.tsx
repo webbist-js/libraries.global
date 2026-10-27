@@ -42,7 +42,7 @@ export function NoticeboardHeroActions({
       <div className="flex flex-wrap gap-2.5">
         <GlobalLink
           href={proposeActionHref(board, signedIn)}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-base font-semibold no-underline hover:border-(--t-accent-primary)"
           style={{ color: T.ink.base }}
         >
           <Icon
@@ -54,7 +54,7 @@ export function NoticeboardHeroActions({
         </GlobalLink>
       </div>
       {openCount > 0 ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           {fmt(openCount)} open {openCount === 1 ? "drive" : "drives"} ·{" "}
           {fmt(helping)} helping
         </p>

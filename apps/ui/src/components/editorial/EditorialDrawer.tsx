@@ -106,7 +106,7 @@ export function EditorialDrawer() {
       title={tUi("editorial")}
       eyebrow={
         <span
-          className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[14px] font-semibold"
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold"
           style={{
             background: T.bg.deep,
             borderColor: T.border.line,
@@ -167,7 +167,7 @@ export function EditorialDrawer() {
                   />
                 </span>
                 <div className="min-w-0">
-                  <p className="m-0 text-[15px] font-semibold">
+                  <p className="m-0 text-base font-semibold">
                     {waiting > 0
                       ? t("waiting", { count: waiting })
                       : countsKnown
@@ -176,7 +176,7 @@ export function EditorialDrawer() {
                           ? t("checking")
                           : t("countsUnavailable")}
                   </p>
-                  <p className="m-0 mt-1 text-[14px] leading-relaxed text-[#d1cedd]">
+                  <p className="m-0 mt-1 text-sm leading-relaxed text-[#d1cedd]">
                     {summary.isPending || countsKnown
                       ? t("reviewPrivacy")
                       : t("partialCounts")}
@@ -240,7 +240,7 @@ export function EditorialDrawer() {
                   <div key={kind} className="py-3 first:pt-0 last:pb-0">
                     <div className="mb-2.5 flex items-start justify-between gap-3">
                       <div>
-                        <h4 className="m-0 flex items-center gap-2 text-[14px] font-semibold text-(--t-ink-base)">
+                        <h4 className="type-h4 m-0 flex items-center gap-2 text-(--t-ink-base)">
                           <Icon
                             aria-hidden
                             icon={
@@ -254,14 +254,14 @@ export function EditorialDrawer() {
                           />
                           {tUi(kind === "docs" ? "knowledge" : "journal")}
                         </h4>
-                        <p className="m-0 mt-1 text-[14px] text-(--t-ink-dim)">
+                        <p className="m-0 mt-1 text-sm text-(--t-ink-dim)">
                           {languagesOf(c.editorLocales[kind])}
                         </p>
                       </div>
                       <Link
                         href={kind === "docs" ? "/knowledge" : "/journal"}
                         onClick={closeEditorialDrawer}
-                        className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                        className="inline-flex min-h-[44px] items-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
                       >
                         {t("browse")}
                       </Link>

@@ -55,7 +55,7 @@ const SIMULATIONS = [
 type Screen = (typeof SCREENS)[number]["key"]
 type Simulation = (typeof SIMULATIONS)[number]["key"] | null
 const CHIP =
-  "inline-flex min-h-11 items-center rounded-full border px-3.5 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex min-h-11 items-center rounded-full border px-3.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
 
 /**
  * The Go live tab's phone frame: the real console screens rendered with a
@@ -205,7 +205,7 @@ export function ConsolePreview({
     >
       <summary
         className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-5 text-[24px] sm:px-6"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+        style={{ fontFamily: T.font.sans, fontWeight: 500 }}
       >
         <span className="flex items-center gap-2">
           <Icon
@@ -236,7 +236,7 @@ export function ConsolePreview({
           role="group"
         >
           <div
-            className="flex h-11 shrink-0 items-center justify-between px-5 text-[13px] font-semibold tabular-nums"
+            className="flex h-11 shrink-0 items-center justify-between px-5 text-sm font-semibold tabular-nums"
             style={{ color: T.ink.dim }}
             aria-hidden="true"
           >
@@ -260,12 +260,12 @@ export function ConsolePreview({
           >
             {screen === "entry" || screen === "confirm" ? (
               <div className="relative">
-                <p className="m-0 text-[12.5px]" style={{ color: T.ink.dim }}>
+                <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                   Staff area · Your libraries
                 </p>
                 <p
                   className="my-2 text-[28px]"
-                  style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+                  style={{ fontFamily: T.font.sans, fontWeight: 500 }}
                 >
                   {local ? greetingFor(Math.floor(local.minute / 60)) : "Hello"}
                   , {firstName}.
@@ -290,7 +290,7 @@ export function ConsolePreview({
                     </button>
                   }
                 />
-                <p className="mt-3 text-[13px]" style={{ color: T.ink.dim }}>
+                <p className="mt-3 text-sm" style={{ color: T.ink.dim }}>
                   Also on the library page, in the “You run this mobile library”
                   card.
                 </p>
@@ -424,7 +424,7 @@ export function ConsolePreview({
                   <div className="space-y-4">
                     <p
                       className="m-0 text-[28px] leading-tight"
-                      style={{ fontFamily: T.font.serif }}
+                      style={{ fontFamily: T.font.sans }}
                     >
                       {action === "skip"
                         ? "Skip this stop?"
@@ -432,7 +432,7 @@ export function ConsolePreview({
                           ? "Not running?"
                           : "End route?"}
                     </p>
-                    <p className="text-[15px]" style={{ color: T.ink.dim }}>
+                    <p className="text-base" style={{ color: T.ink.dim }}>
                       This only changes the preview. No public update is sent.
                     </p>
                     <button
@@ -464,7 +464,7 @@ export function ConsolePreview({
                   </div>
                 ) : (
                   <ConfirmIdentityLook heading="p">
-                    <label className="block text-[15px] font-semibold">
+                    <label className="block text-base font-semibold">
                       {tUi("password")}{" "}
                       <span
                         className="font-normal"
@@ -497,7 +497,7 @@ export function ConsolePreview({
                     </button>
                     <button
                       type="button"
-                      className="mx-auto block min-h-14 text-[15px] font-semibold"
+                      className="mx-auto block min-h-14 text-base font-semibold"
                       style={{ color: T.ink.dim }}
                       onClick={() => setScreen("entry")}
                     >
@@ -516,17 +516,12 @@ export function ConsolePreview({
             className="rounded-[24px] border p-5 sm:p-6"
             style={{ borderColor: T.border.line }}
           >
-            <h3
-              className="m-0 text-[28px]"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
-              Try the console
-            </h3>
-            <p className="m-0 mt-1 text-[14px]" style={{ color: T.ink.dim }}>
+            <h3 className="type-h3 m-0">Try the console</h3>
+            <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
               Interactive preview. Nothing here starts a live session or changes
               the public page.
             </p>
-            <p className="mt-2 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="mt-2 mb-0 text-sm" style={{ color: T.ink.dim }}>
               {routeDate
                 ? `Using the saved timetable for ${shortDate(routeDate)}${!initial.route.length ? "; there are no scheduled stops today" : ""}.`
                 : "Add a timetable to preview the route screens."}
@@ -569,9 +564,7 @@ export function ConsolePreview({
                 )
               })}
             </div>
-            <p className="mt-4 mb-2 text-[14px] font-semibold">
-              {tUi("simulate")}
-            </p>
+            <p className="mt-4 mb-2 text-sm font-semibold">{tUi("simulate")}</p>
             <div
               className="flex flex-wrap gap-2"
               role="group"
@@ -616,10 +609,10 @@ export function ConsolePreview({
             style={{ borderColor: T.border.line }}
             aria-live="polite"
           >
-            <p className="m-0 text-[14px] font-semibold">
+            <p className="m-0 text-sm font-semibold">
               What the public sees right now
             </p>
-            <p className="mt-1 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="mt-1 mb-0 text-sm" style={{ color: T.ink.dim }}>
               The actual public page. Trying the preview doesn’t change this.
             </p>
             {publicNow ? (
@@ -635,13 +628,13 @@ export function ConsolePreview({
                 </p>
                 <p
                   className="my-2 text-[22px] leading-snug"
-                  style={{ fontFamily: T.font.serif }}
+                  style={{ fontFamily: T.font.sans }}
                 >
                   {publicNow.sentence}
                 </p>
               </>
             ) : (
-              <p className="my-2 text-[15px]" style={{ color: T.ink.dim }}>
+              <p className="my-2 text-base" style={{ color: T.ink.dim }}>
                 {tt
                   ? "Checking the public line…"
                   : "Add a timetable to see the public line."}
@@ -649,14 +642,14 @@ export function ConsolePreview({
             )}
             <Link
               href={publicPath}
-              className="text-[14px] font-semibold underline underline-offset-[3px]"
+              className="text-sm font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
               Open the public library page
             </Link>
           </section>
           <p
-            className="m-0 rounded-[24px] border px-5 py-4 text-[15px] leading-relaxed"
+            className="m-0 rounded-[24px] border px-5 py-4 text-base leading-relaxed"
             style={{
               borderColor: T.border.line,
               color: T.ink.dim,

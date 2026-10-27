@@ -52,19 +52,16 @@ function SourceStep({
       <span
         aria-hidden="true"
         className="text-[26px] leading-none"
-        style={{ fontFamily: T.font.serif, color: T.accent.primary }}
+        style={{ fontFamily: T.font.sans, color: T.accent.primary }}
       >
         {index}
       </span>
       <div>
-        <h3
-          className="m-0 text-[16px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
+        <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
           {title}
         </h3>
         <p
-          className="m-0 mt-1 text-[14.5px] leading-[1.55]"
+          className="m-0 mt-1 text-sm leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           {children}
@@ -224,7 +221,7 @@ export function EventsPageClient() {
         {state === "ready" ? (
           <p
             aria-live="polite"
-            className="m-0 flex items-center gap-2 text-[14.5px] font-semibold"
+            className="m-0 flex items-center gap-2 text-sm font-semibold"
             style={{ color: T.ink.base }}
           >
             <Icon
@@ -277,7 +274,7 @@ export function EventsPageClient() {
               />
               <h2
                 aria-live="polite"
-                className="m-0 flex-1 text-[18px] font-semibold"
+                className="type-panel-title m-0 flex-1"
                 style={{ color: T.ink.base }}
               >
                 {state === "loading"
@@ -290,7 +287,7 @@ export function EventsPageClient() {
                 <a
                   href="/api/events/ics"
                   download
-                  className="text-[14.5px] font-semibold underline underline-offset-[3px]"
+                  className="text-sm font-semibold underline underline-offset-[3px]"
                   style={{ color: T.accent.primary }}
                 >
                   {t("subscribe")}
@@ -304,15 +301,12 @@ export function EventsPageClient() {
                 className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) px-7 py-8"
               >
                 <p
-                  className="m-0 text-[17px] font-bold"
+                  className="m-0 text-base font-bold"
                   style={{ color: T.ink.base }}
                 >
                   {t("errorTitle")}
                 </p>
-                <p
-                  className="m-0 mt-1 text-[15px]"
-                  style={{ color: T.ink.base }}
-                >
+                <p className="m-0 mt-1 text-base" style={{ color: T.ink.base }}>
                   {t("errorLead")}
                 </p>
                 <button
@@ -374,16 +368,14 @@ export function EventsPageClient() {
         >
           <h2
             id="events-sources-heading"
-            className="m-0 text-[28px]"
+            className="type-h2 m-0"
             style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
               color: T.ink.base,
             }}
           >
             {t("sourcesTitle")}
           </h2>
-          <p className="mt-1.5 mb-0 text-[15.5px]" style={{ color: T.ink.dim }}>
+          <p className="mt-1.5 mb-0 text-base" style={{ color: T.ink.dim }}>
             {t("sourcesLead")}
           </p>
 

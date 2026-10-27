@@ -104,7 +104,7 @@ const Body = z.object({
         slug: z.string(),
         role: z.enum(["organiser", "member"]),
         libraryCount: z.number().int().nonnegative(),
-        libraryDocumentIds: z.array(z.string()).max(200),
+        libraryDocumentIds: z.array(z.string()).max(2000),
         expiresAt: z.string().nullable(),
         status: z.enum(["active", "lapsed"]),
         organiserName: z.string().nullable().optional(),

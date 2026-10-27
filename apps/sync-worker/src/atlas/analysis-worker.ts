@@ -1,6 +1,7 @@
 import "dotenv/config"
 import { randomUUID } from "node:crypto"
 import { createServer } from "node:http"
+import { setTimeout as delay } from "node:timers/promises"
 
 import knex from "knex"
 
@@ -9,6 +10,45 @@ const required = (key: string): string => {
   if (!value) throw new Error(`${key} is required for Atlas analysis`)
 
   return value
+}
+
+export async function retryAnalysisDatabase(
+  operation: () => Promise<void>,
+  signal: AbortSignal,
+  {
+    once = false,
+    onError = (error: unknown) => console.error(error),
+  }: { once?: boolean; onError?: (error: unknown) => void } = {}
+) {
+  while (!signal.aborted) {
+    try {
+      await operation()
+
+      return
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : ""
+      if (
+        once ||
+        ![
+          "ECONNRESET",
+          "ECONNREFUSED",
+          "EPIPE",
+          "ETIMEDOUT",
+          "57P01",
+          "57P02",
+          "57P03",
+        ].includes(code)
+      )
+        throw error
+      onError(error)
+      await delay(1000, undefined, { signal }).catch((error) => {
+        if (!signal.aborted) throw error
+      })
+    }
+  }
 }
 
 export async function runAnalysisJob(
@@ -130,7 +170,7 @@ async function main() {
   process.once("SIGINT", () => abort.abort())
   let processed = 0
   let lastPrune = 0
-  let lastTick = Date.now()
+  let lastTick = 0
   const health = process.argv.includes("--once")
     ? null
     : createServer((_request, response) => {
@@ -157,81 +197,93 @@ async function main() {
     })
   }
   try {
-    while (!abort.signal.aborted) {
-      lastTick = Date.now()
-      if (Date.now() - lastPrune > 60000) {
-        await db("atlas_analysis_jobs")
-          .where("expires_at", "<", new Date())
-          .delete()
-        await db("atlas_analysis_budgets")
-          .where("window_start", "<", new Date(Date.now() - 2 * 86400000))
-          .delete()
-        // Retire metadata only after a complete private catalogue response.
-        // A dependency outage must never look like an empty active catalogue.
-        try {
-          const response = await fetch(
-            new URL("/releases", required("ANALYSIS_SERVICE_URL")),
-            {
-              headers: {
-                "x-analysis-token": required("ANALYSIS_SERVICE_TOKEN"),
-              },
-              signal: AbortSignal.timeout(10000),
-              redirect: "error",
-            }
-          )
-          const releases = response.ok ? await response.json() : null
-          if (
-            Array.isArray(releases) &&
-            releases.length > 0 &&
-            releases.length <= 512 &&
-            releases.every((row) => typeof row.id === "string")
-          )
+    await retryAnalysisDatabase(
+      async () => {
+        while (!abort.signal.aborted) {
+          if (Date.now() - lastPrune > 60000) {
             await db("atlas_analysis_jobs")
-              .whereNotIn(
-                "release_id",
-                releases.map((row) => row.id)
-              )
+              .where("expires_at", "<", new Date())
               .delete()
-          // A profile can be partitioned without changing the graph used by
-          // its remaining countries. Retire origins moved to another profile.
-          if (
-            Array.isArray(releases) &&
-            releases.every(
-              (release) =>
-                Array.isArray(release.countries) &&
-                release.countries.length > 0 &&
-                release.countries.every(
-                  (country: unknown) =>
-                    typeof country === "string" &&
-                    /^[A-Z]{2}(?:-[A-Z]{3})?$/.test(country)
+            await db("atlas_analysis_budgets")
+              .where("window_start", "<", new Date(Date.now() - 2 * 86400000))
+              .delete()
+            // Retire metadata only after a complete private catalogue response.
+            // A dependency outage must never look like an empty active catalogue.
+            try {
+              const response = await fetch(
+                new URL("/releases", required("ANALYSIS_SERVICE_URL")),
+                {
+                  headers: {
+                    "x-analysis-token": required("ANALYSIS_SERVICE_TOKEN"),
+                  },
+                  signal: AbortSignal.timeout(10000),
+                  redirect: "error",
+                }
+              )
+              const releases = response.ok ? await response.json() : null
+              if (
+                Array.isArray(releases) &&
+                releases.length > 0 &&
+                releases.length <= 512 &&
+                releases.every((row) => typeof row.id === "string")
+              )
+                await db("atlas_analysis_jobs")
+                  .whereNotIn(
+                    "release_id",
+                    releases.map((row) => row.id)
+                  )
+                  .delete()
+              // A profile can be partitioned without changing the graph used by
+              // its remaining countries. Retire origins moved to another profile.
+              if (
+                Array.isArray(releases) &&
+                releases.every(
+                  (release) =>
+                    Array.isArray(release.countries) &&
+                    release.countries.length > 0 &&
+                    release.countries.every(
+                      (country: unknown) =>
+                        typeof country === "string" &&
+                        /^[A-Z]{2}(?:-[A-Z]{3})?$/.test(country)
+                    )
                 )
-            )
-          )
-            for (const release of releases)
-              await db("atlas_analysis_jobs")
-                .where({ release_id: release.id })
-                .whereRaw("payload->>'country' IS NOT NULL")
-                .whereRaw("NOT ((payload->>'country') = ANY (?::text[]))", [
-                  release.countries,
-                ])
-                .delete()
-        } catch {
-          /* Keep resumable jobs while the service is unavailable. */
+              )
+                for (const release of releases)
+                  await db("atlas_analysis_jobs")
+                    .where({ release_id: release.id })
+                    .whereRaw("payload->>'country' IS NOT NULL")
+                    .whereRaw("NOT ((payload->>'country') = ANY (?::text[]))", [
+                      release.countries,
+                    ])
+                    .delete()
+            } catch {
+              /* Keep resumable jobs while the service is unavailable. */
+            }
+            lastPrune = Date.now()
+          }
+          const worked = await runAnalysisJob(db, abort.signal)
+          lastTick = Date.now()
+          if (worked) {
+            processed++
+            if (processed % 25 === 0) console.log(JSON.stringify({ processed }))
+          } else if (process.argv.includes("--once")) {
+            const pending = await db("atlas_analysis_jobs")
+              .whereIn("state", ["pending", "running"])
+              .first("key")
+            if (!pending) break
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+          } else await new Promise((resolve) => setTimeout(resolve, 1000))
         }
-        lastPrune = Date.now()
+      },
+      abort.signal,
+      {
+        once: process.argv.includes("--once"),
+        onError: () => {
+          lastTick = 0
+          console.error("[atlas-analysis] Database unavailable; retrying in 1s")
+        },
       }
-      const worked = await runAnalysisJob(db, abort.signal)
-      if (worked) {
-        processed++
-        if (processed % 25 === 0) console.log(JSON.stringify({ processed }))
-      } else if (process.argv.includes("--once")) {
-        const pending = await db("atlas_analysis_jobs")
-          .whereIn("state", ["pending", "running"])
-          .first("key")
-        if (!pending) break
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-      } else await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
+    )
     console.log(
       JSON.stringify({
         processed,
@@ -261,5 +313,5 @@ export function analysisWorkerHealthy(
   signal: AbortSignal,
   now = Date.now()
 ) {
-  return !signal.aborted && now - lastTick < 330000
+  return !signal.aborted && lastTick > 0 && now - lastTick < 330000
 }

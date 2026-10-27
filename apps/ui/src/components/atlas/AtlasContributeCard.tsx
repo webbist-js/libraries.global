@@ -7,9 +7,9 @@ import { T } from "@/lib/design-tokens"
 import { Icon } from "./atlas-ui"
 
 const PRIMARY =
-  "inline-flex h-9 items-center rounded-full bg-(--t-accent-primary) px-3.5 text-[14px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+  "inline-flex h-9 items-center rounded-full bg-(--t-accent-primary) px-3.5 text-sm font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
 const SECONDARY =
-  "inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-[14px] font-semibold no-underline hover:border-(--t-accent-primary)"
+  "inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-sm font-semibold no-underline hover:border-(--t-accent-primary)"
 
 /**
  * The Atlas's invitation to contribute, under the search. Signed out it
@@ -38,10 +38,10 @@ export function AtlasContributeCard({
         <span className="mt-0.5" style={{ color: T.accent.primary }}>
           <Icon name="pin" size={20} />
         </span>
-        <div className="text-[14px] leading-normal">
+        <div className="text-sm leading-normal">
           <h2
             id="atlas-contribute-title"
-            className="m-0 pr-7 text-[15px] font-bold"
+            className="type-small-heading m-0 pr-7"
           >
             See a gap on the map?
           </h2>

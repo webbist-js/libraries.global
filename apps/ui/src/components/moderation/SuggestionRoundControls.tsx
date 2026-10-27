@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { Badge } from "@/components/ds/Badge"
 import { Button } from "@/components/ui/button"
 import type { SuggestionReviewRound } from "@/lib/community/suggestions"
-import { T } from "@/lib/design-tokens"
 
 export function SuggestionRoundControls({
   initial,
@@ -82,7 +81,7 @@ export function SuggestionRoundControls({
     return (
       <p
         role="status"
-        className="m-0 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[15px] leading-relaxed text-(--t-ink-dim)"
+        className="m-0 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-base leading-relaxed text-(--t-ink-dim)"
       >
         {loading ? "Loading the review schedule…" : t("reviewUnavailable")}
       </p>
@@ -91,12 +90,7 @@ export function SuggestionRoundControls({
   return (
     <section className="grid min-w-0 gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5">
       <div className="flex flex-col items-start gap-3">
-        <h2
-          className="m-0 text-[26px] leading-tight"
-          style={{ fontFamily: T.font.serif }}
-        >
-          {t("manageRound")}
-        </h2>
+        <h2 className="type-h2 m-0">{t("manageRound")}</h2>
         <Badge
           label={t(round.state === "voting" ? "openVotes" : "reviewInProgress")}
           color={round.state === "voting" ? "ok" : "aurora"}
@@ -108,25 +102,25 @@ export function SuggestionRoundControls({
           className="m-0 grid min-w-0 gap-4 border-0 p-0"
         >
           <legend className="sr-only">{t("manageRound")}</legend>
-          <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
+          <label className="grid min-w-0 gap-2 text-sm font-semibold">
             {t("cutoffAt")}
             <input
               type="datetime-local"
               value={cutoff}
               onChange={(e) => setCutoff(e.target.value)}
-              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-[15px] font-normal"
+              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-base font-normal"
             />
           </label>
-          <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
+          <label className="grid min-w-0 gap-2 text-sm font-semibold">
             {t("reviewAt")}
             <input
               type="datetime-local"
               value={review}
               onChange={(e) => setReview(e.target.value)}
-              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-[15px] font-normal"
+              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-base font-normal"
             />
           </label>
-          <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
+          <label className="grid min-w-0 gap-2 text-sm font-semibold">
             {t("capacity")}
             <input
               type="number"
@@ -134,12 +128,12 @@ export function SuggestionRoundControls({
               max={20}
               value={capacity}
               onChange={(e) => setCapacity(Number(e.target.value))}
-              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-[16px] font-normal"
+              className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-surface) px-3 py-2 text-base font-normal"
             />
           </label>
         </fieldset>
       ) : (
-        <ol className="m-0 grid gap-3 pl-5 text-[15px] leading-relaxed">
+        <ol className="m-0 grid gap-3 pl-5 text-base leading-relaxed">
           {round.shortlist.map((item) => (
             <li key={item.documentId}>
               <a
@@ -168,7 +162,7 @@ export function SuggestionRoundControls({
       {message && (
         <p
           role={failed ? "alert" : "status"}
-          className={`m-0 rounded-xl px-4 py-3 text-[14px] leading-relaxed ${failed ? "bg-(--t-palette-coral-soft) text-(--t-palette-coral-fg)" : "bg-(--t-palette-mint-soft) text-(--t-palette-mint-fg)"}`}
+          className={`m-0 rounded-xl px-4 py-3 text-sm leading-relaxed ${failed ? "bg-(--t-palette-coral-soft) text-(--t-palette-coral-fg)" : "bg-(--t-palette-mint-soft) text-(--t-palette-mint-fg)"}`}
         >
           {message}
         </p>

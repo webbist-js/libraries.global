@@ -36,7 +36,7 @@ export function SuggestionReviewCard({
   return (
     <section className="rounded-[32px] bg-(--t-ink-base) p-6 text-white sm:p-7">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h2 className="m-0 font-sans text-sm leading-snug font-bold tracking-[0.1em] text-[#c5c0e9] uppercase">
+        <h2 className="type-label m-0 text-[#c5c0e9] uppercase">
           {t("nextReview")}
         </h2>
         <time
@@ -49,7 +49,7 @@ export function SuggestionReviewCard({
       {round.state === "voting" && days > 0 ? (
         <>
           <p className="mt-2 mb-5 flex flex-wrap items-baseline gap-3">
-            <span className="font-serif text-[72px] leading-none tracking-tight text-white">
+            <span className="font-sans text-[72px] leading-none tracking-tight text-white">
               {days}
             </span>
             <span className="text-base text-(--t-ink-on-dark)">
@@ -71,7 +71,7 @@ export function SuggestionReviewCard({
           </div>
         </>
       ) : (
-        <p className="my-4 font-serif text-2xl">
+        <p className="my-4 font-sans text-2xl">
           {t(round.state === "voting" ? "cutoffReached" : "reviewInProgress")}
         </p>
       )}
@@ -84,7 +84,7 @@ export function SuggestionReviewCard({
           }).format(new Date(round.cutoffAt)),
         })}
       </p>
-      <p className="mt-4 mb-0 text-[15px] leading-[1.55] text-(--t-ink-on-dark)">
+      <p className="mt-4 mb-0 text-base leading-[1.55] text-(--t-ink-on-dark)">
         {t(round.state === "voting" ? "reviewVoteHint" : "shortlistSaved", {
           count: round.capacity,
         })}

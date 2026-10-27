@@ -89,10 +89,7 @@ export function UtilityHeading({
           {icon}
         </div>
       )}
-      <h1
-        className="m-0 text-[clamp(2.6rem,6vw,4.2rem)] leading-[1.06] font-medium tracking-[-0.025em]"
-        style={{ fontFamily: T.font.serif, overflowWrap: "anywhere" }}
-      >
+      <h1 className="type-h1 m-0" style={{ overflowWrap: "anywhere" }}>
         {title}
         {italic && (
           <>

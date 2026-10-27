@@ -105,6 +105,9 @@ function setup(
     [SUBMISSION]: [],
     ...extra,
   })
+  materialiseRelations(fake, "plugin::access.library-authority-grant", [
+    "library",
+  ])
   materialiseRelations(fake, AFFILIATION_UID, ["library", "teamMember"])
   materialiseRelations(fake, TEAM_MEMBER_UID, ["team"])
   fake.services["access.people"] = {

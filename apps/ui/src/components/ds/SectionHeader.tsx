@@ -13,12 +13,10 @@ export function SectionHeader({
 }) {
   return (
     <Tag
+      className={
+        Tag === "h1" ? "type-h1" : Tag === "h3" ? "type-h3" : "type-h2"
+      }
       style={{
-        fontFamily: T.font.serif,
-        fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
-        fontWeight: 500,
-        lineHeight: 1.1,
-        letterSpacing: "-0.01em",
         color: T.ink.base,
         margin: 0,
       }}

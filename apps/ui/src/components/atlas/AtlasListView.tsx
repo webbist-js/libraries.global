@@ -212,7 +212,7 @@ export function AtlasListView({
             loading={Boolean(remoteScope && !remote.value)}
           />
         </div>
-        <div className="flex items-center gap-2 text-[14px] font-semibold">
+        <div className="flex items-center gap-2 text-sm font-semibold">
           <span className={compact ? "sr-only" : undefined}>{t("sort")}</span>
           <SelectField
             label={t("sort")}
@@ -279,13 +279,13 @@ export function AtlasListView({
         </p>
       ) : null}
       {remoteScope && !remote.value ? null : libraries.length === 0 ? (
-        <p className="m-0 p-6 text-[16px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 p-6 text-base" style={{ color: T.ink.dim }}>
           No libraries in this part of the map match your filters. Zoom out or
           loosen a filter.
         </p>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto">
-          <table className="w-full border-collapse text-[15px]">
+          <table className="w-full border-collapse text-base">
             <caption className="sr-only">
               {t("caption", { order: t(sort) })}
             </caption>
@@ -300,7 +300,7 @@ export function AtlasListView({
                         : "ascending"
                       : undefined
                   }
-                  className="border-b px-3.5 py-3 text-left text-[13px] whitespace-nowrap"
+                  className="border-b px-3.5 py-3 text-left text-sm whitespace-nowrap"
                   style={{ borderColor: T.border.hi }}
                 >
                   {sortButton("name", tUi("name"))}
@@ -308,7 +308,7 @@ export function AtlasListView({
                 {!compact ? (
                   <th
                     scope="col"
-                    className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
+                    className="border-b px-3.5 py-3 text-left text-sm font-bold"
                     style={{ borderColor: T.border.hi }}
                   >
                     {tUi("type")}
@@ -323,7 +323,7 @@ export function AtlasListView({
                         : "ascending"
                       : undefined
                   }
-                  className="border-b px-3.5 py-3 text-left text-[13px]"
+                  className="border-b px-3.5 py-3 text-left text-sm"
                   style={{ borderColor: T.border.hi }}
                 >
                   {sortButton("place", t("placeColumn"))}
@@ -331,7 +331,7 @@ export function AtlasListView({
                 {accessibility ? (
                   <th
                     scope="col"
-                    className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
+                    className="border-b px-3.5 py-3 text-left text-sm font-bold"
                     style={{ borderColor: T.border.hi }}
                   >
                     {tUi("accessibility")}{" "}
@@ -339,7 +339,7 @@ export function AtlasListView({
                 ) : null}
                 <th
                   scope="col"
-                  className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
+                  className="border-b px-3.5 py-3 text-left text-sm font-bold"
                   style={{ borderColor: T.border.hi }}
                 >
                   Now
@@ -348,7 +348,7 @@ export function AtlasListView({
                   <>
                     <th
                       scope="col"
-                      className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
+                      className="border-b px-3.5 py-3 text-left text-sm font-bold"
                       style={{ borderColor: T.border.hi }}
                     >
                       Today
@@ -362,7 +362,7 @@ export function AtlasListView({
                             : "ascending"
                           : undefined
                       }
-                      className="border-b px-3.5 py-3 text-left text-[13px] font-bold"
+                      className="border-b px-3.5 py-3 text-left text-sm font-bold"
                       style={{ borderColor: T.border.hi }}
                     >
                       {sortButton(
@@ -489,9 +489,7 @@ export function AtlasListView({
                                   }}
                                 />
                               </span>
-                              <span className="w-8 text-[13px]">
-                                {l.complete}%
-                              </span>
+                              <span className="w-8 text-sm">{l.complete}%</span>
                             </span>
                           )}
                         </td>
@@ -660,7 +658,7 @@ function PagerButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-[14px] font-semibold disabled:opacity-40"
+      className="inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-sm font-semibold disabled:opacity-40"
       style={{ borderColor: T.border.hi }}
     >
       {children}

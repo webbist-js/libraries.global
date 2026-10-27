@@ -554,19 +554,14 @@ export function LiveConsole({
         style={{ borderColor: T.border.line }}
       >
         <div className="min-w-0">
-          <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             Libraries Global Live
           </p>
-          <h1
-            className="m-0 text-[22px] leading-tight break-words"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            {initial.library.name}
-          </h1>
+          <h1 className="type-h1 m-0 break-words">{initial.library.name}</h1>
         </div>
         <details ref={menu} className="relative shrink-0">
           <summary
-            className="flex min-h-14 cursor-pointer list-none items-center gap-1 rounded-full border px-4 text-[14px] font-semibold"
+            className="flex min-h-14 cursor-pointer list-none items-center gap-1 rounded-full border px-4 text-sm font-semibold"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}
           >
             Menu
@@ -631,12 +626,7 @@ export function LiveConsole({
       !initial.liveEnabled ||
       !tt ? (
         <section>
-          <h2
-            className="text-2xl"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            You’re not set up to go live
-          </h2>
+          <h2 className="type-h2">You’re not set up to go live</h2>
           <p className="my-4">
             {!initial.liveEnabled
               ? "Live sharing is temporarily unavailable."
@@ -798,13 +788,13 @@ export function LiveConsole({
           extra={
             <>
               {mode === "approximate" && (
-                <p className="my-4 text-[14px]" style={{ color: T.ink.dim }}>
+                <p className="my-4 text-sm" style={{ color: T.ink.dim }}>
                   Location is shared only between stops, rounded to about 250 m
                   and a minute behind. Keep this screen on. Your browser will
                   ask to use location after starting.
                 </p>
               )}
-              <p className="my-4 text-[13.5px]" style={{ color: T.ink.dim }}>
+              <p className="my-4 text-sm" style={{ color: T.ink.dim }}>
                 On iPhone, an installed app has its own sign-in. Sign in once
                 inside it.
               </p>
@@ -896,7 +886,7 @@ export function LiveConsole({
             </div>
           ) : (
             <>
-              <label className="block text-[15px] font-semibold">
+              <label className="block text-base font-semibold">
                 Reason
                 <select
                   className="live-input mt-2 font-normal"
@@ -918,7 +908,7 @@ export function LiveConsole({
                 </select>
               </label>
               {sheet === "breakdown" && (
-                <label className="block text-[15px] font-semibold">
+                <label className="block text-base font-semibold">
                   Message for the public (optional)
                   <textarea
                     className="live-input mt-2 font-normal"

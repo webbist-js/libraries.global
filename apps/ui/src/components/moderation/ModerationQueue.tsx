@@ -188,7 +188,7 @@ export function ModerationQueue({
     <div className="flex flex-col gap-5" aria-busy={loading}>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="m-0 flex items-center gap-2.5 font-serif text-[30px] leading-tight tracking-tight">
+          <h2 className="type-h2 m-0 flex items-center gap-2.5">
             <QueueIcon
               size={23}
               className="text-(--t-accent-primary)"
@@ -196,7 +196,7 @@ export function ModerationQueue({
             />
             {workspace(state.category ?? "submissions")}
           </h2>
-          <p className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
             {workspace(
               state.category ? `${state.category}Lead` : "submissionsCaption"
             )}
@@ -209,7 +209,7 @@ export function ModerationQueue({
             setRefreshEpoch((value) => value + 1)
             router.refresh()
           }}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-[13px] font-semibold disabled:opacity-50"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-sm font-semibold disabled:opacity-50"
         >
           <RefreshCw size={15} aria-hidden />
           {workspace("refresh")}
@@ -224,7 +224,7 @@ export function ModerationQueue({
       />
 
       {state.drive ? (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           {driveTitle ? `Filtered by drive ${driveTitle}` : "Filtered by drive"}
           {" · "}
           <Link
@@ -239,7 +239,7 @@ export function ModerationQueue({
 
       <p
         aria-live="polite"
-        className={emptyList ? "sr-only" : "m-0 text-[14px]"}
+        className={emptyList ? "sr-only" : "m-0 text-sm"}
         style={{ color: T.ink.dim }}
       >
         {loading
@@ -254,7 +254,7 @@ export function ModerationQueue({
       {error ? (
         <p
           role="alert"
-          className="m-0 rounded-[14px] px-4 py-3 text-[15px]"
+          className="m-0 rounded-[14px] px-4 py-3 text-base"
           style={{ background: "#F6E3DA", color: T.accent.danger }}
         >
           {error}
@@ -284,7 +284,7 @@ export function ModerationQueue({
                     drive: "",
                     page: 1,
                   })}
-                  className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
                   {tUi("clear_filters")}{" "}

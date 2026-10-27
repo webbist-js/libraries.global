@@ -13,12 +13,8 @@ export function StatBlock({
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       <span
         style={{
-          fontFamily: T.font.serif,
-          fontWeight: 400,
-          fontSize: size === "lg" ? "clamp(1.8rem, 4vw, 2.8rem)" : "1.4rem",
+          font: size === "lg" ? T.type.stat : T.type.h2,
           color: T.ink.base,
-          lineHeight: 1,
-          letterSpacing: "-0.02em",
         }}
       >
         {value}
@@ -26,7 +22,7 @@ export function StatBlock({
       <span
         style={{
           fontFamily: T.font.sans,
-          fontSize: "14px",
+          fontSize: "var(--type-body-small-size)",
           fontWeight: 600,
           color: T.ink.dim,
         }}

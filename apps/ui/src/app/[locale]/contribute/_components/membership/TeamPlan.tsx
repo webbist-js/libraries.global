@@ -59,7 +59,7 @@ export function TeamPlan({
     >
       <header className="min-w-0 lg:col-start-1 lg:row-start-1">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-[12px] font-semibold text-(--t-accent-primary)">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-xs font-semibold text-(--t-accent-primary)">
             <Icon
               aria-hidden
               icon="mdi:account-group-outline"
@@ -68,18 +68,15 @@ export function TeamPlan({
             />
             {t("organisations")}
           </span>
-          <span className="rounded-full bg-(--t-bg-muted) px-2.5 py-1 text-[12px] font-semibold text-(--t-ink-dim)">
+          <span className="rounded-full bg-(--t-bg-muted) px-2.5 py-1 text-xs font-semibold text-(--t-ink-dim)">
             {t("invoicedYearly")}
           </span>
           {current ? <CurrentPlanBadge /> : null}
         </div>
-        <h3
-          id={headingId}
-          className="m-0 font-serif text-[36px] leading-tight tracking-[-0.02em]"
-        >
+        <h3 id={headingId} className="type-h3 m-0">
           {team.name}
         </h3>
-        <p className="m-0 mt-2 max-w-[48ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 mt-2 max-w-[48ch] text-base leading-relaxed text-(--t-ink-dim)">
           {t("teamLead")}
         </p>
       </header>
@@ -91,27 +88,27 @@ export function TeamPlan({
         {existing ? (
           <div className="flex h-full flex-col gap-5">
             <div>
-              <p className="m-0 text-[12px] font-semibold text-(--t-accent-primary)">
+              <p className="m-0 text-xs font-semibold text-(--t-accent-primary)">
                 {t("yourTeam")}
               </p>
               <h4
                 id={quoteId}
-                className="m-0 mt-2 font-serif text-[30px] leading-tight [overflow-wrap:anywhere]"
+                className="type-h4 m-0 mt-2 [overflow-wrap:anywhere]"
               >
                 {existing.name}
               </h4>
-              <p className="mt-3 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+              <p className="mt-3 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                 {t("existingTeamLead")}
               </p>
             </div>
             <Link
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-3 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-3 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
               href="/staff/teams"
             >
               <Icon aria-hidden icon="mdi:account-group-outline" width={18} />
               {t("manageTeam")}
             </Link>
-            <div className="mt-auto grid gap-3 border-t border-(--t-border-line) pt-5 text-[14px] font-semibold text-(--t-accent-primary)">
+            <div className="mt-auto grid gap-3 border-t border-(--t-border-line) pt-5 text-sm font-semibold text-(--t-accent-primary)">
               <Link
                 className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4"
                 href="/staff/teams/billing"
@@ -128,17 +125,14 @@ export function TeamPlan({
           </div>
         ) : (
           <>
-            <h4
-              id={quoteId}
-              className="m-0 font-serif text-[26px] leading-tight tracking-[-0.02em]"
-            >
+            <h4 id={quoteId} className="type-h4 m-0">
               {t("estimateTeam")}
             </h4>
-            <p className="m-0 mt-1.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 mt-1.5 text-sm leading-relaxed text-(--t-ink-dim)">
               {t("estimateLead")}
             </p>
             <div className="mt-5">
-              <p className="m-0 mb-2 text-[13px] font-semibold">
+              <p className="m-0 mb-2 text-sm font-semibold">
                 {t("serviceType")}
               </p>
               <PlanToggle
@@ -157,7 +151,7 @@ export function TeamPlan({
                     description: t("publicDescription"),
                     badge: (
                       <span
-                        className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                        className="shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold"
                         style={{
                           background: TYPE_TINT.public.bg,
                           color: TYPE_TINT.public.fg,
@@ -175,8 +169,8 @@ export function TeamPlan({
             </div>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-(--t-border-line) bg-white p-3.5">
               <div className="min-w-0 flex-1 basis-40">
-                <p className="m-0 text-[14px] font-semibold">{t("seats")}</p>
-                <p className="m-0 mt-1 text-[12px] leading-relaxed text-(--t-ink-dim)">
+                <p className="m-0 text-sm font-semibold">{t("seats")}</p>
+                <p className="m-0 mt-1 text-xs leading-relaxed text-(--t-ink-dim)">
                   {t("includedSeats", { count: pricing.team.includedSeats })}
                 </p>
               </div>
@@ -190,7 +184,7 @@ export function TeamPlan({
                 >
                   <Icon aria-hidden height={18} icon="mdi:minus" width={18} />
                 </button>
-                <span className="min-w-12 text-center text-[13px] font-bold tabular-nums">
+                <span className="min-w-12 text-center text-sm font-bold tabular-nums">
                   {t("seatCount", { count: seats })}
                 </span>
                 <button
@@ -205,7 +199,7 @@ export function TeamPlan({
               </div>
             </div>
             <div className="mt-5 border-t border-(--t-border-line) pt-4">
-              <p className="m-0 text-[12px] font-semibold text-(--t-ink-dim)">
+              <p className="m-0 text-xs font-semibold text-(--t-ink-dim)">
                 {t("annualEstimate")}
               </p>
               <p
@@ -213,14 +207,14 @@ export function TeamPlan({
                 aria-atomic="true"
                 className="m-0 mt-2 flex flex-wrap items-baseline gap-x-2"
               >
-                <span className="font-serif text-[44px] leading-none tracking-[-0.025em]">
+                <span className="font-sans text-[44px] leading-none tracking-[-0.025em]">
                   {pounds(totalYear)}
                 </span>
-                <span className="text-[13px] text-(--t-ink-dim)">
+                <span className="text-sm text-(--t-ink-dim)">
                   {t("annualUnit")}
                 </span>
               </p>
-              <dl className="m-0 mt-4 grid gap-2 text-[12.5px] text-(--t-ink-dim)">
+              <dl className="m-0 mt-4 grid gap-2 text-sm text-(--t-ink-dim)">
                 <div className="flex flex-wrap justify-between gap-2">
                   <dt>
                     {t("firstSeats", { count: pricing.team.includedSeats })}
@@ -237,12 +231,12 @@ export function TeamPlan({
                 </div>
               </dl>
               {publicService ? (
-                <p className="m-0 mt-3 rounded-[12px] bg-(--t-accent-chip)/50 px-3 py-2.5 text-[12px] leading-relaxed text-(--t-ink-dim)">
+                <p className="m-0 mt-3 rounded-[12px] bg-(--t-accent-chip)/50 px-3 py-2.5 text-xs leading-relaxed text-(--t-ink-dim)">
                   {t("discountNote")}
                 </p>
               ) : null}
               <Link
-                className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
                 href={`/staff/teams/new?seats=${seats}`}
               >
                 <Icon
@@ -253,12 +247,12 @@ export function TeamPlan({
                 />
                 {team.cta.label}
               </Link>
-              <p className="m-0 mt-2.5 text-[12px] leading-relaxed text-(--t-ink-dim)">
+              <p className="m-0 mt-2.5 text-xs leading-relaxed text-(--t-ink-dim)">
                 {t("confirmQuote")}
               </p>
             </div>
             <div className="mt-4 border-t border-(--t-border-line) pt-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[12.5px]">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span className="font-semibold">{t("apiLabel")}</span>
                 <span className="font-semibold text-(--t-ink-dim)">
                   {t("monthlyAmount", {
@@ -266,7 +260,7 @@ export function TeamPlan({
                   })}
                 </span>
               </div>
-              <p className="m-0 mt-1 text-[12px] leading-relaxed text-(--t-ink-dim)">
+              <p className="m-0 mt-1 text-xs leading-relaxed text-(--t-ink-dim)">
                 {t("apiSeparate")}
               </p>
             </div>

@@ -37,7 +37,7 @@ function verb(e: ReviewEvent): string {
 export function ReviewThread({ events }: { readonly events: ReviewEvent[] }) {
   if (events.length === 0)
     return (
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         No decisions yet.
       </p>
     )
@@ -81,17 +81,17 @@ export function ReviewThread({ events }: { readonly events: ReviewEvent[] }) {
               />
             </span>
             <div className="flex min-w-0 flex-col gap-1">
-              <p className="m-0 text-[14px]" style={{ color: T.ink.base }}>
+              <p className="m-0 text-sm" style={{ color: T.ink.base }}>
                 <strong className="font-semibold">{who(e)}</strong> {verb(e)}
               </p>
-              <p className="m-0 text-[13px]" style={{ color: T.ink.low }}>
+              <p className="m-0 text-sm" style={{ color: T.ink.low }}>
                 <time dateTime={e.createdAt}>
                   {formatDateTime(e.createdAt)}
                 </time>
               </p>
               {e.note ? (
                 <blockquote
-                  className="m-0 mt-1 rounded-[14px] px-3 py-2 text-[14px] leading-normal whitespace-pre-wrap"
+                  className="m-0 mt-1 rounded-[14px] px-3 py-2 text-sm leading-normal whitespace-pre-wrap"
                   style={{
                     background: T.bg.surface,
                     border: `1px solid ${T.border.line}`,

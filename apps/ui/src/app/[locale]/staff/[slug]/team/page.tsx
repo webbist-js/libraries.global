@@ -44,7 +44,7 @@ function TeamPreview() {
             />
           </span>
           <span
-            className="rounded-full border px-2.5 py-0.5 text-[12px] font-semibold"
+            className="rounded-full border px-2.5 py-0.5 text-xs font-semibold"
             style={{
               background: T.bg.deep,
               color: T.ink.dim,
@@ -124,7 +124,7 @@ export default async function TeamPage({
               "Owner and Editor levels per library",
               "Choose who can go live on mobile libraries",
             ]}
-            compareHref="/contribute/membership"
+            compareHref="/plans"
             contactHref={TEAM_CONTACT_HREF}
             preview={<TeamPreview />}
           />

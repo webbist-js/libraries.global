@@ -37,6 +37,6 @@ export async function PUT(
     action: null,
     method: "PUT",
     limiter: "write",
-    bodyKeys: ["name", "libraryDocumentIds"],
+    bodyKeys: ["name", "libraryDocumentIds", "primaryNetworkId"],
   })
 }

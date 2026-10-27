@@ -31,10 +31,10 @@ const links = () => ({
   ],
 })
 
-// Remove this temporary notice only after the deployed checkout passes owned
-// sandbox acceptance. A source fix alone does not make production checkout work.
+// Sandbox checkout and payment activation are verified. Keep the beta notice
+// until dashboard-created key, request and usage acceptance are also complete.
 export const apiCheckoutNotice =
-  "New Team API subscriptions are temporarily unavailable while we correct a checkout problem. If you are joining the beta or need API access, contact info@libraries.global. An existing active API subscription can continue to use its keys while its Team remains active. Live purchases are not enabled."
+  "Team API checkout is enabled for invited beta testers in Stripe Test mode. Use test payment details only: no real charge is made and live purchases are not enabled. Wait for active API access after payment confirmation before creating a key. The full API workflow is still undergoing beta verification. Contact info@libraries.global if activation or your first request fails."
 
 const notice = () =>
   rich(h("Current API availability"), p(apiCheckoutNotice), links())
@@ -55,7 +55,7 @@ export function apiOnboardingArticles(sectionId) {
     article(
       "Team API: signup, keys and your first request",
       "team-api-quickstart",
-      "Set up your account and Team, subscribe when checkout is available, create an API key and make your first authenticated request. Includes the current closed-beta limitation.",
+      "Set up your account and Team, complete sandbox checkout, create an API key and make your first authenticated request. Beta payments use Stripe Test mode.",
       [
         notice(),
         rich({
@@ -102,12 +102,12 @@ export function apiOnboardingArticles(sectionId) {
           p(
             "If you see a page-not-found response, check that your invitation was accepted and that you signed in with the invited email. If you see usage without purchase or key controls, ask an organiser to change your Team role. Staff access to a Library alone does not make you a Team Organiser."
           ),
-          h("4. Subscribe when checkout is available"),
+          h("4. Subscribe in Stripe Test mode"),
           p(
             "The API is a separate £15/month add-on for an active Team, including tax at the base GBP price. Stripe confirms the actual checkout amount. The public-library Team discount does not apply to this add-on. Review the displayed limits, membership terms and cancellation/refund policy, tick the agreement checkbox and choose Subscribe to API access."
           ),
           p(
-            "During the closed beta, checkout uses Stripe Test mode and makes no real charge. Use only Stripe's documented test payment details in that test checkout: https://docs.stripe.com/testing. New subscriptions are currently blocked as stated above; contact us rather than repeatedly trying to pay."
+            "During the closed beta, checkout uses Stripe Test mode and makes no real charge. Use only Stripe's documented test payment details in that test checkout: https://docs.stripe.com/testing. Sandbox checkout is enabled for invited testers. Wait for payment confirmation and active API access before creating a key; contact us if activation does not complete."
           ),
           p(
             "After an accepted checkout, return to API access. Payment confirmation is pending means the payment has not yet been verified. The page checks again every ten seconds; Refresh usage also reloads it. Wait for API access is active before creating a key. A checkout success page alone does not activate the API. If confirmation persists, contact support with your Team name and approximate checkout time; do not send payment details or a key."

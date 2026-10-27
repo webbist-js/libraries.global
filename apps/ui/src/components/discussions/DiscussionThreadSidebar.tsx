@@ -56,7 +56,7 @@ function SidebarPanel({
           className="shrink-0 text-(--t-accent-primary)"
           aria-hidden
         />
-        <h2 className="m-0 min-w-0 flex-1 font-serif text-[23px] leading-tight tracking-tight text-(--t-ink-base)">
+        <h2 className="type-panel-title m-0 min-w-0 flex-1 text-(--t-ink-base)">
           {title}
         </h2>
         {meta}
@@ -107,7 +107,7 @@ const auditTints = {
 }
 
 const contextLink =
-  "inline-flex min-h-10 items-center justify-between gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-3.5 py-2 text-[13px] font-semibold text-(--t-accent-primary) hover:border-(--t-accent-primary)"
+  "inline-flex min-h-10 items-center justify-between gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-3.5 py-2 text-sm font-semibold text-(--t-accent-primary) hover:border-(--t-accent-primary)"
 
 export function DiscussionThreadSidebar({
   thread,
@@ -158,7 +158,7 @@ export function DiscussionThreadSidebar({
 
   return (
     <aside
-      className="grid content-start gap-4 text-[16px] [--spacing:0.25rem]"
+      className="grid content-start gap-4 text-base [--spacing:0.25rem]"
       aria-label={t("conversationDetails")}
     >
       {reviewer && (
@@ -170,14 +170,12 @@ export function DiscussionThreadSidebar({
             >
               <header className="mb-5 flex items-center gap-2.5">
                 <ShieldCheck size={19} className="text-[#d9d5ff]" aria-hidden />
-                <h2 className="m-0 font-serif text-[23px] leading-tight tracking-tight">
-                  {t("reviewQueue")}
-                </h2>
+                <h2 className="type-panel-title m-0">{t("reviewQueue")}</h2>
               </header>
               {reviewer.error ? (
                 <p
                   role="alert"
-                  className="m-0 text-[13px] leading-relaxed text-[#e5e2f5]"
+                  className="m-0 text-sm leading-relaxed text-[#e5e2f5]"
                 >
                   {t("error")}
                 </p>
@@ -186,11 +184,11 @@ export function DiscussionThreadSidebar({
                   {queueCount === null || queueCount === undefined ? (
                     <Skeleton className="h-14 w-16 bg-white/15" />
                   ) : (
-                    <span className="shrink-0 font-serif text-[64px] leading-none tracking-tight">
+                    <span className="shrink-0 font-sans text-[64px] leading-none tracking-tight">
                       {formatter.number(queueCount)}
                     </span>
                   )}
-                  <p className="m-0 text-[13px] leading-relaxed text-[#e5e2f5]">
+                  <p className="m-0 text-sm leading-relaxed text-[#e5e2f5]">
                     {queueCount === null || queueCount === undefined
                       ? t("loading")
                       : t(
@@ -205,13 +203,13 @@ export function DiscussionThreadSidebar({
               {Boolean(reviewer.total) &&
                 reviewer.globalTotal !== null &&
                 !reviewer.error && (
-                  <p className="mt-4 mb-0 border-t border-white/15 pt-3 text-[12px] text-[#e5e2f5]">
+                  <p className="mt-4 mb-0 border-t border-white/15 pt-3 text-xs text-[#e5e2f5]">
                     {t("waitingAll", { count: reviewer.globalTotal })}
                   </p>
                 )}
               <Link
                 href="/contribute/moderation?tab=discussions"
-                className="mt-4 flex min-h-11 items-center justify-between gap-2 rounded-full bg-white px-4 py-2.5 text-[13px] font-semibold text-(--t-ink-base) hover:bg-[#eeecff]"
+                className="mt-4 flex min-h-11 items-center justify-between gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-(--t-ink-base) hover:bg-[#eeecff]"
               >
                 {t("openFullQueue")}
                 <ArrowUpRight size={16} aria-hidden />
@@ -238,11 +236,11 @@ export function DiscussionThreadSidebar({
                       <Icon size={14} aria-hidden />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="m-0 text-[13px] leading-relaxed font-semibold">
+                      <p className="m-0 text-sm leading-relaxed font-semibold">
                         {t(event.message)}
                       </p>
                       {event.actor?.name && (
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-(--t-ink-dim)">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-(--t-ink-dim)">
                           {actorHref ? (
                             <a
                               href={actorHref}
@@ -256,7 +254,7 @@ export function DiscussionThreadSidebar({
                           <AuthorBadges badges={event.actor.badges} />
                         </div>
                       )}
-                      <div className="mt-1 text-[12px] text-(--t-ink-dim)">
+                      <div className="mt-1 text-xs text-(--t-ink-dim)">
                         <DiscussionTime value={event.createdAt} compact />
                       </div>
                     </div>
@@ -265,11 +263,11 @@ export function DiscussionThreadSidebar({
               })}
             </ol>
             {!log.length && (
-              <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+              <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
                 {t("noModerationActions")}
               </p>
             )}
-            <p className="mt-4 mb-0 flex items-start gap-1.5 border-t border-(--t-border-line) pt-3 text-[12px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-4 mb-0 flex items-start gap-1.5 border-t border-(--t-border-line) pt-3 text-xs leading-relaxed text-(--t-ink-dim)">
               <LockKeyhole size={13} className="mt-0.5 shrink-0" aria-hidden />
               {t("moderationLogPrivacy")}
             </p>
@@ -296,7 +294,7 @@ export function DiscussionThreadSidebar({
               <>
                 <DiscussionAvatar author={participant} colourful />
                 <div className="grid min-w-0 gap-1">
-                  <span className="text-[14px] leading-snug font-semibold break-words">
+                  <span className="text-sm leading-snug font-semibold break-words">
                     {participant.name}
                   </span>
                   <AuthorBadges badges={participant.badges} />
@@ -319,7 +317,7 @@ export function DiscussionThreadSidebar({
           })}
         </ul>
         {(thread.participantCount ?? 0) > participants.length && (
-          <p className="mt-3 mb-0 text-[12px] text-(--t-ink-dim)">
+          <p className="mt-3 mb-0 text-xs text-(--t-ink-dim)">
             {t("moreParticipants", {
               count: thread.participantCount! - participants.length,
             })}
@@ -331,7 +329,7 @@ export function DiscussionThreadSidebar({
           {thread.target && targetHref && (
             <div className="grid gap-3">
               <p
-                className="m-0 text-[15px] leading-relaxed font-semibold"
+                className="m-0 text-base leading-relaxed font-semibold"
                 lang={thread.language}
               >
                 {thread.target.title}
@@ -375,7 +373,7 @@ export function DiscussionThreadSidebar({
                   : undefined
               }
             >
-              <h3 className="mt-0 mb-3 text-[11px] leading-relaxed font-bold tracking-wide text-(--t-ink-dim) uppercase">
+              <h3 className="type-label mt-0 mb-3 text-(--t-ink-dim) uppercase">
                 {t("linkedContexts")}
               </h3>
               <ul className="m-0 grid list-none gap-3 p-0">
@@ -387,7 +385,7 @@ export function DiscussionThreadSidebar({
                       {href ? (
                         <a
                           href={href}
-                          className="flex items-start justify-between gap-2 text-[13px] leading-relaxed font-semibold hover:text-(--t-accent-primary)"
+                          className="flex items-start justify-between gap-2 text-sm leading-relaxed font-semibold hover:text-(--t-accent-primary)"
                         >
                           {link.title}
                           <ArrowUpRight
@@ -397,7 +395,7 @@ export function DiscussionThreadSidebar({
                           />
                         </a>
                       ) : (
-                        <span className="text-[13px] font-semibold">
+                        <span className="text-sm font-semibold">
                           {link.title}
                         </span>
                       )}
@@ -425,16 +423,16 @@ export function DiscussionThreadSidebar({
             style={{ color: palette.fg }}
           >
             <MessagesSquare size={18} className="mt-1 shrink-0" aria-hidden />
-            <h2 className="m-0 font-serif text-[23px] leading-tight tracking-tight">
+            <h2 className="type-panel-title m-0">
               {t("moreInSubject", { subject: thread.subject.name })}
             </h2>
           </header>
-          <ul className="m-0 grid list-none divide-y divide-(--t-border-line) p-0">
+          <ul className="m-0 grid list-none divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0">
             {related.map((item) => (
-              <li key={item.id} className="py-3 first:pt-0">
+              <li key={item.id} className="py-3">
                 <Link
                   href={`/community/discussions/${encodeURIComponent(item.id)}`}
-                  className="flex items-start justify-between gap-2 text-[14px] leading-snug font-semibold hover:underline"
+                  className="flex items-start justify-between gap-2 text-base leading-snug font-semibold text-(--t-accent-primary) underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                   lang={item.language}
                 >
                   {item.title ?? t("untitled")}
@@ -444,7 +442,7 @@ export function DiscussionThreadSidebar({
                     aria-hidden
                   />
                 </Link>
-                <p className="mt-1.5 mb-0 flex items-center gap-1.5 text-[12px] text-(--t-ink-dim)">
+                <p className="mt-1.5 mb-0 flex items-center gap-1.5 text-xs text-(--t-ink-dim)">
                   <MessageCircle size={12} aria-hidden />
                   {t("replyTotal", { count: item.replyCount ?? 0 })} ·{" "}
                   {languageName(item.language, [], locale)}
@@ -453,7 +451,7 @@ export function DiscussionThreadSidebar({
             ))}
           </ul>
           {!related.length && thread.subject.description && (
-            <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
               {thread.subject.description}
             </p>
           )}

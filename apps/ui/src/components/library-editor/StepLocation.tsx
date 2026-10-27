@@ -47,7 +47,7 @@ function NearestAddress({
       className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] px-4 py-3"
       style={{ background: T.accent.chip }}
     >
-      <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+      <p className="m-0 text-base" style={{ color: T.ink.base }}>
         <span className="font-semibold">
           {tUi("nearest_address_to_the_pin")}
         </span>{" "}
@@ -56,7 +56,7 @@ function NearestAddress({
       <button
         type="button"
         onClick={onUse}
-        className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+        className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--t-accent-primary-hover)"
       >
         {tUi("use_this_address")}{" "}
       </button>
@@ -70,7 +70,7 @@ function HierarchyNote() {
   return (
     <p
       role="status"
-      className="m-0 flex items-center gap-1.5 text-[14px]"
+      className="m-0 flex items-center gap-1.5 text-sm"
       style={{ color: T.accent.ok }}
     >
       <Icon

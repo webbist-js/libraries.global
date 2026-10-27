@@ -28,6 +28,7 @@ import {
   betaShellRequest,
 } from "@/lib/proxies/betaGate"
 import { httpsRedirect } from "@/lib/proxies/httpsRedirect"
+import { knowledgeMarkdownRewrite } from "@/lib/proxies/knowledgeMarkdown"
 import {
   isMobileHost,
   mobileAppRoute,
@@ -37,25 +38,55 @@ import {
   staffIndexingResponse,
   staffPathnameRequest,
 } from "@/lib/proxies/staffPathname"
+import { widgetResponse } from "@/lib/proxies/widgets"
 
 // https://next-intl-docs.vercel.app/docs/getting-started/app-router
 const intlProxy = createMiddleware(routing)
 
-export default async function proxy(originalReq: NextRequest) {
-  // Staff pages get their own locale-stripped path as `x-pathname`, for the
-  // sign-in callback; `liveSecurityResponse` forwards the request headers.
-  const cohort = atlasCohortRequest(mobileAppRequest(originalReq))
-  const mobile = isMobileHost(cohort.request)
-  const pass = originalReq.cookies.get(
-    mobile ? MOBILE_BETA_COOKIE : BETA_COOKIE
-  )?.value
-  const hasAccess = betaEnabled() && (await hasBetaAccess(pass))
-  const req = betaShellRequest(
-    staffPathnameRequest(liveSecurityRequest(cohort.request)),
-    hasAccess
-  )
+async function independentPublicResponse(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const respond = (response: NextResponse) => {
+  const widget = await widgetResponse(req)
+  if (widget) return widget
+
+  // Text exports bypass HTML routing; metadata and public files keep root paths.
+  const markdown = knowledgeMarkdownRewrite(req)
+  if (
+    markdown ||
+    ["/robots.txt", "/openapi.json", "/llms.txt", "/embed/resize.js"].includes(
+      pathname
+    ) ||
+    pathname.startsWith("/sitemap") ||
+    /^\/(?:atlas|images)(?:\/|$)/.test(pathname) ||
+    /^\/(?:favicon\.(?:ico|svg)|apple-touch-icon\.png|live-icon\.svg|live-offline\.html|live-sw\.js)$/.test(
+      pathname
+    )
+  ) {
+    return markdown ?? NextResponse.next()
+  }
+
+  return null
+}
+
+function mobilePageResponse(req: NextRequest) {
+  const pathname = req.nextUrl.pathname,
+    target = mobilePageTarget(pathname)
+  if (!target) return NextResponse.next()
+  const url = req.nextUrl.clone()
+  url.pathname = target
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set("x-next-intl-locale", splitMobileLocale(pathname).locale)
+
+  return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+}
+
+function makeResponder(
+  req: NextRequest,
+  created: string | undefined,
+  mobile: boolean,
+  hasAccess: boolean,
+  pass: string | undefined
+) {
+  return (response: NextResponse) => {
     const config = mobileAppConfig()
     const grant = hasAccess ? readBetaPass(pass) : null
     if (config && !mobile && grant)
@@ -71,10 +102,27 @@ export default async function proxy(originalReq: NextRequest) {
     return betaResponse(
       atlasCohortResponse(
         staffIndexingResponse(req, liveSecurityResponse(req, response)),
-        cohort.created
+        created
       )
     )
   }
+}
+
+export default async function proxy(originalReq: NextRequest) {
+  // Staff pages get their own locale-stripped path as `x-pathname`, for the
+  // sign-in callback; `liveSecurityResponse` forwards the request headers.
+  const cohort = atlasCohortRequest(mobileAppRequest(originalReq))
+  const mobile = isMobileHost(cohort.request)
+  const pass = originalReq.cookies.get(
+    mobile ? MOBILE_BETA_COOKIE : BETA_COOKIE
+  )?.value
+  const hasAccess = betaEnabled() && (await hasBetaAccess(pass))
+  const req = betaShellRequest(
+    staffPathnameRequest(liveSecurityRequest(cohort.request)),
+    hasAccess
+  )
+  const { pathname } = req.nextUrl
+  const respond = makeResponder(req, cohort.created, mobile, hasAccess, pass)
 
   const mobileRoute = mobileAppRoute(req)
   if (mobileRoute) return respond(mobileRoute)
@@ -95,36 +143,10 @@ export default async function proxy(originalReq: NextRequest) {
     return respond(gateResponse)
   }
 
-  if (mobile) {
-    const target = mobilePageTarget(pathname)
-    if (target) {
-      const url = req.nextUrl.clone()
-      url.pathname = target
-      const requestHeaders = new Headers(req.headers)
-      requestHeaders.set(
-        "x-next-intl-locale",
-        splitMobileLocale(pathname).locale
-      )
+  if (mobile) return respond(mobilePageResponse(req))
 
-      return respond(
-        NextResponse.rewrite(url, { request: { headers: requestHeaders } })
-      )
-    }
-
-    return respond(NextResponse.next())
-  }
-
-  // Metadata and public files must retain their original, non-localised path.
-  if (
-    pathname === "/robots.txt" ||
-    pathname.startsWith("/sitemap") ||
-    /^\/(?:atlas|images)(?:\/|$)/.test(pathname) ||
-    /^\/(?:favicon\.(?:ico|svg)|apple-touch-icon\.png|live-icon\.svg|live-offline\.html|live-sw\.js)$/.test(
-      pathname
-    )
-  ) {
-    return respond(NextResponse.next())
-  }
+  const independent = await independentPublicResponse(req)
+  if (independent) return respond(independent)
 
   // Route handlers aren't localised: they only pass through the gates above.
   if (isApiPath(pathname)) return respond(NextResponse.next())

@@ -1,5 +1,5 @@
 import "server-only"
-import type { StaffAction } from "@repo/access"
+import { SESSION_PROFILE_MAX_CLAIMS, type StaffAction } from "@repo/access"
 import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
 
@@ -7,6 +7,8 @@ import {
   requireEntitlement,
   requireEntitlementForLibrary,
   requireStaff,
+  staffLibrariesOf,
+  type StaffLibrarySummary,
 } from "./access-server"
 import { auth } from "./auth"
 import { isDocumentIdParam, readJsonCapped } from "./bridge-params"
@@ -138,7 +140,7 @@ export async function proxyStaff(
     )
   }
 
-  const user = session.user
+  let user = session.user
 
   /*
    * Library-scoped authorization.
@@ -158,11 +160,27 @@ export async function proxyStaff(
       )
     }
 
-    const denied = requireStaff(
+    let denied = requireStaff(
       user,
       opts.libraryDocumentId,
       opts.action ?? "seeTeam"
     )
+
+    if (
+      denied?.status === 404 &&
+      Array.isArray(user.staffLibraries) &&
+      user.staffLibraries.length >= SESSION_PROFILE_MAX_CLAIMS
+    ) {
+      const target = await resolveTargetStaff(user, opts.libraryDocumentId)
+      if (target) {
+        user = withTargetStaff(user, target)
+        denied = requireStaff(
+          user,
+          opts.libraryDocumentId,
+          opts.action ?? "seeTeam"
+        )
+      }
+    }
 
     if (denied) return denied
   }
@@ -391,5 +409,38 @@ export async function fetchStaff<T>(
       status: 0,
       body: null,
     }
+  }
+}
+
+/** One current authority read for a target outside the bounded session summary. */
+export async function resolveTargetStaff(
+  user: { id: string; email: string; name?: string },
+  key: string
+) {
+  const response = await fetchStaff<StaffLibrarySummary>(
+    user,
+    `networks/target?key=${encodeURIComponent(key)}`,
+    "access"
+  )
+
+  return response.status === 200 && response.body ? response.body : null
+}
+export function withTargetStaff<
+  T extends { capabilities?: unknown; claimedLibraryIds?: unknown },
+>(user: T, target: StaffLibrarySummary) {
+  const staffLibraries = [
+    target,
+    ...staffLibrariesOf(user).filter((row) => row.id !== target.id),
+  ]
+  const claims = Array.isArray(user.claimedLibraryIds)
+    ? user.claimedLibraryIds
+    : []
+  const capabilities = Array.isArray(user.capabilities) ? user.capabilities : []
+
+  return {
+    ...user,
+    staffLibraries,
+    claimedLibraryIds: [...new Set([...claims, target.id])],
+    capabilities: [...new Set([...capabilities, "staff.area"])],
   }
 }

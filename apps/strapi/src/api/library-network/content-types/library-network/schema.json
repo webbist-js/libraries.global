@@ -22,7 +22,11 @@
     },
     "kind": {
       "type": "enumeration",
-      "enum": ["library_service", "university_system", "consortium"],
+      "enum": [
+        "library_service",
+        "university_system",
+        "consortium"
+      ],
       "required": true,
       "default": "library_service"
     },
@@ -50,6 +54,20 @@
       "relation": "manyToMany",
       "target": "api::library.library",
       "mappedBy": "networks"
+    },
+    "publicPageEnabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "description": {
+      "type": "text"
+    },
+    "publicPageReviewedAt": {
+      "type": "datetime"
+    },
+    "publicPageReviewedBy": {
+      "type": "string",
+      "private": true
     }
   }
 }

@@ -101,7 +101,7 @@ function Progress({
               style={{ background: reached ? T.accent.primary : T.bg.muted2 }}
             />
             <span
-              className="mt-2 block text-[14px] sm:text-[15px]"
+              className="mt-2 block text-sm sm:text-base"
               style={{
                 color: n === step ? T.ink.base : T.ink.dim,
                 fontWeight: n === step ? 600 : 500,
@@ -160,10 +160,7 @@ function StepRail({
       className={`flex h-full flex-col ${drawer ? "gap-5" : "gap-5 lg:gap-7"}`}
     >
       {drawer ? (
-        <p
-          className="m-0 text-[15px] font-semibold"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-base font-semibold" style={{ color: T.ink.dim }}>
           {done ? tUi("sent_for_review") : `Step ${step} of 3`}
         </p>
       ) : (
@@ -178,19 +175,14 @@ function StepRail({
           <span className="flex min-w-0 flex-col">
             <h2
               id={titleId}
-              className="m-0"
+              className="type-h2 m-0"
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "24px",
-                fontWeight: 500,
-                lineHeight: 1.15,
-                letterSpacing: "-0.01em",
                 color: T.ink.base,
               }}
             >
               {meta.title}
             </h2>
-            <span className="mt-0.5 text-[15px]" style={{ color: T.ink.dim }}>
+            <span className="mt-0.5 text-base" style={{ color: T.ink.dim }}>
               {meta.handoff
                 ? (meta.note ?? "Opens a full editor")
                 : done
@@ -232,7 +224,7 @@ function StepRail({
               ) : null}
               <span
                 aria-hidden="true"
-                className="relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
+                className="relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full text-base font-semibold"
                 style={
                   current || complete
                     ? { background: T.accent.primary, color: "#fff" }
@@ -253,7 +245,7 @@ function StepRail({
                 className={`flex min-w-0 flex-col ${drawer ? "pt-1" : "lg:pt-1"}`}
               >
                 <span
-                  className="text-[16px] font-semibold"
+                  className="text-base font-semibold"
                   style={{
                     color: current || complete ? T.ink.base : T.ink.dim,
                   }}
@@ -264,7 +256,7 @@ function StepRail({
                   </span>
                 </span>
                 <span
-                  className={`text-[14.5px] ${wide === "block" ? "" : "hidden lg:block"}`}
+                  className={`text-sm ${wide === "block" ? "" : "hidden lg:block"}`}
                   style={{ color: T.ink.dim }}
                 >
                   {hints[i]}
@@ -276,7 +268,7 @@ function StepRail({
       </ol>
 
       <p
-        className={`m-0 mt-auto items-start gap-2.5 rounded-[16px] px-4 py-3.5 text-[15px] leading-[1.5] ${drawer ? "flex" : "hidden lg:flex"}`}
+        className={`m-0 mt-auto items-start gap-2.5 rounded-[16px] px-4 py-3.5 text-base leading-[1.5] ${drawer ? "flex" : "hidden lg:flex"}`}
         style={{
           background: T.bg.deep,
           border: `1px solid ${T.border.line}`,
@@ -354,7 +346,7 @@ function CategoryCards({
             >
               <Icon height={18} icon={c.icon} width={18} />
             </span>
-            <span className="text-[16px] leading-[1.25] font-semibold">
+            <span className="text-base leading-[1.25] font-semibold">
               {c.value}
             </span>
           </label>
@@ -374,19 +366,19 @@ function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
       className="flex flex-col gap-3 rounded-[16px] p-5"
       style={{ background: T.accent.chip }}
     >
-      <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+      <p className="m-0 text-base" style={{ color: T.ink.base }}>
         <strong>Sign in to send it for review.</strong> Your draft is saved on
         this device, so it’ll be here when you come back.
       </p>
       <div className="flex flex-wrap gap-2">
         <Link
-          className={`${PRIMARY} h-10 bg-(--t-accent-primary) px-5 text-[15px] text-white no-underline hover:bg-(--t-accent-primary-hover)`}
+          className={`${PRIMARY} h-10 bg-(--t-accent-primary) px-5 text-base text-white no-underline hover:bg-(--t-accent-primary-hover)`}
           href={`/auth/signin?callbackUrl=${callback}`}
         >
           {tUi("sign_in")}{" "}
         </Link>
         <Link
-          className={`${SECONDARY} h-10 px-5 text-[15px] no-underline`}
+          className={`${SECONDARY} h-10 px-5 text-base no-underline`}
           href={`/auth/register?callbackUrl=${callback}`}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
@@ -643,13 +635,13 @@ export function ContributionWizard({
       </span>
       <h3
         id={panel || drawer ? undefined : titleId}
-        className="m-0 text-[22px] font-bold"
+        className="type-h3 m-0"
         style={{ color: T.ink.base }}
       >
         Thanks, it’s in review
       </h3>
       <p
-        className="m-0 max-w-[56ch] text-[16px] leading-normal"
+        className="m-0 max-w-[56ch] text-base leading-normal"
         style={{ color: T.ink.dim }}
       >
         A reviewer will check your {action === "photo" ? "photo" : "suggestion"}{" "}
@@ -735,7 +727,7 @@ export function ContributionWizard({
       {blocker && !needsSignIn ? (
         <p
           aria-live="polite"
-          className="m-0 text-[15px]"
+          className="m-0 text-base"
           id={`${titleId}-blocker`}
           style={{ color: T.ink.dim }}
         >
@@ -750,7 +742,7 @@ export function ContributionWizard({
 
   const restoredNotice = restored ? (
     <p
-      className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]"
+      className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
       role="status"
       style={{ color: T.ink.dim }}
     >
@@ -802,7 +794,7 @@ export function ContributionWizard({
         </div>
       </>
     ) : structured && recordLoading ? (
-      <p className="m-0 text-[15px]" role="status" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" role="status" style={{ color: T.ink.dim }}>
         Loading the record…
       </p>
     ) : null
@@ -816,16 +808,11 @@ export function ContributionWizard({
             <h3
               ref={stepHeading}
               id={stepTitleId}
-              className="m-0"
+              className="type-h3 m-0"
               tabIndex={-1}
               style={{
                 // A focus target for screen readers, not a control: no ring.
                 outline: "none",
-                fontFamily: T.font.serif,
-                fontSize: "clamp(28px,4vw,36px)",
-                fontWeight: 500,
-                lineHeight: 1.1,
-                letterSpacing: "-0.015em",
                 color: T.ink.base,
               }}
             >
@@ -834,7 +821,7 @@ export function ContributionWizard({
             </h3>
             <p
               id={leadId}
-              className="m-0 mt-2 max-w-[56ch] text-[16px] leading-normal"
+              className="m-0 mt-2 max-w-[56ch] text-base leading-normal"
               style={{ color: T.ink.dim }}
             >
               {step === 2 && changes
@@ -845,16 +832,11 @@ export function ContributionWizard({
         ) : panel && (step > 1 || meta.handoff) ? (
           <h3
             ref={stepHeading}
-            className={meta.handoff ? "m-0 mb-3" : "m-0 mb-6"}
+            className={`type-h3 ${meta.handoff ? "m-0 mb-3" : "m-0 mb-6"}`}
             tabIndex={-1}
             style={{
               // A focus target for screen readers, not a control: no ring.
               outline: "none",
-              fontFamily: T.font.serif,
-              fontSize: "clamp(28px,3vw,36px)",
-              fontWeight: 500,
-              lineHeight: 1.1,
-              letterSpacing: "-0.015em",
               color: T.ink.base,
             }}
           >
@@ -862,14 +844,14 @@ export function ContributionWizard({
             {meta.handoff?.heading ?? STEP_TITLES[action][step - 1]}
           </h3>
         ) : (
-          <h3 ref={stepHeading} className="sr-only" tabIndex={-1}>
+          <h3 ref={stepHeading} className="type-h3 sr-only" tabIndex={-1}>
             Step {step}: {STEP_LABELS[action][step - 1]}
           </h3>
         )}
 
         {meta.handoff ? (
           <p
-            className="m-0 max-w-[60ch] text-[16px] leading-[1.6]"
+            className="m-0 max-w-[60ch] text-base leading-[1.6]"
             style={{ color: T.ink.dim }}
           >
             {meta.handoff.blurb}
@@ -900,7 +882,7 @@ export function ContributionWizard({
           <div className="flex flex-col gap-5">
             {library && !drawer ? (
               <p
-                className="m-0 flex flex-wrap items-center gap-x-2 text-[15px]"
+                className="m-0 flex flex-wrap items-center gap-x-2 text-base"
                 style={{ color: T.ink.dim }}
               >
                 <Icon
@@ -960,7 +942,7 @@ export function ContributionWizard({
             {step === 2 && action !== "photo" && drawer ? (
               <>
                 <p
-                  className="m-0 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[15px]"
+                  className="m-0 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-base"
                   style={{ color: T.ink.dim }}
                 >
                   <span
@@ -1076,7 +1058,7 @@ export function ContributionWizard({
                       />
                     </div>
                     <label
-                      className="flex cursor-pointer items-start gap-3 text-[15px]"
+                      className="flex cursor-pointer items-start gap-3 text-base"
                       style={{ color: T.ink.base }}
                     >
                       <input
@@ -1118,7 +1100,7 @@ export function ContributionWizard({
                 )}
 
                 <dl
-                  className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-[16px] p-4 text-[14.5px]"
+                  className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-[16px] p-4 text-sm"
                   style={{
                     background: T.bg.surface,
                     border: `1px solid ${T.border.line}`,
@@ -1178,7 +1160,7 @@ export function ContributionWizard({
 
       {error ? (
         <p
-          className="m-0 text-[15px] font-semibold"
+          className="m-0 text-base font-semibold"
           role="alert"
           style={{ color: T.accent.danger }}
         >
@@ -1213,7 +1195,7 @@ export function ContributionWizard({
               {/* Phones get the rail as a progress bar instead. */}
               <div className="sm:hidden">
                 <p
-                  className="m-0 mb-3 text-[15px] font-semibold"
+                  className="m-0 mb-3 text-base font-semibold"
                   style={{ color: T.ink.dim }}
                 >
                   {sent ? tUi("sent_for_review") : `Step ${step} of 3`}
@@ -1265,7 +1247,7 @@ export function ContributionWizard({
       <div className="flex items-center justify-between gap-4">
         <h2
           id={titleId}
-          className="m-0 flex items-center gap-3 text-[18px] font-bold"
+          className="type-panel-title m-0 flex items-center gap-3"
           style={{ color: T.ink.base }}
         >
           <span
@@ -1278,7 +1260,7 @@ export function ContributionWizard({
           {meta.title}
         </h2>
         <p
-          className="m-0 shrink-0 text-[15px] font-semibold"
+          className="m-0 shrink-0 text-base font-semibold"
           style={{ color: T.ink.dim }}
         >
           Step {step} of 3

@@ -54,7 +54,7 @@ export function LibraryClaimButton({
   if (compact)
     return (
       <div
-        className="mt-2 text-[13px] leading-relaxed"
+        className="mt-2 text-sm leading-relaxed"
         style={{ color: T.ink.dim }}
       >
         <p className="m-0">
@@ -81,10 +81,7 @@ export function LibraryClaimButton({
     )
 
   return (
-    <p
-      className="m-0 px-1 text-[13.5px] leading-normal"
-      style={{ color: T.ink.dim }}
-    >
+    <p className="m-0 px-1 text-sm leading-normal" style={{ color: T.ink.dim }}>
       Work here?{" "}
       <Link
         href={

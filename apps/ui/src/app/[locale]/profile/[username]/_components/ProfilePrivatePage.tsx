@@ -17,7 +17,7 @@ export function ProfilePrivatePage({ username }: { username: string }) {
         <p
           style={{
             fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontSize: "var(--type-caption-size)",
             letterSpacing: ".22em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -39,12 +39,8 @@ export function ProfilePrivatePage({ username }: { username: string }) {
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
         <h1
+          className="type-h1"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(1.6rem, 4vw, 2.2rem)",
-            fontWeight: 400,
-            letterSpacing: "-.02em",
-            lineHeight: 1.2,
             color: T.ink.base,
             marginBottom: "16px",
           }}
@@ -55,7 +51,7 @@ export function ProfilePrivatePage({ username }: { username: string }) {
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "0.9rem",
+            fontSize: "var(--type-body-small-size)",
             lineHeight: 1.6,
             color: T.ink.low,
           }}

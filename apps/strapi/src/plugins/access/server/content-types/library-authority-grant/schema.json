@@ -1,0 +1,96 @@
+{
+  "kind": "collectionType",
+  "collectionName": "access_library_authority_grants",
+  "info": {
+    "singularName": "library-authority-grant",
+    "pluralName": "library-authority-grants",
+    "displayName": "Library authority grant"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "grantKey": {
+      "type": "string",
+      "private": true,
+      "required": true,
+      "unique": true
+    },
+    "baUserId": {
+      "type": "string",
+      "private": true,
+      "required": true
+    },
+    "library": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library.library"
+    },
+    "staffRole": {
+      "type": "enumeration",
+      "enum": [
+        "owner",
+        "editor"
+      ],
+      "default": "editor"
+    },
+    "canGoLive": {
+      "type": "boolean",
+      "default": true
+    },
+    "sourceKind": {
+      "type": "enumeration",
+      "enum": [
+        "claim",
+        "team",
+        "network"
+      ],
+      "required": true
+    },
+    "sourceDocumentId": {
+      "type": "string",
+      "private": true,
+      "required": true
+    },
+    "teamMemberDocumentId": {
+      "type": "string",
+      "private": true
+    },
+    "mandateDocumentId": {
+      "type": "string",
+      "private": true
+    },
+    "legacyAffiliationDocumentId": {
+      "type": "string",
+      "private": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "active",
+        "revoked"
+      ],
+      "default": "active"
+    },
+    "approvedAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "revokedAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "issuedBy": {
+      "type": "string",
+      "private": true
+    }
+  }
+}

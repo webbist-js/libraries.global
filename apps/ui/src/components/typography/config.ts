@@ -23,15 +23,15 @@ export const fontWeightVariants = {
 }
 
 export const variantStyles = {
-  heading1: "typo-h1",
-  heading2: "typo-h2",
-  heading3: "typo-h3",
-  heading4: "typo-h4",
-  heading5: "typo-h5",
-  heading6: "typo-h6",
-  small: "typo-p-small",
-  medium: "typo-p-medium",
-  large: "typo-p-large",
+  heading1: "type-h1",
+  heading2: "type-h2",
+  heading3: "type-h3",
+  heading4: "type-h4",
+  heading5: "type-small-heading",
+  heading6: "type-small-heading",
+  small: "text-sm leading-normal",
+  medium: "text-base leading-relaxed",
+  large: "text-lg leading-relaxed",
 }
 
 export const defaultStyles: Record<TypographyTag | ElementTag, Variant> = {

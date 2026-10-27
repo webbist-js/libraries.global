@@ -157,7 +157,7 @@ export function ReplaceFeedForm({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "15px",
+          fontSize: "var(--type-body-size)",
           color: T.ink.dim,
           margin: 0,
         }}
@@ -231,7 +231,7 @@ export function ReplaceFeedForm({
         {!canSend ? (
           <span
             id="replace-feed-hint"
-            className="text-[13.5px]"
+            className="text-sm"
             style={{ color: T.ink.dim }}
           >
             Test the connection first.

@@ -73,11 +73,8 @@ function ReviewSidebar() {
     >
       <h2
         id="correct-review-heading"
-        className="m-0"
+        className="type-panel-title m-0"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "22px",
-          fontWeight: 500,
           color: T.ink.base,
         }}
       >
@@ -98,7 +95,7 @@ function ReviewSidebar() {
               />
             </span>
             <span
-              className="text-[15px] leading-[1.55]"
+              className="text-base leading-[1.55]"
               style={{ color: T.ink.dim }}
             >
               {step.copy}
@@ -107,7 +104,7 @@ function ReviewSidebar() {
         ))}
       </ol>
       <p
-        className="mt-5 mb-0 pt-5 text-[15px] leading-[1.6]"
+        className="mt-5 mb-0 pt-5 text-base leading-[1.6]"
         style={{ color: T.ink.dim, borderTop: `1px solid ${T.border.divider}` }}
       >
         The more specific you are — the right hours, the new address, a link to
@@ -182,7 +179,7 @@ export function CorrectLibraryForm({
               style={cardStyle}
             >
               <span
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14px] font-semibold"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold"
                 style={{ background: "#E6EFE6", color: T.accent.ok }}
               >
                 <Icon
@@ -195,19 +192,15 @@ export function CorrectLibraryForm({
               </span>
               <h2
                 id="correct-success-heading"
-                className="mt-4 mb-0"
+                className="type-h2 mt-4 mb-0"
                 style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(26px,3vw,32px)",
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
                   color: T.ink.base,
                 }}
               >
                 Correction submitted
               </h2>
               <p
-                className="mt-2 mb-6 max-w-[56ch] text-[16px] leading-[1.6]"
+                className="mt-2 mb-6 max-w-[56ch] text-base leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
                 Thanks for helping keep {libraryName} accurate. Our team will
@@ -234,19 +227,15 @@ export function CorrectLibraryForm({
             >
               <h2
                 id="correct-form-heading"
-                className="m-0"
+                className="type-h2 m-0"
                 style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(24px,2.6vw,28px)",
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
                   color: T.ink.base,
                 }}
               >
                 What needs fixing?
               </h2>
               <p
-                className="mt-2 mb-6 max-w-[62ch] text-[15px] leading-[1.6]"
+                className="mt-2 mb-6 max-w-[62ch] text-base leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
                 You&apos;re suggesting a change to{" "}
@@ -312,7 +301,7 @@ export function CorrectLibraryForm({
                 {error ? (
                   <p
                     role="alert"
-                    className="m-0 flex items-start gap-2 rounded-[14px] px-4 py-3 text-[15px] leading-normal"
+                    className="m-0 flex items-start gap-2 rounded-[14px] px-4 py-3 text-base leading-normal"
                     style={{ background: "#F6E3DA", color: T.accent.danger }}
                   >
                     <Icon
@@ -333,7 +322,7 @@ export function CorrectLibraryForm({
                   <button
                     type="submit"
                     disabled={disabled}
-                    className={`${primaryCtaSm} text-[15px] disabled:cursor-not-allowed disabled:opacity-45`}
+                    className={`${primaryCtaSm} text-base disabled:cursor-not-allowed disabled:opacity-45`}
                   >
                     {pending ? tUi("submitting") : "Submit correction"}
                     {!pending && (

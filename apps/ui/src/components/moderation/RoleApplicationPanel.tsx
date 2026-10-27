@@ -29,7 +29,7 @@ const strings = (v: unknown): string[] =>
     ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "")
     : []
 
-const heading = "m-0 text-[15px] font-semibold"
+const heading = "m-0 text-base font-semibold"
 
 /**
  * A Role Application: the role, queue, languages and sections asked for,
@@ -81,18 +81,18 @@ export function RoleApplicationPanel({
       />
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           Why they’re applying
         </h3>
         {statement ? (
           <p
-            className="m-0 rounded-[14px] px-4 py-3 text-[15px] leading-[1.6] whitespace-pre-wrap"
+            className="m-0 rounded-[14px] px-4 py-3 text-base leading-[1.6] whitespace-pre-wrap"
             style={{ background: T.bg.surface, color: T.ink.base }}
           >
             {statement}
           </p>
         ) : (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             No statement.
           </p>
         )}
@@ -100,12 +100,12 @@ export function RoleApplicationPanel({
 
       {samples.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <h3 className={heading} style={{ color: T.ink.base }}>
+          <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
             Samples of their work
           </h3>
           <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
             {samples.map((url) => (
-              <li key={url} className="flex items-start gap-2 text-[14px]">
+              <li key={url} className="flex items-start gap-2 text-sm">
                 <Icon
                   aria-hidden="true"
                   icon="mdi:link-variant"
@@ -130,12 +130,12 @@ export function RoleApplicationPanel({
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           The applicant
         </h3>
         {applicant ? (
           <>
-            <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+            <p className="m-0 text-base" style={{ color: T.ink.base }}>
               {applicant.username ? (
                 <Link
                   href={`/profile/${encodeURIComponent(applicant.username)}`}
@@ -165,7 +165,7 @@ export function RoleApplicationPanel({
                 {applicant.recentAccepted.map((c, i) => (
                   <li
                     key={`${c.decidedAt}-${i}`}
-                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-[14px]"
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
                     style={
                       i > 0
                         ? { borderTop: `1px solid ${T.border.divider}` }
@@ -190,7 +190,7 @@ export function RoleApplicationPanel({
                       <span style={{ color: T.ink.dim }}> · {c.summary}</span>
                     </span>
                     <span
-                      className="shrink-0 text-[13px]"
+                      className="shrink-0 text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       {formatDate(c.decidedAt)}
@@ -199,22 +199,19 @@ export function RoleApplicationPanel({
                 ))}
               </ul>
             ) : (
-              <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                 No accepted changes listed.
               </p>
             )}
           </>
         ) : (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             Applicant details aren’t available.
           </p>
         )}
       </div>
 
-      <p
-        className="m-0 text-[14px] leading-[1.55]"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
         {role === "moderator"
           ? "Approving gives a Moderator grant for this queue in each language asked for. Only the editorial board decides Moderator applications."
           : "Approving gives an editor grant in each language asked for. Points and plans play no part in the decision."}

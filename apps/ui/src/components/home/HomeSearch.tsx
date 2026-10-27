@@ -84,7 +84,7 @@ export default function HomeSearch() {
       />
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="mr-0.5 text-[15px]" style={{ color: T.ink.dim }}>
+        <span className="mr-0.5 text-base" style={{ color: T.ink.dim }}>
           Try
         </span>
         {TRY_SEARCHES.map(({ label, href }) => (
@@ -96,7 +96,7 @@ export default function HomeSearch() {
               content_type: "library",
               action_type: "open",
             })}
-            className="rounded-full border bg-white px-3.5 py-2 text-[14px] font-medium no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
+            className="rounded-full border bg-white px-3.5 py-2 text-sm font-medium no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             {label}

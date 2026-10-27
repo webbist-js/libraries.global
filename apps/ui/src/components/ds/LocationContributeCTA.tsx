@@ -64,10 +64,8 @@ export function LocationContributeCTA({
 
           <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-[48ch]">
-              <h2 className="mb-3 font-serif text-3xl font-normal tracking-tight text-(--t-ink-base) sm:text-4xl">
-                {heading}
-              </h2>
-              <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
+              <h2 className="type-h2 mb-3 text-(--t-ink-base)">{heading}</h2>
+              <p className="text-base leading-relaxed text-(--t-ink-dim)">
                 {body}
               </p>
             </div>

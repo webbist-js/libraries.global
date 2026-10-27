@@ -12,7 +12,7 @@ import { type DriveView, orderByDistance } from "@/lib/drives/drive-view"
 import { DriveCard } from "./DriveCard"
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[15px] font-semibold transition-colors"
+  "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-base font-semibold transition-colors"
 
 const GEO_ERROR = "We couldn’t get your location."
 
@@ -160,7 +160,7 @@ export function OpenDrivesGrid({
       {nearError ? (
         <p
           role="alert"
-          className="m-0 text-[14.5px] font-semibold"
+          className="m-0 text-sm font-semibold"
           style={{ color: T.accent.danger }}
         >
           {nearError}
@@ -170,14 +170,14 @@ export function OpenDrivesGrid({
       <p
         role="status"
         aria-live="polite"
-        className="m-0 text-[14px] font-semibold"
+        className="m-0 text-sm font-semibold"
         style={{ color: T.ink.dim }}
       >
         {liveMessage}
       </p>
 
       {followOn && sorted.length === 0 ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           None of the open drives cover places you follow.{" "}
           <GlobalLink
             href="/libraries"
@@ -200,7 +200,7 @@ export function OpenDrivesGrid({
               <DriveCard view={view} now={now} />
               {distances?.has(view.drive.documentId) ? (
                 <span
-                  className="px-1 text-[13px] font-semibold"
+                  className="px-1 text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
                   {distances.get(view.drive.documentId)} km away

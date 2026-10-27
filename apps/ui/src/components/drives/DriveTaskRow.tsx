@@ -96,15 +96,11 @@ export function DriveTaskRow({
           <Icon icon={icon} width={16} />
         </span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-[14px] leading-[1.3] font-semibold">
+          <span className="text-sm leading-[1.3] font-semibold">
             {task.name}
           </span>
           {place || task.distanceKm != null ? (
-            <span
-              id={placeId}
-              className="text-[12px]"
-              style={{ color: T.ink.dim }}
-            >
+            <span id={placeId} className="text-xs" style={{ color: T.ink.dim }}>
               {place ? <span>{place}</span> : null}
               {place && task.distanceKm != null ? " · " : null}
               {task.distanceKm == null ? null : (
@@ -115,7 +111,7 @@ export function DriveTaskRow({
         </span>
         {inReview ? (
           <span
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
             style={{ background: "var(--tint-public-bg)", color: T.accent.ok }}
           >
             <Icon
@@ -128,7 +124,7 @@ export function DriveTaskRow({
           </span>
         ) : heldByOther ? (
           <span
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
             style={{ background: T.bg.muted, color: T.ink.dim }}
           >
             <Icon
@@ -142,7 +138,7 @@ export function DriveTaskRow({
         ) : (
           <span
             aria-hidden="true"
-            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-(--t-border-hi) bg-white px-3 text-[12px] font-semibold"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-(--t-border-hi) bg-white px-3 text-xs font-semibold"
             style={{ color: T.ink.base }}
           >
             {verb}

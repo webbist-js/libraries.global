@@ -10,7 +10,7 @@ import { BlogArticleCard } from "./BlogArticleCard"
 // ── Pagination ─────────────────────────────────────────────────────────────────
 
 const PAGER_LINK_CLASS =
-  "rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
+  "rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted)"
 
 function Pagination({
   page,
@@ -49,7 +49,7 @@ function Pagination({
         </GlobalLink>
       ) : null}
 
-      <span className="text-[14px]" style={{ color: T.ink.dim }}>
+      <span className="text-sm" style={{ color: T.ink.dim }}>
         {t("pageOf", { page, total: pageCount })}
       </span>
 

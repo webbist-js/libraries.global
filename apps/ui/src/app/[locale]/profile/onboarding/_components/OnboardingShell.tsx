@@ -113,7 +113,7 @@ export function OnboardingShell({
               type="button"
               disabled={primaryDisabled}
               onClick={() => void handleSave("profile")}
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
               style={{ border: "none", fontFamily: T.font.sans }}
             >
               {saving ? (
@@ -129,7 +129,7 @@ export function OnboardingShell({
               type="button"
               disabled={!mounted || saving}
               onClick={() => void handleSave("home")}
-              className="inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-base font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
               style={{
                 background: T.bg.deep,
                 border: `1px solid ${T.border.hi}`,
@@ -140,7 +140,7 @@ export function OnboardingShell({
               Save &amp; finish later
             </button>
             <p
-              className="m-0 mt-1 text-[13.5px] leading-[1.55]"
+              className="m-0 mt-1 text-sm leading-[1.55]"
               style={{ color: T.ink.dim }}
             >
               By continuing, you agree to the{" "}

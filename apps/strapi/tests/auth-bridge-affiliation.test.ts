@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { makeFakeStrapi } from "./helpers/fake-strapi"
+import { makeFakeStrapi, materialiseRelations } from "./helpers/fake-strapi"
 import controller from "../src/api/auth-bridge/controllers/auth-bridge"
 
 const LIBRARY = "api::library.library"
@@ -62,6 +62,10 @@ describe("auth-bridge createAffiliation: email-domain auto-claim (E6)", () => {
         { documentId: "p1", baUserId: "u1", contributorRole: "reader" },
       ],
     })
+    materialiseRelations(faked, AFF, ["library"])
+    materialiseRelations(faked, "plugin::access.library-authority-grant", [
+      "library",
+    ])
     ;(globalThis as any).strapi = faked.strapi
     fake = { ...faked.strapi, store: faked.store }
   })
@@ -79,7 +83,7 @@ describe("auth-bridge createAffiliation: email-domain auto-claim (E6)", () => {
     expect(fake.store[AFF][0]).toMatchObject({
       baUserId: "u1",
       verificationMethod: "email_domain",
-      library: { connect: [{ documentId: "lib1" }] },
+      library: { documentId: "lib1" },
     })
     expect(fake.store[ROLE_GRANT]).toHaveLength(1)
     expect(fake.store[ROLE_GRANT][0]).toMatchObject({

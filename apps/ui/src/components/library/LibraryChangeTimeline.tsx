@@ -33,7 +33,7 @@ import {
 } from "./change-history.helpers"
 
 const SECONDARY_PILL =
-  "inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+  "inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
 
 const historyUrl = (documentId: string, page: number) =>
   `/api/libraries/${documentId}/history?page=${page}`
@@ -97,13 +97,13 @@ export function TimelineRow({
       >
         <LibIcon d={icon} size={16} />
       </span>
-      <div className="min-w-0 flex-1 text-[15px] leading-normal">
+      <div className="min-w-0 flex-1 text-base leading-normal">
         <p className="m-0" style={{ color: T.ink.dim }}>
           <strong style={{ color: T.ink.base }}>{title}</strong>
           {lead ? <> {lead}</> : null}
         </p>
         {parts.length > 0 ? (
-          <p className="mt-1 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="mt-1 mb-0 text-sm" style={{ color: T.ink.dim }}>
             {parts.map((p, i) => (
               <span key={i}>
                 {i > 0 ? " · " : ""}
@@ -129,7 +129,7 @@ export function DetailsDisclosure({
   return (
     <details className="mt-2.5">
       <summary
-        className="cursor-pointer text-[14px] font-semibold"
+        className="cursor-pointer text-sm font-semibold"
         style={{ color: T.accent.primary }}
       >
         {label}
@@ -149,7 +149,7 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
     .filter(Boolean)
     .join(" ")
   const note = (
-    <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
+    <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
       {UNRECORDED_NOTE}
     </p>
   )
@@ -209,12 +209,12 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
                   }}
                 >
                   <dt
-                    className="text-[13px] font-semibold"
+                    className="text-sm font-semibold"
                     style={{ color: T.ink.dim }}
                   >
                     {fieldLabel(f.field)}
                   </dt>
-                  <dd className="m-0 text-[14px] break-words">
+                  <dd className="m-0 text-sm break-words">
                     <span data-previous style={{ color: T.ink.dim }}>
                       {formatValue(f.previous)}
                     </span>
@@ -228,7 +228,7 @@ function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
               ))}
             </dl>
           ) : (
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               {fieldNames(batch.fields, 12)}
             </p>
           )}
@@ -317,7 +317,7 @@ export function LibraryChangeTimeline({
 
   if (rows.length === 0 && !more)
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         No changes recorded yet.
       </p>
     )
@@ -341,7 +341,7 @@ export function LibraryChangeTimeline({
       </ul>
 
       {hidden ? (
-        <p className="mt-3 mb-0 text-[14px]">
+        <p className="mt-3 mb-0 text-sm">
           <GlobalLink
             href={LIBRARY_HISTORY_UPGRADE.href}
             className="font-semibold underline underline-offset-[3px]"
@@ -357,7 +357,7 @@ export function LibraryChangeTimeline({
         {entries === 1 ? "entry" : "entries"}.
       </p>
       {failed ? (
-        <p className="mt-3 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
+        <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
           Older entries couldn’t be loaded. Try again.
         </p>
       ) : null}

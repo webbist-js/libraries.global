@@ -54,7 +54,7 @@ export function ArticleContext({
       aria-label={p(kind === "journal" ? "contextStory" : "contextReference")}
       className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-6"
     >
-      <h2 className="mt-0 text-xl">
+      <h2 className="type-panel-title mt-0">
         {p(kind === "journal" ? "contextStory" : "contextReference")}
       </h2>
       <dl className="mb-0 grid gap-3">
@@ -109,7 +109,7 @@ export function ArticleContext({
       </dl>
       {events.length > 0 && (
         <div className="mt-5">
-          <h3 className="text-lg">{t("events")}</h3>
+          <h3 className="type-h3">{t("events")}</h3>
           <p className="text-xs" style={{ color: "var(--t-ink-dim)" }}>
             {p("citedByAuthor")}
           </p>
@@ -128,7 +128,7 @@ export function ArticleContext({
                 <li key={event.citationId ?? index}>
                   <p className="mb-1 font-semibold">{event.title}</p>
                   {start && (
-                    <p className="m-0 text-sm">
+                    <p className="m-0 text-base">
                       {t("starts")}:{" "}
                       <time dateTime={event.startTime ?? undefined}>
                         {start}
@@ -137,7 +137,7 @@ export function ArticleContext({
                     </p>
                   )}
                   {end && (
-                    <p className="m-0 text-sm">
+                    <p className="m-0 text-base">
                       {t("ends")}:{" "}
                       <time dateTime={event.endTime ?? undefined}>{end}</time> ·{" "}
                       {timezone}

@@ -59,11 +59,9 @@ export function LibraryFeedsSection({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2
+            className="type-h2"
             id={`library-${library.documentId}-heading`}
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "clamp(20px, 2.4vw, 24px)",
-              fontWeight: 500,
               color: T.ink.base,
               margin: 0,
             }}
@@ -76,7 +74,7 @@ export function LibraryFeedsSection({
           </h2>
           {intro ? (
             <p
-              className="m-0 mt-1 max-w-[60ch] text-[15px]"
+              className="m-0 mt-1 max-w-[60ch] text-base"
               style={{ color: T.ink.dim }}
             >
               {intro}

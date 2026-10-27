@@ -24,7 +24,7 @@ export function MostReadCard({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <h2
-        className="m-0 text-[15px] font-semibold"
+        className="type-small-heading m-0"
         id="journal-most-read"
         style={{ color: T.ink.base }}
       >
@@ -33,7 +33,7 @@ export function MostReadCard({
 
       {articles.length === 0 ? (
         <p
-          className="m-0 mt-2 text-[14px] leading-[1.5]"
+          className="m-0 mt-2 text-sm leading-[1.5]"
           style={{ color: T.ink.low }}
         >
           {t("mostReadSoon")}
@@ -48,22 +48,22 @@ export function MostReadCard({
             >
               <span
                 aria-hidden="true"
-                className="w-4 flex-none text-[20px] leading-none"
-                style={{ fontFamily: T.font.serif, color: T.accent.primary }}
+                className="w-4 flex-none text-xl leading-none"
+                style={{ fontFamily: T.font.sans, color: T.accent.primary }}
               >
                 {i + 1}
               </span>
               <span className="min-w-0">
                 <Link
-                  className="text-[16px] leading-[1.3] transition-colors hover:text-(--t-accent-primary)"
+                  className="text-base leading-[1.3] transition-colors hover:text-(--t-accent-primary)"
                   href={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
                   locale={locale}
-                  style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                  style={{ fontFamily: T.font.sans, color: T.ink.base }}
                 >
                   {article.title}
                 </Link>
                 <span
-                  className="mt-0.5 block text-[13px]"
+                  className="mt-0.5 block text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   {[

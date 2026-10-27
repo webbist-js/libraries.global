@@ -19,7 +19,7 @@ export function ToggleSwitch({
     <span className="inline-flex shrink-0 items-center gap-2.5">
       <span
         aria-hidden="true"
-        className="text-[13px] font-semibold"
+        className="text-sm font-semibold"
         style={{ color: value ? T.ink.dim : T.ink.faint }}
       >
         {value ? "On" : "Off"}

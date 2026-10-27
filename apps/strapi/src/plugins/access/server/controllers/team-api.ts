@@ -71,7 +71,11 @@ export default ({ strapi }: { strapi: any }) => {
 
       return teams().configure(
         teamId(ctx),
-        { name: body.name, libraryDocumentIds: body.libraryDocumentIds },
+        {
+          name: body.name,
+          libraryDocumentIds: body.libraryDocumentIds,
+          primaryNetworkId: body.primaryNetworkId,
+        },
         actor(user)
       )
     }),
