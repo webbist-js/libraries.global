@@ -67,13 +67,8 @@ export function CardHeading({
   return (
     <h2
       id={id}
-      className="m-0"
+      className="type-h2 m-0"
       style={{
-        fontFamily: T.font.serif,
-        fontSize: "24px",
-        fontWeight: 500,
-        lineHeight: 1.2,
-        letterSpacing: "-0.01em",
         color: T.ink.base,
       }}
     >
@@ -105,7 +100,7 @@ export function YourSubmissionsList({
           <CardHeading id="your-submissions">
             {tUi("your_submissions")}
           </CardHeading>
-          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
             {submissions.length === 0
               ? "Your changes and their review status"
               : inReview > 0
@@ -115,7 +110,7 @@ export function YourSubmissionsList({
         </div>
         <GlobalLink
           href={username ? `/profile/${username}` : "/contribute/submissions"}
-          className="text-[14px] font-semibold underline underline-offset-[3px]"
+          className="text-sm font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
           {username ? "View on your profile" : "See all submissions"}
@@ -131,12 +126,12 @@ export function YourSubmissionsList({
           >
             <Icon height={20} icon="mdi:tray-arrow-up" width={20} />
           </span>
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-base" style={{ color: T.ink.dim }}>
             Nothing submitted yet. Your first change will appear here.
           </p>
           <GlobalLink
             href="#start"
-            className="text-[14px] font-semibold underline underline-offset-[3px]"
+            className="text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
             Choose something to do
@@ -158,21 +153,21 @@ export function YourSubmissionsList({
                 }
               >
                 <span
-                  className="justify-self-start rounded-full px-3 py-1 text-center text-[13px] font-semibold sm:w-[118px]"
+                  className="justify-self-start rounded-full px-3 py-1 text-center text-sm font-semibold sm:w-[118px]"
                   style={{ background: chip.bg, color: chip.fg }}
                 >
                   {chip.label}
                 </span>
                 <span className="order-3 col-span-2 min-w-0 sm:order-none sm:col-span-1">
                   <span
-                    className="block text-[15px] font-semibold"
+                    className="block text-base font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {ACTION_LABEL[submission.submissionType] ?? "Made a change"}
                   </span>
                   {submission.targetName ? (
                     <span
-                      className="block truncate text-[14px]"
+                      className="block truncate text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       {submission.targetName}
@@ -185,7 +180,7 @@ export function YourSubmissionsList({
                   ) : null}
                 </span>
                 <span
-                  className="order-2 text-right text-[14px] sm:order-none"
+                  className="order-2 text-right text-sm sm:order-none"
                   style={{ color: T.ink.low }}
                 >
                   {formatDate(submission.createdAt)}
@@ -201,12 +196,12 @@ export function YourSubmissionsList({
           className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t px-6 py-4"
           style={{ borderColor: T.border.divider }}
         >
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             {summaryLine(submissions)}
           </p>
           <GlobalLink
             href="/contribute/submissions"
-            className="text-[14px] font-semibold underline underline-offset-[3px]"
+            className="text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
             Track them in My submissions
@@ -251,7 +246,7 @@ export function SignInPromptCard() {
           Every change starts with an account
         </CardHeading>
         <p
-          className="mt-2 mb-0 max-w-[56ch] text-[15px] leading-[1.6]"
+          className="mt-2 mb-0 max-w-[56ch] text-base leading-[1.6]"
           style={{ color: T.ink.dim }}
         >
           Create a free account to suggest corrections, add libraries and share
@@ -262,14 +257,14 @@ export function SignInPromptCard() {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         <GlobalLink
           href="/auth/register"
-          className="rounded-full px-6 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+          className="rounded-full px-6 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
           style={{ background: T.accent.primary }}
         >
           Create a free account
         </GlobalLink>
         <GlobalLink
           href="/auth/signin"
-          className="text-[14px] underline underline-offset-[3px]"
+          className="text-sm underline underline-offset-[3px]"
           style={{ color: T.ink.dim }}
         >
           Already have an account? Sign in

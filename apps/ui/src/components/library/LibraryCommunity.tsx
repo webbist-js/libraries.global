@@ -71,7 +71,7 @@ export function LibraryCommunity({
         className="mb-6 border-b pb-5"
         style={{ borderColor: T.border.line }}
       >
-        <h3 className="m-0 text-base font-semibold">{t("stories")}</h3>
+        <h3 className="type-h3 m-0">{t("stories")}</h3>
         <p className="mt-2 text-sm" style={{ color: T.ink.dim }}>
           {t("storiesIntro")}
         </p>

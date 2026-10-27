@@ -1,9 +1,15 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
+import { Badge } from "@/components/ds/Badge"
+import {
+  TeamNetworkChoice,
+  type TeamNetworkSelection,
+} from "@/components/networks/TeamNetworkChoice"
 import { Button } from "@/components/ui/button"
 import { Link, useRouter } from "@/lib/navigation"
 import { TEAM_TERMS_VERSION } from "@/lib/team-billing/types"
@@ -20,16 +26,20 @@ export function TeamSignup({
   initialSeats,
   sandbox,
   user,
+  initialNetwork,
 }: {
   readonly available: boolean
   readonly verified: boolean
   readonly initialSeats: number
   readonly sandbox: boolean
+  readonly initialNetwork?: string
   readonly user: { name: string; email: string }
 }) {
   const requestId = useRef(crypto.randomUUID())
   const [team, setTeam] = useState<{ id: string; name: string } | null>(null)
-  const [open, setOpen] = useState(true)
+  const [network, setNetwork] = useState<TeamNetworkSelection>(null)
+  const [networkChosen, setNetworkChosen] = useState(false)
+  const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
   const [pending, startTransition] = useTransition()
   const refresh = useMembershipRefresh()
@@ -50,6 +60,12 @@ export function TeamSignup({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               name: choice.name,
+              ...(network
+                ? {
+                    primaryNetworkId: network.network.documentId,
+                    libraryDocumentIds: network.libraryDocumentIds,
+                  }
+                : {}),
               requestId: requestId.current,
               publicServiceRequested: choice.publicServiceRequested,
             }),
@@ -109,43 +125,74 @@ export function TeamSignup({
         }
         compact
       >
-        <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="text-base leading-relaxed text-(--t-ink-dim)">
           {!verified
             ? "Verify your email before creating a Team."
             : "New Team subscriptions are temporarily unavailable. Please check back later."}
         </p>
         <Link
           className={STAFF_LINK}
-          href={!verified ? "/profile/settings" : "/contribute/membership"}
+          href={!verified ? "/profile/settings" : "/plans"}
         >
           {!verified ? "Open account settings" : "View membership options"}
         </Link>
       </StaffPanel>
     )
 
+  if (!networkChosen)
+    return (
+      <TeamNetworkChoice
+        initialNetwork={initialNetwork}
+        onChoose={(choice) => {
+          setNetwork(choice)
+          setNetworkChosen(true)
+          setOpen(true)
+        }}
+      />
+    )
+
   return (
     <>
-      <StaffPanel title={team ? team.name : "Your Team, together"} compact>
-        <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
-          {team
-            ? "Your Team is saved. Complete annual billing when you’re ready to activate membership."
-            : "Start with five seats, invite colleagues and manage annual billing online."}
-        </p>
-        <div className="flex flex-wrap items-center gap-4">
-          <Button variant="primary" size="pill" onClick={() => setOpen(true)}>
-            {team ? "Continue to payment" : "Create your Team"}
-          </Button>
-          {team ? (
-            <Link className={STAFF_LINK} href="/staff/teams/billing">
-              Open Team billing
-            </Link>
-          ) : (
-            <Link className={STAFF_LINK} href="/staff">
-              Your staff workspace
-            </Link>
-          )}
-        </div>
-      </StaffPanel>
+      <div className="mx-auto max-w-3xl">
+        <StaffPanel title={team ? team.name : "Your Team, together"} compact>
+          <p className="mb-5 text-xs font-semibold tracking-wide text-(--t-accent-primary) uppercase">
+            Step 2 of 2 · Team & billing
+          </p>
+          <SignupCoverage network={network} />
+          <p className="text-base leading-relaxed text-(--t-ink-dim)">
+            {team
+              ? "Your Team is saved. Complete annual billing when you’re ready to activate membership."
+              : "Start with five seats, invite colleagues and manage annual billing online."}
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-4">
+            <Button variant="primary" size="pill" onClick={() => setOpen(true)}>
+              {team ? "Continue to payment" : "Create your Team"}
+            </Button>
+            <ServiceManagementLink team={team} network={network} />
+            {team ? (
+              <Link className={STAFF_LINK} href="/staff/teams/billing">
+                Open Team billing
+              </Link>
+            ) : (
+              <Link className={STAFF_LINK} href="/staff">
+                Your staff workspace
+              </Link>
+            )}
+          </div>
+          {!team ? (
+            <Button
+              className="mt-5 px-0"
+              variant="link"
+              onClick={() => {
+                setNetworkChosen(false)
+                setOpen(false)
+              }}
+            >
+              Change library selection
+            </Button>
+          ) : null}
+        </StaffPanel>
+      </div>
       <TeamCheckoutDialog
         open={open}
         onOpenChange={(value) => {
@@ -154,6 +201,7 @@ export function TeamSignup({
         }}
         initialSeats={initialSeats}
         teamName={team?.name}
+        initialName={network?.network.name}
         sandbox={sandbox}
         user={user}
         busy={pending}
@@ -162,5 +210,52 @@ export function TeamSignup({
         onCheckout={checkout}
       />
     </>
+  )
+}
+
+function ServiceManagementLink({
+  team,
+  network,
+}: {
+  readonly team: { id: string; name: string } | null
+  readonly network: TeamNetworkSelection
+}) {
+  if (!team || !network) return null
+
+  return (
+    <Link
+      className={STAFF_LINK}
+      href={`/staff/networks?network=${network.network.documentId}`}
+    >
+      Request service management
+    </Link>
+  )
+}
+
+function SignupCoverage({
+  network,
+}: {
+  readonly network: TeamNetworkSelection
+}) {
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-2xl bg-(--t-bg-surface) p-4">
+      <Icon
+        aria-hidden
+        icon="mdi:domain"
+        width={24}
+        className="text-(--t-accent-primary)"
+      />
+      <div className="min-w-0 flex-1">
+        <strong className="block text-sm">
+          {network?.network.name ?? "Choose libraries individually"}
+        </strong>
+        <p className="mt-1 text-xs text-(--t-ink-dim)">
+          {network
+            ? `${network.libraryDocumentIds.length} published libraries selected`
+            : "Add your libraries in the staff workspace after setup."}
+        </p>
+      </div>
+      <Badge color="aurora" label="Starting coverage" />
+    </div>
   )
 }

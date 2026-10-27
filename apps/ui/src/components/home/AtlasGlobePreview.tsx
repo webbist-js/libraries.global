@@ -9,7 +9,6 @@ import GlobalLink from "@/components/global/GlobalLink"
 import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import { HOMEPAGE_GLOBE_APPEARANCE } from "@/components/home/knowledge-globe-settings"
 import type { GlobeOverrides } from "@/components/home/KnowledgeGlobeCanvas"
-import { T } from "@/lib/design-tokens"
 
 function GlobePlaceholder({
   unavailable = false,
@@ -22,7 +21,7 @@ function GlobePlaceholder({
       className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-[#C9C7D8]"
     >
       <Globe aria-hidden="true" className="size-10 text-[#B9B4F5]" />
-      <p className="m-0 text-[14px]">
+      <p className="m-0 text-sm">
         {unavailable
           ? "Explore library locations in the atlas"
           : "Loading globe…"}
@@ -101,29 +100,24 @@ export default function AtlasGlobePreview({
         <div className="pointer-events-none absolute inset-x-5 top-[calc(50%_+_min(28cqw,28cqh))] flex -translate-y-1/2 justify-center">
           <GlobalLink
             href={href}
-            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[14px] font-semibold text-[#17162B] no-underline shadow-[0_4px_24px_#17162B80] transition-colors hover:bg-[#ECEBFB] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B9B4F5]"
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#17162B] no-underline shadow-[0_4px_24px_#17162B80] transition-colors hover:bg-[#ECEBFB] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B9B4F5]"
           >
             Open the atlas
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </GlobalLink>
         </div>
-        <p className="pointer-events-none absolute inset-x-5 bottom-5 m-0 text-center text-[12px] text-[#C9C7D8]">
+        <p className="pointer-events-none absolute inset-x-5 bottom-5 m-0 text-center text-xs text-[#C9C7D8]">
           Drag to rotate · Arrow keys when focused
         </p>
       </div>
       <figcaption className="border-t border-[#4A4866] px-6 py-6 sm:px-8 sm:py-7">
-        <h3
-          className="m-0 text-[28px] leading-[1.1] tracking-[-0.02em] text-white sm:text-[32px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
-          How the globe lights up
-        </h3>
-        <p className="mt-3 mb-0 text-[15px] leading-[1.65] text-[#C9C7D8]">
+        <h3 className="type-h3 m-0 text-white">How the globe lights up</h3>
+        <p className="mt-3 mb-0 text-base leading-[1.65] text-[#C9C7D8]">
           Warm lights show where published library records are located. Brighter
           hubs mark featured principal libraries. Arcs join these hubs to nearby
           featured libraries, illustrating a shared world of knowledge.
         </p>
-        <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-[12px] text-[#C9C7D8]">
+        <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-xs text-[#C9C7D8]">
           <li className="inline-flex items-center gap-2">
             <span
               aria-hidden="true"

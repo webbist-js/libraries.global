@@ -64,13 +64,10 @@ export function ChoiceCard({
           style={{ color: checked ? T.accent.primary : T.border.hi }}
         />
       </span>
-      <span
-        className="text-[15.5px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
+      <span className="text-base font-semibold" style={{ color: T.ink.base }}>
         {title}
       </span>
-      <span className="text-[14px] leading-[1.45]" style={{ color: T.ink.dim }}>
+      <span className="text-sm leading-[1.45]" style={{ color: T.ink.dim }}>
         {hint}
       </span>
     </label>

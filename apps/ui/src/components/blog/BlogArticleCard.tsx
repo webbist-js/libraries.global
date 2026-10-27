@@ -59,11 +59,8 @@ export function BlogArticleCard({
         </p>
 
         <h3
-          className="m-0 mb-2.5 text-[22px] leading-[1.15]"
+          className="type-h3 m-0 mb-2.5"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >
@@ -72,7 +69,7 @@ export function BlogArticleCard({
 
         {article.summary ? (
           <p
-            className="m-0 mb-3 line-clamp-2 text-[15px] leading-[1.55]"
+            className="m-0 mb-3 line-clamp-2 text-base leading-[1.55]"
             style={{ color: T.ink.dim }}
           >
             {article.summary}

@@ -48,7 +48,7 @@ export function DraftResumeBanner({
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "16px",
+            fontSize: "var(--type-body-size)",
             fontWeight: 600,
             color: T.ink.base,
             margin: "0 0 2px",
@@ -59,7 +59,7 @@ export function DraftResumeBanner({
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
             color: T.ink.dim,
             margin: 0,
           }}

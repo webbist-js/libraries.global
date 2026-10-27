@@ -228,15 +228,10 @@ function DiscussionFeedPanel({
         )}
       >
         <div>
-          <h2
-            className={cn(
-              "m-0 font-serif leading-tight tracking-tight",
-              compact ? "text-[26px]" : "text-[clamp(30px,3vw,40px)]"
-            )}
-          >
+          <h2 className={cn("m-0", compact ? "type-panel-title" : "type-h2")}>
             {title ?? t("contextConversations")}
           </h2>
-          <p className="mt-1.5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-1.5 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
             {lead}
           </p>
         </div>
@@ -265,12 +260,7 @@ function DiscussionFeedPanel({
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
         <div>
           <div className="flex items-baseline gap-3">
-            <h2
-              className={cn(
-                "m-0 font-serif leading-tight tracking-tight",
-                compact ? "text-[26px]" : "text-[clamp(30px,3vw,40px)]"
-              )}
-            >
+            <h2 className={cn("m-0", compact ? "type-panel-title" : "type-h2")}>
               {title ?? t("contextConversations")}
             </h2>
             {!loading && !error && enabled && (
@@ -280,7 +270,7 @@ function DiscussionFeedPanel({
               </span>
             )}
           </div>
-          <p className="mt-1.5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-1.5 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
             {lead}
           </p>
         </div>
@@ -352,7 +342,7 @@ function DiscussionFeedPanel({
             inlineDescription
             label={t("feedManageHeading")}
             description={t("feedManageLead")}
-            className="py-3.5 [&_h2]:text-sm [&>div:first-child]:gap-x-1 [&>div:first-child]:text-sm"
+            className="py-3.5 [&_h2]:[font:var(--type-small-heading)] [&>div:first-child]:gap-x-1 [&>div:first-child]:text-sm"
             actions={
               <>
                 {enabled && (
@@ -486,11 +476,19 @@ function DiscussionFeedPanel({
               {t("loadMore")}
             </button>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--t-border-line) pt-3 text-sm">
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-3 border-t border-(--t-border-line) pt-3 text-sm",
+              compact && "flex-col items-stretch text-base"
+            )}
+          >
             <p className="m-0 text-(--t-ink-dim)">{t("feedModerationLead")}</p>
             <Link
               href={browse}
-              className="inline-flex items-center gap-1.5 font-semibold text-(--t-accent-primary) underline underline-offset-4"
+              className={cn(
+                "inline-flex items-center gap-1.5 font-semibold text-(--t-accent-primary) underline underline-offset-4",
+                compact && "min-h-12 border-t border-(--t-border-line) py-3"
+              )}
             >
               {t("viewContextConversations")}
               <ArrowRight size={17} aria-hidden />
@@ -555,7 +553,7 @@ function DiscussionFeedPanel({
         ))}
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
         <DialogContent>
-          <DialogTitle>{t("linkConversation")}</DialogTitle>
+          <DialogTitle className="type-h2">{t("linkConversation")}</DialogTitle>
           <DialogDescription>{t("linkConversationLead")}</DialogDescription>
           {linkOpen && (
             <DiscussionLinkPicker
@@ -579,7 +577,7 @@ function DiscussionFeedPanel({
       </Dialog>
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogTitle>{t("newThread")}</DialogTitle>
+          <DialogTitle className="type-h2">{t("newThread")}</DialogTitle>
           <DialogDescription>{t("reviewLead")}</DialogDescription>
           {subject ? (
             <DiscussionComposer

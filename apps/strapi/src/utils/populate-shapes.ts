@@ -188,6 +188,15 @@ export const LIBRARY_SHAPES: ShapeSet = {
     ],
     populate: {
       ...LIBRARY_LIST_POPULATE,
+      networks: {
+        fields: [
+          "name",
+          "slug",
+          "kind",
+          "publicPageEnabled",
+          "publicPageReviewedAt",
+        ],
+      },
       accessibility: {
         fields: ["name", "category", "icon", "summary", "description"],
       },

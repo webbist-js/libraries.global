@@ -1,0 +1,1232 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Libraries Global Team API",
+    "version": "1.0.0",
+    "description": "Read-only search and retrieval of published public Library records. Requires a Team-owned API key, an active Team and active API add-on coverage. Keys grant no user session, Staff access or protected data. Only English content is currently live. Default shared Team allowances are 100,000 successful requests and 10 GiB of uncompressed JSON per calendar month, 60 authenticated attempts per minute, five concurrent requests and 256 KiB per response. Subscription-specific saved limits take precedence. Successful responses, including repeated reads, consume allowance; errors do not consume monthly request or byte allowance. There are no automatic overage charges. Availability and purchasing restrictions are described in the current Knowledge access guide. Browser beta and Basic Auth cookies are unnecessary for the three machine routes; discovery files and website pages retain their beta and staging gates. Other website APIs and proposed resources are outside this contract. Preserve attribution and source-specific licences; missing data does not prove a service is unavailable. Infrastructure or access-gate failures can return non-JSON responses.",
+    "contact": {
+      "name": "Libraries Global",
+      "email": "info@libraries.global",
+      "url": "https://libraries.global"
+    },
+    "termsOfService": "https://libraries.global/legal/terms"
+  },
+  "servers": [
+    {
+      "url": "https://libraries.global"
+    }
+  ],
+  "externalDocs": {
+    "description": "Team API request reference",
+    "url": "https://libraries.global/knowledge/data-api/team-api-reference"
+  },
+  "security": [
+    {
+      "TeamApiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Libraries",
+      "description": "Published public Library search and records."
+    }
+  ],
+  "paths": {
+    "/api/v1/search/libraries": {
+      "post": {
+        "operationId": "searchLibraries",
+        "tags": [
+          "Libraries"
+        ],
+        "summary": "Search published Libraries",
+        "description": "Requires the search:read key scope. Search uses offset pagination. Increment offset by limit; stop on an empty or short page. Use the cursor-based Library list for longer sequential extraction. Retrieve a full record for source credits.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              },
+              "example": {
+                "q": "Bristol",
+                "locale": "en",
+                "limit": 10,
+                "country": "united-kingdom",
+                "near": {
+                  "lat": 51.4545,
+                  "lng": -2.5879,
+                  "radius": 25000
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/libraries": {
+      "get": {
+        "operationId": "listLibraries",
+        "tags": [
+          "Libraries"
+        ],
+        "summary": "List published Libraries",
+        "description": "Requires the libraries:read key scope. Unknown and repeated query parameters are rejected. Records are ordered by document identifier. Follow meta.nextCursor using after until it is null. This is not a frozen snapshot; published records can change during pagination.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Locale"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Country"
+          },
+          {
+            "$ref": "#/components/parameters/After"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/libraries/{entityRef}": {
+      "get": {
+        "operationId": "getLibrary",
+        "tags": [
+          "Libraries"
+        ],
+        "summary": "Retrieve one published Library",
+        "description": "Requires the libraries:read key scope. Take entityRef from a search or list result and URL-encode it as a single path segment. A reference may change after a rename or geographic move. Returns an object in data, not an array.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/EntityRef"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "TeamApiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "lg_api_*",
+        "description": "Team API key, not a user JWT or CMS token. Send Authorization: Bearer YOUR_API_KEY. Search requires search:read; list/detail require libraries:read. Keep keys on your server."
+      }
+    },
+    "parameters": {
+      "Locale": {
+        "name": "locale",
+        "in": "query",
+        "description": "Content locale. Only English is currently live.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "en"
+          ],
+          "default": "en"
+        }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Maximum records per page. Reduce this if the response exceeds the byte cap.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "Country": {
+        "name": "country",
+        "in": "query",
+        "description": "Country slug, not a display name or ISO code.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{1,100}$"
+        },
+        "example": "united-kingdom"
+      },
+      "After": {
+        "name": "after",
+        "in": "query",
+        "description": "Opaque meta.nextCursor from the preceding page. Keep locale and country unchanged; stop when nextCursor is null.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{20,32}$"
+        }
+      },
+      "EntityRef": {
+        "name": "entityRef",
+        "in": "path",
+        "required": true,
+        "description": "Exact entityRef from search or list results, URL-encoded as one path segment. Not a documentId or page URL. References can change after a rename or geographic move.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "europe:united-kingdom:scotland:national-library-of-scotland"
+      }
+    },
+    "schemas": {
+      "SearchRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Filters combine with AND. Unknown properties are rejected; raw search-engine filters and sorting are unavailable. Body limit: 8192 bytes.",
+        "properties": {
+          "q": {
+            "type": "string",
+            "maxLength": 512,
+            "default": ""
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en"
+            ],
+            "default": "en",
+            "description": "Only live content locales are accepted."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 0
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,100}$",
+            "description": "Country slug."
+          },
+          "region": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,100}$",
+            "description": "Region slug."
+          },
+          "libraryType": {
+            "type": "string",
+            "maxLength": 80,
+            "description": "Exact indexed Library type value; take values from returned records."
+          },
+          "operationalStatus": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "Exact indexed operational value, for example open or appointment_only. This is not date-specific opening availability."
+          },
+          "near": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "lat",
+              "lng",
+              "radius"
+            ],
+            "properties": {
+              "lat": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "lng": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 100000,
+                "description": "Search radius in metres."
+              }
+            }
+          }
+        }
+      },
+      "SearchHit": {
+        "type": "object",
+        "description": "Search summary; fields absent from the index may be omitted. Retrieve the full Library record for its source credits.",
+        "properties": {
+          "documentId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entityRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "libraryType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operationalStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "continent_slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country_slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region_slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "_geo": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "lat": {
+                "type": "number"
+              },
+              "lng": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "locale",
+              "limit",
+              "offset",
+              "estimatedTotal",
+              "attribution"
+            ],
+            "properties": {
+              "locale": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              },
+              "estimatedTotal": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Search estimate, not a guaranteed complete catalogue count."
+              },
+              "attribution": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "LibraryRecord": {
+        "type": "object",
+        "required": [
+          "documentId",
+          "sourceRecords"
+        ],
+        "description": "Explicit public record projection. Null means information is not recorded. These routes do not include opening times, facility relations, Events, verification dates or every field shown on the website.",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "description": "Strapi document identifier; not accepted by the entityRef detail route."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entityRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shortName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operationalStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operatorType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "streetAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postalCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "catalogueUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "libraryType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "location": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Stored coordinates; older records may contain numeric strings.",
+            "properties": {
+              "lat": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "lng": {
+                "type": [
+                  "number",
+                  "string"
+                ]
+              },
+              "address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Record modification time, not a verification date."
+          },
+          "country": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "slug": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "iso2": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "region": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "slug": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "sourceRecords": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceRecord"
+            }
+          }
+        }
+      },
+      "SourceRecord": {
+        "type": "object",
+        "properties": {
+          "dataset": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "recordId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "retrievedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "origin",
+              "reference",
+              null
+            ]
+          },
+          "fields": {
+            "description": "Source field associations as stored JSON, or null when unspecified."
+          },
+          "datasetCredit": {
+            "$ref": "#/components/schemas/DatasetCredit"
+          }
+        }
+      },
+      "DatasetCredit": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "Source-specific credits. A missing credit or unconfirmed licence does not establish redistribution permission. API access does not replace source terms.",
+        "properties": {
+          "key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publisher": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "licence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "licenceUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "attribution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "redistribution": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "permitted",
+              "permitted_with_attribution",
+              "not_permitted",
+              "unconfirmed",
+              null
+            ]
+          },
+          "licenceStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "confirmed_in_writing",
+              "stated_by_publisher",
+              "unconfirmed",
+              null
+            ]
+          }
+        }
+      },
+      "RecordMeta": {
+        "type": "object",
+        "required": [
+          "locale",
+          "nextCursor",
+          "attribution"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Opaque cursor for the next list page, or null at the end and for a detail response."
+          },
+          "attribution": {
+            "type": "string",
+            "description": "Retain alongside the relevant sourceRecords credits."
+          }
+        }
+      },
+      "LibraryListResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LibraryRecord"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RecordMeta"
+          }
+        }
+      },
+      "LibraryDetailResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LibraryRecord"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/RecordMeta"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Machine-readable error code."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid input or unavailable content locale. Correct the request before retrying.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "invalid_search": {
+                "value": {
+                  "error": {
+                    "code": "invalid_search"
+                  }
+                }
+              },
+              "invalid_query": {
+                "value": {
+                  "error": {
+                    "code": "invalid_query"
+                  }
+                }
+              },
+              "invalid_limit": {
+                "value": {
+                  "error": {
+                    "code": "invalid_limit"
+                  }
+                }
+              },
+              "invalid_cursor": {
+                "value": {
+                  "error": {
+                    "code": "invalid_cursor"
+                  }
+                }
+              },
+              "invalid_country": {
+                "value": {
+                  "error": {
+                    "code": "invalid_country"
+                  }
+                }
+              },
+              "locale_unavailable": {
+                "value": {
+                  "error": {
+                    "code": "locale_unavailable"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing, malformed, expired, revoked or regenerated key. Obtain a valid key before retrying.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "invalid_api_key": {
+                "value": {
+                  "error": {
+                    "code": "invalid_api_key"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The key lacks the required scope, the Team is inactive, or API add-on coverage is inactive.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "api_scope_refused": {
+                "value": {
+                  "error": {
+                    "code": "api_scope_refused"
+                  }
+                }
+              },
+              "team_inactive": {
+                "value": {
+                  "error": {
+                    "code": "team_inactive"
+                  }
+                }
+              },
+              "api_addon_inactive": {
+                "value": {
+                  "error": {
+                    "code": "api_addon_inactive"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No published Library resolves for this entity reference.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "record_not_found": {
+                "value": {
+                  "error": {
+                    "code": "record_not_found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "TooLarge": {
+        "description": "Search body exceeds the 8192-byte cap.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "invalid_search": {
+                "value": {
+                  "error": {
+                    "code": "invalid_search"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate, concurrency or monthly allowance exceeded. Respect Retry-After. Monthly quotas reset at the next calendar month in UTC.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "api_rate_limit": {
+                "value": {
+                  "error": {
+                    "code": "api_rate_limit"
+                  }
+                }
+              },
+              "api_concurrency_limit": {
+                "value": {
+                  "error": {
+                    "code": "api_concurrency_limit"
+                  }
+                }
+              },
+              "api_request_allowance_exhausted": {
+                "value": {
+                  "error": {
+                    "code": "api_request_allowance_exhausted"
+                  }
+                }
+              },
+              "api_byte_allowance_exhausted": {
+                "value": {
+                  "error": {
+                    "code": "api_byte_allowance_exhausted"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait before retrying.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "X-API-Quota-Reset": {
+            "description": "Present when a monthly request or byte allowance is exhausted.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "UpstreamUnavailable": {
+        "description": "Upstream failure or oversized response. Retry with backoff; reduce the page size for oversized responses.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "api_upstream_unavailable": {
+                "value": {
+                  "error": {
+                    "code": "api_upstream_unavailable"
+                  }
+                }
+              },
+              "api_response_too_large": {
+                "value": {
+                  "error": {
+                    "code": "api_response_too_large"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "API configuration, Team service, search, records or accounting is temporarily unavailable. Retry with backoff.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "api_temporarily_unavailable": {
+                "value": {
+                  "error": {
+                    "code": "api_temporarily_unavailable"
+                  }
+                }
+              },
+              "team_service_unavailable": {
+                "value": {
+                  "error": {
+                    "code": "team_service_unavailable"
+                  }
+                }
+              },
+              "api_search_unavailable": {
+                "value": {
+                  "error": {
+                    "code": "api_search_unavailable"
+                  }
+                }
+              },
+              "api_records_unavailable": {
+                "value": {
+                  "error": {
+                    "code": "api_records_unavailable"
+                  }
+                }
+              },
+              "api_configuration_invalid": {
+                "value": {
+                  "error": {
+                    "code": "api_configuration_invalid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -169,10 +169,8 @@ export function ConnectFeedForm({
       >
         <h2
           id="connect-library-heading"
-          className="m-0 text-[20px]"
+          className="type-panel-title m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -180,7 +178,7 @@ export function ConnectFeedForm({
         </h2>
         {libraries.length <= 1 ? (
           <p
-            className="m-0 text-[16px] font-semibold"
+            className="m-0 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {libraries[0]?.name ?? "No claimed library"}
@@ -213,10 +211,8 @@ export function ConnectFeedForm({
       >
         <h2
           id="connect-platform-heading"
-          className="m-0 text-[20px]"
+          className="type-panel-title m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -255,7 +251,7 @@ export function ConnectFeedForm({
             </a>
             <button
               type="button"
-              className="inline-flex min-h-11 items-center text-[14px] font-semibold underline underline-offset-[3px]"
+              className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
               onClick={() => setManualToken(true)}
             >
@@ -274,10 +270,8 @@ export function ConnectFeedForm({
         >
           <h2
             id="connect-details-heading"
-            className="m-0 text-[20px]"
+            className="type-panel-title m-0"
             style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
               color: T.ink.base,
             }}
           >
@@ -347,7 +341,7 @@ export function ConnectFeedForm({
             {!canSend ? (
               <span
                 id="connect-feed-hint"
-                className="text-[13.5px]"
+                className="text-sm"
                 style={{ color: T.ink.dim }}
               >
                 Test the connection first.
@@ -358,7 +352,7 @@ export function ConnectFeedForm({
             className="m-0"
             style={{
               fontFamily: T.font.sans,
-              fontSize: "13.5px",
+              fontSize: "var(--type-body-small-size)",
               color: T.ink.dim,
             }}
           >

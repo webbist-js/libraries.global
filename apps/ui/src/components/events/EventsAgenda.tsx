@@ -34,7 +34,7 @@ function Chip({
 }) {
   return (
     <span
-      className="inline-flex items-center rounded-full px-2.5 py-[2px] text-[12.5px] font-semibold"
+      className="inline-flex items-center rounded-full px-2.5 py-[2px] text-sm font-semibold"
       style={{ background: bg, color: fg }}
     >
       {children}
@@ -55,7 +55,7 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
     <li className="flex items-start gap-4 px-5 py-4 sm:px-6">
       {/* Time */}
       <span
-        className="w-[52px] shrink-0 pt-0.5 text-[14px] font-semibold tabular-nums"
+        className="w-[52px] shrink-0 pt-0.5 text-sm font-semibold tabular-nums"
         style={{ color: T.ink.base }}
       >
         {event.allDay
@@ -74,7 +74,7 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
 
       {/* Body */}
       <div className="min-w-0 flex-1">
-        <p className="m-0 text-[16px] leading-snug font-semibold">
+        <p className="m-0 text-base leading-snug font-semibold">
           {isHttpUrl(event.url) ? (
             <a
               href={event.url}
@@ -90,7 +90,7 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
           )}
         </p>
         {event.library_name ? (
-          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
             {libraryPath ? (
               <GlobalLink
                 href={libraryPath}
@@ -117,7 +117,7 @@ function AgendaRow({ event }: { readonly event: EventSearchHit }) {
 
       {/* Provider */}
       <span
-        className="hidden shrink-0 pt-0.5 text-[13px] sm:block"
+        className="hidden shrink-0 pt-0.5 text-sm sm:block"
         style={{ color: T.ink.low }}
       >
         {t("via", {
@@ -176,17 +176,15 @@ export function EventsAgenda({
           <Icon icon="mdi:calendar-plus-outline" width={27} />
         </span>
         <h3
-          className="m-0 text-[28px] text-balance"
+          className="type-h3 m-0 text-balance"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
           {totalUnfiltered === 0 ? t("emptyTitle") : t("noMatches")}
         </h3>
         <p
-          className="mx-auto mt-2 mb-0 max-w-[48ch] text-[16px]"
+          className="mx-auto mt-2 mb-0 max-w-[48ch] text-base"
           style={{ color: T.ink.dim }}
         >
           {totalUnfiltered === 0 ? t("emptyLead") : t("widen")}
@@ -232,10 +230,8 @@ export function EventsAgenda({
           aria-label={agendaGroupLabel(group.key, now, locale)}
         >
           <h3
-            className="m-0 mb-2.5 text-[22px]"
+            className="type-h3 m-0 mb-2.5"
             style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
               color: T.ink.base,
             }}
           >

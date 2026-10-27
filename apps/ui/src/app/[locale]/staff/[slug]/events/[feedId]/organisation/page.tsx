@@ -39,18 +39,14 @@ export default async function EventbriteOrganisationPage({
   return (
     <div className="mx-auto w-full max-w-[640px]">
       <h2
-        className="m-0 mb-2"
+        className="type-h2 m-0 mb-2"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(26px,3vw,32px)",
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
           color: T.ink.base,
         }}
       >
         Choose an Eventbrite organisation
       </h2>
-      <p className="m-0 mb-6 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 mb-6 text-base" style={{ color: T.ink.dim }}>
         Your Eventbrite account has more than one organisation. Choose the one
         whose events this library should show.
       </p>

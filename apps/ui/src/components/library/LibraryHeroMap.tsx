@@ -24,7 +24,7 @@ const VOYAGER_NO_LABELS =
   "https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json"
 
 const PILL =
-  "pointer-events-auto inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-2 text-[13.5px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "pointer-events-auto inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /**
  * The library page's hero map: this library as a labelled indigo pin, its
@@ -167,7 +167,7 @@ export function LibraryHeroMap({
 
       {failed ? (
         <p
-          className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-[14px]"
+          className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-sm"
           style={{ color: T.ink.dim }}
         >
           The map can&rsquo;t load in this browser. The address and nearby
@@ -182,7 +182,7 @@ export function LibraryHeroMap({
             if (!inView(at)) return null
             const label = `${i + 1}. ${n.name}`
             const className =
-              "pointer-events-auto absolute flex size-[26px] items-center justify-center rounded-full border-2 text-[12px] font-bold no-underline transition-transform hover:scale-110 motion-reduce:hover:scale-100"
+              "pointer-events-auto absolute flex size-[26px] items-center justify-center rounded-full border-2 text-xs font-bold no-underline transition-transform hover:scale-110 motion-reduce:hover:scale-100"
             const style = {
               left: at.x - 13,
               top: at.y - 13,
@@ -225,7 +225,7 @@ export function LibraryHeroMap({
               }}
             >
               <span
-                className="mb-1.5 max-w-[220px] truncate rounded-lg px-2.5 py-1 text-[12.5px] font-semibold text-white"
+                className="mb-1.5 max-w-[220px] truncate rounded-lg px-2.5 py-1 text-sm font-semibold text-white"
                 style={{ background: T.ink.base }}
               >
                 {name}

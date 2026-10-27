@@ -25,6 +25,11 @@ describe("beta routing", () => {
     "/api/public-proxy/api/libraries",
     "/api/export/atlas",
     "/sitemap.xml",
+    "/openapi.json",
+    "/llms.txt",
+    "/knowledge/data-api/guide.md",
+    "/fr/knowledge/data-api/guide.md",
+    "/knowledge/data-api/guide/markdown",
     "/sitemaps/libraries-en-1.xml",
   ])("blocks a locked request to %s", (path) =>
     expect(betaGate(request(path))).not.toBeNull()

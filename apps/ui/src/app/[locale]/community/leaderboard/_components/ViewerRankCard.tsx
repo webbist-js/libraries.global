@@ -26,7 +26,7 @@ export function ViewerRankCard({
     >
       <span
         aria-hidden="true"
-        className="flex size-[36px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+        className="flex size-[36px] shrink-0 items-center justify-center rounded-full text-sm font-bold"
         style={{
           background: TYPE_TINT.national.bg,
           color: TYPE_TINT.national.fg,
@@ -35,7 +35,7 @@ export function ViewerRankCard({
         {initials}
       </span>
       <p
-        className="m-0 text-[16px] leading-normal"
+        className="m-0 text-base leading-normal"
         style={{ flex: "1 1 220px", color: T.ink.base }}
       >
         {rank == null ? (
@@ -51,7 +51,7 @@ export function ViewerRankCard({
       </p>
       <GlobalLink
         href="/contribute/index"
-        className="inline-flex min-h-[44px] items-center rounded-full bg-(--t-accent-primary) px-[18px] text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+        className="inline-flex min-h-[44px] items-center rounded-full bg-(--t-accent-primary) px-[18px] text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
       >
         Make a change
       </GlobalLink>

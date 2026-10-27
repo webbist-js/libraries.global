@@ -45,7 +45,7 @@ export function SuggestionDecisions({
           <section key={month} aria-labelledby={headingId}>
             <h2
               id={headingId}
-              className="mt-0 mb-5 font-serif text-[clamp(28px,2.8vw,38px)] leading-tight tracking-tight text-(--t-ink-base)"
+              className="type-h2 mt-0 mb-5 text-(--t-ink-base)"
             >
               {t("decidedMonth", {
                 month: new Intl.DateTimeFormat(locale, {
@@ -80,7 +80,7 @@ export function SuggestionDecisions({
                       color: s.status === "accepted" ? T.accent.ok : T.ink.dim,
                     }}
                   />
-                  <h3 className="mt-4 mb-3 text-[20px] leading-[1.35] font-bold text-(--t-ink-base)">
+                  <h3 className="type-h3 mt-4 mb-3 text-(--t-ink-base)">
                     <GlobalLink
                       href={suggestionHref(s.documentId)}
                       className="no-underline hover:underline"
@@ -88,10 +88,10 @@ export function SuggestionDecisions({
                       {s.name}
                     </GlobalLink>
                   </h3>
-                  <p className="m-0 text-[16px] leading-[1.6] text-(--t-ink-dim)">
+                  <p className="m-0 text-base leading-[1.6] text-(--t-ink-dim)">
                     {s.decisionNote || t("legacyDecision")}
                   </p>
-                  <p className="mt-auto mb-0 pt-5 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                  <p className="mt-auto mb-0 pt-5 text-sm leading-relaxed text-(--t-ink-dim)">
                     {t("votes", { count: s.votes })} ·{" "}
                     {t(`lists.${s.optionKey}`)} ·{" "}
                     {t("conversationReplies", {

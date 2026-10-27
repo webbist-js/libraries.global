@@ -3,6 +3,7 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 import { toast } from "sonner"
 
+import { MembershipSettingsLink } from "@/components/membership/MembershipSettingsLink"
 import { ProfileProgress } from "@/components/profile-form/ProfileProgress"
 import {
   AffiliationSection,
@@ -20,7 +21,6 @@ import { useRouter } from "@/lib/navigation"
 import type { UserProfile } from "@/lib/types/profile"
 
 import { DataAccountSection } from "./DataAccountSection"
-import { MembershipBillingSection } from "./MembershipBillingSection"
 import { NotificationsSection } from "./NotificationsSection"
 import { PrivacySection } from "./PrivacySection"
 import { SignInSecuritySection } from "./SignInSecuritySection"
@@ -94,7 +94,10 @@ export function SettingsShell({
           />
           <InterestsSection form={form} />
           <LinksSection form={form} />
-          <MembershipBillingSection />
+          <MembershipSettingsLink
+            plan={sessionUser.plan ?? "free"}
+            source={sessionUser.planSource}
+          />
           <PrivacySection
             profile={profile}
             visibility={form.visibility}
@@ -127,7 +130,7 @@ export function SettingsShell({
               {saving ? tUi("saving") : "Save profile"}
             </Button>
             <p
-              className="m-0 text-[13.5px] leading-[1.55]"
+              className="m-0 text-sm leading-[1.55]"
               style={{ color: T.ink.dim }}
             >
               Saves the profile cards. Privacy and notification changes save as

@@ -27,7 +27,6 @@ import {
   useNotifications,
 } from "@/components/notifications/NotificationProvider"
 import { Button } from "@/components/ui/button"
-import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 const categories = {
@@ -192,13 +191,8 @@ function InboxEmptyState({
           <Icon className="size-6" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3
-            className="m-0 text-[28px] leading-tight text-(--t-ink-base)"
-            style={{ fontFamily: T.font.serif }}
-          >
-            {title}
-          </h3>
-          <p className="mt-3 mb-0 max-w-xl text-[15px] leading-relaxed text-(--t-ink-dim)">
+          <h3 className="type-h3 m-0 text-(--t-ink-base)">{title}</h3>
+          <p className="mt-3 mb-0 max-w-xl text-base leading-relaxed text-(--t-ink-dim)">
             {detail}
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -253,15 +247,12 @@ export function NotificationInbox() {
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <h2
-                className="m-0 text-[28px] leading-tight text-(--t-ink-base)"
-                style={{ fontFamily: T.font.serif }}
-              >
+              <h2 className="type-h2 m-0 text-(--t-ink-base)">
                 {tUi("notifications")}
               </h2>
               {!loading && !loadError && items.length > 0 ? (
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${unread ? "bg-(--t-accent-chip) text-(--t-accent-primary)" : "bg-(--tint-public-bg) text-(--tint-public-fg)"}`}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${unread ? "bg-(--t-accent-chip) text-(--t-accent-primary)" : "bg-(--tint-public-bg) text-(--tint-public-fg)"}`}
                 >
                   {unread ? (
                     `${unread} unread`
@@ -274,7 +265,7 @@ export function NotificationInbox() {
                 </span>
               ) : null}
             </div>
-            <p className="mt-2 mb-0 flex items-center gap-2 text-[13px] text-(--t-ink-dim)">
+            <p className="mt-2 mb-0 flex items-center gap-2 text-sm text-(--t-ink-dim)">
               <LockKeyhole aria-hidden="true" className="size-4 shrink-0" />
               Only you can see this tab
             </p>
@@ -321,7 +312,7 @@ export function NotificationInbox() {
                   type="button"
                   aria-pressed={filter === key}
                   onClick={() => setFilter(key)}
-                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition-colors focus-visible:-outline-offset-4! motion-reduce:transition-none ${filter === key ? "border-(--t-ink-base) bg-(--t-ink-base) text-(--t-bg-deep)" : "border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-dim) hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"}`}
+                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:-outline-offset-4! motion-reduce:transition-none ${filter === key ? "border-(--t-ink-base) bg-(--t-ink-base) text-(--t-bg-deep)" : "border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-dim) hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"}`}
                 >
                   {key === "all"
                     ? "All"
@@ -329,7 +320,7 @@ export function NotificationInbox() {
                       ? "Unread"
                       : categories[key].label}
                   <span
-                    className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none tabular-nums ${filter === key ? "bg-white/15 text-white" : "bg-(--t-bg-muted) text-(--t-ink-dim)"}`}
+                    className={`rounded-full px-1.5 py-0.5 text-xs leading-none tabular-nums ${filter === key ? "bg-white/15 text-white" : "bg-(--t-bg-muted) text-(--t-ink-dim)"}`}
                   >
                     {items.filter((item) => matches(item, key)).length}
                   </span>
@@ -342,7 +333,7 @@ export function NotificationInbox() {
       {(error || loadError) && (
         <div
           role="alert"
-          className="mx-5 mb-5 flex flex-wrap items-center gap-3 rounded-2xl bg-(--t-palette-coral-soft) p-4 text-[14px] leading-relaxed text-(--t-palette-coral-fg) sm:mx-7 sm:mb-7"
+          className="mx-5 mb-5 flex flex-wrap items-center gap-3 rounded-2xl bg-(--t-palette-coral-soft) p-4 text-sm leading-relaxed text-(--t-palette-coral-fg) sm:mx-7 sm:mb-7"
         >
           <p className="m-0 flex min-w-0 flex-1 items-start gap-2.5">
             <AlertCircle aria-hidden className="mt-0.5 size-5 shrink-0" />
@@ -361,7 +352,7 @@ export function NotificationInbox() {
       )}
       {loading ? (
         <div role="status" className="px-5 pb-5 sm:px-7 sm:pb-7">
-          <p className="mt-0 mb-4 text-[14px] text-(--t-ink-dim)">
+          <p className="mt-0 mb-4 text-sm text-(--t-ink-dim)">
             Loading your updates…
           </p>
           <div
@@ -435,7 +426,7 @@ export function NotificationInbox() {
 
           return (
             <div key={group.id}>
-              <h3 className="m-0 border-y border-(--t-border-line) bg-(--t-bg-surface) px-5 py-3 text-[12px] font-semibold text-(--t-ink-dim) sm:px-7">
+              <h3 className="type-small-heading m-0 border-y border-(--t-border-line) bg-(--t-bg-surface) px-5 py-3 text-(--t-ink-dim) sm:px-7">
                 {group.label}
               </h3>
               <ul className="m-0 list-none p-0">
@@ -456,25 +447,23 @@ export function NotificationInbox() {
                       </div>
                       <div className="min-w-0 flex-1 pr-4">
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-                          <h4
-                            className={`m-0 text-[15px] leading-snug [overflow-wrap:anywhere] ${!item.readAt ? "font-semibold" : "font-medium"}`}
-                          >
+                          <h4 className="type-h4 m-0 [overflow-wrap:anywhere]">
                             {item.title}
                           </h4>
                           <time
                             dateTime={item.createdAt}
                             title={new Date(item.createdAt).toLocaleString()}
-                            className="shrink-0 text-[12px] text-(--t-ink-low)"
+                            className="shrink-0 text-xs text-(--t-ink-low)"
                           >
                             {when(item.createdAt, now)}
                           </time>
                         </div>
-                        <p className="mt-1.5 mb-0 text-[14px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-line text-(--t-ink-dim)">
+                        <p className="mt-1.5 mb-0 text-sm leading-relaxed [overflow-wrap:anywhere] whitespace-pre-line text-(--t-ink-dim)">
                           {item.body}
                         </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                           <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${tint}`}
+                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tint}`}
                           >
                             {meta.label}
                           </span>
@@ -498,7 +487,7 @@ export function NotificationInbox() {
                               disabled={saving}
                               onClick={() => void read(item.documentId)}
                               aria-label={`Mark as read: ${item.title}`}
-                              className="min-h-[44px] rounded-full px-3 text-[13px] text-(--t-ink-dim)"
+                              className="min-h-[44px] rounded-full px-3 text-sm text-(--t-ink-dim)"
                             >
                               <CheckCheck aria-hidden className="size-4" />
                               Mark as read
@@ -520,7 +509,7 @@ export function NotificationInbox() {
         })
       )}
       {items.length > 0 && (
-        <p className="m-0 border-t border-(--t-border-line) px-5 py-4 text-[12px] leading-relaxed text-(--t-ink-dim) sm:px-7">
+        <p className="m-0 border-t border-(--t-border-line) px-5 py-4 text-xs leading-relaxed text-(--t-ink-dim) sm:px-7">
           Filters apply to the latest {items.length}{" "}
           {items.length === 1 ? "update" : "updates"} shown here. The unread
           total includes all retained notifications.

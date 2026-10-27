@@ -91,9 +91,7 @@ export function AppDialog({
         className={cn("max-h-screen overflow-auto", dialogContentClassName)}
       >
         <DialogHeader className="mb-4">
-          <DialogTitle className="text-2xl font-semibold">
-            {header.title}
-          </DialogTitle>
+          <DialogTitle className="type-h2">{header.title}</DialogTitle>
           {header.description && (
             <DialogDescription className="text-justify">
               {header.description}

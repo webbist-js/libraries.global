@@ -14,7 +14,7 @@ export function MetaRow({
     <p
       style={{
         fontFamily: T.font.sans,
-        fontSize: "12.5px",
+        fontSize: "var(--type-body-small-size)",
         color: T.ink.low,
         display: "flex",
         alignItems: "center",

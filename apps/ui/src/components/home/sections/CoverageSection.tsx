@@ -13,11 +13,8 @@ const BAR_SHADES = ["#2F5D3A", "#6D9A76", "#A9C8AE", "#CBDCCB"]
 export type CountryBreakdown = Record<string, { name: string; count: number }[]>
 
 const NAME_STYLE = {
-  fontFamily: T.font.serif,
-  fontWeight: 500,
-  fontSize: "clamp(32px,3.4vw,48px)",
-  lineHeight: 1,
-  letterSpacing: "-0.015em",
+  font: T.type.displayCompact,
+  letterSpacing: "var(--type-display-tracking)",
 } as const
 
 /** How far the index has got: a row per continent with published records
@@ -87,7 +84,7 @@ export function CoverageSection({
                   ))}
                 </div>
                 {countries.length > 0 ? (
-                  <ul className="m-0 mt-2.5 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[14px]">
+                  <ul className="m-0 mt-2.5 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-sm">
                     {countries.map((country) => (
                       <li key={country.name} style={{ color: T.ink.dim }}>
                         <span
@@ -106,11 +103,7 @@ export function CoverageSection({
               <p
                 className="m-0 text-right"
                 style={{
-                  fontFamily: T.font.serif,
-                  fontWeight: 500,
-                  fontSize: "clamp(44px,4.6vw,66px)",
-                  lineHeight: 1,
-                  letterSpacing: "-0.02em",
+                  font: T.type.stat,
                   color: TYPE_TINT.public.fg,
                 }}
               >
@@ -134,7 +127,7 @@ export function CoverageSection({
                 <li key={continent.documentId}>
                   <GlobalLink
                     href={`/${continent.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-base font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
                     style={{ borderColor: T.border.hi, color: T.ink.base }}
                   >
                     {continent.name}
@@ -150,7 +143,7 @@ export function CoverageSection({
             </ul>
             <GlobalLink
               href="/contribute/index/new"
-              className="text-right text-[15px] font-semibold underline underline-offset-[3px]"
+              className="text-right text-base font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
               Add the first library in your country

@@ -23,10 +23,7 @@ function Column({ side }: { side: Side }) {
       style={{ background: T.bg.surface, border: `1px solid ${T.border.line}` }}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h3
-          className="m-0 text-[14px] font-semibold"
-          style={{ color: T.ink.dim }}
-        >
+        <h3 className="type-small-heading m-0" style={{ color: T.ink.dim }}>
           {side.heading}
         </h3>
         {side.locale ? (
@@ -36,14 +33,14 @@ function Column({ side }: { side: Side }) {
       {side.title ? (
         <p
           className="m-0 text-[22px] leading-tight"
-          style={{ fontFamily: T.font.serif, color: T.ink.base }}
+          style={{ fontFamily: T.font.sans, color: T.ink.base }}
         >
           {side.title}
         </p>
       ) : null}
       {side.summary ? (
         <p
-          className="m-0 text-[15px] leading-[1.55]"
+          className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           {side.summary}
@@ -51,13 +48,13 @@ function Column({ side }: { side: Side }) {
       ) : null}
       {side.body ? (
         <div
-          className="max-h-[36rem] overflow-y-auto text-[15px] leading-[1.6] whitespace-pre-wrap"
+          className="max-h-[36rem] overflow-y-auto text-base leading-[1.6] whitespace-pre-wrap"
           style={{ color: T.ink.base }}
         >
           {side.body}
         </div>
       ) : (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.faint }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.faint }}>
           No body text.
         </p>
       )}
@@ -161,14 +158,14 @@ export function ArticleReviewPanel({
         <Badge label={kindLabel} color="dim" />
         <Badge label={detail.locale.toUpperCase()} color="dim" />
         {detail.targetSlug ? (
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             {detail.targetSlug}
           </span>
         ) : null}
       </div>
       {detail.status === "pending" || detail.status === "needs_info" ? (
         <p
-          className="m-0 rounded-[14px] px-4 py-3 text-[14px] leading-[1.55]"
+          className="m-0 rounded-[14px] px-4 py-3 text-sm leading-[1.55]"
           style={{
             background: T.bg.surface,
             border: `1px solid ${T.border.line}`,
@@ -180,21 +177,18 @@ export function ArticleReviewPanel({
         </p>
       ) : null}
       {editSummary ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+        <p className="m-0 text-base" style={{ color: T.ink.base }}>
           <strong>Edit summary: </strong>
           {editSummary}
         </p>
       ) : null}
       {proposal ? (
         <div className="flex flex-col gap-1">
-          <h3
-            className="m-0 text-[14px] font-semibold"
-            style={{ color: T.ink.dim }}
-          >
+          <h3 className="type-small-heading m-0" style={{ color: T.ink.dim }}>
             {category ? `Proposal · ${category}` : "Proposal"}
           </h3>
           <p
-            className="m-0 text-[15px] leading-[1.6] whitespace-pre-wrap"
+            className="m-0 text-base leading-[1.6] whitespace-pre-wrap"
             style={{ color: T.ink.base }}
           >
             {proposal}

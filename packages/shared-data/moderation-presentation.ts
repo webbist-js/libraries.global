@@ -7,6 +7,7 @@ export const MODERATION_TYPE_LABELS: Record<string, string> = {
   new_library: "New library",
   library_edit: "Library edit",
   library_claim: "Library claim",
+  network_claim: "Service or network claim",
   wiki_edit: "Knowledge",
   blog_submission: "Journal",
   topic_suggestion: "Topic",
@@ -197,6 +198,8 @@ export function moderationSummaryOf(sub: ModerationSubmissionLike): string {
   switch (sub.submissionType) {
     case "new_library":
       return str(f.name) ?? "Unnamed library"
+    case "network_claim":
+      return `${String(f.networkName ?? "Service")} · ${String(f.intent ?? "affiliation")} · ${Array.isArray(f.libraryIds) ? f.libraryIds.length : 0} libraries`
     case "library_claim":
       return str(f.name) ?? sub.targetSlug ?? "Library claim"
     case "wiki_edit":

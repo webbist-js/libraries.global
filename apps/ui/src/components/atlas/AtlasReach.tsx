@@ -443,7 +443,7 @@ function ReachResultContent({
         onShading={onOpacity}
         about={
           <div className="flex flex-col gap-4">
-            <h4 className="m-0 font-semibold text-(--t-ink-base)">
+            <h4 className="type-h4 m-0 text-(--t-ink-base)">
               {t("aboutData")}
             </h4>
             <p>{t("reachMethod")}</p>
@@ -479,7 +479,7 @@ function ReachResultContent({
               })}
             </p>
             <div className="flex flex-col gap-4">
-              <h4 className="m-0 font-semibold text-(--t-ink-base)">
+              <h4 className="type-h4 m-0 text-(--t-ink-base)">
                 {t("technicalDetails")}
               </h4>
               <p>{t("reachSpeeds")}</p>

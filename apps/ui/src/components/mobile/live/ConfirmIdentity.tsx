@@ -99,7 +99,7 @@ export function ConfirmIdentity({
             void confirm("password")
           }}
         >
-          <label className="block text-[15px] font-semibold">
+          <label className="block text-base font-semibold">
             {tUi("password")}{" "}
             <input
               className="live-input mt-2 font-normal"
@@ -152,7 +152,7 @@ export function ConfirmIdentity({
               void confirm("code")
             }}
           >
-            <label className="block text-[15px] font-semibold">
+            <label className="block text-base font-semibold">
               Six-digit code
               <input
                 ref={codeRef}
@@ -175,13 +175,13 @@ export function ConfirmIdentity({
         )}
         <button
           type="button"
-          className="mx-auto block min-h-11 text-[15px] font-semibold"
+          className="mx-auto block min-h-11 text-base font-semibold"
           style={{ color: T.ink.dim }}
           onClick={onClose}
         >
           {tUi("cancel")}{" "}
         </button>
-        <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           Confirmation lasts 12 hours on this sign-in. After confirming, you can
           add a passkey to this account.
         </p>

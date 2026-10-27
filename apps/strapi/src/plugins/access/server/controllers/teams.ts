@@ -130,6 +130,14 @@ export default ({ strapi }: { strapi: any }) => {
       return teams().verify(teamId(ctx), verified, admin.id)
     }),
 
+    widgetBranding: run((ctx, admin) => {
+      const enabled = ctx.request?.body?.enabled
+      if (typeof enabled !== "boolean")
+        throw new AccessError(400, "invalid_input")
+
+      return teams().widgetBranding(teamId(ctx), enabled, admin.id)
+    }),
+
     // POST /teams/:id/members  { email, teamRole?, preassign? }
     invite: run(async (ctx, admin) => {
       const b = ctx.request?.body ?? {}

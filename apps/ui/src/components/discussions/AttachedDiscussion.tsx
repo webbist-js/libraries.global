@@ -165,15 +165,7 @@ function AttachedDiscussionPanel({
       {variant !== "suggestion" && (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h2
-              className={
-                articleCard
-                  ? "m-0 font-serif text-[28px] leading-tight font-medium"
-                  : "text-2xl font-medium"
-              }
-            >
-              {heading}
-            </h2>
+            <h2 className={`type-h2 ${articleCard ? "m-0" : ""}`}>{heading}</h2>
             {articleCard && (
               <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                 {t(journal ? "storyLead" : "attachedLead")}

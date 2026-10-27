@@ -32,9 +32,8 @@ export function KpiTile({
         {label}
       </p>
       <p
-        className="my-2 text-4xl break-words tabular-nums"
+        className="type-stat my-2 break-words"
         style={{
-          fontFamily: T.font.serif,
           color: ghost ? T.ink.dim : T.ink.base,
         }}
       >

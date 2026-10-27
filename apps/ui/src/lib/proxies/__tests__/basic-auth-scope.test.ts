@@ -11,6 +11,10 @@ describe("needsBasicAuth", () => {
     "/api/newsletter",
     "/api/public-proxy/api/libraries",
     "/api/export/atlas",
+    "/openapi.json",
+    "/llms.txt",
+    "/knowledge/data-api/guide.md",
+    "/knowledge/data-api/guide/markdown",
     "/api/authors", // not /api/auth
     "/api/previews", // not /api/preview
     "/api/internals", // not /api/internal

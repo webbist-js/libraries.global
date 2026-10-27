@@ -42,11 +42,11 @@ export function LibraryClaimWorkspace({
               <h2
                 ref={heading}
                 tabIndex={-1}
-                className="m-0 font-serif text-[32px] leading-tight outline-none"
+                className="type-h2 m-0 outline-none"
               >
                 {t("sent")}
               </h2>
-              <p className="max-w-[60ch] text-[16px] leading-relaxed text-(--t-ink-dim)">
+              <p className="max-w-[60ch] text-base leading-relaxed text-(--t-ink-dim)">
                 {t("sentBody", { library: library?.libraryName ?? "" })}
               </p>
               <div className="flex flex-wrap gap-3">
@@ -66,13 +66,13 @@ export function LibraryClaimWorkspace({
             <>
               <div className="mb-6 flex flex-col items-start gap-4 border-b border-(--t-border-line) pb-6 sm:flex-row sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <p className="mb-2 text-[14px] font-semibold text-(--t-accent-primary)">
+                  <p className="mb-2 text-sm font-semibold text-(--t-accent-primary)">
                     {t("selected")}
                   </p>
                   <h2
                     ref={heading}
                     tabIndex={-1}
-                    className="m-0 font-serif text-[clamp(26px,3vw,34px)] leading-tight break-words outline-none"
+                    className="type-h2 m-0 break-words outline-none"
                   >
                     {library.libraryName}
                   </h2>
@@ -120,6 +120,18 @@ export function LibraryClaimWorkspace({
             </div>
           )}
         </StaffPanel>
+        <StaffPanel title="Manage a wider service?">
+          <p>
+            Request employment verification or management of a reviewed group of
+            libraries in one service claim.
+          </p>
+          <Link
+            className="font-semibold underline underline-offset-4"
+            href="/staff/networks"
+          >
+            Find your service or network
+          </Link>
+        </StaffPanel>
         <Notice icon="mdi:shield-check-outline" tone="info" title={t("after")}>
           <p className="m-0 max-w-[80ch]">{t("afterBody")}</p>
         </Notice>
@@ -144,7 +156,7 @@ export function LibraryClaimWorkspace({
         >
           <ol className="m-0 grid list-none gap-6 p-0">
             {(["find", "details", "review"] as const).map((step, i) => (
-              <li key={step} className="flex gap-3 text-[15px] leading-relaxed">
+              <li key={step} className="flex gap-3 text-base leading-relaxed">
                 <span
                   aria-hidden
                   className="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--t-accent-chip) font-semibold text-(--t-accent-primary)"

@@ -137,7 +137,7 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
           aria-labelledby="cookie-choices-title"
           className="fixed inset-x-3 bottom-3 z-[80] max-h-[85dvh] overflow-y-auto rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-(--t-ink-base) shadow-xl sm:left-auto sm:w-[32rem] sm:p-6"
         >
-          <h2 id="cookie-choices-title" className="text-lg font-semibold">
+          <h2 id="cookie-choices-title" className="type-h2">
             {t.title}
           </h2>
           <p className="mt-3 text-sm leading-relaxed">{t.body}</p>

@@ -1,4 +1,5 @@
 import "server-only"
+import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { cache } from "react"
@@ -7,7 +8,11 @@ import { requireStaff, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { isStaffSlugParam } from "@/lib/staff/paths"
-import { fetchStaff } from "@/lib/staff-proxy"
+import {
+  fetchStaff,
+  resolveTargetStaff,
+  withTargetStaff,
+} from "@/lib/staff-proxy"
 import { PublicStrapiClient } from "@/lib/strapi-api"
 
 import type { StaffOverview } from "./types"
@@ -25,14 +30,22 @@ export const loadStaffPage = cache(async (slug: string, _pathname?: string) => {
   if (!isStaffSlugParam(slug)) notFound()
   const session = await getSessionSSR(await headers())
   if (!session?.user) notFound()
-  const libraries = staffLibrariesOf(session.user)
+  let user = session.user
+  let libraries = staffLibrariesOf(user)
+  if (!libraries.some((library) => library.slug === slug)) {
+    if (libraries.length < SESSION_PROFILE_MAX_CLAIMS) notFound()
+    const target = await resolveTargetStaff(user, slug)
+    if (!target) notFound()
+    user = withTargetStaff(user, target)
+    libraries = staffLibrariesOf(user)
+  }
   const matches = libraries.filter((library) => library.slug === slug)
   if (matches.length !== 1) notFound()
   const id = matches[0]!.id
   if (!isDocumentIdParam(id)) notFound()
-  if (requireStaff(session.user, id, "seeTeam")) notFound()
+  if (requireStaff(user, id, "seeTeam")) notFound()
   const result = await fetchStaff<StaffOverview>(
-    session.user,
+    user,
     `libraries/${id}/overview`
   )
   if ([401, 403, 404].includes(result.status)) notFound()
@@ -47,7 +60,7 @@ export const loadStaffPage = cache(async (slug: string, _pathname?: string) => {
     notFound()
 
   return {
-    user: session.user,
+    user,
     libraries,
     documentId: id,
     overview: result.body,

@@ -124,15 +124,11 @@ export function SupportersDirectory({
     >
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h2
-            id="supporters-heading"
-            className="m-0 text-[clamp(30px,3vw,42px)] leading-tight"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
+          <h2 id="supporters-heading" className="type-h2 m-0">
             Our supporters
           </h2>
           {directory ? (
-            <p className="mt-2 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="mt-2 mb-0 text-sm" style={{ color: T.ink.dim }}>
               {directory.total.toLocaleString(locale)} supporters ·{" "}
               {directory.listed.toLocaleString(locale)} listed here
             </p>
@@ -157,7 +153,7 @@ export function SupportersDirectory({
                 disabled: pending,
               }}
             />
-            <label className="flex items-center gap-2 text-[14px] font-semibold">
+            <label className="flex items-center gap-2 text-sm font-semibold">
               Sort
               <SelectField
                 name="sort"
@@ -204,7 +200,7 @@ export function SupportersDirectory({
                 key={region}
                 href={supportersHref({ ...query, country: undefined, region })}
                 aria-current={active ? "page" : undefined}
-                className="inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-[14px] font-semibold no-underline"
+                className="inline-flex min-h-10 items-center rounded-full border px-4 py-2 text-sm font-semibold no-underline"
                 style={{
                   background: active ? T.accent.chip : T.bg.deep,
                   borderColor: active ? T.accent.primary : T.border.hi,
@@ -222,20 +218,20 @@ export function SupportersDirectory({
           className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[22px] px-5 py-4"
           style={{ background: T.accent.chip }}
         >
-          <span className="mr-1 text-[14px] font-semibold">New this month</span>
+          <span className="mr-1 text-sm font-semibold">New this month</span>
           {directory.newThisMonth?.length ? (
             directory.newThisMonth.map((entry) => (
               <GlobalLink
                 key={entry.username}
                 href={`/profile/${encodeURIComponent(entry.username)}`}
-                className="rounded-full px-3 py-1 text-[13px] font-semibold no-underline"
+                className="rounded-full px-3 py-1 text-sm font-semibold no-underline"
                 style={{ background: T.bg.deep, color: T.ink.base }}
               >
                 {entry.displayName}
               </GlobalLink>
             ))
           ) : (
-            <span className="text-[13px]" style={{ color: T.ink.dim }}>
+            <span className="text-sm" style={{ color: T.ink.dim }}>
               No new public supporters listed this month.
             </span>
           )}
@@ -285,12 +281,12 @@ export function SupportersDirectory({
                   size="lg"
                 />
                 <span className="min-w-0">
-                  <span className="block text-[14px] leading-snug font-semibold">
+                  <span className="block text-sm leading-snug font-semibold">
                     {entry.displayName}
                   </span>
                   {entry.city || entry.country ? (
                     <span
-                      className="mt-1 block text-[13px] leading-snug"
+                      className="mt-1 block text-sm leading-snug"
                       style={{ color: T.ink.dim }}
                     >
                       {[
@@ -304,7 +300,7 @@ export function SupportersDirectory({
                     </span>
                   ) : null}
                   <span
-                    className="mt-1 block text-[12px] leading-snug font-semibold"
+                    className="mt-1 block text-xs leading-snug font-semibold"
                     style={{ color: T.accent.primary }}
                   >
                     {entry.since
@@ -319,7 +315,7 @@ export function SupportersDirectory({
       )}
       {directory ? (
         <div
-          className="mt-5 flex flex-wrap items-center justify-between gap-3 text-[14px]"
+          className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm"
           style={{ color: T.ink.dim }}
         >
           <p className="m-0 inline-flex items-center gap-2">
@@ -337,7 +333,7 @@ export function SupportersDirectory({
               type="button"
               onClick={() => void showMore()}
               disabled={loadingMore || pending}
-              className="min-h-11 cursor-pointer rounded-full border px-5 py-2.5 text-[14px] font-semibold disabled:cursor-wait disabled:opacity-60"
+              className="min-h-11 cursor-pointer rounded-full border px-5 py-2.5 text-sm font-semibold disabled:cursor-wait disabled:opacity-60"
               style={{
                 background: T.bg.deep,
                 borderColor: T.border.hi,

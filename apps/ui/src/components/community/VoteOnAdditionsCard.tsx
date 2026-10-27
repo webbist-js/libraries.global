@@ -20,7 +20,7 @@ const SHOWN = 3
 const votesText = (n: number) => `${n} ${n === 1 ? "vote" : "votes"}`
 
 const BOX =
-  "flex h-11 w-12 shrink-0 items-center justify-center gap-0.5 rounded-xl text-[15px] font-bold tabular-nums"
+  "flex h-11 w-12 shrink-0 items-center justify-center gap-0.5 rounded-xl text-base font-bold tabular-nums"
 
 function boxStyle(voted: boolean) {
   return voted
@@ -84,14 +84,14 @@ export function VoteOnAdditionsCard({
       <div className="flex items-baseline justify-between gap-2">
         <h2
           id="vote-on-additions"
-          className="m-0 text-[17px] font-bold"
+          className="type-panel-title m-0"
           style={{ color: T.ink.base }}
         >
           Vote on additions
         </h2>
         <GlobalLink
           href="/community/suggestions"
-          className="text-[15px] font-semibold underline underline-offset-[3px]"
+          className="text-base font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
           All suggestions
@@ -101,7 +101,7 @@ export function VoteOnAdditionsCard({
       {error ? (
         <p
           role="alert"
-          className="m-0 mt-1 text-[14px] font-semibold"
+          className="m-0 mt-1 text-base font-semibold"
           style={{ color: T.accent.danger }}
         >
           {error}
@@ -110,7 +110,7 @@ export function VoteOnAdditionsCard({
 
       {top.length === 0 ? (
         <p
-          className="m-0 mt-1 text-[15px] leading-[1.55]"
+          className="m-0 mt-1 text-base leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           Nothing to vote on yet.{" "}
@@ -171,12 +171,12 @@ export function VoteOnAdditionsCard({
                 )}
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span
-                    className="text-[15px] font-semibold"
+                    className="text-base font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {s.name}
                   </span>
-                  <span className="text-[13px]" style={{ color: T.ink.dim }}>
+                  <span className="text-sm" style={{ color: T.ink.dim }}>
                     {LIST_LABELS[s.optionKey] ?? s.optionKey} ·{" "}
                     {STATUS_META[s.status]?.label ?? s.status}
                   </span>

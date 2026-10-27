@@ -270,7 +270,7 @@ function DensityAreaSummary({
       data-atlas-reveal
       className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4"
     >
-      <h3 className="mt-0 text-base font-bold">{area.name}</h3>
+      <h3 className="type-h3 mt-0">{area.name}</h3>
       <p className="text-3xl font-semibold">
         {area.peoplePerKm2 === null
           ? t("unavailable")
@@ -330,7 +330,7 @@ function DensityPoint({
         data-atlas-reveal
         className="rounded-xl border border-(--t-border-line) p-4"
       >
-        <h3 className="m-0 text-sm font-semibold">{context("selectedCell")}</h3>
+        <h3 className="type-h3 m-0">{context("selectedCell")}</h3>
         <p className="my-3 text-[40px] font-semibold text-(--t-accent-primary)">
           {gridPoint.density.toLocaleString(undefined, {
             maximumFractionDigits: 1,
@@ -450,7 +450,7 @@ function DensityData({
         onShading={controls?.onOpacity}
         about={
           <div className="flex flex-col gap-4">
-            <h4 className="m-0 font-semibold text-(--t-ink-base)">
+            <h4 className="type-h4 m-0 text-(--t-ink-base)">
               {t("aboutData")}
             </h4>
             <p>{t("densityMethod")}</p>

@@ -74,8 +74,8 @@ export function SectionTabs({
             className={[
               "inline-flex shrink-0 items-center gap-2 border-b-2 font-medium whitespace-nowrap transition-colors duration-150 focus-visible:-outline-offset-4! motion-reduce:transition-none",
               roomy
-                ? "min-h-[60px] px-4 py-3 text-[16px]"
-                : "min-h-[56px] px-3 py-3 text-[15px]",
+                ? "min-h-[60px] px-4 py-3 text-base"
+                : "min-h-[56px] px-3 py-3 text-base",
               active
                 ? "border-(--t-accent-primary) font-semibold text-(--t-ink-base)"
                 : "border-transparent text-(--t-ink-dim) hover:border-(--t-accent-primary)/35 hover:text-(--t-accent-primary) focus-visible:text-(--t-accent-primary)",
@@ -96,7 +96,7 @@ export function SectionTabs({
             {tab.badge}
             {tab.count ? (
               <span
-                className="rounded-full px-1.5 py-0.5 text-[13px] leading-none font-semibold tabular-nums"
+                className="rounded-full px-1.5 py-0.5 text-sm leading-none font-semibold tabular-nums"
                 style={{
                   background: T.bg.muted,
                   color: T.ink.dim,

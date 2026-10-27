@@ -1,7 +1,6 @@
 import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
 
-import { T } from "@/lib/design-tokens"
 import type { Drive } from "@/lib/drives/types"
 
 export function DriveHowToHelp({
@@ -30,15 +29,11 @@ export function DriveHowToHelp({
     >
       <div>
         {hoursOnly ? (
-          <p className="m-0 text-[11px] font-bold tracking-wide text-(--t-ink-dim) uppercase">
+          <p className="m-0 text-xs font-bold tracking-wide text-(--t-ink-dim) uppercase">
             {t("timeEstimate")}
           </p>
         ) : null}
-        <h2
-          id="drive-steps-heading"
-          className="m-0 text-[30px] leading-tight font-medium"
-          style={{ fontFamily: T.font.serif }}
-        >
+        <h2 id="drive-steps-heading" className="type-h2 m-0">
           {t("howToHelp")}
         </h2>
       </div>
@@ -46,7 +41,7 @@ export function DriveHowToHelp({
         {steps.map((step, i) => (
           <li
             key={step.id ?? i}
-            className="flex items-start gap-2.5 text-[14px] leading-relaxed text-(--t-ink-dim)"
+            className="flex items-start gap-2.5 text-sm leading-relaxed text-(--t-ink-dim)"
           >
             <span
               aria-hidden
@@ -63,7 +58,7 @@ export function DriveHowToHelp({
           type="button"
           onClick={onRandom}
           disabled={busy || disabled}
-          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:cursor-wait disabled:opacity-60"
+          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:cursor-wait disabled:opacity-60"
         >
           <Icon aria-hidden icon="mdi:shuffle-variant" width={17} />
           {busy ? t("findingLibrary") : t("giveMeLibrary")}

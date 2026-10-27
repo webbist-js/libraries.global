@@ -131,7 +131,7 @@ export default async function CommunityPage({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <CommunitySectionHeader
-        title="The *noticeboard.*"
+        title="Our *community.*"
         lead="Community drives to fill gaps in the index. Pick one, work through small tasks, and see the whole effort move forward."
         counts={{ noticeboard: open.length, suggestions: votableCount }}
       >

@@ -24,21 +24,18 @@ function StatCard({ stat }: { readonly stat: Stat }) {
     >
       <span
         className="text-[28px] leading-none"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
+        style={{ fontFamily: T.font.sans, fontWeight: 500, color: T.ink.base }}
       >
         {stat.value}
       </span>
       <span
-        className="mt-1 text-[13.5px] leading-snug font-semibold"
+        className="mt-1 text-sm leading-snug font-semibold"
         style={{ color: T.ink.base }}
       >
         {stat.label}
       </span>
       {stat.note ? (
-        <span
-          className="text-[12.5px] leading-snug"
-          style={{ color: T.ink.dim }}
-        >
+        <span className="text-sm leading-snug" style={{ color: T.ink.dim }}>
           {stat.note}
         </span>
       ) : null}
@@ -120,7 +117,7 @@ export function LibraryAreaSection({
       ) : null}
 
       <h3
-        className="mt-6 mb-1 text-[15px] font-bold"
+        className="type-small-heading mt-6 mb-1"
         style={{ color: T.ink.base }}
       >
         {area.sameRegion
@@ -140,7 +137,7 @@ export function LibraryAreaSection({
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-[26px] shrink-0 items-center justify-center rounded-full border-2 text-[12px] font-bold"
+                  className="flex size-[26px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold"
                   style={{
                     background: "var(--tint-public-bg)",
                     borderColor: "var(--tint-public-fg)",
@@ -153,26 +150,23 @@ export function LibraryAreaSection({
                   {n.href ? (
                     <Link
                       href={n.href}
-                      className="block text-[15px] font-semibold no-underline hover:underline"
+                      className="block text-base font-semibold no-underline hover:underline"
                       style={{ color: T.ink.base }}
                     >
                       {n.name}
                     </Link>
                   ) : (
-                    <span className="block text-[15px] font-semibold">
+                    <span className="block text-base font-semibold">
                       {n.name}
                     </span>
                   )}
-                  <span
-                    className="block text-[13px]"
-                    style={{ color: T.ink.dim }}
-                  >
+                  <span className="block text-sm" style={{ color: T.ink.dim }}>
                     {typeLine(n.libraryType, n.city)}
                   </span>
                 </span>
                 {n.km !== null ? (
                   <span
-                    className="shrink-0 text-[14px] font-semibold tabular-nums"
+                    className="shrink-0 text-sm font-semibold tabular-nums"
                     style={{ color: T.ink.base }}
                   >
                     {formatDistance(n.km)}
@@ -182,13 +176,13 @@ export function LibraryAreaSection({
             ))}
           </ol>
           {hasDistances ? (
-            <p className="mt-1 mb-0 text-[12.5px]" style={{ color: T.ink.dim }}>
+            <p className="mt-1 mb-0 text-sm" style={{ color: T.ink.dim }}>
               Straight-line distance from the coordinates in this record.
             </p>
           ) : null}
         </>
       ) : (
-        <p className="m-0 text-[14.5px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           {area.neighboursUnavailable
             ? "Nearby library results are temporarily unavailable."
             : area.sameRegion

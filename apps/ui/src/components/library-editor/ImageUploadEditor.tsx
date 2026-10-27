@@ -85,7 +85,7 @@ export function ImageUploadEditor({
           background: T.bg.surface,
           color: uploading ? T.ink.faint : T.ink.dim,
           fontFamily: T.font.sans,
-          fontSize: "13px",
+          fontSize: "var(--type-body-small-size)",
           cursor: uploading ? "not-allowed" : "pointer",
           display: "flex",
           flexDirection: "column",
@@ -99,7 +99,7 @@ export function ImageUploadEditor({
         <span>{uploading ? "Uploading…" : "Click to select images"}</span>
         <span
           style={{
-            fontSize: "13px",
+            fontSize: "var(--type-body-small-size)",
             color: T.ink.faint,
             marginTop: "2px",
           }}
@@ -120,7 +120,7 @@ export function ImageUploadEditor({
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "13px",
+            fontSize: "var(--type-body-small-size)",
             color: T.accent.danger,
             margin: 0,
           }}
@@ -169,7 +169,7 @@ export function ImageUploadEditor({
                     top: "6px",
                     left: "6px",
                     fontFamily: T.font.sans,
-                    fontSize: "13px",
+                    fontSize: "var(--type-body-small-size)",
                     color: "#fff",
                     background: T.accent.primary,
                     padding: "2px 7px",
@@ -200,7 +200,7 @@ export function ImageUploadEditor({
                     style={{
                       flex: 1,
                       fontFamily: T.font.sans,
-                      fontSize: "13px",
+                      fontSize: "var(--type-body-small-size)",
                       color: T.accent.primary,
                       background: T.bg.deep,
                       border: "none",
@@ -217,7 +217,7 @@ export function ImageUploadEditor({
                   onClick={() => remove(i)}
                   style={{
                     fontFamily: T.font.sans,
-                    fontSize: "13px",
+                    fontSize: "var(--type-body-small-size)",
                     color: T.accent.danger,
                     background: "var(--tint-special-bg)",
                     border: "none",

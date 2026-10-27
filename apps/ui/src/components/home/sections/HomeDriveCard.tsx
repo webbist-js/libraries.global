@@ -26,7 +26,7 @@ export function HomeDriveCard({ view }: { readonly view: DriveView }) {
           <DriveFocusChip focus={drive.focus} />
           {place ? (
             <span
-              className="inline-flex items-center rounded-full px-3 py-[5px] text-[14px] font-semibold"
+              className="inline-flex items-center rounded-full px-3 py-[5px] text-sm font-semibold"
               style={{ background: T.bg.muted, color: T.ink.base }}
             >
               {place}
@@ -37,12 +37,8 @@ export function HomeDriveCard({ view }: { readonly view: DriveView }) {
       </div>
 
       <h4
-        className="m-0"
+        className="type-h4 m-0"
         style={{
-          fontFamily: T.font.serif,
-          fontWeight: 500,
-          fontSize: 22,
-          lineHeight: 1.2,
           color: T.ink.base,
         }}
       >
@@ -50,7 +46,7 @@ export function HomeDriveCard({ view }: { readonly view: DriveView }) {
       </h4>
 
       <p
-        className="m-0 line-clamp-2 text-[15px] leading-[1.55]"
+        className="m-0 line-clamp-2 text-base leading-[1.55]"
         style={{ color: T.ink.dim }}
       >
         {drive.summary}
@@ -66,7 +62,7 @@ export function HomeDriveCard({ view }: { readonly view: DriveView }) {
           color={tint.fg}
         />
       ) : (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           Not counted yet.
         </p>
       )}
@@ -74,13 +70,13 @@ export function HomeDriveCard({ view }: { readonly view: DriveView }) {
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
         <GlobalLink
           href={href}
-          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
         >
           Join this drive
         </GlobalLink>
         <GlobalLink
           href="/community"
-          className="text-[14px] font-semibold underline underline-offset-[3px]"
+          className="text-sm font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
           How drives work

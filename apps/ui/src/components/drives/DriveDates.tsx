@@ -39,7 +39,7 @@ export function DriveDates({
           : detail && drive.status === "open"
             ? T.accent.warn
             : T.ink.dim,
-        fontFamily: lg ? T.font.serif : undefined,
+        fontFamily: lg ? T.font.sans : undefined,
         fontSize: lg ? 22 : detail ? 12 : 14,
         fontWeight: lg ? 500 : 600,
         lineHeight: 1.2,

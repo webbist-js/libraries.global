@@ -167,17 +167,17 @@ export function SignInSecuritySection() {
         >
           <div>
             <p
-              className="m-0 text-[15px] font-medium"
+              className="m-0 text-base font-medium"
               style={{ color: T.ink.base }}
             >
               Two-step verification
             </p>
-            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
               Ask for a code from an authenticator app when you sign in.
             </p>
           </div>
           <span
-            className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
+            className="shrink-0 rounded-full px-3 py-1 text-sm font-semibold"
             style={{
               background: "var(--tint-special-bg)",
               color: "var(--tint-special-fg)",
@@ -189,7 +189,7 @@ export function SignInSecuritySection() {
 
         {/* Connected sign-in methods */}
         {loading ? (
-          <p className="py-3.5 text-[14px]" style={{ color: T.ink.low }}>
+          <p className="py-3.5 text-sm" style={{ color: T.ink.low }}>
             Loading sign-in methods…
           </p>
         ) : (
@@ -217,13 +217,13 @@ export function SignInSecuritySection() {
                   />
                   <div className="min-w-0">
                     <p
-                      className="m-0 text-[15px] font-medium"
+                      className="m-0 text-base font-medium"
                       style={{ color: T.ink.base }}
                     >
                       {meta.label}
                     </p>
                     <p
-                      className="m-0 mt-0.5 truncate text-[14px]"
+                      className="m-0 mt-0.5 truncate text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       {isOnly
@@ -263,17 +263,17 @@ export function SignInSecuritySection() {
 
         {/* Sessions */}
         <p
-          className="m-0 mt-6 mb-1 text-[15px] font-semibold"
+          className="m-0 mt-6 mb-1 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
           Where you&rsquo;re signed in
         </p>
         {loading ? (
-          <p className="py-3 text-[14px]" style={{ color: T.ink.low }}>
+          <p className="py-3 text-sm" style={{ color: T.ink.low }}>
             Loading sessions…
           </p>
         ) : sessions.length === 0 ? (
-          <p className="py-3 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="py-3 text-sm" style={{ color: T.ink.dim }}>
             No active sessions found.
           </p>
         ) : (
@@ -305,13 +305,13 @@ export function SignInSecuritySection() {
                 </span>
                 <div className="min-w-0">
                   <p
-                    className="m-0 text-[15px] font-medium"
+                    className="m-0 text-base font-medium"
                     style={{ color: T.ink.base }}
                   >
                     {describeDevice(s.userAgent)}
                   </p>
                   <p
-                    className="m-0 mt-0.5 truncate text-[14px]"
+                    className="m-0 mt-0.5 truncate text-sm"
                     style={{ color: T.ink.dim }}
                   >
                     Signed in{" "}
@@ -322,7 +322,7 @@ export function SignInSecuritySection() {
               </div>
               {s.current ? (
                 <span
-                  className="shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold text-white"
+                  className="shrink-0 rounded-full px-3 py-1 text-sm font-semibold text-white"
                   style={{ background: T.ink.base }}
                 >
                   This device

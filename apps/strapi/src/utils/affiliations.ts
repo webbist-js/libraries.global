@@ -1,3 +1,9 @@
+import {
+  issueAuthorityGrant,
+  prepareLegacyAuthority,
+  withAuthorityLock,
+  withAuthorityOrigin,
+} from "./authority-grants"
 import { createGrant } from "./role-grants"
 
 /**
@@ -82,7 +88,7 @@ async function libraryHasStaff(
  * Returns the affiliation's documentId and whether this call created it, so
  * a caller can compensate (delete it) if a later step fails.
  */
-export async function upsertAffiliation(
+async function upsertLegacyAffiliation(
   strapi: any,
   data: {
     baUserId: string
@@ -177,4 +183,43 @@ export async function upsertAffiliation(
       ?.joined(data.baUserId, data.libraryDocumentId)
 
   return { documentId: created.documentId, created: true }
+}
+
+export async function upsertAffiliation(
+  strapi: Parameters<typeof upsertLegacyAffiliation>[0],
+  data: Parameters<typeof upsertLegacyAffiliation>[1] & {
+    mandateDocumentId?: string
+  }
+) {
+  if (data.role === "proposer") return upsertLegacyAffiliation(strapi, data)
+  if (data.source === "team" && !data.teamMemberDocumentId)
+    throw new RangeError("A Team grant needs its member provenance")
+  const origin = {
+    ...data,
+    sourceKind: data.source ?? "claim",
+    sourceDocumentId:
+      data.source === "team"
+        ? data.teamMemberDocumentId!
+        : `claim:${data.baUserId}:${data.libraryDocumentId}`,
+    issuedBy: "affiliation-workflow",
+  }
+
+  return withAuthorityOrigin(strapi, origin, () =>
+    withAuthorityLock(
+      strapi,
+      data.baUserId,
+      data.libraryDocumentId,
+      async () => {
+        await prepareLegacyAuthority(
+          strapi,
+          data.baUserId,
+          data.libraryDocumentId
+        )
+        const row = await upsertLegacyAffiliation(strapi, data)
+        await issueAuthorityGrant(strapi, origin)
+
+        return row
+      }
+    )
+  )
 }

@@ -4,7 +4,7 @@ import createService from "../../src/plugins/content-moderation/server/services/
 import { payloadHash } from "../../src/plugins/content-moderation/server/utils/payload-hash"
 import { adminReviewer } from "../../src/plugins/content-moderation/server/utils/reviewer"
 import { syncDerivedRole } from "../../src/utils/role-grants"
-import { makeFakeStrapi } from "../helpers/fake-strapi"
+import { makeFakeStrapi, materialiseRelations } from "../helpers/fake-strapi"
 
 const REVIEWER = adminReviewer({ id: 1, email: "moderator@example.org" })
 
@@ -136,6 +136,10 @@ describe("claim approval", () => {
       [LIB]: [{ documentId: "lib0000000000000000000001", id: 7 }],
       [AFF]: [],
     })
+    materialiseRelations(f, AFF, ["library"])
+    materialiseRelations(f, "plugin::access.library-authority-grant", [
+      "library",
+    ])
     f.services["rewards.points"] = {
       award: vi.fn(async () => ({ awarded: true })),
     }
@@ -179,6 +183,10 @@ describe("claim approval", () => {
         },
       ],
     })
+    materialiseRelations(f, AFF, ["library"])
+    materialiseRelations(f, "plugin::access.library-authority-grant", [
+      "library",
+    ])
     f.services["rewards.points"] = {
       award: vi.fn(async () => ({ awarded: true })),
     }

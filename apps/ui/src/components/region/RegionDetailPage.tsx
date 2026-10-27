@@ -78,14 +78,11 @@ function QuickLinkCard({ link }: { link: QuickLink }) {
         <Icon icon={iconName ?? "mdi:arrow-right"} className="size-4" />
       </div>
       <div className="flex flex-col gap-0.5">
-        <span
-          className="text-[15px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
+        <span className="text-base font-semibold" style={{ color: T.ink.base }}>
           {link.label}
         </span>
         {link.description ? (
-          <span className="text-[13px] leading-5" style={{ color: T.ink.dim }}>
+          <span className="text-sm leading-5" style={{ color: T.ink.dim }}>
             {link.description}
           </span>
         ) : null}
@@ -412,7 +409,7 @@ export async function RegionDetailPage({
                 <LocationSectionHeading title={`Libraries in ${name}`} />
                 {libraries.length === 0 ? (
                   <p
-                    className="mt-0 mb-4 text-[16px]"
+                    className="mt-0 mb-4 text-base"
                     style={{ color: T.ink.dim }}
                   >
                     {countsAvailable &&

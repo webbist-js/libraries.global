@@ -21,6 +21,7 @@ export function SupporterPreferences({
   readonly visibility: string
   readonly compact?: boolean
 }) {
+  const t = useUiTranslations("membershipPreferences")
   const tUi = useUiTranslations("ui")
 
   const router = useRouter()
@@ -41,10 +42,10 @@ export function SupporterPreferences({
       })
       if (!res.ok) throw new Error("Save failed")
       setPrefs((previous) => ({ ...previous, [key]: value }))
-      toast.success("Supporter preference saved")
+      toast.success(t("saved"))
       router.refresh()
     } catch {
-      toast.error("Couldn't save your preference. Please try again.")
+      toast.error(t("failed"))
     } finally {
       setSaving(false)
     }
@@ -60,9 +61,7 @@ export function SupporterPreferences({
       }
     >
       <Switch
-        label={
-          compact ? "Show me on this page" : "Show me on the supporters page"
-        }
+        label={compact ? t("listedCompact") : t("listed")}
         checked={publicProfile && prefs.supporterListed}
         disabled={saving || !publicProfile}
         inline={compact}
@@ -73,19 +72,15 @@ export function SupporterPreferences({
             : undefined
         }
         onChange={(next) => void save("supporterListed", next)}
-        description={
-          compact
-            ? undefined
-            : "Your name and public location. You can opt out at any time."
-        }
+        description={compact ? undefined : t("listedDescription")}
       />
       {compact ? (
         <GlobalLink
-          href="/profile/settings#supporter-settings"
-          className="inline-flex min-h-13 items-center rounded-full border px-5 py-2.5 text-[14px] font-semibold no-underline"
+          href="/profile/membership#recognition"
+          className="inline-flex min-h-13 items-center rounded-full border px-5 py-2.5 text-sm font-semibold no-underline"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Supporter mark settings
+          {t("settings")}
         </GlobalLink>
       ) : (
         <Switch
@@ -93,13 +88,12 @@ export function SupporterPreferences({
           checked={prefs.supporterBadgeVisible}
           disabled={saving}
           onChange={(next) => void save("supporterBadgeVisible", next)}
-          description="The mark never shows your plan, payment amount or contributor role."
+          description={t("badgeDescription")}
         />
       )}
       {!publicProfile ? (
-        <p className="m-0 basis-full text-[14px]" style={{ color: T.ink.dim }}>
-          Private and limited profiles are not listed. Make your profile public
-          in Settings, then choose whether to be listed.
+        <p className="m-0 basis-full text-sm" style={{ color: T.ink.dim }}>
+          {t("privateProfile")}
         </p>
       ) : null}
     </div>

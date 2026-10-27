@@ -56,7 +56,7 @@ export async function GlobalHeader({
   const localeSwitcher = (
     <LocaleSwitcher
       locale={locale}
-      triggerClassName="h-9 w-auto gap-1 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-3.5 text-[14px] font-medium uppercase text-(--t-ink-base) shadow-none hover:border-(--t-border-hi) [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
+      triggerClassName="h-9 w-auto gap-1 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-3.5 text-sm font-medium uppercase text-(--t-ink-base) shadow-none hover:border-(--t-border-hi) [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
     />
   )
   const auth = (
@@ -89,7 +89,10 @@ export async function GlobalHeader({
               className="text-[1.2rem] leading-none font-medium whitespace-nowrap text-(--t-ink-base)"
               style={{ fontFamily: T.font.serif }}
             >
-              {tUi("libraries")} <em className="font-normal italic">Global</em>
+              {tUi("libraries")}{" "}
+              <em className="font-normal text-(--t-accent-primary) italic">
+                Global
+              </em>
             </span>
           </GlobalLink>
         </div>
@@ -100,19 +103,13 @@ export async function GlobalHeader({
         {/* Pushes the actions right when the nav is collapsed */}
         <span className="flex-1 lg:hidden" aria-hidden="true" />
 
-        {/* Right: locale + auth + contribute, lg and up */}
-        <div
-          data-header-stable=""
-          className="hidden shrink-0 items-center gap-2 lg:flex"
-        >
-          {localeSwitcher}
-          {auth}
-          <GlobalContributeMenu />
-        </div>
-
-        {/* Below lg: Contribute stays visible from sm; below that the menu's
-            Contribute section covers it, and everything else is in the menu */}
-        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+        {/* One Contribute panel across desktop and tablet breakpoints. On
+            phones its shortcuts remain in the compact navigation menu. */}
+        <div data-header-stable="" className="flex shrink-0 items-center gap-2">
+          <div className="hidden items-center gap-2 lg:flex">
+            {localeSwitcher}
+            {auth}
+          </div>
           <GlobalContributeMenu className="hidden sm:inline-flex" />
           <GlobalMobileMenu
             links={links}
@@ -144,7 +141,10 @@ function PublicBetaHeader({ locale }: { locale: Locale }) {
           className="text-[1.2rem] text-(--t-ink-base)"
           style={{ fontFamily: T.font.serif }}
         >
-          {tUi("libraries")} <em className="font-normal">Global</em>
+          {tUi("libraries")}{" "}
+          <em className="font-normal text-(--t-accent-primary) italic">
+            Global
+          </em>
         </GlobalLink>
         <div className="flex items-center gap-4">
           <LocaleSwitcher locale={locale} />

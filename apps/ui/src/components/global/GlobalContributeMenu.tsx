@@ -10,7 +10,7 @@ import {
   HeaderDropdownContent,
   HeaderDropdownTrigger,
 } from "@/components/global/HeaderDropdown"
-import { Popover } from "@/components/ui/popover"
+import { Popover, PopoverAnchor } from "@/components/ui/popover"
 import {
   type ContributeMenu,
   useContributeMenu,
@@ -19,6 +19,7 @@ import type {
   ContributorCard,
   ContributorLink,
 } from "@/lib/contributor-shortcuts"
+import { cn } from "@/lib/styles"
 
 import {
   CardMonogram,
@@ -28,7 +29,7 @@ import {
 } from "./ContributeMenuParts"
 
 const PILL =
-  "min-h-11 rounded-full border-0 bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+  "min-h-11 rounded-full border-0 bg-(--t-accent-primary) px-4 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
 
 const FOCUS =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
@@ -59,11 +60,11 @@ function CardLink({
       className={`flex min-h-11 items-center gap-2 rounded-[12px] px-2 py-2 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
     >
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-[14px] leading-snug font-semibold">
+        <span className="text-sm leading-snug font-semibold wrap-break-word">
           {link.label}
         </span>
         {link.sub ? (
-          <span className="mt-0.5 text-[14px] leading-snug text-(--t-ink-dim)">
+          <span className="mt-0.5 text-sm leading-snug text-(--t-ink-dim)">
             {link.sub}
           </span>
         ) : null}
@@ -110,11 +111,11 @@ function FeaturedDrive({
       onClick={onNavigate}
       className={`flex flex-col gap-2 rounded-[16px] border border-(--t-edge-info) bg-(--t-bg-selected) px-3.5 py-3 text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) ${FOCUS}`}
     >
-      <span className="flex items-center gap-1.5 text-[13px] font-bold tracking-wide text-(--t-accent-primary) uppercase">
+      <span className="flex items-center gap-1.5 text-sm font-bold tracking-wide text-(--t-accent-primary) uppercase">
         <Icon aria-hidden icon="mdi:pin-outline" width={13} height={13} />
         {t("featuredDrive")}
       </span>
-      <span className="font-serif text-[21px] leading-[1.1] tracking-[-0.015em]">
+      <span className="text-base leading-snug font-semibold text-pretty">
         {featured.title}
       </span>
       {featured.progress ? (
@@ -128,7 +129,7 @@ function FeaturedDrive({
               style={{ width: `${featured.percent}%` }}
             />
           </span>
-          <span className="text-[14px] leading-snug text-(--t-ink-dim)">
+          <span className="text-sm leading-snug text-(--t-ink-dim)">
             {featured.progress}
           </span>
         </>
@@ -154,25 +155,25 @@ function ReviewShortcut({
       <GlobalLink
         href={link.href}
         onClick={onNavigate}
-        className={`flex min-h-[76px] items-center gap-3 rounded-[18px] bg-[#19172c] px-4 py-3 text-white no-underline transition-colors hover:bg-[#29253f] ${FOCUS}`}
+        className={`flex min-h-[76px] items-center gap-2.5 rounded-[18px] bg-[#19172c] px-4 py-4 text-white no-underline transition-colors hover:bg-[#29253f] ${FOCUS}`}
       >
         <span
           aria-hidden
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#c5bdf8]"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#c5bdf8]"
         >
           <Icon icon="mdi:shield-check-outline" width={21} height={21} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[15px] font-semibold">{link.label}</span>
-          <span className="mt-0.5 block text-[14px] leading-relaxed text-[#d1cedd]">
+          <span className="block text-base font-semibold">{link.label}</span>
+          <span className="mt-0.5 block text-sm leading-relaxed text-[#d1cedd]">
             {link.sub ?? t("reviewLead")}
           </span>
+          {link.badge ? (
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-sm font-semibold tabular-nums">
+              {link.badge} <span>{t("waiting")}</span>
+            </span>
+          ) : null}
         </span>
-        {link.badge ? (
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[14px] font-semibold tabular-nums">
-            {link.badge} <span>{t("waiting")}</span>
-          </span>
-        ) : null}
         <Icon
           aria-hidden
           icon="mdi:arrow-right"
@@ -212,26 +213,23 @@ function Card({
 
   return (
     <li
-      className={`flex min-w-0 flex-col gap-2.5 ${columns ? "rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-3" : "py-3 first:pt-0 last:pb-0"}`}
+      className={`flex min-w-0 flex-col gap-3 ${columns ? "rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-3.5" : "py-3 first:pt-0 last:pb-0"}`}
     >
       {hasHeading ? (
-        <div className="flex items-center gap-3 px-1">
+        <div className="flex items-start gap-2.5 px-1">
           <CardMonogram icon={card.icon} tint={card.tint} size={30} />
           <div className="min-w-0 flex-1">
-            <h4
-              id={titleId}
-              className="m-0 text-[14px] leading-6 font-bold text-(--t-ink-base)"
-            >
+            <h4 id={titleId} className="type-h4 m-0 text-(--t-ink-base)">
               {card.title}
             </h4>
-            <p className="m-0 mt-0.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 mt-0.5 text-sm leading-relaxed text-(--t-ink-dim)">
               {card.description}
             </p>
           </div>
         </div>
       ) : null}
       {hideHeading && card.key !== "hub" ? (
-        <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
           {card.description}
         </p>
       ) : null}
@@ -241,7 +239,7 @@ function Card({
       <div
         className={
           card.key === "drives" && card.featured
-            ? "grid items-center gap-3 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]"
+            ? "grid items-center gap-3 @min-[28rem]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]"
             : undefined
         }
       >
@@ -254,7 +252,7 @@ function Card({
             compactActions
               ? "m-0 flex list-none flex-wrap gap-2 p-0"
               : card.key === "hub"
-                ? "m-0 grid list-none gap-1 p-0 sm:grid-cols-2"
+                ? "m-0 grid list-none gap-1 p-0 @min-[28rem]:grid-cols-2"
                 : "m-0 flex list-none flex-col p-0"
           }
         >
@@ -264,7 +262,7 @@ function Card({
                 <GlobalLink
                   href={link.href}
                   onClick={onNavigate}
-                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+                  className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-sm font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
                 >
                   <Icon
                     aria-hidden
@@ -314,18 +312,15 @@ function CardGroup({
     <div
       role="group"
       aria-labelledby={titleId}
-      className="min-w-0 rounded-[20px] border border-(--t-border-line) bg-white p-3.5"
+      className="@container min-w-0 rounded-[20px] border border-(--t-border-line) bg-white p-4"
     >
-      <h3
-        id={titleId}
-        className="m-0 mb-4 font-serif text-[23px] leading-tight tracking-[-0.02em] text-(--t-ink-base)"
-      >
+      <h3 id={titleId} className="type-h3 m-0 mb-4 text-(--t-ink-base)">
         {title}
       </h3>
       <ul
         className={
           columns
-            ? "m-0 grid list-none gap-4 p-0 sm:grid-cols-2"
+            ? `m-0 grid list-none items-start gap-3 p-0 @min-[28rem]:grid-cols-2 ${cards.length === 3 ? "@min-[28rem]:[&>li:first-child]:row-span-2" : ""}`
             : "m-0 list-none divide-y divide-(--t-divider) p-0"
         }
       >
@@ -350,7 +345,7 @@ function SignInCard({ onNavigate }: { readonly onNavigate: () => void }) {
 
   return (
     <div className="rounded-[18px] border border-(--t-edge-info) bg-(--t-bg-selected) px-4 py-3.5">
-      <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
         <strong className="text-(--t-ink-base)">
           {tUi("contributing_is_free")}
         </strong>{" "}
@@ -360,14 +355,14 @@ function SignInCard({ onNavigate }: { readonly onNavigate: () => void }) {
         <GlobalLink
           href="/auth/signin"
           onClick={onNavigate}
-          className={`inline-flex min-h-10 items-center rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) ${FOCUS}`}
+          className={`inline-flex min-h-10 items-center rounded-full bg-(--t-accent-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) ${FOCUS}`}
         >
           {tUi("sign_in")}
         </GlobalLink>
         <GlobalLink
           href="/auth/register"
           onClick={onNavigate}
-          className={`inline-flex min-h-10 items-center rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+          className={`inline-flex min-h-10 items-center rounded-full border border-(--t-border-hi) bg-white px-4 text-sm font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
         >
           {tUi("create_account")}
         </GlobalLink>
@@ -390,7 +385,7 @@ function LoadingRow() {
         className="size-8 shrink-0 animate-pulse rounded-full bg-(--t-bg-muted-2) motion-reduce:animate-none"
       />
       <span className="flex flex-1 flex-col gap-2">
-        <span className="text-[13px] font-semibold text-(--t-ink-dim)">
+        <span className="text-sm font-semibold text-(--t-ink-dim)">
           {t("loading")}
         </span>
         <span
@@ -413,14 +408,16 @@ function MembershipRow({
 
   return (
     <GlobalLink
-      href="/contribute/membership"
+      href={plan ? "/profile/membership" : "/plans"}
       onClick={onNavigate}
-      className={`flex min-h-16 items-center gap-3 border-t border-(--t-border-line) bg-white px-5 py-3 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+      className={`flex min-h-16 shrink-0 items-center gap-3 border-t border-(--t-border-line) bg-white px-5 py-3 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) sm:px-6 ${FOCUS}`}
     >
       <CardMonogram icon="mdi:heart-outline" tint="accent" size={30} />
       <span className="flex min-w-0 flex-1 flex-col">
-        <strong className="text-[14px]">{tUi("membership")}</strong>
-        <span className="mt-0.5 text-[14px] leading-snug text-(--t-ink-dim)">
+        <strong className="text-sm">
+          {tUi(plan ? "membership" : "plans_and_pricing")}
+        </strong>
+        <span className="mt-0.5 text-sm leading-snug text-(--t-ink-dim)">
           {tUi("support_the_index_and_explore_pro")}
         </span>
       </span>
@@ -445,59 +442,81 @@ export function ContributeMenuPanel({
   const hub = menu.common.find((card) => card.key === "hub")
   const drives = menu.common.find((card) => card.key === "drives")
   const hubLink = hub?.links.find((link) => link.href === "/contribute")
+  const hasPersonalColumn = menu.status !== "signedIn" || tools.length > 0
 
   return (
-    <nav aria-label={tUi("contribute_menu")} className="flex flex-col">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4">
+    <nav
+      aria-label={tUi("contribute_menu")}
+      className="flex max-h-[min(800px,var(--radix-popover-content-available-height))] flex-col"
+    >
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4 sm:px-6">
         <div className="min-w-0 flex-1">
-          <h2 className="m-0 font-serif text-[28px] leading-tight tracking-[-0.02em] text-(--t-ink-base)">
+          <h2 className="type-h2 m-0 text-(--t-ink-base)">
             {tUi("contribute")}
           </h2>
-          <p className="m-0 mt-1 text-[13px] leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 mt-1 text-sm leading-relaxed text-(--t-ink-dim)">
             {t("lead")}
           </p>
         </div>
-        {hubLink ? (
-          <GlobalLink
-            href={hubLink.href}
+        <div className="flex shrink-0 items-center gap-2">
+          {hubLink ? (
+            <GlobalLink
+              href={hubLink.href}
+              onClick={onNavigate}
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-4 text-sm font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+            >
+              {t("hub")}
+              <Icon
+                aria-hidden
+                icon="mdi:arrow-top-right"
+                width={14}
+                height={14}
+              />
+            </GlobalLink>
+          ) : null}
+          <button
+            type="button"
             onClick={onNavigate}
-            className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-(--t-border-hi) bg-white px-3 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) ${FOCUS}`}
+            aria-label={tUi("close_menu")}
+            className={`flex size-11 items-center justify-center rounded-full text-(--t-ink-dim) transition-colors hover:bg-(--t-bg-surface) hover:text-(--t-ink-base) ${FOCUS}`}
           >
-            {t("hub")}
-            <Icon
-              aria-hidden
-              icon="mdi:arrow-top-right"
-              width={14}
-              height={14}
-            />
-          </GlobalLink>
-        ) : null}
+            <Icon aria-hidden icon="mdi:close" width={20} height={20} />
+          </button>
+        </div>
       </div>
-      <div className="flex flex-col gap-3 bg-(--t-bg-void) p-4">
-        {menu.status === "signedOut" ? (
-          <SignInCard onNavigate={onNavigate} />
+      <div
+        className={`grid min-h-0 items-start gap-4 overflow-y-auto overscroll-contain bg-(--t-bg-void) p-4 sm:grid-cols-2 sm:p-6 ${hasPersonalColumn ? (tools.length > 0 ? "lg:grid-cols-[minmax(0,1.6fr)_repeat(2,minmax(0,1fr))]" : "lg:grid-cols-3") : ""}`}
+      >
+        {hasPersonalColumn ? (
+          <div className="flex min-w-0 flex-col gap-4 sm:col-span-2 lg:col-span-1">
+            {menu.status === "signedOut" ? (
+              <SignInCard onNavigate={onNavigate} />
+            ) : null}
+            {menu.status === "loading" ? <LoadingRow /> : null}
+            {tools.length > 0 ? (
+              <CardGroup
+                title={tUi("your_work")}
+                cards={tools}
+                library={menu.library}
+                onNavigate={onNavigate}
+                columns={tools.length > 1}
+              />
+            ) : null}
+          </div>
         ) : null}
-        {menu.status === "loading" ? <LoadingRow /> : null}
-        {review ? (
-          <ReviewShortcut card={review} onNavigate={onNavigate} />
-        ) : null}
-        {tools.length > 0 ? (
-          <CardGroup
-            title={tUi("your_work")}
-            cards={tools}
-            library={menu.library}
-            onNavigate={onNavigate}
-            columns={tools.length > 1}
-          />
-        ) : null}
-        {hub ? (
-          <CardGroup
-            title={t("getInvolved")}
-            cards={[hub]}
-            library={menu.library}
-            onNavigate={onNavigate}
-          />
-        ) : null}
+        <div className="flex min-w-0 flex-col gap-4">
+          {review ? (
+            <ReviewShortcut card={review} onNavigate={onNavigate} />
+          ) : null}
+          {hub ? (
+            <CardGroup
+              title={t("getInvolved")}
+              cards={[hub]}
+              library={menu.library}
+              onNavigate={onNavigate}
+            />
+          ) : null}
+        </div>
         {drives ? (
           <CardGroup
             title={drives.title}
@@ -513,7 +532,7 @@ export function ContributeMenuPanel({
 }
 
 /**
- * The header's primary action: a Contribute button that opens a 680px
+ * The header's primary action: a Contribute button that opens a site-width
  * panel of grouped shortcuts for the work the viewer can do. Open for
  * everyone, signed out included; the cards combine for people with several
  * roles. Escape closes it and returns focus to the button.
@@ -538,7 +557,10 @@ export function GlobalContributeMenu({
       <HeaderDropdownTrigger kind="popover" asChild>
         <button
           type="button"
-          className={`inline-flex cursor-pointer items-center gap-1 ${PILL} pr-3 ${className}`}
+          className={cn(
+            `inline-flex cursor-pointer items-center gap-1 ${PILL} pr-3`,
+            className
+          )}
         >
           {tUi("contribute")}{" "}
           <Icon
@@ -550,10 +572,21 @@ export function GlobalContributeMenu({
           />
         </button>
       </HeaderDropdownTrigger>
+      {/* The header container is positioned; this anchor follows its content
+          edges independently of the action button, including in the Atlas.
+          Keep it after the trigger so it replaces Radix's default anchor. */}
+      <PopoverAnchor asChild>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-4 bottom-0 h-0 sm:inset-x-8"
+        />
+      </PopoverAnchor>
 
       <HeaderDropdownContent
         kind="popover"
         ref={contentRef}
+        align="center"
+        aria-label={tUi("contribute_menu")}
         onOpenAutoFocus={(event) => {
           // Land on the first link rather than on the panel itself.
           const first =
@@ -563,7 +596,7 @@ export function GlobalContributeMenu({
             first.focus()
           }
         }}
-        className="w-[680px] p-0"
+        className="w-(--radix-popover-trigger-width) max-w-[1296px] overflow-hidden p-0"
       >
         <ContributeMenuPanel menu={menu} onNavigate={() => setOpen(false)} />
       </HeaderDropdownContent>

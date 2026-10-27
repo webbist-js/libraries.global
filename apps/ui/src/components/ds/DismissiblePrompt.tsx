@@ -79,7 +79,7 @@ export function DismissiblePrompt({
         ref={statusRef}
         role="status"
         tabIndex={-1}
-        className="m-0 text-[14.5px]"
+        className="m-0 text-sm"
         style={{ color: T.ink.dim }}
       >
         {hidden === "settings" ? (

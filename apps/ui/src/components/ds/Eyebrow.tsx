@@ -17,7 +17,7 @@ export function Eyebrow({
     <p
       style={{
         fontFamily: T.font.sans,
-        fontSize: "14px",
+        fontSize: "var(--type-body-small-size)",
         fontWeight: 600,
         color: T.ink.dim,
         display: "flex",

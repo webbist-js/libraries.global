@@ -114,6 +114,43 @@ export interface AdminApiTokenPermission extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface AdminAuditLog extends Struct.CollectionTypeSchema {
+  collectionName: "strapi_audit_logs"
+  info: {
+    displayName: "Audit Log"
+    pluralName: "audit-logs"
+    singularName: "audit-log"
+  }
+  options: {
+    draftAndPublish: false
+    timestamps: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    date: Schema.Attribute.DateTime & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<"oneToMany", "admin::audit-log"> &
+      Schema.Attribute.Private
+    payload: Schema.Attribute.JSON
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    user: Schema.Attribute.Relation<"oneToOne", "admin::user">
+  }
+}
+
 export interface AdminPermission extends Struct.CollectionTypeSchema {
   collectionName: "admin_permissions"
   info: {
@@ -524,6 +561,11 @@ export interface ApiAccessibilityAccessibility
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -618,6 +660,11 @@ export interface ApiAmenityAmenity extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -666,6 +713,11 @@ export interface ApiAnnouncementAnnouncement
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -846,6 +898,11 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -911,6 +968,11 @@ export interface ApiArticleChangeArticleChange
     publishedAt: Schema.Attribute.DateTime
     reviewerId: Schema.Attribute.String
     slug: Schema.Attribute.String
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     submissionDocumentId: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -1161,6 +1223,11 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1257,6 +1324,11 @@ export interface ApiBlogLandingBlogLanding extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -1327,6 +1399,11 @@ export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     tint: Schema.Attribute.Enumeration<
       ["purple", "green", "blue", "rust", "neutral"]
     > &
@@ -1410,6 +1487,11 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     tagLabel: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1593,6 +1675,11 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1885,6 +1972,11 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1967,6 +2059,11 @@ export interface ApiDatasetDataset extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<"unconfirmed">
     sourceUpdatedAt: Schema.Attribute.Date
     sourceUrl: Schema.Attribute.String
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2220,6 +2317,11 @@ export interface ApiDriveDrive extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 120
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -2287,6 +2389,11 @@ export interface ApiEntitlementGrantEntitlementGrant
       ["admin", "press", "partner", "team", "grant_funder"]
     > &
       Schema.Attribute.DefaultTo<"admin">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2340,6 +2447,11 @@ export interface ApiFooterFooter extends Struct.SingleTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     text: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2559,6 +2671,11 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     tasksIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2703,6 +2820,11 @@ export interface ApiLegalDocumentLegalDocument
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summaryPoints: Schema.Attribute.Component<"legal.summary-point", true> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2743,6 +2865,9 @@ export interface ApiLibraryAffiliationLibraryAffiliation
   }
   attributes: {
     approvedAt: Schema.Attribute.DateTime
+    authorityManaged: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
     baUserId: Schema.Attribute.String & Schema.Attribute.Required
     canGoLive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
     createdAt: Schema.Attribute.DateTime
@@ -2758,7 +2883,7 @@ export interface ApiLibraryAffiliationLibraryAffiliation
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     role: Schema.Attribute.String
-    source: Schema.Attribute.Enumeration<["claim", "team"]>
+    source: Schema.Attribute.Enumeration<["claim", "team", "network"]>
     staffRole: Schema.Attribute.Enumeration<["owner", "editor"]>
     teamMember: Schema.Attribute.Relation<
       "manyToOne",
@@ -2768,7 +2893,7 @@ export interface ApiLibraryAffiliationLibraryAffiliation
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     verificationMethod: Schema.Attribute.Enumeration<
-      ["email_domain", "vouching", "contact_us", "team"]
+      ["email_domain", "vouching", "contact_us", "team", "network"]
     > &
       Schema.Attribute.DefaultTo<"contact_us">
   }
@@ -2825,6 +2950,11 @@ export interface ApiLibraryChangeLibraryChange
     source: Schema.Attribute.Enumeration<
       ["submission", "staff", "admin", "api_token", "import", "system"]
     >
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     submissionDocumentId: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -2850,6 +2980,7 @@ export interface ApiLibraryNetworkLibraryNetwork
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    description: Schema.Attribute.Text
     kind: Schema.Attribute.Enumeration<
       ["library_service", "university_system", "consortium"]
     > &
@@ -2864,12 +2995,21 @@ export interface ApiLibraryNetworkLibraryNetwork
     > &
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
+    publicPageEnabled: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
+    publicPageReviewedAt: Schema.Attribute.DateTime
+    publicPageReviewedBy: Schema.Attribute.String & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
     slug: Schema.Attribute.UID<"name"> & Schema.Attribute.Required
     sourceKey: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique
     sourceUrl: Schema.Attribute.String
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2949,6 +3089,11 @@ export interface ApiLibraryNoticeLibraryNotice
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 10
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     to: Schema.Attribute.Date
     type: Schema.Attribute.Enumeration<
       [
@@ -3002,6 +3147,11 @@ export interface ApiLibraryTypeLibraryType extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.Unique
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -3439,6 +3589,11 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     streetAddress: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -3568,6 +3723,11 @@ export interface ApiNotificationNotification
     readAt: Schema.Attribute.DateTime
     recipientEmail: Schema.Attribute.Email & Schema.Attribute.Private
     sentAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     title: Schema.Attribute.String & Schema.Attribute.Required
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -3611,6 +3771,11 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -3703,6 +3868,11 @@ export interface ApiProVerificationProVerification
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3735,6 +3905,11 @@ export interface ApiRedirectRedirect extends Struct.CollectionTypeSchema {
     permanent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
     source: Schema.Attribute.String & Schema.Attribute.Required
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3965,6 +4140,11 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4029,6 +4209,11 @@ export interface ApiRoleGrantRoleGrant extends Struct.CollectionTypeSchema {
       ["admin", "claim", "application", "migration", "team"]
     > &
       Schema.Attribute.DefaultTo<"admin">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4058,6 +4243,11 @@ export interface ApiSavedEventSavedEvent extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4151,6 +4341,11 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4204,6 +4399,11 @@ export interface ApiSiteConfigSiteConfig extends Struct.SingleTypeSchema {
       >
     populationEstimates: Schema.Attribute.JSON & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     supportersLead: Schema.Attribute.Text &
       Schema.Attribute.DefaultTo<"Support helps cover the servers, maps and data behind Libraries Global. Library records, downloads and community contributions stay free for everyone.">
     supportersTitle: Schema.Attribute.String &
@@ -4256,6 +4456,11 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"pending_confirmation">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     type: Schema.Attribute.Enumeration<["beta_waitlist", "newsletter"]> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"newsletter">
@@ -4309,6 +4514,11 @@ export interface ApiTopicTopic extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<"pending">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     suggestedByEmail: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4421,6 +4631,11 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     >
     publicPrefs: Schema.Attribute.JSON
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     supporterBadgeVisible: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
@@ -4617,6 +4832,11 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4701,6 +4921,11 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4786,9 +5011,242 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessLibraryAuthorityGrant
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_library_authority_grants"
+  info: {
+    displayName: "Library authority grant"
+    pluralName: "library-authority-grants"
+    singularName: "library-authority-grant"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    approvedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    canGoLive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    grantKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique
+    issuedBy: Schema.Attribute.String & Schema.Attribute.Private
+    legacyAffiliationDocumentId: Schema.Attribute.String &
+      Schema.Attribute.Private
+    library: Schema.Attribute.Relation<"manyToOne", "api::library.library">
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.library-authority-grant"
+    > &
+      Schema.Attribute.Private
+    mandateDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    revokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    sourceDocumentId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    sourceKind: Schema.Attribute.Enumeration<["claim", "team", "network"]> &
+      Schema.Attribute.Required
+    staffRole: Schema.Attribute.Enumeration<["owner", "editor"]> &
+      Schema.Attribute.DefaultTo<"editor">
+    status: Schema.Attribute.Enumeration<["active", "revoked"]> &
+      Schema.Attribute.DefaultTo<"active">
+    teamMemberDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessNetworkAffiliation
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_network_affiliations"
+  info: {
+    displayName: "Network affiliation"
+    pluralName: "network-affiliations"
+    singularName: "network-affiliation"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    department: Schema.Attribute.String
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.network-affiliation"
+    > &
+      Schema.Attribute.Private
+    network: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-network.library-network"
+    >
+    publicDisplay: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
+    publishedAt: Schema.Attribute.DateTime
+    revokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    role: Schema.Attribute.String
+    status: Schema.Attribute.Enumeration<
+      ["declared", "pending", "verified", "revoked"]
+    > &
+      Schema.Attribute.DefaultTo<"declared">
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    verifiedAt: Schema.Attribute.DateTime
+  }
+}
+
+export interface PluginAccessNetworkMandate
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_network_mandates"
+  info: {
+    displayName: "Network management mandate"
+    pluralName: "network-mandates"
+    singularName: "network-mandate"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    approvedLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    fulfilment: Schema.Attribute.JSON & Schema.Attribute.Private
+    lastReconciledAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.network-mandate"
+    > &
+      Schema.Attribute.Private
+    membershipRevision: Schema.Attribute.String & Schema.Attribute.Private
+    network: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-network.library-network"
+    >
+    nextAttemptAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    ownerLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reviewedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    reviewedBy: Schema.Attribute.String & Schema.Attribute.Private
+    revocationReason: Schema.Attribute.Text & Schema.Attribute.Private
+    revokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
+    sourceLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    staffRole: Schema.Attribute.Enumeration<["editor", "owner"]> &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<"editor">
+    status: Schema.Attribute.Enumeration<["approved", "revoked"]> &
+      Schema.Attribute.DefaultTo<"approved">
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team"> &
+      Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
+  }
+}
+
+export interface PluginAccessNetworkMandateEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_network_mandate_events"
+  info: {
+    displayName: "Network mandate event"
+    pluralName: "network-mandate-events"
+    singularName: "network-mandate-event"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.Enumeration<
+      ["approved", "reconciled", "revoked"]
+    > &
+      Schema.Attribute.Private
+    actor: Schema.Attribute.String & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    libraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.network-mandate-event"
+    > &
+      Schema.Attribute.Private
+    mandate: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.network-mandate"
+    > &
+      Schema.Attribute.Private
+    ownerLibraryIds: Schema.Attribute.JSON & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.Text & Schema.Attribute.Private
+    submissionDocumentId: Schema.Attribute.String & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.Private
   }
 }
 
@@ -4848,6 +5306,10 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
         },
         number
       >
+    primaryNetwork: Schema.Attribute.Relation<
+      "manyToOne",
+      "api::library-network.library-network"
+    >
     publicServiceApproved: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
@@ -4868,6 +5330,9 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     verifiedAt: Schema.Attribute.DateTime
+    widgetBranding: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
   }
 }
 
@@ -4923,6 +5388,188 @@ export interface PluginAccessTeamMember extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessWidget extends Struct.CollectionTypeSchema {
+  collectionName: "access_widgets"
+  info: {
+    displayName: "widget"
+    pluralName: "widgets"
+    singularName: "widget"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    blockedReports: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<0>
+    config: Schema.Attribute.JSON & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    draftVersion: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
+    hasChanges: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>
+    loads: Schema.Attribute.BigInteger & Schema.Attribute.DefaultTo<0>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    origins: Schema.Attribute.JSON & Schema.Attribute.Private
+    publicId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique
+    publishedAt: Schema.Attribute.DateTime
+    publishedRelease: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.widget-release"
+    >
+    publishedVersion: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
+    reviewRequested: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
+    selection: Schema.Attribute.Relation<
+      "manyToOne",
+      "plugin::access.widget-selection"
+    >
+    state: Schema.Attribute.Enumeration<
+      ["draft", "live", "paused", "unpublished", "archived"]
+    > &
+      Schema.Attribute.DefaultTo<"draft">
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    type: Schema.Attribute.Enumeration<["finder", "directory", "chart", "stat"]>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginAccessWidgetAudit extends Struct.CollectionTypeSchema {
+  collectionName: "access_widget_audits"
+  info: {
+    displayName: "widget-audit"
+    pluralName: "widget-audits"
+    singularName: "widget-audit"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.String
+    actor: Schema.Attribute.String & Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    details: Schema.Attribute.JSON & Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget-audit"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    revision: Schema.Attribute.Integer
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    widget: Schema.Attribute.Relation<"manyToOne", "plugin::access.widget">
+  }
+}
+
+export interface PluginAccessWidgetRelease extends Struct.CollectionTypeSchema {
+  collectionName: "access_widget_releases"
+  info: {
+    displayName: "widget-release"
+    pluralName: "widget-releases"
+    singularName: "widget-release"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget-release"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    publisherId: Schema.Attribute.String & Schema.Attribute.Private
+    snapshot: Schema.Attribute.JSON & Schema.Attribute.Private
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.Required
+    widget: Schema.Attribute.Relation<"manyToOne", "plugin::access.widget">
+  }
+}
+
+export interface PluginAccessWidgetSelection
+  extends Struct.CollectionTypeSchema {
+  collectionName: "access_widget_selections"
+  info: {
+    displayName: "widget-selection"
+    pluralName: "widget-selections"
+    singularName: "widget-selection"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::access.widget-selection"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String & Schema.Attribute.Required
+    publishedAt: Schema.Attribute.DateTime
+    spec: Schema.Attribute.JSON & Schema.Attribute.Private
+    team: Schema.Attribute.Relation<"manyToOne", "plugin::access.team">
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    version: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
   }
 }
 
@@ -5228,6 +5875,7 @@ export interface PluginContentModerationSubmission
         "topic_suggestion",
         "role_application",
         "drive_proposal",
+        "network_claim",
       ]
     > &
       Schema.Attribute.Required
@@ -5246,6 +5894,7 @@ export interface PluginContentModerationSubmission
         "user_profile",
         "topic",
         "drive",
+        "library_network",
       ]
     >
     targetSlug: Schema.Attribute.String
@@ -6458,6 +7107,11 @@ export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"upcoming">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text
     syncHash: Schema.Attribute.String & Schema.Attribute.Required
     tags: Schema.Attribute.JSON
@@ -7458,6 +8112,11 @@ export interface PluginUsersPermissionsUser
       "manyToOne",
       "plugin::users-permissions.role"
     >
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -7475,6 +8134,7 @@ declare module "@strapi/strapi" {
     export interface ContentTypeSchemas {
       "admin::api-token": AdminApiToken
       "admin::api-token-permission": AdminApiTokenPermission
+      "admin::audit-log": AdminAuditLog
       "admin::permission": AdminPermission
       "admin::role": AdminRole
       "admin::session": AdminSession
@@ -7524,8 +8184,16 @@ declare module "@strapi/strapi" {
       "api::wiki-article.wiki-article": ApiWikiArticleWikiArticle
       "api::wiki-landing.wiki-landing": ApiWikiLandingWikiLanding
       "api::wiki-section.wiki-section": ApiWikiSectionWikiSection
+      "plugin::access.library-authority-grant": PluginAccessLibraryAuthorityGrant
+      "plugin::access.network-affiliation": PluginAccessNetworkAffiliation
+      "plugin::access.network-mandate": PluginAccessNetworkMandate
+      "plugin::access.network-mandate-event": PluginAccessNetworkMandateEvent
       "plugin::access.team": PluginAccessTeam
       "plugin::access.team-member": PluginAccessTeamMember
+      "plugin::access.widget": PluginAccessWidget
+      "plugin::access.widget-audit": PluginAccessWidgetAudit
+      "plugin::access.widget-release": PluginAccessWidgetRelease
+      "plugin::access.widget-selection": PluginAccessWidgetSelection
       "plugin::beta-invites.invitation": PluginBetaInvitesInvitation
       "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
       "plugin::content-moderation.option-vote": PluginContentModerationOptionVote

@@ -67,12 +67,12 @@ export function ArticleEditHistory({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <summary
-        className="flex cursor-pointer items-center gap-2 text-[16px] font-semibold"
+        className="flex cursor-pointer items-center gap-2 text-base font-semibold"
         style={{ color: T.ink.base }}
       >
         <Icon aria-hidden="true" height={18} icon="mdi:history" width={18} />
         {t("editHistory")}
-        <span className="text-[14px] font-normal" style={{ color: T.ink.dim }}>
+        <span className="text-sm font-normal" style={{ color: T.ink.dim }}>
           ({t("changeCount", { count: total })})
         </span>
       </summary>
@@ -93,7 +93,7 @@ export function ArticleEditHistory({
           return (
             <li
               key={`${item.changedAt}-${item.kind}-${item.locale}`}
-              className="flex gap-3 py-3 text-[15px]"
+              className="flex gap-3 py-3 text-base"
               style={{ borderTop: `1px solid ${T.border.divider}` }}
             >
               <Icon
@@ -141,10 +141,7 @@ export function ArticleEditHistory({
                     {item.editSummary}
                   </p>
                 ) : null}
-                <p
-                  className="m-0 mt-0.5 text-[13px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
                   {actor.href ? (
                     <GlobalLink
                       href={actor.href}
@@ -166,7 +163,7 @@ export function ArticleEditHistory({
         })}
       </ul>
       {total > items.length ? (
-        <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
           {t("latestChanges", { shown: items.length, total })}
         </p>
       ) : null}

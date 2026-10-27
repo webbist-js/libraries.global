@@ -47,7 +47,11 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
       />
       <p
         id="oauth-terms"
-        style={{ fontSize: "14px", lineHeight: 1.5, color: T.ink.dim }}
+        style={{
+          fontSize: "var(--type-body-small-size)",
+          lineHeight: 1.5,
+          color: T.ink.dim,
+        }}
       >
         By continuing with Google, you confirm you&rsquo;re{" "}
         {MINIMUM_ACCOUNT_AGE} or over and agree to our{" "}

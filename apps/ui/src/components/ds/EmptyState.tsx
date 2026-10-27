@@ -61,14 +61,14 @@ export function EmptyState({
         <Icon height={22} icon={icon} width={22} />
       </span>
       <Headline
-        className="m-0 text-[16px] font-semibold"
-        style={{ fontFamily: T.font.sans, color: T.ink.base }}
+        className="type-small-heading m-0"
+        style={{ color: T.ink.base }}
       >
         {headline}
       </Headline>
       {detail ? (
         <p
-          className="m-0 max-w-md text-[14px] leading-[1.5]"
+          className="m-0 max-w-md text-sm leading-[1.5]"
           style={{ fontFamily: T.font.sans, color: T.ink.dim }}
         >
           {detail}

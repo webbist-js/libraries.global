@@ -88,7 +88,7 @@ export function DiscussionAvatar({
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold ${size === "sm" ? "size-6 text-[10px]" : size === "feed" ? "size-8 text-xs" : "size-10 text-sm"}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold ${size === "sm" ? "size-6 text-xs" : size === "feed" ? "size-8 text-xs" : "size-10 text-sm"}`}
       style={{
         background: palette?.bg ?? "var(--t-bg-muted)",
         color: palette?.fg ?? "var(--t-ink-dim)",
@@ -243,7 +243,7 @@ export function DiscussionPreview({
             </span>
           )}
         </div>
-        <h3 className="m-0 font-serif text-[1.6rem] leading-tight tracking-tight">
+        <h3 className="type-h3 m-0">
           <Link
             href={`/community/discussions/${encodeURIComponent(record.id)}`}
             className="no-underline after:absolute after:inset-0 after:rounded-[22px] after:content-[''] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-(--t-accent-primary)"
@@ -264,7 +264,7 @@ export function DiscussionPreview({
       <div className="min-w-12 pt-1 text-right text-sm text-(--t-ink-dim)">
         {typeof record.replyCount === "number" && (
           <span>
-            <span className="mb-2 block font-serif text-[32px] leading-none text-(--t-ink-base)">
+            <span className="mb-2 block font-sans text-[32px] leading-none text-(--t-ink-base)">
               {record.replyCount}
             </span>
             {t("replyCountLabel", { count: record.replyCount })}

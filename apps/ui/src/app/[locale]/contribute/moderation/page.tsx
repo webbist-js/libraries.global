@@ -159,7 +159,7 @@ export default async function ModerationQueuePage({
             : `You review ${describeScopes(scopes, localeNames)}. Your own submissions never appear here.`
         }
       />
-      <div className="mx-auto grid w-full max-w-[1360px] gap-6 px-4 pt-8 pb-16 text-[16px] [--spacing:0.25rem] sm:px-8">
+      <div className="mx-auto grid w-full max-w-[1360px] gap-6 px-4 pt-8 pb-16 text-base [--spacing:0.25rem] sm:px-8">
         <EditorialToolbar
           label={t("workspace")}
           description={t("scopeHint")}

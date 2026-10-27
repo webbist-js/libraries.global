@@ -150,7 +150,7 @@ export function BetaForms({
         <span className={styles.successIcon}>
           <Check aria-hidden="true" size={28} />
         </span>
-        <h2>{t("acceptedTitle")}</h2>
+        <h2 className="type-h2">{t("acceptedTitle")}</h2>
         <p>{t("acceptedDescription")}</p>
         <a className={styles.continue} href={destination}>
           {t("continue")}
@@ -161,7 +161,9 @@ export function BetaForms({
   return (
     <div className={styles.forms}>
       <section className={styles.card} aria-labelledby="beta-entry-title">
-        <h2 id="beta-entry-title">{t("entryTitle")}</h2>
+        <h2 className="type-h2" id="beta-entry-title">
+          {t("entryTitle")}
+        </h2>
         <p>{t("entryDescription")}</p>
         <form onSubmit={enter}>
           <label htmlFor="beta-password">{t("passwordLabel")}</label>
@@ -210,7 +212,9 @@ export function BetaForms({
         className={styles.waitlist}
         aria-labelledby="beta-waitlist-title"
       >
-        <h2 id="beta-waitlist-title">{t("waitlistTitle")}</h2>
+        <h2 className="type-h2" id="beta-waitlist-title">
+          {t("waitlistTitle")}
+        </h2>
         <p>{t("waitlistDescription")}</p>
         {waitlistStatus === "done" ? (
           <div className={styles.waitlistSuccess} role="status">

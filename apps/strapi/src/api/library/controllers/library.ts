@@ -18,6 +18,7 @@ import { BUILDING_LIBRARY_FILTER } from "../../../utils/library-building-filter"
 import type { OpeningTimes } from "../../../utils/library-completeness"
 import { countLibrariesByLocationPath } from "../../../utils/library-location-counts"
 import { noticesForLibraries } from "../../../utils/library-notices"
+import { publicLibraryNetworks } from "../../../utils/public-library-networks"
 import { readStatus } from "../../../utils/read-status"
 
 // ── Atlas helpers ──────────────────────────────────────────────────────────
@@ -164,7 +165,16 @@ export default factories.createCoreController(
         pagination: { pageSize: 5 },
       }
 
-      return super.find(ctx)
+      const response = await super.find(ctx)
+      await Promise.all(
+        response.data.map(
+          async (row: { documentId: string; networks?: unknown }) => {
+            row.networks = await publicLibraryNetworks(strapi, row.documentId)
+          }
+        )
+      )
+
+      return response
     },
 
     /**

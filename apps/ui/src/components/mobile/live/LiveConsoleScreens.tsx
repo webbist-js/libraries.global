@@ -54,7 +54,7 @@ export function LiveStatusStrip({
   return (
     <p
       role="status"
-      className="m-0 mb-3.5 flex items-center gap-2 rounded-[16px] border px-3 py-2.5 text-[14px] font-semibold"
+      className="m-0 mb-3.5 flex items-center gap-2 rounded-[16px] border px-3 py-2.5 text-sm font-semibold"
       style={{ background: tint.bg, color: tint.fg }}
     >
       <Icon aria-hidden="true" icon={icon} width={18} className="shrink-0" />
@@ -74,7 +74,7 @@ export function ConsoleLine({
   return (
     <p
       role={tone}
-      className="m-0 mb-4 flex items-start gap-2 rounded-[14px] border px-4 py-3 text-[15px]"
+      className="m-0 mb-4 flex items-start gap-2 rounded-[14px] border px-4 py-3 text-base"
       style={{
         ...panel,
         borderColor: tone === "alert" ? T.edge.danger : T.border.line,
@@ -119,21 +119,16 @@ export function CurrentStopCard({
       className="rounded-[24px] border-2 p-[18px]"
       style={{ background: T.bg.deep, borderColor: T.ink.base }}
     >
-      <p className="m-0 text-[14px] font-semibold" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm font-semibold" style={{ color: T.ink.dim }}>
         {eyebrow}
       </p>
-      <Heading
-        className="my-3 text-[34px] leading-[1.05] break-words"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
-        {name}
-      </Heading>
-      <p className="mt-0 mb-3 text-[16px]" style={{ color: T.ink.dim }}>
+      <Heading className="type-panel-title my-3 break-words">{name}</Heading>
+      <p className="mt-0 mb-3 text-base" style={{ color: T.ink.dim }}>
         {meta}
       </p>
       <button
         type="button"
-        className="live-button live-primary rounded-full text-[18px]"
+        className="live-button live-primary rounded-full text-lg"
         style={{ minHeight: 64 }}
         disabled={busy}
         onClick={onPrimary}
@@ -166,14 +161,11 @@ export function NextStopCard({
       style={panel}
     >
       <div className="min-w-0 flex-1">
-        <p
-          className="m-0 text-[13px] font-semibold"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm font-semibold" style={{ color: T.ink.dim }}>
           {tUi("next")}{" "}
         </p>
-        <p className="m-0 text-[18px] font-semibold break-words">{name}</p>
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-lg font-semibold break-words">{name}</p>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           {time}
         </p>
       </div>
@@ -201,13 +193,13 @@ export function DelayButtons({
 }) {
   return (
     <fieldset className="m-0 my-5 border-0 p-0">
-      <legend className="mb-2 text-[15px] font-semibold">Running late?</legend>
+      <legend className="mb-2 text-base font-semibold">Running late?</legend>
       <div className="grid grid-cols-4 gap-1.5">
         {[5, 10, 15, 30].map((delay) => (
           <button
             key={delay}
             type="button"
-            className="live-button rounded-[16px] text-[17px]"
+            className="live-button rounded-[16px] text-base"
             style={
               delayMin === delay
                 ? {
@@ -245,7 +237,7 @@ export function ExceptionButtons({
     <div className="grid grid-cols-2 gap-2">
       <button
         type="button"
-        className="live-button rounded-[18px] py-0 text-[15px]"
+        className="live-button rounded-[18px] py-0 text-base"
         aria-label="Skip stop: skip this stop"
         onClick={onSkip}
       >
@@ -253,7 +245,7 @@ export function ExceptionButtons({
       </button>
       <button
         type="button"
-        className="live-button rounded-[18px] border-2 py-0 text-[15px]"
+        className="live-button rounded-[18px] border-2 py-0 text-base"
         style={{
           background: TYPE_TINT.special.bg,
           borderColor: T.accent.danger,
@@ -282,7 +274,7 @@ export function StopList({
 
   return (
     <>
-      <Heading className="mt-6 mb-3 text-[17px] font-semibold">{title}</Heading>
+      <Heading className="type-panel-title mt-6 mb-3">{title}</Heading>
       <ol
         className="m-0 overflow-hidden rounded-[20px] border p-0"
         style={panel}
@@ -301,7 +293,7 @@ export function StopList({
               }}
             >
               <span
-                className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[14px] font-bold"
+                className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-sm font-bold"
                 style={{
                   background:
                     s.state === "done"
@@ -336,13 +328,13 @@ export function StopList({
               </span>
               <span className="min-w-0 flex-1">
                 <strong
-                  className={`block text-[16px] break-words ${s.state === "skipped" ? "line-through" : ""}`}
+                  className={`block text-base break-words ${s.state === "skipped" ? "line-through" : ""}`}
                 >
                   {s.name}
                 </strong>
               </span>
               <span
-                className="shrink-0 text-right text-[13px] tabular-nums"
+                className="shrink-0 text-right text-sm tabular-nums"
                 style={{ color: here ? T.accent.primary : T.ink.dim }}
               >
                 <span className="block whitespace-nowrap">
@@ -383,19 +375,14 @@ export function EntryCard({
   return (
     <section className="rounded-[20px] border p-5" style={panel}>
       <span
-        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold"
+        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
         style={{ background: TYPE_TINT.public.bg, color: TYPE_TINT.public.fg }}
       >
         <Icon aria-hidden="true" icon="mdi:bus-side" width={14} />
         Mobile library
       </span>
-      <Heading
-        className="my-2 text-[26px] leading-tight"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
-        {name}
-      </Heading>
-      <p className="my-3 text-[15px]" style={{ color: T.ink.dim }}>
+      <Heading className="type-panel-title my-2">{name}</Heading>
+      <p className="my-3 text-base" style={{ color: T.ink.dim }}>
         {meta}
       </p>
       {action}
@@ -419,14 +406,11 @@ export function ConfirmIdentityLook({
   return (
     <div className="live-controls space-y-4">
       {showTitle ? (
-        <Heading
-          className="m-0 text-[26px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
+        <Heading className="type-panel-title m-0">
           {tUi("confirm_its_you")}
         </Heading>
       ) : null}
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         Needed each day before you share live updates.
       </p>
       {children}
@@ -501,8 +485,8 @@ export function BeforeYouStartScreen({
           style={{ color: checked ? T.accent.primary : T.border.hi }}
         />
         <span>
-          <span className="block text-[15.5px] font-semibold">{title}</span>
-          <span className="block text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="block text-base font-semibold">{title}</span>
+          <span className="block text-sm" style={{ color: T.ink.dim }}>
             {hint}
           </span>
         </span>
@@ -512,14 +496,9 @@ export function BeforeYouStartScreen({
 
   return (
     <section>
-      <Heading
-        className="m-0 text-[30px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
-        Before you start
-      </Heading>
+      <Heading className="type-panel-title m-0">Before you start</Heading>
       {intro ? (
-        <p className="my-3 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="my-3 text-base" style={{ color: T.ink.dim }}>
           {intro}
         </p>
       ) : null}
@@ -529,13 +508,13 @@ export function BeforeYouStartScreen({
       >
         <div className="min-w-0 flex-1">
           <p
-            className="m-0 text-[12.5px] font-semibold tracking-wide uppercase"
+            className="m-0 text-sm font-semibold tracking-wide uppercase"
             style={{ color: T.ink.dim }}
           >
             Today’s route
           </p>
-          <p className="m-0 text-[16px] font-semibold">{routeLabel}</p>
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-base font-semibold">{routeLabel}</p>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             {routeTimes}
           </p>
         </div>
@@ -563,7 +542,7 @@ export function BeforeYouStartScreen({
           )
         ) : (
           <p
-            className="m-0 flex items-start gap-2 text-[14px]"
+            className="m-0 flex items-start gap-2 text-sm"
             style={{ color: T.ink.dim }}
           >
             <Icon
@@ -580,14 +559,14 @@ export function BeforeYouStartScreen({
       {preview ? (
         <div className="my-4 rounded-[16px] border p-4" style={panel}>
           <p
-            className="m-0 text-[12.5px] font-semibold tracking-wide uppercase"
+            className="m-0 text-sm font-semibold tracking-wide uppercase"
             style={{ color: T.ink.dim }}
           >
             What the public sees
           </p>
-          <p className="m-0 mt-1 flex flex-wrap items-center gap-2 text-[15px]">
+          <p className="m-0 mt-1 flex flex-wrap items-center gap-2 text-base">
             <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{
                 background: TYPE_TINT.public.bg,
                 color: TYPE_TINT.public.fg,
@@ -600,7 +579,7 @@ export function BeforeYouStartScreen({
           </p>
         </div>
       ) : null}
-      <ul className="my-4 flex list-none flex-col gap-2 p-0 text-[14.5px]">
+      <ul className="my-4 flex list-none flex-col gap-2 p-0 text-sm">
         {checklist.map((line) => (
           <li key={line} className="flex items-start gap-2">
             <Icon
@@ -616,7 +595,7 @@ export function BeforeYouStartScreen({
       </ul>
       <button
         type="button"
-        className="live-button live-primary rounded-full text-[17px]"
+        className="live-button live-primary rounded-full text-base"
         style={{ minHeight: 64 }}
         disabled={busy || startDisabled}
         onClick={onStart}
@@ -655,16 +634,11 @@ export function FinishedScreen({
       >
         <Icon icon="mdi:check" width={40} />
       </span>
-      <Heading
-        className="mt-4 mb-2 text-[30px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
-        {title}
-      </Heading>
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <Heading className="type-panel-title mt-4 mb-2">{title}</Heading>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         {summary}
       </p>
-      <p className="mt-2 mb-5 text-[13.5px]" style={{ color: T.ink.dim }}>
+      <p className="mt-2 mb-5 text-sm" style={{ color: T.ink.dim }}>
         {note}
       </p>
       <Link className="live-button w-auto rounded-full px-6" href={backHref}>

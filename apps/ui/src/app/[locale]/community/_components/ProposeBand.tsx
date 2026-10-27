@@ -26,7 +26,7 @@ const RULES = [
 ] as const
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full px-[22px] py-3 text-[16px] font-semibold no-underline transition-colors"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full px-[22px] py-3 text-base font-semibold no-underline transition-colors"
 
 /**
  * The Noticeboard's last card (spec §5.5): "Spotted a gap? Propose a
@@ -58,12 +58,8 @@ export function ProposeBand({
     >
       <h2
         id="propose-heading"
-        className="m-0"
+        className="type-h2 m-0"
         style={{
-          fontFamily: T.font.serif,
-          fontWeight: 500,
-          fontSize: "clamp(28px,3vw,38px)",
-          lineHeight: 1.1,
           color: T.ink.base,
         }}
       >
@@ -97,11 +93,11 @@ export function ProposeBand({
               <Icon icon={rule.icon} width={18} height={18} />
             </span>
             <span className="flex min-w-0 flex-col gap-0.5">
-              <strong className="text-[16px]" style={{ color: T.ink.base }}>
+              <strong className="text-base" style={{ color: T.ink.base }}>
                 {rule.title}
               </strong>
               <span
-                className="text-[15px] leading-[1.45]"
+                className="text-base leading-[1.45]"
                 style={{ color: T.ink.dim }}
               >
                 {rule.text}

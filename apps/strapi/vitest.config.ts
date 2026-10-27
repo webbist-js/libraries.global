@@ -26,6 +26,9 @@ export default defineConfig({
   esbuild: { jsx: "automatic" },
   resolve: {
     alias: {
+      // Workspace plugins can resolve another peer snapshot of Strapi. Keep
+      // admin imports on one module identity so the shared test mocks apply.
+      "@strapi/strapi/admin": resolveDependency.resolve("@strapi/strapi/admin"),
       "@strapi/design-system": designSystem.replace(/\.js$/, ".mjs"),
       "@strapi/ui-primitives": primitives.replace(/\.js$/, ".mjs"),
     },

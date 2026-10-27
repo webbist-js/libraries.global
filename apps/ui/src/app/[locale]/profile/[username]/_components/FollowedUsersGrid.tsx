@@ -24,7 +24,7 @@ function UserRow({ user }: { user: FollowedUser }) {
       >
         <span
           aria-hidden="true"
-          className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-[15px] font-semibold"
+          className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-base font-semibold"
           style={{
             background: user.avatarUrl ? T.bg.muted : "var(--tint-academic-bg)",
             color: "var(--tint-academic-fg)",
@@ -44,17 +44,17 @@ function UserRow({ user }: { user: FollowedUser }) {
 
         <span className="min-w-0 flex-1">
           <span
-            className="block truncate text-[16px] font-semibold"
+            className="block truncate text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {user.displayName}
           </span>
-          <span className="block text-[14px]" style={{ color: T.ink.low }}>
+          <span className="block text-sm" style={{ color: T.ink.low }}>
             @{user.username}
           </span>
           {user.bio ? (
             <span
-              className="mt-0.5 block truncate text-[14px]"
+              className="mt-0.5 block truncate text-sm"
               style={{ color: T.ink.dim }}
             >
               {user.bio}
@@ -80,7 +80,7 @@ export function FollowedUsersGrid({ users }: { users: FollowedUser[] }) {
   const t = useTranslations("ui")
   if (users.length === 0) {
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         {t("not_following_contributors")}
       </p>
     )

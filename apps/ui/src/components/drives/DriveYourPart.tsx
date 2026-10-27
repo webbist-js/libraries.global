@@ -37,7 +37,7 @@ export function DriveYourPart({
       className="flex flex-col gap-3 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5"
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 id="drive-your-part-heading" className="m-0 text-[14px] font-bold">
+        <h2 id="drive-your-part-heading" className="type-small-heading m-0">
           {t("yourPart")}
         </h2>
         <span className="text-xs text-(--t-ink-dim)">{t("thisDrive")}</span>
@@ -48,7 +48,7 @@ export function DriveYourPart({
             <div key={stat.label} className="min-w-0 px-3 py-2.5">
               <p
                 className="m-0 text-[27px] leading-tight"
-                style={{ fontFamily: T.font.serif }}
+                style={{ fontFamily: T.font.sans }}
               >
                 {stat.count.toLocaleString("en-GB")}
               </p>
@@ -66,11 +66,11 @@ export function DriveYourPart({
           ))}
         </div>
       ) : (
-        <p className="m-0 text-[13px] text-(--t-ink-dim)" role="status">
+        <p className="m-0 text-sm text-(--t-ink-dim)" role="status">
           {t("loadingPart")}
         </p>
       )}
-      <div className="flex flex-col gap-1.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
+      <div className="flex flex-col gap-1.5 text-sm leading-relaxed text-(--t-ink-dim)">
         {mine?.sent === 0 && mine.accepted === 0 ? (
           <p className="m-0">{t("nothingSent")}</p>
         ) : null}

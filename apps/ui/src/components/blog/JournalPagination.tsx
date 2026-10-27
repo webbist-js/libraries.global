@@ -12,9 +12,9 @@ import {
 } from "./journalLanding.helpers"
 
 const PILL =
-  "inline-flex h-9 items-center gap-1 rounded-full border px-3.5 text-[14px] font-semibold"
+  "inline-flex h-9 items-center gap-1 rounded-full border px-3.5 text-sm font-semibold"
 const CIRCLE =
-  "inline-flex size-9 items-center justify-center rounded-full border text-[14px] font-semibold"
+  "inline-flex size-9 items-center justify-center rounded-full border text-sm font-semibold"
 
 export function JournalPagination({
   query,
@@ -47,7 +47,7 @@ export function JournalPagination({
 
   return (
     <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         {from > 0
           ? t("showingRange", { from, to, total })
           : t("articleCount", { count: total })}
@@ -73,7 +73,7 @@ export function JournalPagination({
               typeof p === "string" ? (
                 <li
                   aria-hidden="true"
-                  className="px-1 text-[14px]"
+                  className="px-1 text-sm"
                   key={p}
                   style={{ color: T.ink.low }}
                 >

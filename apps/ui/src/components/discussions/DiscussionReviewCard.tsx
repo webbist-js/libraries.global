@@ -89,13 +89,13 @@ export function DiscussionReviewCard({
   return (
     <article
       id={`discussion-review-${revision.id}`}
-      className="rounded-[24px] border border-[#ecd9a4] bg-[#fffcf2] p-5 text-[16px] [--spacing:0.25rem] sm:p-6"
+      className="rounded-[24px] border border-[#ecd9a4] bg-[#fffcf2] p-5 text-base [--spacing:0.25rem] sm:p-6"
     >
       <div className="flex items-start gap-3.5">
         <DiscussionAvatar author={author} colourful />
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <h3 className="m-0 text-xs font-bold tracking-[0.06em] text-[#875409] uppercase">
+            <h3 className="type-label m-0 text-[#875409] uppercase">
               {t(
                 editing
                   ? "editPublished"
@@ -106,7 +106,7 @@ export function DiscussionReviewCard({
             </h3>
             <div className="flex shrink-0 items-center gap-2">
               {Boolean(revision.contentFlags?.terms?.length) && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-(--t-palette-rose-soft) px-2.5 py-1 text-[11px] font-semibold text-(--t-palette-rose-fg)">
+                <span className="inline-flex items-center gap-1 rounded-full bg-(--t-palette-rose-soft) px-2.5 py-1 text-xs font-semibold text-(--t-palette-rose-fg)">
                   <Flag size={12} aria-hidden />
                   {t("flaggedWording")}
                 </span>
@@ -126,7 +126,7 @@ export function DiscussionReviewCard({
                   align="end"
                   className="max-h-[75vh] w-[min(380px,calc(100vw-2rem))] overflow-y-auto rounded-2xl border-(--t-border-line) bg-(--t-bg-deep) p-4 text-sm text-(--t-ink-dim)"
                 >
-                  <h4 className="m-0 flex items-center gap-2 text-sm font-semibold text-(--t-ink-base)">
+                  <h4 className="type-h4 m-0 flex items-center gap-2 text-(--t-ink-base)">
                     <ShieldCheck size={15} aria-hidden />
                     {t("reviewChecks")}
                   </h4>
@@ -195,7 +195,7 @@ export function DiscussionReviewCard({
               </Popover>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-1 text-[13px] leading-relaxed text-(--t-ink-dim)">
+          <div className="flex flex-wrap items-center gap-1 text-sm leading-relaxed text-(--t-ink-dim)">
             <span className="font-bold text-(--t-ink-base)">{author.name}</span>
             <AuthorBadges badges={author.badges} />
             {revision.parentAuthor && (
@@ -216,7 +216,7 @@ export function DiscussionReviewCard({
           {showThread && (
             <Link
               href={`/community/discussions/${encodeURIComponent(revision.threadId)}`}
-              className="mt-3 flex w-fit items-center gap-1.5 rounded-full border border-(--t-palette-amber-bg) bg-(--t-bg-deep) px-3 py-1.5 text-[13px] font-semibold text-(--t-accent-primary) hover:border-(--t-accent-primary)"
+              className="mt-3 flex w-fit items-center gap-1.5 rounded-full border border-(--t-palette-amber-bg) bg-(--t-bg-deep) px-3 py-1.5 text-sm font-semibold text-(--t-accent-primary) hover:border-(--t-accent-primary)"
             >
               {revision.threadTitle ?? revision.title ?? t("untitled")}
               <ArrowUpRight size={14} className="shrink-0" aria-hidden />
@@ -236,14 +236,14 @@ export function DiscussionReviewCard({
           )}
           {editing && (
             <div className="mt-3 rounded-xl border border-[#e8e5dc] bg-(--t-bg-deep) p-3">
-              <h4 className="m-0 mb-1 text-[11px] font-bold tracking-wide text-(--t-ink-dim) uppercase">
+              <h4 className="type-label m-0 mb-1 text-(--t-ink-dim) uppercase">
                 {t("publishedNow")}
               </h4>
               {revision.previousTitle && (
                 <p className="m-0 font-semibold">{revision.previousTitle}</p>
               )}
               <p
-                className="m-0 text-[15px] leading-[1.65] break-words whitespace-pre-wrap text-(--t-ink-dim)"
+                className="m-0 text-base leading-[1.65] break-words whitespace-pre-wrap text-(--t-ink-dim)"
                 lang={revision.language}
               >
                 {revision.previousBody}
@@ -258,7 +258,7 @@ export function DiscussionReviewCard({
             }
           >
             {editing && (
-              <h4 className="m-0 mb-1 text-[11px] font-bold tracking-wide text-(--t-palette-mint-fg) uppercase">
+              <h4 className="type-label m-0 mb-1 text-(--t-palette-mint-fg) uppercase">
                 {t("proposedEdit")}
               </h4>
             )}

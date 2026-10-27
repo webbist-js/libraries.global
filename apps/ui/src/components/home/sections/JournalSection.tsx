@@ -48,7 +48,7 @@ function LeadStory({
         />
       ) : (
         <span
-          className="flex flex-1 flex-col items-center justify-center gap-2 pb-40 text-[14px] font-medium"
+          className="flex flex-1 flex-col items-center justify-center gap-2 pb-40 text-sm font-medium"
           style={{ color: visual.fg }}
         >
           <Icon aria-hidden="true" height={24} icon={visual.icon} width={24} />
@@ -60,7 +60,7 @@ function LeadStory({
         <span className="flex flex-wrap gap-2">
           {editorsPick ? (
             <span
-              className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-semibold"
+              className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold"
               style={{
                 background: T.accent.chip,
                 color: T.accent.primaryHover,
@@ -72,17 +72,14 @@ function LeadStory({
           <SectionTag section={article.section} />
         </span>
         <h3
-          className="m-0 text-[clamp(26px,2.6vw,38px)] leading-[1.1] text-balance transition-colors group-hover:text-(--t-accent-primary)"
+          className="type-display-compact m-0 text-balance transition-colors group-hover:text-(--t-accent-primary)"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >
           {article.title}
         </h3>
-        <span className="text-[14px]" style={{ color: T.ink.dim }}>
+        <span className="text-sm" style={{ color: T.ink.dim }}>
           {articleMeta(article, {
             locale,
             readingTime: t("readingTime", { minutes: article.readMinutes }),

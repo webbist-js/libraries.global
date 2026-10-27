@@ -26,13 +26,8 @@ export function KnowledgeSection({
       >
         <h2
           id="knowledge-title"
-          className="m-0"
+          className="type-display-compact m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: "clamp(26px,2.3vw,34px)",
-            lineHeight: 1.1,
-            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >
@@ -45,7 +40,7 @@ export function KnowledgeSection({
               <GlobalLink
                 href={link.href ?? "/knowledge"}
                 title={link.text ?? undefined}
-                className="inline-block rounded-full border bg-white px-3.5 py-2 text-[14px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
+                className="inline-block rounded-full border bg-white px-3.5 py-2 text-sm font-semibold no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
               >
                 {link.title}
@@ -56,7 +51,7 @@ export function KnowledgeSection({
             <li className="pl-2">
               <GlobalLink
                 href={band.primaryHref}
-                className="text-[14px] font-semibold underline underline-offset-[3px]"
+                className="text-sm font-semibold underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >
                 {band.primaryLabel} <span aria-hidden="true">→</span>

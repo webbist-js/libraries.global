@@ -20,7 +20,7 @@ import { wizardSteps, wizardStepCopy } from "./wizard.steps"
 import type { FormData } from "./wizard.types"
 
 const OUTLINED_PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
 
 type StaleField = { field: string; byName?: string | null; changedAt: string }
 
@@ -235,7 +235,9 @@ export function StaffPublishControls({
 
             return list.length ? (
               <section key={step.n}>
-                <h3>{wizardStepCopy(step.n, mobile, true).label}</h3>
+                <h3 className="type-h3">
+                  {wizardStepCopy(step.n, mobile, true).label}
+                </h3>
                 <ul>
                   {list.map((key) => (
                     <li key={key}>{label(key)}</li>
@@ -246,7 +248,7 @@ export function StaffPublishControls({
           })}
         {requested.length > 0 && (
           <section>
-            <h3>{tUi("sent_to_a_moderator")}</h3>
+            <h3 className="type-h3">{tUi("sent_to_a_moderator")}</h3>
             <ul>
               {requested.map((key) => (
                 <li key={key}>{label(key)}</li>
@@ -254,7 +256,7 @@ export function StaffPublishControls({
             </ul>
           </section>
         )}
-        <label className="block text-[15px] font-semibold">
+        <label className="block text-base font-semibold">
           {tUi("note_optional")}{" "}
           <textarea
             value={note}
@@ -271,7 +273,7 @@ export function StaffPublishControls({
         {error && (
           <div
             role="alert"
-            className="mt-4 flex flex-col gap-3 rounded-[16px] px-4 py-3 text-[14px]"
+            className="mt-4 flex flex-col gap-3 rounded-[16px] px-4 py-3 text-sm"
             style={{ background: T.bg.surface, color: T.ink.base }}
           >
             <p className="m-0 flex items-start gap-2">

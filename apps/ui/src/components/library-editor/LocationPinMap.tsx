@@ -195,7 +195,7 @@ export function LocationPinMap({
         />
         {failed ? (
           <p
-            className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-[14px]"
+            className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-sm"
             style={{ color: T.ink.dim }}
           >
             {tUi(
@@ -205,7 +205,7 @@ export function LocationPinMap({
         ) : null}
         {!failed && !hasPoint ? (
           <p
-            className="pointer-events-none absolute top-3 right-3 left-14 z-[1] m-0 rounded-full px-4 py-2 text-center text-[13.5px] font-semibold"
+            className="pointer-events-none absolute top-3 right-3 left-14 z-[1] m-0 rounded-full px-4 py-2 text-center text-sm font-semibold"
             style={{
               background: T.bg.deep,
               color: T.ink.base,

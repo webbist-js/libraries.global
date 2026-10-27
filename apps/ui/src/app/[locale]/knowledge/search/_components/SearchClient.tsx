@@ -51,7 +51,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
         {hit.section_name && (
           <p
             style={{
-              fontSize: "13px",
+              fontSize: "var(--type-body-small-size)",
               fontWeight: 600,
               color: T.ink.dim,
               margin: 0,
@@ -63,7 +63,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
         {hit.category_slug && (
           <span
             style={{
-              fontSize: "13px",
+              fontSize: "var(--type-body-small-size)",
               fontWeight: 600,
               color: T.accent.primaryHover,
               padding: "2px 10px",
@@ -76,13 +76,9 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
         )}
       </div>
       <h3
+        className="type-h3"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "1.2rem",
-          fontWeight: 600,
-          letterSpacing: "-.01em",
           color: T.ink.base,
-          lineHeight: 1.3,
           margin: 0,
         }}
       >
@@ -92,7 +88,7 @@ function SearchResult({ hit }: { hit: WikiArticleSearchHit }) {
         <p
           style={{
             marginTop: "10px",
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             lineHeight: 1.6,
             color: T.ink.dim,
             display: "-webkit-box",
@@ -124,7 +120,11 @@ function DocsSearchResults({ query }: { query: string }) {
   return (
     <div style={{ marginTop: "32px" }}>
       {loading ? (
-        <p style={{ color: T.ink.dim, fontSize: "14px" }}>Searching…</p>
+        <p
+          style={{ color: T.ink.dim, fontSize: "var(--type-body-small-size)" }}
+        >
+          Searching…
+        </p>
       ) : searched && results.length === 0 ? (
         <div
           style={{
@@ -134,7 +134,7 @@ function DocsSearchResults({ query }: { query: string }) {
             borderRadius: "18px",
             background: T.bg.surface,
             color: T.ink.dim,
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
           }}
         >
           No pages found for &ldquo;{query}&rdquo;.
@@ -143,7 +143,7 @@ function DocsSearchResults({ query }: { query: string }) {
         <>
           <p
             style={{
-              fontSize: "14px",
+              fontSize: "var(--type-body-small-size)",
               color: T.ink.dim,
               marginBottom: "20px",
             }}
@@ -210,7 +210,7 @@ function SearchPageInner() {
         <Container>
           <DocsSearchResults query={query} />
           {!query.trim() && (
-            <p style={{ color: T.ink.dim, fontSize: "15px" }}>
+            <p style={{ color: T.ink.dim, fontSize: "var(--type-body-size)" }}>
               Enter a search term to find documentation pages.
             </p>
           )}

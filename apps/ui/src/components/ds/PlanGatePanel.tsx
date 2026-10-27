@@ -54,25 +54,20 @@ export function PlanGatePanel({
           {comingSoon ? <Badge label={tUi("coming_soon")} color="dim" /> : null}
         </p>
         <h2
-          className="m-0 text-balance"
+          className="type-h2 m-0 text-balance"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(32px,3.5vw,48px)",
-            fontWeight: 500,
-            lineHeight: 1.08,
-            letterSpacing: "-0.015em",
             color: T.ink.base,
           }}
         >
           {title}
         </h2>
         <p
-          className="m-0 text-[17px] leading-[1.65]"
+          className="m-0 text-base leading-[1.65]"
           style={{ color: T.ink.dim }}
         >
           {lead}
         </p>
-        <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[17px]">
+        <ul className="m-0 flex list-none flex-col gap-2 p-0 text-base">
           {points.map((point) => (
             <li key={point} className="flex items-start gap-2.5">
               <Icon
@@ -87,7 +82,7 @@ export function PlanGatePanel({
             </li>
           ))}
         </ul>
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           {freeNote}
         </p>
         <div className="flex flex-wrap gap-3">
@@ -116,7 +111,7 @@ export function PlanGatePanel({
           >
             {preview}
           </div>
-          <p className="m-0 mt-2 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
             Illustration of the Team feature
           </p>
         </div>

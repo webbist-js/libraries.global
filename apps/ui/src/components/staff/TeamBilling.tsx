@@ -1,10 +1,12 @@
 "use client"
 
+import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useEffect, useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
 import { Badge } from "@/components/ds"
+import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import { Button } from "@/components/ui/button"
 import pricing from "@/lib/membership-pricing.json"
 import { Link, useRouter } from "@/lib/navigation"
@@ -54,26 +56,29 @@ function PaidTeamDetails({
 }) {
   return (
     <>
-      <div className="mt-7 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-serif text-[clamp(36px,4vw,48px)] leading-tight tracking-tight">
-          {money(amount * membership.seats)}
-        </span>
-        <span className="text-[15px] text-(--t-ink-dim)">
-          per year, excluding VAT
-        </span>
+      <div className="mt-7 rounded-2xl bg-(--t-bg-surface) p-5">
+        <p className="mb-3 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
+          Annual Team membership
+        </p>
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="type-stat">{money(amount * membership.seats)}</span>
+          <span className="text-base text-(--t-ink-dim)">
+            per year, excluding VAT
+          </span>
+        </div>
       </div>
       <dl className="mt-6 mb-0 grid gap-4 border-y border-(--t-border-line) py-5 sm:grid-cols-2">
         <div>
-          <dt className="text-[13px] text-(--t-ink-dim)">Paid seats</dt>
-          <dd className="m-0 mt-1 text-[17px] font-semibold">
+          <dt className="text-sm text-(--t-ink-dim)">Paid seats</dt>
+          <dd className="m-0 mt-1 text-base font-semibold">
             {membership.paidSeats}
           </dd>
         </div>
         <div>
-          <dt className="text-[13px] text-(--t-ink-dim)">
+          <dt className="text-sm text-(--t-ink-dim)">
             {membership.cancelAtPeriodEnd ? "Paid access ends" : "Paid through"}
           </dt>
-          <dd className="m-0 mt-1 text-[17px] font-semibold">
+          <dd className="m-0 mt-1 text-base font-semibold">
             {membership.paidThrough
               ? date(membership.paidThrough)
               : "Awaiting payment"}
@@ -81,12 +86,12 @@ function PaidTeamDetails({
         </div>
       </dl>
       {membership.cancelAtPeriodEnd ? (
-        <p className="mt-4 rounded-2xl bg-(--t-bg-surface) p-4 text-[14px] leading-relaxed">
+        <p className="mt-4 rounded-2xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed">
           Renewal is cancelled. Paid access continues to its paid-through date.
         </p>
       ) : null}
       {membership.pendingSeats ? (
-        <p className="mt-4 text-[14px] leading-relaxed">
+        <p className="mt-4 text-sm leading-relaxed">
           {membership.pendingSeats} seats are scheduled
           {membership.pendingAt
             ? ` from ${date(membership.pendingAt)}`
@@ -95,7 +100,7 @@ function PaidTeamDetails({
         </p>
       ) : null}
       {membership.revoked ? (
-        <p role="alert" className="mt-4 text-[14px] text-red-800">
+        <p role="alert" className="mt-4 text-sm text-red-800">
           Access is suspended following a payment reversal.
         </p>
       ) : null}
@@ -157,12 +162,12 @@ function TeamPaymentActions({
           </Button>
         </div>
       ) : (
-        <p className="mt-6 text-[14px] text-(--t-ink-dim)">
+        <p className="mt-6 text-sm text-(--t-ink-dim)">
           A Team Organiser manages payment and seats.
         </p>
       )}
       {canSubscribe && !data.purchasing ? (
-        <p className="mt-4 text-[14px]">
+        <p className="mt-4 text-sm">
           New subscriptions are temporarily unavailable.
         </p>
       ) : null}
@@ -181,13 +186,13 @@ function UnusedTeam({
 
   return (
     <StaffPanel id="unused-team" title="Unused Team" compact>
-      <p className="mt-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="mt-0 text-sm leading-relaxed text-(--t-ink-dim)">
         You can discard a Team you no longer need once it has no paid membership
         or other members. Its separate API subscription must also be cancelled.
       </p>
       {discarding ? (
         <div className="space-y-4">
-          <p className="text-[14px]">
+          <p className="text-sm">
             Discard this unused Team? Any open checkout will be closed.
           </p>
           <div className="flex flex-wrap gap-3">
@@ -434,7 +439,7 @@ export function TeamBilling({
         }
         await refreshMembership()
         if (result.discarded) {
-          router.push("/contribute/membership")
+          router.push("/plans")
 
           return
         }
@@ -464,20 +469,20 @@ export function TeamBilling({
           aside={<Badge color={status.color} label={status.label} />}
         >
           <p
-            className="m-0 text-[15px] leading-relaxed text-(--t-ink-dim)"
+            className="m-0 text-base leading-relaxed text-(--t-ink-dim)"
             role="status"
           >
             {status.description}
           </p>
           {data.source !== "checkout" ? (
-            <p className="mt-5 text-[15px] leading-relaxed">
+            <p className="mt-5 text-base leading-relaxed">
               This Team has an existing agreement. Its agreed terms are
               preserved; contact us to arrange a switch to self-service billing.
             </p>
           ) : (
             <>
               {data.mode === "sandbox" ? (
-                <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-900">
+                <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
                   <strong>Test mode.</strong> No real payment is taken. Use
                   Stripe test payment details only.
                 </p>
@@ -500,7 +505,7 @@ export function TeamBilling({
                 locale={locale}
                 setCheckoutOpen={setCheckoutOpen}
               />
-              <p className="mt-5 mb-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+              <p className="mt-5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                 Stripe lets you update payment details, view invoices and cancel
                 renewal. Add seats when you need them; increases require
                 payment. Seat reductions start at renewal.
@@ -510,7 +515,7 @@ export function TeamBilling({
           {error ? (
             <p
               role="alert"
-              className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-[14px] text-red-900"
+              className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
             >
               {error}
             </p>
@@ -521,43 +526,106 @@ export function TeamBilling({
         ) : null}
       </div>
       <aside className="min-w-0 space-y-6">
-        <StaffPanel id="team-seat-allowance" title="Your seats" compact>
+        <StaffPanel
+          id="team-seat-allowance"
+          title="Your seats"
+          compact
+          aside={
+            <Icon
+              aria-hidden
+              icon="mdi:account-group-outline"
+              width={22}
+              className="text-(--t-accent-primary)"
+            />
+          }
+        >
           <p className="mt-0 mb-3 flex items-baseline gap-2">
-            <strong className="font-serif text-4xl font-medium">
+            <strong className="font-sans text-4xl font-medium">
               {data.used}
               <span className="text-2xl text-(--t-ink-dim)">
                 {" "}
                 / {data.seats}
               </span>
             </strong>
-            <span className="text-[14px] text-(--t-ink-dim)">occupied</span>
+            <span className="text-sm text-(--t-ink-dim)">occupied</span>
           </p>
-          <p className="text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <div
+            role="progressbar"
+            aria-label="Team seats occupied"
+            aria-valuenow={data.used}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(data.used, data.seats)}
+            className="my-5 h-2 overflow-hidden rounded-full bg-(--t-bg-muted)"
+          >
+            <div
+              className="h-full rounded-full bg-(--t-accent-primary)"
+              style={{
+                width: `${Math.min(100, (data.used / Math.max(1, data.seats)) * 100)}%`,
+              }}
+            />
+          </div>
+          <p className="text-base leading-relaxed text-(--t-ink-dim)">
             Members and pending invitations each use one seat, including your
             Organiser seat.
           </p>
-          <Link className={STAFF_LINK} href="/staff/teams">
-            Manage members and libraries
-          </Link>
+          <SidebarLinks>
+            <li>
+              <Link className={STAFF_LINK} href="/staff/teams">
+                Manage members and libraries
+              </Link>
+            </li>
+          </SidebarLinks>
         </StaffPanel>
-        <StaffPanel id="team-library-access" title="Library access" compact>
-          <p className="mt-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        <StaffPanel
+          id="team-library-access"
+          title="Library access"
+          compact
+          aside={
+            <Icon
+              aria-hidden
+              icon="mdi:shield-check-outline"
+              width={22}
+              className="text-(--t-accent-primary)"
+            />
+          }
+        >
+          <p className="mt-0 text-base leading-relaxed text-(--t-ink-dim)">
             Payment activates your membership. Library staff authority is
             checked separately before your Team can manage a library.
           </p>
-          <Link className={STAFF_LINK} href="/staff/claim">
-            Request library access
-          </Link>
+          <SidebarLinks>
+            <li>
+              <Link className={STAFF_LINK} href="/staff/claim">
+                Request library access
+              </Link>
+            </li>
+          </SidebarLinks>
         </StaffPanel>
-        <StaffPanel id="team-api-billing" title="API add-on" compact>
-          <p className="mt-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        <StaffPanel
+          id="team-api-billing"
+          title="API add-on"
+          compact
+          aside={
+            <Icon
+              aria-hidden
+              icon="mdi:code-tags"
+              width={22}
+              className="text-(--t-accent-primary)"
+            />
+          }
+        >
+          <p className="mt-0 text-base leading-relaxed text-(--t-ink-dim)">
             Optional API access is billed separately at{" "}
             {money(pricing.teamApi.month)} a month. Manage its subscription
             separately if your Team ends.
           </p>
-          <Link className={STAFF_LINK} href="/staff/teams/api">
-            API access and usage
-          </Link>
+          <SidebarLinks>
+            <li>
+              <Link className={STAFF_LINK} href="/staff/teams/api">
+                API access and usage
+              </Link>
+            </li>
+          </SidebarLinks>
         </StaffPanel>
       </aside>
       {canSubscribe ? (

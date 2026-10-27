@@ -35,7 +35,7 @@ export function StaffDrawerMenuItem({
 
   return (
     <DropdownMenuItem
-      className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-2.5 py-2.5 text-[15px] font-medium focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
+      className="flex w-full cursor-pointer items-center gap-3 rounded-[12px] px-2.5 py-2.5 text-base font-medium focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
       onSelect={() => d.open()}
       style={{ color: T.ink.base }}
     >
@@ -50,7 +50,7 @@ export function StaffDrawerMenuItem({
       <span className="min-w-0 flex-1">{d.label}</span>
       <kbd
         aria-label={`Shortcut: Alt ${d.key}`}
-        className="rounded-md border px-1.5 text-[11px] font-semibold"
+        className="rounded-md border px-1.5 text-xs font-semibold"
         style={{
           borderColor: T.border.hi,
           color: T.ink.dim,

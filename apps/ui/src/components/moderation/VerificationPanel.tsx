@@ -184,17 +184,14 @@ export function VerificationPanel({
 
   if (sections.length === 0)
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         No sections to confirm in this submission.
       </p>
     )
 
   return (
     <div className="flex flex-col gap-4">
-      <p
-        className="m-0 text-[14px] leading-[1.55]"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
         Approving marks each section below as checked today. Nothing in the
         record changes, so check the live values against how they checked.
       </p>
@@ -208,10 +205,7 @@ export function VerificationPanel({
         </Notice>
       ) : null}
       <KeyValueList rows={evidence} />
-      <h3
-        className="m-0 text-[16px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
+      <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
         Confirms these are still right
       </h3>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -221,21 +215,19 @@ export function VerificationPanel({
           return (
             <li
               key={s}
-              className="flex flex-col gap-1.5 rounded-[14px] px-4 py-3 text-[15px]"
+              className="flex flex-col gap-1.5 rounded-[14px] px-4 py-3 text-base"
               style={{
                 background: T.bg.surface,
                 border: `1px solid ${T.border.line}`,
                 color: T.ink.base,
               }}
             >
-              <h4 className="m-0 text-[15px] font-semibold">
-                {SECTION_LABELS[s]}
-              </h4>
+              <h4 className="type-h4 m-0">{SECTION_LABELS[s]}</h4>
               {review ? (
                 <LiveValue current={review.current} section={s} />
               ) : null}
               <p
-                className="m-0 flex items-center gap-1.5 text-[13.5px]"
+                className="m-0 flex items-center gap-1.5 text-sm"
                 style={{ color: T.ink.dim }}
               >
                 <Icon

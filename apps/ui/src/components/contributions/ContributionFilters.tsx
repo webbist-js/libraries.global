@@ -32,7 +32,7 @@ export function ContributionFilters<Id extends string>({
               type="button"
               aria-pressed={on}
               onClick={() => onChange(option.id)}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[14px] font-semibold transition-colors"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors"
               style={
                 on
                   ? {
@@ -49,7 +49,7 @@ export function ContributionFilters<Id extends string>({
             >
               {option.label}
               <span
-                className="text-[13px] font-medium"
+                className="text-sm font-medium"
                 style={{ color: on ? T.accent.primaryHover : T.ink.low }}
               >
                 {counts[option.id]}

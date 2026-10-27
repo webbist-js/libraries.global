@@ -5,6 +5,8 @@ import {
 } from "@repo/shared-data"
 
 import createNotifications, { scheduleNotification } from "./notifications"
+import { approveNetworkClaim } from "../../../../plugins/access/server/services/network-claims"
+import type { SubmissionRecord as NetworkSubmissionRecord } from "../../../../plugins/access/server/services/network-records"
 import { isActivityPublic } from "../../../../utils/activity-visibility"
 import {
   grantVerifiedLibrarian,
@@ -727,6 +729,63 @@ export async function resolveSubmissionLocale(
 // own document `status` key in list responses, so they show "published".
 // Read moderation state through this plugin's routes, not the content-manager.
 export default ({ strapi }: { strapi: any }) => ({
+  /** Internal network facade: a fresh frozen scope, same needs-info case and review history. */
+  async resubmitNetwork(
+    documentId: string,
+    userId: string,
+    fields: Record<string, unknown>,
+    locale?: unknown
+  ) {
+    const existing = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
+    if (
+      existing?.submittedByUserId !== userId ||
+      existing.submissionType !== "network_claim" ||
+      existing.status !== "needs_info"
+    )
+      return null
+    const data = {
+      fields,
+      contentLocale: await resolveSubmissionLocale(strapi, locale, existing),
+      status: "pending",
+      note: fields.note,
+      evidenceUrl: fields.evidenceUrl,
+    }
+    const next = { ...existing, ...data }
+    const moved = await strapi.db.transaction(async () => {
+      const { count } = await strapi.db
+        .query("plugin::content-moderation.submission")
+        .updateMany({
+          where: {
+            documentId,
+            status: "needs_info",
+            ...revisionWhere(existing),
+          },
+          data: { ...data, payloadHash: payloadHash(next) },
+        })
+      if (count !== 1) return false
+      await writeReviewEvent(strapi, {
+        submissionDocumentId: documentId,
+        fromStatus: "needs_info",
+        toStatus: "pending",
+        reviewerId: `ba:${userId}`,
+        reviewerKind: "contributor",
+      })
+
+      return true
+    })
+    if (!moved) return null
+    const submission = await strapi
+      .documents("plugin::content-moderation.submission")
+      .findOne({ documentId })
+    scheduleNotification(strapi, `alert for ${documentId}`, () =>
+      notifications(strapi).submissionPending(submission)
+    )
+
+    return submission
+  },
+
   async create(data: {
     submissionType: string
     targetEntityType?: string
@@ -970,7 +1029,12 @@ export default ({ strapi }: { strapi: any }) => ({
     // "Approve and publish" (Moderators, Task 11): an article suggestion or
     // new article is published, and a new library is published with its
     // hierarchy. The caller checks the reviewer may publish it.
-    opts: { publish?: boolean } = {}
+    opts: {
+      expectedPayloadHash?: string
+      publish?: boolean
+      approvedLibraryIds?: string[]
+      approvedStaffRole?: "editor" | "owner"
+    } = {}
   ): Promise<
     | {
         error:
@@ -993,6 +1057,11 @@ export default ({ strapi }: { strapi: any }) => ({
       .documents("plugin::content-moderation.submission")
       .findOne({ documentId })
     if (!submission) return { error: "not_found" }
+    if (
+      opts.expectedPayloadHash !== undefined &&
+      submission.payloadHash !== opts.expectedPayloadHash
+    )
+      return { error: "conflict" }
     // No self-review, decided before anything is written.
     if (isSelfReview(reviewer, submission)) return { error: "self_review" }
     if (!canTransition(submission.status, status))
@@ -1379,6 +1448,32 @@ export default ({ strapi }: { strapi: any }) => ({
               }
               throw err
             }
+          }
+
+          if (
+            status === "approved" &&
+            submission.submissionType === "network_claim"
+          ) {
+            if (
+              (opts.approvedStaffRole === "owner" ||
+                (opts.approvedLibraryIds &&
+                  opts.approvedLibraryIds.length !==
+                    ((submission.fields?.libraryIds as unknown[]) ?? [])
+                      .length)) &&
+              !reviewNote?.trim()
+            )
+              throw new Error("Explain the partial approval")
+            const resultId = await approveNetworkClaim(
+              strapi,
+              submission as unknown as NetworkSubmissionRecord,
+              reviewer.id,
+              opts.approvedLibraryIds,
+              opts.approvedStaffRole
+            )
+            await strapi
+              .documents("plugin::content-moderation.submission")
+              .update({ documentId, data: { resultDocumentId: resultId } })
+            updated.resultDocumentId = resultId
           }
 
           // Side-effect: if approving a library_claim, create affiliation record + mark profile verified
@@ -1836,7 +1931,7 @@ export default ({ strapi }: { strapi: any }) => ({
       // Award points for library_claim approval — 10pts
       if (
         status === "approved" &&
-        submission?.submissionType === "library_claim"
+        ["library_claim", "network_claim"].includes(submission?.submissionType)
       ) {
         try {
           await strapi.plugin("rewards").service("points").award(
@@ -2353,6 +2448,7 @@ export default ({ strapi }: { strapi: any }) => ({
       .findMany({
         filters: {
           submittedByUserId: baUserId,
+          submissionType: { $ne: "network_claim" },
           status: { $eq: "approved" },
         },
         sort: { createdAt: "desc" },
@@ -2699,7 +2795,11 @@ export default ({ strapi }: { strapi: any }) => ({
   async applyArticle(
     submission: any,
     kind: "wiki" | "journal",
-    opts: { publish?: boolean } = {}
+    opts: {
+      publish?: boolean
+      approvedLibraryIds?: string[]
+      approvedStaffRole?: "editor" | "owner"
+    } = {}
   ): Promise<ApplyArticleResult> {
     return applyArticleSubmissionWithResult(strapi, submission, kind, opts)
   },

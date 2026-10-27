@@ -223,6 +223,8 @@ export default ({ strapi }: { strapi: any }) => ({
     // Event Feed submissions carry a reference to an encrypted credential and
     // are created only by the events plugin (POST /api/events/feeds), never
     // from a client body.
+    if (submissionType === "network_claim")
+      return ctx.badRequest("Use the service management request endpoint")
     if (submissionType === "event_feed") {
       ctx.status = 400
       ctx.body = {
@@ -498,7 +500,9 @@ export default ({ strapi }: { strapi: any }) => ({
   async updateStatus(ctx: any) {
     const { id } = ctx.params
     if (!isDocumentId(id)) return ctx.badRequest("Invalid id")
-    const { status, reviewNote } = (ctx.request.body ?? {}) as {
+    const { status, reviewNote, approvedLibraryIds } = (ctx.request.body ??
+      {}) as {
+      approvedLibraryIds?: string[]
       status: string
       reviewNote?: string
     }
@@ -521,7 +525,13 @@ export default ({ strapi }: { strapi: any }) => ({
     const result = await strapi
       .plugin("content-moderation")
       .service("submission")
-      .updateStatus(id, status, reviewer, reviewNote)
+      .updateStatus(
+        id,
+        status,
+        reviewer,
+        reviewNote,
+        ...(approvedLibraryIds ? [{ approvedLibraryIds }] : [])
+      )
 
     if ("error" in result) {
       if (result.error === "not_found") return ctx.notFound()

@@ -328,9 +328,7 @@ function NetworkReachAbout({ result }: { result: AtlasNetworkReachResult }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h4 className="m-0 font-semibold text-(--t-ink-base)">
-        {t("aboutResult")}
-      </h4>
+      <h4 className="type-h4 m-0 text-(--t-ink-base)">{t("aboutResult")}</h4>
       <p>
         {t("residentsTotal", {
           count: networkResidentNumber(result.totalResidents, t("unknown")),
@@ -537,7 +535,7 @@ function NetworkReachControls({
         </div>
       ) : null}
       {result ? (
-        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[13px] font-medium">
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm font-medium">
           <input
             type="checkbox"
             className="size-4 accent-(--t-accent-primary)"

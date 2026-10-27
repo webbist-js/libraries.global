@@ -39,7 +39,7 @@ const PLACE_LEVEL_LABELS: Record<DrivePlaceLevel, string> = {
   area: "Area",
 }
 
-const heading = "m-0 text-[15px] font-semibold"
+const heading = "m-0 text-base font-semibold"
 
 /** "yyyy-MM-dd" for a date input's value, from an ISO stamp. */
 function toDayValue(iso: string): string {
@@ -94,7 +94,7 @@ function ProposerBlock({
 
   if (!applicant) {
     return (
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         Proposer details aren’t available.
       </p>
     )
@@ -102,7 +102,7 @@ function ProposerBlock({
 
   return (
     <>
-      <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+      <p className="m-0 text-base" style={{ color: T.ink.base }}>
         {applicant.username ? (
           <Link
             href={`/profile/${encodeURIComponent(applicant.username)}`}
@@ -132,7 +132,7 @@ function ProposerBlock({
           {applicant.recentAccepted.map((c, i) => (
             <li
               key={`${c.decidedAt}-${i}`}
-              className="flex items-center gap-2.5 px-3.5 py-2.5 text-[14px]"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
               style={
                 i > 0
                   ? { borderTop: `1px solid ${T.border.divider}` }
@@ -146,17 +146,14 @@ function ProposerBlock({
                 <span className="font-semibold">{c.type}</span>
                 <span style={{ color: T.ink.dim }}> · {c.summary}</span>
               </span>
-              <span
-                className="shrink-0 text-[13px]"
-                style={{ color: T.ink.dim }}
-              >
+              <span className="shrink-0 text-sm" style={{ color: T.ink.dim }}>
                 {formatDate(c.decidedAt)}
               </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           No accepted changes listed.
         </p>
       )}
@@ -235,7 +232,7 @@ function ChangeDatesForm({
         <div className="flex flex-col gap-1">
           <label
             htmlFor={opensId}
-            className="text-[14px] font-semibold"
+            className="text-sm font-semibold"
             style={{ color: T.ink.base }}
           >
             {tUi("opens")}
@@ -245,7 +242,7 @@ function ChangeDatesForm({
             type="date"
             value={opens}
             onChange={(e) => setOpens(e.target.value)}
-            className="rounded-[10px] border px-3 py-2 text-[14px]"
+            className="rounded-[10px] border px-3 py-2 text-sm"
             style={{
               borderColor: T.border.hi,
               background: T.bg.deep,
@@ -256,7 +253,7 @@ function ChangeDatesForm({
         <div className="flex flex-col gap-1">
           <label
             htmlFor={endsId}
-            className="text-[14px] font-semibold"
+            className="text-sm font-semibold"
             style={{ color: T.ink.base }}
           >
             {tUi("ends")}
@@ -266,7 +263,7 @@ function ChangeDatesForm({
             type="date"
             value={ends}
             onChange={(e) => setEnds(e.target.value)}
-            className="rounded-[10px] border px-3 py-2 text-[14px]"
+            className="rounded-[10px] border px-3 py-2 text-sm"
             style={{
               borderColor: T.border.hi,
               background: T.bg.deep,
@@ -278,7 +275,7 @@ function ChangeDatesForm({
           type="button"
           disabled={busy || !opens || !ends}
           onClick={() => void save()}
-          className="inline-flex items-center justify-center rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
           {busy ? tUi("saving") : "Save dates"}
@@ -287,7 +284,7 @@ function ChangeDatesForm({
       {errors ? (
         <ul
           role="alert"
-          className="m-0 flex list-none flex-col gap-1 p-0 text-[14px]"
+          className="m-0 flex list-none flex-col gap-1 p-0 text-sm"
           style={{ color: T.accent.danger }}
         >
           {errors.map((e, i) => (
@@ -297,7 +294,7 @@ function ChangeDatesForm({
       ) : null}
       <p
         aria-live="polite"
-        className="m-0 text-[14px]"
+        className="m-0 text-sm"
         style={{ color: T.accent.ok }}
       >
         {saved ? "Dates saved" : ""}
@@ -326,7 +323,7 @@ export function DriveProposalPanel({
 
   if (!proposal) {
     return (
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         This proposal’s drive could not be read.
       </p>
     )
@@ -346,7 +343,7 @@ export function DriveProposalPanel({
     <div className="flex flex-col gap-6">
       {proposal.discussions && (
         <section className="grid gap-2 rounded-xl border border-(--t-border-line) p-4">
-          <h3 className={heading}>Requested conversation feed</h3>
+          <h3 className={`type-h3 ${heading}`}>Requested conversation feed</h3>
           <p className="m-0 text-sm">
             {proposal.discussions.enabled
               ? "Enable conversations and link the following threads. Original authorship and moderation are retained."
@@ -372,14 +369,11 @@ export function DriveProposalPanel({
         </section>
       )}
       <div className="flex flex-col gap-2">
-        <h3
-          className="m-0 text-[18px]"
-          style={{ fontFamily: T.font.serif, color: T.ink.base }}
-        >
+        <h3 className="type-card-title m-0" style={{ color: T.ink.base }}>
           <DriveTitle title={drive.title} />
         </h3>
         <p
-          className="m-0 text-[15px] leading-[1.55]"
+          className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.base }}
         >
           {drive.summary}
@@ -396,27 +390,27 @@ export function DriveProposalPanel({
           {kindLook ? (
             <Badge label={kindLook.label} color="aurora" icon={kindLook.icon} />
           ) : null}
-          <span className="text-[13px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             Per {drive.unit}
           </span>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           {tUi("focus")}
         </h3>
-        <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+        <p className="m-0 text-base" style={{ color: T.ink.base }}>
           {focusSummary(drive.focus)}
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           Where
         </h3>
         <ul
-          className="m-0 flex list-none flex-col gap-1 p-0 text-[15px]"
+          className="m-0 flex list-none flex-col gap-1 p-0 text-base"
           style={{ color: T.ink.base }}
         >
           {[...whereList, ...detailLines].map((line) => (
@@ -426,16 +420,16 @@ export function DriveProposalPanel({
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           Counts
         </h3>
         {counts === null ? (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             Counts are unavailable right now.
           </p>
         ) : (
           <>
-            <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+            <p className="m-0 text-base" style={{ color: T.ink.base }}>
               {`${counts.total} in scope, ${counts.todo} to do`}
             </p>
             {counts.todo > 2000 ? (
@@ -457,11 +451,11 @@ export function DriveProposalPanel({
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           Dates
         </h3>
         <div className="flex flex-wrap items-center gap-2">
-          <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+          <p className="m-0 text-base" style={{ color: T.ink.base }}>
             {`Opens ${formatDate(drive.startsAt)} · Ends ${formatDate(drive.endsAt)}`}
           </p>
           {datesEdited ? (
@@ -473,18 +467,18 @@ export function DriveProposalPanel({
           ) : null}
         </div>
         {drive.goalPercent !== 100 ? (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             {`Goal ${drive.goalPercent}%`}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           How to help
         </h3>
         <ol
-          className="m-0 flex list-decimal flex-col gap-1 pl-5 text-[15px]"
+          className="m-0 flex list-decimal flex-col gap-1 pl-5 text-base"
           style={{ color: T.ink.base }}
         >
           {drive.steps.map((step, i) => (
@@ -494,10 +488,10 @@ export function DriveProposalPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           {tUi("where_to_look")}
         </h3>
-        <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+        <p className="m-0 text-base" style={{ color: T.ink.base }}>
           {drive.whereToLook.name}
         </p>
         {drive.whereToLook.url ? (
@@ -506,21 +500,21 @@ export function DriveProposalPanel({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${drive.whereToLook.name} (opens in a new tab)`}
-            className="text-[14px] underline underline-offset-2"
+            className="text-sm underline underline-offset-2"
             style={{ color: T.accent.primary, wordBreak: "break-all" }}
           >
             {drive.whereToLook.url}
           </a>
         ) : null}
         {drive.whereToLook.licenceNote ? (
-          <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             {drive.whereToLook.licenceNote}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
-        <h3 className={heading} style={{ color: T.ink.base }}>
+        <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           Proposed by
         </h3>
         <ProposerBlock applicant={applicant} />
@@ -542,7 +536,7 @@ export function DriveProposalPanel({
 
       {OPEN.has(status) ? (
         <div className="flex flex-col gap-2">
-          <h3 className={heading} style={{ color: T.ink.base }}>
+          <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
             Change dates
           </h3>
           <ChangeDatesForm
@@ -559,7 +553,7 @@ export function DriveProposalPanel({
           icon="mdi:check-circle-outline"
           title={`Scheduled as a drive: ${plainDriveTitle(created.title)}`}
         >
-          <p className="m-0 text-[14px]">
+          <p className="m-0 text-sm">
             <Link
               href={driveHref(created.slug)}
               className="font-semibold underline underline-offset-2"
@@ -568,7 +562,7 @@ export function DriveProposalPanel({
               Open the drive →
             </Link>
           </p>
-          <p className="m-0 text-[14px]">
+          <p className="m-0 text-sm">
             The editorial board pins and features drives.
           </p>
         </Notice>

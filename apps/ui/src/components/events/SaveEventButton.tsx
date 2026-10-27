@@ -129,7 +129,7 @@ export function SaveEventButton({
         aria-busy={saving || readState === "loading"}
         aria-pressed={saved}
         title={saved ? t("remove") : t("save")}
-        className={`inline-flex items-center gap-1.5 rounded-full border transition-all duration-150 ${size === "sm" ? "px-2.5 py-1 text-[10px]" : "px-3.5 py-2 text-xs"}`}
+        className={`inline-flex items-center gap-1.5 rounded-full border transition-all duration-150 ${size === "sm" ? "px-2.5 py-1 text-xs" : "px-3.5 py-2 text-xs"}`}
         style={{
           fontFamily: T.font.mono,
           letterSpacing: ".1em",

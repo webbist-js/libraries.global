@@ -55,7 +55,7 @@ export function ProfileProgress({
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
         <h2
           id="profile-progress-title"
-          className="m-0 text-[17px] font-bold"
+          className="type-panel-title m-0"
           style={{ color: T.ink.base }}
         >
           {title}
@@ -63,7 +63,7 @@ export function ProfileProgress({
         <p aria-hidden="true" className="m-0 whitespace-nowrap">
           <span
             style={{
-              fontFamily: T.font.serif,
+              fontFamily: T.font.sans,
               fontSize: 32,
               fontWeight: 500,
               lineHeight: 1,
@@ -72,7 +72,7 @@ export function ProfileProgress({
           >
             {doneCount}
           </span>
-          <span className="text-[15px]" style={{ color: T.ink.dim }}>
+          <span className="text-base" style={{ color: T.ink.dim }}>
             {" "}
             of {total}
           </span>
@@ -100,7 +100,7 @@ export function ProfileProgress({
 
       <p
         aria-live="polite"
-        className="mt-3.5 mb-1 text-[15px] leading-[1.5]"
+        className="mt-3.5 mb-1 text-base leading-[1.6]"
         style={{
           color: requiredLeft === 0 ? T.accent.ok : T.ink.dim,
           fontWeight: requiredLeft === 0 ? 600 : 400,
@@ -134,7 +134,7 @@ export function ProfileProgress({
               </span>
               <span className="flex min-w-0 flex-col">
                 <span
-                  className="text-[15px] leading-[1.3] font-semibold group-hover:underline"
+                  className="text-base leading-[1.3] font-semibold group-hover:underline"
                   style={{ color: T.ink.base }}
                 >
                   {step.label}
@@ -149,7 +149,7 @@ export function ProfileProgress({
                   ) : null}
                 </span>
                 <span
-                  className="mt-0.5 truncate text-[14px]"
+                  className="mt-0.5 truncate text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   <span className="sr-only">
@@ -165,15 +165,15 @@ export function ProfileProgress({
 
       {links?.length ? (
         <ul
-          className="m-0 mt-1 list-none border-t p-0 pt-2"
+          className="m-0 mt-3 list-none divide-y divide-(--t-border-line) border-t p-0"
           style={{ borderColor: T.border.divider }}
         >
           {links.map((link) => (
             <li key={link.id}>
               <a
                 href={`#${link.id}`}
-                className="group flex items-center gap-3.5 py-2 text-[15px] font-semibold no-underline"
-                style={{ color: T.ink.base }}
+                className="group flex min-h-12 items-center gap-3.5 py-3 text-base font-semibold underline underline-offset-4"
+                style={{ color: T.accent.primary }}
               >
                 <span
                   aria-hidden="true"

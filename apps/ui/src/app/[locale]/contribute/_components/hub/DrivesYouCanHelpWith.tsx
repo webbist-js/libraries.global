@@ -36,7 +36,7 @@ function HubDriveRow({ view }: { readonly view: DriveView }) {
         </div>
         <h3
           id={titleId}
-          className="m-0 font-serif text-[23px] leading-tight font-medium group-hover:text-(--t-accent-primary) sm:text-[26px]"
+          className="type-h3 m-0 group-hover:text-(--t-accent-primary)"
         >
           <DriveTitle title={drive.title} />
         </h3>
@@ -110,17 +110,14 @@ export function DrivesYouCanHelpWith({
         <div className="flex flex-wrap items-center justify-between gap-4 px-6 pt-6 pb-4 sm:px-8 sm:pt-8">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
-              <h2
-                id="hub-drives"
-                className="m-0 font-serif text-[30px] leading-tight font-medium text-(--t-ink-base) sm:text-[32px]"
-              >
+              <h2 id="hub-drives" className="type-h2 m-0 text-(--t-ink-base)">
                 Drives you can help with
               </h2>
               <span className="rounded-full bg-(--t-bg-muted) px-2.5 py-0.5 text-sm font-bold text-(--t-ink-dim)">
                 {views.length}
               </span>
             </div>
-            <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-2 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
               Choose a place and a task. Start with a few changes you can
               source.
             </p>

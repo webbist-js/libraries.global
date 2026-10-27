@@ -42,7 +42,7 @@ export function Notice({
         className="mt-0.5 shrink-0"
         style={{ color: fg }}
       />
-      <div className="flex min-w-0 flex-col gap-1 text-[15px] leading-[1.55]">
+      <div className="flex min-w-0 flex-col gap-1 text-base leading-[1.55]">
         <p className="m-0 font-semibold" style={{ color: fg }}>
           {title}
         </p>

@@ -61,7 +61,7 @@ export async function generateMetadata({
 
   const title = article.title ?? tUi("knowledge")
 
-  return buildMetadata({
+  const metadata = buildMetadata({
     seo: article.seo,
     alternateLocales: [locale],
     title: `${title} / ${tUi("knowledge")}`,
@@ -82,6 +82,22 @@ export async function generateMetadata({
     // A default-locale stand-in for a missing translation isn't indexed.
     robots: res?.localeFallback || contentLanguage ? "noindex-follow" : "index",
   })
+
+  return {
+    ...metadata,
+    alternates: {
+      ...metadata.alternates,
+      types: {
+        "text/markdown":
+          localizedPath(
+            docsArticlePath(article, toDocsSections(sectionsRes.data)),
+            locale
+          ) +
+          ".md" +
+          contentLanguageSuffix(contentLanguage),
+      },
+    },
+  }
 }
 
 export default async function DocsArticleRoute({

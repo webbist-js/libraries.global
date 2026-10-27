@@ -78,7 +78,7 @@ export function TrafficPreview({
                   key={range}
                   href={rangeHref(range)}
                   aria-current={active ? "page" : undefined}
-                  className="inline-flex min-h-11 items-center rounded-full px-4 text-[14px] font-semibold no-underline"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold no-underline"
                   style={{
                     background: active ? T.bg.deep : undefined,
                     color: active ? T.accent.primary : T.ink.dim,
@@ -91,7 +91,7 @@ export function TrafficPreview({
           </nav>
           {summary.sample ? (
             <p
-              className="m-0 flex items-center gap-1.5 text-[13.5px]"
+              className="m-0 flex items-center gap-1.5 text-sm"
               style={{ color: T.ink.dim }}
             >
               <Icon aria-hidden="true" icon="mdi:flask-outline" width={16} />
@@ -138,10 +138,8 @@ export function TrafficPreview({
         >
           <Heading
             id={ghost ? undefined : "traffic-referrers-heading"}
-            className="m-0 text-[20px]"
+            className="type-panel-title m-0"
             style={{
-              fontFamily: T.font.serif,
-              fontWeight: 500,
               color: ghost ? T.ink.dim : T.ink.base,
             }}
           >
@@ -151,7 +149,7 @@ export function TrafficPreview({
             <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0">
               {summary.referrers.map((row) => (
                 <li key={row.label} className="flex flex-col gap-1">
-                  <span className="flex justify-between text-[14px]">
+                  <span className="flex justify-between text-sm">
                     <span
                       className="font-semibold"
                       style={{ color: ghost ? T.ink.dim : T.ink.base }}
@@ -180,7 +178,7 @@ export function TrafficPreview({
               ))}
             </ul>
           ) : (
-            <p className="m-0 mt-4 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-4 text-sm" style={{ color: T.ink.dim }}>
               No referrers recorded in the last {period}.
             </p>
           )}
@@ -191,15 +189,11 @@ export function TrafficPreview({
             style={panel}
             aria-labelledby="traffic-searches-heading"
           >
-            <h2
-              id="traffic-searches-heading"
-              className="m-0 text-[20px]"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
+            <h2 id="traffic-searches-heading" className="type-panel-title m-0">
               Searches that found you
             </h2>
             {summary.searches.length ? (
-              <table className="mt-4 w-full text-left text-[14px]">
+              <table className="mt-4 w-full text-left text-sm">
                 <caption className="sr-only">
                   Searches that led to your page in the last {period}
                 </caption>
@@ -231,7 +225,7 @@ export function TrafficPreview({
                 </tbody>
               </table>
             ) : (
-              <p className="m-0 mt-4 text-[14px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 mt-4 text-sm" style={{ color: T.ink.dim }}>
                 No searches recorded in the last {period}. Searches appear once
                 people find your page through the site’s search.
               </p>

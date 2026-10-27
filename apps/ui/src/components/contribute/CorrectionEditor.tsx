@@ -137,7 +137,7 @@ function SuggestOption({
   return (
     <div className="flex flex-col gap-2">
       <label
-        className="text-[15px] font-semibold"
+        className="text-base font-semibold"
         htmlFor={id}
         style={{ color: T.ink.base }}
       >
@@ -150,7 +150,7 @@ function SuggestOption({
       <div className="flex gap-2">
         <input
           aria-describedby={message ? `${id}-message` : undefined}
-          className="w-full rounded-[14px] border border-(--t-border-hi) bg-white px-4 py-3 text-[16px] outline-none focus:border-(--t-accent-primary)"
+          className="w-full rounded-[14px] border border-(--t-border-hi) bg-white px-4 py-3 text-base outline-none focus:border-(--t-accent-primary)"
           id={id}
           maxLength={80}
           onChange={(e) => {
@@ -172,7 +172,7 @@ function SuggestOption({
           value={draft}
         />
         <button
-          className="inline-flex h-[50px] shrink-0 items-center rounded-full border bg-white px-5 text-[15px] font-semibold hover:bg-(--t-bg-surface)"
+          className="inline-flex h-[50px] shrink-0 items-center rounded-full border bg-white px-5 text-base font-semibold hover:bg-(--t-bg-surface)"
           onClick={add}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
           type="button"
@@ -184,7 +184,7 @@ function SuggestOption({
         <p
           id={`${id}-message`}
           aria-live="polite"
-          className="m-0 text-[14px]"
+          className="m-0 text-sm"
           style={{ color: T.ink.dim }}
         >
           {message}
@@ -195,7 +195,7 @@ function SuggestOption({
           {suggested.map((name) => (
             <li
               key={name}
-              className="inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-[14px] font-semibold"
+              className="inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-sm font-semibold"
               style={{ background: T.accent.chip, color: T.accent.primary }}
             >
               New: {name}
@@ -366,7 +366,7 @@ export function CorrectionEditor({
     case "hours":
       body = (
         <div className="flex flex-col gap-3">
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-base" style={{ color: T.ink.dim }}>
             {current.openingTimes
               ? "These are the hours on the record now. Change the days that are wrong."
               : "There are no hours on the record yet. Switch on each open day and set its times."}

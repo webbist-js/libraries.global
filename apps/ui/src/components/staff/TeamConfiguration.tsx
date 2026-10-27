@@ -108,7 +108,7 @@ export function TeamConfiguration({
           aria-busy={pending}
           onSubmit={saveTeam}
         >
-          <label className="grid gap-2 text-[15px] font-semibold">
+          <label className="grid gap-2 text-base font-semibold">
             Team name
             <input
               className={STAFF_FIELD}
@@ -119,7 +119,7 @@ export function TeamConfiguration({
               onChange={(e) => setName(e.target.value)}
             />
           </label>
-          <p className="rounded-2xl bg-(--t-bg-surface) p-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <p className="rounded-2xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed text-(--t-ink-dim)">
             Choose the Libraries your Team covers. Adding a Library does not
             verify staff access. Removing one ends the staff access this Team
             assigned there.
@@ -127,12 +127,12 @@ export function TeamConfiguration({
           <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
             {libraries.map((library) => (
               <li
-                className="flex items-center justify-between gap-3 py-3 text-[14px]"
+                className="flex items-center justify-between gap-3 py-3 text-sm"
                 key={library.documentId}
               >
                 <span>{library.name}</span>
                 <button
-                  className="min-h-11 shrink-0 rounded-full border border-(--t-border-line) px-4 py-2 text-[14px] font-semibold disabled:opacity-50"
+                  className="min-h-11 shrink-0 rounded-full border border-(--t-border-line) px-4 py-2 text-sm font-semibold disabled:opacity-50"
                   type="button"
                   disabled={pending}
                   onClick={() => removeLibrary(library.documentId)}
@@ -143,7 +143,7 @@ export function TeamConfiguration({
               </li>
             ))}
           </ul>
-          <label className="grid gap-2 text-[15px] font-semibold">
+          <label className="grid gap-2 text-base font-semibold">
             Find a Library
             <input
               className={STAFF_FIELD}
@@ -166,7 +166,7 @@ export function TeamConfiguration({
                 .map((library) => (
                   <li key={library.documentId}>
                     <button
-                      className="min-h-11 shrink-0 rounded-full border border-(--t-border-line) px-4 py-2 text-[14px] font-semibold disabled:opacity-50"
+                      className="min-h-11 shrink-0 rounded-full border border-(--t-border-line) px-4 py-2 text-sm font-semibold disabled:opacity-50"
                       type="button"
                       disabled={pending || libraries.length >= 200}
                       onClick={() => {
@@ -184,7 +184,7 @@ export function TeamConfiguration({
           {error ? (
             <p
               role="alert"
-              className="rounded-2xl bg-red-50 p-4 text-[14px] text-red-900"
+              className="rounded-2xl bg-red-50 p-4 text-sm text-red-900"
             >
               {error}
             </p>

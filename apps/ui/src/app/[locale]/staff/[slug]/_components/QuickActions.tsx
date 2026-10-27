@@ -25,7 +25,7 @@ export function QuickActions({
     >
       <h2
         id="quick-actions-heading"
-        className="m-0 text-[18px] font-semibold"
+        className="type-panel-title m-0"
         style={{ color: T.ink.base }}
       >
         Quick actions
@@ -49,11 +49,11 @@ export function QuickActions({
               >
                 <Icon icon={action.icon} width={20} height={20} />
               </span>
-              <span className="flex-1 text-[15px] font-semibold">
+              <span className="flex-1 text-base font-semibold">
                 {action.label}
                 {action.tag ? (
                   <span
-                    className="ml-2 rounded-full px-2 py-0.5 text-[12px] font-semibold"
+                    className="ml-2 rounded-full px-2 py-0.5 text-xs font-semibold"
                     style={{
                       background: TYPE_TINT.public.bg,
                       color: TYPE_TINT.public.fg,

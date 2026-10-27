@@ -147,7 +147,7 @@ export function TypeBadge({ group }: { readonly group: TypeGroupKey }) {
 
   return (
     <span
-      className="inline-flex h-[26px] items-center gap-1.5 rounded-full px-2.5 text-[13px] font-bold whitespace-nowrap"
+      className="inline-flex h-[26px] items-center gap-1.5 rounded-full px-2.5 text-sm font-bold whitespace-nowrap"
       style={{ background: tint.bg, color: tint.fg }}
     >
       <PinGlyph group={group} size={10} />
@@ -165,7 +165,7 @@ export function ProChip({
 }) {
   return (
     <span
-      className="inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 text-[12px] font-bold whitespace-nowrap text-white"
+      className="inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 text-xs font-bold whitespace-nowrap text-white"
       style={
         soft
           ? { background: T.accent.chip, color: T.accent.primary }
@@ -185,7 +185,7 @@ export function MutedChip({
 }) {
   return (
     <span
-      className="inline-flex h-[22px] shrink-0 items-center rounded-full px-2 text-[12px] font-bold whitespace-nowrap"
+      className="inline-flex h-[22px] shrink-0 items-center rounded-full px-2 text-xs font-bold whitespace-nowrap"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       {children}
@@ -224,7 +224,7 @@ export function Chip({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-[14px] font-semibold whitespace-nowrap"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold whitespace-nowrap"
       style={style}
     >
       {on && !preserveGlyph ? (
@@ -335,7 +335,7 @@ export function Segmented<V extends string>({
             role="radio"
             aria-checked={on}
             onClick={() => onChange(o.value)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-[14px] font-semibold whitespace-nowrap"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold whitespace-nowrap"
             style={
               on
                 ? {
@@ -372,7 +372,7 @@ export function RampLegend({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-[5px]">
-      <span className="text-[13px] font-bold whitespace-nowrap">{title}</span>
+      <span className="text-sm font-bold whitespace-nowrap">{title}</span>
       <span
         className="flex h-2.5 overflow-hidden rounded-[3px]"
         style={{
@@ -391,17 +391,14 @@ export function RampLegend({
           : null}
       </span>
       <span
-        className="flex justify-between text-[12px]"
+        className="flex justify-between text-xs"
         style={{ width, color: T.ink.dim }}
       >
         {ticks.map((t, i) => (
           <span key={`${t}-${i}`}>{t}</span>
         ))}
       </span>
-      <span
-        className="text-[12px] whitespace-nowrap"
-        style={{ color: T.ink.dim }}
-      >
+      <span className="text-xs whitespace-nowrap" style={{ color: T.ink.dim }}>
         {source}
       </span>
     </div>
@@ -419,8 +416,8 @@ export function KeyLegend({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-[5px]">
-      <span className="text-[13px] font-bold whitespace-nowrap">{title}</span>
-      <span className="flex flex-wrap gap-2.5 text-[13px]">
+      <span className="text-sm font-bold whitespace-nowrap">{title}</span>
+      <span className="flex flex-wrap gap-2.5 text-sm">
         {items.map((i) => (
           <span
             key={i.key}
@@ -431,7 +428,7 @@ export function KeyLegend({
           </span>
         ))}
       </span>
-      <span className="max-w-[320px] text-[12px]" style={{ color: T.ink.dim }}>
+      <span className="max-w-[320px] text-xs" style={{ color: T.ink.dim }}>
         {source}
       </span>
     </div>

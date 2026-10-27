@@ -22,7 +22,7 @@ type Billing = "monthly" | "yearly"
 const MEMBERSHIP: readonly PlanCardKey[] = ["supporter", "pro"]
 
 const PILL =
-  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-[15px] font-semibold no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-base font-semibold no-underline focus-visible:outline-2 focus-visible:outline-offset-2"
 
 function Price({
   plan,
@@ -46,11 +46,11 @@ function Price({
           <>
             <span
               className="text-[48px] leading-none"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+              style={{ fontFamily: T.font.sans, fontWeight: 500 }}
             >
               {parts.amount}
             </span>
-            <span className="text-[15px]" style={{ color: T.ink.dim }}>
+            <span className="text-base" style={{ color: T.ink.dim }}>
               / {m(parts.period === "month" ? "copy.month" : "copy.year")}
               {parts.suffix}
             </span>
@@ -58,14 +58,14 @@ function Price({
         ) : (
           <span
             className="text-[32px] leading-none"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+            style={{ fontFamily: T.font.sans, fontWeight: 500 }}
           >
             {shown}
           </span>
         )}
       </p>
       {otherParts || note ? (
-        <p className="m-0 mt-2 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
           {otherParts
             ? m("copy.otherPrice", {
                 amount: otherParts.amount,
@@ -154,20 +154,12 @@ function PlanColumn({
     >
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-2">
-          <h3
-            className="m-0 text-[30px] leading-tight"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            {plan.name}
-          </h3>
+          <h3 className="type-h3 m-0">{plan.name}</h3>
           {current ? <CurrentPlanBadge /> : null}
         </div>
         <Price billing={billing} plan={plan} />
       </div>
-      <p
-        className="m-0 text-[14.5px] leading-[1.5]"
-        style={{ color: T.ink.base }}
-      >
+      <p className="m-0 text-sm leading-[1.5]" style={{ color: T.ink.base }}>
         {plan.who}
       </p>
       <Cta current={current} plan={plan} purchase={purchase} />
@@ -230,7 +222,7 @@ export function MembershipPlans({
                 label: m("copy.yearly"),
                 badge: savingMonths ? (
                   <span
-                    className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
+                    className="rounded-full px-2 py-0.5 text-xs font-semibold"
                     style={{
                       background: TYPE_TINT.public.bg,
                       color: TYPE_TINT.public.fg,
@@ -247,7 +239,7 @@ export function MembershipPlans({
         sub={t("lead")}
         title={tUi("choose_your_membership")}
       />
-      <p className="m-0 mb-5 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 mb-5 text-sm leading-relaxed text-(--t-ink-dim)">
         {t("personalBilling")}
         {currentPlan !== "pro" && currentPlan !== "team" ? (
           <>
@@ -271,10 +263,7 @@ export function MembershipPlans({
             plan={plan}
             purchase={
               checkoutUser?.hasPaidMembership ? (
-                <GlobalLink
-                  href="/profile/settings#membership"
-                  className={PILL}
-                >
+                <GlobalLink href="/profile/membership" className={PILL}>
                   {m("copy.manage")}
                 </GlobalLink>
               ) : billingAvailable &&
@@ -293,7 +282,7 @@ export function MembershipPlans({
         <TeamPlan current={currentPlan === "team"} teams={teams} />
       </ul>
       <p
-        className="m-0 mt-4 flex items-start gap-2 text-[13.5px] leading-[1.6]"
+        className="m-0 mt-4 flex items-start gap-2 text-sm leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
         <Icon

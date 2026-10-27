@@ -15,7 +15,6 @@ import {
 import { createPortal } from "react-dom"
 
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover"
-import { T } from "@/lib/design-tokens"
 
 import { Icon, PANEL_STYLE } from "./atlas-ui"
 import type { LayerId } from "./atlas.logic"
@@ -175,7 +174,7 @@ export function AtlasInspectTools({
           className="z-[90] flex max-h-[min(72dvh,640px)] w-[min(400px,calc(100vw-32px))] flex-col overflow-clip rounded-2xl border-(--t-border-hi) bg-white p-0 text-sm text-(--t-ink-base) shadow-lg"
         >
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-(--t-border-line) px-5 py-2.5">
-            <h3 className="m-0 text-base font-semibold">{label}</h3>
+            <h3 className="type-h3 m-0">{label}</h3>
             <button
               ref={closeButton}
               type="button"
@@ -188,7 +187,7 @@ export function AtlasInspectTools({
               <Icon name="x" size={16} />
             </button>
           </div>
-          <div className="atlas-tool-content flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain p-5 text-[13px] leading-relaxed text-(--t-ink-dim) [&_button]:min-h-11 [&_p]:m-0">
+          <div className="atlas-tool-content flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain p-5 text-sm leading-relaxed text-(--t-ink-dim) [&_button]:min-h-11 [&_p]:m-0">
             {tool === "about" ? about : downloads}
           </div>
         </PopoverContent>
@@ -213,7 +212,7 @@ export function AtlasInspectSettings({
       className="flex flex-col gap-4 border-t border-(--t-border-line) pt-5"
     >
       <div>
-        <h3 className="m-0 text-sm font-semibold">{t("settings")}</h3>
+        <h3 className="type-h3 m-0">{t("settings")}</h3>
         <span
           className="mt-1 block text-xs leading-relaxed text-(--t-ink-dim)"
           title={summary}
@@ -287,14 +286,14 @@ export function AtlasInspect({
               aria-label={t("open", { name: entry.title })}
               title={`${entry.title} · ${entry.detail}${entry.metric ? ` · ${entry.metric}` : ""}`}
               onClick={() => onSelect(entry.id)}
-              className="flex min-h-11 w-12 flex-col items-center justify-center overflow-hidden rounded-xl px-1 text-[11px] font-semibold aria-current:bg-(--t-accent-chip) aria-current:text-(--t-accent-primary)"
+              className="flex min-h-11 w-12 flex-col items-center justify-center overflow-hidden rounded-xl px-1 text-xs font-semibold aria-current:bg-(--t-accent-chip) aria-current:text-(--t-accent-primary)"
               aria-current={selected.id === entry.id ? "true" : undefined}
             >
               <span className="max-w-full truncate">
                 {entry.metric ?? entry.label}
               </span>
               {entry.metric ? (
-                <span className="max-w-full truncate text-[9px] font-normal">
+                <span className="max-w-full truncate text-xs font-normal">
                   {entry.label}
                 </span>
               ) : null}
@@ -374,7 +373,7 @@ export function AtlasInspect({
               ))}
             </div>
           ) : (
-            <span className="min-w-0 flex-1 truncate px-2 text-[13px] font-semibold">
+            <span className="min-w-0 flex-1 truncate px-2 text-sm font-semibold">
               {selected.label}
             </span>
           )}
@@ -391,16 +390,12 @@ export function AtlasInspect({
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-(--t-border-line) px-5 pt-5 pb-4">
           <div className="min-w-0">
             <p
-              className="m-0 truncate text-[11px] leading-relaxed text-(--t-ink-dim)"
+              className="m-0 truncate text-xs leading-relaxed text-(--t-ink-dim)"
               title={selected.detail}
             >
               {selected.detail}
             </p>
-            <h2
-              tabIndex={-1}
-              className="m-0 mt-1 text-[28px] leading-tight text-(--t-ink-base)"
-              style={{ fontFamily: T.font.serif }}
-            >
+            <h2 tabIndex={-1} className="type-h2 m-0 mt-1 text-(--t-ink-base)">
               {selected.title}
             </h2>
           </div>

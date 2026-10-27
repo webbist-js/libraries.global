@@ -19,22 +19,43 @@
     }
   },
   "attributes": {
-    "billingAccountId": { "type": "string", "unique": true, "private": true },
+    "billingAccountId": {
+      "type": "string",
+      "unique": true,
+      "private": true
+    },
     "billingMode": {
       "type": "enumeration",
       "enum": ["sandbox", "live"],
       "private": true
     },
-    "billingRevision": { "type": "integer", "default": 0, "private": true },
-    "billingMembership": { "type": "json", "private": true },
+    "billingRevision": {
+      "type": "integer",
+      "default": 0,
+      "private": true
+    },
+    "billingMembership": {
+      "type": "json",
+      "private": true
+    },
     "billingSuspended": {
       "type": "boolean",
       "default": false,
       "private": true
     },
-    "billingArchived": { "type": "boolean", "default": false, "private": true },
-    "pendingSeats": { "type": "integer", "min": 1 },
-    "publicServiceApproved": { "type": "boolean", "default": false },
+    "billingArchived": {
+      "type": "boolean",
+      "default": false,
+      "private": true
+    },
+    "pendingSeats": {
+      "type": "integer",
+      "min": 1
+    },
+    "publicServiceApproved": {
+      "type": "boolean",
+      "default": false
+    },
     "name": {
       "type": "string",
       "required": true
@@ -75,6 +96,16 @@
     },
     "createdByAdmin": {
       "type": "string",
+      "private": true
+    },
+    "primaryNetwork": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library-network.library-network"
+    },
+    "widgetBranding": {
+      "type": "boolean",
+      "default": false,
       "private": true
     }
   }

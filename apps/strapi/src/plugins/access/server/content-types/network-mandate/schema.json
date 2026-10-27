@@ -1,0 +1,107 @@
+{
+  "kind": "collectionType",
+  "collectionName": "access_network_mandates",
+  "info": {
+    "singularName": "network-mandate",
+    "pluralName": "network-mandates",
+    "displayName": "Network management mandate"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "network": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::library-network.library-network"
+    },
+    "baUserId": {
+      "type": "string",
+      "private": true,
+      "required": true
+    },
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.team",
+      "private": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "approved",
+        "revoked"
+      ],
+      "default": "approved"
+    },
+    "approvedLibraryIds": {
+      "type": "json",
+      "private": true
+    },
+    "membershipRevision": {
+      "type": "string",
+      "private": true
+    },
+    "submissionDocumentId": {
+      "type": "string",
+      "private": true
+    },
+    "reviewedBy": {
+      "type": "string",
+      "private": true
+    },
+    "reviewedAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "revokedAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "revocationReason": {
+      "type": "text",
+      "private": true
+    },
+    "version": {
+      "type": "integer",
+      "default": 1
+    },
+    "fulfilment": {
+      "type": "json",
+      "private": true
+    },
+    "nextAttemptAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "lastReconciledAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "sourceLibraryIds": {
+      "type": "json",
+      "private": true
+    },
+    "staffRole": {
+      "type": "enumeration",
+      "enum": [
+        "editor",
+        "owner"
+      ],
+      "default": "editor",
+      "private": true
+    },
+    "ownerLibraryIds": {
+      "type": "json",
+      "private": true
+    }
+  }
+}

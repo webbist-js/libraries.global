@@ -32,7 +32,7 @@ const triggerStyle: React.CSSProperties = {
   border: `1px solid ${T.border.line}`,
   background: T.bg.deep,
   color: T.ink.base,
-  fontSize: "15px",
+  fontSize: "var(--type-body-size)",
   fontFamily: T.font.sans,
   boxSizing: "border-box",
   cursor: "pointer",
@@ -153,7 +153,7 @@ export function TimezoneCombobox({
               borderBottom: `1px solid ${T.border.line}`,
               background: "transparent",
               color: T.ink.base,
-              fontSize: "15px",
+              fontSize: "var(--type-body-size)",
               fontFamily: T.font.sans,
               outline: "none",
               boxSizing: "border-box",
@@ -165,7 +165,7 @@ export function TimezoneCombobox({
                 style={{
                   padding: "12px 14px",
                   color: T.ink.faint,
-                  fontSize: "13px",
+                  fontSize: "var(--type-body-small-size)",
                 }}
               >
                 {tUi("no_results")}{" "}
@@ -188,7 +188,7 @@ export function TimezoneCombobox({
                     tz === value ? "var(--t-accent-chip)" : "transparent",
                   border: "none",
                   color: tz === value ? T.accent.primaryHover : T.ink.base,
-                  fontSize: "14px",
+                  fontSize: "var(--type-body-small-size)",
                   fontFamily: T.font.sans,
                   fontWeight: tz === value ? 600 : 400,
                   cursor: "pointer",
@@ -204,7 +204,7 @@ export function TimezoneCombobox({
                 style={{
                   padding: "8px 14px",
                   color: T.ink.low,
-                  fontSize: "13px",
+                  fontSize: "var(--type-body-small-size)",
                 }}
               >
                 {filtered.length - 100} more — refine your search

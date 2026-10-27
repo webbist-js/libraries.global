@@ -92,7 +92,7 @@ export function LibraryFollowButton({
           background: `rgba(255,255,255,.07)`,
           color: "rgba(255,255,255,.40)",
           fontFamily: T.font.mono,
-          fontSize: "10px",
+          fontSize: "var(--type-caption-size)",
           letterSpacing: ".1em",
           textTransform: "uppercase",
           textDecoration: "none",

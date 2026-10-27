@@ -156,7 +156,7 @@ export function LibraryFeaturedContribution({
           {task.title} <span aria-hidden="true">→</span>
         </span>
         <span
-          className="mt-1 block text-[13px] leading-relaxed font-normal"
+          className="mt-1 block text-sm leading-relaxed font-normal"
           style={{ color: T.ink.dim }}
         >
           {task.description}
@@ -224,8 +224,7 @@ export function LibraryFeaturedContribution({
                 </p>
                 <h2
                   id="contribute-heading"
-                  className="m-0 max-w-[24ch] text-[clamp(26px,2.6vw,32px)] leading-[1.12] tracking-[-.015em] text-balance"
-                  style={{ fontFamily: T.font.serif }}
+                  className="type-h2 m-0 max-w-[24ch] text-balance"
                 >
                   {ask.title}
                 </h2>
@@ -251,9 +250,7 @@ export function LibraryFeaturedContribution({
               </div>
               {tasks.length ? (
                 <div>
-                  <h3 className="m-0 mb-3 text-sm font-bold">
-                    {t("nextTasks")}
-                  </h3>
+                  <h3 className="type-h3 m-0 mb-3">{t("nextTasks")}</h3>
                   <ul className="m-0 grid list-none gap-2 p-0">
                     {tasks.slice(0, 3).map(renderTask)}
                   </ul>
@@ -273,7 +270,7 @@ export function LibraryFeaturedContribution({
                 className="border-t pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6"
                 style={{ borderColor: T.border.line }}
               >
-                <h3 className="m-0 text-sm font-bold">{t("whatNext")}</h3>
+                <h3 className="type-h3 m-0">{t("whatNext")}</h3>
                 <ol
                   className="m-0 mt-3 grid list-none gap-3 p-0 text-sm leading-relaxed"
                   style={{ color: T.ink.dim }}

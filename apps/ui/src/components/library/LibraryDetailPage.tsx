@@ -28,6 +28,7 @@ import { LibraryFeaturedContribution } from "@/components/library/LibraryFeature
 import type { TranslateLocale } from "@/components/library/LibraryHelpPanel"
 import { LibraryHero } from "@/components/library/LibraryHero"
 import { LibraryMissingDetails } from "@/components/library/LibraryMissingDetails"
+import { LibraryNetworks } from "@/components/library/LibraryNetworks"
 import { LibraryNoticeBanners } from "@/components/library/LibraryNoticeBanners"
 import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"
 import {
@@ -421,6 +422,10 @@ export function LibraryDetailPage({
                   stats={historyStats}
                   datasets={datasets}
                   reuseUrl={publicCanonicalUrl(canonicalUrl ?? path)}
+                />
+                <LibraryNetworks
+                  libraryId={library.documentId}
+                  networks={library.networks}
                 />
                 <LibraryCommunity
                   id={library.documentId}

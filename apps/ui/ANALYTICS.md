@@ -40,7 +40,7 @@ Async actions capture consent and route at request start. Only a confirmed succe
 
 Atlas typing/autocomplete, passive camera movements, automatic view fallbacks and restored correction drafts are not actions. No Atlas share affordance currently exists. Registration, calendar, X and download events are handoffs, not proof that the external task completed. Search-result buckets are `zero`, `one`, `two_to_ten`, `more_than_ten`; network failures are not zero-result searches.
 
-## Emission and GTM migration
+## Emission and GTM ownership
 
 Use `pushAnalyticsEvent` for immediate explicit actions, `captureAnalyticsEvent` before async operations and `analyticsAttributes` for selected server-rendered links/buttons or search forms. Add event names/fields and fixed values to `src/lib/analytics-events.ts` before using them; do not add generic click, form or URL extraction. `prepare` is a controller method used by the async helper.
 

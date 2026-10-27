@@ -141,7 +141,7 @@ export function FindFilterChips({
       {chips.map((chip) => (
         <span
           key={chip.label}
-          className="flex items-center gap-2 rounded-full py-2 pr-2 pl-3.5 text-[14px] font-semibold"
+          className="flex items-center gap-2 rounded-full py-2 pr-2 pl-3.5 text-sm font-semibold"
           style={{
             background: T.accent.chip,
             color: T.accent.primaryHover,
@@ -152,7 +152,7 @@ export function FindFilterChips({
             type="button"
             aria-label={`Remove filter: ${chip.label}`}
             onClick={chip.onRemove}
-            className="flex size-5 cursor-pointer items-center justify-center rounded-full border-0 text-[13px]"
+            className="flex size-5 cursor-pointer items-center justify-center rounded-full border-0 text-sm"
             style={{ background: "#fff", color: T.ink.dim }}
           >
             ×
@@ -162,7 +162,7 @@ export function FindFilterChips({
       <button
         type="button"
         onClick={onClearAll}
-        className="cursor-pointer border-0 bg-transparent px-1 text-[14px] font-semibold underline"
+        className="cursor-pointer border-0 bg-transparent px-1 text-sm font-semibold underline"
         style={{ color: T.ink.dim, textUnderlineOffset: 3 }}
       >
         Clear all
@@ -234,7 +234,7 @@ export function FindResultsControls({
 
       <p
         aria-live="polite"
-        className="m-0 flex-1 text-[15px] font-semibold"
+        className="m-0 flex-1 text-base font-semibold"
         style={{ color: T.ink.dim }}
       >
         {loading
@@ -244,14 +244,14 @@ export function FindResultsControls({
             : `${total.toLocaleString("en-GB")} ${total === 1 ? "library" : "libraries"}`}
       </p>
 
-      <label className="flex items-center gap-2 text-[15px] font-semibold">
+      <label className="flex items-center gap-2 text-base font-semibold">
         <span className="sr-only">Sort results</span>
         <select
           value={state.sort}
           onChange={(e) =>
             onChange({ sort: e.target.value as SortKey, page: 0 })
           }
-          className="cursor-pointer rounded-[10px] px-3 py-2.5 text-[15px] font-semibold"
+          className="cursor-pointer rounded-[10px] px-3 py-2.5 text-base font-semibold"
           style={{
             background: T.bg.deep,
             border: `1px solid ${T.border.hi}`,

@@ -1,19 +1,13 @@
 "use client"
 
+import type { SubmissionType } from "@repo/access"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { useHydratedSession } from "@/lib/access-client"
 
 export interface Submission {
   documentId: string
-  submissionType:
-    | "correction"
-    | "new_library"
-    | "library_claim"
-    | "library_edit"
-    | "wiki_edit"
-    | "blog_submission"
-    | "topic_suggestion"
+  submissionType: SubmissionType
   status: "draft" | "pending" | "approved" | "rejected" | "needs_info"
   targetEntityType?: string | null
   targetDocumentId?: string | null

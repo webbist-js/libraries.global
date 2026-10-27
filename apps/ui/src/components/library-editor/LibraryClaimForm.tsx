@@ -81,10 +81,10 @@ export function LibraryClaimForm({
       aria-busy={pending}
     >
       <div>
-        <h3 className="m-0 text-[20px] font-semibold">{t("affiliation")}</h3>
+        <h3 className="type-h3 m-0">{t("affiliation")}</h3>
         <p
           id="claim-private"
-          className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)"
+          className="mt-2 mb-0 text-base leading-relaxed text-(--t-ink-dim)"
         >
           {t("private")}
         </p>
@@ -97,7 +97,7 @@ export function LibraryClaimForm({
           <div>
             <label
               htmlFor="claim-role"
-              className="mb-2 flex flex-wrap items-baseline gap-x-2 text-[15px] font-semibold"
+              className="mb-2 flex flex-wrap items-baseline gap-x-2 text-base font-semibold"
             >
               {t("role")} <RequiredTag />
             </label>
@@ -119,7 +119,7 @@ export function LibraryClaimForm({
           <div>
             <label
               htmlFor="claim-department"
-              className="mb-2 block text-[15px] font-semibold"
+              className="mb-2 block text-base font-semibold"
             >
               {t("department")}
             </label>
@@ -135,7 +135,7 @@ export function LibraryClaimForm({
         <div>
           <label
             htmlFor="claim-note"
-            className="mb-2 flex flex-wrap items-baseline gap-x-2 text-[15px] font-semibold"
+            className="mb-2 flex flex-wrap items-baseline gap-x-2 text-base font-semibold"
           >
             {t("verification")} <RequiredTag />
           </label>
@@ -153,7 +153,7 @@ export function LibraryClaimForm({
           />
           <p
             id="claim-note-hint"
-            className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)"
+            className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)"
           >
             {t("noteHint")}
           </p>
@@ -162,7 +162,7 @@ export function LibraryClaimForm({
       {error ? (
         <p
           role="alert"
-          className="m-0 rounded-xl bg-(--t-bg-surface) p-4 text-[15px]"
+          className="m-0 rounded-xl bg-(--t-bg-surface) p-4 text-base"
         >
           {error}
         </p>
@@ -176,7 +176,7 @@ export function LibraryClaimForm({
         >
           {pending ? t("sending") : t("submit")}
         </Button>
-        <span className="text-[14px] text-(--t-ink-dim)">
+        <span className="text-sm text-(--t-ink-dim)">
           {t("noInstantAccess")}
         </span>
       </div>

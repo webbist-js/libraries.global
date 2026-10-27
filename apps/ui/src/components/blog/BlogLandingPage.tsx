@@ -71,7 +71,7 @@ export function BlogLandingPage({
             {featured ? (
               <section aria-labelledby="journal-index">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                  <h2 id="journal-index" className="m-0 text-sm font-semibold">
+                  <h2 id="journal-index" className="type-small-heading m-0">
                     {tDiscovery("fromIndex")}
                   </h2>
                   <GlobalLink
@@ -114,12 +114,7 @@ export function BlogLandingPage({
 
             {communityPick ? (
               <section aria-label={t("editorPick")} className="mt-7">
-                <h2
-                  className="mb-5 text-3xl"
-                  style={{ fontFamily: T.font.serif }}
-                >
-                  {t("editorPick")}
-                </h2>
+                <h2 className="type-h2 mb-5">{t("editorPick")}</h2>
                 <JournalFeatureCard
                   article={communityPick}
                   editorsPick

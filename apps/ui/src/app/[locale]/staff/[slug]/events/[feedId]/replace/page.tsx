@@ -49,12 +49,8 @@ export default async function ReplaceEventFeedPage({
         label={tUi("event_feeds")}
       />
       <h2
-        className="m-0 mb-6"
+        className="type-h2 m-0 mb-6"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(26px,3vw,32px)",
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
           color: T.ink.base,
         }}
       >

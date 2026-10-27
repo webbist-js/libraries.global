@@ -37,11 +37,11 @@ export function AtlasMobileFilters({
         >
           <Icon name="bus" size={16} />
         </span>
-        <h3 className="m-0 flex-1 text-[15px] font-bold">
+        <h3 className="type-small-heading m-0 flex-1">
           {tUi("mobile_libraries")}
         </h3>
         <span
-          className="text-[13px] font-semibold"
+          className="text-sm font-semibold"
           style={{ color: T.ink.dim }}
           aria-live="polite"
         >
@@ -49,7 +49,7 @@ export function AtlasMobileFilters({
         </span>
       </div>
       <Segmented
-        className="w-full rounded-[16px] [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:rounded-xl [&>button]:px-1.5 [&>button]:text-[13px]"
+        className="w-full rounded-[16px] [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:rounded-xl [&>button]:px-1.5 [&>button]:text-sm"
         label={tUi("mobile_library_visits")}
         value={value}
         onChange={onChange}
@@ -73,7 +73,7 @@ export function AtlasMobileFilters({
         ]}
       />
       <p
-        className="m-0 mt-2 text-[13px] leading-normal"
+        className="m-0 mt-2 text-sm leading-normal"
         style={{ color: T.ink.dim }}
       >
         {PERIOD_COPY[value]}
@@ -100,9 +100,7 @@ export function AtlasMobileStops({
       style={{ borderColor: T.border.line }}
       aria-label={tUi("mobile_stops_in_view")}
     >
-      <h3 className="text-lg font-bold">
-        Stops in view · {total.toLocaleString()}
-      </h3>
+      <h3 className="type-h3">Stops in view · {total.toLocaleString()}</h3>
       {zoomIn || total > 200 ? (
         <p className="text-sm" style={{ color: T.ink.dim }}>
           Zoom in to see the rest.

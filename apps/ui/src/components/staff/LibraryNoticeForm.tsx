@@ -40,7 +40,7 @@ const noticeInputStyle = {
   padding: "12px 16px",
   background: T.bg.deep,
   borderRadius: "16px",
-  fontSize: "16px",
+  fontSize: "var(--type-body-size)",
 }
 
 function RequiredTag() {
@@ -48,7 +48,7 @@ function RequiredTag() {
 
   return (
     <span
-      className="text-[13px] font-medium"
+      className="text-sm font-medium"
       style={{ color: TYPE_TINT.special.fg }}
     >
       {tUi("required_d0a363")}{" "}
@@ -172,14 +172,10 @@ export function LibraryNoticeForm({
     >
       {embedded ? null : (
         <div>
-          <h2
-            id={field("heading")}
-            className="m-0 text-[28px] leading-[1.1] sm:text-[32px]"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
+          <h2 id={field("heading")} className="type-h2 m-0">
             {initial ? tUi("edit_notice") : tUi("post_a_notice")}
           </h2>
-          <p className="m-0 mt-1 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
             Publishes straight away. Dates use the library’s timezone.
           </p>
         </div>
@@ -386,7 +382,7 @@ export function LibraryNoticeForm({
         <p
           id={field("error")}
           role="alert"
-          className="m-0 flex items-start gap-2 text-[14px]"
+          className="m-0 flex items-start gap-2 text-sm"
           style={{ color: T.accent.danger }}
         >
           <Icon
@@ -401,7 +397,7 @@ export function LibraryNoticeForm({
       {sent && (
         <p
           role="status"
-          className="m-0 flex items-start gap-2 text-[14px]"
+          className="m-0 flex items-start gap-2 text-sm"
           style={{ color: T.accent.ok }}
         >
           <Icon

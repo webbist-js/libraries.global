@@ -27,7 +27,7 @@ function teamLead(
 
   return team?.verifiedAt
     ? "Invite colleagues, assign them to your Libraries and manage their access. Add seats from Billing & seats when your Team grows."
-    : "Invite colleagues and manage your Team’s Libraries. Library assignments need a moderator’s approval until your Team is verified. Payment does not verify Library authority."
+    : "Invite colleagues, connect your service and manage your Team’s libraries. Library access is reviewed separately."
 }
 
 /**
@@ -67,6 +67,7 @@ export default async function TeamOrganiserPage({
     <>
       <PageHero
         staff
+        compact
         breadcrumb={[
           { label: tUi("staff_area"), href: "/staff" },
           { label: team?.name ?? chosen.name },

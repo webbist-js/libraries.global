@@ -15,7 +15,7 @@ import { Link } from "@/lib/navigation"
 import { cn } from "@/lib/styles"
 
 const field =
-  "mt-2 block w-full rounded-[16px] border border-(--t-border-hi) bg-(--t-bg-deep) p-3 text-[14px] leading-relaxed focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+  "mt-2 block w-full rounded-[16px] border border-(--t-border-hi) bg-(--t-bg-deep) p-3 text-sm leading-relaxed focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
 
 /** Immutable evidence stays alongside the current message; removal checks both versions. */
 export function DiscussionReportReviewCard({
@@ -84,23 +84,23 @@ export function DiscussionReportReviewCard({
   return (
     <article className="grid gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 rounded-full bg-(--t-palette-rose-soft) px-3 py-1.5 text-[12px] font-semibold text-(--t-palette-rose-fg)">
+        <span className="inline-flex items-center gap-2 rounded-full bg-(--t-palette-rose-soft) px-3 py-1.5 text-xs font-semibold text-(--t-palette-rose-fg)">
           <Flag size={14} aria-hidden />
           {workspace("reports")}
         </span>
         <Link
           href={`/community/discussions/${encodeURIComponent(report.threadId)}${report.recordType === "reply" ? `#discussion-reply-${encodeURIComponent(report.recordId)}` : ""}`}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--t-accent-primary) hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--t-accent-primary) hover:underline"
         >
           {t("viewReported")}
           <ArrowUpRight size={15} aria-hidden />
         </Link>
       </header>
       <div className="rounded-[16px] bg-(--t-palette-rose-soft) p-4">
-        <h3 className="mt-0 mb-1 text-[11px] font-bold tracking-wide text-(--t-palette-rose-fg) uppercase">
+        <h3 className="type-label mt-0 mb-1 text-(--t-palette-rose-fg) uppercase">
           {workspace("reportReason")}
         </h3>
-        <p className="m-0 text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+        <p className="m-0 text-base leading-relaxed break-words whitespace-pre-wrap">
           {report.reason}
         </p>
       </div>
@@ -117,11 +117,11 @@ export function DiscussionReportReviewCard({
             )}
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="m-0 text-[12px] font-bold tracking-wide text-(--t-ink-dim) uppercase">
+              <h3 className="type-label m-0 text-(--t-ink-dim) uppercase">
                 {version.label}
               </h3>
               {typeof version.version === "number" && (
-                <span className="rounded-full bg-(--t-bg-deep) px-2 py-1 text-[11px] text-(--t-ink-dim)">
+                <span className="rounded-full bg-(--t-bg-deep) px-2 py-1 text-xs text-(--t-ink-dim)">
                   {t("versionLabel", { version: version.version })}
                 </span>
               )}
@@ -130,7 +130,7 @@ export function DiscussionReportReviewCard({
               <p className="mt-0 mb-2 font-semibold">{version.title}</p>
             )}
             <p
-              className="m-0 text-[15px] leading-[1.65] break-words whitespace-pre-wrap"
+              className="m-0 text-base leading-[1.65] break-words whitespace-pre-wrap"
               lang={report.language}
             >
               {version.body}
@@ -139,7 +139,7 @@ export function DiscussionReportReviewCard({
           </section>
         ))}
       </div>
-      <label className="text-[13px] font-semibold text-(--t-ink-dim)">
+      <label className="text-sm font-semibold text-(--t-ink-dim)">
         <span className="inline-flex items-center gap-1.5">
           <LockKeyhole size={13} aria-hidden />
           {t("reviewNote")}
@@ -158,7 +158,7 @@ export function DiscussionReportReviewCard({
           tone="neutral"
           disabled={busy}
           onClick={() => void decide("dismiss")}
-          className="min-h-11 px-4 text-[13px]"
+          className="min-h-11 px-4 text-sm"
         >
           {t("dismiss")}
         </DiscussionModeratorButton>
@@ -166,7 +166,7 @@ export function DiscussionReportReviewCard({
           tone="danger"
           disabled={busy || !canRemove}
           onClick={() => setConfirming(true)}
-          className="min-h-11 px-4 text-[13px]"
+          className="min-h-11 px-4 text-sm"
         >
           {t("remove")}
         </DiscussionModeratorButton>
@@ -179,11 +179,9 @@ export function DiscussionReportReviewCard({
           }}
           className="grid gap-3 rounded-[18px] border border-(--t-palette-coral-fg)/30 bg-(--t-palette-coral-soft) p-4"
         >
-          <h3 className="m-0 text-[16px] font-semibold">
-            {t("confirmRemoval")}
-          </h3>
-          <p className="m-0 text-[13px] leading-relaxed">{t("removalLead")}</p>
-          <label className="text-[13px] font-semibold">
+          <h3 className="type-small-heading m-0">{t("confirmRemoval")}</h3>
+          <p className="m-0 text-sm leading-relaxed">{t("removalLead")}</p>
+          <label className="text-sm font-semibold">
             {t("authorFeedback")}
             <textarea
               required
@@ -200,7 +198,7 @@ export function DiscussionReportReviewCard({
               tone="danger"
               type="submit"
               disabled={busy || !feedback.trim()}
-              className="min-h-11 px-4 text-[13px]"
+              className="min-h-11 px-4 text-sm"
             >
               {t("confirmRemove")}
             </DiscussionModeratorButton>
@@ -208,7 +206,7 @@ export function DiscussionReportReviewCard({
               type="button"
               disabled={busy}
               onClick={() => setConfirming(false)}
-              className="min-h-11 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-[13px] font-semibold"
+              className="min-h-11 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-sm font-semibold"
             >
               {t("cancel")}
             </button>
@@ -218,7 +216,7 @@ export function DiscussionReportReviewCard({
       {error && (
         <p
           role="alert"
-          className="m-0 rounded-xl bg-(--t-palette-coral-soft) p-3 text-[13px] text-(--t-palette-coral-fg)"
+          className="m-0 rounded-xl bg-(--t-palette-coral-soft) p-3 text-sm text-(--t-palette-coral-fg)"
         >
           {error}
         </p>

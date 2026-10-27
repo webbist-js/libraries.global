@@ -47,7 +47,7 @@ describe("access-server", () => {
     expect(await r?.json()).toEqual({
       error: "Upgrade required",
       feature: "atlas.export",
-      upgradeUrl: "/contribute/membership",
+      upgradeUrl: "/plans",
     })
     expect(
       requireEntitlement({ features: ["atlas.export"] }, "atlas.export")
@@ -169,7 +169,7 @@ describe("access-server", () => {
     expect(await r?.json()).toEqual({
       error: "Upgrade required",
       feature: "library.team",
-      upgradeUrl: "/contribute/membership",
+      upgradeUrl: "/plans",
     })
     expect(
       requireEntitlementForLibrary(

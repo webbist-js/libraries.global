@@ -52,12 +52,12 @@ export function PlanCompareSelectors({
       ].map((choice) => (
         <div
           key={choice.label}
-          className="flex min-w-0 flex-col gap-1.5 text-[13px] font-semibold"
+          className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold"
         >
           <label htmlFor={choice.id}>{choice.label}</label>
           <select
             id={choice.id}
-            className="min-h-11 w-full rounded-[12px] border border-(--t-border-hi) bg-white px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+            className="min-h-11 w-full rounded-[12px] border border-(--t-border-hi) bg-white px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
             value={choice.value}
             onChange={(event) =>
               choice.onChange(event.target.value as PlanCardKey)
@@ -106,7 +106,7 @@ export function PlanCompareMobile({
               key={group.id}
               className="border-b border-(--t-border-line) last:border-b-0"
             >
-              <h3 className="m-0">
+              <h3 className="type-h3 m-0">
                 <button
                   className="flex min-h-14 w-full items-center gap-2 bg-(--t-bg-surface) p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
                   aria-controls={id}
@@ -122,17 +122,17 @@ export function PlanCompareMobile({
                     width={18}
                   />
                   <span>
-                    <span className="block text-[14px] font-bold">
+                    <span className="block text-sm font-bold">
                       {group.title}
                     </span>
-                    <span className="mt-0.5 block text-[12px] font-normal text-(--t-ink-dim)">
+                    <span className="mt-0.5 block text-xs font-normal text-(--t-ink-dim)">
                       {compareGroupSummary(group)}
                     </span>
                   </span>
                 </button>
               </h3>
               <div hidden={!expanded} id={id}>
-                <table className="w-full table-fixed border-collapse text-[13px]">
+                <table className="w-full table-fixed border-collapse text-sm">
                   <caption className="sr-only">
                     {m("copy.comparisonCaption", {
                       group: group.title,
@@ -143,7 +143,7 @@ export function PlanCompareMobile({
                   <thead>
                     <tr>
                       <th
-                        className="w-[48%] px-3 py-3 text-left text-[12px] text-(--t-ink-dim)"
+                        className="w-[48%] px-3 py-3 text-left text-xs text-(--t-ink-dim)"
                         scope="col"
                       >
                         {m("copy.feature")}
@@ -155,19 +155,19 @@ export function PlanCompareMobile({
                           scope="col"
                         >
                           <span
-                            className="block text-[16px] leading-tight"
+                            className="block text-base leading-tight"
                             style={{
-                              fontFamily: T.font.serif,
+                              fontFamily: T.font.sans,
                             }}
                           >
                             {planCard(key).name}
                           </span>
-                          <span className="mt-1 block text-[11px] text-(--t-ink-dim)">
+                          <span className="mt-1 block text-xs text-(--t-ink-dim)">
                             {shortPrice(planCard(key).price)}
                             {key === "team" ? ` ${m("copy.exVat")}` : ""}
                           </span>
                           {key === "team" ? (
-                            <span className="mt-1 block text-[10px] font-normal text-(--t-ink-dim)">
+                            <span className="mt-1 block text-xs font-normal text-(--t-ink-dim)">
                               {m("copy.teamSeats", {
                                 count: pricing.team.includedSeats,
                               })}

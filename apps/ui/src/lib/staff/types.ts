@@ -122,6 +122,13 @@ export type TeamLibrary = {
 
 /** `GET /api/staff/team/[teamId]`: the organiser's (or a member's) view. */
 export type TeamDetail = {
+  primaryNetwork?: { documentId: string; name: string; slug: string } | null
+  serviceScopes?: {
+    networkId: string
+    name: string
+    approvedLibraryIds: string[]
+    ownerLibraryIds: string[]
+  }[]
   pendingSeats?: number | null
   source?: "admin" | "checkout"
   publicServiceApproved?: boolean

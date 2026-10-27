@@ -332,7 +332,7 @@ export function LocationHeroMap({
 
       {failed ? (
         <p
-          className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-[14px]"
+          className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-sm"
           style={{ color: T.ink.dim }}
         >
           The map can&rsquo;t load in this browser. The list below has the same
@@ -343,7 +343,7 @@ export function LocationHeroMap({
       {listHref ? (
         <a
           href={listHref}
-          className="absolute top-3 left-3 z-[2] inline-flex min-h-11 items-center rounded-full border bg-white px-3 text-[12px] font-semibold"
+          className="absolute top-3 left-3 z-[2] inline-flex min-h-11 items-center rounded-full border bg-white px-3 text-xs font-semibold"
           style={{ borderColor: T.border.line }}
         >
           View places as a list →
@@ -364,7 +364,7 @@ export function LocationHeroMap({
               height: size,
             }
             const className =
-              "pointer-events-auto absolute flex items-center justify-center rounded-full border-2 border-(--t-accent-primary) bg-white text-[12px] font-semibold text-(--t-accent-primary) transition-colors hover:bg-(--t-accent-primary) hover:text-white"
+              "pointer-events-auto absolute flex items-center justify-center rounded-full border-2 border-(--t-accent-primary) bg-white text-xs font-semibold text-(--t-accent-primary) transition-colors hover:bg-(--t-accent-primary) hover:text-white"
 
             if (group.ids.length === 1) {
               const point = pointById.get(group.ids[0]!)
@@ -450,7 +450,7 @@ export function LocationHeroMap({
       ) : null}
 
       <figcaption
-        className="absolute bottom-8 left-3 z-[2] flex max-w-[calc(100%-4.5rem)] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-[12.5px] leading-[1.35]"
+        className="absolute bottom-8 left-3 z-[2] flex max-w-[calc(100%-4.5rem)] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm leading-[1.35]"
         style={{
           background: "rgba(255,255,255,.94)",
           borderColor: T.border.line,
@@ -472,7 +472,7 @@ export function LocationHeroMap({
         ) : (
           <span
             aria-hidden="true"
-            className="flex size-[20px] shrink-0 items-center justify-center rounded-full border-[1.5px] text-[10px] font-semibold"
+            className="flex size-[20px] shrink-0 items-center justify-center rounded-full border-[1.5px] text-xs font-semibold"
             style={{
               borderColor: T.accent.primary,
               color: T.accent.primary,

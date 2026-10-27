@@ -11,17 +11,18 @@ import {
 } from "@repo/shared-data"
 
 import { emailConfigured } from "../../../plugins/content-moderation/server/utils/email-config"
-import { noticesForLibrary } from "../../../utils/library-notices"
 import {
-  AFFILIATION_UID,
-  listStaff,
-  requireStaffMember,
-} from "../../../utils/staff"
+  changeEffectiveAuthority,
+  revokeAuthoritySource,
+} from "../../../utils/authority-grants"
+import { noticesForLibrary } from "../../../utils/library-notices"
+import { listStaff, requireStaffMember } from "../../../utils/staff"
 import {
   afterStaffCommit,
   notifyStaffChange,
 } from "../../../utils/staff-notifications"
 import { hasLibraryFeature } from "../../../utils/team-access"
+import { removeServiceScopes } from "../../access/server/services/network-fulfilment"
 
 export const AUDIT = "plugin::library-staff.staff-audit"
 const LIBRARY = "api::library.library"
@@ -421,9 +422,11 @@ export default ({ strapi }: { strapi: any }) => ({
       )
         throw new StaffError(409, "last_owner")
       if (remove || leave) {
-        await strapi
-          .documents(AFFILIATION_UID)
-          .delete({ documentId: member.affiliationDocumentId })
+        await removeServiceScopes(strapi, member.baUserId, id, `ba:${user}`)
+        await revokeAuthoritySource(strapi, {
+          baUserId: member.baUserId,
+          libraryDocumentId: id,
+        })
         await this.audit(id, user, leave ? "left" : "removed", member.baUserId)
       } else {
         const data: Record<string, unknown> = {}
@@ -442,9 +445,11 @@ export default ({ strapi }: { strapi: any }) => ({
         const permissionsChanged = Object.keys(data).some(
           (key) => data[key] !== (member as any)[key]
         )
-        await strapi
-          .documents(AFFILIATION_UID)
-          .update({ documentId: member.affiliationDocumentId, data })
+        await changeEffectiveAuthority(strapi, {
+          baUserId: member.baUserId,
+          libraryDocumentId: id,
+          ...data,
+        })
         for (const key of Object.keys(data))
           await this.audit(
             id,

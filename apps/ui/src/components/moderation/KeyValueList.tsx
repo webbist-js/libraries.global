@@ -20,14 +20,11 @@ export function KeyValueList({
 
         return (
           <div key={label} className="flex min-w-0 flex-col gap-0.5">
-            <dt
-              className="text-[13px] font-semibold"
-              style={{ color: T.ink.dim }}
-            >
+            <dt className="text-sm font-semibold" style={{ color: T.ink.dim }}>
               {label}
             </dt>
             <dd
-              className="m-0 text-[15px] break-words"
+              className="m-0 text-base break-words"
               style={{ color: text === "—" ? T.ink.faint : T.ink.base }}
             >
               {isUrl ? (

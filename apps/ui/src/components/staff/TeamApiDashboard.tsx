@@ -149,7 +149,7 @@ function TeamKeyList({
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="m-0 text-[16px] font-semibold break-words">
+                      <h3 className="type-small-heading m-0 break-words">
                         {key.name}
                       </h3>
                       <Badge
@@ -161,7 +161,7 @@ function TeamKeyList({
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <code
                         translate="no"
-                        className="rounded bg-(--t-bg-muted) px-2 py-0.5 font-mono text-[13px] break-all"
+                        className="rounded bg-(--t-bg-muted) px-2 py-0.5 font-mono text-sm break-all"
                       >
                         {key.prefix}…
                       </code>
@@ -169,7 +169,7 @@ function TeamKeyList({
                         <span
                           key={scope}
                           translate="no"
-                          className="rounded-full border border-(--t-border-line) px-2 py-0.5 font-mono text-[13px] text-(--t-ink-dim)"
+                          className="rounded-full border border-(--t-border-line) px-2 py-0.5 font-mono text-sm text-(--t-ink-dim)"
                         >
                           {scope}
                         </span>
@@ -182,7 +182,7 @@ function TeamKeyList({
                         type="button"
                         variant="surface"
                         size="pill"
-                        className="px-3.5 py-2 text-[14px]"
+                        className="px-3.5 py-2 text-sm"
                         disabled={
                           pending || !data.active || expired || Boolean(secret)
                         }
@@ -200,7 +200,7 @@ function TeamKeyList({
                         type="button"
                         variant="surface"
                         size="pill"
-                        className="px-3.5 py-2 text-[14px] text-(--t-accent-danger)"
+                        className="px-3.5 py-2 text-sm text-(--t-accent-danger)"
                         disabled={pending}
                         onClick={() =>
                           setConfirmation({
@@ -215,7 +215,7 @@ function TeamKeyList({
                     </div>
                   ) : null}
                 </div>
-                <p className="mt-3 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                <p className="mt-3 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                   {count(key.requests)} requests ·{" "}
                   {formatApiBytes(key.bytes, locale)} this month ·{" "}
                   {key.lastUsedAt
@@ -237,10 +237,8 @@ function TeamKeyList({
             <Icon aria-hidden="true" icon="mdi:key-outline" width={23} />
           </span>
           <div className="min-w-0">
-            <h3 className="m-0 font-serif text-[24px] leading-tight">
-              {t("emptyTitle")}
-            </h3>
-            <p className="mt-2 mb-0 max-w-[65ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+            <h3 className="type-h3 m-0">{t("emptyTitle")}</h3>
+            <p className="mt-2 mb-0 max-w-[65ch] text-base leading-relaxed text-(--t-ink-dim)">
               {t(
                 !data.organiser
                   ? "emptyMember"
@@ -275,12 +273,12 @@ function KeyChangeConfirmation({
       role="group"
       aria-label="Confirm key change"
     >
-      <p className="m-0 text-[16px] font-semibold">
+      <p className="m-0 text-base font-semibold">
         {confirmation.action === "rotate"
           ? "Regenerate " + confirmation.name + "?"
           : "Revoke " + confirmation.name + "?"}
       </p>
-      <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+      <p className="mt-2 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
         {confirmation.action === "rotate"
           ? "The old key will stop working immediately. Update every application using it."
           : "Applications using it will stop working."}
@@ -421,7 +419,7 @@ export function TeamApiDashboard({
         {data.active ? (
           <div className="min-w-0 flex-1">{subscription}</div>
         ) : (
-          <p className="m-0 text-[15px] text-(--t-ink-dim)">
+          <p className="m-0 text-base text-(--t-ink-dim)">
             API access for {data.teamName}
           </p>
         )}
@@ -471,7 +469,7 @@ export function TeamApiDashboard({
           id="api-keys"
           aside={
             <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-(--t-bg-surface) px-3 py-1.5 text-[14px] text-(--t-ink-dim) tabular-nums">
+              <span className="rounded-full bg-(--t-bg-surface) px-3 py-1.5 text-sm text-(--t-ink-dim) tabular-nums">
                 {t("activeCount", { count: activeKeys })}
               </span>
               {canCreateApiKeys(data) ? (
@@ -500,7 +498,7 @@ export function TeamApiDashboard({
             </div>
           }
         >
-          <p className="mt-0 mb-5 max-w-[70ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-0 mb-5 max-w-[70ch] text-base leading-relaxed text-(--t-ink-dim)">
             {t("intro")}
           </p>
           {secret ? (
@@ -510,12 +508,12 @@ export function TeamApiDashboard({
               className="mb-5 rounded-2xl border border-(--t-accent-primary)/25 bg-(--t-accent-primary)/5 p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) sm:p-5"
               role="status"
             >
-              <p className="mt-0 mb-3 text-[16px] font-semibold">
+              <p className="mt-0 mb-3 text-base font-semibold">
                 {t("copyNow")}
               </p>
               <code
                 translate="no"
-                className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-[14px] break-all select-all"
+                className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-sm break-all select-all"
               >
                 {secret}
               </code>

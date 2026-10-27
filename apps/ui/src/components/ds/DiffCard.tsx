@@ -30,13 +30,10 @@ export function DiffCard({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3
-          className="m-0 text-[17px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
+        <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
           {title}
         </h3>
-        <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
           {byline}
         </p>
       </div>
@@ -47,32 +44,32 @@ export function DiffCard({
               className={
                 rows.length === 1 && row.label === title
                   ? "sr-only"
-                  : "text-[14px] font-semibold"
+                  : "text-sm font-semibold"
               }
             >
               {row.label}
             </dt>
             <dd className="m-0 grid gap-2 sm:grid-cols-2">
               <span
-                className="flex flex-col rounded-[14px] px-3.5 py-2.5 text-[16px]"
+                className="flex flex-col rounded-[14px] px-3.5 py-2.5 text-base"
                 style={{
                   background: TYPE_TINT.special.bg,
                   color: TYPE_TINT.special.fg,
                 }}
               >
-                <span className="text-[13px] font-semibold">Now</span>
+                <span className="text-sm font-semibold">Now</span>
                 <del className="wrap-break-word" style={{ color: T.ink.base }}>
                   {row.now || "Empty"}
                 </del>
               </span>
               <span
-                className="flex flex-col rounded-[14px] px-3.5 py-2.5 text-[16px]"
+                className="flex flex-col rounded-[14px] px-3.5 py-2.5 text-base"
                 style={{
                   background: TYPE_TINT.public.bg,
                   color: TYPE_TINT.public.fg,
                 }}
               >
-                <span className="text-[13px] font-semibold">Suggested</span>
+                <span className="text-sm font-semibold">Suggested</span>
                 <span className="wrap-break-word" style={{ color: T.ink.base }}>
                   {row.suggested || "Empty"}
                 </span>
@@ -82,10 +79,7 @@ export function DiffCard({
         ))}
       </dl>
       {evidence ? (
-        <p
-          className="m-0 text-[14px] wrap-break-word"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm wrap-break-word" style={{ color: T.ink.dim }}>
           <span className="font-semibold" style={{ color: T.ink.base }}>
             Source:
           </span>{" "}
@@ -94,7 +88,7 @@ export function DiffCard({
       ) : null}
       {footer ? (
         <p
-          className="m-0 flex items-start gap-2 text-[14px]"
+          className="m-0 flex items-start gap-2 text-sm"
           style={{ color: T.ink.dim }}
           role="status"
         >

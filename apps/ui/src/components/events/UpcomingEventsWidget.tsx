@@ -67,18 +67,18 @@ export function UpcomingEventsWidget({
                 className="flex w-[60px] shrink-0 flex-col items-center justify-center self-start rounded-[14px] py-2.5"
                 style={{ background: T.bg.space, color: T.ink.dim }}
               >
-                <span className="text-[13px] font-semibold">{month}</span>
+                <span className="text-sm font-semibold">{month}</span>
                 <span
                   className="text-[28px] leading-none"
                   style={{
-                    fontFamily: T.font.serif,
+                    fontFamily: T.font.sans,
                     fontWeight: 500,
                     color: T.ink.base,
                   }}
                 >
                   {day}
                 </span>
-                <span className="mt-0.5 text-[13px]">{weekday}</span>
+                <span className="mt-0.5 text-sm">{weekday}</span>
               </span>
 
               <span className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -92,17 +92,15 @@ export function UpcomingEventsWidget({
                   />
                 </span>
                 <h3
-                  className="m-0 line-clamp-2 text-[19px] leading-tight transition-colors group-hover:text-(--t-accent-primary)"
+                  className="type-card-title m-0 line-clamp-2 transition-colors group-hover:text-(--t-accent-primary)"
                   style={{
-                    fontFamily: T.font.serif,
-                    fontWeight: 500,
                     color: T.ink.base,
                   }}
                 >
                   {event.title}
                 </h3>
                 <span
-                  className="mt-auto flex items-center gap-1.5 pt-1 text-[14px]"
+                  className="mt-auto flex items-center gap-1.5 pt-1 text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   <Clock
@@ -117,7 +115,7 @@ export function UpcomingEventsWidget({
                 </span>
                 {place ? (
                   <span
-                    className="flex min-w-0 items-start gap-1.5 text-[14px] leading-[1.4]"
+                    className="flex min-w-0 items-start gap-1.5 text-sm leading-[1.4]"
                     style={{ color: T.ink.dim }}
                   >
                     <MapPin

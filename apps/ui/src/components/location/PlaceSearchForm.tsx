@@ -47,13 +47,13 @@ export function PlaceSearchForm({
           id={id}
           name="q"
           type="search"
-          className="min-w-0 flex-1 bg-transparent text-[14px] outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none"
           placeholder={"Library name, town or region in " + name}
         />
       </div>
       <button
         type="submit"
-        className="min-h-12 rounded-full px-5 text-[14px] font-semibold text-white"
+        className="min-h-12 rounded-full px-5 text-sm font-semibold text-white"
         style={{ background: T.accent.primary }}
       >
         Search libraries

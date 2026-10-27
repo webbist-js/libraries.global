@@ -58,10 +58,7 @@ export function NearbyMobileLibraries({
       aria-label={tUi("mobile_libraries_near_you")}
       style={{ borderColor: T.edge.ok, background: TYPE_TINT.public.bg }}
     >
-      <h2
-        className="mt-0 mb-3 text-[22px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h2 className="type-panel-title mt-0 mb-3">
         Mobile libraries that stop near you
       </h2>
       {error ? (

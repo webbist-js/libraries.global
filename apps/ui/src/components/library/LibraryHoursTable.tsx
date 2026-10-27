@@ -148,7 +148,7 @@ export function LibraryHoursTable({
 
   if (!hasHours && !recordedHours) {
     return (
-      <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         Hours not added yet.
       </p>
     )
@@ -199,7 +199,7 @@ export function LibraryHoursTable({
       {!compact ? (
         <div
           aria-hidden="true"
-          className="mb-2 flex justify-between px-3 text-[11px] tabular-nums"
+          className="mb-2 flex justify-between px-3 text-xs tabular-nums"
           style={{ color: T.ink.dim }}
         >
           <span>{hourLabel(window.startHour)}</span>
@@ -294,7 +294,7 @@ export function LibraryHoursTable({
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[15px]">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-base">
                     <span className={isToday ? "font-bold" : "font-semibold"}>
                       {weekdayName(key)}
                       {isToday ? " (today)" : ""}
@@ -337,7 +337,7 @@ export function LibraryHoursTable({
                     })}
                   </div>
                   {frames.length > 0 ? (
-                    <ul className="m-0 mt-2 list-none space-y-1 p-0 text-[14px]">
+                    <ul className="m-0 mt-2 list-none space-y-1 p-0 text-sm">
                       {frames.map((frame) => (
                         <li
                           key={`${frame.startTime}:${frame.endTime}:${frame.staffing ?? ""}`}
@@ -359,7 +359,7 @@ export function LibraryHoursTable({
                           </div>
                           {frame.note ? (
                             <p
-                              className="m-0 mt-0.5 text-[13px] leading-relaxed"
+                              className="m-0 mt-0.5 text-sm leading-relaxed"
                               style={{ color: T.ink.dim }}
                             >
                               {frame.note}
@@ -379,10 +379,10 @@ export function LibraryHoursTable({
         className="mt-3 rounded-xl border p-3"
         style={{ borderColor: T.border.line, background: T.bg.surface }}
       >
-        <summary className="cursor-pointer text-[13px] font-semibold">
+        <summary className="cursor-pointer text-sm font-semibold">
           What the opening modes mean
         </summary>
-        <ul className="m-0 mt-3 grid list-none gap-3 p-0 text-[13px] sm:grid-cols-2">
+        <ul className="m-0 mt-3 grid list-none gap-3 p-0 text-sm sm:grid-cols-2">
           {modes.map((mode) => (
             <li key={mode}>
               <div className="flex items-center gap-2 font-semibold">
@@ -440,7 +440,7 @@ export function LibraryOpenStatusBadge({
             ? "m-0 text-[30px] leading-tight"
             : "m-0 text-sm font-semibold"
         }
-        style={{ fontFamily: prominent ? T.font.serif : undefined }}
+        style={{ fontFamily: prominent ? T.font.sans : undefined }}
       >
         {fixed[operationalStatus]}
       </p>
@@ -458,11 +458,11 @@ export function LibraryOpenStatusBadge({
       className={
         prominent
           ? "inline-flex items-center gap-2 text-[30px] leading-tight"
-          : "inline-flex items-center gap-1.5 text-[13.5px] font-semibold"
+          : "inline-flex items-center gap-1.5 text-sm font-semibold"
       }
       style={{
         color: open ? T.accent.ok : T.accent.danger,
-        fontFamily: prominent ? T.font.serif : undefined,
+        fontFamily: prominent ? T.font.sans : undefined,
       }}
     >
       <Icon
@@ -566,18 +566,18 @@ export function FactCard({
         <Icon height={17} icon={icon} width={17} />
       </span>
       <span className="flex min-w-0 flex-col">
-        <span className="text-[12.5px]" style={{ color: T.ink.dim }}>
+        <span className="text-sm" style={{ color: T.ink.dim }}>
           {label}
         </span>
         <span
-          className="text-[14.5px] leading-snug font-semibold"
+          className="text-sm leading-snug font-semibold"
           style={{ color: T.ink.base }}
         >
           {value}
         </span>
         {note ? (
           <span
-            className="mt-1 text-[12px] leading-relaxed"
+            className="mt-1 text-xs leading-relaxed"
             style={{ color: T.ink.dim }}
           >
             {note}

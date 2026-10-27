@@ -33,13 +33,13 @@ function Row({
         background: you ? YOU_ROW_BG : T.bg.deep,
       }}
     >
-      <span className="text-[16px] font-bold" style={{ color: T.ink.dim }}>
+      <span className="text-base font-bold" style={{ color: T.ink.dim }}>
         {entry.rank}
       </span>
       <span className="flex min-w-0 items-center gap-[12px]">
         <span
           aria-hidden="true"
-          className="flex size-[36px] shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+          className="flex size-[36px] shrink-0 items-center justify-center rounded-full text-sm font-bold"
           style={{ background: tint.bg, color: tint.fg }}
         >
           {getInitials(entry)}
@@ -49,14 +49,14 @@ function Row({
             {entry.username ? (
               <GlobalLink
                 href={`/profile/${entry.username}`}
-                className="min-w-0 text-[16px] font-bold wrap-break-word no-underline hover:underline"
+                className="min-w-0 text-base font-bold wrap-break-word no-underline hover:underline"
                 style={{ color: T.ink.base }}
               >
                 {name}
               </GlobalLink>
             ) : (
               <span
-                className="min-w-0 text-[16px] font-bold wrap-break-word"
+                className="min-w-0 text-base font-bold wrap-break-word"
                 style={{ color: T.ink.base }}
               >
                 {name}
@@ -64,14 +64,14 @@ function Row({
             )}
             {you ? (
               <span
-                className="rounded-full px-[8px] py-[2px] text-[12px] font-bold text-white"
+                className="rounded-full px-[8px] py-[2px] text-xs font-bold text-white"
                 style={{ background: T.accent.primary }}
               >
                 You
               </span>
             ) : null}
           </span>
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             {place ? `${entry.tier} · ${place}` : entry.tier}
           </span>
         </span>
@@ -80,7 +80,7 @@ function Row({
         <span
           className="leading-none"
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: 24,
             color: T.ink.base,
           }}
@@ -89,7 +89,7 @@ function Row({
           {fmt(entry.periodPoints)}
         </span>
         <span
-          className="text-[13px] whitespace-nowrap"
+          className="text-sm whitespace-nowrap"
           style={{ color: T.ink.dim }}
         >
           {fmt(entry.approvedCount)} approved
@@ -121,7 +121,7 @@ export function LeaderboardRows({
     >
       <div
         aria-hidden="true"
-        className={`${GRID} py-[12px] text-[14px] font-bold`}
+        className={`${GRID} py-[12px] text-sm font-bold`}
         style={{
           background: T.bg.surface,
           borderBottom: `1px solid ${T.border.divider}`,

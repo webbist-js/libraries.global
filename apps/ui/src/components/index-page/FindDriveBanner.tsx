@@ -65,7 +65,7 @@ export function FindDriveBanner({
   return (
     <Link
       href={proposeHref(prefillFromFindState(state))}
-      className="inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-[13.5px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+      className="inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
       style={{ borderColor: T.border.hi, color: T.accent.primary }}
     >
       Propose a drive from these results

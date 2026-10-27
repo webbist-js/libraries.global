@@ -5,8 +5,12 @@ import { BETA_COOKIE, createBetaPass } from "@/lib/beta/access"
 import { MOBILE_BETA_COOKIE } from "@/lib/mobile-app"
 import proxy from "@/proxy"
 
-const { access } = vi.hoisted(() => ({ access: vi.fn() }))
+const { access, stagingAuth } = vi.hoisted(() => ({
+  access: vi.fn(),
+  stagingAuth: vi.fn(),
+}))
 vi.mock("@/lib/beta/invitations", () => ({ hasBetaAccess: access }))
+vi.mock("@/lib/proxies/basicAuth", () => ({ basicAuth: stagingAuth }))
 vi.mock("@/lib/navigation", () => ({
   routing: { locales: ["en", "cs", "fr"], defaultLocale: "en" },
 }))
@@ -29,6 +33,7 @@ beforeEach(() => {
   vi.stubEnv("BASIC_AUTH_ENABLED", "false")
   vi.stubEnv("BETA_ACCESS_SECRET", "s".repeat(32))
   access.mockResolvedValue(false)
+  stagingAuth.mockReturnValue(null)
 })
 afterEach(() => vi.unstubAllEnvs())
 
@@ -107,5 +112,44 @@ describe("mobile proxy integration", () => {
     expect(response.headers.has("x-middleware-rewrite")).toBe(false)
     expect((await proxy(req("/staff"))).status).toBe(404)
     expect((await proxy(req("/live", "libraries.global"))).status).toBe(404)
+  })
+})
+
+describe("Knowledge Markdown routing", () => {
+  it.each([
+    ["/knowledge/data-api/guide.md", "/en/knowledge/data-api/guide/markdown"],
+    [
+      "/fr/knowledge/data-api/guide.md",
+      "/fr/knowledge/data-api/guide/markdown",
+    ],
+  ])(
+    "rewrites %s to the text handler while preserving the language query",
+    async (path, target) => {
+      const response = await proxy(
+        req(`${path}?contentLang=cs`, "libraries.global")
+      )
+      const rewritten = new URL(response.headers.get("x-middleware-rewrite")!)
+      expect(rewritten.pathname).toBe(target)
+      expect(rewritten.searchParams.get("contentLang")).toBe("cs")
+    }
+  )
+
+  it("runs beta and staging access checks before Markdown rewrites", async () => {
+    vi.stubEnv("BETA_GATE_ENABLED", "true")
+    const locked = await proxy(
+      req("/knowledge/data-api/guide.md", "libraries.global")
+    )
+    expect(locked.status).toBe(401)
+    expect(locked.headers.has("x-middleware-rewrite")).toBe(false)
+    vi.stubEnv("BETA_GATE_ENABLED", "false")
+    vi.stubEnv("BASIC_AUTH_ENABLED", "true")
+    stagingAuth.mockReturnValue(
+      new NextResponse("Authentication required", { status: 401 })
+    )
+    const staging = await proxy(
+      req("/knowledge/data-api/guide.md", "libraries.global")
+    )
+    expect(staging.status).toBe(401)
+    expect(staging.headers.has("x-middleware-rewrite")).toBe(false)
   })
 })

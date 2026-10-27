@@ -188,7 +188,7 @@ export function AtlasAccessAnalysis({
           >
             {settings}
             <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap items-center gap-3 text-[14px]">
+              <div className="flex flex-wrap items-center gap-3 text-sm">
                 <label className="flex items-center gap-2 font-semibold">
                   Scope
                   <SelectField

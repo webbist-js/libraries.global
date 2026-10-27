@@ -81,6 +81,9 @@ export function scrubTelemetryEvent<T extends object>(event: T): T {
   ) {
     if (key === "user") return record.id === undefined ? {} : { id: record.id }
     for (const name of Object.keys(record)) {
+      // Sentry removes this field before serialization. Its live scopes and
+      // request objects belong to the SDK and must never be traversed or changed.
+      if (depth === 0 && name === "sdkProcessingMetadata") continue
       const normalized = name.replaceAll(/[^a-z]/gi, "").toLowerCase()
       const requestBody =
         key === "request" && (normalized === "data" || normalized === "body")

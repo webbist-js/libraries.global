@@ -131,7 +131,7 @@ function SheetCell({
   if (cell === "soon")
     return (
       <span
-        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold whitespace-nowrap"
+        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap"
         style={{ background: T.accent.chip, color: T.accent.primaryHover }}
       >
         <Icon name="clock" size={12} />
@@ -151,12 +151,12 @@ function SheetCell({
 function SeeAllPlansLink() {
   return (
     <GlobalLink
-      href="/contribute/membership"
+      href="/plans"
       {...analyticsAttributes("membership_interest", {
         interaction_source: "upgrade_prompt",
         action_type: "compare",
       })}
-      className="text-[14px] font-semibold underline underline-offset-[3px]"
+      className="text-sm font-semibold underline underline-offset-[3px]"
       style={{ color: T.accent.primary }}
     >
       See all plans
@@ -165,7 +165,7 @@ function SeeAllPlansLink() {
 }
 
 const OUTLINE_PILL =
-  "inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-[14px] font-semibold no-underline"
+  "inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-sm font-semibold no-underline"
 
 function PlanCta({
   plan,
@@ -184,7 +184,7 @@ function PlanCta({
     return (
       <span className="inline-flex flex-col items-start gap-1">
         <span
-          className="text-[14px] whitespace-nowrap"
+          className="text-sm whitespace-nowrap"
           style={{ color: T.ink.dim }}
         >
           You’re here
@@ -221,7 +221,7 @@ function PlanCta({
     return (
       <span className="inline-flex flex-col items-start gap-1">
         <span
-          className="inline-flex items-center gap-1 text-[14px] font-semibold whitespace-nowrap"
+          className="inline-flex items-center gap-1 text-sm font-semibold whitespace-nowrap"
           style={{ color: T.ink.dim }}
         >
           <Icon name="clock" size={15} />
@@ -263,7 +263,7 @@ export function AtlasPlansSheet({
     >
       <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-5 sm:px-8">
         <p
-          className="mt-0 mb-5 max-w-[680px] text-[17px]"
+          className="mt-0 mb-5 max-w-[680px] text-base"
           style={{ color: T.ink.dim }}
         >
           Addresses, hours, services and every community record stay open to
@@ -274,7 +274,7 @@ export function AtlasPlansSheet({
           className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-white [contain:paint]"
           style={{ borderColor: T.border.line }}
         >
-          <table className="w-full min-w-[680px] border-collapse text-[15px]">
+          <table className="w-full min-w-[680px] border-collapse text-base">
             <caption className="sr-only">What each plan includes</caption>
             <thead>
               <tr>
@@ -292,17 +292,17 @@ export function AtlasPlansSheet({
                       background: p.key === "pro" ? T.accent.chip : "#fff",
                     }}
                   >
-                    <span className="block text-[15px] whitespace-nowrap">
+                    <span className="block text-base whitespace-nowrap">
                       {p.name}
                     </span>
                     <span
                       className="my-0.5 block text-[22px] leading-tight font-medium"
-                      style={{ fontFamily: T.font.serif }}
+                      style={{ fontFamily: T.font.sans }}
                     >
                       {priceHeadline(p.price)}
                     </span>
                     <span
-                      className="block text-[14px] font-medium whitespace-nowrap"
+                      className="block text-sm font-medium whitespace-nowrap"
                       style={{ color: T.ink.dim }}
                     >
                       {TAGLINE[p.key as SheetPlan]}
@@ -363,7 +363,7 @@ export function AtlasPlansSheet({
         </div>
 
         <div
-          className="mt-5 grid gap-4 text-[14px] leading-normal sm:grid-cols-2"
+          className="mt-5 grid gap-4 text-sm leading-normal sm:grid-cols-2"
           style={{ color: "#45435A" }}
         >
           <p className="m-0 flex gap-2">
@@ -374,7 +374,7 @@ export function AtlasPlansSheet({
               </strong>{" "}
               It renews each year.{" "}
               <GlobalLink
-                href="/contribute/membership#get-pro-free"
+                href="/plans#get-pro-free"
                 className="font-semibold underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >

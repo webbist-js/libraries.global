@@ -38,7 +38,7 @@ function TestLine({
 }) {
   if (!test)
     return (
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         {label}: not run
       </p>
     )
@@ -46,7 +46,7 @@ function TestLine({
 
   return (
     <p
-      className="m-0 flex items-start gap-2 text-[14px]"
+      className="m-0 flex items-start gap-2 text-sm"
       style={{ color: ok ? T.accent.ok : T.accent.warn }}
     >
       <Icon
@@ -117,7 +117,7 @@ export function EventFeedPanel({
           submission.
         </Notice>
       ) : null}
-      <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[14px]">
+      <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
         <dt style={{ color: T.ink.dim }}>Platform</dt>
         <dd className="m-0">{def?.label ?? review.provider}</dd>
         <dt style={{ color: T.ink.dim }}>{tUi("library")}</dt>
@@ -136,7 +136,10 @@ export function EventFeedPanel({
             </dt>
             <dd
               className="m-0"
-              style={{ fontFamily: T.font.mono, fontSize: "13px" }}
+              style={{
+                fontFamily: T.font.mono,
+                fontSize: "var(--type-body-small-size)",
+              }}
             >
               {v}
             </dd>
@@ -148,7 +151,10 @@ export function EventFeedPanel({
                 <dt style={{ color: T.ink.dim }}>{label(k)} (current)</dt>
                 <dd
                   className="m-0"
-                  style={{ fontFamily: T.font.mono, fontSize: "13px" }}
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "var(--type-body-small-size)",
+                  }}
                 >
                   {v}
                 </dd>
@@ -163,7 +169,7 @@ export function EventFeedPanel({
       {open && review.exists ? (
         <FeedTestButton documentId={documentId} />
       ) : null}
-      <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         Details are encrypted. Moderators see only these masked hints; only
         Libraries Global staff can read a value.
       </p>

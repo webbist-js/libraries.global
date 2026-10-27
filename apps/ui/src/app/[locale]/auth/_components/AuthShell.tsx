@@ -59,7 +59,7 @@ export function AuthShell({
             className="-ml-2 flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-1.5 transition-colors hover:bg-(--t-bg-muted-2)"
             style={{
               fontFamily: T.font.sans,
-              fontSize: "15px",
+              fontSize: "var(--type-body-size)",
               fontWeight: 600,
               color: T.ink.base,
               borderRadius: "999px",
@@ -70,7 +70,7 @@ export function AuthShell({
           </GlobalLink>
           <LocaleSwitcher
             locale={locale}
-            triggerClassName="h-10 w-auto gap-1 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-4 text-[15px] font-semibold uppercase text-(--t-ink-base) shadow-none hover:border-(--t-border-hi) [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
+            triggerClassName="h-10 w-auto gap-1 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-4 text-base font-semibold uppercase text-(--t-ink-base) shadow-none hover:border-(--t-border-hi) [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
           />
         </div>
 
@@ -83,7 +83,7 @@ export function AuthShell({
           style={{
             borderTop: `1px solid ${T.border.line}`,
             fontFamily: T.font.sans,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             color: T.ink.dim,
           }}
         >

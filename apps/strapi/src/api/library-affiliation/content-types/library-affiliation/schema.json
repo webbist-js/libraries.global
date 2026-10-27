@@ -39,7 +39,8 @@
         "email_domain",
         "vouching",
         "contact_us",
-        "team"
+        "team",
+        "network"
       ],
       "default": "contact_us"
     },
@@ -61,13 +62,19 @@
       "type": "enumeration",
       "enum": [
         "claim",
-        "team"
+        "team",
+        "network"
       ]
     },
     "teamMember": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::access.team-member"
+    },
+    "authorityManaged": {
+      "type": "boolean",
+      "default": false,
+      "private": true
     }
   }
 }

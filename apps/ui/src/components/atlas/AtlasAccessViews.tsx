@@ -127,7 +127,7 @@ export function AreaDetails({
       className="flex flex-col gap-3"
     >
       <div>
-        <h3 className="m-0 text-lg font-bold">{area.name}</h3>
+        <h3 className="type-h3 m-0">{area.name}</h3>
         <p
           className="mt-1 mb-0 text-3xl font-semibold"
           style={{ color: T.accent.primary }}
@@ -253,7 +253,7 @@ export function AccessOverview({
           className="flex flex-col gap-3 rounded-[20px] border p-4 text-sm leading-relaxed"
           style={{ borderColor: T.border.hi, background: T.bg.surface }}
         >
-          <h3 className="m-0 text-base font-bold">
+          <h3 className="type-h3 m-0">
             {fewRecords.toLocaleString()} areas have few records yet
           </h3>
           <p className="m-0" style={{ color: T.ink.dim }}>
@@ -346,7 +346,7 @@ export function AccessExplore({
           <AreaDetails area={area} metric={metric} onFit={onFit} />
         ) : (
           <>
-            <h3 className="m-0 mb-2 text-base font-bold">Pick an area</h3>
+            <h3 className="type-h3 m-0 mb-2">Pick an area</h3>
             <p
               className="m-0 text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
@@ -373,7 +373,7 @@ function AccessRanking({
 }) {
   return (
     <section aria-label="Areas with the fewest recorded libraries per resident">
-      <h3 className="m-0 mb-2 text-base font-bold">
+      <h3 className="type-h3 m-0 mb-2">
         {metric === "per100k"
           ? "Fewest libraries per resident"
           : "Most people per library"}

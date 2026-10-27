@@ -20,7 +20,7 @@ const pillBase: React.CSSProperties = {
   gap: "8px",
   borderRadius: "999px",
   padding: "9px 16px",
-  fontSize: "14px",
+  fontSize: "var(--type-body-small-size)",
   fontWeight: 600,
   cursor: "pointer",
   minHeight: "44px",

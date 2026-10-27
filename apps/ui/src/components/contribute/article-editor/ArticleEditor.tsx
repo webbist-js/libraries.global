@@ -41,7 +41,7 @@ function ToolButton({
       disabled={disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] px-2 text-[14px] font-bold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-40"
+      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] px-2 text-sm font-bold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-40"
       style={{
         background: active ? T.accent.chip : "transparent",
         color: active ? T.accent.primary : T.ink.base,
@@ -73,12 +73,12 @@ const smallInput: React.CSSProperties = {
   background: T.bg.deep,
   color: T.ink.base,
   fontFamily: T.font.sans,
-  fontSize: 16,
+  fontSize: "var(--type-body-size)",
   minWidth: 0,
 }
 
 const smallPill =
-  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold transition-colors"
+  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors"
 
 /** The toolbar's context row: link, quote, code and callout details. */
 function ContextRow({ editor }: { editor: Editor }) {
@@ -106,7 +106,7 @@ function ContextRow({ editor }: { editor: Editor }) {
   if (!state) return null
   const rows: React.ReactNode[] = []
   const labelStyle: React.CSSProperties = {
-    fontSize: 14,
+    fontSize: "var(--type-body-small-size)",
     fontWeight: 600,
     color: T.ink.dim,
     whiteSpace: "nowrap",
@@ -404,10 +404,10 @@ function Toolbar({
 
 /** Editor styles: the article's own type on paper, no chrome inside the text. */
 const EDITOR_CSS = `
-.ae-editor .ProseMirror { outline: none; min-height: 320px; font-family: var(--ae-sans); font-size: 17px; line-height: 1.7; color: var(--t-ink-base); }
+.ae-editor .ProseMirror { outline: none; min-height: 320px; font-family: var(--ae-sans); font-size: var(--type-body-large-size); line-height: 1.7; color: var(--t-ink-base); }
 .ae-editor .ProseMirror > * + * { margin-top: 0.9em; }
-.ae-editor .ProseMirror h2 { font-family: var(--ae-serif); font-size: 30px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; margin-top: 1.4em; }
-.ae-editor .ProseMirror h3 { font-family: var(--ae-serif); font-size: 23px; font-weight: 500; line-height: 1.2; margin-top: 1.2em; }
+.ae-editor .ProseMirror h2 { font: var(--type-h2); letter-spacing: var(--type-heading-tracking); margin-top: 1.4em; }
+.ae-editor .ProseMirror h3 { font: var(--type-h3); letter-spacing: var(--type-heading-tracking); margin-top: 1.2em; }
 .ae-editor .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--t-ink-faint); float: left; height: 0; pointer-events: none; }
 .ae-editor .ProseMirror a { color: var(--t-accent-primary); text-decoration: underline; text-underline-offset: 3px; }
 .ae-editor .ProseMirror ul, .ae-editor .ProseMirror ol { padding-inline-start: 1.5em; }
@@ -546,7 +546,6 @@ export function ArticleEditor({
           background: T.bg.deep,
           border: `1px solid ${T.border.line}`,
           "--ae-sans": T.font.sans,
-          "--ae-serif": T.font.serif,
           "--ae-mono": T.font.mono,
         } as React.CSSProperties
       }
@@ -560,9 +559,7 @@ export function ArticleEditor({
             width={20}
             className="shrink-0 text-(--t-accent-primary)"
           />
-          <h2 className="m-0 text-[15px] leading-snug font-semibold">
-            {heading}
-          </h2>
+          <h2 className="type-small-heading m-0">{heading}</h2>
         </div>
       )}
       {editor ? (
@@ -612,7 +609,7 @@ export function ArticleEditor({
       )}
       <div className="px-6 pt-8 pb-10 sm:px-10">
         <span
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold"
           style={{ background: meta.tintBg, color: meta.tintFg }}
         >
           {tEditor(kind === "knowledge" ? "kindKnowledge" : "kindJournal")}
@@ -631,11 +628,8 @@ export function ArticleEditor({
           maxLength={200}
           className="mt-4 block w-full resize-none border-0 bg-transparent p-0 outline-none"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(34px,4vw,48px)",
-            fontWeight: 500,
-            lineHeight: 1.1,
-            letterSpacing: "-0.02em",
+            font: T.type.h1,
+            letterSpacing: "var(--type-display-tracking)",
             color: T.ink.base,
           }}
         />
@@ -653,7 +647,7 @@ export function ArticleEditor({
           className="mt-5 block w-full resize-none border-0 bg-transparent p-0 outline-none"
           style={{
             fontFamily: T.font.sans,
-            fontSize: "19px",
+            fontSize: "var(--type-body-large-size)",
             lineHeight: 1.55,
             color: T.ink.dim,
           }}
@@ -671,8 +665,8 @@ export function ArticleEditor({
               className="mt-6 flex min-h-[140px] w-full flex-col items-center justify-center gap-2 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-surface) p-5 text-center text-(--t-ink-dim) hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
             >
               <Icon aria-hidden icon="mdi:image-plus-outline" width={28} />
-              <strong className="text-[16px]">{w("addOpening")}</strong>
-              <span className="max-w-[48ch] text-[14px] leading-relaxed">
+              <strong className="text-base">{w("addOpening")}</strong>
+              <span className="max-w-[48ch] text-sm leading-relaxed">
                 {w("coverHint")}
               </span>
             </button>

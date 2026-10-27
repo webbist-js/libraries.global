@@ -7,7 +7,6 @@ import { LiveConsole } from "@/components/mobile/live/LiveConsole"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
-import { T } from "@/lib/design-tokens"
 import { mobilePath, mobileSignInHref } from "@/lib/mobile-app"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { Link } from "@/lib/navigation"
@@ -49,12 +48,7 @@ export default async function ConsolePage({
   if (!result.body)
     return (
       <section className="live-controls">
-        <h1
-          className="my-3 text-[26px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
-          {library.name}
-        </h1>
+        <h1 className="type-h1 my-3">{library.name}</h1>
         <p className="my-4">
           The live service is temporarily unavailable. Try again shortly.
         </p>

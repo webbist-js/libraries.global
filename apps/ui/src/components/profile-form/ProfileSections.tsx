@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { ChoiceCard, Notice } from "@/components/ds"
+import { NetworkAffiliationEditor } from "@/components/networks/NetworkAffiliationEditor"
 import { AvatarUpload } from "@/components/settings/AvatarUpload"
 import { CountryCombobox } from "@/components/settings/CountryCombobox"
 import { InterestsChips } from "@/components/settings/InterestsChips"
@@ -154,7 +155,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
           <span
             id={ids.usernameStatus}
             aria-live="polite"
-            className="text-[14px] font-semibold"
+            className="text-sm font-semibold"
           >
             <UsernameStatusText status={form.usernameStatus} />
           </span>
@@ -259,7 +260,7 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
           </label>
           <span
             id={ids.bioCount}
-            className="text-[13px] font-semibold"
+            className="text-sm font-semibold"
             style={{ color: T.ink.dim }}
           >
             {form.bio.length} of {BIO_MAX}
@@ -411,7 +412,7 @@ export function AffiliationSection({
             </span>
             <div>
               <h3
-                className="m-0 text-[16px] font-semibold"
+                className="type-small-heading m-0"
                 style={{ color: T.ink.base }}
               >
                 {hasClaim
@@ -419,7 +420,7 @@ export function AffiliationSection({
                   : "Are you affiliated with a library on the atlas?"}
               </h3>
               <p
-                className="m-0 mt-1 text-[15px] leading-[1.55]"
+                className="m-0 mt-1 text-base leading-[1.55]"
                 style={{ color: T.ink.dim }}
               >
                 Search libraries by name, city or entity ref. Verified
@@ -436,7 +437,7 @@ export function AffiliationSection({
         <button
           type="button"
           onClick={() => setClaimAnother(true)}
-          className="inline-flex cursor-pointer items-center gap-1.5 self-start rounded-full px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+          className="inline-flex cursor-pointer items-center gap-1.5 self-start rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
           style={{
             background: T.bg.deep,
             border: `1px solid ${T.border.hi}`,
@@ -448,6 +449,7 @@ export function AffiliationSection({
           Claim another library
         </button>
       ) : null}
+      <NetworkAffiliationEditor />
     </SectionCard>
   )
 }
@@ -510,7 +512,7 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
               return (
                 <li
                   key={lang.code}
-                  className="inline-flex items-center gap-1 rounded-full py-1 pr-1 pl-3.5 text-[14px] font-semibold"
+                  className="inline-flex items-center gap-1 rounded-full py-1 pr-1 pl-3.5 text-sm font-semibold"
                   style={{
                     background: T.accent.chip,
                     color: T.accent.primaryHover,
@@ -573,7 +575,7 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
             type="button"
             onClick={addLanguage}
             disabled={!addingLang}
-            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full px-5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-1.5 rounded-full px-5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               background: T.bg.deep,
               border: `1px solid ${T.border.hi}`,

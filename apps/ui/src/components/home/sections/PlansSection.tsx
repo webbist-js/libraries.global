@@ -20,7 +20,7 @@ function teaserCta(
         ? null
         : { label: "Create account", href: "/auth/register" }
     case "pro":
-      return { label: "See Pro", href: "/contribute/membership" }
+      return { label: "See Pro", href: "/plans" }
     case "team":
       return { label: "Create your Team", href: "/staff/teams/new" }
   }
@@ -51,7 +51,7 @@ export function PlansSection({
         <div className="mb-10 max-w-[760px]">
           <SectionHeader id="plans-title" intro={intro} size="band" />
           <GlobalLink
-            href="/contribute/membership"
+            href="/plans"
             {...analyticsAttributes("membership_interest", {
               interaction_source: "home_plans",
               action_type: "compare",
@@ -81,10 +81,8 @@ export function PlansSection({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3
-                    className="m-0 text-[24px] leading-[1.15]"
+                    className="type-h3 m-0"
                     style={{
-                      fontFamily: T.font.serif,
-                      fontWeight: 500,
                       color: T.ink.base,
                     }}
                   >
@@ -92,14 +90,14 @@ export function PlansSection({
                   </h3>
                   {current ? (
                     <span
-                      className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+                      className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
                       style={{ background: "#E6EFE6", color: "#2F5D3A" }}
                     >
                       Your plan
                     </span>
                   ) : highlight ? (
                     <span
-                      className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+                      className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
                       style={{
                         background: T.accent.chip,
                         color: T.accent.primary,
@@ -110,13 +108,13 @@ export function PlansSection({
                   ) : null}
                 </div>
                 <p
-                  className="m-0 text-[14px] font-semibold"
+                  className="m-0 text-sm font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {teaser.tagline}
                 </p>
                 <p
-                  className="m-0 text-[15px] leading-[1.5]"
+                  className="m-0 text-base leading-[1.5]"
                   style={{ color: T.ink.dim }}
                 >
                   {teaser.summary}
@@ -133,8 +131,8 @@ export function PlansSection({
                         : {})}
                       className={
                         highlight
-                          ? "inline-block rounded-full px-4 py-2 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-                          : "inline-block rounded-full border bg-white px-4 py-2 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+                          ? "inline-block rounded-full px-4 py-2 text-base font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                          : "inline-block rounded-full border bg-white px-4 py-2 text-base font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
                       }
                       style={
                         highlight

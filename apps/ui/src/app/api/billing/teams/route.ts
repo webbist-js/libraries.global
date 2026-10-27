@@ -12,6 +12,14 @@ const Signup = z
   .object({
     requestId: z.uuid(),
     name: z.string().trim().min(1).max(120),
+    primaryNetworkId: z
+      .string()
+      .regex(/^[a-z0-9]{20,32}$/)
+      .optional(),
+    libraryDocumentIds: z
+      .array(z.string().regex(/^[a-z0-9]{20,32}$/))
+      .max(2000)
+      .optional(),
     publicServiceRequested: z.boolean().optional(),
   })
   .strict()

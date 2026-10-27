@@ -35,7 +35,7 @@ export function SectionTitle({
       id={id}
       className="m-0"
       style={{
-        fontFamily: T.font.serif,
+        fontFamily: T.font.sans,
         fontSize: "24px",
         fontWeight: 500,
         letterSpacing: "-0.01em",
@@ -58,7 +58,7 @@ export function TextLink({
   return (
     <Link
       href={href}
-      className="text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+      className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
       style={{ color: T.accent.primary }}
     >
       {children}
@@ -118,17 +118,17 @@ export function BadgeTile({
       </span>
       <span className="min-w-0 flex-1">
         <span
-          className="block text-[16px] font-bold"
+          className="block text-base font-bold"
           style={{ color: earned ? T.ink.base : T.ink.dim }}
         >
           {badge.name}
         </span>
-        <span className="block text-[14px]" style={{ color: T.ink.dim }}>
+        <span className="block text-sm" style={{ color: T.ink.dim }}>
           {badge.description}
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-2">
           <span
-            className="text-[13px] font-semibold"
+            className="text-sm font-semibold"
             style={{
               color: earned ? "var(--tint-public-fg)" : T.ink.low,
             }}
@@ -141,7 +141,7 @@ export function BadgeTile({
           </span>
           {showRarity ? (
             <span
-              className="rounded-full px-2 py-px text-[12px] font-semibold"
+              className="rounded-full px-2 py-px text-xs font-semibold"
               style={{
                 background: T.bg.deep,
                 border: `1px solid ${T.border.line}`,

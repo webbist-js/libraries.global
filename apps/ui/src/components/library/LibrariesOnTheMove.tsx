@@ -24,9 +24,7 @@ export function LibrariesOnTheMove({
 
   return (
     <section>
-      <h2 className="text-3xl" style={{ fontFamily: T.font.serif }}>
-        Based here
-      </h2>
+      <h2 className="type-h2">Based here</h2>
       <p style={{ color: T.ink.dim }}>
         Mobile libraries that start their routes from this library.
       </p>
@@ -48,7 +46,7 @@ export function LibrariesOnTheMove({
           return (
             <Card key={library.documentId} className="p-5">
               <span
-                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold"
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
                 style={{
                   background: TYPE_TINT.public.bg,
                   color: TYPE_TINT.public.fg,
@@ -57,10 +55,7 @@ export function LibrariesOnTheMove({
                 <Icon aria-hidden="true" icon="mdi:bus-side" width={14} />
                 Mobile library
               </span>
-              <h3
-                className="mt-3 mb-1 text-[22px] leading-tight"
-                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-              >
+              <h3 className="type-h3 mt-3 mb-1">
                 <Link
                   href={path}
                   className="no-underline hover:underline"
@@ -69,7 +64,7 @@ export function LibrariesOnTheMove({
                   {library.name}
                 </Link>
               </h3>
-              <p className="m-0 text-[14.5px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                 {summary.stopCount} {summary.stopCount === 1 ? "stop" : "stops"}{" "}
                 · {summary.cycleWeeks}-week cycle
               </p>

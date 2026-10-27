@@ -126,7 +126,7 @@ export function AtlasAreaPicker({
           className="z-[90] flex max-h-[min(540px,calc(100dvh-32px))] w-[min(360px,calc(100vw-32px))] flex-col gap-3 overflow-auto rounded-2xl bg-(--t-bg-deep) p-4 text-(--t-ink-base)"
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 className="m-0 text-base font-semibold">{t("findArea")}</h3>
+            <h3 className="type-h3 m-0">{t("findArea")}</h3>
             <button
               type="button"
               aria-label={t("close")}

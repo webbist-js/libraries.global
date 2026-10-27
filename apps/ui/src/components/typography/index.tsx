@@ -23,7 +23,7 @@ export function Typography({
   className,
   variant,
   textColor = "black",
-  fontWeight = "normal",
+  fontWeight,
   tag: Tag = "p",
   id,
 }: TypographyProps) {

@@ -53,7 +53,13 @@ export type TeamBillingContext = {
 export async function createSelfServiceTeam(
   pool: Pool,
   buyer: Buyer,
-  input: { requestId: string; name: string; publicServiceRequested?: boolean }
+  input: {
+    requestId: string
+    name: string
+    publicServiceRequested?: boolean
+    primaryNetworkId?: string
+    libraryDocumentIds?: string[]
+  }
 ) {
   const config = teamBillingConfig()
   if (!config.purchasing)
@@ -108,6 +114,8 @@ export async function createSelfServiceTeam(
         baUserId: buyer.id,
         email: buyer.email,
         publicServiceRequested: input.publicServiceRequested === true,
+        primaryNetworkId: input.primaryNetworkId,
+        libraryDocumentIds: input.libraryDocumentIds,
       })
       await client.query(
         "update team_billing_accounts set team_id=$2 where id=$1",

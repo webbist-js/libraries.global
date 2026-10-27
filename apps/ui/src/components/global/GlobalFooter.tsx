@@ -1,3 +1,4 @@
+import { membershipLink } from "@repo/shared-data"
 import type { Data } from "@repo/strapi-types"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
@@ -24,6 +25,7 @@ export function GlobalFooter({
 
   const sections = Array.isArray(footer?.sections) ? footer.sections : []
   const year = new Date().getFullYear()
+  const brandTitle = footer?.title || SITE_NAME
 
   // Keep frequent destinations direct. The legal index lists every published
   // policy, including documents added later, without growing the bottom bar.
@@ -80,12 +82,21 @@ export function GlobalFooter({
               className="m-0 mb-3 text-[30px] leading-[1.15] font-medium tracking-[-0.015em]"
               style={{ fontFamily: T.font.serif, color: T.ink.base }}
             >
-              {footer?.title || SITE_NAME}
+              {brandTitle.endsWith(" Global") ? (
+                <>
+                  {brandTitle.slice(0, -7)}{" "}
+                  <em className="font-normal text-(--t-accent-primary) italic">
+                    Global
+                  </em>
+                </>
+              ) : (
+                footer?.title || SITE_NAME
+              )}
             </h2>
 
             {footer?.text ? (
               <p
-                className="m-0 max-w-[34ch] text-[15px] leading-[1.7]"
+                className="m-0 max-w-[34ch] text-base leading-[1.7]"
                 style={{ color: T.ink.dim }}
               >
                 {footer.text}
@@ -94,7 +105,7 @@ export function GlobalFooter({
 
             <GlobalLink
               href="/about"
-              className="mt-5 text-[14px] text-(--t-ink-base) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
+              className="mt-5 text-sm text-(--t-ink-base) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary)"
             >
               {tUi("about_the_project")}
             </GlobalLink>
@@ -110,7 +121,7 @@ export function GlobalFooter({
                     className="flex flex-col gap-5"
                   >
                     <p
-                      className="m-0 text-[18px] font-bold"
+                      className="m-0 text-lg font-bold"
                       style={{ color: T.ink.dim }}
                     >
                       {section.title}
@@ -121,9 +132,13 @@ export function GlobalFooter({
                         <GlobalLink
                           key={link.id ?? link.page?.slug ?? link.href ?? index}
                           href={getStrapiLinkHref(link)}
-                          className="block w-fit text-[17px] text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
+                          className="block w-fit text-base text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
                         >
-                          {link.label}
+                          {/^(?:https?:\/\/(?:www\.)?libraries\.global)?(?:\/(?:en|fr|cs))?\/plans(?:[?#]|$)/.test(
+                            membershipLink(getStrapiLinkHref(link) ?? "")
+                          )
+                            ? tUi("plans_and_pricing")
+                            : link.label}
                         </GlobalLink>
                       ))}
                     </div>
@@ -138,7 +153,7 @@ export function GlobalFooter({
         <div className="flex flex-col gap-x-8 gap-y-3 pt-5 lg:flex-row lg:items-center lg:justify-between">
           {/* Left: copyright + tagline */}
           <p
-            className="m-0 text-[13px] leading-relaxed"
+            className="m-0 text-sm leading-relaxed"
             style={{ color: T.ink.dim }}
           >
             © {year} {SITE_NAME} · Indexing the world&rsquo;s libraries
@@ -154,7 +169,7 @@ export function GlobalFooter({
                 <GlobalLink
                   key={link.key}
                   href={link.href}
-                  className="inline-flex min-h-11 items-center text-[13px] text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4"
+                  className="inline-flex min-h-11 items-center text-sm text-(--t-ink-dim) underline underline-offset-4 transition-colors hover:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4"
                 >
                   {link.label}
                 </GlobalLink>

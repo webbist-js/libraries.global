@@ -54,7 +54,7 @@ export function Avatar({
     >
       <span
         style={{
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontSize: fs,
           color: tinted ? palette.fg : T.bg.deep,
           fontWeight: tinted && (tint || size === "xl") ? 400 : 600,
