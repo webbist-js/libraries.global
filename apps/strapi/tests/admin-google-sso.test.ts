@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   adminAuthCookieSecure,
+  adminPanelUrl,
   googleAdminAuthProviders,
 } from "../src/utils/admin-google-sso"
 
@@ -29,6 +30,7 @@ describe("Google admin SSO", () => {
     vi.stubEnv("STRAPI_ADMIN_GOOGLE_SSO_ENABLED", "true")
     vi.stubEnv("GOOGLE_CLIENT_ID", "test-client")
     vi.stubEnv("GOOGLE_CLIENT_SECRET", "test-secret")
+    vi.stubEnv("STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS", "admin@example.com")
     vi.stubEnv("STRAPI_ADMIN_GOOGLE_CALLBACK_URL", "")
     vi.stubEnv("STRAPI_ADMIN_SSO_LOOPBACK", "false")
   })
@@ -37,6 +39,7 @@ describe("Google admin SSO", () => {
   it("keeps production cookies secure unless loopback mode is explicitly configured", () => {
     vi.stubEnv("NODE_ENV", "production")
     expect(adminAuthCookieSecure({ env })).toBe(true)
+    expect(adminPanelUrl({ env })).toBe("/admin")
     vi.stubEnv(
       "STRAPI_ADMIN_GOOGLE_CALLBACK_URL",
       "http://127.0.0.1:18080/admin/connect/google"
@@ -44,6 +47,7 @@ describe("Google admin SSO", () => {
     expect(adminAuthCookieSecure({ env })).toBe(true)
     vi.stubEnv("STRAPI_ADMIN_SSO_LOOPBACK", "true")
     expect(adminAuthCookieSecure({ env })).toBe(false)
+    expect(adminPanelUrl({ env })).toBe("http://127.0.0.1:18080/admin")
   })
 
   it.each([
@@ -56,7 +60,22 @@ describe("Google admin SSO", () => {
     expect(() => adminAuthCookieSecure({ env })).toThrow(
       "HTTP loopback callback"
     )
+    expect(() => adminPanelUrl({ env })).toThrow("HTTP loopback callback")
   })
+
+  it.each(["localhost", "127.0.0.1", "[::1]"])(
+    "keeps SSO completion on the %s callback origin instead of the server URL",
+    (host) => {
+      vi.stubEnv("STRAPI_ADMIN_SSO_LOOPBACK", "true")
+      vi.stubEnv("APP_URL", "https://cms.example.com")
+      vi.stubEnv(
+        "STRAPI_ADMIN_GOOGLE_CALLBACK_URL",
+        `http://${host}:18080/admin/connect/google`
+      )
+      expect(adminPanelUrl({ env })).toBe(`http://${host}:18080/admin`)
+      expect(process.env.APP_URL).toBe("https://cms.example.com")
+    }
+  )
 
   it("keeps the provider disabled until explicitly enabled", () => {
     vi.stubEnv("STRAPI_ADMIN_GOOGLE_SSO_ENABLED", "false")
@@ -72,6 +91,46 @@ describe("Google admin SSO", () => {
       )
     }
   )
+
+  it.each(["", " , "])(
+    "fails startup when enabled without an explicit email allowlist: %s",
+    (allowedEmails) => {
+      vi.stubEnv("STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS", allowedEmails)
+      expect(() => googleAdminAuthProviders({ env })).toThrow(
+        "Google admin SSO requires STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS"
+      )
+    }
+  )
+
+  it("rejects an email outside the allowlist before checking administrator access", async () => {
+    const { strategy, findOne } = createStrategy()
+    const done = vi.fn()
+    await strategy._verify(
+      "token",
+      "",
+      { email: "outsider@example.com", email_verified: true },
+      done
+    )
+    expect(done).toHaveBeenCalledWith(null, false)
+    expect(findOne).not.toHaveBeenCalled()
+  })
+
+  it("normalizes the configured allowlist and Google email for exact matching", async () => {
+    vi.stubEnv(
+      "STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS",
+      " Admin@Example.com , secondary@example.com "
+    )
+    const { strategy, findOne } = createStrategy()
+    const done = vi.fn()
+    await strategy._verify(
+      "token",
+      "",
+      { email: " ADMIN@EXAMPLE.COM ", email_verified: true },
+      done
+    )
+    expect(findOne).toHaveBeenCalled()
+    expect(done).toHaveBeenCalledWith(null, { email: "admin@example.com" })
+  })
 
   it.each([undefined, false, "true"])(
     "rejects an email whose verification flag is %s",
@@ -116,7 +175,7 @@ describe("Google admin SSO", () => {
       "token",
       "",
       {
-        email: "outsider@example.com",
+        email: "admin@example.com",
         email_verified: true,
         given_name: "Unknown",
         family_name: "User",
