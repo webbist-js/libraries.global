@@ -52,13 +52,7 @@ export function BarSeries({
     <section className="min-w-0" aria-label={title}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <Heading
-          className={cn(
-            "m-0",
-            compact
-              ? "text-[15px] font-semibold"
-              : "font-serif text-[22px] font-medium",
-            ghost ? "text-(--t-ink-dim)" : "text-(--t-ink-base)"
-          )}
+          className={`type-panel-title ${cn("m-0", ghost ? "text-(--t-ink-dim)" : "text-(--t-ink-base)")}`}
         >
           {title}
         </Heading>
@@ -66,7 +60,7 @@ export function BarSeries({
           <Button
             type="button"
             variant="link"
-            className="min-h-11 px-0 text-[14px] text-(--t-accent-primary) underline underline-offset-4"
+            className="min-h-11 px-0 text-sm text-(--t-accent-primary) underline underline-offset-4"
             onClick={() => setTable((value) => !value)}
             aria-expanded={table}
             aria-controls={id}
@@ -84,7 +78,7 @@ export function BarSeries({
               aria-label={title + " data"}
               className="mt-3 overflow-x-auto rounded-2xl border border-(--t-border-line)"
             >
-              <table className="w-full text-left text-[14px] tabular-nums">
+              <table className="w-full text-left text-sm tabular-nums">
                 <caption className="sr-only">{title}</caption>
                 <thead className="bg-(--t-bg-surface)">
                   <tr>
@@ -118,7 +112,7 @@ export function BarSeries({
           <>
             <div className="relative mt-3">
               {empty && emptyMessage ? (
-                <p className="absolute inset-0 m-0 flex items-center justify-center px-5 text-center text-[15px] leading-relaxed text-(--t-ink-dim)">
+                <p className="absolute inset-0 m-0 flex items-center justify-center px-5 text-center text-base leading-relaxed text-(--t-ink-dim)">
                   {emptyMessage}
                 </p>
               ) : null}
@@ -165,7 +159,7 @@ export function BarSeries({
             {points.length ? (
               <div
                 aria-hidden="true"
-                className="mt-2 flex justify-between text-[13px] text-(--t-ink-dim)"
+                className="mt-2 flex justify-between text-sm text-(--t-ink-dim)"
               >
                 <span>{date(points[0]!.date)}</span>
                 <span>{endLabel ?? date(points.at(-1)!.date)}</span>

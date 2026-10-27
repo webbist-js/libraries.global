@@ -32,7 +32,7 @@ const optionStyle = (active: boolean): React.CSSProperties => ({
   background: active ? T.accent.chip : "transparent",
   border: "none",
   color: active ? T.accent.primaryHover : T.ink.base,
-  fontSize: "15px",
+  fontSize: "var(--type-body-size)",
   fontWeight: active ? 600 : 400,
   fontFamily: T.font.sans,
   cursor: "pointer",
@@ -163,7 +163,7 @@ function CountrySlugCombobox({
               borderBottom: `1px solid ${T.border.line}`,
               background: "transparent",
               color: T.ink.base,
-              fontSize: "15px",
+              fontSize: "var(--type-body-size)",
               fontFamily: T.font.sans,
               outline: "none",
               boxSizing: "border-box",
@@ -183,7 +183,7 @@ function CountrySlugCombobox({
                 style={{
                   padding: "12px 16px",
                   color: T.ink.dim,
-                  fontSize: "15px",
+                  fontSize: "var(--type-body-size)",
                 }}
               >
                 {tUi("no_results")}{" "}
@@ -249,13 +249,13 @@ function SelectedLibrary({
         />
         <div className="min-w-0">
           <p
-            className="m-0 text-[15px] font-semibold"
+            className="m-0 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {hit.name}
           </p>
           {place ? (
-            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
               {place}
             </p>
           ) : null}
@@ -264,7 +264,7 @@ function SelectedLibrary({
       <button
         type="button"
         onClick={onChange}
-        className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-[14px] font-semibold underline underline-offset-[3px]"
+        className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold underline underline-offset-[3px]"
         style={{ color: T.accent.primary }}
       >
         Change<span className="sr-only"> library</span>
@@ -443,13 +443,13 @@ export function LibraryClaimSearch({
       </p>
 
       {searching ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           Searching…
         </p>
       ) : null}
 
       {!searching && hits.length === 0 && query.trim() ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           No libraries found. Try a different name or broaden your filters.
         </p>
       ) : null}
@@ -476,12 +476,12 @@ export function LibraryClaimSearch({
                 style={{ fontFamily: T.font.sans }}
               >
                 <span
-                  className="text-[15px] font-semibold"
+                  className="text-base font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {hit.name}
                 </span>
-                <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                <span className="text-sm" style={{ color: T.ink.dim }}>
                   {placeOf(hit)}
                 </span>
               </button>
@@ -529,7 +529,7 @@ export function LibraryClaimSearch({
             type="button"
             disabled={claiming}
             onClick={() => void handleClaim()}
-            className="inline-flex items-center gap-1.5 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
             style={{ border: "none", fontFamily: T.font.sans }}
           >
             {claiming ? tUi("sending") : "Claim affiliation"}

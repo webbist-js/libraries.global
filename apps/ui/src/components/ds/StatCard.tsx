@@ -39,15 +39,13 @@ export function StatCard({
       <span
         className="truncate"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: compactValue ? "30px" : "40px",
-          lineHeight: compactValue ? "40px" : 1,
+          font: compactValue ? T.type.h2 : T.type.stat,
           color: T.ink.base,
         }}
       >
         {value}
       </span>
-      <span className="text-[15px] font-semibold" style={{ color: fg }}>
+      <span className="text-base font-semibold" style={{ color: fg }}>
         {label}
       </span>
     </div>

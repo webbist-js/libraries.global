@@ -12,7 +12,7 @@ import { DriveTitle } from "./DriveTitle"
 import { focusChipOf, gapPhraseOf } from "./focus-meta"
 
 const CHIP =
-  "inline-flex items-center gap-1.5 rounded-full px-3 py-[5px] text-[14px]"
+  "inline-flex items-center gap-1.5 rounded-full px-3 py-[5px] text-sm"
 
 /**
  * The Noticeboard's big drive card (mockup: the pinned card). Chips for
@@ -77,20 +77,15 @@ export function FeaturedDrive({
 
       <h2
         id="featured-drive-heading"
-        className="m-0 text-balance"
+        className="type-h2 m-0 text-balance"
         style={{
-          fontFamily: T.font.serif,
-          fontWeight: 500,
-          fontSize: "clamp(34px,4vw,52px)",
-          lineHeight: 1.02,
-          letterSpacing: "-0.02em",
           color: T.ink.base,
         }}
       >
         <DriveTitle title={drive.title} />
       </h2>
       <p
-        className="m-0 max-w-[62ch] text-[17px] leading-[1.6]"
+        className="m-0 max-w-[62ch] text-base leading-[1.6]"
         style={{ color: T.ink.base }}
       >
         {drive.summary}
@@ -106,7 +101,7 @@ export function FeaturedDrive({
           color={tint.fg}
         />
       ) : (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           Progress shows once the drive is counted, within the hour.
         </p>
       )}
@@ -114,13 +109,13 @@ export function FeaturedDrive({
       <div className="flex flex-wrap gap-2.5">
         <GlobalLink
           href={href}
-          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-[16px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
         >
           Join this drive
         </GlobalLink>
         <GlobalLink
           href={howHref ?? `${href}#rules`}
-          className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
+          className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-base font-semibold no-underline hover:border-(--t-accent-primary)"
           style={{ color: T.ink.base }}
         >
           How drives work

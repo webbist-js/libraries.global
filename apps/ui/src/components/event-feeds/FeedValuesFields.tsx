@@ -78,7 +78,7 @@ export function FeedValuesFields({
               {f.secret ? (
                 <button
                   type="button"
-                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-[13.5px] font-semibold hover:bg-(--t-bg-surface)"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold hover:bg-(--t-bg-surface)"
                   style={{
                     borderColor: T.border.hi,
                     color: T.ink.base,

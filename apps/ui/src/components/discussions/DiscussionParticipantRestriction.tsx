@@ -105,7 +105,7 @@ export function DiscussionParticipantRestriction({
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl bg-(--t-bg-deep)">
-          <DialogTitle>
+          <DialogTitle className="type-h2">
             {t("restrictParticipant")} ·{" "}
             {discussionAuthor(record.author, t("member")).name}
           </DialogTitle>

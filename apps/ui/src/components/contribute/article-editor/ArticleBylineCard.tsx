@@ -34,7 +34,7 @@ export function ArticleBylineCard({
           : "grid gap-3 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6"
       }
     >
-      <h2 className="m-0 text-[17px] font-bold">{t("heading")}</h2>
+      <h2 className="type-small-heading m-0">{t("heading")}</h2>
       <label className="grid gap-1">
         {t("byline")}
         <input
@@ -42,7 +42,7 @@ export function ArticleBylineCard({
           maxLength={120}
           disabled={disabled}
           onChange={(event) => onChange({ byline: event.target.value })}
-          className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-3 py-2 text-[16px]"
+          className="min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-3 py-2 text-base"
         />
       </label>
       <p className="m-0 text-sm text-(--t-ink-dim)">
@@ -67,7 +67,7 @@ export function ArticleBylineCard({
               { value: "community", label: t("community") },
               { value: "index", label: t("index") },
             ]}
-            className="min-h-[48px] min-w-0 text-[16px]"
+            className="min-h-[48px] min-w-0 text-base"
           />
         </label>
       )}

@@ -78,14 +78,14 @@ export function RegionLibraryList({
         </span>
         <span>
           <span
-            className="block text-[15px] font-semibold"
+            className="block text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {libraries.length > 0
               ? `Know another library in ${regionName}?`
               : `Know a library in ${regionName}?`}
           </span>
-          <span className="block text-[13.5px]" style={{ color: T.ink.dim }}>
+          <span className="block text-sm" style={{ color: T.ink.dim }}>
             Add it with a source. A reviewer checks it before it’s published.
           </span>
         </span>
@@ -120,10 +120,10 @@ export function NearbyRegions({
           height={19}
           style={{ color: T.accent.primary }}
         />
-        <h3 className="m-0 text-[17px] font-semibold">{title}</h3>
+        <h3 className="type-small-heading m-0">{title}</h3>
       </div>
       <p
-        className="mt-2 mb-3 text-[13px] leading-relaxed"
+        className="mt-2 mb-3 text-sm leading-relaxed"
         style={{ color: T.ink.dim }}
       >
         Keep exploring the libraries documented nearby.
@@ -136,13 +136,10 @@ export function NearbyRegions({
               className="flex min-h-14 items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-white"
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[14px] font-semibold">
+                <span className="block text-sm font-semibold">
                   {region.name}
                 </span>
-                <span
-                  className="block text-[12px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <span className="block text-xs" style={{ color: T.ink.dim }}>
                   {region.libraryCount > 0
                     ? `${formatCount(region.libraryCount)} ${countNoun(region.libraryCount, "library", "libraries")}`
                     : "No records yet"}

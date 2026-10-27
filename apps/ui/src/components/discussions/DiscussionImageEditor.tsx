@@ -37,7 +37,7 @@ function PictureDetails({
   const t = useTranslations("discussions")
   const helpId = useId()
   const inputClass =
-    "mt-2 min-h-[44px] rounded-xl border-(--t-border-hi) bg-(--t-bg-deep) text-[14px] shadow-none focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[14px] dark:bg-(--t-bg-deep)"
+    "mt-2 min-h-[44px] rounded-xl border-(--t-border-hi) bg-(--t-bg-deep) text-sm shadow-none focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-sm dark:bg-(--t-bg-deep)"
 
   return (
     <div className="grid items-start gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -141,7 +141,7 @@ export function DiscussionImageEditor({
   }
 
   const content = (
-    <div className="grid gap-4 rounded-[18px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 text-[16px] [--spacing:0.25rem] sm:p-5">
+    <div className="grid gap-4 rounded-[18px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 text-base [--spacing:0.25rem] sm:p-5">
       {images.map((image, index) => (
         <figure
           key={image.id}

@@ -79,6 +79,10 @@ function setup(
     [AUDIT]: [],
     ...(team ? teamRows("owner") : {}),
   })
+  materialiseRelations(fake, "plugin::access.library-authority-grant", [
+    "library",
+  ])
+  materialiseRelations(fake, AFFILIATION_UID, ["library", "teamMember"])
   const staff = factory({ strapi: fake.strapi })
   fake.services["library-staff.staff"] = staff
   fake.services["email.email"] = { send: vi.fn().mockResolvedValue({}) }
@@ -135,6 +139,9 @@ describe("library staff authority", () => {
   })
   it("stores the first claimant as owner explicitly and later claimants as editors", async () => {
     const fake = makeFakeStrapi({ [LIBRARY]: [library], [AFFILIATION_UID]: [] })
+    materialiseRelations(fake, "plugin::access.library-authority-grant", [
+      "library",
+    ])
     materialiseRelations(fake, AFFILIATION_UID, ["library"])
     const { strapi, store } = fake
     await upsertAffiliation(strapi, {
@@ -149,7 +156,7 @@ describe("library staff authority", () => {
     })
     expect(store[AFFILIATION_UID]!.map((row) => row.staffRole)).toEqual([
       "owner",
-      null,
+      "editor",
     ])
     expect(store[AFFILIATION_UID]![0]).toMatchObject({
       source: "claim",
@@ -178,6 +185,9 @@ describe("library staff authority", () => {
         },
       ],
     })
+    materialiseRelations(fake, "plugin::access.library-authority-grant", [
+      "library",
+    ])
     materialiseRelations(fake, AFFILIATION_UID, ["library"])
     const joined = vi.fn()
     fake.services["library-staff.staff"] = { joined }

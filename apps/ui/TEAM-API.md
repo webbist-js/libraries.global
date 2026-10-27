@@ -14,6 +14,8 @@ Limits are saved with the checkout attempt and subscription. Changing environmen
 
 ## Requests
 
+The machine-readable API description is the static `public/openapi.json`. `/llms.txt` is generated from the published Knowledge catalogue, linking every supported language variant to its full `.md` representation. Both discovery routes keep their root paths without locale rewrites and remain behind the existing beta and staging gates. Update the OpenAPI description and the introduction in `src/lib/agent-discovery.ts` alongside changes to the versioned routes, their public field projections, limits or live content locales. Proposed resources are excluded from the OpenAPI paths until they are callable.
+
 Send `Authorization: Bearer YOUR_API_KEY`. Machine routes authenticate keys directly and do not require browser beta or Basic Auth cookies. Staff management routes still require a verified session, same-origin mutations and current Team membership. The CMS and Meilisearch remain private.
 
 ```sh

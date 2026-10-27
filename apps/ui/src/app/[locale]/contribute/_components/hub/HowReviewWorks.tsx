@@ -33,14 +33,11 @@ export function HowReviewWorks() {
           <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#eeebfb] text-(--t-accent-primary)">
             <ShieldCheck size={20} aria-hidden />
           </span>
-          <h2
-            id="how-review-works"
-            className="m-0 font-serif text-[30px] leading-tight font-medium text-(--t-ink-base) sm:text-[32px]"
-          >
+          <h2 id="how-review-works" className="type-h2 m-0 text-(--t-ink-base)">
             How review works
           </h2>
         </div>
-        <p className="m-0 max-w-[52ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 max-w-[52ch] text-base leading-relaxed text-(--t-ink-dim)">
           Every change is checked before it’s published. Accepted work is
           credited to you and kept in the record’s history.
         </p>
@@ -50,7 +47,7 @@ export function HowReviewWorks() {
               <Send size={17} aria-hidden />
             </span>
             <div className="min-w-0 pt-0.5">
-              <h3 className="m-0 text-[15px] font-bold text-(--t-ink-base)">
+              <h3 className="type-small-heading m-0 text-(--t-ink-base)">
                 1. Send your change
               </h3>
               <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
@@ -63,7 +60,7 @@ export function HowReviewWorks() {
               <Clock3 size={18} aria-hidden />
             </span>
             <div className="min-w-0 pt-0.5">
-              <h3 className="m-0 text-[15px] font-bold text-(--t-ink-base)">
+              <h3 className="type-small-heading m-0 text-(--t-ink-base)">
                 2. A reviewer checks it
               </h3>
               <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
@@ -76,7 +73,7 @@ export function HowReviewWorks() {
       </div>
 
       <div className="rounded-[20px] bg-(--t-bg-surface) p-5 sm:p-6">
-        <h3 className="m-0 text-xs font-bold tracking-[0.08em] text-(--t-ink-dim) uppercase">
+        <h3 className="type-label m-0 text-(--t-ink-dim) uppercase">
           After review
         </h3>
         <ul className="mt-4 mb-0 grid list-none gap-4 p-0">
@@ -91,9 +88,7 @@ export function HowReviewWorks() {
                 <Icon size={16} aria-hidden />
               </span>
               <div className="min-w-0">
-                <h4 className="m-0 text-[14px] font-bold text-(--t-ink-base)">
-                  {label}
-                </h4>
+                <h4 className="type-h4 m-0 text-(--t-ink-base)">{label}</h4>
                 <p className="mt-1 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                   {copy}
                 </p>

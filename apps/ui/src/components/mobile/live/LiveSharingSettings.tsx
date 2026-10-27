@@ -84,7 +84,7 @@ export function LiveSharingSettings({
           }}
         />
         {!owner && (
-          <p className="m-0 mt-2 text-[13.5px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
             Only owners can change live sharing settings.
           </p>
         )}
@@ -97,14 +97,14 @@ export function LiveSharingSettings({
       >
         <h3
           id="who-can-go-live"
-          className="m-0 text-[16px] font-semibold"
+          className="type-small-heading m-0"
           style={{ color: T.ink.base }}
         >
           Who can go live
         </h3>
         {team ? (
           <>
-            <p className="my-2 text-[14.5px]" style={{ color: T.ink.dim }}>
+            <p className="my-2 text-sm" style={{ color: T.ink.dim }}>
               Owners choose who can go live, person by person.{" "}
               <Badge
                 label={tUi("team")}
@@ -163,19 +163,19 @@ export function LiveSharingSettings({
                 ))}
               </ul>
             ) : (
-              <p className="m-0 text-[14.5px]">
+              <p className="m-0 text-sm">
                 Ask an owner to change who can go live.
               </p>
             )}
           </>
         ) : (
           <>
-            <p className="my-2 text-[14.5px]" style={{ color: T.ink.dim }}>
+            <p className="my-2 text-sm" style={{ color: T.ink.dim }}>
               Every verified staff member for this library can go live.
               Restrictions already set stay in force.
             </p>
             <p
-              className="m-0 mt-3 flex items-start gap-2 rounded-[14px] px-4 py-3 text-[14px]"
+              className="m-0 mt-3 flex items-start gap-2 rounded-[14px] px-4 py-3 text-sm"
               style={{ background: T.bg.surface, color: T.ink.dim }}
             >
               <Icon
@@ -203,7 +203,7 @@ export function LiveSharingSettings({
       <section className={card} style={cardStyle} aria-labelledby="public-sees">
         <h3
           id="public-sees"
-          className="m-0 text-[16px] font-semibold"
+          className="type-small-heading m-0"
           style={{ color: T.ink.base }}
         >
           What the public sees
@@ -237,7 +237,7 @@ export function LiveSharingSettings({
             />
           </div>
         </fieldset>
-        <label className="mt-5 flex flex-wrap items-center gap-3 text-[15px]">
+        <label className="mt-5 flex flex-wrap items-center gap-3 text-base">
           Stop sharing automatically
           <select
             aria-label={tUi("minutes_after_the_last_stop")}

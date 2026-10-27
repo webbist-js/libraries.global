@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { libraryTypeName } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 
+import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import { facilityRows } from "@/components/library/facility-rows"
 import { libraryChecklist } from "@/components/library/library-presentation"
 import {
@@ -69,13 +70,13 @@ export function LibraryRecordPanel({
     >
       <Heading
         id="rec-h"
-        className="m-0 mb-3 text-[15px] font-bold"
+        className="type-panel-title m-0 mb-3"
         style={{ color: T.ink.base }}
       >
         {tPage("recordStatus")}
       </Heading>
       <div
-        className="flex gap-2.5 rounded-2xl px-3 py-2.5 text-[13.5px] leading-normal"
+        className="flex gap-2.5 rounded-2xl px-3 py-2.5 text-sm leading-normal"
         style={{
           background: T.bg.surface,
           border: `1px solid ${T.border.line}`,
@@ -97,13 +98,10 @@ export function LibraryRecordPanel({
       </div>
 
       <div className="mt-4 flex items-baseline justify-between">
-        <h3 className="m-0 text-[14px] font-bold" style={{ color: T.ink.base }}>
+        <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
           Core details recorded
         </h3>
-        <span
-          className="text-[14px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
+        <span className="text-sm font-semibold" style={{ color: T.ink.base }}>
           {done} of {total}
         </span>
       </div>
@@ -118,7 +116,7 @@ export function LibraryRecordPanel({
           />
         ))}
       </div>
-      <ul className="m-0 mt-3 grid list-none grid-cols-2 gap-x-3 gap-y-1.5 p-0 text-[13.5px]">
+      <ul className="m-0 mt-3 grid list-none grid-cols-2 gap-x-3 gap-y-1.5 p-0 text-sm">
         {items.map((item) => (
           <li
             key={item.key}
@@ -143,7 +141,7 @@ export function LibraryRecordPanel({
       </ul>
 
       <p
-        className="mt-4 mb-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[13px]"
+        className="mt-4 mb-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm"
         style={{ color: T.ink.dim }}
       >
         <LibIcon d={LIB_ICONS.calendar} size={14} />
@@ -293,7 +291,10 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
   ]
 
   const missing = (label: string, icon: string) => (
-    <li className="flex items-center gap-2" style={{ color: T.ink.dim }}>
+    <li
+      className="flex min-h-12 items-center gap-2 py-3"
+      style={{ color: T.ink.dim }}
+    >
       <LibIcon d={icon} size={16} />
       <span>
         {label} not added yet ·{" "}
@@ -313,10 +314,7 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
     icon: string,
     action?: AnalyticsParameters["action_type"]
   ) => (
-    <li key={label} className="flex items-center gap-2">
-      <span style={{ color: T.accent.primary }}>
-        <LibIcon d={icon} size={16} />
-      </span>
+    <li key={label}>
       <a
         href={href}
         {...(action
@@ -328,9 +326,10 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
           : {})}
         target="_blank"
         rel="noopener noreferrer"
-        className="min-w-0 truncate font-semibold underline underline-offset-2"
+        className="min-w-0"
         style={{ color: T.accent.primary }}
       >
+        <LibIcon d={icon} size={16} />
         {label} ↗<span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
       </a>
     </li>
@@ -340,12 +339,12 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
     <section aria-labelledby="links-h" className={PANEL} style={panelStyle}>
       <h2
         id="links-h"
-        className="m-0 mb-2.5 text-[15px] font-bold"
+        className="type-panel-title m-0 mb-2.5"
         style={{ color: T.ink.base }}
       >
         Official links
       </h2>
-      <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[14px]">
+      <SidebarLinks>
         {website
           ? link(website, hostname(website), LIB_ICONS.globe, "website")
           : missing("Website", LIB_ICONS.globe)}
@@ -360,10 +359,10 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
         {others.flatMap((l) =>
           l.href ? [link(l.href, l.label, l.icon, l.action)] : []
         )}
-      </ul>
+      </SidebarLinks>
       {hasContact ? (
         <p
-          className="m-0 mt-3 border-t pt-3 text-[13.5px]"
+          className="m-0 mt-3 border-t pt-3 text-sm"
           style={{ borderColor: T.border.divider, color: T.ink.dim }}
         >
           <OpenVerifyLink

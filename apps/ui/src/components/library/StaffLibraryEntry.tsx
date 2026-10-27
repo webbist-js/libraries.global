@@ -77,7 +77,7 @@ export function StaffLibraryEntry(props: {
       aria-labelledby="staff-entry-heading"
     >
       <p
-        className="m-0 flex items-center gap-1.5 text-[13px] font-semibold"
+        className="m-0 flex items-center gap-1.5 text-sm font-semibold"
         style={{ color: ON_DARK_LOW }}
       >
         <Icon
@@ -88,15 +88,11 @@ export function StaffLibraryEntry(props: {
         />
         Library staff
       </p>
-      <h2
-        id="staff-entry-heading"
-        className="m-0 mt-2 text-[24px] leading-tight"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h2 id="staff-entry-heading" className="type-panel-title m-0 mt-2">
         You run this {mobile ? "mobile library" : "library"}
       </h2>
       <p
-        className="my-2 text-[14.5px] leading-normal"
+        className="my-2 text-base leading-normal"
         style={{ color: ON_DARK_DIM }}
       >
         {mobile
@@ -105,7 +101,7 @@ export function StaffLibraryEntry(props: {
       </p>
       {mobile && !canGoLive ? (
         <p
-          className="m-0 flex items-center gap-1.5 text-[13.5px]"
+          className="m-0 flex items-center gap-1.5 text-sm"
           style={{ color: ON_DARK_DIM }}
         >
           <Icon
@@ -120,7 +116,7 @@ export function StaffLibraryEntry(props: {
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
         {canGoLive ? (
           <Link
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-base font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base }}
             href={mobileConsoleHref(props.libraryDocumentId, locale)}
           >
@@ -135,7 +131,7 @@ export function StaffLibraryEntry(props: {
           </Link>
         ) : null}
         <Link
-          className="inline-flex min-h-11 items-center gap-1 text-[14.5px] font-semibold underline underline-offset-4"
+          className="inline-flex min-h-11 items-center gap-1 text-base font-semibold underline underline-offset-4"
           style={{ color: T.bg.deep }}
           href={base}
         >
@@ -144,7 +140,7 @@ export function StaffLibraryEntry(props: {
         </Link>
         {props.hasActiveFeed ? null : (
           <Link
-            className="inline-flex min-h-11 items-center gap-1 text-[14.5px] font-semibold underline underline-offset-4"
+            className="inline-flex min-h-11 items-center gap-1 text-base font-semibold underline underline-offset-4"
             style={{ color: ON_DARK_DIM }}
             href={`${base}/events/connect`}
           >
@@ -190,21 +186,21 @@ function CompactStaffTools({
       {canGoLive ? (
         <Link
           href={mobileConsoleHref(libraryDocumentId, locale)}
-          className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-base font-semibold underline underline-offset-4"
         >
           {tUi("go_live")}
         </Link>
       ) : null}
       <Link
         href={base}
-        className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+        className="inline-flex min-h-11 items-center text-base font-semibold underline underline-offset-4"
       >
         {tUi("open_the_staff_area")}
       </Link>
       {!hasActiveFeed ? (
         <Link
           href={`${base}/events/connect`}
-          className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-base font-semibold underline underline-offset-4"
         >
           {tPage("connectEvents")}
         </Link>

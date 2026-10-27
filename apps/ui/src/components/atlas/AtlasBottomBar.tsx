@@ -303,7 +303,7 @@ export function AtlasLegends({
             swatch: (
               <i
                 aria-hidden="true"
-                className="inline-flex size-3.5 items-center justify-center rounded-full text-[10px] leading-none font-bold"
+                className="inline-flex size-3.5 items-center justify-center rounded-full text-xs leading-none font-bold"
                 style={{
                   border: "1.5px solid #A13A1A",
                   color: "#A13A1A",
@@ -346,13 +346,13 @@ export function AtlasCount({
 }) {
   return (
     <p
-      className="m-0 text-[15px] whitespace-nowrap"
+      className="m-0 text-base whitespace-nowrap"
       aria-live="polite"
       aria-busy={loading}
     >
       <strong
         className="text-[22px] font-medium"
-        style={{ fontFamily: T.font.serif }}
+        style={{ fontFamily: T.font.sans }}
       >
         {loading ? (
           <>

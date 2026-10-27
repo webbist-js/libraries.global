@@ -109,7 +109,7 @@ export function ArticleBodyBlocks({
                       </span>
                     ) : null}
                     {block.language && block.language !== "plaintext" ? (
-                      <span className="ml-auto rounded-full border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-0.5 text-[10px] font-medium tracking-wide text-(--t-ink-faint) uppercase">
+                      <span className="ml-auto rounded-full border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-0.5 text-xs font-medium tracking-wide text-(--t-ink-faint) uppercase">
                         {block.language}
                       </span>
                     ) : null}

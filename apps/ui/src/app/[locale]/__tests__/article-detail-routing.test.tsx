@@ -88,6 +88,13 @@ const props = (language?: string, section = "reports") => ({
 })
 beforeEach(() => vi.clearAllMocks())
 
+it("advertises each Knowledge article's Markdown alternate in the selected language", async () => {
+  const metadata = await knowledge.generateMetadata(props("fr"))
+  expect(metadata.alternates?.types?.["text/markdown"]).toBe(
+    "/knowledge/reports/story.md?contentLang=fr"
+  )
+})
+
 describe.each([
   ["Journal", journal],
   ["Knowledge", knowledge],

@@ -110,7 +110,7 @@ export function OverviewSection({
   return (
     <div className="flex flex-col gap-6">
       {/* Stat cards */}
-      <h2 className="sr-only">Contribution summary</h2>
+      <h2 className="type-h2 sr-only">Contribution summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label={tUi("changes_accepted")}
@@ -148,7 +148,7 @@ export function OverviewSection({
         <div className="flex min-w-0 flex-col gap-6">
           {canSee(prefs.showActivity) ? (
             <>
-              <h2 className="sr-only">Activity</h2>
+              <h2 className="type-h2 sr-only">Activity</h2>
               <ContributionHeatmap submissions={allContribs} now={now} />
             </>
           ) : null}
@@ -161,7 +161,7 @@ export function OverviewSection({
               </span>
               <Link
                 href={`/profile/${profile.username}/contributions`}
-                className="text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
                 style={{ color: T.accent.primary }}
               >
                 See all
@@ -169,7 +169,7 @@ export function OverviewSection({
             </div>
             {recentContribs.length === 0 ? (
               <p
-                className="m-0 border-t px-6 py-6 text-[15px]"
+                className="m-0 border-t px-6 py-6 text-base"
                 style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
               >
                 No contributions yet.
@@ -194,7 +194,7 @@ export function OverviewSection({
               </span>
               <Link
                 href={`/profile/${profile.username}/badges`}
-                className="text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
                 style={{ color: T.accent.primary }}
               >
                 All badges
@@ -217,7 +217,7 @@ export function OverviewSection({
           >
             <h3
               id="ov-libraries"
-              className="m-0 mb-3 text-[14px] font-semibold"
+              className="type-panel-title m-0 mb-3"
               style={{ color: T.ink.base }}
             >
               {tUi("libraries")}{" "}
@@ -225,7 +225,7 @@ export function OverviewSection({
             {(profile.claimedLibraries?.length ?? 0) > 0 ? (
               <div className="mb-3">
                 <p
-                  className="m-0 mb-1 text-[13px] font-semibold tracking-wide uppercase"
+                  className="m-0 mb-1 text-sm font-semibold tracking-wide uppercase"
                   style={{ color: T.ink.low }}
                 >
                   Represents
@@ -236,13 +236,13 @@ export function OverviewSection({
                     className="m-0 py-0.5"
                   >
                     <span
-                      className="text-[15px] font-semibold"
+                      className="text-base font-semibold"
                       style={{ color: T.ink.base }}
                     >
                       {lib.name}
                     </span>{" "}
                     <span
-                      className="text-[13px]"
+                      className="text-sm"
                       style={{ color: "var(--tint-public-fg)" }}
                     >
                       · steward
@@ -254,13 +254,13 @@ export function OverviewSection({
             {canSee(prefs.showFollows) ? (
               <>
                 <p
-                  className="m-0 mb-1 text-[13px] font-semibold tracking-wide uppercase"
+                  className="m-0 mb-1 text-sm font-semibold tracking-wide uppercase"
                   style={{ color: T.ink.low }}
                 >
                   Follows
                 </p>
                 {(profile.followedLibraries?.length ?? 0) === 0 ? (
-                  <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                  <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                     Not following any libraries yet.
                   </p>
                 ) : (
@@ -268,7 +268,7 @@ export function OverviewSection({
                     {profile.followedLibraries!.slice(0, 4).map((lib) => (
                       <p key={lib.documentId} className="m-0 truncate py-0.5">
                         <span
-                          className="text-[15px]"
+                          className="text-base"
                           style={{ color: T.ink.base }}
                         >
                           {lib.name}
@@ -277,7 +277,7 @@ export function OverviewSection({
                     ))}
                     <Link
                       href={`/profile/${profile.username}/following`}
-                      className="mt-1 inline-block text-[14px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                      className="mt-4 flex min-h-12 items-center border-t border-(--t-border-line) pt-3 text-base font-semibold underline underline-offset-4"
                       style={{ color: T.accent.primary }}
                     >
                       All {profile.followedLibraries!.length} followed
@@ -301,7 +301,7 @@ export function OverviewSection({
             >
               <h3
                 id="ov-level"
-                className="m-0 mb-2 text-[14px] font-semibold"
+                className="type-panel-title m-0 mb-2"
                 style={{ color: "var(--tint-national-fg)" }}
               >
                 Contributor level
@@ -309,7 +309,7 @@ export function OverviewSection({
               <p
                 className="m-0"
                 style={{
-                  fontFamily: T.font.serif,
+                  fontFamily: T.font.sans,
                   fontSize: "30px",
                   fontWeight: 500,
                   color: T.ink.base,
@@ -318,17 +318,14 @@ export function OverviewSection({
                 {profile.tier ?? "Contributor"}
               </p>
               {profile.points != null ? (
-                <p
-                  className="m-0 mt-1 text-[15px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <p className="m-0 mt-1 text-base" style={{ color: T.ink.dim }}>
                   {profile.points.toLocaleString()} points
                   {profile.streak ? ` · ${profile.streak}-day streak` : ""}
                 </p>
               ) : null}
               <Link
                 href="/knowledge"
-                className="mt-2 inline-block text-[14px] font-semibold underline underline-offset-[3px]"
+                className="mt-4 flex min-h-12 items-center border-t border-(--t-border-line) pt-3 text-base font-semibold underline underline-offset-4"
                 style={{ color: T.accent.primary }}
               >
                 How levels work
@@ -344,7 +341,7 @@ export function OverviewSection({
             >
               <h3
                 id="ov-facts"
-                className="m-0 mb-2 text-[14px] font-semibold"
+                className="type-panel-title m-0 mb-2"
                 style={{ color: T.ink.base }}
               >
                 About
@@ -357,15 +354,12 @@ export function OverviewSection({
                     style={{ borderBottomColor: T.border.divider }}
                   >
                     <dt
-                      className="text-[13px] font-semibold"
+                      className="text-sm font-semibold"
                       style={{ color: T.ink.low }}
                     >
                       {f.label}
                     </dt>
-                    <dd
-                      className="m-0 text-[15px]"
-                      style={{ color: T.ink.base }}
-                    >
+                    <dd className="m-0 text-base" style={{ color: T.ink.base }}>
                       {f.value}
                     </dd>
                   </div>
@@ -387,19 +381,19 @@ export function OverviewSection({
             >
               <h3
                 id="ov-links"
-                className="m-0 mb-2 text-[14px] font-semibold"
+                className="type-panel-title m-0 mb-2"
                 style={{ color: "var(--tint-national-fg)" }}
               >
                 Links
               </h3>
-              <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+              <ul className="m-0 list-none divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0">
                 {links.map((l) => (
                   <li key={l.href}>
                     <a
                       href={l.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-[15px] font-semibold underline underline-offset-[3px]"
+                      className="flex min-h-12 items-center gap-2 py-3 text-base font-semibold underline underline-offset-4"
                       style={{ color: T.accent.primary }}
                     >
                       <Icon

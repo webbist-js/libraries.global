@@ -59,7 +59,7 @@ export function ModerationWorkspaceNav({
             href={view.href}
             aria-current={selected ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-[15px] font-semibold whitespace-nowrap no-underline",
+              "inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-base font-semibold whitespace-nowrap no-underline",
               selected
                 ? "border-(--t-ink-base) bg-(--t-ink-base) text-white"
                 : "border-transparent text-(--t-ink-dim) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"

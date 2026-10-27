@@ -98,19 +98,19 @@ function CardInner({
 
       {/* Index badge — top left */}
       {index != null && (
-        <div className="absolute top-4 left-4 flex size-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-[10px] text-white/50 backdrop-blur-sm">
+        <div className="absolute top-4 left-4 flex size-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-xs text-white/50 backdrop-blur-sm">
           {padIndex(index)}
         </div>
       )}
 
       {/* Continent code / type chip — top right */}
       {!isCompact && continentCode ? (
-        <div className="absolute top-4 right-4 text-[10px] tracking-[0.08em] text-white/30">
+        <div className="absolute top-4 right-4 text-xs tracking-[0.08em] text-white/30">
           {continentCode}
         </div>
       ) : libraryType ? (
         <div
-          className="absolute top-4 right-4 rounded px-2 py-0.5 text-[10px] tracking-[0.10em] text-white/70 backdrop-blur-sm"
+          className="absolute top-4 right-4 rounded px-2 py-0.5 text-xs tracking-[0.10em] text-white/70 backdrop-blur-sm"
           style={{ background: "rgba(0,0,0,0.55)" }}
         >
           {libraryType}
@@ -124,11 +124,10 @@ function CardInner({
         {!isCompact && <div className="mb-4 h-px bg-white/10" />}
 
         <h3
-          className={`leading-[1.05] font-semibold tracking-[-0.02em] text-white ${
-            isCompact ? "mb-1 text-[1.15rem]" : "mb-2 text-[1.9rem]"
+          className={`text-white ${
+            isCompact ? "type-card-title mb-1" : "type-feature-title mb-2"
           }`}
           style={{
-            fontFamily: T.font.serif,
             textShadow: "0 1px 4px rgba(0,0,0,0.5)",
           }}
         >
@@ -136,14 +135,14 @@ function CardInner({
         </h3>
 
         {!isCompact && locationParts.length > 0 && (
-          <p className="text-[11px] tracking-[0.08em] text-white/45">
+          <p className="text-xs tracking-[0.08em] text-white/45">
             {locationParts.join(" · ")}
           </p>
         )}
 
         {isCompact && (city || countryName) && (
           <p
-            className="truncate text-[10px] tracking-[0.08em] text-white/40"
+            className="truncate text-xs tracking-[0.08em] text-white/40"
             style={{ fontFamily: T.font.mono }}
           >
             {[city, countryName].filter(Boolean).join(", ")}

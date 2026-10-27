@@ -4,10 +4,17 @@ import type { StaffRole } from "@repo/access"
 import { libraryTypeName, emailTemplate } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
+import { loadNetwork } from "./network-catalogue"
+import { approvedTeamMandate } from "./network-fulfilment"
+import { networkStore, MANDATE, type MandateRecord } from "./network-records"
 import {
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../../utils/affiliations"
+import {
+  authorityLibrariesForSource,
+  revokeAuthoritySource,
+} from "../../../../utils/authority-grants"
 import { notifySessionInvalidated } from "../../../../utils/role-grants"
 import { AFFILIATION_UID, resolveStaff } from "../../../../utils/staff"
 import {
@@ -90,6 +97,13 @@ export type TeamMemberView = {
 }
 
 export type TeamView = {
+  primaryNetwork?: { documentId: string; name: string; slug: string } | null
+  serviceScopes?: {
+    networkId: string
+    name: string
+    approvedLibraryIds: string[]
+    ownerLibraryIds: string[]
+  }[]
   documentId: string
   name: string
   slug: string
@@ -106,6 +120,7 @@ export type TeamView = {
   organiserNames: string[]
   createdAt: string | null
   publicServiceApproved?: boolean
+  widgetBranding?: boolean
   pendingSeats?: number | null
   billingSuspended?: boolean
 }
@@ -125,8 +140,10 @@ export type TeamSummary = {
 }
 
 type TeamRow = {
+  primaryNetwork?: { documentId: string; name: string; slug: string } | null
   pendingSeats?: number | null
   billingSuspended?: boolean | null
+  widgetBranding?: boolean | null
   publicServiceApproved?: boolean | null
   billingMembership?: { accessUntil?: string | null; paidSeats?: number } | null
   billingMode?: string | null
@@ -184,6 +201,7 @@ const isTeamRole = (v: unknown): v is TeamRole =>
   v === "organiser" || v === "member"
 
 const TEAM_FIELDS = [
+  "widgetBranding",
   "pendingSeats",
   "billingSuspended",
   "publicServiceApproved",
@@ -362,6 +380,22 @@ export default ({ strapi }: { strapi: any }) => {
   const affiliations = () => strapi.documents(AFFILIATION_UID as any)
   const people = () => strapi.plugin("access").service("people")
 
+  async function serviceScopes(teamId: string) {
+    const rows = await networkStore<MandateRecord>(strapi, MANDATE).findMany({
+      filters: { team: { documentId: teamId }, status: "approved" },
+      populate: { network: { fields: ["name"] } },
+      limit: 11,
+    })
+    if (rows.length > 10)
+      throw new AccessError(409, "too_many_service_mandates")
+
+    return rows.map((row) => ({
+      networkId: row.network.documentId,
+      name: row.network.name,
+      approvedLibraryIds: row.approvedLibraryIds,
+      ownerLibraryIds: row.ownerLibraryIds ?? [],
+    }))
+  }
   async function teamOf(documentId: string): Promise<TeamRow> {
     if (!isDocumentId(documentId)) throw new AccessError(404, "not_found")
     const team = (await teams().findOne({
@@ -369,6 +403,7 @@ export default ({ strapi }: { strapi: any }) => {
       fields: TEAM_FIELDS,
       populate: {
         libraries: { populate: LIBRARY_POPULATE, fields: LIBRARY_FIELDS },
+        primaryNetwork: { fields: ["name", "slug"] },
       },
     })) as TeamRow | null
     if (!team) throw new AccessError(404, "not_found")
@@ -447,6 +482,32 @@ export default ({ strapi }: { strapi: any }) => {
       ])
     }
 
+    for (const member of rows) {
+      const ledger = await authorityLibrariesForSource(
+        strapi,
+        "team",
+        member.documentId
+      )
+      const known = new Set(
+        (out.get(member.documentId) ?? []).map(
+          (assignment) => assignment.libraryDocumentId
+        )
+      )
+      for (const grant of ledger) {
+        if (!grant.library?.documentId || known.has(grant.library.documentId))
+          continue
+        out.set(member.documentId, [
+          ...(out.get(member.documentId) ?? []),
+          {
+            affiliationDocumentId: grant.documentId,
+            libraryDocumentId: grant.library.documentId,
+            staffRole: grant.staffRole,
+            canGoLive: grant.canGoLive,
+          },
+        ])
+      }
+    }
+
     return out
   }
 
@@ -505,6 +566,8 @@ export default ({ strapi }: { strapi: any }) => {
 
     return {
       documentId: team.documentId,
+      primaryNetwork: team.primaryNetwork ?? null,
+      serviceScopes: await serviceScopes(team.documentId),
       name: team.name ?? "Team",
       slug: team.slug ?? "",
       seats: team.seats ?? 0,
@@ -514,6 +577,8 @@ export default ({ strapi }: { strapi: any }) => {
         viewer.role === "admin" ? team.billingSuspended === true : undefined,
       source: team.source === "checkout" ? "checkout" : "admin",
       publicServiceApproved: team.publicServiceApproved === true,
+      widgetBranding:
+        viewer.role === "admin" ? team.widgetBranding === true : undefined,
       pendingSeats: team.pendingSeats ?? null,
       verifiedAt: team.verifiedAt ?? null,
       expiresAt: team.expiresAt ?? null,
@@ -693,7 +758,10 @@ export default ({ strapi }: { strapi: any }) => {
     if (!member.baUserId) throw new AccessError(409, "member_not_active")
     if (!(team.libraries ?? []).some((l) => l.documentId === libraryDocumentId))
       throw new AccessError(400, "library_not_in_team")
-    if (team.verifiedAt) {
+    const mandate = team.verifiedAt
+      ? null
+      : await approvedTeamMandate(strapi, team.documentId, libraryDocumentId)
+    if (team.verifiedAt || mandate) {
       await upsertAffiliation(strapi, {
         baUserId: member.baUserId,
         libraryDocumentId,
@@ -701,6 +769,7 @@ export default ({ strapi }: { strapi: any }) => {
         verificationMethod: "team",
         source: "team",
         teamMemberDocumentId: member.documentId,
+        ...(mandate ? { mandateDocumentId: mandate.documentId } : {}),
       })
       await grantVerifiedLibrarian(strapi, member.baUserId, "team")
       await audit(libraryDocumentId, actor, "level_changed", member.baUserId, {
@@ -770,13 +839,33 @@ export default ({ strapi }: { strapi: any }) => {
       populate: { library: { fields: ["documentId"] } },
       limit: MAX_TEAM_LIBRARIES,
     })) as any[]
-    for (const row of rows) {
-      await affiliations().delete({ documentId: row.documentId })
-      if (row.library?.documentId && member.baUserId)
-        await audit(row.library.documentId, actor, "removed", member.baUserId)
+    const ledger = await authorityLibrariesForSource(
+      strapi,
+      "team",
+      member.documentId
+    )
+    const libraryIds = new Set(
+      [
+        ...rows.map((row) => row.library?.documentId),
+        ...ledger.map((grant) => grant.library?.documentId),
+      ].filter(
+        (id): id is string =>
+          Boolean(id) && (!libraryDocumentId || id === libraryDocumentId)
+      )
+    )
+    for (const id of libraryIds) {
+      if (libraryDocumentId && id !== libraryDocumentId) continue
+      if (member.baUserId)
+        await revokeAuthoritySource(strapi, {
+          baUserId: member.baUserId,
+          libraryDocumentId: id,
+          sourceKind: "team",
+          sourceDocumentId: member.documentId,
+        })
+      if (member.baUserId) await audit(id, actor, "removed", member.baUserId)
     }
 
-    return rows.length
+    return libraryIds.size
   }
 
   async function paidBillingUpdate(
@@ -1030,6 +1119,26 @@ export default ({ strapi }: { strapi: any }) => {
       })
     },
 
+    /** Operator-granted branding entitlement; never inferred from payment or verification. */
+    async widgetBranding(
+      teamId: string,
+      enabled: boolean,
+      adminId: string | number
+    ) {
+      return teamTransaction(strapi, teamId, async () => {
+        await teamOf(teamId)
+        await teams().update({
+          documentId: teamId,
+          data: { widgetBranding: enabled },
+        })
+        strapi.log.info(
+          `[access] admin:${adminId} ${enabled ? "granted" : "revoked"} widget branding for team ${teamId}`
+        )
+
+        return view(await teamOf(teamId), { baUserId: null, role: "admin" })
+      })
+    },
+
     /** Lapse (or reactivate) a Team: `status` only. */
     async lapse(
       teamId: string,
@@ -1062,15 +1171,27 @@ export default ({ strapi }: { strapi: any }) => {
     /** Organisers configure their organisation; covered Libraries confer no verification. */
     async configure(
       teamId: string,
-      input: { name?: string; libraryDocumentIds?: string[] },
+      input: {
+        name?: string
+        libraryDocumentIds?: string[]
+        primaryNetworkId?: string | null
+      },
       actor: Extract<Actor, { kind: "user" }>
     ) {
+      if (
+        input.primaryNetworkId !== undefined &&
+        input.primaryNetworkId !== null &&
+        !isDocumentId(input.primaryNetworkId)
+      )
+        throw new AccessError(400, "invalid_network")
       const parsed = parseTeamInput(input, true)
       if (!parsed.ok) throw new AccessError(400, "invalid_team_details")
 
       return teamTransaction(strapi, teamId, async () => {
         await this.requireOrganiser(teamId, actor.baUserId)
         const team = await teamOf(teamId)
+        if (input.primaryNetworkId)
+          await loadNetwork(strapi, input.primaryNetworkId)
         const next = await librariesByIds(
           parsed.value.libraryDocumentIds ??
             (team.libraries ?? []).map((l) => l.documentId)
@@ -1086,6 +1207,9 @@ export default ({ strapi }: { strapi: any }) => {
           documentId: teamId,
           data: {
             ...(parsed.value.name ? { name: parsed.value.name } : {}),
+            ...(input.primaryNetworkId !== undefined
+              ? { primaryNetwork: input.primaryNetworkId }
+              : {}),
             libraries: { set: next.map((l) => ({ documentId: l.documentId })) },
           },
         })

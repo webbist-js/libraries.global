@@ -232,12 +232,12 @@ export function PlaceSearch({
               />
               <span className="flex min-w-0 flex-col">
                 <span
-                  className="text-[15px] font-semibold"
+                  className="text-base font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {p.name}
                 </span>
-                <span className="text-[13px]" style={{ color: T.ink.dim }}>
+                <span className="text-sm" style={{ color: T.ink.dim }}>
                   {p.kind ?? LEVEL_WORD[p.level]}
                   {p.context ? ` · ${p.context}` : ""}
                 </span>
@@ -248,7 +248,7 @@ export function PlaceSearch({
         {status ? (
           <p
             role="status"
-            className="m-0 px-4 py-3 text-[14px]"
+            className="m-0 px-4 py-3 text-sm"
             style={{ color: T.ink.dim }}
           >
             {status}

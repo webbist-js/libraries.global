@@ -107,7 +107,7 @@ function Monogram({
     >
       <span
         style={{
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontSize: size === "card" ? 60 : 24,
           fontWeight: 500,
           color: tint.fg,
@@ -151,14 +151,7 @@ export function LibraryResultCard({
     hit.heroImage?.formats?.small?.url ?? hit.heroImage?.url
   )
 
-  const title = (
-    <h3
-      className="m-0 leading-[1.15]"
-      style={{ fontFamily: T.font.serif, fontSize: 24, fontWeight: 500 }}
-    >
-      {hit.name}
-    </h3>
-  )
+  const title = <h3 className="type-h3 m-0">{hit.name}</h3>
 
   return (
     <article
@@ -196,20 +189,20 @@ export function LibraryResultCard({
           title
         )}
 
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           {locationLine(hit, distanceKmValue) || "Location not documented"}
         </p>
 
         <div className="flex flex-col items-start gap-2">
           <span
-            className="rounded-full px-2.5 py-1 text-[13px] font-semibold whitespace-nowrap"
+            className="rounded-full px-2.5 py-1 text-sm font-semibold whitespace-nowrap"
             style={{ background: tint.bg, color: tint.fg }}
           >
             {hit.libraryType ?? tUi("library")}
           </span>
           {statusOverride === undefined ? (
             <span
-              className="rounded-full px-2.5 py-1 text-[13px] font-semibold"
+              className="rounded-full px-2.5 py-1 text-sm font-semibold"
               style={{ background: badge.bg, color: badge.fg }}
             >
               {badge.label}
@@ -220,10 +213,7 @@ export function LibraryResultCard({
         </div>
 
         {hit.summary ? (
-          <p
-            className="m-0 text-[14px] leading-[1.5]"
-            style={{ color: T.ink.dim }}
-          >
+          <p className="m-0 text-sm leading-[1.5]" style={{ color: T.ink.dim }}>
             {hit.summary.length > 110
               ? `${hit.summary.slice(0, 110)}…`
               : hit.summary}
@@ -265,7 +255,11 @@ export function LibraryResultRow({
 
   const name = (
     <span
-      style={{ fontFamily: T.font.serif, fontSize: 20, fontWeight: 500 }}
+      style={{
+        fontFamily: T.font.sans,
+        fontSize: "var(--type-body-xl-size)",
+        fontWeight: 500,
+      }}
       className="text-(--t-ink-base)"
     >
       {hit.name}
@@ -300,20 +294,20 @@ export function LibraryResultRow({
         ) : (
           name
         )}
-        <p className="m-0 truncate text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 truncate text-sm" style={{ color: T.ink.dim }}>
           {locationLine(hit, distanceKmValue) || "Location not documented"}
         </p>
       </div>
 
       <span
-        className="hidden rounded-full px-2.5 py-1 text-[13px] font-semibold sm:inline"
+        className="hidden rounded-full px-2.5 py-1 text-sm font-semibold sm:inline"
         style={{ background: tint.bg, color: tint.fg }}
       >
         {hit.libraryType ?? tUi("library")}
       </span>
       {statusOverride === undefined ? (
         <span
-          className="hidden rounded-full px-2.5 py-1 text-[13px] font-semibold md:inline"
+          className="hidden rounded-full px-2.5 py-1 text-sm font-semibold md:inline"
           style={{ background: badge.bg, color: badge.fg }}
         >
           {badge.label}

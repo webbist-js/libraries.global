@@ -21,7 +21,7 @@ import { useMobileClock } from "../useMobileClock"
 import { liveRequest } from "./ConfirmIdentity"
 
 const OUTLINED =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 
 /**
  * "Today and the way in": today's stops with Done / Here now chips from the
@@ -100,15 +100,11 @@ export function GoLiveToday({
     >
       <div className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-col items-start gap-2">
-          <h2
-            id="go-live-today-heading"
-            className="m-0 text-[28px] leading-[1.1] sm:text-[36px]"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
+          <h2 id="go-live-today-heading" className="type-h2 m-0">
             Today and the way in
           </h2>
           <p
-            className="m-0 text-[14px] leading-relaxed"
+            className="m-0 text-sm leading-relaxed"
             style={{ color: T.ink.dim }}
           >
             {meta}
@@ -116,7 +112,7 @@ export function GoLiveToday({
         </div>
         {initial.activeSession ? (
           <p
-            className="m-0 flex items-center gap-2 text-[14.5px] leading-relaxed"
+            className="m-0 flex items-center gap-2 text-sm leading-relaxed"
             style={{ color: T.accent.ok }}
           >
             <Icon
@@ -143,7 +139,7 @@ export function GoLiveToday({
                 >
                   <span
                     aria-hidden="true"
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tabular-nums"
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums"
                     style={{
                       background: here ? T.accent.primary : T.bg.muted2,
                       color: here ? T.bg.deep : T.ink.base,
@@ -151,7 +147,7 @@ export function GoLiveToday({
                   >
                     {index + 1}
                   </span>
-                  <span className="min-w-0 flex-1 text-[15px]">
+                  <span className="min-w-0 flex-1 text-base">
                     <span className="font-semibold">{stopName(v.stopId)}</span>{" "}
                     <span
                       className="block sm:inline"
@@ -162,7 +158,7 @@ export function GoLiveToday({
                   </span>
                   {state === "done" ? (
                     <span
-                      className="col-start-2 inline-flex items-center gap-1 justify-self-start rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold sm:col-start-auto sm:justify-self-end"
+                      className="col-start-2 inline-flex items-center gap-1 justify-self-start rounded-full px-2.5 py-0.5 text-sm font-semibold sm:col-start-auto sm:justify-self-end"
                       style={{
                         background: TYPE_TINT.public.bg,
                         color: TYPE_TINT.public.fg,
@@ -177,7 +173,7 @@ export function GoLiveToday({
                     </span>
                   ) : here ? (
                     <span
-                      className="col-start-2 inline-flex items-center gap-1 justify-self-start rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold sm:col-start-auto sm:justify-self-end"
+                      className="col-start-2 inline-flex items-center gap-1 justify-self-start rounded-full px-2.5 py-0.5 text-sm font-semibold sm:col-start-auto sm:justify-self-end"
                       style={{ background: T.bg.deep, color: T.accent.primary }}
                     >
                       <Icon
@@ -189,7 +185,7 @@ export function GoLiveToday({
                     </span>
                   ) : state === "skipped" ? (
                     <span
-                      className="col-start-2 inline-flex items-center gap-1 justify-self-start rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold sm:col-start-auto sm:justify-self-end"
+                      className="col-start-2 inline-flex items-center gap-1 justify-self-start rounded-full px-2.5 py-0.5 text-sm font-semibold sm:col-start-auto sm:justify-self-end"
                       style={{ background: T.bg.muted, color: T.ink.dim }}
                     >
                       <Icon
@@ -206,7 +202,7 @@ export function GoLiveToday({
           </ol>
         ) : (
           <p
-            className="m-0 max-w-2xl text-[15px] leading-relaxed"
+            className="m-0 max-w-2xl text-base leading-relaxed"
             style={{ color: T.ink.dim }}
           >
             No scheduled service today. The console can use a swapped day’s
@@ -232,7 +228,7 @@ export function GoLiveToday({
           </div>
         ) : !allowed ? (
           <p
-            className="m-0 flex min-h-11 items-center gap-2 rounded-[14px] px-4 py-3 text-[14.5px]"
+            className="m-0 flex min-h-11 items-center gap-2 rounded-[14px] px-4 py-3 text-sm"
             style={{ background: T.bg.muted, color: T.ink.base }}
           >
             <Icon
@@ -248,7 +244,7 @@ export function GoLiveToday({
         ) : (
           <div className="grid gap-2.5 sm:flex sm:flex-wrap sm:items-center">
             <a
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
               href={consoleUrl}
             >
               <Icon aria-hidden="true" icon="mdi:circle" width={10} />
@@ -303,7 +299,7 @@ export function GoLiveToday({
           </div>
         )}
         {learnMoreHref ? (
-          <p className="m-0 text-[14px] leading-relaxed">
+          <p className="m-0 text-sm leading-relaxed">
             <a
               href={learnMoreHref}
               className="font-semibold underline underline-offset-[3px]"
@@ -316,7 +312,7 @@ export function GoLiveToday({
         {note ? (
           <p
             role={note.tone === "danger" ? "alert" : "status"}
-            className="m-0 flex items-start gap-2 text-[14px] leading-relaxed"
+            className="m-0 flex items-start gap-2 text-sm leading-relaxed"
             style={{
               color: note.tone === "danger" ? T.accent.danger : T.accent.ok,
             }}
@@ -350,7 +346,7 @@ export function GoLiveToday({
           />
         </div>
         <p
-          className="m-0 text-center text-[13px] leading-relaxed"
+          className="m-0 text-center text-sm leading-relaxed"
           style={{ color: T.ink.dim }}
         >
           Scan to open the console on your phone. Staff sign-in required.
@@ -369,7 +365,7 @@ export function GoLiveToday({
         />
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <p
-            className="m-0 text-[14px] leading-relaxed"
+            className="m-0 text-sm leading-relaxed"
             style={{ color: T.ink.dim }}
           >
             <strong className="font-semibold" style={{ color: T.ink.base }}>
@@ -377,7 +373,7 @@ export function GoLiveToday({
             </strong>{" "}
             Sign in once inside the installed app.
           </p>
-          <dl className="m-0 grid gap-3 text-[14px] leading-relaxed sm:grid-cols-2 sm:gap-6">
+          <dl className="m-0 grid gap-3 text-sm leading-relaxed sm:grid-cols-2 sm:gap-6">
             <div>
               <dt className="font-semibold" style={{ color: T.ink.base }}>
                 iPhone

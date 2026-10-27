@@ -123,7 +123,7 @@ function displayTime(t: string): string {
 
 const monoSm: React.CSSProperties = {
   fontFamily: T.font.sans,
-  fontSize: "13px",
+  fontSize: "var(--type-body-small-size)",
   color: T.ink.faint,
 }
 
@@ -190,7 +190,7 @@ function DayToggle({
       <span
         style={{
           ...monoSm,
-          fontSize: "13px",
+          fontSize: "var(--type-body-small-size)",
           color: open ? "var(--tint-public-fg)" : T.ink.dim,
           transition: "color 0.15s",
           userSelect: "none",
@@ -200,7 +200,7 @@ function DayToggle({
       </span>
       <span
         style={{
-          fontSize: "14px",
+          fontSize: "var(--type-body-small-size)",
           lineHeight: 1,
           color: open ? T.accent.danger : "var(--tint-public-fg)",
           opacity: open ? 0.7 : 0.5,
@@ -262,7 +262,7 @@ function CopyDaySelect({
       }}
       style={{
         ...monoSm,
-        fontSize: "13px",
+        fontSize: "var(--type-body-small-size)",
         color: T.accent.primary,
         fontWeight: 600,
         background: "none",
@@ -368,7 +368,9 @@ function TimeframeRow({
         ))}
       </select>
 
-      <span style={{ ...monoSm, fontSize: "13px" }}>to</span>
+      <span style={{ ...monoSm, fontSize: "var(--type-body-small-size)" }}>
+        to
+      </span>
 
       {/* End time */}
       <select
@@ -390,7 +392,7 @@ function TimeframeRow({
         <span
           style={{
             fontFamily: T.font.sans,
-            fontSize: "13px",
+            fontSize: "var(--type-body-small-size)",
             color: T.accent.danger,
             opacity: 0.8,
           }}
@@ -413,7 +415,7 @@ function TimeframeRow({
           border: "none",
           cursor: "pointer",
           color: T.ink.faint,
-          fontSize: "18px",
+          fontSize: "var(--type-body-large-size)",
           lineHeight: 1,
           padding: "0 2px",
           display: "flex",
@@ -568,7 +570,7 @@ export function OpeningTimesEditor({
               <span
                 style={{
                   fontFamily: T.font.sans,
-                  fontSize: "13px",
+                  fontSize: "var(--type-body-small-size)",
                   color: day.enabled ? T.ink.base : T.ink.faint,
                   width: "82px",
                   flexShrink: 0,
@@ -640,7 +642,7 @@ export function OpeningTimesEditor({
                   style={{
                     alignSelf: "flex-start",
                     ...monoSm,
-                    fontSize: "13px",
+                    fontSize: "var(--type-body-small-size)",
                     color: T.accent.primary,
                     fontWeight: 600,
                     background: "none",

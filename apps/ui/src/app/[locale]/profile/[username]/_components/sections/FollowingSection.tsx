@@ -34,7 +34,7 @@ function SectionHead({
         {title}
       </SectionTitle>
       {count ? (
-        <span className="text-[15px]" style={{ color: T.ink.dim }}>
+        <span className="text-base" style={{ color: T.ink.dim }}>
           {count}
         </span>
       ) : null}
@@ -50,7 +50,7 @@ function plural(n: number, one: string, many: string) {
 function FollowedDrivesGrid({ drives }: { drives: readonly DriveView[] }) {
   if (drives.length === 0) {
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         Not following any drives yet. Follow one from its page to keep an eye on
         it.{" "}
         <Link

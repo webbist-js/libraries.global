@@ -71,7 +71,7 @@ function StepCircle({
         color: fg,
         border,
         fontFamily: T.font.sans,
-        fontSize: "15px",
+        fontSize: "var(--type-body-size)",
         fontWeight: 600,
         boxSizing: "border-box",
       }}
@@ -99,7 +99,7 @@ function StepLabel({
         className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
         style={{
           fontFamily: T.font.sans,
-          fontSize: "17px",
+          fontSize: "var(--type-body-size)",
           fontWeight: 600,
           color: T.ink.base,
           lineHeight: 1.25,
@@ -124,7 +124,7 @@ function StepLabel({
         className="hidden lg:block"
         style={{
           fontFamily: T.font.sans,
-          fontSize: "15px",
+          fontSize: "var(--type-body-size)",
           color: T.ink.dim,
           lineHeight: 1.35,
           marginTop: "2px",
@@ -289,11 +289,9 @@ export function RecordProgress({
     <section aria-labelledby="record-progress-heading">
       <div className="flex items-baseline justify-between gap-3">
         <h3
+          className="type-small-heading"
           id="record-progress-heading"
           style={{
-            fontFamily: T.font.sans,
-            fontSize: "15px",
-            fontWeight: 600,
             color: T.ink.base,
             margin: 0,
           }}
@@ -307,13 +305,13 @@ export function RecordProgress({
             margin: 0,
             whiteSpace: "nowrap",
             fontFamily: T.font.sans,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             color: T.ink.dim,
           }}
         >
           <span
             style={{
-              fontFamily: T.font.serif,
+              fontFamily: T.font.sans,
               fontSize: "22px",
               fontWeight: 500,
               color: T.ink.base,
@@ -354,7 +352,7 @@ export function RecordProgress({
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             color: T.ink.dim,
             margin: "8px 0 0",
             lineHeight: 1.5,

@@ -31,7 +31,7 @@ export function DriveFlowPills({
       {steps.map((step, i) => (
         <li
           key={step}
-          className="inline-flex items-center gap-2 rounded-full border py-1.5 pr-3.5 pl-1.5 text-[14px] font-semibold"
+          className="inline-flex items-center gap-2 rounded-full border py-1.5 pr-3.5 pl-1.5 text-sm font-semibold"
           style={{
             background: T.bg.deep,
             borderColor: T.border.line,
@@ -40,7 +40,7 @@ export function DriveFlowPills({
         >
           <span
             aria-hidden="true"
-            className="flex size-6 items-center justify-center rounded-full text-[12px] font-bold"
+            className="flex size-6 items-center justify-center rounded-full text-xs font-bold"
             style={{ background: T.accent.chip, color: T.accent.primaryHover }}
           >
             {i + 1}

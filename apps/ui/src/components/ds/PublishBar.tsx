@@ -34,7 +34,7 @@ export function PublishBar({
     <div
       className={
         quiet
-          ? "mt-6 flex items-center gap-2 px-1 text-[14px]"
+          ? "mt-6 flex items-center gap-2 px-1 text-sm"
           : "sticky bottom-4 z-20 mt-8 flex flex-wrap items-center gap-4 rounded-[20px] border p-4"
       }
       style={

@@ -57,7 +57,7 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
                 <a
                   href={item.href}
                   aria-current={active ? "location" : undefined}
-                  className="flex min-h-13 items-center gap-[7px] border-b-2 px-1 py-3 text-[14px] font-medium whitespace-nowrap no-underline transition-colors hover:text-(--t-accent-primary)"
+                  className="flex min-h-13 items-center gap-[7px] border-b-2 px-1 py-3 text-sm font-medium whitespace-nowrap no-underline transition-colors hover:text-(--t-accent-primary)"
                   style={{
                     color: active ? T.accent.primary : T.ink.dim,
                     borderColor: active ? T.accent.primary : "transparent",
@@ -66,7 +66,7 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
                   {item.label}
                   {item.pro ? (
                     <span
-                      className="rounded-full px-1.5 text-[11px] font-bold"
+                      className="rounded-full px-1.5 text-xs font-bold"
                       style={{
                         background: T.accent.chip,
                         color: T.accent.primary,

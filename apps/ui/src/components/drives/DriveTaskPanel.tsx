@@ -71,9 +71,9 @@ import {
 } from "./task-panel.logic"
 
 const LINK =
-  "inline-flex items-center gap-1.5 text-[15px] font-semibold underline underline-offset-[3px]"
+  "inline-flex items-center gap-1.5 text-base font-semibold underline underline-offset-[3px]"
 
-const DIM = "m-0 text-[15px]"
+const DIM = "m-0 text-base"
 
 const NO_RECORD = "We couldn’t load this record. Skip it, or try again later."
 
@@ -265,15 +265,10 @@ function PanelHeader({
         ref={nameRef}
         tabIndex={-1}
         data-drive-task-name=""
-        className="m-0"
+        className="type-h3 m-0"
         style={{
           // A focus target for screen readers, not a control: no ring.
           outline: "none",
-          fontFamily: T.font.serif,
-          fontSize: "clamp(24px,2.6vw,30px)",
-          fontWeight: 500,
-          lineHeight: 1.12,
-          letterSpacing: "-0.01em",
           color: T.ink.base,
         }}
       >
@@ -320,7 +315,7 @@ function SignInToHelp({ drivePath }: { readonly drivePath: string }) {
         Every change goes to a reviewer before it’s published.
       </p>
       <Link
-        className={`${PRIMARY} h-11 bg-(--t-accent-primary) px-5 text-[15px] text-white no-underline hover:bg-(--t-accent-primary-hover)`}
+        className={`${PRIMARY} h-11 bg-(--t-accent-primary) px-5 text-base text-white no-underline hover:bg-(--t-accent-primary-hover)`}
         href={`/auth/signin?callbackUrl=${encodeURIComponent(drivePath)}`}
       >
         Sign in to help
@@ -343,7 +338,7 @@ function GapSwitcher({
 }) {
   return (
     <fieldset className="m-0 flex flex-wrap gap-2 border-0 p-0">
-      <legend className="mb-2 p-0 text-[15px] font-semibold">
+      <legend className="mb-2 p-0 text-base font-semibold">
         What are you adding?
       </legend>
       {gaps.map((g) => {
@@ -352,7 +347,7 @@ function GapSwitcher({
         return (
           <label
             key={g}
-            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-[15px] font-semibold outline-offset-2 outline-(--t-accent-primary) has-[:focus-visible]:outline-[3px]"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-base font-semibold outline-offset-2 outline-(--t-accent-primary) has-[:focus-visible]:outline-[3px]"
             style={{
               background: on ? T.accent.chip : T.bg.deep,
               borderColor: on ? T.accent.primary : T.border.hi,
@@ -428,7 +423,7 @@ function PhotoFields({
         />
       </div>
       <label
-        className="flex cursor-pointer items-start gap-3 text-[15px]"
+        className="flex cursor-pointer items-start gap-3 text-base"
         style={{ color: T.ink.base }}
       >
         <input
@@ -466,7 +461,7 @@ function DriveRefusal({
         </p>
         <button
           type="button"
-          className={`${SECONDARY} mt-2 h-10 self-start px-4 text-[15px]`}
+          className={`${SECONDARY} mt-2 h-10 self-start px-4 text-base`}
           disabled={sending}
           onClick={onResend}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
@@ -479,7 +474,7 @@ function DriveRefusal({
 }
 
 const ROW_ACTION =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-[15px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-base font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** One checklist row's action: an editor toggle, a photo, or the Index editor. */
 function LacksAction({
@@ -582,10 +577,7 @@ function RecordChecklist({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <h4
-        className="m-0 text-[16px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
+      <h4 className="type-h4 m-0" style={{ color: T.ink.base }}>
         What this record lacks
       </h4>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -606,7 +598,7 @@ function RecordChecklist({
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span
-                  className="text-[16px] font-semibold"
+                  className="text-base font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {label}
@@ -644,7 +636,7 @@ function QuotaFull({
     <div className="flex flex-col gap-2">
       <p
         id={id}
-        className="m-0 text-[15px] font-semibold"
+        className="m-0 text-base font-semibold"
         style={{ color: T.ink.base }}
       >
         {reason}
@@ -913,11 +905,11 @@ export function DriveTaskPanel({
           if it has moved, or both.
         </p>
         <div className="flex flex-col gap-3">
-          <h4 className="m-0 text-[16px] font-semibold">Is it still open?</h4>
+          <h4 className="type-h4 m-0">Is it still open?</h4>
           {editorFor(MODE_CATEGORIES.closed[0]!)}
         </div>
         <div className="flex flex-col gap-3">
-          <h4 className="m-0 text-[16px] font-semibold">Where is it now?</h4>
+          <h4 className="type-h4 m-0">Where is it now?</h4>
           {editorFor(MODE_CATEGORIES.closed[1]!)}
         </div>
       </div>
@@ -1100,7 +1092,7 @@ export function DriveTaskPanel({
       ) : null}
       {error ? (
         <p
-          className="m-0 text-[15px] font-semibold"
+          className="m-0 text-base font-semibold"
           role="alert"
           style={{ color: T.accent.danger }}
         >
@@ -1110,7 +1102,7 @@ export function DriveTaskPanel({
       {showBlocker && !error && !refusal && !verifyOn ? (
         <p
           id={blockerId}
-          className="m-0 text-[15px] font-semibold"
+          className="m-0 text-base font-semibold"
           role="alert"
           style={{ color: T.accent.danger }}
         >

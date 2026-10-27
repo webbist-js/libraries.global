@@ -74,11 +74,7 @@ function Sparkline({
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <span
-        aria-hidden="true"
-        className="text-[13px]"
-        style={{ color: T.ink.dim }}
-      >
+      <span aria-hidden="true" className="text-sm" style={{ color: T.ink.dim }}>
         Last {log.length} days: {fmt(first.done)} → {fmt(last.done)} done
       </span>
     </div>
@@ -125,10 +121,10 @@ export function DriveProgress({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-2.5 gap-y-1">
-        <p id={textId} className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
+        <p id={textId} className="m-0 text-base" style={{ color: T.ink.dim }}>
           <strong
             style={{
-              fontFamily: T.font.serif,
+              fontFamily: T.font.sans,
               fontSize: 32,
               fontWeight: 500,
               color: T.ink.base,
@@ -142,7 +138,7 @@ export function DriveProgress({
         </p>
         {meta ? (
           <p
-            className="m-0 text-[15px] font-semibold"
+            className="m-0 text-base font-semibold"
             style={{ color: T.ink.dim }}
           >
             {meta}
@@ -175,7 +171,7 @@ export function DriveProgress({
 
       {inReview > 0 || showGoal ? (
         <ul
-          className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-[14px]"
+          className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-sm"
           style={{ color: T.ink.dim }}
         >
           {inReview > 0 ? (

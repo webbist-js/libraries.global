@@ -182,10 +182,10 @@ export function SuggestOptionForm({
   const duplicate =
     query && nameIssue(name, list, optionNames, suggestions) === DUPLICATE_NAME
   const field =
-    "w-full rounded-[14px] border-(--t-border-hi) bg-(--t-bg-deep) px-3.5 text-[16px] font-normal shadow-none focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-[16px] dark:bg-(--t-bg-deep)"
-  const sectionHeading = "m-0 text-[13px] font-bold tracking-[0.05em] uppercase"
+    "w-full rounded-[14px] border-(--t-border-hi) bg-(--t-bg-deep) px-3.5 text-base font-normal shadow-none focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-base dark:bg-(--t-bg-deep)"
+  const sectionHeading = "m-0 text-sm font-bold tracking-[0.05em] uppercase"
   const secondaryAction =
-    "inline-flex min-h-[40px] items-center justify-center rounded-full border border-(--t-palette-violet-bg) bg-(--t-bg-deep) px-4 text-[14px] font-semibold text-(--t-accent-primary) hover:border-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-2"
+    "inline-flex min-h-[40px] items-center justify-center rounded-full border border-(--t-palette-violet-bg) bg-(--t-bg-deep) px-4 text-sm font-semibold text-(--t-accent-primary) hover:border-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-2"
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -251,21 +251,18 @@ export function SuggestOptionForm({
       id={SUGGEST_FORM_ID}
       aria-labelledby={`${id}-heading`}
       onSubmit={submit}
-      className={`grid scroll-mt-24 gap-5 rounded-[28px] border-2 bg-(--t-bg-deep) p-5 text-[16px] [--spacing:0.25rem] focus-within:border-(--t-accent-primary) sm:p-8 ${query ? "border-(--t-accent-primary)" : "border-(--t-border-line)"}`}
+      className={`grid scroll-mt-24 gap-5 rounded-[28px] border-2 bg-(--t-bg-deep) p-5 text-base [--spacing:0.25rem] focus-within:border-(--t-accent-primary) sm:p-8 ${query ? "border-(--t-accent-primary)" : "border-(--t-border-line)"}`}
     >
       <div className="grid gap-3">
-        <h2
-          id={`${id}-heading`}
-          className="m-0 font-serif text-[clamp(30px,3vw,38px)] leading-[1.12] font-semibold tracking-tight"
-        >
+        <h2 id={`${id}-heading`} className="type-h2 m-0">
           {t("composerTitle")}
         </h2>
-        <p className="m-0 max-w-[74ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 max-w-[74ch] text-base leading-relaxed text-(--t-ink-dim)">
           {t("composerLead")}
         </p>
       </div>
       {revising && (
-        <div className="grid gap-1.5 rounded-[16px] border border-[#eeddb6] bg-[#fffbf3] px-4 py-3 text-[14px]">
+        <div className="grid gap-1.5 rounded-[16px] border border-[#eeddb6] bg-[#fffbf3] px-4 py-3 text-sm">
           <p className="m-0 font-semibold text-(--t-palette-amber-fg)">
             {t("revisionLoaded", { name: revising.name })}
           </p>
@@ -276,7 +273,7 @@ export function SuggestOptionForm({
           )}
         </div>
       )}
-      <label className="grid gap-2 text-[14px] font-semibold">
+      <label className="grid gap-2 text-sm font-semibold">
         {t("optionName")}
         <Input
           ref={nameInput}
@@ -294,20 +291,22 @@ export function SuggestOptionForm({
           aria-describedby={`${id}-feedback`}
           className={cn(
             field,
-            "min-h-[56px] bg-(--t-bg-void) px-4 text-[18px] md:text-[18px] dark:bg-(--t-bg-void)"
+            "min-h-[56px] bg-(--t-bg-void) px-4 text-lg md:text-lg dark:bg-(--t-bg-void)"
           )}
         />
       </label>
       {matches.length > 0 && (
         <div className="grid gap-2">
-          <h3 className={cn(sectionHeading, "text-(--t-accent-ok)")}>
+          <h3
+            className={`type-h3 ${cn(sectionHeading, "text-(--t-accent-ok)")}`}
+          >
             {t("checklistMatches")}
           </h3>
           <div className="flex flex-wrap gap-2">
             {matches.map((item) => (
               <span
                 key={`${item.list}:${item.documentId}`}
-                className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[14px] text-(--t-accent-ok)"
+                className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm text-(--t-accent-ok)"
                 style={{ background: LIST_TINTS.services.soft }}
               >
                 <Icon aria-hidden icon="mdi:check" width={18} />
@@ -327,7 +326,7 @@ export function SuggestOptionForm({
             ))}
           </div>
           {existing.length === 0 && (
-            <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
               {t("correctionLead")}{" "}
               <GlobalLink
                 href="/contribute/index"
@@ -342,7 +341,9 @@ export function SuggestOptionForm({
       )}
       {existing.length > 0 && (
         <div className="grid gap-2">
-          <h3 className={cn(sectionHeading, "text-(--t-accent-primary)")}>
+          <h3
+            className={`type-h3 ${cn(sectionHeading, "text-(--t-accent-primary)")}`}
+          >
             {t("suggestionMatches")}
           </h3>
           {existing.map((item) => (
@@ -350,7 +351,7 @@ export function SuggestOptionForm({
               key={item.documentId}
               className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 rounded-[18px] bg-(--t-palette-violet-soft) px-4 py-3"
             >
-              <p className="m-0 min-w-0 text-[15px] leading-relaxed">
+              <p className="m-0 min-w-0 text-base leading-relaxed">
                 <GlobalLink
                   href={suggestionHref(item.documentId)}
                   className="font-semibold hover:underline"
@@ -373,7 +374,7 @@ export function SuggestOptionForm({
                   {t("addToConversation")}
                 </GlobalLink>
                 {!isVotable(item) || frozen(item) ? (
-                  <span className="text-[13px] font-semibold text-(--t-ink-dim)">
+                  <span className="text-sm font-semibold text-(--t-ink-dim)">
                     {t(
                       frozen(item) ? "votesPaused" : `statuses.${item.status}`
                     )}
@@ -385,7 +386,7 @@ export function SuggestOptionForm({
                     aria-label={`${t(item.voted ? "youVoted" : "voteMatch")}: ${item.name}`}
                     disabled={busyId !== null}
                     onClick={() => void voteMatch(item)}
-                    className={`inline-flex min-h-[40px] items-center justify-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${item.voted ? "bg-(--t-ink-base)" : "bg-(--t-accent-primary) hover:bg-(--t-accent-primary-hover)"}`}
+                    className={`inline-flex min-h-[40px] items-center justify-center gap-1 rounded-full px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${item.voted ? "bg-(--t-ink-base)" : "bg-(--t-accent-primary) hover:bg-(--t-accent-primary-hover)"}`}
                   >
                     {item.voted && (
                       <Icon aria-hidden icon="mdi:check" width={18} />
@@ -403,7 +404,7 @@ export function SuggestOptionForm({
                     href={`/auth/signin?callbackUrl=${encodeURIComponent(RETURN_TO)}`}
                     className={cn(
                       primaryCtaSm,
-                      "min-h-[40px] justify-center text-[14px]"
+                      "min-h-[40px] justify-center text-sm"
                     )}
                   >
                     {t("voteMatch")}
@@ -419,12 +420,14 @@ export function SuggestOptionForm({
           className={`grid gap-3 ${hasMatches ? "border-t border-(--t-border-line) pt-4" : ""}`}
         >
           {hasMatches && (
-            <h3 className={cn(sectionHeading, "text-(--t-accent-primary)")}>
+            <h3
+              className={`type-h3 ${cn(sectionHeading, "text-(--t-accent-primary)")}`}
+            >
               {t("newIdeaHeading")}
             </h3>
           )}
           <div className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_200px] lg:grid-cols-[minmax(0,1fr)_220px]">
-            <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
+            <label className="grid min-w-0 gap-2 text-sm font-semibold">
               {t(hasMatches ? "distinctIdea" : "whyMatters")}
               <Textarea
                 value={description}
@@ -439,7 +442,7 @@ export function SuggestOptionForm({
                 )}
               />
             </label>
-            <label className="grid min-w-0 gap-2 text-[14px] font-semibold">
+            <label className="grid min-w-0 gap-2 text-sm font-semibold">
               {t("whichList")}
               <SelectField
                 name="list"
@@ -451,7 +454,7 @@ export function SuggestOptionForm({
                   setExplanation("")
                   setError("")
                 }}
-                className="min-h-[48px] rounded-[14px] border-(--t-border-hi) px-4 text-[16px] font-semibold shadow-none focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/20 dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
+                className="min-h-[48px] rounded-[14px] border-(--t-border-hi) px-4 text-base font-semibold shadow-none focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/20 dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
                 options={LIST_ORDER.map((key) => ({
                   value: key,
                   label: t(`lists.${key}`),
@@ -460,7 +463,7 @@ export function SuggestOptionForm({
             </label>
           </div>
           {!!optionCatalogue?.[list].length && (
-            <details className="group/comparison text-[13px] text-(--t-ink-dim)">
+            <details className="group/comparison text-sm text-(--t-ink-dim)">
               <summary className="inline-flex min-h-[32px] w-fit cursor-pointer list-none items-center gap-1.5 font-medium hover:text-(--t-accent-primary) [&::-webkit-details-marker]:hidden">
                 {t("comparisonLabel")}
                 <ChevronDown
@@ -470,13 +473,13 @@ export function SuggestOptionForm({
                 />
               </summary>
               <div className="mt-2 grid gap-3 rounded-[14px] border border-(--t-border-line) bg-(--t-bg-surface) p-4">
-                <label className="grid gap-2 text-[14px] font-semibold">
+                <label className="grid gap-2 text-sm font-semibold">
                   {t("comparisonLabel")}
                   <SelectField
                     label={t("comparisonLabel")}
                     value={comparisonId}
                     onValueChange={setComparisonId}
-                    className="min-h-[44px] text-[14px] shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
+                    className="min-h-[44px] text-sm shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
                     options={[
                       { value: "", label: t("noComparison") },
                       ...optionCatalogue[list].map((item) => ({
@@ -487,7 +490,7 @@ export function SuggestOptionForm({
                   />
                 </label>
                 {comparisonId && (
-                  <label className="grid gap-2 text-[14px] font-semibold">
+                  <label className="grid gap-2 text-sm font-semibold">
                     {t("explanationLabel")}
                     <Textarea
                       value={explanation}
@@ -512,14 +515,14 @@ export function SuggestOptionForm({
               disabled={posting || Boolean(duplicate)}
               className={cn(
                 primaryCtaSm,
-                "min-h-[44px] justify-center px-5 text-[15px] disabled:cursor-not-allowed disabled:opacity-50"
+                "min-h-[44px] justify-center px-5 text-base disabled:cursor-not-allowed disabled:opacity-50"
               )}
             >
               {posting
                 ? t("posting")
                 : t("suggestNamed", { name: name.trim() })}
             </button>
-            <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
               {t("publicationHint")}
             </p>
           </div>
@@ -530,7 +533,7 @@ export function SuggestOptionForm({
           href={`/auth/signin?callbackUrl=${encodeURIComponent(RETURN_TO)}`}
           className={cn(
             primaryCtaSm,
-            "min-h-[44px] justify-center justify-self-start px-5 text-[15px] no-underline"
+            "min-h-[44px] justify-center justify-self-start px-5 text-base no-underline"
           )}
         >
           {t("signInToSuggest")}
@@ -563,13 +566,13 @@ export function SuggestOptionForm({
           {pending.map((item) => (
             <li
               key={item.documentId}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-[18px] border border-dashed border-(--t-palette-violet-bg) bg-(--t-palette-violet-soft) px-4 py-3 text-[14px]"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-[18px] border border-dashed border-(--t-palette-violet-bg) bg-(--t-palette-violet-soft) px-4 py-3 text-sm"
             >
               <p className="m-0">
                 <strong>{item.name}</strong> · {t(`lists.${item.optionKey}`)} ·{" "}
                 {t("privatePending")}
               </p>
-              <strong className="text-[13px] text-(--t-palette-violet-fg)">
+              <strong className="text-sm text-(--t-palette-violet-fg)">
                 {t("onlyYou")}
               </strong>
             </li>

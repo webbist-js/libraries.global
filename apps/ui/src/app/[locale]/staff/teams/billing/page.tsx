@@ -61,6 +61,7 @@ export default async function TeamBillingPage({
     <>
       <PageHero
         staff
+        compact
         breadcrumb={[
           { label: "Staff area", href: "/staff" },
           { label: chosen.name, href: "/staff/teams" },

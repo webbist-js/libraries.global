@@ -1,0 +1,87 @@
+{
+  "kind": "collectionType",
+  "collectionName": "access_widgets",
+  "info": {
+    "singularName": "widget",
+    "pluralName": "widgets",
+    "displayName": "widget"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "team": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.team"
+    },
+    "selection": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.widget-selection"
+    },
+    "publicId": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["finder", "directory", "chart", "stat"]
+    },
+    "config": {
+      "type": "json",
+      "private": true
+    },
+    "draftVersion": {
+      "type": "integer",
+      "default": 1
+    },
+    "state": {
+      "type": "enumeration",
+      "enum": ["draft", "live", "paused", "unpublished", "archived"],
+      "default": "draft"
+    },
+    "reviewRequested": {
+      "type": "boolean",
+      "default": false
+    },
+    "hasChanges": {
+      "type": "boolean",
+      "default": true
+    },
+    "publishedVersion": {
+      "type": "integer",
+      "default": 0
+    },
+    "origins": {
+      "type": "json",
+      "private": true
+    },
+    "publishedRelease": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.widget-release"
+    },
+    "loads": {
+      "type": "biginteger",
+      "default": 0
+    },
+    "blockedReports": {
+      "type": "biginteger",
+      "default": 0
+    }
+  }
+}

@@ -54,19 +54,15 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
         </span>
         <h2
           id="drives-heading"
-          className="m-0"
+          className="type-h2 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: "clamp(32px,3.4vw,44px)",
-            lineHeight: 1.05,
             color: T.ink.base,
           }}
         >
           No drives are open yet
         </h2>
         <p
-          className="m-0 max-w-[56ch] text-[17px] leading-[1.6]"
+          className="m-0 max-w-[56ch] text-base leading-[1.6]"
           style={{ color: T.ink.dim }}
         >
           A drive is a short, shared push to fill one kind of gap, like opening
@@ -76,13 +72,13 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
         <div className="mt-1 flex flex-wrap gap-2.5">
           <GlobalLink
             href="/contribute/index"
-            className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-[16px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+            className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
           >
             Improve a record
           </GlobalLink>
           <GlobalLink
             href={proposeHref()}
-            className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-[16px] font-semibold no-underline hover:border-(--t-accent-primary)"
+            className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-base font-semibold no-underline hover:border-(--t-accent-primary)"
             style={{ color: T.ink.base }}
           >
             Propose a drive
@@ -105,7 +101,7 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
           <li key={step.title} className="flex items-start gap-3">
             <span
               aria-hidden="true"
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold"
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold"
               style={{
                 background: T.accent.chip,
                 color: T.accent.primaryHover,
@@ -114,11 +110,11 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
               {i + 1}
             </span>
             <span className="flex flex-col gap-0.5">
-              <strong className="text-[16px]" style={{ color: T.ink.base }}>
+              <strong className="text-base" style={{ color: T.ink.base }}>
                 {step.title}
               </strong>
               <span
-                className="text-[15px] leading-[1.45]"
+                className="text-base leading-[1.45]"
                 style={{ color: T.ink.dim }}
               >
                 {step.text}

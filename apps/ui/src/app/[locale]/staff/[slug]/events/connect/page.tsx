@@ -31,12 +31,8 @@ export default async function ConnectEventFeedPage({
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-12">
       <div className="flex min-w-0 flex-col gap-6">
         <h2
-          className="m-0"
+          className="type-h2 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(26px,3vw,32px)",
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >

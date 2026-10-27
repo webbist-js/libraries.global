@@ -51,13 +51,9 @@ export function LocationGridBrowser({
         >
           <div>
             <h3
+              className="type-h3"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
-                fontSize: "22px",
-                letterSpacing: "-.01em",
                 margin: 0,
-                lineHeight: "1.12",
                 color: T.ink.base,
               }}
             >
@@ -67,7 +63,7 @@ export function LocationGridBrowser({
               <p
                 style={{
                   color: T.ink.dim,
-                  fontSize: "14px",
+                  fontSize: "var(--type-body-small-size)",
                   lineHeight: "1.5",
                   margin: "6px 0 0",
                 }}
@@ -80,7 +76,7 @@ export function LocationGridBrowser({
 
           <span
             aria-hidden="true"
-            className="self-end text-[15px] opacity-0 transition-opacity group-hover:opacity-100"
+            className="self-end text-base opacity-0 transition-opacity group-hover:opacity-100"
             style={{ color: T.accent.primary }}
           >
             →

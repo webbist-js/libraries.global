@@ -16,7 +16,7 @@ export function DriveFocusChip({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${compact ? "px-2.5 py-1 text-[12px]" : "px-3 py-[5px] text-[14px]"}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${compact ? "px-2.5 py-1 text-xs" : "px-3 py-[5px] text-sm"}`}
       style={{ background: tint.bg, color: tint.fg }}
     >
       <Icon aria-hidden="true" height={14} icon={icon} width={14} />

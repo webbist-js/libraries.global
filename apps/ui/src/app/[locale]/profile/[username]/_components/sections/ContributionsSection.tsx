@@ -104,7 +104,7 @@ export function ContributionsSection({
     .reduce((a, b) => a + b, 0)
 
   const ownerNote = isOwner ? (
-    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+    <p className="m-0 text-base" style={{ color: T.ink.dim }}>
       Only accepted changes appear here. Drafts and changes in review are in{" "}
       <TextLink href="/contribute/submissions">
         {tUi("my_submissions")}
@@ -154,7 +154,7 @@ export function ContributionsSection({
         <SectionTitle as="h2" id="ct-empty">
           Contributions
         </SectionTitle>
-        <p className="m-0 mt-2 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-2 text-base" style={{ color: T.ink.dim }}>
           No accepted contributions yet. Added libraries, edits and articles
           appear here once a moderator accepts them.
         </p>
@@ -171,7 +171,7 @@ export function ContributionsSection({
   return (
     <div className="flex flex-col gap-6">
       {/* Stat cards */}
-      <h2 className="sr-only">Contribution summary</h2>
+      <h2 className="type-h2 sr-only">Contribution summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label={tUi("accepted")}

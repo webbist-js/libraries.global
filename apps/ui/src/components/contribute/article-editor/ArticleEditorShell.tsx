@@ -971,7 +971,7 @@ export function ArticleEditorShell({
         setView(next)
         document.getElementById(`article-view-${next}`)?.focus()
       }}
-      className="min-h-[44px] rounded-full px-4 py-2 text-[15px] font-semibold transition-colors"
+      className="min-h-[44px] rounded-full px-4 py-2 text-base font-semibold transition-colors"
       style={{
         background: view === id ? T.bg.deep : "transparent",
         color: view === id ? T.ink.base : T.ink.dim,
@@ -996,7 +996,7 @@ export function ArticleEditorShell({
                   ? "/contribute/knowledge?type=journal"
                   : "/contribute/knowledge"
               }
-              className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-semibold no-underline hover:text-(--t-accent-primary)"
+              className="inline-flex min-h-11 items-center gap-1.5 text-base font-semibold no-underline hover:text-(--t-accent-primary)"
               style={{ color: T.ink.base }}
             >
               <Icon icon="mdi:chevron-left" width={20} aria-hidden="true" />
@@ -1039,7 +1039,7 @@ export function ArticleEditorShell({
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-(--t-divider) pt-3">
-            <p className="m-0 text-[14px] text-(--t-ink-dim)">
+            <p className="m-0 text-sm text-(--t-ink-dim)">
               {p(
                 mode === "new"
                   ? kind === "journal"
@@ -1090,7 +1090,7 @@ export function ArticleEditorShell({
               aria-label={p("recoveryTitle")}
               className="mb-4 rounded-xl border p-4"
             >
-              <h2 className="font-semibold">{p("recoveryTitle")}</h2>
+              <h2 className="type-h2">{p("recoveryTitle")}</h2>
               <p>
                 {p("recoveryHint")} ·{" "}
                 {new Date(recovery.candidate.writtenAt).toLocaleString(
@@ -1152,7 +1152,7 @@ export function ArticleEditorShell({
             className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] px-5 py-3.5"
             style={{ background: T.accent.chip, color: T.ink.base }}
           >
-            <p className="m-0 text-[15px]">
+            <p className="m-0 text-base">
               <strong>{tUi("you_have_an_unsent_draft")}</strong>{" "}
               {tEditor("resume", {
                 time: relativeTime(resumable.updatedAt, displayLocale),
@@ -1162,7 +1162,7 @@ export function ArticleEditorShell({
               <button
                 type="button"
                 onClick={() => hydrate(resumable)}
-                className="rounded-full px-4 py-2 text-[14px] font-semibold text-white"
+                className="rounded-full px-4 py-2 text-sm font-semibold text-white"
                 style={{
                   background: T.accent.primary,
                   border: "none",
@@ -1175,7 +1175,7 @@ export function ArticleEditorShell({
               <button
                 type="button"
                 onClick={() => setResumable(null)}
-                className="rounded-full px-4 py-2 text-[14px] font-semibold"
+                className="rounded-full px-4 py-2 text-sm font-semibold"
                 style={{
                   background: T.bg.deep,
                   border: `1px solid ${T.border.hi}`,
@@ -1258,7 +1258,7 @@ export function ArticleEditorShell({
                       <ArticleSourcePanel article={article} locales={locales} />
                     </div>
                     <details className="min-w-0 xl:hidden">
-                      <summary className="cursor-pointer rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 text-[15px] font-semibold marker:text-(--t-accent-primary)">
+                      <summary className="cursor-pointer rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 text-base font-semibold marker:text-(--t-accent-primary)">
                         {tUi("source_article")}
                       </summary>
                       <div className="mt-3">
@@ -1317,7 +1317,7 @@ export function ArticleEditorShell({
             )}
 
             <p
-              className="mt-3 mb-0 flex flex-wrap gap-x-4 text-[14px]"
+              className="mt-3 mb-0 flex flex-wrap gap-x-4 text-sm"
               style={{ color: T.ink.dim }}
             >
               <span>{tEditor("words", { count: words })}</span>
@@ -1428,9 +1428,7 @@ export function ArticleEditorShell({
         )}
 
         <section className="grid gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5">
-          <h2 className="m-0 font-serif text-[24px] leading-tight font-medium">
-            {p("publishing")}
-          </h2>
+          <h2 className="type-h2 m-0">{p("publishing")}</h2>
           <SectionsCard
             embedded
             kind={kind}

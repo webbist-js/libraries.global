@@ -97,12 +97,12 @@ export function PreviewCard({ view }: { readonly view: DriveView }) {
       <div className="flex items-baseline justify-between gap-3 px-1 pt-1">
         <h2
           id="drive-preview-heading"
-          className="m-0 text-[15px] font-semibold"
+          className="type-small-heading m-0"
           style={{ color: T.ink.base }}
         >
           On the noticeboard
         </h2>
-        <span className="text-[13px]" style={{ color: T.ink.dim }}>
+        <span className="text-sm" style={{ color: T.ink.dim }}>
           Live preview
         </span>
       </div>
@@ -125,7 +125,7 @@ function BigNumber({
     <div className="flex min-w-0 flex-col">
       <span
         style={{
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontSize: 40,
           fontWeight: 500,
           lineHeight: 1.05,
@@ -140,7 +140,7 @@ function BigNumber({
       >
         {value == null ? "…" : fmt(value)}
       </span>
-      <span className="text-[14px]" style={{ color: T.ink.dim }}>
+      <span className="text-sm" style={{ color: T.ink.dim }}>
         {label}
       </span>
     </div>
@@ -238,7 +238,7 @@ export function ScopeCard({
         <div className="grid grid-cols-2 gap-4">
           <BigNumber value={total} label="libraries in scope" />
           {ready && todo == null ? (
-            <p className="m-0 self-end text-[14px]">
+            <p className="m-0 self-end text-sm">
               Choose a gap to see how many miss it.
             </p>
           ) : (
@@ -265,7 +265,7 @@ export function ScopeCard({
         {ready && ready.places.length > 0 ? (
           <ul
             aria-label={tUi("by_place")}
-            className="m-0 flex list-none flex-col p-0 text-[14px]"
+            className="m-0 flex list-none flex-col p-0 text-sm"
           >
             {ready.places.map((p) => (
               <li
@@ -295,7 +295,7 @@ export function ScopeCard({
     >
       <h2
         id="drive-counts-heading"
-        className={railTitleClass}
+        className={`type-h2 ${railTitleClass}`}
         style={{ color: T.ink.base }}
       >
         Scope right now
@@ -303,7 +303,7 @@ export function ScopeCard({
       <div
         aria-live="polite"
         aria-busy={counts.status === "loading"}
-        className="mt-3 text-[15px] leading-[1.6]"
+        className="mt-3 text-base leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
         {body}
@@ -338,7 +338,7 @@ export function StandingCard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="drive-standing"
-          className={railTitleClass}
+          className={`type-h2 ${railTitleClass}`}
           style={{ color: T.ink.base }}
         >
           Who can propose
@@ -350,7 +350,7 @@ export function StandingCard({
         )}
       </div>
       <p
-        className="mt-2 mb-0 text-[15px] leading-[1.6]"
+        className="mt-2 mb-0 text-base leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
         Anyone with {needed} accepted changes. You have{" "}
@@ -376,7 +376,7 @@ export function StandingCard({
               }}
             />
           </div>
-          <p className="mt-4 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="mt-4 mb-0 text-base" style={{ color: T.ink.dim }}>
             Corrections, new libraries and photos all count.{" "}
             <Link href="/contribute" className={linkClass} style={linkStyle}>
               Improve a record
@@ -393,14 +393,14 @@ export function StandingCard({
           }}
         >
           <p
-            className="m-0 text-[15px] font-semibold"
+            className="m-0 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {open.title
               ? `Your proposal “${open.title}” is waiting for review.`
               : "Your proposal is waiting for review."}
           </p>
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             You can propose another once it’s decided. Follow it in{" "}
             <Link
               href="/contribute/submissions"
@@ -430,7 +430,7 @@ export function BoardCard({ editing }: { readonly editing: boolean }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
           id="drive-board"
-          className={railTitleClass}
+          className={`type-h2 ${railTitleClass}`}
           style={{ color: T.ink.base }}
         >
           Editorial board
@@ -438,7 +438,7 @@ export function BoardCard({ editing }: { readonly editing: boolean }) {
         <Badge label={tUi("no_review_needed")} color="ok" icon="mdi:check" />
       </div>
       <p
-        className="mt-2 mb-0 text-[15px] leading-[1.6]"
+        className="mt-2 mb-0 text-base leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
         {editing

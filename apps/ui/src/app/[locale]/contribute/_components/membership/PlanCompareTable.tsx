@@ -70,13 +70,10 @@ function GroupHeader({
             }}
             width={18}
           />
-          <span className="text-[15px] font-bold" style={{ color: T.ink.base }}>
+          <span className="text-base font-bold" style={{ color: T.ink.base }}>
             {group.title}
           </span>
-          <span
-            className="text-[13.5px] font-medium"
-            style={{ color: T.ink.dim }}
-          >
+          <span className="text-sm font-medium" style={{ color: T.ink.dim }}>
             {compareGroupSummary(group)}
           </span>
         </button>
@@ -153,7 +150,7 @@ export function PlanCompareTable({
             ]}
           />
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
             onClick={() =>
               setOpen(allOpen ? new Set() : new Set(GROUPS.map((g) => g.id)))
             }
@@ -172,7 +169,7 @@ export function PlanCompareTable({
             {allOpen ? t("collapseAll") : t("expandAll")}
           </button>
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-(--t-border-line) pt-3 text-[13px] text-(--t-ink-dim)">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-(--t-border-line) pt-3 text-sm text-(--t-ink-dim)">
           <p aria-live="polite" aria-atomic="true" className="m-0 font-medium">
             {t("showing", { count: rowCount, total: featureCount })}
           </p>
@@ -209,12 +206,12 @@ export function PlanCompareTable({
         tabIndex={0}
         style={{ borderColor: T.border.line }}
       >
-        <table className="w-full min-w-[720px] border-collapse text-[15px]">
+        <table className="w-full min-w-[720px] border-collapse text-base">
           <caption className="sr-only">{m("copy.includes")}</caption>
           <thead>
             <tr>
               <th
-                className={`w-[38%] border-b bg-white px-4 py-4 text-left text-[14px] font-semibold ${STICKY}`}
+                className={`w-[38%] border-b bg-white px-4 py-4 text-left text-sm font-semibold ${STICKY}`}
                 scope="col"
                 style={{ borderColor: T.border.line, color: T.ink.dim }}
               >
@@ -240,24 +237,24 @@ export function PlanCompareTable({
                       className="flex min-h-11 w-full flex-col items-center justify-center gap-1 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
                       <span
-                        className="text-[19px] leading-tight"
-                        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+                        className="text-lg leading-tight"
+                        style={{ fontFamily: T.font.sans, fontWeight: 500 }}
                       >
                         {plan.name}
                       </span>
-                      <span className="text-[12px] font-medium text-(--t-ink-dim)">
+                      <span className="text-xs font-medium text-(--t-ink-dim)">
                         {shortPrice(plan.price)}
                         {key === "team" ? ` ${m("copy.exVat")}` : ""}
                       </span>
                       {key === "team" ? (
-                        <span className="text-[11px] font-normal text-(--t-ink-dim)">
+                        <span className="text-xs font-normal text-(--t-ink-dim)">
                           {m("copy.teamSeats", {
                             count: pricing.team.includedSeats,
                           })}
                         </span>
                       ) : null}
                       {key === currentPlan ? (
-                        <span className="text-[11px] font-semibold text-(--t-accent-primary)">
+                        <span className="text-xs font-semibold text-(--t-accent-primary)">
                           {m("copy.current")}
                         </span>
                       ) : null}

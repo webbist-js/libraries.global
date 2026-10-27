@@ -161,7 +161,7 @@ export function ContributeSection({
         </h2>
         {band.text ? (
           <p
-            className="mt-8 max-w-[540px] text-[18px] leading-[1.65] text-pretty"
+            className="mt-8 max-w-[540px] text-lg leading-[1.65] text-pretty"
             style={{ color: T.ink.dim }}
           >
             {band.text}
@@ -173,13 +173,13 @@ export function ContributeSection({
             {steps.map((step, i) => (
               <li
                 key={step.title}
-                className="flex items-center gap-2.5 rounded-full border bg-white py-1.5 pr-4 pl-1.5 text-[16px] font-medium"
+                className="flex items-center gap-2.5 rounded-full border bg-white py-1.5 pr-4 pl-1.5 text-base font-medium"
                 style={{ borderColor: T.border.line, color: T.ink.base }}
                 title={step.text ?? undefined}
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-[30px] shrink-0 items-center justify-center rounded-full text-[14px] font-semibold text-white"
+                  className="flex size-[30px] shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
                   style={{ background: T.ink.base }}
                 >
                   {i + 1}
@@ -220,16 +220,13 @@ export function ContributeSection({
           className="flex flex-wrap items-baseline justify-between gap-3 border-b pb-3"
           style={{ borderColor: T.border.line }}
         >
-          <h3
-            className="m-0 text-[17px] font-bold"
-            style={{ color: T.ink.base }}
-          >
+          <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
             {tasksIntro.title}
           </h3>
           {featuredDrive ? (
             <GlobalLink
               href="/community"
-              className="text-[15px] font-semibold underline underline-offset-[3px]"
+              className="text-base font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
               {tUi("all_drives")}
@@ -237,7 +234,7 @@ export function ContributeSection({
           ) : tasks.length > 0 ? (
             <GlobalLink
               href="/contribute"
-              className="text-[15px] font-semibold underline underline-offset-[3px]"
+              className="text-base font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
               See all open tasks
@@ -268,7 +265,7 @@ export function ContributeSection({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
-                        className="block text-[14px] font-semibold"
+                        className="block text-sm font-semibold"
                         style={{ color: tint.fg }}
                       >
                         {label}
@@ -276,7 +273,7 @@ export function ContributeSection({
                       <span
                         className="block truncate text-[22px] leading-tight transition-colors group-hover:text-(--t-accent-primary)"
                         style={{
-                          fontFamily: T.font.serif,
+                          fontFamily: T.font.sans,
                           fontWeight: 500,
                           color: T.ink.base,
                         }}
@@ -285,7 +282,7 @@ export function ContributeSection({
                       </span>
                       {task.place ? (
                         <span
-                          className="block truncate text-[14px]"
+                          className="block truncate text-sm"
                           style={{ color: T.ink.dim }}
                         >
                           {task.place}
@@ -293,7 +290,7 @@ export function ContributeSection({
                       ) : null}
                     </span>
                     <span
-                      className="hidden shrink-0 text-[15px] font-semibold sm:inline"
+                      className="hidden shrink-0 text-base font-semibold sm:inline"
                       style={{ color: T.accent.primary }}
                     >
                       {action} <span aria-hidden="true">→</span>
@@ -320,7 +317,7 @@ export function ContributeSection({
                     <span
                       className="block text-[22px] leading-tight"
                       style={{
-                        fontFamily: T.font.serif,
+                        fontFamily: T.font.sans,
                         fontWeight: 500,
                         color: T.ink.base,
                       }}
@@ -328,7 +325,7 @@ export function ContributeSection({
                       Your local library missing?
                     </span>
                     <span
-                      className="block text-[14px]"
+                      className="block text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       Only a name, library type and one source are required.
@@ -341,7 +338,7 @@ export function ContributeSection({
         )}
 
         <p
-          className="m-0 mt-4 flex items-center gap-2 text-[15px]"
+          className="m-0 mt-4 flex items-center gap-2 text-base"
           style={{ color: T.ink.dim }}
         >
           <Star
@@ -353,7 +350,7 @@ export function ContributeSection({
           <span>
             Regular contributors get{" "}
             <GlobalLink
-              href="/contribute/membership"
+              href="/plans"
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >

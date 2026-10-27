@@ -28,7 +28,7 @@ export function DrivesHere({
         className="rounded-3xl p-6"
         style={{ background: T.bg.space }}
       >
-        <h2 className="m-0 text-2xl" style={{ fontFamily: T.font.serif }}>
+        <h2 className="type-h2 m-0">
           {items
             ? `No drives are active in ${placeName} right now`
             : "Drives are temporarily unavailable"}
@@ -60,12 +60,7 @@ export function DrivesHere({
 
   return (
     <section id="drives-here" className="scroll-mt-24">
-      <h2
-        className="m-0 text-[clamp(30px,4vw,44px)] leading-tight"
-        style={{ fontFamily: T.font.serif }}
-      >
-        Community drives in {placeName}
-      </h2>
+      <h2 className="type-h2 m-0">Community drives in {placeName}</h2>
       <p
         className="mt-3 mb-6 max-w-[80ch] text-base leading-relaxed"
         style={{ color: T.ink.dim }}
@@ -83,10 +78,7 @@ export function DrivesHere({
           >
             <div>
               <DriveFocusChip focus={view.drive.focus} />
-              <h3
-                className="mt-3 mb-3 text-[30px] leading-[1.1]"
-                style={{ fontFamily: T.font.serif }}
-              >
+              <h3 className="type-h3 mt-3 mb-3">
                 <GlobalLink href={view.href} className="hover:underline">
                   <DriveTitle title={view.drive.title} />
                 </GlobalLink>

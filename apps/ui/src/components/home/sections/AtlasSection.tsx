@@ -101,7 +101,7 @@ export function AtlasSection({
       <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-stretch gap-[clamp(40px,7vw,120px)] px-4 sm:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)]">
         <div>
           <p
-            className="m-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[14px] font-semibold"
+            className="hero-eyebrow inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold"
             style={{ borderColor: OUTLINE }}
           >
             <Globe aria-hidden="true" className="size-3.5" strokeWidth={2} />
@@ -109,14 +109,14 @@ export function AtlasSection({
           </p>
           <h2
             id="atlas-title"
-            className="m-0 mt-[18px] text-balance"
+            className="m-0 text-balance"
             style={displayStyle("band")}
           >
             <Emphasis text={band.title} emStyle={{ color: LAVENDER }} />
           </h2>
           {band.text ? (
             <p
-              className="mt-8 max-w-[500px] text-[18px] leading-[1.65] text-pretty"
+              className="mt-8 max-w-[500px] text-lg leading-[1.65] text-pretty"
               style={{ color: BODY }}
             >
               {band.text}
@@ -144,11 +144,11 @@ export function AtlasSection({
                     <Icon className="size-[18px]" strokeWidth={1.8} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[16px] font-semibold">
+                    <span className="block text-base font-semibold">
                       {title}
                     </span>
                     <span
-                      className="block text-[14px] leading-[1.45]"
+                      className="block text-sm leading-[1.45]"
                       style={{ color: MUTED }}
                     >
                       {text}
@@ -156,14 +156,14 @@ export function AtlasSection({
                   </span>
                   <span className="flex shrink-0 flex-wrap justify-end gap-1.5">
                     <span
-                      className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+                      className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
                       style={{ background: badge.bg, color: badge.fg }}
                     >
                       {badge.label}
                     </span>
                     {live ? null : (
                       <span
-                        className="rounded-full border px-2.5 py-0.5 text-[13px] font-medium"
+                        className="rounded-full border px-2.5 py-0.5 text-sm font-medium"
                         style={{ borderColor: OUTLINE, color: MUTED }}
                       >
                         {tUi("soon")}

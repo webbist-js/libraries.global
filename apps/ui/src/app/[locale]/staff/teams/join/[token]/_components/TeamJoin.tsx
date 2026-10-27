@@ -129,13 +129,13 @@ export function TeamJoin({
         </StaffPanel>
       ) : (
         <StaffPanel title={t("invitationTitle")} id="team-invitation">
-          <p className="mt-0 mb-6 max-w-[68ch] text-[16px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-0 mb-6 max-w-[68ch] text-base leading-relaxed text-(--t-ink-dim)">
             {t("invitationIntro")}
           </p>
-          <dl className="m-0 grid gap-x-8 gap-y-5 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 sm:grid-cols-2 sm:p-6 [&_dd]:mt-1.5 [&_dd]:mb-0 [&_dd]:ml-0 [&_dd]:text-[16px] [&_dd]:[overflow-wrap:anywhere] [&_dt]:text-[14px] [&_dt]:font-semibold [&_dt]:text-(--t-ink-dim)">
+          <dl className="m-0 grid gap-x-8 gap-y-5 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 sm:grid-cols-2 sm:p-6 [&_dd]:mt-1.5 [&_dd]:mb-0 [&_dd]:ml-0 [&_dd]:text-base [&_dd]:[overflow-wrap:anywhere] [&_dt]:text-sm [&_dt]:font-semibold [&_dt]:text-(--t-ink-dim)">
             <div>
               <dt>{tUi("team")}</dt>
-              <dd className="font-serif text-[23px]! leading-tight">
+              <dd className="font-sans text-[23px]! leading-tight">
                 {invite.teamName}
               </dd>
             </div>
@@ -160,7 +160,7 @@ export function TeamJoin({
               </div>
             ) : null}
           </dl>
-          <p className="mt-5 mb-0 max-w-[72ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-5 mb-0 max-w-[72ch] text-base leading-relaxed text-(--t-ink-dim)">
             {t(organiser ? "organiserDetail" : "memberDetail")}
           </p>
           <div className="mt-6 space-y-4">
@@ -242,14 +242,14 @@ export function TeamJoin({
             {error ? (
               <p
                 role="alert"
-                className="m-0 text-[15px] text-(--t-accent-danger)"
+                className="m-0 text-base text-(--t-accent-danger)"
               >
                 {error}
               </p>
             ) : null}
           </div>
           <div className="mt-6 flex flex-col gap-4 border-t border-(--t-border-line) pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <p className="m-0 flex max-w-[48ch] items-start gap-2 text-[14px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 flex max-w-[48ch] items-start gap-2 text-sm leading-relaxed text-(--t-ink-dim)">
               <Icon
                 aria-hidden="true"
                 icon="mdi:shield-check-outline"
@@ -281,11 +281,11 @@ export function TeamJoin({
         <div className="mb-5 text-center">
           <h2
             id="invite-next-steps"
-            className="m-0 font-serif text-[30px] leading-tight text-(--t-ink-base)"
+            className="type-h2 m-0 text-(--t-ink-base)"
           >
             {t(joined ? "nextTitleJoined" : "nextTitle")}
           </h2>
-          <p className="mt-3 mb-0 text-[16px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-3 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
             {t("nextIntro")}
           </p>
         </div>
@@ -324,10 +324,10 @@ export function TeamJoin({
                 width={23}
                 className="mb-4 text-(--t-accent-primary)"
               />
-              <h3 className="m-0 font-serif text-[23px] leading-tight text-(--t-ink-base)">
+              <h3 className="type-h3 m-0 text-(--t-ink-base)">
                 {t(step.title)}
               </h3>
-              <p className="mt-3 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+              <p className="mt-3 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
                 {t(step.detail)}
               </p>
             </li>
@@ -342,7 +342,7 @@ export function TeamJoin({
               <li key={guide.href} className="min-w-0">
                 <Link
                   href={guide.href}
-                  className="flex h-full min-h-14 items-center gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-[15px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)/40 hover:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                  className="flex h-full min-h-14 items-center gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-base font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary)/40 hover:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
                 >
                   <Icon
                     aria-hidden="true"
@@ -372,7 +372,7 @@ export function TeamJoin({
             <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
           </Link>
         )}
-        <p className="mt-5 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="mt-5 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
           {t("helpDetail")}{" "}
           <Link href="/contribute/discussions" className={STAFF_LINK}>
             {t("askCommunity")}

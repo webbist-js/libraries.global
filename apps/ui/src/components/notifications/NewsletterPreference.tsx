@@ -60,7 +60,7 @@ export function NewsletterPreference() {
     <div className="py-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[15px] font-medium">
+          <p className="text-base font-medium">
             {tUi("newsletter_and_journal_dispatch")}
           </p>
           <p className="mt-1 text-sm text-(--t-ink-dim)">

@@ -5,7 +5,7 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { useMembershipPlan } from "@/lib/localized-plans"
 
 const LINK =
-  "inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
+  "inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-sm font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
 
 const SOURCE_COPY = {
   grant: "grantDetail",
@@ -23,7 +23,7 @@ function membershipAction(
   if (hasPaidMembership || source === "paid")
     return {
       label: "manageMembership",
-      href: "/profile/settings#membership",
+      href: "/profile/membership",
     } as const
   if (source === "earned")
     return { label: "contributions", href: "/contribute/submissions" } as const
@@ -32,7 +32,7 @@ function membershipAction(
 
   return {
     label: "membershipSettings",
-    href: "/profile/settings#membership",
+    href: "/profile/membership",
   } as const
 }
 
@@ -62,30 +62,23 @@ export function MembershipRecognition({
           height={20}
           className="shrink-0 text-(--t-accent-primary)"
         />
-        <Heading
-          id="member-recognition-h"
-          className={
-            compact
-              ? "m-0 text-[16px] font-semibold"
-              : "m-0 font-serif text-[26px] leading-tight"
-          }
-        >
+        <Heading id="member-recognition-h" className="type-panel-title m-0">
           {t("recognition")}
         </Heading>
       </div>
-      <p className="m-0 mt-2 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
         {compact ? t("recognitionMember") : t("recognitionLead")}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         {compact ? (
-          <GlobalLink className={LINK} href="/profile/settings#privacy">
+          <GlobalLink className={LINK} href="/profile/membership#recognition">
             {t("recognitionSettings")}
             <Icon aria-hidden icon="mdi:arrow-right" width={16} height={16} />
           </GlobalLink>
         ) : null}
         <GlobalLink
           href="/community/supporters"
-          className="inline-flex min-h-11 items-center text-[14px] font-semibold text-(--t-accent-primary) underline underline-offset-4 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {t("meetSupporters")}
         </GlobalLink>
@@ -132,16 +125,16 @@ export function PlanStatusBanner({
         <div className="min-w-0 flex-1">
           <h2
             id="current-membership-h"
-            className="m-0 scroll-mt-28 text-[12px] font-semibold text-(--t-ink-dim)"
+            className="type-small-heading m-0 scroll-mt-28 text-(--t-ink-dim)"
           >
             {t("yourMembership")}
           </h2>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="m-0 font-serif text-[30px] leading-tight">
+            <p className="m-0 font-sans text-[30px] leading-tight">
               {planCard(plan).name}
             </p>
             {source ? (
-              <span className="rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-[12px] font-semibold text-(--t-accent-primary)">
+              <span className="rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-xs font-semibold text-(--t-accent-primary)">
                 {complimentary
                   ? t("complimentary")
                   : source === "team"
@@ -150,7 +143,7 @@ export function PlanStatusBanner({
               </span>
             ) : null}
           </div>
-          <p className="m-0 mt-2 max-w-[55ch] text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 mt-2 max-w-[55ch] text-sm leading-relaxed text-(--t-ink-dim)">
             {t(source ? SOURCE_COPY[source] : "unknownDetail")}
           </p>
           <GlobalLink className={`${LINK} mt-4`} href={action.href}>

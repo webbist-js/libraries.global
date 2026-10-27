@@ -3,7 +3,15 @@ import { editorApplyHref } from "@/lib/editor-gate"
 
 /** Where an unsent draft continues: the record wizard or the article editor. */
 export function continueHref(submission: Submission): string {
-  const { submissionType, targetSlug, documentId, draftData } = submission
+  const {
+    submissionType,
+    targetSlug,
+    documentId,
+    draftData,
+    targetDocumentId,
+  } = submission
+  if (submissionType === "network_claim")
+    return `/staff/networks?${new URLSearchParams({ ...(targetDocumentId ? { network: targetDocumentId } : {}), request: documentId })}`
   if (submissionType === "wiki_edit" || submissionType === "blog_submission") {
     const kind = submissionType === "wiki_edit" ? "knowledge" : "journal"
     if (

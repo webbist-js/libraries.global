@@ -39,6 +39,8 @@ export function summaryOf(sub: SummarySource): string {
   switch (sub.submissionType) {
     case "new_library":
       return str(f.name) ?? "Unnamed library"
+    case "network_claim":
+      return `${String(f.networkName ?? "Service")} · ${String(f.intent ?? "affiliation")} · ${Array.isArray(f.libraryIds) ? f.libraryIds.length : 0} libraries`
     case "library_claim":
       return str(f.name) ?? sub.targetSlug ?? "Library claim"
     case "wiki_edit":

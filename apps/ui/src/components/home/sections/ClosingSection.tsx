@@ -66,10 +66,7 @@ export function ClosingSection({
           className="m-0 text-balance"
           style={displayStyle("closing")}
         >
-          <Emphasis
-            text={band.title}
-            emStyle={{ color: SOFT, display: "block" }}
-          />
+          <Emphasis text={band.title} emStyle={{ color: SOFT }} />
         </h2>
 
         {columns.length > 0 ? (
@@ -89,21 +86,10 @@ export function ClosingSection({
                 }`}
                 style={{ borderColor: DIVIDER }}
               >
-                <h3
-                  className="m-0"
-                  style={{
-                    fontFamily: T.font.serif,
-                    fontWeight: 500,
-                    fontSize: "clamp(32px,3vw,44px)",
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {step.title}
-                </h3>
+                <h3 className="type-display-compact m-0">{step.title}</h3>
                 {step.text ? (
                   <p
-                    className="m-0 mt-4 max-w-[520px] text-[17px] leading-[1.65] text-pretty"
+                    className="m-0 mt-4 max-w-[520px] text-base leading-[1.65] text-pretty"
                     style={{ color: SOFT }}
                   >
                     {step.text}
@@ -130,12 +116,12 @@ export function ClosingSection({
         {openLinks.length > 0 ? (
           <nav
             aria-labelledby="open-title"
-            className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-t pt-6 text-[15px]"
+            className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-t pt-6 text-base"
             style={{ borderColor: RULE }}
           >
             <h2
               id="open-title"
-              className="m-0 text-[15px] font-normal"
+              className="type-small-heading m-0"
               style={{ color: SOFT }}
             >
               {openIntro.title}:

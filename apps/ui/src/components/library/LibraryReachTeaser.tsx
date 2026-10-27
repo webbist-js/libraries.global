@@ -32,10 +32,8 @@ export function LibraryReachTeaser({
         border: `1px solid ${T.border.line}`,
       }}
     >
-      {!embedded ? (
-        <h3 className="m-0 text-xl font-semibold">{t("reach")}</h3>
-      ) : null}
-      <p className="m-0 text-sm">{t("reachAvailability")}</p>
+      {!embedded ? <h3 className="type-h3 m-0">{t("reach")}</h3> : null}
+      <p className="m-0 text-base">{t("reachAvailability")}</p>
       <label className="flex flex-col gap-2 text-sm font-semibold">
         {t("travelMode")}
         <SelectField
@@ -48,20 +46,20 @@ export function LibraryReachTeaser({
           ]}
         />
       </label>
-      <p className="m-0 text-sm">{t("reachExplanation")}</p>
+      <p className="m-0 text-base">{t("reachExplanation")}</p>
       {isPro ? (
         <Link
           href={`/map?${params}`}
-          className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 py-3 text-center text-sm font-semibold text-white no-underline"
+          className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 py-3 text-center text-base font-semibold text-white no-underline"
         >
           {t("openReach")}
         </Link>
       ) : (
         <>
-          <p className="m-0 text-sm">{t("reachAccessMessage")}</p>
+          <p className="m-0 text-base">{t("reachAccessMessage")}</p>
           <Link
-            href="/contribute/membership"
-            className="min-h-11 py-3 text-sm font-semibold underline"
+            href="/plans"
+            className="min-h-11 py-3 text-base font-semibold underline"
           >
             {t("seePlans")}
           </Link>

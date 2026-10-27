@@ -36,7 +36,7 @@ import {
   searchFind,
 } from "@/lib/find-search"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
-import { usePathname, useRouter } from "@/lib/navigation"
+import { Link, usePathname, useRouter } from "@/lib/navigation"
 
 import {
   type FindState,
@@ -315,6 +315,12 @@ export function FindLibraryPage({
           nearActive={state.nearLat != null}
           locating={locating}
         />
+        <Link
+          className="mt-4 inline-block font-semibold underline underline-offset-4"
+          href="/library-networks"
+        >
+          Explore library services and networks
+        </Link>
       </PageHero>
 
       {/* Main two-column area */}
@@ -346,7 +352,7 @@ export function FindLibraryPage({
 
         {/* Results */}
         <section aria-label={tUi("results")} className="min-w-0 flex-1">
-          <h2 className="sr-only">{tUi("results")}</h2>
+          <h2 className="type-h2 sr-only">{tUi("results")}</h2>
           <FindResultsControls
             state={state}
             total={total}
@@ -476,7 +482,7 @@ export function FindLibraryPage({
                 type="button"
                 disabled={page === 0}
                 onClick={() => patch({ page: page - 1 })}
-                className="cursor-pointer rounded-full px-4 py-2 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+                className="cursor-pointer rounded-full px-4 py-2 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-40"
                 style={{
                   background: T.bg.deep,
                   border: `1px solid ${T.border.hi}`,
@@ -485,14 +491,14 @@ export function FindLibraryPage({
               >
                 ← Previous
               </button>
-              <span className="text-[15px]" style={{ color: T.ink.dim }}>
+              <span className="text-base" style={{ color: T.ink.dim }}>
                 Page {page + 1} of {pageCount}
               </span>
               <button
                 type="button"
                 disabled={page >= pageCount - 1}
                 onClick={() => patch({ page: page + 1 })}
-                className="cursor-pointer rounded-full px-4 py-2 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+                className="cursor-pointer rounded-full px-4 py-2 text-base font-semibold disabled:cursor-not-allowed disabled:opacity-40"
                 style={{
                   background: T.bg.deep,
                   border: `1px solid ${T.border.hi}`,
@@ -506,7 +512,7 @@ export function FindLibraryPage({
           {total > FIND_MAX_REACHABLE ? (
             <p
               role="status"
-              className="mt-3 text-center text-[14.5px]"
+              className="mt-3 text-center text-sm"
               style={{ color: T.ink.dim }}
             >
               Showing the first {FIND_MAX_REACHABLE.toLocaleString("en-GB")} of{" "}

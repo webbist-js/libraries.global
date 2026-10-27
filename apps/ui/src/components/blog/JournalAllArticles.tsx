@@ -130,7 +130,7 @@ export function JournalAllArticles({
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="journal-all" className="m-0 text-sm font-semibold">
+          <h2 id="journal-all" className="type-small-heading m-0">
             {tDiscovery(journalCollectionKey(discovery.appliedFilters.origins))}
           </h2>
           <p
@@ -149,7 +149,7 @@ export function JournalAllArticles({
       </div>
 
       {fallbackFrom ? (
-        <p className="m-0 mt-3 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-3 text-sm" style={{ color: T.ink.dim }}>
           {t("journalFallback", {
             requested: languageName(fallbackFrom, languages, locale),
             language: languageName(lang, languages, locale),

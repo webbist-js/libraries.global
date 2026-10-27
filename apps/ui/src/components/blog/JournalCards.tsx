@@ -83,7 +83,7 @@ export function SectionTag({
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold"
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
       style={{ background: visual.bg, color: visual.fg }}
     >
       <Icon aria-hidden="true" height={14} icon={visual.icon} width={14} />
@@ -132,7 +132,7 @@ function ArticleThumb({
       {article.place ? (
         <span
           className={cn(
-            "absolute right-3 bottom-3 text-[12px] font-semibold",
+            "absolute right-3 bottom-3 text-xs font-semibold",
             imgUrl && "rounded-full bg-white/90 px-2 py-0.5"
           )}
           style={imgUrl ? { color: T.ink.base } : undefined}
@@ -186,7 +186,7 @@ export function JournalFeatureCard({
         <div className="mb-3 flex flex-wrap gap-2">
           {editorsPick ? (
             <span
-              className="inline-flex items-center rounded-full px-2.5 py-1 text-[13px] font-semibold"
+              className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold"
               style={{
                 background: T.accent.chip,
                 color: T.accent.primaryHover,
@@ -199,11 +199,8 @@ export function JournalFeatureCard({
         </div>
 
         <h3
-          className="m-0 text-[clamp(28px,3vw,38px)] leading-[1.1]"
+          className="type-feature-title m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            letterSpacing: "-0.015em",
             color: T.ink.base,
           }}
         >
@@ -212,7 +209,7 @@ export function JournalFeatureCard({
 
         {article.summary ? (
           <p
-            className="m-0 mt-3 line-clamp-3 text-[15px] leading-[1.6]"
+            className="m-0 mt-3 line-clamp-3 text-base leading-[1.6]"
             style={{ color: T.ink.dim }}
           >
             {article.summary}
@@ -220,14 +217,14 @@ export function JournalFeatureCard({
         ) : null}
 
         <p
-          className="m-0 mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px]"
+          className="m-0 mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
           style={{ color: T.ink.dim }}
         >
           {article.author ? (
             <>
               <span
                 aria-hidden="true"
-                className="flex size-7 flex-none items-center justify-center rounded-full text-[12px] font-semibold"
+                className="flex size-7 flex-none items-center justify-center rounded-full text-xs font-semibold"
                 style={{
                   background: "var(--tint-national-bg)",
                   color: "var(--tint-national-fg)",
@@ -275,12 +272,12 @@ export function JournalSideCard({
         <SectionLabel section={article.section} />
       </div>
       <h3
-        className="m-0 mt-3 mb-4 text-[23px] leading-[1.15] transition-colors group-hover:text-(--t-accent-primary)"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
+        className="type-h3 m-0 mt-3 mb-4 transition-colors group-hover:text-(--t-accent-primary)"
+        style={{ color: T.ink.base }}
       >
         {article.title}
       </h3>
-      <p className="m-0 mt-auto text-[13px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 mt-auto text-sm" style={{ color: T.ink.dim }}>
         {articleMeta(article, {
           locale,
           readingTime: t("readingTime", { minutes: article.readMinutes }),
@@ -299,7 +296,7 @@ function SectionLabel({
 
   return (
     <p
-      className="m-0 mb-1 text-[13px] font-semibold"
+      className="m-0 mb-1 text-sm font-semibold"
       style={{ color: sectionVisual(section).fg }}
     >
       {section.name}
@@ -336,10 +333,8 @@ export function JournalArticleCard({
       <div className="flex flex-1 flex-col p-5">
         <SectionLabel section={article.section} />
         <h3
-          className="m-0 text-[20px] leading-[1.2] transition-colors group-hover:text-(--t-accent-primary)"
+          className="type-h3 m-0 transition-colors group-hover:text-(--t-accent-primary)"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -347,7 +342,7 @@ export function JournalArticleCard({
         </h3>
         {article.summary ? (
           <p
-            className="m-0 mt-2 line-clamp-3 text-[14px] leading-[1.5]"
+            className="m-0 mt-2 line-clamp-3 text-sm leading-[1.5]"
             style={{ color: T.ink.dim }}
           >
             {article.summary}
@@ -358,10 +353,7 @@ export function JournalArticleCard({
             {article.place}
           </p>
         ) : null}
-        <p
-          className="m-0 mt-auto pt-4 text-[13px]"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 mt-auto pt-4 text-sm" style={{ color: T.ink.dim }}>
           {articleMeta(article, {
             locale,
             readingTime: t("readingTime", { minutes: article.readMinutes }),
@@ -401,10 +393,8 @@ export function JournalArticleRow({
       <div className="flex min-w-0 flex-1 flex-col py-2">
         <SectionLabel section={article.section} />
         <h3
-          className="m-0 text-[19px] leading-[1.2] transition-colors group-hover:text-(--t-accent-primary)"
+          className="type-card-title m-0 transition-colors group-hover:text-(--t-accent-primary)"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -412,16 +402,13 @@ export function JournalArticleRow({
         </h3>
         {article.summary ? (
           <p
-            className="m-0 mt-1.5 line-clamp-2 hidden text-[14px] leading-[1.5] sm:block"
+            className="m-0 mt-1.5 line-clamp-2 hidden text-sm leading-[1.5] sm:block"
             style={{ color: T.ink.dim }}
           >
             {article.summary}
           </p>
         ) : null}
-        <p
-          className="m-0 mt-auto pt-2 text-[13px]"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 mt-auto pt-2 text-sm" style={{ color: T.ink.dim }}>
           {[
             articleMeta(article, {
               locale,

@@ -366,7 +366,7 @@ export function RecordSteps({ children }: { readonly children?: ReactNode }) {
         <div className="about-record-grid" aria-hidden="true" />
         <div className="about-record-content">
           <p className="about-record-kicker">An illustrative record</p>
-          <h3>A library, better known.</h3>
+          <h3 className="type-h3">A library, better known.</h3>
           <div className="about-record-layers">
             <div className="about-record-layer" data-visible="true">
               <span className="about-record-field-label">The foundation</span>

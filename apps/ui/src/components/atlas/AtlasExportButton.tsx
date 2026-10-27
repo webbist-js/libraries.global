@@ -26,7 +26,7 @@ const FORMATS: { value: ExportFormat; label: string; sub: string }[] = [
 ]
 
 const BUTTON =
-  "inline-flex h-9 items-center gap-1.5 rounded-full border bg-white px-3.5 text-[14px] font-semibold disabled:opacity-40"
+  "inline-flex h-9 items-center gap-1.5 rounded-full border bg-white px-3.5 text-sm font-semibold disabled:opacity-40"
 
 type Outcome = { tone: "ok" | "error"; text: string }
 
@@ -177,7 +177,7 @@ export function AtlasExportButton({
         </button>
         <p
           id={noteId}
-          className="order-last m-0 basis-full text-[14px]"
+          className="order-last m-0 basis-full text-sm"
           style={{ color: T.ink.dim }}
         >
           Supporter exports up to 500 libraries per download; Pro exports up to
@@ -222,8 +222,8 @@ export function AtlasExportButton({
               }
               className="cursor-pointer flex-col items-start gap-0 rounded-[12px] px-2.5 py-2 focus:bg-(--t-bg-muted-2) focus:text-(--t-ink-base)"
             >
-              <span className="text-[15px] font-semibold">{f.label}</span>
-              <span className="text-[13px]" style={{ color: T.ink.dim }}>
+              <span className="text-base font-semibold">{f.label}</span>
+              <span className="text-sm" style={{ color: T.ink.dim }}>
                 {f.sub}
               </span>
             </DropdownMenuItem>
@@ -235,7 +235,7 @@ export function AtlasExportButton({
         role="status"
         className={
           error
-            ? "order-last m-0 flex basis-full items-center gap-1.5 text-[14px] font-semibold"
+            ? "order-last m-0 flex basis-full items-center gap-1.5 text-sm font-semibold"
             : "sr-only"
         }
         style={error ? { color: T.accent.danger } : undefined}

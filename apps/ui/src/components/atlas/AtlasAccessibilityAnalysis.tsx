@@ -175,7 +175,7 @@ export function AtlasAccessibilityAnalysis({
             className="flex flex-col gap-3"
           >
             <div className="flex items-start justify-between gap-3">
-              <h3 className="m-0 text-base font-bold">What do you need?</h3>
+              <h3 className="type-h3 m-0">What do you need?</h3>
               <span className="text-right text-sm" style={{ color: T.ink.dim }}>
                 {selected.length
                   ? `${selected.length} chosen`
@@ -332,7 +332,7 @@ export function AtlasAccessibilityAnalysis({
             className="flex flex-col gap-3"
             aria-labelledby={`${id}-map`}
           >
-            <h3 id={`${id}-map`} className="m-0 text-base font-bold">
+            <h3 id={`${id}-map`} className="type-h3 m-0">
               Show on the map
             </h3>
             <div
@@ -462,7 +462,7 @@ export function AtlasAccessibilityAnalysis({
                 borderColor: T.border.divider,
               }}
             >
-              <h3 className="m-0 text-base font-bold">
+              <h3 className="type-h3 m-0">
                 {summary.unconfirmed.toLocaleString()} libraries here{" "}
                 {selected.length
                   ? "don’t confirm every chosen feature"
@@ -560,7 +560,7 @@ function AccessibilityHeadline({
         <>
           <p
             className="m-0 text-6xl leading-none"
-            style={{ fontFamily: T.font.serif }}
+            style={{ fontFamily: T.font.sans }}
           >
             {coverage.matches.toLocaleString()}
           </p>

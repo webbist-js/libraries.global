@@ -195,12 +195,7 @@ export function AtlasFiltersTab({
     <div className="flex min-h-full flex-col">
       <div className="flex flex-col gap-2 pb-1">
         <div className="flex min-h-11 items-center justify-between gap-3">
-          <h2
-            className="m-0 text-[30px] leading-tight"
-            style={{ fontFamily: T.font.serif }}
-          >
-            {tUi("filters")}
-          </h2>
+          <h2 className="type-h2 m-0">{tUi("filters")}</h2>
           <button
             type="button"
             onClick={() => onChange(EMPTY_FILTERS)}
@@ -295,7 +290,7 @@ export function AtlasFiltersTab({
         {filters.opening === "at" ? (
           <div className="flex gap-2">
             <label
-              className="flex flex-1 flex-col gap-1 text-[13px] font-semibold"
+              className="flex flex-1 flex-col gap-1 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               Day
@@ -310,7 +305,7 @@ export function AtlasFiltersTab({
               />
             </label>
             <label
-              className="flex w-32 flex-col gap-1 text-[13px] font-semibold"
+              className="flex w-32 flex-col gap-1 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               Time
@@ -323,7 +318,7 @@ export function AtlasFiltersTab({
                   if (Number.isFinite(h) && Number.isFinite(m))
                     set({ atMinutes: h! * 60 + m! })
                 }}
-                className="h-11 rounded-[14px] border bg-white px-3 text-[15px] font-medium"
+                className="h-11 rounded-[14px] border bg-white px-3 text-base font-medium"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
               />
             </label>
@@ -508,13 +503,13 @@ export function AtlasFiltersTab({
               }
             />
             <div
-              className="flex justify-between text-[14px]"
+              className="flex justify-between text-sm"
               style={{ color: T.ink.dim }}
             >
               <span>{years[0]}</span>
               <span>Today</span>
             </div>
-            <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               Only libraries with a recorded founding year are shown when this
               is set.
             </p>

@@ -144,11 +144,7 @@ export function MobilePlaceStops({
 
   return (
     <section aria-labelledby={`mobile-stops-${slug}`}>
-      <h2
-        id={`mobile-stops-${slug}`}
-        style={{ fontFamily: T.font.serif }}
-        className="text-3xl"
-      >
+      <h2 id={`mobile-stops-${slug}`} className="type-h2">
         Mobile libraries that visit {name}
       </h2>
       <p>
@@ -166,7 +162,7 @@ export function MobilePlaceStops({
           <div className="grid gap-4 sm:grid-cols-2">
             {[...groups].map(([id, stops]) => (
               <Card key={id} className="p-5">
-                <h3 className="m-0 text-lg font-semibold">
+                <h3 className="type-h3 m-0">
                   {stops[0]!.library_path ? (
                     <Link href={stops[0]!.library_path}>
                       {stops[0]!.library_name}

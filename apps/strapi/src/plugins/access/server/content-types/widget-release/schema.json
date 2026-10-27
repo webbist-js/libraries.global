@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "access_widget_releases",
+  "info": {
+    "singularName": "widget-release",
+    "pluralName": "widget-releases",
+    "displayName": "widget-release"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "widget": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::access.widget"
+    },
+    "version": {
+      "type": "integer",
+      "required": true
+    },
+    "snapshot": {
+      "type": "json",
+      "private": true
+    },
+    "publishedAt": {
+      "type": "datetime"
+    },
+    "publisherId": {
+      "type": "string",
+      "private": true
+    }
+  }
+}

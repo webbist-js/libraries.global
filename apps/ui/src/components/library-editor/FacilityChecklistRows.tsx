@@ -122,7 +122,7 @@ export function FacilityChecklistRows({
               className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border px-4 py-2.5"
               style={{ borderColor: T.border.line, background: T.bg.deep }}
             >
-              <span className="flex items-center gap-2.5 text-[15px] font-semibold">
+              <span className="flex items-center gap-2.5 text-base font-semibold">
                 <Icon
                   aria-hidden="true"
                   icon={facilityIcon(check.label, check.collection)}
@@ -142,7 +142,7 @@ export function FacilityChecklistRows({
               ) : (
                 <span
                   role="status"
-                  className="text-[13px]"
+                  className="text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   {settled[check.collection]

@@ -138,7 +138,7 @@ export function LocationHierarchySelector({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "13px",
+          fontSize: "var(--type-body-small-size)",
           color: T.ink.faint,
           margin: 0,
           lineHeight: 1.5,

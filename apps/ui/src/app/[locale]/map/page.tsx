@@ -43,7 +43,9 @@ export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
 
   return (
     <>
-      <h1 className="sr-only">Atlas: map of the world&apos;s libraries</h1>
+      <h1 className="type-h1 sr-only">
+        Atlas: map of the world&apos;s libraries
+      </h1>
       <AtlasExplorer
         feedbackPrompt={<AtlasFeedbackButton />}
         scalable={scalableAtlasEnabled(

@@ -11,6 +11,7 @@ export const SUBMISSION_TYPES = [
   "correction",
   "new_library",
   "library_claim",
+  "network_claim",
   "library_edit",
   "event_feed",
   "wiki_edit",
@@ -36,6 +37,7 @@ export const QUEUE_OF_SUBMISSION_TYPE: Record<SubmissionType, ModerationQueue> =
     correction: "index",
     new_library: "index",
     library_claim: "index",
+    network_claim: "index",
     library_edit: "index",
     event_feed: "index",
     topic_suggestion: "index",
@@ -287,6 +289,7 @@ export function canSubmit(
       return c.set.has("submit.correction")
     case "new_library":
       return c.set.has("submit.newLibrary")
+    case "network_claim":
     case "library_claim":
       return c.set.has("submit.claim")
     case "library_edit":

@@ -39,7 +39,7 @@ function SearchResult({ hit }: { hit: BlogArticleSearchHit }) {
       {hit.section_slug && (
         <p
           style={{
-            fontSize: "13px",
+            fontSize: "var(--type-body-small-size)",
             fontWeight: 600,
             color: T.accent.ember,
             marginBottom: "8px",
@@ -49,13 +49,9 @@ function SearchResult({ hit }: { hit: BlogArticleSearchHit }) {
         </p>
       )}
       <h3
+        className="type-h3"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "1.2rem",
-          fontWeight: 600,
-          letterSpacing: "-.01em",
           color: T.ink.base,
-          lineHeight: 1.3,
           margin: 0,
         }}
       >
@@ -84,7 +80,7 @@ function BlogSearchResults({ query }: { query: string }) {
         <p
           style={{
             color: T.ink.faint,
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
           }}
         >
           Searching…
@@ -98,7 +94,7 @@ function BlogSearchResults({ query }: { query: string }) {
             borderRadius: "18px",
             background: T.bg.surface,
             color: T.ink.low,
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
           }}
         >
           No articles found for &ldquo;{query}&rdquo;.
@@ -107,7 +103,7 @@ function BlogSearchResults({ query }: { query: string }) {
         <>
           <p
             style={{
-              fontSize: "14px",
+              fontSize: "var(--type-body-small-size)",
               color: T.ink.dim,
               marginBottom: "20px",
             }}
@@ -170,7 +166,7 @@ function SearchPageInner() {
         <Container>
           <BlogSearchResults query={query} />
           {!query.trim() && (
-            <p style={{ color: T.ink.dim, fontSize: "15px" }}>
+            <p style={{ color: T.ink.dim, fontSize: "var(--type-body-size)" }}>
               Enter a search term in the search bar above to find articles.
             </p>
           )}

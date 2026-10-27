@@ -38,7 +38,7 @@ export function StaffDrawerTab({ onOpen }: { readonly onOpen: () => void }) {
       </span>
       <span
         aria-hidden="true"
-        className="text-[13px] font-semibold tracking-wide"
+        className="text-sm font-semibold tracking-wide"
         style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
       >
         Staff

@@ -37,6 +37,12 @@ export default [
   route("GET", "/teams/:id", "teams.findOne", "manage-teams"),
   route("PUT", "/teams/:id", "teams.update", "manage-teams"),
   route("POST", "/teams/:id/verify", "teams.verify", "manage-teams"),
+  route(
+    "POST",
+    "/teams/:id/widget-branding",
+    "teams.widgetBranding",
+    "manage-teams"
+  ),
   route("POST", "/teams/:id/members", "teams.invite", "manage-teams"),
   route("PUT", "/teams/:id/members/:memberId", "teams.member", "manage-teams"),
   route(

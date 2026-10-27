@@ -49,7 +49,7 @@ function StatusLine({
   return (
     <p
       role="status"
-      className="m-0 flex items-start gap-1.5 text-[14px] leading-normal"
+      className="m-0 flex items-start gap-1.5 text-sm leading-normal"
       style={{ color }}
     >
       <Icon
@@ -85,7 +85,7 @@ function Alert({
         className="mt-0.5 shrink-0"
         style={{ color: T.accent.warn }}
       />
-      <div className="flex min-w-0 flex-col gap-0.5 text-[15px] leading-normal">
+      <div className="flex min-w-0 flex-col gap-0.5 text-base leading-normal">
         <p className="m-0 font-semibold" style={{ color: T.ink.base }}>
           {title}
         </p>
@@ -316,14 +316,14 @@ export function LocationLookup({
               >
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span
-                    className="text-[15px] font-semibold"
+                    className="text-base font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {place.label}
                   </span>
                   {place.detail ? (
                     <span
-                      className="text-[13.5px] leading-snug"
+                      className="text-sm leading-snug"
                       style={{ color: T.ink.dim }}
                     >
                       {place.detail}
@@ -331,7 +331,7 @@ export function LocationLookup({
                   ) : null}
                 </span>
                 <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+                  className="shrink-0 rounded-full px-2 py-0.5 text-sm font-semibold"
                   style={{
                     background: TYPE_TINT.neutral.bg,
                     color: TYPE_TINT.neutral.fg,
@@ -348,7 +348,7 @@ export function LocationLookup({
             type="button"
             onClick={locate}
             disabled={locating}
-            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-wait disabled:opacity-70"
+            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-full px-5 text-base font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-wait disabled:opacity-70"
             style={{
               border: `1px solid ${T.border.hi}`,
               background: T.bg.deep,

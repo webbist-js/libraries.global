@@ -78,7 +78,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     primaryLabel: "Open the atlas",
     primaryHref: "/map",
     secondaryLabel: "What Pro adds",
-    secondaryHref: "/contribute/membership",
+    secondaryHref: "/plans",
   },
 
   communityBand: {

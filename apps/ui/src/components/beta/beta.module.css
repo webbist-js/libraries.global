@@ -31,7 +31,7 @@
   border: 1px solid var(--t-border-line);
   border-radius: 50px;
   padding: 8px 15px;
-  font-size: 14px;
+  font-size: var(--type-body-small-size);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -54,11 +54,8 @@
   padding: 90px 0 100px;
 }
 .introduction h1 {
-  font-family: var(--font-newsreader), Georgia, serif;
-  font-size: clamp(76px, 7.8vw, 132px);
-  font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: -0.055em;
+  font: var(--type-h1);
+  letter-spacing: var(--type-heading-tracking);
   margin: 0 0 40px;
 }
 .introduction h1 em {
@@ -67,14 +64,14 @@
 }
 .lead {
   color: var(--t-ink-dim);
-  font-size: clamp(18px, 1.45vw, 23px);
+  font-size: var(--type-lead-size);
   line-height: 1.65;
   max-width: 660px;
   margin: 0 0 30px;
 }
 .notes {
   padding-left: 20px;
-  font-size: 16px;
+  font-size: var(--type-body-size);
   line-height: 1.6;
 }
 .notes li + li {
@@ -96,22 +93,20 @@
   padding: 36px;
 }
 .card h2 {
-  font-family: var(--font-newsreader), Georgia, serif;
-  font-size: 34px;
-  font-weight: 500;
-  line-height: 1.15;
+  font: var(--type-h2);
+  letter-spacing: var(--type-heading-tracking);
   margin: 0 0 10px;
 }
 .card > p,
 .waitlist > p {
   color: var(--t-ink-dim);
-  font-size: 16px;
+  font-size: var(--type-body-size);
   line-height: 1.55;
   margin: 0 0 22px;
 }
 .card label {
   display: block;
-  font-size: 16px;
+  font-size: var(--type-body-size);
   font-weight: 700;
   margin-bottom: 10px;
 }
@@ -135,7 +130,7 @@
   background: transparent;
   border: 0;
   border-radius: inherit;
-  font-size: 18px;
+  font-size: var(--type-body-large-size);
   outline: none;
 }
 .passwordField button {
@@ -154,7 +149,7 @@
   border-radius: 50px;
   min-height: 56px;
   padding: 14px 22px;
-  font-size: 16px;
+  font-size: var(--type-body-size);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s;
@@ -195,9 +190,8 @@
   padding: 32px;
 }
 .waitlist h2 {
-  font-family: var(--font-figtree), sans-serif;
-  font-weight: 700;
-  font-size: 19px;
+  font: var(--type-h2);
+  letter-spacing: var(--type-heading-tracking);
   margin: 0 0 5px;
 }
 .waitlist > p {
@@ -216,7 +210,7 @@
   background: #fff;
   height: 56px;
   padding: 12px 16px;
-  font-size: 18px;
+  font-size: var(--type-body-large-size);
 }
 .waitlistForm > input::placeholder {
   color: var(--t-ink-low);
@@ -228,7 +222,7 @@
 }
 .error {
   color: var(--t-accent-danger);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.45;
   margin: 12px 0 0;
 }
@@ -255,7 +249,7 @@
   color: #365c40;
 }
 .waitlistSuccess p {
-  font-size: 17px;
+  font-size: var(--type-body-size);
   line-height: 1.5;
   margin: 0;
   overflow-wrap: anywhere;
@@ -271,14 +265,15 @@
   margin-bottom: 24px;
 }
 .accepted h2 {
-  font-size: 44px;
+  font: var(--type-h2);
+  letter-spacing: var(--type-heading-tracking);
 }
 .accepted > p {
-  font-size: 18px;
+  font-size: var(--type-body-large-size);
 }
 .continue {
   color: var(--t-accent-primary);
-  font-size: 19px;
+  font-size: var(--type-body-large-size);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -291,7 +286,7 @@
   border-top: 1px solid var(--t-border-line);
   padding: 20px 3%;
   color: var(--t-ink-dim);
-  font-size: 14px;
+  font-size: var(--type-body-small-size);
 }
 .footer p {
   margin: 0;
@@ -319,7 +314,8 @@
     max-width: none;
   }
   .introduction h1 {
-    font-size: clamp(76px, 12vw, 112px);
+    font: var(--type-h1);
+    letter-spacing: var(--type-heading-tracking);
   }
   .header {
     padding: 24px 5%;
@@ -333,7 +329,7 @@
     font-size: 23px;
   }
   .badge {
-    font-size: 12px;
+    font-size: var(--type-caption-size);
     padding: 7px 11px;
   }
   .card {
@@ -343,7 +339,8 @@
     padding: 24px;
   }
   .card h2 {
-    font-size: 31px;
+    font: var(--type-h2);
+    letter-spacing: var(--type-heading-tracking);
   }
   .waitlistForm {
     flex-direction: column;

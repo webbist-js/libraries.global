@@ -24,9 +24,9 @@ export type VerifyLibrary = WizardLibrary & VerifyRecord
 
 // The correction drawer's own button styles (ContributionWizard).
 const PRIMARY =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-[16px] font-semibold transition-colors"
+  "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-base font-semibold transition-colors"
 const SECONDARY =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-white px-5 text-[16px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-white px-5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface)"
 const CTA = `${PRIMARY} bg-(--t-accent-primary) text-white no-underline hover:bg-(--t-accent-primary-hover)`
 
 /**
@@ -140,14 +140,14 @@ export function LibraryVerify({
           </span>
           <h3
             ref={thanks}
-            className="m-0 text-[22px] font-bold outline-none"
+            className="type-h3 m-0 outline-none"
             style={{ color: T.ink.base }}
             tabIndex={-1}
           >
             Thanks. A Moderator will check it.
           </h3>
           <p
-            className="m-0 max-w-[56ch] text-[16px] leading-normal"
+            className="m-0 max-w-[56ch] text-base leading-normal"
             style={{ color: T.ink.dim }}
           >
             Once it’s approved, {library.name} shows these details as checked
@@ -182,13 +182,13 @@ export function LibraryVerify({
           <div>
             <h3
               id={`${id}-title`}
-              className="m-0 text-[22px] font-bold"
+              className="type-h3 m-0"
               style={{ color: T.ink.base }}
             >
               Is this still right?
             </h3>
             <p
-              className="m-0 mt-1.5 max-w-[56ch] text-[16px] leading-normal"
+              className="m-0 mt-1.5 max-w-[56ch] text-base leading-normal"
               style={{ color: T.ink.dim }}
             >
               Confirm what you’ve checked. A Moderator reviews it, then it shows

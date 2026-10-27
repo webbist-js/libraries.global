@@ -9,7 +9,7 @@ import { T } from "@/lib/design-tokens"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
 const LINK =
-  "inline-flex min-h-11 items-center text-[14px] font-semibold underline underline-offset-[3px]"
+  "inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-[3px]"
 
 /**
  * The empty Events card's action: this library's staff connect a feed in
@@ -78,7 +78,7 @@ export function LibraryEventsEmptyAction({
     )
   if (claimed)
     return (
-      <span className="block min-h-11 text-[14px]" style={{ color: T.ink.dim }}>
+      <span className="block min-h-11 text-sm" style={{ color: T.ink.dim }}>
         Your claim is with a moderator. Once it’s approved you can connect the
         library’s events here.
       </span>

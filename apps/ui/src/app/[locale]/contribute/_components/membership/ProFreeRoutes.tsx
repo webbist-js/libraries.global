@@ -39,7 +39,7 @@ const STATUS: Record<
 }
 
 const LINK_PILL =
-  "mt-auto inline-flex h-10 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-[14.5px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "mt-auto inline-flex h-10 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** The three ways to hold Pro without paying. */
 export function ProFreeRoutes() {
@@ -121,7 +121,7 @@ export function ProFreeRoutes() {
                   <Icon height={20} icon={route.icon} width={20} />
                 </span>
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12.5px] font-semibold"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold"
                   style={{ background: status.bg, color: status.fg }}
                 >
                   <Icon
@@ -133,14 +133,9 @@ export function ProFreeRoutes() {
                   {m(`copy.${route.status}`)}
                 </span>
               </div>
-              <h3
-                className="m-0 text-[21px] leading-tight"
-                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-              >
-                {route.title}
-              </h3>
+              <h3 className="type-h3 m-0">{route.title}</h3>
               <p
-                className="m-0 mb-2 text-[14.5px] leading-[1.55]"
+                className="m-0 mb-2 text-sm leading-[1.55]"
                 style={{ color: T.ink.dim }}
               >
                 {route.body}

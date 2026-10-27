@@ -13,7 +13,7 @@ export function FeedStatusBadge({ feed }: { readonly feed: FeedView }) {
 
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
+      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold"
       style={{ background: bg, color: fg, fontFamily: T.font.sans }}
     >
       <Icon icon={status.icon} width={15} height={15} aria-hidden="true" />

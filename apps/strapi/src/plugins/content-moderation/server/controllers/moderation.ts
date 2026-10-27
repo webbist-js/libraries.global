@@ -8,7 +8,9 @@ import {
 
 import { decideFromRequest } from "./option-suggestion"
 import { claimAffiliationFilter } from "../../../../utils/affiliations"
+import { revokeAuthoritySource } from "../../../../utils/authority-grants"
 import { decodeHeaderName } from "../../../../utils/header-name"
+import { removeServiceScopes } from "../../../access/server/services/network-fulfilment"
 import {
   LIST_STATUSES,
   type ListStatus,
@@ -305,9 +307,16 @@ export default ({ strapi }: { strapi: any }) => {
           row.baUserId,
           { by: "moderator" }
         )
-      await strapi
-        .documents("api::library-affiliation.library-affiliation")
-        .delete({ documentId: affiliationDocumentId })
+      await removeServiceScopes(
+        strapi,
+        row.baUserId,
+        row.library.documentId,
+        `ba:${auth.viewer.id}`
+      )
+      await revokeAuthoritySource(strapi, {
+        baUserId: row.baUserId,
+        libraryDocumentId: row.library.documentId,
+      })
       strapi.log.info(
         `[content-moderation] moderator ${auth.viewer.id} removed staff ${affiliationDocumentId} from ${row.library.documentId}`
       )
@@ -390,7 +399,12 @@ export default ({ strapi }: { strapi: any }) => {
             affiliationDocumentId: r.documentId,
             name: names.get(r.baUserId) ?? "Library staff",
             staffRole: r.staffRole === "owner" ? "owner" : "editor",
-            source: r.source === "team" ? "team" : "claim",
+            source:
+              r.source === "network"
+                ? "network"
+                : r.source === "team"
+                  ? "team"
+                  : "claim",
             approvedAt: r.approvedAt ?? r.createdAt ?? null,
             // Moderators can't remove themselves from a library this way.
             canRemove: r.baUserId !== auth.viewer.id,
@@ -451,7 +465,8 @@ export default ({ strapi }: { strapi: any }) => {
       const { documentId } = (ctx.params ?? {}) as { documentId?: unknown }
       if (!isDocumentId(documentId)) return fail(ctx, 400, "Invalid documentId")
       const body = (ctx.request?.body ?? {}) as Record<string, unknown>
-      const { status, note, publish } = body
+      const { status, note, publish, approvedLibraryIds, approvedStaffRole } =
+        body
       if (typeof status !== "string" || !DECISIONS.has(status))
         return fail(ctx, 400, "status must be approved, rejected or needs_info")
       if (note !== undefined && note !== null && typeof note !== "string")
@@ -481,7 +496,11 @@ export default ({ strapi }: { strapi: any }) => {
         status,
         reviewer,
         text || undefined,
-        { publish: wantsPublish }
+        {
+          publish: wantsPublish,
+          approvedStaffRole,
+          approvedLibraryIds,
+        }
       )
 
       if ("error" in result) {

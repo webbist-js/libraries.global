@@ -59,20 +59,17 @@ export default function BetaWelcome({
             ref={title}
             tabIndex={-1}
             style={{ outline: "none" }}
-            className="pr-5 font-serif text-[clamp(32px,5vw,42px)] leading-[1.05] font-medium tracking-tight outline-none"
+            className="type-h2 pr-5 outline-none"
           >
             {t("title")}
           </DialogTitle>
-          <DialogDescription className="mt-2 max-w-[62ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+          <DialogDescription className="mt-2 max-w-[62ch] text-base leading-relaxed text-(--t-ink-dim)">
             {t("intro")}
           </DialogDescription>
         </div>
         <div className="grid gap-6 px-6 py-5 sm:px-8 md:grid-cols-[1.1fr_1fr]">
           <section aria-labelledby="beta-try-title">
-            <h3
-              id="beta-try-title"
-              className="m-0 mb-4 text-base font-semibold"
-            >
+            <h3 id="beta-try-title" className="type-h3 m-0 mb-4">
               {t("tryTitle")}
             </h3>
             <ul className="m-0 grid list-none gap-3 p-0">
@@ -101,7 +98,7 @@ export default function BetaWelcome({
           >
             <h3
               id="beta-payments-title"
-              className="m-0 flex items-center gap-2 text-base font-semibold"
+              className="type-h3 m-0 flex items-center gap-2"
             >
               <CreditCard size={18} aria-hidden />
               {t("paymentTitle")}
@@ -117,7 +114,7 @@ export default function BetaWelcome({
                   </p>
                   <code
                     translate="no"
-                    className="mt-2 block font-mono text-[clamp(15px,3.6vw,20px)] font-semibold tracking-wide"
+                    className="mt-2 block font-mono text-base font-semibold tracking-wide sm:text-xl"
                   >
                     4242 4242 4242 4242
                   </code>

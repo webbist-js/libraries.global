@@ -69,7 +69,7 @@ export function PhotoUpload({
           <button
             type="button"
             onClick={() => onChange(null)}
-            className={`${SECONDARY} h-10 px-4 text-[15px]`}
+            className={`${SECONDARY} h-10 px-4 text-base`}
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             Replace
@@ -92,7 +92,7 @@ export function PhotoUpload({
             width={26}
           />
           <span
-            className="text-[15px] font-semibold"
+            className="text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {busy ? "Uploading…" : "Choose a photo"}
@@ -109,7 +109,7 @@ export function PhotoUpload({
       )}
       {error ? (
         <p
-          className="mt-2 mb-0 text-[14px] font-semibold"
+          className="mt-2 mb-0 text-sm font-semibold"
           role="alert"
           style={{ color: T.accent.danger }}
         >

@@ -16,6 +16,7 @@ import { getSiteUrl } from "@/lib/seo/metadata"
 const PRIVATE_PATHS = [
   "/auth/",
   "/profile/settings",
+  "/profile/membership",
   "/profile/onboarding",
   "/contribute/",
   "/live",
@@ -48,7 +49,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         // Strapi media is proxied through /api/asset — keep images crawlable;
-        // the plans page is the one public Contribute sub-page.
+        // Keep the legacy pricing redirect crawlable. /plans is public.
         allow: [
           "/",
           "/api/asset/",

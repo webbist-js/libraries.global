@@ -47,7 +47,7 @@ export function DriveShareButton({ title }: { readonly title: string }) {
         type="button"
         onClick={share}
         title={`Copy a link to “${title}”`}
-        className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-[18px] text-[15px] font-semibold transition-colors hover:border-(--t-accent-primary)"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-[18px] text-base font-semibold transition-colors hover:border-(--t-accent-primary)"
         style={{ color: T.ink.base }}
       >
         <Icon
@@ -61,7 +61,7 @@ export function DriveShareButton({ title }: { readonly title: string }) {
       <span
         role="status"
         aria-live="polite"
-        className="text-[14px] font-semibold"
+        className="text-sm font-semibold"
         style={{ color: message === FAILED ? T.accent.danger : T.accent.ok }}
       >
         {message}

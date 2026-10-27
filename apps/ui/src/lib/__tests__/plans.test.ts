@@ -97,7 +97,7 @@ describe("PLANS", () => {
     })
     expect(plan("free").cta).toMatchObject({
       kind: "signup",
-      href: "/auth/register?callbackUrl=/contribute/membership",
+      href: "/auth/register?callbackUrl=/plans",
     })
   })
 

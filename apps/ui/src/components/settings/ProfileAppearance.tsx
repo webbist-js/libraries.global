@@ -20,7 +20,7 @@ export function ProfileAppearance({
       style={{ borderColor: T.border.line }}
     >
       <div>
-        <h3 className="m-0 text-lg font-semibold">Avatar colour</h3>
+        <h3 className="type-h3 m-0">Avatar colour</h3>
         <p
           id={`${id}-hint`}
           className="mt-1 mb-0 text-sm"

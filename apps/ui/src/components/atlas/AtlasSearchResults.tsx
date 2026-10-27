@@ -13,7 +13,7 @@ export function ResultGroup({
 }) {
   return (
     <section className="flex flex-col gap-1" aria-label={title}>
-      <h3 className="m-0 mb-1 text-[15px] font-bold">{title}</h3>
+      <h3 className="type-small-heading m-0 mb-1">{title}</h3>
       <ul className="m-0 flex list-none flex-col p-0">{children}</ul>
     </section>
   )
@@ -57,21 +57,18 @@ export function ResultRow({
         </span>
         <span className="min-w-0 flex-1">
           <span
-            className="block truncate text-[15px] font-semibold"
+            className="block truncate text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             {title}
           </span>
-          <span
-            className="block truncate text-[13px]"
-            style={{ color: T.ink.dim }}
-          >
+          <span className="block truncate text-sm" style={{ color: T.ink.dim }}>
             {sub}
           </span>
         </span>
         {badge ? (
           <span
-            className="shrink-0 rounded-full px-2 py-1 text-[12px] font-bold"
+            className="shrink-0 rounded-full px-2 py-1 text-xs font-bold"
             style={{
               color: TYPE_TINT.public.fg,
               background: TYPE_TINT.public.bg,

@@ -48,11 +48,8 @@ export function FinishedDrives({
     >
       <h2
         id="finished-drives-heading"
-        className="m-0"
+        className="type-h2 m-0"
         style={{
-          fontFamily: T.font.serif,
-          fontWeight: 500,
-          fontSize: "clamp(28px,3vw,38px)",
           color: T.ink.base,
         }}
       >
@@ -93,8 +90,8 @@ export function FinishedDrives({
                   href={href}
                   className="no-underline hover:underline"
                   style={{
-                    fontFamily: T.font.serif,
-                    fontSize: 20,
+                    fontFamily: T.font.sans,
+                    fontSize: "var(--type-body-xl-size)",
                     fontWeight: 500,
                     lineHeight: 1.2,
                     color: T.ink.base,
@@ -102,13 +99,13 @@ export function FinishedDrives({
                 >
                   <DriveTitle title={drive.title} />
                 </GlobalLink>
-                <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                <span className="text-sm" style={{ color: T.ink.dim }}>
                   {finishedLine({ drive, progress, helpers })}
                 </span>
               </span>
               {drive.closedReason === "goal" ? (
                 <span
-                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-semibold"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold"
                   style={{
                     background: TYPE_TINT.public.bg,
                     color: T.accent.ok,

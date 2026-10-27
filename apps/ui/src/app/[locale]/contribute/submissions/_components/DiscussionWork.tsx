@@ -38,7 +38,7 @@ export function DiscussionWork() {
 
   return (
     <section className="rounded-3xl border bg-(--t-bg-deep) p-6">
-      <h2 className="mt-0 font-serif text-2xl">{p("discussionWork")}</h2>
+      <h2 className="type-h2 mt-0">{p("discussionWork")}</h2>
       <div className="flex flex-wrap gap-3">
         <label>
           {p("recordType")}{" "}
@@ -100,7 +100,7 @@ export function DiscussionWork() {
               {languageName(record.language, [], locale)} ·{" "}
               {discussions(`states.${discussionRecordState(record)}`)}
             </p>
-            <h3 className="my-2 font-serif text-xl">
+            <h3 className="type-h3 my-2">
               {record.latestRevision?.title ?? record.title ?? p("reply")}
             </h3>
             <p className="line-clamp-3 break-words whitespace-pre-wrap">

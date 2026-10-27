@@ -181,10 +181,7 @@ export function CheckoutFlow({
             <Check className="size-8" aria-hidden="true" />
           </span>
         ) : null}
-        <h2
-          className="m-0 text-4xl leading-tight text-balance sm:text-5xl"
-          style={{ fontFamily: T.font.serif }}
-        >
+        <h2 className="type-h2 m-0 text-balance">
           {state === "ready" && user?.verified
             ? t("thankYou")
             : t("confirming")}
@@ -206,7 +203,7 @@ export function CheckoutFlow({
           <GlobalLink
             href={
               user?.verified
-                ? "/profile/settings#membership"
+                ? "/profile/membership"
                 : `/auth/signin?callbackUrl=${encodeURIComponent(callback)}`
             }
           >
@@ -228,8 +225,7 @@ export function CheckoutFlow({
           <h2
             ref={heading}
             tabIndex={-1}
-            className="m-0 text-4xl leading-[1.08] text-balance focus-visible:outline-2 focus-visible:outline-offset-4 sm:text-[46px]"
-            style={{ fontFamily: T.font.serif }}
+            className="type-h2 m-0 text-balance focus-visible:outline-2 focus-visible:outline-offset-4"
           >
             {step === "plan" ? t("choose") : t("yourDetails")}
           </h2>

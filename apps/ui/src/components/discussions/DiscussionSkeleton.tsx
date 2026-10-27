@@ -144,7 +144,7 @@ export function DiscussionThreadSkeleton({
       className={
         embedded
           ? "grid gap-6"
-          : "grid items-start gap-8 text-[16px] [--spacing:0.25rem] lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-10"
+          : "grid items-start gap-8 text-base [--spacing:0.25rem] lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-10"
       }
     >
       <div className="grid min-w-0 gap-6">

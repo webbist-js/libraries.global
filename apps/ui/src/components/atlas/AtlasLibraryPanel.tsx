@@ -199,7 +199,7 @@ export function AtlasLibraryPanel({
             >
               <span
                 className="text-[40px] leading-none"
-                style={{ fontFamily: T.font.serif }}
+                style={{ fontFamily: T.font.sans }}
                 aria-hidden="true"
               >
                 {library.name
@@ -209,7 +209,7 @@ export function AtlasLibraryPanel({
                   .map((w) => w[0])
                   .join("") || library.name[0]}
               </span>
-              <span className="text-[13px] font-semibold">No photo yet</span>
+              <span className="text-sm font-semibold">No photo yet</span>
             </div>
           )}
           {!inInspect ? (
@@ -233,7 +233,7 @@ export function AtlasLibraryPanel({
           <TypeBadge group={group} />
           {operator ? (
             <span
-              className="inline-flex h-[26px] items-center rounded-full px-2.5 text-[13px] font-bold"
+              className="inline-flex h-[26px] items-center rounded-full px-2.5 text-sm font-bold"
               style={{ background: T.bg.muted, color: T.ink.base }}
             >
               {operator.label}
@@ -252,14 +252,7 @@ export function AtlasLibraryPanel({
         </div>
 
         <div>
-          {!inInspect ? (
-            <h2
-              className="m-0 text-[30px] leading-[1.05] sm:text-[32px]"
-              style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-            >
-              {library.name}
-            </h2>
-          ) : null}
+          {!inInspect ? <h2 className="type-h2 m-0">{library.name}</h2> : null}
           {!compact && pending ? (
             <div className="mt-2 grid gap-2" aria-hidden="true">
               <Skeleton className="h-3 w-full rounded-full bg-(--t-border-line)" />
@@ -267,7 +260,7 @@ export function AtlasLibraryPanel({
             </div>
           ) : !compact && detail?.summary ? (
             <p
-              className="mt-1 mb-0 line-clamp-2 text-[14px]"
+              className="mt-1 mb-0 line-clamp-2 text-sm"
               style={{ color: T.ink.dim }}
             >
               {detail.summary}
@@ -290,7 +283,7 @@ export function AtlasLibraryPanel({
         {reachPrompt}
         {closedForGood ? (
           <div
-            className="flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-[15px] font-semibold"
+            className="flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-base font-semibold"
             style={{ background: "#F6E3DA", color: T.accent.danger }}
           >
             <Icon name="x" size={17} stroke={2.4} />
@@ -307,13 +300,13 @@ export function AtlasLibraryPanel({
             style={{ background: statusBox.bg }}
           >
             <span
-              className="inline-flex items-center gap-1.5 text-[15px] font-semibold"
+              className="inline-flex items-center gap-1.5 text-base font-semibold"
               style={{ color: statusBox.fg }}
             >
               <Icon name={statusBox.icon} size={17} stroke={2.4} />
               {statusBox.text}
             </span>
-            <span className="text-right text-[15px]">
+            <span className="text-right text-base">
               {status.state === "open"
                 ? status.label.replace("Open until", "Until")
                 : status.label.replace("Closed · ", "")}
@@ -321,7 +314,7 @@ export function AtlasLibraryPanel({
           </div>
         )}
 
-        <dl className="m-0 grid grid-cols-[24px_1fr] items-start gap-x-2.5 gap-y-1 text-[15px] leading-snug">
+        <dl className="m-0 grid grid-cols-[24px_1fr] items-start gap-x-2.5 gap-y-1 text-base leading-snug">
           <dt className="pt-0.5" style={{ color: T.ink.dim }}>
             <Icon name="pin" size={18} />
             <span className="sr-only">{tUi("address")}</span>
@@ -336,7 +329,7 @@ export function AtlasLibraryPanel({
                 .join(", ")}
             {!compact && library.mapped !== false ? (
               <span
-                className="block text-[13px]"
+                className="block text-sm"
                 style={{ fontFamily: T.font.mono, color: T.ink.dim }}
               >
                 {formatCoordinates({ lat: library.lat, lng: library.lng })}
@@ -356,12 +349,12 @@ export function AtlasLibraryPanel({
 
         {!compact && facilities.length > 0 ? (
           <div className="flex flex-col gap-2">
-            <p className="m-0 text-[14px] font-bold">Services & facilities</p>
+            <p className="m-0 text-sm font-bold">Services & facilities</p>
             <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
               {facilities.map((f) => (
                 <li
                   key={f}
-                  className="inline-flex h-8 items-center rounded-full border px-3 text-[14px] font-medium"
+                  className="inline-flex h-8 items-center rounded-full border px-3 text-sm font-medium"
                   style={{ borderColor: T.border.hi }}
                 >
                   {f}
@@ -398,7 +391,7 @@ export function AtlasLibraryPanel({
         <div className="mt-auto flex flex-col gap-2.5 pt-1">
           {!compact ? (
             <p
-              className="m-0 flex flex-col gap-1 text-left text-[13px] leading-relaxed"
+              className="m-0 flex flex-col gap-1 text-left text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               <span>
@@ -424,7 +417,7 @@ export function AtlasLibraryPanel({
                   content_type: "library",
                   library_document_id: library.id,
                 })}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-[15px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-base font-semibold text-white hover:bg-(--t-accent-primary-hover)"
               >
                 {tLibrary("viewLibrary")}
                 <Icon name="chev" size={16} color="#fff" stroke={2.2} />
@@ -438,7 +431,7 @@ export function AtlasLibraryPanel({
                   action_type: "open",
                   library_document_id: library.id,
                 })}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-5 py-2 text-[15px] font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-surface)"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-5 py-2 text-base font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-surface)"
               >
                 {tLibrary("improveRecord")}
                 <Icon name="chev" size={16} />
@@ -469,7 +462,7 @@ function SecondaryLink({
   const tUi = useUiTranslations("ui")
 
   const cls =
-    "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-white px-3.5 text-[14px] font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
+    "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-white px-3.5 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
   const style = { borderColor: T.border.hi, color: T.ink.base }
   const analytics = analyticsAttributes("library_action", {
     interaction_source: "atlas_panel",

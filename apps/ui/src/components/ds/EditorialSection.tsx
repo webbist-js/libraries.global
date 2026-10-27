@@ -45,13 +45,11 @@ export function EditorialSection({
           {/* Text */}
           <div className="flex flex-col gap-5">
             {section.eyebrow ? (
-              <span className="text-[11px] font-semibold tracking-[0.16em] text-(--t-accent-aurora) opacity-70">
+              <span className="text-xs font-semibold tracking-[0.16em] text-(--t-accent-aurora) opacity-70">
                 {section.eyebrow}
               </span>
             ) : null}
-            <h2 className="text-[clamp(1.8rem,4vw,3rem)] leading-[1.05] font-bold tracking-[-0.03em] text-(--t-ink-base)">
-              {section.title}
-            </h2>
+            <h2 className="type-h2 text-(--t-ink-base)">{section.title}</h2>
             {Array.isArray(section.body) && section.body.length > 0 ? (
               <div className="max-w-[52ch] text-(--t-ink-dim)">
                 <StrapiBlocksContent

@@ -101,7 +101,7 @@ export function BadgesSection({
   return (
     <div className="flex flex-col gap-6">
       {/* Stat cards */}
-      <h2 className="sr-only">Recognition summary</h2>
+      <h2 className="type-h2 sr-only">Recognition summary</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-live="polite">
         <StatCard
           label={tUi("total_points")}
@@ -167,19 +167,19 @@ export function BadgesSection({
               />
             </div>
             <p
-              className="m-0 mt-2 text-[15px] font-semibold"
+              className="m-0 mt-2 text-base font-semibold"
               style={{ color: T.ink.base }}
             >
               {progress}% to {nextTierName}
             </p>
             {pointsThisMonth ? (
-              <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+              <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                 {pointsThisMonth.toLocaleString()} points this month
               </p>
             ) : null}
           </div>
         ) : (
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-base" style={{ color: T.ink.dim }}>
             {tier === "Curator"
               ? "Highest tier reached."
               : "Earn points by contributing to start climbing the tiers."}
@@ -203,12 +203,12 @@ export function BadgesSection({
           ].map((f) => (
             <div key={f.label}>
               <dt
-                className="text-[13px] font-semibold"
+                className="text-sm font-semibold"
                 style={{ color: T.ink.low }}
               >
                 {f.label}
               </dt>
-              <dd className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+              <dd className="m-0 text-base" style={{ color: T.ink.base }}>
                 {f.value}
               </dd>
             </div>
@@ -227,7 +227,7 @@ export function BadgesSection({
             Earned
           </SectionTitle>
           <span
-            className="text-[15px]"
+            className="text-base"
             style={{ color: T.ink.dim }}
             aria-live="polite"
           >
@@ -237,7 +237,7 @@ export function BadgesSection({
           </span>
         </div>
         {loading ? null : earnedList.length === 0 ? (
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-base" style={{ color: T.ink.dim }}>
             No badges earned yet. A first accepted contribution earns one.
           </p>
         ) : (
@@ -267,7 +267,7 @@ export function BadgesSection({
             <SectionTitle as="h2" id="rc-locked">
               Still to earn
             </SectionTitle>
-            <span className="text-[15px]" style={{ color: T.ink.dim }}>
+            <span className="text-base" style={{ color: T.ink.dim }}>
               {lockedList.length} {lockedList.length === 1 ? "badge" : "badges"}
             </span>
           </div>

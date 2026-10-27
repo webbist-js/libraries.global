@@ -33,11 +33,11 @@ export function SuggestionChangesRequested({
         <div className="grid gap-2">
           <h2
             id="suggestion-changes-heading"
-            className="m-0 font-serif text-[26px] leading-tight tracking-tight text-(--t-ink-base)"
+            className="type-h2 m-0 text-(--t-ink-base)"
           >
             {t("yourRejected")}
           </h2>
-          <p className="m-0 flex items-center gap-1.5 text-[13px] leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 flex items-center gap-1.5 text-sm leading-relaxed text-(--t-ink-dim)">
             <LockKeyhole size={13} aria-hidden className="shrink-0" />
             {t("rejectionPrivacy")}
           </p>
@@ -51,7 +51,7 @@ export function SuggestionChangesRequested({
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="grid min-w-0 flex-1 basis-48 gap-2">
-                <h3 className="m-0 text-[18px] leading-snug font-bold break-words text-(--t-ink-base)">
+                <h3 className="type-card-title m-0 break-words text-(--t-ink-base)">
                   {suggestion.name}
                 </h3>
                 <Badge
@@ -74,16 +74,16 @@ export function SuggestionChangesRequested({
             </div>
             {suggestion.decisionNote && (
               <div className="grid gap-1.5 border-l-2 border-[#e4c98c] pl-3.5">
-                <p className="m-0 text-[12px] font-bold tracking-[0.04em] text-(--t-palette-amber-fg) uppercase">
+                <p className="m-0 text-xs font-bold tracking-[0.04em] text-(--t-palette-amber-fg) uppercase">
                   {t("reviewFeedback")}
                 </p>
-                <p className="m-0 text-[15px] leading-[1.65] break-words whitespace-pre-wrap text-(--t-ink-dim)">
+                <p className="m-0 text-base leading-[1.65] break-words whitespace-pre-wrap text-(--t-ink-dim)">
                   {suggestion.decisionNote}
                 </p>
               </div>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#eeddb6] pt-4">
-              <p className="m-0 max-w-[46ch] text-[13px] leading-relaxed text-(--t-ink-dim)">
+              <p className="m-0 max-w-[46ch] text-sm leading-relaxed text-(--t-ink-dim)">
                 {t("resubmitHint")}
               </p>
               {onRevise ? (
@@ -93,7 +93,7 @@ export function SuggestionChangesRequested({
                   aria-label={t("reviseNamed", { name: suggestion.name })}
                   className={cn(
                     primaryCtaSm,
-                    "min-h-10 shrink-0 text-[14px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                    "min-h-10 shrink-0 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
                   )}
                 >
                   <Pencil size={15} aria-hidden />
@@ -105,7 +105,7 @@ export function SuggestionChangesRequested({
                   aria-label={t("reviseNamed", { name: suggestion.name })}
                   className={cn(
                     primaryCtaSm,
-                    "min-h-10 shrink-0 text-[14px] no-underline"
+                    "min-h-10 shrink-0 text-sm no-underline"
                   )}
                 >
                   <Pencil size={15} aria-hidden />

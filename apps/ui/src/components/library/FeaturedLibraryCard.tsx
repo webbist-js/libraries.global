@@ -52,7 +52,7 @@ export function FeaturedLibraryCard({
         />
       ) : (
         <span
-          className="flex flex-1 flex-col items-center justify-center gap-1.5 pb-28 text-[14px] font-medium"
+          className="flex flex-1 flex-col items-center justify-center gap-1.5 pb-28 text-sm font-medium"
           style={{ color: ground.fg }}
         >
           <ImageOff aria-hidden="true" className="size-5" strokeWidth={1.6} />
@@ -64,7 +64,7 @@ export function FeaturedLibraryCard({
         <span className="flex flex-wrap gap-1.5">
           {libraryType ? (
             <span
-              className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+              className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{ background: typeTint.bg, color: typeTint.fg }}
             >
               {libraryType} library
@@ -72,7 +72,7 @@ export function FeaturedLibraryCard({
           ) : null}
           {location ? (
             <span
-              className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+              className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{ background: T.bg.space, color: T.ink.base }}
             >
               {location}
@@ -80,17 +80,15 @@ export function FeaturedLibraryCard({
           ) : null}
         </span>
         <h3
-          className="m-0 text-[clamp(24px,2.2vw,30px)] leading-[1.1] transition-colors group-hover:text-(--t-accent-primary)"
+          className="type-h3 m-0 transition-colors group-hover:text-(--t-accent-primary)"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
           {name}
         </h3>
         <span
-          className="flex items-center gap-1.5 text-[14px]"
+          className="flex items-center gap-1.5 text-sm"
           style={{ color: T.ink.dim }}
         >
           <Clock

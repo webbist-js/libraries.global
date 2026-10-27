@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from "node:util"
 import { isPaidTeamMembership, type PaidTeamMembership } from "@repo/access"
 import type { Core } from "@strapi/strapi"
 
+import { loadNetwork, memberIds } from "./network-catalogue"
 import { teamTransaction, requireNoOtherTeam } from "./teams"
 import { notifySessionInvalidated } from "../../../../utils/role-grants"
 import { TEAM_MEMBER_UID, TEAM_UID } from "../../../../utils/team-access"
@@ -20,6 +21,8 @@ type SignupInput = {
   baUserId: string
   name: string
   email: string
+  primaryNetworkId?: string
+  libraryDocumentIds?: string[]
   publicServiceRequested?: boolean
 }
 type ContextInput = { teamId: string; mode: string; baUserId: string }
@@ -157,6 +160,12 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       )
         throw new AccessError(400, "invalid_team_signup")
 
+      if (
+        input.primaryNetworkId !== undefined &&
+        !isDocumentId(input.primaryNetworkId)
+      )
+        throw new AccessError(400, "invalid_network")
+
       return teamTransaction(
         strapi,
         `membership:${input.baUserId}`,
@@ -181,13 +190,33 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
             return { teamId: existing.documentId }
           }
           await requireNoOtherTeam(strapi, input.baUserId)
+          const network = input.primaryNetworkId
+            ? await loadNetwork(strapi, input.primaryNetworkId)
+            : null
+          const sourceIds = network
+            ? await memberIds(strapi, network.documentId)
+            : []
+          const libraryIds = input.libraryDocumentIds ?? sourceIds
+          if (
+            !Array.isArray(libraryIds) ||
+            libraryIds.length > 2000 ||
+            libraryIds.some(
+              (id) => !isDocumentId(id) || (network && !sourceIds.includes(id))
+            )
+          )
+            throw new AccessError(400, "invalid_team_libraries")
           const created = await teamService().create(
-            { name: input.name.trim(), seats: 5 },
+            {
+              name: input.name.trim(),
+              seats: 5,
+              libraryDocumentIds: libraryIds,
+            },
             "self-service"
           )
           await teams().update({
             documentId: created.documentId,
             data: {
+              primaryNetwork: network?.documentId ?? null,
               source: "checkout",
               status: "lapsed",
               expiresAt: new Date(0).toISOString(),

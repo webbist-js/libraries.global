@@ -234,7 +234,6 @@ export function AboutHero({
               className="m-0 text-balance"
               style={{
                 ...displayStyle("hero"),
-                fontSize: "clamp(46px,min(7.5vw,10svh),104px)",
               }}
             >
               <Emphasis
@@ -304,7 +303,7 @@ export function AboutHero({
           inert={!expanded ? true : undefined}
         >
           <p className="about-eyebrow">Reading the globe</p>
-          <h2>Where the record reaches.</h2>
+          <h2 className="type-h2">Where the record reaches.</h2>
           {markers.length > 0 ? (
             <>
               <p>

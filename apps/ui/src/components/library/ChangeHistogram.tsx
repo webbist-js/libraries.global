@@ -84,7 +84,7 @@ export function ChangeHistogram({
       </svg>
 
       <figcaption
-        className="mt-2 flex items-center justify-between gap-4 text-[14px]"
+        className="mt-2 flex items-center justify-between gap-4 text-sm"
         style={{ color: T.ink.dim }}
       >
         <span data-axis>{months[0] ? monthName(months[0].month) : null}</span>

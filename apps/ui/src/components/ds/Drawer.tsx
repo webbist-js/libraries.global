@@ -81,16 +81,10 @@ export function Drawer({
   const heading = (
     <div className="min-w-0">
       <div id={titleId}>
-        <Dialog.Title asChild>
+        <Dialog.Title className="type-h2" asChild>
           <h2
-            className="m-0"
+            className="type-h2 m-0"
             style={{
-              fontFamily: T.font.serif,
-              fontSize:
-                size === "md" ? "clamp(26px,4vw,34px)" : "clamp(22px,3vw,28px)",
-              fontWeight: 500,
-              lineHeight: size === "md" ? 1.1 : 1.15,
-              letterSpacing: "-0.01em",
               color: T.ink.base,
             }}
           >
@@ -100,7 +94,7 @@ export function Drawer({
       </div>
       {subtitle ? (
         <p
-          className="m-0 mt-0.5 truncate text-[15px]"
+          className="m-0 mt-0.5 truncate text-base"
           style={{ color: T.ink.dim }}
         >
           {subtitle}

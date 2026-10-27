@@ -57,8 +57,8 @@ function BoxContent({
   return (
     <>
       <Icon aria-hidden="true" height={18} icon="mdi:chevron-up" width={18} />
-      <span className="font-serif text-[28px] leading-tight">{votes}</span>
-      <span className="text-[11px] font-bold uppercase">
+      <span className="font-sans text-[28px] leading-tight">{votes}</span>
+      <span className="text-xs font-bold uppercase">
         {t(voted ? "voteBoxVoted" : "voteBoxVote")}
       </span>
     </>
@@ -79,7 +79,7 @@ function Summary({ s }: { readonly s: PublicSuggestion }) {
   if (!text) return null
 
   return (
-    <p className="m-0 text-[16px] leading-[1.55]" style={{ color: T.ink.dim }}>
+    <p className="m-0 text-base leading-[1.55]" style={{ color: T.ink.dim }}>
       {text}
     </p>
   )
@@ -172,12 +172,8 @@ export function SuggestionCard({
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <h3
-              className="m-0"
+              className="type-card-title m-0"
               style={{
-                fontFamily: T.font.sans,
-                fontWeight: 700,
-                fontSize: 19,
-                lineHeight: 1.15,
                 color: T.ink.base,
               }}
             >
@@ -193,7 +189,7 @@ export function SuggestionCard({
             </h3>
             {status ? (
               <span
-                className="inline-flex items-center gap-1.5 rounded-full text-[13px] font-bold"
+                className="inline-flex items-center gap-1.5 rounded-full text-sm font-bold"
                 style={{
                   background: status.bg,
                   color: status.fg,
@@ -238,7 +234,7 @@ export function SuggestionCard({
 
           {s.decisionNote ? (
             <p
-              className="m-0 text-[15px] leading-normal"
+              className="m-0 text-base leading-normal"
               style={{
                 color: T.ink.dim,
                 background: T.bg.surface,
@@ -253,7 +249,7 @@ export function SuggestionCard({
           ) : null}
 
           <div
-            className="flex flex-wrap items-baseline gap-x-4 gap-y-2 text-[14px]"
+            className="flex flex-wrap items-baseline gap-x-4 gap-y-2 text-sm"
             style={{ color: T.ink.dim }}
           >
             <p className="m-0 inline-flex flex-wrap items-center gap-x-1.5 gap-y-1">

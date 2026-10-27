@@ -80,13 +80,10 @@ export default async function LiveEntry({
   return (
     <>
       <header className="mb-6">
-        <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           Staff area · Your libraries
         </p>
-        <h1
-          className="my-3 text-[32px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
+        <h1 className="type-h1 my-3">
           {greetingFor(hour)}, {session.user.name.split(" ")[0]}.
         </h1>
         <p className="m-0" style={{ color: T.ink.dim }}>
@@ -95,12 +92,7 @@ export default async function LiveEntry({
       </header>
       {!rows.length ? (
         <section>
-          <h2
-            className="text-2xl"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            You’re not set up to go live
-          </h2>
+          <h2 className="type-h2">You’re not set up to go live</h2>
           <p className="my-4">
             Claim your mobile library first. Once a Moderator approves the
             claim, an owner of the library can allow live updates.
@@ -118,7 +110,7 @@ export default async function LiveEntry({
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
               <p
-                className="m-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold"
+                className="m-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
                 style={{
                   background: TYPE_TINT.public.bg,
                   color: TYPE_TINT.public.fg,
@@ -126,12 +118,7 @@ export default async function LiveEntry({
               >
                 Mobile library
               </p>
-              <h2
-                className="my-2 text-2xl"
-                style={{ fontFamily: T.font.serif }}
-              >
-                {l.name}
-              </h2>
+              <h2 className="type-h2 my-2">{l.name}</h2>
               <p className="my-3">
                 {!result.body
                   ? "The live service is temporarily unavailable."
@@ -165,7 +152,7 @@ export default async function LiveEntry({
           ))}
         </div>
       )}
-      <p className="mt-4 text-[13px]" style={{ color: T.ink.dim }}>
+      <p className="mt-4 text-sm" style={{ color: T.ink.dim }}>
         Also on the library page, in the “You run this mobile library” card.
       </p>
       <Link className="live-button mt-4 rounded-full" href={`${site}/staff`}>

@@ -61,20 +61,15 @@ export function LibraryFeatureDetails({
         <DialogHeader className="text-left">
           {detailCategory ? (
             <p
-              className="m-0 text-[13px] font-semibold"
+              className="m-0 text-sm font-semibold"
               style={{ color: T.accent.primary }}
             >
               {detailCategory}
             </p>
           ) : null}
-          <DialogTitle
-            className="pr-7 text-[30px] leading-tight"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            {name}
-          </DialogTitle>
+          <DialogTitle className="type-h2 pr-7">{name}</DialogTitle>
           <DialogDescription
-            className="text-[14px] leading-relaxed"
+            className="text-sm leading-relaxed"
             style={{ color: T.ink.dim }}
           >
             About this feature. Check with the library for availability and any
@@ -82,14 +77,14 @@ export function LibraryFeatureDetails({
           </DialogDescription>
         </DialogHeader>
         {summary?.trim() ? (
-          <p className="m-0 text-[16px] leading-relaxed">{summary}</p>
+          <p className="m-0 text-base leading-relaxed">{summary}</p>
         ) : null}
         {blocks.length > 0 ? (
           <StrapiBlocksContent
             blocks={
               blocks as Parameters<typeof StrapiBlocksContent>[0]["blocks"]
             }
-            className="text-[15px]"
+            className="text-base"
           />
         ) : null}
       </DialogContent>

@@ -137,7 +137,7 @@ export function EventModal() {
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "10px",
+                fontSize: "var(--type-caption-size)",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: T.ink.faint,
@@ -156,7 +156,7 @@ export function EventModal() {
                   key={tag}
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "10px",
+                    fontSize: "var(--type-caption-size)",
                     letterSpacing: ".14em",
                     textTransform: "uppercase",
                     color: T.ink.faint,
@@ -180,7 +180,7 @@ export function EventModal() {
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "11px",
+                  fontSize: "var(--type-caption-size)",
                   color: T.ink.dim,
                 }}
               >
@@ -199,7 +199,7 @@ export function EventModal() {
                 <span
                   style={{
                     fontFamily: T.font.mono,
-                    fontSize: "11px",
+                    fontSize: "var(--type-caption-size)",
                     color: T.ink.dim,
                   }}
                 >
@@ -278,8 +278,8 @@ export function EventModal() {
         ) : (
           <p
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "1rem",
+              fontFamily: T.font.sans,
+              fontSize: "var(--type-body-size)",
               color: T.ink.faint,
               fontStyle: "italic",
             }}

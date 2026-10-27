@@ -211,7 +211,7 @@ export function AboutStory({
                       aria-hidden="true"
                     />
                   </span>
-                  <h3>{title}</h3>
+                  <h3 className="type-h3">{title}</h3>
                   <p>{text}</p>
                 </li>
               )
@@ -237,7 +237,7 @@ export function AboutStory({
           <ol className="about-step-grid">
             {RECORD_STEPS.map((step) => (
               <li key={step.title} className="about-step">
-                <h3>{step.title}</h3>
+                <h3 className="type-h3">{step.title}</h3>
                 <p>{step.text}</p>
               </li>
             ))}
@@ -322,7 +322,7 @@ export function AboutStory({
                   strokeWidth={1.7}
                   aria-hidden="true"
                 />
-                <h3>{title}</h3>
+                <h3 className="type-h3">{title}</h3>
                 <p>{text}</p>
                 <GlobalLink href={href} className="about-text-link">
                   {action}{" "}

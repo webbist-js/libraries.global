@@ -28,7 +28,7 @@ function RankChip({ rank }: { readonly rank: number }) {
 
   return (
     <span
-      className={`rounded-full px-[12px] py-[4px] text-[13px] font-bold ${first ? "text-white" : ""}`}
+      className={`rounded-full px-[12px] py-[4px] text-sm font-bold ${first ? "text-white" : ""}`}
       style={
         first
           ? { background: T.accent.primary }
@@ -75,7 +75,7 @@ function OpenSpot({
       </span>
       <strong
         style={{
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontWeight: 500,
           fontSize: 22,
           color: T.ink.base,
@@ -84,7 +84,7 @@ function OpenSpot({
         Open spot
       </strong>
       <span
-        className="max-w-[24ch] text-[14px] leading-[1.45]"
+        className="max-w-[24ch] text-sm leading-[1.45]"
         style={{ color: T.ink.dim }}
       >
         One approved change {periodPhrase} puts you here.
@@ -124,7 +124,7 @@ function PodiumCard({
           height: avatar,
           background: tint.bg,
           color: tint.fg,
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontSize: 22,
         }}
       >
@@ -135,7 +135,7 @@ function PodiumCard({
           href={`/profile/${entry.username}`}
           className="wrap-break-word no-underline hover:underline"
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: 24,
             lineHeight: 1.1,
             color: T.ink.base,
@@ -147,7 +147,7 @@ function PodiumCard({
         <span
           className="wrap-break-word"
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: 24,
             lineHeight: 1.1,
             color: T.ink.base,
@@ -156,13 +156,13 @@ function PodiumCard({
           {name}
         </span>
       )}
-      <span className="text-[14px]" style={{ color: T.ink.dim }}>
+      <span className="text-sm" style={{ color: T.ink.dim }}>
         {entry.tier}
       </span>
-      <span className="text-[15px]" style={{ color: T.ink.dim }}>
+      <span className="text-base" style={{ color: T.ink.dim }}>
         <strong
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: 32,
             fontWeight: 500,
             color: T.ink.base,
@@ -173,7 +173,7 @@ function PodiumCard({
         pts
       </span>
       <span
-        className="flex flex-col gap-px text-[14px]"
+        className="flex flex-col gap-px text-sm"
         style={{ color: T.ink.dim }}
       >
         <span>{fmt(entry.approvedCount)} approved</span>

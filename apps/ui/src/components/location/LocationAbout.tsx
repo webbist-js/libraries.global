@@ -22,7 +22,7 @@ export function LocationAbout({
     <section id="about" className="scroll-mt-28">
       <LocationSectionHeading title={`About libraries in ${name}`} />
       <div
-        className="rounded-3xl px-7 py-7 text-[17px] leading-[1.7] sm:px-9"
+        className="rounded-3xl px-7 py-7 text-base leading-[1.7] sm:px-9"
         style={{
           background: T.bg.deep,
           border: `1px solid ${T.border.line}`,

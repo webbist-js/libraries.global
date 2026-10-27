@@ -180,10 +180,10 @@ export function LibraryHero({
 
         <div className="mt-5 grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div className="min-w-0">
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="hero-eyebrow flex flex-wrap items-center gap-x-4 gap-y-2">
               {typeLabel ? (
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
                   style={{ background: tint.bg, color: tint.fg }}
                 >
                   <LibIcon d={LIB_ICONS.building} size={14} />
@@ -191,7 +191,7 @@ export function LibraryHero({
                 </span>
               ) : null}
               <span
-                className="inline-flex min-h-7 items-center rounded-full border bg-white px-2.5 text-[12px] font-semibold"
+                className="inline-flex min-h-7 items-center rounded-full border bg-white px-2.5 text-xs font-semibold"
                 style={{ borderColor: T.border.line, color: T.ink.dim }}
               >
                 {rec.hasStaff
@@ -201,10 +201,8 @@ export function LibraryHero({
             </div>
 
             <h1
-              className="m-0 max-w-[20ch] text-[clamp(44px,5.8vw,80px)] leading-[.95] tracking-[-0.03em] text-balance"
+              className="type-h1 m-0 max-w-[20ch] text-balance"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
                 color: T.ink.base,
               }}
             >
@@ -216,7 +214,7 @@ export function LibraryHero({
 
             {locationLine || shortName ? (
               <p
-                className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-[15.5px]"
+                className="mt-3 mb-0 flex flex-wrap items-center gap-1.5 text-base"
                 style={{ color: T.ink.dim }}
               >
                 <LibIcon d={LIB_ICONS.pin} size={16} />
@@ -434,12 +432,12 @@ export function LibraryHero({
                       style={{ color: T.ink.low }}
                       width={30}
                     />
-                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                       This record has no map location yet.
                     </p>
                     <OpenCorrectionLink
                       category="Address or location"
-                      className="text-[14px] font-semibold underline underline-offset-[3px]"
+                      className="text-sm font-semibold underline underline-offset-[3px]"
                     >
                       Add the location
                     </OpenCorrectionLink>

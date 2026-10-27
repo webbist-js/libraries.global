@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const mocks = vi.hoisted(() => ({ session: vi.fn(), fetchStaff: vi.fn() }))
+const mocks = vi.hoisted(() => ({
+  session: vi.fn(),
+  fetchStaff: vi.fn(),
+  target: vi.fn(),
+}))
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
 vi.mock("next/navigation", () => ({
   notFound: () => {
@@ -8,7 +12,17 @@ vi.mock("next/navigation", () => ({
   },
 }))
 vi.mock("@/lib/auth-server", () => ({ getSessionSSR: mocks.session }))
-vi.mock("@/lib/staff-proxy", () => ({ fetchStaff: mocks.fetchStaff }))
+vi.mock("@/lib/staff-proxy", () => ({
+  fetchStaff: mocks.fetchStaff,
+  resolveTargetStaff: mocks.target,
+  withTargetStaff: (user: Record<string, unknown>, target: unknown) => ({
+    ...user,
+    staffLibraries: [
+      target,
+      ...(Array.isArray(user.staffLibraries) ? user.staffLibraries : []),
+    ],
+  }),
+}))
 vi.mock("@/lib/strapi-api", () => ({
   PublicStrapiClient: { fetchMany: vi.fn() },
 }))
@@ -46,6 +60,7 @@ const overview = {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.target.mockResolvedValue(null)
   mocks.session.mockResolvedValue({ user })
   mocks.fetchStaff.mockResolvedValue({ status: 200, body: overview })
 })
@@ -59,6 +74,23 @@ describe("staff page access", () => {
       user,
       `libraries/${ID}/overview`
     )
+  })
+
+  it("resolves a current library outside a bounded service session summary", async () => {
+    const scopedUser = {
+      ...user,
+      staffLibraries: Array.from({ length: 100 }, (_, i) => ({
+        ...library,
+        id: `library${String(i).padStart(17, "0")}`,
+        slug: `other-${i}`,
+      })),
+    }
+    mocks.session.mockResolvedValue({ user: scopedUser })
+    mocks.target.mockResolvedValue(library)
+    const result = await loadStaffPage(SLUG)
+    expect(result.documentId).toBe(ID)
+    expect(mocks.target).toHaveBeenCalledWith(scopedUser, SLUG)
+    expect(result.libraries[0]?.id).toBe(ID)
   })
 
   it("also permits a verified editor", async () => {

@@ -57,7 +57,7 @@ export function ProfilePrivacyControls({
     >
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <p
-          className="m-0 flex items-center gap-3 text-[15px]"
+          className="m-0 flex items-center gap-3 text-base"
           style={{ color: T.ink.dim }}
         >
           <Icon
@@ -75,7 +75,7 @@ export function ProfilePrivacyControls({
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            className="rounded-full px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+            className="rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base, background: T.bg.deep }}
           >
             Manage what&rsquo;s public
@@ -89,14 +89,14 @@ export function ProfilePrivacyControls({
           className="mt-3 mb-2 w-full rounded-[14px] border p-4"
           style={{ borderColor: T.border.line, background: T.bg.deep }}
         >
-          <legend className="px-1 text-[14px] font-semibold">
+          <legend className="px-1 text-sm font-semibold">
             Shown on your public profile
           </legend>
           <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
             {PREF_ITEMS.map(({ key, label }) => (
               <label
                 key={key}
-                className="flex cursor-pointer items-center gap-2.5 text-[15px]"
+                className="flex cursor-pointer items-center gap-2.5 text-base"
                 style={{ color: T.ink.base }}
               >
                 <input
@@ -114,7 +114,7 @@ export function ProfilePrivacyControls({
           {error ? (
             <p
               role="alert"
-              className="m-0 mt-2 text-[14px] font-semibold"
+              className="m-0 mt-2 text-sm font-semibold"
               style={{ color: T.accent.danger }}
             >
               Couldn&rsquo;t save — please try again.

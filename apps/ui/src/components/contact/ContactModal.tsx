@@ -303,8 +303,12 @@ function ContactHeader({
       <div className={styles.eyebrow}>
         <MessageSquare size={14} aria-hidden="true" /> {t(`${modeKey}.eyebrow`)}
       </div>
-      <Dialog.Title asChild>
-        <h2 className={styles.title} tabIndex={-1} ref={headingRef}>
+      <Dialog.Title className="type-h2" asChild>
+        <h2
+          className={`type-h2 ${styles.title}`}
+          tabIndex={-1}
+          ref={headingRef}
+        >
           {sent ? t("successTitle") : t(`${modeKey}.title`)}
         </h2>
       </Dialog.Title>

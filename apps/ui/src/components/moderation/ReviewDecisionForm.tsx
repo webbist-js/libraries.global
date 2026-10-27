@@ -30,9 +30,9 @@ const APPROVE_LABEL: Record<string, string> = {
 }
 
 const PRIMARY =
-  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-[#21704d] px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-[#21704d] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
 const SECONDARY =
-  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2.5 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
 
 /**
  * The decision on one submission: a note (required for Needs changes and
@@ -43,6 +43,10 @@ const SECONDARY =
  */
 export function ReviewDecisionForm({
   documentId,
+  approvedLibraryIds,
+  approvedStaffRole,
+  requireApprovalNote = false,
+  approvalBlockedReason,
   status,
   submissionType,
   canPublish,
@@ -51,6 +55,10 @@ export function ReviewDecisionForm({
   driveDocumentId,
   returnTo,
 }: {
+  readonly approvedStaffRole?: "editor" | "owner"
+  readonly approvedLibraryIds?: string[]
+  readonly approvalBlockedReason?: string
+  readonly requireApprovalNote?: boolean
   readonly documentId: string
   readonly status: string
   readonly submissionType?: string
@@ -105,24 +113,9 @@ export function ReviewDecisionForm({
     }
   }, [done, driveDocumentId, documentId, returnTo])
 
-  const nextInDriveBlock =
-    done && driveDocumentId ? (
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
-        {nextInDrive === "none" ? (
-          "No more in this drive."
-        ) : nextInDrive ? (
-          <Link
-            href={nextInDrive.href}
-            className="font-semibold underline-offset-2 hover:underline"
-            style={{ color: T.accent.primary }}
-          >
-            Next in this drive →
-          </Link>
-        ) : (
-          "Checking the drive…"
-        )}
-      </p>
-    ) : null
+  const nextInDriveBlock = (
+    <NextInDriveStatus show={!!done && !!driveDocumentId} next={nextInDrive} />
+  )
 
   if (!OPEN.has(status)) {
     const meta = statusMeta(status)
@@ -133,13 +126,13 @@ export function ReviewDecisionForm({
       <div className="flex flex-col gap-2">
         <p
           aria-live="polite"
-          className="m-0 text-[14px]"
+          className="m-0 text-sm"
           style={{ color: T.accent.ok }}
         >
           {done}
         </p>
         <p
-          className="m-0 text-[15px] leading-[1.55]"
+          className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           {`This submission is ${meta.label.toLowerCase()}${reviewedAt ? ` (${new Date(reviewedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })})` : ""}; decisions are final.`}
@@ -152,13 +145,14 @@ export function ReviewDecisionForm({
   async function decide(decision: Decision, publish = false) {
     if (!canApprove && decision !== "rejected") {
       setError(
-        "This timetable changed after the suggestion. Decline it so a new suggestion can be made."
+        approvalBlockedReason ??
+          "This timetable changed after the suggestion. Decline it so a new suggestion can be made."
       )
 
       return
     }
     const text = note.trim()
-    if (decision !== "approved" && !text) {
+    if ((decision !== "approved" || requireApprovalNote) && !text) {
       setError(
         "Write a note first: the contributor sees it and needs to know what to change."
       )
@@ -173,11 +167,15 @@ export function ReviewDecisionForm({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: decision,
-            ...(text ? { note: text } : {}),
-            ...(publish ? { publish: true } : {}),
-          }),
+          body: JSON.stringify(
+            decisionBody(
+              decision,
+              text,
+              publish,
+              approvedLibraryIds,
+              approvedStaffRole
+            )
+          ),
         }
       )
       const body: unknown = await res.json().catch(() => null)
@@ -217,14 +215,14 @@ export function ReviewDecisionForm({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor={noteId}
-          className="text-[15px] font-semibold"
+          className="text-base font-semibold"
           style={{ color: T.ink.base }}
         >
           Note to the contributor
         </label>
         <p
           id={hintId}
-          className="m-0 text-[14px] leading-normal"
+          className="m-0 text-sm leading-normal"
           style={{ color: T.ink.dim }}
         >
           Required for Needs changes and Reject. Say what was wrong and what
@@ -237,7 +235,7 @@ export function ReviewDecisionForm({
           maxLength={MAX_NOTE}
           rows={5}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-[16px] border px-3.5 py-3 text-[15px] leading-relaxed focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+          className="w-full rounded-[16px] border px-3.5 py-3 text-base leading-relaxed focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
           style={{
             borderColor: T.border.hi,
             background: T.bg.deep,
@@ -251,7 +249,7 @@ export function ReviewDecisionForm({
       {error ? (
         <p
           role="alert"
-          className="m-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-[14px] leading-normal"
+          className="m-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-sm leading-normal"
           style={{ background: "#F6E3DA", color: T.accent.danger }}
         >
           <AlertCircle size={18} aria-hidden className="mt-0.5 shrink-0" />
@@ -260,7 +258,7 @@ export function ReviewDecisionForm({
       ) : null}
       <p
         aria-live="polite"
-        className="m-0 text-[14px]"
+        className="m-0 text-sm"
         style={{ color: T.accent.ok }}
       >
         {done}
@@ -276,7 +274,7 @@ export function ReviewDecisionForm({
           }}
         >
           <p
-            className="m-0 text-[14px] leading-[1.55]"
+            className="m-0 text-sm leading-[1.55]"
             style={{ color: T.ink.base }}
           >
             Approving and publishing puts this live: readers see it straight
@@ -353,4 +351,47 @@ export function ReviewDecisionForm({
       </div>
     </form>
   )
+}
+
+function NextInDriveStatus({
+  show,
+  next,
+}: {
+  readonly show: boolean
+  readonly next: NextInDrive
+}) {
+  if (!show) return null
+
+  return (
+    <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
+      {next === "none" ? (
+        "No more in this drive."
+      ) : next ? (
+        <Link
+          href={next.href}
+          className="font-semibold underline-offset-2 hover:underline"
+          style={{ color: T.accent.primary }}
+        >
+          Next in this drive →
+        </Link>
+      ) : (
+        "Checking the drive…"
+      )}
+    </p>
+  )
+}
+function decisionBody(
+  status: Decision,
+  note: string,
+  publish: boolean,
+  approvedLibraryIds?: string[],
+  approvedStaffRole?: "editor" | "owner"
+) {
+  return {
+    status,
+    ...(note ? { note } : {}),
+    ...(publish ? { publish: true } : {}),
+    ...(approvedLibraryIds ? { approvedLibraryIds } : {}),
+    ...(approvedStaffRole ? { approvedStaffRole } : {}),
+  }
 }

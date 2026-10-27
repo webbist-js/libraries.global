@@ -42,8 +42,8 @@ function Header({
           height: 44,
           background: avatarUrl ? "transparent" : palette.bg,
           color: palette.fg,
-          fontFamily: T.font.serif,
-          fontSize: 18,
+          fontFamily: T.font.sans,
+          fontSize: "var(--type-body-large-size)",
         }}
       >
         {avatarUrl ? (
@@ -58,19 +58,15 @@ function Header({
       <div className="min-w-0">
         <h2
           id="standing-heading"
-          className="m-0"
+          className="type-panel-title m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: 26,
-            lineHeight: 1.1,
             color: T.ink.base,
           }}
         >
           Your standing
         </h2>
         {subtitle ? (
-          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 mt-0.5 text-base" style={{ color: T.ink.dim }}>
             {subtitle}
           </p>
         ) : null}
@@ -109,13 +105,13 @@ function Tile({
         padding: "12px 14px",
       }}
     >
-      <dt className="text-[14px]" style={{ color: T.ink.dim }}>
+      <dt className="text-sm" style={{ color: T.ink.dim }}>
         {label}
       </dt>
       <dd
         className="m-0 mt-1"
         style={{
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontSize: value === NOT_RANKED ? 20 : 26,
           lineHeight: 1.1,
           color: T.ink.base,
@@ -132,7 +128,7 @@ function Progress({ standing }: { readonly standing: Standing }) {
 
   if (!nextName || !nextThreshold) {
     return (
-      <p className="m-0 text-[15px] leading-[1.5]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base leading-[1.5]" style={{ color: T.ink.dim }}>
         You’ve reached the top tier. Thank you.
       </p>
     )
@@ -144,7 +140,7 @@ function Progress({ standing }: { readonly standing: Standing }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap justify-between gap-x-3 text-[15px]">
+      <div className="flex flex-wrap justify-between gap-x-3 text-base">
         <strong style={{ color: T.ink.base }}>Progress to {nextName}</strong>
         <span style={{ color: T.ink.dim }}>
           {fmt(points)} of {fmt(nextThreshold)} pts
@@ -168,7 +164,7 @@ function Progress({ standing }: { readonly standing: Standing }) {
         />
       </div>
       <p
-        className="m-0 mt-0.5 text-[15px] leading-[1.5]"
+        className="m-0 mt-0.5 text-base leading-[1.5]"
         style={{ color: T.ink.dim }}
       >
         {fmt(toGo)} points to go. One approved new library is worth{" "}
@@ -207,14 +203,14 @@ export function StandingCard({
       <Shell>
         <Header initials={null} />
         <p
-          className="m-0 text-[15px] leading-[1.55]"
+          className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           Sign in to see your rank, tier and progress.
         </p>
         <GlobalLink
           href={`/auth/signin?callbackUrl=${encodeURIComponent(signInReturnTo)}`}
-          className="inline-flex min-h-11 items-center self-start rounded-full bg-(--t-accent-primary) px-5 text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+          className="inline-flex min-h-11 items-center self-start rounded-full bg-(--t-accent-primary) px-5 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
         >
           {tUi("sign_in")}{" "}
         </GlobalLink>
@@ -231,7 +227,7 @@ export function StandingCard({
           background={background}
         />
         <p
-          className="m-0 text-[15px] leading-[1.55]"
+          className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           Your standing couldn’t load right now. Try again in a minute.

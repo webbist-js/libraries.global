@@ -16,7 +16,7 @@ export function CheckoutHeader({ sandbox }: { readonly sandbox?: boolean }) {
     <header className="flex flex-wrap items-center gap-x-5 gap-y-3 pr-12 lg:pr-0">
       <span
         className="text-2xl sm:text-[28px]"
-        style={{ fontFamily: T.font.serif }}
+        style={{ fontFamily: T.font.sans }}
         translate="no"
       >
         Libraries <i>Global</i>
@@ -209,7 +209,7 @@ export function CheckoutPlanPicker({
                 />
                 <span
                   className="text-[30px] leading-none"
-                  style={{ fontFamily: T.font.serif }}
+                  style={{ fontFamily: T.font.sans }}
                 >
                   {t(value)}
                 </span>
@@ -222,7 +222,7 @@ export function CheckoutPlanPicker({
               <span className="flex flex-wrap items-baseline gap-2">
                 <span
                   className="text-[42px] leading-none tabular-nums"
-                  style={{ fontFamily: T.font.serif }}
+                  style={{ fontFamily: T.font.sans }}
                 >
                   {price
                     ? formatBillingMoney(
@@ -291,13 +291,11 @@ export function CheckoutSummary({
 
   return (
     <aside className="flex min-w-0 flex-col gap-6 border-t border-(--t-border-line) bg-(--t-bg-void) p-6 sm:p-10 lg:border-t-0 lg:border-l lg:pt-24">
-      <h3 className="m-0 text-base font-semibold text-(--t-accent-primary)">
-        {t("summary")}
-      </h3>
+      <h3 className="type-h3 m-0 text-(--t-accent-primary)">{t("summary")}</h3>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p
           className="m-0 text-[36px] leading-none"
-          style={{ fontFamily: T.font.serif }}
+          style={{ fontFamily: T.font.sans }}
         >
           {t(plan)}
         </p>
@@ -317,18 +315,18 @@ export function CheckoutSummary({
           <span className="font-semibold">{t("basePrice")}</span>
           <span
             className="text-[42px] leading-none tabular-nums"
-            style={{ fontFamily: T.font.serif }}
+            style={{ fontFamily: T.font.sans }}
           >
             {price
               ? formatBillingMoney(price.unitAmount, price.currency, locale)
               : "—"}
           </span>
         </div>
-        <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+        <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
           {t("taxAndCurrency")}
         </p>
       </div>
-      <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
         {t(interval === "month" ? "renewsMonthly" : "renewsYearly")}
       </p>
       {annualSaving > 0 && yearly ? (
@@ -356,7 +354,7 @@ export function CheckoutSummary({
           </span>
         </Button>
       ) : null}
-      <ul className="mt-auto mb-0 flex list-none flex-col gap-4 border-t border-(--t-border-line) pt-6 pl-0 text-sm leading-relaxed">
+      <ul className="mt-auto mb-0 flex list-none flex-col gap-4 border-t border-(--t-border-line) pt-6 pl-0 text-base leading-relaxed">
         {[t("cancel"), t("trust"), t("securePaymentBenefit")].map((benefit) => (
           <li key={benefit} className="flex items-start gap-3">
             <Check

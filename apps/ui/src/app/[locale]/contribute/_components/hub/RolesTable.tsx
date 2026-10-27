@@ -101,13 +101,13 @@ function CellValue({ cell }: { cell: Cell }) {
 
   if (cell.kind === "claim")
     return (
-      <span className="text-[14px]" style={{ color: T.ink.dim }}>
+      <span className="text-sm" style={{ color: T.ink.dim }}>
         With a library claim
       </span>
     )
   if (cell.kind === "no") {
     return (
-      <span className="text-[14px]" style={{ color: T.ink.faint }}>
+      <span className="text-sm" style={{ color: T.ink.faint }}>
         — {cell.note ?? tUi("no")}
       </span>
     )
@@ -115,7 +115,7 @@ function CellValue({ cell }: { cell: Cell }) {
 
   return (
     <span
-      className="text-[14px] font-semibold"
+      className="text-sm font-semibold"
       style={{ color: "var(--tint-public-fg)" }}
     >
       ✓ {cell.note ?? tUi("yes")}
@@ -147,7 +147,7 @@ export function RolesTable() {
             <tr style={{ borderBottom: `1px solid ${T.border.divider}` }}>
               <th
                 scope="col"
-                className="px-6 py-4 text-[14px] font-medium"
+                className="px-6 py-4 text-sm font-medium"
                 style={{ color: T.ink.dim }}
               >
                 What you can do
@@ -155,13 +155,13 @@ export function RolesTable() {
               {COLUMNS.map((column) => (
                 <th key={column.title} scope="col" className="px-6 py-4">
                   <span
-                    className="block text-[15px] font-semibold"
+                    className="block text-base font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {column.title}
                   </span>
                   <span
-                    className="block text-[13px] font-normal"
+                    className="block text-sm font-normal"
                     style={{ color: T.ink.low }}
                   >
                     {column.sub}
@@ -170,7 +170,7 @@ export function RolesTable() {
                     <GlobalLink
                       href={column.apply}
                       aria-label={`Apply to be a ${column.title}`}
-                      className="mt-1 inline-block text-[13px] font-semibold underline underline-offset-[3px]"
+                      className="mt-1 inline-block text-sm font-semibold underline underline-offset-[3px]"
                       style={{ color: T.accent.primary }}
                     >
                       Apply
@@ -192,7 +192,7 @@ export function RolesTable() {
               >
                 <th
                   scope="row"
-                  className="max-w-[320px] px-6 py-3.5 text-[15px] font-normal"
+                  className="max-w-[320px] px-6 py-3.5 text-base font-normal"
                   style={{ color: T.ink.base }}
                 >
                   {row.label}
@@ -208,10 +208,10 @@ export function RolesTable() {
         </table>
       </div>
 
-      <p className="mt-3 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
         Points raise how much you can send at once, never your role.
       </p>
-      <p className="mt-1.5 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="mt-1.5 mb-0 text-sm" style={{ color: T.ink.dim }}>
         Staff verification lets you steward your library&rsquo;s record. It
         doesn&rsquo;t mean the library endorses this project.{" "}
         <GlobalLink

@@ -66,13 +66,13 @@ export function FilterPanelHeader({
       className={`flex min-h-11 items-center gap-2 ${inDrawer ? "justify-end" : "justify-between"}`}
     >
       {inDrawer ? null : (
-        <h2 className="m-0 text-[20px] font-bold">{title ?? tUi("filters")}</h2>
+        <h2 className="type-panel-title m-0">{title ?? tUi("filters")}</h2>
       )}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={onReset}
-          className="min-h-10 cursor-pointer rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-muted)"
+          className="min-h-10 cursor-pointer rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted)"
           style={{ color: T.ink.dim, textUnderlineOffset: 3 }}
         >
           {resetLabel ?? tUi("reset")}
@@ -84,7 +84,7 @@ export function FilterPanelHeader({
             onClick={sidebar.hide}
             aria-controls={sidebar.sidebarId}
             aria-expanded
-            className="hidden min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-[13px] font-semibold transition-colors hover:bg-(--t-bg-muted2) lg:inline-flex"
+            className="hidden min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted2) lg:inline-flex"
             style={{ color: T.ink.dim }}
           >
             <PanelIcon />
@@ -113,7 +113,7 @@ export function FilterHelper({
 }) {
   return (
     <p
-      className="mt-1.5 mb-0 text-[13px] leading-[1.4]"
+      className="mt-1.5 mb-0 text-sm leading-[1.4]"
       style={{ color: T.ink.dim }}
     >
       {children}
@@ -192,14 +192,14 @@ export function FilterGroup({
           onClick={handleToggle}
           aria-expanded={open}
           aria-controls={bodyId}
-          className="flex min-h-10 w-full cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-[16px] font-semibold text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
+          className="flex min-h-10 w-full cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-left text-base font-semibold text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
           style={{ opacity: dimmed ? 0.55 : 1 }}
         >
           {icon ? <svg {...LEGEND_ICON_PROPS}>{icon}</svg> : null}
           <span className="min-w-0 flex-1">{title}</span>
           {!open && active > 0 ? (
             <span
-              className="rounded-full px-2 py-0.5 text-[12px] font-semibold"
+              className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ background: T.accent.chip, color: T.accent.primary }}
             >
               {active} selected
@@ -222,7 +222,7 @@ export function FilterGroup({
             type="button"
             onClick={handleShowAll}
             aria-expanded={showAll}
-            className="mt-1 cursor-pointer rounded-full border-0 bg-transparent p-0 text-[14px] font-semibold underline"
+            className="mt-1 cursor-pointer rounded-full border-0 bg-transparent p-0 text-sm font-semibold underline"
             style={{ color: T.accent.primary, textUnderlineOffset: 3 }}
           >
             {showAll ? "Show fewer" : `Show all ${options.length}`}
@@ -271,7 +271,7 @@ export function FilterOption({
 }: FilterOptionProps) {
   return (
     <label
-      className="flex h-[35px] items-center gap-2.5 text-[15px]"
+      className="flex h-[35px] items-center gap-2.5 text-base"
       style={{
         cursor: disabled ? "not-allowed" : "pointer",
         color: T.ink.base,
@@ -293,7 +293,7 @@ export function FilterOption({
         {label}
       </span>
       {count != null ? (
-        <span className="text-[14px] tabular-nums" style={{ color: T.ink.low }}>
+        <span className="text-sm tabular-nums" style={{ color: T.ink.low }}>
           {count}
         </span>
       ) : null}
@@ -376,7 +376,7 @@ function FilterPill({
       onClick={onClick}
       aria-expanded={expanded}
       aria-controls={controls}
-      className={`${className} min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-[15px] font-semibold`}
+      className={`${className} min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-base font-semibold`}
       style={{
         background: T.bg.deep,
         border: `1px solid ${T.border.hi}`,
@@ -387,7 +387,7 @@ function FilterPill({
       {label}
       {activeCount > 0 ? (
         <span
-          className="flex size-5 items-center justify-center rounded-full text-[12px] font-bold text-white"
+          className="flex size-5 items-center justify-center rounded-full text-xs font-bold text-white"
           style={{ background: T.accent.primary }}
         >
           {activeCount}
@@ -540,7 +540,7 @@ export function FilterDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-11 w-full rounded-full border-0 bg-(--t-accent-primary) px-5 py-3 text-[16px] font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+              className="min-h-11 w-full rounded-full border-0 bg-(--t-accent-primary) px-5 py-3 text-base font-semibold text-white hover:bg-(--t-accent-primary-hover)"
             >
               {showLabel}
             </button>

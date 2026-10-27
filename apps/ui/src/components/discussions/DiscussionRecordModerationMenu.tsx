@@ -98,7 +98,7 @@ export function DiscussionRecordModerationMenu({
       )}
       <Dialog open={removalOpen} onOpenChange={setRemovalOpen}>
         <DialogContent className="rounded-3xl bg-(--t-bg-deep)">
-          <DialogTitle>{t("confirmRemoval")}</DialogTitle>
+          <DialogTitle className="type-h2">{t("confirmRemoval")}</DialogTitle>
           <DialogDescription>{t("removalLead")}</DialogDescription>
           <form
             className="grid gap-4"

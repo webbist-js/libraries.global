@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const portal = await stripe.billingPortal.sessions.create({
       customer: account.customer_id,
       configuration,
-      return_url: `${billingConfig().origin}/profile/settings#membership`,
+      return_url: `${billingConfig().origin}/profile/membership`,
     })
 
     return billingJson({ url: providerUrl(portal.url, ["billing.stripe.com"]) })

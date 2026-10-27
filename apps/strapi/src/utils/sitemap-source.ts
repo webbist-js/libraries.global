@@ -4,6 +4,10 @@ import { publicEventFilters } from "../plugins/events/server/utils/query"
 
 /** Public URL discovery only: no bodies, media, credentials or account data. */
 const SOURCES = {
+  networks: {
+    uid: "api::library-network.library-network",
+    fields: ["slug", "updatedAt"],
+  },
   libraries: {
     uid: "api::library.library",
     fields: ["slug", "updatedAt"],
@@ -118,6 +122,11 @@ export function sitemapQuery(source: SitemapSource, locale: string) {
       }
     )
   }
+  if (source === "networks")
+    filters.push({
+      publicPageEnabled: true,
+      publicPageReviewedAt: { $notNull: true },
+    })
   if (source === "profiles") {
     filters.push({ profileVisibility: "public", username: nonempty })
   } else if (source === "events") {

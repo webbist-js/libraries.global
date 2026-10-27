@@ -37,16 +37,14 @@ export function FeaturedContribution({
     >
       <div className="flex flex-col items-start gap-3.5">
         <p
-          className="m-0 text-[14px] font-semibold"
+          className="m-0 text-sm font-semibold"
           style={{ color: T.accent.primary }}
         >
           Where you could help
         </p>
         <h2
-          className="m-0 text-[clamp(28px,3vw,38px)] leading-[1.05] tracking-[-.015em] text-balance"
+          className="type-h2 m-0 text-balance"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -69,7 +67,7 @@ export function FeaturedContribution({
       >
         {next ? (
           <>
-            <h3 className="m-0 text-[14px] font-bold">What happens next</h3>
+            <h3 className="type-small-heading m-0">What happens next</h3>
             <p
               className="mt-3 text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
@@ -87,9 +85,7 @@ export function FeaturedContribution({
           className="border-t pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-7"
           style={{ borderColor: T.border.line }}
         >
-          <h3 className="m-0 mb-3 text-[14px] font-bold">
-            {alternativesTitle}
-          </h3>
+          <h3 className="type-small-heading m-0 mb-3">{alternativesTitle}</h3>
           <ul className="m-0 list-none p-0">
             {alternatives.slice(0, 3).map((item, index) => (
               <li
@@ -104,12 +100,10 @@ export function FeaturedContribution({
                   href={item.href}
                   style={{ color: T.ink.base }}
                 >
-                  <span className="text-[15px] font-semibold">
-                    {item.title}
-                  </span>
+                  <span className="text-base font-semibold">{item.title}</span>
                   {item.description ? (
                     <span
-                      className="text-[13px] leading-[1.5] font-normal"
+                      className="text-sm leading-[1.5] font-normal"
                       style={{ color: T.ink.dim }}
                     >
                       {item.description}

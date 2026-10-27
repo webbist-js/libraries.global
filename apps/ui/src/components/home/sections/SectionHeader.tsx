@@ -30,9 +30,7 @@ export function SectionHeader({
   const text = intro.text ? (
     <p
       className={`m-0 max-w-[520px] text-pretty ${
-        textBeside
-          ? "text-[16px] leading-[1.6]"
-          : "mt-4 text-[18px] leading-[1.6]"
+        textBeside ? "text-base leading-[1.6]" : "mt-4 text-lg leading-[1.6]"
       }`}
       style={{ color: T.ink.dim }}
     >

@@ -73,7 +73,7 @@ export function AccessCompare({
             "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
         }}
       >
-        <label className="flex min-w-0 flex-col gap-2 text-[14px] font-bold">
+        <label className="flex min-w-0 flex-col gap-2 text-sm font-bold">
           {tUi("sort_by")}{" "}
           <SelectField
             label={tUi("sort_by")}
@@ -102,7 +102,7 @@ export function AccessCompare({
             ]}
           />
         </label>
-        <label className="flex min-w-0 flex-col gap-2 text-[14px] font-bold">
+        <label className="flex min-w-0 flex-col gap-2 text-sm font-bold">
           Order
           <SelectField
             label="Order"
@@ -121,7 +121,7 @@ export function AccessCompare({
           />
         </label>
       </div>
-      <label className="flex flex-col gap-2 text-[14px] font-bold">
+      <label className="flex flex-col gap-2 text-sm font-bold">
         Search areas
         <input
           type="search"
@@ -134,10 +134,7 @@ export function AccessCompare({
           style={{ borderColor: T.border.hi }}
         />
       </label>
-      <p
-        className="m-0 text-[13px] leading-relaxed"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
         {rows.length.toLocaleString()} {rows.length === 1 ? "area" : "areas"}
         {query.trim() ? " match your search" : ""}. Unknown values stay last. “5
         / 8” means 5 match your filters out of 8 indexed.
@@ -149,7 +146,7 @@ export function AccessCompare({
           role="region"
           aria-label={tUi("area_comparison_table")}
         >
-          <table className="w-full border-collapse text-left text-[14px]">
+          <table className="w-full border-collapse text-left text-sm">
             <caption className="sr-only">
               {areaKind} ·{" "}
               {metric === "per100k"
@@ -160,7 +157,7 @@ export function AccessCompare({
             </caption>
             <thead>
               <tr
-                className="border-b text-[13px]"
+                className="border-b text-sm"
                 style={{ borderColor: T.border.hi, color: T.ink.dim }}
               >
                 <th scope="col" className="min-w-20 pr-2 pb-2 font-semibold">
@@ -367,7 +364,7 @@ export function AccessCompareFooter({
         setPage(0)
       }}
       aria-label={`Show all ${total.toLocaleString()} areas in the comparison table`}
-      className="min-h-[48px] w-full rounded-full border bg-white px-4 text-[14px] font-semibold"
+      className="min-h-[48px] w-full rounded-full border bg-white px-4 text-sm font-semibold"
       style={{ borderColor: T.border.hi }}
     >
       Show all {total.toLocaleString()}

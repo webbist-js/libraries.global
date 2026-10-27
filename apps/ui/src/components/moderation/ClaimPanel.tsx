@@ -60,7 +60,7 @@ const formatDate = (iso: string, locale: string) =>
   }).format(new Date(iso))
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
 
 /**
  * A Library Claim: who the claimant says they are, whether their email
@@ -142,7 +142,7 @@ export function ClaimPanel({
     <div className="flex flex-col gap-4">
       {team && (
         <p
-          className="m-0 rounded-[14px] border px-4 py-3 text-[14px]"
+          className="m-0 rounded-[14px] border px-4 py-3 text-sm"
           style={{ borderColor: T.border.line }}
         >
           Filed by <strong>{team.name}</strong>’s organiser, who assigned the
@@ -152,7 +152,7 @@ export function ClaimPanel({
       )}
       {hasDomains ? (
         <div
-          className="flex items-start gap-2.5 rounded-[14px] px-4 py-3 text-[14px] leading-[1.55]"
+          className="flex items-start gap-2.5 rounded-[14px] px-4 py-3 text-sm leading-[1.55]"
           style={{
             background: match ? NOTICE_TONES.ok.bg : NOTICE_TONES.warn.bg,
             color: match ? NOTICE_TONES.ok.fg : NOTICE_TONES.warn.fg,
@@ -177,7 +177,7 @@ export function ClaimPanel({
           </div>
         </div>
       ) : (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           No domain check: the claim has no email or website domain to compare.
         </p>
       )}
@@ -201,7 +201,7 @@ export function ClaimPanel({
       />
       {affiliation && !removed ? (
         <div
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border px-4 py-3 text-[14px]"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border px-4 py-3 text-sm"
           style={{ borderColor: T.border.line, background: T.bg.surface }}
         >
           <p className="m-0">
@@ -218,7 +218,7 @@ export function ClaimPanel({
                 <button
                   type="button"
                   disabled={busy}
-                  className="inline-flex min-h-11 items-center rounded-full px-4 text-[14px] font-semibold text-white disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
                   style={{ background: T.accent.danger }}
                   onClick={() => void remove()}
                 >
@@ -256,7 +256,7 @@ export function ClaimPanel({
       <p
         role="status"
         aria-live="polite"
-        className={removed ? "m-0 text-[14px]" : "sr-only"}
+        className={removed ? "m-0 text-sm" : "sr-only"}
         style={{ color: T.accent.ok }}
       >
         {removed
@@ -267,7 +267,7 @@ export function ClaimPanel({
         <p className="m-0">
           <Link
             href={`/contribute/moderation/staff/${encodeURIComponent(libraryDocumentId)}`}
-            className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
+            className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
             See everyone with staff access
@@ -283,16 +283,13 @@ export function ClaimPanel({
       {error ? (
         <p
           role="alert"
-          className="m-0 text-[14px]"
+          className="m-0 text-sm"
           style={{ color: T.accent.danger }}
         >
           {error}
         </p>
       ) : null}
-      <p
-        className="m-0 text-[14px] leading-[1.55]"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
         Approving records the affiliation and raises the claimant to Verified
         librarian. Roles are never lowered.
       </p>

@@ -40,7 +40,7 @@ export function AtlasLibraryDensityLegend({
           background: `linear-gradient(90deg,${ATLAS_DENSITY_COLORS.join(",")})`,
         }}
       />
-      <div className="flex justify-between gap-1 text-[10px] text-(--t-ink-dim)">
+      <div className="flex justify-between gap-1 text-xs text-(--t-ink-dim)">
         {settings.view === "smooth" ? (
           <>
             <span>{t("low")}</span>
@@ -138,7 +138,7 @@ export function AtlasLibraryDensity({
             className="rounded-xl border border-(--t-border-line) p-4"
             aria-label={t("inspection")}
           >
-            <h3 className="m-0 text-sm font-semibold">{t("inspection")}</h3>
+            <h3 className="type-h3 m-0">{t("inspection")}</h3>
             <p className="mt-3 mb-1 text-2xl font-semibold">
               {selected.total.toLocaleString(locale)}{" "}
               <span className="text-xs font-normal text-(--t-ink-dim)">

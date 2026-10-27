@@ -59,6 +59,9 @@ function setup(extra: Record<string, any[]> = {}) {
     [ROLE]: [],
     ...extra,
   })
+  materialiseRelations(fake, "plugin::access.library-authority-grant", [
+    "library",
+  ])
   materialiseRelations(fake, AFFILIATION_UID, ["library"])
   fake.services["rewards.points"] = { award: vi.fn(async () => {}) }
   fake.services["i18n.locales"] = { find: async () => [{ code: "en" }] }

@@ -49,7 +49,7 @@ export function FeedTestButton({
     <div className="flex flex-col gap-1.5">
       <button
         type="button"
-        className="inline-flex w-fit items-center justify-center gap-2 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex w-fit items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
         style={{ borderColor: T.border.hi, color: T.ink.base }}
         disabled={busy}
         onClick={() => void run()}
@@ -66,7 +66,7 @@ export function FeedTestButton({
       {error ? (
         <p
           role="alert"
-          className="m-0 text-[13px]"
+          className="m-0 text-sm"
           style={{ color: T.accent.danger }}
         >
           {error}

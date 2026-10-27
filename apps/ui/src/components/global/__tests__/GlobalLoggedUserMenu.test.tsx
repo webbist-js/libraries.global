@@ -58,8 +58,11 @@ it.each(["supporter", "pro", "team"] as const)(
   async (plan) => {
     const trigger = mount(plan)
     const support = await screen.findByRole("menuitem", {
-      name: "Membership support",
+      name: "Support",
     })
+    expect(
+      screen.getByRole("menuitem", { name: /Membership/ }).getAttribute("href")
+    ).toBe("/profile/membership")
     expect(support.getAttribute("aria-haspopup")).toBe("dialog")
     fireEvent.click(support)
     const dialog = await screen.findByRole("dialog", {
@@ -86,8 +89,6 @@ it.each(["free", "public", undefined] as const)(
   async (plan) => {
     mount(plan)
     await screen.findByRole("menu")
-    expect(
-      screen.queryByRole("menuitem", { name: "Membership support" })
-    ).toBeNull()
+    expect(screen.queryByRole("menuitem", { name: "Support" })).toBeNull()
   }
 )

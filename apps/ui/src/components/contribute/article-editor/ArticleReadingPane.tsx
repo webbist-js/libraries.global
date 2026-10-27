@@ -35,10 +35,7 @@ export function ArticleReadingPane({
           width={20}
           className="shrink-0 text-(--t-ink-dim)"
         />
-        <h2
-          id={headingId}
-          className="m-0 text-[15px] leading-snug font-semibold"
-        >
+        <h2 id={headingId} className="type-small-heading m-0">
           {heading}
         </h2>
       </div>

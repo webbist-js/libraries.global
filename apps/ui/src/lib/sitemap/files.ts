@@ -17,6 +17,7 @@ export const SITEMAP_SEGMENTS = [
   "events",
   "drives",
   "libraries",
+  "networks",
   "journal",
   "knowledge",
   "legal",

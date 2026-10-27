@@ -14,7 +14,13 @@ export async function PUT(req: Request, { params }: Ctx) {
     path: `submissions/${encodeURIComponent(documentId)}/status`,
     ids: [documentId],
     method: "PUT",
-    bodyKeys: ["status", "note", "publish"],
+    bodyKeys: [
+      "status",
+      "note",
+      "publish",
+      "approvedLibraryIds",
+      "approvedStaffRole",
+    ],
   })
   if (res.ok) revalidateTag("drive", { expire: 0 })
 
