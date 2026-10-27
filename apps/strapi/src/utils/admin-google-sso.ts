@@ -11,13 +11,7 @@ type VerifyDone = (
   user?: { email: string } | false
 ) => void
 
-export function adminAuthCookieSecure({
-  env,
-}: Core.Config.Shared.ConfigParams) {
-  if (!env.bool("STRAPI_ADMIN_SSO_LOOPBACK", false)) {
-    return env("NODE_ENV") === "production"
-  }
-
+function adminSsoLoopbackCallback({ env }: Core.Config.Shared.ConfigParams) {
   const callback = new URL(env("STRAPI_ADMIN_GOOGLE_CALLBACK_URL", ""))
   if (
     callback.protocol !== "http:" ||
@@ -33,6 +27,24 @@ export function adminAuthCookieSecure({
     )
   }
 
+  return callback
+}
+
+export function adminPanelUrl({ env }: Core.Config.Shared.ConfigParams) {
+  if (!env.bool("STRAPI_ADMIN_SSO_LOOPBACK", false)) return "/admin"
+
+  return new URL("/admin", adminSsoLoopbackCallback({ env })).toString()
+}
+
+export function adminAuthCookieSecure({
+  env,
+}: Core.Config.Shared.ConfigParams) {
+  if (!env.bool("STRAPI_ADMIN_SSO_LOOPBACK", false)) {
+    return env("NODE_ENV") === "production"
+  }
+
+  adminSsoLoopbackCallback({ env })
+
   // The browser-to-CMS connection must be carried by an encrypted SSH tunnel.
   return false
 }
@@ -47,6 +59,18 @@ export function googleAdminAuthProviders({
   if (!clientID || !clientSecret) {
     throw new Error(
       "Google admin SSO requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET"
+    )
+  }
+
+  const allowedEmails = new Set(
+    env
+      .array("STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS", [])
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean)
+  )
+  if (allowedEmails.size === 0) {
+    throw new Error(
+      "Google admin SSO requires STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS"
     )
   }
 
@@ -77,10 +101,14 @@ export function googleAdminAuthProviders({
               return done(null, false)
             }
 
+            const email = profile.email.trim()
+            if (!allowedEmails.has(email.toLowerCase()))
+              return done(null, false)
+
             try {
               const user = await strapi.db.query("admin::user").findOne({
                 where: {
-                  email: { $eqi: profile.email.trim() },
+                  email: { $eqi: email },
                   isActive: true,
                 },
                 select: ["email"],
