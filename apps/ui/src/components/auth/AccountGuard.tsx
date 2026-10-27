@@ -38,8 +38,14 @@ export function AccountGuard({
     refreshedScope.current = actualScope
     router.refresh()
   }, [actualScope, isPending, error, matches, router])
-  // Anonymous public content has no prior-account state and remains server-rendered.
-  if (expectedScope === "guest" && publicGuestPage && isPending)
+  // Guest-only public content has no prior-account state. Keep its main and
+  // keyboard focus intact while the session service is pending or unavailable.
+  if (
+    expectedScope === "guest" &&
+    matches &&
+    publicGuestPage &&
+    (isPending || error)
+  )
     return <AccountContent key="guest">{children}</AccountContent>
   if (isPending)
     return (
