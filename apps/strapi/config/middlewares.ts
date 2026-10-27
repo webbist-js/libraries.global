@@ -1,3 +1,5 @@
+import { adminAuthCookieSecure } from "../src/utils/admin-google-sso"
+
 /**
  * CORS origins that may make credentialed requests to Strapi.
  * - CORS_ORIGINS: comma-separated list (set the production app URL here).
@@ -119,7 +121,10 @@ export default ({ env }: { env: any }) => [
   // Must run after strapi::query, which installs the querystring parser.
   "global::strip-draft-status",
   "strapi::body",
-  "strapi::session",
+  {
+    name: "strapi::session",
+    config: { secure: adminAuthCookieSecure({ env }) },
+  },
   "strapi::favicon",
   "strapi::public",
   "strapi::compression",
