@@ -61,6 +61,7 @@
     "free-email-domains": "1.12.13",
     "jsonwebtoken": "9.0.3",
     "lodash": "^4.17.21",
+    "passport-google-oauth2": "^0.2.0",
     "pg": "^8.13.1",
     "qs": "^6.16.0",
     "react": "^18.0.0",

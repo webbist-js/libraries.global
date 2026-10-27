@@ -42,6 +42,47 @@ Private query keys include user identity and the relevant library, locale or per
 
 Admin plugins use `useFetchClient` and registered admin routes, whose policies require both an authenticated admin and the appropriate plugin action. Wait for `useAuth` to finish before mounting permission checks. Treat permission-check errors separately from an actual denial. Credential reveals require their own permission, are audited server-side and clear their values when the dialog closes.
 
+## Strapi admin Google SSO
+
+Admin SSO requires a Strapi license with the SSO feature. It uses the Google
+Passport strategy in `apps/strapi/src/utils/admin-google-sso.ts` and is separate
+from Better Auth website sessions.
+
+Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the CMS runtime environment,
+then set `STRAPI_ADMIN_GOOGLE_SSO_ENABLED=true`. The client may be shared with
+the website, but the CMS needs its own environment entries. Register the admin
+callback as an additional authorized redirect URI in Google Cloud; retain the
+website's existing callback. By default the admin callback is
+`{browser-facing CMS origin}/admin/connect/google`.
+
+Set `STRAPI_ADMIN_GOOGLE_CALLBACK_URL` to the complete callback URL when the
+browser reaches the CMS through a different origin, such as a private tunnel.
+Start and finish login on the same origin so the OAuth state cookie survives
+the redirect. Retain the session middleware: the strategy validates state and
+uses PKCE with S256.
+
+For a private production CMS reached only through an encrypted SSH tunnel, set
+`STRAPI_ADMIN_SSO_LOOPBACK=true` with an explicit HTTP loopback callback. This
+allows the OAuth state and admin cookies on the tunnel's local HTTP endpoint.
+The configuration rejects non-loopback callbacks in this mode. Keep this flag
+off for HTTPS deployments and never use it with a public HTTP CMS.
+
+Only a verified Google email matching an existing active Strapi administrator
+can sign in. Existing roles are preserved. The provider rejects other accounts
+even if auto-registration is enabled in Strapi; keep auto-registration off in
+Settings > Global settings > Single Sign-On. Keep local authentication enabled,
+particularly for Super Admin, so password login remains available for recovery.
+
+Rebuild and restart Strapi after deployment configuration changes. Verify that
+the Google provider appears on the admin login screen, complete a sign-in with
+an existing administrator, and check that an unregistered account is rejected.
+Production changes follow the protected release and private acceptance process.
+Setting `STRAPI_ADMIN_GOOGLE_SSO_ENABLED=false` and restarting removes the
+provider without changing administrator accounts.
+
+See Strapi's [Google SSO setup](https://docs.strapi.io/cms/configurations/sso-providers/google)
+and [SSO settings](https://docs.strapi.io/cms/features/sso).
+
 ## Configuration and verification
 
 The checked-in environment examples document variable names and placeholders. Runtime values and operator access details belong outside Git. Use `APP_PUBLIC_URL` for the accepted browser origin, `BETTER_AUTH_SECRET` for Better Auth and the server's configured bridge credentials for CMS calls.
