@@ -63,12 +63,16 @@ uses PKCE with S256.
 
 For a private production CMS reached only through an encrypted SSH tunnel, set
 `STRAPI_ADMIN_SSO_LOOPBACK=true` with an explicit HTTP loopback callback. This
-allows the OAuth state and admin cookies on the tunnel's local HTTP endpoint.
+allows the OAuth state and admin cookies on the tunnel's local HTTP endpoint
+and sets the admin panel URL to the callback's origin. SSO success and error
+redirects stay on that origin while the server's APP_URL remains unchanged.
 The configuration rejects non-loopback callbacks in this mode. Keep this flag
 off for HTTPS deployments and never use it with a public HTTP CMS.
 
-Only a verified Google email matching an existing active Strapi administrator
-can sign in. Existing roles are preserved. The provider rejects other accounts
+Set `STRAPI_ADMIN_GOOGLE_ALLOWED_EMAILS` to the comma-separated administrator
+email allowlist. Enabling Google SSO without a non-empty allowlist fails startup.
+Only a verified Google email on that list matching an existing active Strapi
+administrator can sign in. Existing roles are preserved. The provider rejects other accounts
 even if auto-registration is enabled in Strapi; keep auto-registration off in
 Settings > Global settings > Single Sign-On. Keep local authentication enabled,
 particularly for Super Admin, so password login remains available for recovery.
