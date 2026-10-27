@@ -1,6 +1,11 @@
 import { adminResetEmailTemplate } from "@repo/shared-data"
 import type { UID } from "@strapi/strapi"
 
+import {
+  adminAuthCookieSecure,
+  adminPanelUrl,
+  googleAdminAuthProviders,
+} from "../src/utils/admin-google-sso"
 import type { StrapiPreviewConfig } from "../types/internals"
 
 export default ({ env }) => {
@@ -13,6 +18,7 @@ export default ({ env }) => {
 
   return {
     autoOpen: env.bool("STRAPI_ADMIN_AUTO_OPEN", false),
+    url: adminPanelUrl({ env }),
     forgotPassword: {
       from: env("EMAIL_FROM"),
       replyTo: env("EMAIL_REPLY_TO"),
@@ -23,6 +29,8 @@ export default ({ env }) => {
     },
     auth: {
       secret: env("ADMIN_JWT_SECRET"),
+      providers: googleAdminAuthProviders({ env }),
+      cookie: { secure: adminAuthCookieSecure({ env }) },
     },
     apiToken: {
       salt: env("API_TOKEN_SALT"),
