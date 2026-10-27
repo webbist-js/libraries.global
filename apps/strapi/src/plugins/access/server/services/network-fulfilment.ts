@@ -217,7 +217,11 @@ export async function runNetworkFulfilment(strapi: DocumentRuntime) {
     sort: "nextAttemptAt:asc",
     limit: 1,
   })
-  for (const row of rows) await fulfilNetworkMandate(strapi, row.documentId)
+  let applied = 0
+  for (const row of rows)
+    applied += (await fulfilNetworkMandate(strapi, row.documentId)).applied
+
+  return { mandates: rows.length, applied }
 }
 export async function approvedTeamMandate(
   strapi: DocumentRuntime,

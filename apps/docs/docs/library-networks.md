@@ -33,6 +33,8 @@ A grant ledger records independent claim, Team and network origins. Existing aff
 
 Grant creation and revocation share the source mandate lock. Each library grant and its fulfilment checkpoint commit atomically. Retries are idempotent and failures remain visible. Batches contain at most 25 libraries. A leader-elected cron attempts a due batch every ten seconds; an authorised retry action can also resume one batch. Revoked mandates are rejected at current authority checks while their physical removal batches finish. Bulk work uses one case notification rather than a message for every library.
 
+When CMS cron is disabled, an operator scheduler must call the existing private `POST /api/notifications/operations` endpoint with action `networkFulfilment` every ten seconds. It requires the server service secret and shares the cron job's database leader lock. Its response contains only whether the job ran and the number of mandates and library updates processed. A code deployment alone does not install that scheduler.
+
 The service workspace shows approved scope, pending work, later additions and source removals. `/staff/networks/libraries` pages through current staff records. Sessions retain the existing 100-library summary bound; an individual staff page outside that summary resolves its target authority from Strapi. Team coverage supports up to 2,000 library identities, without expanding the session's staff-permission payload.
 
 ## Teams and widgets

@@ -32,6 +32,8 @@ import { PASSWORD_MIN_LENGTH, SITE_NAME } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import { passwordStrength } from "@/lib/password-strength"
 
+const authBodyFontSize = "var(--type-body-size)"
+
 // No `outline: none` — the global :focus-visible ring must stay visible.
 export const authInputStyle: CSSProperties = {
   width: "100%",
@@ -41,7 +43,7 @@ export const authInputStyle: CSSProperties = {
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
-  fontSize: "var(--type-body-size)",
+  fontSize: authBodyFontSize,
   fontFamily: T.font.sans,
   boxSizing: "border-box",
 }
@@ -150,7 +152,7 @@ export function AuthHeading({
       <p
         style={{
           marginTop: "14px",
-          fontSize: "var(--type-body-size)",
+          fontSize: authBodyFontSize,
           lineHeight: 1.55,
           color: T.ink.dim,
         }}
@@ -193,7 +195,7 @@ export function AuthField({
           htmlFor={id}
           style={{
             fontFamily: T.font.sans,
-            fontSize: "var(--type-body-size)",
+            fontSize: authBodyFontSize,
             fontWeight: 600,
             color: T.ink.base,
           }}
@@ -275,7 +277,7 @@ const pillBase: CSSProperties = {
   height: "52px",
   borderRadius: "999px",
   fontFamily: T.font.sans,
-  fontSize: "var(--type-body-size)",
+  fontSize: authBodyFontSize,
   fontWeight: 600,
   display: "flex",
   alignItems: "center",
@@ -384,7 +386,7 @@ export function AuthCheckbox({
         alignItems: "flex-start",
         gap: "12px",
         cursor: "pointer",
-        fontSize: "var(--type-body-size)",
+        fontSize: authBodyFontSize,
         lineHeight: 1.5,
         color: T.ink.base,
       }}
@@ -435,7 +437,7 @@ export function AuthStatusMessage({ status }: { status: AuthStatus }) {
             alignItems: "flex-start",
             gap: "8px",
             marginTop: "12px",
-            fontSize: "var(--type-body-size)",
+            fontSize: authBodyFontSize,
             lineHeight: 1.5,
             color: status.tone === "error" ? T.accent.danger : T.accent.ok,
           }}
@@ -541,9 +543,7 @@ export function AuthDivider() {
         aria-hidden="true"
         style={{ flex: 1, height: "1px", background: T.border.line }}
       />
-      <span style={{ fontSize: "var(--type-body-size)", color: T.ink.dim }}>
-        or
-      </span>
+      <span style={{ fontSize: authBodyFontSize, color: T.ink.dim }}>or</span>
       <span
         aria-hidden="true"
         style={{ flex: 1, height: "1px", background: T.border.line }}
@@ -566,7 +566,7 @@ export function AuthSwitchPrompt({
       style={{
         textAlign: "center",
         marginTop: "18px",
-        fontSize: "var(--type-body-size)",
+        fontSize: authBodyFontSize,
         color: T.ink.dim,
       }}
     >
@@ -598,7 +598,7 @@ export function AuthInboxHint({
       <p
         style={{
           marginBottom: "8px",
-          fontSize: "var(--type-body-size)",
+          fontSize: authBodyFontSize,
           fontWeight: 600,
           color: T.ink.base,
         }}
@@ -635,7 +635,7 @@ export function AuthInboxHint({
           </p>
           <p
             style={{
-              fontSize: "var(--type-body-size)",
+              fontSize: authBodyFontSize,
               fontWeight: 600,
               color: T.ink.base,
               overflowWrap: "anywhere",

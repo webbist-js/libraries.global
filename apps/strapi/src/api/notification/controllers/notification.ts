@@ -1,4 +1,5 @@
 import { internalNotifications } from "../../../utils/internal-notifications/service"
+import { runNetworkFulfilmentJob } from "../../../utils/network-fulfilment-job"
 import {
   bridgeBaUserId,
   isValidServiceSecret,
@@ -19,6 +20,8 @@ export default {
       return ctx.unauthorized()
     ctx.set("Cache-Control", "private, no-store")
     const { action, baUserId } = ctx.request.body ?? {}
+    if (action === "networkFulfilment")
+      return ctx.send(await runNetworkFulfilmentJob(strapi))
     const service = strapi.service(UID)
     if (action === "internalRun")
       return ctx.send(await internalNotifications(strapi).run())
