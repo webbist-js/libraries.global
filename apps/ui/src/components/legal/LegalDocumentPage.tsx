@@ -127,13 +127,8 @@ export function LegalDocumentPage({
             />
 
             <h1
-              className="mt-3 mb-0 text-balance"
+              className="type-h1 mt-3 mb-0 text-balance"
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "clamp(40px,5vw,68px)",
-                fontWeight: 500,
-                lineHeight: 1.04,
-                letterSpacing: "-0.02em",
                 color: T.ink.base,
               }}
             >
@@ -147,14 +142,14 @@ export function LegalDocumentPage({
             <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               {doc.lead ? (
                 <p
-                  className="m-0 max-w-[60ch] text-[17px] leading-[1.6] text-pretty"
+                  className="m-0 max-w-[60ch] text-base leading-[1.6] text-pretty"
                   style={{ color: T.ink.dim }}
                 >
                   {doc.lead}
                 </p>
               ) : null}
 
-              <dl className="m-0 flex flex-wrap items-baseline gap-x-6 gap-y-3 text-[14px] lg:justify-end">
+              <dl className="m-0 flex flex-wrap items-baseline gap-x-6 gap-y-3 text-sm lg:justify-end">
                 {meta.map((item) => (
                   <div
                     className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
@@ -225,14 +220,14 @@ export function LegalDocumentPage({
                   />
                   <div>
                     <h2
-                      className="m-0 text-[15px] font-semibold"
+                      className="type-panel-title m-0"
                       id="legal-draft-notice"
                       style={{ color: T.ink.base }}
                     >
                       Pre-launch draft
                     </h2>
                     <p
-                      className="mt-1 mb-0 text-[15px] leading-[1.55]"
+                      className="mt-1 mb-0 text-base leading-[1.55]"
                       style={{ color: T.ink.base }}
                     >
                       Libraries Global hasn’t launched yet. This is a working
@@ -251,13 +246,13 @@ export function LegalDocumentPage({
                   className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-7"
                 >
                   <h2
-                    className="m-0 text-[14px] font-semibold tracking-[0.06em] text-(--t-accent-primary) uppercase"
+                    className="type-label m-0 text-(--t-accent-primary) uppercase"
                     id="legal-short-version"
                   >
                     The short version
                   </h2>
                   <ul
-                    className="mt-4 mb-0 grid list-none gap-3 p-0 text-[16px] leading-relaxed"
+                    className="mt-4 mb-0 grid list-none gap-3 p-0 text-base leading-relaxed"
                     style={{ color: T.ink.base }}
                   >
                     {summaryPoints.map((point) => (
@@ -273,7 +268,7 @@ export function LegalDocumentPage({
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-5 mb-0 border-t border-(--t-border-line) pt-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                  <p className="mt-5 mb-0 border-t border-(--t-border-line) pt-4 text-base leading-relaxed text-(--t-ink-dim)">
                     These summaries help you read the document but aren’t part
                     of it. The full text below is what applies.
                   </p>
@@ -281,7 +276,7 @@ export function LegalDocumentPage({
               ) : null}
 
               {sections.length === 0 ? (
-                <p className="mt-8 text-[16px]" style={{ color: T.ink.dim }}>
+                <p className="mt-8 text-base" style={{ color: T.ink.dim }}>
                   This document has no content yet.
                 </p>
               ) : null}
@@ -295,18 +290,18 @@ export function LegalDocumentPage({
                   style={{ borderColor: T.border.line }}
                 >
                   <h2
-                    className="m-0 [break-after:avoid-page] text-[30px] leading-tight font-medium tracking-[-0.01em] sm:text-[32px]"
+                    className="type-h2 m-0 [break-after:avoid-page]"
                     id={`${anchors[index]}-heading`}
-                    style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                    style={{ color: T.ink.base }}
                   >
                     {section.heading}
                   </h2>
 
                   {section.inShort ? (
                     <p
-                      className="mt-3 mb-0 [break-after:avoid-page] text-[19px] leading-relaxed italic"
+                      className="mt-3 mb-0 [break-after:avoid-page] text-lg leading-relaxed italic"
                       style={{
-                        fontFamily: T.font.serif,
+                        fontFamily: T.font.sans,
                         color: T.ink.dim,
                       }}
                     >
@@ -316,7 +311,7 @@ export function LegalDocumentPage({
 
                   <StrapiBlocksContent
                     blocks={section.body as Blocks}
-                    className="mt-4 text-[16px] [&_li]:leading-[1.75] [&_p]:leading-[1.75]"
+                    className="mt-4 text-base [&_li]:leading-[1.75] [&_p]:leading-[1.75]"
                   />
                 </section>
               ))}
@@ -325,9 +320,9 @@ export function LegalDocumentPage({
               {revisions.length > 0 ? (
                 <section aria-labelledby="legal-changes" className="pt-10">
                   <h2
-                    className="m-0 text-[28px] leading-tight font-medium"
+                    className="type-h2 m-0"
                     id="legal-changes"
-                    style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                    style={{ color: T.ink.base }}
                   >
                     Changes to this document
                   </h2>
@@ -341,7 +336,7 @@ export function LegalDocumentPage({
                       borderColor: T.border.line,
                     }}
                   >
-                    <table className="w-full border-collapse text-[15px] leading-relaxed">
+                    <table className="w-full border-collapse text-base leading-relaxed">
                       <caption className="sr-only">
                         Revision history of the {title.toLowerCase()}
                       </caption>
@@ -361,7 +356,7 @@ export function LegalDocumentPage({
                             style={{ borderColor: T.border.divider }}
                           >
                             <th
-                              className="py-4 pr-2 pl-4 text-left align-top text-[14px] font-medium whitespace-nowrap"
+                              className="py-4 pr-2 pl-4 text-left align-top text-sm font-medium whitespace-nowrap"
                               scope="row"
                               style={{
                                 fontFamily: T.font.mono,
@@ -404,7 +399,7 @@ export function LegalDocumentPage({
                     </table>
                   </div>
                   <p
-                    className="mt-3 mb-0 text-[14px] leading-relaxed"
+                    className="mt-3 mb-0 text-sm leading-relaxed"
                     style={{ color: T.ink.dim }}
                   >
                     We announce material changes in the journal and by email to
@@ -420,14 +415,14 @@ export function LegalDocumentPage({
                 style={{ background: TYPE_TINT.national.bg }}
               >
                 <h2
-                  className="m-0 text-[28px] font-medium"
+                  className="type-h2 m-0"
                   id="legal-questions"
-                  style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                  style={{ color: T.ink.base }}
                 >
                   Questions about this?
                 </h2>
                 <p
-                  className="mt-2 mb-0 text-[15px] leading-relaxed"
+                  className="mt-2 mb-0 text-base leading-relaxed"
                   style={{ color: T.ink.dim }}
                 >
                   Ask in the community forum, or write to the maintainers. We
@@ -473,7 +468,7 @@ function LegalContents({
       {items.map((item) => (
         <li key={item.id}>
           <a
-            className="flex min-h-11 items-center rounded-lg px-3 py-2 text-[15px] leading-snug text-(--t-ink-dim) no-underline transition-colors hover:bg-(--t-accent-chip) hover:text-(--t-accent-primary) focus-visible:bg-(--t-accent-chip) focus-visible:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:-outline-offset-2 lg:min-h-9 lg:py-1.5"
+            className="flex min-h-11 items-center rounded-lg px-3 py-2 text-base leading-snug text-(--t-ink-dim) no-underline transition-colors hover:bg-(--t-accent-chip) hover:text-(--t-accent-primary) focus-visible:bg-(--t-accent-chip) focus-visible:text-(--t-accent-primary) focus-visible:outline-2 focus-visible:-outline-offset-2 lg:min-h-9 lg:py-1.5"
             href={`#${item.id}`}
           >
             {item.label}
@@ -493,13 +488,13 @@ function LegalContents({
             "min(560px, calc(var(--sticky-content-max-height) - 64px))",
         }}
       >
-        <p className="m-0 shrink-0 px-3 pt-1 pb-3 text-[15px] font-semibold">
+        <p className="m-0 shrink-0 px-3 pt-1 pb-3 text-base font-semibold">
           {label}
         </p>
         {links}
       </nav>
       <details className="group w-full rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-4 lg:hidden">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-base font-semibold [&::-webkit-details-marker]:hidden">
           {label}
           <Icon
             aria-hidden="true"

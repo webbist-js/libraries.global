@@ -125,14 +125,14 @@ export function TeamSignup({
         }
         compact
       >
-        <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="text-base leading-relaxed text-(--t-ink-dim)">
           {!verified
             ? "Verify your email before creating a Team."
             : "New Team subscriptions are temporarily unavailable. Please check back later."}
         </p>
         <Link
           className={STAFF_LINK}
-          href={!verified ? "/profile/settings" : "/contribute/membership"}
+          href={!verified ? "/profile/settings" : "/plans"}
         >
           {!verified ? "Open account settings" : "View membership options"}
         </Link>
@@ -159,7 +159,7 @@ export function TeamSignup({
             Step 2 of 2 · Team & billing
           </p>
           <SignupCoverage network={network} />
-          <p className="text-[15px] leading-relaxed text-(--t-ink-dim)">
+          <p className="text-base leading-relaxed text-(--t-ink-dim)">
             {team
               ? "Your Team is saved. Complete annual billing when you’re ready to activate membership."
               : "Start with five seats, invite colleagues and manage annual billing online."}

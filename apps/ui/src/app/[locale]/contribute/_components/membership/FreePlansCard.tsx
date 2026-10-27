@@ -16,7 +16,7 @@ const LOOK = {
 function Done({ children }: { readonly children: React.ReactNode }) {
   return (
     <p
-      className="m-0 flex items-center gap-2 text-[14px] font-medium"
+      className="m-0 flex items-center gap-2 text-sm font-medium"
       style={{ color: T.ink.dim }}
     >
       <Icon
@@ -53,19 +53,14 @@ function Half({
           <Icon height={20} icon={look.icon} width={20} />
         </span>
         <div className="min-w-0 flex-1">
-          <h3
-            className="m-0 text-[24px] leading-tight"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
-            {plan.name}
-          </h3>
-          <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+          <h3 className="type-h3 m-0">{plan.name}</h3>
+          <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
             {plan.who}
           </p>
         </div>
         <p
           className="m-0 text-[22px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+          style={{ fontFamily: T.font.sans, fontWeight: 500 }}
         >
           {tUi("free")}
         </p>
@@ -119,7 +114,7 @@ export function FreePlansCard({ signedIn }: { readonly signedIn: boolean }) {
                 <Done>{m("copy.signedIn")}</Done>
               ) : freePlan.cta.href ? (
                 <GlobalLink
-                  className="inline-flex h-10 items-center rounded-full bg-(--t-accent-primary) px-5 text-[14.5px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                  className="inline-flex h-10 items-center rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
                   href={freePlan.cta.href}
                 >
                   {freePlan.cta.label}

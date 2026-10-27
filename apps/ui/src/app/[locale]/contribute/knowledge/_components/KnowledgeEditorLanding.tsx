@@ -211,10 +211,7 @@ export function KnowledgeEditorLanding({
   return (
     <MainContent className="mx-auto grid w-full max-w-[1360px] gap-10 px-4 py-8 sm:px-8 lg:py-10">
       <section aria-labelledby="start-writing" className="grid gap-4">
-        <h2
-          id="start-writing"
-          className="m-0 font-serif text-[32px] leading-tight font-medium"
-        >
+        <h2 id="start-writing" className="type-h2 m-0">
           {w("startNew")}
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
@@ -239,7 +236,7 @@ export function KnowledgeEditorLanding({
                 </span>
                 <div className="flex min-w-0 flex-col items-start gap-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="m-0 text-[19px] font-semibold">
+                    <h3 className="type-card-title m-0">
                       {p(
                         kind === "journal" ? "journalStory" : "knowledgeArticle"
                       )}
@@ -249,7 +246,7 @@ export function KnowledgeEditorLanding({
                       color="dim"
                     />
                   </div>
-                  <p className="m-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                  <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
                     {p(
                       kind === "journal" ? "journalChoice" : "knowledgeChoice"
                     )}
@@ -285,7 +282,7 @@ export function KnowledgeEditorLanding({
           aria-label={p("yourDrafts")}
         >
           <details open={filter === "mine" || undefined}>
-            <summary className="cursor-pointer text-[17px] font-semibold">
+            <summary className="cursor-pointer text-base font-semibold">
               {p("yourDrafts")}{" "}
               <span className="ml-2 text-(--t-ink-dim)">{drafts.length}</span>
             </summary>
@@ -311,7 +308,7 @@ export function KnowledgeEditorLanding({
                       <strong className="block">
                         {draft.title || p("untitledDraft")}
                       </strong>
-                      <span className="mt-2 block text-[14px] text-(--t-ink-dim)">
+                      <span className="mt-2 block text-sm text-(--t-ink-dim)">
                         {languageName(draft.locale ?? locale, locales, locale)}{" "}
                         ·{" "}
                         {p(
@@ -336,13 +333,10 @@ export function KnowledgeEditorLanding({
         aria-busy={busy}
       >
         <header>
-          <h2
-            id="improve-writing"
-            className="m-0 font-serif text-[32px] leading-tight font-medium"
-          >
+          <h2 id="improve-writing" className="type-h2 m-0">
             {w("improveExisting")}
           </h2>
-          <p className="mt-2 mb-0 text-[16px] text-(--t-ink-dim)">
+          <p className="mt-2 mb-0 text-base text-(--t-ink-dim)">
             {w("oneRow")}
           </p>
         </header>
@@ -403,7 +397,7 @@ export function KnowledgeEditorLanding({
             </Button>
           )}
         </div>
-        <p role="status" className="m-0 text-[15px] text-(--t-ink-dim)">
+        <p role="status" className="m-0 text-base text-(--t-ink-dim)">
           {busy
             ? p("loadingWork")
             : failed
@@ -420,7 +414,7 @@ export function KnowledgeEditorLanding({
               "flex flex-wrap items-center justify-between gap-3 p-5"
             )}
           >
-            <p className="m-0 text-[15px]">{p("workFailed")}</p>
+            <p className="m-0 text-base">{p("workFailed")}</p>
             <Button
               variant="surface"
               size="pill"
@@ -491,7 +485,7 @@ export function KnowledgeEditorLanding({
                   className="flex min-w-0 flex-wrap items-center gap-4 p-5 sm:p-6"
                 >
                   <div className="min-w-0 flex-[1_1_340px]">
-                    <div className="flex flex-wrap items-center gap-2 text-[14px] font-semibold text-(--t-ink-dim)">
+                    <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-(--t-ink-dim)">
                       <span
                         style={{
                           color: ARTICLE_KIND_META[article.kind].tintFg,
@@ -507,12 +501,12 @@ export function KnowledgeEditorLanding({
                     </div>
                     <h3
                       lang={source}
-                      className="my-2 font-serif text-[23px] leading-tight font-medium [overflow-wrap:anywhere]"
+                      className="type-h3 my-2 [overflow-wrap:anywhere]"
                     >
                       {article.title}
                     </h3>
                     {absent && (
-                      <p className="m-0 text-[14px] text-(--t-ink-dim)">
+                      <p className="m-0 text-sm text-(--t-ink-dim)">
                         {w("fallback", {
                           language: contentName,
                           source: languageName(source, locales, locale),
@@ -535,7 +529,7 @@ export function KnowledgeEditorLanding({
                         )
                       )}
                     </div>
-                    <span className="text-[14px] text-(--t-ink-dim)">
+                    <span className="text-sm text-(--t-ink-dim)">
                       {article.updatedAt
                         ? new Date(article.updatedAt).toLocaleDateString(locale)
                         : article.publishedAt

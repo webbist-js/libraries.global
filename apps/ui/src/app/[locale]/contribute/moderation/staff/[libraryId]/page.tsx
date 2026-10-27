@@ -97,7 +97,7 @@ export default async function StaffAccessPage({
         lead="Who can publish to this record, how they got access and since when. Remove anyone whose access shouldn’t stand; they’re emailed and the change is audited."
       >
         {place?.href ? (
-          <p className="m-0 text-[15px]">
+          <p className="m-0 text-base">
             <Link
               href={place.href}
               className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"

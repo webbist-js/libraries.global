@@ -138,13 +138,10 @@ export default async function StaffOverviewPage({
           style={{ background: T.bg.deep, borderColor: T.border.line }}
           aria-labelledby="traffic-card-heading"
         >
-          <h2
-            id="traffic-card-heading"
-            className="m-0 text-[18px] font-semibold"
-          >
+          <h2 id="traffic-card-heading" className="type-panel-title m-0">
             {tUi("traffic")}
           </h2>
-          <p className="my-2 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="my-2 text-base" style={{ color: T.ink.dim }}>
             {trafficCovered
               ? "See traffic reports for your library’s page."
               : "See visits to your library’s page with the Team plan. Traffic reports are coming soon."}

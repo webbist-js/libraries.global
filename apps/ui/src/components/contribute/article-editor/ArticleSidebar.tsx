@@ -31,23 +31,20 @@ const card: React.CSSProperties = {
 }
 
 const cardTitle: React.CSSProperties = {
-  fontFamily: T.font.sans,
-  fontSize: 17,
-  fontWeight: 700,
   color: T.ink.base,
   margin: 0,
 }
 
 const cardHint: React.CSSProperties = {
   fontFamily: T.font.sans,
-  fontSize: 14.5,
+  fontSize: "var(--type-body-small-size)",
   color: T.ink.dim,
   margin: "4px 0 0",
   lineHeight: 1.5,
 }
 
 const chipBase =
-  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 py-2 text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
 
 function Chip({
   on,
@@ -86,7 +83,7 @@ function Chip({
       {children}
       {badge && (
         <span
-          className="rounded-full px-1.5 py-0.5 text-[13px] font-bold"
+          className="rounded-full px-1.5 py-0.5 text-sm font-bold"
           style={{ background: T.accent.primary, color: "#fff" }}
         >
           {badge}
@@ -169,20 +166,17 @@ export function StatusCard({
     <section aria-labelledby="status-heading" style={card}>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2
+          className="type-panel-title"
           id="status-heading"
           style={{
             ...cardTitle,
-            fontFamily: T.font.serif,
-            fontSize: 26,
-            fontWeight: 500,
-            lineHeight: 1.15,
           }}
         >
           {title}
         </h2>
         <p
           role="status"
-          className="m-0 flex items-center gap-1.5 rounded-full bg-(--t-bg-surface) px-2.5 py-1 text-[14px] font-semibold"
+          className="m-0 flex items-center gap-1.5 rounded-full bg-(--t-bg-surface) px-2.5 py-1 text-base font-semibold"
           style={{ color: saveColor }}
         >
           <Icon icon={saveIcon} width={16} aria-hidden="true" />
@@ -197,7 +191,7 @@ export function StatusCard({
             : p("privateDraft")}
       </p>
       {mode === "edit" && (
-        <p className="mt-2 text-sm text-(--t-ink-dim)">
+        <p className="mt-2 text-base text-(--t-ink-dim)">
           {publishedAt
             ? p("livePublished", {
                 date: new Date(publishedAt).toLocaleDateString(displayLocale),
@@ -231,7 +225,7 @@ export function StatusCard({
           {checks.map((check) => (
             <li
               key={check.id}
-              className="flex items-center gap-2 text-[15px] leading-relaxed"
+              className="flex items-center gap-2 text-base leading-relaxed"
             >
               <Icon
                 aria-hidden
@@ -273,7 +267,7 @@ export function StatusCard({
       </Button>
       {submitted && (
         <p
-          className="mt-3 mb-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-[14.5px]"
+          className="mt-3 mb-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-base"
           style={{
             background: "var(--tint-public-bg)",
             color: "var(--tint-public-fg)",
@@ -301,13 +295,13 @@ export function StatusCard({
       {submitState === "error" && submitError && (
         <p
           role="alert"
-          className="mt-3 mb-0 rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-semibold"
+          className="mt-3 mb-0 rounded-[14px] px-3.5 py-2.5 text-base font-semibold"
           style={{ background: "#F6E3DA", color: T.accent.danger }}
         >
           {submitError}
         </p>
       )}
-      <p className="mt-3 mb-0 text-[13.5px]" style={{ color: T.ink.low }}>
+      <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.low }}>
         {kind === "journal" ? tUi("journal") : tUi("knowledge")} · {localeName}
       </p>
     </section>
@@ -403,7 +397,7 @@ export function SectionsCard({
       aria-labelledby="sections-heading"
       style={embedded ? undefined : card}
     >
-      <h2 id="sections-heading" style={cardTitle}>
+      <h2 className="type-panel-title" id="sections-heading" style={cardTitle}>
         {kind === "knowledge"
           ? tUi("knowledge_sections")
           : tUi("journal_section")}{" "}
@@ -432,13 +426,13 @@ export function SectionsCard({
         }
       >
         {loadState === "loading" && (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.faint }}>
+          <p className="m-0 text-base" style={{ color: T.ink.faint }}>
             {tUi("loading_sections")}{" "}
           </p>
         )}
         {loadState === "error" && (
           <div role="alert">
-            <p className="m-0 mb-2 text-[14px]">{w("sectionsUnavailable")}</p>
+            <p className="m-0 mb-2 text-base">{w("sectionsUnavailable")}</p>
             <Button
               variant="surface"
               size="pill"
@@ -449,9 +443,7 @@ export function SectionsCard({
           </div>
         )}
         {loadState === "ready" && !visibleOptions.length && (
-          <p className="m-0 text-[14px] text-(--t-ink-dim)">
-            {w("noSections")}
-          </p>
+          <p className="m-0 text-base text-(--t-ink-dim)">{w("noSections")}</p>
         )}
         {loadState === "ready" &&
           visibleOptions.map((o) => {
@@ -461,7 +453,7 @@ export function SectionsCard({
             return inherited ? (
               <span
                 key={o.key}
-                className="inline-flex min-h-9 items-center gap-2 rounded-full bg-(--t-bg-muted) px-3 py-1.5 text-[14px] font-medium"
+                className="inline-flex min-h-9 items-center gap-2 rounded-full bg-(--t-bg-muted) px-3 py-1.5 text-sm font-medium"
               >
                 {o.label}
                 {home && (
@@ -629,12 +621,12 @@ export function TagsCard({
 
   return (
     <section aria-labelledby="tags-heading" style={card}>
-      <h2 id="tags-heading" style={cardTitle}>
+      <h2 className="type-panel-title" id="tags-heading" style={cardTitle}>
         {w("about")}{" "}
       </h2>
       <p style={cardHint}>{inherited ? w("inherited") : tRelations("lead")}</p>
       {inherited && tags.length === 0 && (
-        <p className="mt-4 mb-0 text-[14px] text-(--t-ink-dim)">
+        <p className="mt-4 mb-0 text-base text-(--t-ink-dim)">
           {w("noRelations")}
         </p>
       )}
@@ -684,7 +676,7 @@ export function TagsCard({
         <>
           <ArticlePlacePicker locale={contentLocale} onAdd={add} />
           <div className="mt-6 grid min-w-0 gap-3 border-t border-(--t-border-line) pt-6">
-            <h3 className="m-0 text-[15px] font-semibold">
+            <h3 className="type-small-heading m-0">
               {tRelations("topicsLibraries")}
             </h3>
             <SearchField
@@ -707,7 +699,7 @@ export function TagsCard({
             />
             {suggestions.length > 0 && (
               <div className="grid gap-2">
-                <p className="m-0 text-[14px] text-(--t-ink-dim)">
+                <p className="m-0 text-base text-(--t-ink-dim)">
                   {tUi("suggested")}
                 </p>
                 <ul className="m-0 grid list-none gap-2 p-0">
@@ -717,7 +709,7 @@ export function TagsCard({
                         type="button"
                         variant="surface"
                         size="pill"
-                        className="h-auto min-h-11 w-full justify-start gap-2.5 px-3.5 py-2.5 text-left text-[15px] leading-snug whitespace-normal"
+                        className="h-auto min-h-11 w-full justify-start gap-2.5 px-3.5 py-2.5 text-left text-base leading-snug whitespace-normal"
                         onClick={() => add(s)}
                         aria-label={tEditor("addTag", { tag: s.label })}
                       >
@@ -818,7 +810,7 @@ function ArticlePlacePicker({
 
   return (
     <fieldset className="m-0 mt-6 min-w-0 border-0 p-0">
-      <legend className="mb-3 p-0 text-[15px] font-semibold">
+      <legend className="mb-3 p-0 text-base font-semibold">
         {tRelations("places")}
       </legend>
       <div className="grid gap-4">
@@ -831,7 +823,7 @@ function ArticlePlacePicker({
           <div key={kind} className="grid min-w-0 gap-2">
             <label
               htmlFor={`article-place-${kind}`}
-              className="text-[14px] font-medium text-(--t-ink-dim)"
+              className="text-sm font-medium text-(--t-ink-dim)"
             >
               {tRelations(kind)}
             </label>
@@ -839,7 +831,7 @@ function ArticlePlacePicker({
               id={`article-place-${kind}`}
               label={tRelations(kind)}
               value={selected[kind]?.documentId ?? ""}
-              className="min-h-[48px] min-w-0 px-4 text-[16px] font-normal"
+              className="min-h-[48px] min-w-0 px-4 text-base font-normal"
               options={[
                 {
                   value: "",
@@ -876,7 +868,7 @@ function ArticlePlacePicker({
         ))}
       </div>
       {error && (
-        <p role="alert" className="mb-0 text-[14px]">
+        <p role="alert" className="mb-0 text-base">
           {tRelations("placeError")}
         </p>
       )}
@@ -948,7 +940,11 @@ export function ArticleEventsCard({
 
   return (
     <section aria-labelledby="event-mentions-heading" style={card}>
-      <h2 id="event-mentions-heading" style={cardTitle}>
+      <h2
+        className="type-panel-title"
+        id="event-mentions-heading"
+        style={cardTitle}
+      >
         {tRelations("eventsHeading")}
       </h2>
       <p style={cardHint}>{tRelations("eventsLead")}</p>
@@ -977,7 +973,7 @@ export function ArticleEventsCard({
         </div>
       ))}
       {!disabled && (
-        <div className="mt-4 grid gap-3 text-[14px]">
+        <div className="mt-4 grid gap-3 text-sm">
           <label>
             {tRelations("eventName")}
             <input
@@ -1101,7 +1097,7 @@ export function LanguageCard({
 
   return inline ? (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <span className="text-[14px] font-semibold text-(--t-ink-dim)">
+      <span className="text-sm font-semibold text-(--t-ink-dim)">
         {w("articleLanguage")}
       </span>
       <SelectField
@@ -1116,7 +1112,7 @@ export function LanguageCard({
     </div>
   ) : (
     <section aria-labelledby="language-heading" style={card}>
-      <h2 id="language-heading" style={cardTitle}>
+      <h2 className="type-panel-title" id="language-heading" style={cardTitle}>
         {tUi("language")}
       </h2>
       <p style={cardHint}>
@@ -1160,7 +1156,7 @@ export function EditSummaryCard({
       aria-labelledby="summary-heading"
       style={embedded ? undefined : card}
     >
-      <h2 id="summary-heading" style={cardTitle}>
+      <h2 className="type-panel-title" id="summary-heading" style={cardTitle}>
         {tUi("what_changed")}{" "}
         <span style={{ color: "var(--tint-special-fg)", fontWeight: 500 }}>
           {tUi("required")}{" "}
@@ -1189,7 +1185,7 @@ export function EditSummaryCard({
           background: T.bg.deep,
           color: T.ink.base,
           fontFamily: T.font.sans,
-          fontSize: 16,
+          fontSize: "var(--type-body-size)",
           boxSizing: "border-box",
         }}
       />
@@ -1213,15 +1209,12 @@ export function HowEditingWorks({
       style={{ background: "var(--tint-national-bg)" }}
     >
       <p
-        className="m-0 mb-2 text-[16px] font-bold"
+        className="m-0 mb-2 text-base font-bold"
         style={{ color: "var(--tint-national-fg)" }}
       >
         {tUi("how_editing_works")}{" "}
       </p>
-      <p
-        className="m-0 text-[15px] leading-[1.6]"
-        style={{ color: T.ink.base }}
-      >
+      <p className="m-0 text-base leading-[1.6]" style={{ color: T.ink.base }}>
         {publishesDirectly
           ? tUi(
               "editors_review_every_change_before_its_published_as_an_editor_your_approved_changes_go_live_at_once"

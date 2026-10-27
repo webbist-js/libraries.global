@@ -249,7 +249,7 @@ function ErrorSummary({
     >
       <p
         id="drive-errors-title"
-        className="m-0 flex items-center gap-1.5 text-[15px] font-semibold"
+        className="m-0 flex items-center gap-1.5 text-base font-semibold"
         style={{ color: T.accent.danger }}
       >
         <Icon aria-hidden="true" icon="mdi:alert-circle-outline" width={18} />
@@ -257,7 +257,7 @@ function ErrorSummary({
           ? `Fix this before ${verb}`
           : `Fix these ${errors.length} things before ${verb}`}
       </p>
-      <ul className="m-0 flex flex-col gap-1 pl-5 text-[15px]">
+      <ul className="m-0 flex flex-col gap-1 pl-5 text-base">
         {errors.map((e, i) => (
           <li key={`${e.field ?? "drive"}-${i}`} style={{ color: T.ink.base }}>
             {e.field ? (
@@ -326,12 +326,12 @@ function ProposalSent() {
         id="drive-sent"
         ref={ref}
         tabIndex={-1}
-        className="m-0 outline-none"
+        className="type-h2 m-0 outline-none"
         style={cardTitle}
       >
         Thanks. We’ve got your proposal.
       </h2>
-      <p className="m-0 text-[16px] leading-[1.6]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base leading-[1.6]" style={{ color: T.ink.dim }}>
         A moderator will review it. You’ll get an email when it’s decided.
       </p>
       <div className="mt-1 flex flex-wrap gap-2.5">
@@ -839,7 +839,7 @@ export function DriveBuilder({
             border: "none",
             padding: 0,
             fontFamily: T.font.sans,
-            fontSize: 15,
+            fontSize: "var(--type-body-size)",
           }}
         >
           {problems.length === 1
@@ -882,7 +882,7 @@ export function DriveBuilder({
                   border: "none",
                   padding: 0,
                   fontFamily: T.font.sans,
-                  fontSize: 15,
+                  fontSize: "var(--type-body-size)",
                 }}
               >
                 Start again instead
@@ -1062,7 +1062,7 @@ export function DriveBuilder({
           >
             <p
               id="drive-record-hint"
-              className="mt-2 mb-0 text-[14px]"
+              className="mt-2 mb-0 text-sm"
               style={{ color: T.ink.dim }}
             >
               A record is done once it reaches this.
@@ -1078,9 +1078,7 @@ export function DriveBuilder({
       </Step>
 
       <section className="grid gap-4 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
-        <h2 className="m-0 font-serif text-2xl">
-          {tUi("drive_conversations")}
-        </h2>
+        <h2 className="type-h2 m-0">{tUi("drive_conversations")}</h2>
         <DriveDiscussionOptions
           driveId={drive?.documentId}
           value={state.discussions}
@@ -1118,7 +1116,7 @@ export function DriveBuilder({
                 return (
                   <li
                     key={`${p.level}:${p.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3.5 text-[14px]"
+                    className="inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3.5 text-sm"
                     style={{ background: T.accent.chip }}
                   >
                     <span
@@ -1157,12 +1155,12 @@ export function DriveBuilder({
               })}
             </ul>
           ) : (
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               No places yet. A library in any place you add is in the drive.
             </p>
           )}
           {listCount > 0 && state.places.length > 0 ? (
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               Your list of libraries replaces these places.
             </p>
           ) : null}
@@ -1299,7 +1297,7 @@ export function DriveBuilder({
             />
             {unknownLibraries.length > 0 && !errorOf("libraries") ? (
               <p
-                className="mt-2 mb-0 text-[14px]"
+                className="mt-2 mb-0 text-sm"
                 style={{ color: T.accent.danger }}
               >
                 Not found: {unknownLibraries.join(", ")}.
@@ -1347,12 +1345,12 @@ export function DriveBuilder({
                   />
                   <span className="flex min-w-0 flex-col">
                     <span
-                      className="text-[15px] font-semibold"
+                      className="text-base font-semibold"
                       style={{ color: T.ink.base }}
                     >
                       {c.title}
                     </span>
-                    <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                    <span className="text-sm" style={{ color: T.ink.dim }}>
                       {c.hint}
                     </span>
                   </span>
@@ -1471,8 +1469,8 @@ export function DriveBuilder({
             onChange={(e) => write("title", { title: e.target.value })}
             style={{
               ...styleOf("title"),
-              fontFamily: T.font.serif,
-              fontSize: 19,
+              fontFamily: T.font.sans,
+              fontSize: "var(--type-body-large-size)",
             }}
             aria-describedby={describedBy(
               "title",
@@ -1531,7 +1529,7 @@ export function DriveBuilder({
               <li key={i} className="flex items-center gap-2">
                 <span
                   aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-[14px] font-bold"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold"
                   style={{
                     background: T.accent.chip,
                     color: T.accent.primaryHover,
@@ -1583,7 +1581,7 @@ export function DriveBuilder({
             <button
               type="button"
               onClick={redraft}
-              className="cursor-pointer text-[14px] font-semibold underline underline-offset-[3px]"
+              className="cursor-pointer text-sm font-semibold underline underline-offset-[3px]"
               style={{
                 ...linkStyle,
                 background: "none",
@@ -1648,7 +1646,7 @@ export function DriveBuilder({
           >
             <p
               id="drive-runs-hint"
-              className="mt-2 mb-0 text-[14px]"
+              className="mt-2 mb-0 text-sm"
               style={{ color: T.ink.dim }}
             >
               {closes ? (
@@ -1681,7 +1679,7 @@ export function DriveBuilder({
           >
             <p
               id="drive-goal-hint"
-              className="mt-2 mb-0 text-[14px]"
+              className="mt-2 mb-0 text-sm"
               style={{ color: T.ink.dim }}
             >
               {goalHint(state.goalPercent, counts)}
@@ -1781,11 +1779,11 @@ export function DriveBuilder({
         className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[24px] px-5 py-4 sm:px-6"
         style={cardStyle}
       >
-        <div className="flex min-w-0 flex-col gap-1 text-[15px]">
+        <div className="flex min-w-0 flex-col gap-1 text-base">
           {status}
           <p
             aria-live="polite"
-            className="m-0 text-[14px]"
+            className="m-0 text-sm"
             style={{ color: T.ink.dim }}
           >
             {draftMessage ?? ""}
@@ -1796,7 +1794,7 @@ export function DriveBuilder({
             <button
               type="button"
               onClick={saveDraft}
-              className="inline-flex cursor-pointer items-center rounded-full px-5 py-3 text-[15px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+              className="inline-flex cursor-pointer items-center rounded-full px-5 py-3 text-base font-semibold transition-colors hover:bg-(--t-bg-surface)"
               style={{ ...secondaryStyle, fontFamily: T.font.sans }}
             >
               Save draft

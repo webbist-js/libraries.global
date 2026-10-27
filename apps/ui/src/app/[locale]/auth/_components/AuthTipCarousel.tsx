@@ -41,14 +41,16 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
             background: T.accent.chip,
             color: T.accent.primary,
             borderRadius: "999px",
-            fontSize: "14px",
+            fontSize: "var(--type-body-small-size)",
             fontWeight: 600,
           }}
         >
           <Icon icon="mdi:lightbulb-outline" width={16} aria-hidden="true" />
           {tUi("tip")}
         </span>
-        <span style={{ fontSize: "14px", color: T.ink.dim }}>
+        <span
+          style={{ fontSize: "var(--type-body-small-size)", color: T.ink.dim }}
+        >
           {index + 1} of {tips.length}
         </span>
       </div>
@@ -64,7 +66,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
           >
             <p
               style={{
-                fontFamily: T.font.serif,
+                fontFamily: T.font.sans,
                 fontSize: "24px",
                 fontWeight: 400,
                 lineHeight: 1.15,
@@ -77,7 +79,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
             <p
               style={{
                 marginTop: "12px",
-                fontSize: "15px",
+                fontSize: "var(--type-body-size)",
                 lineHeight: 1.6,
                 color: T.ink.dim,
               }}

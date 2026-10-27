@@ -265,7 +265,7 @@ function WidgetMapPane({
           aria-label={t("Selected library")}
         >
           <strong>{picked.name}</strong>
-          <p className="mt-1 text-sm">{picked.address}</p>
+          <p className="mt-1 text-base">{picked.address}</p>
           <Button
             variant="link"
             className="min-h-11 px-0"

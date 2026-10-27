@@ -182,7 +182,7 @@ export function StaffDrawer() {
       title={library.name}
       eyebrow={
         <span
-          className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[14px] font-semibold"
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold"
           style={{
             background: T.bg.deep,
             borderColor: T.border.line,
@@ -212,7 +212,7 @@ export function StaffDrawer() {
               />
               <span className="sr-only">{tUi("library")}</span>
               <select
-                className="min-h-12 w-full min-w-0 appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-[15px] font-semibold"
+                className="min-h-12 w-full min-w-0 appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-base font-semibold"
                 onChange={(event) => setSelected(event.target.value)}
                 style={{
                   background: T.bg.deep,
@@ -236,7 +236,7 @@ export function StaffDrawer() {
               />
             </label>
           ) : (
-            <p className="m-0 flex flex-wrap items-center gap-2 text-[13px] text-(--t-ink-dim)">
+            <p className="m-0 flex flex-wrap items-center gap-2 text-sm text-(--t-ink-dim)">
               <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-(--t-ink-base)">
                 {library.role === "owner"
                   ? t("libraryOwner")
@@ -261,14 +261,14 @@ export function StaffDrawer() {
               />
               <div className="min-w-0 flex-1">
                 <p
-                  className="m-0 text-[15px] font-semibold"
+                  className="m-0 text-base font-semibold"
                   style={{ color: isLive ? T.accent.ok : T.ink.base }}
                 >
                   {isLive ? tUi("live_now") : "Not live"}
                 </p>
                 <p
                   aria-live="polite"
-                  className="m-0 text-[15px] leading-snug"
+                  className="m-0 text-base leading-snug"
                   style={{ color: T.ink.dim }}
                 >
                   {isLive && live?.currentStop
@@ -285,13 +285,13 @@ export function StaffDrawer() {
               {canGoLive ? (
                 <Link
                   href={mobileConsoleHref(id, locale)}
-                  className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-(--t-accent-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
                 >
                   {tUi("go_live")}
                 </Link>
               ) : (
                 <p
-                  className="m-0 max-w-[12ch] shrink-0 text-right text-[12px]"
+                  className="m-0 max-w-[12ch] shrink-0 text-right text-xs"
                   style={{ color: T.ink.dim }}
                 >
                   Live updates: ask an owner
@@ -318,7 +318,7 @@ export function StaffDrawer() {
       <div className="flex flex-col gap-4 px-5 py-4">
         {elsewhere ? (
           <p
-            className="m-0 flex items-start gap-2 rounded-[16px] px-3.5 py-3 text-[14px]"
+            className="m-0 flex items-start gap-2 rounded-[16px] px-3.5 py-3 text-sm"
             style={{
               background: NOTICE_TONES.info.bg,
               color: T.ink.base,
@@ -353,7 +353,7 @@ export function StaffDrawer() {
             {failed && !data ? (
               <p
                 role="status"
-                className="m-0 rounded-[14px] bg-(--t-bg-surface) px-3 py-2.5 text-[13px] leading-relaxed text-(--t-ink-dim)"
+                className="m-0 rounded-[14px] bg-(--t-bg-surface) px-3 py-2.5 text-sm leading-relaxed text-(--t-ink-dim)"
               >
                 {t("staffUnavailable")}
               </p>
@@ -365,15 +365,15 @@ export function StaffDrawer() {
               >
                 <span
                   aria-hidden
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-[17px] font-semibold tabular-nums"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-base font-semibold tabular-nums"
                 >
                   {data.suggestions}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] leading-snug font-semibold">
+                  <span className="block text-sm leading-snug font-semibold">
                     {t("suggestedChanges", { count: data.suggestions })}
                   </span>
-                  <span className="mt-0.5 block text-[12px] leading-snug text-[#d1cedd]">
+                  <span className="mt-0.5 block text-xs leading-snug text-[#d1cedd]">
                     {t("reviewBeforeLive")}
                   </span>
                 </span>
@@ -385,7 +385,7 @@ export function StaffDrawer() {
                 />
               </Link>
             ) : (
-              <p className="m-0 flex items-center gap-2 rounded-[12px] bg-(--t-bg-surface) px-3 py-2.5 text-[12px] text-(--t-ink-dim)">
+              <p className="m-0 flex items-center gap-2 rounded-[12px] bg-(--t-bg-surface) px-3 py-2.5 text-xs text-(--t-ink-dim)">
                 <Icon
                   aria-hidden
                   icon={
@@ -485,7 +485,7 @@ export function StaffDrawer() {
             />
           ) : null}
           {!teamCovered || !trafficCovered ? (
-            <p className="m-0 mt-2 border-t border-(--t-border-line) pt-2 text-[12px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 mt-2 border-t border-(--t-border-line) pt-2 text-xs leading-relaxed text-(--t-ink-dim)">
               {t("teamAccess")}
             </p>
           ) : null}
@@ -498,7 +498,7 @@ export function StaffDrawer() {
             <Link
               href="/community"
               onClick={closeStaffDrawer}
-              className="inline-flex min-h-8 shrink-0 items-center text-[12px] font-semibold text-(--t-accent-primary) underline underline-offset-4"
+              className="inline-flex min-h-8 shrink-0 items-center text-xs font-semibold text-(--t-accent-primary) underline underline-offset-4"
             >
               {tUi("all_drives")}
             </Link>
@@ -523,7 +523,7 @@ export function StaffDrawer() {
                 ))}
               </div>
             ) : (
-              <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+              <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
                 {data
                   ? t("noLibraryDrive")
                   : failed

@@ -41,7 +41,7 @@ export const authInputStyle: CSSProperties = {
   border: `1px solid ${T.border.hi}`,
   background: T.bg.surface,
   color: T.ink.base,
-  fontSize: "16px",
+  fontSize: "var(--type-body-size)",
   fontFamily: T.font.sans,
   boxSizing: "border-box",
 }
@@ -138,12 +138,8 @@ export function AuthHeading({
         </div>
       )}
       <h1
+        className="type-page-compact"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "clamp(2.5rem, 4.2vw, 3.5rem)",
-          fontWeight: 500,
-          letterSpacing: "-0.025em",
-          lineHeight: 1.02,
           color: T.ink.base,
           margin: 0,
         }}
@@ -154,7 +150,7 @@ export function AuthHeading({
       <p
         style={{
           marginTop: "14px",
-          fontSize: "16px",
+          fontSize: "var(--type-body-size)",
           lineHeight: 1.55,
           color: T.ink.dim,
         }}
@@ -197,7 +193,7 @@ export function AuthField({
           htmlFor={id}
           style={{
             fontFamily: T.font.sans,
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
             fontWeight: 600,
             color: T.ink.base,
           }}
@@ -226,7 +222,7 @@ export function FieldError({ id, message }: { id: string; message?: string }) {
         alignItems: "center",
         gap: "6px",
         marginTop: "6px",
-        fontSize: "14px",
+        fontSize: "var(--type-body-small-size)",
         color: T.accent.danger,
       }}
     >
@@ -279,7 +275,7 @@ const pillBase: CSSProperties = {
   height: "52px",
   borderRadius: "999px",
   fontFamily: T.font.sans,
-  fontSize: "16px",
+  fontSize: "var(--type-body-size)",
   fontWeight: 600,
   display: "flex",
   alignItems: "center",
@@ -388,7 +384,7 @@ export function AuthCheckbox({
         alignItems: "flex-start",
         gap: "12px",
         cursor: "pointer",
-        fontSize: "15px",
+        fontSize: "var(--type-body-size)",
         lineHeight: 1.5,
         color: T.ink.base,
       }}
@@ -409,7 +405,11 @@ export function AuthCheckbox({
         {label}
         {hint && (
           <span
-            style={{ display: "block", fontSize: "14px", color: T.ink.dim }}
+            style={{
+              display: "block",
+              fontSize: "var(--type-body-small-size)",
+              color: T.ink.dim,
+            }}
           >
             {hint}
           </span>
@@ -435,7 +435,7 @@ export function AuthStatusMessage({ status }: { status: AuthStatus }) {
             alignItems: "flex-start",
             gap: "8px",
             marginTop: "12px",
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
             lineHeight: 1.5,
             color: status.tone === "error" ? T.accent.danger : T.accent.ok,
           }}
@@ -463,7 +463,7 @@ export function AuthNote({ children }: { children: ReactNode }) {
     <p
       style={{
         textAlign: "center",
-        fontSize: "14px",
+        fontSize: "var(--type-body-small-size)",
         lineHeight: 1.55,
         color: T.ink.dim,
       }}
@@ -514,7 +514,7 @@ export function PasswordStrengthMeter({
         aria-live="polite"
         style={{
           marginTop: "8px",
-          fontSize: "14px",
+          fontSize: "var(--type-body-small-size)",
           lineHeight: 1.5,
           color: T.ink.dim,
         }}
@@ -541,7 +541,9 @@ export function AuthDivider() {
         aria-hidden="true"
         style={{ flex: 1, height: "1px", background: T.border.line }}
       />
-      <span style={{ fontSize: "15px", color: T.ink.dim }}>or</span>
+      <span style={{ fontSize: "var(--type-body-size)", color: T.ink.dim }}>
+        or
+      </span>
       <span
         aria-hidden="true"
         style={{ flex: 1, height: "1px", background: T.border.line }}
@@ -564,7 +566,7 @@ export function AuthSwitchPrompt({
       style={{
         textAlign: "center",
         marginTop: "18px",
-        fontSize: "16px",
+        fontSize: "var(--type-body-size)",
         color: T.ink.dim,
       }}
     >
@@ -596,7 +598,7 @@ export function AuthInboxHint({
       <p
         style={{
           marginBottom: "8px",
-          fontSize: "15px",
+          fontSize: "var(--type-body-size)",
           fontWeight: 600,
           color: T.ink.base,
         }}
@@ -623,10 +625,17 @@ export function AuthInboxHint({
           <Mail size={22} />
         </span>
         <div className="min-w-0" style={{ lineHeight: 1.45 }}>
-          <p style={{ fontSize: "14px", color: T.ink.dim }}>From {SITE_NAME}</p>
           <p
             style={{
-              fontSize: "15px",
+              fontSize: "var(--type-body-small-size)",
+              color: T.ink.dim,
+            }}
+          >
+            From {SITE_NAME}
+          </p>
+          <p
+            style={{
+              fontSize: "var(--type-body-size)",
               fontWeight: 600,
               color: T.ink.base,
               overflowWrap: "anywhere",
@@ -634,7 +643,14 @@ export function AuthInboxHint({
           >
             {subject}
           </p>
-          <p style={{ fontSize: "14px", color: T.ink.dim }}>{detail}</p>
+          <p
+            style={{
+              fontSize: "var(--type-body-small-size)",
+              color: T.ink.dim,
+            }}
+          >
+            {detail}
+          </p>
         </div>
       </div>
     </div>
@@ -652,7 +668,10 @@ export function AuthInlineLink({
   return (
     <GlobalLink
       href={href}
-      style={{ color: T.accent.primary, fontSize: "14px" }}
+      style={{
+        color: T.accent.primary,
+        fontSize: "var(--type-body-small-size)",
+      }}
       className={inlineLinkClassName}
     >
       {children}

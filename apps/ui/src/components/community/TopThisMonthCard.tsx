@@ -41,14 +41,14 @@ export function TopThisMonthCard({
       <div className="flex items-baseline justify-between gap-2">
         <h2
           id="top-month-heading"
-          className="m-0 text-[17px] font-bold"
+          className="type-panel-title m-0"
           style={{ color: T.ink.base }}
         >
           Top this month
         </h2>
         <GlobalLink
           href="/community/leaderboard"
-          className="text-[15px] font-semibold underline underline-offset-[3px]"
+          className="text-base font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
           {tUi("leaderboard")}
@@ -65,13 +65,13 @@ export function TopThisMonthCard({
                 className="flex items-center gap-2.5"
                 style={{ ...ROW_STYLE, color: T.ink.dim }}
               >
-                <span className="w-5 text-[15px] font-bold">{i + 1}</span>
+                <span className="w-5 text-base font-bold">{i + 1}</span>
                 <span
                   aria-hidden="true"
                   className="box-border size-8 shrink-0 rounded-full"
                   style={{ border: `2px dashed ${T.border.hi}` }}
                 />
-                <span className="flex-1 text-[15px]">Open spot</span>
+                <span className="flex-1 text-base">Open spot</span>
               </li>
             )
           }
@@ -86,19 +86,19 @@ export function TopThisMonthCard({
               style={ROW_STYLE}
             >
               <span
-                className="w-5 text-[15px] font-bold"
+                className="w-5 text-base font-bold"
                 style={{ color: T.ink.dim }}
               >
                 {entry.rank}
               </span>
               <span
                 aria-hidden="true"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
                 style={{ background: tint.bg, color: tint.fg }}
               >
                 {getInitials(entry)}
               </span>
-              <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
+              <span className="min-w-0 flex-1 truncate text-base font-semibold">
                 {entry.username ? (
                   <GlobalLink
                     href={`/profile/${entry.username}`}
@@ -112,7 +112,7 @@ export function TopThisMonthCard({
                 )}
               </span>
               <span
-                className="shrink-0 text-[14px] whitespace-nowrap"
+                className="shrink-0 text-sm whitespace-nowrap"
                 style={{ color: T.ink.dim }}
               >
                 {entry.periodPoints.toLocaleString("en-GB")} pts

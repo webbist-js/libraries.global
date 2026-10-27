@@ -111,7 +111,7 @@ function RailStatus({
       role="status"
       style={{
         fontFamily: T.font.sans,
-        fontSize: "15px",
+        fontSize: "var(--type-body-size)",
         color,
         margin: 0,
         display: "flex",
@@ -653,13 +653,8 @@ export function IndexRecordWizard({
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
               <h2
-                className="truncate"
+                className="type-h2 truncate"
                 style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "24px",
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
-                  lineHeight: 1.2,
                   color: T.ink.base,
                   margin: "0 0 6px",
                 }}
@@ -753,7 +748,7 @@ export function IndexRecordWizard({
                   }}
                 >
                   <p
-                    className="m-0 flex items-start gap-3 text-[15px] leading-[1.5]"
+                    className="m-0 flex items-start gap-3 text-base leading-[1.5]"
                     style={{ color: T.ink.dim }}
                   >
                     <Icon
@@ -780,7 +775,7 @@ export function IndexRecordWizard({
                   </p>
                   <Link
                     href={findHref}
-                    className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
+                    className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-muted-2)"
                     style={{
                       border: `1px solid ${T.border.hi}`,
                       background: T.bg.deep,
@@ -807,7 +802,7 @@ export function IndexRecordWizard({
                   </Notice>
                   {step === 3 && (
                     <p
-                      className="mt-3 mb-0 flex items-start gap-2 text-[14px]"
+                      className="mt-3 mb-0 flex items-start gap-2 text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       <Icon
@@ -879,7 +874,7 @@ export function IndexRecordWizard({
                       <span
                         style={{
                           color: T.ink.dim,
-                          fontSize: 14,
+                          fontSize: "var(--type-body-small-size)",
                           fontWeight: 400,
                         }}
                       >
@@ -906,9 +901,7 @@ export function IndexRecordWizard({
                   role="status"
                   className="mb-6 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5"
                 >
-                  <h2 className="m-0 text-lg font-semibold">
-                    {tSave("recoveryTitle")}
-                  </h2>
+                  <h2 className="type-h2 m-0">{tSave("recoveryTitle")}</h2>
                   <p className="mt-2 text-sm text-(--t-ink-dim)">
                     {tSave("recoveryLead")}
                   </p>
@@ -1037,7 +1030,7 @@ export function IndexRecordWizard({
                   <button
                     type="button"
                     onClick={goNext}
-                    className={`${primaryCtaSm} min-h-12 px-6 text-[16px]`}
+                    className={`${primaryCtaSm} min-h-12 px-6 text-base`}
                     style={{ border: "none", cursor: "pointer" }}
                   >
                     Next: {wizardStepCopy(nextStep, mobile, staff).label}
@@ -1053,7 +1046,7 @@ export function IndexRecordWizard({
                     onClick={submit}
                     disabled={isPending}
                     aria-busy={isPending}
-                    className={`${primaryCtaSm} min-h-12 px-6 text-[16px]`}
+                    className={`${primaryCtaSm} min-h-12 px-6 text-base`}
                     style={{
                       border: "none",
                       cursor: isPending ? "not-allowed" : "pointer",

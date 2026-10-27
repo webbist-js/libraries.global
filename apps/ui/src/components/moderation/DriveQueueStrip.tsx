@@ -19,10 +19,7 @@ export function DriveQueueStrip({
 
   return (
     <div className="flex flex-col gap-3 rounded-[24px] border border-(--t-palette-mint-bg) bg-(--t-palette-mint-soft) p-5">
-      <h2
-        className="m-0 font-serif text-[24px] leading-tight tracking-tight"
-        style={{ color: T.ink.base }}
-      >
+      <h2 className="type-h2 m-0" style={{ color: T.ink.base }}>
         Drives with work waiting
       </h2>
       <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
@@ -30,7 +27,7 @@ export function DriveQueueStrip({
           <li key={drive.documentId}>
             <Link
               href={`/contribute/moderation?category=libraries&drive=${encodeURIComponent(drive.documentId)}&status=pending`}
-              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-muted2)"
+              className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-muted2)"
               style={{
                 border: `1px solid ${T.border.hi}`,
                 background: T.bg.surface,

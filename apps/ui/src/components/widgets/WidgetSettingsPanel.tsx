@@ -121,7 +121,7 @@ function WidgetContentSettings(props: SettingsProps) {
             : null}
         </>
       ) : null}
-      <h3 className="border-b border-(--t-border-line) pb-3 text-sm font-semibold">
+      <h3 className="type-h3 border-b border-(--t-border-line) pb-3">
         Title & introduction
       </h3>
       <WidgetField label="Public title">
@@ -276,7 +276,7 @@ function WidgetAppearanceSettings(props: SettingsProps) {
         />
       </WidgetField>
       <div className="border-t border-(--t-border-line) pt-4">
-        <h3 className="text-base font-semibold">Branding</h3>
+        <h3 className="type-h3">Branding</h3>
         <Switch
           label="Hide Powered by Libraries Global"
           checked={draft.config.hidePowered}

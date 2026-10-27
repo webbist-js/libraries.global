@@ -35,11 +35,15 @@ function HelperList({
 
   return (
     <div className="flex flex-col gap-1">
-      <h3 id={headingId} className="sr-only" style={{ color: T.ink.dim }}>
+      <h3
+        id={headingId}
+        className="type-h3 sr-only"
+        style={{ color: T.ink.dim }}
+      >
         {label}
       </h3>
       {entries.length === 0 ? (
-        <p className="m-0 py-1.5 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 py-1.5 text-sm" style={{ color: T.ink.dim }}>
           {empty}
         </p>
       ) : (
@@ -62,19 +66,19 @@ function HelperList({
                 }}
               >
                 <span
-                  className="w-4 text-[12px] font-bold"
+                  className="w-4 text-xs font-bold"
                   style={{ color: T.ink.dim }}
                 >
                   {entry.rank}
                 </span>
                 <span
                   aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
                   style={{ background: tint.bg, color: tint.fg }}
                 >
                   {entry.username ? initialsOf(entry) : "·"}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                   {entry.username ? (
                     <GlobalLink
                       href={`/profile/${entry.username}`}
@@ -88,7 +92,7 @@ function HelperList({
                   )}
                 </span>
                 <span
-                  className="shrink-0 text-[12px] whitespace-nowrap"
+                  className="shrink-0 text-xs whitespace-nowrap"
                   style={{ color: T.ink.dim }}
                 >
                   {entry.credits.toLocaleString("en-GB")} accepted
@@ -136,11 +140,7 @@ export function DriveHelpers({
       }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2
-          id="drive-helpers-heading"
-          className="m-0 text-[27px] font-medium"
-          style={{ fontFamily: T.font.serif }}
-        >
+        <h2 id="drive-helpers-heading" className="type-h2 m-0">
           {t("helpersHeading")}
         </h2>
         {publicOnly ? null : (
@@ -176,7 +176,7 @@ export function DriveHelpers({
         {t("helpersRanked")}
       </p>
       {hidden > 0 ? (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           And {hidden} more who {hidden === 1 ? "keeps their" : "keep their"}{" "}
           activity private.
         </p>

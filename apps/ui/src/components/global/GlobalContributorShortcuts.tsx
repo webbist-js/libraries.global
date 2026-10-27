@@ -26,7 +26,7 @@ function MobileLink({ link }: { readonly link: ContributorLink }) {
   return (
     <GlobalLink
       href={link.href}
-      className="flex min-h-11 items-center justify-between gap-2 border-t px-1 text-[15px] font-semibold text-(--t-ink-base) no-underline"
+      className="flex min-h-11 items-center justify-between gap-2 border-t px-1 text-base font-semibold text-(--t-ink-base) no-underline"
       style={{ borderColor: T.border.divider }}
     >
       <span className="min-w-0 truncate">{link.label}</span>
@@ -58,12 +58,12 @@ function MobileTile({
       <summary className="flex min-h-[52px] cursor-pointer list-none items-center gap-2.5 [&::-webkit-details-marker]:hidden">
         <CardMonogram icon={card.icon} tint={card.tint} size={30} />
         <span
-          className="flex-1 text-[16px] font-bold"
+          className="flex-1 text-base font-bold"
           style={{ color: T.ink.base }}
         >
           {card.title}
         </span>
-        <span className="text-[13px]" style={{ color: T.ink.dim }}>
+        <span className="text-sm" style={{ color: T.ink.dim }}>
           {count}
           <span className="sr-only"> {count === 1 ? "link" : "links"}</span>
         </span>
@@ -116,15 +116,15 @@ function MobileShortcuts() {
     >
       <h2
         id={titleId}
-        className="m-0 mx-1 text-[24px] font-medium"
-        style={{ fontFamily: T.font.serif, color: T.ink.base }}
+        className="type-h2 m-0 mx-1"
+        style={{ color: T.ink.base }}
       >
         {tUi("contribute")}{" "}
       </h2>
       {menu.status === "signedOut" ? (
         <GlobalLink
           href="/auth/signin"
-          className="mx-1 mb-1 self-start rounded-full bg-(--t-accent-primary) px-4 py-2.5 text-[15px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+          className="mx-1 mb-1 self-start rounded-full bg-(--t-accent-primary) px-4 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
         >
           {tUi("sign_in_to_contribute")}{" "}
         </GlobalLink>
@@ -133,7 +133,7 @@ function MobileShortcuts() {
         <p
           role="status"
           aria-busy="true"
-          className="m-0 mx-1 text-[14px] font-semibold"
+          className="m-0 mx-1 text-sm font-semibold"
           style={{ color: T.ink.dim }}
         >
           Loading your shortcuts…
@@ -148,11 +148,11 @@ function MobileShortcuts() {
         />
       ))}
       <GlobalLink
-        href="/contribute/membership"
-        className="flex min-h-[52px] items-center gap-2.5 rounded-[16px] border px-3 text-[16px] font-bold text-(--t-ink-base) no-underline"
+        href={menu.plan ? "/profile/membership" : "/plans"}
+        className="flex min-h-[52px] items-center gap-2.5 rounded-[16px] border px-3 text-base font-bold text-(--t-ink-base) no-underline"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
-        {tUi("membership")}{" "}
+        {tUi(menu.plan ? "membership" : "plans_and_pricing")}{" "}
         {menu.plan ? (
           <span className="ml-auto">
             <PlanPill plan={menu.plan} />

@@ -60,7 +60,7 @@ export function LibraryNoticeBanners({
           <StatusBadge tone="info" icon="mdi:calendar-clock-outline">
             From {shortDate(n.from)} · {LIBRARY_NOTICE_LABELS[n.type]}
           </StatusBadge>
-          <p className="m-0 min-w-0 flex-1 text-[15px] leading-[1.5]">
+          <p className="m-0 min-w-0 flex-1 text-base leading-[1.5]">
             {n.message}
           </p>
         </div>

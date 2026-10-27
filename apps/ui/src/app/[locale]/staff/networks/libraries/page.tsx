@@ -80,7 +80,7 @@ export default async function ServiceStaffLibraries({
               key={row.documentId}
               className="rounded-xl border border-(--t-border-line) bg-white p-5"
             >
-              <h2 className="font-serif text-2xl">{row.name}</h2>
+              <h2 className="type-h2">{row.name}</h2>
               <Link className={STAFF_LINK} href={`/staff/${row.slug}`}>
                 Open Staff area
               </Link>

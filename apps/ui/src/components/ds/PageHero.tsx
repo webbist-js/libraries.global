@@ -16,7 +16,7 @@ import { SectionNavigation } from "./SectionNavigation"
  * optional slot (search, status) on the right. Don't hand-roll a hero — add a
  * prop here instead so every section stays in step.
  *
- * `title` accepts `*italic*` markup, rendered as indigo italic.
+ * `title` accepts `*italic*` markup, rendered as indigo italic on its own line.
  * `tabs` takes a `SectionTabs` row for sections with sub-pages.
  * `chips` adds pills after the eyebrow pill (a type tint, a status);
  * `meta` is one line under the title (operator, links, a plan chip).
@@ -159,13 +159,17 @@ export function PageHero({
                 className={[
                   "flex flex-wrap items-center gap-2",
                   centered ? "justify-center" : "",
-                  compact || staff ? "mb-3" : "mb-5",
+                  eyebrow && !back
+                    ? "hero-eyebrow"
+                    : compact || staff
+                      ? "mb-3"
+                      : "mb-5",
                 ].join(" ")}
               >
                 {back ? (
                   <Link
                     href={back.href}
-                    className="inline-flex min-h-11 items-center gap-1 rounded-full border py-1 pr-3 pl-2 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                    className="inline-flex min-h-11 items-center gap-1 rounded-full border py-1 pr-3 pl-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
                     style={{
                       background: T.bg.deep,
                       borderColor: T.border.line,
@@ -183,7 +187,7 @@ export function PageHero({
                   </Link>
                 ) : eyebrow ? (
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 text-[14px] font-semibold ${staff ? "py-1.5" : "py-1"}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 text-sm font-semibold ${staff ? "py-1.5" : "py-1"}`}
                     style={{
                       background: T.bg.deep,
                       borderColor: T.border.line,
@@ -215,21 +219,8 @@ export function PageHero({
             >
               {titleIcon ? <span className="shrink-0">{titleIcon}</span> : null}
               <h1
-                className="m-0 min-w-0 text-balance [overflow-wrap:anywhere]"
+                className={`m-0 min-w-0 text-balance [overflow-wrap:anywhere] ${displayTitle ? "type-display-band" : compact ? "type-page-compact" : "type-h1"}`}
                 style={{
-                  fontFamily: T.font.serif,
-                  fontSize: displayTitle
-                    ? "clamp(48px,6.5vw,88px)"
-                    : compact
-                      ? "clamp(32px,3.6vw,46px)"
-                      : staff
-                        ? "clamp(40px,5.8vw,80px)"
-                        : leadPlacement === "left"
-                          ? "clamp(48px,6.5vw,88px)"
-                          : "clamp(40px,5vw,68px)",
-                  fontWeight: 500,
-                  lineHeight: 1.04,
-                  letterSpacing: "-0.02em",
                   color: T.ink.base,
                   whiteSpace: "pre-line",
                 }}
@@ -239,7 +230,7 @@ export function PageHero({
             </div>
             {meta ? (
               <div
-                className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 ${staff ? "text-[17px]" : "text-[15px]"} ${centered ? "justify-center" : ""}`}
+                className={`mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-base ${centered ? "justify-center" : ""}`}
                 style={{ color: T.ink.dim }}
               >
                 {meta}
@@ -247,7 +238,7 @@ export function PageHero({
             ) : null}
             {(centered || leadPlacement === "left") && lead ? (
               <p
-                className={`mt-6 mb-0 max-w-[56ch] text-[17px] leading-[1.6] ${centered ? "mx-auto" : ""}`}
+                className={`mt-6 mb-0 max-w-[56ch] text-base leading-[1.6] ${centered ? "mx-auto" : ""}`}
                 style={{ color: T.ink.dim }}
               >
                 {lead}
@@ -260,7 +251,7 @@ export function PageHero({
             <div className="flex flex-col gap-5">
               {!centered && leadPlacement === "right" && lead ? (
                 <p
-                  className="m-0 max-w-[52ch] text-[17px] leading-[1.6]"
+                  className="m-0 max-w-[52ch] text-base leading-[1.6]"
                   style={{ color: T.ink.dim }}
                 >
                   {lead}
@@ -306,7 +297,7 @@ function WorkspaceHero({
             </div>
           ) : null}
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-            <h1 className="m-0 min-w-0 font-serif text-[clamp(24px,2.4vw,32px)] leading-tight font-medium wrap-anywhere">
+            <h1 className="type-page-inline m-0 min-w-0 wrap-anywhere">
               {title}
             </h1>
             {lead ? (
@@ -397,7 +388,7 @@ export function PageHeroSkeleton({
 
 /**
  * Parse a hero title string that uses *word* markup for italic spans; every
- * span renders as an indigo italic em (the homepage hero's emphasis).
+ * span renders as an indigo italic em on its own line.
  *
  * Example: "Field notes *from the stacks.*"
  */
@@ -412,9 +403,8 @@ export function parseHeroText(
       return (
         <em
           key={i}
+          className="type-heading-accent"
           style={{
-            fontStyle: "italic",
-            fontWeight: 400,
             color: emphasisTone === "ink" ? T.ink.base : T.accent.primary,
           }}
         >

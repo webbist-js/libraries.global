@@ -1,6 +1,6 @@
 /**
  * The one source of plan copy and prices for the Membership page
- * (/contribute/membership), the Atlas plans sheet and the account menu.
+ * (/plans), the Atlas plans sheet and the account menu.
  * Individual amounts are the agreed tax-inclusive GBP base prices. Checkout
  * reads the owned Stripe catalogue and confirms the actual recurring charge.
  * No other code may hard-code an amount.
@@ -125,7 +125,7 @@ export const PRO_FEATURE_COPY: Record<
  */
 export const LIBRARY_HISTORY_UPGRADE = {
   text: "See what changed, field by field, with Supporter or Pro.",
-  href: "/contribute/membership",
+  href: "/plans",
 } as const
 
 /** A plan's features, read from the resolver so the copy can't drift from it. */
@@ -253,7 +253,7 @@ export const PLANS: readonly PlanCard[] = [
     cta: {
       kind: "signup",
       label: "Create a free account",
-      href: "/auth/register?callbackUrl=/contribute/membership",
+      href: "/auth/register?callbackUrl=/plans",
     },
   },
   {

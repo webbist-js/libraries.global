@@ -35,7 +35,7 @@ export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
           style={{ color: T.accent.primary }}
           width={16}
         />
-        <p className="m-0 flex-1 text-[14px] font-semibold">
+        <p className="m-0 flex-1 text-sm font-semibold">
           {m("copy.roadmap")}{" "}
           <span className="font-medium" style={{ color: T.ink.dim }}>
             {soon.length}
@@ -48,7 +48,7 @@ export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
             expanded: open ? "yes" : "no",
             plan: plan.name,
           })}
-          className="min-h-11 text-[13.5px] font-semibold underline underline-offset-[3px] focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="min-h-11 text-sm font-semibold underline underline-offset-[3px] focus-visible:outline-2 focus-visible:outline-offset-2"
           onClick={() => setOpen((value) => !value)}
           style={{ color: T.accent.primary }}
           type="button"
@@ -58,14 +58,14 @@ export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
       </div>
       {summary ? (
         <p
-          className="m-0 mt-1.5 text-[13.5px] leading-[1.5]"
+          className="m-0 mt-1.5 text-sm leading-[1.5]"
           style={{ color: T.ink.dim }}
         >
           {summary}
         </p>
       ) : null}
       <ul
-        className="m-0 mt-3 list-none space-y-1.5 p-0 text-[13.5px]"
+        className="m-0 mt-3 list-none space-y-1.5 p-0 text-sm"
         hidden={!open}
         id={listId}
         style={{ color: T.ink.dim }}

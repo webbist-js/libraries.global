@@ -22,7 +22,7 @@ import {
 import type { PlaceGapInsight } from "./PlaceInsights"
 
 const LINK =
-  "inline-flex min-h-[44px] items-center rounded-md text-[14px] font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
+  "inline-flex min-h-[44px] items-center rounded-md text-sm font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
 const TINTS: Record<string, { bg: string; fg: string }> = {
   indigo: { bg: "var(--t-accent-chip)", fg: T.accent.primary },
   green: { bg: "#E6F3EE", fg: "#287456" },
@@ -122,7 +122,7 @@ export function PlaceContributionCard({
     >
       <div className="min-w-0">
         <p
-          className="m-0 mb-3 text-[14px] font-semibold"
+          className="m-0 mb-3 text-sm font-semibold"
           style={{ color: T.accent.primary }}
         >
           {ask.eyebrow}
@@ -130,10 +130,8 @@ export function PlaceContributionCard({
         <h2
           id={`${id}-title`}
           aria-live="polite"
-          className="m-0 max-w-[28ch] text-[clamp(28px,3vw,38px)] leading-[1.1] tracking-[-.015em] text-balance"
+          className="type-h2 m-0 max-w-[28ch] text-balance"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
             color: T.ink.base,
           }}
         >
@@ -147,15 +145,12 @@ export function PlaceContributionCard({
         </p>
         <GlobalLink
           href={ask.href}
-          className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-center text-[15px] font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:w-auto"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-center text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:w-auto"
         >
           {ask.label}
         </GlobalLink>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-          <p
-            className="m-0 text-[14px] leading-[1.6]"
-            style={{ color: T.ink.dim }}
-          >
+          <p className="m-0 text-sm leading-[1.6]" style={{ color: T.ink.dim }}>
             {ask.context}
           </p>
           {canChoose ? (
@@ -186,7 +181,7 @@ export function PlaceContributionCard({
             </label>
             <select
               id={`${id}-place`}
-              className="min-h-[44px] w-full rounded-xl border bg-white px-3 text-[15px] focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+              className="min-h-[44px] w-full rounded-xl border bg-white px-3 text-base focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
               style={{ borderColor: T.border.hi }}
               value={
                 level === "region" ? siblingSlug || place.region : chosenSlug
@@ -224,7 +219,7 @@ export function PlaceContributionCard({
           </div>
         ) : null}
         {mounted && !signedIn ? (
-          <p className="mt-3 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
             A free account is needed to contribute.
             {ask.kind === "add"
               ? " Sign in to open the form; your selected place is kept."
@@ -245,7 +240,7 @@ export function PlaceContributionCard({
             </span>
             <div className="min-w-0">
               <p
-                className="m-0 text-[14px] leading-[1.6]"
+                className="m-0 text-sm leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
                 Add what you know with a source. A reviewer checks it, and
@@ -272,7 +267,7 @@ export function PlaceContributionCard({
                   What do I need?
                 </summary>
                 <p
-                  className="mt-1 mb-0 max-w-[60ch] text-[14px] leading-[1.6]"
+                  className="mt-1 mb-0 max-w-[60ch] text-sm leading-[1.6]"
                   style={{ color: T.ink.dim }}
                 >
                   {requirement}
@@ -288,10 +283,7 @@ export function PlaceContributionCard({
           className="flex min-w-0 flex-col rounded-[20px] border p-5 sm:p-6"
           style={{ background: T.bg.surface, borderColor: T.border.line }}
         >
-          <h3
-            id={`${id}-alternatives`}
-            className="m-0 mb-3 text-[16px] font-bold"
-          >
+          <h3 id={`${id}-alternatives`} className="type-small-heading m-0 mb-3">
             {baseAsk.kind === "gap"
               ? "Other ways to help in "
               : "Improve existing libraries in "}
@@ -318,19 +310,19 @@ export function PlaceContributionCard({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
-                        className="block text-[15px] leading-[1.4] font-semibold"
+                        className="block text-base leading-[1.4] font-semibold"
                         style={{ color: T.ink.base }}
                       >
                         {copy.title}
                       </span>
                       <span
-                        className="mt-1 block text-[14px] leading-[1.5]"
+                        className="mt-1 block text-sm leading-[1.5]"
                         style={{ color: T.ink.dim }}
                       >
                         {copy.benefit}
                       </span>
                       <span
-                        className="mt-1 block text-[13px] leading-[1.5]"
+                        className="mt-1 block text-sm leading-[1.5]"
                         style={{ color: T.ink.dim }}
                       >
                         {total
@@ -350,12 +342,12 @@ export function PlaceContributionCard({
             })}
           </ul>
           <p
-            className="mt-auto mb-0 border-t pt-4 text-[14px] leading-[1.7]"
+            className="mt-auto mb-0 border-t pt-4 text-sm leading-[1.7]"
             style={{ borderColor: T.border.line, color: T.ink.dim }}
           >
             You don’t need to be a librarian.{" "}
             <GlobalLink
-              href="/contribute/membership"
+              href="/plans"
               className={LINK}
               style={{ color: T.accent.primary }}
             >
@@ -364,13 +356,10 @@ export function PlaceContributionCard({
           </p>
         </nav>
       ) : (
-        <p
-          className="m-0 text-[14px] leading-[1.7]"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm leading-[1.7]" style={{ color: T.ink.dim }}>
           You don’t need to be a librarian.{" "}
           <GlobalLink
-            href="/contribute/membership"
+            href="/plans"
             className={LINK}
             style={{ color: T.accent.primary }}
           >

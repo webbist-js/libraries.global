@@ -4,5 +4,7 @@
 build/
 node_modules/
 .env
+# Strapi Enterprise credentials are injected at runtime.
+[Ll][Ii][Cc][Ee][Nn][Ss][Ee].[Tt][Xx][Tt]
 data/
 backup/

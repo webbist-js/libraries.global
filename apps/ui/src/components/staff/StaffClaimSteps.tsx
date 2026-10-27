@@ -15,14 +15,14 @@ export function StaffClaimSteps() {
         >
           <span
             aria-hidden="true"
-            className="mb-3 inline-flex size-7 items-center justify-center rounded-full bg-(--t-accent-primary)/10 text-[14px] font-semibold text-(--t-accent-primary)"
+            className="mb-3 inline-flex size-7 items-center justify-center rounded-full bg-(--t-accent-primary)/10 text-sm font-semibold text-(--t-accent-primary)"
           >
             {index + 1}
           </span>
-          <h3 className="m-0 text-[15px] font-semibold text-(--t-ink-base)">
+          <h3 className="type-small-heading m-0 text-(--t-ink-base)">
             {t(`claimStep${step}`)}
           </h3>
-          <p className="mt-2 mb-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
             {t(`claimStep${step}Detail`)}
           </p>
         </li>

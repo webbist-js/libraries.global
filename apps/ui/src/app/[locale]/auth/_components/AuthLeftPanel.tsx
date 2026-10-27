@@ -170,7 +170,7 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
             background: T.bg.deep,
             border: `1px solid ${T.border.line}`,
             borderRadius: "999px",
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
             fontWeight: 500,
             color: T.ink.base,
           }}
@@ -187,11 +187,8 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
         <p
           style={{
             marginTop: "20px",
-            fontFamily: T.font.serif,
-            fontSize: "clamp(3rem, 5.4vw, 5.5rem)",
-            fontWeight: 500,
-            lineHeight: 1,
-            letterSpacing: "-0.03em",
+            font: T.type.displayBand,
+            letterSpacing: "var(--type-display-tracking)",
             color: T.ink.base,
           }}
         >
@@ -201,7 +198,7 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
         <p
           style={{
             marginTop: "24px",
-            fontSize: "17px",
+            fontSize: "var(--type-body-size)",
             lineHeight: 1.65,
             color: T.ink.dim,
             maxWidth: "48ch",
@@ -242,7 +239,7 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
     >
       <span
         style={{
-          fontSize: "14px",
+          fontSize: "var(--type-body-small-size)",
           fontWeight: 600,
           color: T.accent.primary,
         }}
@@ -252,7 +249,7 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
       <span
         style={{
           marginTop: "8px",
-          fontFamily: T.font.serif,
+          fontFamily: T.font.sans,
           fontSize: "24px",
           lineHeight: 1.15,
           letterSpacing: "-0.01em",
@@ -264,7 +261,7 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
       <span
         className="mt-auto flex items-center gap-1.5 pt-8"
         style={{
-          fontSize: "15px",
+          fontSize: "var(--type-body-size)",
           fontWeight: 600,
           color: T.accent.primary,
         }}
@@ -306,7 +303,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
               className="flex size-9 items-center justify-center"
               style={{
                 borderRadius: "999px",
-                fontSize: "15px",
+                fontSize: "var(--type-body-size)",
                 fontWeight: 600,
                 ...(active && { background: T.accent.primary, color: "#fff" }),
                 ...(done && {
@@ -329,7 +326,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
             <div>
               <p
                 style={{
-                  fontSize: "16px",
+                  fontSize: "var(--type-body-size)",
                   fontWeight: 600,
                   color: T.ink.base,
                 }}
@@ -340,7 +337,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
               <p
                 style={{
                   marginTop: "4px",
-                  fontSize: "14px",
+                  fontSize: "var(--type-body-small-size)",
                   lineHeight: 1.5,
                   color: T.ink.dim,
                 }}

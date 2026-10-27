@@ -158,9 +158,9 @@ describe("GlobalContributeMenu", () => {
     )
     expect(
       within(nav)
-        .getByRole("link", { name: /Membership/ })
+        .getByRole("link", { name: /Plans and pricing/ })
         .getAttribute("href")
-    ).toBe("/contribute/membership")
+    ).toBe("/plans")
     expect(within(nav).queryByText(/^Plan:/)).toBeNull()
   })
 
@@ -317,6 +317,77 @@ describe("GlobalContributeMenu", () => {
     await waitFor(() =>
       expect(trigger.getAttribute("aria-expanded")).toBe("false")
     )
+  })
+
+  it("keeps every shortcut when library, Team, publishing and review roles combine", async () => {
+    session.data = {
+      user: {
+        id: "busy-organiser",
+        plan: "pro",
+        capabilities: [
+          "staff.area",
+          "docs.directEdit",
+          "journal.directEdit",
+          "moderate.queue",
+          "drives.manage",
+        ],
+        staffLibraries: STAFF_LIBRARIES,
+        teams: [
+          {
+            id: "team1",
+            name: "Test Team",
+            slug: "test-team",
+            role: "organiser",
+            libraryCount: 2,
+          },
+        ],
+        moderationScopes: [{ queue: "all", locale: null }],
+      },
+    }
+    responses.set("/api/drives/featured", { data: null })
+    responses.set("/api/moderation/summary", { data: [] })
+    responses.set("/api/contribute/standing", { pendingCount: 0 })
+    renderMenu()
+    const { nav, trigger } = await openMenu()
+    fireEvent.change(within(nav).getByLabelText("Library"), {
+      target: { value: "lib1" },
+    })
+    const destinations = within(nav)
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"))
+
+    expect(destinations).toEqual(
+      expect.arrayContaining([
+        "/contribute",
+        "/staff/nailsea-library/edit",
+        "/staff/nailsea-library/events",
+        "/staff/teams",
+        "/staff/teams/api",
+        "/staff/teams/billing",
+        "/contribute/knowledge/new?type=knowledge",
+        "/contribute/knowledge",
+        "/contribute/knowledge/new?type=journal",
+        "/contribute/knowledge?type=journal",
+        "/contribute/moderation",
+        "/contribute/moderation/suggestions",
+        "/contribute/index/new",
+        "/contribute/submissions",
+        "/community",
+        "/community/drives/new",
+        "/profile/membership",
+      ])
+    )
+    expect(within(nav).getByLabelText("Library")).toBeTruthy()
+    expect(document.activeElement).toBe(
+      within(nav).getByRole("link", { name: "Contribute hub" })
+    )
+    expect(screen.getByRole("dialog", { name: "Contribute menu" })).toBeTruthy()
+
+    fireEvent.click(within(nav).getByRole("button", { name: "Close menu" }))
+    await waitFor(() =>
+      expect(trigger.getAttribute("aria-expanded")).toBe("false")
+    )
+    expect(document.activeElement).toBe(trigger)
   })
 
   it.each([0, null])(

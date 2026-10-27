@@ -70,7 +70,7 @@ export function SearchField({
         placeholder={placeholder}
         className={cn(
           "min-w-0 flex-1 border-0 bg-transparent outline-none placeholder:text-(--t-ink-faint) [&::-webkit-search-cancel-button]:hidden",
-          size === "md" ? "text-[16px]" : "text-[14px]"
+          size === "md" ? "text-base" : "text-sm"
         )}
         style={{ color: T.ink.base, fontFamily: T.font.sans }}
         {...inputProps}
@@ -80,7 +80,7 @@ export function SearchField({
           type="button"
           aria-label={tUi("clear_search")}
           onClick={onClear}
-          className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 text-[15px] leading-none"
+          className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 text-base leading-none"
           style={{ background: T.bg.muted, color: T.ink.dim }}
         >
           ×

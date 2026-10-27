@@ -34,7 +34,7 @@ export function AtlasLoading({
         />
         <span>
           <strong className="block">{tUi("loading_map")}</strong>
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             {listReady ? tUi("library_list_ready") : tUi("fetching_libraries")}
           </span>
         </span>
@@ -43,7 +43,7 @@ export function AtlasLoading({
         <button
           type="button"
           onClick={onOpenList}
-          className="inline-flex h-9 items-center gap-2 rounded-full border bg-white px-3.5 text-[14px] font-semibold"
+          className="inline-flex h-9 items-center gap-2 rounded-full border bg-white px-3.5 text-sm font-semibold"
           style={{ borderColor: T.border.hi }}
         >
           <Icon name="list" size={15} />
@@ -71,15 +71,12 @@ export function AtlasNoMatch({
       style={{ borderColor: T.border.hi }}
       role="status"
     >
-      <h2
-        className="m-0 text-[26px] leading-tight"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h2 className="type-h2 m-0">
         No libraries match{" "}
         {filterCount === 1 ? "this filter" : `all ${filterCount} filters`}
       </h2>
       <p
-        className="mt-2 mb-3.5 text-[15px] leading-normal"
+        className="mt-2 mb-3.5 text-base leading-normal"
         style={{ color: "#45435A" }}
       >
         {suggestions.length > 0
@@ -92,7 +89,7 @@ export function AtlasNoMatch({
             key={s.label}
             type="button"
             onClick={() => onApply(s)}
-            className="flex h-11 items-center justify-between rounded-full border bg-white px-4 text-[14px] font-semibold"
+            className="flex h-11 items-center justify-between rounded-full border bg-white px-4 text-sm font-semibold"
             style={{ borderColor: T.border.hi }}
           >
             {s.label}
@@ -105,7 +102,7 @@ export function AtlasNoMatch({
       <button
         type="button"
         onClick={onClear}
-        className="mt-3 text-[14px] font-semibold underline underline-offset-[3px]"
+        className="mt-3 text-sm font-semibold underline underline-offset-[3px]"
         style={{ color: "#3730A3" }}
       >
         Clear all filters
@@ -142,14 +139,14 @@ export function AtlasBanner({
         size={20}
         color={danger ? T.accent.danger : "#28496E"}
       />
-      <span className="flex-1 text-[15px] leading-snug">
+      <span className="flex-1 text-base leading-snug">
         <strong>{title}</strong> {body}
       </span>
       {action ? (
         <button
           type="button"
           onClick={action.onClick}
-          className="col-start-2 inline-flex min-h-11 shrink-0 items-center justify-self-start rounded-full border bg-white px-3.5 text-[14px] font-semibold"
+          className="col-start-2 inline-flex min-h-11 shrink-0 items-center justify-self-start rounded-full border bg-white px-3.5 text-sm font-semibold"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
           {action.label}
@@ -172,7 +169,7 @@ export function AtlasToast({
 
   return (
     <div
-      className="flex items-center gap-3 rounded-full border bg-white py-2 pr-2.5 pl-4 text-[14px] font-semibold"
+      className="flex items-center gap-3 rounded-full border bg-white py-2 pr-2.5 pl-4 text-sm font-semibold"
       style={{ borderColor: T.border.hi }}
       role="status"
     >
@@ -181,7 +178,7 @@ export function AtlasToast({
         <button
           type="button"
           onClick={action.onClick}
-          className="text-[14px] font-semibold underline underline-offset-[3px]"
+          className="text-sm font-semibold underline underline-offset-[3px]"
           style={{ color: "#3730A3" }}
         >
           {action.label}

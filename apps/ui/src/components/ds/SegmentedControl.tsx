@@ -46,7 +46,7 @@ export function SegmentedControl<V extends string>({
           return (
             <label
               key={option.value}
-              className={`inline-flex min-h-11 cursor-pointer flex-col items-center justify-center rounded-full font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-(--t-accent-primary) has-focus-visible:outline-solid ${size === "sm" ? "text-[13px]" : "text-[14px]"} ${layout === "equal" ? `min-w-0 gap-0.5 py-2 text-center leading-5 ${size === "sm" ? "px-1" : "px-2"}` : "px-4"}`}
+              className={`inline-flex min-h-11 cursor-pointer flex-col items-center justify-center rounded-full text-sm font-semibold has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-(--t-accent-primary) has-focus-visible:outline-solid ${layout === "equal" ? `min-w-0 gap-0.5 py-2 text-center leading-5 ${size === "sm" ? "px-1" : "px-2"}` : "px-4"}`}
               style={{
                 background: active ? T.bg.deep : undefined,
                 color: active ? T.accent.primary : T.ink.dim,
@@ -67,7 +67,7 @@ export function SegmentedControl<V extends string>({
               {option.label}
               {option.sub ? (
                 <span
-                  className="text-[12px] leading-tight font-normal"
+                  className="text-xs leading-tight font-normal"
                   style={{ color: active ? T.accent.primary : T.ink.dim }}
                 >
                   {option.sub}

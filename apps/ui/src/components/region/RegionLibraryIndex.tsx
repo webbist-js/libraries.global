@@ -58,7 +58,7 @@ import type { RegionLibrary } from "@/lib/strapi-api/content/server"
 
 const PAGE_SIZE = 24
 const ACTION_CLASS =
-  "inline-flex min-h-11 items-center gap-1.5 self-start rounded-full px-3 text-[13px] font-semibold"
+  "inline-flex min-h-11 items-center gap-1.5 self-start rounded-full px-3 text-sm font-semibold"
 
 /** A bounded, region-scoped version of the main library index. */
 export function RegionLibraryIndex({
@@ -268,7 +268,7 @@ export function RegionLibraryIndex({
         notices={source.notices}
       />
     ) : source && !Array.isArray(source.notices) ? (
-      <span className="text-[13px]" style={{ color: T.ink.dim }}>
+      <span className="text-sm" style={{ color: T.ink.dim }}>
         Current status unavailable
       </span>
     ) : undefined
@@ -316,7 +316,7 @@ export function RegionLibraryIndex({
               {mobile ? (
                 <GlobalLink
                   href={`${path}#stops`}
-                  className="inline-flex min-h-11 items-center text-[13px] underline"
+                  className="inline-flex min-h-11 items-center text-sm underline"
                 >
                   Stops and times
                 </GlobalLink>
@@ -365,7 +365,7 @@ export function RegionLibraryIndex({
             onClearAll={reset}
           />
           {featuredMatches > 0 ? (
-            <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               {featuredMatches === 1
                 ? "One matching national library is"
                 : `${featuredMatches} matching national libraries are`}{" "}
@@ -434,7 +434,7 @@ export function RegionLibraryIndex({
           ) : null}
           <GlobalLink
             href={result ? fullHref : findHref}
-            className="inline-flex min-h-11 items-center gap-2 text-[14px] font-semibold underline underline-offset-3"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold underline underline-offset-3"
             style={{ color: T.accent.primary }}
           >
             Open in the full library index <span aria-hidden="true">→</span>

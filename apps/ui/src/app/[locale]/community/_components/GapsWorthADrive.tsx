@@ -17,7 +17,7 @@ const GAP_LOOK: Record<
 }
 
 const PILL =
-  "inline-flex h-11 items-center gap-1.5 rounded-full border px-4 text-[15px] font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
+  "inline-flex h-11 items-center gap-1.5 rounded-full border px-4 text-base font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
 
 /** Every section a verify drive can confirm, for the stale row. */
 const STALE_SECTIONS = ["hours", "status", "address", "contact"] as const
@@ -63,17 +63,14 @@ export function GapsWorthADrive({ gaps }: { readonly gaps: DriveGap[] }) {
       <div>
         <h2
           id="gaps-heading"
-          className="m-0"
+          className="type-h2 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontWeight: 500,
-            fontSize: "clamp(28px,3vw,38px)",
             color: T.ink.base,
           }}
         >
           Gaps worth a drive
         </h2>
-        <p className="m-0 mt-1.5 text-[16px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-1.5 text-base" style={{ color: T.ink.dim }}>
           Found automatically in the index. Propose one and a Moderator will
           review it.
         </p>
@@ -110,12 +107,12 @@ export function GapsWorthADrive({ gaps }: { readonly gaps: DriveGap[] }) {
                 className="flex min-w-0 flex-col gap-0.5"
                 style={{ flex: "1 1 220px" }}
               >
-                <strong className="text-[17px]" style={{ color: T.ink.base }}>
+                <strong className="text-base" style={{ color: T.ink.base }}>
                   {gap.title}
                 </strong>
                 <GlobalLink
                   href={gap.href}
-                  className="self-start text-[15px] underline decoration-(--t-border-hi) underline-offset-[3px] hover:decoration-(--t-accent-primary)"
+                  className="self-start text-base underline decoration-(--t-border-hi) underline-offset-[3px] hover:decoration-(--t-accent-primary)"
                   style={{ color: T.ink.dim }}
                 >
                   <strong style={{ color: T.ink.base }}>

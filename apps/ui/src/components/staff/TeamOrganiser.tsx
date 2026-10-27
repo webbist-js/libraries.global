@@ -233,7 +233,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             id="team-members"
             title="Members"
             aside={
-              <span className="text-[14px] text-(--t-ink-dim)">
+              <span className="text-sm text-(--t-ink-dim)">
                 {team.used} of {team.seats} seats
               </span>
             }
@@ -271,7 +271,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                             ) : null}
                           </p>
                           <p
-                            className="m-0 text-[14px]"
+                            className="m-0 text-sm"
                             style={{ color: T.ink.dim }}
                           >
                             {organiser ? member.email : member.emailMasked}
@@ -296,7 +296,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                           dot
                         />
                         {organiser && !member.isYou ? (
-                          <div className="flex items-center gap-2 text-[14px]">
+                          <div className="flex items-center gap-2 text-sm">
                             <span className="sr-only">
                               Team role for {member.name ?? member.email}
                             </span>
@@ -425,10 +425,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                         />
                       ))}
                       {current.length === 0 && member.pending.length === 0 ? (
-                        <span
-                          className="text-[14px]"
-                          style={{ color: T.ink.dim }}
-                        >
+                        <span className="text-sm" style={{ color: T.ink.dim }}>
                           No libraries yet
                         </span>
                       ) : null}
@@ -464,7 +461,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               })}
             </ul>
             {!organiser ? (
-              <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+              <p className="mt-4 mb-0 text-sm" style={{ color: T.ink.dim }}>
                 Ask {team.organiserNames.join(" or ") || "your organiser"} to
                 change your access.
               </p>
@@ -480,7 +477,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               ) : undefined
             }
             aside={
-              <span className="text-[14px] text-(--t-ink-dim)">
+              <span className="text-sm text-(--t-ink-dim)">
                 {team.libraries.length}
               </span>
             }
@@ -501,29 +498,26 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       }}
                     >
                       <span
-                        className="inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[14px] font-semibold"
+                        className="inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold"
                         style={{ background: tint.bg, color: tint.fg }}
                       >
                         {lib.libraryType === "Mobile"
                           ? "Mobile library"
                           : `${lib.libraryType} library`}
                       </span>
-                      <strong className="text-[16px] font-semibold">
+                      <strong className="text-base font-semibold">
                         {lib.name}
                       </strong>
                       {staff ? (
                         <Link
                           href={staffLibraryHref(lib.slug)}
-                          className="inline-flex min-h-11 items-center text-[14px] font-semibold underline underline-offset-[3px]"
+                          className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-[3px]"
                           style={{ color: T.accent.primary }}
                         >
                           Open Staff area
                         </Link>
                       ) : (
-                        <span
-                          className="text-[14px]"
-                          style={{ color: T.ink.dim }}
-                        >
+                        <span className="text-sm" style={{ color: T.ink.dim }}>
                           You’re not assigned here
                         </span>
                       )}
@@ -536,7 +530,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-(--t-bg-space) text-(--t-ink-dim)">
                   <Icon aria-hidden="true" icon="mdi:bank-outline" width={22} />
                 </span>
-                <p className="m-0 min-w-0 flex-1 basis-48 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                <p className="m-0 min-w-0 flex-1 basis-48 text-base leading-relaxed text-(--t-ink-dim)">
                   <strong className="text-(--t-ink-base)">
                     No libraries yet.
                   </strong>{" "}
@@ -583,17 +577,22 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             <dl className="m-0 grid gap-4">
               <div>
                 <dt
-                  className="text-[14px] font-semibold"
+                  className="text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
                   Seats
                 </dt>
                 <dd
                   className="m-0 text-[28px]"
-                  style={{ fontFamily: T.font.serif }}
+                  style={{ fontFamily: T.font.sans }}
                 >
                   {team.used}{" "}
-                  <span style={{ color: T.ink.dim, fontSize: 16 }}>
+                  <span
+                    style={{
+                      color: T.ink.dim,
+                      fontSize: "var(--type-body-size)",
+                    }}
+                  >
                     of {team.seats}
                   </span>
                 </dd>
@@ -606,23 +605,23 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               </div>
               <div>
                 <dt
-                  className="text-[14px] font-semibold"
+                  className="text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
                   Organisers
                 </dt>
-                <dd className="m-0 text-[15px]">
+                <dd className="m-0 text-base">
                   {team.organiserNames.join(", ") || "None yet"}
                 </dd>
               </div>
               <div>
                 <dt
-                  className="text-[14px] font-semibold"
+                  className="text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
                   Runs until
                 </dt>
-                <dd className="m-0 text-[15px]">
+                <dd className="m-0 text-base">
                   {team.expiresAt ? date(team.expiresAt) : "Open ended"}
                 </dd>
               </div>
@@ -634,13 +633,13 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               compact
               title={tUi("invite_a_colleague")}
               aside={
-                <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                <span className="text-sm" style={{ color: T.ink.dim }}>
                   {seatsLeft} {seatsLeft === 1 ? "seat" : "seats"} left
                 </span>
               }
             >
               {seatsLeft === 0 ? (
-                <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                   Every available seat is taken. Remove a member or invitation,
                   or add seats.{" "}
                   {team.source === "checkout" ? (
@@ -691,7 +690,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                     })
                   }}
                 >
-                  <label className="flex flex-col gap-2 text-[14px] font-semibold">
+                  <label className="flex flex-col gap-2 text-sm font-semibold">
                     {tUi("email")}{" "}
                     <input
                       type="email"
@@ -705,7 +704,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       placeholder="colleague@library.example"
                     />
                   </label>
-                  <div className="flex flex-col gap-2 text-[14px] font-semibold">
+                  <div className="flex flex-col gap-2 text-sm font-semibold">
                     <span>Team role</span>
                     <SelectField
                       label="Team role"
@@ -725,7 +724,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       ]}
                     />
                   </div>
-                  <div className="flex flex-col gap-2 text-[14px] font-semibold">
+                  <div className="flex flex-col gap-2 text-sm font-semibold">
                     <span>Give access to (optional)</span>
                     <SelectField
                       label="Give access to (optional)"
@@ -742,7 +741,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                     />
                   </div>
                   {inviteLibrary !== NONE ? (
-                    <div className="flex flex-col gap-2 text-[14px] font-semibold">
+                    <div className="flex flex-col gap-2 text-sm font-semibold">
                       Level
                       <SegmentedControl
                         label={tUi("level_at_the_library")}
@@ -768,7 +767,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       Send invite
                     </Button>
                     <p
-                      className="mt-3 mb-0 text-[14px]"
+                      className="mt-3 mb-0 text-base"
                       style={{ color: T.ink.dim }}
                     >
                       They sign in with that email and accept the link. The
@@ -819,7 +818,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           </div>
         }
       >
-        <p className="m-0 mb-4 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mb-4 text-base" style={{ color: T.ink.dim }}>
           Staff access at each library below, at the chosen level. Owners manage
           the staff list, live sharing and notices; editors keep the record,
           hours and notices up to date. Changes apply when you save
@@ -836,7 +835,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border p-3"
                 style={{ borderColor: T.border.line, background: T.bg.deep }}
               >
-                <strong className="min-w-0 flex-1 text-[15px]">
+                <strong className="min-w-0 flex-1 text-base">
                   {libraryName(a.libraryDocumentId)}
                 </strong>
                 <SegmentedControl
@@ -877,7 +876,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             ))}
           </ul>
         ) : (
-          <p className="m-0 text-[14.5px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             No libraries yet.
           </p>
         )}
@@ -886,7 +885,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             className="mt-5 flex flex-col gap-3 rounded-[14px] border border-dashed p-4"
             style={{ borderColor: T.border.hi }}
           >
-            <label className="flex flex-col gap-2 text-[14px] font-semibold">
+            <label className="flex flex-col gap-2 text-sm font-semibold">
               {tUi("add_a_library")}
               <select
                 value={addLibrary}

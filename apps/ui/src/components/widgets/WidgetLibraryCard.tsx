@@ -44,7 +44,7 @@ export function WidgetLibraryCard({
         <div className="flex items-start justify-between gap-2">
           <button
             type="button"
-            className="min-h-11 min-w-0 flex-1 text-left text-[15px] font-semibold underline-offset-4 hover:underline focus-visible:outline-2"
+            className="min-h-11 min-w-0 flex-1 text-left text-base font-semibold underline-offset-4 hover:underline focus-visible:outline-2"
             aria-pressed={selected === r.documentId}
             onClick={() => {
               onSelect(r.documentId)
@@ -65,7 +65,7 @@ export function WidgetLibraryCard({
           ) : null}
         </div>
       ) : (
-        <h3 className="m-0 text-[17px] font-semibold">{r.name}</h3>
+        <h3 className="type-small-heading m-0">{r.name}</h3>
       )}
       <WidgetLibraryFacts r={r} c={c} type={type} />
       {c.showHours ? (

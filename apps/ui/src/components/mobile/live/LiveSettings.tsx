@@ -88,26 +88,16 @@ export function LiveSettings({
         firstName={firstName}
       />
       <section aria-labelledby="live-sharing-heading">
-        <h2
-          id="live-sharing-heading"
-          className="m-0"
-          style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(28px,3vw,36px)",
-            fontWeight: 500,
-            lineHeight: 1.1,
-            letterSpacing: "-0.015em",
-          }}
-        >
+        <h2 id="live-sharing-heading" className="type-h2 m-0">
           Live sharing settings
         </h2>
-        <p className="m-0 mt-1 mb-5 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-1 mb-5 text-base" style={{ color: T.ink.dim }}>
           For claimants of {initial.library.name}.
         </p>
         {note ? (
           <p
             role={note.tone === "danger" ? "alert" : "status"}
-            className="mb-4 flex items-center gap-2 text-[14px]"
+            className="mb-4 flex items-center gap-2 text-sm"
             style={{
               color: note.tone === "danger" ? T.accent.danger : T.accent.ok,
             }}

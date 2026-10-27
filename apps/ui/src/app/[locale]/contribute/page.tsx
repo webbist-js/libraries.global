@@ -210,14 +210,14 @@ function BottomLinkCard({
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       <span
-        className="flex items-center gap-1.5 text-[17px] font-semibold"
+        className="flex items-center gap-1.5 text-base font-semibold"
         style={{ color: T.ink.base }}
       >
         {title}
         <span aria-hidden="true">{external ? "↗" : "→"}</span>
       </span>
       <span
-        className="mt-1.5 block text-[14.5px] leading-[1.55]"
+        className="mt-1.5 block text-sm leading-[1.55]"
         style={{ color: T.ink.dim }}
       >
         {copy}
@@ -308,7 +308,7 @@ export default async function ContributePage({
         title="Help build the world’s *library index.*"
         lead="Add a missing library, fix a detail you know is wrong, or share a photo you took. Accuracy matters more than volume. A single well-sourced correction helps more than ten guesses."
       >
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           {staffLibraries.length > 0
             ? "Community maintained. Your staff tools are below."
             : "Community maintained, every change reviewed."}{" "}
@@ -341,18 +341,14 @@ export default async function ContributePage({
           />
         ) : null}
         <h2
-          className="m-0"
+          className="type-h2 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(26px,3vw,32px)",
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
             color: T.ink.base,
           }}
         >
           What would you like to do?
         </h2>
-        <p className="mt-2 mb-6 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="mt-2 mb-6 text-base" style={{ color: T.ink.dim }}>
           Choose one to start. Drafts save on this device, so you can come back
           later.
         </p>

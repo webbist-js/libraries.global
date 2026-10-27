@@ -112,7 +112,7 @@ export function PrivacySection({
       <div>
         <p
           id="privacy-visibility"
-          className="m-0 mb-3 text-[15px] font-semibold"
+          className="m-0 mb-3 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
           Who can see your profile
@@ -126,7 +126,7 @@ export function PrivacySection({
 
       <div>
         <p
-          className="m-0 mb-1 text-[15px] font-semibold"
+          className="m-0 mb-1 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
           Show on your public profile
@@ -144,13 +144,13 @@ export function PrivacySection({
           >
             <div className="min-w-0">
               <p
-                className="m-0 text-[15px] font-medium"
+                className="m-0 text-base font-medium"
                 style={{ color: T.ink.base }}
               >
                 {row.label}
               </p>
               <p
-                className="m-0 mt-0.5 truncate text-[14px]"
+                className="m-0 mt-0.5 truncate text-sm"
                 style={{ color: T.ink.dim }}
               >
                 {row.desc}
@@ -168,7 +168,7 @@ export function PrivacySection({
       {profile?.isSupporter ? (
         <div>
           <p
-            className="m-0 mb-2 text-[15px] font-semibold"
+            className="m-0 mb-2 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             Supporter recognition

@@ -85,10 +85,8 @@ export default async function IndexEditorPage({
             className={`${WIZARD_RAIL} hidden lg:block`}
             aria-label="Your record"
           >
-            <h2 className="m-0 font-serif text-[24px] leading-tight font-medium">
-              {tUi("your_record")}
-            </h2>
-            <p className="mt-2 mb-5 text-[15px] text-(--t-ink-dim)">
+            <h2 className="type-panel-title m-0">{tUi("your_record")}</h2>
+            <p className="mt-2 mb-5 text-base text-(--t-ink-dim)">
               Choose a library to start
             </p>
             <WizardStepNav
@@ -107,10 +105,8 @@ export default async function IndexEditorPage({
             </section>
             <section className="flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-(--t-border-line) bg-(--t-accent-chip) p-6">
               <div className="max-w-[52ch]">
-                <h2 className="m-0 text-[20px] font-semibold">
-                  {tClaim("workHere")}
-                </h2>
-                <p className="mt-2 mb-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                <h2 className="type-panel-title m-0">{tClaim("workHere")}</h2>
+                <p className="mt-2 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
                   {tClaim("ctaBody")}
                 </p>
               </div>

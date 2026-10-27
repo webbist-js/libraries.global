@@ -130,7 +130,7 @@ function JournalStoryForm({
     >
       <label
         htmlFor="drive-story-slug"
-        className="text-[14px] font-semibold"
+        className="text-sm font-semibold"
         style={{ color: T.ink.base }}
       >
         Journal story
@@ -141,10 +141,10 @@ function JournalStoryForm({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="ohio-hours-thank-you"
-        className="min-h-11 rounded-[14px] border bg-white px-3.5 text-[15px]"
+        className="min-h-11 rounded-[14px] border bg-white px-3.5 text-base"
         style={{ borderColor: T.border.hi, color: T.ink.base }}
       />
-      <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         The slug of a published Journal article, for example
         ohio-hours-thank-you.
       </p>
@@ -157,7 +157,7 @@ function JournalStoryForm({
         <p
           role="status"
           aria-live="polite"
-          className="m-0 flex items-center gap-1.5 text-[14px] font-semibold"
+          className="m-0 flex items-center gap-1.5 text-sm font-semibold"
           style={{
             color: message.tone === "error" ? T.accent.danger : T.accent.ok,
           }}
@@ -316,7 +316,7 @@ export function DriveBoardActions({
               >
                 <p
                   id="drive-board-confirm"
-                  className="m-0 flex items-start gap-2 text-[15px] leading-[1.5]"
+                  className="m-0 flex items-start gap-2 text-base leading-[1.5]"
                   style={{ color: T.ink.base }}
                 >
                   <Icon
@@ -356,7 +356,7 @@ export function DriveBoardActions({
 
             <p
               className={cn(
-                "m-0 flex items-center gap-1.5 text-[14px] font-semibold",
+                "m-0 flex items-center gap-1.5 text-sm font-semibold",
                 !message && "sr-only"
               )}
               style={{

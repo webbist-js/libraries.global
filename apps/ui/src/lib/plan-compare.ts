@@ -1,5 +1,5 @@
 /**
- * The "compare every plan" matrix for /contribute/membership and the Atlas
+ * The "compare every plan" matrix for /plans and the Atlas
  * plans sheet. Rows
  * are derived from lib/plans.ts (each plan's includes) and the entitlement
  * resolver (which Pro features each plan gets), so the table can't claim

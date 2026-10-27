@@ -95,7 +95,7 @@ export function WidgetsOverview({
             <p className="mb-1 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
               Default library source
             </p>
-            <h2 className="text-base font-semibold">
+            <h2 className="type-h2">
               {team.primaryNetwork?.name ?? "Your Team libraries"}
             </h2>
             <p className="mt-1 text-sm text-(--t-ink-dim)">

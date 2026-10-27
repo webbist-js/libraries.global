@@ -24,7 +24,7 @@ function TrafficIllustration() {
             className="rounded-[16px] border bg-white p-4"
             style={{ borderColor: T.border.line }}
           >
-            <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
               {label}
             </p>
             <span
@@ -67,25 +67,21 @@ export default async function TrafficPage({
           style={{ background: T.bg.deep, borderColor: T.border.line }}
           aria-labelledby="traffic-heading"
         >
-          <h2
-            id="traffic-heading"
-            className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
-            style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-          >
+          <h2 id="traffic-heading" className="type-h2 m-0">
             Page traffic
           </h2>
-          <p className="mt-3 mb-0 text-[17px]" style={{ color: T.ink.dim }}>
+          <p className="mt-3 mb-0 text-base" style={{ color: T.ink.dim }}>
             Visits to your library’s page on Libraries Global.
           </p>
           <div
             className="mt-8 rounded-[20px] border p-5 sm:p-6"
             style={{ background: T.bg.surface, borderColor: T.border.line }}
           >
-            <h3 className="m-0 text-[18px] font-semibold">
+            <h3 className="type-card-title m-0">
               Traffic reports are coming soon
             </h3>
             <p
-              className="mt-2 mb-0 max-w-[65ch] text-[16px] leading-relaxed"
+              className="mt-2 mb-0 max-w-[65ch] text-base leading-relaxed"
               style={{ color: T.ink.dim }}
             >
               Your Team plan includes this feature. Traffic reporting is not
@@ -103,7 +99,7 @@ export default async function TrafficPage({
             "Where visitors came from",
           ]}
           comingSoon
-          compareHref="/contribute/membership"
+          compareHref="/plans"
           contactHref={TEAM_CONTACT_HREF}
           preview={<TrafficIllustration />}
         />

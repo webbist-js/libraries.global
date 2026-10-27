@@ -100,7 +100,7 @@ export function ContributionHeatmap({
       >
         <span
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: "24px",
             fontWeight: 500,
             letterSpacing: "-0.01em",
@@ -109,7 +109,9 @@ export function ContributionHeatmap({
         >
           Activity
         </span>
-        <span style={{ fontSize: "14px", color: T.ink.dim }}>
+        <span
+          style={{ fontSize: "var(--type-body-small-size)", color: T.ink.dim }}
+        >
           Last 26 weeks
         </span>
       </div>
@@ -150,11 +152,21 @@ export function ContributionHeatmap({
       {/* Text alternative */}
       <details style={{ marginTop: "12px" }}>
         <summary
-          style={{ fontSize: "14px", color: T.ink.dim, cursor: "pointer" }}
+          style={{
+            fontSize: "var(--type-body-small-size)",
+            color: T.ink.dim,
+            cursor: "pointer",
+          }}
         >
           Activity as text
         </summary>
-        <p style={{ fontSize: "14px", color: T.ink.dim, margin: "8px 0 0" }}>
+        <p
+          style={{
+            fontSize: "var(--type-body-small-size)",
+            color: T.ink.dim,
+            margin: "8px 0 0",
+          }}
+        >
           {visibleCount} contribution
           {visibleCount === 1 ? "" : "s"} recorded in the last 26 weeks across{" "}
           {activeDays.length} active day
@@ -171,13 +183,15 @@ export function ContributionHeatmap({
           marginTop: "10px",
         }}
       >
-        <span style={{ fontSize: "13px", color: T.ink.low }}>
+        <span
+          style={{ fontSize: "var(--type-body-small-size)", color: T.ink.low }}
+        >
           Mon – Sun, last 182 days
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <span
             style={{
-              fontSize: "13px",
+              fontSize: "var(--type-body-small-size)",
               color: T.ink.low,
               marginRight: "2px",
             }}
@@ -197,7 +211,7 @@ export function ContributionHeatmap({
           ))}
           <span
             style={{
-              fontSize: "13px",
+              fontSize: "var(--type-body-small-size)",
               color: T.ink.low,
               marginLeft: "2px",
             }}

@@ -21,13 +21,10 @@ function Rule({
       className="grid grid-cols-[minmax(90px,0.4fr)_minmax(0,1fr)] gap-3"
       style={{ borderTop: `1px solid ${T.border.divider}`, padding: "10px 0" }}
     >
-      <dt className="text-[13px]" style={{ color: T.ink.dim }}>
+      <dt className="text-sm" style={{ color: T.ink.dim }}>
         {label}
       </dt>
-      <dd
-        className="m-0 text-[14px] leading-[1.5]"
-        style={{ color: T.ink.base }}
-      >
+      <dd className="m-0 text-sm leading-[1.5]" style={{ color: T.ink.base }}>
         {children}
       </dd>
     </div>
@@ -68,8 +65,8 @@ export function DriveRules({
     >
       <h2
         id="drive-rules-heading"
-        className="m-0 mb-1 text-[27px] font-medium"
-        style={{ color: T.ink.base, fontFamily: T.font.serif }}
+        className="type-h2 m-0 mb-1"
+        style={{ color: T.ink.base }}
       >
         Rules
       </h2>
@@ -118,7 +115,7 @@ export function DriveRules({
         )}
       </dl>
       <p
-        className="m-0 mt-1 rounded-[14px] p-3 text-[12px] leading-[1.5]"
+        className="m-0 mt-1 rounded-[14px] p-3 text-xs leading-[1.5]"
         style={{ color: T.ink.dim, background: T.bg.void }}
       >
         Every task is an ordinary suggestion, checked by a moderator before it

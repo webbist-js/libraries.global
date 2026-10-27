@@ -117,7 +117,7 @@ export function TimetableReviewPanel({
       {moved && (
         <details className="group">
           <summary
-            className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border bg-white px-4 text-[14px] font-semibold hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold hover:bg-(--t-bg-surface)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             <span aria-hidden="true" className="group-open:hidden">
@@ -131,9 +131,7 @@ export function TimetableReviewPanel({
           <div className="mt-3 grid gap-4 md:grid-cols-2">
             {before && (
               <section>
-                <h4 className="m-0 mb-2 text-[15px] font-semibold">
-                  Current pins
-                </h4>
+                <h4 className="type-h4 m-0 mb-2">Current pins</h4>
                 <MobileRouteMap
                   tt={before}
                   notices={[]}
@@ -144,9 +142,7 @@ export function TimetableReviewPanel({
             )}
             {after && (
               <section>
-                <h4 className="m-0 mb-2 text-[15px] font-semibold">
-                  Suggested pins
-                </h4>
+                <h4 className="type-h4 m-0 mb-2">Suggested pins</h4>
                 <MobileRouteMap
                   tt={after}
                   notices={[]}

@@ -70,6 +70,14 @@ const ENTRY_CARDS = [
   },
 ] as const
 
+/** Older CMS titles omit the accent markers present in the translated pattern. */
+function knowledgeHeroTitle(title: string, pattern: string): string {
+  const accent = /\*([^*]+)\*$/.exec(pattern)?.[1]
+  if (!accent || title.includes("*") || !title.endsWith(accent)) return title
+
+  return `${title.slice(0, -accent.length)}*${accent}*`
+}
+
 function toRow(
   article: DocsWikiArticle,
   sections: readonly DocsSection[],
@@ -244,12 +252,13 @@ export function DocsPage({
           eyebrowIcon="mdi:book-open-outline"
           title={
             activeSection?.title ??
-            landing?.heroTitle ??
-            t("knowledgeHeroTitle")
+            knowledgeHeroTitle(
+              landing?.heroTitle ?? t("knowledgeHeroTitle"),
+              t("knowledgeHeroTitle")
+            )
           }
           plainTitle={Boolean(activeSection)}
           compact={Boolean(activeSection)}
-          emphasisTone="ink"
           leadPlacement={activeSection ? "left" : "right"}
           lead={
             activeSection?.description ??
@@ -284,7 +293,7 @@ export function DocsPage({
                 <span className="block text-xs font-semibold text-(--t-ink-dim)">
                   {t("startWith")}
                 </span>
-                <span className="mt-1 block font-serif text-[22px] leading-tight">
+                <span className="mt-1 block font-sans text-[22px] leading-tight">
                   {firstGuide.title}
                 </span>
               </span>
@@ -343,7 +352,7 @@ export function DocsPage({
                 <section className="mb-7" aria-labelledby="docs-start-heading">
                   <h2
                     id="docs-start-heading"
-                    className="m-0 mb-3 text-sm font-semibold text-(--t-ink-dim)"
+                    className="type-small-heading m-0 mb-3 text-(--t-ink-dim)"
                   >
                     {t("popularStartingPoints")}
                   </h2>
@@ -367,7 +376,7 @@ export function DocsPage({
                         >
                           <Icon icon={card.icon} width={20} />
                         </span>
-                        <span className="font-serif text-[23px] leading-tight font-medium group-hover:text-(--t-accent-primary)">
+                        <span className="font-sans text-[23px] leading-tight font-medium group-hover:text-(--t-accent-primary)">
                           {card.title}
                         </span>
                         <span className="mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
@@ -400,10 +409,10 @@ export function DocsPage({
                 aria-labelledby="docs-recent"
                 className="rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5"
               >
-                <h2 id="docs-recent" className="m-0 mb-2 text-sm font-semibold">
+                <h2 id="docs-recent" className="type-panel-title m-0 mb-2">
                   {activeSection ? t("otherSections") : p("recentPages")}
                 </h2>
-                <ul className="m-0 list-none p-0">
+                <ul className="m-0 list-none divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0">
                   {activeSection
                     ? sections
                         .filter(
@@ -413,7 +422,7 @@ export function DocsPage({
                           <li key={section.slug}>
                             <GlobalLink
                               href={`/knowledge?section=${section.slug}`}
-                              className="flex min-h-12 items-center gap-3 py-2 text-sm hover:text-(--t-accent-primary)"
+                              className="flex min-h-12 items-center gap-3 py-3 text-base font-semibold text-(--t-accent-primary) underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                             >
                               <span
                                 aria-hidden="true"
@@ -442,13 +451,10 @@ export function DocsPage({
                         )
 
                         return (
-                          <li
-                            key={article.documentId}
-                            className="border-t border-(--t-divider) py-3"
-                          >
+                          <li key={article.documentId} className="py-3">
                             <GlobalLink
                               href={row.href}
-                              className="block text-sm leading-snug font-semibold hover:text-(--t-accent-primary)"
+                              className="block text-base leading-snug font-semibold text-(--t-accent-primary) underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                             >
                               {row.title}
                             </GlobalLink>
@@ -461,7 +467,7 @@ export function DocsPage({
                       })}
                 </ul>
                 {!activeSection && !recent.length ? (
-                  <p className="mb-0 text-sm text-(--t-ink-dim)">
+                  <p className="mb-0 text-base text-(--t-ink-dim)">
                     {t("noPages")}
                   </p>
                 ) : null}
@@ -471,21 +477,18 @@ export function DocsPage({
                 className="rounded-[20px] p-5"
                 style={{ background: T.ink.base, color: T.bg.deep }}
               >
-                <h2
-                  id="docs-write-with-us"
-                  className="m-0 font-serif text-[26px] leading-tight font-medium"
-                >
+                <h2 id="docs-write-with-us" className="type-panel-title m-0">
                   {activeSection ? t("missingGuide") : t("outOfDate")}
                 </h2>
                 <p
-                  className="mt-3 mb-0 text-sm leading-relaxed"
+                  className="mt-3 mb-0 text-base leading-relaxed"
                   style={{ color: T.ink.onDark }}
                 >
                   {activeSection ? t("missingGuideLead") : p("maintenanceHint")}
                 </p>
                 <GlobalLink
                   href="/contribute/knowledge"
-                  className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"
+                  className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 text-base font-semibold text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted)"
                 >
                   {activeSection ? t("suggestGuide") : p("suggestImprovement")}
                 </GlobalLink>

@@ -18,7 +18,7 @@ export async function PublicNetworkAffiliations({
 
   return (
     <section className="my-6 rounded-2xl border border-(--t-border-line) bg-white p-6">
-      <h2 className="font-serif text-2xl">Services and networks</h2>
+      <h2 className="type-h2">Services and networks</h2>
       <ul className="m-0 list-none space-y-3 p-0">
         {data.affiliations.map((row) => (
           <li key={row.network.documentId}>

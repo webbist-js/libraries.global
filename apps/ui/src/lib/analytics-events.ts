@@ -308,6 +308,8 @@ const DESTINATIONS: Record<string, AnalyticsParameters["destination"]> = {
   "/events": "events",
   "/community": "community",
   "/contribute/membership": "membership",
+  "/profile/membership": "membership",
+  "/plans": "membership",
 }
 
 export function navigationAttributes(href: string) {

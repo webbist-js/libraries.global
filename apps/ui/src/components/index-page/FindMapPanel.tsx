@@ -108,7 +108,9 @@ export function FindMapPanel({
                 )
               })}
             </svg>
-            <p className="m-0 text-sm">● Library buildings · ■ Mobile stops</p>
+            <p className="m-0 text-base">
+              ● Library buildings · ■ Mobile stops
+            </p>
           </>
         )}
         <svg
@@ -125,7 +127,7 @@ export function FindMapPanel({
           <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" />
           <path d="M9 4v14M15 6v14" />
         </svg>
-        <p className="m-0 text-[17px] font-semibold">
+        <p className="m-0 text-base font-semibold">
           {withGeo.length} of {hits.length} results have map coordinates
         </p>
         <Link
@@ -135,7 +137,7 @@ export function FindMapPanel({
             action_type: "open",
             destination: "atlas",
           })}
-          className="rounded-full px-5 py-2.5 text-[15px] font-semibold text-white no-underline"
+          className="rounded-full px-5 py-2.5 text-base font-semibold text-white no-underline"
           style={{ background: T.accent.primary }}
         >
           Open the full map
@@ -145,7 +147,7 @@ export function FindMapPanel({
       {withGeo.length > 0 ? (
         <details className="text-left">
           <summary
-            className="cursor-pointer text-[15px] font-semibold"
+            className="cursor-pointer text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             Map as text
@@ -154,13 +156,16 @@ export function FindMapPanel({
             {withGeo.slice(0, 30).map((h) => (
               <li
                 key={h.documentId}
-                className="flex items-baseline justify-between gap-3 text-[14px]"
+                className="flex items-baseline justify-between gap-3 text-sm"
                 style={{ color: T.ink.base }}
               >
                 <span className="truncate">{h.name}</span>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: T.font.mono, fontSize: 12.5 }}
+                  style={{
+                    fontFamily: T.font.mono,
+                    fontSize: "var(--type-body-small-size)",
+                  }}
                 >
                   {h._geo!.lat.toFixed(4)}, {h._geo!.lng.toFixed(4)}
                 </span>

@@ -34,7 +34,7 @@ export function LeaderboardPeriodNav({
             href={`/community/leaderboard?period=${key}`}
             scroll={false}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full px-[10px] text-[15px] font-semibold whitespace-nowrap no-underline sm:flex-none sm:px-[16px] ${
+            className={`inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full px-[10px] text-base font-semibold whitespace-nowrap no-underline sm:flex-none sm:px-[16px] ${
               active ? "text-white" : "hover:bg-(--t-bg-muted-2)"
             }`}
             style={active ? { background: T.ink.base } : { color: T.ink.base }}

@@ -11,6 +11,7 @@ describe("isValidUsername", () => {
     ["аlice", false],
     ["a".repeat(31), false],
     ["admin", false],
+    ["membership", false],
   ])("%s → %s", (u, ok) => expect(isValidUsername(u)).toBe(ok))
 })
 

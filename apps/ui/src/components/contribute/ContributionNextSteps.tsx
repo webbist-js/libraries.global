@@ -34,12 +34,12 @@ export function ContributionNextSteps({
 
   return (
     <div>
-      <h3 className="m-0 mb-3 text-[14px] font-bold">What happens next</h3>
+      <h3 className="type-small-heading m-0 mb-3">What happens next</h3>
       <ol className="m-0 list-none space-y-2.5 p-0">
         {items.map((step, index) => (
           <li
             key={step}
-            className="grid grid-cols-[22px_minmax(0,1fr)] items-start gap-2 text-[14px] leading-[1.5]"
+            className="grid grid-cols-[22px_minmax(0,1fr)] items-start gap-2 text-sm leading-[1.5]"
             style={{ color: T.ink.dim }}
           >
             <span className="font-bold" style={{ color: T.ink.base }}>

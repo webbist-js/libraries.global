@@ -15,7 +15,7 @@ type HtmlClassNameParams = {
   tag: ElementTag | TypographyTag
   variant?: Variant
   textColor: TextColor
-  fontWeight: FontWeight
+  fontWeight?: FontWeight
   className?: string
 }
 
@@ -33,7 +33,7 @@ export function resolveHtmlComponentClassName({
   return cn(
     selectedVariant,
     textColorVariants[textColor],
-    fontWeightVariants[fontWeight],
+    fontWeight ? fontWeightVariants[fontWeight] : undefined,
     className
   )
 }

@@ -61,7 +61,7 @@ export default async function BetaPage({
       </header>
       <MainContent className={styles.main}>
         <section className={styles.introduction}>
-          <h1>
+          <h1 className="type-h1">
             {t("headlineFirst")}
             <br />
             {t("headlineSecond")}

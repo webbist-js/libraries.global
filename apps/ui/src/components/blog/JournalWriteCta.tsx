@@ -18,29 +18,25 @@ export function JournalWriteCta() {
       className="rounded-[20px] p-5"
       style={{ background: T.ink.base, color: "#fff" }}
     >
-      <h2
-        className="m-0 text-[21px]"
-        id="journal-write-with-us"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h2 className="type-panel-title m-0" id="journal-write-with-us">
         {t("pitchTitle")}
       </h2>
       <p
-        className="mt-2 mb-0 text-[14px] leading-[1.55]"
+        className="mt-2 mb-0 text-base leading-[1.55]"
         style={{ color: "rgba(255,255,255,.75)" }}
       >
         {t("pitchIntro")}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <GlobalLink
-          className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-opacity hover:opacity-90"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 py-2 text-base font-semibold transition-opacity hover:opacity-90"
           href={JOURNAL_PITCH_HREF}
           style={{ background: "#fff", color: T.ink.base }}
         >
           {t("pitchStory")}
         </GlobalLink>
         <GlobalLink
-          className="inline-flex min-h-11 items-center gap-1 rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-white/10"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full border px-4 py-2 text-base font-semibold transition-colors hover:bg-white/10"
           href={JOURNAL_EDITOR_APPLY_HREF}
           style={{
             borderColor: "rgba(255,255,255,.35)",

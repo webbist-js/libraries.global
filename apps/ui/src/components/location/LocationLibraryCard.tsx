@@ -85,7 +85,7 @@ export function LocationLibraryCard({
               icon="mdi:bank-outline"
               width={26}
             />
-            <span className="text-[12px] font-semibold">No photo yet</span>
+            <span className="text-xs font-semibold">No photo yet</span>
           </div>
         )}
       </div>
@@ -93,14 +93,14 @@ export function LocationLibraryCard({
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-3 pt-3 pb-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
           <span
-            className="rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold"
+            className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
             style={{ background: tint.bg, color: tint.fg }}
           >
             {libraryTypeLabel(libraryTypeName(library.libraryType))}
           </span>
           {place ? (
             <span
-              className="rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold"
+              className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{ background: T.bg.muted, color: T.ink.dim }}
             >
               {place}
@@ -108,7 +108,7 @@ export function LocationLibraryCard({
           ) : null}
           {closed ? (
             <span
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12.5px] font-semibold"
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{
                 background: "var(--tint-special-bg)",
                 color: T.accent.danger,
@@ -125,10 +125,7 @@ export function LocationLibraryCard({
           ) : null}
         </div>
 
-        <h3
-          className="m-0 text-[21px] leading-[1.15]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
+        <h3 className="type-h3 m-0">
           {href ? (
             <GlobalLink
               href={href}
@@ -144,7 +141,7 @@ export function LocationLibraryCard({
 
         {library.summary ? (
           <p
-            className="m-0 line-clamp-2 text-[14.5px] leading-[1.5]"
+            className="m-0 line-clamp-2 text-sm leading-[1.5]"
             style={{ color: T.ink.dim }}
           >
             {library.summary}
@@ -152,7 +149,7 @@ export function LocationLibraryCard({
         ) : null}
 
         <p
-          className="m-0 mt-auto flex items-center gap-1.5 pt-1 text-[13.5px]"
+          className="m-0 mt-auto flex items-center gap-1.5 pt-1 text-sm"
           style={{ color: T.ink.dim }}
         >
           <Icon
@@ -167,7 +164,7 @@ export function LocationLibraryCard({
 
         {gaps.length > 0 ? (
           <p
-            className="m-0 mt-0.5 flex flex-wrap items-center gap-1.5 text-[12.5px]"
+            className="m-0 mt-0.5 flex flex-wrap items-center gap-1.5 text-sm"
             style={{ color: T.ink.dim }}
           >
             <span className="font-semibold">Missing:</span>

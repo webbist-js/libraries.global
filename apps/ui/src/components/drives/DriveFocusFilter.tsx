@@ -8,7 +8,7 @@ import type { FocusFilterOption } from "@/lib/drives/drive-view"
 import type { FocusFilterKey } from "./focus-meta"
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[15px] font-semibold no-underline transition-colors"
+  "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-base font-semibold no-underline transition-colors"
 
 function FilterLink({
   href,
@@ -40,7 +40,7 @@ function FilterLink({
         ) : null}
         {label}
         <span
-          className="rounded-full px-2 text-[13px] font-bold"
+          className="rounded-full px-2 text-sm font-bold"
           style={{ background: T.bg.muted, color: T.ink.dim }}
         >
           {count}

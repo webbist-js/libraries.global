@@ -32,7 +32,7 @@ export function RunningCosts({
       className="rounded-2xl border p-4"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
-      <div className="flex flex-wrap justify-between gap-2 text-[14px] font-semibold">
+      <div className="flex flex-wrap justify-between gap-2 text-sm font-semibold">
         <span>
           {currentMonth
             ? "This month’s running costs"
@@ -53,7 +53,7 @@ export function RunningCosts({
         />
       ) : null}
       {costs.breakdown ? (
-        <details className="group mt-2 text-[13px]">
+        <details className="group mt-2 text-sm">
           <summary
             className="cursor-pointer list-none font-semibold underline underline-offset-2 [&::-webkit-details-marker]:hidden"
             style={{ color: T.accent.primary }}

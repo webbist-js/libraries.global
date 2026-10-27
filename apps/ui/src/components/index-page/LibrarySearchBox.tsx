@@ -178,7 +178,7 @@ export function LibrarySearchBox({
               : undefined
           }
           autoComplete="off"
-          className="w-0 min-w-0 flex-1 bg-transparent py-3 text-[17px] font-medium outline-none"
+          className="w-0 min-w-0 flex-1 bg-transparent py-3 text-base font-medium outline-none"
           style={{ color: T.ink.base }}
           placeholder={placeholder}
           type="text"
@@ -192,7 +192,7 @@ export function LibrarySearchBox({
           onClick={onNearMe}
           aria-pressed={nearActive}
           className={[
-            "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2.5 text-[15px] font-semibold whitespace-nowrap transition-colors sm:px-3.5",
+            "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2.5 text-base font-semibold whitespace-nowrap transition-colors sm:px-3.5",
             nearActive ? "" : "bg-white hover:bg-(--t-bg-muted)",
           ].join(" ")}
           style={
@@ -214,7 +214,7 @@ export function LibrarySearchBox({
         <button
           type="button"
           onClick={submit}
-          className="shrink-0 rounded-full bg-(--t-accent-primary) px-5 py-3 text-[16px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) sm:px-6"
+          className="shrink-0 rounded-full bg-(--t-accent-primary) px-5 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) sm:px-6"
         >
           {tUi("search")}{" "}
         </button>
@@ -247,7 +247,7 @@ export function LibrarySearchBox({
                 }}
               >
                 <span
-                  className="min-w-[54px] rounded-full px-2 py-0.5 text-center text-[13px] font-semibold"
+                  className="min-w-[54px] rounded-full px-2 py-0.5 text-center text-sm font-semibold"
                   style={{
                     background: "var(--tint-national-bg)",
                     color: "var(--tint-national-fg)",
@@ -257,14 +257,14 @@ export function LibrarySearchBox({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span
-                    className="block truncate text-[16px] font-semibold"
+                    className="block truncate text-base font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {hit.name}
                   </span>
                   {location ? (
                     <span
-                      className="block truncate text-[14px]"
+                      className="block truncate text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       {location}
@@ -275,10 +275,7 @@ export function LibrarySearchBox({
             )
           })}
           {hits.length === 0 ? (
-            <div
-              className="px-3 py-3.5 text-[15px]"
-              style={{ color: T.ink.dim }}
-            >
+            <div className="px-3 py-3.5 text-base" style={{ color: T.ink.dim }}>
               Nothing matches &ldquo;{query}&rdquo; yet.{" "}
               <Link href="/contribute" style={{ color: T.accent.primary }}>
                 Add a missing library

@@ -177,7 +177,9 @@ export function WidgetSelectionEditor({
     <div className="space-y-6">
       <Dialog open={discardOpen} onOpenChange={setDiscardOpen}>
         <DialogContent>
-          <DialogTitle>Discard unsaved selection changes?</DialogTitle>
+          <DialogTitle className="type-h2">
+            Discard unsaved selection changes?
+          </DialogTitle>
           <DialogDescription>
             Your saved selection and published widgets will keep their current
             versions. Cancel to save these changes first.

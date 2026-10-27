@@ -39,7 +39,7 @@ function ProfileOverviewBanner({ profile }: { profile: UserProfile }) {
       actions={
         <GlobalLink
           href="/profile/settings"
-          className="text-[15px] font-semibold underline underline-offset-4"
+          className="text-base font-semibold underline underline-offset-4"
           style={{ color: T.accent.primary }}
         >
           Edit profile

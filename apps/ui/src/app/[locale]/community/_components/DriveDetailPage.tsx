@@ -35,8 +35,7 @@ const CARD = {
   padding: "clamp(20px,2.6vw,28px)",
 } as const
 
-const CHIP =
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px]"
+const CHIP = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
 
 type ChipLook = { label: string; icon: string; bg: string; fg: string }
 
@@ -172,12 +171,12 @@ function JournalStoryCard({
 
   return (
     <section aria-labelledby="drive-story-heading" style={CARD}>
-      <h2 id="drive-story-heading" className="sr-only">
+      <h2 id="drive-story-heading" className="type-h2 sr-only">
         Journal story
       </h2>
       <Link
         href={href}
-        className="inline-flex items-center gap-2 text-[16px] font-semibold no-underline"
+        className="inline-flex items-center gap-2 text-base font-semibold no-underline"
         style={{ color: T.accent.primary }}
       >
         <Icon
@@ -263,7 +262,7 @@ export function DriveDetailPage({
             aria-labelledby="drive-progress-heading"
             className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) px-6 py-5 sm:px-8"
           >
-            <h2 id="drive-progress-heading" className="sr-only">
+            <h2 id="drive-progress-heading" className="type-h2 sr-only">
               {finished ? "Final numbers" : tUi("progress")}
             </h2>
             {progress ? (
@@ -277,7 +276,7 @@ export function DriveDetailPage({
                 finished={finished}
               />
             ) : (
-              <p className="m-0 text-[14px] text-(--t-ink-dim)">
+              <p className="m-0 text-sm text-(--t-ink-dim)">
                 Progress shows once the drive is counted, within the hour.
               </p>
             )}
@@ -298,7 +297,7 @@ export function DriveDetailPage({
 
       <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-6 px-4 pt-6 pb-20 sm:px-8 sm:pt-8">
         {drive.status !== "open" && (
-          <div className="text-[13px]">
+          <div className="text-sm">
             <BackLink href="/community#drives">{tUi("all_drives")}</BackLink>
           </div>
         )}

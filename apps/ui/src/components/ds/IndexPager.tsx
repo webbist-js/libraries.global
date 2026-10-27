@@ -65,7 +65,7 @@ export function IndexPager({
             style={{
               color: T.ink.faint,
               padding: "6px 4px",
-              fontSize: "14px",
+              fontSize: "var(--type-body-small-size)",
               fontFamily: T.font.sans,
             }}
           >

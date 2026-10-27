@@ -133,7 +133,7 @@ export function StaffShell({
       eyebrowIcon="mdi:shield-account-outline"
       chips={
         <span
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[14px] font-semibold"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold"
           style={{ background: tint.bg, color: tint.fg }}
         >
           <Icon
@@ -201,7 +201,7 @@ export function StaffShell({
         <div className="flex flex-wrap gap-x-4">
           <Link
             href="/staff/claim"
-            className="inline-flex min-h-11 w-fit items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
+            className="inline-flex min-h-11 w-fit items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
             Claim another library
@@ -214,7 +214,7 @@ export function StaffShell({
           </Link>
           <Link
             href="/staff/new"
-            className="inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold underline underline-offset-[3px]"
+            className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
             Add a new library

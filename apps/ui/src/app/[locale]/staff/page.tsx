@@ -25,7 +25,7 @@ import { fetchStaff } from "@/lib/staff-proxy"
 const ROLE_LABEL = { owner: "Owner", editor: "Editor" } as const
 
 const QUICK_LINK =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** What `?oauth=` means after an Eventbrite sign-in came back here. */
 const OAUTH_NOTICE: Record<string, { title: string; message: string }> = {
@@ -111,7 +111,7 @@ export default async function StaffLibrariesPage({
         <div className="flex flex-wrap gap-3">
           <Link
             href="/staff/claim"
-            className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             <Icon
@@ -126,7 +126,7 @@ export default async function StaffLibrariesPage({
           {canAddLibrary && (
             <Link
               href="/staff/new"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
             >
               <Icon
@@ -203,7 +203,7 @@ export default async function StaffLibrariesPage({
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold"
+                          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold"
                           style={{ background: tint.bg, color: tint.fg }}
                         >
                           <Icon
@@ -221,13 +221,8 @@ export default async function StaffLibrariesPage({
                         <Badge label={ROLE_LABEL[lib.role]} color="dim" />
                       </div>
                       <h2
-                        className="m-0"
+                        className="type-h2 m-0"
                         style={{
-                          fontFamily: T.font.serif,
-                          fontSize: "clamp(24px,2.6vw,30px)",
-                          fontWeight: 500,
-                          lineHeight: 1.15,
-                          letterSpacing: "-0.01em",
                           color: T.ink.base,
                         }}
                       >
@@ -239,10 +234,7 @@ export default async function StaffLibrariesPage({
                           {lib.name}
                         </Link>
                       </h2>
-                      <p
-                        className="m-0 text-[15px]"
-                        style={{ color: T.ink.dim }}
-                      >
+                      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                         {overview ? (
                           <>
                             <span
@@ -272,7 +264,7 @@ export default async function StaffLibrariesPage({
                       <div className="flex flex-wrap gap-2">
                         <Link
                           href={base}
-                          className="inline-flex min-h-11 items-center gap-1 rounded-full bg-(--t-accent-primary) px-4 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-full bg-(--t-accent-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
                         >
                           Open Staff area
                           <Icon
@@ -354,18 +346,15 @@ export default async function StaffLibrariesPage({
                 style={{ background: T.bg.deep, borderColor: T.border.line }}
               >
                 <h2
-                  className="m-0 mb-2"
+                  className="type-h2 m-0 mb-2"
                   style={{
-                    fontFamily: T.font.serif,
-                    fontSize: "clamp(24px,2.6vw,30px)",
-                    fontWeight: 500,
                     color: T.ink.base,
                   }}
                 >
                   Connect your first Library
                 </h2>
                 <p
-                  className="m-0 mb-4 max-w-[52ch] text-[15px]"
+                  className="m-0 mb-4 max-w-[52ch] text-base"
                   style={{ color: T.ink.dim }}
                 >
                   {teams[0]?.role === "organiser"

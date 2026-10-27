@@ -130,12 +130,12 @@ function TaskBody({
       </span>
       <span className="min-w-0 flex-1">
         <span
-          className="block text-[14px] leading-snug font-semibold"
+          className="block text-sm leading-snug font-semibold"
           style={{ color: T.ink.base }}
         >
           {task.title}
         </span>
-        <span className="block text-[12.5px]" style={{ color: T.ink.dim }}>
+        <span className="block text-sm" style={{ color: T.ink.dim }}>
           {task.meta}
         </span>
       </span>
@@ -205,7 +205,7 @@ function TranslateRecord({
               <li key={l.code}>
                 <Link
                   href={translateHref(librarySlug, l.code)}
-                  className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-[13px] font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
                   {l.name}
@@ -294,7 +294,7 @@ export function LibraryHelpPanel({
       {driveNote}
       <h2
         id="help-h"
-        className="m-0 mb-3 text-[15px] font-bold"
+        className="type-panel-title m-0 mb-3"
         style={{ color: T.ink.base }}
       >
         Help finish this record

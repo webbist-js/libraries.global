@@ -101,7 +101,7 @@ export function AtlasNetworkPicker({
   return (
     <div className="flex flex-col gap-2">
       {!compact ? (
-        <div className="flex items-center justify-between gap-2 text-[13px] font-semibold text-(--t-ink-dim)">
+        <div className="flex items-center justify-between gap-2 text-sm font-semibold text-(--t-ink-dim)">
           <span>{t("networkLabel")}</span>
           {value ? (
             <button
@@ -145,7 +145,7 @@ export function AtlasNetworkPicker({
           className="z-[90] flex max-h-[calc(100dvh-32px)] w-[min(360px,calc(100vw-32px))] flex-col gap-3 overflow-y-auto rounded-2xl border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-(--t-ink-base) shadow-xl"
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 className="m-0 text-base font-semibold">{t("findService")}</h3>
+            <h3 className="type-h3 m-0">{t("findService")}</h3>
             <button
               type="button"
               aria-label={t("closePicker")}
@@ -242,7 +242,7 @@ export function AtlasNetworkPicker({
                   type="button"
                   aria-pressed={value === network.documentId}
                   onClick={() => choose(network.documentId)}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[14px] hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-(--t-accent-primary) aria-pressed:bg-(--t-accent-chip)"
+                  className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-(--t-accent-primary) aria-pressed:bg-(--t-accent-chip)"
                 >
                   <span className="flex-1">{network.name}</span>
                   {value === network.documentId ? (

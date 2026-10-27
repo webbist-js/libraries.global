@@ -61,10 +61,7 @@ function Section({
       className="flex flex-col gap-4 rounded-[24px] p-5 sm:p-6"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
-      <h2
-        className="m-0 text-[24px] leading-tight tracking-tight"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
-      >
+      <h2 className="type-h2 m-0" style={{ color: T.ink.base }}>
         {title}
       </h2>
       {children}
@@ -242,7 +239,7 @@ function LoadFailed() {
       <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
         <p
           role="alert"
-          className="m-0 rounded-[14px] px-4 py-3 text-[15px]"
+          className="m-0 rounded-[14px] px-4 py-3 text-base"
           style={{ background: "#F6E3DA", color: T.accent.danger }}
         >
           This submission could not be loaded. Try again in a moment.
@@ -323,14 +320,14 @@ export default async function ReviewSubmissionPage({
       <ModerationHero title={d.summary} plainTitle leaf={moderationRowLabel(d)}>
         <div className="flex flex-wrap items-center gap-3">
           <StatusBadge status={d.status} />
-          <span className="text-[15px]" style={{ color: T.ink.dim }}>
+          <span className="text-base" style={{ color: T.ink.dim }}>
             {`${moderationRowLabel(d)} · ${language}`}
           </span>
           {d.drive ? <DriveChip drive={d.drive} /> : null}
         </div>
       </ModerationHero>
 
-      <div className="mx-auto grid w-full max-w-[1360px] gap-8 px-4 pt-8 pb-16 text-[16px] [--spacing:0.25rem] sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="mx-auto grid w-full max-w-[1360px] gap-8 px-4 pt-8 pb-16 text-base [--spacing:0.25rem] sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="lg:col-span-2">
           <BackLink href={returnTo}>Back to the queue</BackLink>
         </div>
@@ -365,7 +362,7 @@ export default async function ReviewSubmissionPage({
           {contributorNote ? (
             <Section title={tUi("the_contributors_note")}>
               <p
-                className="m-0 text-[15px] leading-[1.6] whitespace-pre-wrap"
+                className="m-0 text-base leading-[1.6] whitespace-pre-wrap"
                 style={{ color: T.ink.base }}
               >
                 {contributorNote}
@@ -416,7 +413,7 @@ export default async function ReviewSubmissionPage({
           </Section>
           <Section title={tUi("history")}>
             {d.reviewNote && events.every((e) => !e.note) ? (
-              <p className="m-0 text-[14px]" style={{ color: T.ink.base }}>
+              <p className="m-0 text-base" style={{ color: T.ink.base }}>
                 <strong>Moderator note: </strong>
                 {d.reviewNote}
               </p>
@@ -425,12 +422,12 @@ export default async function ReviewSubmissionPage({
           </Section>
           <nav
             aria-label={tUi("related_pages")}
-            className="flex flex-col gap-2 text-[15px]"
+            className="flex flex-col text-base"
           >
             {created?.link?.href ? (
               <Link
                 href={created.link.href}
-                className="inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline"
+                className="flex min-h-12 items-center gap-2 border-t border-(--t-border-line) py-3 font-semibold underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                 style={{ color: T.accent.primary }}
               >
                 <Icon
@@ -450,7 +447,7 @@ export default async function ReviewSubmissionPage({
               <Link
                 key={l.href}
                 href={l.href}
-                className="inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline"
+                className="flex min-h-12 items-center gap-2 border-t border-(--t-border-line) py-3 font-semibold underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                 style={{ color: T.accent.primary }}
               >
                 <Icon
@@ -464,7 +461,7 @@ export default async function ReviewSubmissionPage({
             ))}
             <Link
               href={returnTo}
-              className="inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline"
+              className="flex min-h-12 items-center gap-2 border-t border-(--t-border-line) py-3 font-semibold underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
               style={{ color: T.accent.primary }}
             >
               <Icon

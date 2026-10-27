@@ -18,9 +18,9 @@ export type StaffAccessRow = {
 }
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
 const PRIMARY_DANGER =
-  "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-[14px] font-semibold text-white disabled:opacity-50"
+  "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50"
 
 const initialsOf = (name: string) =>
   name
@@ -98,14 +98,10 @@ export function StaffAccessList({
       className="rounded-[20px] border p-6"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
-      <h2
-        id="staff-access-heading"
-        className="m-0 text-[24px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h2 id="staff-access-heading" className="type-h2 m-0">
         Staff ({rows.length})
       </h2>
-      <p className="m-0 mt-1 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
         Everyone who can publish to this record. Removing someone ends their
         access now and is recorded in the library’s staff audit.
       </p>
@@ -114,7 +110,7 @@ export function StaffAccessList({
       </p>
       {announce ? (
         <p
-          className="m-0 mt-4 flex items-start gap-2 rounded-[16px] px-4 py-3 text-[14px]"
+          className="m-0 mt-4 flex items-start gap-2 rounded-[16px] px-4 py-3 text-sm"
           style={{ background: NOTICE_TONES.ok.bg, color: NOTICE_TONES.ok.fg }}
         >
           <Icon
@@ -130,7 +126,7 @@ export function StaffAccessList({
       {error && !removing ? (
         <p
           role="alert"
-          className="m-0 mt-4 text-[14px]"
+          className="m-0 mt-4 text-sm"
           style={{ color: T.accent.danger }}
         >
           {error}
@@ -161,7 +157,7 @@ export function StaffAccessList({
                   >
                     {row.name}
                   </p>
-                  <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+                  <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
                     {row.source === "team"
                       ? "Assigned by a Team"
                       : row.source === "network"
@@ -203,7 +199,7 @@ export function StaffAccessList({
           ))}
         </ul>
       ) : (
-        <p className="m-0 mt-4 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-4 text-base" style={{ color: T.ink.dim }}>
           Nobody has staff access to this library.
         </p>
       )}
@@ -217,7 +213,7 @@ export function StaffAccessList({
             : "Remove from staff"
         }
       >
-        <p className="m-0 mb-5 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mb-5 text-base" style={{ color: T.ink.dim }}>
           Their staff access ends now, any live session they started stops, and
           they’re emailed. They can claim the library again later, and a
           moderator will check that claim.
@@ -225,7 +221,7 @@ export function StaffAccessList({
         {error ? (
           <p
             role="alert"
-            className="m-0 mb-4 text-[14px]"
+            className="m-0 mb-4 text-sm"
             style={{ color: T.accent.danger }}
           >
             {error}

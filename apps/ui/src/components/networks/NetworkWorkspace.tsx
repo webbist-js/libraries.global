@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback } from "react"
 
 import { Badge } from "@/components/ds/Badge"
 import { Notice } from "@/components/ds/Notice"
+import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import { NetworkClaimForm } from "@/components/networks/NetworkClaimForm"
 import { NetworkMandateCard } from "@/components/networks/NetworkMandateCard"
 import { NetworkPicker } from "@/components/networks/NetworkPicker"
@@ -208,7 +209,7 @@ export function NetworkWorkspace({
       <aside className="space-y-6">
         <StaffPanel title="Your affiliations" compact>
           {workspace && !workspace.affiliations.length ? (
-            <p className="mb-4 text-sm text-(--t-ink-dim)">
+            <p className="mb-4 text-base text-(--t-ink-dim)">
               No affiliations yet. Verified connections can appear on your
               profile when you choose to share them.
             </p>
@@ -218,24 +219,28 @@ export function NetworkWorkspace({
               key={row.documentId}
               className="border-b border-(--t-border-line) py-4"
             >
-              <h3 className="text-lg font-semibold">{row.network.name}</h3>
+              <h3 className="type-h3">{row.network.name}</h3>
               <p>
                 {row.role} · {reviewStatus(row.status)}
               </p>
-              <p className="text-sm">
+              <p className="text-base">
                 {row.publicDisplay
                   ? "Shown on your public profile"
                   : "Private profile affiliation"}
               </p>
             </div>
           ))}
-          <Link className={STAFF_LINK} href="/profile/settings">
-            Manage profile affiliations
-          </Link>
+          <SidebarLinks>
+            <li>
+              <Link className={STAFF_LINK} href="/profile/settings">
+                Manage profile affiliations
+              </Link>
+            </li>
+          </SidebarLinks>
         </StaffPanel>
         <StaffPanel title="Grouped requests" compact>
           {workspace && !workspace.requests.length ? (
-            <p className="mb-4 text-sm text-(--t-ink-dim)">
+            <p className="mb-4 text-base text-(--t-ink-dim)">
               Your service requests will appear here with their review status.
             </p>
           ) : null}
@@ -244,7 +249,7 @@ export function NetworkWorkspace({
               key={row.documentId}
               className="border-b border-(--t-border-line) py-3"
             >
-              <h3 className="font-semibold">{row.fields.networkName}</h3>
+              <h3 className="type-h3">{row.fields.networkName}</h3>
               <p>
                 {row.fields.intent === "employment"
                   ? "Affiliation"
@@ -271,9 +276,13 @@ export function NetworkWorkspace({
               ) : null}
             </div>
           ))}
-          <Link className={STAFF_LINK} href="/contribute/submissions">
-            Your submissions
-          </Link>
+          <SidebarLinks>
+            <li>
+              <Link className={STAFF_LINK} href="/contribute/submissions">
+                Your submissions
+              </Link>
+            </li>
+          </SidebarLinks>
         </StaffPanel>
         <StaffPanel title="How access works" compact>
           <ul className="m-0 list-none space-y-5 p-0">
@@ -303,7 +312,7 @@ export function NetworkWorkspace({
                 />
                 <div>
                   <strong className="text-sm">{item.title}</strong>
-                  <p className="mt-1 text-sm leading-relaxed text-(--t-ink-dim)">
+                  <p className="mt-1 text-base leading-relaxed text-(--t-ink-dim)">
                     {item.text}
                   </p>
                 </div>

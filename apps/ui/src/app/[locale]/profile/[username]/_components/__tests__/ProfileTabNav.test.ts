@@ -35,6 +35,7 @@ vi.mock("@/lib/navigation", async () => {
 
 afterEach(() => {
   cleanup()
+  nav.path = "/profile/ada"
 })
 
 const { ProfileTabNav } = await import("../ProfileTabNav")
@@ -47,6 +48,17 @@ describe("ProfileTabNav", () => {
     expect(tab.getAttribute("href")).toBe("/profile/ada/following")
     expect(tab.querySelector('[data-icon="mdi:heart-outline"]')).toBeTruthy()
     expect(screen.queryByRole("link", { name: /^Libraries/ })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Membership" })).toBeNull()
+  })
+
+  it("shows the private Membership tab only on your own profile and marks it active", () => {
+    nav.path = "/profile/membership"
+    render(
+      createElement(ProfileTabNav, { username: "ada", isOwnProfile: true })
+    )
+    const tab = screen.getByRole("link", { name: "Membership" })
+    expect(tab.getAttribute("href")).toBe("/profile/membership")
+    expect(tab.getAttribute("aria-current")).toBe("page")
   })
 
   it("marks Following as the current tab on its page, with its count", () => {

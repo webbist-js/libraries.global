@@ -168,12 +168,12 @@ export function LibraryDriveNote({
           className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
           style={{ background: T.accent.chip }}
         >
-          <p className="m-0 min-w-0 text-[14px]" style={{ color: T.ink.base }}>
+          <p className="m-0 min-w-0 text-sm" style={{ color: T.ink.base }}>
             Part of{" "}
             <Link
               href={driveHref(drive.slug)}
               className="font-semibold underline underline-offset-2"
-              style={{ color: T.accent.primaryHover, fontFamily: T.font.serif }}
+              style={{ color: T.accent.primaryHover, fontFamily: T.font.sans }}
             >
               <DriveTitle title={drive.title} />
             </Link>{" "}
@@ -182,7 +182,7 @@ export function LibraryDriveNote({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border bg-white px-4 text-[13.5px] font-semibold"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             {actionName}

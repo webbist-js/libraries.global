@@ -87,7 +87,7 @@ const cardStyle: React.CSSProperties = {
   background: T.bg.deep,
   border: `1px solid ${T.border.line}`,
 }
-const titleClass = "m-0 text-[16px] font-semibold"
+const titleClass = "m-0 text-base font-semibold"
 
 /**
  * The apply page's side column: what the chosen role can do, how
@@ -111,7 +111,7 @@ export function RoleApplicationAside({
       >
         <h2
           id="apply-powers"
-          className={titleClass}
+          className={`type-h2 ${titleClass}`}
           style={{ color: T.ink.base }}
         >
           What a {ROLE_NOUN[role]} can do
@@ -120,7 +120,7 @@ export function RoleApplicationAside({
           {POWERS[role].map((p) => (
             <li
               key={`${p.lead}${p.rest}`}
-              className="flex items-start gap-2.5 text-[14.5px] leading-[1.5]"
+              className="flex items-start gap-2.5 text-sm leading-[1.5]"
               style={{ color: T.ink.base }}
             >
               <Icon
@@ -146,13 +146,13 @@ export function RoleApplicationAside({
       >
         <h2
           id="apply-review"
-          className={titleClass}
+          className={`type-h2 ${titleClass}`}
           style={{ color: T.ink.base }}
         >
           How applications are reviewed
         </h2>
         <ol
-          className="m-0 mt-3 flex list-decimal flex-col gap-2 pl-5 text-[14.5px] leading-[1.5]"
+          className="m-0 mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm leading-[1.5]"
           style={{ color: T.ink.base }}
         >
           <li>{reviewer} reads your application and accepted changes.</li>
@@ -173,7 +173,7 @@ export function RoleApplicationAside({
           </li>
         </ol>
         <p
-          className="mt-4 mb-0 text-[13.5px] leading-[1.5]"
+          className="mt-4 mb-0 text-sm leading-[1.5]"
           style={{ color: T.ink.dim }}
         >
           Roles are never bought or earned through points. Paid membership
@@ -188,7 +188,7 @@ export function RoleApplicationAside({
       >
         <h2
           id="apply-other"
-          className={titleClass}
+          className={`type-h2 ${titleClass}`}
           style={{ color: T.ink.base }}
         >
           Looking for a different role?
@@ -206,11 +206,11 @@ export function RoleApplicationAside({
             <Icon icon="mdi:bank-outline" width={18} height={18} />
           </span>
           <span className="flex flex-col">
-            <span className="text-[15px] font-semibold group-hover:underline">
+            <span className="text-base font-semibold group-hover:underline">
               Library staff
             </span>
             <span
-              className="text-[14px] leading-[1.5]"
+              className="text-sm leading-[1.5]"
               style={{ color: T.ink.dim }}
             >
               Verify that you work at a library to look after its record.

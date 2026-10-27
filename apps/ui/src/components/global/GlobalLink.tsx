@@ -1,3 +1,4 @@
+import { membershipLink } from "@repo/shared-data"
 import type React from "react"
 
 import { formatHref, isAppLink, Link } from "@/lib/navigation"
@@ -19,7 +20,7 @@ export function GlobalLink({
   fallbackAs = "span",
   ...props
 }: GlobalLinkProps) {
-  const formattedHref = formatHref(href)
+  const formattedHref = formatHref(href ? membershipLink(href) : href)
 
   if (!formattedHref || formattedHref === "#") {
     const FallbackTag = fallbackAs

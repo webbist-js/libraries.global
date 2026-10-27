@@ -16,9 +16,7 @@ export function SourceRecordsEditor({
 
   return (
     <div className="grid gap-3">
-      <h3 className="m-0 text-base font-semibold">
-        {t("public_source_references")}
-      </h3>
+      <h3 className="type-h3 m-0">{t("public_source_references")}</h3>
       <p className="m-0 text-sm">{t("public_source_references_help")}</p>
       {value.map((record, index) => (
         <fieldset key={index} className="grid gap-3 rounded-xl border p-4">

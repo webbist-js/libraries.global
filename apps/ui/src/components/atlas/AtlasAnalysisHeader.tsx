@@ -76,12 +76,7 @@ export function AtlasAnalysisHeader({
           </button>
         </div>
       </div>
-      <h2
-        className="m-0 text-[28px] leading-tight"
-        style={{ fontFamily: T.font.serif }}
-      >
-        {title}
-      </h2>
+      <h2 className="type-h2 m-0">{title}</h2>
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         {description}
       </p>

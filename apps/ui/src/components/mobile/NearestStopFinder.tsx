@@ -109,11 +109,7 @@ export function NearestStopFinder({
       style={{ borderColor: T.border.line, background: T.bg.deep }}
       aria-labelledby="nearest-stop-heading"
     >
-      <h3
-        id="nearest-stop-heading"
-        className="mt-0 mb-3 text-[20px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h3 id="nearest-stop-heading" className="type-h3 mt-0 mb-3">
         Find your nearest stop
       </h3>
       <div className="flex flex-wrap items-end gap-3">

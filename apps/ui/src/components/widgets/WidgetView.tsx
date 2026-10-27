@@ -39,12 +39,12 @@ export function WidgetView({
       <header className="mb-5 space-y-2">
         <Heading
           id={`${id}-title`}
-          className="m-0 font-serif text-[clamp(26px,4vw,38px)] leading-tight font-medium wrap-break-word"
+          className="type-panel-title m-0 wrap-break-word"
         >
           {c.title}
         </Heading>
         {c.introduction ? (
-          <p className="m-0 text-[16px] text-(--t-ink-dim)">{c.introduction}</p>
+          <p className="m-0 text-base text-(--t-ink-dim)">{c.introduction}</p>
         ) : null}
         <p className="sr-only">{c.description}</p>
       </header>

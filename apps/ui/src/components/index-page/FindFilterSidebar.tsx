@@ -289,7 +289,7 @@ export function FindFilterSidebar({
             className="m-0 mt-3 min-w-0 border-0 p-0"
           >
             <legend
-              className="p-0 text-[14px] font-semibold"
+              className="p-0 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               Distance
@@ -363,14 +363,14 @@ function PlaceSelects({
         return (
           <label
             key={level}
-            className="flex flex-col gap-1.5 text-[14px] font-semibold"
+            className="flex flex-col gap-1.5 text-sm font-semibold"
             style={{ color: T.ink.dim }}
           >
             {label}
             <select
               value={path[level]}
               onChange={(e) => onChange(pickPlace(path, level, e.target.value))}
-              className="min-h-11 w-full cursor-pointer rounded-[14px] px-3 text-[15px] font-normal"
+              className="min-h-11 w-full cursor-pointer rounded-[14px] px-3 text-base font-normal"
               style={{
                 background: T.bg.deep,
                 border: `1px solid ${T.border.hi}`,

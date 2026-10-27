@@ -93,7 +93,7 @@ export function ModerationFilters({
               type="button"
               aria-pressed={active}
               onClick={() => onChange({ segment: s.id })}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-[14px] transition-colors"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors"
               style={{
                 background: active ? T.accent.chip : "transparent",
                 color: active ? T.accent.primary : T.ink.dim,
@@ -107,7 +107,7 @@ export function ModerationFilters({
               {s.label}
               {count !== undefined ? (
                 <span
-                  className="rounded-full px-2 text-[13px] font-semibold tabular-nums"
+                  className="rounded-full px-2 text-sm font-semibold tabular-nums"
                   style={{
                     background: active ? T.accent.chip : T.bg.muted,
                     color: active ? T.accent.primary : T.ink.dim,
@@ -128,7 +128,7 @@ export function ModerationFilters({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={ids.queue}
-              className="text-[14px] font-semibold"
+              className="text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               {value.category === "articles"
@@ -146,7 +146,7 @@ export function ModerationFilters({
               onValueChange={(queue) =>
                 onChange({ queue: queue as QueueFilters["queue"] })
               }
-              className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-[14px] shadow-none"
+              className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-sm shadow-none"
               options={[
                 {
                   value: "",
@@ -167,7 +167,7 @@ export function ModerationFilters({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={ids.locale}
-              className="text-[14px] font-semibold"
+              className="text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               {tUi("language")}{" "}
@@ -177,7 +177,7 @@ export function ModerationFilters({
               label={tUi("language")}
               value={value.locale}
               onValueChange={(locale) => onChange({ locale })}
-              className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-[14px] shadow-none"
+              className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-sm shadow-none"
               options={[
                 { value: "", label: "All languages" },
                 ...locales.map((locale) => ({

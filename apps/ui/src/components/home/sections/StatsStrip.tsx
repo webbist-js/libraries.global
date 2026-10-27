@@ -50,14 +50,14 @@ export function StatsStrip({
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p
-          className="m-0 text-[11px] font-semibold tracking-[0.12em] uppercase"
+          className="m-0 text-xs font-semibold tracking-[0.12em] uppercase"
           style={{ color: T.ink.dim }}
         >
           {tUi("the_index_so_far")}
         </p>
         <GlobalLink
           href="/knowledge/data-api/how-we-count"
-          className="inline-flex items-center gap-1.5 text-[12px] font-medium text-(--t-accent-primary) no-underline transition-colors hover:text-(--t-accent-primary-hover) hover:underline hover:underline-offset-4"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-(--t-accent-primary) no-underline transition-colors hover:text-(--t-accent-primary-hover) hover:underline hover:underline-offset-4"
         >
           How we count
           <span aria-hidden="true">→</span>
@@ -67,16 +67,14 @@ export function StatsStrip({
         {cells.map((cell) => (
           <div key={cell.label} className="flex min-w-0 flex-col gap-2">
             <dt
-              className="order-2 text-[13px] leading-5"
+              className="order-2 text-sm leading-5"
               style={{ color: T.ink.dim }}
             >
               {cell.label}
             </dt>
             <dd
-              className="order-1 m-0 text-[36px] leading-none tracking-[-0.02em] tabular-nums sm:text-[42px]"
+              className="type-stat order-1 m-0"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
                 color: T.ink.base,
               }}
             >

@@ -198,7 +198,7 @@ function ViewLink({
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 rounded-full border bg-white px-4 py-1.5 text-[14px] font-semibold whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-surface)"
+      className="inline-flex items-center gap-1 rounded-full border bg-white px-4 py-1.5 text-sm font-semibold whitespace-nowrap no-underline transition-colors hover:bg-(--t-bg-surface)"
       style={{ borderColor: T.border.hi, color: T.ink.base }}
     >
       {tUi("view")} {kind}
@@ -275,7 +275,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
         action: (
           <Link
             href={next.href}
-            className="inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-[14px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            className="inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
             style={{ background: T.accent.primary }}
           >
             {s.status === "needs_info"
@@ -322,7 +322,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
         action: (
           <Link
             href={staffLibraryHref(s.targetSlug)}
-            className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-[14px] font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
             style={{ background: T.accent.primary }}
           >
             Open Staff area
@@ -348,7 +348,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
         title="Your contributions, *in flight.*"
         lead="Drafts, changes in review and decisions, with the moderator’s note where there is one."
       >
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           This list refreshes every minute.
         </p>
       </ContributeSectionHeader>
@@ -394,19 +394,15 @@ export function SubmissionsShell({ username }: { username: string | null }) {
             >
               <h2
                 id="subs-empty"
-                className="m-0"
+                className="type-h2 m-0"
                 style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "24px",
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
                   color: T.ink.base,
                 }}
               >
                 No submissions yet
               </h2>
               <p
-                className="mt-2 mb-3 text-[15px] leading-[1.6]"
+                className="mt-2 mb-3 text-base leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
                 Libraries you add, corrections and articles appear here as soon
@@ -418,7 +414,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
             </section>
           ) : (
             <div className="flex flex-col gap-6">
-              <h2 className="sr-only">{tUi("submission_summary")}</h2>
+              <h2 className="type-h2 sr-only">{tUi("submission_summary")}</h2>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <StatCard
                   label={tUi("drafts")}
@@ -459,7 +455,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
                 rowExtras={rowExtras}
                 intro={
                   username ? (
-                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                       Accepted ones also make up the public record on{" "}
                       <Link
                         href={`/profile/${encodeURIComponent(username)}/contributions`}

@@ -120,12 +120,8 @@ export default async function LeaderboardPage({
           <div className="flex flex-wrap items-center justify-between gap-[12px]">
             <h2
               id="leaderboard-heading"
-              className="m-0"
+              className="type-h2 m-0"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
-                fontSize: "clamp(30px,3.2vw,42px)",
-                lineHeight: 1.1,
                 color: T.ink.base,
               }}
             >
@@ -146,7 +142,7 @@ export default async function LeaderboardPage({
           ) : null}
 
           <p
-            className="m-0 text-[14px] leading-normal"
+            className="m-0 text-sm leading-normal"
             style={{ marginTop: -12, color: T.ink.dim }}
           >
             Points only come from approved changes. Acceptance rate is shown so

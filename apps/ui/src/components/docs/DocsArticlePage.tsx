@@ -8,6 +8,7 @@ import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { MainContent } from "@/components/ds/MainContent"
+import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
@@ -157,9 +158,7 @@ export function DocsArticlePage({
                   },
                 ]}
               />
-              <h1 className="mt-4 mb-0 font-serif text-[clamp(36px,4.5vw,58px)] leading-[1.06] font-medium tracking-[-0.025em] text-pretty">
-                {title}
-              </h1>
+              <h1 className="type-h1 mt-4 mb-0 text-pretty">{title}</h1>
               {untranslatedLocale ? (
                 <NotTranslatedNote locale={untranslatedLocale} />
               ) : null}
@@ -257,7 +256,7 @@ export function DocsArticlePage({
                   />
                   {/* Heading margins are in rem: the spacing scale is em-based,
                     so mt-* on a 26px heading would scale with it. */}
-                  <div className="[&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[26px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[20px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
+                  <div className="article-prose [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3:first-child]:mt-0">
                     <ArticleBodyBlocks blocks={body} />
                   </div>
                 </div>
@@ -319,14 +318,14 @@ export function DocsArticlePage({
                     }}
                   >
                     <span
-                      className="block text-[13px]"
+                      className="block text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       ← {tArticle("previous")}
                     </span>
                     <span
-                      className="mt-1 block text-[19px] font-medium"
-                      style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                      className="mt-1 block text-lg font-medium"
+                      style={{ fontFamily: T.font.sans, color: T.ink.base }}
                     >
                       {previous.title}
                     </span>
@@ -344,14 +343,14 @@ export function DocsArticlePage({
                     }}
                   >
                     <span
-                      className="block text-[13px]"
+                      className="block text-sm"
                       style={{ color: T.ink.dim }}
                     >
                       {tArticle("next")} →
                     </span>
                     <span
-                      className="mt-1 block text-[19px] font-medium"
-                      style={{ fontFamily: T.font.serif, color: T.ink.base }}
+                      className="mt-1 block text-lg font-medium"
+                      style={{ fontFamily: T.font.sans, color: T.ink.base }}
                     >
                       {next.title}
                     </span>
@@ -375,16 +374,13 @@ export function DocsArticlePage({
                   className="rounded-[20px] border p-5"
                   style={{ background: T.bg.deep, borderColor: T.border.line }}
                 >
-                  <p
-                    className="m-0 mb-2 text-[15px] font-semibold"
+                  <h2
+                    className="type-panel-title m-0 mb-3"
                     style={{ color: T.ink.base }}
                   >
                     {tUi("on_this_page")}
-                  </p>
-                  <ul
-                    className="m-0 flex list-none flex-col gap-1 border-l p-0 pl-3"
-                    style={{ borderColor: T.border.divider }}
-                  >
+                  </h2>
+                  <SidebarLinks>
                     {headings.map((heading) => (
                       <li
                         key={heading.id}
@@ -394,16 +390,12 @@ export function DocsArticlePage({
                             : undefined
                         }
                       >
-                        <a
-                          className="block py-0.5 text-[14px] leading-snug transition-colors hover:text-(--t-accent-primary)"
-                          href={`#${heading.id}`}
-                          style={{ color: T.ink.dim }}
-                        >
+                        <a className="leading-snug" href={`#${heading.id}`}>
                           {heading.text}
                         </a>
                       </li>
                     ))}
-                  </ul>
+                  </SidebarLinks>
                 </nav>
               ) : null}
 
@@ -422,11 +414,11 @@ export function DocsArticlePage({
                       className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0"
                       style={{ borderColor: T.border.divider }}
                     >
-                      <dt className="text-[14px]" style={{ color: T.ink.dim }}>
+                      <dt className="text-sm" style={{ color: T.ink.dim }}>
                         {row.label}
                       </dt>
                       <dd
-                        className="m-0 text-right text-[14px] font-semibold"
+                        className="m-0 text-right text-sm font-semibold"
                         style={{ color: T.ink.base }}
                       >
                         {row.value}

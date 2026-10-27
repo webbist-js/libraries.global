@@ -77,19 +77,15 @@ export function ContributionList<I extends ContributionItem, F extends string>({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2
             id={titleId}
-            className="m-0"
+            className="type-h2 m-0"
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "24px",
-              fontWeight: 500,
-              letterSpacing: "-0.01em",
               color: T.ink.base,
             }}
           >
             {title}
           </h2>
           <span
-            className="text-[15px]"
+            className="text-base"
             style={{ color: T.ink.dim }}
             aria-live="polite"
           >
@@ -110,7 +106,7 @@ export function ContributionList<I extends ContributionItem, F extends string>({
 
       {grouped.length === 0 ? (
         <p
-          className="m-0 border-t px-6 py-6 text-[15px]"
+          className="m-0 border-t px-6 py-6 text-base"
           style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
         >
           Nothing here yet.
@@ -119,7 +115,7 @@ export function ContributionList<I extends ContributionItem, F extends string>({
         grouped.map((group) => (
           <div key={group.label}>
             <h3
-              className="m-0 border-t px-6 pt-4 pb-1 text-[14px] font-semibold"
+              className="type-small-heading m-0 border-t px-6 pt-4 pb-1"
               style={{ borderTopColor: T.border.line, color: T.ink.low }}
             >
               {group.label}

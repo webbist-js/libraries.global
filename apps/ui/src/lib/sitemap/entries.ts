@@ -173,7 +173,7 @@ const STATIC_ROUTES: {
   },
   { path: "contribute", changeFrequency: "monthly", priority: 0.5 },
   {
-    path: "contribute/membership",
+    path: "plans",
     changeFrequency: "monthly",
     priority: 0.5,
   },

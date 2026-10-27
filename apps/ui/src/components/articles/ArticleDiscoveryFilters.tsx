@@ -383,7 +383,7 @@ export function ArticleDiscoveryFilters({
           <DialogTrigger asChild>
             <button
               type="button"
-              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted) ${compact ? "h-[44px] min-h-[44px] text-[15px]" : ""}`}
+              className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted) ${compact ? "h-[44px] min-h-[44px] text-base" : ""}`}
               style={{ borderColor: T.border.hi }}
             >
               <Icon aria-hidden="true" icon="mdi:tune-variant" width={18} />
@@ -397,10 +397,7 @@ export function ArticleDiscoveryFilters({
             style={{ background: T.bg.deep, color: T.ink.base }}
           >
             <div className="shrink-0 border-b border-(--t-border-line) px-5 pt-6 pb-5 sm:px-7">
-              <DialogTitle
-                className="pr-10 text-[30px] font-medium"
-                style={{ fontFamily: T.font.serif }}
-              >
+              <DialogTitle className="type-h2 pr-10">
                 {p("filters")}
               </DialogTitle>
               <DialogDescription className="mt-2 max-w-[55ch] text-sm leading-relaxed text-(--t-ink-dim)">

@@ -108,14 +108,11 @@ function RoleCard({
         <Icon icon={icon} width={20} height={20} aria-hidden="true" />
       </span>
       <span className="flex flex-col">
-        <span
-          className="text-[16px] font-semibold"
-          style={{ color: T.ink.base }}
-        >
+        <span className="text-base font-semibold" style={{ color: T.ink.base }}>
           {title}
         </span>
         {note ? (
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             {note}
           </span>
         ) : null}
@@ -189,7 +186,7 @@ export function ProfileHero({
               style={{
                 background: avatar ? "transparent" : palette.bg,
                 color: avatar ? undefined : palette.fg,
-                fontFamily: T.font.serif,
+                fontFamily: T.font.sans,
                 fontWeight: 500,
               }}
             >
@@ -205,13 +202,8 @@ export function ProfileHero({
             {/* Wraps under the avatar on narrow screens */}
             <div className="min-w-0 flex-1 basis-[min(100%,420px)]">
               <h1
-                className="m-0"
+                className="type-h1 m-0"
                 style={{
-                  fontFamily: T.font.serif,
-                  fontSize: "clamp(42px, 5.4vw, 68px)",
-                  fontWeight: 500,
-                  lineHeight: 1.02,
-                  letterSpacing: "-0.02em",
                   color: T.ink.base,
                 }}
               >
@@ -219,7 +211,7 @@ export function ProfileHero({
               </h1>
 
               <p
-                className="mt-3 mb-0 flex flex-wrap gap-x-7 gap-y-1.5 text-[16px]"
+                className="mt-3 mb-0 flex flex-wrap gap-x-7 gap-y-1.5 text-base"
                 style={{ color: T.ink.dim }}
               >
                 <MetaItem icon="mdi:at">{profile.username}</MetaItem>
@@ -239,7 +231,7 @@ export function ProfileHero({
 
               {profile.bio ? (
                 <p
-                  className="mt-3 mb-0 max-w-[64ch] text-[17px] leading-[1.55]"
+                  className="mt-3 mb-0 max-w-[64ch] text-base leading-[1.55]"
                   style={{ color: T.ink.base }}
                 >
                   {profile.bio}
@@ -317,7 +309,7 @@ export function ProfileHero({
               {isFounder(profile.username) ? (
                 <GlobalLink
                   href={KOFI_URL}
-                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-[15px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
+                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-base font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
                   style={{ borderColor: T.border.hi }}
                 >
                   <Icon

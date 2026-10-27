@@ -16,7 +16,7 @@ import {
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
-const cell = "px-4 py-4 text-left align-top text-[14px]"
+const cell = "px-4 py-4 text-left align-top text-sm"
 
 /** Presentation only; the guarded queue supplies server-scoped submissions. */
 export function ModerationSubmissionList({
@@ -70,7 +70,7 @@ export function ModerationSubmissionList({
                 <div className="flex flex-col items-start gap-1.5">
                   <Link
                     href={reviewHref(row.documentId, returnTo)}
-                    className="inline-flex items-start gap-1.5 text-[15px] leading-relaxed font-semibold text-(--t-accent-primary) underline-offset-2 hover:underline"
+                    className="inline-flex items-start gap-1.5 text-base leading-relaxed font-semibold text-(--t-accent-primary) underline-offset-2 hover:underline"
                   >
                     {row.summary}
                     <ArrowUpRight

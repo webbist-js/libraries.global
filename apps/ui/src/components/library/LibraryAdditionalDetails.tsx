@@ -43,7 +43,7 @@ export function LibraryAmenitiesSection({
                       .map((row) => (
                         <li key={row.label}>
                           <span
-                            className="inline-flex rounded-full px-3.5 py-2 text-[15px] font-semibold"
+                            className="inline-flex rounded-full px-3.5 py-2 text-base font-semibold"
                             style={{
                               background: T.bg.space,
                               color: T.ink.base,
@@ -84,7 +84,7 @@ export function LibraryAmenitiesSection({
                   ) : null
                 })}
                 <div
-                  className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]"
+                  className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   {languages?.trim() || classification?.trim() ? (
@@ -99,7 +99,7 @@ export function LibraryAmenitiesSection({
                   ) : null}
                   <OpenCorrectionLink
                     category="Services and facilities"
-                    className="inline-flex min-h-11 items-center text-[14px] underline underline-offset-[3px]"
+                    className="inline-flex min-h-11 items-center text-sm underline underline-offset-[3px]"
                   >
                     Add a service
                   </OpenCorrectionLink>

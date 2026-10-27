@@ -53,17 +53,14 @@ export function ContributionRow({
         <Icon icon={kind.icon} width={19} height={19} />
       </span>
       <div className="min-w-0 flex-1">
-        <p
-          className="m-0 text-[14px] font-semibold"
-          style={{ color: T.ink.dim }}
-        >
+        <p className="m-0 text-sm font-semibold" style={{ color: T.ink.dim }}>
           {kind.label}
         </p>
         <p
           className="m-0 truncate"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "21px",
+            fontFamily: T.font.sans,
+            fontSize: "var(--type-body-xl-size)",
             fontWeight: 500,
             color: T.ink.base,
           }}
@@ -72,7 +69,7 @@ export function ContributionRow({
         </p>
         {item.editSummary ? (
           <p
-            className="m-0 mt-0.5 truncate text-[15px]"
+            className="m-0 mt-0.5 truncate text-base"
             style={{ color: T.ink.dim }}
           >
             “{item.editSummary}”
@@ -101,7 +98,7 @@ export function ContributionRow({
               }}
             />
             <p
-              className="m-0 text-[15px] leading-[1.55]"
+              className="m-0 text-base leading-[1.55]"
               style={{ color: T.ink.base }}
             >
               <span
@@ -119,7 +116,7 @@ export function ContributionRow({
       </div>
       <div className="flex shrink-0 flex-col items-end text-right">
         <p
-          className="m-0 inline-flex items-center gap-1 text-[14px] font-semibold"
+          className="m-0 inline-flex items-center gap-1 text-sm font-semibold"
           style={{ color: status.color }}
         >
           {showStatusIcon ? (
@@ -132,12 +129,12 @@ export function ContributionRow({
           ) : null}
           {status.label}
         </p>
-        <p className="m-0 text-[13px]" style={{ color: T.ink.low }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.low }}>
           {relativeTime(item.createdAt)}
         </p>
         {points != null ? (
           <p
-            className="m-0 text-[13px] font-semibold"
+            className="m-0 text-sm font-semibold"
             style={{ color: "var(--tint-public-fg)" }}
           >
             +{points} points

@@ -96,10 +96,10 @@ function NoticeRow({
         />
       </div>
       <div className="min-w-0 flex-[1_1_220px]">
-        <p className="m-0 text-[16px]" style={{ color: T.ink.base }}>
+        <p className="m-0 text-base" style={{ color: T.ink.base }}>
           {notice.message}
         </p>
-        <p className="m-0 mt-1 text-[13.5px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
           {noticeDates(notice, locale)}
           {!notice.to && !ended ? " · shown for 30 days" : ""}
           {ended
@@ -214,14 +214,10 @@ export function StaffNotices({
         style={{ background: T.bg.deep, borderColor: T.border.line }}
         aria-labelledby="notices-heading"
       >
-        <h2
-          id="notices-heading"
-          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
+        <h2 id="notices-heading" className="type-h2 m-0">
           {tUi("notices")}
         </h2>
-        <p className="m-0 mt-4 text-[16px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-4 text-base" style={{ color: T.ink.dim }}>
           Shown at the top of your library page, and in search while they apply.
         </p>
         <p role="status" aria-live="polite" className="sr-only">
@@ -230,7 +226,7 @@ export function StaffNotices({
         {error && !ending && (
           <div
             role="alert"
-            className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] px-4 py-3 text-[14px]"
+            className="mt-4 flex flex-wrap items-center gap-3 rounded-[16px] px-4 py-3 text-sm"
             style={{ background: T.bg.surface, color: T.ink.base }}
           >
             <Icon
@@ -282,7 +278,7 @@ export function StaffNotices({
               className="mt-0.5 shrink-0"
               style={{ color: T.ink.dim }}
             />
-            <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 text-base" style={{ color: T.ink.dim }}>
               <span className="font-semibold" style={{ color: T.ink.base }}>
                 No notices showing.
               </span>{" "}
@@ -296,7 +292,7 @@ export function StaffNotices({
           <section className="mt-8" aria-labelledby="past-notices-heading">
             <h3
               id="past-notices-heading"
-              className="m-0 text-[17px] font-semibold"
+              className="type-small-heading m-0"
               style={{ color: T.ink.base }}
             >
               Past notices from the last 30 days
@@ -324,10 +320,10 @@ export function StaffNotices({
       >
         {ending ? (
           <>
-            <p className="m-0 text-[15px]" style={{ color: T.ink.base }}>
+            <p className="m-0 text-base" style={{ color: T.ink.base }}>
               {ending.message}
             </p>
-            <p className="m-0 mt-2 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
               {LIBRARY_NOTICE_LABELS[ending.type]} ·{" "}
               {noticeDates(ending, locale)}. It stops showing on the library
               page and in search straight away. This can’t be undone, but you
@@ -336,7 +332,7 @@ export function StaffNotices({
             {error && error.retry === ending.id ? (
               <p
                 role="alert"
-                className="m-0 mt-3 text-[14px]"
+                className="m-0 mt-3 text-sm"
                 style={{ color: T.accent.danger }}
               >
                 {error.message}

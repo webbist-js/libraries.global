@@ -188,7 +188,7 @@ export function AtlasLayersTab({
             Open analysis
           </button>
         ) : (
-          <h4 className="m-0 text-sm font-bold">{configured.name} settings</h4>
+          <h4 className="type-h4 m-0">{configured.name} settings</h4>
         )}
         {configured.id !== "perCapita" ? (
           <button
@@ -302,10 +302,7 @@ export function AtlasLayersTab({
   return (
     <div className="flex flex-col gap-7">
       <div className="flex items-center justify-between gap-2">
-        <h2
-          className="m-0 text-[30px] leading-tight"
-          style={{ fontFamily: T.font.serif }}
-        >
+        <h2 className="type-h2 m-0">
           Layers{" "}
           <span
             className="ml-1 text-sm font-normal"
@@ -334,7 +331,7 @@ export function AtlasLayersTab({
             <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 border-b border-(--t-border-line) pb-2.5">
               <h3
                 id={`atlas-layers-${group.id}`}
-                className="m-0 text-xs leading-5 font-bold tracking-[0.055em] uppercase"
+                className="type-label m-0 uppercase"
                 style={{ color: T.ink.dim }}
               >
                 {group.name}

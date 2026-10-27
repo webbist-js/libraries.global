@@ -85,10 +85,7 @@ export function TakeOnARole({
           single ? undefined : "flex flex-wrap items-baseline gap-x-6 gap-y-2"
         }
       >
-        <h2
-          id="take-on-a-role"
-          className="m-0 font-serif text-[26px] leading-tight font-medium text-(--t-ink-base)"
-        >
+        <h2 id="take-on-a-role" className="type-h2 m-0 text-(--t-ink-base)">
           Take on a role
         </h2>
         <p
@@ -130,9 +127,7 @@ export function TakeOnARole({
                 <Icon size={20} aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <h3 className="m-0 font-serif text-[22px] leading-tight font-medium text-(--t-ink-base)">
-                  {title}
-                </h3>
+                <h3 className="type-h3 m-0 text-(--t-ink-base)">{title}</h3>
                 <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                   {copy}
                 </p>

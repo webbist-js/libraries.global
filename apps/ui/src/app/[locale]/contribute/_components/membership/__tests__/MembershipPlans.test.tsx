@@ -105,7 +105,7 @@ it("takes existing paid members to management or the Atlas instead of a second c
   ).toBe("/map")
   expect(
     screen.getByRole("link", { name: "Manage membership" }).getAttribute("href")
-  ).toBe("/profile/settings#membership")
+  ).toBe("/profile/membership")
 })
 
 it("keeps Team enquiries available for current Team members", () => {

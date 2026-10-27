@@ -77,7 +77,7 @@ export function SuggestionConversation({
     <div className="relative">
       <button
         type="button"
-        className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 text-[13px] font-semibold text-(--t-ink-dim) hover:text-(--t-accent-primary) hover:underline"
+        className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 text-sm font-semibold text-(--t-ink-dim) hover:text-(--t-accent-primary) hover:underline"
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(

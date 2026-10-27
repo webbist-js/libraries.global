@@ -32,7 +32,7 @@ export function TranslationBanner({
   return (
     <div
       role="note"
-      className="mb-8 flex items-start gap-3 rounded-[20px] p-5 text-[15px] leading-[1.5]"
+      className="mb-8 flex items-start gap-3 rounded-[20px] p-5 text-base leading-[1.5]"
       style={{
         background: T.accent.chip,
         border: `1px solid ${T.border.line}`,

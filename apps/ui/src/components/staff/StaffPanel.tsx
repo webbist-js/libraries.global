@@ -35,10 +35,8 @@ export function StaffPanel({
           <h2
             id={id ? `${id}-title` : undefined}
             className={cn(
-              "m-0 min-w-0 font-serif font-medium text-balance text-(--t-ink-base)",
-              compact
-                ? "text-[24px] leading-tight"
-                : "text-[clamp(26px,2.8vw,34px)] leading-[1.15]"
+              "m-0 min-w-0 text-balance text-(--t-ink-base)",
+              compact ? "type-panel-title" : "type-h2"
             )}
           >
             {title}
@@ -57,6 +55,6 @@ export function StaffPanel({
 }
 
 export const STAFF_FIELD =
-  "min-h-11 w-full min-w-0 rounded-[14px] border border-(--t-border-line) bg-(--t-bg-surface) px-3.5 py-2.5 text-[16px] leading-normal font-normal text-(--t-ink-base) shadow-none outline-none focus-visible:border-(--t-accent-primary) focus-visible:ring-2 focus-visible:ring-(--t-accent-primary)/30 disabled:cursor-not-allowed disabled:opacity-60 md:text-[15px]"
+  "min-h-11 w-full min-w-0 rounded-[14px] border border-(--t-border-line) bg-(--t-bg-surface) px-3.5 py-2.5 text-base leading-normal font-normal text-(--t-ink-base) shadow-none outline-none focus-visible:border-(--t-accent-primary) focus-visible:ring-2 focus-visible:ring-(--t-accent-primary)/30 disabled:cursor-not-allowed disabled:opacity-60 md:text-base"
 export const STAFF_LINK =
   "font-semibold text-(--t-accent-primary) underline underline-offset-4 hover:text-(--t-accent-primary-hover)"

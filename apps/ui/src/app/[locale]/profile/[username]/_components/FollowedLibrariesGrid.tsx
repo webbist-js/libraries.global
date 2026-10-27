@@ -97,7 +97,7 @@ function LibraryTile({
             aria-hidden="true"
             className="flex size-full items-center justify-center"
             style={{
-              fontFamily: T.font.serif,
+              fontFamily: T.font.sans,
               fontSize: compact ? "32px" : "44px",
               fontWeight: 500,
               color: tint.fg,
@@ -115,7 +115,7 @@ function LibraryTile({
         <p
           className="m-0"
           style={{
-            fontFamily: T.font.serif,
+            fontFamily: T.font.sans,
             fontSize: compact ? "17px" : "20px",
             fontWeight: 500,
             lineHeight: 1.25,
@@ -127,7 +127,7 @@ function LibraryTile({
         <div className="flex flex-wrap items-center gap-1.5">
           {lib.libraryType ? (
             <span
-              className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+              className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{ background: tint.bg, color: tint.fg }}
             >
               {lib.libraryType}
@@ -135,7 +135,7 @@ function LibraryTile({
           ) : null}
           {roleLabel ? (
             <span
-              className="rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+              className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{
                 background: "var(--tint-public-bg)",
                 color: "var(--tint-public-fg)",
@@ -146,7 +146,7 @@ function LibraryTile({
           ) : null}
         </div>
         {place ? (
-          <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
             {place}
           </p>
         ) : null}
@@ -199,7 +199,7 @@ export function FollowedLibrariesGrid({
     return (
       emptyState ?? (
         <div className="flex flex-col items-start gap-4">
-          <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="m-0 text-base" style={{ color: T.ink.dim }}>
             Not following any libraries yet. Find a library and follow its page
             to keep up with changes.
           </p>
@@ -233,7 +233,7 @@ export function FollowedLibrariesGrid({
         <p className="m-0 mt-3 text-right">
           <Link
             href={`/profile/${username}/following`}
-            className="text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+            className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
             style={{ color: T.accent.primary }}
           >
             See all {libraries.length}

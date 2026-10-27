@@ -25,7 +25,7 @@ export function LibraryAboutDisclosure({
   readonly title?: string
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px]">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
       {children ? (
         <Dialog>
           <DialogTrigger asChild>
@@ -46,21 +46,16 @@ export function LibraryAboutDisclosure({
             }}
           >
             <DialogHeader className="text-left">
-              <DialogTitle
-                className="pr-7 text-[30px] leading-tight"
-                style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-              >
-                {title}
-              </DialogTitle>
+              <DialogTitle className="type-h2 pr-7">{title}</DialogTitle>
               <DialogDescription
-                className="text-[14px]"
+                className="text-sm"
                 style={{ color: T.ink.dim }}
               >
                 The history, building and collections recorded for this library.
               </DialogDescription>
             </DialogHeader>
             <div
-              className="text-[16px] leading-[1.65]"
+              className="text-base leading-[1.65]"
               style={{ color: T.ink.dim }}
             >
               {children}

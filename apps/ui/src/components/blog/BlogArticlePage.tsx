@@ -10,6 +10,7 @@ import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { MainContent } from "@/components/ds/MainContent"
+import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
@@ -39,7 +40,7 @@ function FounderTag() {
 
   return (
     <span
-      className="ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 align-middle text-[12px] font-semibold"
+      className="ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 align-middle text-xs font-semibold"
       style={{
         fontFamily: T.font.sans,
         background: "var(--tint-special-bg)",
@@ -188,10 +189,7 @@ export function BlogArticlePage({
                     {article.category.name}
                   </p>
                 ) : null}
-                <h1
-                  className="mt-3 mb-0 text-[clamp(38px,4.5vw,60px)] leading-[1.02] tracking-[-0.02em] text-balance"
-                  style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-                >
+                <h1 className="type-h1 mt-3 mb-0 text-balance">
                   {article.title}
                 </h1>
                 {untranslatedLocale ? (
@@ -200,8 +198,8 @@ export function BlogArticlePage({
 
                 {article.summary ? (
                   <p
-                    className="mt-5 mb-0 max-w-[58ch] text-[21px] leading-[1.5] text-pretty"
-                    style={{ color: T.ink.dim, fontFamily: T.font.serif }}
+                    className="mt-5 mb-0 max-w-[58ch] text-xl leading-[1.5] text-pretty"
+                    style={{ color: T.ink.dim, fontFamily: T.font.sans }}
                   >
                     {article.summary}
                   </p>
@@ -212,7 +210,7 @@ export function BlogArticlePage({
                   <div className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="flex size-10 flex-none items-center justify-center overflow-hidden rounded-full text-[15px] font-semibold"
+                      className="flex size-10 flex-none items-center justify-center overflow-hidden rounded-full text-base font-semibold"
                       style={{
                         background: "var(--tint-national-bg)",
                         color: "var(--tint-national-fg)",
@@ -231,7 +229,7 @@ export function BlogArticlePage({
                     </span>
                     <div>
                       <p
-                        className="m-0 text-[15px] font-semibold"
+                        className="m-0 text-base font-semibold"
                         style={{ color: T.ink.base }}
                       >
                         {authorName && authorHref ? (
@@ -343,7 +341,7 @@ export function BlogArticlePage({
                 />
                 {/* Heading margins are in rem: the spacing scale is em-based,
                   so mt-* on a 28px heading would scale with it. */}
-                <div className="article-drop-cap [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2]:[font-family:var(--font-newsreader),Georgia,serif] [&_h2]:text-[28px] [&_h2]:font-medium [&_h2]:tracking-[-0.01em] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3]:[font-family:var(--font-newsreader),Georgia,serif] [&_h3]:text-[21px] [&_h3]:font-medium [&_h3:first-child]:mt-0 [&_li]:text-[17px] [&_li]:leading-[1.7] [&_p]:text-[17px] [&_p]:leading-[1.7]">
+                <div className="article-prose article-drop-cap [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3:first-child]:mt-0">
                   {article.body?.length ? (
                     <ArticleBodyBlocks blocks={article.body} />
                   ) : (
@@ -362,7 +360,7 @@ export function BlogArticlePage({
                 >
                   <span
                     aria-hidden="true"
-                    className="flex size-14 flex-none items-center justify-center overflow-hidden rounded-full text-[20px] font-semibold"
+                    className="flex size-14 flex-none items-center justify-center overflow-hidden rounded-full text-xl font-semibold"
                     style={{
                       background: "var(--tint-national-bg)",
                       color: "var(--tint-national-fg)",
@@ -381,7 +379,7 @@ export function BlogArticlePage({
                   </span>
                   <div className="min-w-0">
                     <p
-                      className="m-0 mb-0.5 text-[14px] font-semibold"
+                      className="m-0 mb-0.5 text-sm font-semibold"
                       style={{ color: T.ink.dim }}
                     >
                       {tArticle("writtenBy")}
@@ -389,7 +387,7 @@ export function BlogArticlePage({
                     <p
                       className="m-0 text-[22px]"
                       style={{
-                        fontFamily: T.font.serif,
+                        fontFamily: T.font.sans,
                         fontWeight: 500,
                         color: T.ink.base,
                       }}
@@ -409,7 +407,7 @@ export function BlogArticlePage({
                     </p>
                     {article.authorTitle ? (
                       <p
-                        className="m-0 mt-0.5 text-[14px]"
+                        className="m-0 mt-0.5 text-sm"
                         style={{ color: T.ink.dim }}
                       >
                         {article.authorTitle}
@@ -417,7 +415,7 @@ export function BlogArticlePage({
                     ) : null}
                     {article.authorBio ? (
                       <p
-                        className="m-0 mt-3 text-[15px] leading-[1.6]"
+                        className="m-0 mt-3 text-base leading-[1.6]"
                         style={{ color: T.ink.base }}
                       >
                         {article.authorBio}
@@ -426,7 +424,7 @@ export function BlogArticlePage({
                     {authorHref ? (
                       <GlobalLink
                         href={authorHref}
-                        className="mt-3 inline-flex text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                        className="mt-3 inline-flex text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
                         style={{ color: T.accent.primary }}
                       >
                         {tArticle("viewProfile")}
@@ -440,7 +438,7 @@ export function BlogArticlePage({
                 {/* Back link */}
                 <GlobalLink
                   href="/journal"
-                  className="mt-1 inline-flex w-fit items-center gap-2 text-[15px] font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
+                  className="mt-1 inline-flex w-fit items-center gap-2 text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
                   style={{ color: T.accent.primary }}
                 >
                   <svg
@@ -487,11 +485,7 @@ export function BlogArticlePage({
             </div>
             {relatedCards.length > 0 ? (
               <section aria-labelledby="related-heading" className="mt-10">
-                <h2
-                  id="related-heading"
-                  className="mb-5 text-[32px] leading-tight"
-                  style={{ fontFamily: T.font.serif }}
-                >
+                <h2 id="related-heading" className="type-h2 mb-5">
                   {tArticle("relatedStories")}
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -511,16 +505,13 @@ export function BlogArticlePage({
                 className="hidden lg:block"
                 style={{ borderColor: T.border.line }}
               >
-                <p
-                  className="m-0 mb-2 text-[13px] font-semibold"
+                <h2
+                  className="type-panel-title m-0 mb-3"
                   style={{ color: T.ink.base }}
                 >
                   {tUi("in_this_article")}
-                </p>
-                <ul
-                  className="m-0 flex list-none flex-col gap-1 border-l p-0 pl-3"
-                  style={{ borderColor: T.border.divider }}
-                >
+                </h2>
+                <SidebarLinks>
                   {headings.map((h) => (
                     <li
                       key={h.id}
@@ -530,16 +521,12 @@ export function BlogArticlePage({
                           : undefined
                       }
                     >
-                      <a
-                        href={`#${h.id}`}
-                        className="block py-0.5 text-[14px] leading-snug transition-colors hover:text-(--t-accent-primary)"
-                        style={{ color: T.ink.dim }}
-                      >
+                      <a href={`#${h.id}`} className="leading-snug">
                         {h.text}
                       </a>
                     </li>
                   ))}
-                </ul>
+                </SidebarLinks>
               </nav>
             ) : null}
             <div className="hidden lg:block">
@@ -555,7 +542,7 @@ export function BlogArticlePage({
                 style={{ borderColor: T.border.line }}
               >
                 <p
-                  className="m-0 mb-2 text-[15px] font-semibold"
+                  className="m-0 mb-2 text-base font-semibold"
                   style={{ color: T.ink.base }}
                 >
                   {tArticle("aboutArticle")}
@@ -567,11 +554,11 @@ export function BlogArticlePage({
                       className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0"
                       style={{ borderColor: T.border.divider }}
                     >
-                      <dt className="text-[14px]" style={{ color: T.ink.dim }}>
+                      <dt className="text-sm" style={{ color: T.ink.dim }}>
                         {row.label}
                       </dt>
                       <dd
-                        className="m-0 text-right text-[14px] font-semibold"
+                        className="m-0 text-right text-sm font-semibold"
                         style={{ color: T.ink.base }}
                       >
                         {row.value}

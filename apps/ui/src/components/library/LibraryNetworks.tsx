@@ -42,7 +42,7 @@ export function LibraryNetworks({
       className="rounded-2xl border border-(--t-border-line) bg-white p-6"
       aria-label="Services and networks"
     >
-      <h2 className="font-serif text-2xl">Part of</h2>
+      <h2 className="type-h2">Part of</h2>
       <ul className="m-0 list-none space-y-3 p-0">
         {visible.map((row) => (
           <li key={row.documentId}>

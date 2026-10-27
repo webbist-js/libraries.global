@@ -29,7 +29,7 @@ import { cn } from "@/lib/styles"
 
 type ReviewView = "messages" | "reports" | "restrictions"
 const pill =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-[13px] font-semibold hover:border-(--t-accent-primary) disabled:opacity-50"
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold hover:border-(--t-accent-primary) disabled:opacity-50"
 
 export function DiscussionModeration() {
   const actor = useDiscussionActor()
@@ -186,11 +186,11 @@ function DiscussionModerationPanel({
   ] as const
 
   return (
-    <div className="grid gap-5 text-[16px] [--spacing:0.25rem]">
+    <div className="grid gap-5 text-base [--spacing:0.25rem]">
       <section className="grid gap-5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="m-0 flex items-center gap-2.5 font-serif text-[30px] leading-tight tracking-tight">
+            <h2 className="type-h2 m-0 flex items-center gap-2.5">
               <MessagesSquare
                 size={23}
                 className="text-(--t-accent-primary)"
@@ -198,7 +198,7 @@ function DiscussionModerationPanel({
               />
               {workspace("discussions")}
             </h2>
-            <p className="mt-2 mb-0 max-w-[72ch] text-[14px] leading-relaxed text-(--t-ink-dim)">
+            <p className="mt-2 mb-0 max-w-[72ch] text-sm leading-relaxed text-(--t-ink-dim)">
               {t("moderationLead")}
             </p>
           </div>
@@ -246,7 +246,7 @@ function DiscussionModerationPanel({
             )
           })}
         </div>
-        <p className="m-0 flex items-center gap-1.5 border-t border-(--t-border-line) pt-3 text-[12px] text-(--t-ink-dim)">
+        <p className="m-0 flex items-center gap-1.5 border-t border-(--t-border-line) pt-3 text-xs text-(--t-ink-dim)">
           <LockKeyhole size={13} aria-hidden />
           {workspace("privateReview")}
         </p>
@@ -254,7 +254,7 @@ function DiscussionModerationPanel({
       {error && (
         <p
           role="alert"
-          className="m-0 rounded-[18px] border border-(--t-palette-coral-fg)/20 bg-(--t-palette-coral-soft) p-4 text-[14px] text-(--t-palette-coral-fg)"
+          className="m-0 rounded-[18px] border border-(--t-palette-coral-fg)/20 bg-(--t-palette-coral-soft) p-4 text-sm text-(--t-palette-coral-fg)"
         >
           {error}
         </p>
@@ -266,8 +266,8 @@ function DiscussionModerationPanel({
             hidden={view !== "messages"}
             className={view === "messages" ? "grid gap-4" : "hidden"}
           >
-            <h2 className="sr-only">{t("proposals")}</h2>
-            <p className="m-0 text-[13px] text-(--t-ink-dim)">
+            <h2 className="type-h2 sr-only">{t("proposals")}</h2>
+            <p className="m-0 text-sm text-(--t-ink-dim)">
               {workspace("messagesLead")}
             </p>
             {!revisions.length && (
@@ -303,8 +303,8 @@ function DiscussionModerationPanel({
             hidden={view !== "reports"}
             className={view === "reports" ? "grid gap-4" : "hidden"}
           >
-            <h2 className="sr-only">{t("reports")}</h2>
-            <p className="m-0 text-[13px] leading-relaxed text-(--t-ink-dim)">
+            <h2 className="type-h2 sr-only">{t("reports")}</h2>
+            <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
               {workspace("reportsLead")}
             </p>
             {!reports.length && (
@@ -336,7 +336,7 @@ function DiscussionModerationPanel({
             )}
           </section>
           <div hidden={view !== "restrictions"}>
-            <p className="mt-0 mb-4 text-[13px] text-(--t-ink-dim)">
+            <p className="mt-0 mb-4 text-sm text-(--t-ink-dim)">
               {workspace("restrictionLead")}
             </p>
             <DiscussionRestrictions

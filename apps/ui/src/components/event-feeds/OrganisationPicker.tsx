@@ -81,7 +81,7 @@ export function OrganisationPicker({
         <legend
           style={{
             fontFamily: T.font.sans,
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
             fontWeight: 600,
             color: T.ink.base,
             padding: 0,

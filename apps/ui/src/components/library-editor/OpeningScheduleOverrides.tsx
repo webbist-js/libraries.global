@@ -203,7 +203,7 @@ export function OpeningScheduleOverrides({
           regular week within the selected dates. Closure and changed-hours
           notices take precedence.
         </p>
-        <h3>Dated exceptions</h3>
+        <h3 className="type-h3">Dated exceptions</h3>
         {(value.exceptions ?? []).map((exception, n) => (
           <fieldset key={n} style={{ margin: "12px 0", borderRadius: 8 }}>
             <legend>Exception {n + 1}</legend>
@@ -267,7 +267,7 @@ export function OpeningScheduleOverrides({
         >
           Add an exception
         </button>
-        <h3>Seasonal hours</h3>
+        <h3 className="type-h3">Seasonal hours</h3>
         {(value.seasons ?? []).map((season, n) => (
           <fieldset
             key={season.id}

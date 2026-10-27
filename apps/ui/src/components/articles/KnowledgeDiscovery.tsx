@@ -32,7 +32,7 @@ export function KnowledgeDiscovery({
         <h2
           id="knowledge-discovery"
           aria-live="polite"
-          className="m-0 text-sm font-semibold"
+          className="type-small-heading m-0"
         >
           {e("guideCount", { count: discovery.total })}
         </h2>
@@ -66,7 +66,7 @@ export function KnowledgeDiscovery({
                   ).padStart(2, "0")}
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-serif text-[25px] leading-tight font-medium text-pretty transition-colors group-hover:text-(--t-accent-primary)">
+                  <span className="block font-sans text-[25px] leading-tight font-medium text-pretty transition-colors group-hover:text-(--t-accent-primary)">
                     {article.title}
                   </span>
                   {article.summary ? (

@@ -39,7 +39,7 @@ export function PlanCompareCell({
   if (cell === "soon")
     return (
       <span
-        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold whitespace-nowrap"
+        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap"
         style={{ background: T.accent.chip, color: T.accent.primaryHover }}
       >
         <Icon

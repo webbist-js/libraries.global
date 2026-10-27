@@ -54,18 +54,18 @@ function TeamOrderSummary({
       className="flex min-w-0 flex-col gap-6 border-t border-(--t-border-line) bg-(--t-bg-void) p-5 sm:p-9 lg:border-t-0 lg:border-l lg:p-10 lg:pt-24"
     >
       <div>
-        <p className="mt-0 mb-4 text-[14px] font-semibold text-(--t-accent-primary)">
+        <p className="mt-0 mb-4 text-base font-semibold text-(--t-accent-primary)">
           Order summary
         </p>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h3 className="m-0 font-serif text-4xl">Team</h3>
+          <h3 className="type-h3 m-0">Team</h3>
           <strong className="text-xl">{money(total)}</strong>
         </div>
-        <p className="mt-2 mb-0 text-[14px] [overflow-wrap:anywhere] text-(--t-ink-dim)">
+        <p className="mt-2 mb-0 text-base [overflow-wrap:anywhere] text-(--t-ink-dim)">
           {name.trim() || "Your Team"} · {seats} seats · yearly
         </p>
       </div>
-      <dl className="m-0 space-y-3 border-y border-(--t-border-line) py-5 text-[14px]">
+      <dl className="m-0 space-y-3 border-y border-(--t-border-line) py-5 text-sm">
         <div className="flex justify-between gap-4">
           <dt>First 5 seats</dt>
           <dd className="m-0">{money(unit * MIN_TEAM_SEATS)}</dd>
@@ -82,25 +82,25 @@ function TeamOrderSummary({
         </div>
       </dl>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <span className="text-[15px] font-semibold">Annual subtotal</span>
-        <strong className="font-serif text-4xl font-medium">
+        <span className="text-base font-semibold">Annual subtotal</span>
+        <strong className="font-sans text-4xl font-medium">
           {money(total)}
         </strong>
       </div>
-      <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
         Then {money(total)} a year until you cancel. Prices exclude VAT. Your
         renewal date is confirmed after payment.
       </p>
       {discounted ? (
-        <p className="m-0 text-[14px] text-(--t-accent-ok)">
+        <p className="m-0 text-base text-(--t-accent-ok)">
           Approved public-service discount included.
         </p>
       ) : null}
-      <p className="m-0 rounded-2xl border border-(--t-border-line) bg-white p-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 rounded-2xl border border-(--t-border-line) bg-white p-4 text-base leading-relaxed text-(--t-ink-dim)">
         Optional API access, {money(pricing.teamApi.month)} a month, is billed
         separately once your Team is active.
       </p>
-      <ul className="mt-auto mb-0 list-none space-y-3 border-t border-(--t-border-line) p-0 pt-5 text-[14px] text-(--t-ink-dim)">
+      <ul className="mt-auto mb-0 list-none space-y-3 border-t border-(--t-border-line) p-0 pt-5 text-base text-(--t-ink-dim)">
         {[
           "Cancel renewal any time",
           "Add seats when you need them",
@@ -137,8 +137,8 @@ function TeamSeatPicker({
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-(--t-border-line) p-4">
       <div>
-        <p className="m-0 text-[15px] font-semibold">Seats</p>
-        <p className="mt-1 mb-0 text-[13px] text-(--t-ink-dim)">
+        <p className="m-0 text-base font-semibold">Seats</p>
+        <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
           5 included. Extra seats {money(unit)} a year each.
         </p>
       </div>
@@ -163,7 +163,7 @@ function TeamSeatPicker({
           max={MAX_TEAM_SEATS}
           required
           step={1}
-          className="min-h-11 w-16 rounded-lg text-center text-[16px] font-semibold tabular-nums outline-offset-2"
+          className="min-h-11 w-16 rounded-lg text-center text-base font-semibold tabular-nums outline-offset-2"
           value={seats}
           disabled={busy}
           onChange={(event) => setSeats(Number(event.target.value))}
@@ -269,7 +269,7 @@ export function TeamCheckoutDialog({
         }}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
-        <DialogTitle className="sr-only">
+        <DialogTitle className="type-h2 sr-only">
           {teamName ? "Set up Team billing" : "Create your Team"}
         </DialogTitle>
         <DialogDescription className="sr-only">
@@ -288,7 +288,7 @@ export function TeamCheckoutDialog({
             <h2
               ref={heading}
               tabIndex={-1}
-              className="mt-[28px] mb-[16px] font-serif text-[clamp(32px,4vw,48px)] leading-[1.1] tracking-tight outline-none"
+              className="type-h2 mt-[28px] mb-[16px] outline-none"
             >
               {checkoutHeading(step, teamName)}
             </h2>
@@ -320,10 +320,10 @@ export function TeamCheckoutDialog({
             >
               {step === "plan" ? (
                 <>
-                  <p className="mt-0 text-[15px] leading-relaxed text-(--t-ink-dim)">
+                  <p className="mt-0 text-base leading-relaxed text-(--t-ink-dim)">
                     {checkoutLead(teamName)}
                   </p>
-                  <label className="grid gap-2 text-[15px] font-semibold">
+                  <label className="grid gap-2 text-base font-semibold">
                     Team name
                     <input
                       className={STAFF_FIELD}
@@ -336,14 +336,14 @@ export function TeamCheckoutDialog({
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                     />
-                    <span className="text-[13px] leading-relaxed font-normal text-(--t-ink-dim)">
+                    <span className="text-sm leading-relaxed font-normal text-(--t-ink-dim)">
                       Usually your library service or organisation. Members see
                       this name.
                     </span>
                   </label>
                   {!teamName ? (
                     <fieldset className="min-w-0">
-                      <legend className="mb-3 text-[15px] font-semibold">
+                      <legend className="mb-3 text-base font-semibold">
                         Service type
                       </legend>
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -361,12 +361,12 @@ export function TeamCheckoutDialog({
                               onChange={() => setService(value)}
                             />
                             <span>
-                              <strong className="text-[15px]">
+                              <strong className="text-base">
                                 {value === "standard"
                                   ? "Standard"
                                   : "Public library service"}
                               </strong>
-                              <span className="mt-1 block text-[13px] leading-relaxed text-(--t-ink-dim)">
+                              <span className="mt-1 block text-sm leading-relaxed text-(--t-ink-dim)">
                                 {value === "standard"
                                   ? "For teams and organisations."
                                   : "20% off after eligibility is approved."}
@@ -378,7 +378,7 @@ export function TeamCheckoutDialog({
                     </fieldset>
                   ) : null}
                   {service === "public" && !discounted ? (
-                    <p className="rounded-2xl bg-(--t-bg-surface) p-4 text-[13px] leading-relaxed text-(--t-ink-dim)">
+                    <p className="rounded-2xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed text-(--t-ink-dim)">
                       We’ll record your request for an eligibility check.
                       Today’s checkout uses the standard price shown; the
                       discount only applies after approval. You can wait for
@@ -415,29 +415,29 @@ export function TeamCheckoutDialog({
                         {user.name.trim().slice(0, 1).toUpperCase()}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <strong className="block text-[15px] [overflow-wrap:anywhere]">
+                        <strong className="block text-base [overflow-wrap:anywhere]">
                           {user.name}
                         </strong>
-                        <span className="text-[13px] [overflow-wrap:anywhere] text-(--t-ink-dim)">
+                        <span className="text-sm [overflow-wrap:anywhere] text-(--t-ink-dim)">
                           {user.email}
                         </span>
                       </div>
-                      <span className="rounded-full bg-(--t-bg-surface) px-3 py-1 text-[12px] font-semibold">
+                      <span className="rounded-full bg-(--t-bg-surface) px-3 py-1 text-xs font-semibold">
                         Organiser
                       </span>
                     </div>
                   ) : null}
                   <div className="rounded-2xl border border-(--t-border-line) p-5">
-                    <h3 className="mt-0 mb-2 text-[16px] font-semibold">
+                    <h3 className="type-small-heading mt-0 mb-2">
                       Billing details in Stripe
                     </h3>
-                    <p className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                    <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
                       Review your billing details and any applicable VAT in the
                       secure payment step. Stripe handles payment and invoices.
                       Your Team subscription renews every year until you cancel.
                     </p>
                   </div>
-                  <p className="flex items-start gap-2 text-[14px] leading-relaxed text-(--t-ink-dim)">
+                  <p className="flex items-start gap-2 text-sm leading-relaxed text-(--t-ink-dim)">
                     <Info
                       className="mt-0.5 size-4 shrink-0 text-(--t-accent-primary)"
                       aria-hidden
@@ -445,7 +445,7 @@ export function TeamCheckoutDialog({
                     Paying doesn’t verify staff authority. Each library your
                     Team looks after is checked separately.
                   </p>
-                  <label className="flex cursor-pointer items-start gap-3 text-[14px] leading-relaxed">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
                     <input
                       type="checkbox"
                       required
@@ -503,7 +503,7 @@ export function TeamCheckoutDialog({
               {error ? (
                 <p
                   role="alert"
-                  className="rounded-2xl border border-red-200 bg-red-50 p-4 text-[14px] text-red-900"
+                  className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
                 >
                   {error}
                 </p>

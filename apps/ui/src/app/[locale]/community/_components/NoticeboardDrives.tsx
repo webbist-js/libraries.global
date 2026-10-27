@@ -56,7 +56,7 @@ export function NoticeboardDrives({
           <FeaturedDrive view={featured} howHref={howHref} now={now} />
         ) : (
           <p
-            className="m-0 text-[17px]"
+            className="m-0 text-base"
             style={{
               background: T.bg.deep,
               border: `1px solid ${T.border.line}`,
@@ -84,11 +84,8 @@ export function NoticeboardDrives({
           >
             <h2
               id="other-drives-heading"
-              className="m-0"
+              className="type-h2 m-0"
               style={{
-                fontFamily: T.font.serif,
-                fontWeight: 500,
-                fontSize: "clamp(28px,3vw,38px)",
                 color: T.ink.base,
               }}
             >

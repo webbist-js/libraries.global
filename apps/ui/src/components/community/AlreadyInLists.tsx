@@ -86,7 +86,7 @@ export function AlreadyInLists({
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2
           id="already-in-lists"
-          className="m-0 font-serif text-[25px] leading-tight font-medium"
+          className="type-h2 m-0"
           style={{ color: T.ink.base }}
         >
           {t("checklistTitle")}
@@ -116,7 +116,7 @@ export function AlreadyInLists({
         />
       </div>
       {matches.length === 0 ? (
-        <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           {t("noChecklistMatches")}
         </p>
       ) : (
@@ -130,7 +130,7 @@ export function AlreadyInLists({
 
             return (
               <section key={list}>
-                <h3 className="mt-0 mb-2 flex items-center gap-2 text-[13px] font-bold tracking-[0.08em] text-(--t-ink-dim) uppercase">
+                <h3 className="type-label mt-0 mb-2 flex items-center gap-2 text-(--t-ink-dim) uppercase">
                   <span
                     aria-hidden
                     className="size-2 shrink-0 rounded-full"
@@ -172,7 +172,7 @@ export function AlreadyInLists({
           aria-expanded={expanded}
           aria-controls={listId}
           onClick={() => setExpanded((v) => !v)}
-          className="inline-flex min-h-11 cursor-pointer items-center self-start rounded-full px-4 text-[15px] font-semibold transition-colors hover:border-(--t-accent-primary)"
+          className="inline-flex min-h-11 cursor-pointer items-center self-start rounded-full px-4 text-base font-semibold transition-colors hover:border-(--t-accent-primary)"
           style={{
             background: T.bg.deep,
             border: `1px solid ${T.border.hi}`,

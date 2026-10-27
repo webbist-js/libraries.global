@@ -19,7 +19,7 @@ export function ComingSoonChip({ label }: { label?: string }) {
 
   return (
     <span
-      className="ml-1 inline-flex w-fit items-center rounded-full px-2 py-px align-[1px] text-[12px] leading-[1.4] font-semibold whitespace-nowrap"
+      className="ml-1 inline-flex w-fit items-center rounded-full px-2 py-px align-[1px] text-xs leading-[1.4] font-semibold whitespace-nowrap"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       {label ?? m("copy.soon")}
@@ -33,7 +33,7 @@ export function IncludeItem({ item }: { readonly item: PlanInclude }) {
 
   return (
     <li
-      className="flex gap-2 text-[14.5px] leading-[1.45]"
+      className="flex gap-2 text-sm leading-[1.45]"
       style={{ color: soon ? T.ink.dim : T.ink.base }}
     >
       <Icon
@@ -62,7 +62,7 @@ export function CurrentPlanBadge() {
 
   return (
     <span
-      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[13px] font-semibold text-white"
+      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-sm font-semibold text-white"
       style={{ background: T.accent.primary }}
     >
       <Icon aria-hidden="true" height={14} icon="mdi:check" width={14} />
@@ -87,7 +87,7 @@ export function PlanFeatures({
       className="flex flex-col gap-3 border-t pt-5"
       style={{ borderColor: T.border.divider }}
     >
-      <p className="m-0 text-[13.5px] font-bold">{m("copy.includedNow")}</p>
+      <p className="m-0 text-sm font-bold">{m("copy.includedNow")}</p>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {live.map((item) => (
           <IncludeItem key={item.text} item={item} />
@@ -96,7 +96,7 @@ export function PlanFeatures({
       {notes.map((item) => (
         <p
           key={item.text}
-          className="m-0 rounded-[14px] border px-3.5 py-2.5 text-[13.5px] leading-[1.5]"
+          className="m-0 rounded-[14px] border px-3.5 py-2.5 text-sm leading-[1.5]"
           style={{
             background: T.bg.surface,
             borderColor: T.border.line,
@@ -112,11 +112,6 @@ export function PlanFeatures({
 }
 
 export const H2_STYLE = {
-  fontFamily: T.font.serif,
-  fontSize: "clamp(28px,3.2vw,36px)",
-  fontWeight: 500,
-  letterSpacing: "-0.015em",
-  lineHeight: 1.1,
   color: T.ink.base,
 } as const
 
@@ -135,11 +130,11 @@ export function PlanSectionHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h2 id={id} className="m-0 scroll-mt-24" style={H2_STYLE}>
+        <h2 id={id} className="type-h2 m-0 scroll-mt-24" style={H2_STYLE}>
           {title}
         </h2>
         <p
-          className="mt-2 mb-0 max-w-[62ch] text-[16px] leading-[1.55]"
+          className="mt-2 mb-0 max-w-[62ch] text-base leading-[1.55]"
           style={{ color: T.ink.dim }}
         >
           {sub}

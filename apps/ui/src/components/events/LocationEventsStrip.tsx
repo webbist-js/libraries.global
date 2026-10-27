@@ -89,7 +89,7 @@ export function LocationEventsStrip({
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -98,10 +98,8 @@ export function LocationEventsStrip({
             {t("upcoming")}
           </span>
           <h3
+            className="type-h3"
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "1.3rem",
-              fontWeight: 400,
               color: T.ink.base,
             }}
           >
@@ -113,7 +111,7 @@ export function LocationEventsStrip({
           className="inline-flex items-center gap-1 transition-colors duration-150 hover:text-(--t-accent-aurora)"
           style={{
             fontFamily: T.font.mono,
-            fontSize: "10px",
+            fontSize: "var(--type-caption-size)",
             letterSpacing: ".16em",
             textTransform: "uppercase",
             color: T.ink.faint,
@@ -139,7 +137,7 @@ export function LocationEventsStrip({
               <span
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "10px",
+                  fontSize: "var(--type-caption-size)",
                   letterSpacing: ".1em",
                   color: T.ink.faint,
                 }}
@@ -150,8 +148,8 @@ export function LocationEventsStrip({
             <p
               className="line-clamp-2 leading-snug transition-colors duration-150 group-hover:text-(--t-accent-aurora)"
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "0.95rem",
+                fontFamily: T.font.sans,
+                fontSize: "var(--type-body-size)",
                 fontStyle: "italic",
                 color: T.ink.base,
               }}
@@ -162,7 +160,7 @@ export function LocationEventsStrip({
               <p
                 style={{
                   fontFamily: T.font.mono,
-                  fontSize: "10px",
+                  fontSize: "var(--type-caption-size)",
                   letterSpacing: ".1em",
                   textTransform: "uppercase",
                   color: T.ink.faint,

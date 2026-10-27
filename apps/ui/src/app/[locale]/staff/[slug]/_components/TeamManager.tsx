@@ -153,7 +153,7 @@ export function TeamManager({
         }
         footer={
           <>
-            <p className="m-0 mr-auto text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mr-auto text-sm" style={{ color: T.ink.dim }}>
               <span className="font-semibold" style={{ color: T.ink.base }}>
                 Your access
               </span>{" "}
@@ -220,7 +220,7 @@ export function TeamManager({
                 />
                 <div>
                   <p
-                    className="m-0 text-[18px] font-semibold wrap-break-word"
+                    className="m-0 text-lg font-semibold wrap-break-word"
                     style={{ color: T.ink.base }}
                   >
                     {member.name}
@@ -229,7 +229,7 @@ export function TeamManager({
                     ) : null}
                   </p>
                   {full ? (
-                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                       {member.approvedAt
                         ? `Verified ${date(member.approvedAt)}`
                         : "Verified"}
@@ -244,7 +244,7 @@ export function TeamManager({
               {full ? (
                 <div className="flex flex-wrap items-center gap-3">
                   {owner ? (
-                    <label className="flex items-center gap-2 text-[14px]">
+                    <label className="flex items-center gap-2 text-sm">
                       <span className="sr-only">Level for {member.name}</span>
                       <select
                         value={member.staffRole}
@@ -349,7 +349,7 @@ export function TeamManager({
                     >
                       {invite.emailMasked}
                     </p>
-                    <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+                    <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                       {invite.staffRole === "owner" ? "Owner" : "Editor"} ·
                       holds a seat until {date(invite.expiresAt)}
                     </p>
@@ -417,7 +417,7 @@ export function TeamManager({
                   })
                 }}
               >
-                <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-2 text-[15px] font-semibold">
+                <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-2 text-base font-semibold">
                   {tUi("email")}{" "}
                   <input
                     name="email"
@@ -432,7 +432,7 @@ export function TeamManager({
                     placeholder="colleague@library.example"
                   />
                 </label>
-                <label className="flex flex-col gap-2 text-[14px] font-semibold">
+                <label className="flex flex-col gap-2 text-sm font-semibold">
                   Level
                   <select
                     name="staffRole"
@@ -464,7 +464,7 @@ export function TeamManager({
                   Send invite
                 </Button>
                 <p
-                  className="m-0 basis-full text-[13px]"
+                  className="m-0 basis-full text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   They join {team.name} and get {inviteRole} access to{" "}
@@ -483,7 +483,7 @@ export function TeamManager({
               </form>
             ) : null}
             {data.invites.some((i) => i.status === "expired") ? (
-              <p className="mt-4 mb-0 text-[13px]" style={{ color: T.ink.dim }}>
+              <p className="mt-4 mb-0 text-sm" style={{ color: T.ink.dim }}>
                 {data.invites.filter((i) => i.status === "expired").length}{" "}
                 earlier invite
                 {data.invites.filter((i) => i.status === "expired").length === 1
@@ -495,7 +495,7 @@ export function TeamManager({
           </div>
         ) : null}
         {!full ? (
-          <p className="mt-4 mb-0 text-[14px]" style={{ color: T.ink.dim }}>
+          <p className="mt-4 mb-0 text-sm" style={{ color: T.ink.dim }}>
             Each person claimed access on their own and a moderator checked it.
             With the Team plan an organiser manages this list.
           </p>
@@ -528,12 +528,12 @@ export function TeamManager({
             {data.audit.map((row, index) => (
               <li
                 key={`${row.at}-${index}`}
-                className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-3 text-[14px]"
+                className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-3 text-sm"
                 style={{ borderColor: T.border.divider }}
               >
                 <time
                   dateTime={row.at}
-                  className="shrink-0 text-[13px] tabular-nums"
+                  className="shrink-0 text-sm tabular-nums"
                   style={{ color: T.ink.dim }}
                 >
                   {date(row.at)}
@@ -617,7 +617,7 @@ export function TeamManager({
             })
           }}
         >
-          <label className="flex flex-col gap-2 text-[14px] font-semibold">
+          <label className="flex flex-col gap-2 text-sm font-semibold">
             Tell the moderators what’s wrong
             <textarea
               value={message}
@@ -626,11 +626,11 @@ export function TeamManager({
               minLength={10}
               maxLength={1000}
               rows={5}
-              className="rounded-[14px] border bg-(--t-bg-surface) p-3 text-[15px] font-normal"
+              className="rounded-[14px] border bg-(--t-bg-surface) p-3 text-base font-normal"
               style={{ borderColor: T.border.hi }}
             />
           </label>
-          <p className="mt-2 mb-4 text-[13px]" style={{ color: T.ink.dim }}>
+          <p className="mt-2 mb-4 text-sm" style={{ color: T.ink.dim }}>
             A moderator can remove anyone from a library’s staff. 10 to 1,000
             characters.
           </p>

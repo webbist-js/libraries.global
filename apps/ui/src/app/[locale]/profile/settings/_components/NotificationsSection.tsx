@@ -118,7 +118,7 @@ function NotifGroup<K extends string>({
   return (
     <div>
       <p
-        className="m-0 mb-1 text-[15px] font-semibold"
+        className="m-0 mb-1 text-base font-semibold"
         style={{ color: T.ink.base }}
       >
         {title}
@@ -136,12 +136,12 @@ function NotifGroup<K extends string>({
         >
           <div className="min-w-0">
             <p
-              className="m-0 text-[15px] font-medium"
+              className="m-0 text-base font-medium"
               style={{ color: T.ink.base }}
             >
               {item.label}
             </p>
-            <p className="m-0 mt-0.5 text-[14px]" style={{ color: T.ink.dim }}>
+            <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
               {item.desc}
             </p>
           </div>

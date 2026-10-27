@@ -42,14 +42,14 @@ export function MonthlyDispatchCard() {
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <h2
-        className="m-0 text-[21px]"
+        className="type-panel-title m-0"
         id="journal-dispatch"
-        style={{ fontFamily: T.font.serif, fontWeight: 500, color: T.ink.base }}
+        style={{ color: T.ink.base }}
       >
         {t("dispatchTitle")}
       </h2>
       <p
-        className="mt-1.5 mb-4 text-[14px] leading-[1.5]"
+        className="mt-1.5 mb-4 text-base leading-[1.5]"
         style={{ color: T.ink.dim }}
       >
         {t("dispatchIntro")}
@@ -57,7 +57,7 @@ export function MonthlyDispatchCard() {
 
       {status === "done" ? (
         <p
-          className="m-0 text-[15px] font-semibold"
+          className="m-0 text-base font-semibold"
           role="status"
           style={{ color: T.accent.ok }}
         >
@@ -66,7 +66,7 @@ export function MonthlyDispatchCard() {
       ) : (
         <form onSubmit={subscribe}>
           <label
-            className="mb-1.5 block text-[14px] font-medium"
+            className="mb-1.5 block text-sm font-medium"
             htmlFor="journal-subscribe"
             style={{ color: T.ink.base }}
           >
@@ -75,7 +75,7 @@ export function MonthlyDispatchCard() {
           <input
             aria-describedby="journal-subscribe-note"
             autoComplete="email"
-            className="min-h-11 w-full rounded-full border px-3.5 py-2.5 text-[15px]"
+            className="min-h-11 w-full rounded-full border px-3.5 py-2.5 text-base"
             id="journal-subscribe"
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.org"
@@ -89,7 +89,7 @@ export function MonthlyDispatchCard() {
             value={email}
           />
           <button
-            className="mt-3 min-h-11 w-fit cursor-pointer rounded-full px-4 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-60"
+            className="mt-3 min-h-11 w-fit cursor-pointer rounded-full px-4 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-60"
             disabled={status === "saving"}
             style={{ background: T.accent.primary }}
             type="submit"
@@ -98,7 +98,7 @@ export function MonthlyDispatchCard() {
           </button>
           {status === "error" ? (
             <p
-              className="m-0 mt-2 text-[14px] font-semibold"
+              className="m-0 mt-2 text-base font-semibold"
               role="alert"
               style={{ color: T.accent.danger }}
             >
@@ -109,7 +109,7 @@ export function MonthlyDispatchCard() {
       )}
 
       <p
-        className="m-0 mt-3 text-[13px] leading-[1.5]"
+        className="m-0 mt-3 text-sm leading-[1.5]"
         id="journal-subscribe-note"
         style={{ color: T.ink.dim }}
       >

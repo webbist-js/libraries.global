@@ -87,11 +87,11 @@ export function TeamApiKeyDialog({
           <DialogTitle
             ref={titleRef}
             tabIndex={-1}
-            className="m-0 pr-12 font-serif text-[32px] leading-tight font-medium outline-none sm:text-[38px]"
+            className="type-h2 m-0 pr-12 outline-none"
           >
             {t("createTitle")}
           </DialogTitle>
-          <DialogDescription className="m-0 text-[16px] leading-relaxed text-(--t-ink-dim)">
+          <DialogDescription className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
             {t("createIntro")}
           </DialogDescription>
         </DialogHeader>
@@ -137,7 +137,7 @@ function KeyForm({
       }}
     >
       <div className="grid gap-5 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div className="grid content-start gap-2 text-[15px]">
+        <div className="grid content-start gap-2 text-base">
           <label htmlFor="api-key-name" className="font-semibold">
             {t("name")}
           </label>
@@ -156,12 +156,12 @@ function KeyForm({
           />
           <p
             id="api-key-name-help"
-            className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)"
+            className="m-0 text-sm leading-relaxed text-(--t-ink-dim)"
           >
             {t("nameHelp")}
           </p>
         </div>
-        <div className="grid content-start gap-2 text-[15px]">
+        <div className="grid content-start gap-2 text-base">
           <label htmlFor="api-key-expiry" className="font-semibold">
             {t("expiry")}
           </label>
@@ -177,17 +177,17 @@ function KeyForm({
           />
           <p
             id="api-key-expiry-help"
-            className="m-0 text-[14px] leading-relaxed text-(--t-ink-dim)"
+            className="m-0 text-sm leading-relaxed text-(--t-ink-dim)"
           >
             {t("expiryHelp")}
           </p>
         </div>
       </div>
       <fieldset disabled={pending} className="m-0 min-w-0 border-0 p-0">
-        <legend className="mb-2 text-[15px] font-semibold">
+        <legend className="mb-2 text-base font-semibold">
           {t("permissions")}
         </legend>
-        <p className="mt-0 mb-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+        <p className="mt-0 mb-4 text-sm leading-relaxed text-(--t-ink-dim)">
           {t("permissionsHelp")}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -212,15 +212,15 @@ function KeyForm({
                   className="mt-1 size-5 shrink-0 accent-(--t-accent-primary)"
                 />
                 <span className="min-w-0">
-                  <span className="block text-[15px] font-semibold">
+                  <span className="block text-base font-semibold">
                     {t(search ? "search" : "records")}
                   </span>
-                  <span className="mt-1 block text-[14px] leading-relaxed text-(--t-ink-dim)">
+                  <span className="mt-1 block text-sm leading-relaxed text-(--t-ink-dim)">
                     {t(search ? "searchHelp" : "recordsHelp")}
                   </span>
                   <code
                     translate="no"
-                    className="mt-3 inline-block font-mono text-[13px] break-all text-(--t-ink-dim)"
+                    className="mt-3 inline-block font-mono text-sm break-all text-(--t-ink-dim)"
                   >
                     {scope}
                   </code>
@@ -230,7 +230,7 @@ function KeyForm({
           })}
         </div>
       </fieldset>
-      <p className="m-0 flex items-start gap-2 rounded-2xl bg-(--t-bg-surface) p-4 text-[14px] leading-relaxed text-(--t-ink-dim)">
+      <p className="m-0 flex items-start gap-2 rounded-2xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed text-(--t-ink-dim)">
         <Icon
           aria-hidden="true"
           icon="mdi:shield-key-outline"
@@ -242,7 +242,7 @@ function KeyForm({
       {error ? (
         <p
           role="alert"
-          className="m-0 text-[15px] leading-relaxed text-(--t-accent-danger)"
+          className="m-0 text-base leading-relaxed text-(--t-accent-danger)"
         >
           {error}
         </p>

@@ -65,11 +65,7 @@ export function LegalIndexPage({
         <Container className="grid items-start gap-8 py-10 sm:gap-10 sm:py-14 lg:grid-cols-3">
           {groups.map((group) => (
             <section key={group.key} aria-labelledby={group.key}>
-              <h2
-                id={group.key}
-                className="m-0 mb-5 text-[28px] leading-tight font-medium"
-                style={{ fontFamily: T.font.serif }}
-              >
+              <h2 id={group.key} className="type-h2 m-0 mb-5">
                 {t(group.key)}
               </h2>
               <ul className="m-0 list-none space-y-3 p-0">
@@ -77,7 +73,7 @@ export function LegalIndexPage({
                   <li key={doc.documentId}>
                     <GlobalLink
                       href={`/legal/${doc.slug}`}
-                      className="group flex min-h-20 items-center gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-[16px] leading-relaxed font-medium no-underline transition-colors hover:border-(--t-accent-primary)/40 hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4"
+                      className="group flex min-h-20 items-center gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-base leading-relaxed font-medium no-underline transition-colors hover:border-(--t-accent-primary)/40 hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-4"
                     >
                       <Icon
                         aria-hidden="true"

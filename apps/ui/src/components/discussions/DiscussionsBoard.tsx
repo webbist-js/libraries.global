@@ -275,7 +275,7 @@ function DiscussionsBoardPanel({
         )}
         <section aria-labelledby="discussion-subjects" className="grid gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="discussion-subjects" className="m-0 font-serif text-3xl">
+            <h2 id="discussion-subjects" className="type-h2 m-0">
               {t("pickSubject")}
             </h2>
             <button
@@ -564,12 +564,12 @@ function DiscussionsBoardPanel({
           </section>
           <aside className="grid content-start gap-4">
             <section className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
-              <h2 className="m-0 font-serif text-2xl">{t("waitingHeading")}</h2>
-              <p className="mt-3 mb-4 text-sm text-(--t-ink-dim)">
+              <h2 className="type-panel-title m-0">{t("waitingHeading")}</h2>
+              <p className="mt-3 mb-4 text-base text-(--t-ink-dim)">
                 {t("waitingLead")}
               </p>
               {waiting.length ? (
-                <ul className="m-0 grid list-none gap-4 p-0">
+                <ul className="m-0 grid list-none divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0 [&>li]:py-3">
                   {waiting.map((record) => (
                     <li
                       key={record.id}
@@ -589,12 +589,12 @@ function DiscussionsBoardPanel({
                       <div className="min-w-0">
                         <Link
                           href={`/community/discussions/${encodeURIComponent(record.id)}`}
-                          className="leading-snug font-bold hover:underline"
+                          className="leading-snug font-semibold text-(--t-accent-primary) underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                           lang={record.language}
                         >
                           {record.title ?? t("untitled")}
                         </Link>
-                        <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
+                        <p className="mt-1 mb-0 text-base text-(--t-ink-dim)">
                           {discussionAuthor(record.author, t("member")).name}
                           {" · "}
                           {languageName(record.language, [], locale)}
@@ -611,7 +611,7 @@ function DiscussionsBoardPanel({
                   ))}
                 </ul>
               ) : (
-                <p className="mb-0 text-sm">{t("waitingEmpty")}</p>
+                <p className="mb-0 text-base">{t("waitingEmpty")}</p>
               )}
             </section>
             <StepsCard
@@ -623,7 +623,7 @@ function DiscussionsBoardPanel({
             />
             {actor.signedIn && actor.ready && (
               <section className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
-                <h2 className="m-0 font-serif text-2xl">{t("youFollow")}</h2>
+                <h2 className="type-panel-title m-0">{t("youFollow")}</h2>
                 {followed.length ? (
                   <ul className="mt-4 mb-0 grid list-none gap-4 p-0">
                     {followed.map((record) => (
@@ -633,13 +633,13 @@ function DiscussionsBoardPanel({
                       >
                         <Link
                           href={`/community/discussions/${encodeURIComponent(record.id)}`}
-                          className="leading-snug font-bold hover:underline"
+                          className="leading-snug font-semibold text-(--t-accent-primary) underline underline-offset-4 hover:text-(--t-accent-primary-hover)"
                           lang={record.language}
                         >
                           {record.title ?? t("untitled")}
                         </Link>
                         {record.activityAt && (
-                          <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
+                          <p className="mt-1 mb-0 text-base text-(--t-ink-dim)">
                             {t("latestActivity")}{" "}
                             <DiscussionTime value={record.activityAt} />
                           </p>
@@ -648,7 +648,7 @@ function DiscussionsBoardPanel({
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-(--t-ink-dim)">
+                  <p className="text-base text-(--t-ink-dim)">
                     {t("followLead")}
                   </p>
                 )}
@@ -682,9 +682,7 @@ function DiscussionsBoardPanel({
       {actor.ready && (
         <Dialog open={showComposer} onOpenChange={setShowComposer}>
           <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl bg-(--t-bg-deep) sm:max-w-xl">
-            <DialogTitle className="font-serif text-3xl">
-              {t("newThread")}
-            </DialogTitle>
+            <DialogTitle className="type-h2">{t("newThread")}</DialogTitle>
             <DialogDescription>{t("reviewLead")}</DialogDescription>
             {subject ? (
               <>

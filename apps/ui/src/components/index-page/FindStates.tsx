@@ -74,7 +74,7 @@ export function FindErrorState({ onRetry }: { onRetry: () => void }) {
         color: "var(--tint-special-fg)",
       }}
     >
-      <p className="m-0 flex items-center gap-2 text-[19px] font-bold">
+      <p className="m-0 flex items-center gap-2 text-lg font-bold">
         <svg
           width="22"
           height="22"
@@ -90,14 +90,14 @@ export function FindErrorState({ onRetry }: { onRetry: () => void }) {
         </svg>
         We couldn&rsquo;t load libraries just now.
       </p>
-      <p className="m-0 text-[16px]" style={{ color: T.ink.base }}>
+      <p className="m-0 text-base" style={{ color: T.ink.base }}>
         The search service may be starting up or unreachable. Your filters are
         kept — try again in a moment.
       </p>
       <button
         type="button"
         onClick={onRetry}
-        className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-[15px] font-semibold text-white"
+        className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-base font-semibold text-white"
         style={{ background: T.ink.base }}
       >
         {tUi("try_again")}{" "}
@@ -136,13 +136,8 @@ export function FindEmptyState({ onClear }: { onClear: () => void }) {
           <path d="m20 20-3.5-3.5M8 11h6" />
         </svg>
       </span>
-      <h3
-        className="m-0"
-        style={{ fontFamily: T.font.serif, fontSize: 32, fontWeight: 500 }}
-      >
-        No libraries match these filters
-      </h3>
-      <p className="m-0 max-w-[46ch] text-[17px]" style={{ color: T.ink.dim }}>
+      <h3 className="type-h3 m-0">No libraries match these filters</h3>
+      <p className="m-0 max-w-[46ch] text-base" style={{ color: T.ink.dim }}>
         Try removing a filter or two — or help the index grow by adding a
         library you know about.
       </p>
@@ -150,14 +145,14 @@ export function FindEmptyState({ onClear }: { onClear: () => void }) {
         <button
           type="button"
           onClick={onClear}
-          className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-[15px] font-semibold text-white"
+          className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-base font-semibold text-white"
           style={{ background: T.ink.base }}
         >
           {tUi("clear_filters")}{" "}
         </button>
         <Link
           href="/contribute"
-          className="rounded-full px-5 py-2.5 text-[15px] font-semibold no-underline"
+          className="rounded-full px-5 py-2.5 text-base font-semibold no-underline"
           style={{
             background: T.bg.deep,
             border: `1px solid ${T.border.hi}`,

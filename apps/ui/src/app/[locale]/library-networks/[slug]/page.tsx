@@ -127,7 +127,7 @@ export default async function NetworkPage({
             </Link>
           </div>
         </StaffPanel>
-        <aside className="text-sm text-(--t-ink-dim)">
+        <aside className="text-base leading-relaxed text-(--t-ink-dim)">
           <p>
             Membership describes a sourced relationship. Consortium membership
             does not establish ownership or staff authority.

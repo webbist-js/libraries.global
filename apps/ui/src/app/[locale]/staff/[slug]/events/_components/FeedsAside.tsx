@@ -38,12 +38,9 @@ export function FeedsAside() {
         }}
       >
         <h2
+          className="type-panel-title"
           id="event-feed-aside-heading"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "22px",
-            fontWeight: 500,
-            lineHeight: 1.25,
             color: T.ink.base,
             margin: 0,
           }}
@@ -63,7 +60,7 @@ export function FeedsAside() {
                 <p
                   style={{
                     fontFamily: T.font.sans,
-                    fontSize: "15px",
+                    fontSize: "var(--type-body-size)",
                     fontWeight: 600,
                     color: T.ink.base,
                     margin: "0 0 2px",
@@ -74,7 +71,7 @@ export function FeedsAside() {
                 <p
                   style={{
                     fontFamily: T.font.sans,
-                    fontSize: "14px",
+                    fontSize: "var(--type-body-size)",
                     lineHeight: 1.55,
                     color: T.ink.dim,
                     margin: 0,
@@ -89,7 +86,7 @@ export function FeedsAside() {
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "13px",
+            fontSize: "var(--type-body-small-size)",
             lineHeight: 1.55,
             color: T.ink.dim,
             margin: 0,

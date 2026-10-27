@@ -124,7 +124,7 @@ export function WidgetEditor({
           ).map(([key, label, path]) => (
             <Button
               key={key}
-              className="min-w-0 px-3 text-[13px] sm:px-6 sm:text-[15px]"
+              className="min-w-0 px-3 text-sm sm:px-6 sm:text-base"
               variant={mode === key ? "primary" : "surface"}
               size="pill"
               disabled={busy || phase === "saving" || phase === "conflict"}

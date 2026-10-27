@@ -148,7 +148,7 @@ export function WidgetManage({
                 width={22}
                 className="mb-3 text-(--t-accent-primary)"
               />
-              <p className="font-serif text-4xl tabular-nums">
+              <p className="font-sans text-4xl tabular-nums">
                 {widget.loads.toLocaleString()}
               </p>
               <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
@@ -162,7 +162,7 @@ export function WidgetManage({
                 width={22}
                 className="mb-3 text-(--t-ink-dim)"
               />
-              <p className="font-serif text-4xl tabular-nums">
+              <p className="font-sans text-4xl tabular-nums">
                 {widget.blockedReports.toLocaleString()}
               </p>
               <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
@@ -217,7 +217,7 @@ export function WidgetManage({
         }}
       >
         <DialogContent>
-          <DialogTitle>{confirmation?.title}</DialogTitle>
+          <DialogTitle className="type-h2">{confirmation?.title}</DialogTitle>
           <DialogDescription>
             {confirmation?.action === "restore"
               ? "The live publication stays available until you publish the restored draft."

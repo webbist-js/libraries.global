@@ -80,7 +80,7 @@ export function AccessibilityControls({
             type="button"
             aria-pressed={view === value}
             onClick={() => onChange(value)}
-            className="min-h-11 rounded-lg px-1 text-[13px] font-semibold hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+            className="min-h-11 rounded-lg px-1 text-sm font-semibold hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
             style={
               view === value
                 ? {
@@ -95,7 +95,7 @@ export function AccessibilityControls({
           </button>
         ))}
       </div>
-      <p className="m-0 text-[13px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         {VIEWS.find((option) => option.value === view)!.description}
       </p>
       <AccessibilityCoverage
@@ -103,7 +103,7 @@ export function AccessibilityControls({
         scope={scope}
         enabled={enabled}
       />
-      <p className="m-0 text-[12px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-xs" style={{ color: T.ink.dim }}>
         A gap in our records does not prove a feature is absent.
       </p>
     </div>
@@ -207,7 +207,7 @@ export function AccessibilityMapKey({
       aria-label={tUi("accessibility_map_key")}
       className="flex flex-col gap-2 text-sm"
     >
-      <h3 className="m-0 text-sm font-bold">On the map</h3>
+      <h3 className="type-h3 m-0">On the map</h3>
       {view !== "gaps" ? (
         <span className="flex items-center gap-2">
           <AccessibilitySwatch confirmed />

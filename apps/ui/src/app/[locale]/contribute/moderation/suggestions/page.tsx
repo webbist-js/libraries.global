@@ -94,7 +94,7 @@ export default async function OptionSuggestionsPage({
         ) : (
           <p
             role="alert"
-            className="m-0 rounded-[14px] px-4 py-3 text-[15px]"
+            className="m-0 rounded-[14px] px-4 py-3 text-base"
             style={{ background: "#F6E3DA", color: T.accent.danger }}
           >
             {res.status === 403

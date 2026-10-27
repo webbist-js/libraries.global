@@ -202,9 +202,7 @@ export function AtlasContextSources({
   if (plain)
     return (
       <div className="flex flex-col gap-4">
-        <h4 className="m-0 font-semibold text-(--t-ink-base)">
-          {t("sources")}
-        </h4>
+        <h4 className="type-h4 m-0 text-(--t-ink-base)">{t("sources")}</h4>
         {content}
       </div>
     )
@@ -379,7 +377,7 @@ function ContextAreaSummary({
       data-atlas-reveal
       className="rounded-xl border border-(--t-border-line) p-4"
     >
-      <h3 className="m-0 text-base font-semibold">{area.name}</h3>
+      <h3 className="type-h3 m-0">{area.name}</h3>
       <p className="mt-1 text-xs text-(--t-ink-dim)">
         {area.code} · {release.year}
       </p>

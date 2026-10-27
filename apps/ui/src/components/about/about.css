@@ -13,7 +13,7 @@
 .about-eyebrow {
   margin: 0 0 18px;
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -29,7 +29,7 @@
   border-radius: 999px;
   background: var(--t-accent-primary);
   color: white;
-  font-size: 15px;
+  font-size: var(--type-body-size);
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -57,7 +57,7 @@
   align-items: center;
   gap: 8px;
   color: var(--t-accent-primary);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -81,13 +81,14 @@
   text-align: center;
 }
 .about-hero-eyebrow {
+  margin-bottom: var(--hero-eyebrow-gap);
   display: inline-flex;
   padding: 7px 14px;
   border: 1px solid var(--t-border-line);
   border-radius: 999px;
   background: var(--t-bg-deep);
   color: var(--t-ink-base);
-  font-size: 14px;
+  font-size: var(--type-body-small-size);
   letter-spacing: normal;
   text-transform: none;
 }
@@ -95,7 +96,7 @@
   max-width: 660px;
   margin: 24px auto 0;
   color: var(--t-ink-dim);
-  font-size: clamp(18px, 1.6vw, 21px);
+  font-size: var(--type-lead-size);
   line-height: 1.6;
   text-wrap: pretty;
 }
@@ -108,7 +109,7 @@
 }
 .about-hero-skip {
   margin-top: 12px;
-  font-size: 13px;
+  font-size: var(--type-body-small-size);
 }
 .about-hero-globe {
   position: relative;
@@ -138,17 +139,14 @@
   background: var(--t-bg-deep);
 }
 .about-globe-guide h2 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 0;
-  font-family: var(--font-newsreader), Georgia, serif;
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
 }
 .about-globe-guide p:not(.about-eyebrow) {
   margin: 14px 0 0;
   color: var(--t-ink-dim);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.6;
 }
 .about-globe-guide .about-text-link {
@@ -170,7 +168,7 @@
   border-radius: 999px;
   background: var(--t-bg-void);
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 .about-globe-controls > div {
   display: flex;
@@ -188,7 +186,7 @@
   border-radius: 999px;
   background: var(--t-bg-deep);
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   cursor: pointer;
 }
 .about-motion-toggle:disabled {
@@ -202,7 +200,7 @@
 .about-prose {
   max-width: 65ch;
   color: var(--t-ink-dim);
-  font-size: 18px;
+  font-size: var(--type-body-large-size);
   line-height: 1.75;
 }
 
@@ -243,19 +241,16 @@
 .about-card h3,
 .about-step h3,
 .about-photo-card h3 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 18px 0 10px;
-  font-family: var(--font-newsreader), Georgia, serif;
-  font-size: 28px;
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  line-height: 1.12;
 }
 
 .about-card p,
 .about-step p {
   margin: 0;
   color: var(--t-ink-dim);
-  font-size: 16px;
+  font-size: var(--type-body-size);
   line-height: 1.65;
 }
 
@@ -310,8 +305,8 @@
   margin-top: clamp(36px, 4vw, 56px);
 }
 .about-coverage-rows h2 {
-  font-size: clamp(28px, 3vw, 40px) !important;
-  line-height: 1.08 !important;
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
 }
 .about-coverage-rows .text-right {
   font-variant-numeric: tabular-nums;
@@ -320,7 +315,7 @@
   max-width: 65ch;
   margin: 24px 0 0;
   color: var(--t-ink-dim);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.65;
 }
 .about-coverage > div:last-child > .about-text-link {
@@ -345,15 +340,15 @@
 }
 .about-contribute-option .about-eyebrow {
   margin-bottom: 4px;
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-contribute-option .about-text-link {
-  font-size: 17px;
+  font-size: var(--type-body-size);
 }
 .about-contribute-option p:not(.about-eyebrow) {
   margin: 4px 0 0;
   color: var(--t-ink-dim);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.6;
 }
 
@@ -394,22 +389,19 @@
   padding: 22px 24px;
 }
 .about-photo-card h3 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 10px 0;
-  font-family: var(--font-newsreader), Georgia, serif;
-  font-size: clamp(24px, 2.3vw, 32px);
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  line-height: 1.12;
 }
 .about-photo-card p {
   margin: 10px 0 0;
   color: var(--t-ink-dim);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.6;
 }
 .about-photo-card .about-photo-place {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--type-body-small-size);
 }
 .about-photo-current,
 .about-photo-scroll-hint {
@@ -440,12 +432,11 @@
     padding-top: 24px;
   }
   .about-hero-eyebrow {
-    margin-bottom: 16px;
-    font-size: 13px;
+    font-size: var(--type-body-small-size);
   }
   .about-hero-intro {
     margin-top: 16px;
-    font-size: 16px;
+    font-size: var(--type-body-size);
     line-height: 1.5;
   }
   .about-hero-actions {
@@ -454,7 +445,7 @@
   }
   .about-button {
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: var(--type-body-small-size);
   }
   .about-globe-guide {
     margin-inline: 16px;
@@ -565,21 +556,18 @@
   }
   .about-photo-current .about-eyebrow {
     margin-bottom: 8px;
-    font-size: 12px;
+    font-size: var(--type-caption-size);
   }
   .about-photo-current h3 {
+    font: var(--type-h3);
+    letter-spacing: var(--type-heading-tracking);
     margin: 0;
-    font-family: var(--font-newsreader), Georgia, serif;
-    font-size: clamp(28px, 2vw, 48px);
-    font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
   }
   .about-photo-sequence[data-scrolling="true"] .about-photo-scroll-hint {
     display: block;
     margin: 12px 0 0;
     color: var(--t-ink-dim);
-    font-size: 13px;
+    font-size: var(--type-body-small-size);
   }
 }
 @media (hover: hover) and (pointer: fine) {
@@ -636,7 +624,7 @@
   border: 1px solid var(--t-border-line);
   border-radius: 16px;
   background: var(--t-bg-deep);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 .about-country-picker label {
   color: var(--t-ink-dim);
@@ -696,26 +684,24 @@
 }
 .about-country-preview > span {
   float: right;
-  font-size: 10px;
+  font-size: var(--type-caption-size);
   color: var(--t-ink-dim);
 }
 .about-country-preview h3 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 0 0 6px;
-  font:
-    500 21px/1.1 var(--font-newsreader),
-    Georgia,
-    serif;
 }
 .about-country-preview p {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   color: var(--t-ink-dim);
 }
 .about-country-preview small {
   display: block;
   margin-top: 12px;
   color: var(--t-accent-primary);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-connection-label {
   max-width: 224px;
@@ -730,7 +716,7 @@
   border-radius: 10px;
   background: var(--t-bg-deep);
   color: var(--t-ink-base);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   font-weight: 600;
   line-height: 1.4;
   box-shadow: 0 8px 24px rgb(23 22 43 / 16%);
@@ -796,7 +782,7 @@
 }
 .about-country-heading .about-eyebrow {
   margin: 0;
-  font-size: 10px;
+  font-size: var(--type-caption-size);
 }
 .about-country-actions {
   display: flex;
@@ -819,19 +805,16 @@
   border-color: var(--t-ink-base);
 }
 .about-country-panel h2 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 18px 0 8px;
-  font:
-    500 34px/1.05 var(--font-newsreader),
-    Georgia,
-    serif;
-  letter-spacing: -0.02em;
 }
 .about-country-status {
   display: flex;
   align-items: center;
   gap: 5px;
   color: var(--t-ink-dim);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-country-status button {
   display: inline-flex;
@@ -852,24 +835,24 @@
 }
 .about-country-count > span {
   font:
-    500 42px/1 var(--font-newsreader),
-    Georgia,
-    serif;
+    500 42px/1 var(--font-figtree),
+    system-ui,
+    sans-serif;
 }
 .about-country-count small {
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 .about-country-summary {
   margin: 14px 0;
   color: var(--t-ink-dim);
-  font-size: 13px;
+  font-size: var(--type-body-small-size);
   line-height: 1.55;
 }
 .about-country-capital,
 .about-country-message {
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   line-height: 1.5;
 }
 .about-country-message button {
@@ -878,9 +861,9 @@
   cursor: pointer;
 }
 .about-country-panel h3 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 14px 0 8px;
-  font-size: 12px;
-  font-weight: 600;
 }
 .about-country-type-bar {
   display: flex;
@@ -905,7 +888,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: var(--type-caption-size);
   color: var(--t-ink-dim);
 }
 .about-country-types i {
@@ -947,14 +930,14 @@
 }
 .about-country-featured strong {
   display: block;
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   font-weight: 600;
 }
 .about-country-featured small {
   display: block;
   margin-top: 2px;
   color: var(--t-ink-dim);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-country-featured svg {
   flex: 0 0 auto;
@@ -969,14 +952,14 @@
   flex: 1;
   min-height: 40px;
   padding: 10px 8px;
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-country-first-library {
   width: 100%;
   min-height: 40px;
   margin-bottom: 8px;
   padding: 10px;
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 .about-country-footer[data-empty="true"] {
   display: flex;
@@ -986,7 +969,7 @@
 .about-country-footer {
   margin: 14px 0 0;
   color: var(--t-ink-dim);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
   line-height: 1.5;
 }
 .about-country-footer a {
@@ -996,7 +979,7 @@
 .about-country-updated {
   margin: 8px 0 0;
   color: var(--t-ink-dim);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-country-coverage {
   margin: 10px 0;
@@ -1017,7 +1000,7 @@
 .about-country-coverage p {
   margin: 7px 0 0;
   color: var(--t-ink-dim);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
   line-height: 1.5;
 }
 .about-country-coverage strong {
@@ -1033,14 +1016,14 @@
 }
 .about-country-stats dt {
   color: var(--t-ink-dim);
-  font-size: 10px;
+  font-size: var(--type-caption-size);
 }
 .about-country-stats dd {
   margin: 5px 0 0;
   font:
-    500 24px/1.1 var(--font-newsreader),
-    Georgia,
-    serif;
+    500 24px/1.1 var(--font-figtree),
+    system-ui,
+    sans-serif;
 }
 .about-country-stats small {
   display: block;
@@ -1065,16 +1048,14 @@
   background: var(--t-bg-void);
 }
 .about-country-empty h3 {
+  font: var(--type-h3);
+  letter-spacing: var(--type-heading-tracking);
   margin: 0 0 10px;
-  font:
-    500 23px/1.1 var(--font-newsreader),
-    Georgia,
-    serif;
 }
 .about-country-empty p {
   margin: 0;
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   line-height: 1.55;
 }
 .about-country-context {
@@ -1084,7 +1065,7 @@
 .about-country-context summary {
   min-height: 40px;
   padding: 12px 0;
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   font-weight: 600;
   cursor: pointer;
 }
@@ -1097,7 +1078,7 @@
 }
 .about-country-context p {
   color: var(--t-ink-dim);
-  font-size: 12px;
+  font-size: var(--type-caption-size);
   line-height: 1.5;
 }
 .about-country-context dl {
@@ -1113,18 +1094,18 @@
 .about-country-context dt {
   flex-shrink: 0;
   color: var(--t-ink-dim);
-  font-size: 11px;
+  font-size: var(--type-caption-size);
 }
 .about-country-context dd {
   margin: 0;
   text-align: right;
-  font-size: 12px;
+  font-size: var(--type-caption-size);
 }
 .about-country-context small {
   display: block;
   margin-top: 3px;
   color: var(--t-ink-dim);
-  font-size: 10px;
+  font-size: var(--type-caption-size);
 }
 @media (hover: hover) and (pointer: fine) {
   .about-country-featured a:hover,
@@ -1170,18 +1151,19 @@
     border-radius: 20px;
   }
   .about-hero[data-story="true"] .about-globe-guide h2 {
-    font-size: 26px;
+    font: var(--type-h3);
+    letter-spacing: var(--type-heading-tracking);
   }
   .about-hero[data-story="true"] .about-globe-guide p:not(.about-eyebrow) {
-    font-size: 12px;
+    font-size: var(--type-caption-size);
     line-height: 1.55;
   }
   .about-hero[data-story="true"] .about-globe-guide .about-eyebrow {
-    font-size: 10px;
+    font-size: var(--type-caption-size);
     margin-bottom: 12px;
   }
   .about-hero[data-story="true"] .about-globe-guide .about-text-link {
-    font-size: 12px;
+    font-size: var(--type-caption-size);
     min-height: 32px;
   }
 }

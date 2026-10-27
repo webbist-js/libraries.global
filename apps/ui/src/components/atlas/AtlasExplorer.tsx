@@ -1942,7 +1942,7 @@ export function AtlasExplorer({
             aria-selected={on}
             aria-controls="atlas-tabpanel"
             onClick={() => animateAtlas(() => setTab(key))}
-            className="flex min-h-11 flex-[1_0_auto] items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap max-[350px]:gap-1 max-[350px]:px-1.5 max-[350px]:text-[13px]"
+            className="flex min-h-11 flex-[1_0_auto] items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap max-[350px]:gap-1 max-[350px]:px-1.5 max-[350px]:text-sm"
             style={
               on
                 ? {
@@ -3089,7 +3089,7 @@ export function AtlasExplorer({
                       if (narrow) setInspectMinimised(true)
                     })
                   }
-                  className="flex min-h-[64px] w-[56px] shrink-0 flex-col items-center justify-center gap-2 rounded-xl px-1 py-3 text-[11px] leading-4 font-semibold"
+                  className="flex min-h-[64px] w-[56px] shrink-0 flex-col items-center justify-center gap-2 rounded-xl px-1 py-3 text-xs leading-4 font-semibold"
                   style={{
                     background: tab === key ? T.accent.chip : undefined,
                     color: tab === key ? T.accent.primary : T.ink.dim,

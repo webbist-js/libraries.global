@@ -296,14 +296,14 @@ export function CountryDetailPage({
                   border: `1px solid ${T.border.line}`,
                 }}
               >
-                <p className="m-0 text-[16px]" style={{ color: T.ink.dim }}>
+                <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                   {formatCount(libraryCount)}{" "}
                   {libraryCount === 1 ? "library is" : "libraries are"}{" "}
                   documented in {name}.
                 </p>
                 <GlobalLink
                   href={`/libraries?country=${encodeURIComponent(slug)}`}
-                  className="inline-flex items-center rounded-full px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+                  className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
                   style={{ background: T.accent.primary }}
                 >
                   Find libraries in {name}

@@ -30,7 +30,7 @@ export function ChangedTag() {
 
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-semibold"
       style={{ background: T.accent.chip, color: T.accent.primary }}
     >
       <Icon icon="mdi:pencil" width={12} aria-hidden="true" />
@@ -92,7 +92,7 @@ export function SharedTag({ id }: { id?: string }) {
   return (
     <span
       id={id}
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-semibold"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       <Icon icon="mdi:earth" width={12} aria-hidden="true" />
@@ -124,7 +124,7 @@ export function ModeratedTag({ id }: { id?: string }) {
   return (
     <span
       id={id}
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12.5px] font-semibold"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-semibold"
       style={{ background: T.bg.muted, color: T.ink.dim }}
     >
       <Icon icon="mdi:shield-check-outline" width={12} aria-hidden="true" />
@@ -188,7 +188,7 @@ export function RequiredTag() {
     <span
       style={{
         fontFamily: T.font.sans,
-        fontSize: "14px",
+        fontSize: "var(--type-body-small-size)",
         fontWeight: 500,
         color: "var(--tint-special-fg)",
       }}
@@ -391,7 +391,7 @@ export function WizardSelect({
               value={o.value}
               style={{
                 color: T.ink.base,
-                fontSize: "15px",
+                fontSize: "var(--type-body-size)",
                 fontFamily: T.font.sans,
                 cursor: "pointer",
               }}
@@ -546,7 +546,7 @@ export function TagSelector({
   const chipBase: React.CSSProperties = {
     padding: "8px 14px",
     borderRadius: "999px",
-    fontSize: "14px",
+    fontSize: "var(--type-body-small-size)",
     fontFamily: T.font.sans,
     cursor: "pointer",
     lineHeight: 1.1,
@@ -666,14 +666,10 @@ export function SubSection({ label, sub }: { label: string; sub?: string }) {
       }}
     >
       <h3
+        className="type-h3"
         style={{
-          fontFamily: T.font.serif,
-          fontSize: "26px",
-          fontWeight: 500,
           color: T.ink.base,
           margin: "0 0 6px",
-          letterSpacing: "-0.01em",
-          lineHeight: 1.2,
         }}
       >
         {label}
@@ -682,7 +678,7 @@ export function SubSection({ label, sub }: { label: string; sub?: string }) {
         <p
           style={{
             fontFamily: T.font.sans,
-            fontSize: "15px",
+            fontSize: "var(--type-body-size)",
             color: T.ink.dim,
             margin: 0,
             lineHeight: 1.55,
@@ -715,7 +711,7 @@ export function StepHeading({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "15px",
+          fontSize: "var(--type-body-size)",
           fontWeight: 600,
           color: T.accent.primary,
           margin: "0 0 12px",
@@ -724,17 +720,11 @@ export function StepHeading({
         {eyebrow}
       </p>
       <h2
+        className="type-h2"
         ref={titleRef}
         tabIndex={titleRef ? -1 : undefined}
         style={{
-          fontFamily: T.font.serif,
-          fontSize: compact
-            ? "clamp(28px, 2.6vw, 36px)"
-            : "clamp(32px, 3.5vw, 44px)",
           outline: titleRef ? "none" : undefined,
-          fontWeight: 500,
-          lineHeight: 1.12,
-          letterSpacing: "-0.01em",
           color: T.ink.base,
           margin: "0 0 12px",
         }}
@@ -744,7 +734,7 @@ export function StepHeading({
       <p
         style={{
           fontFamily: T.font.sans,
-          fontSize: "16px",
+          fontSize: "var(--type-body-size)",
           color: T.ink.dim,
           margin: 0,
           lineHeight: 1.55,

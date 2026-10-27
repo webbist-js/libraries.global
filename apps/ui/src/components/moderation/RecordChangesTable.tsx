@@ -85,7 +85,7 @@ function Lines({
   )
 }
 
-const cell = "px-4 py-3 align-top text-left text-[14px]"
+const cell = "px-4 py-3 align-top text-left text-sm"
 
 /**
  * A record edit (a claimant's `library_edit` or a `correction` with
@@ -123,7 +123,7 @@ export function RecordChangesTable({
 
   if (changes.length === 0 && suggested.length === 0)
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         No field changes in this submission.
       </p>
     )
@@ -185,7 +185,7 @@ export function RecordChangesTable({
         />
       )}
       <div
-        className="rounded-[14px] px-4 py-3 text-[14px] leading-[1.55]"
+        className="rounded-[14px] px-4 py-3 text-sm leading-[1.55]"
         style={{
           background: T.bg.surface,
           border: `1px solid ${T.border.line}`,

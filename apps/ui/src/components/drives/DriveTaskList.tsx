@@ -15,7 +15,7 @@ import { DriveTaskRow } from "./DriveTaskRow"
 const SEARCH_DELAY_MS = 300
 
 const PILL =
-  "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors"
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold transition-colors"
 const NEAR_PILL =
   "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-base font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 
@@ -178,10 +178,7 @@ export function DriveTaskList({
           </button>
         </div>
         {nearError ? (
-          <p
-            className="col-span-2 m-0 text-[13px]"
-            style={{ color: T.ink.dim }}
-          >
+          <p className="col-span-2 m-0 text-sm" style={{ color: T.ink.dim }}>
             {nearError}
           </p>
         ) : null}
@@ -194,7 +191,7 @@ export function DriveTaskList({
       {error ? (
         <p
           role="alert"
-          className="m-0 text-[14.5px] font-semibold"
+          className="m-0 text-sm font-semibold"
           style={{ color: T.accent.danger }}
         >
           {error}
@@ -244,7 +241,7 @@ export function DriveTaskList({
       ) : null}
 
       {tasks.length === 0 && !loading && !error ? (
-        <p className="m-0 text-[14px] text-(--t-ink-dim)">
+        <p className="m-0 text-sm text-(--t-ink-dim)">
           {statusLine(0, query, false)}
         </p>
       ) : null}

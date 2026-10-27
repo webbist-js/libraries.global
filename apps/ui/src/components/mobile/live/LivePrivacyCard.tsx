@@ -34,8 +34,7 @@ export function LivePrivacyCard({
     >
       <h3
         id="live-privacy-heading"
-        className="m-0 flex items-center gap-2 text-[20px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
+        className="type-h3 m-0 flex items-center gap-2"
       >
         <Icon
           aria-hidden="true"
@@ -45,7 +44,7 @@ export function LivePrivacyCard({
         />
         {tUi("privacy")}
       </h3>
-      <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0 text-[14.5px]">
+      <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0 text-base">
         {POINTS.map((point) => (
           <li key={point} className="flex items-start gap-2.5">
             <Icon
@@ -60,13 +59,13 @@ export function LivePrivacyCard({
         ))}
       </ul>
       <p
-        className="mt-4 mb-0 rounded-[14px] px-4 py-3 text-[13.5px]"
+        className="mt-4 mb-0 rounded-[14px] px-4 py-3 text-sm"
         style={{ background: T.bg.surface, color: T.ink.dim }}
       >
         Your library should cover live tracking in its own staff data-protection
         checks.
       </p>
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px]">
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <Link
           className="font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}

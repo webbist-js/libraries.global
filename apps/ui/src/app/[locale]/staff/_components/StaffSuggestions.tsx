@@ -158,15 +158,11 @@ export function StaffSuggestions({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="mb-5">
-        <h2
-          id="staff-suggestions-heading"
-          className="m-0 text-[32px] leading-[1.1] sm:text-[40px]"
-          style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-        >
+        <h2 id="staff-suggestions-heading" className="type-h2 m-0">
           Suggested changes
           {total > 0 ? (
             <span
-              className="ml-2 inline-flex min-w-7 items-center justify-center rounded-full px-2 align-middle text-[13px] font-bold tabular-nums"
+              className="ml-2 inline-flex min-w-7 items-center justify-center rounded-full px-2 align-middle text-sm font-bold tabular-nums"
               style={{ background: T.accent.chip, color: T.accent.primary }}
             >
               {total}
@@ -174,7 +170,7 @@ export function StaffSuggestions({
             </span>
           ) : null}
         </h2>
-        <p className="m-0 mt-2 text-[16px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 mt-2 text-base" style={{ color: T.ink.dim }}>
           From the community. As staff, your decision publishes straight away.
         </p>
       </div>
@@ -184,7 +180,7 @@ export function StaffSuggestions({
       {error && (
         <p
           role="alert"
-          className="mb-4 flex items-start gap-2 text-[14px]"
+          className="mb-4 flex items-start gap-2 text-sm"
           style={{ color: T.accent.danger }}
         >
           <Icon
@@ -199,7 +195,7 @@ export function StaffSuggestions({
       {listError && (
         <div
           role="alert"
-          className="mb-4 flex flex-wrap items-center gap-3 rounded-[16px] px-4 py-3 text-[14px]"
+          className="mb-4 flex flex-wrap items-center gap-3 rounded-[16px] px-4 py-3 text-sm"
           style={{ background: T.bg.surface, color: T.ink.base }}
         >
           <Icon
@@ -348,7 +344,7 @@ export function StaffSuggestions({
         {!loaded && !listError && (
           <p
             role="status"
-            className="m-0 text-[15px]"
+            className="m-0 text-base"
             style={{ color: T.ink.dim }}
           >
             Loading suggestions…
@@ -370,7 +366,7 @@ export function StaffSuggestions({
           >
             {tUi("previous")}{" "}
           </Button>
-          <span className="text-[14px]" style={{ color: T.ink.dim }}>
+          <span className="text-sm" style={{ color: T.ink.dim }}>
             Page {page} of {pages}
           </span>
           <Button
@@ -402,7 +398,7 @@ export function StaffSuggestions({
           </Button>
         }
       >
-        <label className="block text-[15px] font-semibold">
+        <label className="block text-base font-semibold">
           Reason
           <select
             className="my-2 block min-h-11 w-full rounded-[14px] border px-3 py-2 font-normal"
@@ -417,7 +413,7 @@ export function StaffSuggestions({
             ))}
           </select>
         </label>
-        <label className="block text-[15px] font-semibold">
+        <label className="block text-base font-semibold">
           Note {reason === "other" ? "(required)" : tUi("optional")}
           <textarea
             className="mt-2 w-full rounded-[14px] border p-3 font-normal"

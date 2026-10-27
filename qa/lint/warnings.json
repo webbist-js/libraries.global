@@ -1390,9 +1390,6 @@
     "apps/ui/src/app/[locale]/profile/[username]/layout.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/ui/src/app/[locale]/profile/settings/_components/MembershipBillingSection.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/app/[locale]/profile/settings/_components/SettingsShell.tsx": {
       "react/jsx-handler-names": 1
     },
@@ -1920,6 +1917,9 @@
     },
     "apps/ui/src/components/location/location-page.helpers.ts": {
       "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/components/membership/PersonalBillingPanel.tsx": {
+      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/mobile/HomeLibraryPicker.tsx": {
       "sonarjs/redundant-type-aliases": 1

@@ -103,20 +103,15 @@ export function LibraryPicker({
     <div className="flex flex-col gap-6">
       <div>
         <h3
-          className="m-0"
+          className="type-h3 m-0"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "clamp(28px,3vw,36px)",
-            fontWeight: 500,
-            lineHeight: 1.1,
-            letterSpacing: "-0.015em",
             color: T.ink.base,
           }}
         >
           Which library is this about?
         </h3>
         {publishedCount ? (
-          <p className="mt-1 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+          <p className="mt-1 mb-0 text-base" style={{ color: T.ink.dim }}>
             Search the {publishedCount.toLocaleString("en-GB")} published
             records.
           </p>
@@ -138,16 +133,13 @@ export function LibraryPicker({
             />
             <span>
               <span
-                className="block text-[16px] font-semibold"
+                className="block text-base font-semibold"
                 style={{ color: T.ink.base }}
               >
                 {selected.name}
               </span>
               {selected.place ? (
-                <span
-                  className="block text-[14px]"
-                  style={{ color: T.ink.dim }}
-                >
+                <span className="block text-sm" style={{ color: T.ink.dim }}>
                   {selected.place}
                 </span>
               ) : null}
@@ -156,7 +148,7 @@ export function LibraryPicker({
           <button
             type="button"
             onClick={() => onSelect(null)}
-            className="rounded-full border bg-white px-3 py-1.5 text-[14px] font-semibold"
+            className="rounded-full border bg-white px-3 py-1.5 text-sm font-semibold"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             Change
@@ -165,7 +157,7 @@ export function LibraryPicker({
       ) : (
         <div className="relative max-w-[640px]">
           <label
-            className="mb-2 block text-[15px] font-semibold"
+            className="mb-2 block text-base font-semibold"
             htmlFor={inputId}
             style={{ color: T.ink.base }}
           >
@@ -188,7 +180,7 @@ export function LibraryPicker({
               aria-controls={listId}
               aria-expanded={open}
               autoComplete="off"
-              className="h-14 w-full rounded-[14px] border border-(--t-border-hi) bg-white pr-4 pl-12 text-[16px] transition-colors outline-none placeholder:text-(--t-ink-faint) focus:border-(--t-accent-primary)"
+              className="h-14 w-full rounded-[14px] border border-(--t-border-hi) bg-white pr-4 pl-12 text-base transition-colors outline-none placeholder:text-(--t-ink-faint) focus:border-(--t-accent-primary)"
               id={inputId}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
@@ -211,14 +203,14 @@ export function LibraryPicker({
             >
               {searching && hits.length === 0 ? (
                 <li
-                  className="px-3 py-2.5 text-[14px]"
+                  className="px-3 py-2.5 text-sm"
                   style={{ color: T.ink.low }}
                 >
                   Searching…
                 </li>
               ) : hits.length === 0 ? (
                 <li
-                  className="px-3 py-2.5 text-[14px]"
+                  className="px-3 py-2.5 text-sm"
                   style={{ color: T.ink.dim }}
                 >
                   No records match. Try another spelling, or{" "}
@@ -235,7 +227,7 @@ export function LibraryPicker({
                   <li
                     key={hit.slug}
                     aria-selected={i === active}
-                    className="cursor-pointer rounded-[10px] px-3 py-2.5 text-[15px] hover:bg-(--t-bg-surface) aria-selected:bg-(--t-accent-chip)"
+                    className="cursor-pointer rounded-[10px] px-3 py-2.5 text-base hover:bg-(--t-bg-surface) aria-selected:bg-(--t-accent-chip)"
                     id={`${listId}-${i}`}
                     onClick={() => choose(hit)}
                     onMouseDown={(e) => e.preventDefault()}
@@ -257,7 +249,7 @@ export function LibraryPicker({
       {!selected && suggestions.length > 0 ? (
         <div>
           <p
-            className="m-0 mb-3 text-[15px] font-semibold"
+            className="m-0 mb-3 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
             Records with missing details
@@ -277,13 +269,13 @@ export function LibraryPicker({
                   }}
                 >
                   <span
-                    className="text-[16px] font-semibold"
+                    className="text-base font-semibold"
                     style={{ color: T.ink.base }}
                   >
                     {s.name}
                   </span>
                   {s.place ? (
-                    <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                    <span className="text-sm" style={{ color: T.ink.dim }}>
                       {s.place}
                     </span>
                   ) : null}
@@ -291,7 +283,7 @@ export function LibraryPicker({
                     {s.missing.map((m) => (
                       <span
                         key={m}
-                        className="rounded-full px-2.5 py-0.5 text-[13px] font-medium"
+                        className="rounded-full px-2.5 py-0.5 text-sm font-medium"
                         style={{
                           background: "var(--tint-special-bg)",
                           color: "var(--tint-special-fg)",

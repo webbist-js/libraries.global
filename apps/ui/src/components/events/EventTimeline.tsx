@@ -86,7 +86,7 @@ function DateScrollPicker({
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "10px",
+                fontSize: "var(--type-caption-size)",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
                 color: isSelected ? T.accent.aurora : T.ink.ghost,
@@ -96,8 +96,8 @@ function DateScrollPicker({
             </span>
             <span
               style={{
-                fontFamily: T.font.serif,
-                fontSize: "18px",
+                fontFamily: T.font.sans,
+                fontSize: "var(--type-body-large-size)",
                 lineHeight: 1.2,
                 color: isSelected
                   ? T.accent.aurora
@@ -150,9 +150,17 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
         className="w-20 shrink-0 pt-0.5 text-right"
         style={{ fontFamily: T.font.mono }}
       >
-        <p style={{ fontSize: "12px", color: T.ink.dim }}>{startLabel}</p>
+        <p style={{ fontSize: "var(--type-caption-size)", color: T.ink.dim }}>
+          {startLabel}
+        </p>
         {endLabel ? (
-          <p style={{ fontSize: "10px", color: T.ink.faint, marginTop: "2px" }}>
+          <p
+            style={{
+              fontSize: "var(--type-caption-size)",
+              color: T.ink.faint,
+              marginTop: "2px",
+            }}
+          >
             {endLabel}
           </p>
         ) : null}
@@ -185,7 +193,7 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
             <span
               style={{
                 fontFamily: T.font.mono,
-                fontSize: "10px",
+                fontSize: "var(--type-caption-size)",
                 letterSpacing: ".1em",
                 color: T.ink.faint,
               }}
@@ -198,8 +206,8 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
           href={`/events/${event.documentId}`}
           className="text-sm leading-snug transition-colors duration-150 group-hover:text-(--t-accent-aurora)"
           style={{
-            fontFamily: T.font.serif,
-            fontSize: "1.1rem",
+            fontFamily: T.font.sans,
+            fontSize: "var(--type-body-large-size)",
             fontStyle: "italic",
             color: T.ink.base,
             textDecoration: "none",
@@ -221,7 +229,7 @@ function TimelineRow({ event }: { event: TimelineEvent }) {
           href={linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[10px] transition-all duration-150 hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
+          className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-all duration-150 hover:border-(--t-border-hi) hover:text-(--t-ink-base)"
           style={{
             fontFamily: T.font.mono,
             letterSpacing: ".1em",
@@ -333,7 +341,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".22em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -342,10 +350,8 @@ export function EventTimeline({ filters }: EventTimelineProps) {
             § 01 ·
           </span>
           <h2
+            className="type-h2"
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "1.5rem",
-              fontWeight: 400,
               color: T.ink.base,
             }}
           >
@@ -359,7 +365,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               color: T.ink.faint,
             }}
           >
@@ -392,7 +398,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
           <span
             style={{
               fontFamily: T.font.mono,
-              fontSize: "10px",
+              fontSize: "var(--type-caption-size)",
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.ink.faint,
@@ -409,8 +415,8 @@ export function EventTimeline({ filters }: EventTimelineProps) {
           />
           <p
             style={{
-              fontFamily: T.font.serif,
-              fontSize: "1.1rem",
+              fontFamily: T.font.sans,
+              fontSize: "var(--type-body-large-size)",
               color: T.ink.faint,
               fontStyle: "italic",
             }}

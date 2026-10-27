@@ -101,7 +101,7 @@ export function NetworkDirectory({
             <p className="text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
               {NETWORK_KIND_LABELS[row.kind]}
             </p>
-            <h2 className="font-serif text-3xl">
+            <h2 className="type-h2">
               <Link href={networkHref(row.slug)}>{row.name}</Link>
             </h2>
             <p>

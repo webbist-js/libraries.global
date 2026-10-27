@@ -33,7 +33,7 @@ export default async function WidgetPage({
   if (!result.body)
     return (
       <section className="rounded-2xl border border-(--t-border-line) bg-white p-6">
-        <h1 className="font-serif text-3xl">Library widget unavailable</h1>
+        <h1 className="type-page-compact">Library widget unavailable</h1>
         <p className="my-3">
           {result.status === 503
             ? "Library data is temporarily unavailable. Please try again later."

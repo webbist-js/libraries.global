@@ -222,7 +222,7 @@ export function requireEntitlement(
       {
         error: "Upgrade required",
         feature,
-        upgradeUrl: "/contribute/membership",
+        upgradeUrl: "/plans",
       },
       { status: 402 }
     )
@@ -247,7 +247,7 @@ export function requireEntitlementForLibrary(
       {
         error: "Upgrade required",
         feature,
-        upgradeUrl: "/contribute/membership",
+        upgradeUrl: "/plans",
       },
       { status: 402 }
     )

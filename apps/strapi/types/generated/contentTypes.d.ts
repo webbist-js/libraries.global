@@ -114,6 +114,43 @@ export interface AdminApiTokenPermission extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface AdminAuditLog extends Struct.CollectionTypeSchema {
+  collectionName: "strapi_audit_logs"
+  info: {
+    displayName: "Audit Log"
+    pluralName: "audit-logs"
+    singularName: "audit-log"
+  }
+  options: {
+    draftAndPublish: false
+    timestamps: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    action: Schema.Attribute.String & Schema.Attribute.Required
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    date: Schema.Attribute.DateTime & Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<"oneToMany", "admin::audit-log"> &
+      Schema.Attribute.Private
+    payload: Schema.Attribute.JSON
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    user: Schema.Attribute.Relation<"oneToOne", "admin::user">
+  }
+}
+
 export interface AdminPermission extends Struct.CollectionTypeSchema {
   collectionName: "admin_permissions"
   info: {
@@ -524,6 +561,11 @@ export interface ApiAccessibilityAccessibility
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -618,6 +660,11 @@ export interface ApiAmenityAmenity extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -666,6 +713,11 @@ export interface ApiAnnouncementAnnouncement
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -846,6 +898,11 @@ export interface ApiAreaArea extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -911,6 +968,11 @@ export interface ApiArticleChangeArticleChange
     publishedAt: Schema.Attribute.DateTime
     reviewerId: Schema.Attribute.String
     slug: Schema.Attribute.String
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     submissionDocumentId: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -1161,6 +1223,11 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1257,6 +1324,11 @@ export interface ApiBlogLandingBlogLanding extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -1327,6 +1399,11 @@ export interface ApiBlogSectionBlogSection extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     tint: Schema.Attribute.Enumeration<
       ["purple", "green", "blue", "rust", "neutral"]
     > &
@@ -1410,6 +1487,11 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     tagLabel: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1593,6 +1675,11 @@ export interface ApiContinentContinent extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1885,6 +1972,11 @@ export interface ApiCountryCountry extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1967,6 +2059,11 @@ export interface ApiDatasetDataset extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<"unconfirmed">
     sourceUpdatedAt: Schema.Attribute.Date
     sourceUrl: Schema.Attribute.String
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2220,6 +2317,11 @@ export interface ApiDriveDrive extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 120
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -2287,6 +2389,11 @@ export interface ApiEntitlementGrantEntitlementGrant
       ["admin", "press", "partner", "team", "grant_funder"]
     > &
       Schema.Attribute.DefaultTo<"admin">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2340,6 +2447,11 @@ export interface ApiFooterFooter extends Struct.SingleTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     text: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2559,6 +2671,11 @@ export interface ApiHomepageHomepage extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     tasksIntro: Schema.Attribute.Component<"homepage.section-intro", false> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2703,6 +2820,11 @@ export interface ApiLegalDocumentLegalDocument
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summaryPoints: Schema.Attribute.Component<"legal.summary-point", true> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -2828,6 +2950,11 @@ export interface ApiLibraryChangeLibraryChange
     source: Schema.Attribute.Enumeration<
       ["submission", "staff", "admin", "api_token", "import", "system"]
     >
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     submissionDocumentId: Schema.Attribute.String
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -2878,6 +3005,11 @@ export interface ApiLibraryNetworkLibraryNetwork
       Schema.Attribute.Required &
       Schema.Attribute.Unique
     sourceUrl: Schema.Attribute.String
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -2957,6 +3089,11 @@ export interface ApiLibraryNoticeLibraryNotice
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 10
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     to: Schema.Attribute.Date
     type: Schema.Attribute.Enumeration<
       [
@@ -3010,6 +3147,11 @@ export interface ApiLibraryTypeLibraryType extends Struct.CollectionTypeSchema {
       Schema.Attribute.Required &
       Schema.Attribute.Unique
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -3447,6 +3589,11 @@ export interface ApiLibraryLibrary extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     streetAddress: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -3576,6 +3723,11 @@ export interface ApiNotificationNotification
     readAt: Schema.Attribute.DateTime
     recipientEmail: Schema.Attribute.Email & Schema.Attribute.Private
     sentAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     title: Schema.Attribute.String & Schema.Attribute.Required
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -3619,6 +3771,11 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     title: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{
@@ -3711,6 +3868,11 @@ export interface ApiProVerificationProVerification
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3743,6 +3905,11 @@ export interface ApiRedirectRedirect extends Struct.CollectionTypeSchema {
     permanent: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
     source: Schema.Attribute.String & Schema.Attribute.Required
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -3973,6 +4140,11 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4037,6 +4209,11 @@ export interface ApiRoleGrantRoleGrant extends Struct.CollectionTypeSchema {
       ["admin", "claim", "application", "migration", "team"]
     > &
       Schema.Attribute.DefaultTo<"admin">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4066,6 +4243,11 @@ export interface ApiSavedEventSavedEvent extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4159,6 +4341,11 @@ export interface ApiServiceService extends Struct.CollectionTypeSchema {
         }
       }>
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4212,6 +4399,11 @@ export interface ApiSiteConfigSiteConfig extends Struct.SingleTypeSchema {
       >
     populationEstimates: Schema.Attribute.JSON & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     supportersLead: Schema.Attribute.Text &
       Schema.Attribute.DefaultTo<"Support helps cover the servers, maps and data behind Libraries Global. Library records, downloads and community contributions stay free for everyone.">
     supportersTitle: Schema.Attribute.String &
@@ -4264,6 +4456,11 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"pending_confirmation">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     type: Schema.Attribute.Enumeration<["beta_waitlist", "newsletter"]> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"newsletter">
@@ -4317,6 +4514,11 @@ export interface ApiTopicTopic extends Struct.CollectionTypeSchema {
         }
       }> &
       Schema.Attribute.DefaultTo<"pending">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     suggestedByEmail: Schema.Attribute.String &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4429,6 +4631,11 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     >
     publicPrefs: Schema.Attribute.JSON
     publishedAt: Schema.Attribute.DateTime
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     streak: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>
     supporterBadgeVisible: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
@@ -4625,6 +4832,11 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4709,6 +4921,11 @@ export interface ApiWikiLandingWikiLanding extends Struct.SingleTypeSchema {
           localized: true
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -4794,6 +5011,11 @@ export interface ApiWikiSectionWikiSection extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -6885,6 +7107,11 @@ export interface PluginEventsEvent extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<"upcoming">
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     summary: Schema.Attribute.Text
     syncHash: Schema.Attribute.String & Schema.Attribute.Required
     tags: Schema.Attribute.JSON
@@ -7885,6 +8112,11 @@ export interface PluginUsersPermissionsUser
       "manyToOne",
       "plugin::users-permissions.role"
     >
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -7902,6 +8134,7 @@ declare module "@strapi/strapi" {
     export interface ContentTypeSchemas {
       "admin::api-token": AdminApiToken
       "admin::api-token-permission": AdminApiTokenPermission
+      "admin::audit-log": AdminAuditLog
       "admin::permission": AdminPermission
       "admin::role": AdminRole
       "admin::session": AdminSession

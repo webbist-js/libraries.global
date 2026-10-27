@@ -43,7 +43,7 @@ export function ModerationAccessUnavailable({
           <form action={path} method="get" className="m-0 mt-2">
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
             >
               <Icon

@@ -6,7 +6,6 @@ import { use } from "react"
 import { MainContent } from "@/components/ds/MainContent"
 import StrapiStructuredData from "@/components/page-builder/components/seo-utilities/StrapiStructuredData"
 import { fetchPage } from "@/lib/strapi-api/content/server"
-import { cn } from "@/lib/styles"
 
 interface Props {
   params: {
@@ -34,7 +33,7 @@ export default function StrapiPageView({ params, searchParams }: Props) {
     <>
       <StrapiStructuredData structuredData={data?.seo?.structuredData} />
 
-      <MainContent className={cn("flex w-full flex-col overflow-hidden")} />
+      <MainContent className="flex w-full flex-col overflow-hidden" />
     </>
   )
 }

@@ -73,20 +73,16 @@ export function LiveSessionsTable({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
       aria-labelledby="live-sessions-heading"
     >
-      <h3
-        id="live-sessions-heading"
-        className="m-0 text-[20px]"
-        style={{ fontFamily: T.font.serif, fontWeight: 500 }}
-      >
+      <h3 id="live-sessions-heading" className="type-h3 m-0">
         Live sessions · last 90 days
       </h3>
       {!logs.length ? (
-        <p className="mt-3 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="mt-3 mb-0 text-base" style={{ color: T.ink.dim }}>
           No live sessions yet. The first route you share appears here.
         </p>
       ) : (
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-[14px]">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <caption className="sr-only">
               Live sessions in the last 90 days
             </caption>
@@ -142,7 +138,7 @@ export function LiveSessionsTable({
                       {s.checkIns} of {s.totalStops}
                       {s.flags.length ? (
                         <span
-                          className="block text-[12.5px]"
+                          className="block text-sm"
                           style={{ color: T.ink.dim }}
                         >
                           {s.flags.join(", ")}

@@ -20,7 +20,7 @@ export function WidgetStat({
 
   return (
     <div>
-      <p className="my-2 font-serif text-6xl" style={{ color: accent }}>
+      <p className="my-2 font-sans text-6xl" style={{ color: accent }}>
         {c.metric === "libraries"
           ? rows.length
           : c.chartMode === "percentage"

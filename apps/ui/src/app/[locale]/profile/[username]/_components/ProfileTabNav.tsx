@@ -79,6 +79,12 @@ export function ProfileTabNav({
         count: unread || undefined,
       },
       {
+        id: "membership",
+        label: tUi("membership"),
+        href: "/profile/membership",
+        icon: "mdi:star-circle-outline",
+      },
+      {
         id: "settings",
         label: tUi("settings"),
         href: "/profile/settings",

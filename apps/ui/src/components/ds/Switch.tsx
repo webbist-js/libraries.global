@@ -39,7 +39,7 @@ export function Switch({
       className={[
         "cursor-pointer items-center has-disabled:cursor-not-allowed has-disabled:opacity-60",
         inline
-          ? "inline-flex min-h-11 gap-2.5 text-[14px]"
+          ? "inline-flex min-h-11 gap-2.5 text-sm"
           : "flex min-h-11 justify-between gap-4 py-2",
         className,
       ].join(" ")}
@@ -48,7 +48,7 @@ export function Switch({
       <span className="min-w-0">
         {label}
         {description ? (
-          <small className="block text-[14px]" style={{ color: T.ink.dim }}>
+          <small className="block text-sm" style={{ color: T.ink.dim }}>
             {description}
           </small>
         ) : null}

@@ -29,10 +29,10 @@ function ComparisonMetadata({
 
   return (
     <details className="mx-5 mt-5 rounded-[16px] border border-(--t-border-line) bg-(--t-bg-surface) sm:mx-7">
-      <summary className="cursor-pointer px-4 py-3 text-[14px] font-semibold">
+      <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">
         {p("details")}
       </summary>
-      <dl className="m-0 grid gap-1 border-t border-(--t-border-line) p-4 text-[14px] leading-relaxed [overflow-wrap:anywhere]">
+      <dl className="m-0 grid gap-1 border-t border-(--t-border-line) p-4 text-sm leading-relaxed [overflow-wrap:anywhere]">
         <dt className="font-semibold">{t("sections")}</dt>
         <dd className="m-0">
           {value.sections.map((key) => key.replaceAll("-", " ")).join(", ") ||
@@ -124,7 +124,7 @@ export function ArticleRevisionComparison({
           <h2
             ref={headingRef}
             tabIndex={-1}
-            className="m-0 font-serif text-[28px] leading-tight font-medium outline-none"
+            className="type-h2 m-0 outline-none"
           >
             {p("comparisonSummary")}
           </h2>
@@ -140,7 +140,7 @@ export function ArticleRevisionComparison({
             </Button>
           )}
         </div>
-        <p className="mt-4 mb-0 max-w-[80ch] text-[15px] leading-relaxed text-(--t-ink-dim)">
+        <p className="mt-4 mb-0 max-w-[80ch] text-base leading-relaxed text-(--t-ink-dim)">
           {t("instructions")}
         </p>
         <dl className="mt-5 mb-0 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -152,12 +152,12 @@ export function ArticleRevisionComparison({
                 key={field}
                 className="rounded-[14px] bg-(--t-bg-surface) px-3 py-3"
               >
-                <dt className="text-[14px] font-semibold">
+                <dt className="text-sm font-semibold">
                   {field === "title" || field === "summary"
                     ? tUi(field)
                     : p(field)}
                 </dt>
-                <dd className="m-0 mt-1 flex items-center gap-1.5 text-[14px] text-(--t-ink-dim)">
+                <dd className="m-0 mt-1 flex items-center gap-1.5 text-sm text-(--t-ink-dim)">
                   <Icon
                     aria-hidden="true"
                     icon={unchanged ? "mdi:check" : "mdi:circle-edit-outline"}
@@ -224,7 +224,7 @@ export function ArticleRevisionComparison({
           />
           {t("adopt")}
         </Button>
-        <p className="mt-3 mb-0 max-w-[80ch] text-[14px] leading-relaxed text-(--t-ink-dim)">
+        <p className="mt-3 mb-0 max-w-[80ch] text-sm leading-relaxed text-(--t-ink-dim)">
           {t("adoptHelp")}
         </p>
       </div>

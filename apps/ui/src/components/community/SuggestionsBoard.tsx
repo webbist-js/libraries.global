@@ -169,7 +169,7 @@ export function SuggestionsBoard({
         />
       )}
       <SuggestionChangesRequested items={needsChanges} onRevise={onRevise} />
-      <h2 className="m-0 font-serif text-3xl">
+      <h2 className="type-h2 m-0">
         {t(round?.state === "review" ? "reviewAndVoting" : "openVotes")}
       </h2>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -187,7 +187,7 @@ export function SuggestionsBoard({
                 type="button"
                 aria-pressed={on}
                 onClick={() => pickFilter(f.id)}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors hover:border-(--t-accent-primary)"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-base font-semibold transition-colors hover:border-(--t-accent-primary)"
                 style={{
                   border: `1px solid ${on ? T.accent.primary : T.border.hi}`,
                   background: on ? T.accent.chip : T.bg.deep,
@@ -211,7 +211,7 @@ export function SuggestionsBoard({
           })}
         </div>
         <label
-          className="flex items-center gap-2 text-[15px] font-semibold"
+          className="flex items-center gap-2 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
           {t("sort")}
@@ -223,7 +223,7 @@ export function SuggestionsBoard({
               { value: "top", label: t("mostVotes") },
               { value: "new", label: t("newest") },
             ]}
-            className="w-auto text-[15px] font-medium"
+            className="w-auto text-base font-medium"
           />
         </label>
       </div>
@@ -231,7 +231,7 @@ export function SuggestionsBoard({
       {error ? (
         <p
           role="alert"
-          className="m-0 text-[15px] font-semibold"
+          className="m-0 text-base font-semibold"
           style={{ color: T.accent.danger }}
         >
           {error}

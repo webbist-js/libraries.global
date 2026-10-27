@@ -111,7 +111,7 @@ const input: React.CSSProperties = {
   border: `1px solid ${T.border.hi}`,
   background: T.bg.deep,
   color: T.ink.base,
-  fontSize: 16,
+  fontSize: "var(--type-body-size)",
   fontFamily: T.font.sans,
   width: "100%",
   boxSizing: "border-box",
@@ -123,14 +123,10 @@ const cardStyle: React.CSSProperties = {
   border: `1px solid ${T.border.line}`,
 }
 const cardTitle: React.CSSProperties = {
-  fontFamily: T.font.serif,
-  fontSize: 26,
-  fontWeight: 500,
-  letterSpacing: "-0.01em",
   color: T.ink.base,
 }
-const legendClass = "m-0 p-0 text-[15px] font-semibold"
-const hintClass = "mt-0.5 mb-3 text-[14px]"
+const legendClass = "m-0 p-0 text-base font-semibold"
+const hintClass = "mt-0.5 mb-3 text-sm"
 
 /** "Optional" / "Required" after a field's name. */
 function Tag({ children }: { readonly children: React.ReactNode }) {
@@ -191,7 +187,7 @@ function Chip({
 }) {
   return (
     <label
-      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[14px] font-medium transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--t-accent-primary) has-[:focus-visible]:outline-solid"
       style={{
         background: checked ? T.accent.chip : T.bg.deep,
         borderColor: checked ? T.accent.primary : T.border.hi,
@@ -231,7 +227,7 @@ function EligibilityCard({
       style={cardStyle}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 id="apply-eligibility" className="m-0" style={cardTitle}>
+        <h2 id="apply-eligibility" className="type-h2 m-0" style={cardTitle}>
           Who can apply
         </h2>
         {eligible ? (
@@ -241,14 +237,14 @@ function EligibilityCard({
         )}
       </div>
       <p
-        className="mt-3 mb-5 text-[15px] leading-[1.6]"
+        className="mt-3 mb-5 text-base leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
         Editor and moderator roles go to people whose changes have already been
         accepted by a reviewer. Any kind of change counts: records, photos,
         sources or articles.
       </p>
-      <div className="mb-2 flex items-baseline justify-between gap-3 text-[15px]">
+      <div className="mb-2 flex items-baseline justify-between gap-3 text-base">
         <span className="font-semibold" style={{ color: T.ink.base }}>
           {acceptedCount} accepted {acceptedCount === 1 ? "change" : "changes"}
         </span>
@@ -275,7 +271,7 @@ function EligibilityCard({
         />
       </div>
       {eligible ? null : (
-        <p className="mt-4 mb-0 text-[15px]" style={{ color: T.ink.dim }}>
+        <p className="mt-4 mb-0 text-base" style={{ color: T.ink.dim }}>
           Keep contributing: corrections, new libraries and photos all count.{" "}
           <Link
             href="/contribute"
@@ -309,13 +305,10 @@ function OpenApplication({
       className="flex flex-col gap-2 rounded-[16px] p-4"
       style={{ border: `1px solid ${T.border.line}`, background: T.bg.surface }}
     >
-      <p
-        className="m-0 text-[15px] font-semibold"
-        style={{ color: T.ink.base }}
-      >
+      <p className="m-0 text-base font-semibold" style={{ color: T.ink.base }}>
         You already have an application for this role.
       </p>
-      <div className="flex flex-wrap items-center gap-2 text-[14px]">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         <span style={{ color: T.ink.base }}>
           {APPLICATION_ROLE_LABEL[app.role]}
           {app.queue ? ` · ${APPLICATION_QUEUE_LABEL[app.queue]}` : ""}
@@ -329,7 +322,7 @@ function OpenApplication({
           </span>
         ) : null}
         <span
-          className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
+          className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold"
           style={{ background: status.bg, color: status.fg }}
         >
           <Icon aria-hidden="true" icon={status.icon} width={14} />
@@ -338,14 +331,14 @@ function OpenApplication({
       </div>
       {app.status === "needs_info" && app.reviewNote ? (
         <p
-          className="m-0 text-[15px] leading-[1.55]"
+          className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.base }}
         >
           <span style={{ color: T.ink.dim }}>Moderator’s question: </span>
           {app.reviewNote}
         </p>
       ) : null}
-      <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
         {app.status === "needs_info" ? "Reply from " : "Follow it in "}
         <Link
           href="/contribute/submissions"
@@ -375,7 +368,7 @@ function AcceptedList({
         Your accepted changes<Tag>Attached automatically</Tag>
       </p>
       {accepted.length === 0 ? (
-        <p className="m-0 text-[14px]" style={{ color: T.ink.dim }}>
+        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           None yet. Your accepted changes will be attached here.
         </p>
       ) : (
@@ -389,7 +382,7 @@ function AcceptedList({
           {accepted.map((c, i) => (
             <li
               key={c.documentId}
-              className="flex items-center gap-2.5 px-3.5 py-2.5 text-[14px]"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
               style={
                 i > 0
                   ? { borderTop: `1px solid ${T.border.divider}` }
@@ -413,10 +406,7 @@ function AcceptedList({
                   <span style={{ color: T.ink.dim }}> · {c.target}</span>
                 ) : null}
               </span>
-              <span
-                className="shrink-0 text-[13px]"
-                style={{ color: T.ink.dim }}
-              >
+              <span className="shrink-0 text-sm" style={{ color: T.ink.dim }}>
                 {shortDate(c.decidedAt)}
               </span>
             </li>
@@ -426,7 +416,7 @@ function AcceptedList({
       {username && total > 0 ? (
         <Link
           href={`/profile/${encodeURIComponent(username)}/contributions`}
-          className="self-start text-[14px] underline underline-offset-[3px]"
+          className="self-start text-sm underline underline-offset-[3px]"
           style={linkStyle}
         >
           See all {total} on your profile
@@ -638,13 +628,13 @@ export function RoleApplicationForm({
               id={`${ids}-sent`}
               ref={sentRef}
               tabIndex={-1}
-              className="m-0 outline-none"
+              className="type-h2 m-0 outline-none"
               style={cardTitle}
             >
               Thanks. We’ve got your application.
             </h2>
             <p
-              className="m-0 text-[16px] leading-[1.6]"
+              className="m-0 text-base leading-[1.6]"
               style={{ color: T.ink.dim }}
             >
               {reviewer} will read it and email you their decision, usually
@@ -661,7 +651,7 @@ export function RoleApplicationForm({
             <button
               type="button"
               onClick={() => setState("idle")}
-              className="mt-1 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-semibold"
+              className="mt-1 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold"
               style={{
                 background: T.bg.deep,
                 border: `1px solid ${T.border.hi}`,
@@ -680,7 +670,11 @@ export function RoleApplicationForm({
             className={card}
             style={cardStyle}
           >
-            <h2 id={`${ids}-title`} className="m-0 mb-6" style={cardTitle}>
+            <h2
+              id={`${ids}-title`}
+              className="type-h2 m-0 mb-6"
+              style={cardTitle}
+            >
               Your application
             </h2>
 
@@ -872,7 +866,7 @@ export function RoleApplicationForm({
                       </label>
                       <span
                         id={`${ids}-statement-count`}
-                        className="text-[13px] font-semibold"
+                        className="text-sm font-semibold"
                         style={{
                           color:
                             statementLength > APPLICATION_STATEMENT_MAX
@@ -945,7 +939,7 @@ export function RoleApplicationForm({
                       <button
                         type="button"
                         onClick={() => setSamples((prev) => [...prev, ""])}
-                        className="mt-3 inline-flex items-center gap-1 rounded-full px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+                        className="mt-3 inline-flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
                         style={{
                           background: T.bg.deep,
                           border: `1px solid ${T.border.hi}`,
@@ -960,7 +954,7 @@ export function RoleApplicationForm({
                   </fieldset>
 
                   <label
-                    className="flex items-start gap-3 text-[15px] leading-[1.55]"
+                    className="flex items-start gap-3 text-base leading-[1.55]"
                     style={{ color: T.ink.base }}
                   >
                     <input
@@ -996,7 +990,7 @@ export function RoleApplicationForm({
               {error ? (
                 <p
                   role="alert"
-                  className="m-0 flex items-start gap-1.5 text-[14px] font-semibold"
+                  className="m-0 flex items-start gap-1.5 text-sm font-semibold"
                   style={{ color: T.accent.danger }}
                 >
                   <Icon
@@ -1016,7 +1010,7 @@ export function RoleApplicationForm({
                 >
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ border: "none", fontFamily: T.font.sans }}
                   >
                     {state === "sending" ? tUi("sending") : "Send application"}
@@ -1028,7 +1022,7 @@ export function RoleApplicationForm({
                       />
                     )}
                   </button>
-                  <span className="text-[14px]" style={{ color: T.ink.dim }}>
+                  <span className="text-sm" style={{ color: T.ink.dim }}>
                     {reviewer} usually replies within 7 days.
                   </span>
                 </div>

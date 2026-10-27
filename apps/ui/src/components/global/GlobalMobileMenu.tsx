@@ -122,7 +122,7 @@ export function GlobalMobileMenu({
                         href={link.href}
                         {...navigationAttributes(link.href)}
                         aria-current={active ? "page" : undefined}
-                        className="flex min-h-12 items-center rounded-2xl px-4 text-[17px] font-medium"
+                        className="flex min-h-12 items-center rounded-2xl px-4 text-base font-medium"
                         style={
                           active
                             ? { background: T.ink.base, color: "#fff" }

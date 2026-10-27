@@ -38,7 +38,7 @@ function writeSaved(slug: string, answers: Record<string, Answer> | null) {
 }
 
 const answerPill =
-  "min-h-11 min-w-[42px] rounded-full border px-2.5 py-1 text-[13px] font-semibold transition-colors disabled:cursor-default"
+  "min-h-11 min-w-[42px] rounded-full border px-2.5 py-1 text-sm font-semibold transition-colors disabled:cursor-default"
 
 /**
  * The accessibility grid: documented facilities are marked Yes, confirmed
@@ -198,8 +198,8 @@ export function LibraryFacilityAnswers({
           id={labelId}
           className={
             grouped
-              ? "min-w-0 flex-1 text-[13px] font-medium"
-              : "min-w-0 flex-1 text-[15px] font-medium"
+              ? "min-w-0 flex-1 text-sm font-medium"
+              : "min-w-0 flex-1 text-base font-medium"
           }
           style={{ color: T.ink.base }}
         >
@@ -212,7 +212,7 @@ export function LibraryFacilityAnswers({
         </span>
         {known !== "unknown" ? (
           <span
-            className="inline-flex items-center gap-1 text-[13.5px] font-semibold"
+            className="inline-flex items-center gap-1 text-sm font-semibold"
             style={{
               color: known === "yes" ? "var(--tint-public-fg)" : T.ink.dim,
             }}
@@ -280,7 +280,7 @@ export function LibraryFacilityAnswers({
 
                 return known.length ? (
                   <div key={category}>
-                    <h3 className="m-0 mb-2 text-sm font-semibold">
+                    <h3 className="type-h3 m-0 mb-2">
                       {tPage(
                         category === "accessibility" ? "access" : "facilities"
                       )}
@@ -298,9 +298,7 @@ export function LibraryFacilityAnswers({
               className="rounded-2xl border p-4 sm:p-5"
               style={{ borderColor: T.border.line, background: T.bg.space }}
             >
-              <h3 className="m-0 text-base font-semibold">
-                {tPage("questionsTitle")}
-              </h3>
+              <h3 className="type-h3 m-0">{tPage("questionsTitle")}</h3>
               <p
                 className="mt-1 mb-3 text-sm leading-relaxed"
                 style={{ color: T.ink.dim }}
@@ -342,7 +340,7 @@ export function LibraryFacilityAnswers({
       <div aria-live="polite" className="mt-3">
         {state === "sent" ? (
           <p
-            className="m-0 flex items-center gap-2 rounded-2xl px-4 py-3 text-[14.5px] font-semibold"
+            className="m-0 flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold"
             style={{ background: "var(--tint-public-bg)", color: T.accent.ok }}
           >
             <Icon
@@ -358,10 +356,7 @@ export function LibraryFacilityAnswers({
             className="flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3"
             style={{ background: T.accent.chip }}
           >
-            <span
-              className="flex-1 text-[14.5px]"
-              style={{ color: T.ink.base }}
-            >
+            <span className="flex-1 text-sm" style={{ color: T.ink.base }}>
               {count} {count === 1 ? "answer" : "answers"} ready to send.
             </span>
             {isPending ? null : session?.user ? (
@@ -369,14 +364,14 @@ export function LibraryFacilityAnswers({
                 type="button"
                 onClick={() => void send()}
                 disabled={state === "sending"}
-                className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-70"
+                className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-70"
               >
                 {state === "sending" ? tUi("sending") : "Send for review"}
               </button>
             ) : (
               <Link
                 href={`/auth/signin?callbackUrl=${encodeURIComponent(`${libraryPath}#access`)}`}
-                className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
               >
                 Sign in to send
               </Link>
@@ -384,10 +379,7 @@ export function LibraryFacilityAnswers({
           </div>
         ) : null}
         {state === "error" && error ? (
-          <p
-            className="mt-2 mb-0 text-[14px]"
-            style={{ color: T.accent.danger }}
-          >
+          <p className="mt-2 mb-0 text-sm" style={{ color: T.accent.danger }}>
             {error}
           </p>
         ) : null}
@@ -395,7 +387,7 @@ export function LibraryFacilityAnswers({
           <button
             type="button"
             onClick={() => void send(false)}
-            className="mt-2 rounded-full border border-(--t-border-hi) bg-white px-4 py-2 text-[14px] font-semibold transition-colors hover:bg-(--t-bg-surface)"
+            className="mt-2 rounded-full border border-(--t-border-hi) bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base }}
           >
             Send without the drive

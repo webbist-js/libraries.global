@@ -86,7 +86,7 @@ export function StaffVerifyButton({
       {error && (
         <span
           role="alert"
-          className="text-[13px]"
+          className="text-sm"
           style={{ color: T.accent.danger }}
         >
           {error}

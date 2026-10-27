@@ -10,7 +10,7 @@ import { Badge } from "./Badge"
 
 export const DRAWER_CARD = "rounded-[20px] border"
 export const DRAWER_PILL =
-  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-[14px] font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-4 text-sm font-semibold text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
 
 /** Compact workspace shortcuts, grouped on a single paper surface. */
 export function DrawerSection({
@@ -33,14 +33,11 @@ export function DrawerSection({
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3
-            id={id}
-            className="m-0 font-serif text-[23px] leading-tight tracking-[-0.02em] text-(--t-ink-base)"
-          >
+          <h3 id={id} className="type-h3 m-0 text-(--t-ink-base)">
             {title}
           </h3>
           {description ? (
-            <p className="m-0 mt-1 text-[14px] leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 mt-1 text-sm leading-relaxed text-(--t-ink-dim)">
               {description}
             </p>
           ) : null}
@@ -85,11 +82,11 @@ export function DrawerAction({
         />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[14px] leading-snug font-semibold">
+        <span className="block text-sm leading-snug font-semibold">
           {label}
         </span>
         {description ? (
-          <span className="mt-0.5 block text-[14px] leading-relaxed text-(--t-ink-dim)">
+          <span className="mt-0.5 block text-sm leading-relaxed text-(--t-ink-dim)">
             {description}
           </span>
         ) : null}
@@ -99,7 +96,7 @@ export function DrawerAction({
       ) : null}
       {count !== undefined ? (
         <span
-          className={`min-w-6 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[13px] font-semibold tabular-nums ${typeof count === "number" && count > 0 ? "bg-[#19172c] text-white" : "bg-(--t-bg-space) text-(--t-ink-dim)"}`}
+          className={`min-w-6 shrink-0 rounded-full px-1.5 py-0.5 text-center text-sm font-semibold tabular-nums ${typeof count === "number" && count > 0 ? "bg-[#19172c] text-white" : "bg-(--t-bg-space) text-(--t-ink-dim)"}`}
         >
           {count}
         </span>
@@ -131,13 +128,13 @@ export function DrawerFooter({
       <Link
         href={href}
         onClick={onClose}
-        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-[14px] font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
       >
         {label}
         <Icon aria-hidden height={16} width={16} icon="mdi:arrow-right" />
       </Link>
       <kbd
-        className="rounded-md border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-1 text-[14px] text-(--t-ink-dim)"
+        className="rounded-md border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-1 text-sm text-(--t-ink-dim)"
         style={{ fontFamily: T.font.mono }}
       >
         {shortcut}
@@ -146,7 +143,7 @@ export function DrawerFooter({
   )
 }
 const TILE =
-  "flex min-h-[104px] flex-col justify-between gap-6 rounded-[20px] border p-3.5 text-[16px] font-semibold leading-snug no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "flex min-h-[104px] flex-col justify-between gap-6 rounded-[20px] border p-3.5 text-base font-semibold leading-snug no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 export function DrawerTile({
   href,
@@ -205,7 +202,7 @@ export function DrawerLinkCard({
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <span
-        className="flex items-start gap-3 text-[16px] leading-snug font-semibold"
+        className="flex items-start gap-3 text-base leading-snug font-semibold"
         style={{ color: T.ink.base }}
       >
         <Icon
@@ -219,7 +216,7 @@ export function DrawerLinkCard({
         <span>{title}</span>
       </span>
       {description ? (
-        <span className="text-[14px]" style={{ color: T.ink.dim }}>
+        <span className="text-sm" style={{ color: T.ink.dim }}>
           {description}
         </span>
       ) : null}

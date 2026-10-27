@@ -33,7 +33,7 @@ export function WidgetSelectionFilters({
 
   return (
     <details className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
-      <summary className="min-h-11 cursor-pointer font-serif text-2xl">
+      <summary className="min-h-11 cursor-pointer font-sans text-2xl">
         Filter this selection
       </summary>
       <div className="space-y-4 pt-3">

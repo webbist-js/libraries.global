@@ -88,7 +88,7 @@ export function WidgetCreate({ data }: { readonly data: WidgetWorkspace }) {
       <WidgetError error={error} />
       {step === 1 ? (
         <fieldset>
-          <legend className="mb-5 font-serif text-3xl">
+          <legend className="mb-5 font-sans text-3xl">
             What would you like to publish?
           </legend>
           <div className="grid gap-4 sm:grid-cols-2">

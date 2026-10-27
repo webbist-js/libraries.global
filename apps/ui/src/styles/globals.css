@@ -3,6 +3,7 @@
 @import "@repo/design-system/palette.css";
 @import "@repo/design-system/custom-styles.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
+@import "./typography.css";
 
 @plugin "tailwindcss-animate";
 
@@ -18,16 +19,15 @@
   --sticky-content-max-height: calc(100dvh - 105px);
 
   /* Avoid compounding em sizes in nested labels and controls. */
-  --text-xs: 0.875rem;
+  --text-xs: 0.75rem;
   --text-xs--line-height: 1.45;
-  --text-sm: 0.9375rem;
+  --text-sm: 0.875rem;
   --text-sm--line-height: 1.5;
   --text-base: 1rem;
   --text-base--line-height: 1.5;
 
-  /* font — legacy alias, still referenced by blog card components; remove
-     with their next restyle */
-  --font-fraunces: var(--font-newsreader);
+  /* Legacy content styles follow the body typeface. */
+  --font-fraunces: var(--font-figtree);
 
   /* backgrounds — warm paper */
   --t-bg-void: #faf8f4; /* page root */
@@ -342,7 +342,7 @@
 /* Scoped to the first rich-text block only, so pull quotes and later blocks
    never pick up a cap. */
 .article-drop-cap > div > div:first-child > p:first-child::first-letter {
-  font-family: var(--font-newsreader);
+  font-family: var(--font-figtree);
   font-size: 4.4rem;
   font-weight: 600;
   float: left;

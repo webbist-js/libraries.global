@@ -59,9 +59,27 @@ export const T = {
     danger: "var(--t-accent-danger)",
   },
   font: {
+    /** Page heroes, editorial display sections and the site wordmark. */
     serif: "var(--font-newsreader), Georgia, serif",
     mono: "var(--font-jetbrains-mono), ui-monospace, monospace",
     sans: "var(--font-figtree), system-ui, sans-serif",
+  },
+  type: {
+    h1: "var(--type-h1)",
+    h2: "var(--type-h2)",
+    h3: "var(--type-h3)",
+    h4: "var(--type-h4)",
+    smallHeading: "var(--type-small-heading)",
+    label: "var(--type-label)",
+    pageCompact: "var(--type-page-compact)",
+    pageInline: "var(--type-page-inline)",
+    feature: "var(--type-feature)",
+    displayHero: "var(--type-display-hero)",
+    displayBand: "var(--type-display-band)",
+    displaySection: "var(--type-display-section)",
+    displayCompact: "var(--type-display-compact)",
+    displayClosing: "var(--type-display-closing)",
+    stat: "var(--type-stat)",
   },
 } as const
 

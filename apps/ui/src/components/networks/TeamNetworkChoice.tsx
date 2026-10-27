@@ -130,8 +130,8 @@ export function TeamNetworkChoice({
         <span className="flex size-11 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">
           <Icon aria-hidden icon="mdi:account-group-outline" width={23} />
         </span>
-        <h2 className="font-serif text-2xl">A shared workspace</h2>
-        <ol className="list-decimal space-y-5 pl-5 text-sm text-(--t-ink-dim)">
+        <h2 className="type-panel-title">A shared workspace</h2>
+        <ol className="list-decimal space-y-5 pl-5 text-base text-(--t-ink-dim)">
           <li>
             <strong className="block text-(--t-ink-base)">
               Connect your libraries

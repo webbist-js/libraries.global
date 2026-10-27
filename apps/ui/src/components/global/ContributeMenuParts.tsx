@@ -52,7 +52,7 @@ export function CountPill({
 }) {
   return (
     <span
-      className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-[13px] font-bold text-white"
+      className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-sm font-bold text-white"
       style={{ background: T.ink.base }}
     >
       {count.toLocaleString("en-GB")}
@@ -91,7 +91,7 @@ export function LibrarySelect({
     >
       <label
         htmlFor={id}
-        className="text-[13px] font-semibold whitespace-nowrap"
+        className="text-sm font-semibold whitespace-nowrap"
         style={{ color: T.ink.dim }}
       >
         {tUi("library")}{" "}
@@ -100,7 +100,7 @@ export function LibrarySelect({
         id={id}
         value={library.selectedId ?? ""}
         onChange={(e) => library.select(e.target.value)}
-        className="min-w-0 flex-1 cursor-pointer truncate rounded-md border-0 bg-transparent text-[14px] font-semibold outline-none"
+        className="min-w-0 flex-1 cursor-pointer truncate rounded-md border-0 bg-transparent text-sm font-semibold outline-none"
         style={{ color: T.ink.base, fontFamily: T.font.sans }}
       >
         {library.options.map((option) => (

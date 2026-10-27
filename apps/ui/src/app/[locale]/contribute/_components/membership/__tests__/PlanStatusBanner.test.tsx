@@ -19,7 +19,7 @@ it.each([
     "grant",
     /Granted by the Libraries Global team/,
     "Membership settings",
-    "/profile/settings#membership",
+    "/profile/membership",
   ],
   [
     "earned",
@@ -31,11 +31,11 @@ it.each([
     "verified",
     /verified library staff, a student or charity staff/,
     "Membership settings",
-    "/profile/settings#membership",
+    "/profile/membership",
   ],
   [
     "team",
-    /Your library service pays for the Team/,
+    /Your Pro access is included with your Team seat/,
     "Open the Staff area",
     "/staff",
   ],
@@ -43,7 +43,7 @@ it.each([
     "paid",
     /Manage your subscription, renewal and invoices/,
     "Manage membership",
-    "/profile/settings#membership",
+    "/profile/membership",
   ],
 ] as const)(
   "explains %s access and offers the relevant management destination",
@@ -60,7 +60,7 @@ it.each([
       summary
         .getByRole("link", { name: "Choose your visibility" })
         .getAttribute("href")
-    ).toBe("/profile/settings#privacy")
+    ).toBe("/profile/membership#recognition")
     expect(summary.queryByRole("checkbox")).toBeNull()
   }
 )
@@ -70,7 +70,7 @@ it("keeps billing management accessible when complimentary access is combined wi
   expect(screen.getByText("Complimentary")).toBeTruthy()
   expect(
     screen.getByRole("link", { name: "Manage membership" }).getAttribute("href")
-  ).toBe("/profile/settings#membership")
+  ).toBe("/profile/membership")
 })
 
 it("links verified library staff to their staff tools without sending students there", () => {

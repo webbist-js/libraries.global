@@ -70,7 +70,7 @@ export function NetworkAffiliationEditor() {
 
   return (
     <div className="mt-6 space-y-4 border-t border-(--t-border-line) pt-6">
-      <h3 className="font-serif text-2xl">Your service or network</h3>
+      <h3 className="type-h3">Your service or network</h3>
       <p className="text-sm">
         Add your institutional affiliation. A declared affiliation is separate
         from verified employment or authority to manage library records.

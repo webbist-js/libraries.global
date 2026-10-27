@@ -25,17 +25,14 @@ export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
 
   if (rows.length === 0)
     return (
-      <p className="m-0 text-[15px]" style={{ color: T.ink.dim }}>
+      <p className="m-0 text-base" style={{ color: T.ink.dim }}>
         No facility answers in this submission.
       </p>
     )
 
   return (
     <div className="flex flex-col gap-3">
-      <p
-        className="m-0 text-[14px] leading-[1.55]"
-        style={{ color: T.ink.dim }}
-      >
+      <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
         Approving links each Yes to the library and records each No as absent,
         then publishes the library.
       </p>
@@ -45,14 +42,14 @@ export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
           <tr>
             <th
               scope="col"
-              className="py-2 pr-4 text-left text-[14px] font-semibold"
+              className="py-2 pr-4 text-left text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               Facility
             </th>
             <th
               scope="col"
-              className="py-2 text-left text-[14px] font-semibold"
+              className="py-2 text-left text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
               Answer
@@ -67,12 +64,12 @@ export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
             >
               <th
                 scope="row"
-                className="py-2 pr-4 text-left text-[15px] font-medium"
+                className="py-2 pr-4 text-left text-base font-medium"
                 style={{ color: T.ink.base }}
               >
                 {r.label}
               </th>
-              <td className="py-2 text-[15px]">
+              <td className="py-2 text-base">
                 <span
                   className="inline-flex items-center gap-1.5 font-semibold"
                   style={{ color: r.yes ? T.accent.ok : T.accent.danger }}
