@@ -79,6 +79,8 @@ describe("beta routing", () => {
     expect(betaPublicRequest("/api/contact", "GET")).toBe(false)
     expect(betaPublicRequest("/api/contact/other", "POST")).toBe(false)
     expect(betaPublicRequest("/api/cron/retention", "GET")).toBe(true)
+    expect(betaGate(request("/api/cron/cms"))).toBeNull()
+    expect(betaPublicRequest("/api/cron/cms/other", "GET")).toBe(false)
     expect(betaPublicRequest("/api/cron/other", "GET")).toBe(false)
     expect(betaPublicRequest("/api/auth/sign-up/email", "POST")).toBe(false)
     expect(betaPublicRequest("/api/auth/callback/google", "GET")).toBe(true)
