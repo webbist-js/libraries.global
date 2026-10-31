@@ -151,7 +151,7 @@ async function upsertChunk(
     else stats.unchanged++
   }
 
-  // Step 2: upsert on the (source_provider, external_id) unique index.
+  // Step 2: upsert on the feed-scoped identity unique index.
   // A conflict keeps the row's id and document_id, so links and any URL
   // built on the documentId stay stable across syncs.
   const valuesSql = rows

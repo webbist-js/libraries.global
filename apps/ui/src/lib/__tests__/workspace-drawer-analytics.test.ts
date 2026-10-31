@@ -32,7 +32,7 @@ const views = () =>
 
 describe("workspace drawers", () => {
   it("records a real open/section change once, respecting the unsaved-changes guard", () => {
-    installGoogleAnalytics(window)!.setConsent(true)
+    installGoogleAnalytics(window, undefined, false, true)!.setConsent(true)
     openProfileDrawer("overview", "PRIVATE_ACTOR")
     openProfileDrawer("overview", "PRIVATE_ACTOR")
     expect(views()).toHaveLength(1)
@@ -48,7 +48,7 @@ describe("workspace drawers", () => {
   })
 
   it("does not measure pre-consent activity, and never includes staff library IDs", () => {
-    const controller = installGoogleAnalytics(window)!
+    const controller = installGoogleAnalytics(window, undefined, false, true)!
     openStaffDrawer("PRIVATE_LIBRARY")
     expect(views()).toHaveLength(0)
     controller.setConsent(true)

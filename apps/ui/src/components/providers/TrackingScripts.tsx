@@ -2,7 +2,10 @@ import Script from "next/script"
 
 import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics"
 import { isDevelopment } from "@/lib/general-helpers"
-import { productionAnalyticsEnabled } from "@/lib/google-analytics"
+import {
+  productionAnalyticsEnabled,
+  workspaceNoticePublished,
+} from "@/lib/google-analytics"
 
 export function TrackingScriptWrapper({
   id,
@@ -44,7 +47,11 @@ function TrackingScripts({
     <GoogleAnalytics
       nonce={nonce}
       locale={locale}
-      checkoutEnabled={process.env.CHECKOUT_ANALYTICS_ENABLED === "true"}
+      workspaceEnabled={workspaceNoticePublished()}
+      checkoutEnabled={
+        process.env.CHECKOUT_ANALYTICS_ENABLED === "true" &&
+        workspaceNoticePublished()
+      }
     />
   )
 }

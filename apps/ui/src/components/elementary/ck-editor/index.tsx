@@ -7,6 +7,7 @@ import {
 import { cn } from "@/lib/styles"
 
 import "@/styles/CkEditorDefaultStyles.css"
+import { sanitizeCmsHtml } from "./sanitize"
 
 function CkEditorRenderer({
   htmlContent,
@@ -28,7 +29,9 @@ function CkEditorRenderer({
       removeEmptyImagesFromContent,
     ]
 
-    return transformers.reduce((result, transform) => transform(result), html)
+    return sanitizeCmsHtml(
+      transformers.reduce((result, transform) => transform(result), html)
+    )
   }
 
   return htmlContent ? (

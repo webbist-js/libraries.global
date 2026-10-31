@@ -25,10 +25,15 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function setup() {
+function setup(workspaceEnabled = false) {
   window.location.href = "https://libraries.global/libraries?q=PRIVATE_QUERY"
   vi.spyOn(document.head, "append").mockImplementation(() => {})
-  const controller = installGoogleAnalytics(window)!
+  const controller = installGoogleAnalytics(
+    window,
+    undefined,
+    false,
+    workspaceEnabled
+  )!
   remove = installAnalyticsClickTracking(window)
   const named = (name: string) =>
     window
@@ -47,7 +52,7 @@ function setup() {
 
 describe("explicit semantic interactions", () => {
   it("records a workspace menu intent once without its private URL or duplicate public event", () => {
-    const { controller, named } = setup()
+    const { controller, named } = setup(true)
     const link = document.createElement("a")
     link.href = "/staff/PRIVATE_LIBRARY/events?token=PRIVATE_TOKEN"
     Object.entries(

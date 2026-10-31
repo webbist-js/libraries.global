@@ -14,6 +14,10 @@ import {
 
 export const GOOGLE_ANALYTICS_ID = "G-8M465CHXJ6"
 export const GOOGLE_TAG_MANAGER_ID = "GTM-M8GLG9F2"
+export const WORKSPACE_NOTICE_REVISION = "2.0-dashboard"
+export const workspaceNoticePublished = () =>
+  process.env.ANALYTICS_NOTICE_REVISION === WORKSPACE_NOTICE_REVISION
+
 export const ANALYTICS_ORIGIN = "https://libraries.global"
 const DISABLE_KEY = "ga-disable-G-8M465CHXJ6"
 const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
@@ -42,6 +46,9 @@ export function analyticsPageAllowed(pathname: string): boolean {
     !workspaceRoute(path)
   )
 }
+
+const enabledWorkspace = (enabled: boolean, path: string) =>
+  enabled ? workspaceRoute(path) : null
 
 export const analyticsConsentPromptAllowed = (pathname: string) =>
   analyticsPageAllowed(pathname) || Boolean(workspaceRoute(pathname))
@@ -156,7 +163,8 @@ declare global {
 export function installGoogleAnalytics(
   browser: Window,
   nonce?: string,
-  checkoutEnabled = false
+  checkoutEnabled = false,
+  workspaceEnabled = false
 ): AnalyticsConsentController | undefined {
   if (browser.location.origin !== ANALYTICS_ORIGIN) return
   if (browser.librariesGlobalAnalytics) return browser.librariesGlobalAnalytics
@@ -235,7 +243,7 @@ export function installGoogleAnalytics(
   }
   const pageView = () => {
     const { origin, pathname } = browser.location
-    const workspace = workspaceRoute(pathname)
+    const workspace = enabledWorkspace(workspaceEnabled, pathname)
     if (
       !granted ||
       origin !== ANALYTICS_ORIGIN ||
@@ -300,6 +308,7 @@ export function installGoogleAnalytics(
     return true
   }
   const workspaceConsent = () =>
+    workspaceEnabled &&
     granted &&
     browser.location.origin === ANALYTICS_ORIGIN &&
     analyticsConsentPromptAllowed(browser.location.pathname)
@@ -335,6 +344,7 @@ export function installGoogleAnalytics(
         ].includes(path)
   }
   const checkoutConsent = (name: string) =>
+    workspaceEnabled &&
     checkoutEnabled &&
     granted &&
     browser.location.origin === ANALYTICS_ORIGIN &&

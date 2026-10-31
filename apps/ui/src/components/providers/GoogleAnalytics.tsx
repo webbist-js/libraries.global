@@ -18,7 +18,9 @@ export function GoogleAnalytics({
   nonce,
   locale = "en",
   checkoutEnabled = false,
+  workspaceEnabled = false,
 }: {
+  readonly workspaceEnabled?: boolean
   readonly checkoutEnabled?: boolean
   readonly nonce?: string
   readonly locale?: string
@@ -27,6 +29,7 @@ export function GoogleAnalytics({
   // A nonce belongs to the document. Route renders must not pause/reinstall it.
   const documentNonce = useRef(nonce)
   const documentCheckoutEnabled = useRef(checkoutEnabled)
+  const documentWorkspaceEnabled = useRef(workspaceEnabled)
   const installed = useSyncExternalStore(
     subscribeAnalyticsConsent,
     analyticsInstalled,
@@ -37,7 +40,8 @@ export function GoogleAnalytics({
     const analytics = installGoogleAnalytics(
       window,
       documentNonce.current,
-      documentCheckoutEnabled.current
+      documentCheckoutEnabled.current,
+      documentWorkspaceEnabled.current
     )
     const removeClicks = installAnalyticsClickTracking(window)
 

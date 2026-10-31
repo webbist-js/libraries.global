@@ -485,7 +485,7 @@ export function FilterSidebar({
       className={[
         "-mx-1 w-[290px] shrink-0 px-1 pb-4",
         sticky
-          ? "scrollbar-thin sticky top-(--sticky-content-top) max-h-(--sticky-content-max-height) overflow-x-hidden overflow-y-auto overscroll-contain"
+          ? "sticky top-(--sticky-content-top) max-h-(--sticky-content-max-height) scrollbar-thin overflow-x-hidden overflow-y-auto overscroll-contain"
           : "",
         sidebar.collapsed ? "hidden" : "hidden lg:block",
       ].join(" ")}

@@ -29,3 +29,10 @@ it("still scrubs similarly named fields inside transmitted event data", () => {
     status: "failed",
   })
 })
+
+it("redacts mailbox addresses in free-text errors", () => {
+  expect(
+    scrubTelemetryEvent({ message: "Email to person@example.test failed" })
+      .message
+  ).not.toContain("person@example.test")
+})
