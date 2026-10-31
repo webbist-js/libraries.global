@@ -1546,6 +1546,7 @@ export async function fetchDocsWikiArticles(locale: Locale) {
           "updatedAt",
           "docsSections",
           "readingTimeMinutes",
+          "priority",
         ] as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sort: ["updatedAt:desc"] as any,

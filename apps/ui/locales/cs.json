@@ -3646,7 +3646,7 @@
     "paymentsOff": "Testování plateb není v tomto prostředí dostupné. Vyzkoušejte ostatní beta funkce.",
     "resetTitle": "Data bety budou před spuštěním smazána",
     "resetBody": "Účty, příspěvky, týmy ani testovací předplatná se nepřevedou. Uchovejte si kopii všeho, co chcete zachovat.",
-    "feedbackBody": "Počítejte s chybami a nedokončenými detaily. Pomocí záložky Zpětná vazba na okraji stránky nahlaste problémy, nejasné kroky nebo nápady. Popište očekávaný výsledek a co se skutečně stalo.",
+    "feedbackBody": "Počítejte s chybami a nedokončenými detaily. Pomocí tlačítka Zpětná vazba nahlaste problémy, nejasné kroky nebo nápady. Popište očekávaný výsledek a co se skutečně stalo.",
     "start": "Začít testovat",
     "feedback": "Odeslat zpětnou vazbu",
     "apiGuide": "Začínáme s API"

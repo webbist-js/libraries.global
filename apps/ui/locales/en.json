@@ -3646,7 +3646,7 @@
     "paymentsOff": "Payment testing is unavailable in this environment. Please explore the other beta features.",
     "resetTitle": "Beta data will be wiped before launch",
     "resetBody": "Accounts, contributions, Teams and test subscriptions won’t carry over. Keep a separate copy of anything you want to save.",
-    "feedbackBody": "Expect bugs and unfinished details. Use the Feedback tab on the edge of the page to report what happened, what you expected, or an idea to improve the beta.",
+    "feedbackBody": "Expect bugs and unfinished details. Use Feedback to report what happened, what you expected, or an idea to improve the beta.",
     "start": "Start testing",
     "feedback": "Send feedback",
     "apiGuide": "API quickstart"
