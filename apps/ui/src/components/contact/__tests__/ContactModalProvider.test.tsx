@@ -70,17 +70,20 @@ it("honors a specific purpose and a configured beta alias", () => {
     type: "report_issue",
   })
 })
-it("opens the floating beta button as feedback", () => {
-  render(
-    <ContactModalProvider>
-      <BetaFeedback label="Feedback" />
-    </ContactModalProvider>
-  )
-  fireEvent.click(screen.getByRole("button", { name: "Feedback" }))
-  expect(JSON.parse(screen.getByTestId("intent").textContent!)).toEqual({
-    mode: "feedback",
-  })
-})
+it.each([false, true])(
+  "opens the feedback button (inline: %s) with the shared modal",
+  (inline) => {
+    render(
+      <ContactModalProvider>
+        <BetaFeedback label="Feedback" inline={inline} />
+      </ContactModalProvider>
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Feedback" }))
+    expect(JSON.parse(screen.getByTestId("intent").textContent!)).toEqual({
+      mode: "feedback",
+    })
+  }
+)
 
 it.each(["/map", "/map/", "/en/map", "/cs/map", "/fr/map/"])(
   "replaces the floating feedback tab on %s with Atlas feedback",

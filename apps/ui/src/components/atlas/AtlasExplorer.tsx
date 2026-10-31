@@ -3207,7 +3207,7 @@ export function AtlasExplorer({
           </div>
           <div
             className="pointer-events-none absolute top-4 z-20 flex max-w-[560px] flex-col gap-2 [&>*]:pointer-events-auto"
-            style={{ left: leftEdge, right: mapRightEdge + 80 }}
+            style={{ left: leftEdge + 16, right: mapRightEdge + 80 }}
           >
             {notices}
           </div>

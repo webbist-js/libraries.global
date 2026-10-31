@@ -1,3 +1,4 @@
+import { BetaFeedback } from "@/components/beta/BetaFeedback"
 import { ContactModalProvider } from "@/components/contact/ContactModalProvider"
 import { DashboardFrame } from "@/components/dashboard/DashboardFrame"
 import { DashboardNavigation } from "@/components/dashboard/DashboardNavigation"
@@ -5,10 +6,13 @@ import { buildFooterNavigation } from "@/components/global/footer-navigation"
 import { FooterNavigationProvider } from "@/components/global/FooterNavigationContext"
 import { GLOBAL_NAVIGATION } from "@/components/global/global-navigation"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
+import { FindLibraryPage } from "@/components/index-page/FindLibraryPage"
 import { NotificationProvider } from "@/components/notifications/NotificationProvider"
 import { ProfileDrawerMount } from "@/components/profile/ProfileDrawerMount"
+import { CookieConsent } from "@/components/providers/CookieConsent"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
+import { findResult } from "../../fixtures/public/find"
 import { footerData, legalDocuments } from "../../fixtures/public/homepage"
 import {
   readerSession,
@@ -51,7 +55,7 @@ const meta = {
     docs: { story: { inline: false, height: "900px" } },
   },
   decorators: [
-    (Story) => (
+    (Story, context) => (
       <ContactModalProvider>
         <NotificationProvider>
           <FooterNavigationProvider
@@ -61,14 +65,26 @@ const meta = {
             })}
           >
             <DashboardFrame navigation={<Story />}>
-              <main className="dashboard-main p-8">
-                <h1 className="type-h1">Library workspace</h1>
-                <p>
-                  Use the rail, More menu and account controls to explore the
-                  real navigation.
-                </p>
+              <main className="dashboard-main">
+                {context.parameters.withoutContentToolbar ? (
+                  <div className="p-8">
+                    <h1 className="type-h1">Libraries Global</h1>
+                    <p>
+                      Navigation and feedback stay available without a content
+                      toolbar.
+                    </p>
+                  </div>
+                ) : (
+                  <FindLibraryPage
+                    initial={findResult}
+                    statsTotal={1200}
+                    drives={[]}
+                  />
+                )}
               </main>
             </DashboardFrame>
+            <CookieConsent locale="en" />
+            <BetaFeedback label="Feedback" />
             <ProfileDrawerMount />
           </FooterNavigationProvider>
         </NotificationProvider>
@@ -88,4 +104,11 @@ export const SignedOut: Story = {
     ),
   },
   parameters: { fixtureSession: null },
+}
+
+export const WithoutContentToolbar: Story = {
+  parameters: {
+    withoutContentToolbar: true,
+    nextjs: { navigation: { pathname: "/" } },
+  },
 }

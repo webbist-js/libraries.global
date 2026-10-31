@@ -479,6 +479,7 @@ export function FilterSidebar({
   return (
     <div
       role="region"
+      data-filter-sidebar
       id={sidebar.sidebarId}
       aria-label={tUi("filters")}
       className={[

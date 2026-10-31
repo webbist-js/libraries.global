@@ -124,7 +124,7 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
         ref={settingsButton}
         data-cookie-consent-settings
         type="button"
-        className="fixed bottom-3 left-3 z-[70] min-h-[44px] rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-4 text-xs text-(--t-ink-base) shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4"
+        className="fixed right-3 bottom-3 z-[88] min-h-[44px] rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-4 text-xs text-(--t-ink-base) shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4"
         onClick={() => setOpen(true)}
         aria-expanded={visible}
         aria-controls={visible ? "cookie-choices" : undefined}
@@ -137,7 +137,7 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
           data-cookie-consent-panel
           role="region"
           aria-labelledby="cookie-choices-title"
-          className="fixed inset-x-3 bottom-3 z-[80] max-h-[85dvh] overflow-y-auto rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-(--t-ink-base) shadow-xl sm:left-auto sm:w-[32rem] sm:p-6"
+          className="fixed inset-x-3 bottom-3 z-[88] max-h-[85dvh] overflow-y-auto rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-(--t-ink-base) shadow-xl sm:left-auto sm:w-[32rem] sm:p-6"
         >
           <h2 id="cookie-choices-title" className="type-h2">
             {t.title}

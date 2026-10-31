@@ -71,7 +71,6 @@ export function DashboardNavigation({
   const t = useTranslations("ui")
   const d = useTranslations("dashboard")
   const contributeNav = useTranslations("contributeNav")
-  const translation = useTranslations("translation")
   const locale = useLocale()
   const { data: session, isPending, error } = useHydratedSession()
   const staffVisible = !isPending && !error && hasStaffWorkspace(session?.user)
@@ -243,11 +242,6 @@ export function DashboardNavigation({
         </GlobalLink>
         <div className="dashboard-desktop-links">{destinations(true)}</div>
         <span className="dashboard-mobile-title">{pageLabel} </span>
-        <div
-          className={`dashboard-appearance-control ${pathname === "/" || pathname === "/about" || pathname.startsWith("/map") ? "dashboard-appearance-without-toolbar" : ""}`}
-        >
-          <AppearanceControl inverse />
-        </div>
         <div className="dashboard-global-actions">
           {destinationsForViewer
             .filter((link) =>
@@ -310,11 +304,11 @@ export function DashboardNavigation({
         title={d("navigation")}
         footer={
           <div className="dashboard-navigation-footer">
-            <span>{translation("language")}</span>
             <LocaleSwitcher
               locale={locale}
-              triggerClassName="w-28 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-4 font-semibold uppercase text-(--t-ink-base) shadow-none [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
+              triggerClassName="w-32 gap-2 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-4 font-semibold uppercase text-(--t-ink-base) shadow-none [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
             />
+            <AppearanceControl className="rounded-full" />
           </div>
         }
       >
