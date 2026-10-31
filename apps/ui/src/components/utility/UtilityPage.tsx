@@ -26,10 +26,9 @@ export function UtilityPage({ children }: { children: ReactNode }) {
           href="/"
           className="mb-10 inline-block text-[28px] leading-none sm:mb-12"
           style={{ fontFamily: T.font.serif }}
-          aria-label="Libraries Global homepage"
+          aria-label={`${tUi("libraries")} Global homepage`}
         >
-          {tUi("libraries")}
-          <i>Global</i>
+          {tUi("libraries")} <i>Global</i>
         </UtilityLink>
         {children}
       </section>

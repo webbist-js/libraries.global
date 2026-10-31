@@ -2,8 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 
 export const LIVE_CONFIRM_HOURS = 12
 export type LiveProof = { userId: string; sessionId: string; expiresAt: number }
-const secret = () =>
-  process.env.MOBILE_LIVE_STEPUP_SECRET ?? process.env.STRAPI_BRIDGE_SECRET
+const secret = () => process.env.MOBILE_LIVE_STEPUP_SECRET
 
 export function signLiveProof(
   userId: string,

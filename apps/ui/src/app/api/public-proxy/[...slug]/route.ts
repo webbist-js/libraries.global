@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { getEnvVar } from "@/lib/env-vars"
+import { checkLibraryLookup } from "@/lib/library-query-rate"
 import {
   createStrapiAuthHeader,
   isStrapiEndpointAllowed,
@@ -52,6 +53,10 @@ async function handler(
   const strapiUrl = getEnvVar("STRAPI_URL", true)
   const incoming = new URL(request.url)
   const target = new URL(`${strapiUrl!.replace(/\/$/, "")}/${path}`)
+  const lookupDenied =
+    path === "api/libraries" ? await checkLibraryLookup(request) : null
+  if (lookupDenied) return lookupDenied
+
   // Final guard: the resolved path must still be the allowlisted one.
   const expectedSuffix = new URL(`http://proxy.invalid/${path}`).pathname
   if (!target.pathname.endsWith(expectedSuffix)) {

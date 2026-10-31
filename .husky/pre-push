@@ -1,0 +1,9 @@
+set -eu
+# Check every not-yet-published commit, including files later deleted in the same push.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_sha" in
+    0000000000000000000000000000000000000000) continue ;;
+  esac
+  node scripts/release/check-public-files.mjs
+  node scripts/release/check-public-files.mjs --unpushed "$local_sha"
+done

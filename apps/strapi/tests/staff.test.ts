@@ -469,6 +469,7 @@ describe("Moderator staff removal", () => {
       request: {
         headers: {
           "x-service-secret": SECRET,
+          "x-ba-session-created-at": new Date().toISOString(),
           "x-ba-user-id": viewer,
           "x-ba-user-email": `${viewer}@example.org`,
         },

@@ -582,26 +582,6 @@
   display: none;
 }
 @media (max-width: 639px) {
-  body:has(.about-page) [data-feedback-trigger] {
-    top: auto;
-    bottom: max(16px, env(safe-area-inset-bottom));
-    left: 16px;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    justify-content: center;
-    border-left-width: 1px;
-    border-radius: 999px;
-    transform: none;
-  }
-  body:has(.about-page) [data-feedback-trigger] span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
   .about-hero-stage {
     padding-top: 24px;
   }

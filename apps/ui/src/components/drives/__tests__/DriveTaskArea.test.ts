@@ -190,7 +190,11 @@ afterEach(() => {
 })
 
 const row = (name: string) =>
-  screen.getByRole("button", { name: `Add hours for ${name}`, hidden: true })
+  screen.getByRole("button", {
+    name: (label) => label.startsWith(name),
+    description: (label) => label.startsWith(`Add hours for ${name}`),
+    hidden: true,
+  })
 
 async function sendHoursFor(name: string) {
   fireEvent.click(row(name))

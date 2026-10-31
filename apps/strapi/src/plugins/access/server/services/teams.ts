@@ -674,7 +674,8 @@ export default ({ strapi }: { strapi: any }) => {
   async function sendMail(
     to: string,
     subject: string,
-    text: string
+    text: string,
+    actionUrl: URL
   ): Promise<boolean> {
     try {
       const email = strapi.plugin?.("email")?.service?.("email")
@@ -685,6 +686,17 @@ export default ({ strapi }: { strapi: any }) => {
 
         return false
       }
+      const origin = process.env.APP_PUBLIC_URL
+        ? new URL(process.env.APP_PUBLIC_URL).origin
+        : process.env.NODE_ENV === "production"
+          ? null
+          : actionUrl.origin
+      if (
+        !origin ||
+        actionUrl.origin !== origin ||
+        !/^https?:$/.test(actionUrl.protocol)
+      )
+        throw new Error("invalid_invitation_origin")
       await email.send({
         to,
         ...emailTemplate({
@@ -692,7 +704,7 @@ export default ({ strapi }: { strapi: any }) => {
           siteUrl: process.env.APP_PUBLIC_URL,
           title: subject,
           body: text,
-          url: text.match(/https?:\/\/\S+/)?.[0],
+          url: actionUrl.href,
           action: "Open invitation",
         }),
       })
@@ -712,12 +724,13 @@ export default ({ strapi }: { strapi: any }) => {
     role: TeamRole
     libraryName: string | null
     link: URL
-  }): { subject: string; text: string } {
+  }): { subject: string; text: string; url: URL } {
     const where = i.libraryName
       ? ` You'll be given staff access to ${i.libraryName}.`
       : ""
 
     return {
+      url: i.link,
       subject: `Join ${i.teamName} on Libraries Global`,
       text: `${i.inviter} invited you to join ${i.teamName}${
         i.role === "organiser" ? " as an organiser" : ""
@@ -960,9 +973,41 @@ export default ({ strapi }: { strapi: any }) => {
     async searchLibraries(q: string): Promise<TeamLibrary[]> {
       const query = q.trim().slice(0, NAME_MAX)
       if (query.length < 2) return []
+      const credentials = await strapi
+        .plugin("meilisearch")
+        ?.service("store")
+        ?.getCredentials()
+      if (!credentials?.host || !credentials.apiKey)
+        throw new AccessError(503, "library_search_unavailable")
+      const response = await fetch(
+        new URL("/indexes/library/search", credentials.host),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${credentials.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            q: query,
+            limit: LIBRARY_SEARCH_MAX,
+            filter: 'locale = "en"',
+            attributesToRetrieve: ["documentId"],
+          }),
+          signal: AbortSignal.timeout(5000),
+        }
+      )
+      if (!response.ok) throw new AccessError(503, "library_search_unavailable")
+      const result = (await response.json()) as {
+        hits?: { documentId?: unknown }[]
+      }
+      const ids = (result.hits ?? [])
+        .slice(0, LIBRARY_SEARCH_MAX)
+        .map((hit) => hit.documentId)
+        .filter(isDocumentId)
+      if (!ids.length) return []
 
       return (await strapi.documents(LIBRARY).findMany({
-        filters: { name: { $containsi: query } },
+        filters: { documentId: { $in: ids } },
         status: "published",
         populate: LIBRARY_POPULATE,
         fields: LIBRARY_FIELDS,
@@ -1319,7 +1364,7 @@ export default ({ strapi }: { strapi: any }) => {
           libraryName,
           link: new URL(`/staff/teams/join/${token}`, base),
         })
-        emailSent = await sendMail(email, mail.subject, mail.text)
+        emailSent = await sendMail(email, mail.subject, mail.text, mail.url)
       } else
         strapi.log.warn(
           "[access] APP_PUBLIC_URL is not set; the invite was created but no email was sent"
@@ -1383,7 +1428,8 @@ export default ({ strapi }: { strapi: any }) => {
       const emailSent = await sendMail(
         (row.email ?? "").toLowerCase(),
         mail.subject,
-        mail.text
+        mail.text,
+        mail.url
       )
       if (!emailSent) throw new AccessError(503, "email_failed")
 
@@ -1668,6 +1714,15 @@ export default ({ strapi }: { strapi: any }) => {
           const wanted = body.assignments.map(parsePreassign)
           if (wanted.includes(null))
             throw new AccessError(400, "invalid_assignments")
+          const covered = new Set(
+            (team.libraries ?? []).map((library) => library.documentId)
+          )
+          if (
+            (wanted as Preassign[]).some(
+              (assignment) => !covered.has(assignment.libraryDocumentId)
+            )
+          )
+            throw new AccessError(400, "library_not_in_team")
           const next = new Map(
             (wanted as Preassign[]).map((a) => [
               a.libraryDocumentId,
@@ -1835,6 +1890,7 @@ export default ({ strapi }: { strapi: any }) => {
             (await teams().findMany({
               filters: {
                 status: { $eq: "active" },
+                verifiedAt: { $notNull: true },
                 libraries: { documentId: { $eq: libraryDocumentId } },
               },
               fields: TEAM_FIELDS,

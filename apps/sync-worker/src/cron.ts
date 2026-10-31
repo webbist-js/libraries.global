@@ -4,23 +4,16 @@ import cron from "node-cron"
 import db from "./db"
 import { purgeExpiredEvents } from "./pipeline/purge"
 import { runSync } from "./pipeline/sync"
-import { setSyncStatus, setLastSync } from "./server"
 
 export function registerCronJobs(): void {
   const syncCron = process.env.EVENTS_SYNC_CRON ?? "0 */6 * * *"
 
-  // Main sync
+  // The central lease covers cron and manual runs across worker instances.
   cron.schedule(syncCron, async () => {
-    setSyncStatus("running")
     try {
       await runSync("cron")
-    } finally {
-      setSyncStatus("idle")
-      setLastSync({
-        runId: "cron",
-        status: "done",
-        at: new Date().toISOString(),
-      })
+    } catch {
+      console.error("[cron] Event sync failed")
     }
   })
 
@@ -49,57 +42,25 @@ export function registerCronJobs(): void {
     }
   })
 
-  // Poll for manual sync commands every 2 minutes
+  // Atomic claim: another worker cannot consume the same command. A busy
+  // global lease returns it to the queue rather than silently losing it.
   cron.schedule("*/2 * * * *", async () => {
-    let command: Record<string, unknown> | undefined
     try {
-      command = (await db("ev_sync_commands")
-        .select("id", "requested_by_user_id", "credential_document_id")
-        .whereNull("consumed_at")
-        .orderBy("requested_at", "asc")
-        .first()) as Record<string, unknown> | undefined
-    } catch (err: any) {
-      console.error("[cron:poll] DB query error:", err.message)
-
-      return
-    }
-
-    if (!command) return
-
-    try {
-      // Mark as consumed immediately
-      await db("ev_sync_commands")
-        .where("id", command.id as number)
-        .update({ consumed_at: new Date().toISOString() })
-    } catch (err: any) {
-      console.error(
-        "[cron:poll] Failed to mark command as consumed:",
-        err.message
-      )
-
-      return
-    }
-
-    console.log(`[cron:poll] Manual sync command found — triggering`)
-    setSyncStatus("running")
-    try {
-      await runSync(
-        "manual",
-        (command.requested_by_user_id as number | undefined) ?? undefined,
-        {
-          credentialDocumentId:
-            (command.credential_document_id as string | undefined) ?? undefined,
-        }
-      )
-    } catch (err: any) {
-      console.error("[cron:poll] runSync error:", err.message)
-    } finally {
-      setSyncStatus("idle")
-      setLastSync({
-        runId: "manual",
-        status: "done",
-        at: new Date().toISOString(),
+      const result = await db.raw(`UPDATE ev_sync_commands SET consumed_at=now()
+        WHERE id=(SELECT id FROM ev_sync_commands WHERE consumed_at IS NULL
+          ORDER BY requested_at,id FOR UPDATE SKIP LOCKED LIMIT 1)
+        RETURNING id,requested_by_user_id,credential_document_id`)
+      const command = result.rows[0]
+      if (!command) return
+      const ran = await runSync("manual", command.requested_by_user_id, {
+        credentialDocumentId: command.credential_document_id ?? undefined,
       })
+      if (!ran)
+        await db("ev_sync_commands")
+          .where("id", command.id)
+          .update({ consumed_at: null })
+    } catch {
+      console.error("[cron:poll] Event command processing failed")
     }
   })
 

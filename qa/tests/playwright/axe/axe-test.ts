@@ -13,8 +13,6 @@ import urls from "../helpers/urls.json"
 
 dotenv.config({ path: path.resolve(__dirname, "../.env"), override: false })
 
-// import { fetchSitemap } from "../helpers/get-sitemap-links"
-
 // Rule IDs that should be treated as warnings instead of errors
 const WARNING_RULE_IDS = new Set<string>([""])
 
@@ -63,7 +61,6 @@ function formatViolationsSection(
   }
 
   // If the sitemap is available, we can fetch pages directly from there
-  // await fetchSitemap(baseUrl + "/sitemap.xml", "--json")
   // const sitesPath = path.join(__dirname, "../helpers/sites.json")
   // const sites: string[] = JSON.parse(fs.readFileSync(sitesPath, "utf-8"))
 

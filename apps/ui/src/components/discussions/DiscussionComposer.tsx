@@ -221,7 +221,6 @@ export function DiscussionComposer({
           type="button"
           onClick={onExpand}
           className="discussion-composer-prompt"
-          aria-label={heading ?? t("joinConversation")}
           aria-expanded={false}
         >
           <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">
@@ -230,7 +229,7 @@ export function DiscussionComposer({
           <span className="min-w-0 flex-1 text-left">
             <span className="block font-semibold">
               {heading ?? t("joinConversation")}
-            </span>
+            </span>{" "}
             <span className="mt-1 block text-sm text-(--t-ink-dim)">
               {t("inlineReplyPlaceholder")}
             </span>

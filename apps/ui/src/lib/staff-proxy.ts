@@ -1,7 +1,10 @@
 import "server-only"
+
 import { SESSION_PROFILE_MAX_CLAIMS, type StaffAction } from "@repo/access"
 import { revalidateTag } from "next/cache"
 import { headers } from "next/headers"
+
+import { sessionIsFresh, reauthenticationResponse } from "@/lib/fresh-auth"
 
 import {
   requireEntitlement,
@@ -139,6 +142,15 @@ export async function proxyStaff(
       }
     )
   }
+
+  if (
+    (((opts.method ?? "GET") !== "GET" &&
+      (opts.action === "manageTeam" ||
+        /(?:^|\/)(?:members|roles|grants|owners)(?:\/|$)/.test(opts.path))) ||
+      /(?:^|\/)(?:reveal|credentials)(?:\/|$)/.test(opts.path)) &&
+    !sessionIsFresh(session.session)
+  )
+    return reauthenticationResponse("/staff")
 
   let user = session.user
 

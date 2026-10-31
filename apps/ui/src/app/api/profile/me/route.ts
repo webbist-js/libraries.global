@@ -8,6 +8,7 @@ import { auth, authDbPool } from "@/lib/auth"
 import { BillingError } from "@/lib/billing/config"
 import { stopBillingBeforeDeletion } from "@/lib/billing/deletion"
 import { deleteStrapiProfile } from "@/lib/delete-profile"
+import { sessionIsFresh, reauthenticationResponse } from "@/lib/fresh-auth"
 import { readOwnProfile } from "@/lib/own-profile-server"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
 import { invalidateSessionProfile } from "@/lib/session-profile"
@@ -220,6 +221,9 @@ export async function DELETE(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  if (!sessionIsFresh(session.session))
+    return reauthenticationResponse("/profile/settings")
 
   try {
     await stopBillingBeforeDeletion(authDbPool, session.user.id)

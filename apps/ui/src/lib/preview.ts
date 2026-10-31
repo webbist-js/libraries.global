@@ -10,14 +10,8 @@ const VALID_PAGE_URL = new RegExp(
 export const isValidPreviewUrl = (url: string): boolean =>
   url !== "" && !url.startsWith("//") && VALID_PAGE_URL.test(url)
 
-/**
- * The preview secret from the `X-Preview-Secret` header, else from the
- * `secret` query parameter. The query form stays because Strapi's preview
- * button opens a URL (`config/admin.ts` builds it) and cannot send headers.
- */
+/** Header authentication is retained for trusted server callers. Browser
+ * previews use a scoped one-minute ticket, never a shared secret in a URL. */
 export function readPreviewSecret(request: Request): string {
-  const header = request.headers.get("x-preview-secret")
-  if (header) return header
-
-  return new URL(request.url).searchParams.get("secret") ?? ""
+  return request.headers.get("x-preview-secret") ?? ""
 }

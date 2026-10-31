@@ -58,11 +58,7 @@ export function AtlasSection({
           </div>
         </div>
         <figure className="home-atlas-preview">
-          <GlobalLink
-            href="/map"
-            {...homepageLinkAttributes("/map")}
-            aria-label="Open the Atlas to explore library access"
-          >
+          <div className="home-atlas-image">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -73,11 +69,18 @@ export function AtlasSection({
             ) : (
               <ReachTownIllustration />
             )}
-          </GlobalLink>
+          </div>
           <figcaption>
-            {imageUrl
-              ? "Explore library access in the Atlas"
-              : "Illustrative town · a fifteen-minute walking catchment"}
+            <GlobalLink
+              href="/map"
+              {...homepageLinkAttributes("/map")}
+              className="text-inherit no-underline after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+            >
+              {imageUrl
+                ? "Explore library access in the Atlas"
+                : "Illustrative town · a fifteen-minute walking catchment"}
+              <span className="sr-only"> · {band.primaryLabel}</span>
+            </GlobalLink>
           </figcaption>
         </figure>
       </div>

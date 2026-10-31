@@ -45,6 +45,6 @@ export const MountedEntryPoint: Story = {
 }
 export const Opened: Story = {
   play: async ({ canvas }) => {
-    await userEvent.click(canvas.getByRole("button", { name: "Your profile" }))
+    await userEvent.click(canvas.getByRole("button", { name: /Your profile/ }))
   },
 }

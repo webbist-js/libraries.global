@@ -1,3 +1,4 @@
+import { boundedLibraryQuery } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
 import {
@@ -17,9 +18,17 @@ export default (
   _deps: { strapi: Core.Strapi }
 ) => {
   return async (
-    ctx: { query?: Record<string, unknown> },
+    ctx: { query?: Record<string, unknown>; status?: number; body?: unknown },
     next: () => Promise<unknown>
   ) => {
+    try {
+      ctx.query = boundedLibraryQuery(ctx.query ?? {})
+    } catch {
+      ctx.status = 400
+      ctx.body = { error: "invalid_library_query" }
+
+      return
+    }
     applyPopulateShape(ctx, LIBRARY_SHAPES, config)
 
     await next()

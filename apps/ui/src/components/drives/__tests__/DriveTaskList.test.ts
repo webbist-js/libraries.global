@@ -69,12 +69,18 @@ describe("DriveTaskList", () => {
     expect(list.querySelectorAll("li")).toHaveLength(2)
     expect(
       screen
-        .getByRole("button", { name: "Add hours for Alpha Library" })
+        .getByRole("button", {
+          name: /Alpha Library/,
+          description: /Add hours for Alpha Library/,
+        })
         .getAttribute("aria-pressed")
     ).toBe("true")
     expect(
       screen
-        .getByRole("button", { name: "Add hours for Beta Library" })
+        .getByRole("button", {
+          name: /Beta Library/,
+          description: /Add hours for Beta Library/,
+        })
         .getAttribute("aria-disabled")
     ).toBe("true")
     expect(screen.getByRole("status").textContent).toBe("Showing 2 libraries")

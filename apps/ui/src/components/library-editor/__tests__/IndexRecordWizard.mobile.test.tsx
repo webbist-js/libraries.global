@@ -211,11 +211,17 @@ describe("the shared mobile library wizard", () => {
         screen.getByRole("heading", { name: "Where does the vehicle stop?" })
       ).toBeTruthy()
       expect(
-        screen.getByRole("button", { name: /Step 2: Base & area/ })
+        screen.getByRole("button", {
+          name: /Base & area/,
+          description: /Step 2: Base & area/,
+        })
       ).toBeTruthy()
       expect(
         screen
-          .getByRole("button", { name: /Step 3: Stops & times/ })
+          .getByRole("button", {
+            name: /Stops & times/,
+            description: /Step 3: Stops & times/,
+          })
           .getAttribute("aria-current")
       ).toBe("step")
       expect(mocks.timetable.mock.lastCall?.[0]).toMatchObject({
@@ -329,7 +335,10 @@ describe("the shared mobile library wizard", () => {
     setup("improve")
     fireEvent.click(screen.getByRole("button", { name: "Change arrival" }))
     fireEvent.click(
-      screen.getByRole("button", { name: /Step 8: Sources & send/ })
+      screen.getByRole("button", {
+        name: /Sources & send/,
+        description: /Step 8: Sources & send/,
+      })
     )
     fireEvent.click(screen.getByRole("button", { name: "Submit for review" }))
     expect(mocks.create).toHaveBeenCalledWith(

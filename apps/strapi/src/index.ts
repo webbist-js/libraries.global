@@ -9,6 +9,7 @@ import {
 } from "./documentMiddlewares/article-discovery"
 import { registerAtlasOutboxMiddleware } from "./documentMiddlewares/atlas-outbox"
 import { registerChangeRecordsMiddleware } from "./documentMiddlewares/change-records"
+import { registerFreshAuthorityMiddleware } from "./documentMiddlewares/fresh-authority"
 import { registerLibraryPublishPlacesMiddleware } from "./documentMiddlewares/library-publish-places"
 import { registerMobileTimetableMiddleware } from "./documentMiddlewares/mobile-timetable"
 import { registerOpeningScheduleMiddleware } from "./documentMiddlewares/opening-schedule"
@@ -117,6 +118,7 @@ export default {
     registerEntityRefSubscriber({ strapi })
     registerRoleGrantSubscriber({ strapi })
     await registerArticlePrivacySubscriber({ strapi })
+    registerFreshAuthorityMiddleware({ strapi })
     registerAtlasOutboxMiddleware({ strapi })
     // Change Records / Article Changes: audit every library and article write.
     registerChangeRecordsMiddleware({ strapi })

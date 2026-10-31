@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, type ComponentProps } from "react"
+import { useRef, useState, type ComponentProps } from "react"
 
 import { useHydratedSession } from "@/lib/access-client"
 import { dashboardDirection } from "@/lib/dashboard-navigation"
@@ -16,11 +16,45 @@ export function AccountAwareLink({
   ...props
 }: AccountAwareLinkProps) {
   const pathname = usePathname()
+  const [destinations, setDestinations] = useState<readonly string[]>([])
+  // Read the visible navigation order on intent (also keyboard/touch), so CMS
+  // sections and permission-dependent menus need no duplicated route catalogue.
+  const readNavigation = (anchor: HTMLAnchorElement) => {
+    const links = anchor
+      .closest("nav")
+      ?.querySelectorAll<HTMLAnchorElement>("a[href]")
+    if (!links) return
+    const paths = Array.from(links).flatMap((link) => {
+      const url = new URL(link.href, window.location.href)
+
+      return url.origin === window.location.origin &&
+        !link.getAttribute("href")?.startsWith("#")
+        ? [url.pathname]
+        : []
+    })
+    setDestinations((previous) =>
+      previous.join("\n") === paths.join("\n") ? previous : paths
+    )
+  }
   const href =
     typeof props.href === "string" ? props.href : (props.href.pathname ?? "")
-  const direction = pathname ? dashboardDirection(pathname, href) : null
+  const direction = pathname
+    ? dashboardDirection(pathname, href, destinations)
+    : null
   const forwarded = {
     ...props,
+    onFocus: (event: React.FocusEvent<HTMLAnchorElement>) => {
+      props.onFocus?.(event)
+      readNavigation(event.currentTarget)
+    },
+    onPointerEnter: (event: React.PointerEvent<HTMLAnchorElement>) => {
+      props.onPointerEnter?.(event)
+      readNavigation(event.currentTarget)
+    },
+    onPointerDown: (event: React.PointerEvent<HTMLAnchorElement>) => {
+      props.onPointerDown?.(event)
+      readNavigation(event.currentTarget)
+    },
     transitionTypes:
       props.transitionTypes ?? (direction ? [direction] : undefined),
     onNavigate: (event: { preventDefault: () => void }) => {

@@ -216,13 +216,17 @@ export async function refreshApiSubscription(
   id: string,
   reversal?: { revoke: boolean; reversedInvoice?: string }
 ) {
-  const subscription = await stripe.subscriptions.retrieve(id, {
-    expand: ["latest_invoice"],
-  })
-  const teamId = subscription.metadata.lg_api_team_id
+  const initial = await stripe.subscriptions.retrieve(id)
+
+  const teamId = initial.metadata.lg_api_team_id
   if (!teamId) return false
 
   return withBillingLock(pool, `api-team:${teamId}`, async (client) => {
+    const subscription = await stripe.subscriptions.retrieve(id, {
+      expand: ["latest_invoice"],
+    })
+    if (subscription.metadata.lg_api_team_id !== teamId)
+      throw new BillingError("api_subscription_binding_invalid")
     if (subscription.livemode !== (apiConfig().mode === "live"))
       throw new BillingError("subscription_environment_mismatch")
     const account = (

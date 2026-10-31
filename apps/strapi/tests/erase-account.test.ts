@@ -1,7 +1,10 @@
+import { createHash } from "node:crypto"
+
 import { describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import { eraseAccount } from "../src/utils/erase-account"
+import { purgeErasedMedia } from "../src/utils/erased-media"
 
 const PROFILE = "api::user-profile.user-profile"
 const SUB = "plugin::content-moderation.submission"
@@ -144,11 +147,18 @@ function seed() {
       { documentId: "ce1", actor: "ba:u1", action: "connect_submitted" },
     ],
     [UP_FILE]: [
-      { id: 9, documentId: "f9", name: "pending.jpg" },
-      { id: 10, documentId: "f10", name: "approved.jpg" },
-      { id: 11, documentId: "f11", name: "draft.jpg" },
+      { ...avatar, documentId: "f77", related: [] },
+      { id: 9, documentId: "f9", name: "pending.jpg", related: [] },
+      {
+        id: 10,
+        documentId: "f10",
+        name: "approved.jpg",
+        related: [{ id: 42 }],
+      },
+      { id: 11, documentId: "f11", name: "draft.jpg", related: [] },
     ],
     [UPLOAD]: [
+      { documentId: "up3", baUserId: "u1", fileId: 11 },
       { documentId: "up1", baUserId: "u1", fileId: 9 },
       { documentId: "up2", baUserId: "u1", fileId: 10 },
     ],
@@ -196,6 +206,100 @@ function seed() {
 }
 
 describe("eraseAccount", () => {
+  it("scrubs rejected content and remaining reviewer identities, including notification deduplication keys", async () => {
+    const { strapi, store } = seed()
+    const review = "plugin::content-moderation.review-event"
+    const suggestion = "plugin::content-moderation.option-suggestion"
+    const notification = "api::internal-notification.internal-notification"
+    const identity = createHash("sha256").update("u1").digest("hex")
+    store[SUB].push({
+      documentId: "rejected",
+      status: "rejected",
+      submittedByUserId: "u1",
+      fields: { private: "personal detail" },
+      draftData: { private: true },
+      note: "private",
+      editSummary: "private",
+    })
+    store[review] = [
+      { documentId: "own", reviewerId: "ba:u1" },
+      { documentId: "other", reviewerId: "u2" },
+    ]
+    store[suggestion] = [
+      {
+        documentId: "own",
+        suggestedBy: "u1",
+        decidedBy: "ba:u1",
+        publicationReviewedBy: "u1",
+      },
+      { documentId: "other", suggestedBy: "u2" },
+    ]
+    store[notification] = [
+      { documentId: "account", eventKey: `account:${identity}` },
+      { documentId: "login", eventKey: `login:${identity}:2026-10-31` },
+      { documentId: "active", eventKey: `active:${identity}:2026-10-31` },
+      { documentId: "actor", actorId: "u1", eventKey: "unrelated" },
+      { documentId: "other", actorId: "u2", eventKey: "account:other" },
+    ]
+    await eraseAccount(strapi, { baUserId: "u1" })
+    expect(
+      store[SUB].find((row) => row.documentId === "rejected")
+    ).toMatchObject({
+      fields: null,
+      draftData: null,
+      note: null,
+      editSummary: null,
+    })
+    expect(store[review]).toEqual([
+      { documentId: "own", reviewerId: null },
+      { documentId: "other", reviewerId: "u2" },
+    ])
+    expect(store[suggestion]).toEqual([
+      {
+        documentId: "own",
+        suggestedBy: null,
+        decidedBy: null,
+        publicationReviewedBy: null,
+      },
+      { documentId: "other", suggestedBy: "u2" },
+    ])
+    expect(store[notification].map((row) => row.documentId)).toEqual(["other"])
+  })
+  it("retains anonymous cleanup evidence after storage failure and retries it", async () => {
+    const { strapi, store, remove } = seed()
+    remove.mockRejectedValueOnce(new Error("storage unavailable"))
+    await eraseAccount(strapi, { baUserId: "u1" })
+    expect(store[UPLOAD]).toHaveLength(1)
+    expect(store[UPLOAD][0].baUserId).toMatch(ERASED)
+    remove.mockResolvedValue(undefined)
+    expect((await purgeErasedMedia(strapi)).removed).toBe(1)
+    expect(store[UPLOAD]).toEqual([])
+  })
+
+  it("never deletes another user's file named by an untrusted draft", async () => {
+    const { strapi, store, remove } = seed()
+    store[UP_FILE].push({ documentId: "foreign", id: 999, related: [] })
+    store[UPLOAD].push({
+      documentId: "foreign-owner",
+      fileId: 999,
+      baUserId: "u2",
+    })
+    store[SUB].find((row) => row.documentId === "s2")!.fields = { photoId: 999 }
+    await eraseAccount(strapi, { baUserId: "u1" })
+    expect(remove.mock.calls.some(([file]) => file.id === 999)).toBe(false)
+    expect(store[UPLOAD].find((row) => row.fileId === 999)?.baUserId).toBe("u2")
+  })
+
+  it("retains an owned published asset even when a draft names it", async () => {
+    const { strapi, store, remove } = seed()
+    store[UP_FILE].find((row) => row.id === 10)!.related = [
+      { id: 42, __type: "api::library.library" },
+    ]
+    store[SUB].find((row) => row.documentId === "s2")!.fields = { photoId: 10 }
+    await eraseAccount(strapi, { baUserId: "u1" })
+    expect(remove.mock.calls.some(([file]) => file.id === 10)).toBe(false)
+  })
+
   it("strips personal data, follows, preferences and earned Pro from the profile", async () => {
     const { strapi, store } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
@@ -250,10 +354,11 @@ describe("eraseAccount", () => {
   it("erases a profile cover and its selected background along with the avatar", async () => {
     const { strapi, store, remove } = seed()
     const cover = { id: 78, name: "cover.webp", url: "/uploads/cover.webp" }
+    store[UP_FILE].push({ ...cover, documentId: "f78", related: [] })
     store[PROFILE][0]!.coverImage = cover
     store[PROFILE][0]!.profileBackground = "rose"
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
-    expect(remove).toHaveBeenCalledWith(cover)
+    expect(remove).toHaveBeenCalledWith(expect.objectContaining(cover))
     expect(store[PROFILE][0]).toMatchObject({
       coverImage: null,
       profileBackground: "violet",
@@ -264,7 +369,7 @@ describe("eraseAccount", () => {
     const { strapi, remove, avatar } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
 
-    expect(remove).toHaveBeenCalledWith(avatar)
+    expect(remove).toHaveBeenCalledWith(expect.objectContaining(avatar))
   })
 
   it("deletes saved events, claims, votes, grants, verifications, upload ownership, the newsletter row and the users-permissions user", async () => {

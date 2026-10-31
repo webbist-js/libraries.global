@@ -152,7 +152,7 @@ describe("suggestion board", () => {
     render(createElement(Board))
     expect(
       screen
-        .getByRole("link", { name: "Sign in to vote for Quiet room, 36 votes" })
+        .getByRole("link", { name: /Sign in to vote for Quiet room, 36 votes/ })
         .getAttribute("href")
     ).toBe(
       `/auth/signin?callbackUrl=${encodeURIComponent("/community/suggestions")}`

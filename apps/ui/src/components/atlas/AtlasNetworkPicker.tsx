@@ -118,7 +118,7 @@ export function AtlasNetworkPicker({
         <PopoverTrigger asChild>
           <button
             type="button"
-            aria-label={t("chooseNetwork")}
+            title={t("chooseNetwork")}
             className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-(--t-border-hi) bg-(--t-bg-surface) px-3.5 py-3 text-left text-sm text-(--t-ink-base) hover:bg-(--t-bg-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
           >
             {!compact ? <Icon name="book" size={18} /> : null}

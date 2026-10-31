@@ -24,7 +24,11 @@ const request = () =>
   })
 beforeEach(() => {
   vi.resetAllMocks()
-  find.mockResolvedValue({ id: "key", team_id: "team" })
+  find.mockResolvedValue({
+    id: "key",
+    team_id: "team",
+    created_by: "organiser",
+  })
   active.mockResolvedValue(undefined)
   reserve.mockResolvedValue({
     id: "request",
@@ -243,3 +247,23 @@ it.each([
     expect(work).not.toHaveBeenCalled()
   }
 )
+
+it("denies removed organisers before reserving quota or delivering data and retires their keys", async () => {
+  active.mockRejectedValueOnce(new BillingError("api_key_owner_removed", 401))
+  const query = vi.fn().mockResolvedValue({ rows: [] })
+  const upstream = vi.fn()
+  const response = await serveTeamApi(
+    { query } as unknown as Pool,
+    request(),
+    "libraries:read",
+    "libraries.list",
+    upstream
+  )
+  expect(response.status).toBe(401)
+  expect(upstream).not.toHaveBeenCalled()
+  expect(reserve).not.toHaveBeenCalled()
+  expect(query).toHaveBeenCalledWith(expect.stringContaining("revoked_at"), [
+    "team",
+    "organiser",
+  ])
+})

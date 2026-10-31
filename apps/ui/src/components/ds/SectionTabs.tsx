@@ -62,7 +62,7 @@ export function SectionTabs({
       aria-label={label}
       className={[
         // A right-edge fade says the row scrolls on narrow screens.
-        "relative -mb-px flex min-w-0 flex-1 gap-1 self-stretch overflow-x-auto [scrollbar-width:none] after:pointer-events-none after:sticky after:right-0 after:-ml-6 after:w-6 after:shrink-0 after:bg-linear-to-l after:from-(--t-bg-deep) after:to-transparent sm:after:hidden print:hidden [&::-webkit-scrollbar]:hidden",
+        "relative -mb-px flex min-w-0 flex-1 [scrollbar-width:none] gap-1 self-stretch overflow-x-auto after:pointer-events-none after:sticky after:right-0 after:-ml-6 after:w-6 after:shrink-0 after:bg-linear-to-l after:from-(--t-bg-deep) after:to-transparent sm:after:hidden print:hidden [&::-webkit-scrollbar]:hidden",
         variant === "pills" ? "section-tabs-pills" : "",
         className,
       ]

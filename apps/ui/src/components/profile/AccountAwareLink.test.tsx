@@ -7,7 +7,11 @@ import { cleanup, fireEvent, render, screen } from "@/test/render"
 
 import { AccountAwareLink } from "./AccountAwareLink"
 
-const state = vi.hoisted(() => ({ signedIn: true, navigated: vi.fn() }))
+const state = vi.hoisted(() => ({
+  signedIn: true,
+  navigated: vi.fn(),
+  pathname: "/europe",
+}))
 vi.mock("@/lib/access-client", () => ({
   useHydratedSession: () => ({
     data: state.signedIn
@@ -16,7 +20,7 @@ vi.mock("@/lib/access-client", () => ({
   }),
 }))
 vi.mock("@/lib/navigation-core", () => ({
-  usePathname: () => "/europe",
+  usePathname: () => state.pathname,
   NavigationLink: ({
     onNavigate,
     transitionTypes,
@@ -57,6 +61,7 @@ afterEach(() => {
   cleanup()
   closeProfileDrawer(true)
   state.signedIn = true
+  state.pathname = "/europe"
   state.navigated.mockClear()
   vi.restoreAllMocks()
 })
@@ -140,4 +145,21 @@ it("announces accepted route changes for URL-sync cancellation and keeps cancele
     .filter((event) => event.type === "dashboard-before-navigation")
   expect(events).toHaveLength(1)
   expect((events[0] as CustomEvent).detail).toEqual({ href: "/journal" })
+})
+
+it("follows visible sidebar order with keyboard and touch intent", () => {
+  state.pathname = "/staff/teams/api"
+  render(
+    <nav>
+      <AccountAwareLink href="/staff/teams/billing">Billing</AccountAwareLink>
+      <AccountAwareLink href="/staff/teams/api">API</AccountAwareLink>
+      <AccountAwareLink href="/staff/teams/members">Members</AccountAwareLink>
+    </nav>
+  )
+  const billing = screen.getByText("Billing"),
+    members = screen.getByText("Members")
+  fireEvent.focus(billing)
+  expect(billing.dataset.transitionTypes).toBe("section-back")
+  fireEvent.pointerDown(members)
+  expect(members.dataset.transitionTypes).toBe("section-forward")
 })

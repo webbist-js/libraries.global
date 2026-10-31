@@ -226,13 +226,11 @@ export default async function RootLayout({
                 )}
                 {!liveConsole && <StaffDrawerMount />}
                 {!liveConsole && <EditorialDrawerMount />}
+                {!liveConsole && <BetaFeedback label={tUi("feedback")} />}
                 {betaEnabled() && !liveConsole && (
-                  <>
-                    <BetaFeedback label={tUi("feedback")} />
-                    <BetaWelcomeMount
-                      sandbox={process.env.BILLING_ENV !== "live"}
-                    />
-                  </>
+                  <BetaWelcomeMount
+                    sandbox={process.env.BILLING_ENV !== "live"}
+                  />
                 )}
               </EventModalProvider>
             </ClientProviders>

@@ -165,6 +165,7 @@ body[data-dashboard-active] [data-cookie-consent-settings] {
   left: auto;
 }
 body[data-dashboard-active] [data-cookie-consent-panel] {
+  right: max(12px, env(safe-area-inset-right));
   bottom: calc(var(--dashboard-mobile-nav-height) + 12px);
   max-height: calc(
     100dvh - var(--dashboard-bar-height) - env(safe-area-inset-top) -
@@ -195,6 +196,10 @@ body[data-dashboard-active]
   body[data-dashboard-active] [data-cookie-consent-panel] {
     bottom: 12px;
     max-height: calc(100dvh - 24px);
+  }
+  body[data-dashboard-active] [data-cookie-consent-panel] {
+    width: min(32rem, calc(100dvw - var(--dashboard-rail-width) - 24px));
+    left: auto;
   }
   body[data-dashboard-active] [data-drawer-backdrop] {
     top: 0;
@@ -554,8 +559,8 @@ body[data-dashboard-active] .strapi-layout-footer {
 /* Recipes from the installed view-transition guide, confined to these names. */
 :root {
   --duration-exit: 150ms;
-  --duration-enter: 220ms;
-  --duration-move: 240ms;
+  --duration-enter: 240ms;
+  --duration-move: 300ms;
 }
 @keyframes dashboard-fade {
   from {
@@ -581,39 +586,75 @@ body[data-dashboard-active] .strapi-layout-footer {
     translate: var(--slide-offset);
   }
 }
-::view-transition-old(.nav-forward) {
+/* Geography is a shallow horizontal handoff; ordered workspace pages move
+   vertically. Atlas uses the complete canvas width rather than a small nudge. */
+::view-transition-old(.nav-forward),
+::view-transition-old(.section-forward),
+::view-transition-old(.atlas-forward) {
   --slide-offset: -32px;
   animation:
     var(--duration-exit) linear both dashboard-fade reverse,
     var(--duration-exit) var(--motion-ease-out) both dashboard-depart;
 }
-::view-transition-new(.nav-forward) {
+::view-transition-new(.nav-forward),
+::view-transition-new(.section-forward),
+::view-transition-new(.atlas-forward) {
   --slide-offset: 32px;
   animation:
     var(--duration-enter) linear both dashboard-fade,
     var(--duration-move) var(--motion-ease-out) both dashboard-slide;
 }
-::view-transition-old(.nav-back) {
+::view-transition-old(.nav-back),
+::view-transition-old(.section-back),
+::view-transition-old(.atlas-back) {
   --slide-offset: 32px;
   animation:
     var(--duration-exit) linear both dashboard-fade reverse,
     var(--duration-exit) var(--motion-ease-out) both dashboard-depart;
 }
-::view-transition-new(.nav-back) {
+::view-transition-new(.nav-back),
+::view-transition-new(.section-back),
+::view-transition-new(.atlas-back) {
   --slide-offset: -32px;
   animation:
     var(--duration-enter) linear both dashboard-fade,
     var(--duration-move) var(--motion-ease-out) both dashboard-slide;
 }
-::view-transition-old(.fade-out) {
-  animation: var(--duration-exit) linear both dashboard-fade reverse;
+::view-transition-old(.section-forward),
+::view-transition-new(.section-back) {
+  --slide-offset: 0 -24px;
 }
-::view-transition-new(.fade-in) {
-  animation: var(--duration-enter) linear both dashboard-fade;
+::view-transition-new(.section-forward),
+::view-transition-old(.section-back) {
+  --slide-offset: 0 24px;
 }
-::view-transition-group(.morph) {
-  animation-duration: var(--duration-move);
-  animation-timing-function: var(--motion-ease-out);
+::view-transition-old(.atlas-forward),
+::view-transition-new(.atlas-back) {
+  --slide-offset: -100vw;
+}
+::view-transition-new(.atlas-forward),
+::view-transition-old(.atlas-back) {
+  --slide-offset: 100vw;
+}
+::view-transition-old(.atlas-forward),
+::view-transition-old(.atlas-back),
+::view-transition-new(.atlas-forward),
+::view-transition-new(.atlas-back) {
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* No automatic size/position morph: both snapshots keep their page geometry. */
+::view-transition-group(dashboard-page) {
+  animation: none;
+  /* Clip the moving snapshots at the canvas edge, behind the fixed shell. */
+  overflow: clip;
+}
+::view-transition-old(dashboard-page),
+::view-transition-new(dashboard-page) {
+  height: 100%;
+  object-fit: none;
+  object-position: top left;
+  mix-blend-mode: normal;
 }
 ::view-transition-old(.page-crossfade) {
   animation: var(--duration-exit) linear both dashboard-fade reverse;
@@ -621,12 +662,24 @@ body[data-dashboard-active] .strapi-layout-footer {
 ::view-transition-new(.page-crossfade) {
   animation: var(--duration-enter) linear both dashboard-fade;
 }
-::view-transition-group(persistent-nav) {
+::view-transition-group(persistent-toolbar),
+::view-transition-group(persistent-section-toggle),
+::view-transition-group(.dashboard-still) {
   animation: none;
   z-index: 100;
 }
-:root:has([data-dashboard-page])::view-transition-old(root),
-:root:has([data-dashboard-page])::view-transition-new(root) {
+::view-transition-old(persistent-toolbar),
+::view-transition-old(persistent-section-toggle),
+::view-transition-old(.dashboard-still) {
+  display: none;
+}
+::view-transition-new(persistent-toolbar),
+::view-transition-new(persistent-section-toggle),
+::view-transition-new(.dashboard-still) {
+  animation: none;
+}
+html[data-dashboard-active]::view-transition-old(root),
+html[data-dashboard-active]::view-transition-new(root) {
   animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -639,7 +692,9 @@ body[data-dashboard-active] .strapi-layout-footer {
 }
 
 @media (min-width: 1024px) {
-  .dashboard-find-page .dashboard-sidebar-content > aside {
+  .dashboard-find-page
+    .dashboard-sidebar-content
+    > :is(aside, [data-filter-sidebar]) {
     width: auto;
     margin: 0;
     padding: 16px;
@@ -1078,13 +1133,13 @@ body:not([data-dashboard-aware]):has([data-dashboard-shell])
   }
 }
 
-/* Outside the drawer's scrolling body so language stays within reach. */
+/* Compact preferences stay reachable outside the scrolling navigation. */
 .dashboard-navigation-footer {
   display: flex;
-  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  flex-shrink: 0;
+  gap: 12px;
   padding: 16px 24px max(16px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--t-border-line);
   background: var(--t-bg-space);
@@ -1092,44 +1147,38 @@ body:not([data-dashboard-aware]):has([data-dashboard-shell])
   font: var(--type-small-heading);
 }
 
-/* One appearance control in the visible header on each shell. */
-.record-toolbar-actions > .record-appearance-control {
-  padding: 0;
-  border: 0;
-  background: transparent;
+/* Pages without a content toolbar keep feedback in the masthead area. */
+body[data-dashboard-active] [data-feedback-trigger] {
+  top: 8px;
+  right: 16px;
+  left: auto;
+  z-index: 70;
+  width: auto;
+  min-height: 40px;
+  flex-direction: row;
+  border-left-width: 1px;
+  border-radius: 999px;
+  padding: 8px 14px;
+  translate: none;
+  transform: none;
 }
-.record-appearance-control button {
-  width: 44px;
-  height: 44px;
+body[data-dashboard-active] [data-feedback-trigger] span {
+  writing-mode: horizontal-tb;
+  rotate: none;
+  transform: none;
 }
-.dashboard-appearance-control {
+body:has([data-feedback-inline]) [data-feedback-trigger] {
   display: none;
 }
-@media (min-width: 768px) {
-  body:not(:has(.record-toolbar)) .dashboard-appearance-control {
-    display: block;
-    position: fixed;
-    top: 12px;
-    right: 72px;
-    z-index: 86;
-    padding: 2px;
-    border-radius: 12px;
-    background: var(--t-bg-inverse);
-  }
-}
 @media (max-width: 767px) {
-  .record-toolbar-actions > .record-appearance-control {
+  body[data-dashboard-active] [data-feedback-trigger] {
+    right: 64px;
+    min-height: 44px;
+    color: var(--t-ink-inverse);
+    background: var(--t-bg-inverse);
+    border-color: rgb(255 255 255 / 25%);
+  }
+  body[data-dashboard-active] [data-feedback-trigger] span {
     display: none;
-  }
-  .dashboard-appearance-control {
-    display: block;
-    position: fixed;
-    top: 8px;
-    right: 62px;
-    z-index: 86;
-  }
-  .dashboard-appearance-control button {
-    width: 44px;
-    height: 44px;
   }
 }

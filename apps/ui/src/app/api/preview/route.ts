@@ -1,6 +1,8 @@
+import { readPreviewTicket } from "@repo/shared-data/preview-ticket"
 import { cookies, draftMode } from "next/headers"
 import { hasLocale } from "next-intl"
 
+import { authDbPool } from "@/lib/auth"
 import { getEnvVar } from "@/lib/env-vars"
 import { redirect, routing } from "@/lib/navigation"
 import { isValidPreviewUrl, readPreviewSecret } from "@/lib/preview"
@@ -16,25 +18,39 @@ export async function GET(request: Request) {
     return new Response("Invalid Configuration", { status: 404 })
   }
   const { searchParams } = new URL(request.url)
-  // The secret comes in the X-Preview-Secret header, or in the query for the
-  // Strapi preview button (which can only open a URL).
+  // Browser links carry only a short-lived target-bound ticket. Trusted server
+  // callers can still authenticate using an HTTP header.
   const secret = readPreviewSecret(request)
-  if (!safeEqual(secret, previewSecret)) {
+  const ticket = readPreviewTicket(
+    searchParams.get("ticket") ?? "",
+    previewSecret
+  )
+  if (!safeEqual(secret, previewSecret) && !ticket) {
     console.warn(
       "[STRAPI_PREVIEW]: Preview request received, but [secret] does not match [STRAPI_PREVIEW_SECRET]. Status: 401."
     )
 
     return new Response("Invalid token", { status: 401 })
   }
+  if (ticket) {
+    // A unique expiring receipt is shared by every UI replica. Conflicts reject
+    // replays before enabling draft mode; existing housekeeping removes receipts.
+    const receipt = await authDbPool.query(
+      "insert into billing_rate_limits(key,hits,resets_at) values($1,1,to_timestamp($2 / 1000.0)) on conflict(key) do nothing returning key",
+      [`preview:${ticket.nonce}`, ticket.expiresAt]
+    )
+    if (!receipt.rows.length)
+      return new Response("Invalid token", { status: 401 })
+  }
   // Validate the URL begins with ROOT_PAGE_PATH (e.g. index, with optional / for nested pages)
-  const urlParam = String(searchParams.get("url"))
+  const urlParam = ticket?.url ?? String(searchParams.get("url"))
   const url = isValidPreviewUrl(urlParam) ? urlParam : undefined
   if (!url) {
     return new Response("Invalid URL", { status: 404 })
   }
 
   // Check if the status in the request is configured correctly
-  const statusParam = String(searchParams.get("status"))
+  const statusParam = ticket?.status ?? String(searchParams.get("status"))
   const status = validPageStatusKeys.has(statusParam)
     ? statusParam
     : "published"
@@ -58,7 +74,7 @@ export async function GET(request: Request) {
   cookieStore.set({
     name: draftModePrerenderCookieKey,
     value: draftCookie?.value || "",
-    expires: draftCookie?.value ? undefined : 0, // undefined => does not expire, 0 => expires at timestamp 0
+    expires: draftCookie?.value ? new Date(Date.now() + 10 * 60_000) : 0, // undefined => does not expire, 0 => expires at timestamp 0
     httpOnly: true,
     path: "/",
     secure: true,
@@ -66,7 +82,7 @@ export async function GET(request: Request) {
   })
   // --------------------------------------------------------------------
   // Check if the locale in the request is a correct frontend locale
-  const localeParam = String(searchParams.get("locale"))
+  const localeParam = ticket?.locale ?? String(searchParams.get("locale"))
   const locale = hasLocale(routing.locales, localeParam)
     ? localeParam
     : routing.defaultLocale

@@ -87,7 +87,7 @@ export function ContactModalProvider({
   )
 
   useEffect(() => {
-    // One delegated listener also covers links supplied by CMS content and future pages.
+    // One delegated listener covers shell feedback and CMS contact links.
     const onClick = (event: MouseEvent) => {
       if (
         event.defaultPrevented ||
@@ -98,6 +98,18 @@ export function ContactModalProvider({
         event.altKey
       )
         return
+      const feedback =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>(
+              "[data-feedback-trigger], [data-feedback-inline]"
+            )
+          : null
+      if (feedback) {
+        event.preventDefault()
+        open({ mode: "feedback" }, feedback)
+
+        return
+      }
       const link =
         event.target instanceof Element
           ? event.target.closest<HTMLAnchorElement>("a[href]")

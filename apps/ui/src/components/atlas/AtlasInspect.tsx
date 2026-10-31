@@ -283,7 +283,6 @@ export function AtlasInspect({
             <button
               key={entry.id}
               type="button"
-              aria-label={t("open", { name: entry.title })}
               title={`${entry.title} · ${entry.detail}${entry.metric ? ` · ${entry.metric}` : ""}`}
               onClick={() => onSelect(entry.id)}
               className="flex min-h-11 w-12 flex-col items-center justify-center overflow-hidden rounded-xl px-1 text-xs font-semibold aria-current:bg-(--t-accent-chip) aria-current:text-(--t-accent-primary)"
@@ -318,7 +317,7 @@ export function AtlasInspect({
         aria-label={t("inspect")}
         className={`${styles.stack} atlas-motion-card flex min-h-0 flex-1 flex-col overflow-clip ${mobile ? "bg-(--t-bg-deep)" : "rounded-[22px] border border-(--t-border-hi) bg-(--t-bg-deep) shadow-[0_8px_24px_rgb(23_22_43/0.06)]"}`}
         style={{
-          viewTransitionName: "atlas-inspect",
+          viewTransitionName: "var(--atlas-inspect-transition, none)",
           display: hidden ? "none" : undefined,
         }}
       >

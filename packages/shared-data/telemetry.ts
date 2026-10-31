@@ -25,6 +25,7 @@ function cleanText(value: string, key: string): string {
       : value.replaceAll(/https?:\/\/[^\s<>"']+|\/[^\s<>"']+/g, cleanUrl)
 
   return text
+    .replaceAll(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, FILTERED)
     .replaceAll(
       /\/(?:staff\/teams?\/join|reset-password|magic-link|verify-email)\/[^\s?#<>"']+/gi,
       cleanUrl

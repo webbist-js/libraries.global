@@ -59,7 +59,7 @@ it.each(["pointer", "keyboard"])(
       </>
     )
     fireEvent.click(
-      screen.getByRole("button", { name: "Search Libraries Global" })
+      screen.getByRole("button", { name: /Search the whole site/ })
     )
     const input = await screen.findByRole("combobox")
     fireEvent.change(input, { target: { value: "PRIVATE_QUERY" } })

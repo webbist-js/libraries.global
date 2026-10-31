@@ -23,6 +23,11 @@ import {
   sendResetPasswordEmail,
   sendVerificationEmail,
 } from "./email"
+import {
+  emailOwnershipProtection,
+  recordSignupBrowser,
+  type VerificationContext,
+} from "./email-ownership-proof"
 import { TERMS_VERSION } from "./legal-consent"
 import { liveCookieOptions, signLiveProof } from "./live-proof"
 import { MOBILE_SESSION_COOKIE, mobileAppConfig } from "./mobile-app"
@@ -112,6 +117,10 @@ async function syncUserToStrapi(user: {
 
 const mobile = mobileAppConfig()
 
+async function verificationContext(): Promise<VerificationContext> {
+  return auth.$context
+}
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET!,
   baseURL: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
@@ -186,6 +195,7 @@ export const auth = betterAuth({
       }
     }),
     after: createAuthMiddleware(async (ctx) => {
+      recordSignupBrowser(ctx, process.env.NODE_ENV === "production")
       if (
         ctx.path !== "/passkey/verify-authentication" ||
         ctx.headers?.get("x-live-confirm") !== "true"
@@ -240,8 +250,9 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
+    ...emailOwnershipProtection(verificationContext),
     sendOnSignUp: true,
-    sendOnSignIn: true,
+    sendOnSignIn: false,
     autoSignInAfterVerification: true,
     expiresIn: VERIFICATION_LINK_TTL_SECONDS,
     sendVerificationEmail: async ({ user, url }) => {
@@ -301,6 +312,7 @@ export const auth = betterAuth({
     }),
   ],
   session: {
+    freshAge: 5 * 60,
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // refresh session token after 1 day of activity
     cookieCache: {

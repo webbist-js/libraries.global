@@ -37,6 +37,7 @@ beforeEach(() => {
   mocks.counts.clear()
   vi.stubEnv("APP_PUBLIC_URL", "https://libraries.example")
   vi.stubEnv("STRAPI_BRIDGE_SECRET", "test-only-secret")
+  vi.stubEnv("MOBILE_LIVE_STEPUP_SECRET", "test-only-live-proof-key")
   mocks.proof = signLiveProof("staff", "ba-session")
   mocks.session.mockResolvedValue({
     user: { id: "staff", email: "crew@example.org", name: "Crew" },

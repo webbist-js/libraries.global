@@ -711,7 +711,7 @@ utility shell rather than a dashboard masthead.
 
 Onboarding now uses the dashboard masthead, toolbar, section navigation and
 responsive reading canvas. Its profile form, visibility controls, account guard
-and save actions are retained. The form has a dedicated loading skeleton.
+and save actions are retained. Initial entry uses the shared logo loader.
 
 Direct `/profile`, `/profile/settings`, `/profile/notifications` and
 `/profile/membership` requests open the corresponding account drawer on the
@@ -731,3 +731,28 @@ The remaining pages outside the dashboard have specific reasons to stand alone:
 Error and missing-page screens retain their utility layouts. Feature pages
 inside the dashboard inherit their section shell; nested task pages do not add
 another masthead. The standalone mobile console is unchanged.
+
+### Page transitions
+
+The persistent dashboard shell owns one Suspense boundary. During navigation it
+keeps the current, revealed page until the destination is ready; initial entry
+uses the existing logo loader. Route-level skeleton boundaries would interrupt
+this handoff and should not be reintroduced. Feature-local loading states still
+belong to their controls and results.
+
+`DashboardRouteTransition` pairs content canvases, including Atlas. Its nested
+sidebar and toolbar boundaries exclude those controls from the moving snapshot.
+Atlas-to-place content slides left, with the destination entering from the right;
+returning to Atlas reverses it. Geographic ancestry uses a subtle 32px
+horizontal slide and fade, reversed for parent destinations. Other section links
+use 24px vertical slides and fades, following the visible sidebar order. The
+shared link reads that order on mouse, keyboard or touch intent, including CMS
+and permission-dependent navigation. Query-only and anchor changes do not trigger
+page movement. Browser history without a transition type uses a quiet crossfade.
+
+The global rail remains live outside the snapshots. Canvas snapshots clip at
+its edge, the record toolbar stays anchored, and section navigation stays in
+place for every transition. Switching sections replaces its contents immediately. Atlas names its individual panels only during
+its own internal transitions, so map controls can move with the content during
+route changes. The Explore sidebar remains anchored while its contents are replaced. Reduced-motion CSS removes animation durations; unsupported
+browsers and stable React embeds retain normal navigation without animation.

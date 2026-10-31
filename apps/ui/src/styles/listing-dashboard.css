@@ -12,7 +12,9 @@
 .dashboard-listing-page .dashboard-context-panel {
   background: var(--t-bg-deep);
 }
-.dashboard-listing-page .dashboard-sidebar-content > aside {
+.dashboard-listing-page
+  .dashboard-sidebar-content
+  > :is(aside, [data-filter-sidebar]) {
   width: auto;
   margin: 0;
   padding: 16px;

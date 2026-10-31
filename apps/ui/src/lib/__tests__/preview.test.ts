@@ -30,10 +30,10 @@ describe("readPreviewSecret", () => {
     expect(readPreviewSecret(req)).toBe("header")
   })
 
-  it("falls back to the query string for the Strapi preview button", () => {
+  it("never accepts a long-lived secret from a query string", () => {
     const req = new Request("http://localhost/api/preview?secret=query")
 
-    expect(readPreviewSecret(req)).toBe("query")
+    expect(readPreviewSecret(req)).toBe("")
   })
 
   it("returns an empty string when neither is present", () => {

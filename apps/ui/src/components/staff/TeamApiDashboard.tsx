@@ -4,6 +4,8 @@ import { Icon } from "@iconify/react"
 import { useLocale, useTranslations } from "next-intl"
 import {
   useEffect,
+  useMemo,
+  useSyncExternalStore,
   useRef,
   useState,
   useTransition,
@@ -18,6 +20,7 @@ import { TeamApiKeyDialog } from "@/components/staff/TeamApiKeyDialog"
 import { TeamPurchaseProgress } from "@/components/staff/TeamPurchaseJourney"
 import { Button } from "@/components/ui/button"
 import { captureCheckoutAttempt } from "@/lib/checkout-analytics"
+import { redirectForReauthentication } from "@/lib/fresh-auth"
 import { Link } from "@/lib/navigation"
 import type { ApiDashboard } from "@/lib/team-api/types"
 import {
@@ -446,6 +449,19 @@ function apiDashboardVisibility(
   }
 }
 
+// A browser purchase choice is read once per Team visit. Keep the completed
+// journey visible after its persistent hand-off marker has been cleared.
+const noJourneyUnsubscribe = () => {}
+const noJourneySubscription = () => noJourneyUnsubscribe
+function journeySnapshot(teamId: string, requested: boolean) {
+  let selected: boolean | undefined
+
+  return {
+    browser: () => (selected ??= requested || teamApiChoiceSelected(teamId)),
+    server: () => requested,
+  }
+}
+
 export function TeamApiDashboard({
   initial,
   confirming,
@@ -457,8 +473,16 @@ export function TeamApiDashboard({
   readonly initial: ApiDashboard
   readonly confirming: boolean
 }) {
-  const [guided, setGuided] = useState(setupRequested)
   const [data, setData] = useState(initial)
+  const journey = useMemo(
+    () => journeySnapshot(data.teamId, setupRequested),
+    [data.teamId, setupRequested]
+  )
+  const guided = useSyncExternalStore(
+    noJourneySubscription,
+    journey.browser,
+    journey.server
+  )
   const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState("")
   const [secret, setSecret] = useState<string | null>(null)
@@ -473,8 +497,6 @@ export function TeamApiDashboard({
 
   useEffect(() => {
     if (!data.organiser) return
-    const selected = setupRequested || teamApiChoiceSelected(data.teamId)
-    if (selected) setGuided(true)
     if (data.active) rememberTeamApiChoice(data.teamId, false)
   }, [data.teamId, data.organiser, data.active, setupRequested])
 
@@ -517,9 +539,11 @@ export function TeamApiDashboard({
         })
         const result = (await response.json()) as {
           error?: string
+          reauthUrl?: string
           secret?: string
           url?: string
         }
+        if (!response.ok && redirectForReauthentication(result)) return
         if (!response.ok)
           throw new Error(
             ERRORS[result.error ?? ""] ??

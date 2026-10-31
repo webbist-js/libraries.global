@@ -126,7 +126,7 @@ describe("beta cookie choices", () => {
     route.path = "/fr/profile/settings"
     window.location.pathname = route.path
     saveAnalyticsChoice(localStorage, true)
-    render(<GoogleAnalytics locale="fr" />)
+    render(<GoogleAnalytics locale="fr" workspaceEnabled />)
     expect(document.head.append).toHaveBeenCalledTimes(1)
     expect(JSON.stringify(window.dataLayer)).toContain(
       "/workspace/account/page/settings"

@@ -67,7 +67,7 @@ export const SubmitForReview: Story = {
       await canvas.findByRole("option", { name: "Sources & send" })
     )
     await userEvent.type(
-      canvas.getByLabelText(/Submission summary/),
+      await canvas.findByRole("textbox", { name: /Submission summary/ }),
       "Correct the library name"
     )
     const send = canvas.getByRole("button", { name: "Submit for review" })
@@ -94,9 +94,9 @@ export const ResumeDraft: Story = {
     await userEvent.click(
       await canvas.findByRole("button", { name: "Continue" })
     )
-    await expect(canvas.getByLabelText(/Submission summary/)).toHaveValue(
-      "Correct the library name"
-    )
+    await expect(
+      await canvas.findByRole("textbox", { name: /Submission summary/ })
+    ).toHaveValue("Correct the library name")
   },
 }
 export const ChangesRequested: Story = {
@@ -275,7 +275,7 @@ export const PublishedRecordChanged: Story = {
       await canvas.findByRole("option", { name: "Sources & send" })
     )
     await userEvent.type(
-      canvas.getByLabelText(/Submission summary/),
+      await canvas.findByRole("textbox", { name: /Submission summary/ }),
       "Correct the library name"
     )
     const send = canvas.getByRole("button", { name: "Submit for review" })

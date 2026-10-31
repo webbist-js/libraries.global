@@ -8,6 +8,7 @@ import { SectionCard } from "@/components/profile-form/FormParts"
 import { authClient } from "@/lib/auth-client"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
+import { redirectForReauthentication } from "@/lib/fresh-auth"
 
 const pillButton = {
   padding: "8px 16px",
@@ -69,7 +70,11 @@ export function DataAccountSection({
     try {
       const res = await fetch("/api/profile/me", { method: "DELETE" })
       if (!res.ok) {
-        const json = (await res.json()) as { error?: string }
+        const json = (await res.json()) as {
+          error?: string
+          reauthUrl?: string
+        }
+        if (redirectForReauthentication(json)) return
         toast.error(json.error ?? "Failed to delete account")
 
         return
@@ -88,7 +93,7 @@ export function DataAccountSection({
     <SectionCard
       id="data"
       title={tUi("your_data_account")}
-      lead="Download everything we hold about you, or delete your account."
+      lead="Download your account summary, request a complete personal-data copy, or delete your account."
     >
       <div>
         {/* Download */}
@@ -101,7 +106,9 @@ export function DataAccountSection({
               Download your data
             </p>
             <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
-              A JSON file of your profile, preferences and account details.
+              A JSON summary of your profile, preferences, account and billing
+              details. For a complete personal-data copy, contact
+              legal@libraries.global.
             </p>
           </div>
           <a

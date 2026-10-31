@@ -38,7 +38,7 @@ export function LibraryFeatureDetails({
         <button
           type="button"
           className={`${className} cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2`}
-          aria-label={`More about ${name}`}
+          title={`More about ${name}`}
         >
           {children ?? name}
           <Icon
