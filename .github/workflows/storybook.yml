@@ -45,14 +45,15 @@ jobs:
           path: apps/storybook/dist
           retention-days: 7
 
-  stories:
-    name: Stories (${{ matrix.appearance }})
+  story_shards:
+    name: Story shard (${{ matrix.appearance }}, ${{ matrix.shard }}/2)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
         appearance: [light, dark]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -60,10 +61,28 @@ jobs:
       - uses: ./.github/actions/setup-pnpm
       - name: Install browser
         run: pnpm --filter @repo/storybook exec playwright install --with-deps chromium
+      - name: Build story dependencies
+        run: pnpm exec turbo run build --filter=@repo/access --filter=@repo/shared-data --concurrency=1 --no-daemon
       - name: Render every story, interaction and accessibility check
         env:
           STORYBOOK_APPEARANCE: ${{ matrix.appearance }}
-        run: pnpm test:storybook
+        run: pnpm --filter @repo/storybook test --shard=${{ matrix.shard }}/2
+
+  # Keep the existing required-check names while every shard remains mandatory.
+  stories:
+    name: Stories (${{ matrix.appearance }})
+    needs: [story_shards]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    strategy:
+      matrix:
+        appearance: [light, dark]
+    steps:
+      - name: Require every appearance shard
+        env:
+          SHARDS_RESULT: ${{ needs.story_shards.result }}
+        run: test "$SHARDS_RESULT" = success
 
   verify:
     needs: [catalogue, stories]
