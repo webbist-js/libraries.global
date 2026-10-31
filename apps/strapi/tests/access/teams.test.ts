@@ -138,6 +138,16 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 describe("team seats and invites", () => {
+  it("uses the real invitation button URL even when the Team name starts with a URL", async () => {
+    const { teams, services } = setup({ name: "https://attacker.example" })
+    await teams.invite(TEAM, "new@example.org", "member", undefined, organiser)
+    const mail = services["email.email"].send.mock.calls[0]![0]
+    expect(mail.html).not.toContain('href="https://attacker.example')
+    expect(mail.html).toContain(
+      'href="https://libraries.example/staff/teams/join/'
+    )
+  })
+
   it("takes the account and Team locks in order inside one transaction", async () => {
     const raw = vi.fn()
     const transaction = vi.fn(async (work) => work({ trx: { raw } }))
@@ -575,4 +585,36 @@ describe("who may organise", () => {
     )
     expect(promoted.teamRole).toBe("organiser")
   })
+})
+
+it("uses the index for Team picker discovery and resolves only bounded exact identifiers", async () => {
+  const fake = setup()
+  fake.services["meilisearch.store"] = {
+    getCredentials: vi.fn(async () => ({
+      host: "https://search.example.org",
+      apiKey: "fixture",
+    })),
+  }
+  const fetcher = vi.fn(async () =>
+    Response.json({ hits: [{ documentId: LIB_A }] })
+  )
+  vi.stubGlobal("fetch", fetcher)
+  try {
+    const result = await fake.teams.searchLibraries("Library")
+    expect(result.map((row) => row.documentId)).toEqual([LIB_A])
+    expect(fetcher).toHaveBeenCalledWith(
+      expect.any(URL),
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining('"attributesToRetrieve":["documentId"]'),
+      })
+    )
+    expect(JSON.stringify(fake.strapi.documents.mock.calls)).not.toContain(
+      "$containsi"
+    )
+    fetcher.mockRejectedValueOnce(new Error("offline"))
+    await expect(fake.teams.searchLibraries("Library")).rejects.toThrow()
+  } finally {
+    vi.unstubAllGlobals()
+  }
 })

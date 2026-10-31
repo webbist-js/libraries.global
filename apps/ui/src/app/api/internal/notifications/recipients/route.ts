@@ -1,13 +1,12 @@
+import { matchesBridgeSecret } from "@repo/shared-data/service-key"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { authDbPool } from "@/lib/auth"
 import { readJsonCapped } from "@/lib/bridge-params"
-import { safeEqual } from "@/lib/safe-equal"
 
 export async function POST(req: Request) {
-  const secret = process.env.STRAPI_BRIDGE_SECRET
-  if (!secret || !safeEqual(req.headers.get("x-service-secret") ?? "", secret))
+  if (!matchesBridgeSecret(req.headers.get("x-service-secret")))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const read = await readJsonCapped(req, 32 * 1024)
   const parsed = read.ok

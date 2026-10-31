@@ -73,6 +73,18 @@ afterEach(() => {
   document.body.innerHTML = ""
 })
 
+it("offers an immediate explicit resend after unverified sign-in without claiming an email was sent", () => {
+  const view = render(
+    createElement(VerifyEmailContent, { state: "unverified" })
+  )
+  expect(view.container.textContent).toContain("request a new link below")
+  expect(view.container.textContent).not.toContain("we’ve sent a new link")
+  expect(
+    (view.getByRole("button", { name: "Send a new link" }) as HTMLButtonElement)
+      .disabled
+  ).toBe(false)
+})
+
 const FORMS: [name: string, element: () => ReactElement, action: string][] = [
   ["sign-in", () => createElement(SignInForm), "/auth/signin"],
   ["register", () => createElement(RegisterForm), "/auth/register"],

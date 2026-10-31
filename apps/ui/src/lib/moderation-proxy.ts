@@ -100,6 +100,7 @@ export type ProxyOptions = {
 }
 
 type SessionUser = {
+  sessionCreatedAt?: Date | string
   id: string
   email: string
   name?: string | null
@@ -110,7 +111,12 @@ async function sessionUser(): Promise<SessionUser | null> {
   try {
     const session = await auth.api.getSession({ headers: await headers() })
 
-    return (session?.user as SessionUser | undefined) ?? null
+    return session?.user
+      ? ({
+          ...session.user,
+          sessionCreatedAt: session.session?.createdAt,
+        } as SessionUser)
+      : null
   } catch {
     return null
   }
@@ -211,6 +217,9 @@ export async function proxyModeration(
       headers: {
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
         ...bridgeUserHeaders(user),
+        "X-Ba-Session-Created-At": user.sessionCreatedAt
+          ? new Date(user.sessionCreatedAt).toISOString()
+          : "",
       },
       body,
       cache: "no-store",

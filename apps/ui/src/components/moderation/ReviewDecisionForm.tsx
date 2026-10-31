@@ -12,6 +12,7 @@ import { useEffect, useId, useState } from "react"
 
 import { reviewHref } from "@/components/moderation/queue-navigation"
 import { T } from "@/lib/design-tokens"
+import { redirectForReauthentication } from "@/lib/fresh-auth"
 import { Link, useRouter } from "@/lib/navigation"
 import { captureWorkspaceAction } from "@/lib/workspace-analytics"
 
@@ -195,6 +196,12 @@ export function ReviewDecisionForm({
       )
       const body: unknown = await res.json().catch(() => null)
       if (!res.ok) {
+        if (
+          body &&
+          typeof body === "object" &&
+          redirectForReauthentication(body)
+        )
+          return
         measured("error")
         setError(decisionErrorMessage(res.status, body))
 

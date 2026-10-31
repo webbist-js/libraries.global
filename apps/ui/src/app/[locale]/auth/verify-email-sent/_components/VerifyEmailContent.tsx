@@ -2,9 +2,8 @@
 
 // apps/ui/src/app/[locale]/auth/verify-email-sent/_components/VerifyEmailContent.tsx
 //
-// Sign-up's second step. The confirmation email has gone out (after sign-up,
-// or after signing in to an unconfirmed account), or the link in it failed;
-// either way the reader can send themselves a new one.
+// Sign-up sends the first confirmation email. An unconfirmed sign-in or failed
+// link offers an explicit resend rather than sending email automatically.
 
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
@@ -106,11 +105,11 @@ function subtitleFor(state: VerifyEmailState, email: string | null) {
     case "unverified":
       return to ? (
         <>
-          Your account isn&rsquo;t confirmed yet, so we&rsquo;ve sent a new link
-          to {to}.
+          Confirm {to} before signing in. Use your original confirmation email,
+          or request a new link below.
         </>
       ) : (
-        "Your account isn’t confirmed yet, so we’ve sent a new link to your email address."
+        "Confirm your email before signing in. Use your original confirmation email, or request a new link below."
       )
     case "expired":
       return `Confirmation links work for ${LIFETIME}. Send yourself a new one and open it from your inbox.`
@@ -125,7 +124,7 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
   usePreloadedIcons(STATUS_ICONS)
   const mounted = useMounted()
   const knownEmail = usePendingEmail()
-  const emailWentOut = state === "sent" || state === "unverified"
+  const emailWentOut = state === "sent"
   const heading = HEADINGS[state]
 
   // null until edited, so the field starts with the address from this tab.

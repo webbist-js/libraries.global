@@ -1,10 +1,12 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import { useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, NOTICE_TONES, Sheet } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
+import { redirectForReauthentication } from "@/lib/fresh-auth"
 import { useRouter } from "@/lib/navigation"
 
 /** One person with staff access: `GET /api/moderation/staff/[libraryId]`. */
@@ -69,6 +71,7 @@ export function StaffAccessList({
         const body = (await res.json().catch(() => null)) as {
           error?: { message?: string } | string
         } | null
+        if (body && redirectForReauthentication(body)) return
         const message =
           typeof body?.error === "string" ? body.error : body?.error?.message
         throw new Error(

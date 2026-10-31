@@ -119,8 +119,7 @@ export function verifyLiveProof(
 ): boolean {
   if (typeof proof !== "string" || typeof baSessionId !== "string") return false
   const [body, sig, extra] = proof.split(".")
-  const secret =
-    process.env.MOBILE_LIVE_STEPUP_SECRET ?? process.env.STRAPI_BRIDGE_SECRET
+  const secret = process.env.MOBILE_LIVE_STEPUP_SECRET
   if (!body || !sig || extra || !secret) return false
   const hash = createHmac("sha256", secret).update(body).digest("base64url")
   if (

@@ -81,7 +81,7 @@ describe("Team key generation contract", () => {
     const req = request(create)
     const response = await POST(req, params())
     expect(response.status).toBe(201)
-    expect(f.user).toHaveBeenCalledWith(req, true)
+    expect(f.user).toHaveBeenCalledWith(req, true, true)
     expect(f.create).toHaveBeenCalledWith(
       {},
       "team000000000000000001",

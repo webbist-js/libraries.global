@@ -4,6 +4,12 @@
 export default {
   routes: [
     {
+      method: "GET",
+      path: "/user-profiles/check-username",
+      handler: "user-profile.checkUsername",
+      config: { auth: false, policies: [] },
+    },
+    {
       // Bridge only: the controller checks X-Service-Secret and reads the
       // Better Auth id from X-Ba-User-Id, which the UI server sets from the
       // session. `baUserId` is private, so the core find can't filter on it.
