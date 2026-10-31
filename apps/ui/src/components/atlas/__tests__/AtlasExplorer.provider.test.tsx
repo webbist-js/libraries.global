@@ -175,7 +175,7 @@ it("opens the installed context analysis panel and keeps the background when Rea
   fireEvent.click(
     within(
       screen.getByRole("navigation", { name: "Minimised Inspect" })
-    ).getByRole("button", { name: "Open Travel-time reach" })
+    ).getByRole("button", { name: "Reach", description: /Travel-time reach/ })
   )
   expect(screen.getByRole("tabpanel", { name: "Reach" })).toBeTruthy()
   fireEvent.click(
