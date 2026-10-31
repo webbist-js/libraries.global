@@ -4,6 +4,7 @@ import { setTimeout } from "node:timers/promises"
 import type { Core } from "@strapi/strapi"
 
 import { collectAuthEvents, collectContentEvents } from "./events"
+import { maintenanceHealthEvent } from "./maintenance"
 import {
   notificationConfig,
   postToSlack,
@@ -104,24 +105,14 @@ function channelScope(blocked: Set<string>) {
 
 export function internalNotifications(strapi: Core.Strapi) {
   const query = () => strapi.db.query(UID)
-  const actorName = async (id?: string) => {
-    if (!id) return null
-    const profile = await strapi.db
-      .query("api::user-profile.user-profile")
-      .findOne({
-        where: { baUserId: id },
-        select: ["username", "contributorNumber"],
-      })
-
-    return profile?.username
-      ? `@${profile.username}`
-      : profile?.contributorNumber
-        ? `Contributor #${profile.contributorNumber}`
-        : `Account ${id.slice(0, 8)}`
-  }
   const enqueue = async (event: InternalEvent) => {
     const config = notificationConfig()
-    if (!config || Date.parse(event.eventAt) < Date.parse(config.since)) return
+    if (
+      !config ||
+      Date.parse(event.eventAt) <
+        Math.max(Date.parse(config.since), Date.now() - 90 * DAY)
+    )
+      return
     const now = new Date().toISOString()
     // Conflict handling is in PostgreSQL, including concurrent presence writes.
     await strapi.db
@@ -189,7 +180,7 @@ export function internalNotifications(strapi: Core.Strapi) {
     row: DeliveryRow,
     config: NonNullable<ReturnType<typeof notificationConfig>>
   ) => {
-    const who = await actorName(row.actorId)
+    const who = row.actorId ? "Account activity" : null
     const event = {
       ...row,
       detail: `${who ? `${who} · ` : ""}${row.detail}`,
@@ -317,6 +308,8 @@ export function internalNotifications(strapi: Core.Strapi) {
           )
         }
         await sourceHealth(report.queuedSourcesFailed, now)
+        const maintenanceAlert = await maintenanceHealthEvent(strapi, now)
+        if (maintenanceAlert) await enqueue(maintenanceAlert)
         await summary(now)
         // Keep deduplication keys, but remove personal payloads after 30 days.
         await query().updateMany({

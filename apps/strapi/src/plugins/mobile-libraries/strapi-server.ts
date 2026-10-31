@@ -1,6 +1,7 @@
 import controller from "./server/controller"
 import routes from "./server/routes"
 import live from "./server/service"
+import { observeMaintenance } from "../../utils/cms-maintenance"
 import {
   registerMobileStopIndex,
   syncMobileStops,
@@ -17,15 +18,26 @@ export default {
       strapi.log.warn(
         "[mobile-live] Emergency kill switch is active. All active sharing will end."
       )
-    await strapi.plugin("mobile-libraries").service("live").sweep()
+    await observeMaintenance(strapi, "mobile-live-stop", () =>
+      strapi.plugin("mobile-libraries").service("live").sweep()
+    )
+    await observeMaintenance(strapi, "mobile-live-retention", () =>
+      strapi.plugin("mobile-libraries").service("live").prune()
+    )
     registerMobileStopIndex(strapi)
     strapi.cron.add({
       "mobile-live-stop": {
-        task: () => strapi.plugin("mobile-libraries").service("live").sweep(),
+        task: () =>
+          observeMaintenance(strapi, "mobile-live-stop", () =>
+            strapi.plugin("mobile-libraries").service("live").sweep()
+          ),
         options: { rule: "*/5 * * * *" },
       },
       "mobile-live-retention": {
-        task: () => strapi.plugin("mobile-libraries").service("live").prune(),
+        task: () =>
+          observeMaintenance(strapi, "mobile-live-retention", () =>
+            strapi.plugin("mobile-libraries").service("live").prune()
+          ),
         options: { rule: "35 2 * * *" },
       },
     })
