@@ -13,7 +13,13 @@ import { ArticleReadingPane } from "./ArticleReadingPane"
 
 export type PublishedComparison = Pick<
   ArticleDraft,
-  "title" | "summary" | "doc" | "sections" | "tags" | "eventMentions"
+  | "title"
+  | "summary"
+  | "doc"
+  | "sections"
+  | "tags"
+  | "eventMentions"
+  | "sources"
 > & {
   revision: string
   locale: string
@@ -22,7 +28,7 @@ export type PublishedComparison = Pick<
 function ComparisonMetadata({
   value,
 }: {
-  value: Pick<ArticleDraft, "sections" | "tags" | "eventMentions">
+  value: Pick<ArticleDraft, "sections" | "tags" | "eventMentions" | "sources">
 }) {
   const t = useTranslations("articleConflict")
   const p = useTranslations("publishing")
@@ -187,6 +193,7 @@ export function ArticleRevisionComparison({
             kind={kind}
             title={published.title}
             summary={published.summary}
+            sources={published.sources}
             doc={published.doc}
             compact
           />
@@ -201,6 +208,7 @@ export function ArticleRevisionComparison({
             kind={kind}
             title={draft.title}
             summary={draft.summary}
+            sources={draft.sources}
             doc={draft.doc}
             compact
           />

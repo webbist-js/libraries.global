@@ -1,6 +1,9 @@
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { MainContent } from "@/components/ds/MainContent"
 import { parseHeroText } from "@/components/ds/PageHero"
@@ -56,36 +59,95 @@ function LegalTabs({
   )
 }
 
-export function LegalDocumentPage({
-  document: doc,
-  documents,
-  locale,
-  untranslatedLocale = null,
+function LegalDocumentHero({
+  doc,
+  title,
+  dashboard,
+  untranslatedLocale,
+  meta,
 }: {
-  readonly document: LegalDocumentDetail
-  readonly documents: LegalDocumentNavItem[]
-  readonly locale: Locale
-  readonly untranslatedLocale?: string | null
+  doc: LegalDocumentDetail
+  title: string
+  dashboard: boolean
+  untranslatedLocale: string | null
+  meta: { label: string; value: string | null; mono?: boolean }[]
 }) {
   const tUi = useUiTranslations("ui")
 
-  const title = doc.title ?? "Legal"
-  const membershipPolicy = [
-    "membership",
-    "cancellation-refunds",
-    "beta",
-  ].includes(doc.slug ?? "")
-  const contactEmail = membershipPolicy
-    ? "info@libraries.global"
-    : LEGAL_CONTACT_EMAIL
-  const sections = doc.sections ?? []
-  const anchors = sectionAnchors(sections)
-  const summaryPoints = doc.summaryPoints ?? []
-  const revisions = revisionsNewestFirst(doc.revisions)
-  const current = revisions[0]
-  const draft = isPreLaunchDraft(current?.version)
+  return (
+    <section
+      className="border-b"
+      style={{ background: T.bg.space, borderColor: T.border.line }}
+    >
+      <Container className="pt-6 pb-6 sm:pt-10 sm:pb-8">
+        {!dashboard ? (
+          <Breadcrumb
+            items={[
+              { label: tUi("home"), href: "/" },
+              {
+                label: tUi("legal_policies"),
+                href: doc.slug === "beta" ? undefined : "/legal",
+              },
+              { label: title },
+            ]}
+          />
+        ) : null}
 
-  const meta = [
+        <h1
+          tabIndex={-1}
+          className="type-h1 mt-3 mb-0 text-balance"
+          style={{
+            color: T.ink.base,
+          }}
+        >
+          {parseHeroText(doc.heroTitle || title, "ink")}
+        </h1>
+
+        {untranslatedLocale ? (
+          <NotTranslatedNote locale={untranslatedLocale} />
+        ) : null}
+
+        <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          {doc.lead ? (
+            <p
+              className="m-0 max-w-[60ch] text-base leading-[1.6] text-pretty"
+              style={{ color: T.ink.dim }}
+            >
+              {doc.lead}
+            </p>
+          ) : null}
+
+          <dl className="m-0 flex flex-wrap items-baseline gap-x-6 gap-y-3 text-sm lg:justify-end">
+            {meta.map((item) => (
+              <div
+                className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
+                key={item.label}
+              >
+                <dt style={{ color: T.ink.dim }}>{item.label}</dt>
+                <dd
+                  className="m-0 font-semibold"
+                  style={{
+                    color: T.ink.base,
+                    fontFamily: item.mono ? T.font.mono : undefined,
+                  }}
+                >
+                  {item.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function legalMetadata(
+  doc: LegalDocumentDetail,
+  current: NonNullable<LegalDocumentDetail["revisions"]>[number] | undefined,
+  draft: boolean
+) {
+  return [
     {
       label: "Last updated",
       value: formatLegalDate(current?.date ?? doc.updatedAt),
@@ -99,88 +161,84 @@ export function LegalDocumentPage({
     },
     { label: "Reading time", value: `${legalReadingMinutes(doc)} min` },
   ].filter((item) => item.value)
+}
 
-  return (
+function isMembershipPolicy(slug?: string | null) {
+  return ["membership", "cancellation-refunds", "beta"].includes(slug ?? "")
+}
+
+function policyContactEmail(slug?: string | null) {
+  return isMembershipPolicy(slug)
+    ? "info@libraries.global"
+    : LEGAL_CONTACT_EMAIL
+}
+
+export function LegalDocumentPage({
+  document: doc,
+  documents,
+  locale,
+  untranslatedLocale = null,
+  dashboard = false,
+}: {
+  readonly dashboard?: boolean
+  readonly document: LegalDocumentDetail
+  readonly documents: LegalDocumentNavItem[]
+  readonly locale: Locale
+  readonly untranslatedLocale?: string | null
+}) {
+  const tUi = useUiTranslations("ui")
+
+  const title = doc.title ?? "Legal"
+  const membershipPolicy = isMembershipPolicy(doc.slug)
+  const contactEmail = policyContactEmail(doc.slug)
+  const sections = doc.sections ?? []
+  const anchors = sectionAnchors(sections)
+  const summaryPoints = doc.summaryPoints ?? []
+  const revisions = revisionsNewestFirst(doc.revisions)
+  const current = revisions[0]
+  const draft = isPreLaunchDraft(current?.version)
+
+  const meta = legalMetadata(doc, current, draft)
+
+  const content = (
     <div
-      className="relative isolate flex min-h-screen w-full flex-col"
+      className={
+        dashboard
+          ? "legal-dashboard-document"
+          : "relative isolate flex min-h-screen w-full flex-col"
+      }
       data-legal-document=""
       style={{ background: T.bg.void, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale} />
+      {!dashboard ? <GlobalHeader locale={locale} /> : null}
 
-      <MainContent className="relative z-10 flex-1">
+      <MainContent
+        className={dashboard ? "relative z-0 flex-1" : "relative z-10 flex-1"}
+      >
         {/* ── Hero band + document tabs ── */}
-        <section
-          className="border-b"
-          style={{ background: T.bg.space, borderColor: T.border.line }}
-        >
-          <Container className="pt-6 pb-6 sm:pt-10 sm:pb-8">
-            <Breadcrumb
-              items={[
-                { label: tUi("home"), href: "/" },
-                {
-                  label: tUi("legal_policies"),
-                  href: doc.slug === "beta" ? undefined : "/legal",
-                },
-                { label: title },
-              ]}
-            />
-
-            <h1
-              className="type-h1 mt-3 mb-0 text-balance"
-              style={{
-                color: T.ink.base,
-              }}
-            >
-              {parseHeroText(doc.heroTitle || title, "ink")}
-            </h1>
-
-            {untranslatedLocale ? (
-              <NotTranslatedNote locale={untranslatedLocale} />
-            ) : null}
-
-            <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              {doc.lead ? (
-                <p
-                  className="m-0 max-w-[60ch] text-base leading-[1.6] text-pretty"
-                  style={{ color: T.ink.dim }}
-                >
-                  {doc.lead}
-                </p>
-              ) : null}
-
-              <dl className="m-0 flex flex-wrap items-baseline gap-x-6 gap-y-3 text-sm lg:justify-end">
-                {meta.map((item) => (
-                  <div
-                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1"
-                    key={item.label}
-                  >
-                    <dt style={{ color: T.ink.dim }}>{item.label}</dt>
-                    <dd
-                      className="m-0 font-semibold"
-                      style={{
-                        color: T.ink.base,
-                        fontFamily: item.mono ? T.font.mono : undefined,
-                      }}
-                    >
-                      {item.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </Container>
-        </section>
-        {documents.length > 1 ? (
+        <LegalDocumentHero
+          doc={doc}
+          title={title}
+          dashboard={dashboard}
+          untranslatedLocale={untranslatedLocale}
+          meta={meta}
+        />
+        {!dashboard && documents.length > 1 ? (
           <SectionNavigation>
             <LegalTabs activeSlug={doc.slug ?? ""} documents={documents} />
           </SectionNavigation>
         ) : null}
 
         <Container className="py-10 sm:py-12">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,720px)] lg:gap-12 xl:gap-14">
+          <div
+            className={
+              dashboard
+                ? "mx-auto max-w-[800px]"
+                : "grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,720px)] lg:gap-12 xl:gap-14"
+            }
+          >
             {/* ── Left: contents + actions ── */}
-            <aside className="print:hidden">
+            <aside className={dashboard ? "hidden" : "print:hidden"}>
               <div className="flex flex-col items-start gap-3 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:pb-1">
                 {sections.length > 0 ? (
                   <div className="min-h-0 w-full">
@@ -327,8 +385,6 @@ export function LegalDocumentPage({
                     Changes to this document
                   </h2>
                   <div
-                    role="region"
-                    aria-labelledby="legal-changes"
                     tabIndex={0}
                     className="mt-4 overflow-x-auto rounded-2xl border focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
                     style={{
@@ -451,6 +507,77 @@ export function LegalDocumentPage({
         </Container>
       </MainContent>
     </div>
+  )
+  if (!dashboard) return content
+
+  return (
+    <DashboardPage
+      title={title}
+      routeKey={`/legal/${doc.slug}`}
+      className="dashboard-legal-page"
+      navigationHeading={
+        <RecordContextIdentity
+          title={title}
+          parent={{ href: "/legal", label: tUi("legal_policies") }}
+        />
+      }
+      mobileNavigationHeading={
+        <GlobalLink className="record-parent-chip" href="/legal">
+          ‹ {tUi("legal_policies")}
+        </GlobalLink>
+      }
+      toolbar={
+        <RecordToolbar
+          items={[
+            { href: "/legal", label: tUi("legal_policies") },
+            { label: title },
+          ]}
+        />
+      }
+      navigation={
+        <div className="legal-sidebar-groups">
+          <nav
+            className="legal-sidebar-documents"
+            aria-label={tUi("legal_documents")}
+          >
+            <p className="legal-sidebar-label">{tUi("legal_documents")}</p>
+            {documents.map((item) => (
+              <GlobalLink
+                key={item.documentId}
+                href={`/legal/${item.slug}`}
+                aria-current={item.slug === doc.slug ? "page" : undefined}
+              >
+                <Icon icon={legalIcon(item.slug)} width={16} aria-hidden />
+                <span>{item.navLabel || item.title}</span>
+              </GlobalLink>
+            ))}
+          </nav>
+          {sections.length ? (
+            <nav
+              className="legal-sidebar-contents"
+              aria-label={tUi("on_this_page")}
+            >
+              <p className="legal-sidebar-label">{tUi("on_this_page")}</p>
+              <ol>
+                {sections.map((section, index) => (
+                  <li key={anchors[index]}>
+                    <a href={`#${anchors[index]}`}>
+                      <span aria-hidden>
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span>{section.heading}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          ) : null}
+        </div>
+      }
+      navigationFooter={<LegalPrintButton compact />}
+    >
+      {content}
+    </DashboardPage>
   )
 }
 

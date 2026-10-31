@@ -138,7 +138,7 @@ export function FindMapPanel({
             destination: "atlas",
           })}
           className="rounded-full px-5 py-2.5 text-base font-semibold text-white no-underline"
-          style={{ background: T.accent.primary }}
+          style={{ background: T.action.primary }}
         >
           Open the full map
         </Link>

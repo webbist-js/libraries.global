@@ -153,7 +153,7 @@ export function AtlasRegionMap({
       />
       <p
         role="status"
-        className="absolute bottom-8 left-3 rounded-xl bg-white px-3 py-2 text-sm"
+        className="absolute bottom-8 left-3 rounded-xl bg-(--t-bg-deep) px-3 py-2 text-sm"
       >
         {error ??
           (generation

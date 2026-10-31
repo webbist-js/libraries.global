@@ -39,6 +39,9 @@ describe("StatusBadge", () => {
     const pill = icon?.closest("span[style*='border-radius']") as HTMLElement
     expect(pill).toBeTruthy()
     expect(pill.textContent).toBe("Rejected")
-    expect(icon?.getAttribute("style")).toContain("color:#A13A1A")
+    expect(icon?.getAttribute("style")).toContain(
+      "color:var(--t-palette-coral-fg)"
+    )
+    expect(pill.style.color).toBe("var(--t-palette-coral-fg)")
   })
 })

@@ -1,6 +1,6 @@
 # Team API add-on
 
-The add-on belongs to a Team, separately from personal memberships and Team Seats. Team Organisers buy and manage it at `/staff/teams/api`; members can inspect usage. Payment never grants staff authority or access to personal or protected data.
+The add-on belongs to a Team, separately from personal memberships and Team Seats. Team Organisers buy and manage it at `/developers`; members can inspect usage. Payment never grants staff authority or access to personal or protected data.
 
 Create a new Team through the [self-service annual Team flow](TEAM-BILLING.md) when enabled. Team Checkout activates seats after payment confirmation; it does not purchase the separate API add-on. Existing invoice Teams retain their agreed terms.
 
@@ -59,6 +59,33 @@ Team API customers, attempts and subscription projections are separate from pers
 5. Keep the existing authenticated minute billing timer running. Confirm an actual owned sandbox checkout, settlement, cancellation and Portal recovery before live activation. A successful fixture test does not confirm a provider payment or its eligibility.
 
 `pnpm --filter @repo/ui billing:db:test` runs personal, Team API and Team seat concurrency/settlement tests sequentially in generated local schemas and removes them afterward; it refuses remote databases. Unit and component coverage is under `src/lib/team-api`, `src/components/staff/__tests__/TeamApiDashboard.test.tsx` and `apps/strapi/tests/access/api-data.test.ts`.
+
+## Public workspace and playground
+
+The API workspace lives at `/developers`, with separate keys, usage, request
+reference and playground pages. Teams and the main menu link to it. The former
+`/staff/teams/api` URL redirects there and preserves checkout/setup continuation.
+Docs do not require an account; private controls require a server-verified Team
+membership. Existing beta and staging gates still apply.
+
+The playground requires an active Team and API add-on. Users enter an existing
+Team API key, kept only in page memory. Requests call the three `/api/v1` routes
+directly and use their existing authentication, scopes, Team rate/concurrency
+limits, quota reservations and accounting. Successful requests and response
+bytes count toward the key’s Team allowance, including “Read this record” actions.
+Errors do not consume monthly allowance. The page states this before the form
+and beside the Run button. Requests are never run automatically on page load.
+
+A usage reminder opens each time a Team member visits the playground. Closing
+it only acknowledges that visit. “Don’t show this again” saves the private
+`api-playground-usage` prompt preference to their profile. Active Team members
+can re-enable it under Settings → Notifications → Prompts; other accounts do
+not see that switch. The inline allowance notice remains visible either way.
+
+All playground traffic uses the authenticated versioned API. There is no
+alternate unmetered preview endpoint or geographic restriction. Search and list
+results retain their “Read this record” actions. Access remains subject to the
+normal paid entitlement and scoped-key checks.
 
 ## API credentials and planned resources
 

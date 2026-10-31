@@ -1,0 +1,31 @@
+import { Markdown, Meta } from "@storybook/addon-docs/blocks"
+import coverage from "../audit/coverage.md?raw"
+import findings from "../audit/structural-findings.md?raw"
+import inventoryUrl from "../audit/inventory.csv?url"
+import componentsUrl from "../audit/components.csv?url"
+
+<Meta title="Start here/UI coverage" />
+
+<div className="sb-audit-content">
+  <h1>UI coverage</h1>
+  <p>
+    Every visual export must have a direct story or a real production composition
+    reference. The export audit also records nonvisual contexts and runtime
+    installers with their reasons. CI rejects missing exports and stale snapshots.
+  </p>
+  <a href={componentsUrl} download="component-coverage.csv">
+    Download the component export audit
+  </a>
+  <p>
+    The file inventory below also includes framework route hosts, supporting code,
+    tests and styles. Its file-level uncovered counts are separate from the
+    export-level component gate.
+  </p>
+  <Markdown>{coverage.replace(/^# UI inventory/, "## File inventory")}</Markdown>
+
+<a href={inventoryUrl} download="ui-inventory.csv">
+  Download the complete file inventory
+</a>
+
+  <Markdown>{findings.replaceAll(/^## /gm, "### ").replace(/^# /, "## ")}</Markdown>
+</div>

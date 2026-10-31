@@ -12,6 +12,9 @@ import {
   useState,
 } from "react"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import {
   FilterDrawer,
   FilterSidebar,
@@ -21,6 +24,7 @@ import {
 import { Container } from "@/components/elementary/Container"
 import { MobilePlaceStops } from "@/components/mobile/MobilePlaceStops"
 import { NearbyMobileLibraries } from "@/components/mobile/NearbyMobileLibraries"
+import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import {
   captureAnalyticsEvent,
   pushAnalyticsEvent,
@@ -71,6 +75,7 @@ export function FindLibraryPage({
   drives?: readonly FindDrive[]
 }) {
   const tUi = useUiTranslations("ui")
+  const workspace = useUiTranslations("communityDashboard")
 
   const locale = useLocale()
   const router = useRouter()
@@ -100,9 +105,13 @@ export function FindLibraryPage({
   }, [])
 
   // ── URL sync ──────────────────────────────────────────────────────────────
+  const canSyncUrl = useRouteUrlSyncGuard()
+  const lastUrlState = useRef(findStateToParams(state).toString())
   useEffect(() => {
-    if (!didMount.current) return
+    if (!didMount.current || !canSyncUrl()) return
     const qs = findStateToParams(state).toString()
+    if (qs === lastUrlState.current) return
+    lastUrlState.current = qs
     router.replace((qs ? `${pathname}?${qs}` : pathname) as never, {
       scroll: false,
     })
@@ -275,12 +284,48 @@ export function FindLibraryPage({
     : { libraryType: {}, accessibility: {}, services: {} }
 
   return (
-    <>
+    <DashboardPage
+      routeKey="/libraries"
+      title={tUi("find_libraries")}
+      className="dashboard-find-page dashboard-listing-page"
+      navigationHeading={null}
+      navigationFooter={
+        <DashboardSidebarCta
+          title={workspace("findTitle")}
+          body={workspace("findBody")}
+          action={{
+            label: tUi("add_a_library"),
+            href: "/contribute/index/new",
+          }}
+          secondary={{
+            label: workspace("learnMore"),
+            href: "/knowledge?section=contributing",
+          }}
+        />
+      }
+      toolbar={
+        <RecordToolbar
+          items={[
+            { label: tUi("home"), href: "/" },
+            { label: tUi("find_libraries") },
+          ]}
+        />
+      }
+      navigationHidden={filterSidebar.collapsed}
+      navigation={
+        <FilterSidebar sidebar={filterSidebar} sticky={false}>
+          <FindFilterSidebar
+            state={state}
+            facets={facets}
+            onChange={patch}
+            onReset={clearAll}
+            sidebar={filterSidebar}
+          />
+        </FilterSidebar>
+      }
+    >
       <PageHero
-        breadcrumb={[
-          { label: tUi("home"), href: "/" },
-          { label: tUi("find_libraries") },
-        ]}
+        variant="card"
         eyebrow="Library index"
         eyebrowIcon="mdi:map-search-outline"
         lead={`Search ${statsTotal.toLocaleString("en-GB")} published records by name, place, type and facilities. The index grows as contributors document more libraries.`}
@@ -324,20 +369,12 @@ export function FindLibraryPage({
       </PageHero>
 
       {/* Main two-column area */}
-      <Container className="flex flex-1 items-start gap-8 pt-8 pb-8 sm:pb-12">
+      <Container className="py-6">
         {/* Desktop filters scroll with the page and can be hidden. */}
-        <FilterSidebar sidebar={filterSidebar} sticky={false}>
-          <FindFilterSidebar
-            state={state}
-            facets={facets}
-            onChange={patch}
-            onReset={clearAll}
-            sidebar={filterSidebar}
-          />
-        </FilterSidebar>
 
         {/* Sidebar — drawer on mobile */}
         <FilterDrawer
+          edgeAligned
           open={filtersOpen}
           onClose={() => setFiltersOpen(false)}
           showLabel={`Show ${total.toLocaleString("en-GB")} results`}
@@ -523,7 +560,7 @@ export function FindLibraryPage({
         </section>
       </Container>
       {contributeBand}
-    </>
+    </DashboardPage>
   )
 }
 

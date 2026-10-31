@@ -1,20 +1,11 @@
-import {
-  type LucideIcon,
-  Accessibility,
-  BookOpen,
-  Camera,
-  Clock,
-  Globe,
-  History,
-  MapPin,
-  Plus,
-  Star,
-} from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { Plus } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { ContributionActions } from "@/components/home/ContributionActions"
+import { DriveCarousel } from "@/components/home/DriveCarousel"
 import Emphasis from "@/components/home/Emphasis"
-import { displayStyle } from "@/components/home/homepage.constants"
+import { homepageLinkAttributes } from "@/components/home/homepage.analytics"
 import type {
   ContributionTask,
   CtaBand,
@@ -22,72 +13,19 @@ import type {
   Step,
 } from "@/components/home/homepage.types"
 import { HomeDriveCard } from "@/components/home/sections/HomeDriveCard"
-import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
 import type { IncompleteLibrary } from "@/lib/strapi-api/content/server"
 
-type TaskCopy = {
-  label: string
-  action: string
-  Icon: LucideIcon
-  tint: { bg: string; fg: string }
-}
-
-const GREEN = { bg: "#E6EFE6", fg: "#2F5D3A" }
-const RUST = { bg: "#F6E3DA", fg: "#8A3F22" }
-const BLUE = { bg: "#E4ECF5", fg: "#28496E" }
-const PURPLE = { bg: "#ECE8F6", fg: "#4A3F8C" }
-
-/** Keyed by `computeCompleteness` section key, in task priority order. */
-const TASK_COPY: Record<string, TaskCopy> = {
-  facilities: {
-    label: "Missing accessibility information",
-    action: "Add details",
-    Icon: Accessibility,
-    tint: GREEN,
-  },
-  photo: {
-    label: "Needs a photo",
-    action: "Upload one",
-    Icon: Camera,
-    tint: RUST,
-  },
-  hours: {
-    label: "Opening hours not added",
-    action: "Add hours",
-    Icon: Clock,
-    tint: BLUE,
-  },
-  contact: {
-    label: "No website or contact details",
-    action: "Add contact details",
-    Icon: Globe,
-    tint: PURPLE,
-  },
-  about: {
-    label: "Collections not described",
-    action: "Describe them",
-    Icon: BookOpen,
-    tint: GREEN,
-  },
-  history: {
-    label: "Founding date unknown",
-    action: "Add its history",
-    Icon: History,
-    tint: RUST,
-  },
-  address: {
-    label: "Street address missing",
-    action: "Add the address",
-    Icon: MapPin,
-    tint: BLUE,
-  },
-  location: {
-    label: "Not pinned on the map",
-    action: "Pin it",
-    Icon: MapPin,
-    tint: BLUE,
-  },
+/** Keyed by the record completeness sections, in task priority order. */
+const TASK_COPY: Record<string, string> = {
+  facilities: "Missing accessibility information",
+  photo: "Needs a photo",
+  hours: "Opening hours not added",
+  contact: "No website or contact details",
+  about: "Collections not described",
+  history: "Founding date unknown",
+  address: "Street address missing",
+  location: "Not pinned on the map",
 }
 
 const PRIORITY = Object.keys(TASK_COPY)
@@ -122,248 +60,142 @@ function taskHref(task: ContributionTask): string {
   return `/contribute/correct/${task.slug}?libraryName=${encodeURIComponent(task.name)}`
 }
 
-const ROW = "group flex items-center gap-4 py-4 no-underline"
-
-/** How contributing works, beside a few real gaps anyone could fill now. */
+/** A free-account invitation beside real, open community work. */
 export function ContributeSection({
   band,
   steps,
   tasksIntro,
   tasks,
-  featuredDrive,
+  drives,
 }: {
   readonly band: CtaBand
   readonly steps: readonly Step[]
   readonly tasksIntro: SectionIntro
   readonly tasks: readonly ContributionTask[]
-  /** A pinned or featured open drive; replaces the task rows when set. */
-  readonly featuredDrive?: DriveView | null
+  readonly drives: readonly DriveView[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const t = useTranslations("homepageContribute")
 
   return (
     <section
       id="contribute"
       aria-labelledby="contribute-title"
       data-homepage-surface="paper"
-      className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-[clamp(40px,7vw,120px)] px-4 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+      className="home-frame home-split home-contribute"
     >
       <div>
-        <h2
-          id="contribute-title"
-          className="m-0 text-balance"
-          style={{ ...displayStyle("band"), color: T.ink.base }}
-        >
-          <Emphasis
-            text={band.title ?? ""}
-            emStyle={{ color: T.accent.primary }}
-          />
+        <p className="home-kicker">{t("eyebrow")}</p>
+        <h2 id="contribute-title" className="type-display-band font-semibold">
+          <Emphasis text={band.title ?? ""} />
         </h2>
-        {band.text ? (
-          <p
-            className="mt-8 max-w-[540px] text-lg leading-[1.65] text-pretty"
-            style={{ color: T.ink.dim }}
-          >
-            {band.text}
-          </p>
-        ) : null}
-
-        {steps.length > 0 ? (
-          <ol className="m-0 mt-6 flex list-none flex-wrap gap-2 p-0">
-            {steps.map((step, i) => (
-              <li
-                key={step.title}
-                className="flex items-center gap-2.5 rounded-full border bg-white py-1.5 pr-4 pl-1.5 text-base font-medium"
-                style={{ borderColor: T.border.line, color: T.ink.base }}
-                title={step.text ?? undefined}
-              >
-                <span
-                  aria-hidden="true"
-                  className="flex size-[30px] shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-                  style={{ background: T.ink.base }}
-                >
-                  {i + 1}
-                </span>
+        <p className="home-section-copy">{band.text}</p>
+        <ol className="home-contribution-steps">
+          {steps
+            .filter((step) => step.title)
+            .map((step, index) => (
+              <li key={step.title}>
+                <span aria-hidden="true">{index + 1}</span>
                 {step.title}
               </li>
             ))}
-          </ol>
-        ) : null}
-
-        <div className="mt-7 flex flex-wrap gap-2.5">
-          {band.primaryLabel && band.primaryHref ? (
+        </ol>
+        <ContributionActions
+          memberLabel={band.primaryLabel}
+          memberHref={band.primaryHref}
+          secondaryAction={
             <GlobalLink
-              href={band.primaryHref}
-              className="rounded-full px-6 py-3.5 font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-              style={{ background: T.accent.primary }}
+              href={band.secondaryHref ?? "/contribute/index/new"}
+              className="home-button home-button-paper"
             >
-              {band.primaryLabel}
+              {band.secondaryLabel ?? "Add a library"}
             </GlobalLink>
-          ) : null}
-          {band.secondaryLabel && band.secondaryHref ? (
-            <GlobalLink
-              href={band.secondaryHref}
-              className="rounded-full border bg-white px-6 py-3.5 font-semibold no-underline transition-colors hover:border-(--t-accent-primary)"
-              style={{ borderColor: T.border.hi, color: T.ink.base }}
-            >
-              {band.secondaryLabel}
-            </GlobalLink>
-          ) : null}
+          }
+        />
+        <div className="home-contribution-help">
+          <GlobalLink
+            href="/contribute/index"
+            {...homepageLinkAttributes("/contribute/index")}
+            className="home-text-link"
+          >
+            {t("suggestCorrection")}
+          </GlobalLink>
+          <GlobalLink
+            href="/knowledge/governance/how-review-works"
+            {...homepageLinkAttributes(
+              "/knowledge/governance/how-review-works"
+            )}
+            className="home-text-link"
+          >
+            {t("howReviewWorks")}
+          </GlobalLink>
         </div>
       </div>
-
-      <div
-        className="rounded-[28px] border bg-white px-[clamp(20px,2.4vw,32px)] pt-6 pb-5"
-        style={{ borderColor: T.border.line }}
-      >
-        <div
-          className="flex flex-wrap items-baseline justify-between gap-3 border-b pb-3"
-          style={{ borderColor: T.border.line }}
-        >
-          <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
-            {tasksIntro.title}
-          </h3>
-          {featuredDrive ? (
-            <GlobalLink
-              href="/community"
-              className="text-base font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
-            >
-              {tUi("all_drives")}
-            </GlobalLink>
-          ) : tasks.length > 0 ? (
-            <GlobalLink
-              href="/contribute"
-              className="text-base font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
-            >
-              See all open tasks
-            </GlobalLink>
-          ) : null}
-        </div>
-
-        {featuredDrive ? (
-          <HomeDriveCard view={featuredDrive} />
+      <div className="home-contribution-work">
+        {drives.length ? (
+          <>
+            <div className="home-drive-heading">
+              <h3 className="type-h3">{t("openDrives")}</h3>
+              <GlobalLink
+                href="/community"
+                {...homepageLinkAttributes("/community")}
+                className="home-text-link"
+              >
+                {t("allDrives")}
+              </GlobalLink>
+            </div>
+            <p className="home-drive-intro">{t("driveIntro")}</p>
+            <DriveCarousel label={t("openDrives")}>
+              {drives.map((view, index) => (
+                <HomeDriveCard
+                  key={view.drive.documentId}
+                  view={view}
+                  index={index + 1}
+                />
+              ))}
+            </DriveCarousel>
+          </>
         ) : (
-          <ul className="m-0 list-none p-0">
-            {tasks.map((task) => {
-              const { label, action, Icon, tint } = TASK_COPY[task.missingKey]!
-
-              return (
-                <li
-                  key={task.documentId}
-                  className="border-b"
-                  style={{ borderColor: T.border.line }}
-                >
-                  <GlobalLink href={taskHref(task)} className={ROW}>
-                    <span
-                      aria-hidden="true"
-                      className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
-                      style={{ background: tint.bg, color: tint.fg }}
-                    >
-                      <Icon className="size-5" strokeWidth={1.8} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className="block text-sm font-semibold"
-                        style={{ color: tint.fg }}
-                      >
-                        {label}
-                      </span>
-                      <span
-                        className="block truncate text-[22px] leading-tight transition-colors group-hover:text-(--t-accent-primary)"
-                        style={{
-                          fontFamily: T.font.sans,
-                          fontWeight: 500,
-                          color: T.ink.base,
-                        }}
-                      >
+          <div className="home-task-card">
+            <h3 className="home-kicker">
+              {tasksIntro.title ?? "Open tasks right now"}
+            </h3>
+            <ul className="home-link-rows">
+              {tasks.length ? (
+                tasks.map((task) => (
+                  <li key={task.documentId}>
+                    <GlobalLink href={taskHref(task)}>
+                      <span>
                         {task.name}
+                        <small>
+                          {TASK_COPY[task.missingKey]} · {task.place}
+                        </small>
                       </span>
-                      {task.place ? (
-                        <span
-                          className="block truncate text-sm"
-                          style={{ color: T.ink.dim }}
-                        >
-                          {task.place}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span
-                      className="hidden shrink-0 text-base font-semibold sm:inline"
-                      style={{ color: T.accent.primary }}
-                    >
-                      {action} <span aria-hidden="true">→</span>
-                    </span>
+                    </GlobalLink>
+                  </li>
+                ))
+              ) : (
+                <li>
+                  <GlobalLink
+                    href="/contribute/index/new"
+                    {...homepageLinkAttributes("/contribute/index/new")}
+                  >
+                    Add a missing library <Plus aria-hidden="true" size={18} />
                   </GlobalLink>
                 </li>
-              )
-            })}
-
-            {tasks.length === 0 ? (
-              <li className="border-b" style={{ borderColor: T.border.line }}>
-                <GlobalLink href="/contribute/index/new" className={ROW}>
-                  <span
-                    aria-hidden="true"
-                    className="flex size-12 shrink-0 items-center justify-center rounded-[12px]"
-                    style={{
-                      background: T.accent.chip,
-                      color: T.accent.primary,
-                    }}
-                  >
-                    <Plus className="size-5" strokeWidth={2} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span
-                      className="block text-[22px] leading-tight"
-                      style={{
-                        fontFamily: T.font.sans,
-                        fontWeight: 500,
-                        color: T.ink.base,
-                      }}
-                    >
-                      Your local library missing?
-                    </span>
-                    <span
-                      className="block text-sm"
-                      style={{ color: T.ink.dim }}
-                    >
-                      Only a name, library type and one source are required.
-                    </span>
-                  </span>
-                </GlobalLink>
-              </li>
-            ) : null}
-          </ul>
-        )}
-
-        <p
-          className="m-0 mt-4 flex items-center gap-2 text-base"
-          style={{ color: T.ink.dim }}
-        >
-          <Star
-            aria-hidden="true"
-            className="size-4 shrink-0"
-            strokeWidth={1.8}
-            style={{ color: T.accent.primary }}
-          />
-          <span>
-            Regular contributors get{" "}
+              )}
+            </ul>
             <GlobalLink
-              href="/plans"
-              className="font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
+              href="/contribute"
+              {...homepageLinkAttributes("/contribute")}
+              className="home-text-link"
             >
-              Pro free
+              All ways to contribute
             </GlobalLink>
-            .
-          </span>
-        </p>
+          </div>
+        )}
       </div>
     </section>
   )
 }
-
-ContributeSection.displayName = "ContributeSection"
 
 export default ContributeSection

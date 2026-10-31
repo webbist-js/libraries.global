@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 
+import { DiscussionComposerDrawer } from "@/components/discussions/DiscussionComposerDrawer"
 import { DiscussionThreadSkeleton } from "@/components/discussions/DiscussionSkeleton"
 
 import {
@@ -65,20 +66,6 @@ function AttachedDiscussionPanel({
   const [error, setError] = useState("")
   const [retryable, setRetryable] = useState(false)
   const [composing, setComposing] = useState(false)
-  const panelRef = useRef<HTMLElement>(null)
-  const wasComposing = useRef(false)
-  useEffect(() => {
-    if (composing) {
-      panelRef.current
-        ?.querySelector<HTMLElement>('input:not([type="hidden"]), a[href]')
-        ?.focus({ preventScroll: true })
-    } else if (wasComposing.current) {
-      panelRef.current
-        ?.querySelector<HTMLButtonElement>("button[data-start-discussion]")
-        ?.focus({ preventScroll: true })
-    }
-    wasComposing.current = composing
-  }, [composing])
   const [loadedScope, setLoadedScope] = useState("")
   const scope = `${target.uid}:${target.documentId}:${target.locale ?? language}:${subjectSlug}:${actor.scope}`
   const currentScope = useRef(scope)
@@ -151,7 +138,6 @@ function AttachedDiscussionPanel({
 
   return (
     <section
-      ref={panelRef}
       id={variant === "suggestion" ? undefined : "discussion"}
       aria-label={heading}
       className={
@@ -172,21 +158,16 @@ function AttachedDiscussionPanel({
               </p>
             )}
           </div>
-          {articleCard &&
-            loadedScope === scope &&
-            !thread &&
-            subject &&
-            !composing &&
-            !error && (
-              <button
-                type="button"
-                data-start-discussion
-                onClick={() => setComposing(true)}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-(--t-ink-base) px-4 text-sm font-semibold text-white hover:opacity-90"
-              >
-                {t("startDiscussion")}
-              </button>
-            )}
+          {loadedScope === scope && !thread && subject && !error && (
+            <button
+              type="button"
+              data-start-discussion
+              onClick={() => setComposing(true)}
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-(--t-bg-inverse) px-4 text-sm font-semibold text-white hover:opacity-90"
+            >
+              {t("startDiscussion")}
+            </button>
+          )}
         </div>
       )}
       {!actor.ready || loadedScope !== scope ? (
@@ -218,7 +199,7 @@ function AttachedDiscussionPanel({
           footerAction={footerAction}
           onActivity={onActivity}
         />
-      ) : subject && (!articleCard || composing) ? (
+      ) : subject && variant === "suggestion" ? (
         <>
           {variant !== "suggestion" && !articleCard && (
             <p>{t("attachedLead")}</p>
@@ -256,6 +237,35 @@ function AttachedDiscussionPanel({
       ) : !subject ? (
         <p>{t("unavailable")}</p>
       ) : null}
+      {variant !== "suggestion" &&
+        actor.ready &&
+        loadedScope === scope &&
+        subject && (
+          <DiscussionComposerDrawer
+            key={scope}
+            open={composing}
+            onOpen={() => setComposing(true)}
+            onClose={() => setComposing(false)}
+            subject={subject}
+            target={target}
+            contextTitle={title}
+            initialTitle={t("attachedTitle", { title })}
+            language={language}
+            defaultLanguage={language}
+            compositionPreferences={actor.compositionPreferences}
+            languages={languages}
+            returnTo={returnTo}
+            signedIn={actor.signedIn}
+            lockLanguage
+            disabled={
+              subject.createPolicy === "moderators" && !actor.canModerate
+            }
+            onSubmitted={(record) => {
+              if (record) setThread(record)
+              else load().catch(handleLoadFailure)
+            }}
+          />
+        )}
     </section>
   )
 }

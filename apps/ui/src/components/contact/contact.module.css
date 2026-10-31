@@ -3,7 +3,6 @@
   inset: 0;
   z-index: 90;
   background: var(--t-scrim, rgb(25 23 43 / 45%));
-  animation: reveal 160ms ease-out;
 }
 
 .modal {
@@ -23,7 +22,6 @@
   color: var(--t-ink-base);
   box-shadow: 0 24px 100px rgb(25 23 43 / 20%);
   outline: none;
-  animation: reveal 180ms ease-out;
 }
 
 .header {
@@ -81,7 +79,7 @@
   width: 28px;
   height: 3px;
   border-radius: 4px;
-  background: var(--t-accent-primary);
+  background: var(--t-action-primary);
 }
 .progress > span[data-active="false"] {
   background: var(--t-border-line);
@@ -268,7 +266,7 @@
 }
 .featureError {
   margin: 10px 0 0;
-  color: var(--t-edge-danger);
+  color: var(--t-accent-danger);
   font-size: var(--type-body-small-size);
   line-height: 1.5;
 }
@@ -323,7 +321,7 @@
   padding: 12px;
   border-radius: 10px;
   background: var(--t-bg-void);
-  color: var(--t-edge-danger);
+  color: var(--t-accent-danger);
   font-size: var(--type-body-small-size);
   line-height: 1.5;
 }
@@ -354,11 +352,11 @@
   line-height: 1.5;
 }
 .primary {
-  background: var(--t-accent-primary);
+  background: var(--t-action-primary);
   color: white;
 }
 .primary:hover {
-  background: var(--t-accent-primary-hover);
+  background: var(--t-action-primary-hover);
 }
 .secondary {
   padding-inline: 0;
@@ -396,14 +394,6 @@
   border-radius: 50%;
   background: var(--t-bg-selected);
   color: var(--t-accent-primary);
-}
-@keyframes reveal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 @media (max-width: 480px) {
   .modal {

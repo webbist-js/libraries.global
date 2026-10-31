@@ -67,6 +67,7 @@ export function LibraryDriveNote({
 
   const [drive, setDrive] = useState<ForLibraryDrive | null>(null)
   const [open, setOpen] = useState(false)
+  const [completed, setCompleted] = useState(false)
   const [hidden, setHidden] = useState(false)
   const [quota, setQuota] = useState<PendingQuota | null>(null)
   const [announcement, setAnnouncement] = useState("")
@@ -140,7 +141,7 @@ export function LibraryDriveNote({
               type="button"
               onClick={() => setOpen(true)}
               className="min-h-12 rounded-full px-5 text-sm font-semibold text-white"
-              style={{ background: T.accent.primary }}
+              style={{ background: T.action.primary }}
             >
               {actionName}
             </button>
@@ -182,7 +183,7 @@ export function LibraryDriveNote({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             {actionName}
@@ -194,35 +195,37 @@ export function LibraryDriveNote({
         {announcement}
       </div>
 
-      {open ? (
-        <Drawer
-          icon={{ name: chip.icon, bg: chip.tint.bg, fg: chip.tint.fg }}
-          onClose={() => setOpen(false)}
-          subtitle={plainDriveTitle(drive.title)}
-          title={verb}
-          titleId="library-drive-task-title"
-        >
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
-            <DriveTaskPanel
-              claimed={claimedLibraryIds.includes(library.documentId)}
-              drive={{
-                documentId: drive.documentId,
-                slug: drive.slug,
-                focus: drive.focus,
-              }}
-              onSent={() => {
-                setAnnouncement("Sent for review")
-                setOpen(false)
-                setHidden(true)
-              }}
-              onSkip={() => setOpen(false)}
-              quota={quota}
-              signedIn={signedIn}
-              task={task}
-            />
-          </div>
-        </Drawer>
-      ) : null}
+      <Drawer
+        open={open}
+        onAfterClose={() => {
+          if (completed) setHidden(true)
+        }}
+        icon={{ name: chip.icon, bg: chip.tint.bg, fg: chip.tint.fg }}
+        onClose={() => setOpen(false)}
+        subtitle={plainDriveTitle(drive.title)}
+        title={verb}
+        titleId="library-drive-task-title"
+      >
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">
+          <DriveTaskPanel
+            claimed={claimedLibraryIds.includes(library.documentId)}
+            drive={{
+              documentId: drive.documentId,
+              slug: drive.slug,
+              focus: drive.focus,
+            }}
+            onSent={() => {
+              setAnnouncement("Sent for review")
+              setOpen(false)
+              setCompleted(true)
+            }}
+            onSkip={() => setOpen(false)}
+            quota={quota}
+            signedIn={signedIn}
+            task={task}
+          />
+        </div>
+      </Drawer>
     </>
   )
 }

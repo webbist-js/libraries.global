@@ -2,14 +2,28 @@
 
 import { Icon } from "@iconify/react"
 import { useLocale, useTranslations } from "next-intl"
-import { useEffect, useRef, useState, useTransition } from "react"
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+  type RefObject,
+} from "react"
 
 import { Badge } from "@/components/ds/Badge"
 import { Notice } from "@/components/ds/Notice"
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { TeamApiKeyDialog } from "@/components/staff/TeamApiKeyDialog"
+import { TeamPurchaseProgress } from "@/components/staff/TeamPurchaseJourney"
 import { Button } from "@/components/ui/button"
+import { captureCheckoutAttempt } from "@/lib/checkout-analytics"
+import { Link } from "@/lib/navigation"
 import type { ApiDashboard } from "@/lib/team-api/types"
+import {
+  rememberTeamApiChoice,
+  teamApiChoiceSelected,
+} from "@/lib/team-purchase-intent"
 
 import {
   ApiSubscriptionPanel,
@@ -312,13 +326,138 @@ function KeyChangeConfirmation({
   )
 }
 
+function ApiDashboardHeader({
+  data,
+  subscription,
+  pending,
+  onRefresh,
+}: {
+  data: Pick<ApiDashboard, "active" | "teamName">
+  subscription: ReactNode
+  pending: boolean
+  onRefresh: () => void
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      {data.active ? (
+        <div className="min-w-0 flex-1">{subscription}</div>
+      ) : (
+        <p className="m-0 text-base text-(--t-ink-dim)">
+          API access for {data.teamName}
+        </p>
+      )}
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          variant="surface"
+          size="pill"
+          disabled={pending}
+          aria-busy={pending}
+          className="px-4 py-2"
+          onClick={onRefresh}
+        >
+          <Icon icon="mdi:refresh" aria-hidden="true" width={17} height={17} />
+          Refresh usage
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ApiKeySecret({
+  secret,
+  copied,
+  fieldRef,
+  onCopied,
+  onCopyError,
+  onDismiss,
+}: {
+  secret: string
+  copied: boolean
+  fieldRef: RefObject<HTMLDivElement | null>
+  onCopied: () => void
+  onCopyError: () => void
+  onDismiss: () => void
+}) {
+  const t = useTranslations("teamApiKeys")
+
+  return (
+    <div
+      ref={fieldRef}
+      tabIndex={-1}
+      className="mb-5 rounded-2xl border border-(--t-accent-primary)/25 bg-(--t-action-primary)/5 p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) sm:p-5"
+      role="status"
+    >
+      <p className="mt-0 mb-3 text-base font-semibold">{t("copyNow")}</p>
+      <code
+        translate="no"
+        className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-sm break-all select-all"
+      >
+        {secret}
+      </code>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button
+          type="button"
+          variant="primary"
+          size="pill"
+          onClick={() =>
+            navigator.clipboard
+              .writeText(secret)
+              .then(() => onCopied())
+              .catch(() => onCopyError())
+          }
+        >
+          <Icon
+            aria-hidden="true"
+            icon={copied ? "mdi:check" : "mdi:content-copy"}
+          />
+          {t(copied ? "copied" : "copyKey")}
+        </Button>
+        <Button
+          type="button"
+          variant="surface"
+          size="pill"
+          onClick={() => onDismiss()}
+        >
+          {t("saved")}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function apiDashboardVisibility(
+  data: ApiDashboard,
+  section: string,
+  guided: boolean,
+  setupRequested: boolean
+) {
+  return {
+    progress: guided && data.organiser && ["all", "overview"].includes(section),
+    stage: data.active
+      ? ("complete" as const)
+      : data.teamActive
+        ? ("api" as const)
+        : ("team" as const),
+    summary: hasApiUsage(data) && section === "overview",
+    usage: hasApiUsage(data) && ["all", "usage"].includes(section),
+    keys: hasApiKeys(data) && ["all", "keys"].includes(section),
+    setup: setupRequested && data.organiser,
+  }
+}
+
 export function TeamApiDashboard({
   initial,
   confirming,
+  setupRequested = false,
+  section = "all",
 }: {
+  readonly section?: "all" | "overview" | "keys" | "usage"
+  readonly setupRequested?: boolean
   readonly initial: ApiDashboard
   readonly confirming: boolean
 }) {
+  const [guided, setGuided] = useState(setupRequested)
   const [data, setData] = useState(initial)
   const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState("")
@@ -331,6 +470,13 @@ export function TeamApiDashboard({
   const [pending, startTransition] = useTransition()
   const locale = useLocale()
   const endpoint = `/api/staff/team/${data.teamId}/api`
+
+  useEffect(() => {
+    if (!data.organiser) return
+    const selected = setupRequested || teamApiChoiceSelected(data.teamId)
+    if (selected) setGuided(true)
+    if (data.active) rememberTeamApiChoice(data.teamId, false)
+  }, [data.teamId, data.organiser, data.active, setupRequested])
 
   useEffect(() => {
     if ((!confirming && !data.pendingPayment) || data.active) return
@@ -360,6 +506,8 @@ export function TeamApiDashboard({
   }
   const request = (body: unknown) =>
     startTransition(async () => {
+      const fields = { product: "team_api", billing_interval: "month" } as const
+      const { handoff, failed } = captureCheckoutAttempt(body, fields)
       setError("")
       try {
         const response = await fetch(endpoint, {
@@ -378,6 +526,7 @@ export function TeamApiDashboard({
               "API access is temporarily unavailable. Try again shortly."
           )
         if (result.url) {
+          handoff()
           window.location.assign(result.url)
 
           return
@@ -390,6 +539,7 @@ export function TeamApiDashboard({
         setConfirmation(null)
         await refresh()
       } catch (failure) {
+        failed()
         setError(
           failure instanceof Error
             ? failure.message
@@ -399,8 +549,12 @@ export function TeamApiDashboard({
     })
 
   const activeKeys = activeApiKeyCount(data, now)
-  const showUsage = hasApiUsage(data)
-  const showKeys = hasApiKeys(data)
+  const visibility = apiDashboardVisibility(
+    data,
+    section,
+    guided,
+    setupRequested
+  )
   const subscription = (
     <ApiSubscriptionPanel
       data={data}
@@ -410,48 +564,31 @@ export function TeamApiDashboard({
       clearError={() => setError("")}
       request={request}
       confirming={confirming}
+      setupRequested={visibility.setup}
     />
   )
 
+  const handleRefresh = () =>
+    startTransition(async () => {
+      try {
+        await refresh()
+        setError("")
+      } catch {
+        setError("Could not refresh API usage. Try again shortly.")
+      }
+    })
+
   return (
     <div className="min-w-0 space-y-6 text-(--t-ink-base)">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        {data.active ? (
-          <div className="min-w-0 flex-1">{subscription}</div>
-        ) : (
-          <p className="m-0 text-base text-(--t-ink-dim)">
-            API access for {data.teamName}
-          </p>
-        )}
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="surface"
-            size="pill"
-            disabled={pending}
-            aria-busy={pending}
-            className="px-4 py-2"
-            onClick={() =>
-              startTransition(async () => {
-                try {
-                  await refresh()
-                  setError("")
-                } catch {
-                  setError("Could not refresh API usage. Try again shortly.")
-                }
-              })
-            }
-          >
-            <Icon
-              icon="mdi:refresh"
-              aria-hidden="true"
-              width={17}
-              height={17}
-            />
-            Refresh usage
-          </Button>
-        </div>
-      </div>
+      {visibility.progress ? (
+        <TeamPurchaseProgress stage={visibility.stage} />
+      ) : null}
+      <ApiDashboardHeader
+        data={data}
+        subscription={subscription}
+        pending={pending}
+        onRefresh={handleRefresh}
+      />
       {error ? (
         <Notice
           tone="warn"
@@ -462,8 +599,28 @@ export function TeamApiDashboard({
         </Notice>
       ) : null}
       {!data.active ? subscription : null}
-      {showUsage ? <ApiUsagePanel data={data} locale={locale} /> : null}
-      {showKeys ? (
+      {visibility.summary ? (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-(--t-ink-dim) tabular-nums">
+          <span>
+            This month:{" "}
+            {new Intl.NumberFormat(locale).format(data.usage.requests)} of{" "}
+            {new Intl.NumberFormat(locale).format(data.limits.requests)}{" "}
+            successful requests
+          </span>
+          <span>
+            {formatApiBytes(data.usage.bytes, locale)} of{" "}
+            {formatApiBytes(data.limits.bytes, locale)} response data
+          </span>
+          <Link
+            href="/developers/usage"
+            className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
+          >
+            View usage and reset date
+          </Link>
+        </div>
+      ) : null}
+      {visibility.usage ? <ApiUsagePanel data={data} locale={locale} /> : null}
+      {visibility.keys ? (
         <StaffPanel
           title={t("title")}
           id="api-keys"
@@ -502,51 +659,16 @@ export function TeamApiDashboard({
             {t("intro")}
           </p>
           {secret ? (
-            <div
-              ref={secretRef}
-              tabIndex={-1}
-              className="mb-5 rounded-2xl border border-(--t-accent-primary)/25 bg-(--t-accent-primary)/5 p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) sm:p-5"
-              role="status"
-            >
-              <p className="mt-0 mb-3 text-base font-semibold">
-                {t("copyNow")}
-              </p>
-              <code
-                translate="no"
-                className="block rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 font-mono text-sm break-all select-all"
-              >
-                {secret}
-              </code>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="pill"
-                  onClick={() =>
-                    navigator.clipboard
-                      .writeText(secret)
-                      .then(() => setCopied(true))
-                      .catch(() =>
-                        setError("Select the key above and copy it manually.")
-                      )
-                  }
-                >
-                  <Icon
-                    aria-hidden="true"
-                    icon={copied ? "mdi:check" : "mdi:content-copy"}
-                  />
-                  {t(copied ? "copied" : "copyKey")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="surface"
-                  size="pill"
-                  onClick={() => setSecret(null)}
-                >
-                  {t("saved")}
-                </Button>
-              </div>
-            </div>
+            <ApiKeySecret
+              secret={secret}
+              copied={copied}
+              fieldRef={secretRef}
+              onCopied={() => setCopied(true)}
+              onCopyError={() =>
+                setError("Select the key above and copy it manually.")
+              }
+              onDismiss={() => setSecret(null)}
+            />
           ) : null}
           <TeamKeyList
             data={data}
@@ -578,7 +700,7 @@ export function TeamApiDashboard({
           />
         </StaffPanel>
       ) : null}
-      <ApiGuidePanel />
+      {section === "all" ? <ApiGuidePanel /> : null}
     </div>
   )
 }

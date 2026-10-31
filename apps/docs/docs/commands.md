@@ -66,3 +66,16 @@ Use the current [browser acceptance guide](https://github.com/webbist-js/librari
 ## Content and release work
 
 [CMS content operations](https://github.com/webbist-js/libraries.global/blob/dev/apps/strapi/CONTENT-OPERATIONS.md) defines production/local content targets. [Release helpers](https://github.com/webbist-js/libraries.global/blob/dev/scripts/release/README.md) defines image and acceptance checks. Credentials, host access and results stay in private operator storage.
+
+## Storybook pattern library
+
+```bash
+pnpm dev:storybook              # Standalone component library, port 6006
+pnpm build:storybook            # Static output: apps/storybook/dist
+pnpm test:storybook             # Chromium render, interaction and accessibility checks
+pnpm storybook:inventory        # Regenerate the per-file UI inventory
+pnpm storybook:inventory:check  # Check inventory freshness
+```
+
+See [Storybook](./storybook.md) for installation, authoring and deployment notes,
+and [the pattern-library audit](./pattern-library-audit.md) for consolidation decisions.

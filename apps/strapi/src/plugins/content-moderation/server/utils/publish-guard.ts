@@ -179,6 +179,8 @@ const DEFAULT_FIELDS: Record<string, readonly string[]> = {
     "authorTitle",
     "authorBio",
     "publicationOrigin",
+    "entriesAdded",
+    "sources",
     "geographyFacet",
     "readingTimeMinutes",
   ],

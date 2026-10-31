@@ -255,7 +255,10 @@ export function ModerationQueue({
         <p
           role="alert"
           className="m-0 rounded-[14px] px-4 py-3 text-base"
-          style={{ background: "#F6E3DA", color: T.accent.danger }}
+          style={{
+            background: "var(--t-palette-coral-bg)",
+            color: T.accent.danger,
+          }}
         >
           {error}
         </p>
@@ -284,7 +287,7 @@ export function ModerationQueue({
                     drive: "",
                     page: 1,
                   })}
-                  className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
                   {tUi("clear_filters")}{" "}

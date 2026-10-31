@@ -70,7 +70,7 @@ export function DiscussionModeratorToolbar({
             type="button"
             className={cn(
               pill,
-              "border-transparent bg-white text-[#19172c] hover:bg-white/90"
+              "border-transparent bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface)"
             )}
             onClick={onPreview}
           >

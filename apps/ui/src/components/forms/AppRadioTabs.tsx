@@ -63,14 +63,14 @@ export function AppRadioTabs({
 
                 <TabsList
                   {...tabListProps}
-                  className={cn("bg-primary", tabListProps?.className)}
+                  className={cn("bg-muted", tabListProps?.className)}
                 >
                   {tabTriggers.map((tabTrigger) => (
                     <TabsTrigger
                       key={tabTrigger.value}
                       value={tabTrigger.value}
                       tabIndex={tabTrigger.tabIndex}
-                      className="text-sm text-(--t-ink-dim)"
+                      className="text-sm"
                     >
                       {tabTrigger.title}
                     </TabsTrigger>

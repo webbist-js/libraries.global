@@ -34,7 +34,7 @@ export function PlaceSearchForm({
         Search libraries in {name}
       </label>
       <div
-        className="flex min-h-12 min-w-40 flex-1 items-center gap-2 rounded-full border bg-white px-4"
+        className="flex min-h-12 min-w-40 flex-1 items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4"
         style={{ borderColor: T.border.hi }}
       >
         <Icon
@@ -54,7 +54,7 @@ export function PlaceSearchForm({
       <button
         type="submit"
         className="min-h-12 rounded-full px-5 text-sm font-semibold text-white"
-        style={{ background: T.accent.primary }}
+        style={{ background: T.action.primary }}
       >
         Search libraries
       </button>

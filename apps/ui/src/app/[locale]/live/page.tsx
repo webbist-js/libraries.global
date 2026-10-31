@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
+import { AppearanceControl } from "@/components/appearance/AppearanceControl"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -79,16 +80,19 @@ export default async function LiveEntry({
 
   return (
     <>
-      <header className="mb-6">
-        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          Staff area · Your libraries
-        </p>
-        <h1 className="type-h1 my-3">
-          {greetingFor(hour)}, {session.user.name.split(" ")[0]}.
-        </h1>
-        <p className="m-0" style={{ color: T.ink.dim }}>
-          Choose the vehicle you’re running today.
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
+            Staff area · Your libraries
+          </p>
+          <h1 className="type-h1 my-3">
+            {greetingFor(hour)}, {session.user.name.split(" ")[0]}.
+          </h1>
+          <p className="m-0" style={{ color: T.ink.dim }}>
+            Choose the vehicle you’re running today.
+          </p>
+        </div>
+        <AppearanceControl />
       </header>
       {!rows.length ? (
         <section>

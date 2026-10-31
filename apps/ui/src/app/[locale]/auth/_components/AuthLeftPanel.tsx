@@ -305,7 +305,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
                 borderRadius: "999px",
                 fontSize: "var(--type-body-size)",
                 fontWeight: 600,
-                ...(active && { background: T.accent.primary, color: "#fff" }),
+                ...(active && { background: T.action.primary, color: "#fff" }),
                 ...(done && {
                   background: "var(--tint-public-bg)",
                   color: T.accent.ok,

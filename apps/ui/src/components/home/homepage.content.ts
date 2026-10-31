@@ -12,78 +12,104 @@ import type {
  * without having to fill the whole component.
  */
 type HomepageDefaults = {
+  libraryBand: CtaBand
+  libraryTools: LinkCard[]
+  trustItems: LinkCard[]
   heroEyebrow: string
   heroTitle: string
   heroText: string
-  journeysIntro: SectionIntro
-  journeys: Journey[]
   featuredIntro: SectionIntro
   communityBand: CtaBand
   communitySteps: Step[]
   tasksIntro: SectionIntro
   atlasBand: CtaBand
   plansIntro: SectionIntro
-  coverageIntro: SectionIntro
-  eventsIntro: SectionIntro
   journalIntro: SectionIntro
-  knowledgeBand: CtaBand
   knowledgeLinks: LinkCard[]
   finalCta: CtaBand
-  finalBenefits: Step[]
-  openIntro: SectionIntro
   openLinks: LinkCard[]
 }
 
 export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
+  libraryBand: {
+    title: "Work at a library? This record is yours.",
+    text: "Claim your library and keep its details right at the source: hours, services, accessibility, events and mobile stops. Publish once, wherever the record appears.",
+    primaryLabel: "Claim your library",
+    primaryHref: "/staff/claim",
+    secondaryLabel: "Explore Teams",
+    secondaryHref: "/plans#plan-team",
+  },
+  libraryTools: [
+    {
+      title: "Maintain hours, services and accessibility",
+      text: "Free",
+      href: "/staff",
+    },
+    {
+      title: "Publish notices and connect your events feed",
+      text: "Free",
+      href: "/staff",
+    },
+    {
+      title: "Manage mobile library routes and stops",
+      text: "Free",
+      href: "/staff",
+    },
+    {
+      title: "A Team workspace for your service or network",
+      text: "Team",
+      href: "/staff/teams",
+    },
+    {
+      title: "Embeddable library finders and comparison tools",
+      text: "Team",
+      href: "/staff/teams/widgets",
+    },
+    {
+      title: "Connect your application to the library API",
+      text: "API add-on",
+      href: "/knowledge/data-api/reusing-the-data",
+    },
+  ],
+  trustItems: [
+    {
+      title: "Sources",
+      text: "Library websites, open datasets and local knowledge. Records retain their sources so you can follow the evidence.",
+      href: "/knowledge/data-api/reusing-the-data",
+    },
+    {
+      title: "Review",
+      text: "Community suggestions are checked before publication. Verified staff can maintain their own library records, with a recorded history.",
+      href: "/knowledge/governance/how-review-works",
+    },
+    {
+      title: "Gaps",
+      text: "Coverage is uneven. A missing record means a gap in the index, rather than a place without a library.",
+      href: "/knowledge/data-api/how-we-count",
+    },
+    {
+      title: "Reuse",
+      text: "Explore the source code, check each dataset’s licence and attribution, or bring published records into your own tools.",
+      href: "/knowledge/data-api/reusing-the-data",
+    },
+  ],
   heroEyebrow: "Open data · Open source · Free to use",
   heroTitle: "Every library, *one map.*",
   heroText:
-    "An open record of the world’s libraries: find one near you, see how places are served, and help document the rest.",
-
-  journeysIntro: {
-    title: "Find them. Learn about them. *Help document them.*",
-    text: null,
-  },
-
-  journeys: [
-    {
-      tone: "explore",
-      eyebrow: "For visitors",
-      title: "Find a library",
-      text: "Search by name or place, check hours and access, and plan a visit.",
-      ctaLabel: "Browse the index",
-      ctaHref: "/libraries",
-    },
-    {
-      tone: "contribute",
-      eyebrow: "For anyone who knows a library",
-      title: "Help build the index",
-      text: "Add missing libraries, fix details and share photos. Reviewers check every change.",
-      ctaLabel: "Start contributing",
-      ctaHref: "/contribute",
-    },
-    {
-      tone: "analyse",
-      eyebrow: "For researchers and planners",
-      title: "Analyse access",
-      text: "Map library locations, opening hours and accessibility features. Compare libraries with resident populations using Library access on Pro or Team.",
-      ctaLabel: "Open the atlas",
-      ctaHref: "/map",
-    },
-  ],
+    "Find a library near you, see when it opens and what it offers, and help finish the record. Free to browse, no account needed.",
 
   atlasBand: {
     title: "See how places *are served.*",
-    text: "Every library on one map. Filter by type, opening hours or services, then switch on layers for accessibility, events and record completeness.",
+    text: "Explore libraries on a global map and compare library coverage with population. In the UK, choose a walking or cycling time to see how many people live within reach of a library or service.",
     primaryLabel: "Open the atlas",
     primaryHref: "/map",
-    secondaryLabel: "What Pro adds",
-    secondaryHref: "/plans",
+    secondaryLabel: "How to read the Atlas",
+    secondaryHref: "/knowledge/getting-started/exploring-the-atlas",
   },
 
   communityBand: {
     title: "Two minutes can *finish a record.*",
-    text: "You don’t need to be a librarian. Pick a gap, add what you know with a source, and a reviewer checks it. Every accepted change is credited to you.",
+    text: "You don’t need to be a librarian. Share what you know and get credit for every accepted change.",
     primaryLabel: "Start contributing",
     primaryHref: "/contribute",
     secondaryLabel: "Add a missing library",
@@ -102,57 +128,54 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
   },
 
   featuredIntro: {
-    title: "Libraries *worth knowing*",
-    text: null,
-  },
-
-  coverageIntro: {
-    title: "Where we are *so far.*",
-    text: "There’s no complete open record of the world’s libraries. We’re building one, country by country. Counts are published records only.",
+    title: "Libraries worth knowing",
+    text: "Pillar institutions, chosen for their national, historical or cultural importance.",
   },
 
   plansIntro: {
-    title: "Library facts are *always free.*",
+    title: "Library facts are always free.",
     text: "Plans pay for analysis and extra data and keep the index independent. No ads, and money never buys a place in the index.",
   },
 
-  eventsIntro: {
-    title: "What’s on at libraries",
-    text: "Talks, exhibitions, storytimes and workshops, collected from library calendars and booking sites.",
-  },
-
   journalIntro: {
-    title: "From the *journal*",
+    title: "From the journal",
     text: null,
-  },
-
-  knowledgeBand: {
-    title: "How it all works, *in plain words.*",
-    text: null,
-    primaryLabel: "Knowledge hub",
-    primaryHref: "/knowledge",
-    secondaryLabel: null,
-    secondaryHref: null,
   },
 
   knowledgeLinks: [
     {
-      title: "Finding a library",
+      title: "Getting started: finding and following libraries",
       text: "Browse by place, search and filter the index, or explore the map.",
       href: "/knowledge/getting-started/finding-a-library",
     },
     {
-      title: "How review works",
+      title: "Reading a library page",
+      href: "/knowledge/getting-started/reading-a-library-page",
+    },
+    {
+      title: "Adding a missing library",
+      href: "/knowledge/contributing/adding-a-missing-library",
+    },
+    {
+      title: "Contributing and how review works",
       text: "Who checks contributions, and what happens to yours.",
       href: "/knowledge/governance/how-review-works",
     },
     {
-      title: "Claiming a library you work for",
+      title: "Managing your library’s record",
       text: "How staff and volunteers become verified stewards of a record.",
       href: "/knowledge/contributing/claiming-your-library",
     },
     {
-      title: "Reusing the data",
+      title: "Using the Atlas and reading its layers",
+      href: "/knowledge/getting-started/exploring-the-atlas",
+    },
+    {
+      title: "How we count libraries and coverage",
+      href: "/knowledge/data-api/how-we-count",
+    },
+    {
+      title: "Reusing the data: licences and API",
       text: "The licence on records and photos, and what it asks of you.",
       href: "/knowledge/data-api/reusing-the-data",
     },
@@ -162,27 +185,11 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
   // call to action under the first and the secondary under the second.
   finalCta: {
     title: "Know a library? *Put it on the map.*",
-    text: null,
-    primaryLabel: "Create a free account",
-    primaryHref: "/auth/register",
-    secondaryLabel: "Make your first contribution",
-    secondaryHref: "/contribute",
-  },
-
-  finalBenefits: [
-    {
-      title: "Join the index",
-      text: "A free account takes a minute. Follow the libraries you care about and get credit for every accepted change.",
-    },
-    {
-      title: "Add what you know",
-      text: "Fill a gap in a record or add a missing library. A reviewer checks it first, and regular contributors get Pro free.",
-    },
-  ],
-
-  openIntro: {
-    title: "Open by design",
-    text: null,
+    text: "An open record, built together. Browsing and searching are free. Membership supports the servers, review tools and analysis that keep the record independent.",
+    primaryLabel: "Contribute",
+    primaryHref: "/contribute",
+    secondaryLabel: "Support the project",
+    secondaryHref: "/community/supporters",
   },
 
   openLinks: [
@@ -205,24 +212,12 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
 }
 
 /**
- * The homepage closing band's first step for a signed-in member, in place of
- * the join step and its sign-up button.
- */
-export const CLOSING_MEMBER_STEP: Step & { ctaLabel: string; ctaHref: string } =
-  {
-    title: "You’ve joined the index",
-    text: "Follow the libraries you care about, and get credit for every change of yours that’s accepted.",
-    ctaLabel: "Find libraries to follow",
-    ctaHref: "/libraries",
-  }
-
-/**
  * The contribute prompt above the Find libraries list: the homepage's
  * closing ask, with what an account gets you in place of its two steps.
  */
 export const FIND_CONTRIBUTE_PROMPT: { band: CtaBand; benefits: Step[] } = {
   band: {
-    title: "Know a library? *Put it on the map.*",
+    title: "Know a library? Put it on the map.",
     text: "A free account takes a minute. You get credit for every accepted change, and regular contributors get Pro free.",
     primaryLabel: "Create a free account",
     primaryHref: "/auth/register",
@@ -273,10 +268,13 @@ export function listOrFallback<T>(
 }
 
 type HomepageCms = {
+  contentTitle?: string | null
+  contentText?: string | null
+  contentCtaLabel?: string | null
+  contentCtaHref?: string | null
   heroEyebrow?: string | null
   heroTitle?: string | null
   heroText?: string | null
-  journeysIntro?: SectionIntro | null
   journeys?: Journey[] | null
   featuredIntro?: SectionIntro | null
   communityBand?: CtaBand | null
@@ -284,14 +282,9 @@ type HomepageCms = {
   tasksIntro?: SectionIntro | null
   atlasBand?: CtaBand | null
   plansIntro?: SectionIntro | null
-  coverageIntro?: SectionIntro | null
-  eventsIntro?: SectionIntro | null
   journalIntro?: SectionIntro | null
-  knowledgeBand?: CtaBand | null
   knowledgeLinks?: LinkCard[] | null
   finalCta?: CtaBand | null
-  finalBenefits?: Step[] | null
-  openIntro?: SectionIntro | null
   openLinks?: LinkCard[] | null
 }
 
@@ -308,25 +301,39 @@ export function resolveHomepageContent(
   const d = HOMEPAGE_DEFAULTS
 
   return {
+    // The existing CMS content CTA, steward journeys and open links own these sections.
+    libraryBand: withFallback(
+      {
+        title: cms?.contentTitle,
+        text: cms?.contentText,
+        primaryLabel: cms?.contentCtaLabel,
+        primaryHref: cms?.contentCtaHref,
+      },
+      d.libraryBand
+    ),
+    libraryTools: listOrFallback(
+      cms?.journeys
+        ?.filter((journey) => journey.tone === "steward")
+        .map((journey) => ({
+          title: journey.title,
+          text: journey.text,
+          href: journey.ctaHref,
+        })),
+      d.libraryTools
+    ),
+    trustItems: listOrFallback(cms?.openLinks, d.trustItems),
     heroEyebrow: cms?.heroEyebrow || d.heroEyebrow,
     heroTitle: cms?.heroTitle || d.heroTitle,
     heroText: cms?.heroText || d.heroText,
-    journeysIntro: withFallback(cms?.journeysIntro, d.journeysIntro),
-    journeys: listOrFallback(cms?.journeys, d.journeys),
     featuredIntro: withFallback(cms?.featuredIntro, d.featuredIntro),
     communityBand: withFallback(cms?.communityBand, d.communityBand),
     communitySteps: listOrFallback(cms?.communitySteps, d.communitySteps),
     tasksIntro: withFallback(cms?.tasksIntro, d.tasksIntro),
     atlasBand: withFallback(cms?.atlasBand, d.atlasBand),
     plansIntro: withFallback(cms?.plansIntro, d.plansIntro),
-    coverageIntro: withFallback(cms?.coverageIntro, d.coverageIntro),
-    eventsIntro: withFallback(cms?.eventsIntro, d.eventsIntro),
     journalIntro: withFallback(cms?.journalIntro, d.journalIntro),
-    knowledgeBand: withFallback(cms?.knowledgeBand, d.knowledgeBand),
     knowledgeLinks: listOrFallback(cms?.knowledgeLinks, d.knowledgeLinks),
     finalCta: withFallback(cms?.finalCta, d.finalCta),
-    finalBenefits: listOrFallback(cms?.finalBenefits, d.finalBenefits),
-    openIntro: withFallback(cms?.openIntro, d.openIntro),
-    openLinks: listOrFallback(cms?.openLinks, d.openLinks),
+    openLinks: d.openLinks,
   }
 }

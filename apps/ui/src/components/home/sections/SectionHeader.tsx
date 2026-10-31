@@ -4,6 +4,7 @@ import Emphasis from "@/components/home/Emphasis"
 import {
   type DisplaySize,
   displayStyle,
+  plainHomepageTitle,
 } from "@/components/home/homepage.constants"
 import type { SectionIntro } from "@/components/home/homepage.types"
 import { T } from "@/lib/design-tokens"
@@ -16,7 +17,7 @@ export function SectionHeader({
   intro,
   action,
   id,
-  size = "section",
+  size,
   textBeside = false,
 }: {
   readonly intro: SectionIntro
@@ -48,9 +49,19 @@ export function SectionHeader({
         <h2
           id={id}
           className="m-0 text-balance"
-          style={{ ...displayStyle(size), color: T.ink.base }}
+          style={{
+            ...(size ? displayStyle(size) : { font: T.type.h2 }),
+            color: T.ink.base,
+          }}
         >
-          <Emphasis text={intro.title} emStyle={{ color: T.accent.primary }} />
+          {size ? (
+            <Emphasis
+              text={intro.title}
+              emStyle={{ color: T.accent.primary }}
+            />
+          ) : (
+            plainHomepageTitle(intro.title)
+          )}
         </h2>
         {textBeside ? null : text}
       </div>

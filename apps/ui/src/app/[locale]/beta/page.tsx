@@ -7,6 +7,7 @@ import {
   setRequestLocale,
 } from "next-intl/server"
 
+import { AppearanceControl } from "@/components/appearance/AppearanceControl"
 import styles from "@/components/beta/beta.module.css"
 import { BetaFooter } from "@/components/beta/BetaFooter"
 import { BetaForms } from "@/components/beta/BetaForms"
@@ -57,7 +58,10 @@ export default async function BetaPage({
         >
           {tUi("libraries")} <em>Global</em>
         </a>
-        <span className={styles.badge}>{t("badge")}</span>
+        <div className="flex items-center gap-3">
+          <span className={styles.badge}>{t("badge")}</span>
+          <AppearanceControl />
+        </div>
       </header>
       <MainContent className={styles.main}>
         <section className={styles.introduction}>

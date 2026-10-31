@@ -46,6 +46,8 @@ export function ContactModalProvider({
   readonly aliases?: readonly string[]
 }) {
   const [request, setRequest] = useState<ModalRequest | null>(null)
+  const [opened, setOpened] = useState(false)
+  const requestId = useRef(0)
   const pathname = usePathname()
   const pageStarted = useRef(Date.now())
   useEffect(() => {
@@ -58,13 +60,14 @@ export function ContactModalProvider({
         ? document.activeElement
         : null
     ) => {
+      setOpened(true)
       setRequest({
         intent,
         context: captureContactContext(
           (Date.now() - pageStarted.current) / 1000
         ),
         trigger,
-        id: Date.now(),
+        id: ++requestId.current,
       })
     },
     []
@@ -128,7 +131,13 @@ export function ContactModalProvider({
           intent={request.intent}
           context={request.context}
           trigger={request.trigger}
-          onClose={() => setRequest(null)}
+          open={opened}
+          onClose={() => setOpened(false)}
+          onAfterClose={() =>
+            setRequest((current) =>
+              current?.id === request.id ? null : current
+            )
+          }
         />
       ) : null}
     </ContactModalContext.Provider>

@@ -19,7 +19,7 @@ export function StaffBackLink({
     <p className="m-0 mb-5">
       <Link
         href={href}
-        className="inline-flex min-h-11 items-center gap-1 rounded-full border bg-white pr-4 pl-3 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+        className="inline-flex min-h-11 items-center gap-1 rounded-full border bg-(--t-bg-deep) pr-4 pl-3 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
         style={{ borderColor: T.border.hi, color: T.ink.base }}
       >
         <Icon

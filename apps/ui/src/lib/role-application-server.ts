@@ -15,18 +15,27 @@ export async function fetchMySubmissions(user: {
   email: string
   name?: string | null
 }): Promise<MySubmissionRow[]> {
-  if (!process.env.STRAPI_BRIDGE_SECRET) return []
+  return (await fetchMySubmissionsResult(user)) ?? []
+}
+
+/** Preserve unavailable state for workspaces that must not suggest starting again. */
+export async function fetchMySubmissionsResult(user: {
+  id: string
+  email: string
+  name?: string | null
+}): Promise<MySubmissionRow[] | null> {
+  if (!process.env.STRAPI_BRIDGE_SECRET) return null
   try {
     const res = await fetch(`${STRAPI}/api/content-moderation/submissions/my`, {
       cache: "no-store",
       headers: bridgeUserHeaders(user),
     })
-    if (!res.ok) return []
+    if (!res.ok) return null
     const json = (await res.json()) as { data?: unknown }
 
-    return Array.isArray(json.data) ? (json.data as MySubmissionRow[]) : []
+    return Array.isArray(json.data) ? (json.data as MySubmissionRow[]) : null
   } catch {
-    return []
+    return null
   }
 }
 

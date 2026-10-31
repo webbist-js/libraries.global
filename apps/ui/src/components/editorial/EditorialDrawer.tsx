@@ -54,7 +54,13 @@ function languagesOf(locales: "all" | ReadonlySet<string>): string {
  * and the board everything plus drives and option suggestions. UI only:
  * every route behind these links re-checks access.
  */
-export function EditorialDrawer() {
+export function EditorialDrawer({
+  open = true,
+  onAfterClose,
+}: {
+  readonly open?: boolean
+  readonly onAfterClose?: () => void
+}) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("workspaceDrawer")
   const review = useUiTranslations("moderationWorkspace")
@@ -101,6 +107,9 @@ export function EditorialDrawer() {
 
   return (
     <Drawer
+      open={open}
+      edgeAligned
+      onAfterClose={onAfterClose}
       size="md"
       titleId="editorial-drawer-title"
       title={tUi("editorial")}
@@ -128,7 +137,7 @@ export function EditorialDrawer() {
         <DrawerFooter
           href={
             moderates
-              ? "/contribute/moderation"
+              ? "/moderation"
               : docs
                 ? "/contribute/knowledge"
                 : journal
@@ -193,8 +202,8 @@ export function EditorialDrawer() {
                   key={id}
                   href={
                     id === "discussions"
-                      ? "/contribute/moderation?tab=discussions"
-                      : `/contribute/moderation?category=${id}`
+                      ? "/moderation?tab=discussions"
+                      : `/moderation?category=${id}`
                   }
                   icon={REVIEW_ICON[id]}
                   label={review(id)}
@@ -218,7 +227,7 @@ export function EditorialDrawer() {
             {allScopes ? (
               <div className="mt-2 border-t border-(--t-border-line) pt-2">
                 <DrawerAction
-                  href="/contribute/moderation/suggestions"
+                  href="/moderation/suggestions"
                   icon="mdi:lightbulb-on-outline"
                   label={review("optionSuggestions")}
                   onClick={closeEditorialDrawer}

@@ -93,7 +93,7 @@ export function ProfileProgress({
           className="h-full rounded-full transition-[width] duration-300"
           style={{
             width: `${pct}%`,
-            background: requiredLeft === 0 ? T.accent.ok : T.accent.primary,
+            background: requiredLeft === 0 ? T.accent.ok : T.action.primary,
           }}
         />
       </div>

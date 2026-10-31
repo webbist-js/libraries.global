@@ -79,7 +79,7 @@ export function ArticleReaderActions({
   return (
     <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-(--t-divider) py-3 text-xs">
       <span
-        className="rounded-full bg-(--t-ink-base) px-2.5 py-1.5 font-semibold text-white"
+        className="rounded-full bg-(--t-bg-inverse) px-2.5 py-1.5 font-semibold text-white"
         aria-current="true"
       >
         {languageName(contentLocale, [], interfaceLocale)}

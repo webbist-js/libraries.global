@@ -55,7 +55,7 @@ export function WidgetChartBar({
           <>
             <span
               style={{
-                background: "#8A8799",
+                background: "var(--t-ink-low)",
                 [axis]: `${(m.no / max) * 100}%`,
               }}
             />

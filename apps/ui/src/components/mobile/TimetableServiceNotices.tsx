@@ -14,7 +14,7 @@ import { Link, useRouter } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
 
 const OUTLINED =
-  "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-3 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** Published service notices are independent of the timetable draft. */
 export function TimetableServiceNotices({

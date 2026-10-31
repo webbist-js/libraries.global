@@ -2,7 +2,9 @@
 
 import { useEffect } from "react"
 
-import { useStaff } from "@/lib/access-client"
+import { DrawerPresence } from "@/components/ds/DrawerPresence"
+import { useHydratedSession, useStaff } from "@/lib/access-client"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { usePathname } from "@/lib/navigation"
 import {
   closeStaffDrawer,
@@ -49,10 +51,15 @@ const isTyping = (target: EventTarget | null) => {
  * drawer itself while open. Renders nothing for everyone else.
  */
 export function StaffDrawerMount() {
+  const session = useHydratedSession()
+  const certain = !session.isPending && !session.error
+  const scope = contributionAccountScope(
+    certain ? session.data?.user : undefined
+  )
   const { libraries, ready } = useStaff()
   const { open } = useStaffDrawer()
   const pathname = usePathname()
-  const staff = ready && libraries.length > 0
+  const staff = certain && ready && libraries.length > 0
 
   useEffect(() => {
     if (!staff) return
@@ -78,7 +85,7 @@ export function StaffDrawerMount() {
   // Leaving the page closes it, like any other overlay.
   useEffect(() => {
     closeStaffDrawer()
-  }, [pathname])
+  }, [pathname, scope])
 
   if (!staff) return null
   const hideTab =
@@ -87,8 +94,14 @@ export function StaffDrawerMount() {
 
   return (
     <>
-      {hideTab ? null : <StaffDrawerTab onOpen={() => openStaffDrawer()} />}
-      {open ? <StaffDrawer /> : null}
+      <span hidden={hideTab}>
+        <StaffDrawerTab onOpen={() => openStaffDrawer()} />
+      </span>
+      <DrawerPresence key={scope} open={open}>
+        {(onAfterClose) => (
+          <StaffDrawer open={open} onAfterClose={onAfterClose} />
+        )}
+      </DrawerPresence>
     </>
   )
 }

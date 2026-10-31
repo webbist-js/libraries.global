@@ -68,15 +68,15 @@ vi.mock("@/components/legal/LegalDocumentPage", () => ({
   default: LegalDocument,
 }))
 
-import { generateMetadata as regionMetadata } from "@/app/[locale]/[continent]/[country]/[region]/page"
-import { generateMetadata as countryMetadata } from "@/app/[locale]/[continent]/[country]/page"
-import { generateMetadata as continentMetadata } from "@/app/[locale]/[continent]/page"
+import { generateMetadata as regionMetadata } from "@/app/[locale]/(dashboard)/[continent]/[country]/[region]/page"
+import { generateMetadata as countryMetadata } from "@/app/[locale]/(dashboard)/[continent]/[country]/page"
+import { generateMetadata as continentMetadata } from "@/app/[locale]/(dashboard)/[continent]/page"
 import KnowledgeRoute, {
   generateMetadata as knowledgeMetadata,
-} from "@/app/[locale]/knowledge/[section]/[slug]/page"
+} from "@/app/[locale]/(dashboard)/knowledge/[section]/[slug]/page"
 import LegalRoute, {
   generateMetadata as legalMetadata,
-} from "@/app/[locale]/legal/[slug]/page"
+} from "@/app/[locale]/(dashboard)/legal/[slug]/page"
 
 const home = {
   documentId: "home",

@@ -174,7 +174,7 @@ export async function apiCheckout(
       }
       if (!attempt) throw new BillingError("api_checkout_unavailable")
       const prefix = attempt.locale === "en" ? "" : `/${attempt.locale}`
-      const back = `${config.origin}${prefix}/staff/teams/api`
+      const back = `${config.origin}${prefix}/developers`
       const params: ManagedCheckoutParams = {
         mode: "subscription",
         customer,
@@ -380,7 +380,7 @@ export async function apiPortal(
   const session = await stripe.billingPortal.sessions.create({
     customer: account.customer_id,
     configuration: config.portalId,
-    return_url: `${config.origin}${locale === "en" ? "" : `/${locale}`}/staff/teams/api`,
+    return_url: `${config.origin}${locale === "en" ? "" : `/${locale}`}/developers`,
   })
 
   return { url: providerUrl(session.url, ["billing.stripe.com"]) }

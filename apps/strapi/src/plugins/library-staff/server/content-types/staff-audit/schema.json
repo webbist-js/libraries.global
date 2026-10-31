@@ -42,7 +42,8 @@
         "stepup_locked",
         "notice_created",
         "notice_updated",
-        "notice_ended"
+        "notice_ended",
+        "notice_reactivated"
       ],
       "required": true
     },

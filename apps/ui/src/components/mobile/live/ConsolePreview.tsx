@@ -249,7 +249,7 @@ export function ConsolePreview({
             </span>
             <span
               className="h-6 w-24 rounded-full"
-              style={{ background: T.ink.base }}
+              style={{ background: T.bg.inverse }}
             />
             <span>82%</span>
           </div>
@@ -542,8 +542,8 @@ export function ConsolePreview({
                     style={
                       active
                         ? {
-                            background: T.ink.base,
-                            color: T.bg.deep,
+                            background: T.bg.inverse,
+                            color: T.ink.inverse,
                             borderColor: T.ink.base,
                           }
                         : {
@@ -581,8 +581,8 @@ export function ConsolePreview({
                     style={
                       active
                         ? {
-                            background: T.ink.base,
-                            color: T.bg.deep,
+                            background: T.bg.inverse,
+                            color: T.ink.inverse,
                             borderColor: T.ink.base,
                           }
                         : {

@@ -1,12 +1,15 @@
 // @vitest-environment happy-dom
 import { cleanup, render, screen, within } from "@testing-library/react"
-import type { AnchorHTMLAttributes } from "react"
+import type { AnchorHTMLAttributes, ReactNode } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
 const { translate } = vi.hoisted(() => ({ translate: (key: string) => key }))
 vi.mock("next-intl", () => ({ useTranslations: () => translate }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/components/global/GlobalHeader", () => ({ default: () => null }))
+vi.mock("@/components/dashboard/InformationPage", () => ({
+  InformationPage: ({ children }: { children: ReactNode }) => children,
+}))
 vi.mock("@/components/global/GlobalLink", () => ({
   default: (props: AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props} />,
 }))
@@ -19,11 +22,12 @@ vi.mock("@/components/ds/PageHero", () => ({
   ),
 }))
 vi.mock("@/components/page-builder/components/utilities/StrapiLink", () => ({
-  getStrapiLinkHref: () => null,
+  getStrapiLinkHref: (link?: { href?: string }) => link?.href ?? null,
 }))
 
 import { LegalIndexPage } from "@/components/legal/LegalIndexPage"
 
+import { buildFooterNavigation, type FooterData } from "../footer-navigation"
 import { GlobalFooter } from "../GlobalFooter"
 
 const documents = [
@@ -70,4 +74,33 @@ it("never adds a direct footer destination for an unpublished document", () => {
   )
   expect(screen.queryByRole("link", { name: "privacy" })).toBeNull()
   expect(screen.getByRole("link", { name: "legal_policies" })).toBeTruthy()
+})
+
+it("shares CMS section and supplemental links with the dashboard while retaining published legal rules", () => {
+  const navigation = buildFooterNavigation(
+    {
+      sections: [
+        {
+          id: 1,
+          title: "Explore",
+          links: [{ id: 2, href: "/pro", label: "Membership" }],
+        },
+      ],
+      links: [
+        { id: 3, href: "/about", label: "About" },
+        { id: 4, href: "/legal/unpublished", label: "Unpublished" },
+      ],
+    } as unknown as FooterData,
+    documents,
+    { legal: "Legal policies", plans: "Plans and pricing" }
+  )
+  expect(navigation.sections[0]?.links).toEqual([
+    { key: "2", href: "/pro", label: "Plans and pricing" },
+  ])
+  expect(navigation.links.map((link) => link.href)).toEqual([
+    "/legal",
+    "/legal/privacy",
+    "/legal/accessibility",
+    "/about",
+  ])
 })

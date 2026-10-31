@@ -8,7 +8,10 @@ import { useState } from "react"
 import { Avatar, Badge, Notice, SegmentedControl, Sheet } from "@/components/ds"
 import { SelectField } from "@/components/ds/SelectField"
 import { TeamNetworkConnection } from "@/components/networks/TeamNetworkConnection"
+import { LibraryAccessBadge } from "@/components/staff/LibraryAccessBadge"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
+import { TeamSeatUsage } from "@/components/staff/TeamSeatUsage"
+import { TeamStatusBadges } from "@/components/staff/TeamStatusBadges"
 import { Button } from "@/components/ui/button"
 import { useStaff } from "@/lib/access-client"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
@@ -56,9 +59,32 @@ const initialsOf = (m: TeamMemberRow) =>
 
 const Card = StaffPanel
 
+/** Library identity and role stay readable independently of the review badge. */
+function MemberLibraryAccess({
+  name,
+  role,
+  status,
+}: {
+  readonly name: string
+  readonly role: StaffRole
+  readonly status: string
+}) {
+  return (
+    <li className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+      <div className="min-w-0 flex-1 basis-48">
+        <strong className="block text-sm wrap-anywhere">{name}</strong>
+        <span className="text-sm text-(--t-ink-dim)">
+          {role === "owner" ? "Owner" : "Editor"}
+        </span>
+      </div>
+      <LibraryAccessBadge status={status} />
+    </li>
+  )
+}
+
 /**
  * The Team organiser's page body: seats, the libraries covered, the
- * members list with each person's libraries as chips, invites and removal.
+ * members list with each person's library access and review states, invites and removal.
  * An organiser changes a member's libraries and levels in one sheet,
  * "Libraries for {name}", saved as a single request. Members (not
  * organisers) get the same view read only.
@@ -216,11 +242,10 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         <Notice
           tone="warn"
           icon="mdi:clock-outline"
-          title="Waiting for Team verification"
+          title="Some library assignments need review"
         >
-          Assignments within approved service delegation scopes can be applied
-          immediately. Other assignments are filed as claims for a moderator to
-          check.{" "}
+          Assignments need moderator review unless they are covered by an
+          approved service delegation.{" "}
           <a href={TEAM_CONTACT_HREF} className={CONTACT_LINK}>
             Contact the site team
           </a>
@@ -233,9 +258,16 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             id="team-members"
             title="Members"
             aside={
-              <span className="text-sm text-(--t-ink-dim)">
-                {team.used} of {team.seats} seats
-              </span>
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-sm text-(--t-ink-dim)">
+                  {team.used} of {team.seats} seats
+                </span>
+                {organiser ? (
+                  <Link href="#team-invite" className={CONTACT_LINK}>
+                    Invite a colleague
+                  </Link>
+                ) : null}
+              </div>
             }
           >
             <ul
@@ -402,28 +434,33 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {current.map((a) => (
-                        <Badge
-                          key={a.libraryDocumentId}
-                          label={`${libraryName(a.libraryDocumentId)} · ${a.staffRole === "owner" ? "Owner" : "Editor"}${member.status === "invited" ? " · on acceptance" : ""}`}
-                          color="dim"
-                          icon={
-                            team.libraries.find(
-                              (l) => l.documentId === a.libraryDocumentId
-                            )?.libraryType === "Mobile"
-                              ? "mdi:bus-side"
-                              : "mdi:library-outline"
-                          }
-                        />
-                      ))}
-                      {member.pending.map((p) => (
-                        <Badge
-                          key={p.submissionDocumentId}
-                          label={`${libraryName(p.libraryDocumentId)} · ${p.staffRole === "owner" ? "Owner" : "Editor"} · with a moderator`}
-                          color="warn"
-                          icon="mdi:clock-outline"
-                        />
-                      ))}
+                      {current.length || member.pending.length ? (
+                        <ul
+                          aria-label={`Library access for ${memberName(member)}`}
+                          className="m-0 w-full list-none divide-y divide-(--t-border-line) p-0"
+                        >
+                          {current.map((assignment) => (
+                            <MemberLibraryAccess
+                              key={assignment.libraryDocumentId}
+                              name={libraryName(assignment.libraryDocumentId)}
+                              role={assignment.staffRole}
+                              status={
+                                member.status === "invited"
+                                  ? "invited"
+                                  : "approved"
+                              }
+                            />
+                          ))}
+                          {member.pending.map((request) => (
+                            <MemberLibraryAccess
+                              key={request.submissionDocumentId}
+                              name={libraryName(request.libraryDocumentId)}
+                              role={request.staffRole}
+                              status={request.status}
+                            />
+                          ))}
+                        </ul>
+                      ) : null}
                       {current.length === 0 && member.pending.length === 0 ? (
                         <span className="text-sm" style={{ color: T.ink.dim }}>
                           No libraries yet
@@ -482,11 +519,20 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               </span>
             }
           >
+            <p className="mt-0 text-sm leading-relaxed text-(--t-ink-dim)">
+              Team coverage enables shared features. Each person’s library staff
+              access is assigned and checked separately.
+            </p>
             {team.libraries.length ? (
               <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
                 {team.libraries.map((lib) => {
                   const tint = tintForLibraryType(lib.libraryType)
                   const staff = staffOf.has(lib.documentId)
+                  const pending = team.members
+                    .find((member) => member.isYou)
+                    ?.pending.find(
+                      (request) => request.libraryDocumentId === lib.documentId
+                    )
 
                   return (
                     <li
@@ -516,6 +562,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                         >
                           Open Staff area
                         </Link>
+                      ) : pending ? (
+                        <LibraryAccessBadge status={pending.status} />
                       ) : (
                         <span className="text-sm" style={{ color: T.ink.dim }}>
                           You’re not assigned here
@@ -551,27 +599,16 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             title="Team details"
             footer={organiser ? <TeamConfiguration team={team} /> : undefined}
             aside={
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  label={team.verifiedAt ? "Verified team" : "Not yet verified"}
-                  color={team.verifiedAt ? "ok" : "warn"}
-                  icon={
-                    team.verifiedAt
-                      ? "mdi:check-decagram-outline"
-                      : "mdi:clock-outline"
-                  }
-                />
-                <Badge
-                  label={
-                    active
-                      ? "Active"
-                      : team.status === "lapsed"
-                        ? "Lapsed"
-                        : "Expired"
-                  }
-                  color={active ? "aurora" : "dim"}
-                />
-              </div>
+              <TeamStatusBadges
+                membership={
+                  active
+                    ? "active"
+                    : team.status === "lapsed"
+                      ? "lapsed"
+                      : "expired"
+                }
+                verified={Boolean(team.verifiedAt)}
+              />
             }
           >
             <dl className="m-0 grid gap-4">
@@ -582,26 +619,9 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 >
                   Seats
                 </dt>
-                <dd
-                  className="m-0 text-[28px]"
-                  style={{ fontFamily: T.font.sans }}
-                >
-                  {team.used}{" "}
-                  <span
-                    style={{
-                      color: T.ink.dim,
-                      fontSize: "var(--type-body-size)",
-                    }}
-                  >
-                    of {team.seats}
-                  </span>
+                <dd className="m-0 mt-2">
+                  <TeamSeatUsage used={team.used} total={team.seats} />
                 </dd>
-                <progress
-                  aria-label="Team seats in use"
-                  value={team.used}
-                  max={Math.max(1, team.seats)}
-                  className="mt-3 h-2 w-full overflow-hidden rounded-full accent-(--t-accent-primary) [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:bg-(--t-accent-primary)"
-                />
               </div>
               <div>
                 <dt
@@ -630,6 +650,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
 
           {organiser ? (
             <Card
+              id="team-invite"
+              className="scroll-mt-(--sticky-content-top)"
               compact
               title={tUi("invite_a_colleague")}
               aside={
@@ -952,7 +974,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             variant="primary"
             size="pill"
             style={
-              confirm?.danger ? { background: T.accent.danger } : undefined
+              confirm?.danger ? { background: T.action.danger } : undefined
             }
             disabled={busy}
             onClick={() => {

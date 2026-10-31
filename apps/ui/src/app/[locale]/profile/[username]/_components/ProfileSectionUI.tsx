@@ -106,7 +106,7 @@ export function BadgeTile({
         aria-hidden="true"
         className="flex size-10 shrink-0 items-center justify-center rounded-full"
         style={{
-          background: "#fff",
+          background: "var(--t-bg-deep)",
           color: earned ? "var(--tint-national-fg)" : T.ink.low,
         }}
       >

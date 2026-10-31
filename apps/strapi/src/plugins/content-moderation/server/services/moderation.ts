@@ -35,7 +35,7 @@ import { summaryOf } from "../utils/submission-summary"
 
 /**
  * The Moderation Queue as community Moderators see it on the site
- * (`/contribute/moderation`): every read is filtered to the caller's
+ * (`/moderation`): every read is filtered to the caller's
  * Moderation Scopes and never includes their own submissions. The
  * controller re-loads the caller's capabilities for every request and
  * passes them in; nothing here trusts a scope from the client.

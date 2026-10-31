@@ -18,8 +18,8 @@ vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: any) => <a href={href}>{children}</a>,
   useRouter: () => ({ refresh: actor.refresh }),
 }))
-vi.mock("../GlobalLoggedUserMenu", () => ({
-  GlobalLoggedUserMenu: ({ user, profileSnippet }: any) => (
+vi.mock("@/components/profile/ProfileDrawerTrigger", () => ({
+  ProfileDrawerTrigger: ({ user, profileSnippet }: any) => (
     <div>
       {user.name}
       {profileSnippet?.username ? `:${profileSnippet.username}` : ""}
@@ -33,7 +33,7 @@ afterEach(() => {
   actor.error = null
   actor.refresh.mockClear()
 })
-it("never carries A's profile snippet into B's menu or keeps SSR A after hydrated sign-out", () => {
+it("never carries A's profile snippet into B's profile trigger or keeps SSR A after hydrated sign-out", () => {
   const props = {
     sessionSSR: { user: { id: "a", name: "A" } },
     profileSnippet: { username: "private-a" },

@@ -1,5 +1,5 @@
 import { canDirectEdit } from "@repo/access"
-import { articleReadingMinutes } from "@repo/shared-data"
+import { parseArticleSources, articleReadingMinutes } from "@repo/shared-data"
 
 import {
   configuredLocales,
@@ -352,6 +352,8 @@ async function relationData(
       source.eventMentions,
       locale
     )
+  if (kind === "journal" && "sources" in source)
+    data.sources = parseArticleSources(source.sources)
   const profileId = await submitterProfileId(strapi, submitterBaUserId)
   if (profileId) data.contributors = { connect: [{ documentId: profileId }] }
 

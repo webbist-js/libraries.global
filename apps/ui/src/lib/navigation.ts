@@ -1,31 +1,11 @@
-import {
-  DEFAULT_LOCALE,
-  normalizePageFullPath,
-  SUPPORTED_LOCALES,
-} from "@repo/shared-data"
-import { createNavigation } from "next-intl/navigation"
-import { defineRouting } from "next-intl/routing"
+import { normalizePageFullPath } from "@repo/shared-data"
 
 import { getEnvVar } from "@/lib/env-vars"
 
-export const routing = defineRouting({
-  // A list of all locales that are supported
-  locales: SUPPORTED_LOCALES,
+export { routing, usePathname, useRouter, getPathname } from "./navigation-core"
+import { _redirect, routing } from "./navigation-core"
 
-  // Used when no locale matches
-  defaultLocale: DEFAULT_LOCALE,
-
-  localePrefix: "as-needed",
-})
-
-// https://next-intl-docs.vercel.app/docs/routing/navigation
-export const {
-  Link,
-  redirect: _redirect,
-  usePathname,
-  useRouter,
-  getPathname,
-} = createNavigation(routing)
+export { AccountAwareLink as Link } from "@/components/profile/AccountAwareLink"
 
 // Help TypeScript detect unreachable code
 // https://next-intl-docs.vercel.app/docs/routing/navigation#redirect

@@ -2,10 +2,12 @@
 
 import { ArrowUpRight, Globe } from "lucide-react"
 import dynamic from "next/dynamic"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { homepageLinkAttributes } from "@/components/home/homepage.analytics"
 import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
 import { HOMEPAGE_GLOBE_APPEARANCE } from "@/components/home/knowledge-globe-settings"
 import type { GlobeOverrides } from "@/components/home/KnowledgeGlobeCanvas"
@@ -57,6 +59,7 @@ export default function AtlasGlobePreview({
   readonly markers: readonly LibraryMarker[]
   readonly href: string
 }) {
+  const t = useTranslations("ui")
   const containerRef = useRef<HTMLElement>(null)
   const [hasEntered, setHasEntered] = useState(false)
   const [active, setActive] = useState(false)
@@ -100,9 +103,10 @@ export default function AtlasGlobePreview({
         <div className="pointer-events-none absolute inset-x-5 top-[calc(50%_+_min(28cqw,28cqh))] flex -translate-y-1/2 justify-center">
           <GlobalLink
             href={href}
-            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#17162B] no-underline shadow-[0_4px_24px_#17162B80] transition-colors hover:bg-[#ECEBFB] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B9B4F5]"
+            {...homepageLinkAttributes(href)}
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-(--t-bg-deep) px-6 py-3.5 text-sm font-semibold text-(--t-ink-base) no-underline shadow-[0_4px_24px_#17162B80] transition-colors hover:bg-(--t-accent-chip) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B9B4F5]"
           >
-            Open the atlas
+            {t("about_the_project")}
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </GlobalLink>
         </div>

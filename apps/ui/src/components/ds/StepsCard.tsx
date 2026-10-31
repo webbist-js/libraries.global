@@ -13,7 +13,7 @@ export function StepsCard({
   return (
     <section
       aria-label={title}
-      className="rounded-3xl bg-(--t-ink-base) p-6 text-white"
+      className="rounded-3xl bg-(--t-bg-inverse) p-6 text-white"
     >
       <h2 className="type-panel-title m-0 text-white">{title}</h2>
       <ol className="mt-4 mb-0 grid list-none gap-4 p-0 text-base leading-[1.6]">
@@ -21,7 +21,7 @@ export function StepsCard({
           <li key={step.id} className="flex items-start gap-3">
             <span
               aria-hidden="true"
-              className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-(--t-accent-primary) text-sm font-bold text-white"
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-(--t-action-primary) text-sm font-bold text-white"
             >
               {index + 1}
             </span>

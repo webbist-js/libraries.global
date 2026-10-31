@@ -77,7 +77,7 @@ export function NewsletterForm() {
             type="email"
             autoComplete="email"
             required
-            fieldClassName="h-14 bg-white"
+            fieldClassName="h-14 bg-(--t-bg-deep)"
             aria-label="email"
           />
           {/* Honeypot: hidden from people, filled by bots, rejected server-side. */}

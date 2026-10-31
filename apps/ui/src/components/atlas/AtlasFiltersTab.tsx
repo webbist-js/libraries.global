@@ -318,7 +318,7 @@ export function AtlasFiltersTab({
                   if (Number.isFinite(h) && Number.isFinite(m))
                     set({ atMinutes: h! * 60 + m! })
                 }}
-                className="h-11 rounded-[14px] border bg-white px-3 text-base font-medium"
+                className="h-11 rounded-[14px] border bg-(--t-bg-deep) px-3 text-base font-medium"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
               />
             </label>
@@ -380,7 +380,7 @@ export function AtlasFiltersTab({
               }
             }}
             className="min-h-11 self-start text-sm font-semibold underline underline-offset-4"
-            style={{ color: "#3730A3" }}
+            style={{ color: "var(--t-accent-primary-hover)" }}
           >
             {allFacilities
               ? "Show fewer"
@@ -574,7 +574,7 @@ export function AtlasFiltersTab({
         </Group>
       </Group>
 
-      <div className="sticky bottom-0 -mx-5 mt-auto flex items-center gap-3 border-t border-(--t-border-line) bg-white px-5 py-4">
+      <div className="sticky bottom-0 -mx-5 mt-auto flex items-center gap-3 border-t border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4">
         <p
           className="m-0 min-w-0 flex-1 text-xs leading-5 text-(--t-ink-dim)"
           aria-live="polite"
@@ -588,7 +588,7 @@ export function AtlasFiltersTab({
           type="button"
           onClick={onShowResults}
           disabled={matchCount + mobileCount === 0}
-          className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
+          className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-(--t-action-primary) px-5 text-sm font-semibold text-white hover:bg-(--t-action-primary-hover) disabled:opacity-50"
         >
           {showResultsLabel} results
         </button>
@@ -666,8 +666,11 @@ function Check({
         className="flex size-5 shrink-0 items-center justify-center rounded-[5px] border-[1.5px] peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--t-accent-primary)"
         style={
           checked
-            ? { background: T.accent.primary, borderColor: T.accent.primary }
-            : { background: "#fff", borderColor: "#8A8799" }
+            ? { background: T.action.primary, borderColor: T.accent.primary }
+            : {
+                background: "var(--t-bg-deep)",
+                borderColor: "var(--t-ink-low)",
+              }
         }
       >
         {checked ? (

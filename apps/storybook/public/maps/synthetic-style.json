@@ -1,0 +1,301 @@
+{
+  "version": 8,
+  "name": "Synthetic Storybook map",
+  "metadata": {
+    "description": "Self-authored sample geography for offline component previews; no real service coverage is implied."
+  },
+  "sources": {
+    "sample-land": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Example district"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.4,
+                    51.3
+                  ],
+                  [
+                    0.15,
+                    51.3
+                  ],
+                  [
+                    0.15,
+                    51.75
+                  ],
+                  [
+                    -0.4,
+                    51.75
+                  ],
+                  [
+                    -0.4,
+                    51.3
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Example river"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -0.35,
+                  51.55
+                ],
+                [
+                  -0.2,
+                  51.5
+                ],
+                [
+                  -0.05,
+                  51.52
+                ],
+                [
+                  0.1,
+                  51.44
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Example park",
+              "kind": "park"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.116,
+                    51.501
+                  ],
+                  [
+                    -0.105,
+                    51.501
+                  ],
+                  [
+                    -0.105,
+                    51.507
+                  ],
+                  [
+                    -0.116,
+                    51.507
+                  ],
+                  [
+                    -0.116,
+                    51.501
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Example main road",
+              "kind": "road"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -0.12,
+                  51.49
+                ],
+                [
+                  -0.1,
+                  51.5
+                ],
+                [
+                  -0.08,
+                  51.513
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Example building",
+              "kind": "building"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.104,
+                    51.499
+                  ],
+                  [
+                    -0.101,
+                    51.499
+                  ],
+                  [
+                    -0.101,
+                    51.501
+                  ],
+                  [
+                    -0.104,
+                    51.501
+                  ],
+                  [
+                    -0.104,
+                    51.499
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "ocean-background",
+      "type": "background",
+      "paint": {
+        "background-color": "#e8eef1"
+      }
+    },
+    {
+      "id": "sample-land",
+      "type": "fill",
+      "source": "sample-land",
+      "filter": [
+        "all",
+        [
+          "==",
+          [
+            "geometry-type"
+          ],
+          "Polygon"
+        ],
+        [
+          "!",
+          [
+            "has",
+            "kind"
+          ]
+        ]
+      ],
+      "paint": {
+        "fill-color": "#f1ede5"
+      }
+    },
+    {
+      "id": "sample-boundary",
+      "type": "line",
+      "source": "sample-land",
+      "filter": [
+        "==",
+        [
+          "geometry-type"
+        ],
+        "Polygon"
+      ],
+      "paint": {
+        "line-color": "#b8b0a3",
+        "line-width": 2
+      }
+    },
+    {
+      "id": "sample-river",
+      "type": "line",
+      "source": "sample-land",
+      "filter": [
+        "==",
+        [
+          "geometry-type"
+        ],
+        "LineString"
+      ],
+      "paint": {
+        "line-color": "#9bbbd0",
+        "line-width": 8
+      }
+    },
+    {
+      "id": "sample-park",
+      "type": "fill",
+      "source": "sample-land",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "park"
+      ],
+      "paint": {
+        "fill-color": "#dce8cf"
+      }
+    },
+    {
+      "id": "sample-building",
+      "type": "fill",
+      "source": "sample-land",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "building"
+      ],
+      "paint": {
+        "fill-color": "#dbd5c9"
+      }
+    },
+    {
+      "id": "road_pri_case",
+      "type": "line",
+      "source": "sample-land",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "road"
+      ],
+      "paint": {
+        "line-color": "#d5caba",
+        "line-width": 14
+      }
+    },
+    {
+      "id": "road_pri_fill",
+      "type": "line",
+      "source": "sample-land",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "road"
+      ],
+      "paint": {
+        "line-color": "#fff5ce",
+        "line-width": 9
+      }
+    }
+  ]
+}

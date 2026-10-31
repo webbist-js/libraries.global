@@ -27,7 +27,7 @@ function boxStyle(voted: boolean, locked: boolean): CSSProperties {
   if (voted)
     return {
       border: `2px solid ${T.accent.primary}`,
-      background: T.accent.primary,
+      background: T.action.primary,
       color: "white",
     }
   if (locked)
@@ -218,7 +218,7 @@ export function SuggestionCard({
               {t(`lists.${s.optionKey}`)}
             </span>
             {shortlistRank && (
-              <span className="rounded-full bg-(--t-ink-base) px-2 py-1 text-(--t-bg-deep)">
+              <span className="rounded-full bg-(--t-bg-inverse) px-2 py-1 text-(--t-ink-inverse)">
                 {t(frozen ? "savedRank" : "provisionalRank", {
                   rank: shortlistRank,
                 })}

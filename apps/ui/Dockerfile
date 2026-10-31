@@ -37,11 +37,13 @@ ENV NEXT_OUTPUT=standalone
 ENV NEXT_TELEMETRY_DISABLED=1
 # This dummy value exists only in the builder; the runtime needs a real secret.
 ENV BETTER_AUTH_SECRET=dummy-build-secret-not-for-runtime
+ARG NEXT_PUBLIC_FORCE_LIGHT_THEME=false
 ARG APP_PUBLIC_URL=https://libraries.global
 ARG NEXT_PUBLIC_STRAPI_URL=https://cms.libraries.global
 ARG IMAGE_REMOTE_HOSTS=libraries-global-production-media.lon1.cdn.digitaloceanspaces.com
 ENV APP_PUBLIC_URL=${APP_PUBLIC_URL}
 ENV NEXT_PUBLIC_STRAPI_URL=${NEXT_PUBLIC_STRAPI_URL}
+ENV NEXT_PUBLIC_FORCE_LIGHT_THEME=${NEXT_PUBLIC_FORCE_LIGHT_THEME}
 ENV IMAGE_REMOTE_HOSTS=${IMAGE_REMOTE_HOSTS}
 RUN pnpm exec turbo run build --filter=${WORKSPACE}
 RUN test -f apps/${APP}/.next/standalone/apps/${APP}/server.js

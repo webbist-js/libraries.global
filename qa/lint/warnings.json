@@ -1312,38 +1312,61 @@
     "apps/ui/scripts/email-smoke.mjs": {
       "sonarjs/slow-regex": 1
     },
+    "apps/ui/src/app/[locale]/(dashboard)/community/supporters/_components/SupportersDirectory.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/index/[slug]/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/index/_components/__tests__/FindLibraryFirst.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/knowledge/[slug]/page.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/knowledge/__tests__/editor-locale-param.test.ts": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/knowledge/_components/KnowledgeEditorLanding.tsx": {
+      "react/jsx-handler-names": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/knowledge/_components/__tests__/KnowledgeEditorLanding.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/knowledge/apply/page.tsx": {
+      "unicorn/consistent-function-scoping": 2
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/knowledge/new/page.test.tsx": {
+      "unicorn/consistent-function-scoping": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/submissions/_components/DiscussionWork.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/submissions/_components/SubmissionsShell.tab.test.tsx": {
+      "@typescript-eslint/no-explicit-any": 1,
+      "sonarjs/no-identical-functions": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/contribute/submissions/_components/submissionContinue.ts": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/profile/[username]/layout.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/staff/[slug]/_components/TeamManager.tsx": {
+      "react/no-array-index-key": 1,
+      "sonarjs/cognitive-complexity": 2
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/staff/[slug]/_components/TrafficPreview.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
+    "apps/ui/src/app/[locale]/(dashboard)/staff/teams/join/[token]/_components/TeamJoin.tsx": {
+      "sonarjs/cognitive-complexity": 1
+    },
     "apps/ui/src/app/[locale]/auth/_components/__tests__/native-submit.test.ts": {
       "unicorn/consistent-function-scoping": 2
     },
     "apps/ui/src/app/[locale]/auth/_components/pending-email.ts": {
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/app/[locale]/community/supporters/_components/SupportersDirectory.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/index/[slug]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/index/_components/__tests__/FindLibraryFirst.test.tsx": {
-      "@typescript-eslint/no-explicit-any": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/knowledge/[slug]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/knowledge/__tests__/editor-locale-param.test.ts": {
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/knowledge/_components/KnowledgeEditorLanding.tsx": {
-      "react/jsx-handler-names": 1,
-      "sonarjs/cognitive-complexity": 2
-    },
-    "apps/ui/src/app/[locale]/contribute/knowledge/_components/__tests__/KnowledgeEditorLanding.test.tsx": {
-      "@typescript-eslint/no-explicit-any": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/knowledge/apply/page.tsx": {
-      "unicorn/consistent-function-scoping": 2
-    },
-    "apps/ui/src/app/[locale]/contribute/knowledge/new/page.test.tsx": {
       "unicorn/consistent-function-scoping": 1
     },
     "apps/ui/src/app/[locale]/contribute/moderation/[documentId]/page.tsx": {
@@ -1356,16 +1379,6 @@
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/[locale]/contribute/moderation/staff/[libraryId]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/submissions/_components/DiscussionWork.test.tsx": {
-      "@typescript-eslint/no-explicit-any": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/submissions/_components/SubmissionsShell.tab.test.tsx": {
-      "@typescript-eslint/no-explicit-any": 1,
-      "sonarjs/no-identical-functions": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/submissions/_components/submissionContinue.ts": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/[locale]/live/page.tsx": {
@@ -1387,9 +1400,6 @@
       "react/hook-use-state": 1,
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/ui/src/app/[locale]/profile/[username]/layout.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/app/[locale]/profile/settings/_components/SettingsShell.tsx": {
       "react/jsx-handler-names": 1
     },
@@ -1398,16 +1408,6 @@
     },
     "apps/ui/src/app/[locale]/profile/settings/_components/__tests__/MembershipBillingSection.test.tsx": {
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/app/[locale]/staff/[slug]/_components/TeamManager.tsx": {
-      "react/no-array-index-key": 1,
-      "sonarjs/cognitive-complexity": 2
-    },
-    "apps/ui/src/app/[locale]/staff/[slug]/_components/TrafficPreview.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/staff/teams/join/[token]/_components/TeamJoin.tsx": {
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/api/atlas/changes/route.ts": {
       "@typescript-eslint/no-explicit-any": 1

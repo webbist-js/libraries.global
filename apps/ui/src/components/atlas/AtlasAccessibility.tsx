@@ -80,11 +80,11 @@ export function AccessibilityControls({
             type="button"
             aria-pressed={view === value}
             onClick={() => onChange(value)}
-            className="min-h-11 rounded-lg px-1 text-sm font-semibold hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+            className="min-h-11 rounded-lg px-1 text-sm font-semibold hover:bg-(--t-bg-deep) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
             style={
               view === value
                 ? {
-                    background: "#fff",
+                    background: "var(--t-bg-deep)",
                     color: T.ink.base,
                     boxShadow: `inset 0 0 0 1px ${T.border.hi}`,
                   }
@@ -149,7 +149,10 @@ export function AccessibilityCoverage({
           <div
             aria-hidden="true"
             className="flex h-2.5 overflow-hidden rounded-full border"
-            style={{ borderColor: ACCESS_GAP, background: "#FFF4E5" }}
+            style={{
+              borderColor: ACCESS_GAP,
+              background: "var(--t-palette-amber-soft)",
+            }}
           >
             <span
               style={{

@@ -13,8 +13,8 @@ import { SectionNavigation } from "./SectionNavigation"
  * The one hero band for primary section pages (Find libraries, Journal,
  * Events, Knowledge, Contribute) and their search/sub pages. Tinted paper band with
  * a hairline rule below; eyebrow pill + serif title on the left, lead +
- * optional slot (search, status) on the right. Don't hand-roll a hero — add a
- * prop here instead so every section stays in step.
+ * optional slot (search, status) on the right. Use WorkspacePageHeader for
+ * operational tasks and the reader's own heading for detail pages.
  *
  * `title` accepts `*italic*` markup, rendered as indigo italic on its own line.
  * `tabs` takes a `SectionTabs` row for sections with sub-pages.
@@ -45,6 +45,7 @@ export function PageHero({
   footer,
   emphasisTone = "brand",
   centered = false,
+  variant = "band",
 }: {
   /** Optional breadcrumb trail rendered above the eyebrow pill. */
   readonly breadcrumb?: BreadcrumbItem[]
@@ -89,6 +90,8 @@ export function PageHero({
   readonly emphasisTone?: "brand" | "ink"
   /** Focused flows such as invitations: a centred title and lead in one column. */
   readonly centered?: boolean
+  /** A contained hero that splits by its available width, including in a dashboard. */
+  readonly variant?: "band" | "card"
   /**
    * Section tabs (`SectionTabs`) on the band's bottom edge, for sections
    * with sub-pages (Contribute, Knowledge).
@@ -118,8 +121,11 @@ export function PageHero({
   return (
     <>
       <section
-        className="border-b"
-        style={{ background: T.bg.space, borderColor: T.border.line }}
+        className={variant === "card" ? "page-hero-card border" : "border-b"}
+        style={{
+          background: variant === "card" ? T.bg.deep : T.bg.space,
+          borderColor: T.border.line,
+        }}
       >
         {breadcrumb?.length ? (
           <Container
@@ -133,21 +139,25 @@ export function PageHero({
         ) : null}
         <Container
           className={[
-            centered
-              ? "flex max-w-[960px] flex-col items-center text-center"
-              : staff
-                ? "grid gap-x-12 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-end"
-                : leadPlacement === "left"
-                  ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
-                  : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
+            variant === "card"
+              ? "page-hero-card-layout"
+              : centered
+                ? "flex max-w-[960px] flex-col items-center text-center"
+                : staff
+                  ? "grid gap-x-12 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-end"
+                  : leadPlacement === "left"
+                    ? "grid gap-x-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end"
+                    : "grid gap-x-16 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end",
             compact ? "gap-y-5" : "gap-y-8",
-            leadPlacement === "left" && breadcrumb?.length
-              ? "pt-3 pb-12 sm:pb-16"
-              : bandPadding({
-                  breadcrumb: Boolean(breadcrumb?.length),
-                  compact,
-                  tabs: Boolean(tabs),
-                }),
+            variant === "card"
+              ? ""
+              : leadPlacement === "left" && breadcrumb?.length
+                ? "pt-3 pb-12 sm:pb-16"
+                : bandPadding({
+                    breadcrumb: Boolean(breadcrumb?.length),
+                    compact,
+                    tabs: Boolean(tabs),
+                  }),
           ].join(" ")}
         >
           {prelude ? (
@@ -187,6 +197,7 @@ export function PageHero({
                   </Link>
                 ) : eyebrow ? (
                   <span
+                    data-hero-eyebrow=""
                     className={`inline-flex items-center gap-1.5 rounded-full border px-3 text-sm font-semibold ${staff ? "py-1.5" : "py-1"}`}
                     style={{
                       background: T.bg.deep,
@@ -205,7 +216,10 @@ export function PageHero({
                     ) : null}
                     {eyebrow}
                     {eyebrowAccent ? (
-                      <span style={{ color: T.accent.primary }}>
+                      <span
+                        className="hero-eyebrow-accent"
+                        style={{ color: T.accent.primary }}
+                      >
                         {eyebrowAccent}
                       </span>
                     ) : null}
@@ -219,6 +233,7 @@ export function PageHero({
             >
               {titleIcon ? <span className="shrink-0">{titleIcon}</span> : null}
               <h1
+                tabIndex={-1}
                 className={`m-0 min-w-0 text-balance [overflow-wrap:anywhere] ${displayTitle ? "type-display-band" : compact ? "type-page-compact" : "type-h1"}`}
                 style={{
                   color: T.ink.base,
@@ -297,7 +312,10 @@ function WorkspaceHero({
             </div>
           ) : null}
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-            <h1 className="type-page-inline m-0 min-w-0 wrap-anywhere">
+            <h1
+              tabIndex={-1}
+              className="type-page-inline m-0 min-w-0 wrap-anywhere"
+            >
               {title}
             </h1>
             {lead ? (

@@ -63,9 +63,9 @@ vi.mock("@/lib/strapi-helpers", () => ({
   formatStrapiMediaUrl: (value: string) => value,
 }))
 
-import { generateMetadata as journalMetadata } from "@/app/[locale]/journal/[section]/[slug]/page"
-import { generateMetadata as journalLandingMetadata } from "@/app/[locale]/journal/page"
-import { generateMetadata as knowledgeMetadata } from "@/app/[locale]/knowledge/[section]/[slug]/page"
+import { generateMetadata as journalMetadata } from "@/app/[locale]/(dashboard)/journal/[section]/[slug]/page"
+import { generateMetadata as journalLandingMetadata } from "@/app/[locale]/(dashboard)/journal/page"
+import { generateMetadata as knowledgeMetadata } from "@/app/[locale]/(dashboard)/knowledge/[section]/[slug]/page"
 
 describe("article canonical metadata", () => {
   it.each([

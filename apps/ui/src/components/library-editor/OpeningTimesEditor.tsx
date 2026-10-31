@@ -138,7 +138,6 @@ function selectStyle(hasError: boolean): React.CSSProperties {
     color: T.ink.base,
     fontSize: "13px",
     fontFamily: T.font.sans,
-    outline: "none",
     cursor: "pointer",
     width: "112px",
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(23,22,43,0.45)'/%3E%3C/svg%3E")`,
@@ -240,6 +239,7 @@ function CopyDaySelect({
 
   return (
     <select
+      aria-label={`Copy ${DAY_LABELS[sourceDay]} hours to another day`}
       defaultValue=""
       onChange={(e) => {
         const val = e.target.value
@@ -269,7 +269,6 @@ function CopyDaySelect({
         border: "none",
         cursor: "pointer",
         padding: 0,
-        outline: "none",
         marginLeft: "auto",
         appearance: "none" as const,
         WebkitAppearance: "none" as const,
@@ -278,30 +277,33 @@ function CopyDaySelect({
       <option
         value=""
         disabled
-        style={{ background: "#0d1020", color: T.ink.dim }}
+        style={{ background: "var(--t-bg-surface)", color: T.ink.dim }}
       >
         {tUi("copy_to")}{" "}
       </option>
       <option
         value="weekdays"
-        style={{ background: "#0d1020", color: T.ink.base }}
+        style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
       >
         {tUi("mon_fri")}{" "}
       </option>
       <option
         value="weekend"
-        style={{ background: "#0d1020", color: T.ink.base }}
+        style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
       >
         {tUi("sat_sun")}{" "}
       </option>
-      <option value="all" style={{ background: "#0d1020", color: T.ink.base }}>
+      <option
+        value="all"
+        style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
+      >
         {tUi("all_days")}{" "}
       </option>
       {otherDays.map((d) => (
         <option
           key={d}
           value={d}
-          style={{ background: "#0d1020", color: T.ink.base }}
+          style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
         >
           {DAY_LABELS[d]}
         </option>
@@ -554,8 +556,6 @@ export function OpeningTimesEditor({
               padding: "14px 18px 16px",
               background: isEven ? T.bg.surface : "transparent",
               borderTop: dayIdx > 0 ? `1px solid ${T.border.line}` : undefined,
-              opacity: day.enabled ? 1 : 0.55,
-              transition: "opacity 0.15s",
             }}
           >
             {/* Row: day label + toggle + copy */}

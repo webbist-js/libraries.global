@@ -4,11 +4,15 @@ import { Icon } from "@iconify/react"
 
 import { Button } from "@/components/ui/button"
 
-export function LegalPrintButton() {
+export function LegalPrintButton({
+  compact = false,
+}: {
+  readonly compact?: boolean
+}) {
   return (
     <Button
       variant="surface"
-      size="pill"
+      size={compact ? "sm" : "pill"}
       onClick={() => window.print()}
       type="button"
     >

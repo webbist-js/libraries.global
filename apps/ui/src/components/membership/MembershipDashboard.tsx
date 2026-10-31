@@ -54,6 +54,8 @@ const FEATURE_DESTINATIONS = {
 } as const
 
 export type MembershipDashboardProps = {
+  /** The parent workspace provides the page gutters and section spacing. */
+  readonly embedded?: boolean
   readonly plan: string
   readonly source: string
   readonly teams: SessionTeam[]
@@ -67,6 +69,7 @@ export type MembershipDashboardProps = {
 }
 
 export function MembershipDashboard({
+  embedded = false,
   plan,
   source,
   teams,
@@ -122,7 +125,10 @@ export function MembershipDashboard({
   }
 
   return (
-    <Container className="py-8 sm:py-10 lg:pb-16">
+    <Container
+      hideDefaultPadding={embedded}
+      className={embedded ? "max-w-none" : "py-8 sm:py-10 lg:pb-16"}
+    >
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,0.85fr)]">
         <div className="flex min-w-0 flex-col gap-6">
           <CurrentPlanPanel view={view} copy={copy} staffCount={staffCount} />

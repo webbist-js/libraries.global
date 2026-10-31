@@ -33,8 +33,8 @@ for (const directory of workspaces) {
     cwd: path.join(root, directory),
     overrideConfigFile: path.join(
       root,
-      directory === "apps/ui"
-        ? "apps/ui/eslint.config.mjs"
+      ["apps/ui", "apps/storybook"].includes(directory)
+        ? `${directory}/eslint.config.mjs`
         : "eslint.config.mjs"
     ),
   })

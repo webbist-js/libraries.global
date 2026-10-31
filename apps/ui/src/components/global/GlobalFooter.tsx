@@ -1,15 +1,12 @@
-import { membershipLink } from "@repo/shared-data"
-import type { Data } from "@repo/strapi-types"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
-import { getStrapiLinkHref } from "@/components/page-builder/components/utilities/StrapiLink"
 import { SITE_NAME } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import type { LegalDocumentNavItem } from "@/lib/strapi-api/content/server"
 
-type FooterData = Data.ContentType<"api::footer.footer"> | null | undefined
+import { buildFooterNavigation, type FooterData } from "./footer-navigation"
 
 export function GlobalFooter({
   locale: _locale,
@@ -23,44 +20,12 @@ export function GlobalFooter({
 }) {
   const tUi = useUiTranslations("ui")
 
-  const sections = Array.isArray(footer?.sections) ? footer.sections : []
+  const { sections, links } = buildFooterNavigation(footer, legalDocuments, {
+    legal: tUi("legal_policies"),
+    plans: tUi("plans_and_pricing"),
+  })
   const year = new Date().getFullYear()
   const brandTitle = footer?.title || SITE_NAME
-
-  // Keep frequent destinations direct. The legal index lists every published
-  // policy, including documents added later, without growing the bottom bar.
-  const legalLinks = legalDocuments.flatMap((doc) =>
-    doc.slug && ["privacy", "accessibility"].includes(doc.slug)
-      ? [
-          {
-            key: doc.documentId,
-            label: doc.title ?? doc.slug,
-            href: `/legal/${doc.slug}`,
-          },
-        ]
-      : []
-  )
-  const cmsLinks = (Array.isArray(footer?.links) ? footer.links : []).flatMap(
-    (link, index) => {
-      const href = getStrapiLinkHref(link)
-      if (
-        !href ||
-        href === "#" ||
-        href === "/legal" ||
-        href.startsWith("/legal/")
-      )
-        return []
-
-      return [{ key: String(link.id ?? index), label: link.label, href }]
-    }
-  )
-  const links = [
-    ...(legalDocuments.some((doc) => doc.slug)
-      ? [{ key: "legal-index", label: tUi("legal_policies"), href: "/legal" }]
-      : []),
-    ...legalLinks,
-    ...cmsLinks,
-  ]
 
   return (
     <footer
@@ -116,10 +81,7 @@ export function GlobalFooter({
             {sections.length > 0 ? (
               <div className="grid gap-10 sm:grid-cols-3">
                 {sections.map((section) => (
-                  <div
-                    key={section.id ?? section.title}
-                    className="flex flex-col gap-5"
-                  >
+                  <div key={section.key} className="flex flex-col gap-5">
                     <p
                       className="m-0 text-lg font-bold"
                       style={{ color: T.ink.dim }}
@@ -128,17 +90,13 @@ export function GlobalFooter({
                     </p>
 
                     <div className="space-y-2.5">
-                      {section.links?.map((link, index) => (
+                      {section.links.map((link) => (
                         <GlobalLink
-                          key={link.id ?? link.page?.slug ?? link.href ?? index}
-                          href={getStrapiLinkHref(link)}
+                          key={link.key}
+                          href={link.href}
                           className="block w-fit text-base text-(--t-ink-base) transition-colors hover:text-(--t-accent-primary)"
                         >
-                          {/^(?:https?:\/\/(?:www\.)?libraries\.global)?(?:\/(?:en|fr|cs))?\/plans(?:[?#]|$)/.test(
-                            membershipLink(getStrapiLinkHref(link) ?? "")
-                          )
-                            ? tUi("plans_and_pricing")
-                            : link.label}
+                          {link.label}
                         </GlobalLink>
                       ))}
                     </div>

@@ -44,7 +44,7 @@ import {
 } from "@/lib/auth-links"
 import { T } from "@/lib/design-tokens"
 
-const SETTINGS_HREF = "/profile/settings"
+const SETTINGS_HREF = "/map?account=settings"
 const TOO_MANY = "Too many attempts. Wait a minute, then try again."
 
 const ChangePasswordSchema = z

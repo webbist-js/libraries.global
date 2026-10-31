@@ -34,8 +34,8 @@ function tabsFor(
       id: ALL_SECTIONS,
       label: allSections,
       href: href(),
-      count:
-        total ?? sections.reduce((sum, s) => sum + (counts[s.slug] ?? 0), 0),
+      // Guides may appear in multiple sections; their facet counts cannot be summed.
+      count: total,
     },
     ...sections.map((s) => ({
       id: s.slug,
@@ -50,10 +50,12 @@ function TabsFromUrl({
   sections,
   counts,
   total,
+  variant,
 }: {
   readonly sections: readonly DocsSection[]
   readonly counts: DocsSectionCounts
   readonly total?: number
+  readonly variant?: "underline" | "pills"
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
@@ -63,6 +65,7 @@ function TabsFromUrl({
 
   return (
     <SectionTabs
+      variant={variant}
       activeId={active}
       label={tUi("knowledge_sections")}
       scroll={false}
@@ -85,10 +88,12 @@ export function DocsSectionTabs({
   sections,
   counts,
   total,
+  variant,
 }: {
   readonly sections: readonly DocsSection[]
   readonly counts: DocsSectionCounts
   readonly total?: number
+  readonly variant?: "underline" | "pills"
 }) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
@@ -97,13 +102,19 @@ export function DocsSectionTabs({
     <Suspense
       fallback={
         <SectionTabs
+          variant={variant}
           activeId={ALL_SECTIONS}
           label={tUi("knowledge_sections")}
           tabs={tabsFor(sections, counts, t("allSections"), "", total)}
         />
       }
     >
-      <TabsFromUrl counts={counts} sections={sections} total={total} />
+      <TabsFromUrl
+        counts={counts}
+        sections={sections}
+        total={total}
+        variant={variant}
+      />
     </Suspense>
   )
 }

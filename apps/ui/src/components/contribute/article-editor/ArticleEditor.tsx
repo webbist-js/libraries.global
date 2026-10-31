@@ -6,6 +6,7 @@ import { EditorContent, useEditor, useEditorState } from "@tiptap/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
+import { WritingToolbarButton as ToolButton } from "@/components/ds/WritingToolbarButton"
 import { T } from "@/lib/design-tokens"
 
 import { ARTICLE_KIND_META, type ArticleKind } from "./article.types"
@@ -14,46 +15,6 @@ import { ArticleImageDialog } from "./ArticleImageDialog"
 import { articleExtensions } from "./extensions"
 
 export type UploadedImage = { id: number; url: string; alt?: string | null }
-
-type ToolButtonProps = {
-  icon?: string
-  label: string
-  text?: string
-  active?: boolean
-  disabled?: boolean
-  onClick: () => void
-}
-
-function ToolButton({
-  icon,
-  label,
-  text,
-  active,
-  disabled,
-  onClick,
-}: ToolButtonProps) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={active}
-      title={label}
-      disabled={disabled}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onClick}
-      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[10px] px-2 text-sm font-bold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-40"
-      style={{
-        background: active ? T.accent.chip : "transparent",
-        color: active ? T.accent.primary : T.ink.base,
-        border: "none",
-        cursor: "pointer",
-        fontFamily: T.font.sans,
-      }}
-    >
-      {icon ? <Icon icon={icon} width={18} aria-hidden="true" /> : text}
-    </button>
-  )
-}
 
 function Divider() {
   return (
@@ -418,9 +379,9 @@ const EDITOR_CSS = `
 .ae-editor .ProseMirror pre { background: var(--t-bg-surface); border: 1px solid var(--t-border-line); border-radius: 14px; padding: 16px 18px; font-family: var(--ae-mono); font-size: 14px; line-height: 1.6; overflow-x: auto; }
 .ae-editor .ProseMirror code { font-family: var(--ae-mono); font-size: 0.92em; background: var(--t-bg-surface); border: 1px solid var(--t-border-line); border-radius: 6px; padding: 1px 5px; }
 .ae-editor .ProseMirror pre code { background: none; border: 0; padding: 0; }
-.ae-editor .ProseMirror aside.ae-callout { border: 1px solid var(--t-border-line); border-left: 3px solid var(--t-accent-primary); border-radius: 14px; padding: 14px 18px; background: var(--t-bg-surface); }
-.ae-editor .ProseMirror aside.ae-callout::before { content: attr(data-kind); display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t-accent-primary); margin-bottom: 4px; }
-.ae-editor .ProseMirror aside.ae-callout[data-title]::before { content: attr(data-kind) " · " attr(data-title); }
+.ae-editor .ProseMirror .ae-callout { border: 1px solid var(--t-border-line); border-left: 3px solid var(--t-accent-primary); border-radius: 14px; padding: 14px 18px; background: var(--t-bg-surface); }
+.ae-editor .ProseMirror .ae-callout::before { content: attr(data-kind); display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t-accent-primary); margin-bottom: 4px; }
+.ae-editor .ProseMirror .ae-callout[data-title]::before { content: attr(data-kind) " · " attr(data-title); }
 .ae-editor .ProseMirror img { max-width: 100%; height: auto; border-radius: 16px; display: block; }
 .ae-editor .ProseMirror img.ProseMirror-selectednode { outline: 3px solid var(--t-accent-primary); outline-offset: 3px; }
 .ae-editor .ProseMirror ::selection { background: var(--t-accent-chip); }
@@ -470,7 +431,13 @@ export function ArticleEditor({
     content: doc,
     immediatelyRender: false,
     editorProps: {
-      attributes: { "aria-label": tUi("article_body"), spellcheck: "true" },
+      attributes: {
+        role: "textbox",
+        "aria-multiline": "true",
+        "aria-readonly": String(Boolean(readOnly)),
+        "aria-label": tUi("article_body"),
+        spellcheck: "true",
+      },
     },
     onUpdate: ({ editor: e }) => onDocChange(e.getJSON() as TiptapDoc),
   })

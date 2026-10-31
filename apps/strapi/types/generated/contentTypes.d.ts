@@ -1129,6 +1129,19 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    entriesAdded: Schema.Attribute.Integer &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: false
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 2147483647
+          min: 0
+        },
+        number
+      >
     eventMentions: Schema.Attribute.Component<"content.event-mention", true> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -1223,6 +1236,18 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
           localized: false
         }
       }>
+    sources: Schema.Attribute.Component<"content.article-source", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 30
+        },
+        number
+      >
     strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
     strapi_stage: Schema.Attribute.Relation<
       "oneToOne",
@@ -4552,6 +4577,10 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     affiliationType: Schema.Attribute.Enumeration<
       ["reader", "librarian", "researcher", "archivist", "educator", "other"]
     >
+    appearancePreference: Schema.Attribute.Enumeration<
+      ["light", "dark", "system"]
+    > &
+      Schema.Attribute.Private
     avatar: Schema.Attribute.Media<"images">
     baUserId: Schema.Attribute.String &
       Schema.Attribute.Required &
@@ -4644,6 +4673,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<true>
     theme: Schema.Attribute.Enumeration<["dark", "light"]> &
+      Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<"dark">
     tier: Schema.Attribute.String & Schema.Attribute.DefaultTo<"Reader">
     timezone: Schema.Attribute.String
@@ -7425,6 +7455,7 @@ export interface PluginLibraryStaffStaffAudit
         "notice_created",
         "notice_updated",
         "notice_ended",
+        "notice_reactivated",
       ]
     > &
       Schema.Attribute.Required

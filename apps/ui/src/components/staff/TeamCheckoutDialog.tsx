@@ -1,7 +1,7 @@
 "use client"
 
 import { ArrowLeft, ArrowRight, Check, Info, Minus, Plus } from "lucide-react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   type Dispatch,
   type SetStateAction,
@@ -21,16 +21,19 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { pushCheckoutEvent } from "@/lib/checkout-analytics"
 import pricing from "@/lib/membership-pricing.json"
 import { Link } from "@/lib/navigation"
 import { MAX_TEAM_SEATS, MIN_TEAM_SEATS } from "@/lib/team-billing/types"
 
 import { STAFF_FIELD, STAFF_LINK } from "./StaffPanel"
+import { TeamPurchaseProgress } from "./TeamPurchaseJourney"
 
 export type TeamCheckoutChoice = {
   name: string
   seats: number
   publicServiceRequested: boolean
+  apiAddon?: boolean
 }
 
 function TeamOrderSummary({
@@ -40,7 +43,9 @@ function TeamOrderSummary({
   total,
   discounted,
   money,
+  apiAddon,
 }: {
+  apiAddon: boolean
   name: string
   seats: number
   unit: number
@@ -48,6 +53,8 @@ function TeamOrderSummary({
   discounted: boolean
   money: (amount: number) => string
 }) {
+  const t = useTranslations("teamPurchase")
+
   return (
     <aside
       aria-label="Order summary"
@@ -96,10 +103,18 @@ function TeamOrderSummary({
           Approved public-service discount included.
         </p>
       ) : null}
-      <p className="m-0 rounded-2xl border border-(--t-border-line) bg-white p-4 text-base leading-relaxed text-(--t-ink-dim)">
-        Optional API access, {money(pricing.teamApi.month)} a month, is billed
-        separately once your Team is active.
-      </p>
+      <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 text-sm leading-relaxed">
+        <strong className="block">
+          {t(apiAddon ? "apiSelected" : "apiOptional")}
+        </strong>
+        <p className="mt-2 mb-0 text-(--t-ink-dim)">
+          {money(pricing.teamApi.month)} / {t("month")}
+        </p>
+        <p className="mt-2 mb-0 text-(--t-ink-dim)">
+          {t(apiAddon ? "afterTeamPayment" : "separateCharges")}
+        </p>
+      </div>
+      {apiAddon ? <TeamPurchaseProgress stage="team" /> : null}
       <ul className="mt-auto mb-0 list-none space-y-3 border-t border-(--t-border-line) p-0 pt-5 text-base text-(--t-ink-dim)">
         {[
           "Cancel renewal any time",
@@ -203,6 +218,8 @@ export function TeamCheckoutDialog({
   onOpenChange,
   initialSeats,
   initialName,
+  initialApiAddon = false,
+  initialPublicService = false,
   minimumSeats = MIN_TEAM_SEATS,
   teamName,
   discounted = false,
@@ -216,6 +233,8 @@ export function TeamCheckoutDialog({
   readonly open: boolean
   readonly onOpenChange: (open: boolean) => void
   readonly minimumSeats?: number
+  readonly initialApiAddon?: boolean
+  readonly initialPublicService?: boolean
   readonly initialName?: string
   readonly initialSeats: number
   readonly teamName?: string
@@ -227,15 +246,18 @@ export function TeamCheckoutDialog({
   readonly onTeam?: (choice: TeamCheckoutChoice) => Promise<boolean>
   readonly onCheckout: (choice: TeamCheckoutChoice) => void
 }) {
+  const t = useTranslations("teamPurchase")
+  const [apiAddon, setApiAddon] = useState(initialApiAddon)
   const [step, setStep] = useState<"plan" | "details">("plan")
   const [name, setName] = useState(teamName ?? initialName ?? "")
   const [seats, setSeats] = useState(Math.max(minimumSeats, initialSeats))
   const [service, setService] = useState<"standard" | "public">(
-    discounted ? "public" : "standard"
+    discounted || initialPublicService ? "public" : "standard"
   )
   const [consent, setConsent] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const previousStep = useRef(step)
+  const began = useRef(false)
   const locale = useLocale()
   const money = (amount: number) =>
     new Intl.NumberFormat(locale, {
@@ -249,6 +271,21 @@ export function TeamCheckoutDialog({
     (discounted ? 1 - pricing.team.publicServiceDiscountPercent / 100 : 1)
   const total = unit * seats
   useEffect(() => {
+    if (!open) {
+      began.current = false
+
+      return
+    }
+    if (began.current) return
+    began.current = true
+    pushCheckoutEvent("begin_checkout", {
+      product: "team",
+      billing_interval: "year",
+      api_addon: apiAddon ? "selected" : "not_selected",
+      billing_mode: sandbox ? "sandbox" : "live",
+    })
+  }, [open, apiAddon, sandbox])
+  useEffect(() => {
     if (step !== previousStep.current) heading.current?.focus()
     previousStep.current = step
   }, [step])
@@ -261,8 +298,8 @@ export function TeamCheckoutDialog({
       }}
     >
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-3xl bg-white p-0 sm:max-w-[calc(100%-3rem)] lg:max-w-6xl"
-        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-white opacity-100 hover:bg-(--t-bg-surface)"
+        className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-3xl bg-(--t-bg-deep) p-0 sm:max-w-[calc(100%-3rem)] lg:max-w-6xl"
+        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-(--t-bg-deep) opacity-100 hover:bg-(--t-bg-surface)"
         showCloseButton={!busy}
         onEscapeKeyDown={(event) => {
           if (busy) event.preventDefault()
@@ -304,6 +341,7 @@ export function TeamCheckoutDialog({
                       name: name.trim(),
                       seats,
                       publicServiceRequested: service === "public",
+                      apiAddon,
                     }))
                   )
                     setStep("details")
@@ -315,6 +353,7 @@ export function TeamCheckoutDialog({
                     name: name.trim(),
                     seats,
                     publicServiceRequested: service === "public",
+                    apiAddon,
                   })
               }}
             >
@@ -393,6 +432,21 @@ export function TeamCheckoutDialog({
                     unit={unit}
                     money={money}
                   />
+                  <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 text-sm leading-relaxed">
+                    <input
+                      type="checkbox"
+                      checked={apiAddon}
+                      disabled={busy}
+                      onChange={(event) => setApiAddon(event.target.checked)}
+                      className="mt-0.5 size-5 shrink-0 accent-(--t-accent-primary)"
+                    />
+                    <span>
+                      <strong className="block">{t("selectApi")}</strong>
+                      <span className="mt-1 block text-(--t-ink-dim)">
+                        {t("separateCharges")}
+                      </span>
+                    </span>
+                  </label>
                   <Button
                     className="w-full"
                     variant="primary"
@@ -503,7 +557,7 @@ export function TeamCheckoutDialog({
               {error ? (
                 <p
                   role="alert"
-                  className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+                  className="rounded-2xl border border-(--t-edge-danger) bg-(--t-palette-coral-soft) p-4 text-sm text-(--t-palette-coral-fg)"
                 >
                   {error}
                 </p>
@@ -516,6 +570,7 @@ export function TeamCheckoutDialog({
             unit={unit}
             total={total}
             discounted={discounted}
+            apiAddon={apiAddon}
             money={money}
           />
         </div>

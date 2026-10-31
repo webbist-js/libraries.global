@@ -1,0 +1,104 @@
+/* One motion language for portalled surfaces. Radix Presence keeps closed
+   panels mounted until these exit animations finish; no artificial delays. */
+:root {
+  --motion-enter: 240ms;
+  --motion-exit: 160ms;
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes surface-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes drawer-reveal {
+  from {
+    transform: translate3d(var(--drawer-x, 0), var(--drawer-y, 0), 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes modal-reveal {
+  from {
+    opacity: 0;
+    scale: 0.98;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+/* Explicit exits keep ease-out in the direction of travel. Reversing an
+   entrance also reverses its easing, which makes dismissal hesitate. */
+@keyframes drawer-dismiss {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--drawer-x, 0), var(--drawer-y, 0), 0);
+  }
+}
+@keyframes modal-dismiss {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+[data-drawer-panel="left"] {
+  --drawer-x: -100%;
+}
+[data-drawer-panel="right"] {
+  --drawer-x: 100%;
+}
+[data-drawer-panel="bottom"] {
+  --drawer-y: 100%;
+}
+[data-drawer-panel][data-state="open"] {
+  animation: drawer-reveal var(--motion-enter) var(--motion-ease-out) both;
+}
+[data-drawer-panel][data-state="closed"] {
+  pointer-events: none;
+  animation: drawer-dismiss var(--motion-exit) var(--motion-ease-out) both;
+}
+:is(
+  [data-drawer-backdrop],
+  [data-slot="dialog-overlay"],
+  [data-modal-overlay]
+)[data-state="open"] {
+  animation: surface-fade var(--motion-enter) linear both;
+}
+:is(
+  [data-drawer-backdrop],
+  [data-slot="dialog-overlay"],
+  [data-modal-overlay]
+)[data-state="closed"] {
+  pointer-events: none;
+  animation: surface-fade var(--motion-exit) linear reverse both;
+}
+:is([data-slot="dialog-content"], [data-modal-content])[data-state="open"] {
+  animation: modal-reveal var(--motion-enter) var(--motion-ease-out) both;
+}
+:is([data-slot="dialog-content"], [data-modal-content])[data-state="closed"] {
+  pointer-events: none;
+  animation: modal-dismiss var(--motion-exit) var(--motion-ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(
+    [data-drawer-panel],
+    [data-drawer-backdrop],
+    [data-slot="dialog-overlay"],
+    [data-slot="dialog-content"],
+    [data-modal-overlay],
+    [data-modal-content]
+  ) {
+    animation: none !important;
+    transition: none !important;
+  }
+}

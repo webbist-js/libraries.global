@@ -42,10 +42,10 @@ export function LibraryHeroMedia({
   const current = photos[selected % Math.max(1, photos.length)]
 
   return (
-    <div>
+    <div className="library-hero-media">
       {photos.length || tourUrl ? (
         <div
-          className="mb-3 flex flex-wrap gap-2"
+          className="library-media-switch flex flex-wrap gap-1"
           role="group"
           aria-label="Library media"
         >

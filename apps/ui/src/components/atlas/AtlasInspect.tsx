@@ -92,7 +92,7 @@ export function AtlasInspectTools({
         }
       >
         <PopoverAnchor asChild>
-          <div className="w-full border-t border-(--t-border-line) bg-white">
+          <div className="w-full border-t border-(--t-border-line) bg-(--t-bg-deep)">
             {action ? <div className="px-5 pt-3">{action}</div> : null}
             <div className="flex min-h-[60px] flex-wrap items-center gap-3 px-5 py-2.5 text-xs">
               {shading != null && onShading ? (
@@ -171,7 +171,7 @@ export function AtlasInspectTools({
             const trigger = tool === "about" ? aboutButton : downloadButton
             trigger.current?.focus({ preventScroll: true })
           }}
-          className="z-[90] flex max-h-[min(72dvh,640px)] w-[min(400px,calc(100vw-32px))] flex-col overflow-clip rounded-2xl border-(--t-border-hi) bg-white p-0 text-sm text-(--t-ink-base) shadow-lg"
+          className="z-[90] flex max-h-[min(72dvh,640px)] w-[min(400px,calc(100vw-32px))] flex-col overflow-clip rounded-2xl border-(--t-border-hi) bg-(--t-bg-deep) p-0 text-sm text-(--t-ink-base) shadow-lg"
         >
           <div className="flex shrink-0 items-center justify-between gap-4 border-b border-(--t-border-line) px-5 py-2.5">
             <h3 className="type-h3 m-0">{label}</h3>
@@ -316,7 +316,7 @@ export function AtlasInspect({
         hidden={hidden}
         id={`${id}-panel`}
         aria-label={t("inspect")}
-        className={`${styles.stack} atlas-motion-card flex min-h-0 flex-1 flex-col overflow-clip ${mobile ? "bg-white" : "rounded-[22px] border border-(--t-border-hi) bg-white shadow-[0_8px_24px_rgb(23_22_43/0.06)]"}`}
+        className={`${styles.stack} atlas-motion-card flex min-h-0 flex-1 flex-col overflow-clip ${mobile ? "bg-(--t-bg-deep)" : "rounded-[22px] border border-(--t-border-hi) bg-(--t-bg-deep) shadow-[0_8px_24px_rgb(23_22_43/0.06)]"}`}
         style={{
           viewTransitionName: "atlas-inspect",
           display: hidden ? "none" : undefined,
@@ -359,14 +359,14 @@ export function AtlasInspect({
                       .getElementById(`${id}-${target.id}-tab`)
                       ?.focus({ preventScroll: true })
                   }}
-                  className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold aria-selected:bg-white aria-selected:text-(--t-accent-primary) aria-selected:shadow-[inset_0_0_0_1px_var(--t-border-hi)]"
+                  className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold aria-selected:bg-(--t-bg-deep) aria-selected:text-(--t-accent-primary) aria-selected:shadow-[inset_0_0_0_1px_var(--t-border-hi)]"
                 >
                   <span className="max-w-[110px] truncate">{entry.label}</span>
                   {entry.status ? (
                     <span
                       aria-label={entry.status}
                       title={entry.status}
-                      className="size-[6px] shrink-0 rounded-full bg-(--t-accent-primary)"
+                      className="size-[6px] shrink-0 rounded-full bg-(--t-action-primary)"
                     />
                   ) : null}
                 </button>

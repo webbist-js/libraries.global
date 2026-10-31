@@ -6,9 +6,11 @@ import { useEffect, useState } from "react"
 
 import { Drawer } from "@/components/ds/Drawer"
 import { useEventModal } from "@/components/events/EventModalContext"
+import { EventTags } from "@/components/events/EventTags"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
 import { SaveEventButton } from "@/components/events/SaveEventButton"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   analyticsAttributes,
   captureAnalyticsEvent,
@@ -70,9 +72,6 @@ export function EventModal() {
   // Fetch event when documentId changes
   useEffect(() => {
     if (!activeDocumentId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEvent(null)
-
       return
     }
     const controller = new AbortController()
@@ -81,7 +80,9 @@ export function EventModal() {
       content_type: "event",
       content_id: activeDocumentId,
     })
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the request placeholder when selecting an event
     setLoading(true)
+    setEvent(null)
     fetch(
       `/api/public-proxy/api/events/event/${encodeURIComponent(activeDocumentId)}`,
       { signal: controller.signal }
@@ -94,6 +95,7 @@ export function EventModal() {
         return item
       })
       .then((data) => {
+        if (controller.signal.aborted) return
         setEvent(data)
         setLoading(false)
       })
@@ -107,12 +109,11 @@ export function EventModal() {
     return () => controller.abort()
   }, [activeDocumentId])
 
-  if (!activeDocumentId) return null
-
   const linkUrl = event?.registrationUrl ?? event?.url
 
   return (
     <Drawer
+      open={Boolean(activeDocumentId)}
       titleId="event-details-heading"
       title={loading ? "Loading event" : (event?.title ?? "Event details")}
       onClose={closeModal}
@@ -133,41 +134,20 @@ export function EventModal() {
       {/* Content */}
       <div className="flex flex-col gap-5 p-5 sm:p-6">
         {loading ? (
-          <div className="flex min-h-40 items-center justify-center">
-            <span
-              style={{
-                fontFamily: T.font.mono,
-                fontSize: "var(--type-caption-size)",
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: T.ink.faint,
-              }}
-            >
-              {tUi("loading")}{" "}
-            </span>
+          <div role="status" aria-busy="true" className="grid min-h-40 gap-5">
+            <span className="sr-only">{tUi("loading")}</span>
+            <Skeleton className="aspect-video w-full rounded-xl" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-10 w-36 rounded-full" />
           </div>
         ) : event ? (
           <>
             {/* Chips */}
             <div className="flex flex-wrap items-center gap-2">
               <EventTypeChip type={event.eventType} size="xs" />
-              {event.tags?.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "var(--type-caption-size)",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                    border: `1px solid ${T.border.line}`,
-                    borderRadius: "999px",
-                    padding: "2px 8px",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
+              <EventTags tags={event.tags} />
             </div>
 
             {/* Date/time */}
@@ -245,9 +225,9 @@ export function EventModal() {
                   })}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-accent-primary-hover)"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-action-primary-hover)"
                   style={{
-                    background: T.accent.primary,
+                    background: T.action.primary,
                     color: "white",
                     textDecoration: "none",
                   }}

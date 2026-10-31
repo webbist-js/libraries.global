@@ -32,7 +32,11 @@ type GeoNote =
 const subscribeNever = () => () => {}
 const hasGeolocation = () => !!navigator.geolocation
 
-const LINK = { color: T.accent.primary }
+const LINK = {
+  color: T.accent.primary,
+  textDecoration: "underline",
+  textUnderlineOffset: "3px",
+}
 
 function StatusLine({
   tone,
@@ -295,7 +299,7 @@ export function LocationLookup({
           />
           <ul
             aria-label={tUi("places")}
-            className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 m-0 max-h-[340px] list-none overflow-y-auto rounded-[14px] border bg-white p-1.5"
+            className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 m-0 max-h-[340px] list-none overflow-y-auto rounded-[14px] border bg-(--t-bg-deep) p-1.5"
             hidden={!showList}
             id={listId}
             role="listbox"

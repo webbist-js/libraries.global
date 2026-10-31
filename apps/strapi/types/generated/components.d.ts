@@ -1,5 +1,34 @@
 import type { Schema, Struct } from "@strapi/strapi"
 
+export interface ContentArticleSource extends Struct.ComponentSchema {
+  collectionName: "components_content_article_sources"
+  info: {
+    description: "An editor-managed citation supporting a Journal article."
+    displayName: "Article source"
+    icon: "link"
+  }
+  attributes: {
+    accessedAt: Schema.Attribute.Date
+    notes: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 1000
+      }>
+    publisher: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 180
+      }>
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 180
+      }>
+    url: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2048
+      }>
+  }
+}
+
 export interface ContentCallout extends Struct.ComponentSchema {
   collectionName: "components_content_callouts"
   info: {
@@ -816,6 +845,7 @@ export interface UtilitiesTipTapRichText extends Struct.ComponentSchema {
 declare module "@strapi/strapi" {
   export namespace Public {
     export interface ComponentSchemas {
+      "content.article-source": ContentArticleSource
       "content.callout": ContentCallout
       "content.code-block": ContentCodeBlock
       "content.event-mention": ContentEventMention

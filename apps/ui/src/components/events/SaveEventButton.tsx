@@ -135,7 +135,7 @@ export function SaveEventButton({
           letterSpacing: ".1em",
           textTransform: "uppercase",
           borderColor: saved ? "var(--t-aurora-soft)" : T.border.line,
-          color: saved ? T.accent.aurora : T.ink.ghost,
+          color: saved ? T.accent.aurora : T.ink.dim,
           background: saved ? "var(--t-aurora-soft)" : "transparent",
         }}
       >

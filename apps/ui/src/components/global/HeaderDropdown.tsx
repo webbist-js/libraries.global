@@ -71,7 +71,7 @@ export function HeaderDropdownContent(props: ContentProps) {
         {...content}
         className={cn(
           DROPDOWN_PANEL,
-          "max-h-(--radix-popover-content-available-height)",
+          "z-[70] max-h-(--radix-popover-content-available-height)",
           className
         )}
       />
@@ -83,7 +83,7 @@ export function HeaderDropdownContent(props: ContentProps) {
     <DropdownMenuContent
       {...content}
       {...POSITION}
-      className={cn(DROPDOWN_PANEL, className)}
+      className={cn(DROPDOWN_PANEL, "z-[70]", className)}
     />
   )
 }

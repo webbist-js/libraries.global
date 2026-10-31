@@ -14,6 +14,10 @@ import { ErrorBoundary } from "react-error-boundary"
 
 import { globeInteractionReady } from "@/components/about/about-globe-geography"
 import type { AboutGlobeCountry } from "@/components/about/about-globe.types"
+import {
+  aboutViewport,
+  setAboutViewport,
+} from "@/components/about/about-viewport"
 import { AboutGlobeExplorer } from "@/components/about/AboutGlobeExplorer"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -39,7 +43,8 @@ const GlobeCanvas = dynamic(
 
 const ABOUT_GLOBE: GlobeOverrides = {
   ...HOMEPAGE_GLOBE_APPEARANCE,
-  fitRadius: 0.49,
+  // Leave room for the atmosphere and bloom beyond the globe’s surface.
+  fitRadius: 0.42,
   globeY: 0,
   autoRotate: true,
   autoRotateSpeed: 0.12,
@@ -84,6 +89,7 @@ export function AboutHero({
     const stage = stageRef.current
     const copy = copyRef.current
     if (!hero || !stage || !copy) return
+    const scrollTarget = hero.closest<HTMLElement>(".dashboard-page") ?? window
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
     const desktop = window.matchMedia(
       "(min-width: 1024px) and (min-height: 700px)"
@@ -99,12 +105,13 @@ export function AboutHero({
     const syncActivity = () => setActive(visible && !document.hidden)
     const render = () => {
       frame = 0
+      const viewport = aboutViewport(hero)
       const progress = story
         ? Math.min(
             1,
             Math.max(
               0,
-              (57 - hero.getBoundingClientRect().top) /
+              (viewport.top - hero.getBoundingClientRect().top) /
                 (stage.offsetHeight * REVEAL_SCROLL)
             )
           )
@@ -133,7 +140,8 @@ export function AboutHero({
           story,
           globeFrame.top,
           globeFrame.bottom,
-          window.innerHeight
+          viewport.bottom,
+          viewport.top
         )
       )
       if (ready !== lastReady) {
@@ -150,6 +158,7 @@ export function AboutHero({
       if (visible && !frame) frame = requestAnimationFrame(render)
     }
     const measure = () => {
+      setAboutViewport(hero)
       story = desktop.matches && !motion.matches
       setScrollStory(story)
       hero.dataset.story = String(story)
@@ -179,7 +188,10 @@ export function AboutHero({
     pointer.addEventListener("change", measure)
     document.addEventListener("visibilitychange", syncActivity)
     window.addEventListener("resize", measure)
-    window.addEventListener("scroll", schedule, { passive: true })
+    scrollTarget.addEventListener("scroll", schedule, {
+      passive: true,
+      capture: true,
+    })
     measure()
     syncActivity()
 
@@ -192,7 +204,7 @@ export function AboutHero({
       pointer.removeEventListener("change", measure)
       document.removeEventListener("visibilitychange", syncActivity)
       window.removeEventListener("resize", measure)
-      window.removeEventListener("scroll", schedule)
+      scrollTarget.removeEventListener("scroll", schedule, true)
     }
   }, [])
 
@@ -201,12 +213,13 @@ export function AboutHero({
     const stage = stageRef.current
     if (!hero || !stage) return
     if (hero.dataset.story === "true") {
-      window.scrollTo({
+      const viewport = aboutViewport(hero)
+      ;(viewport.root ?? window).scrollTo({
         top:
           hero.getBoundingClientRect().top +
-          window.scrollY +
+          (viewport.root?.scrollTop ?? window.scrollY) +
           stage.offsetHeight * REVEAL_SCROLL -
-          57,
+          viewport.top,
         behavior: reducedMotion ? "instant" : "smooth",
       })
     } else {
@@ -231,6 +244,7 @@ export function AboutHero({
             </p>
             <h1
               id="about-title"
+              tabIndex={-1}
               className="m-0 text-balance"
               style={{
                 ...displayStyle("hero"),

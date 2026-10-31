@@ -16,6 +16,10 @@ import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
+import {
+  captureWorkspaceAction,
+  workspaceRoute,
+} from "@/lib/workspace-analytics"
 
 import { actionFor } from "./actions"
 import {
@@ -98,7 +102,7 @@ function Progress({
             <span
               aria-hidden="true"
               className="block h-[5px] rounded-full"
-              style={{ background: reached ? T.accent.primary : T.bg.muted2 }}
+              style={{ background: reached ? T.action.primary : T.bg.muted2 }}
             />
             <span
               className="mt-2 block text-sm sm:text-base"
@@ -218,7 +222,7 @@ function StepRail({
                   aria-hidden="true"
                   className={`absolute top-9 bottom-0 left-[17px] w-[2px] rounded-full ${wide}`}
                   style={{
-                    background: complete ? T.accent.primary : T.border.line,
+                    background: complete ? T.action.primary : T.border.line,
                   }}
                 />
               ) : null}
@@ -227,7 +231,7 @@ function StepRail({
                 className="relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full text-base font-semibold"
                 style={
                   current || complete
-                    ? { background: T.accent.primary, color: "#fff" }
+                    ? { background: T.action.primary, color: "#fff" }
                     : {
                         background: T.bg.deep,
                         color: T.ink.dim,
@@ -372,7 +376,7 @@ function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
       </p>
       <div className="flex flex-wrap gap-2">
         <Link
-          className={`${PRIMARY} h-10 bg-(--t-accent-primary) px-5 text-base text-white no-underline hover:bg-(--t-accent-primary-hover)`}
+          className={`${PRIMARY} h-10 bg-(--t-action-primary) px-5 text-base text-white no-underline hover:bg-(--t-action-primary-hover)`}
           href={`/auth/signin?callbackUrl=${callback}`}
         >
           {tUi("sign_in")}{" "}
@@ -395,6 +399,20 @@ function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
  * page's correction drawer (library locked, starting at Details). Drafts
  * save on this device per action and library.
  */
+function correctionAnalyticsType(action: ActionId) {
+  if (action === "photo") return "photo"
+  if (action === "source") return "source"
+
+  return "correction"
+}
+
+function submissionError(error: string | { message?: string } | undefined) {
+  return (
+    (typeof error === "string" ? error : error?.message) ??
+    "We couldn’t send that. Please try again."
+  )
+}
+
 export function ContributionWizard({
   action,
   initialLibrary = null,
@@ -569,14 +587,19 @@ export function ContributionWizard({
 
   const send = async () => {
     if (!library || isHandoff(action)) return
+    const workspaceMeasured = workspaceRoute(window.location.pathname)
+      ? captureWorkspaceAction(
+          {
+            workspace_area: "contribute",
+            workspace_section: "record",
+            workspace_surface: drawer ? "drawer" : "page",
+          },
+          "submit"
+        )
+      : () => false
     const measured = captureAnalyticsEvent("submission_success", {
       interaction_source: "library_correction",
-      submission_type:
-        action === "photo"
-          ? "photo"
-          : action === "source"
-            ? "source"
-            : "correction",
+      submission_type: correctionAnalyticsType(action),
     })
     setSending(true)
     setError(null)
@@ -589,18 +612,19 @@ export function ContributionWizard({
         ),
       })
       if (res.ok) {
+        workspaceMeasured("success")
         measured()
         if (key) writeDraft(key, null)
         setSent(true)
       } else {
+        workspaceMeasured("error")
         const json = (await res.json().catch(() => ({}))) as {
           error?: string | { message?: string }
         }
-        const message =
-          typeof json.error === "string" ? json.error : json.error?.message
-        setError(message ?? "We couldn’t send that. Please try again.")
+        setError(submissionError(json.error))
       }
     } catch {
+      workspaceMeasured("error")
       setError("Network error. Please try again.")
     } finally {
       setSending(false)
@@ -650,7 +674,7 @@ export function ContributionWizard({
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         <Link
-          className={`${PRIMARY} bg-(--t-accent-primary) text-white no-underline hover:bg-(--t-accent-primary-hover)`}
+          className={`${PRIMARY} bg-(--t-action-primary) text-white no-underline hover:bg-(--t-action-primary-hover)`}
           href="/contribute/submissions"
         >
           See my submissions
@@ -706,7 +730,7 @@ export function ContributionWizard({
           className={`${PRIMARY} ${
             blocker || sending
               ? "cursor-not-allowed"
-              : "bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)"
+              : "bg-(--t-action-primary) text-white hover:bg-(--t-action-primary-hover)"
           }`}
           onClick={next}
           style={

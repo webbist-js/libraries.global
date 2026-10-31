@@ -14,8 +14,12 @@ import {
 import { toast } from "sonner"
 
 import { Notice } from "@/components/ds/Notice"
+import { SelectField } from "@/components/ds/SelectField"
 import { Container } from "@/components/elementary/Container"
+import { LibraryContributionReview } from "@/components/library/LibraryContributionReview"
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import {
+  type Submission,
   useCreateSubmission,
   useFinalizeDraft,
   useResumeDraft,
@@ -25,7 +29,6 @@ import { useUnsavedNavigation } from "@/hooks/useUnsavedNavigation"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
-import { primaryCtaSm } from "@/lib/styles"
 
 import { ChangedFieldsContext } from "./ChangedFieldsContext"
 import { DraftResumeBanner } from "./DraftResumeBanner"
@@ -51,6 +54,7 @@ import {
   WIZARD_CARD,
 } from "./wizard.constants"
 import { stepProgress } from "./wizard.progress"
+import { PublishedRecordChangedError, resumeRecordDraft } from "./wizard.resume"
 import { nextWizardStep, wizardStepPosition, wizardSteps } from "./wizard.steps"
 import { tipFor } from "./wizard.tips"
 import {
@@ -158,6 +162,12 @@ export function IndexRecordWizard({
   initialStep,
   creationTeams = [],
   timetableContext,
+  layout = "page",
+  onSubmitted,
+  onCancel,
+  onDraftState,
+  resumeSubmission,
+  beforeSubmit,
 }: IndexRecordWizardProps) {
   const tUi = useUiTranslations("ui")
   const displayLocale = useLocale()
@@ -259,12 +269,19 @@ export function IndexRecordWizard({
     useCreateSubmission()
   const { mutate: saveDraftMutation } = useSaveDraft()
   const { mutate: finalizeDraft, isPending: isFinalizing } = useFinalizeDraft()
-  const { data: existingDraft } = useResumeDraft(
+  const { data: foundDraft } = useResumeDraft(
     submissionType,
     improve ? target.slug : undefined,
     translationLocale ?? undefined,
     staffNew
   )
+  const existingDraft = resumeSubmission ?? foundDraft
+  const [baselineConflict, setBaselineConflict] = useState<FormData | null>(
+    null
+  )
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [preparingSubmit, setPreparingSubmit] = useState(false)
+  const [checkingBaseline, setCheckingBaseline] = useState(false)
   const dirty = JSON.stringify(formData) !== savedSnapshot
   const isPending = isCreating || isFinalizing || saving
   useUnsavedNavigation(dirty || saving, tSave("leave"), committed)
@@ -351,16 +368,27 @@ export function IndexRecordWizard({
   const resumeDraft = useCallback(() => {
     if (!existingDraft?.draftData) return
     const { staffCreation: _creation, ...savedForm } = existingDraft.draftData
-    const resumed = {
+    const restored = improve
+      ? resumeRecordDraft(
+          initial,
+          savedForm,
+          existingDraft.fields?.previous as Record<string, unknown> | undefined
+        )
+      : null
+    const resumed = restored?.form ?? {
       ...initial,
       ...(savedForm as Partial<FormData>),
     }
+    if (restored) setInitial(restored.baseline)
     setFormData(resumed)
     setStep(
-      nextWizardStep(
-        existingDraft.stepCompleted ?? 0,
-        resumed.libraryType === "Mobile"
-      )
+      initialStep &&
+        wizardStepPosition(initialStep, resumed.libraryType === "Mobile") > 0
+        ? initialStep
+        : nextWizardStep(
+            existingDraft.stepCompleted ?? 0,
+            resumed.libraryType === "Mobile"
+          )
     )
     setDraftId(existingDraft.documentId)
     persistedId.current = existingDraft.documentId
@@ -373,7 +401,7 @@ export function IndexRecordWizard({
       setCreationTeamId(savedTeam?.teamDocumentId ?? "")
     }
     setDraftBannerDismissed(true)
-  }, [existingDraft, initial, staffNew])
+  }, [existingDraft, initial, staffNew, improve, initialStep])
 
   const discardDraft = useCallback(() => setDraftBannerDismissed(true), [])
 
@@ -463,7 +491,10 @@ export function IndexRecordWizard({
       saveDraftMutation(
         {
           id,
-          draftData: pending.form as unknown as Record<string, unknown>,
+          draftData: {
+            ...pending.form,
+            ...(improve ? { kind: "record", previous: initial } : {}),
+          } as unknown as Record<string, unknown>,
           stepCompleted: pending.step,
         },
         callbacks
@@ -480,7 +511,10 @@ export function IndexRecordWizard({
               ? recordChangesPayload(initial, pending.form)
               : libraryFields,
             asDraft: true,
-            draftData: pending.form as unknown as Record<string, unknown>,
+            draftData: {
+              ...pending.form,
+              ...(improve ? { kind: "record", previous: initial } : {}),
+            } as unknown as Record<string, unknown>,
             ...(staffNew ? { staffCreation } : {}),
           },
           translationLocale
@@ -574,7 +608,25 @@ export function IndexRecordWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
-  const onSent = () => {
+  useEffect(() => {
+    onDraftState?.({
+      dirty,
+      saving: saving || preparingSubmit || checkingBaseline || isFinalizing,
+      draftId,
+      step,
+    })
+  }, [
+    dirty,
+    saving,
+    preparingSubmit,
+    checkingBaseline,
+    isFinalizing,
+    draftId,
+    step,
+    onDraftState,
+  ])
+
+  const onSent = (submission: Submission) => {
     committed.current = true
     queryClient?.removeQueries({ queryKey: recoveryKey, exact: true })
     queuedSave.current = null
@@ -583,10 +635,17 @@ export function IndexRecordWizard({
         ? "Library sent for review. Approval will add it to your staff area."
         : "Submission received — editorial review typically takes 1–3 days."
     )
-    router.push("/contribute/submissions")
+    queryClient?.invalidateQueries({ queryKey: ["my-submissions"] })
+    queryClient?.invalidateQueries({ queryKey: ["draft"] })
+    if (onSubmitted) onSubmitted(submission)
+    else router.push("/contribute/submissions")
   }
-  const onFailed = (err: Error | null) =>
+  const onFailed = (err: Error | null) => {
+    setSubmitError(
+      err?.message ?? "Submission failed. Your draft is kept; please retry."
+    )
     toast.error(err?.message ?? "Submission failed")
+  }
 
   const submit = () => {
     if (saveBusy.current) return
@@ -630,30 +689,86 @@ export function IndexRecordWizard({
     }
   }
 
+  const submitRef = useRef(submit)
+  submitRef.current = submit
+  // Finalization must wait for the last autosave, including its full draftData.
+  useEffect(() => {
+    if (!preparingSubmit || saving) return
+    if (saveError) {
+      setPreparingSubmit(false)
+
+      return
+    }
+    if (!dirty) {
+      setPreparingSubmit(false)
+      submitRef.current()
+    }
+  }, [preparingSubmit, saving, dirty, saveError])
+  const requestSubmit = async () => {
+    if (checkingBaseline || preparingSubmit || isPending || committed.current)
+      return
+    setSubmitError(null)
+    setCheckingBaseline(true)
+    try {
+      if (beforeSubmit) await beforeSubmit(initial, changed)
+      if (dirty) {
+        setPreparingSubmit(true)
+        persist(formData, step, draftId)
+      } else submit()
+    } catch (error) {
+      if (error instanceof PublishedRecordChangedError)
+        setBaselineConflict(error.current)
+      setPreparingSubmit(false)
+      onFailed(
+        error instanceof Error
+          ? error
+          : new Error("Unable to check the current record. Please retry.")
+      )
+    } finally {
+      setCheckingBaseline(false)
+    }
+  }
+
   const findHref = staff ? "/staff" : INDEX_EDITOR_PATH
 
   // The staff area's layout already provides the page container, so the
   // wizard adds no padding of its own there: same rail, widths and spacing
   // as /contribute/index/[slug].
-  const Wrapper = inStaffArea ? "div" : Container
+  const Wrapper = inStaffArea || layout === "drawer" ? "div" : Container
 
   return (
     <ChangedFieldsContext.Provider value={changedSet}>
       <ModeratedFieldsContext.Provider value={staff}>
-        <Wrapper className={inStaffArea ? "w-full" : "py-10"}>
+        <Wrapper
+          className={
+            layout === "drawer"
+              ? "index-editor-drawer w-full p-4 sm:p-6"
+              : inStaffArea
+                ? "w-full"
+                : "py-10"
+          }
+        >
           <div
             id="wizard-main"
             ref={topRef}
-            className={WIZARD_GRID}
+            className={
+              layout === "drawer"
+                ? "grid min-w-0 grid-cols-1 gap-4"
+                : WIZARD_GRID
+            }
             style={{ scrollMarginTop: "128px" }}
           >
             {/* Left — rail: title, status, completeness, stepper */}
             <div
-              className={WIZARD_RAIL}
+              className={
+                layout === "drawer"
+                  ? "min-w-0 rounded-2xl border p-4 sm:grid sm:grid-cols-2 sm:items-center sm:gap-x-6"
+                  : WIZARD_RAIL
+              }
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
               <h2
-                className="type-h2 truncate"
+                className={layout === "drawer" ? "sr-only" : "type-h2 truncate"}
                 style={{
                   color: T.ink.base,
                   margin: "0 0 6px",
@@ -690,7 +805,10 @@ export function IndexRecordWizard({
                     : tUi("draft_not_yet_saved")}
                 </RailStatus>
               )}
-              <div className="mt-3" aria-live="polite">
+              <div
+                className={layout === "drawer" ? "empty:hidden" : "mt-3"}
+                aria-live="polite"
+              >
                 {saveError ? (
                   <div role="alert">
                     <p className="text-sm">{saveError}</p>
@@ -712,34 +830,94 @@ export function IndexRecordWizard({
                   </RailStatus>
                 ) : null}
               </div>
-              <div className="mt-5">
-                <RecordProgress
-                  progress={progress}
-                  improving={improve}
-                  changedCount={changed.length}
-                />
-              </div>
-              <div className="mt-5">
-                <WizardStepNav
-                  currentStep={step}
-                  progress={progress}
-                  changedSteps={stepsWithChanges}
-                  onStepClick={handleStepClick}
-                  findHref={findHref}
-                  staff={staff}
-                  mobile={formData.libraryType === "Mobile"}
-                />
-              </div>
+              {layout !== "drawer" ? (
+                <div className="mt-5">
+                  <RecordProgress
+                    progress={progress}
+                    improving={improve}
+                    changedCount={changed.length}
+                  />
+                </div>
+              ) : null}
+              {layout === "drawer" ? (
+                <div className="mt-3 flex flex-col gap-2 text-sm font-semibold sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:mt-0">
+                  <span>Section</span>
+                  <SelectField
+                    label="Editor section"
+                    value={String(step)}
+                    onValueChange={(value) => handleStepClick(Number(value))}
+                    options={steps
+                      .filter(({ n }) => n > 0)
+                      .map(({ n }) => ({
+                        value: String(n),
+                        label: wizardStepCopy(n, mobile, staff).label,
+                      }))}
+                  />
+                </div>
+              ) : (
+                <div className="mt-5">
+                  <WizardStepNav
+                    currentStep={step}
+                    progress={progress}
+                    changedSteps={stepsWithChanges}
+                    onStepClick={handleStepClick}
+                    findHref={findHref}
+                    staff={staff}
+                    mobile={formData.libraryType === "Mobile"}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Right — step form */}
             <fieldset
-              disabled={isFinalizing || (isCreating && !saving)}
+              disabled={
+                checkingBaseline ||
+                preparingSubmit ||
+                isFinalizing ||
+                (isCreating && !saving)
+              }
               aria-label={tUi("library_record_form")}
               className={WIZARD_CARD}
               style={{ background: T.bg.deep, borderColor: T.border.line }}
             >
-              {improve && !staff && (
+              {baselineConflict ? (
+                <Notice
+                  icon="mdi:source-branch"
+                  tone="warn"
+                  title="The published record changed"
+                >
+                  <p>
+                    Review your proposal against the latest values. Your
+                    proposed changes will be kept; untouched fields will use the
+                    current record.
+                  </p>
+                  <button
+                    type="button"
+                    className="min-h-11 font-semibold underline"
+                    onClick={() => {
+                      setFormData(
+                        resumeRecordDraft(baselineConflict, {
+                          ...formData,
+                          previous: initial,
+                        }).form
+                      )
+                      setInitial(baselineConflict)
+                      setBaselineConflict(null)
+                      setSubmitError(null)
+                      setStep(LAST_STEP)
+                    }}
+                  >
+                    Compare with the latest record
+                  </button>
+                </Notice>
+              ) : null}
+              {submitError ? (
+                <p role="alert" className="mb-4 text-(--t-ink-base)">
+                  {submitError}
+                </p>
+              ) : null}
+              {improve && !staff && layout !== "drawer" && (
                 <div
                   className="mb-8 flex flex-col gap-3 rounded-[20px] p-5"
                   style={{
@@ -938,6 +1116,11 @@ export function IndexRecordWizard({
                 />
               )}
 
+              {improve && !staff && step === LAST_STEP ? (
+                <LibraryContributionReview
+                  fields={recordChangesPayload(initial, formData)}
+                />
+              ) : null}
               <EditableFieldsContext.Provider value={editable}>
                 <FieldErrorsContext.Provider value={fieldErrors}>
                   <StepPositionContext.Provider value={stepCounter}>
@@ -952,22 +1135,28 @@ export function IndexRecordWizard({
                 </FieldErrorsContext.Provider>
               </EditableFieldsContext.Provider>
 
-              <div className="mt-10">
-                <Notice
-                  icon="mdi:lightbulb-on-outline"
-                  tone="info"
-                  title={tip.title}
-                >
-                  <p className="m-0" style={{ color: T.ink.base }}>
-                    {tip.body}
-                  </p>
-                </Notice>
-              </div>
+              {layout !== "drawer" ? (
+                <div className="mt-10">
+                  <Notice
+                    icon="mdi:lightbulb-on-outline"
+                    tone="info"
+                    title={tip.title}
+                  >
+                    <p className="m-0" style={{ color: T.ink.base }}>
+                      {tip.body}
+                    </p>
+                  </Notice>
+                </div>
+              ) : null}
 
               <div
                 role="group"
                 aria-label={tUi("step_navigation")}
-                className="flex flex-wrap items-center gap-3"
+                className={
+                  layout === "drawer"
+                    ? "sticky bottom-0 z-10 flex flex-wrap items-center gap-3 bg-(--t-bg-deep) pb-4"
+                    : "flex flex-wrap items-center gap-3"
+                }
                 style={{
                   marginTop: "40px",
                   paddingTop: "28px",
@@ -989,6 +1178,14 @@ export function IndexRecordWizard({
                   >
                     <Icon icon="mdi:arrow-left" width={18} aria-hidden="true" />
                     {tUi("back")}{" "}
+                  </button>
+                ) : layout === "drawer" && onCancel ? (
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-full border px-5 text-sm font-semibold"
+                    onClick={onCancel}
+                  >
+                    Back to library
                   </button>
                 ) : (
                   <Link
@@ -1013,7 +1210,7 @@ export function IndexRecordWizard({
                     type="button"
                     onClick={() => handleStepClick(LAST_STEP)}
                     disabled={changed.length === 0}
-                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50"
+                    className={`${layout === "drawer" ? "hidden sm:inline-flex" : "inline-flex"} items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-muted-2) disabled:cursor-not-allowed disabled:opacity-50`}
                     style={{
                       border: `1px solid ${T.border.hi}`,
                       background: T.bg.deep,
@@ -1043,9 +1240,9 @@ export function IndexRecordWizard({
                 ) : staff ? null : (
                   <button
                     type="button"
-                    onClick={submit}
-                    disabled={isPending}
-                    aria-busy={isPending}
+                    onClick={() => void requestSubmit()}
+                    disabled={isPending || preparingSubmit || checkingBaseline}
+                    aria-busy={isPending || preparingSubmit || checkingBaseline}
                     className={`${primaryCtaSm} min-h-12 px-6 text-base`}
                     style={{
                       border: "none",
@@ -1053,7 +1250,9 @@ export function IndexRecordWizard({
                       opacity: isPending ? 0.6 : 1,
                     }}
                   >
-                    {isPending ? tUi("submitting") : tUi("submit_for_review")}
+                    {isPending || preparingSubmit
+                      ? tUi("submitting")
+                      : tUi("submit_for_review")}
                     {!isPending && (
                       <Icon
                         icon="mdi:arrow-right"

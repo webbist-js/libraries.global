@@ -157,7 +157,7 @@ The number of consecutive calendar days on which a user had an approved contribu
 _Avoid_: combo, run, activity count
 
 **Moderator**:
-A community member with authority to approve, reject, or request more information on Submissions within their Moderation Scope: anyone holding a `moderator` Role Grant, and the editorial board for every queue and locale. Moderators review on the site at `/contribute/moderation`, where Strapi re-checks their scope on every request; the owner can also review from the Strapi admin queue. Nobody reviews their own Submission, and no Moderator lets one skip review.
+A community member with authority to approve, reject, or request more information on Submissions within their Moderation Scope: anyone holding a `moderator` Role Grant, and the editorial board for every queue and locale. Moderators review on the site at `/moderation`, where Strapi re-checks their scope on every request; the owner can also review from the Strapi admin queue. Nobody reviews their own Submission, and no Moderator lets one skip review.
 _Avoid_: admin, reviewer (alone — too generic)
 
 **Contributor Role**:

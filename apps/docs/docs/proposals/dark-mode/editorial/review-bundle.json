@@ -1,0 +1,1215 @@
+{
+  "kind": "editorial-review-bundle-not-a-cms-payload",
+  "preparedOn": "2026-10-30",
+  "published": false,
+  "locale": "en",
+  "assets": {
+    "journal-dark-implemented": {
+      "file": "../assets/journal-dark-implemented.png",
+      "alternativeText": "Development Journal in dark appearance, with deep indigo panels, light text and the header appearance control.",
+      "caption": "Development preview of the Journal in dark mode. Includes labelled demonstration stories; dark mode has not shipped yet.",
+      "provenance": "Browser capture of the running development UI after choosing Dark through the real header control. No production account or billing details are shown.",
+      "sha256": "b3bfce188b6eece8a97675aa2bde358f710da188ca3ac79041288e69879b1d2e"
+    },
+    "journal-light-implemented": {
+      "file": "../assets/journal-light-implemented.png",
+      "alternativeText": "The same development Journal in light appearance, with warm paper, dark ink and indigo accents.",
+      "caption": "Development preview of the same Journal in light mode. The coming release will offer Light, Dark and System in the header and account settings.",
+      "provenance": "Browser capture of the running development UI after saving Light in account settings and reloading the page.",
+      "sha256": "ede3491d86c437a466bd97324b45bc4a324a5b0091a16e5d9fe60eeeef3e78b6"
+    },
+    "ui-overhaul-home": {
+      "file": "../assets/ui-overhaul-home.png",
+      "alternativeText": "Current development homepage excerpt showing the warm reading surface, serif headline, library search and globe illustration.",
+      "caption": "An excerpt from our development homepage. Dark mode is coming with the interface overhaul; it has not shipped yet.",
+      "provenance": "Browser capture of the running development UI, clipped to the public homepage hero to exclude account and moderation controls.",
+      "sha256": "a22cc528d0b50199668e599d634f0cf464612ab58957e8656be2bd1740cf0a5d"
+    }
+  },
+  "articles": [
+    {
+      "file": "how-the-site-is-designed.md",
+      "model": "wiki-article",
+      "slug": "how-the-site-is-designed",
+      "sectionSlug": "design-system",
+      "operation": "update-existing-body-and-summary-preserve-metadata",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "stable",
+      "locale": "en",
+      "title": "How the site is designed",
+      "summary": "Libraries Global is an open reference work with people around it. Its design should help you find a fact, understand what supports it and add something useful when the record is incomplete.",
+      "readingTimeMinutes": 3,
+      "body": [
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A reference book you can work in"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The light appearance borrows from printed reference books: a warm background, dark text, serif headings and indigo links. Longer reading needs comfortable line lengths and a clear rhythm. Working pages need labels, controls and enough structure to scan quickly."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We use the same underlying type and spacing rules across those tasks. The Journal has more room for stories and images. The Atlas gives space to maps and their controls. Staff pages put the record, the action and its status close together. Those differences should help explain the page's purpose."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Dark mode is being prepared as a second appearance. It will keep the hierarchy and character of the light design, with colours chosen for darker surfaces. It is not available as a site-wide control yet. "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/colour-and-appearance",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "Colour and appearance"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " explains the intended choices."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Show what the record knows"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A missing answer is not a negative answer. If a record says nothing about step-free access, the interface should show that the information is missing. It should not suggest that the building has no step-free entrance."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The same care applies to coverage. A gap on a map may be a gap in the index. Dates, sources and qualifications belong near the information they explain. We want a reader to be able to follow a claim back to its evidence, rather than treating a polished card as proof."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Colour helps you recognise things"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Library types use broad colour families. National, parliamentary and state libraries use purple; public, municipal and mobile libraries use green; academic libraries use blue. Special, monastic, archive, private and cultural libraries use rust, while digital and other categories use grey."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The type name stays visible alongside the colour. A map legend, tag or status should still make sense if you cannot distinguish the hues. In a dark appearance, the background and text pair may change while the category keeps its identity."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Avatar colours are personal choices. They are separate from the interface appearance and from any claim of staff authority."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Consistency where it helps"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Search, pagination, forms and menus should behave in familiar ways throughout the site. A shared component gives us one place to improve a label, a focus indicator or an error state."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We keep components specific when their job is specific. A map legend is different from a membership summary. Team membership, verification and access to a library must remain separately explained, even when their status labels share a visual pattern. Read more about "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/shared-components-and-section-identity",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "shared components and section identity"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Access is part of the design work"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Our target is WCAG 2.2 AA. Keyboard use, visible focus, meaningful headings, labelled controls and readable contrast belong in routine design reviews. Motion should respect a reader's preferences, and enlarging text should not hide the next action. These are requirements we work towards and test; this article is not a claim that every page has passed a complete assessment."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "If something gets in the way, tell us what you were trying to do, the page and the browser or assistive technology involved. Avoid sending private account details. You can contact info@libraries.global or use the project's "
+                },
+                {
+                  "type": "link",
+                  "url": "https://github.com/webbist-js/libraries.global/issues",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "GitHub issues"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": ". The "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/accessible-interface-interaction",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "accessible interaction guide"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " describes the checks in more detail."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "For implementation details, see "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/getting-started/working-on-the-code",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "Working on the code"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "colour-and-appearance.md",
+      "model": "wiki-article",
+      "slug": "colour-and-appearance",
+      "sectionSlug": "design-system",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "beta",
+      "locale": "en",
+      "title": "Colour and appearance",
+      "summary": "Colour gives Libraries Global a recognisable character and helps organise information. It must also leave text, controls and important states clear enough to use.",
+      "readingTimeMinutes": 3,
+      "body": [
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Light, Dark and System"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Dark mode is coming as part of the interface overhaul. The site-wide appearance controls have not shipped yet. The intended choices are Light, Dark and System, accessible from the header and account settings."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Light keeps the warm reading surface and dark ink. Dark uses deep indigo surfaces and lighter text. System follows the appearance preference reported by your browser, which often reflects your device setting. It will not guess from your location or the time of day."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Choosing Light or Dark will override System until you change the choice again. Choosing System will keep following the browser as its preference changes. A saved System choice is different from saving whichever appearance happened to be active at the time."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The planned controls will work for visitors without an account. A browser choice will stay on that browser where storage is available. Signed-in readers will also be able to save an account preference. If saving fails, the interface should say so rather than suggesting that the choice has reached every device."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Colours have jobs"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The page canvas, a raised panel, ordinary text, a link and a focus indicator need different colour roles. A pale violet that reads well on a dark panel may disappear against a light page. A button needs a tested text-and-background pair of its own."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We define those roles in the shared theme so an improvement reaches the places that use it. Interactive states matter too: hover, focus, selected, loading, invalid and disabled. Checking a static screenshot is only the beginning."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Our contrast target follows "
+                },
+                {
+                  "type": "link",
+                  "url": "https://www.w3.org/TR/WCAG22/",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "WCAG 2.2"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": ": at least 4.5:1 for ordinary text and 3:1 for large text. Essential control boundaries and graphical information have their own contrast requirements. Quiet decoration does not have the same job as the outline that lets you find an input."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Meaning survives a change of appearance"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Library types keep their broad colour families and written names. Status messages need words or icons as well as colour. “Waiting for verification” and “Membership active” describe different facts, even if both appear in small rounded labels."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Photos should retain their original colours. Maps, charts and illustrations need their own review: labels, selected areas and data categories must remain legible, with legends and other ways to understand the information where needed. Simply inverting an image would change the evidence as well as its appearance."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Your avatar colour is also separate from the interface theme. Changing the reading surface should not change your public identity."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Preference, rather than a prescription"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Different readers prefer different appearances in different situations. We are adding a choice, without claiming that one theme is universally healthier or more accessible. Contrast, focus, zoom, motion and clear language still need attention in both."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "See "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/how-the-site-is-designed",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "How the site is designed"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " for the wider principles and "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/accessible-interface-interaction",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "accessible interfaces and interaction"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " for the checks behind the rollout."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "accessible-interface-interaction.md",
+      "model": "wiki-article",
+      "slug": "accessible-interface-interaction",
+      "sectionSlug": "design-system",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "stable",
+      "locale": "en",
+      "title": "Accessible interfaces and interaction",
+      "summary": "Libraries Global should work for people using different screens, input methods and assistive technologies. Our target is WCAG 2.2 AA. This guide describes the design requirements and testing approach; it is not a completed conformance report.",
+      "readingTimeMinutes": 3,
+      "body": [
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Reading and finding your place"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Headings should describe the page and its sections in a meaningful order. A larger visual heading does not automatically need a higher heading level. Links need names that make sense in context, and images need useful alternative text when they carry information."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Text must remain readable against its actual background. We check ordinary text, smaller metadata, links, form values and error messages in each supported appearance. A good contrast score for a headline does not establish that the whole page is readable."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Dark mode is forthcoming. It will be checked alongside Light, including menus, sheets and messages that appear after an action. Neither appearance can stand in for the other in testing."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Keyboard and touch"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "You should be able to reach and use controls with a keyboard and see where focus is. Menus and dialogs need predictable opening, closing and focus return. Sticky bars and drawers must not cover the control you are using."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Small controls need enough space to select reliably. WCAG 2.2 includes a 24 CSS-pixel minimum target-size criterion with specific exceptions; our design aim for primary touch controls is 44 CSS pixels. We also review the space between nearby actions."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A control's icon supplements its name. A sun or moon alone does not explain whether it describes the current appearance or the action you are about to take. The planned appearance menu will name Light, Dark and System explicitly."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Forms and changes"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Labels must attach to the actual input. Help and error messages should be associated with the field they explain. When an action saves, fails or needs another step, the message should be available to assistive technology as well as visible on screen."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Loading should not erase a button's accessible name. A disabled action should not be the only explanation of what is required. Password managers and paste are part of usable authentication, rather than obstacles to design around."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Enlarged text and other preferences"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We review text resizing, high zoom, narrow layouts and text-spacing changes. The page should preserve ordinary content and actions rather than hiding them when space becomes tight. Maps and complex tables may need two-dimensional navigation, but their surrounding instructions and controls still need to work."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Reduced-motion and forced-colour preferences need deliberate testing. Theme changes should not trigger an elaborate animation. Focus indicators and selected states must survive high-contrast settings."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Data and honest status"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Colour cannot be the only way to recognise a category, result or warning. Maps need clear legends; charts need labels and an alternative reading where necessary. Unknown information should be described as unknown."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Team membership, verification and library-management permission remain distinct. An accessible label is useful only if it accurately describes the state."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Checking and reporting"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Automated checks help catch recurring problems. They sit alongside manual keyboard, screen-reader, zoom and real-device checks. We use "
+                },
+                {
+                  "type": "link",
+                  "url": "https://www.w3.org/TR/WCAG22/",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "WCAG 2.2"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " as the reference and track limitations rather than treating a passing scan as certification."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "For current commitments and reporting routes, see the "
+                },
+                {
+                  "type": "link",
+                  "url": "/legal/accessibility",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "accessibility statement"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": ". A useful report includes the page, the task, what happened and your browser or assistive technology. Please leave out passwords, payment information and other private account details."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "shared-components-and-section-identity.md",
+      "model": "wiki-article",
+      "slug": "shared-components-and-section-identity",
+      "sectionSlug": "design-system",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "stable",
+      "locale": "en",
+      "title": "Shared components and section identity",
+      "summary": "Libraries Global has an Atlas, a Journal, a Knowledge hub and working areas for contributors and library staff. They share a design system, while leaving room for the kind of work each section supports.",
+      "readingTimeMinutes": 3,
+      "body": [
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Reuse the familiar mechanics"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A search field should feel familiar when you move from a library list to a network page. Buttons, menus, form labels, pagination and feedback messages benefit from shared behaviour. Fixing the shared part can improve keyboard support or an error state in several places at once."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Shared parts also make a theme possible. A button should draw its colours from tested roles, rather than carrying a private copy of the palette. Light and Dark can then use the same component with different colour pairs. Dark mode is still being prepared; it is not a separate set of pages."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Compose patterns around a purpose"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Some reusable pieces are larger than an individual control. A workspace page header can combine a title, description, context and action. A form section can group a heading, fields and its feedback. An empty state can explain what is missing and offer an appropriate next step."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Those patterns need room for useful variation. An onboarding page may explain a process; a working list should bring the records into view quickly. Reusing the header structure does not require an oversized banner on every screen."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The best abstraction makes the common rules easier to see. A component with dozens of unrelated switches can hide those rules. We prefer smaller pieces composed into a page when its needs are different."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Keep the specialist parts"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A map legend, a discussion reply and an opening-hours table carry different meanings. They can reuse type, spacing, colours and control primitives without becoming one generic card."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Section identity follows that purpose. The Journal leaves room for images and longer reading. The Atlas gives priority to geography and the tools needed to understand it. Staff pages keep records, actions and access information close together."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Shared status styling needs particular care. Active Team membership describes an account entitlement. Verification describes a reviewed connection. Library access describes permission to manage particular records. Matching their shape is useful; merging their meaning would be misleading."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "What Storybook is for"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Storybook is our working component library. It lets us inspect a control without navigating an entire account flow. The useful examples include long labels, empty results, errors, loading, keyboard focus and constrained widths, as well as the tidy default."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The development library already has appearance controls; dark mode has not shipped on the site yet. Stories render the actual shared components in both Light and Dark, including menus and dialogs that appear outside the immediate story container."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A component being imported somewhere is not proof that its states have been reviewed. A screenshot also cannot show every keyboard or screen-reader interaction. We use examples, interaction checks and page-level review together."
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Change once, check in context"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "When a shared part changes, it should be checked in the sections that use it. A smaller button may help a compact toolbar and make a touch action harder to select. A quiet divider may work on a reading page and disappear in a dense table."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The aim is fewer accidental differences and clearer purposeful ones. "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/how-the-site-is-designed",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "How the site is designed"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " describes the principles, and "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/accessible-interface-interaction",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "accessible interfaces and interaction"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " explains the checks that help make them practical."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "journal.md",
+      "model": "blog-article",
+      "slug": "dark-mode-and-a-more-consistent-libraries-global",
+      "sectionSlug": "from-the-index",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "publicationOrigin": "index",
+      "locale": "en",
+      "title": "A darker reading room, and a more consistent Libraries Global",
+      "summary": "Dark mode is coming to Libraries Global as part of a wider interface overhaul. Here is a first look at the design, and the small changes behind it.",
+      "readingTimeMinutes": 4,
+      "body": [
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Libraries Global has grown into several different kinds of place. You can look up an opening time, explore the Atlas, read a story, join a conversation or look after a library's record. Each task asks something different of the interface. A long article needs room to read. A staff workspace needs clear actions and a reliable account of what you can do."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We have been working on making those places feel more connected. Dark mode is the next part of that work: a second appearance that keeps the same type, hierarchy and indigo character."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "These are screenshots from a development build. Dark mode and its appearance controls are coming to the site, but have not shipped yet."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "__component": "content.image-block",
+          "imageAsset": "journal-dark-implemented",
+          "alternativeText": "Development Journal in dark appearance, with deep indigo panels, light text and the header appearance control.",
+          "caption": "Development preview of the Journal in dark mode. Includes labelled demonstration stories; dark mode has not shipped yet.",
+          "fullWidth": true
+        },
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The same place, after dark"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The light appearance takes its cues from a reference book: a warm page, dark ink and headings with a little space around them. The dark design moves to deep indigo surfaces, softer light text and violet accents. Panels still need to feel separate from the page behind them. Links still need to look like links."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We want both appearances to feel considered. Dark mode will not invert photographs or turn every border bright. Library categories will keep their familiar colour families, with labels alongside them. A pending request will still say what is pending."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The development build offers Light, Dark and System. System follows the preference reported by your browser. An explicit Light or Dark choice takes priority. The header and account settings use the same preference, with account saving for signed-in readers."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "__component": "content.image-block",
+          "imageAsset": "journal-light-implemented",
+          "alternativeText": "The same development Journal in light appearance, with warm paper, dark ink and indigo accents.",
+          "caption": "Development preview of the same Journal in light mode. The coming release will offer Light, Dark and System in the header and account settings.",
+          "fullWidth": true
+        },
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Familiar controls, wherever you are"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The wider overhaul is also about repeated details. Page titles, status labels, search fields and action rows should work predictably as you move between sections. Reusing those parts gives us fewer places to fix when a control needs better keyboard behaviour or a clearer error message."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "There is room for different personalities. The Journal can have an editorial pace; the Atlas needs practical map tools. Sharing a button or a page-header pattern does not mean giving every section the same layout."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "The staff area makes the distinction especially clear. Team membership, verification and permission to manage a library are different things. A tidy banner must explain them accurately. Paying for membership does not become a shortcut to library authority because the labels happen to sit together."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "__component": "content.image-block",
+          "imageAsset": "ui-overhaul-home",
+          "alternativeText": "Current development homepage excerpt showing the warm reading surface, serif headline, library search and globe illustration.",
+          "caption": "An excerpt from our development homepage. Dark mode is coming with the interface overhaul; it has not shipped yet.",
+          "fullWidth": true
+        },
+        {
+          "__component": "content.rich-text",
+          "body": [
+            {
+              "type": "heading",
+              "level": 2,
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Checking more than the palette"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "A theme reaches further than the page background. Menus, forms, charts, map controls, editors and loading states all need attention. So do focus indicators, text at high zoom and messages that appear when something goes wrong."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "We are using the rollout to review those details in both appearances. Our target is WCAG 2.2 AA. That is a standard to test against, rather than a claim that a dark palette automatically makes a site accessible. Automated checks will sit alongside keyboard, screen-reader and zoom testing."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "Our development component library, Storybook, has appearance controls too. It gives us a place to inspect the actual controls in light and dark, including the less photogenic states: saving, empty, disabled and failed."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "There is more about the thinking in "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/how-the-site-is-designed",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "How the site is designed"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": ", with new notes on "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/colour-and-appearance",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "colour and appearance"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": ", "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/accessible-interface-interaction",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "accessible interaction"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": " and "
+                },
+                {
+                  "type": "link",
+                  "url": "/knowledge/design-system/shared-components-and-section-identity",
+                  "children": [
+                    {
+                      "type": "text",
+                      "text": "shared components"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "It is good to see the pieces coming together. We will update this post when the controls are available. For now, this is a look at the reading room we are getting ready to open after dark."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

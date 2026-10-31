@@ -20,6 +20,7 @@ import {
   type PlaceNames,
   type PlaceRef,
   placeKey,
+  pickHomepageDrives,
 } from "./drive-view"
 import { fetchDrives, fetchDriveStats } from "./drives-server"
 import type { Drive } from "./types"
@@ -168,6 +169,16 @@ export async function fetchFeaturedDriveView(
   if (!drive) return null
 
   return (await loadDriveViews([drive], locale))[0] ?? null
+}
+
+/** Load progress only for the bounded public homepage selection. */
+export async function fetchHomepageDriveViews(
+  locale: string
+): Promise<DriveView[]> {
+  return loadDriveViews(
+    pickHomepageDrives(await fetchDrives("open", locale)),
+    locale
+  )
 }
 
 type FacetCounts = {

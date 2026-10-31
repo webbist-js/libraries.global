@@ -42,6 +42,7 @@ export const ARTICLE_EVENTS_POPULATE = {
 }
 
 export function articleRevision(article: {
+  sources?: unknown
   title?: unknown
   summary?: unknown
   body?: unknown
@@ -81,6 +82,7 @@ export function articleSnapshotPopulate(uid: string): Record<string, unknown> {
     },
     ...(uid === "api::blog-article.blog-article"
       ? {
+          sources: true,
           authorProfile: refs,
           authorAvatar: { fields: ["id"] },
           eventMentions: { populate: { library: refs, event: refs } },
@@ -91,7 +93,12 @@ export function articleSnapshotPopulate(uid: string): Record<string, unknown> {
 
 export function articleSnapshotValue(key: string, value: unknown): unknown {
   if (value == null) return null
-  if (key === "body" || key === "seo" || key === "eventMentions")
+  if (
+    key === "body" ||
+    key === "seo" ||
+    key === "eventMentions" ||
+    key === "sources"
+  )
     return normalizeArticleBody(value)
   if (["heroImage", "authorAvatar"].includes(key))
     return (value as any)?.id ?? value
@@ -123,7 +130,7 @@ export async function storedArticleComparisonRelations(
 ): Promise<Record<string, unknown> | null> {
   if (!ARTICLE_UIDS.has(uid)) return null
   const refs = { select: ["documentId"] }
-  const populate = Object.fromEntries(
+  const populate: Record<string, unknown> = Object.fromEntries(
     Object.keys(articleSnapshotPopulate(uid))
       .filter(
         (key) =>
@@ -133,12 +140,15 @@ export async function storedArticleComparisonRelations(
             "authorAvatar",
             "seo",
             "eventMentions",
+            "sources",
           ].includes(key)
       )
       .map((key) => [key, refs])
   )
-  if (uid === "api::blog-article.blog-article")
-    populate.eventMentions = { populate: { library: refs, event: refs } } as any
+  if (uid === "api::blog-article.blog-article") {
+    populate.eventMentions = { populate: { library: refs, event: refs } }
+    populate.sources = true
+  }
   const row = await strapi.db.query(uid).findOne({
     where: {
       documentId,

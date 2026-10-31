@@ -22,7 +22,10 @@ export const readPublicNetwork = cache(
 )
 export const publicNetworkList = (query: URLSearchParams) =>
   readPublicNetwork<NetworkList>(`networks?${query}`)
-export const publicNetworkDetail = (slug: string, page = 1) =>
+export const publicNetworkDetail = (
+  slug: string,
+  query: number | URLSearchParams = 1
+) =>
   readPublicNetwork<NetworkDetail>(
-    `networks/${encodeURIComponent(slug)}?page=${page}`
+    `networks/${encodeURIComponent(slug)}?${typeof query === "number" ? `page=${query}` : query}`
   )

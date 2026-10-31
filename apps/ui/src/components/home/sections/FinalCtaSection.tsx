@@ -121,7 +121,7 @@ export function FinalCtaSection({
               <GlobalLink
                 href={primary.href}
                 className={`inline-flex min-h-11 items-center justify-center rounded-full font-semibold no-underline transition-colors hover:bg-(--t-accent-chip) ${size.button}`}
-                style={{ background: "#fff", color: "#17162B" }}
+                style={{ background: "#FFFFFF", color: "#17162B" }}
               >
                 {primary.label}
               </GlobalLink>

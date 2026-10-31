@@ -30,7 +30,7 @@ export function LibraryCopyButton({
           // clipboard unavailable — ignore
         }
       }}
-      className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
+      className="inline-flex items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-3 py-1.5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
       style={{ borderColor: T.border.hi, color: T.ink.base }}
     >
       <Icon

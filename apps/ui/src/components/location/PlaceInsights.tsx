@@ -76,7 +76,7 @@ function InsightRow({
             className="block h-full rounded-full"
             style={{
               width: Math.min(100, total ? (count / total) * 100 : 0) + "%",
-              background: muted ? "#8B86C9" : T.accent.primary,
+              background: muted ? "#8B86C9" : T.action.primary,
             }}
           />
         </span>

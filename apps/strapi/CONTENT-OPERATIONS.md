@@ -103,3 +103,88 @@ ATLAS_CAPACITY_RELEASE_ACCEPTED=true node apps/strapi/scripts/update-atlas-guide
 ```
 
 Use `--local` explicitly for feature fixtures. `CMS_ENV_FILE` can select a private credential file. `ATLAS_IMAGE_FILES_JSON` accepts the two locally inspected author-supplied screenshots for an initial publication; media IDs are checkpointed to avoid duplicate uploads. Backups, previews and staging checkpoints remain under ignored `.scratch/atlas-guides/`. The helper refuses unrelated drafts and changed staged content. Publishing content does not deploy native calculation code or enable billing. Expanded-capacity descriptions stay staged until the UI, CMS and native images agree and the release is accepted.
+
+## Dashboard guide corrections
+
+`dashboard-guide-content.mjs` updates navigation instructions, the profile
+panel, separate moderation workspace, library sections, network filters and
+Journal source fields in existing English, French and Czech guides. The helper
+reads the full Knowledge catalogue and changes only affected bodies. It refuses
+unrelated drafts, saves private before-images and verifies that metadata and
+current publications stay unchanged.
+
+```sh
+# Preview production without writes, using the existing editorial connection.
+node apps/strapi/scripts/update-dashboard-guides.mjs
+
+# Stage reviewed corrections as private production drafts. This never publishes.
+node apps/strapi/scripts/update-dashboard-guides.mjs --stage
+```
+
+`CMS_ENV_FILE` may select the existing private editorial credential file. If the
+connection is unavailable, leave production untouched. Local audit snapshots can
+produce a review-only preview with `--offline-preview`; this is not production
+verification and cannot stage changes. Publish the reviewed drafts only with the
+matching dashboard release. The new search guide has separate release copy in
+`apps/docs/docs/proposals/site-search-knowledge-article.md`.
+
+## Homepage refresh
+
+The discovery-led homepage reuses the existing Homepage single type. Hero,
+featured intro, Atlas, contribution, Journal and closing copy retain their own
+fields. The **Content** title/text/CTA fields introduce the library staff section.
+**Journeys** with tone `steward` supply its tool rows; their title, text and CTA
+URL are the row label, access label and destination. **Open links** supply the
+four source, review, coverage and reuse notes. Pillar institution cards come
+from published Libraries with `featured` enabled, independently of the old
+homepage featured-library relation. The carousel includes up to 36 institutions
+in name order and loops manually, with two full cards and neighbouring card
+previews on desktop (one full card on narrow screens). Names remain visible;
+summaries and hours reveal on hover or keyboard focus and stay visible on touch
+devices. It never advances automatically.
+
+The contribution section uses the existing community band and numbered steps.
+Its manual carousel shows up to six published open drives: featured first,
+then pinned, then other open work in the public list’s order. It loads live
+progress only for that selection and falls back to incomplete-library tasks
+when no drives are open. Account-aware registration and contribution actions
+are UI copy; the homepage does not create accounts or join drives on a visitor’s
+behalf.
+
+```sh
+# Explicit local feature development: preview, then publish and read back.
+node --experimental-strip-types apps/strapi/scripts/update-homepage-content.mjs --local
+node --experimental-strip-types apps/strapi/scripts/update-homepage-content.mjs --local --publish-local
+
+# Production: preview or stage drafts with the matching UI release.
+node --experimental-strip-types apps/strapi/scripts/update-homepage-content.mjs
+node --experimental-strip-types apps/strapi/scripts/update-homepage-content.mjs --stage
+```
+
+The helper covers English, French and Czech, preserves SEO, media and existing
+relations, and refuses unrelated drafts or concurrent changes. Private backups,
+previews and resumable checkpoints stay in ignored `.scratch/homepage-rebuild/`.
+Production publication remains a separate editorial action after the matching
+UI release is accepted. No permissions, subscriptions or service settings change.
+
+The follow-up homepage pass restores the original open-data/open-source eyebrow.
+The hero, Atlas, contribution and closing titles retain accent markup; other CMS titles are plain text, with
+the Atlas and closing banners styled through shared display roles in the UI.
+The helper clears unused journey-intro, coverage, events, Knowledge-band,
+closing-benefit and open-intro copy, without deleting schema fields or curated
+relations. Public homepage reads populate only the sections currently rendered.
+
+Use `--atlas-only` with the homepage helper to update just the Atlas headline
+and description while preserving its CTA labels, destinations and other homepage
+content. Intentional Atlas title emphasis uses the same `*accent*` syntax as the
+hero.
+
+Use `--contribution-only` to update just the contribution headline and description,
+preserving its CTA labels, destinations, numbered steps and other homepage content.
+
+Use `--knowledge-only` to update only the curated Knowledge guide links. The eight
+entries cover discovery, reading a record, adding a library, review, staff claims,
+the Atlas, coverage and data reuse.
+
+Use `--closing-only` to restore the closing headline accent while preserving its
+description, CTA labels, destinations and other homepage content.

@@ -510,7 +510,7 @@ export default ({ strapi }: { strapi: any }) => ({
       fields: ["name"],
     })
     const base = process.env.APP_PUBLIC_URL ?? "https://libraries.global"
-    const review = new URL(`/contribute/moderation/staff/${id}`, base)
+    const review = new URL(`/moderation/staff/${id}`, base)
     await this.mail(
       process.env.MODERATORS_EMAIL,
       `Staff access report: ${lib?.name ?? id}`,

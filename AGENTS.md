@@ -4,14 +4,15 @@ Libraries Global uses a Strapi v5 CMS, Next.js 16 frontend and independent sync 
 
 ## Workspaces
 
-| Path                     | Description                                                                 |
-| ------------------------ | --------------------------------------------------------------------------- |
-| `apps/ui`                | Next.js 16 (App Router, React 19, TailwindCSS v4, Shadcn/ui)                |
-| `apps/strapi`            | Strapi v5 CMS (Docker PostgreSQL locally; managed PostgreSQL in production) |
-| `packages/strapi-types`  | Auto-generated TypeScript types from Strapi schemas                         |
-| `packages/design-system` | Shared TailwindCSS tokens and CkEditor styles                               |
-| `packages/shared-data`   | Shared constants and types                                                  |
-| `qa/tests/playwright`    | E2E and accessibility tests                                                 |
+| Path                     | Description                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `apps/storybook`         | Storybook component and pattern library (port 6006; static build in `dist/`) |
+| `apps/ui`                | Next.js 16 (App Router, React 19, TailwindCSS v4, Shadcn/ui)                 |
+| `apps/strapi`            | Strapi v5 CMS (Docker PostgreSQL locally; managed PostgreSQL in production)  |
+| `packages/strapi-types`  | Auto-generated TypeScript types from Strapi schemas                          |
+| `packages/design-system` | Shared TailwindCSS tokens and CkEditor styles                                |
+| `packages/shared-data`   | Shared constants and types                                                   |
+| `qa/tests/playwright`    | E2E and accessibility tests                                                  |
 
 ## Essential Commands
 

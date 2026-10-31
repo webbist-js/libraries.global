@@ -1,0 +1,188 @@
+import type { Metadata } from "next"
+import { headers } from "next/headers"
+import { notFound } from "next/navigation"
+
+import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/ProfileHero"
+import { ProfilePrivatePage } from "@/app/[locale]/profile/[username]/_components/ProfilePrivatePage"
+import { ProfileTabNav } from "@/app/[locale]/profile/[username]/_components/ProfileTabNav"
+import { AccountGuard } from "@/components/auth/AccountGuard"
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
+import { MainContent } from "@/components/ds/MainContent"
+import { getSessionSSR } from "@/lib/auth-server"
+import { T } from "@/lib/design-tokens"
+import { fetchOwnProfile } from "@/lib/own-profile-server"
+import { fetchPublicProfile as fetchProfile } from "@/lib/public-profile-server"
+import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
+import type { UserProfile } from "@/lib/types/profile"
+
+const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+const BRIDGE_SECRET = process.env.STRAPI_BRIDGE_SECRET
+
+async function fetchContributionCount(username: string): Promise<number> {
+  if (!BRIDGE_SECRET) return 0
+  try {
+    const res = await fetch(
+      `${STRAPI}/api/content-moderation/submissions/by-username/${encodeURIComponent(username)}`,
+      { cache: "no-store", headers: { "X-Service-Secret": BRIDGE_SECRET } }
+    )
+    if (!res.ok) return 0
+    const json = (await res.json()) as { data?: unknown[] }
+
+    return json.data?.length ?? 0
+  } catch {
+    return 0
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; username: string }>
+}): Promise<Metadata> {
+  const { locale, username } = await params
+  // Anonymous fetch — what a crawler sees. Only "public" profiles are
+  // indexable; private (403), limited and missing profiles are noindex.
+  // Tab sub-pages inherit this, so their canonical is the overview URL.
+  const profile = await fetchProfile(username)
+
+  if (profile === null) {
+    return { title: "Profile not found", robots: { index: false } }
+  }
+  if (profile === "private" || profile.profileVisibility !== "public") {
+    return {
+      title: `${username}'s profile`,
+      robots: { index: false, follow: false },
+    }
+  }
+
+  const fullName = [profile.firstName, profile.lastName]
+    .filter(Boolean)
+    .join(" ")
+  const name = fullName || username
+
+  return buildMetadata({
+    title: fullName ? `${fullName} (@${username})` : `@${username}`,
+    description:
+      profile.bio ??
+      `${name}'s library contributions, collections and activity on ${SITE_NAME}.`,
+    path: `profile/${username}`,
+    locale,
+    type: "profile",
+    image: formatStrapiMediaUrl(profile.avatar?.url),
+    imageAlt: name,
+  })
+}
+
+/** The Following tab's count: stewarded and followed libraries, followed drives. */
+const followingCount = (profile: UserProfile) =>
+  (profile.followedLibraries?.length ?? 0) +
+  (profile.followedDrives?.length ?? 0) +
+  (profile.claimedLibraries?.length ?? 0)
+
+export default async function ProfileLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ locale: string; username: string }>
+}) {
+  const [{ username }, hdrs] = await Promise.all([params, headers()])
+
+  const [publicProfile, session, contributionCount] = await Promise.all([
+    fetchProfile(username),
+    getSessionSSR(hdrs),
+    fetchContributionCount(username),
+  ])
+
+  let profile: UserProfile | "private" | null = publicProfile
+  let isOwnProfile = false
+
+  if (session?.user?.id) {
+    // Always determine ownership first — used for both private bypass and limited check
+    const ownProfile = await fetchOwnProfile(session.user)
+    isOwnProfile = ownProfile?.username === username
+
+    if (profile === null || profile === "private") {
+      // Private profile — owner can always view their own page
+      if (isOwnProfile) {
+        profile = await fetchProfile(username, {
+          ownerBaUserId: session.user.id,
+        })
+      }
+    } else if (profile.profileVisibility === "limited" && !isOwnProfile) {
+      // Limited profile — re-fetch with viewer identity so Strapi can check
+      // whether this user is affiliated with any of the same libraries
+      const expanded = await fetchProfile(username, {
+        viewerBaUserId: session.user.id,
+      })
+      if (expanded && expanded !== "private") profile = expanded
+    } else if (profile.profileVisibility === "limited" && isOwnProfile) {
+      // Owner viewing their own limited profile — get full data
+      profile = await fetchProfile(username, {
+        ownerBaUserId: session.user.id,
+      })
+    }
+  }
+
+  if (profile === null) notFound()
+
+  // Private profile viewed by a non-owner — show dedicated page
+  if (profile === "private") {
+    return (
+      <DashboardPage title={`@${username}`} navigationHidden>
+        <ProfilePrivatePage username={username} />
+      </DashboardPage>
+    )
+  }
+
+  return (
+    <DashboardPage
+      title={`@${username}`}
+      navigationHidden
+      toolbar={
+        <RecordToolbar
+          items={[
+            { href: "/community", label: "Community" },
+            { label: `@${username}` },
+          ]}
+        />
+      }
+    >
+      <AccountGuard
+        mode="identity"
+        expectedScope={session?.user?.id ?? "guest"}
+        publicGuestPaths={
+          profile.profileVisibility === "public" ? [`/profile/${username}`] : []
+        }
+      >
+        <div
+          className="relative isolate flex w-full flex-col"
+          style={{ background: T.bg.void }}
+        >
+          <ProfileHero
+            showBreadcrumb={false}
+            profile={profile}
+            isOwnProfile={isOwnProfile}
+            isSignedIn={!!session?.user}
+            tabs={
+              <ProfileTabNav
+                username={username}
+                isOwnProfile={isOwnProfile}
+                counts={{
+                  contributions: contributionCount,
+                  following: followingCount(profile),
+                  recognition: profile.earnedBadges?.length ?? 0,
+                }}
+              />
+            }
+          />
+          <MainContent className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8">
+            {children}
+          </MainContent>
+        </div>
+      </AccountGuard>
+    </DashboardPage>
+  )
+}

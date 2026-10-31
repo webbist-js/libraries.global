@@ -218,3 +218,28 @@ describe("machine API gateway", () => {
     ).rejects.toMatchObject({ code: "record_not_found", status: 404 })
   })
 })
+
+it.each([
+  ["api_addon_inactive", 403],
+  ["api_scope_refused", 403],
+  ["api_rate_limit", 429],
+  ["api_concurrency_limit", 429],
+  ["api_request_allowance_exhausted", 429],
+  ["api_byte_allowance_exhausted", 429],
+] as const)(
+  "refuses metered playground traffic before upstream work when %s",
+  async (code, status) => {
+    reserve.mockRejectedValue(new BillingError(code, status))
+    const work = vi.fn()
+    const response = await serveTeamApi(
+      {} as Pool,
+      request(),
+      "libraries:read",
+      "libraries.list",
+      work
+    )
+    expect(response.status).toBe(status)
+    expect(await response.json()).toEqual({ error: { code } })
+    expect(work).not.toHaveBeenCalled()
+  }
+)

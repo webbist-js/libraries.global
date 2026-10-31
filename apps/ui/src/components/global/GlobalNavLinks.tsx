@@ -49,7 +49,7 @@ export function GlobalNavLinks({
                 ? align === "start"
                   ? // App header (Atlas design): light indigo chip
                     "rounded-full bg-(--t-accent-chip) px-3.5 py-2 text-base font-semibold text-(--t-accent-primary-hover)"
-                  : "rounded-full bg-(--t-ink-base) px-3.5 py-2 text-base font-medium text-white"
+                  : "rounded-full bg-(--t-bg-inverse) px-3.5 py-2 text-base font-medium text-white"
                 : "rounded-full px-3.5 py-2 text-base font-medium text-(--t-ink-base) transition-colors hover:bg-(--t-bg-muted-2)"
             }
           >

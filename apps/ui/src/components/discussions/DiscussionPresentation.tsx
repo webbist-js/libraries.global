@@ -2,9 +2,9 @@
 
 import { Check, Pin } from "lucide-react"
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl"
-import { useState } from "react"
 
 import { AuthorBadges } from "@/components/discussions/AuthorBadges"
+import { ProfileAvatar } from "@/components/ds/ProfileAvatar"
 import { avatarInitials, avatarSrc } from "@/lib/avatar"
 import { COMMUNITY_TINTS } from "@/lib/design-tokens"
 import { languageName } from "@/lib/locale-fallback"
@@ -78,7 +78,6 @@ export function DiscussionAvatar({
   const t = useTranslations("discussions")
   const safeAuthor = discussionAuthor(author, t("member"))
   const url = discussionHref(avatarSrc(safeAuthor.avatar) ?? undefined)
-  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const palette = author?.background
     ? COMMUNITY_TINTS[author.background]
     : colourful
@@ -86,27 +85,17 @@ export function DiscussionAvatar({
       : null
 
   return (
-    <span
-      aria-hidden="true"
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-bold ${size === "sm" ? "size-6 text-xs" : size === "feed" ? "size-8 text-xs" : "size-10 text-sm"}`}
-      style={{
-        background: palette?.bg ?? "var(--t-bg-muted)",
-        color: palette?.fg ?? "var(--t-ink-dim)",
-      }}
-    >
-      {url && failedUrl !== url ? (
-        <img
-          src={url}
-          alt={safeAuthor.avatar?.alternativeText ?? ""}
-          className="size-full object-cover"
-          width={40}
-          height={40}
-          onError={() => setFailedUrl(url)}
-        />
-      ) : (
-        avatarInitials(safeAuthor.name)
-      )}
-    </span>
+    <ProfileAvatar
+      src={url}
+      initials={avatarInitials(safeAuthor.name)}
+      palette={palette ?? undefined}
+      size={size === "sm" ? 24 : size === "feed" ? 32 : 40}
+      className={
+        size === "sm" || size === "feed"
+          ? "text-xs font-bold"
+          : "text-sm font-bold"
+      }
+    />
   )
 }
 
@@ -216,7 +205,7 @@ export function DiscussionPreview({
       <div className="min-w-0">
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
           {record.pinned && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-(--t-ink-base) px-3 py-1 text-(--t-bg-deep)">
+            <span className="inline-flex items-center gap-1 rounded-full bg-(--t-bg-inverse) px-3 py-1 text-(--t-ink-inverse)">
               <Pin size={12} aria-hidden />
               {t("pinned")}
             </span>

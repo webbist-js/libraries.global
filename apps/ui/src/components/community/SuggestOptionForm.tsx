@@ -16,6 +16,7 @@ import {
 import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
 import { LibraryFeatureDetails } from "@/components/library/LibraryFeatureDetails"
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -29,7 +30,7 @@ import {
   type SuggestionList,
   type SuggestionReviewRound,
 } from "@/lib/community/suggestions"
-import { cn, primaryCtaSm } from "@/lib/styles"
+import { cn } from "@/lib/styles"
 
 export const SUGGEST_FORM_ID = "suggest-option"
 export type SuggestOptionFormHandle = { revise: (documentId: string) => void }
@@ -262,7 +263,7 @@ export function SuggestOptionForm({
         </p>
       </div>
       {revising && (
-        <div className="grid gap-1.5 rounded-[16px] border border-[#eeddb6] bg-[#fffbf3] px-4 py-3 text-sm">
+        <div className="grid gap-1.5 rounded-[16px] border border-(--t-edge-warn) bg-(--t-palette-amber-soft) px-4 py-3 text-sm">
           <p className="m-0 font-semibold text-(--t-palette-amber-fg)">
             {t("revisionLoaded", { name: revising.name })}
           </p>
@@ -386,7 +387,7 @@ export function SuggestOptionForm({
                     aria-label={`${t(item.voted ? "youVoted" : "voteMatch")}: ${item.name}`}
                     disabled={busyId !== null}
                     onClick={() => void voteMatch(item)}
-                    className={`inline-flex min-h-[40px] items-center justify-center gap-1 rounded-full px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${item.voted ? "bg-(--t-ink-base)" : "bg-(--t-accent-primary) hover:bg-(--t-accent-primary-hover)"}`}
+                    className={`inline-flex min-h-[40px] items-center justify-center gap-1 rounded-full px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${item.voted ? "bg-(--t-bg-inverse)" : "bg-(--t-action-primary) hover:bg-(--t-action-primary-hover)"}`}
                   >
                     {item.voted && (
                       <Icon aria-hidden icon="mdi:check" width={18} />

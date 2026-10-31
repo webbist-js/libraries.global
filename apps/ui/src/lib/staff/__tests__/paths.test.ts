@@ -30,3 +30,10 @@ describe("staff URLs", () => {
       expect(isStaffSlugParam(bad)).toBe(false)
   })
 })
+
+it("sends legacy API bookmarks and checkout continuations to the dedicated workspace", () => {
+  expect(
+    teamWorkspaceHref("/api", "en", { payment: "confirming", setup: "1" })
+  ).toBe("/developers?payment=confirming&setup=1")
+  expect(teamWorkspaceHref("/api", "fr")).toBe("/fr/developers")
+})

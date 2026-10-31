@@ -26,7 +26,7 @@ export function DriveQueueStrip({
         {rows.map(({ drive, waiting }) => (
           <li key={drive.documentId}>
             <Link
-              href={`/contribute/moderation?category=libraries&drive=${encodeURIComponent(drive.documentId)}&status=pending`}
+              href={`/moderation?category=libraries&drive=${encodeURIComponent(drive.documentId)}&status=pending`}
               className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-muted2)"
               style={{
                 border: `1px solid ${T.border.hi}`,

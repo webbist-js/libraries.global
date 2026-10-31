@@ -155,7 +155,7 @@ export function DriveHelpers({
                 type="button"
                 aria-pressed={period === value}
                 onClick={() => setPeriod(value)}
-                className={`min-h-8 cursor-pointer rounded-full px-3 text-xs font-semibold ${period === value ? "bg-white text-(--t-ink-base)" : "text-(--t-ink-dim) hover:text-(--t-ink-base)"}`}
+                className={`min-h-8 cursor-pointer rounded-full px-3 text-xs font-semibold ${period === value ? "bg-(--t-bg-deep) text-(--t-ink-base)" : "text-(--t-ink-dim) hover:text-(--t-ink-base)"}`}
               >
                 {tUi(value === "week" ? "this_week" : "all_time")}
               </button>

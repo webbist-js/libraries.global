@@ -32,7 +32,7 @@ export function Eyebrow({
             width: "28px",
             height: "2px",
             borderRadius: "999px",
-            background: T.accent.primary,
+            background: T.action.primary,
             display: "inline-block",
             flexShrink: 0,
           }}

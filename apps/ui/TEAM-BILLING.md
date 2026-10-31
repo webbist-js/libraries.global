@@ -54,6 +54,14 @@ Payment never changes Team verification, staff roles or covered Libraries. Organ
 
 Paid projections and checkout capabilities remain private. Consent exports include the requesting account's own Team payment attempts, without customer/checkout capability URLs. Archived Team financial bindings are removed after six years. Stripe owns financial receipts and payment-recovery emails; the application adds deduplicated Team access notices for Organisers. Session cache invalidation follows the existing per-instance model and 60-second TTL; CMS permission checks remain authoritative.
 
+## Optional Team then API checkout
+
+The pricing estimator can select API access while keeping the annual Team estimate separate from the monthly API charge. Signup carries the API choice, seats and public-service request through sign-in. Selecting a service type still cannot approve a discount.
+
+The Team review lets the buyer change the optional API choice. A first-party sessionStorage preference, keyed to the created Team, remembers it for up to 24 hours across the Stripe return in the same tab. It contains no consent or entitlement. Corrupt or blocked storage cannot stop annual checkout; API access remains available from Team billing.
+
+On return, the guided second step waits for the billing dashboard to report active, synchronized Team access with no pending confirmation. The organiser can continue to API review or skip it. API review uses its existing live price, limits, availability gate and fresh consent requirement. A setup query is only a navigation hint; it cannot bypass Team activity or organiser checks. The preference is cleared when the add-on is active or explicitly skipped. Cancellation or delayed confirmation leaves a route to resume; neither starts a second charge automatically.
+
 ## Configure and release
 
 1. Build the Access plugin and run `pnpm --filter @repo/strapi generate:types` after its schema changes. Deploy the matching UI, CMS and billing worker together.

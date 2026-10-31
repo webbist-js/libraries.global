@@ -18,7 +18,7 @@ export function AtlasLoading({
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border bg-white px-4 py-3.5 sm:gap-4"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border bg-(--t-bg-deep) px-4 py-3.5 sm:gap-4"
       style={{ borderColor: T.border.line }}
       role="status"
       aria-busy="true"
@@ -43,7 +43,7 @@ export function AtlasLoading({
         <button
           type="button"
           onClick={onOpenList}
-          className="inline-flex h-9 items-center gap-2 rounded-full border bg-white px-3.5 text-sm font-semibold"
+          className="inline-flex h-9 items-center gap-2 rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold"
           style={{ borderColor: T.border.hi }}
         >
           <Icon name="list" size={15} />
@@ -67,7 +67,7 @@ export function AtlasNoMatch({
 }) {
   return (
     <div
-      className="w-[min(440px,calc(100vw-32px))] rounded-[22px] border bg-white p-[22px]"
+      className="w-[min(440px,calc(100vw-32px))] rounded-[22px] border bg-(--t-bg-deep) p-[22px]"
       style={{ borderColor: T.border.hi }}
       role="status"
     >
@@ -77,7 +77,7 @@ export function AtlasNoMatch({
       </h2>
       <p
         className="mt-2 mb-3.5 text-base leading-normal"
-        style={{ color: "#45435A" }}
+        style={{ color: "var(--t-ink-dim)" }}
       >
         {suggestions.length > 0
           ? "Try loosening one. Each suggestion shows how many libraries it would bring back."
@@ -89,7 +89,7 @@ export function AtlasNoMatch({
             key={s.label}
             type="button"
             onClick={() => onApply(s)}
-            className="flex h-11 items-center justify-between rounded-full border bg-white px-4 text-sm font-semibold"
+            className="flex h-11 items-center justify-between rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold"
             style={{ borderColor: T.border.hi }}
           >
             {s.label}
@@ -103,7 +103,7 @@ export function AtlasNoMatch({
         type="button"
         onClick={onClear}
         className="mt-3 text-sm font-semibold underline underline-offset-[3px]"
-        style={{ color: "#3730A3" }}
+        style={{ color: "var(--t-accent-primary-hover)" }}
       >
         Clear all filters
       </button>
@@ -128,16 +128,16 @@ export function AtlasBanner({
     <div
       className="grid grid-cols-[20px_minmax(0,1fr)] items-start gap-3 rounded-[18px] border px-4 py-3.5 sm:flex sm:items-center"
       style={{
-        background: danger ? "#F6E3DA" : "#fff",
-        borderColor: danger ? "#E4BFAE" : T.border.hi,
-        color: danger ? "#5E2A15" : T.ink.base,
+        background: danger ? "var(--t-palette-coral-bg)" : T.bg.deep,
+        borderColor: danger ? T.edge.danger : T.border.hi,
+        color: danger ? "var(--t-palette-coral-fg)" : T.ink.base,
       }}
       role={danger ? "alert" : "status"}
     >
       <Icon
         name={danger ? "off" : "info"}
         size={20}
-        color={danger ? T.accent.danger : "#28496E"}
+        color={danger ? T.accent.danger : "var(--t-palette-blue-fg)"}
       />
       <span className="flex-1 text-base leading-snug">
         <strong>{title}</strong> {body}
@@ -146,7 +146,7 @@ export function AtlasBanner({
         <button
           type="button"
           onClick={action.onClick}
-          className="col-start-2 inline-flex min-h-11 shrink-0 items-center justify-self-start rounded-full border bg-white px-3.5 text-sm font-semibold"
+          className="col-start-2 inline-flex min-h-11 shrink-0 items-center justify-self-start rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
           {action.label}
@@ -169,7 +169,7 @@ export function AtlasToast({
 
   return (
     <div
-      className="flex items-center gap-3 rounded-full border bg-white py-2 pr-2.5 pl-4 text-sm font-semibold"
+      className="flex items-center gap-3 rounded-full border bg-(--t-bg-deep) py-2 pr-2.5 pl-4 text-sm font-semibold"
       style={{ borderColor: T.border.hi }}
       role="status"
     >
@@ -179,7 +179,7 @@ export function AtlasToast({
           type="button"
           onClick={action.onClick}
           className="text-sm font-semibold underline underline-offset-[3px]"
-          style={{ color: "#3730A3" }}
+          style={{ color: "var(--t-accent-primary-hover)" }}
         >
           {action.label}
         </button>

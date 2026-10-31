@@ -60,6 +60,7 @@ export type MySubmissionRow = {
   fields?: unknown
   draftData?: unknown
   targetSlug?: string | null
+  targetLabel?: string | null
   createdAt?: string
   updatedAt?: string | null
   reviewedAt?: string | null

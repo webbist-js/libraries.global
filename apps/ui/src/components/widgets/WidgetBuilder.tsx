@@ -207,7 +207,7 @@ function WidgetBuilderPreview({
               siteUrl={siteUrl}
             />
           ) : (
-            <div className="min-h-80 rounded-2xl bg-white p-6">
+            <div className="min-h-80 rounded-2xl bg-(--t-bg-deep) p-6">
               <p role="status">
                 {resolution.busy
                   ? "Loading published library data…"

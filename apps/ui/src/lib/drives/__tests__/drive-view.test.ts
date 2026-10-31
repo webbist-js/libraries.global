@@ -10,6 +10,7 @@ import {
   filterByFocus,
   focusFilterOptions,
   pickFeatured,
+  pickHomepageDrives,
   plainDriveTitle,
   progressMeta,
 } from "../drive-view"
@@ -43,6 +44,39 @@ const view = (over: Partial<Drive> = {}): DriveView => ({
   source: null,
   progress: null,
   helpers: null,
+})
+
+describe("pickHomepageDrives", () => {
+  it("includes unpinned open work, prioritises featured and pinned drives, and caps live counting at six", () => {
+    const records = Array.from({ length: 8 }, (_, index) =>
+      drive({ documentId: `d${index}` })
+    )
+    records[6]!.featured = true
+    records[7]!.pinned = true
+    const selected = pickHomepageDrives(records)
+    expect(selected.map((item) => item.documentId)).toEqual([
+      "d6",
+      "d7",
+      "d0",
+      "d1",
+      "d2",
+      "d3",
+    ])
+    expect(records[0]!.documentId).toBe("d0")
+  })
+  it("excludes drafts, scheduled and closed drives and does not duplicate a featured drive", () => {
+    const open = drive({ featured: true })
+    expect(
+      pickHomepageDrives([
+        open,
+        open,
+        drive({ documentId: "draft", status: "draft" }),
+        drive({ documentId: "scheduled", status: "scheduled" }),
+        drive({ documentId: "closed", status: "closed" }),
+      ])
+    ).toEqual([open])
+    expect(pickHomepageDrives([])).toEqual([])
+  })
 })
 
 describe("driveHref", () => {

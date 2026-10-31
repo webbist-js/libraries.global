@@ -236,7 +236,7 @@ export function AtlasNetworkReach(props: NetworkReachProps) {
   const updateCoverage = (
     <button
       type="button"
-      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:opacity-50"
+      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-(--t-action-primary) px-4 font-semibold text-white hover:bg-(--t-action-primary-hover) disabled:opacity-50"
       disabled={
         Boolean(calculationLimit) ||
         !selection?.available ||

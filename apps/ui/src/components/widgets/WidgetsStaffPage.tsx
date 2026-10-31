@@ -6,11 +6,13 @@ import type {
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 
-import { PageHero } from "@/components/ds/PageHero"
+import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
+import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { Container } from "@/components/elementary/Container"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflict"
+import { buttonVariants } from "@/components/ui/button"
 import { WidgetCreate } from "@/components/widgets/WidgetCreate"
 import { WidgetEditor } from "@/components/widgets/WidgetEditor"
 import { WidgetSelectionEditor } from "@/components/widgets/WidgetSelectionEditor"
@@ -19,6 +21,7 @@ import { WidgetWorkspaceReady } from "@/components/widgets/WidgetWorkspaceReady"
 import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
+import { Link } from "@/lib/navigation"
 import { getSiteUrl } from "@/lib/seo/metadata"
 import { fetchStaff } from "@/lib/staff-proxy"
 
@@ -145,6 +148,15 @@ async function loadPage(
   }
 }
 
+function widgetBreadcrumb(mode: Mode, title: string) {
+  if (mode === "overview") return [{ label: "Widgets" }]
+
+  return [
+    { label: "Widgets", href: "/staff/teams/widgets" },
+    ...(mode === "new" ? [{ label: title }] : []),
+  ]
+}
+
 export async function WidgetsStaffPage({
   mode = "overview",
   id,
@@ -153,37 +165,42 @@ export async function WidgetsStaffPage({
   readonly id?: string
 }) {
   const session = await getSessionSSR(await headers())
+  if (!session?.user && mode === "overview")
+    return <FeatureAccessLanding feature="widgets" />
   if (!session?.user)
     redirect("/auth/signin?callbackUrl=%2Fstaff%2Fteams%2Fwidgets")
   const teams = preferredTeams(sessionTeamsOf(session.user))
   if (teams.length > 1) return <TeamMembershipConflict />
   const team = teams[0]
+  if (!team && mode === "overview")
+    return <FeatureAccessLanding feature="widgets" signedIn />
   if (!team) redirect("/staff/teams")
   if (id && id !== "new" && !isDocumentIdParam(id)) notFound()
   const page = await loadPage(session.user, team.id, mode, id)
 
   return (
     <>
-      <PageHero
-        staff
-        compact={mode !== "overview"}
-        workspace={mode !== "overview" && mode !== "new"}
-        plainTitle
+      <WorkspacePageHeader
+        density={mode === "overview" ? "page" : "task"}
         title={page.title}
-        eyebrow="Team widgets"
-        eyebrowIcon="mdi:widgets-outline"
+        context={team.name}
         breadcrumb={[
           { label: "Staff area", href: "/staff" },
           { label: team.name, href: "/staff/teams" },
-          ...(mode === "overview"
-            ? [{ label: "Widgets" }]
-            : [
-                { label: "Widgets", href: "/staff/teams/widgets" },
-                ...(mode === "new" ? [{ label: page.title }] : []),
-              ]),
+          ...widgetBreadcrumb(mode, page.title),
         ]}
         lead={MODE_LEADS[mode]}
         tabs={<StaffAreaTabs active="widgets" teamId={team.id} />}
+        actions={
+          mode === "overview" && page.data?.team.active ? (
+            <Link
+              href="/staff/teams/widgets/new"
+              className={buttonVariants({ variant: "primary", size: "pill" })}
+            >
+              Create widget
+            </Link>
+          ) : undefined
+        }
       />
       <Container
         className={

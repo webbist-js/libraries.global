@@ -64,6 +64,7 @@ export function ProfileTabNav({
       id: tab.id,
       label: tab.label,
       href: `${base}${tab.path}`,
+      publicProfile: true,
       icon: tab.icon,
       count: count ? count : undefined,
     }

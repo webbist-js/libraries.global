@@ -141,7 +141,7 @@ function JournalStoryForm({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="ohio-hours-thank-you"
-        className="min-h-11 rounded-[14px] border bg-white px-3.5 text-base"
+        className="min-h-11 rounded-[14px] border bg-(--t-bg-deep) px-3.5 text-base"
         style={{ borderColor: T.border.hi, color: T.ink.base }}
       />
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
@@ -312,7 +312,7 @@ export function DriveBoardActions({
                 role="group"
                 aria-labelledby="drive-board-confirm"
                 className="flex flex-col gap-3 rounded-[16px] px-4 py-3.5"
-                style={{ background: "#F5EEDC" }}
+                style={{ background: "var(--t-palette-amber-bg)" }}
               >
                 <p
                   id="drive-board-confirm"
@@ -344,7 +344,7 @@ export function DriveBoardActions({
                   </button>
                   <button
                     type="button"
-                    className="inline-flex min-h-8 items-center rounded-full border border-(--t-border-hi) bg-white px-3 py-1.5 text-xs font-semibold text-(--t-ink-base) disabled:opacity-50"
+                    className="inline-flex min-h-8 items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-3 py-1.5 text-xs font-semibold text-(--t-ink-base) disabled:opacity-50"
                     disabled={busy !== null}
                     onClick={() => setConfirming(null)}
                   >

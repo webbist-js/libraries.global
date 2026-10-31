@@ -162,7 +162,7 @@ export function BadgesSection({
                 className="h-full rounded-full"
                 style={{
                   width: `${progress}%`,
-                  background: T.accent.primary,
+                  background: T.action.primary,
                 }}
               />
             </div>

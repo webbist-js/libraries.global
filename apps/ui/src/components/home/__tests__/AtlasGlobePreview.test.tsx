@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react"
 import { useEffect, type AnchorHTMLAttributes } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import AtlasGlobePreview from "@/components/home/AtlasGlobePreview"
+import { act, cleanup, render, screen, waitFor } from "@/test/render"
 
 const canvas = vi.hoisted(() => ({
   unavailable: false,
@@ -71,12 +71,14 @@ function setVisible(visible: boolean) {
 describe("AtlasGlobePreview", () => {
   it("loads near the viewport, pauses offscreen, and resumes without remounting the globe", async () => {
     const { unmount } = render(
-      <AtlasGlobePreview markers={markers} href="/map" />
+      <AtlasGlobePreview markers={markers} href="/about" />
     )
     expect(screen.queryByRole("img", { name: "Canvas globe" })).toBeNull()
     expect(
-      screen.getByRole("link", { name: "Open the atlas" }).getAttribute("href")
-    ).toBe("/map")
+      screen
+        .getByRole("link", { name: "About the project" })
+        .getAttribute("href")
+    ).toBe("/about")
 
     act(() => setVisible(true))
     await waitFor(() =>
@@ -101,10 +103,10 @@ describe("AtlasGlobePreview", () => {
     expect(disconnect).toHaveBeenCalledOnce()
   })
 
-  it("keeps the atlas button available when the canvas cannot render", async () => {
+  it("keeps the About link available when the canvas cannot render", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {})
     canvas.unavailable = true
-    render(<AtlasGlobePreview markers={markers} href="/map" />)
+    render(<AtlasGlobePreview markers={markers} href="/about" />)
     act(() => setVisible(true))
     await waitFor(() =>
       expect(screen.getByRole("status").textContent).toContain(
@@ -112,7 +114,9 @@ describe("AtlasGlobePreview", () => {
       )
     )
     expect(
-      screen.getByRole("link", { name: "Open the atlas" }).getAttribute("href")
-    ).toBe("/map")
+      screen
+        .getByRole("link", { name: "About the project" })
+        .getAttribute("href")
+    ).toBe("/about")
   })
 })

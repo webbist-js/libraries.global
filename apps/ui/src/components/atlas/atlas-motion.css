@@ -119,8 +119,6 @@ html[data-atlas-transition]::view-transition-new(.atlas-card) {
 }
 
 .atlas-inspect-tabs {
-  scrollbar-width: thin;
-  scrollbar-color: var(--t-border-hi) transparent;
   overscroll-behavior: contain;
 }
 .atlas-overlay-chips {
@@ -136,7 +134,21 @@ html[data-atlas-transition]::view-transition-new(.atlas-card) {
   outline-offset: -3px;
 }
 .atlas-status {
-  container-type: inline-size;
+  width: fit-content;
+  max-width: min(720px, 100%);
+}
+.atlas-status .atlas-overlay-chips {
+  max-width: 180px;
+}
+.atlas-status .atlas-overlay-chips:empty {
+  display: none;
+}
+.atlas-status-count {
+  min-width: 0;
+  flex-shrink: 1;
+}
+.atlas-status-count p {
+  white-space: normal;
 }
 @media (max-width: 1439px) {
   .atlas-status-count {
@@ -160,14 +172,4 @@ html[data-atlas-transition]::view-transition-new(.atlas-card) {
 .atlas-rail-feedback button svg {
   width: 18px;
   height: 18px;
-}
-
-.atlas-inspect-rail {
-  scrollbar-width: thin;
-  scrollbar-color: var(--t-border-hi) transparent;
-}
-
-.atlas-tool-content {
-  scrollbar-width: thin;
-  scrollbar-color: var(--t-border-hi) transparent;
 }

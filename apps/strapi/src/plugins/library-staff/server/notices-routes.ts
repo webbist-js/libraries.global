@@ -10,4 +10,9 @@ export default [
   route("POST", "/libraries/:documentId/notices", "create"),
   route("PATCH", "/libraries/:documentId/notices/:noticeId", "edit"),
   route("POST", "/libraries/:documentId/notices/:noticeId/end", "end"),
+  route(
+    "POST",
+    "/libraries/:documentId/notices/:noticeId/reactivate",
+    "reactivate"
+  ),
 ]

@@ -5,6 +5,7 @@ import type { Map as MapLibreMap } from "maplibre-gl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { bindMapAppearance } from "@/lib/map-appearance"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { widgetCopy } from "@/lib/widgets/copy"
 
@@ -41,6 +42,7 @@ export default function WidgetMap({
   const extent = useRef<() => void>(() => {})
   useEffect(() => {
     if (!element.current) return
+    let disposeAppearance: (() => void) | undefined
     let alive = true,
       instance: MapLibreMap | undefined,
       observer: ResizeObserver | undefined
@@ -61,6 +63,7 @@ export default function WidgetMap({
             touchPitch: false,
             attributionControl: { compact: true },
           })
+          disposeAppearance = bindMapAppearance(instance)
           instance.touchZoomRotate.disableRotation()
           instance.addControl(
             new lib.NavigationControl({ showCompass: false }),
@@ -87,6 +90,7 @@ export default function WidgetMap({
 
     return () => {
       alive = false
+      disposeAppearance?.()
       observer?.disconnect()
       instance?.remove()
       map.current = null
@@ -174,7 +178,7 @@ export default function WidgetMap({
       {failed ? (
         <p
           role="status"
-          className="absolute inset-x-5 top-16 z-10 rounded-xl bg-white p-4 text-sm shadow"
+          className="absolute inset-x-5 top-16 z-10 rounded-xl bg-(--t-bg-deep) p-4 text-sm shadow"
         >
           {t("The map is unavailable. Browse the same libraries in the list.")}
           <Button
@@ -192,7 +196,7 @@ export default function WidgetMap({
       ) : !ready ? (
         <p
           role="status"
-          className="absolute inset-x-5 top-16 rounded-xl bg-white p-4 text-sm"
+          className="absolute inset-x-5 top-16 rounded-xl bg-(--t-bg-deep) p-4 text-sm"
         >
           {t("Loading map…")}
         </p>
@@ -243,7 +247,7 @@ export default function WidgetMap({
                 {b.rows.length > 1 ? b.rows.length : null}
               </span>
               {labels && b.rows.length === 1 ? (
-                <span className="absolute top-10 max-w-36 rounded bg-white px-2 py-1 text-xs font-semibold text-black shadow">
+                <span className="absolute top-10 max-w-36 rounded bg-(--t-bg-deep) px-2 py-1 text-xs font-semibold text-black shadow">
                   {b.rows[0]!.name}
                 </span>
               ) : null}
