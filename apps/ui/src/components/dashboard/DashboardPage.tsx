@@ -7,18 +7,11 @@ import { MainContent } from "@/components/ds/MainContent"
 import { Link, usePathname } from "@/lib/navigation"
 
 import { DashboardDrawer, useOptionalDashboardOverlay } from "./DashboardFrame"
+import {
+  DashboardRouteTransition,
+  DashboardContextTransition,
+} from "./DashboardRouteTransition"
 import { useDashboardScroll } from "./useDashboardScroll"
-
-// Next bundles React's transition API. Stable React test/embedded renderers and
-// browsers without support still render the same semantic page immediately.
-const Transition =
-  React.ViewTransition ??
-  (({ children }: { children?: React.ReactNode }) => <>{children}</>)
-const direction = {
-  "nav-forward": "nav-forward",
-  "nav-back": "nav-back",
-  default: "page-crossfade",
-}
 
 export type DashboardDestination = {
   href: string
@@ -221,118 +214,105 @@ export function DashboardPage({
   }, [overlay])
 
   return (
-    <div
-      ref={root}
-      className={pageClasses(
-        Boolean(overview),
-        Boolean(context),
-        navigationHidden,
-        className
-      )}
-      data-dashboard-page={path}
-      data-has-shell={Boolean(overlay)}
-    >
-      {overlay && navigation && !navigationHidden && !navigationLoading ? (
-        <>
-          <button
-            type="button"
-            className="dashboard-section-toggle"
-            aria-haspopup="dialog"
-            aria-expanded={overlay.panel === "section"}
-            onClick={(event) =>
-              overlay.handleToggle("section", event.currentTarget)
-            }
-          >
-            {t("sectionNavigation")} · {title}
-          </button>
-          <DashboardDrawer
-            panel="section"
-            title={title}
-            onAfterClose={() => {
-              const id = pendingAnchor.current
-              pendingAnchor.current = null
-              const destination = id ? document.getElementById(id) : null
-              destination?.scrollIntoView({ block: "start" })
-              destination?.setAttribute("tabindex", "-1")
-              destination?.focus({ preventScroll: true })
-            }}
-          >
-            <div
-              className="dashboard-section-panel"
-              onClick={(event) => {
-                if (
-                  event.button !== 0 ||
-                  event.metaKey ||
-                  event.ctrlKey ||
-                  event.shiftKey ||
-                  event.altKey
-                )
-                  return
-                const anchor = (
-                  event.target as HTMLElement
-                ).closest<HTMLAnchorElement>("a")
-                const href = anchor?.getAttribute("href")
-                if (!href) return
-                if (href.startsWith("#")) pendingAnchor.current = href.slice(1)
-                // Query-driven queues share a pathname, so they cannot rely
-                // on the shell's pathname-change effect to dismiss the drawer.
-                overlay.handleClose()
+    <DashboardRouteTransition routeKey={path}>
+      <div
+        ref={root}
+        className={pageClasses(
+          Boolean(overview),
+          Boolean(context),
+          navigationHidden,
+          className
+        )}
+        data-dashboard-page={path}
+        data-has-shell={Boolean(overlay)}
+      >
+        {overlay && navigation && !navigationHidden && !navigationLoading ? (
+          <>
+            <button
+              type="button"
+              className="dashboard-section-toggle"
+              aria-haspopup="dialog"
+              aria-expanded={overlay.panel === "section"}
+              onClick={(event) =>
+                overlay.handleToggle("section", event.currentTarget)
+              }
+            >
+              {t("sectionNavigation")} · {title}
+            </button>
+            <DashboardDrawer
+              panel="section"
+              title={title}
+              onAfterClose={() => {
+                const id = pendingAnchor.current
+                pendingAnchor.current = null
+                const destination = id ? document.getElementById(id) : null
+                destination?.scrollIntoView({ block: "start" })
+                destination?.setAttribute("tabindex", "-1")
+                destination?.focus({ preventScroll: true })
               }}
             >
-              {mobileNavigationHeading ? (
-                <div className="dashboard-context-heading dashboard-mobile-context-heading">
-                  {mobileNavigationHeading}
+              <div
+                className="dashboard-section-panel"
+                onClick={(event) => {
+                  if (
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                  )
+                    return
+                  const anchor = (
+                    event.target as HTMLElement
+                  ).closest<HTMLAnchorElement>("a")
+                  const href = anchor?.getAttribute("href")
+                  if (!href) return
+                  if (href.startsWith("#"))
+                    pendingAnchor.current = href.slice(1)
+                  // Query-driven queues share a pathname, so they cannot rely
+                  // on the shell's pathname-change effect to dismiss the drawer.
+                  overlay.handleClose()
+                }}
+              >
+                {mobileNavigationHeading ? (
+                  <div className="dashboard-context-heading dashboard-mobile-context-heading">
+                    {mobileNavigationHeading}
+                  </div>
+                ) : null}
+                <div className="dashboard-sidebar-content">
+                  {navigation}
+                  {context ? (
+                    <a
+                      className="dashboard-context-shortcut"
+                      href="#dashboard-page-context"
+                    >
+                      {t("pageContext")}
+                    </a>
+                  ) : null}
                 </div>
-              ) : null}
-              <div className="dashboard-sidebar-content">
-                {navigation}
-                {context ? (
-                  <a
-                    className="dashboard-context-shortcut"
-                    href="#dashboard-page-context"
-                  >
-                    {t("pageContext")}
-                  </a>
+                {navigationFooter ? (
+                  <div className="dashboard-context-footer">
+                    {navigationFooter}
+                  </div>
                 ) : null}
               </div>
-              {navigationFooter ? (
-                <div className="dashboard-context-footer">
-                  {navigationFooter}
-                </div>
-              ) : null}
-            </div>
-          </DashboardDrawer>
-        </>
-      ) : null}
-      <Transition
-        key={`${path}:context`}
-        name="dashboard-context"
-        share="morph"
-        enter="fade-in"
-        exit="fade-out"
-        default="none"
-      >
-        <ContextPanel
-          title={title}
-          eyebrow={eyebrow}
-          navigationHeading={navigationHeading}
-          navigation={navigation}
-          context={context}
-          overview={overview}
-          navigationFooter={navigationFooter}
-          navigationHidden={navigationHidden}
-          sectionLabel={t("sectionNavigation")}
-          contextLabel={t("pageContext")}
-        />
-      </Transition>
-      <Transition
-        key={`${path}:content`}
-        name="dashboard-content"
-        share={direction}
-        enter={direction}
-        exit={direction}
-        default="none"
-      >
+            </DashboardDrawer>
+          </>
+        ) : null}
+        <DashboardContextTransition routeKey={path}>
+          <ContextPanel
+            title={title}
+            eyebrow={eyebrow}
+            navigationHeading={navigationHeading}
+            navigation={navigation}
+            context={context}
+            overview={overview}
+            navigationFooter={navigationFooter}
+            navigationHidden={navigationHidden}
+            sectionLabel={t("sectionNavigation")}
+            contextLabel={t("pageContext")}
+          />
+        </DashboardContextTransition>
         <div className="dashboard-page-body" data-dashboard-scroll="content">
           {hasMobileSections ? (
             <div ref={recordHeader} className="dashboard-record-toolbar">
@@ -364,18 +344,18 @@ export function DashboardPage({
             children
           )}
         </div>
-      </Transition>
-      {context && !overview ? (
-        <aside
-          id="dashboard-page-context"
-          className="dashboard-page-context"
-          aria-label={t("pageContext")}
-          tabIndex={-1}
-        >
-          {context}
-        </aside>
-      ) : null}
-    </div>
+        {context && !overview ? (
+          <aside
+            id="dashboard-page-context"
+            className="dashboard-page-context"
+            aria-label={t("pageContext")}
+            tabIndex={-1}
+          >
+            {context}
+          </aside>
+        ) : null}
+      </div>
+    </DashboardRouteTransition>
   )
 }
 

@@ -36,7 +36,10 @@ export function RecordToolbar({
   if (pathname === "/" || pathname === "/about") return null
 
   return (
-    <div className="record-toolbar">
+    <div
+      className="record-toolbar"
+      style={{ viewTransitionName: "persistent-toolbar" }}
+    >
       <Breadcrumb items={items} labels={labels} />
       <div className="record-toolbar-actions">
         <BetaFeedback label={ui("feedback")} inline />

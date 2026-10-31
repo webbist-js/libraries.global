@@ -2,6 +2,11 @@
 
 /* Existing site fonts, surfaces and easing. No root snapshot: never freeze the map. */
 html[data-atlas-transition] {
+  --atlas-mobile-sheet-transition: atlas-mobile-sheet;
+  --atlas-sidebar-transition: atlas-sidebar;
+  --atlas-sidebar-content-transition: atlas-sidebar-content;
+  --atlas-map-controls-transition: atlas-map-controls;
+  --atlas-inspect-transition: atlas-inspect;
   view-transition-name: none;
 }
 
