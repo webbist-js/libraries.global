@@ -2,6 +2,13 @@
 
 Better Auth in `apps/ui` owns public user accounts and cookie sessions. The browser does not receive a Strapi user JWT or the service bridge secret. Strapi admin authentication is separate from public accounts.
 
+The Node server prepares the Better Auth schema in its awaited instrumentation
+startup hook, before accepting requests. A PostgreSQL advisory transaction lock
+serializes schema inspection and migration across server instances; lock waits
+are bounded at 30 seconds. A migration failure stops startup. Builds and unit
+imports do not run migrations. Google website sign-in is registered only when
+both OAuth credentials are configured.
+
 ## Request boundary
 
 1. A browser sends its Better Auth session cookie to a dedicated Next.js route.

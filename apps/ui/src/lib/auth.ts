@@ -364,12 +364,4 @@ export const auth = betterAuth({
   },
 })
 
-// Run BA table migrations on module load so tables exist before any
-// getSession call — not just when the /api/auth/* route handler is first hit.
-/* eslint-disable sonarjs/void-use, unicorn/prefer-top-level-await */
-void auth.$context
-  .then((ctx) => ctx.runMigrations())
-  .catch((err) => console.error("[better-auth] migration error:", err))
-/* eslint-enable sonarjs/void-use, unicorn/prefer-top-level-await */
-
 export type Session = typeof auth.$Infer.Session
