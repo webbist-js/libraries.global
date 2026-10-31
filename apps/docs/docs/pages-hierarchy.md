@@ -19,6 +19,14 @@ Entity references are identifiers, not public paths. The `entityRef` lifecycle d
 
 Journal articles use `/journal/{section}/{slug}`; Knowledge articles use `/knowledge/{section}/{slug}`. Their section relations and published article loaders determine the path. Legal documents use `/legal/{slug}`. Homepage, library search, Atlas, community and account pages have explicit application routes.
 
+Knowledge reading order is edited in Strapi: section `order` runs lowest first;
+article `priority` runs highest first within each section. A missing priority
+counts as zero, with title and document identity breaking ties. Priorities are
+shared across translations. Publish the affected locales after changing them.
+The section overview, full reading list, sidebar and previous/next links use this
+order. Explicit search filters and sort choices retain discovery ordering;
+Recent changes continues to use update time.
+
 Moderation is an independent private section at `/moderation`. Queue categories
 and filters use its query string; submission reviews use
 `/moderation/{documentId}`, and suggested additions use

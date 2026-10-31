@@ -4,10 +4,12 @@ import type { WikiSection } from "@/lib/strapi-api/content/server"
 
 import {
   DEFAULT_SECTION_ICON,
+  compareDocsArticles,
   docsArticlePath,
   docsPathForSearchHit,
   docsSectionSlugsOf,
   homeSectionOf,
+  orderedDocsArticles,
   tintForOrder,
   toDocsSections,
   UNFILED_SECTION_SEGMENT,
@@ -178,4 +180,39 @@ describe("docsPathForSearchHit", () => {
       `/knowledge/${UNFILED_SECTION_SEGMENT}/lost`
     )
   })
+})
+
+describe("Knowledge reading order", () => {
+  it("uses CMS priority before titles and stable document identities for ties", () => {
+    const guides = [
+      {
+        documentId: "deleting",
+        title: "Deleting your account",
+        priority: -100,
+      },
+      { documentId: "finding", title: "Finding a library", priority: 80 },
+      { documentId: "about", title: "About Libraries Global", priority: 100 },
+      { documentId: "unranked-b", title: "Unranked", priority: null },
+      { documentId: "unranked-a", title: "Unranked" },
+    ]
+    expect(
+      [...guides].sort(compareDocsArticles).map((guide) => guide.documentId)
+    ).toEqual(["about", "finding", "unranked-a", "unranked-b", "deleting"])
+    expect(guides[0]?.documentId).toBe("deleting")
+  })
+})
+
+it("keeps previous/next within each section's curated sequence before the next section", () => {
+  const sections = toDocsSections([
+    section({ slug: "getting-started", order: 1 }),
+    section({ slug: "events", order: 2 }),
+  ])
+  const guides = [
+    { documentId: "events", priority: 1000, docsSections: ["events"] },
+    { documentId: "delete", priority: -100, docsSections: ["getting-started"] },
+    { documentId: "about", priority: 100, docsSections: ["getting-started"] },
+  ]
+  expect(
+    orderedDocsArticles(guides, sections).map((guide) => guide.documentId)
+  ).toEqual(["about", "delete", "events"])
 })
