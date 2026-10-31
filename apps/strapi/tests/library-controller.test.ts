@@ -60,8 +60,14 @@ function build(rows: Record<string, unknown>[]) {
 }
 
 describe("library.atlas (E2, E3)", () => {
-  beforeEach(() => invalidateAtlasCache())
-  afterEach(() => invalidateAtlasCache())
+  beforeEach(() => {
+    invalidateAtlasCache()
+    vi.stubEnv("ATLAS_LEGACY_SOURCE_ENABLED", "true")
+  })
+  afterEach(() => {
+    invalidateAtlasCache()
+    vi.unstubAllEnvs()
+  })
 
   it("walks the table by id keyset with a flat limit, never `pagination`", async () => {
     const rows = Array.from({ length: 1001 }, (_, i) => library(i + 1))

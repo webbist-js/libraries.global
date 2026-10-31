@@ -121,3 +121,15 @@ describe.each(Object.entries(MIDDLEWARES))(
     })
   }
 )
+
+it("rejects expensive Library filters before calling the core controller", async () => {
+  const next = vi.fn()
+  const ctx: {
+    query: Record<string, unknown>
+    status?: number
+    body?: unknown
+  } = { query: { filters: { name: { $containsi: "town" } } } }
+  await libraryPopulate({ view: "list" }, { strapi: {} as never })(ctx, next)
+  expect(ctx.status).toBe(400)
+  expect(next).not.toHaveBeenCalled()
+})

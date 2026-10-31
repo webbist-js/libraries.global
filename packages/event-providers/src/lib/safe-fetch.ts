@@ -187,6 +187,9 @@ export async function resolvePublicUrl(raw: string): Promise<ResolvedUrl> {
       `Refusing to fetch non-public host: ${url.hostname}`
     )
 
+  if (url.protocol !== "https:")
+    throw new UnsafeUrlError("HTTPS is required for event feeds")
+
   return { url, addresses }
 }
 
@@ -403,7 +406,24 @@ export async function safeFetch(
     if (res.status >= 300 && res.status < 400 && location) {
       await agent.close().catch(() => {})
       const next = new URL(location, current).toString()
-      if (!sameOrigin(next, current)) headers = stripCrossOriginAuth(headers)
+      if (!sameOrigin(next, current)) {
+        const guardedHeaders = new Headers(headers)
+        if (
+          init.body != null ||
+          [...guardedHeaders.keys()].some(
+            (name) =>
+              ![
+                "accept",
+                "accept-language",
+                "content-type",
+                "user-agent",
+                "cache-control",
+              ].includes(name)
+          )
+        )
+          throw new UnsafeUrlError("Credentialed cross-origin redirect refused")
+        headers = stripCrossOriginAuth(headers)
+      }
       current = next
       continue
     }
@@ -436,7 +456,24 @@ export async function safeFetchText(
     const location = res.headers?.get?.("location")
     if (res.status >= 300 && res.status < 400 && location) {
       const next = new URL(location, current).toString()
-      if (!sameOrigin(next, current)) headers = stripCrossOriginAuth(headers)
+      if (!sameOrigin(next, current)) {
+        const guardedHeaders = new Headers(headers)
+        if (
+          rest.body != null ||
+          [...guardedHeaders.keys()].some(
+            (name) =>
+              ![
+                "accept",
+                "accept-language",
+                "content-type",
+                "user-agent",
+                "cache-control",
+              ].includes(name)
+          )
+        )
+          throw new UnsafeUrlError("Credentialed cross-origin redirect refused")
+        headers = stripCrossOriginAuth(headers)
+      }
       current = next
       continue
     }

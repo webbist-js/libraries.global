@@ -14,10 +14,12 @@ function fakeStrapi({
   hasTable = true,
   hasColumn = true,
   existingIndexes = new Set<string>(),
+  legacyIdentity = false,
 }: {
   client: string | undefined
   hasTable?: boolean
   hasColumn?: boolean
+  legacyIdentity?: boolean
   existingIndexes?: Set<string>
 }) {
   const hasTableFn = vi.fn(async () => hasTable)
@@ -28,8 +30,9 @@ function fakeStrapi({
         rows: existingIndexes.has(bindings?.[0] as string)
           ? [
               {
-                indexdef:
-                  "CREATE UNIQUE INDEX ON ev_events (credential_id, source_provider, external_id)",
+                indexdef: legacyIdentity
+                  ? "CREATE UNIQUE INDEX ON ev_events (source_provider, external_id)"
+                  : "CREATE UNIQUE INDEX ON ev_events (credential_id, source_provider, external_id)",
               },
             ]
           : [],
@@ -168,4 +171,20 @@ describe("ensureEventIndexes", () => {
     await expect(ensureEventIndexes(strapi)).rejects.toThrow("lock timeout")
     expect(strapi.log.error).toHaveBeenCalled()
   })
+})
+
+it("repairs the legacy identity without deleting or re-keying any events", async () => {
+  const { strapi, rawFn } = fakeStrapi({
+    client: "pg",
+    existingIndexes: new Set([EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME]),
+    legacyIdentity: true,
+  })
+  await ensureEventIndexes(strapi)
+  const sql = rawFn.mock.calls.map((call) => call[0]).join("\n")
+  expect(sql).toContain("LOCK TABLE ev_events")
+  expect(sql).toContain("DROP INDEX IF EXISTS ev_events_provider_external_uq")
+  expect(sql).toContain("(credential_id, source_provider, external_id)")
+  expect(sql).not.toMatch(
+    /DELETE FROM ev_events|UPDATE ev_events SET (?:id|document_id|credential_id)/i
+  )
 })

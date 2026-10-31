@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto"
 import { classifyFailure, getProvider } from "@repo/event-providers"
 import pLimit from "p-limit"
 
+import { withSyncLease } from "./sync-lease"
+import { setSyncStatus, setLastSync } from "../server"
 import { loadCredentials } from "./load-credentials"
 import { matchVenueToLibrary } from "./match-libraries"
 import { normalizeEvent } from "./normalize"
@@ -20,7 +22,7 @@ import type { NormalizedEvent } from "../types"
 
 type TriggerType = "cron" | "manual"
 
-export async function runSync(
+async function performSync(
   triggeredBy: TriggerType = "cron",
   triggeredByUserId?: number,
   opts?: { credentialDocumentId?: string }
@@ -232,8 +234,8 @@ export async function runSync(
     console.log(
       `[sync] Run ${runId} complete — ${status}. Created: ${totalCreated}, Updated: ${totalUpdated}, Purged: ${purged}`
     )
-  } catch (err: any) {
-    console.error(`[sync] Run ${runId} failed fatally:`, err)
+  } catch {
+    console.error(`[sync] Run ${runId} failed fatally`)
     await finaliseRunRecord({
       runId,
       triggeredBy,
@@ -255,5 +257,26 @@ export async function runSync(
       providerBreakdown,
       failedCredentials,
     })
+    throw new Error("event_sync_failed")
   }
+}
+
+export async function runSync(
+  triggeredBy: TriggerType = "cron",
+  triggeredByUserId?: number,
+  opts?: { credentialDocumentId?: string }
+): Promise<boolean> {
+  return withSyncLease(async () => {
+    setSyncStatus("running")
+    let status = "done"
+    try {
+      await performSync(triggeredBy, triggeredByUserId, opts)
+    } catch {
+      status = "failed"
+      throw new Error("event_sync_failed")
+    } finally {
+      setSyncStatus("idle")
+      setLastSync({ runId: triggeredBy, status, at: new Date().toISOString() })
+    }
+  })
 }

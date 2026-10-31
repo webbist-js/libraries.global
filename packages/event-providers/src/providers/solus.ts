@@ -30,11 +30,16 @@ function normaliseEndpoint(endpoint: string): string {
   return endpoint.endsWith("/") ? endpoint.slice(0, -1) : endpoint
 }
 
-async function getToken(endpoint: string, secretKey: string): Promise<string> {
+async function getToken(
+  endpoint: string,
+  secretKey: string,
+  signal?: AbortSignal
+): Promise<string> {
   const res = await safeFetchText(`${endpoint}/1.0/authorization`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ secretKey }),
+    signal,
   })
   if (!res.ok) throw new ProviderStatusError("solus", res.status)
 
@@ -60,12 +65,14 @@ export const solusProvider: EventProvider = {
     }
 
     const base = normaliseEndpoint(endpoint)
-    const token = await getToken(base, secretKey)
+    const signal = AbortSignal.timeout(30_000)
+    const token = await getToken(base, secretKey, signal)
 
     // Quick probe: list 1 event to confirm token works
     const res = await safeFetchText(
       `${base}/1.0/event/query?includeCancelled=false&limit=1`,
       {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -89,13 +96,18 @@ export const solusProvider: EventProvider = {
     maxDate.setMonth(maxDate.getMonth() + MAX_FUTURE_MONTHS)
     const fromDate = new Date().toISOString().split("T")[0]!
 
-    const token = await getToken(base, secretKey)
+    const deadline = Date.now() + 120_000
+    const signal = AbortSignal.timeout(120_000)
+    const token = await getToken(base, secretKey, signal)
     const events: RawEvent[] = []
+    let pagesRead = 0
     let offset = 0
     let hasMore = true
     let totalAvailable: number | null = null
 
     while (hasMore && events.length < 1000) {
+      if (++pagesRead > 100 || Date.now() > deadline)
+        throw new FeedFormatError("Provider pagination budget exceeded")
       const params = new URLSearchParams({
         includeCancelled: "false",
         includePrivate: "false",
@@ -107,6 +119,7 @@ export const solusProvider: EventProvider = {
       })
 
       const res = await safeFetchText(`${base}/1.0/event/query?${params}`, {
+        signal,
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",

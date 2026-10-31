@@ -73,6 +73,10 @@ const HOT_PATH_INDEXES = [
   index("library_types", ["name"]),
   // Drives and Find libraries filter or sort on these (also in Meilisearch).
   index("libraries", ["completeness"]),
+  index("libraries", ["name", "id"]),
+  index("libraries", ["completeness", "name", "id"]),
+  index("libraries", ["created_at", "id"]),
+  index("libraries", ["updated_at", "id"]),
   index("libraries", ["last_verified_at"]),
   index("components_library_source_records", ["dataset", "record_id"]),
 

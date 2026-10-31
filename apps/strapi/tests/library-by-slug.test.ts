@@ -137,10 +137,10 @@ describe("GET /libraries/by-slug/:slug (the library page's read)", () => {
       shaped({
         locale: "en",
         status: "published",
-        sort: { publishedAt: "desc" },
+        sort: "name:asc",
         // A client's own filters and paging never widen the read.
-        filters: { name: { $containsi: "Other" } },
-        pagination: { pageSize: 500, page: 3 },
+        filters: { name: { $eq: "Other" } },
+        pagination: { pageSize: 100, page: 3 },
       })
     )
     await controller.findBySlug(c)
@@ -150,7 +150,7 @@ describe("GET /libraries/by-slug/:slug (the library page's read)", () => {
     expect(forwarded.query).toMatchObject({
       locale: "en",
       status: "published",
-      sort: { publishedAt: "desc" },
+      sort: "name:asc",
       filters: { slug: { $eq: "kent-mobile" } },
       pagination: { pageSize: 5 },
     })
