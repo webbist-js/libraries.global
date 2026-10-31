@@ -2,7 +2,7 @@
 ARG APP=strapi
 ARG WORKSPACE=@repo/strapi
 
-FROM node:22-bookworm-slim AS base
+FROM node:22.23.4-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 ENV TURBO_TELEMETRY_DISABLED=1
@@ -41,7 +41,7 @@ RUN pnpm --filter ${WORKSPACE} deploy --legacy --prod --ignore-scripts /opt/cms 
     test -f /opt/cms/src/plugins/events/dist/server/index.js && \
     test -f /opt/cms/src/plugins/content-moderation/dist/server/index.js
 
-FROM node:22-bookworm-slim AS runner
+FROM node:22.23.4-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS runner
 ENV NODE_ENV=production
 ENV STRAPI_TELEMETRY_DISABLED=true
 ENV HOST=0.0.0.0
