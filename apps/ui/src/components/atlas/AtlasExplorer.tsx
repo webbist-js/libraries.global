@@ -2962,7 +2962,7 @@ export function AtlasExplorer({
           className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-(--t-bg-deep) pb-[env(safe-area-inset-bottom)]`}
           style={{
             height: heights[size],
-            viewTransitionName: "atlas-mobile-sheet",
+            viewTransitionName: "var(--atlas-mobile-sheet-transition, none)",
           }}
         >
           <button
@@ -3085,7 +3085,7 @@ export function AtlasExplorer({
         className={`${panelStyles.stack} absolute inset-y-0 left-0 z-20 flex min-h-0 flex-col overflow-clip border-r border-(--t-border-line) bg-(--t-bg-deep)`}
         style={{
           width: collapsed ? 72 : LEFT_W,
-          viewTransitionName: "atlas-sidebar",
+          viewTransitionName: "var(--atlas-sidebar-transition, none)",
         }}
       >
         {collapsed ? (
@@ -3166,7 +3166,10 @@ export function AtlasExplorer({
               role="tabpanel"
               aria-labelledby={`atlas-tab-${tab}`}
               className={`min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] ${tab === "filter" ? "pb-0" : "pb-5"}`}
-              style={{ viewTransitionName: "atlas-sidebar-content" }}
+              style={{
+                viewTransitionName:
+                  "var(--atlas-sidebar-content-transition, none)",
+              }}
             >
               {tabContent}
             </div>
@@ -3195,7 +3198,7 @@ export function AtlasExplorer({
             className="absolute top-4 z-20 flex flex-col items-end gap-2"
             style={{
               right: mapRightEdge,
-              viewTransitionName: "atlas-map-controls",
+              viewTransitionName: "var(--atlas-map-controls-transition, none)",
             }}
           >
             <MapButtons

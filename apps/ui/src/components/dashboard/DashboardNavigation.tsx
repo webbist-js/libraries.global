@@ -230,7 +230,6 @@ export function DashboardNavigation({
             : "dashboard-navigation"
         }
         aria-label={d("navigation")}
-        style={{ viewTransitionName: "persistent-nav" }}
       >
         <GlobalLink
           href="/"
