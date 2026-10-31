@@ -127,7 +127,7 @@ export function PlanChangeDialog({
       </DialogTrigger>
       <DialogContent
         className="flex max-h-[calc(100dvh-2rem)] flex-col gap-5 overflow-y-auto overscroll-contain rounded-3xl p-6 sm:max-w-2xl sm:gap-6 sm:p-8"
-        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-white opacity-100 hover:bg-(--t-bg-surface)"
+        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-(--t-bg-deep) opacity-100 hover:bg-(--t-bg-surface)"
         style={{ background: T.bg.deep, color: T.ink.base }}
       >
         <DialogHeader className="shrink-0 gap-3 text-left">
@@ -152,7 +152,7 @@ export function PlanChangeDialog({
               className={cn(
                 "flex min-h-11 cursor-pointer items-center rounded-full px-5 py-2.5 font-semibold transition-colors has-[input:disabled]:pointer-events-none has-[input:disabled]:opacity-60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary)",
                 selectedInterval === value
-                  ? "bg-(--t-ink-base) text-white hover:bg-(--t-ink-base)/90"
+                  ? "bg-(--t-bg-inverse) text-white hover:bg-(--t-bg-inverse)/90"
                   : "bg-transparent text-(--t-ink-base) hover:bg-(--t-bg-surface)"
               )}
             >
@@ -190,7 +190,7 @@ export function PlanChangeDialog({
                   className={cn(
                     "flex min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border-2 p-5 transition-colors has-[input:disabled]:pointer-events-none has-[input:disabled]:opacity-60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary)",
                     selectedPlan === value
-                      ? "border-(--t-accent-primary) bg-[#faf9ff]"
+                      ? "border-(--t-accent-primary) bg-(--t-bg-selected)"
                       : "border-(--t-border-line) bg-(--t-bg-deep)",
                     "hover:border-(--t-accent-primary) hover:bg-(--t-bg-selected)"
                   )}
@@ -250,7 +250,7 @@ export function PlanChangeDialog({
         {quote ? (
           <div
             role="status"
-            className="flex shrink-0 flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4"
+            className="flex shrink-0 flex-col gap-2 rounded-xl border border-(--t-edge-warn) bg-(--t-palette-amber-soft) p-4"
           >
             <p className="m-0 leading-relaxed">
               {t("scheduledReview", {

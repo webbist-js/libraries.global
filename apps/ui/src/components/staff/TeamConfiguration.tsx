@@ -184,7 +184,7 @@ export function TeamConfiguration({
           {error ? (
             <p
               role="alert"
-              className="rounded-2xl bg-red-50 p-4 text-sm text-red-900"
+              className="rounded-2xl bg-(--t-palette-coral-soft) p-4 text-sm text-(--t-palette-coral-fg)"
             >
               {error}
             </p>

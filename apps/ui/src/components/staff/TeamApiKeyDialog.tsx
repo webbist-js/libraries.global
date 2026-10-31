@@ -201,7 +201,7 @@ function KeyForm({
                 className={
                   "flex min-w-0 cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-60 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary) " +
                   (selected
-                    ? "border-(--t-accent-primary)/50 bg-(--t-accent-primary)/5"
+                    ? "border-(--t-accent-primary)/50 bg-(--t-action-primary)/5"
                     : "border-(--t-border-line) bg-(--t-bg-deep) hover:bg-(--t-bg-surface)")
                 }
               >

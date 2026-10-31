@@ -154,7 +154,7 @@ export async function createPlanChangePortal(
     if (choice.action === "confirm")
       throw new BillingError("invalid_membership_choice", 400)
     const prefix = choice.locale === "en" ? "" : `/${choice.locale}`
-    const returnUrl = `${config.origin}${prefix}/profile/membership`
+    const returnUrl = `${config.origin}${prefix}/map?account=membership`
     const portalConfiguration =
       row.snapshot.plan === "supporter"
         ? config.supporterPortalConfiguration

@@ -1,0 +1,296 @@
+/* motion-site · profile: product-ui · archetype: Expanding pricing card · patterns: right-anchored surface reveal·staged estimator·paired return · critique: P5 T4 C5 R5 A5 V4 */
+.region {
+  container-type: inline-size;
+}
+
+.plans {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personal {
+  transition: opacity var(--motion-exit, 160ms) linear;
+}
+
+.team {
+  position: relative;
+  min-width: 0;
+  scroll-margin-top: 7rem;
+  list-style: none;
+}
+
+.summary {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 26px;
+  background: var(--t-bg-deep);
+}
+
+.team[data-current="true"] .summary {
+  border: 2px solid var(--t-accent-primary);
+  padding: 19px;
+}
+
+.continueButton {
+  cursor: pointer;
+  transition:
+    transform 160ms var(--motion-ease-out, ease-out),
+    background-color 160ms linear;
+}
+
+.continueButton:active {
+  transform: scale(0.97);
+}
+
+.continueIcon {
+  flex-shrink: 0;
+  transition: transform 160ms var(--motion-ease-out, ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .continueButton:hover {
+    background: color-mix(in srgb, var(--t-accent-primary) 14%, white);
+  }
+
+  .continueButton:hover .continueIcon {
+    transform: translateX(-3px);
+  }
+
+  .team[data-expanded="true"] .continueButton:hover .continueIcon {
+    transform: translateX(3px);
+  }
+}
+
+.estimator {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 26px;
+  background: var(--t-bg-surface);
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity var(--motion-enter, 240ms) linear,
+    transform var(--motion-enter, 240ms) var(--motion-ease-out, ease-out),
+    display var(--motion-enter, 240ms) allow-discrete;
+}
+
+.quoteTotal {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.workspace {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.workspaceAction {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  padding: 18px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 18px;
+  background: white;
+  color: var(--t-ink-base);
+  text-decoration: none;
+}
+
+.primaryAction {
+  border-color: transparent;
+  background: var(--t-action-primary);
+  color: white;
+}
+
+.workspaceAction:focus-visible {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 4px;
+}
+
+.workspaceAction,
+.actionLink {
+  transition: transform 160ms var(--motion-ease-out, ease-out);
+}
+
+.workspaceAction:active,
+.actionLink:active {
+  transform: scale(0.98);
+}
+
+.apiOffer {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--t-border-line);
+  border-radius: 18px;
+  background: var(--t-bg-surface);
+}
+
+.workspace .apiOffer {
+  margin-top: auto;
+}
+
+.estimator[hidden] {
+  display: none;
+  opacity: 0;
+  transform: translateX(16px);
+  transition-duration: var(--motion-exit, 160ms);
+}
+
+.estimator h4:focus {
+  outline: none;
+}
+
+@starting-style {
+  .estimator:not([hidden]) {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+/* Keep the quote close to its trigger on narrow screens. */
+@container (width < 48rem) {
+  .team[data-expanded="true"] .features {
+    display: none;
+  }
+}
+
+/* Size the cards against the available page width, including dashboard navigation. */
+@container (min-width: 48rem) {
+  .plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .personal {
+    grid-row: 1 / span 4;
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+
+  .personal:nth-child(1) {
+    grid-column: 1;
+  }
+
+  .personal:nth-child(2) {
+    grid-column: 2;
+  }
+
+  .team {
+    z-index: 2;
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 1 / span 4;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    pointer-events: none;
+  }
+
+  /* Only the surface scales. Text and controls stay at their natural size. */
+  .team::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    border: 1px solid var(--t-border-line);
+    border-radius: 26px;
+    background: var(--t-bg-deep);
+    content: "";
+    opacity: 0;
+    transform: scaleX(0.333333);
+    transform-origin: right center;
+    transition:
+      transform var(--motion-enter, 240ms) var(--motion-ease-out, ease-out),
+      opacity var(--motion-exit, 160ms) linear;
+  }
+
+  .team[data-expanded="true"]::before {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .summary {
+    display: grid;
+    grid-column: 3;
+    grid-row: 1 / span 4;
+    grid-template-rows: subgrid;
+    pointer-events: auto;
+    transition: border-color var(--motion-exit, 160ms) linear;
+  }
+
+  .team[data-expanded="true"] .summary {
+    border-color: transparent;
+  }
+
+  .team[data-expanded="true"] {
+    pointer-events: auto;
+  }
+
+  .estimator {
+    align-self: stretch;
+    grid-column: 1 / span 2;
+    grid-row: 1 / span 4;
+    margin: 1px 0 1px 1px;
+    padding: 20px;
+    border: 0;
+    border-right: 1px solid var(--t-border-line);
+    border-radius: 25px 0 0 25px;
+    background: var(--t-bg-deep);
+    pointer-events: auto;
+    transition-delay: 60ms;
+  }
+
+  .estimator[hidden] {
+    transition-delay: 0ms;
+  }
+
+  .plans[data-team-expanded="true"] .personal {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personal,
+  .team::before,
+  .summary,
+  .estimator,
+  .continueButton,
+  .continueIcon,
+  .workspaceAction,
+  .actionLink {
+    transition: none;
+  }
+
+  .estimator,
+  .continueButton:active,
+  .workspaceAction:active,
+  .actionLink:active,
+  .continueButton:hover .continueIcon {
+    transform: none;
+  }
+
+  @starting-style {
+    .estimator:not([hidden]) {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

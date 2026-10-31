@@ -4,12 +4,13 @@ import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 
-import { Badge } from "@/components/ds"
 import { StaffPanel } from "@/components/staff/StaffPanel"
+import { TeamStatusBadges } from "@/components/staff/TeamStatusBadges"
 import { useStaff } from "@/lib/access-client"
 import { preferredTeams } from "@/lib/access-server"
 import { Link } from "@/lib/navigation"
 import { staffLibraryHref } from "@/lib/staff/paths"
+import { isActiveTeam } from "@/lib/staff/team-status"
 import type { TeamSummary } from "@/lib/staff/types"
 
 /** Team summary and destinations; API status is only shown by its own dashboard. */
@@ -47,14 +48,22 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
 
   return (
     <StaffPanel id="your-team" title={t("teamLinks")} compact>
+      {teams === undefined ? (
+        <p className="mb-4 text-sm text-(--t-ink-dim)" role="status">
+          {t("detailsUnavailable")}
+        </p>
+      ) : null}
       <ul className="m-0 list-none space-y-6 p-0">
         {rows.map((team) => {
           const covered = libraries.filter((lib) =>
             team.libraryDocumentIds.includes(lib.id)
           )
-          const active =
-            team.status === "active" &&
-            (!team.expiresAt || Date.parse(team.expiresAt) > now)
+          const statusKnown =
+            teams !== undefined ||
+            sessionTeams.some(
+              (item) => item.id === team.id && item.status != null
+            )
+          const active = isActiveTeam(team, now)
 
           return (
             <li key={team.id} className="min-w-0">
@@ -68,10 +77,22 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                     ? "Organised by " + team.organiserName
                     : "Member"}
                 {" · "}
-                {team.libraryCount}{" "}
-                {team.libraryCount === 1 ? "library" : "libraries"}
-                {!active ? " · not active" : ""}
+                {t("coverageCount", { count: team.libraryCount })}
               </p>
+              <div className="mb-4">
+                <TeamStatusBadges
+                  membership={
+                    statusKnown
+                      ? active
+                        ? "active"
+                        : team.status === "lapsed"
+                          ? "lapsed"
+                          : "expired"
+                      : undefined
+                  }
+                  verified={teams !== undefined ? team.verified : undefined}
+                />
+              </div>
               <div className="divide-y divide-(--t-border-line) border-y border-(--t-border-line)">
                 <Link
                   href="/staff/teams"
@@ -80,16 +101,10 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                   <span className="min-w-0 flex-1">
                     {t("membersLibraries")}
                   </span>
-                  {teams ? (
-                    <Badge
-                      label={team.verified ? t("verified") : t("notVerified")}
-                      color={team.verified ? "ok" : "warn"}
-                    />
-                  ) : null}
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
                 </Link>
                 <Link
-                  href="/staff/teams/api"
+                  href="/developers"
                   className="flex min-h-14 items-center justify-between gap-2 py-3 text-base font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("apiAccess")}
