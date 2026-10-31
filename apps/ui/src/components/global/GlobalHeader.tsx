@@ -3,6 +3,7 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { AppearanceControl } from "@/components/appearance/AppearanceControl"
+import { BetaFeedback } from "@/components/beta/BetaFeedback"
 import { DashboardNavigation } from "@/components/dashboard/DashboardNavigation"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import { GLOBAL_NAVIGATION } from "@/components/global/global-navigation"
@@ -104,6 +105,7 @@ export async function GlobalHeader({
         {/* One Contribute panel across desktop and tablet breakpoints. On
             phones its shortcuts remain in the compact navigation menu. */}
         <div data-header-stable="" className="flex shrink-0 items-center gap-2">
+          <BetaFeedback label={tUi("feedback")} inline />
           <SiteSearchTrigger iconOnly />
           <AppearanceControl />
           <div className="hidden items-center gap-2 lg:flex">
@@ -147,6 +149,7 @@ function PublicBetaHeader({ locale }: { locale: Locale }) {
           </em>
         </GlobalLink>
         <div className="flex items-center gap-4">
+          <BetaFeedback label={tUi("feedback")} inline />
           <AppearanceControl />
           <LocaleSwitcher locale={locale} />
           <GlobalLink

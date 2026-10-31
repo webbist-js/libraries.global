@@ -32,10 +32,10 @@ export function magicLinkCallbacks(callbackUrl: string | null | undefined): {
 
 /**
  * The `callbackURL` for `authClient.signIn.email`. Better Auth uses it twice:
- * the client follows it after a successful sign-in, and an unconfirmed
- * account is sent a new confirmation link that returns to it. Both must pass
- * post-signin, or a first sign-in skips onboarding. Neither path decodes the
- * callback before redirecting, so `next` is encoded once.
+ * the client follows it after a successful sign-in. It must pass post-signin,
+ * or a first sign-in skips onboarding. The callback is not decoded before
+ * redirecting, so `next` is encoded once. Unconfirmed accounts request a
+ * verification resend separately.
  */
 export function signInCallbackURL(callbackUrl: string | null | undefined) {
   const next = safeRedirectPath(callbackUrl)

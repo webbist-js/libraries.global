@@ -22,8 +22,7 @@
   },
   "dependencies": {
     "@axe-core/playwright": "^4.10.2",
-    "axe-core": "^4.11.1",
-    "get-sitemap-links": "^1.1.0"
+    "axe-core": "^4.11.1"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

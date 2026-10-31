@@ -370,7 +370,7 @@ export function AboutHero({
               className="about-motion-toggle"
               onClick={() => setPaused((value) => !value)}
               disabled={reducedMotion}
-              aria-label={
+              title={
                 reducedMotion
                   ? "Globe motion disabled by your reduced-motion preference"
                   : paused

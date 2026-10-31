@@ -57,7 +57,7 @@ function BoxContent({
   return (
     <>
       <Icon aria-hidden="true" height={18} icon="mdi:chevron-up" width={18} />
-      <span className="font-sans text-[28px] leading-tight">{votes}</span>
+      <span className="font-sans text-[28px] leading-tight">{votes}</span>{" "}
       <span className="text-xs font-bold uppercase">
         {t(voted ? "voteBoxVoted" : "voteBoxVote")}
       </span>
@@ -150,7 +150,7 @@ export function SuggestionCard({
           <button
             type="button"
             aria-pressed={voted}
-            aria-label={voteLabel(s, locked)}
+            aria-label={`${s.votes} ${t(voted ? "voteBoxVoted" : "voteBoxVote")}: ${voteLabel(s, locked)}`}
             disabled={locked || busy}
             onClick={() => onVote(s)}
             className={`${BOX} ${locked ? "" : "cursor-pointer hover:border-(--t-accent-primary) disabled:cursor-wait disabled:opacity-60"}`}
@@ -161,7 +161,7 @@ export function SuggestionCard({
         ) : (
           <GlobalLink
             href={signInHref}
-            aria-label={`Sign in to vote for ${s.name}, ${votesText(s.votes)}`}
+            aria-label={`${s.votes} ${t("voteBoxVote")}: Sign in to vote for ${s.name}, ${votesText(s.votes)}`}
             className={`${BOX} no-underline hover:border-(--t-accent-primary)`}
             style={boxStyle(false, false)}
           >

@@ -59,7 +59,10 @@ export function betaLegalContent(operator, postalAddress, email) {
           "If you send feedback or contact us, we receive your message, any name and email you provide, and technical context such as the page, browser, language and device dimensions. We use our legitimate interest in answering requests, fixing faults and protecting the service. Please avoid including passwords, payment details or sensitive personal information in feedback."
         ),
         paragraph(
-          "Hosting and security services receive IP addresses, browser details and requested pages. We use these for our legitimate interest in delivering and protecting the service. Our providers include Vercel for website hosting, Strapi Cloud for stored content and access requests, Brevo for email delivery, Namecheap Private Email for correspondence, and Sentry for error reporting. We do not sell access-request information or use it for advertising. The full privacy notice explains recipients, international-transfer safeguards and how to request details."
+          "Hosting and security services receive IP addresses, browser details and requested pages. We use these for our legitimate interest in delivering and protecting the service. Our providers include DigitalOcean for website hosting, stored content and access requests, Brevo for email delivery, Namecheap Private Email for correspondence, and Sentry for error reporting. We do not sell access-request information or use it for advertising. The full privacy notice explains recipients, international-transfer safeguards and how to request details."
+        ),
+        paragraph(
+          "Slack receives limited beta activity alerts and the product feedback you submit, including written messages, reproduction steps and selected product answers. These are delivered to private project channels to help respond to feedback and service problems. We omit account names and email addresses from automated activity alerts, but feedback can contain personal information you type. Slack's free-plan viewing limit is 90 days; deletion may take up to one year unless a shorter retention setting applies. See the full privacy notice for retention and transfer details."
         ),
         paragraph(
           "Access-request records are kept while needed to arrange beta access. A withdrawn or blocked record may be retained to prevent a later retry or import from re-enrolling you. Correspondence is kept for up to two years after the matter closes, unless needed longer for a legal claim. Provider server logs are kept for up to 30 days and error reports for up to 90 days, as described in the full privacy notice. Short-lived beta attempt counters expire after 15 minutes; expired database records are removed by housekeeping."
@@ -84,7 +87,7 @@ export function betaLegalContent(operator, postalAddress, email) {
         paragraph(
           "Other essential storage may support security, interface choices and feedback. After entry, account and payment features use the storage described in the ",
           link("standard cookie policy", "cookies"),
-          ". This notice does not add advertising or analytics cookies."
+          ". Optional analytics described in the standard cookie policy run only after consent; beta entry itself does not grant that consent."
         )
       ),
       section(

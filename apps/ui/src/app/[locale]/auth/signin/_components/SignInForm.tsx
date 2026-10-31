@@ -76,7 +76,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
       {
         onError: (error) => {
           const { code, message } = authErrorParts(error)
-          // Better Auth has just emailed this unconfirmed account a new link.
+          // Offer an explicit resend; failed sign-in does not send email.
           if (code === "EMAIL_NOT_VERIFIED") {
             rememberPendingEmail(values.email)
             globalThis.location.href = `${VERIFY_EMAIL_PATH}?state=unverified`

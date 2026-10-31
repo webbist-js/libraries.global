@@ -245,9 +245,14 @@ describe("About hero and ordinary document", () => {
   })
   it("lets readers pause and resume globe motion", () => {
     renderStory()
-    fireEvent.click(screen.getByRole("button", { name: "Pause globe motion" }))
+    fireEvent.click(screen.getByRole("button", { name: "Pause motion" }))
     expect(latestCanvasProps().motionPaused).toBe(true)
-    fireEvent.click(screen.getByRole("button", { name: "Play globe motion" }))
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Motion paused",
+        description: "Play globe motion",
+      })
+    )
     expect(latestCanvasProps().motionPaused).toBe(false)
   })
   it("honours a reduced-motion preference without hiding the project document", () => {
@@ -257,7 +262,9 @@ describe("About hero and ordinary document", () => {
     expect(
       (
         screen.getByRole("button", {
-          name: "Globe motion disabled by your reduced-motion preference",
+          name: "Motion paused",
+          description:
+            "Globe motion disabled by your reduced-motion preference",
         }) as HTMLButtonElement
       ).disabled
     ).toBe(true)

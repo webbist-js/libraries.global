@@ -93,7 +93,7 @@ export function ModerationNavigationLinks({
       className={
         sidebar
           ? "workspace-navigation"
-          : "scrollbar-thin relative flex min-w-0 flex-nowrap gap-2 overflow-x-auto rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 [--spacing:0.25rem]"
+          : "relative flex min-w-0 scrollbar-thin flex-nowrap gap-2 overflow-x-auto rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-3 [--spacing:0.25rem]"
       }
     >
       {items.map((view) => {

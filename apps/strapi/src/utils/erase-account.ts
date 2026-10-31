@@ -1,8 +1,9 @@
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
+
+import { purgeErasedMedia, queueErasedMedia } from "./erased-media"
 
 const PROFILE = "api::user-profile.user-profile"
 const SUBMISSION = "plugin::content-moderation.submission"
-const SUBMISSION_UPLOAD = "plugin::content-moderation.submission-upload"
 const OPTION_VOTE = "plugin::content-moderation.option-vote"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 const SAVED_EVENT = "api::saved-event.saved-event"
@@ -15,12 +16,11 @@ const POINT_EVENT = "plugin::rewards.point-event"
 const BADGE_AWARD = "plugin::rewards.badge-award"
 const SNAPSHOT = "plugin::rewards.leaderboard-snapshot"
 const UP_USER = "plugin::users-permissions.user"
-const UP_FILE = "plugin::upload.file"
 const CREDENTIAL = "plugin::events.event-credential"
 const CREDENTIAL_EVENT = "plugin::events.credential-event"
 
 /** Submissions that never became public: their content goes with the account. */
-const UNFINISHED_STATUSES = ["draft", "pending", "needs_info"]
+const UNFINISHED_STATUSES = ["draft", "pending", "needs_info", "rejected"]
 
 type SnapshotEntry = { baUserId?: string; username?: string | null }
 
@@ -30,30 +30,6 @@ type UnfinishedSubmission = {
   submissionType?: string
   fields?: unknown
   draftData?: unknown
-}
-
-/** Every `photoId` a submission's fields or draft carries. */
-function photoIdsOf(submission: UnfinishedSubmission): number[] {
-  const ids = new Set<number>()
-  const visit = (value: unknown) => {
-    if (!value || typeof value !== "object") return
-    const id = Number((value as { photoId?: unknown }).photoId)
-    if (Number.isInteger(id) && id > 0) ids.add(id)
-    const nested = (value as { fields?: unknown }).fields
-    if (nested && typeof nested === "object") visit(nested)
-  }
-  visit(submission.fields)
-  visit(submission.draftData)
-
-  return [...ids]
-}
-
-async function removeFile(strapi: any, file: unknown, what: string) {
-  try {
-    await strapi.plugin("upload").service("upload").remove(file)
-  } catch (err) {
-    strapi.log.warn(`[erase-account] ${what} not removed:`, err)
-  }
 }
 
 /**
@@ -73,7 +49,7 @@ export async function eraseAccount(
   { baUserId, email }: { baUserId: string; email?: string }
 ): Promise<void> {
   const erasedId = `deleted-${randomUUID()}`
-  const filesToRemove: unknown[] = []
+  const profileFileIds: number[] = []
 
   await strapi.db.transaction(async () => {
     await strapi.db
@@ -86,17 +62,17 @@ export async function eraseAccount(
           }
         : { baUserId },
     })
+    const identity = createHash("sha256").update(baUserId).digest("hex")
     await strapi.db
       .query("api::internal-notification.internal-notification")
-      .updateMany({
-        where: { actorId: baUserId },
-        data: {
-          actorId: null,
-          title: null,
-          detail: null,
-          href: null,
-          state: "expired",
-          lastError: null,
+      .deleteMany({
+        where: {
+          $or: [
+            { actorId: baUserId },
+            { eventKey: `account:${identity}` },
+            { eventKey: { $startsWith: `login:${identity}:` } },
+            { eventKey: { $startsWith: `active:${identity}:` } },
+          ],
         },
       })
     await strapi.plugin("mobile-libraries")?.service("live")?.eraseFor(baUserId)
@@ -144,8 +120,8 @@ export async function eraseAccount(
 
     if (profile) {
       // Captured before the update nulls it on the record.
-      if (profile.avatar) filesToRemove.push(profile.avatar)
-      if (profile.coverImage) filesToRemove.push(profile.coverImage)
+      if (profile.avatar) profileFileIds.push(profile.avatar.id)
+      if (profile.coverImage) profileFileIds.push(profile.coverImage.id)
       await strapi.documents(PROFILE).update({
         documentId: profile.documentId,
         data: {
@@ -197,11 +173,7 @@ export async function eraseAccount(
         status: { $in: UNFINISHED_STATUSES },
       },
     })) as UnfinishedSubmission[]
-    const photoIds = new Set(unfinished.flatMap(photoIdsOf))
-    for (const id of photoIds) {
-      const file = await strapi.db.query(UP_FILE).findOne({ where: { id } })
-      if (file) filesToRemove.push(file)
-    }
+    await queueErasedMedia(strapi, baUserId, erasedId, profileFileIds)
     if (unfinished.length > 0) {
       await strapi.db.query(SUBMISSION).updateMany({
         where: {
@@ -240,6 +212,20 @@ export async function eraseAccount(
         data: { reviewerId: null },
       })
     }
+    await strapi.db
+      .query("plugin::content-moderation.review-event")
+      .updateMany({
+        where: { reviewerId: { $in: [baUserId, `ba:${baUserId}`] } },
+        data: { reviewerId: null },
+      })
+    for (const field of ["suggestedBy", "decidedBy", "publicationReviewedBy"]) {
+      await strapi.db
+        .query("plugin::content-moderation.option-suggestion")
+        .updateMany({
+          where: { [field]: { $in: [baUserId, `ba:${baUserId}`] } },
+          data: { [field]: null },
+        })
+    }
     await strapi.db.query(POINT_EVENT).updateMany({
       where: { baUserId },
       data: { baUserId: erasedId },
@@ -252,7 +238,6 @@ export async function eraseAccount(
       AFFILIATION,
       "plugin::access.network-affiliation",
       "plugin::access.library-authority-grant",
-      SUBMISSION_UPLOAD,
       "plugin::content-moderation.upload-reservation",
       SAVED_EVENT,
       OPTION_VOTE,
@@ -320,11 +305,9 @@ export async function eraseAccount(
     }
   })
 
-  // Files go after the rows are committed: a failed removal only warns,
-  // and a rolled-back erase must not have deleted anything.
-  for (const file of filesToRemove) {
-    await removeFile(strapi, file, `file ${(file as { id?: number }).id}`)
-  }
+  // Storage writes happen only after erasure commits. The anonymous ownership
+  // ledger remains available to the retention job if storage removal fails.
+  await purgeErasedMedia(strapi, erasedId)
 }
 
 async function eraseNetworkIdentity(

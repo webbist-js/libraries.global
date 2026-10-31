@@ -55,6 +55,19 @@ export type AtlasFeedbackFeature = (typeof ATLAS_FEEDBACK_FEATURES)[number]
 /** Keep credentials, search terms and account tokens out of automatic context. */
 export function contextPath(value: string): string {
   const path = value.split(/[?#]/, 1)[0] ?? ""
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(path)
+  } catch {
+    return "/"
+  }
+  const privatePath = decoded.replace(/^\/(?:en|fr|cs)(?=\/)/, "")
+  if (
+    /^\/(?:auth|staff|profile|moderation|contribute|live)(?:\/|$)/.test(
+      privatePath
+    )
+  )
+    return `/${privatePath.split("/")[1]}`
 
   return /^\/(?!\/)/.test(path) &&
     !/[\s\\]/.test(path) &&

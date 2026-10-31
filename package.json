@@ -66,16 +66,17 @@
     "@repo/typescript-config": "workspace:*",
     "commitizen": "4.3.1",
     "cz-conventional-changelog": "3.3.0",
-    "eslint": "^9.39.2",
+    "eslint": "^9.39.5",
     "husky": "9.1.7",
     "lint-staged": "15.2.7",
     "prettier": "3.8.1",
     "semantic-release": "24.2.0",
-    "turbo": "2.7.6"
+    "turbo": "2.7.6",
+    "typescript": "5.9.3"
   },
   "packageManager": "pnpm@10.28.1",
   "engines": {
-    "node": "^22.0.0"
+    "node": "^22.23.4"
   },
   "pnpm": {
     "overrides": {
@@ -85,7 +86,9 @@
       "@types/react-dom": "19.2.3",
       "better-auth@1.7.7>defu": "6.1.5",
       "eslint@9.39.2>minimatch": "3.1.5",
-      "react-use>js-cookie": "3.0.7"
+      "react-use>js-cookie": "3.0.7",
+      "@_sh/strapi-plugin-ckeditor@8.0.0>ckeditor5": "48.5.1",
+      "@_sh/strapi-plugin-ckeditor@8.0.0>dompurify": "3.4.17"
     },
     "patchedDependencies": {
       "better-auth@1.7.7": "patches/better-auth@1.7.7.patch",

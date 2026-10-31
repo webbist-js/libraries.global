@@ -17,8 +17,8 @@ function distanceLabel(km: number): string {
 }
 
 /**
- * One library in a drive's task list: a button named for its action ("Add
- * hours for Worthington Libraries, Northwest"), pressed while it's the one
+ * One library in a drive's task list: its visible library, place and action
+ * form its name, with action context in its description; pressed while it's the one
  * in the panel. Once sent it reads "In review" (icon and text) and can't be
  * picked again. Held by someone else, it reads "Someone’s on this" and is
  * disabled the same way.
@@ -51,22 +51,16 @@ export function DriveTaskRow({
       : taskPlace(task)
   const disabled = inReview || heldByOther
   const statusId = `${id}-status`
-  const placeId = `${id}-place`
-  const described = [
-    place || task.distanceKm != null ? placeId : null,
-    disabled ? statusId : null,
-  ]
+  const actionId = `${id}-action`
+  const described = [actionId, disabled ? statusId : null]
     .filter(Boolean)
     .join(" ")
-  const label = heldByOther
-    ? `${taskActionName(verb, task.name)}: someone’s on this`
-    : taskActionName(verb, task.name)
+  const label = taskActionName(verb, task.name)
 
   return (
     <li>
       <button
         type="button"
-        aria-label={label}
         aria-pressed={selected}
         aria-haspopup="dialog"
         aria-disabled={disabled || undefined}
@@ -100,7 +94,7 @@ export function DriveTaskRow({
             {task.name}
           </span>
           {place || task.distanceKm != null ? (
-            <span id={placeId} className="text-xs" style={{ color: T.ink.dim }}>
+            <span className="text-xs" style={{ color: T.ink.dim }}>
               {place ? <span>{place}</span> : null}
               {place && task.distanceKm != null ? " · " : null}
               {task.distanceKm == null ? null : (
@@ -137,7 +131,6 @@ export function DriveTaskRow({
           </span>
         ) : (
           <span
-            aria-hidden="true"
             className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-3 text-xs font-semibold"
             style={{ color: T.ink.base }}
           >
@@ -145,6 +138,9 @@ export function DriveTaskRow({
           </span>
         )}
       </button>
+      <span id={actionId} className="sr-only">
+        {label}
+      </span>
     </li>
   )
 }

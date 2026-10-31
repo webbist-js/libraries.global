@@ -156,6 +156,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date("2026-10-06T08:00:00Z"))
   vi.stubEnv("STRAPI_BRIDGE_SECRET", "test-bridge-secret")
+  vi.stubEnv("MOBILE_LIVE_STEPUP_SECRET", "test-bridge-secret")
   vi.stubEnv("MOBILE_LIVE_ENABLED", "true")
 })
 afterEach(() => {

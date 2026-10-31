@@ -1,3 +1,7 @@
+import {
+  runCmsMaintenance,
+  cmsMaintenanceStatus,
+} from "../../../utils/cms-maintenance"
 import { internalNotifications } from "../../../utils/internal-notifications/service"
 import { runNetworkFulfilmentJob } from "../../../utils/network-fulfilment-job"
 import {
@@ -13,6 +17,14 @@ import {
 
 const UID = "api::notification.notification"
 
+const operationHandlers = new Map<string, () => Promise<unknown>>([
+  ["maintenance", () => runCmsMaintenance(strapi)],
+  ["maintenanceStatus", () => cmsMaintenanceStatus(strapi)],
+  ["internalRun", () => internalNotifications(strapi).run()],
+  ["internalStatus", () => internalNotifications(strapi).status()],
+  ["internalRetry", () => internalNotifications(strapi).retry()],
+])
+
 export default {
   /** Operator-only diagnostics and manual cron runs. Never forwarded by the UI. */
   async operations(ctx: any) {
@@ -20,15 +32,11 @@ export default {
       return ctx.unauthorized()
     ctx.set("Cache-Control", "private, no-store")
     const { action, baUserId } = ctx.request.body ?? {}
+    const operation = operationHandlers.get(String(action))
+    if (operation) return ctx.send(await operation())
     if (action === "networkFulfilment")
       return ctx.send(await runNetworkFulfilmentJob(strapi))
     const service = strapi.service(UID)
-    if (action === "internalRun")
-      return ctx.send(await internalNotifications(strapi).run())
-    if (action === "internalStatus")
-      return ctx.send(await internalNotifications(strapi).status())
-    if (action === "internalRetry")
-      return ctx.send(await internalNotifications(strapi).retry())
     if (action === "betaInvites") {
       await strapi.plugin("beta-invites").service("invites").prune()
 

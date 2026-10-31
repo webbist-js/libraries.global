@@ -55,7 +55,7 @@ const sources: Source[] = [
       kind: "contribution",
       title: "Contribution submitted",
       actorId: r.submitted_by_user_id,
-      detail: `${TYPES[r.submission_type] || "Submission"} · ${r.target_slug || r.target_entity_type || "Community"} · ${r.content_locale || "en"} · ${r.status}`,
+      detail: `${TYPES[r.submission_type] || "Submission"} · ${r.content_locale || "en"} · ${r.status}`,
       href: `/moderation/${encodeURIComponent(r.document_id)}`,
     }),
   },
@@ -133,7 +133,7 @@ const sources: Source[] = [
       actorId: r.author_key?.startsWith("ba:")
         ? r.author_key.slice(3)
         : undefined,
-      detail: `${r.title} · ${r.language} · ${r.state}`,
+      detail: `Discussion · ${r.language} · ${r.state}`,
       href: `/community/discussions/${encodeURIComponent(r.document_id)}`,
     }),
   },
@@ -265,7 +265,7 @@ async function contentEvent(strapi: Core.Strapi, source: Source, row: Row) {
         select: ["submissionType", "targetSlug", "contentLocale"],
       })
     if (submission)
-      event.detail = `${TYPES[submission.submissionType] || "Submission"} · ${submission.targetSlug || "Community"} · ${submission.contentLocale || "en"} · ${row.reviewer_kind || "reviewer"}`
+      event.detail = `${TYPES[submission.submissionType] || "Submission"} · ${submission.contentLocale || "en"} · ${row.reviewer_kind || "reviewer"}`
   }
   if (source.name === "notice") {
     const audit = await strapi.db
@@ -299,7 +299,13 @@ export async function collectContentEvents(
       const db = strapi.db.connection
       const query = db(`${source.table} as source`)
         .select("source.*")
-        .where(`source.${source.at}`, ">=", since)
+        .where(
+          `source.${source.at}`,
+          ">=",
+          new Date(
+            Math.max(Date.parse(since), Date.now() - 90 * 86_400_000)
+          ).toISOString()
+        )
         .whereNotExists(function () {
           this.select(db.raw("1"))
             .from(`${TABLE} as delivered`)
@@ -324,8 +330,8 @@ export async function collectContentEvents(
   return failed
 }
 
-/** Feed pages are revisited after a full pass to catch late commits. Keys remain
- * after payload retention, so revisiting never re-announces historical events. */
+/** Feed pages are revisited after a full pass to catch late commits. Collection is limited to the same 90-day window as receipt retention,
+ * so deleting old deduplication keys never re-announces historical events. */
 function authEvent(kind: "users" | "sessions", row: AuthRow): InternalEvent {
   const eventAt = new Date(row.createdAt).toISOString()
   const actorId = row.userId

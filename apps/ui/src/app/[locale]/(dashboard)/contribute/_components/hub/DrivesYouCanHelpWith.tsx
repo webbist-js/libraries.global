@@ -19,15 +19,9 @@ function HubDriveRow({ view }: { readonly view: DriveView }) {
   const titleId = "hub-drive-" + drive.documentId
 
   return (
-    <GlobalLink
-      href={href}
+    <article
       aria-labelledby={titleId}
-      {...analyticsAttributes("select_content", {
-        interaction_source: "drive",
-        content_type: "drive",
-        content_id: drive.documentId,
-      })}
-      className="group grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-4 rounded-[20px] p-5 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-(--t-accent-primary) sm:p-6 md:grid-cols-[minmax(0,1fr)_220px_auto]"
+      className="group relative grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-4 rounded-[20px] p-5 text-(--t-ink-base) no-underline transition-colors focus-within:outline-2 focus-within:outline-offset-[-2px] focus-within:outline-(--t-accent-primary) hover:bg-(--t-bg-surface) sm:p-6 md:grid-cols-[minmax(0,1fr)_220px_auto]"
     >
       <div className="min-w-0">
         <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -38,7 +32,17 @@ function HubDriveRow({ view }: { readonly view: DriveView }) {
           id={titleId}
           className="type-h3 m-0 group-hover:text-(--t-accent-primary)"
         >
-          <DriveTitle title={drive.title} />
+          <GlobalLink
+            href={href}
+            {...analyticsAttributes("select_content", {
+              interaction_source: "drive",
+              content_type: "drive",
+              content_id: drive.documentId,
+            })}
+            className="text-inherit no-underline after:absolute after:inset-0 after:rounded-[20px] focus-visible:outline-none"
+          >
+            <DriveTitle title={drive.title} />
+          </GlobalLink>
         </h3>
         {place || source ? (
           <p className="mt-2 mb-0 flex items-start gap-1.5 text-sm leading-relaxed text-(--t-ink-dim)">
@@ -88,7 +92,7 @@ function HubDriveRow({ view }: { readonly view: DriveView }) {
       <span className="col-start-2 row-start-1 inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-(--t-border-line) bg-(--t-bg-deep) text-(--t-accent-primary) group-hover:border-[#b9b4f5] md:col-start-3">
         <ArrowRight size={18} aria-hidden />
       </span>
-    </GlobalLink>
+    </article>
   )
 }
 

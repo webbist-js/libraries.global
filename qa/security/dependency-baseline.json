@@ -1,0 +1,46 @@
+{
+  "reviewedOn": "2026-10-31",
+  "scope": "High/critical findings in deployed application workspaces and shared packages. These exact upstream paths are temporary exceptions, not a clean audit. Documentation build findings are reported separately. The third-party editor and sanitizer receive scoped patched versions.",
+  "findings": [
+    {
+      "advisory": "GHSA-r5fr-rjxr-66jc",
+      "module": "lodash",
+      "version": "4.17.23",
+      "path": "apps__strapi>@notum-cz/strapi-plugin-tiptap-editor>@strapi/design-system>lodash",
+      "reason": "Upstream CMS editor/design-system dependency. Site inputs do not supply lodash template import bindings; CMS transport and administrator access remain private. Update through supported parent releases.",
+      "reviewBy": "2026-11-14"
+    },
+    {
+      "advisory": "GHSA-g84c-rxfj-3j2c",
+      "module": "webpack-dev-middleware",
+      "version": "6.1.3",
+      "path": "apps__strapi>@strapi/strapi>webpack-dev-middleware",
+      "reason": "Development-server dependency pinned by Strapi. Production runs strapi start with a prebuilt admin bundle; no development middleware endpoint is deployed.",
+      "reviewBy": "2026-11-14"
+    },
+    {
+      "advisory": "GHSA-587h-7wmj-h5pm",
+      "module": "vite",
+      "version": "5.4.21",
+      "path": "apps__strapi>@arshiash80/strapi-plugin-iconhub>@strapi/sdk-plugin>@strapi/pack-up>vite",
+      "reason": "Build dependency of the third-party icon plugin SDK. No Vite development server is deployed.",
+      "reviewBy": "2026-11-14"
+    },
+    {
+      "advisory": "GHSA-mrhx-c7xc-m3w5",
+      "module": "zod",
+      "version": "3.25.76",
+      "path": "apps__strapi>@strapi/plugin-sentry>@strapi/admin>@strapi/types>koa-body>zod",
+      "reason": "Official CMS-pinned administrator parser. CMS transport remains private, administrator access is restricted, and public application bridges cap request bodies. Update official Strapi packages together.",
+      "reviewBy": "2026-11-14"
+    },
+    {
+      "advisory": "GHSA-mrhx-c7xc-m3w5",
+      "module": "zod",
+      "version": "4.4.3",
+      "path": "apps__strapi>@strapi/plugin-sentry>@strapi/admin>zod",
+      "reason": "Official CMS-pinned administrator parser. CMS transport remains private, administrator access is restricted, and public application bridges cap request bodies. Update official Strapi packages together.",
+      "reviewBy": "2026-11-14"
+    }
+  ]
+}

@@ -18,7 +18,7 @@ function fixture(pathname = "/staff/private-library/events") {
       head: { append: () => {} },
     },
   } as unknown as Window
-  const controller = installGoogleAnalytics(browser)!
+  const controller = installGoogleAnalytics(browser, undefined, false, true)!
   const events = () =>
     (browser.dataLayer ?? []).filter(
       (row) => (row as { event?: string }).event === "lg_analytics"

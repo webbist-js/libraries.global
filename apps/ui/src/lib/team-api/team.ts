@@ -33,14 +33,17 @@ export async function requireApiTeam(
   return team
 }
 
-export async function checkApiTeamActive(teamId: string) {
+export async function checkApiTeamActive(teamId: string, creatorId?: string) {
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret || !isDocumentIdParam(teamId))
     throw new BillingError("team_service_unavailable")
   const response = await fetch(
     `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/access/api/teams/${teamId}/status`,
     {
-      headers: { "X-Service-Secret": secret },
+      headers: {
+        "X-Service-Secret": secret,
+        ...(creatorId ? { "X-Api-Key-Owner": creatorId } : {}),
+      },
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     }
@@ -48,5 +51,7 @@ export async function checkApiTeamActive(teamId: string) {
   if (response.status === 404) throw new BillingError("team_inactive", 403)
   if (!response.ok) throw new BillingError("team_service_unavailable")
   const body = await response.json()
+  if (creatorId && body.creatorAllowed !== true)
+    throw new BillingError("api_key_owner_removed", 401)
   if (body.active !== true) throw new BillingError("team_inactive", 403)
 }

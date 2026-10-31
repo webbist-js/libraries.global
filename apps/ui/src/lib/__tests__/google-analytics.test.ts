@@ -5,6 +5,7 @@ import {
   GOOGLE_TAG_MANAGER_ID,
   installGoogleAnalytics,
   productionAnalyticsEnabled,
+  workspaceNoticePublished,
 } from "../google-analytics"
 
 function fixture(origin = "https://libraries.global", pathname = "/beta") {
@@ -117,7 +118,7 @@ describe("production analytics", () => {
       "https://libraries.global",
       "/staff/teams"
     )
-    installGoogleAnalytics(browser)!.setConsent(true)
+    installGoogleAnalytics(browser, undefined, false, true)!.setConsent(true)
     expect(append).toHaveBeenCalledTimes(1)
     expect(views()[0]?.[2]).toMatchObject({
       event_name: "workspace_view",
@@ -155,7 +156,7 @@ describe("production analytics", () => {
       "https://libraries.global",
       "/fr/moderation"
     )
-    const controller = installGoogleAnalytics(browser)!
+    const controller = installGoogleAnalytics(browser, undefined, false, true)!
     controller.setConsent(true)
     expect(
       controller.track("navigation_action", {
@@ -196,7 +197,7 @@ it("uses a separate consented channel with generic context and no private page v
     "https://libraries.global",
     "/fr/staff/teams/billing"
   )
-  const analytics = installGoogleAnalytics(browser, undefined, true)!
+  const analytics = installGoogleAnalytics(browser, undefined, true, true)!
   const fields = {
     product: "team",
     billing_interval: "year",
@@ -239,7 +240,7 @@ it("uses a separate consented channel with generic context and no private page v
 
 it("never replays checkout completions across routes or consent epochs", () => {
   const { browser } = fixture("https://libraries.global", "/staff/teams/new")
-  const analytics = installGoogleAnalytics(browser, undefined, true)!
+  const analytics = installGoogleAnalytics(browser, undefined, true, true)!
   const fields = { product: "team", billing_interval: "year" }
   analytics.setConsent(true)
   const before = analytics.prepareCheckout!("checkout_handoff", fields)
@@ -260,4 +261,19 @@ it("never replays checkout completions across routes or consent epochs", () => {
       action_type: "continue",
     })
   ).toBe(false)
+})
+
+it("requires the exact published disclosure revision for expanded collection", () => {
+  vi.stubEnv("ANALYTICS_NOTICE_REVISION", "")
+  expect(workspaceNoticePublished()).toBe(false)
+  vi.stubEnv("ANALYTICS_NOTICE_REVISION", "old")
+  expect(workspaceNoticePublished()).toBe(false)
+  vi.stubEnv("ANALYTICS_NOTICE_REVISION", "2.0-dashboard")
+  expect(workspaceNoticePublished()).toBe(true)
+  const { browser, append } = fixture(
+    "https://libraries.global",
+    "/staff/private"
+  )
+  installGoogleAnalytics(browser)!.setConsent(true)
+  expect(append).not.toHaveBeenCalled()
 })

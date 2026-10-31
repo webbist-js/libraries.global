@@ -520,6 +520,26 @@ export default factories.createCoreController(
      * visibility rules apply) with the shapes the profile, settings,
      * onboarding, notification and export pages need.
      */
+    async checkUsername(ctx: {
+      query?: Record<string, unknown>
+      request: { headers: Record<string, unknown> }
+      unauthorized: (message: string) => unknown
+      badRequest: (message: string) => unknown
+      body?: unknown
+    }) {
+      if (!bridgeBaUserId(ctx)) return ctx.unauthorized("Unauthorized")
+      const username = ctx.query?.username
+      if (typeof username !== "string" || !/^[a-z0-9_]{3,40}$/.test(username))
+        return ctx.badRequest("Invalid username")
+      const existing = await strapi.db
+        .query("api::user-profile.user-profile")
+        .findOne({
+          where: { username },
+          select: ["id"],
+        })
+      ctx.body = { available: !existing }
+    },
+
     async findMe(ctx: any) {
       if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
         return ctx.unauthorized("Invalid or missing service secret")

@@ -49,10 +49,9 @@ export function validSlackWebhook(value: string): boolean {
 }
 
 export function maskEmail(value: unknown): string {
-  if (typeof value !== "string" || !value.includes("@")) return "Email withheld"
-  const [local, domain] = value.split("@")
-
-  return `${local.slice(0, 1)}***@${domain}`
+  return typeof value === "string" && value.includes("@")
+    ? "Email provided"
+    : "Email withheld"
 }
 
 /** Plain text blocks prevent user-controlled Slack markup, mentions and links. */

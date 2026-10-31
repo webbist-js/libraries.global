@@ -176,19 +176,19 @@ describe("safeFetch", () => {
   // Finding 9: a redirect to a different origin must not carry the first
   // origin's Authorization/Cookie along — undici, unlike a browser, never
   // strips these on its own.
-  it("drops Authorization and Cookie across a cross-origin redirect", async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        status: 302,
-        headers: new Headers({ location: "https://other.example/new" }),
-      })
-      .mockResolvedValueOnce({ status: 200, headers: new Headers() })
-    await safeFetch("https://example.com/old", {
-      headers: { Authorization: "Bearer secret", Cookie: "a=b" },
+  it("refuses credentialed cross-origin redirects without replaying any bytes", async () => {
+    mockFetch.mockResolvedValueOnce({
+      status: 302,
+      headers: new Headers({ location: "https://other.example/new" }),
     })
-    const secondHeaders = new Headers(mockFetch.mock.calls[1]![1].headers)
-    expect(secondHeaders.get("authorization")).toBeNull()
-    expect(secondHeaders.get("cookie")).toBeNull()
+    await expect(
+      safeFetch("https://example.com/old", {
+        headers: { Authorization: "Bearer fixture" },
+        body: "secret body",
+        method: "POST",
+      })
+    ).rejects.toThrow(/cross-origin/)
+    expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 
   it("keeps Authorization across a same-origin redirect", async () => {
@@ -271,25 +271,18 @@ describe("safeFetchText", () => {
   })
 
   // Finding 9, on the body-capped entry point too.
-  it("drops Authorization across a cross-origin redirect", async () => {
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 302,
-        headers: new Headers({ location: "https://other.example/new" }),
-        text: async () => "",
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        headers: new Headers(),
-        text: async () => "ok",
-      })
-    await safeFetchText("https://example.com/old", {
-      headers: { Authorization: "Bearer secret" },
+  it("refuses a body-capped credentialed redirect", async () => {
+    mockFetch.mockResolvedValueOnce({
+      status: 302,
+      headers: new Headers({ location: "https://other.example/new" }),
+      text: async () => "",
     })
-    const secondHeaders = new Headers(mockFetch.mock.calls[1]![1].headers)
-    expect(secondHeaders.get("authorization")).toBeNull()
+    await expect(
+      safeFetchText("https://example.com/old", {
+        headers: { Authorization: "Bearer fixture" },
+      })
+    ).rejects.toThrow(/cross-origin/)
+    expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -318,4 +311,13 @@ describe("parseJsonBody", () => {
     }
     expect(parseJsonBody(res, "TestProvider")).toEqual({ a: 1 })
   })
+})
+
+it("refuses HTTPS downgrade before making the second request", async () => {
+  mockFetch.mockResolvedValueOnce({
+    status: 302,
+    headers: new Headers({ location: "http://example.com/plain" }),
+  })
+  await expect(safeFetch("https://example.com/feed")).rejects.toThrow(/HTTPS/)
+  expect(mockFetch).toHaveBeenCalledTimes(1)
 })

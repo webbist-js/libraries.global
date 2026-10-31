@@ -19,6 +19,7 @@ import {
   reserveApiRequest,
   finishApiRequest,
   type ApiReservation,
+  type KeyRow,
 } from "./store"
 import { checkApiTeamActive } from "./team"
 import type { ApiScope } from "./types"
@@ -250,6 +251,20 @@ export async function apiLibraries(
   )
 }
 
+async function authorizeKeyOwner(pool: Pool, key: KeyRow) {
+  if (!key.created_by) throw new BillingError("invalid_api_key", 401)
+  try {
+    await checkApiTeamActive(key.team_id, key.created_by)
+  } catch (error) {
+    if (error instanceof BillingError && error.code === "api_key_owner_removed")
+      await pool.query(
+        "update team_api_keys set revoked_at=coalesce(revoked_at,now()) where team_id=$1 and created_by=$2",
+        [key.team_id, key.created_by]
+      )
+    throw error
+  }
+}
+
 export async function serveTeamApi(
   pool: Pool,
   request: Request,
@@ -267,7 +282,7 @@ export async function serveTeamApi(
       throw new BillingError("invalid_api_key", 401)
     const secret = authorization.slice(7)
     const key = await findApiKey(pool, secret)
-    await checkApiTeamActive(key.team_id)
+    await authorizeKeyOwner(pool, key)
     reservation = await reserveApiRequest(pool, key, secret, scope, endpoint)
     const body = JSON.stringify(await work(reservation.budget))
     const bytes = Buffer.byteLength(body)

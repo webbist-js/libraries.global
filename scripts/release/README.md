@@ -35,3 +35,30 @@ python3 -m unittest discover -s scripts/release -p 'test_*.py'
 ```
 
 `check-public-files.mjs` rejects private operational paths and credentials from the Git index. Host inventories, runtime secrets, recovery records and promotion commands belong in private operator documentation.
+
+## CMS maintenance
+
+When configured CMS cron is off, install the reviewed `cms-maintenance.py` and
+adapt its service/timer examples. A protected environment file supplies
+`APP_PUBLIC_URL` and `CRON_SECRET`; neither belongs in command arguments or Git.
+The timer runs every minute. The CMS records each job's successful completion and
+retries failed phases independently. Mobile live stop/prune jobs remain owned by
+the existing plugin scheduler; maintenance observes their receipts without
+registering a second scheduler.
+
+After deployment, run maintenance and verify `/api/health`, including successful
+mobile plugin receipts, before setting `CMS_MAINTENANCE_REQUIRED=true`. With that
+flag, stale or failed receipts return HTTP 503. Enable the same flag on the CMS to send a daily-deduplicated missed-run alert
+through the existing private operational notification channel. Verify both its
+queued event and delivery; also include this endpoint in external health monitoring. An active timer
+alone is insufficient acceptance evidence. Do not enable a health gate before
+its first successful run.
+
+Expanded account/Staff/checkout analytics additionally require
+`ANALYTICS_NOTICE_REVISION=2.0-dashboard` after the matching published notices have
+been read back. Public analytics still require the existing environment and
+consent gates. Live confirmation requires a dedicated, matching
+`MOBILE_LIVE_STEPUP_SECRET` on both servers; it never falls back to the bridge key.
+Bridge-key rotation can accept the previous key until an explicit
+`STRAPI_BRIDGE_PREVIOUS_VALID_UNTIL`, capped at one day; remove the overlap after
+both senders use the new key.

@@ -387,7 +387,11 @@
   border-radius: 12px;
   background: #211e3e;
 }
-.home-atlas-preview > a {
+.home-atlas-preview:focus-within {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 4px;
+}
+.home-atlas-preview > .home-atlas-image {
   background: var(--t-bg-surface);
   position: relative;
   display: block;

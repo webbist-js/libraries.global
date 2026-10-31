@@ -35,7 +35,8 @@
     "@strapi/design-system": "^2.0.0"
   },
   "dependencies": {
-    "@repo/access": "workspace:*"
+    "@repo/access": "workspace:*",
+    "@repo/shared-data": "workspace:*"
   },
   "files": [
     "dist",

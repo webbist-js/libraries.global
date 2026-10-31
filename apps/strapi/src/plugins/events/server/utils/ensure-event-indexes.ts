@@ -1,35 +1,7 @@
-/**
- * Indexes the events pipeline relies on but Strapi's schema sync never
- * creates:
- *
- * - `ev_events (source_provider, external_id)` UNIQUE — the worker's upsert
- *   targets it with `ON CONFLICT (source_provider, external_id)`; without it
- *   every sync fails with "no unique or exclusion constraint matching".
- * - `ev_events (library_entity_ref)` — the public library and ICS handlers
- *   filter on the denormalised entity ref.
- * - `ev_event_credentials (status)` — the worker's `loadCredentials` and the
- *   cron's auto-pause scan filter by status.
- * - `ev_credential_events (credential_document_id, created_at)` — the
- *   reveal and review-history reads page one feed's audit log in order.
- * - `ev_events (credential_id, start_time)` — `feeds.list`'s `upcomingEvents`
- *   count (and the worker's own per-credential reads) filter by both.
- *
- * The same statements live in the migration
- * `database/migrations/2026.09.30T00.00.02.events-unique-external-id.js`.
- * Strapi runs user migrations *before* its schema sync, so on a fresh
- * database — and on the first boot after `libraryEntityRef` was added to the
- * schema — the migration finds no table or no column and does nothing (yet is
- * recorded as applied). This bootstrap fallback runs after schema sync, when
- * the column exists, and re-applies the idempotent statements. Same
- * reasoning as `src/utils/ensure-unique-indexes.ts`.
- *
- * Duplicate `(source_provider, external_id)` rows are removed first, keeping
- * the lowest id (the earliest import and therefore the documentId any link
- * was built on). Existing rows get `library_entity_ref` backfilled from the
- * relation's join table.
- *
- * Postgres only. Raw SQL is sanctioned here: DDL and a set-based backfill
- * aren't expressible through the Document Service.
+/** Event identity includes its feed installation. Keep the existing index name
+ * so older CMS bootstrap code cannot run its destructive cross-feed dedupe.
+ * Existing row IDs, document IDs, saved-event references and approval states
+ * are never rewritten. An incompatible old worker fails closed on conflict.
  */
 
 const PG_CLIENTS = new Set(["pg", "postgres", "postgresql"])
@@ -43,14 +15,9 @@ export const EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME =
 export const EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME =
   "ev_events_library_entity_ref_idx"
 
-export const EV_EVENTS_DEDUPE_SQL =
-  "DELETE FROM ev_events a USING ev_events b " +
-  "WHERE a.source_provider = b.source_provider " +
-  "AND a.external_id = b.external_id AND a.id > b.id"
-
 export const EV_EVENTS_PROVIDER_EXTERNAL_INDEX_SQL =
   `CREATE UNIQUE INDEX IF NOT EXISTS ${EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME} ` +
-  "ON ev_events (source_provider, external_id)"
+  "ON ev_events (credential_id, source_provider, external_id)"
 
 export const EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_SQL =
   `CREATE INDEX IF NOT EXISTS ${EV_EVENTS_LIBRARY_ENTITY_REF_INDEX_NAME} ` +
@@ -120,10 +87,19 @@ export async function ensureEventIndexes(strapi: any): Promise<void> {
       // Fail fast instead of hanging bootstrap behind another DDL lock.
       await trx.raw("SET LOCAL lock_timeout = '5s'")
 
-      if (!(await indexExists(trx, EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME))) {
-        // The dedupe is a self-join over the whole table: only while the
-        // unique index doesn't exist yet.
-        await trx.raw(EV_EVENTS_DEDUPE_SQL)
+      const identity = (await trx.raw(
+        "select indexdef from pg_indexes where schemaname = current_schema() and indexname = ?",
+        [EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME]
+      )) as { rows: { indexdef: string }[] }
+      if (
+        !identity.rows[0]?.indexdef.includes(
+          "(credential_id, source_provider, external_id)"
+        )
+      ) {
+        await trx.raw("LOCK TABLE ev_events IN SHARE ROW EXCLUSIVE MODE")
+        await trx.raw(
+          `DROP INDEX IF EXISTS ${EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME}`
+        )
         await trx.raw(EV_EVENTS_PROVIDER_EXTERNAL_INDEX_SQL)
       }
 
@@ -146,5 +122,6 @@ export async function ensureEventIndexes(strapi: any): Promise<void> {
     })
   } catch (err) {
     strapi.log.error("[events] ensureEventIndexes failed", err)
+    throw err
   }
 }

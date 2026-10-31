@@ -24,3 +24,10 @@ type Story = StoryObj<typeof meta>
 export const Page: Story = {}
 export const Blog: Story = { args: { variant: "blog" } }
 export const Empty: Story = { args: { htmlContent: null } }
+
+export const SanitizedContent: Story = {
+  args: {
+    htmlContent:
+      '<h2>Safe article content</h2><p>Formatting and ordinary links stay available.</p><a href="/libraries">Browse libraries</a><img src="/fixtures/library.jpg" alt="Library" onerror="alert(1)"><script>alert(1)</script><iframe srcdoc="untrusted"></iframe><svg onload="alert(1)"></svg>',
+  },
+}

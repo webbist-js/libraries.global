@@ -120,7 +120,10 @@ describe("returned suggestion revision", () => {
       screen.getByText("Only you and reviewers can see this.")
     ).toBeTruthy()
     fireEvent.click(
-      screen.getByRole("button", { name: "Revise Easy-read opening times" })
+      screen.getByRole("button", {
+        name: "Revise suggestion",
+        description: "Revise Easy-read opening times",
+      })
     )
     const name = screen.getByRole("textbox", {
       name: "What were you looking for?",
@@ -163,7 +166,10 @@ describe("returned suggestion revision", () => {
   it("clears private feedback and the revision draft when the account scope changes", () => {
     const view = render(<SuggestionsWorkspace {...props} />)
     fireEvent.click(
-      screen.getByRole("button", { name: "Revise Easy-read opening times" })
+      screen.getByRole("button", {
+        name: "Revise suggestion",
+        description: "Revise Easy-read opening times",
+      })
     )
     expect(screen.getAllByText(returned.decisionNote!)).toHaveLength(2)
     actor.signedIn = false

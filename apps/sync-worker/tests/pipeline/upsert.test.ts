@@ -18,7 +18,7 @@ const { fakeDb, state } = vi.hoisted(() => {
     nextId: 1,
     sql: [] as { sql: string; bindings: unknown[] }[],
   }
-  const key = (p: unknown, e: unknown) => `${String(p)}|${String(e)}`
+  const key = (c: unknown, p: unknown, e: unknown) => JSON.stringify([c, p, e])
 
   const raw = async (sql: string, bindings: unknown[] = []) => {
     state.sql.push({ sql, bindings })
@@ -26,12 +26,14 @@ const { fakeDb, state } = vi.hoisted(() => {
 
     if (
       flat.startsWith(
-        "SELECT source_provider, external_id, sync_hash FROM ev_events"
+        "SELECT credential_id, source_provider, external_id, sync_hash FROM ev_events"
       )
     ) {
       const rows: EventRow[] = []
-      for (let i = 0; i < bindings.length; i += 2) {
-        const row = state.events.get(key(bindings[i], bindings[i + 1]))
+      for (let i = 0; i < bindings.length; i += 3) {
+        const row = state.events.get(
+          key(bindings[i], bindings[i + 1], bindings[i + 2])
+        )
         if (row) rows.push(row)
       }
 
@@ -47,7 +49,7 @@ const { fakeDb, state } = vi.hoisted(() => {
       for (let i = 0; i < bindings.length; i += cols.length) {
         const row: Record<string, unknown> = {}
         cols.forEach((c, j) => (row[c] = bindings[i + j]))
-        const k = key(row.source_provider, row.external_id)
+        const k = key(row.credential_id, row.source_provider, row.external_id)
         const existing = state.events.get(k)
         if (existing) {
           // ON CONFLICT DO UPDATE: everything except the identity columns.
@@ -75,6 +77,7 @@ const { fakeDb, state } = vi.hoisted(() => {
       return {
         rows: returning.map((r) => ({
           id: r.id,
+          credential_id: r.credential_id,
           source_provider: r.source_provider,
           external_id: r.external_id,
         })),
@@ -157,11 +160,28 @@ beforeEach(() => {
 })
 
 describe("upsertEvents", () => {
+  it("keeps independent feeds with the same provider ID and their approvals separate", async () => {
+    await upsertEvents([
+      event({ credentialId: 7, libraryId: 42, pendingReview: false }),
+      event({
+        credentialId: 8,
+        libraryId: 43,
+        pendingReview: true,
+        title: "Other installation",
+      }),
+    ])
+    expect(state.events.size).toBe(2)
+    expect(
+      [...state.events.values()].map((row) => row.pending_review).sort()
+    ).toEqual([false, true])
+    expect([...state.links]).toHaveLength(2)
+  })
+
   it("inserts a new event with a cuid document_id, the entity ref, a link row and no library_id column", async () => {
     const stats = await upsertEvents([event()])
 
     expect(stats).toEqual({ created: 1, updated: 0, unchanged: 0 })
-    const row = state.events.get("ical|ext-1")!
+    const row = state.events.get(JSON.stringify([7, "ical", "ext-1"]))!
     expect(row).toBeDefined()
     expect(row.document_id).toMatch(/^[a-z][a-z0-9]{23}$/)
     expect(row.library_entity_ref).toBe("GB-MCL-001")
@@ -176,9 +196,11 @@ describe("upsertEvents", () => {
       s.sql.includes("INSERT INTO ev_events (")
     )!
     expect(insert.sql).toContain(
-      "ON CONFLICT (source_provider, external_id) DO UPDATE SET"
+      "ON CONFLICT (credential_id, source_provider, external_id) DO UPDATE SET"
     )
-    expect(insert.sql).toContain("RETURNING id, source_provider, external_id")
+    expect(insert.sql).toContain(
+      "RETURNING id, credential_id, source_provider, external_id"
+    )
     const setClause = insert.sql.slice(insert.sql.indexOf("DO UPDATE SET"))
     expect(setClause).not.toMatch(/\bdocument_id\s*=/)
     expect(setClause).toContain(
@@ -188,7 +210,7 @@ describe("upsertEvents", () => {
 
   it("updates in place on a second run with the same (source_provider, external_id)", async () => {
     await upsertEvents([event()])
-    const first = { ...state.events.get("ical|ext-1")! }
+    const first = { ...state.events.get(JSON.stringify([7, "ical", "ext-1"]))! }
 
     const stats = await upsertEvents([
       event({ syncHash: "hash-b", title: "Reading Group (new time)" }),
@@ -196,7 +218,7 @@ describe("upsertEvents", () => {
 
     expect(stats).toEqual({ created: 0, updated: 1, unchanged: 0 })
     expect(state.events.size).toBe(1)
-    const second = state.events.get("ical|ext-1")!
+    const second = state.events.get(JSON.stringify([7, "ical", "ext-1"]))!
     expect(second.id).toBe(first.id)
     expect(second.document_id).toBe(first.document_id)
     expect(second.title).toBe("Reading Group (new time)")
@@ -211,7 +233,7 @@ describe("upsertEvents", () => {
 
   it("moves the link row when the matched library changes", async () => {
     await upsertEvents([event()])
-    const id = state.events.get("ical|ext-1")!.id
+    const id = state.events.get(JSON.stringify([7, "ical", "ext-1"]))!.id
     await upsertEvents([
       event({
         syncHash: "hash-c",
@@ -220,9 +242,9 @@ describe("upsertEvents", () => {
       }),
     ])
     expect([...state.links]).toEqual([`${id}|99`])
-    expect(state.events.get("ical|ext-1")!.library_entity_ref).toBe(
-      "GB-XYZ-002"
-    )
+    expect(
+      state.events.get(JSON.stringify([7, "ical", "ext-1"]))!.library_entity_ref
+    ).toBe("GB-XYZ-002")
   })
 
   it("collapses duplicate (provider, externalId) pairs within one batch", async () => {
@@ -231,7 +253,9 @@ describe("upsertEvents", () => {
       event({ title: "second", syncHash: "hash-2" }),
     ])
     expect(stats.created).toBe(1)
-    expect(state.events.get("ical|ext-1")!.title).toBe("second")
+    expect(state.events.get(JSON.stringify([7, "ical", "ext-1"]))!.title).toBe(
+      "second"
+    )
   })
 
   it("does nothing for an empty batch", async () => {

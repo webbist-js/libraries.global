@@ -591,7 +591,7 @@ function LegalContents({
   readonly label: string
 }) {
   const links = (
-    <ul className="scrollbar-thin m-0 min-h-0 list-none overflow-y-auto overscroll-contain p-0 [scrollbar-gutter:stable]">
+    <ul className="m-0 min-h-0 scrollbar-thin [scrollbar-gutter:stable] list-none overflow-y-auto overscroll-contain p-0">
       {items.map((item) => (
         <li key={item.id}>
           <a
@@ -632,7 +632,7 @@ function LegalContents({
         </summary>
         <nav
           aria-label={label}
-          className="scrollbar-thin mt-3 max-h-[min(420px,60dvh)] overflow-y-auto overscroll-contain border-t border-(--t-border-line) pt-3"
+          className="mt-3 max-h-[min(420px,60dvh)] scrollbar-thin overflow-y-auto overscroll-contain border-t border-(--t-border-line) pt-3"
         >
           {links}
         </nav>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { isLivePath } from "@/lib/live-path"
 import { mobileAppConfig } from "@/lib/mobile-app"
+import { scriptCsp } from "@/lib/script-csp"
 
 export { isLivePath }
 const consoleRequest = (req: NextRequest) =>
@@ -13,14 +14,19 @@ export function liveSecurityRequest(req: NextRequest): NextRequest {
   requestHeaders.delete("x-live-console")
   requestHeaders.delete("x-nonce")
   requestHeaders.delete("Content-Security-Policy")
-  if (!consoleRequest(req))
-    return new NextRequest(req, { headers: requestHeaders })
+  requestHeaders.delete("Content-Security-Policy-Report-Only")
   const nonce = btoa(
     String.fromCodePoint(...crypto.getRandomValues(new Uint8Array(18)))
   )
   requestHeaders.set("x-live-console", "true")
   requestHeaders.set("x-nonce", nonce)
-  requestHeaders.set("Content-Security-Policy", liveCsp(nonce))
+  if (consoleRequest(req)) {
+    requestHeaders.set("x-live-console", "true")
+    requestHeaders.set("Content-Security-Policy", liveCsp(nonce))
+  } else {
+    requestHeaders.delete("x-live-console")
+    requestHeaders.set("Content-Security-Policy-Report-Only", scriptCsp(nonce))
+  }
 
   return new NextRequest(req, { headers: requestHeaders })
 }
@@ -49,7 +55,14 @@ export function liveSecurityResponse(
     "x-middleware-override-headers",
     [...names].filter(Boolean).join(",")
   )
-  if (!consoleRequest(req)) return response
+  if (!consoleRequest(req)) {
+    response.headers.set(
+      "Content-Security-Policy-Report-Only",
+      scriptCsp(nonce)
+    )
+
+    return response
+  }
   response.headers.set("Content-Security-Policy", liveCsp(nonce))
   response.headers.set("X-Robots-Tag", "noindex, nofollow")
   response.headers.set("Referrer-Policy", "no-referrer")

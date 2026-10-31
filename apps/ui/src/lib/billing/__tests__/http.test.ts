@@ -49,3 +49,14 @@ describe("billing session and mutation guards", () => {
     expect(f.query.mock.calls[0]?.[1]).toEqual(["write:owner"])
   })
 })
+
+it("requires a fresh session before sensitive API actions", async () => {
+  f.session.mockResolvedValue({
+    user: { id: "owner", emailVerified: true },
+    session: { createdAt: new Date(Date.now() - 600_000) },
+  })
+  await expect(
+    billingUser(request("https://libraries.global"), true, true)
+  ).rejects.toMatchObject({ code: "reauthentication_required", status: 403 })
+  expect(f.query).not.toHaveBeenCalled()
+})

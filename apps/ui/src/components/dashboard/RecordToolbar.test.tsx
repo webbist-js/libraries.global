@@ -60,26 +60,15 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-it("uses sign out instead of Share by default and puts language in the toolbar", () => {
+it("keeps search and breadcrumbs while preferences and account actions live in navigation", () => {
   render(<RecordToolbar />)
-  const signOut = screen.getByRole("link", { name: "Sign out" })
-  expect(signOut.getAttribute("href")).toBe("/auth/signout")
-  expect(signOut.dataset.prefetch).toBe("false")
+  expect(screen.getByRole("button", { name: "Site search" })).toBeTruthy()
+  expect(screen.getByRole("button", { name: "Feedback" })).toBeTruthy()
   expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeTruthy()
-  expect(signOut.closest(".record-toolbar-floating")).toBeNull()
-  expect(screen.queryByRole("button", { name: "Share" })).toBeNull()
-  expect(
-    screen.getByRole("button", { name: "Language" }).closest(".record-toolbar")
-  ).toBeTruthy()
-})
-
-it("offers sign in to a signed-out visitor", () => {
-  session.signedIn = false
-  render(<RecordToolbar />)
-  expect(
-    screen.getByRole("link", { name: "Sign in" }).getAttribute("href")
-  ).toBe("/auth/signin")
+  expect(screen.queryByRole("button", { name: "Language" })).toBeNull()
   expect(screen.queryByRole("link", { name: "Sign out" })).toBeNull()
+  expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull()
+  expect(screen.queryByRole("button", { name: "Share" })).toBeNull()
 })
 
 it.each(["/", "/about"])(
@@ -92,17 +81,6 @@ it.each(["/", "/about"])(
     expect(screen.queryByRole("button", { name: "Language" })).toBeNull()
     expect(screen.queryByRole("link", { name: "Sign out" })).toBeNull()
     expect(screen.queryByRole("navigation", { name: "Breadcrumb" })).toBeNull()
-  }
-)
-
-it.each(["pending", "error"])(
-  "does not show a stale account action while session is %s",
-  (state) => {
-    session.pending = state === "pending"
-    session.error = state === "error" ? new Error("Unavailable") : null
-    render(<RecordToolbar />)
-    expect(screen.queryByRole("link", { name: "Sign out" })).toBeNull()
-    expect(screen.getByRole("button", { name: "Language" })).toBeTruthy()
   }
 )
 

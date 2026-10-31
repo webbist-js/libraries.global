@@ -86,3 +86,6 @@ __pycache__/
 /apps/storybook/coverage/
 /apps/storybook/.vitest/
 /apps/storybook/debug-storybook.log
+
+*.pyo
+*.pyd

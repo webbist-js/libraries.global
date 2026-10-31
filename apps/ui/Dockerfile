@@ -2,7 +2,7 @@
 ARG APP=ui
 ARG WORKSPACE=@repo/ui
 
-FROM node:22-bookworm-slim AS base
+FROM node:22.23.4-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 ENV TURBO_TELEMETRY_DISABLED=1
@@ -49,7 +49,7 @@ RUN pnpm exec turbo run build --filter=${WORKSPACE}
 RUN test -f apps/${APP}/.next/standalone/apps/${APP}/server.js
 
 # Match the builder's libc for traced native dependencies.
-FROM node:22-bookworm-slim AS runner
+FROM node:22.23.4-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS runner
 ARG APP
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

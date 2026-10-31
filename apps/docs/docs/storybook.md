@@ -33,7 +33,7 @@ Build output is `apps/storybook/dist/`. The static build has a bounded 4 GiB Nod
 
 Storybook's build/typecheck/test cache inputs include the UI source, messages, public assets and manifest. Production CSS is imported directly, including the design-system package's CSS exports. The Next.js application is a source dependency; building its server is deliberately absent from the Storybook task graph.
 
-`.github/workflows/storybook.yml` verifies the inventory, types, lint, render/interaction/accessibility tests and static output. The existing unit-test CI command excludes Storybook because it has a separate browser job. `pnpm test` still discovers every workspace test task, including Storybook, so install Chromium before using it.
+`.github/workflows/storybook.yml` verifies the inventory, types, lint, render/interaction/accessibility tests and static output. CI splits each appearance into two file shards, each with one Chromium worker. All four shards must pass; the existing `Stories (light)` and `Stories (dark)` required checks aggregate those results. Local commands still run the whole catalogue. The existing unit-test CI command excludes Storybook because it has separate browser jobs. `pnpm test` still discovers every workspace test task, including Storybook, so install Chromium before using it.
 
 ## Catalogue structure
 

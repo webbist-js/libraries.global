@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import { AtlasContributeCard } from "@/components/atlas/AtlasContributeCard"
 import { AtlasExplorer } from "@/components/atlas/AtlasExplorer"
 import { AtlasFeedbackButton } from "@/components/atlas/AtlasFeedbackButton"
+import { DashboardRouteTransition } from "@/components/dashboard/DashboardRouteTransition"
 import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
 import { scalableAtlasEnabled, ATLAS_COHORT_COOKIE } from "@/lib/atlas-rollout"
@@ -44,26 +45,31 @@ export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <h1 className="type-h1 sr-only">
-        Atlas: map of the world&apos;s libraries
-      </h1>
-      <RecordToolbar items={[{ label: ui("atlas") }]} />
-      <div className="relative min-h-0 flex-1">
-        <AtlasExplorer
-          feedbackPrompt={<AtlasFeedbackButton />}
-          scalable={scalableAtlasEnabled(
-            cookieStore.get(ATLAS_COHORT_COOKIE)?.value
-          )}
-          contributePrompt={
-            showContribute ? (
-              <DismissiblePrompt prompt="atlas-contribute" signedIn={signedIn}>
-                <AtlasContributeCard signedIn={signedIn} />
-              </DismissiblePrompt>
-            ) : null
-          }
-        />
+    <DashboardRouteTransition>
+      <div className="flex min-h-0 flex-1 flex-col" data-dashboard-page="/map">
+        <h1 className="type-h1 sr-only">
+          Atlas: map of the world&apos;s libraries
+        </h1>
+        <RecordToolbar items={[{ label: ui("atlas") }]} />
+        <div className="relative min-h-0 flex-1">
+          <AtlasExplorer
+            feedbackPrompt={<AtlasFeedbackButton />}
+            scalable={scalableAtlasEnabled(
+              cookieStore.get(ATLAS_COHORT_COOKIE)?.value
+            )}
+            contributePrompt={
+              showContribute ? (
+                <DismissiblePrompt
+                  prompt="atlas-contribute"
+                  signedIn={signedIn}
+                >
+                  <AtlasContributeCard signedIn={signedIn} />
+                </DismissiblePrompt>
+              ) : null
+            }
+          />
+        </div>
       </div>
-    </div>
+    </DashboardRouteTransition>
   )
 }

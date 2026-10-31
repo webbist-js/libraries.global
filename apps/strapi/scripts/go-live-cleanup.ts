@@ -313,9 +313,9 @@ async function main() {
   const args = process.argv.slice(2)
   const value = (flag: string) => args[args.indexOf(flag) + 1]
   const apply = args.includes("--apply")
-  const email = args.includes("--keep-email")
-    ? value("--keep-email")
-    : "info@alex-bennett.co.uk"
+  const email = args.includes("--keep-email") ? value("--keep-email") : null
+  if (!email || !/^[^\s@]+@[^\s@]+$/.test(email))
+    throw new Error("An explicit --keep-email is required")
   const backup = args.includes("--backup") ? value("--backup") : null
   if (apply && (!backup || !existsSync(backup) || statSync(backup).size < 1024))
     throw new Error(

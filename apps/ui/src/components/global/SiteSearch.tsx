@@ -62,7 +62,7 @@ export function SiteSearchTrigger({
     <button
       type="button"
       className={`site-search-trigger ${iconOnly ? "site-search-icon" : ""}`}
-      aria-label={t("title")}
+      aria-label={iconOnly ? t("title") : undefined}
       aria-haspopup="dialog"
       aria-keyshortcuts="Meta+k Control+k"
       onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH))}
@@ -465,7 +465,7 @@ export function SiteSearchMount() {
               <X size={16} aria-hidden />
             </button>
           ) : null}
-          <DialogClose className="site-search-escape" aria-label={ui("close")}>
+          <DialogClose className="site-search-escape" title={ui("close")}>
             Esc
           </DialogClose>
         </div>

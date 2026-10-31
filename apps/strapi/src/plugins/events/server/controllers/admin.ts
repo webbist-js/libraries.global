@@ -1,3 +1,4 @@
+import { requireFreshAdminAuth } from "../../../../utils/fresh-admin-auth"
 import { pageWindow } from "../utils/query"
 
 const adminActor = (ctx: any) =>
@@ -119,6 +120,7 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   async revealCredential(ctx: any) {
+    if (!(await requireFreshAdminAuth(strapi, ctx))) return
     const slot = ctx.request?.body?.slot
     if (!SLOTS.has(slot)) {
       ctx.status = 400
