@@ -86,7 +86,9 @@
       "@types/react-dom": "19.2.3",
       "better-auth@1.7.7>defu": "6.1.5",
       "eslint@9.39.2>minimatch": "3.1.5",
-      "react-use>js-cookie": "3.0.7"
+      "react-use>js-cookie": "3.0.7",
+      "@_sh/strapi-plugin-ckeditor@8.0.0>ckeditor5": "48.5.1",
+      "@_sh/strapi-plugin-ckeditor@8.0.0>dompurify": "3.4.17"
     },
     "patchedDependencies": {
       "better-auth@1.7.7": "patches/better-auth@1.7.7.patch",
