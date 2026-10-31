@@ -1,0 +1,35 @@
+# Reviewed historical false positives: public browser-storage/key identifiers,
+# example placeholders, generated curl syntax and captured public search fixtures.
+# Each entry is bound to one commit, file, rule and line; future matches still fail.
+05407223285d94f911d251ae117aa4d740a8f845:apps/ui/src/components/staff/TeamApiPanels.tsx:curl-auth-header:419
+283a42cee1956b1d81625713c51f92dbc87ed1b9:packages/catalogues/tests/fixtures/enterprise/advanced.html:generic-api-key:27
+283a42cee1956b1d81625713c51f92dbc87ed1b9:packages/catalogues/tests/fixtures/enterprise/detail.html:generic-api-key:27
+283a42cee1956b1d81625713c51f92dbc87ed1b9:packages/catalogues/tests/fixtures/enterprise/search-empty.html:generic-api-key:27
+283a42cee1956b1d81625713c51f92dbc87ed1b9:packages/catalogues/tests/fixtures/enterprise/search-multi.html:generic-api-key:27
+345de2ab1741526f24bfc1d3c17f55401f23c987:apps/ui/src/lib/google-analytics.ts:generic-api-key:11
+3828cad77049f8f3d60930367ff05ba77c8a3a91:apps/ui/src/components/staff/TeamApiPanels.tsx:curl-auth-header:419
+3f6ea5e5b8b4865e8cef70ec353a379ef2c19b35:apps/ui/src/components/staff/TeamApiPanels.tsx:curl-auth-header:419
+46640cb77bce109d9eaf630839cc61d0c1e63a63:apps/ui/src/lib/appearance.ts:generic-api-key:6
+4cc9e60d0c721c65102fb5fd1c283022f6ae1fec:docs/superpowers/plans/2026-04-25-better-auth-strapi-integration.md:generic-api-key:33
+4cc9e60d0c721c65102fb5fd1c283022f6ae1fec:docs/superpowers/plans/2026-04-25-better-auth-strapi-integration.md:generic-api-key:40
+4cc9e60d0c721c65102fb5fd1c283022f6ae1fec:docs/superpowers/plans/2026-04-25-better-auth-strapi-integration.md:generic-api-key:442
+4cc9e60d0c721c65102fb5fd1c283022f6ae1fec:docs/superpowers/plans/2026-04-25-better-auth-strapi-integration.md:generic-api-key:48
+5b9017b278fd3bb2fd0186928240aa5e30330873:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
+5e242a2836734dfd04eafec3ad7d05b8b060d876:apps/ui/src/lib/appearance.ts:generic-api-key:6
+6063c8d78b7fd1eb2a3cfb9d8e0f248cbc3c4885:apps/strapi/.env.example:generic-api-key:17
+6063c8d78b7fd1eb2a3cfb9d8e0f248cbc3c4885:apps/strapi/.env.example:generic-api-key:20
+6063c8d78b7fd1eb2a3cfb9d8e0f248cbc3c4885:apps/strapi/.env.example:generic-api-key:23
+721dece11ae9cf90b8f1d5f02a5e3ef8cf475337:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
+b4dcda2cff3046686662613f6774d5399c11be9d:apps/ui/src/lib/appearance.ts:generic-api-key:6
+bb964124ba380c3f0ccb7c79fea10e3746c0668b:apps/strapi/src/utils/meilisearch-search-key.ts:generic-api-key:16
+bd26baf11790340e50c098d6dcce6276c21ace05:apps/ui/src/components/staff/TeamApiPanels.tsx:curl-auth-header:419
+c240a2cc712a2734b3626e58c4453d445692cf3e:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
+c3a5d2ef6d4e5c732ace8a153744e9d95490afec:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
+c6f92d4b5d706d118ac26aa5e3031ed5aef91139:apps/ui/src/lib/google-analytics.ts:generic-api-key:11
+c8ffe0ebd1fd5782225a3693bf1e674eb44c40e1:docs/superpowers/plans/2026-04-25-better-auth-migration.md:generic-api-key:323
+ceebf975bc9b97467ba11f90388b9995a45d1a5d:apps/strapi/.env.example:generic-api-key:22
+ceebf975bc9b97467ba11f90388b9995a45d1a5d:apps/strapi/.env.example:generic-api-key:25
+ceebf975bc9b97467ba11f90388b9995a45d1a5d:apps/strapi/.env.example:generic-api-key:28
+e2f01918fdd4ae92681739e93bffdc5c6ebb7ee8:apps/ui/src/lib/appearance.ts:generic-api-key:6
+f8641adf3913e3ab9ca89254d2452234a1f29d96:docs/superpowers/specs/2026-04-25-better-auth-migration-design.md:generic-api-key:245
+f8d930bc548f3e2984c7bb4f4837dfeb171625de:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
