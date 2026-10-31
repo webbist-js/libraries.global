@@ -32,7 +32,7 @@ export function FeaturedContribution({
   return (
     <section
       aria-label="Help improve this record"
-      className="grid gap-7 rounded-[28px] border p-6 sm:p-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,.95fr)] lg:gap-8"
+      className="featured-contribution grid gap-7 rounded-[28px] border p-6 sm:p-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,.95fr)] lg:gap-8"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="flex flex-col items-start gap-3.5">

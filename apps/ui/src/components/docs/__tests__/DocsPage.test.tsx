@@ -9,6 +9,9 @@ import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("@/components/global/GlobalHeader", () => ({ default: () => null }))
+vi.mock("@/components/dashboard/RecordToolbar", () => ({
+  RecordToolbar: () => null,
+}))
 vi.mock("@/components/contribute/EditorOnly", () => ({
   EditorOnly: ({ fallback = null }: { fallback?: ReactNode }) => fallback,
 }))
@@ -173,7 +176,9 @@ describe("Knowledge search discovery state", () => {
         }}
       />
     )
-    const input = screen.getByRole("searchbox") as HTMLInputElement
+    const input = screen.getByRole("searchbox", {
+      name: "Search the knowledge base",
+    }) as HTMLInputElement
     fireEvent.change(input, { target: { value: "new search" } })
     const form = input.closest("form")!
     expect(form.getAttribute("action")).toBe("/fr/knowledge")
@@ -200,7 +205,9 @@ describe("Knowledge search discovery state", () => {
         currentQuery={{ lang: "all", country: "all", page: "3" }}
       />
     )
-    const form = screen.getByRole("searchbox").closest("form")!
+    const form = screen
+      .getByRole("searchbox", { name: "Search the knowledge base" })
+      .closest("form")!
     const fields = new FormData(form)
     expect(fields.get("lang")).toBe("all")
     expect(fields.get("country")).toBe("all")

@@ -62,8 +62,8 @@ export const ACTIONS: readonly ActionMeta[] = [
     group: "index",
     tip: "Search first: improving a record that’s already there beats adding a duplicate.",
     icon: "mdi:plus",
-    tintBg: "#F5EEDC",
-    tintFg: "#6B5420",
+    tintBg: "var(--t-palette-amber-bg)",
+    tintFg: "var(--t-palette-amber-fg)",
     title: "Add a missing library",
     description:
       "A library that isn’t in the index yet, anywhere in the world.",

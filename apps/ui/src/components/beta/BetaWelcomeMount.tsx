@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
+import { DrawerPresence } from "@/components/ds/DrawerPresence"
 import { useHydratedSession } from "@/lib/access-client"
 import { betaPath } from "@/lib/beta/scope"
 import {
@@ -84,7 +85,16 @@ export function BetaWelcomeMount({ sandbox }: { readonly sandbox: boolean }) {
     setOpen(false)
   }
 
-  return open && !isPending && !error && !excluded ? (
-    <BetaWelcome sandbox={sandbox} onClose={dismiss} />
+  return !isPending && !error && !excluded ? (
+    <DrawerPresence key={scope} open={open}>
+      {(onAfterClose) => (
+        <BetaWelcome
+          open={open}
+          onAfterClose={onAfterClose}
+          sandbox={sandbox}
+          onClose={dismiss}
+        />
+      )}
+    </DrawerPresence>
   ) : null
 }

@@ -159,7 +159,7 @@ export function AtlasContextLegend({
       </div>
       {missing === "grey" ? (
         <div className="mt-3 flex items-center gap-2 text-xs text-(--t-ink-dim)">
-          <span className="size-3 rounded-sm bg-[#D8D4CA]" />
+          <span className="size-3 rounded-sm bg-(--t-border-hi)" />
           {analysis("unavailable")}
         </div>
       ) : (

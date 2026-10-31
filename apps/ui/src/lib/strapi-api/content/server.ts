@@ -1,6 +1,8 @@
 import "server-only"
 
 import {
+  libraryTypeName,
+  type ArticleSource,
   submittedSourceRecords,
   type LibraryTypeValue,
   type LibrarySourceRecord,
@@ -187,7 +189,6 @@ export async function fetchSeo(
 /** Editable homepage section copy (flat `homepage.*` components). */
 const HOMEPAGE_SECTION_POPULATE = Object.fromEntries(
   [
-    "journeysIntro",
     "journeys",
     "featuredIntro",
     "communityBand",
@@ -196,17 +197,48 @@ const HOMEPAGE_SECTION_POPULATE = Object.fromEntries(
     "atlasBand",
     "atlasImage",
     "plansIntro",
-    "coverageIntro",
-    "eventsIntro",
     "journalIntro",
-    "knowledgeBand",
     "knowledgeLinks",
     "finalCta",
-    "finalBenefits",
-    "openIntro",
     "openLinks",
   ].map((key) => [key, true])
 )
+
+/** Published pillar institutions, independent of the homepage’s handpicked relations. */
+export async function fetchHomepagePillars(
+  locale: Locale
+): Promise<PopulatedFeaturedLibraryData[]> {
+  try {
+    const result = await withLocaleNavigation(locale, async (contentLocale) => {
+      const response = await PublicStrapiClient.fetchAPI("/libraries", {
+        locale: contentLocale,
+        status: "published",
+        filters: { featured: { $eq: true } },
+        fields: ["name", "slug", "summary", "city", "locale"],
+        sort: ["name:asc"],
+        pagination: { pageSize: 36 },
+        populate: {
+          heroImage: { fields: ["url", "alternativeText"] },
+          libraryType: { fields: ["name"] },
+          continent: { fields: ["slug", "name"] },
+          country: { fields: ["slug", "name"] },
+          region: { fields: ["slug", "name"] },
+        },
+      } as Parameters<typeof PublicStrapiClient.fetchAPI>[1])
+
+      return {
+        data:
+          (response as { data?: PopulatedFeaturedLibraryData[] }).data ?? [],
+      }
+    })
+
+    return result.data
+      .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", locale))
+      .slice(0, 36)
+  } catch {
+    return []
+  }
+}
 
 export async function fetchHomepage(locale: Locale) {
   const dm = await draftMode()
@@ -219,26 +251,6 @@ export async function fetchHomepage(locale: Locale) {
         locale,
         status: dm.isEnabled ? "draft" : "published",
         populate: {
-          featuredLibraries: {
-            // Only what the featured cards show, not whole library records.
-            fields: ["name", "slug", "summary", "city", "openingTimes"],
-            populate: {
-              libraryType: { fields: ["name"] },
-              heroImage: {
-                fields: [
-                  "url",
-                  "alternativeText",
-                  "width",
-                  "height",
-                  "formats",
-                ],
-              },
-              continent: { fields: ["slug", "name"] },
-              country: { fields: ["slug", "name"] },
-              region: { fields: ["slug", "name"] },
-            },
-          },
-          featuredServices: true,
           seo: true,
           ...HOMEPAGE_SECTION_POPULATE,
         },
@@ -321,11 +333,13 @@ export async function fetchLibrary(slug: string, locale: Locale) {
  */
 async function fetchLibraryBySlug<T>(
   slug: string,
-  params: { locale: Locale; status: "draft" | "published" }
+  params: { locale: Locale; status: "draft" | "published" },
+  requestInit?: RequestInit
 ): Promise<APIResponse<T>> {
   const res = (await PublicStrapiClient.fetchAPI(
     `/libraries/by-slug/${encodeURIComponent(slug)}`,
-    { ...params, sort: { publishedAt: "desc" } }
+    { ...params, sort: { publishedAt: "desc" } },
+    requestInit
   )) as { data?: T[] | null }
 
   return { data: res.data?.pop() ?? null, meta: {} } as APIResponse<T>
@@ -1015,6 +1029,9 @@ export type BlogSection = {
 }
 
 export type BlogArticleSummary = {
+  sources?: ArticleSource[] | null
+  publicationOrigin?: "index" | "community" | null
+  entriesAdded?: number | null
   documentId: string
   title?: string | null
   slug?: string | null
@@ -2058,6 +2075,7 @@ export type IncompleteLibrary = {
   slug: string
   name: string
   place: string
+  libraryType?: string | null
   percent: number
   /** `computeCompleteness` section keys that aren't filled yet. */
   missing: string[]
@@ -2079,6 +2097,8 @@ const INCOMPLETE_LIBRARY_FIELDS = [
   "city",
   "completeness",
   "openingTimes",
+  "mobileTimetable",
+  "absentFacilities",
   "streetAddress",
   "location",
   "description",
@@ -2108,6 +2128,8 @@ export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
       ...Object.fromEntries(
         INCOMPLETE_LIBRARY_FIELDS.map((field, i) => [`fields[${i}]`, field])
       ),
+      "populate[libraryType][fields][0]": "name",
+      "populate[homeLibrary][fields][0]": "name",
       "populate[heroImage][fields][0]": "url",
       "populate[accessibility][fields][0]": "name",
       "populate[services][fields][0]": "name",
@@ -2132,6 +2154,7 @@ export async function fetchIncompleteLibraries(): Promise<IncompleteLibrary[]> {
           documentId: entry.documentId,
           slug: entry.slug!,
           name: entry.name!,
+          libraryType: libraryTypeName(entry.libraryType),
           place: [entry.city, entry.region?.name, entry.country?.name]
             .filter(Boolean)
             .join(", "),
@@ -2187,10 +2210,16 @@ async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
   try {
     // The detail shape carries `socialLinks` and the long text the editor
     // prefills; the list route does not.
-    return await fetchLibraryBySlug<LibraryForEditing>(slug, {
-      locale,
-      status: "published",
-    })
+    // Editing and pre-submit comparisons require the current published values,
+    // even when ordinary public pages use their tagged five-minute cache.
+    return await fetchLibraryBySlug<LibraryForEditing>(
+      slug,
+      {
+        locale,
+        status: "published",
+      },
+      { next: { revalidate: 0 } }
+    )
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching library '${slug}' for editing`,
@@ -2205,6 +2234,7 @@ async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
 // ── Knowledge editor ───────────────────────────────────────────────────────
 
 export type ArticleForEditing = {
+  sources?: ArticleSource[] | null
   availableLocales?: string[]
   publishedAt?: string | null
   documentId: string
@@ -2282,6 +2312,7 @@ export async function fetchArticleForEditing(
         areas: { fields: ["name", "slug"] },
         ...(kind === "journal"
           ? {
+              sources: true,
               eventMentions: {
                 populate: {
                   library: { fields: ["name", "slug"] },

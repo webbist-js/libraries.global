@@ -57,10 +57,9 @@ export function StaffHeroSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="border-b border-(--t-border-line) bg-(--t-bg-space)"
+      className="rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep)"
     >
-      <Container className="py-8 sm:py-12">
-        <Skeleton className="mb-6 h-4 w-40 rounded-full" />
+      <Container className="p-6 sm:p-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:items-end">
           <div>
             <Skeleton className="mb-4 h-7 w-36 rounded-full" />

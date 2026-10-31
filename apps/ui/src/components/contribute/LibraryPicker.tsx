@@ -148,7 +148,7 @@ export function LibraryPicker({
           <button
             type="button"
             onClick={() => onSelect(null)}
-            className="rounded-full border bg-white px-3 py-1.5 text-sm font-semibold"
+            className="rounded-full border bg-(--t-bg-deep) px-3 py-1.5 text-sm font-semibold"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             Change
@@ -180,7 +180,7 @@ export function LibraryPicker({
               aria-controls={listId}
               aria-expanded={open}
               autoComplete="off"
-              className="h-14 w-full rounded-[14px] border border-(--t-border-hi) bg-white pr-4 pl-12 text-base transition-colors outline-none placeholder:text-(--t-ink-faint) focus:border-(--t-accent-primary)"
+              className="h-14 w-full rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) pr-4 pl-12 text-base transition-colors outline-none placeholder:text-(--t-ink-faint) focus:border-(--t-accent-primary)"
               id={inputId}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
@@ -193,7 +193,7 @@ export function LibraryPicker({
           </div>
           {open ? (
             <ul
-              className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 m-0 list-none rounded-[14px] border bg-white p-1.5"
+              className="absolute top-[calc(100%+6px)] right-0 left-0 z-20 m-0 list-none rounded-[14px] border bg-(--t-bg-deep) p-1.5"
               id={listId}
               role="listbox"
               style={{

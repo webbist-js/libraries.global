@@ -43,18 +43,27 @@ vi.mock("@/components/membership/MembershipDashboard", () => ({
 }))
 vi.mock("@/lib/own-profile-server", () => ({ fetchOwnProfile: vi.fn() }))
 
-import LegacyMembershipPage from "@/app/[locale]/contribute/membership/page"
+import LegacyMembershipPage from "@/app/[locale]/(dashboard)/contribute/membership/page"
 import MembershipRedirect from "@/app/[locale]/membership/page"
 import MembershipPage, {
   generateMetadata,
 } from "@/app/[locale]/profile/membership/page"
+import NotificationsPage from "@/app/[locale]/profile/notifications/page"
+import OwnProfilePage from "@/app/[locale]/profile/page"
+import SettingsPage from "@/app/[locale]/profile/settings/page"
 
-it("requires an account before rendering private membership state", async () => {
+it("opens the account drawer without rendering a second private membership page", async () => {
   await expect(
-    MembershipPage({ params: Promise.resolve({ locale: "fr" }) })
+    MembershipPage({
+      params: Promise.resolve({ locale: "fr" }),
+      searchParams: Promise.resolve({ billing: "return", account: "settings" }),
+    })
   ).rejects.toThrow("sign-in redirect")
   expect(redirect).toHaveBeenCalledWith({
-    href: "/auth/signin?callbackUrl=/profile/membership",
+    href: {
+      pathname: "/map",
+      query: { billing: "return", account: "membership" },
+    },
     locale: "fr",
   })
 })
@@ -79,13 +88,31 @@ it.each(["en", "fr", "cs"] as const)(
   }
 )
 it.each(["en", "fr", "cs"] as const)(
-  "redirects old %s pricing bookmarks to the corresponding public plans URL",
+  "keeps the %s contribution membership workspace authenticated",
   async (locale) => {
     await expect(
       LegacyMembershipPage({ params: Promise.resolve({ locale }) })
-    ).rejects.toThrow("pricing redirect")
-    expect(permanentRedirect).toHaveBeenLastCalledWith(
-      `${locale === "en" ? "" : `/${locale}`}/plans`
-    )
+    ).rejects.toThrow("sign-in redirect")
+    expect(redirect).toHaveBeenLastCalledWith({
+      href: "/auth/signin?callbackUrl=/contribute/membership",
+      locale,
+    })
   }
 )
+
+it.each([
+  { section: "settings", route: SettingsPage },
+  { section: "notifications", route: NotificationsPage },
+  { section: "overview", route: OwnProfilePage },
+])("opens direct $section URLs in the drawer", async ({ section, route }) => {
+  await expect(
+    route({
+      params: Promise.resolve({ locale: "cs" }),
+      searchParams: Promise.resolve({ from: "email" }),
+    })
+  ).rejects.toThrow("sign-in redirect")
+  expect(redirect).toHaveBeenLastCalledWith({
+    href: { pathname: "/map", query: { from: "email", account: section } },
+    locale: "cs",
+  })
+})

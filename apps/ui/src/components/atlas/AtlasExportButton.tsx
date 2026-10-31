@@ -26,7 +26,7 @@ const FORMATS: { value: ExportFormat; label: string; sub: string }[] = [
 ]
 
 const BUTTON =
-  "inline-flex h-9 items-center gap-1.5 rounded-full border bg-white px-3.5 text-sm font-semibold disabled:opacity-40"
+  "inline-flex h-9 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold disabled:opacity-40"
 
 type Outcome = { tone: "ok" | "error"; text: string }
 

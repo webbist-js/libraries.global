@@ -67,7 +67,7 @@ export function SuggestionDecisions({
                   className={cn(
                     "flex h-full flex-col items-start rounded-[26px] p-5 sm:p-6",
                     s.status === "accepted"
-                      ? "bg-[#e6f1eb]"
+                      ? "bg-(--t-palette-mint-bg)"
                       : "bg-(--t-bg-muted)"
                   )}
                 >
@@ -76,8 +76,7 @@ export function SuggestionDecisions({
                     color={s.status === "accepted" ? "ok" : "dim"}
                     size="md"
                     style={{
-                      background: "white",
-                      color: s.status === "accepted" ? T.accent.ok : T.ink.dim,
+                      background: T.bg.deep,
                     }}
                   />
                   <h3 className="type-h3 mt-4 mb-3 text-(--t-ink-base)">

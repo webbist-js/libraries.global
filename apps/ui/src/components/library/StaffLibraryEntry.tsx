@@ -2,7 +2,9 @@
 
 import { Icon } from "@iconify/react"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useId } from "react"
 
+import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
 import { useMounted } from "@/hooks/useMounted"
 import { useStaff } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
@@ -28,6 +30,7 @@ const ON_DARK_LOW = `color-mix(in srgb, ${T.bg.deep} 70%, transparent)`
  */
 export function StaffLibraryEntry(props: {
   readonly compact?: boolean
+  readonly card?: boolean
   readonly libraryDocumentId: string
   readonly librarySlug: string
   readonly libraryName: string
@@ -36,6 +39,7 @@ export function StaffLibraryEntry(props: {
   /** Whether the library has an active event feed (the record's flag). */
   readonly hasActiveFeed?: boolean | null
 }) {
+  const headingId = useId()
   const tUi = useUiTranslations("ui")
   const locale = useLocale()
 
@@ -70,11 +74,23 @@ export function StaffLibraryEntry(props: {
       />
     )
 
+  if (props.card)
+    return (
+      <StaffEntryCard
+        canGoLive={canGoLive}
+        mobile={mobile}
+        base={base}
+        locale={locale}
+        libraryDocumentId={props.libraryDocumentId}
+        hasActiveFeed={props.hasActiveFeed}
+      />
+    )
+
   return (
     <section
       className="rounded-[20px] p-5"
-      style={{ background: T.ink.base, color: T.bg.deep }}
-      aria-labelledby="staff-entry-heading"
+      style={{ background: T.bg.inverse, color: T.ink.inverse }}
+      aria-labelledby={headingId}
     >
       <p
         className="m-0 flex items-center gap-1.5 text-sm font-semibold"
@@ -88,7 +104,7 @@ export function StaffLibraryEntry(props: {
         />
         Library staff
       </p>
-      <h2 id="staff-entry-heading" className="type-panel-title m-0 mt-2">
+      <h2 id={headingId} className="type-panel-title m-0 mt-2">
         You run this {mobile ? "mobile library" : "library"}
       </h2>
       <p
@@ -116,7 +132,7 @@ export function StaffLibraryEntry(props: {
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
         {canGoLive ? (
           <Link
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-base font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-bg-deep) px-4 text-base font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base }}
             href={mobileConsoleHref(props.libraryDocumentId, locale)}
           >
@@ -132,7 +148,7 @@ export function StaffLibraryEntry(props: {
         ) : null}
         <Link
           className="inline-flex min-h-11 items-center gap-1 text-base font-semibold underline underline-offset-4"
-          style={{ color: T.bg.deep }}
+          style={{ color: T.ink.inverse }}
           href={base}
         >
           {tUi("open_the_staff_area")}
@@ -154,6 +170,47 @@ export function StaffLibraryEntry(props: {
         )}
       </div>
     </section>
+  )
+}
+
+function StaffEntryCard({
+  canGoLive,
+  mobile,
+  base,
+  locale,
+  libraryDocumentId,
+  hasActiveFeed,
+}: Parameters<typeof CompactStaffTools>[0]) {
+  const tUi = useUiTranslations("ui")
+
+  return (
+    <DashboardSidebarCta
+      title={`You run this ${mobile ? "mobile library" : "library"}`}
+      body="Keep the record, hours and notices up to date."
+      action={{ label: tUi("open_the_staff_area"), href: base }}
+      secondary={
+        canGoLive
+          ? {
+              label: tUi("go_live"),
+              href: mobileConsoleHref(libraryDocumentId, locale),
+            }
+          : undefined
+      }
+    >
+      {mobile && !canGoLive ? (
+        <p className="text-xs text-(--t-ink-dim)">
+          Live updates are off for you: ask an owner.
+        </p>
+      ) : null}
+      {!hasActiveFeed ? (
+        <Link
+          className="dashboard-sidebar-cta-secondary"
+          href={`${base}/events/connect`}
+        >
+          Connect an event feed
+        </Link>
+      ) : null}
+    </DashboardSidebarCta>
   )
 }
 

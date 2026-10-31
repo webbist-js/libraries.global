@@ -11,6 +11,7 @@ import {
   isLongitude,
   readCoord,
 } from "@/lib/geocode/coordinates"
+import { bindMapAppearance } from "@/lib/map-appearance"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 
 import { fieldHintStyle } from "./wizard.constants"
@@ -36,7 +37,7 @@ function pinElement(): HTMLElement {
     width: "24px",
     height: "24px",
     borderRadius: "999px",
-    background: T.accent.primary,
+    background: T.action.primary,
     border: `3px solid ${T.bg.deep}`,
     outline: `1px solid ${T.accent.primaryHover}`,
     cursor: "grab",
@@ -85,6 +86,7 @@ export function LocationPinMap({
   useEffect(() => {
     if (!containerRef.current) return
     let alive = true
+    let disposeAppearance: (() => void) | undefined
     let observer: ResizeObserver | undefined
 
     import("maplibre-gl")
@@ -112,6 +114,7 @@ export function LocationPinMap({
 
           return
         }
+        disposeAppearance = bindMapAppearance(map)
         map.touchZoomRotate.disableRotation()
         map.keyboard.disableRotation()
         map.addControl(
@@ -147,6 +150,7 @@ export function LocationPinMap({
 
     return () => {
       alive = false
+      disposeAppearance?.()
       observer?.disconnect()
       mapRef.current?.remove()
       mapRef.current = null

@@ -1,16 +1,21 @@
 import { ShieldCheck } from "lucide-react"
 import type { ReactNode } from "react"
 
+import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/styles"
 
-export const EDITORIAL_ACTION_PILL =
-  "inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full border border-white/25 px-4 py-2 text-sm font-semibold text-white no-underline hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+export const EDITORIAL_ACTION_PILL = buttonVariants({
+  variant: "inverse",
+  size: "pill-sm",
+})
 
 export const EDITORIAL_DANGER_PILL =
   "border-(--t-palette-coral-fg) bg-(--t-palette-coral-fg) text-white hover:bg-(--t-palette-coral-fg) hover:brightness-110"
 
-export const EDITORIAL_SUBTLE_PILL =
-  "inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full border border-(--t-border-line) bg-white px-4 py-2 text-sm font-semibold text-(--t-ink-base) no-underline hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+export const EDITORIAL_SUBTLE_PILL = buttonVariants({
+  variant: "surface",
+  size: "pill-sm",
+})
 
 export const EDITORIAL_SUBTLE_DANGER_PILL =
   "text-(--t-palette-coral-fg) hover:border-(--t-palette-coral-fg)"

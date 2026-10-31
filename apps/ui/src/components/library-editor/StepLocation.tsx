@@ -56,7 +56,7 @@ function NearestAddress({
       <button
         type="button"
         onClick={onUse}
-        className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+        className="rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--t-action-primary-hover)"
       >
         {tUi("use_this_address")}{" "}
       </button>

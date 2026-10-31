@@ -20,7 +20,7 @@ vi.mock("meilisearch", () => ({
 }))
 
 // next-intl's navigation can't load under vitest; mirror the real values.
-vi.mock("@/lib/navigation", () => ({
+vi.mock("@/lib/routing", () => ({
   routing: { defaultLocale: "en", locales: ["cs", "en"] },
 }))
 // `fr` stands in for a second live locale; `cs` is routed but not live.

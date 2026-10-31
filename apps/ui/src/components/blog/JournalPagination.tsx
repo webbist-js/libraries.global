@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { buttonVariants } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -11,10 +12,16 @@ import {
   type JournalQuery,
 } from "./journalLanding.helpers"
 
-const PILL =
-  "inline-flex h-9 items-center gap-1 rounded-full border px-3.5 text-sm font-semibold"
-const CIRCLE =
-  "inline-flex size-9 items-center justify-center rounded-full border text-sm font-semibold"
+const PILL = buttonVariants({
+  variant: "surface",
+  size: "pill-sm",
+  className: "h-9 min-h-9 gap-1 px-3.5 py-0",
+})
+const CIRCLE = buttonVariants({
+  variant: "surface",
+  size: "icon",
+  className: "rounded-full font-semibold",
+})
 
 export function JournalPagination({
   query,
@@ -89,7 +96,7 @@ export function JournalPagination({
                     style={
                       p === page
                         ? {
-                            background: T.ink.base,
+                            background: T.bg.inverse,
                             borderColor: T.ink.base,
                             color: "#fff",
                           }

@@ -166,7 +166,7 @@ export function DiscussionThreadSidebar({
           {showQueue && (
             <section
               aria-label={t("reviewQueue")}
-              className="rounded-[24px] bg-(--t-ink-base) p-5 text-white"
+              className="rounded-[24px] bg-(--t-bg-inverse) p-5 text-white"
             >
               <header className="mb-5 flex items-center gap-2.5">
                 <ShieldCheck size={19} className="text-[#d9d5ff]" aria-hidden />
@@ -208,8 +208,8 @@ export function DiscussionThreadSidebar({
                   </p>
                 )}
               <Link
-                href="/contribute/moderation?tab=discussions"
-                className="mt-4 flex min-h-11 items-center justify-between gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-(--t-ink-base) hover:bg-[#eeecff]"
+                href="/moderation?tab=discussions"
+                className="mt-4 flex min-h-11 items-center justify-between gap-2 rounded-full bg-(--t-bg-deep) px-4 py-2.5 text-sm font-semibold text-(--t-ink-base) hover:bg-(--t-palette-violet-bg)"
               >
                 {t("openFullQueue")}
                 <ArrowUpRight size={16} aria-hidden />

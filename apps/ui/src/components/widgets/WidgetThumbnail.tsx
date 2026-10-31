@@ -55,7 +55,7 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
                 width="38"
                 height="3"
                 rx="1.5"
-                fill="#E7E3DB"
+                fill="var(--t-border-line)"
               />
             </g>
           ))}
@@ -73,7 +73,7 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
               />
               <path
                 d={`M54 ${y + 12}h120`}
-                stroke="#E7E3DB"
+                stroke="var(--t-border-line)"
                 strokeWidth="3"
                 strokeLinecap="round"
               />
@@ -125,7 +125,14 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
             strokeWidth="4"
             strokeLinecap="round"
           />
-          <rect x="42" y="81" width="64" height="3" rx="1.5" fill="#E7E3DB" />
+          <rect
+            x="42"
+            y="81"
+            width="64"
+            height="3"
+            rx="1.5"
+            fill="var(--t-border-line)"
+          />
         </>
       )}
     </svg>

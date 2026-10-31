@@ -26,9 +26,8 @@ const nextConfig = {
   // Include shared workspace dependencies in the standalone Docker output.
   outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)),
   reactStrictMode: true,
-  devIndicators: {
-    position: "bottom-right",
-  },
+  // The floating dev badge covers the phone account control; error overlays remain enabled.
+  devIndicators: false,
   // Enable cacheComponents when caching strategy is introduced
   // cacheComponents: true,
   experimental: {

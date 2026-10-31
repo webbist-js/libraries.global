@@ -88,21 +88,35 @@ function useInReview(userId: string | undefined, enabled: boolean) {
     queryKey: ["contribute-menu", userId, "in-review"],
     enabled: enabled && !!userId,
     staleTime: STALE,
-    queryFn: async ({ signal }): Promise<number | null> => {
+    queryFn: async ({
+      signal,
+    }): Promise<{
+      pendingCount: number | null
+      acceptedCount: number | null
+    } | null> => {
       const res = await fetch("/api/contribute/standing", {
         cache: "no-store",
         signal,
       })
       if (!res.ok) return null
-      const json = (await res.json()) as { pendingCount?: unknown }
+      const json = (await res.json()) as {
+        pendingCount?: unknown
+        acceptedCount?: unknown
+      }
 
-      return typeof json.pendingCount === "number" ? json.pendingCount : null
+      return {
+        pendingCount:
+          typeof json.pendingCount === "number" ? json.pendingCount : null,
+        acceptedCount:
+          typeof json.acceptedCount === "number" ? json.acceptedCount : null,
+      }
     },
   })
 }
 
 export type ContributeMenu = ContributeMenuModel & {
   status: ContributeMenuStatus
+  acceptedCount?: number | null
   /** The viewer's plan, or null while signed out or loading. */
   plan: PlanKey | null
   /** The Your libraries card's selector: options only with two or more. */
@@ -170,13 +184,14 @@ export function useContributeMenu(active: boolean): ContributeMenu {
     counts: {
       suggestions: suggestions.data ?? null,
       moderation: moderation.data ?? null,
-      inReview: inReview.data ?? null,
+      inReview: inReview.data?.pendingCount ?? null,
     },
   })
 
   return {
     ...model,
     status,
+    acceptedCount: inReview.data?.acceptedCount ?? null,
     plan: user ? ((user.plan as PlanKey | undefined) ?? "free") : null,
     library: {
       options:

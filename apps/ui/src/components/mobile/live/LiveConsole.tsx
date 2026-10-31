@@ -1,4 +1,5 @@
 "use client"
+
 import {
   addDays,
   cycleWeekOf,
@@ -11,6 +12,7 @@ import {
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { AppearanceControl } from "@/components/appearance/AppearanceControl"
 import { Sheet } from "@/components/ds/Sheet"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
@@ -559,6 +561,7 @@ export function LiveConsole({
           </p>
           <h1 className="type-h1 m-0 break-words">{initial.library.name}</h1>
         </div>
+        <AppearanceControl />
         <details ref={menu} className="relative shrink-0">
           <summary
             className="flex min-h-14 cursor-pointer list-none items-center gap-1 rounded-full border px-4 text-sm font-semibold"

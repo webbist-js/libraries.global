@@ -50,7 +50,7 @@ export function LibraryReachTeaser({
       {isPro ? (
         <Link
           href={`/map?${params}`}
-          className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 py-3 text-center text-base font-semibold text-white no-underline"
+          className="min-h-11 rounded-full bg-(--t-action-primary) px-4 py-3 text-center text-base font-semibold text-white no-underline"
         >
           {t("openReach")}
         </Link>

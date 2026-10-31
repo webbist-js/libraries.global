@@ -78,7 +78,7 @@ export function SuggestionsWorkspace({
         gap: "clamp(16px,2.4vw,28px)",
       }}
     >
-      <div className="w-full">
+      <div className="w-full" id="suggest-item">
         <SuggestOptionForm
           ref={form}
           key={viewerScope}

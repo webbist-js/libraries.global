@@ -3,6 +3,7 @@ import Image from "next/image"
 import { useTranslations, type Locale } from "next-intl"
 import type { ReactNode } from "react"
 
+import { EntriesAdded } from "@/components/blog/EntriesAdded"
 import { formatDate } from "@/lib/article-helpers"
 import { avatarInitials } from "@/lib/avatar"
 import { T } from "@/lib/design-tokens"
@@ -133,7 +134,7 @@ function ArticleThumb({
         <span
           className={cn(
             "absolute right-3 bottom-3 text-xs font-semibold",
-            imgUrl && "rounded-full bg-white/90 px-2 py-0.5"
+            imgUrl && "rounded-full bg-(--t-bg-deep)/90 px-2 py-0.5"
           )}
           style={imgUrl ? { color: T.ink.base } : undefined}
         >
@@ -332,6 +333,10 @@ export function JournalArticleCard({
       ) : null}
       <div className="flex flex-1 flex-col p-5">
         <SectionLabel section={article.section} />
+        <EntriesAdded
+          value={article.entriesAdded}
+          origin={article.publicationOrigin}
+        />
         <h3
           className="type-h3 m-0 transition-colors group-hover:text-(--t-accent-primary)"
           style={{
@@ -368,9 +373,11 @@ export function JournalArticleCard({
 export function JournalArticleRow({
   article,
   locale,
+  dataDrop = false,
 }: {
   readonly article: JournalCardData
   readonly locale: Locale
+  readonly dataDrop?: boolean
 }) {
   const t = useTranslations("editorial")
 
@@ -379,11 +386,18 @@ export function JournalArticleRow({
       article={article}
       className={cn(
         "group flex items-stretch gap-4 rounded-[20px] border p-4",
+        dataDrop && "journal-data-row",
         CARD_HOVER
       )}
       locale={locale}
     >
-      {article.heroImage?.url ? (
+      {dataDrop ? (
+        <EntriesAdded
+          value={article.entriesAdded}
+          origin={article.publicationOrigin}
+        />
+      ) : null}
+      {!dataDrop && article.heroImage?.url ? (
         <ArticleThumb
           article={{ ...article, place: null }}
           className="aspect-[4/3] w-[104px] flex-none sm:w-[168px]"
@@ -391,7 +405,7 @@ export function JournalArticleRow({
         />
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col py-2">
-        <SectionLabel section={article.section} />
+        {dataDrop ? null : <SectionLabel section={article.section} />}
         <h3
           className="type-card-title m-0 transition-colors group-hover:text-(--t-accent-primary)"
           style={{
@@ -400,7 +414,7 @@ export function JournalArticleRow({
         >
           {article.title}
         </h3>
-        {article.summary ? (
+        {!dataDrop && article.summary ? (
           <p
             className="m-0 mt-1.5 line-clamp-2 hidden text-sm leading-[1.5] sm:block"
             style={{ color: T.ink.dim }}

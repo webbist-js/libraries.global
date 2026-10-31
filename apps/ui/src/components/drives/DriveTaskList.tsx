@@ -154,7 +154,7 @@ export function DriveTaskList({
             aria-pressed={near}
             onClick={locate}
             disabled={locating}
-            className={`${NEAR_PILL} ${near ? "" : "bg-white hover:bg-(--t-bg-surface)"}`}
+            className={`${NEAR_PILL} ${near ? "" : "bg-(--t-bg-deep) hover:bg-(--t-bg-surface)"}`}
             style={
               near
                 ? {

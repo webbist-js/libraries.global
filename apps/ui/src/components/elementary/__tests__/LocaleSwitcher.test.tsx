@@ -4,6 +4,8 @@ import type { Window as HappyDomWindow } from "happy-dom"
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
+import { pushAnalyticsEvent } from "@/lib/analytics-events"
+
 import LocaleSwitcher from "../LocaleSwitcher"
 
 const { pathname, clientReplace } = vi.hoisted(() => ({
@@ -74,6 +76,14 @@ it.each([
 
     expect(replace).toHaveBeenCalledWith(target)
     expect(clientReplace).not.toHaveBeenCalled()
+    expect(pushAnalyticsEvent).toHaveBeenCalledExactlyOnceWith(
+      "navigation_action",
+      {
+        interaction_source: "navigation",
+        action_type: "locale",
+        target_locale: to,
+      }
+    )
     replace.mockRestore()
   }
 )

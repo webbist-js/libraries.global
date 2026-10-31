@@ -103,7 +103,7 @@ export function TeamNetworkChoice({
         {error ? (
           <p
             role="alert"
-            className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900"
+            className="mt-4 rounded-xl bg-(--t-palette-amber-soft) p-3 text-sm text-(--t-palette-amber-fg)"
           >
             {error}
           </p>

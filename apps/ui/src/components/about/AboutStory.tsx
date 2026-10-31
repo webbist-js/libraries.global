@@ -13,6 +13,8 @@ import {
 } from "lucide-react"
 
 import type { AboutLibrary } from "@/components/about/about.types"
+import { AboutCoverageChapter } from "@/components/about/AboutCoverageChapter"
+import { AboutCoverageSummary } from "@/components/about/AboutCoverageSummary"
 import { AboutPhotoSequence } from "@/components/about/AboutPhotoSequence"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -23,7 +25,6 @@ import type {
 import CoverageSection from "@/components/home/sections/CoverageSection"
 import FinalCtaSection from "@/components/home/sections/FinalCtaSection"
 import SectionHeader from "@/components/home/sections/SectionHeader"
-import StatsStrip from "@/components/home/sections/StatsStrip"
 import { tintForLibraryType } from "@/lib/design-tokens"
 
 const LIBRARY_TYPES = [
@@ -254,29 +255,24 @@ export function AboutStory({
         className="about-section about-coverage"
         aria-labelledby="about-coverage-title"
       >
-        <Container>
-          <p className="about-eyebrow">Current coverage</p>
-          <SectionHeader
-            id="about-coverage-title"
-            intro={{
-              title: "What we have *recorded so far.*",
-              text: "These counts come from published records. Coverage varies between countries, and the index is still incomplete. The figures show what we have documented, not how many libraries exist worldwide.",
-            }}
-            textBeside
-          />
-          {stats ? (
-            <div className="about-stats-panel">
-              <StatsStrip stats={stats} />
-            </div>
-          ) : (
-            <p className="about-data-note">
-              Live counts are unavailable at the moment. You can still browse
-              the index and explore the atlas.
-            </p>
-          )}
+        <Container className="about-coverage-container">
+          <AboutCoverageSummary stats={stats} />
         </Container>
         {continents.length > 0 ? (
-          <div className="about-coverage-rows">
+          <AboutCoverageChapter
+            footer={
+              <>
+                <p className="about-data-note">
+                  Help fill a gap by adding a library or improving a record in
+                  an area you know.
+                </p>
+                <GlobalLink href="/map" className="about-text-link">
+                  Explore coverage in the atlas{" "}
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </GlobalLink>
+              </>
+            }
+          >
             <CoverageSection
               continents={continents}
               countryBreakdown={countryBreakdown}
@@ -285,18 +281,20 @@ export function AboutStory({
                 text: "Each bar shows how the continent's published records are distributed between countries.",
               }}
             />
-          </div>
+          </AboutCoverageChapter>
         ) : null}
-        <Container>
-          <p className="about-data-note">
-            Help fill a gap by adding a library or improving a record in an area
-            you know.
-          </p>
-          <GlobalLink href="/map" className="about-text-link">
-            Explore coverage in the atlas{" "}
-            <ArrowUpRight className="size-4" aria-hidden="true" />
-          </GlobalLink>
-        </Container>
+        {continents.length === 0 ? (
+          <Container>
+            <p className="about-data-note">
+              Help fill a gap by adding a library or improving a record in an
+              area you know.
+            </p>
+            <GlobalLink href="/map" className="about-text-link">
+              Explore coverage in the atlas{" "}
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </GlobalLink>
+          </Container>
+        ) : null}
       </section>
 
       <section

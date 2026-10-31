@@ -428,7 +428,9 @@ function GlobeShell() {
         />
       </mesh>
 
-      <mesh scale={1.14}>
+      {/* Keep the outer glow close to the limb, including the enlarged hero
+          crop; a 14% shell separated it into a second visible outline. */}
+      <mesh scale={1.06}>
         <sphereGeometry
           args={[
             EARTH_RADIUS,
@@ -1170,6 +1172,8 @@ export type GlobeCornerPin = {
   inset: number
   minInset: number
   clearLeft?: number
+  /** Centre the bottom crop below this viewport width, for stacked heroes. */
+  centerBelow?: number
 }
 
 /** A point on the globe, in degrees, turned to face the camera. */
@@ -1224,18 +1228,27 @@ function useCornerPin(pin: GlobeCornerPin | undefined) {
     const { width, height } = size
     if (!pin || !(camera instanceof THREE.PerspectiveCamera)) return null
     if (width <= 0 || height <= 0) return null
+    // R3F's size observer also updates when the hero switches between its
+    // full-width bottom band and the desktop column. Keep one mounted scene.
+    const centered =
+      pin.centerBelow !== undefined &&
+      window.matchMedia(`(width < ${pin.centerBelow}px)`).matches
     const clearLeft = pin.clearLeft ?? 0
     // Half-width of the cap where the bottom edge cuts it, in radii: the
     // furthest left the globe reaches.
     const reach = pin.below > 0 ? Math.sqrt(1 - Math.min(pin.below, 1) ** 2) : 1
-    const radius = Math.max(
-      Math.min(
-        pin.radius * height,
-        (width - clearLeft) / (reach + pin.minInset)
-      ),
-      0
-    )
-    const x = Math.max(width - pin.inset * radius, clearLeft + reach * radius)
+    const radius = centered
+      ? pin.radius * height
+      : Math.max(
+          Math.min(
+            pin.radius * height,
+            (width - clearLeft) / (reach + pin.minInset)
+          ),
+          0
+        )
+    const x = centered
+      ? width / 2
+      : Math.max(width - pin.inset * radius, clearLeft + reach * radius)
     const y = height + pin.below * radius
 
     // A frame centred on the globe, at the canvas's aspect (so R3F's own
@@ -2087,6 +2100,7 @@ export function KnowledgeGlobeCanvas({
   return (
     <div
       ref={surfaceRef}
+      data-globe-surface=""
       className={cn(
         "relative h-full w-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#B9B4F5]",
         className
@@ -2159,6 +2173,9 @@ export function KnowledgeGlobeCanvas({
         dpr={[1, overrides?.dprMax ?? GLOBE_QUALITY.dprMax]}
         gl={{
           alpha: true,
+          // Bloom can leave bright RGB in low-alpha pixels. Let the browser
+          // apply that alpha once when compositing onto either page theme.
+          premultipliedAlpha: false,
           antialias: GLOBE_QUALITY.antialias,
           powerPreference: "high-performance",
           stencil: false,

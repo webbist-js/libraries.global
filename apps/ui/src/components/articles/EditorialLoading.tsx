@@ -1,11 +1,9 @@
-import { useLocale, useTranslations } from "next-intl"
-import { Suspense, type ReactNode } from "react"
+import { useTranslations } from "next-intl"
+import type { ReactNode } from "react"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { MainContent } from "@/components/ds/MainContent"
 import { SectionNavigation } from "@/components/ds/SectionNavigation"
-import { Container } from "@/components/elementary/Container"
-import GlobalHeader from "@/components/global/GlobalHeader"
-import GlobalLink from "@/components/global/GlobalLink"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/styles"
 
@@ -15,14 +13,14 @@ export function EditorialLoading({
 }: {
   readonly children: ReactNode
 }) {
-  const locale = useLocale()
   const t = useTranslations("ui")
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col bg-(--t-bg-void) text-(--t-ink-base)">
-      <Suspense fallback={<LoadingHeader />}>
-        <GlobalHeader locale={locale} />
-      </Suspense>
+    <DashboardPage
+      title={t("loading")}
+      navigation={<LoadingBlock className="m-5 h-40" />}
+      className="dashboard-editorial-page"
+    >
       <div role="status" className="sr-only">
         {t("loading")}
       </div>
@@ -31,32 +29,7 @@ export function EditorialLoading({
           {children}
         </div>
       </MainContent>
-    </div>
-  )
-}
-
-/** Session/profile reads in the header must not delay the page skeleton. */
-function LoadingHeader() {
-  const t = useTranslations("ui")
-
-  return (
-    <header
-      data-global-header=""
-      className="sticky top-0 z-[60] border-b border-(--t-border-hi) bg-(--t-header-bg)"
-    >
-      <Container className="flex h-14 items-center justify-between gap-6">
-        <GlobalLink
-          href="/"
-          className="font-serif text-[1.2rem] font-medium whitespace-nowrap"
-        >
-          {t("libraries")} <em className="font-normal">Global</em>
-        </GlobalLink>
-        <div aria-hidden="true" className="flex gap-2">
-          <LoadingBlock className="hidden h-9 w-16 sm:block" />
-          <LoadingBlock className="h-9 w-24" />
-        </div>
-      </Container>
-    </header>
+    </DashboardPage>
   )
 }
 
@@ -218,7 +191,7 @@ export function LoadingDiscussion() {
 
 export function LoadingContributionCard() {
   return (
-    <LoadingPanel className="border-(--t-ink-base) bg-(--t-ink-base)">
+    <LoadingPanel className="border-(--t-ink-base) bg-(--t-bg-inverse)">
       <LoadingBlock className="mb-4 h-6 w-4/5 bg-white/20" />
       <div className="grid gap-3">
         {["w-full", "w-[92%]", "w-2/3"].map((width) => (

@@ -44,7 +44,7 @@ export function DriveFollowButton({
     return (
       <Link
         href={`/auth/signin?callbackUrl=${encodeURIComponent(driveHref(driveSlug))}`}
-        className={`${PILL} border-(--t-border-hi) bg-white hover:border-(--t-accent-primary)`}
+        className={`${PILL} border-(--t-border-hi) bg-(--t-bg-deep) hover:border-(--t-accent-primary)`}
         style={{ color: T.ink.base }}
       >
         <Icon
@@ -73,7 +73,7 @@ export function DriveFollowButton({
         label: "Follow drive",
         icon: "mdi:bell-outline",
         className:
-          "border-(--t-border-hi) bg-white hover:border-(--t-accent-primary)",
+          "border-(--t-border-hi) bg-(--t-bg-deep) hover:border-(--t-accent-primary)",
         color: T.ink.base,
         background: undefined,
       }

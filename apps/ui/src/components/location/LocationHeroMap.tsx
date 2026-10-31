@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { parseBounds } from "@/components/map/map.helpers"
 import { MapLoading } from "@/components/map/MapLoading"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
+import { bindMapAppearance } from "@/lib/map-appearance"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { Link } from "@/lib/navigation"
 
@@ -129,6 +130,7 @@ export function LocationHeroMap({
   useEffect(() => {
     if (!containerRef.current) return
     let alive = true
+    let disposeAppearance: (() => void) | undefined
     let observer: ResizeObserver | undefined
 
     import("maplibre-gl")
@@ -156,6 +158,7 @@ export function LocationHeroMap({
 
           return
         }
+        disposeAppearance = bindMapAppearance(map)
         map.touchZoomRotate.disableRotation()
         map.addControl(
           new maplibregl.NavigationControl({ showCompass: false }),
@@ -262,6 +265,7 @@ export function LocationHeroMap({
 
     return () => {
       alive = false
+      disposeAppearance?.()
       observer?.disconnect()
       mapRef.current?.remove()
       mapRef.current = null
@@ -343,7 +347,7 @@ export function LocationHeroMap({
       {listHref ? (
         <a
           href={listHref}
-          className="absolute top-3 left-3 z-[2] inline-flex min-h-11 items-center rounded-full border bg-white px-3 text-xs font-semibold"
+          className="absolute top-3 left-3 z-[2] inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-3 text-xs font-semibold"
           style={{ borderColor: T.border.line }}
         >
           View places as a list →
@@ -364,7 +368,7 @@ export function LocationHeroMap({
               height: size,
             }
             const className =
-              "pointer-events-auto absolute flex items-center justify-center rounded-full border-2 border-(--t-accent-primary) bg-white text-xs font-semibold text-(--t-accent-primary) transition-colors hover:bg-(--t-accent-primary) hover:text-white"
+              "pointer-events-auto absolute flex items-center justify-center rounded-full border-2 border-(--t-accent-primary) bg-(--t-bg-deep) text-xs font-semibold text-(--t-accent-primary) transition-colors hover:bg-(--t-action-primary) hover:text-white"
 
             if (group.ids.length === 1) {
               const point = pointById.get(group.ids[0]!)
@@ -452,7 +456,7 @@ export function LocationHeroMap({
       <figcaption
         className="absolute bottom-8 left-3 z-[2] flex max-w-[calc(100%-4.5rem)] items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm leading-[1.35]"
         style={{
-          background: "rgba(255,255,255,.94)",
+          background: T.bg.deep,
           borderColor: T.border.line,
           color: T.ink.dim,
         }}
@@ -476,7 +480,7 @@ export function LocationHeroMap({
             style={{
               borderColor: T.accent.primary,
               color: T.accent.primary,
-              background: "#fff",
+              background: "var(--t-bg-deep)",
             }}
           >
             n

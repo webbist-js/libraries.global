@@ -4,6 +4,7 @@ import { MessagesSquare, Search, ShieldCheck } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { DiscussionComposerDrawer } from "@/components/discussions/DiscussionComposerDrawer"
 import {
   DiscussionComposerSkeleton,
   DiscussionListSkeleton,
@@ -12,14 +13,9 @@ import { EmptyState } from "@/components/ds/EmptyState"
 import { SelectField } from "@/components/ds/SelectField"
 import { StepsCard } from "@/components/ds/StepsCard"
 import { Container } from "@/components/elementary/Container"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { preferredContentLanguage } from "@/lib/content-language"
+import { DISCUSSION_COMPOSE_EVENT } from "@/lib/discussion-composer"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 
@@ -37,7 +33,6 @@ import {
   type DiscussionRecord,
   type Subject,
 } from "./api"
-import { DiscussionComposer } from "./DiscussionComposer"
 import { DiscussionContextFilter } from "./DiscussionContextFilter"
 import {
   DiscussionPreview,
@@ -115,6 +110,12 @@ function DiscussionsBoardPanel({
     () => new URLSearchParams(initialSearch).get("compose") === "1"
   )
   const [composerSubject, setComposerSubject] = useState("")
+  useEffect(() => {
+    const open = () => setShowComposer(true)
+    window.addEventListener(DISCUSSION_COMPOSE_EVENT, open)
+
+    return () => window.removeEventListener(DISCUSSION_COMPOSE_EVENT, open)
+  }, [])
   const [draft, setDraft] = useState<{
     title: string
     body: string
@@ -257,8 +258,11 @@ function DiscussionsBoardPanel({
   const followed = visibleThreads
     .filter((record) => record.subscribed)
     .slice(0, 3)
-  const buttonClass =
-    "inline-flex items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-3 font-semibold text-white"
+  const buttonClass = buttonVariants({
+    variant: "primary",
+    size: "pill",
+    className: "px-5",
+  })
 
   return (
     <>
@@ -670,7 +674,7 @@ function DiscussionsBoardPanel({
                 size="pill"
                 className="border-dashed border-(--t-palette-coral-fg) bg-(--t-palette-coral-bg) text-(--t-palette-coral-fg) hover:bg-(--t-palette-coral-soft) focus-visible:ring-(--t-palette-coral-fg)/50"
               >
-                <Link href="/contribute/moderation?tab=discussions">
+                <Link href="/moderation?tab=discussions">
                   <ShieldCheck aria-hidden="true" />
                   {t("moderation")}
                 </Link>
@@ -680,56 +684,47 @@ function DiscussionsBoardPanel({
         </div>
       </Container>
       {actor.ready && (
-        <Dialog open={showComposer} onOpenChange={setShowComposer}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl bg-(--t-bg-deep) sm:max-w-xl">
-            <DialogTitle className="type-h2">{t("newThread")}</DialogTitle>
-            <DialogDescription>{t("reviewLead")}</DialogDescription>
-            {subject ? (
-              <>
-                <label>
-                  {t("subject")}
-                  <SelectField
-                    label={t("newThreadSubject")}
-                    value={subject.id}
-                    onValueChange={setComposerSubject}
-                    className="mt-1"
-                    options={visibleSubjects.map((item) => ({
-                      value: item.id,
-                      label: item.name,
-                    }))}
-                  />
-                </label>
-                <DiscussionComposer
-                  subject={subject}
-                  language={draft.language}
-                  compositionPreferences={actor.compositionPreferences}
-                  initialTitle={draft.title}
-                  initialBody={draft.body}
-                  onDraftChange={setDraft}
-                  initialAttachments={draftImages}
-                  onAttachmentsChange={setDraftImages}
-                  languages={languages}
-                  returnTo={
-                    typeof window === "undefined"
-                      ? "/community/discussions"
-                      : `${window.location.pathname}${window.location.search}`
-                  }
-                  signedIn={actor.signedIn}
-                  disabled={
-                    subject.createPolicy === "moderators" && !actor.canModerate
-                  }
-                  onSubmitted={() =>
-                    recover().catch((failure) =>
-                      setError(t(discussionErrorKey(failure)))
-                    )
-                  }
+        <DiscussionComposerDrawer
+          open={showComposer}
+          onOpen={() => setShowComposer(true)}
+          onClose={() => setShowComposer(false)}
+          subject={subject}
+          subjectControl={
+            subject ? (
+              <label className="grid min-w-40 gap-1 text-xs font-semibold text-(--t-ink-dim)">
+                {t("subject")}
+                <SelectField
+                  label={t("newThreadSubject")}
+                  value={subject.id}
+                  onValueChange={setComposerSubject}
+                  options={visibleSubjects.map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
                 />
-              </>
-            ) : (
-              <DiscussionComposerSkeleton />
-            )}
-          </DialogContent>
-        </Dialog>
+              </label>
+            ) : undefined
+          }
+          language={draft.language}
+          compositionPreferences={actor.compositionPreferences}
+          initialTitle={draft.title}
+          initialBody={draft.body}
+          onDraftChange={setDraft}
+          initialAttachments={draftImages}
+          onAttachmentsChange={setDraftImages}
+          languages={languages}
+          signedIn={actor.signedIn}
+          disabled={
+            subject?.createPolicy === "moderators" && !actor.canModerate
+          }
+          onSubmitted={() =>
+            recover().catch((failure) =>
+              setError(t(discussionErrorKey(failure)))
+            )
+          }
+        >
+          <DiscussionComposerSkeleton />
+        </DiscussionComposerDrawer>
       )}
     </>
   )

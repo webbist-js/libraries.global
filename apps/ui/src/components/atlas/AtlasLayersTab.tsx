@@ -183,7 +183,7 @@ export function AtlasLayersTab({
             type="button"
             onClick={handleOpenAnalysis}
             className="min-h-11 rounded-full px-4 text-sm font-semibold"
-            style={{ background: T.accent.primary, color: "#fff" }}
+            style={{ background: T.action.primary, color: "#fff" }}
           >
             Open analysis
           </button>

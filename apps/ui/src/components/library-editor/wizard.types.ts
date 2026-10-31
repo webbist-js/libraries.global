@@ -5,6 +5,8 @@ import type {
 } from "@repo/shared-data"
 import type React from "react"
 
+import type { Submission } from "@/hooks/useSubmissions"
+
 import { emptyOpeningTimes, type OpeningTimesData } from "./opening-times.types"
 
 export interface SocialLink {
@@ -207,6 +209,16 @@ export interface WizardLocale {
 }
 
 export interface IndexRecordWizardProps {
+  layout?: "page" | "drawer"
+  onCancel?: () => void
+  beforeSubmit?: (
+    baseline: FormData,
+    changed: readonly (keyof FormData)[]
+  ) => Promise<void>
+  onSubmitted?: (submission: Submission) => void
+  onDraftState?: (state: WizardDraftState) => void
+  resumeSubmission?: Submission
+
   /** `new` adds a library; `improve` edits the given target. */
   mode: "new" | "improve" | "staff" | "staff-new"
   /** Active Teams the staff creator can request coverage from on approval. */
@@ -233,3 +245,19 @@ export const SUBMISSION_META_KEYS = [
   "evidenceUrl",
   "note",
 ] as const satisfies readonly (keyof FormData)[]
+
+export type LibraryEditorBootstrap = Pick<
+  IndexRecordWizardProps,
+  | "initialData"
+  | "target"
+  | "locale"
+  | "timetableContext"
+  | "initialStep"
+  | "resumeSubmission"
+> & { staffHref: string | null }
+export type WizardDraftState = {
+  dirty: boolean
+  saving: boolean
+  draftId: string | null
+  step: number
+}

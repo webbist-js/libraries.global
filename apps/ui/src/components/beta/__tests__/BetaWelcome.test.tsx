@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { cleanup, fireEvent, render, screen } from "@/test/render"
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import BetaWelcome from "../BetaWelcome"
 
@@ -43,12 +43,14 @@ describe("beta welcome", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start testing" }))
     expect(close).toHaveBeenCalledOnce()
   })
-  it("opens the existing feedback flow after dismissing the welcome", () => {
+  it("opens feedback after the welcome exits, without overlapping focus traps", async () => {
     const close = vi.fn()
-    render(<BetaWelcome sandbox onClose={close} />)
+    const view = render(<BetaWelcome sandbox onClose={close} />)
     fireEvent.click(screen.getByRole("button", { name: "Send feedback" }))
     expect(close).toHaveBeenCalledOnce()
-    expect(openFeedback).toHaveBeenCalledOnce()
+    expect(openFeedback).not.toHaveBeenCalled()
+    view.rerender(<BetaWelcome sandbox open={false} onClose={close} />)
+    await waitFor(() => expect(openFeedback).toHaveBeenCalledOnce())
   })
   it("never supplies a test card or claims payment is free in a live billing environment", () => {
     render(<BetaWelcome sandbox={false} onClose={vi.fn()} />)

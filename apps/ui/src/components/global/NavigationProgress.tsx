@@ -1,47 +1,53 @@
 "use client"
 
-import { usePathname } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { usePathname, useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 /**
  * Thin top progress bar that shows during page-to-page navigation.
  * - Detects navigation start by listening for same-origin <a> tag clicks.
- * - Detects navigation end by watching usePathname for changes.
+ * - Detects navigation end when the pathname or query string commits.
  * - Animates from 0 → 65% (fake progress) then snaps to 100% and fades out.
  */
 export function NavigationProgress() {
   const pathname = usePathname()
+  const search = useSearchParams().toString()
+  const route = `${pathname}?${search}`
   const [width, setWidth] = useState(0)
   const [opacity, setOpacity] = useState(0)
   const [active, setActive] = useState(false)
-  const prevPathname = useRef(pathname)
+  const prevRoute = useRef(route)
   const activeRef = useRef(false)
   const rafRef = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(
     undefined as unknown as ReturnType<typeof setTimeout>
   )
 
-  function clear() {
+  const clear = useCallback(() => {
     clearTimeout(timerRef.current)
     cancelAnimationFrame(rafRef.current ?? 0)
-  }
+  }, [])
 
-  function start() {
+  const start = useCallback(() => {
     if (activeRef.current) return
     activeRef.current = true
     setActive(true)
     clear()
     setWidth(0)
     setOpacity(1)
-    // Stagger the fake progress: 0 → 20 → 50 → 65 (slows down to look realistic)
-    rafRef.current = requestAnimationFrame(() => {
+    const slow = () => setWidth(65)
+    const middle = () => {
+      setWidth(50)
+      timerRef.current = setTimeout(slow, 500)
+    }
+    const first = () => {
       setWidth(20)
-      timerRef.current = setTimeout(() => setWidth(50), 200)
-      timerRef.current = setTimeout(() => setWidth(65), 700)
-    })
-  }
+      timerRef.current = setTimeout(middle, 200)
+    }
+    rafRef.current = requestAnimationFrame(first)
+  }, [clear])
 
-  function finish() {
+  const finish = useCallback(() => {
     clear()
     setWidth(100)
     timerRef.current = setTimeout(() => {
@@ -52,20 +58,22 @@ export function NavigationProgress() {
         setActive(false)
       }, 300)
     }, 180)
-  }
+  }, [clear])
 
-  // Navigation complete when pathname changes
+  // Queue/filter links can navigate without changing the pathname.
   useEffect(() => {
-    if (prevPathname.current !== pathname) {
-      prevPathname.current = pathname
+    if (prevRoute.current !== route) {
+      prevRoute.current = route
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (activeRef.current) finish()
     }
-  }, [pathname])
+  }, [route, finish])
 
   // Detect navigation start via anchor clicks
   useEffect(() => {
     function onClick(e: MouseEvent) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+        return
       const anchor = (e.target as HTMLElement).closest<HTMLAnchorElement>(
         "a[href]"
       )
@@ -88,8 +96,11 @@ export function NavigationProgress() {
     }
     document.addEventListener("click", onClick, true)
 
-    return () => document.removeEventListener("click", onClick, true)
-  }, [])
+    return () => {
+      document.removeEventListener("click", onClick, true)
+      clear()
+    }
+  }, [start, clear])
 
   // Don't render when completely hidden
   if (!active && opacity === 0) return null
@@ -97,6 +108,7 @@ export function NavigationProgress() {
   return (
     <div
       aria-hidden
+      data-navigation-progress=""
       className="pointer-events-none fixed inset-x-0 top-0 z-[9999] h-[2px]"
       style={{ opacity }}
     >

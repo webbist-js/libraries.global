@@ -64,7 +64,7 @@ export function DiscussionFeedItem({
       className={cn(
         "group relative isolate min-w-0",
         displayFeatured
-          ? "rounded-[22px] border border-[#dedaf6] bg-[#f7f5fc] p-5 sm:p-6"
+          ? "rounded-[22px] border border-(--t-edge-info) bg-(--t-bg-selected) p-5 sm:p-6"
           : "flex flex-wrap items-center gap-x-4 gap-y-3 py-4"
       )}
     >
@@ -154,7 +154,7 @@ export function DiscussionFeedItem({
             className={cn(
               "rounded-md px-1.5 py-0.5 text-xs leading-none font-semibold uppercase",
               displayFeatured
-                ? "border border-[#dedaf6] bg-white text-(--t-ink-dim)"
+                ? "border border-(--t-edge-info) bg-(--t-bg-deep) text-(--t-ink-dim)"
                 : "bg-(--t-bg-muted)"
             )}
           >
@@ -187,7 +187,7 @@ export function DiscussionFeedItem({
         </div>
       )}
       {displayFeatured && actions ? (
-        <div className="relative z-10 mt-4 border-t border-dashed border-[#dedaf6] pt-4">
+        <div className="relative z-10 mt-4 border-t border-dashed border-(--t-edge-info) pt-4">
           {actions}
         </div>
       ) : null}

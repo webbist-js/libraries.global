@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Shield } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
+import { DiscussionComposerDrawer } from "@/components/discussions/DiscussionComposerDrawer"
 import {
   DiscussionComposerSkeleton,
   DiscussionListSkeleton,
@@ -13,6 +14,7 @@ import {
   EDITORIAL_SUBTLE_PILL,
 } from "@/components/ds/EditorialToolbar"
 import { SelectField } from "@/components/ds/SelectField"
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import {
   Dialog,
   DialogContent,
@@ -22,7 +24,7 @@ import {
 import { preferredContentLanguage } from "@/lib/content-language"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
-import { cn, primaryCtaSm } from "@/lib/styles"
+import { cn } from "@/lib/styles"
 
 import {
   discussionRequest,
@@ -35,7 +37,6 @@ import {
   type DiscussionLanguage,
   type Subject,
 } from "./api"
-import { DiscussionComposer } from "./DiscussionComposer"
 import { DiscussionContextActions } from "./DiscussionContextActions"
 import { DiscussionFeedItem } from "./DiscussionFeedItem"
 import { DiscussionLinkPicker } from "./DiscussionLinkPicker"
@@ -163,7 +164,7 @@ function DiscussionFeedPanel({
       cancelled = true
       ++epoch.current
     }
-  }, [actor.ready, query, contextQuery, reload, target])
+  }, [actor.ready, actor.signedIn, query, contextQuery, reload, target])
   useEffect(() => {
     if (!composeOpen || !actor.ready) return
     let cancelled = false
@@ -311,28 +312,16 @@ function DiscussionFeedPanel({
               {t(managing ? "feedDone" : "feedManage")}
             </button>
           )}
-          {target &&
-            enabled &&
-            !loading &&
-            !error &&
-            (actor.signedIn ? (
-              <button
-                type="button"
-                onClick={() => setComposeOpen(true)}
-                className={cn(primaryCtaSm, "min-h-11 cursor-pointer")}
-              >
-                <Plus size={17} aria-hidden />
-                {t("newThread")}
-              </button>
-            ) : (
-              <Link
-                href={`/auth/signin?callbackUrl=${encodeURIComponent(`${returnTo}#discussion`)}`}
-                className={cn(primaryCtaSm, "min-h-11 no-underline")}
-              >
-                <Plus size={17} aria-hidden />
-                {t("newThread")}
-              </Link>
-            ))}
+          {target && enabled && !loading && !error && (
+            <button
+              type="button"
+              onClick={() => setComposeOpen(true)}
+              className={cn(primaryCtaSm, "min-h-11 cursor-pointer")}
+            >
+              <Plus size={17} aria-hidden />
+              {t("newThread")}
+            </button>
+          )}
         </div>
       </div>
       {managing && (
@@ -512,7 +501,7 @@ function DiscussionFeedPanel({
         .map((link) => (
           <div
             key={`${link.id}:${link.version}`}
-            className="grid gap-2 rounded-xl border border-(--t-palette-amber-bg) bg-[#fffcf2] p-3"
+            className="grid gap-2 rounded-xl border border-(--t-palette-amber-bg) bg-(--t-palette-amber-soft) p-3"
           >
             <p className="m-0 text-sm font-semibold">
               {t("pendingContextLink")} · {link.thread?.title}
@@ -526,7 +515,7 @@ function DiscussionFeedPanel({
         <p
           key={thread.id}
           role="status"
-          className="m-0 rounded-xl border border-(--t-palette-amber-bg) bg-[#fffcf2] p-3 text-sm"
+          className="m-0 rounded-xl border border-(--t-palette-amber-bg) bg-(--t-palette-amber-soft) p-3 text-sm"
         >
           <Link
             href={`/community/discussions/${encodeURIComponent(thread.id)}`}
@@ -547,7 +536,10 @@ function DiscussionFeedPanel({
       {metadata?.links
         .filter((link) => link.state === "rejected")
         .map((link) => (
-          <p key={link.id} className="m-0 rounded-xl bg-[#fffcf2] p-3 text-sm">
+          <p
+            key={link.id}
+            className="m-0 rounded-xl bg-(--t-palette-amber-soft) p-3 text-sm"
+          >
             {link.thread?.title} · {link.feedback}
           </p>
         ))}
@@ -575,29 +567,25 @@ function DiscussionFeedPanel({
           )}
         </DialogContent>
       </Dialog>
-      <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogTitle className="type-h2">{t("newThread")}</DialogTitle>
-          <DialogDescription>{t("reviewLead")}</DialogDescription>
-          {subject ? (
-            <DiscussionComposer
-              subject={subject}
-              target={target}
-              lockLanguage={false}
-              defaultLanguage={locale}
-              compositionPreferences={actor.compositionPreferences}
-              languages={languages}
-              signedIn={actor.signedIn}
-              onSubmitted={() => {
-                setComposeOpen(false)
-                refresh()
-              }}
-            />
-          ) : (
-            <DiscussionComposerSkeleton />
-          )}
-        </DialogContent>
-      </Dialog>
+      <DiscussionComposerDrawer
+        open={composeOpen}
+        onOpen={() => setComposeOpen(true)}
+        onClose={() => setComposeOpen(false)}
+        subject={subject}
+        target={target}
+        contextTitle={metadata?.projection?.title}
+        lockLanguage={false}
+        defaultLanguage={locale}
+        compositionPreferences={actor.compositionPreferences}
+        languages={languages}
+        signedIn={actor.signedIn}
+        disabled={subject?.createPolicy === "moderators" && !actor.canModerate}
+        disabledMessage={t("notAllowed")}
+        returnTo={returnTo}
+        onSubmitted={refresh}
+      >
+        <DiscussionComposerSkeleton />
+      </DiscussionComposerDrawer>
     </section>
   )
 }

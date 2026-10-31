@@ -42,12 +42,19 @@ export function SearchField({
 }) {
   const tUi = useUiTranslations("ui")
 
+  const {
+    id: suppliedId,
+    className: inputClassName,
+    style: inputStyle,
+    ...nativeProps
+  } = inputProps ?? {}
+  const fieldId = suppliedId ?? id
   const hasValue = String(inputProps?.value ?? "").length > 0
 
   return (
     <div
       className={cn(
-        "flex items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) transition-colors focus-within:border-(--t-accent-primary)",
+        "flex items-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) transition-colors focus-within:border-(--t-accent-primary) focus-within:ring-2 focus-within:ring-(--t-accent-primary)/40 motion-reduce:transition-none",
         size === "md" ? "gap-2.5 px-4 py-3" : "gap-2 px-3 py-2",
         className
       )}
@@ -60,27 +67,30 @@ export function SearchField({
         className="shrink-0"
         style={{ color: loading ? T.accent.primary : T.ink.dim }}
       />
-      <label className="sr-only" htmlFor={id}>
+      <label className="sr-only" htmlFor={fieldId}>
         {label ?? placeholder}
       </label>
       <input
+        {...nativeProps}
         ref={inputRef}
-        id={id}
-        type="search"
-        placeholder={placeholder}
+        id={fieldId}
+        type={nativeProps.type ?? "search"}
+        placeholder={nativeProps.placeholder ?? placeholder}
         className={cn(
-          "min-w-0 flex-1 border-0 bg-transparent outline-none placeholder:text-(--t-ink-faint) [&::-webkit-search-cancel-button]:hidden",
-          size === "md" ? "text-base" : "text-sm"
+          "min-w-0 flex-1 border-0 bg-transparent outline-none placeholder:text-(--t-ink-dim) [&::-webkit-search-cancel-button]:hidden",
+          size === "md" ? "text-base" : "text-sm",
+          inputClassName
         )}
-        style={{ color: T.ink.base, fontFamily: T.font.sans }}
-        {...inputProps}
+        style={{ color: T.ink.base, fontFamily: T.font.sans, ...inputStyle }}
+        aria-busy={loading || nativeProps["aria-busy"]}
       />
       {onClear && hasValue ? (
         <button
           type="button"
           aria-label={tUi("clear_search")}
           onClick={onClear}
-          className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 text-base leading-none"
+          disabled={inputProps?.disabled || inputProps?.readOnly}
+          className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 text-base leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) disabled:cursor-default disabled:opacity-50"
           style={{ background: T.bg.muted, color: T.ink.dim }}
         >
           ×

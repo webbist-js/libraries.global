@@ -22,7 +22,7 @@ export const EVENT_TYPE_META = {
   book_club: {
     label: "Book club",
     icon: "mdi:book-multiple-outline",
-    color: "#6B5420",
+    color: "var(--t-palette-amber-fg)",
   },
   workshop: {
     label: "Workshop",
@@ -42,7 +42,7 @@ export const EVENT_TYPE_META = {
   reading_group: {
     label: "Reading group",
     icon: "mdi:account-group-outline",
-    color: "#6B5420",
+    color: "var(--t-palette-amber-fg)",
   },
   performance: {
     label: "Performance",

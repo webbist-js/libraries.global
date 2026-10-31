@@ -20,7 +20,7 @@ type Props = {
   readonly containerClassName?: string
   readonly fieldClassName?: string
   readonly description?: React.ReactNode
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "className">
+} & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "className">
 
 export function AppTextArea({
   name,
@@ -28,6 +28,7 @@ export function AppTextArea({
   containerClassName,
   fieldClassName,
   description,
+  id,
   ...nativeProps
 }: Props) {
   const { control } = useFormContext()
@@ -42,24 +43,27 @@ export function AppTextArea({
             fieldState={fieldState}
             label={label}
             required={nativeProps.required}
+            htmlFor={id}
           />
 
-          <FormControl>
-            <div className="relative flex items-stretch overflow-hidden">
+          <div className="relative flex items-stretch">
+            <FormControl>
               <Textarea
                 {...field}
+                {...nativeProps}
+                {...(id ? { id } : {})}
                 value={field.value ?? ""}
                 onChange={field.onChange} // eslint-disable-line react/jsx-handler-names -- react-hook-form API
                 className={cn(
                   "border-input w-full ease-in-out",
                   {
-                    "border-red-600": fieldState.invalid,
+                    "border-(--t-accent-danger)": fieldState.invalid,
                   },
                   fieldClassName
                 )}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
 
           <AppFormDescription description={description} />
 

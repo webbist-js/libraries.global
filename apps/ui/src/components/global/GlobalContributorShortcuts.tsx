@@ -124,7 +124,7 @@ function MobileShortcuts() {
       {menu.status === "signedOut" ? (
         <GlobalLink
           href="/auth/signin"
-          className="mx-1 mb-1 self-start rounded-full bg-(--t-accent-primary) px-4 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+          className="mx-1 mb-1 self-start rounded-full bg-(--t-action-primary) px-4 py-2.5 text-base font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
         >
           {tUi("sign_in_to_contribute")}{" "}
         </GlobalLink>

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import { buttonVariants } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { type DriveView, progressMeta } from "@/lib/drives/drive-view"
 
@@ -51,7 +52,7 @@ export function FeaturedDrive({
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={`${CHIP} font-bold`}
-          style={{ background: T.accent.primary, color: T.bg.deep }}
+          style={{ background: T.action.primary, color: T.ink.inverse }}
         >
           <Icon
             aria-hidden="true"
@@ -109,13 +110,18 @@ export function FeaturedDrive({
       <div className="flex flex-wrap gap-2.5">
         <GlobalLink
           href={href}
-          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-[22px] py-3 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+          className={buttonVariants({ variant: "primary", size: "pill" })}
         >
           Join this drive
         </GlobalLink>
         <GlobalLink
           href={howHref ?? `${href}#rules`}
-          className="inline-flex min-h-11 items-center rounded-full border border-(--t-border-hi) bg-white px-[22px] py-3 text-base font-semibold no-underline hover:border-(--t-accent-primary)"
+          className={buttonVariants({
+            variant: "surface",
+            size: "pill",
+            className:
+              "border-(--t-border-hi) hover:border-(--t-accent-primary)",
+          })}
           style={{ color: T.ink.base }}
         >
           How drives work

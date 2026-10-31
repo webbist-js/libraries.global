@@ -82,64 +82,63 @@ vi.mock("@/components/global/GlobalLink", () => ({
     ...props
   }: AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}>{children}</a>,
 }))
-vi.mock("next/dynamic", () => ({
-  default: () =>
-    function Picking({
-      onHover,
-      onPin,
-    }: {
-      onHover: (value: GlobeHover) => void
-      onPin: (value: Extract<GlobeHover, { kind: "country" }>) => void
-    }) {
-      return (
-        <>
-          <button
-            onMouseEnter={() =>
-              onHover({
-                kind: "country",
-                country: countries[0]!,
-                lat: 46,
-                lng: 2,
-              })
-            }
-            onMouseLeave={() => onHover(null)}
-            onClick={() =>
-              onPin({
-                kind: "country",
-                country: countries[0]!,
-                lat: 46,
-                lng: 2,
-              })
-            }
-          >
-            France surface
-          </button>
-          <button
-            onMouseEnter={() =>
-              onHover({
-                kind: "country",
-                country: countries[1]!,
-                lat: 51,
-                lng: 10,
-              })
-            }
-          >
-            Germany surface
-          </button>
-          <button
-            onMouseEnter={() =>
-              onHover({
-                kind: "connection",
-                index: 0,
-                names: ["British Library", "Bibliothèque nationale de France"],
-              })
-            }
-          >
-            Connection
-          </button>
-        </>
-      )
-    },
+vi.mock("@/components/about/AboutGlobePickingLayer", () => ({
+  AboutGlobePickingLayer: function Picking({
+    onHover,
+    onPin,
+  }: {
+    onHover: (value: GlobeHover) => void
+    onPin: (value: Extract<GlobeHover, { kind: "country" }>) => void
+  }) {
+    return (
+      <>
+        <button
+          onMouseEnter={() =>
+            onHover({
+              kind: "country",
+              country: countries[0]!,
+              lat: 46,
+              lng: 2,
+            })
+          }
+          onMouseLeave={() => onHover(null)}
+          onClick={() =>
+            onPin({
+              kind: "country",
+              country: countries[0]!,
+              lat: 46,
+              lng: 2,
+            })
+          }
+        >
+          France surface
+        </button>
+        <button
+          onMouseEnter={() =>
+            onHover({
+              kind: "country",
+              country: countries[1]!,
+              lat: 51,
+              lng: 10,
+            })
+          }
+        >
+          Germany surface
+        </button>
+        <button
+          onMouseEnter={() =>
+            onHover({
+              kind: "connection",
+              index: 0,
+              names: ["British Library", "Bibliothèque nationale de France"],
+            })
+          }
+        >
+          Connection
+        </button>
+      </>
+    )
+  },
 }))
 const fetcher = vi.fn()
 beforeEach(() => {

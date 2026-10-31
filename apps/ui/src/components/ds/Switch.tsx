@@ -71,7 +71,7 @@ export function Switch({
         <span
           aria-hidden="true"
           className="relative block h-7 w-12 rounded-full transition-colors peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--t-accent-primary) peer-focus-visible:outline-solid motion-reduce:transition-none"
-          style={{ background: checked ? T.accent.primary : T.border.hi }}
+          style={{ background: checked ? T.action.primary : T.border.hi }}
         >
           <span
             className="absolute top-0.5 left-0.5 size-6 rounded-full transition-transform motion-reduce:transition-none"

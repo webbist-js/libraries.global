@@ -99,7 +99,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
                 width: i === index ? "24px" : "8px",
                 height: "8px",
                 borderRadius: "999px",
-                background: i === index ? T.accent.primary : T.ink.ghost,
+                background: i === index ? T.action.primary : T.ink.ghost,
                 transition: "width 200ms",
               }}
             />

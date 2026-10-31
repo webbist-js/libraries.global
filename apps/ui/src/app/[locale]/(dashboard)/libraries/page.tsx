@@ -1,0 +1,135 @@
+// apps/ui/src/app/[locale]/libraries/page.tsx
+import type { Metadata } from "next"
+import { cookies, headers } from "next/headers"
+import { Suspense } from "react"
+
+import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
+import { MainContent } from "@/components/ds/MainContent"
+import { FIND_CONTRIBUTE_PROMPT } from "@/components/home/homepage.content"
+import FinalCtaSection from "@/components/home/sections/FinalCtaSection"
+import {
+  findQueryOf,
+  findStateFromParams,
+} from "@/components/index-page/find-helpers"
+import { FindLibraryPage } from "@/components/index-page/FindLibraryPage"
+import { getSessionSSR } from "@/lib/auth-server"
+import { T } from "@/lib/design-tokens"
+import { isPromptHidden } from "@/lib/dismissed-prompts"
+import { fetchDrives } from "@/lib/drives/drives-server"
+import type { FindDrive } from "@/lib/drives/find-match"
+import { findPlaceCatalogue } from "@/lib/find-place-catalogue-server"
+import { libraryTotal, searchFind } from "@/lib/find-search"
+import { buildMetadata } from "@/lib/seo/metadata"
+
+export const dynamic = "force-dynamic"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+
+  // Filtered/queried variants (?q=, ?type=…) canonicalise to the bare page.
+  return buildMetadata({
+    title: "Find a library",
+    description:
+      "Search every published library record by name, place, type, accessibility and facilities. Filter by what's open now, or find libraries near you.",
+    path: "libraries",
+    locale,
+  })
+}
+
+/** The CMS's published-library count, for when search is unreachable. */
+async function strapiLibraryTotal(): Promise<number> {
+  const strapiUrl = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
+  const stats = (await fetch(
+    `${strapiUrl}/api/libraries?pagination[pageSize]=1&fields[0]=id&status=published`,
+    { next: { revalidate: 300 } }
+  )
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null)) as { meta?: { pagination?: { total?: number } } } | null
+
+  return stats?.meta?.pagination?.total ?? 0
+}
+
+export default async function FindLibraryRoute(props: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { locale } = await props.params
+  const raw = await props.searchParams
+  // The page's own state, so the first render already shows this URL's
+  // results: one page of hits, never the whole index.
+  const state = findStateFromParams(
+    new URLSearchParams(
+      Object.entries(raw).flatMap(([key, value]) =>
+        typeof value === "string" ? [[key, value]] : []
+      )
+    )
+  )
+  const [initial, statsTotal, session, cookieStore, openDrives] =
+    await Promise.all([
+      (async () => {
+        const query = findQueryOf(state, locale)
+        const chain = query.place
+          ? await findPlaceCatalogue(query.place, locale)
+          : undefined
+
+        return searchFind({ ...query, locale }, chain)
+      })().catch(() => null),
+      libraryTotal(locale).catch(() => strapiLibraryTotal()),
+      headers().then(getSessionSSR),
+      cookies(),
+      fetchDrives("open", locale),
+    ])
+  const signedIn = Boolean(session?.user)
+  const showContribute = !isPromptHidden(
+    "find-contribute",
+    cookieStore,
+    session?.user
+  )
+  const drives: FindDrive[] = openDrives.map((d) => ({
+    documentId: d.documentId,
+    slug: d.slug,
+    title: d.title,
+    focus: d.focus,
+    scope: d.scope,
+  }))
+
+  return (
+    <div
+      className="relative isolate flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
+      style={{ background: T.bg.void, color: T.ink.base }}
+    >
+      <MainContent className="flex min-h-0 flex-1 flex-col">
+        <Suspense>
+          <FindLibraryPage
+            initial={initial}
+            statsTotal={statsTotal}
+            drives={drives}
+            contributeBand={
+              showContribute ? (
+                <div className="mx-auto w-full max-w-[1360px] px-4 pb-8 sm:px-8 sm:pb-12">
+                  <DismissiblePrompt
+                    prompt="find-contribute"
+                    signedIn={signedIn}
+                  >
+                    <FinalCtaSection
+                      compact
+                      contained
+                      band={FIND_CONTRIBUTE_PROMPT.band}
+                      benefits={FIND_CONTRIBUTE_PROMPT.benefits}
+                      signedIn={signedIn}
+                      dismissLabel="Hide this"
+                    />
+                  </DismissiblePrompt>
+                </div>
+              ) : null
+            }
+          />
+        </Suspense>
+      </MainContent>
+    </div>
+  )
+}

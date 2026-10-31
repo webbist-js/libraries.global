@@ -98,6 +98,11 @@ const PROMPTS: Record<DismissiblePrompt, ToggleItem<DismissiblePrompt>> = {
     label: "Invitation to contribute on the Atlas",
     desc: "The card under the Atlas search.",
   },
+  "api-playground-usage": {
+    key: "api-playground-usage",
+    label: "API playground usage warning",
+    desc: "Show a reminder each time you open the playground that successful requests use your Team’s shared API allowance. The usage notice on the page always stays visible.",
+  },
 }
 
 type NotificationPrefs = Record<NotifKey, boolean>
@@ -159,8 +164,10 @@ function NotifGroup<K extends string>({
 
 export function NotificationsSection({
   profile,
+  hasTeam = false,
 }: {
   profile: UserProfile | null
+  hasTeam?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -197,6 +204,7 @@ export function NotificationsSection({
         ])
       ) as Record<DismissiblePrompt, boolean>
   )
+  const [savingPrompt, setSavingPrompt] = useState(false)
 
   const toggle = async (key: NotifKey) => {
     if (saving) return
@@ -209,12 +217,17 @@ export function NotificationsSection({
   }
 
   const savePrompt = async (key: DismissiblePrompt, show: boolean) => {
-    if (await savePromptSetting(key, !show)) return
-    setShownPrompts((s) => ({ ...s, [key]: !show }))
-    toast.error("Couldn't save that setting")
+    setSavingPrompt(true)
+    const saved = await savePromptSetting(key, !show)
+    setSavingPrompt(false)
+    if (!saved) {
+      setShownPrompts((s) => ({ ...s, [key]: !show }))
+      toast.error("Couldn't save that setting")
+    }
   }
 
   const togglePrompt = (key: DismissiblePrompt) => {
+    if (savingPrompt) return
     const show = !shownPrompts[key]
 
     setShownPrompts((s) => ({ ...s, [key]: show }))
@@ -267,9 +280,12 @@ export function NotificationsSection({
 
       <NotifGroup
         title={tUi("prompts")}
-        items={Object.values(PROMPTS)}
+        items={Object.values(PROMPTS).filter(
+          (item) => hasTeam || item.key !== "api-playground-usage"
+        )}
         prefs={shownPrompts}
         onToggle={togglePrompt}
+        disabled={savingPrompt}
       />
     </SectionCard>
   )

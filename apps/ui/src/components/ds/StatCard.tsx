@@ -32,7 +32,7 @@ export function StatCard({
       <span
         aria-hidden="true"
         className="flex size-10 items-center justify-center rounded-full"
-        style={{ background: "#fff", color: fg }}
+        style={{ background: "var(--t-bg-deep)", color: fg }}
       >
         <Icon icon={icon} width={19} height={19} />
       </span>

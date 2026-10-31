@@ -7,8 +7,8 @@
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-licensing-options
  */
 :root {
-  --ck-color-mention-background: rgba(153, 0, 48, 0.1);
-  --ck-color-mention-text: #990030;
+  --ck-color-mention-background: var(--t-palette-rose-bg);
+  --ck-color-mention-text: var(--t-palette-rose-fg);
 }
 
 .ck-content .mention {
@@ -23,7 +23,7 @@
 }
 
 .ck-content blockquote {
-  border-left: 5px solid #ccc;
+  border-left: 5px solid var(--t-border-hi);
   font-style: italic;
   margin-left: 0;
   margin-right: 0;
@@ -34,14 +34,14 @@
 
 .ck-content[dir="rtl"] blockquote {
   border-left: 0;
-  border-right: 5px solid #ccc;
+  border-right: 5px solid var(--t-border-hi);
 }
 
 .ck-content pre {
   background: hsla(0, 0%, 78%, 0.3);
-  border: 1px solid #c4c4c4;
+  border: 1px solid var(--t-border-hi);
   border-radius: 2px;
-  color: #353535;
+  color: var(--t-ink-base);
   direction: ltr;
   font-style: normal;
   min-width: 200px;
@@ -108,14 +108,14 @@
 }
 
 .ck-content hr {
-  background: #dedede;
+  background: var(--t-border-line);
   border: 0;
   height: 4px;
   margin: 15px 0;
 }
 :root {
-  --ck-color-image-caption-background: #f7f7f7;
-  --ck-color-image-caption-text: #333;
+  --ck-color-image-caption-background: var(--t-bg-surface);
+  --ck-color-image-caption-text: var(--t-ink-dim);
 }
 
 .ck-content .image > figcaption {
@@ -402,7 +402,7 @@
 }
 
 .ck-content .page-break:after {
-  border-bottom: 2px dashed #c4c4c4;
+  border-bottom: 2px dashed var(--t-border-hi);
   content: "";
   position: absolute;
   width: 100%;
@@ -410,7 +410,7 @@
 
 .ck-content .page-break__label {
   background: #fff;
-  border: 1px solid #c4c4c4;
+  border: 1px solid var(--t-border-hi);
   border-radius: 2px;
   box-shadow: 2px 2px 1px rgba(0, 0, 0, 0.15);
   color: #333;
@@ -506,7 +506,7 @@
   border-spacing: 0;
 }
 :root {
-  --ck-color-selector-caption-background: #f7f7f7;
+  --ck-color-selector-caption-background: var(--t-bg-surface);
   --ck-color-selector-caption-text: #333;
 }
 
@@ -535,4 +535,15 @@
 .ck-content .table td,
 .ck-content .table th {
   overflow-wrap: break-word;
+}
+
+/* Authored highlights retain visible ink in both appearances. */
+.ck-content :is(.marker-yellow, .marker-green, .marker-pink, .marker-blue) {
+  color: #17162b;
+}
+.dark .ck-content .pen-red {
+  color: var(--t-palette-coral-fg);
+}
+.dark .ck-content .pen-green {
+  color: var(--t-palette-mint-fg);
 }

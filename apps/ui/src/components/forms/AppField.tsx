@@ -10,7 +10,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { removeThisWhenYouNeedMe } from "@/lib/general-helpers"
 import { cn } from "@/lib/styles"
 
 import { AppFormDescription } from "./AppFormDescription"
@@ -32,10 +31,9 @@ export function AppField({
   containerClassName,
   fieldClassName,
   description,
+  id,
   ...nativeProps
 }: Props) {
-  removeThisWhenYouNeedMe("AppField")
-
   const { control } = useFormContext()
 
   return (
@@ -48,13 +46,15 @@ export function AppField({
             fieldState={fieldState}
             label={label}
             required={nativeProps.required}
+            htmlFor={id}
           />
 
-          <FormControl>
-            <div className="relative flex items-stretch overflow-hidden">
+          <div className="relative flex items-stretch">
+            <FormControl>
               <Input
                 {...field}
                 {...nativeProps}
+                {...(id ? { id } : {})}
                 value={field.value ?? ""}
                 onChange={(event) => {
                   const value = event.target.value
@@ -67,29 +67,29 @@ export function AppField({
                 className={cn(
                   "w-full",
                   {
-                    "border-red-600": fieldState.invalid,
-                    "rounded-md border": !endAdornment,
-                    "rounded-l-md border-y border-l": !!endAdornment,
+                    "border-(--t-accent-danger)": fieldState.invalid,
+                    "rounded-xl border": !endAdornment,
+                    "rounded-r-none border-r-0": !!endAdornment,
                   },
                   fieldClassName
                 )}
               />
-              {endAdornment && (
-                <div
-                  className={cn(
-                    "flex items-center rounded-r-md border bg-gray-100 px-2",
-                    {
-                      "border-y-red-600 border-r-red-600 text-red-600":
-                        fieldState.invalid,
-                      "border-gray-100": !fieldState.invalid,
-                    }
-                  )}
-                >
-                  {endAdornment}
-                </div>
-              )}
-            </div>
-          </FormControl>
+            </FormControl>
+            {endAdornment && (
+              <div
+                className={cn(
+                  "flex items-center rounded-r-xl border bg-(--t-bg-muted) px-2 text-(--t-ink-dim)",
+                  {
+                    "border-y-(--t-accent-danger) border-r-(--t-accent-danger) text-(--t-accent-danger)":
+                      fieldState.invalid,
+                    "border-input": !fieldState.invalid,
+                  }
+                )}
+              >
+                {endAdornment}
+              </div>
+            )}
+          </div>
 
           <AppFormDescription description={description} />
 

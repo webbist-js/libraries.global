@@ -32,10 +32,10 @@ export function ToggleSwitch({
         disabled={disabled}
         onClick={() => onChange(!value)}
         className="relative h-[26px] w-[46px] cursor-pointer rounded-full border-0 transition-colors disabled:cursor-wait disabled:opacity-50"
-        style={{ background: value ? T.accent.primary : T.border.hi }}
+        style={{ background: value ? T.action.primary : T.border.hi }}
       >
         <span
-          className="absolute top-[3px] size-5 rounded-full bg-white transition-[left]"
+          className="absolute top-[3px] size-5 rounded-full bg-(--t-bg-deep) transition-[left]"
           style={{ left: value ? "23px" : "3px" }}
         />
       </button>

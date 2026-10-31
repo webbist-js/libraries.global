@@ -1,11 +1,16 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect } from "react"
 
-import { useCapabilities, useStaff } from "@/lib/access-client"
-import { T } from "@/lib/design-tokens"
+import { DrawerEdgeTab } from "@/components/ds/DrawerEdgeTab"
+import { DrawerPresence } from "@/components/ds/DrawerPresence"
+import {
+  useCapabilities,
+  useHydratedSession,
+  useStaff,
+} from "@/lib/access-client"
+import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import {
   closeEditorialDrawer,
   openEditorialDrawer,
@@ -45,36 +50,14 @@ function EditorialDrawerTab({ belowStaff }: { readonly belowStaff: boolean }) {
   const tUi = useUiTranslations("ui")
 
   return (
-    <button
-      aria-label={tUi("open_the_editorial_drawer")}
-      className="fixed right-0 z-[60] hidden w-11 flex-col items-center gap-2 border border-r-0 pt-2 pb-3 transition-colors hover:bg-(--t-bg-surface) lg:flex"
-      onClick={openEditorialDrawer}
-      style={{
-        top: belowStaff ? "calc(50% + 64px)" : "50%",
-        transform: belowStaff ? undefined : "translateY(-50%)",
-        background: T.bg.deep,
-        borderColor: T.border.line,
-        borderRadius: "20px 0 0 20px",
-        color: T.ink.base,
-      }}
+    <DrawerEdgeTab
+      accessibleLabel={tUi("open_the_editorial_drawer")}
       title={tUi("editorial_drawer_alte")}
-      type="button"
-    >
-      <span
-        aria-hidden="true"
-        className="flex size-8 items-center justify-center rounded-full"
-        style={{ background: T.accent.chip, color: T.accent.primary }}
-      >
-        <Icon height={17} icon="mdi:feather" width={17} />
-      </span>
-      <span
-        aria-hidden="true"
-        className="text-sm font-semibold tracking-wide"
-        style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-      >
-        {tUi("editorial")}
-      </span>
-    </button>
+      label={tUi("editorial")}
+      icon="mdi:feather"
+      onOpen={openEditorialDrawer}
+      below={belowStaff}
+    />
   )
 }
 
@@ -85,12 +68,18 @@ function EditorialDrawerTab({ belowStaff }: { readonly belowStaff: boolean }) {
  * everyone else.
  */
 export function EditorialDrawerMount() {
+  const session = useHydratedSession()
+  const certain = !session.isPending && !session.error
+  const scope = contributionAccountScope(
+    certain ? session.data?.user : undefined
+  )
   const { has, ready } = useCapabilities()
   const { libraries } = useStaff()
   const open = useEditorialDrawer()
   const { open: staffOpen } = useStaffDrawer()
   const pathname = usePathname()
-  const editorial = ready && EDITORIAL_CAPABILITIES.some((cap) => has(cap))
+  const editorial =
+    certain && ready && EDITORIAL_CAPABILITIES.some((cap) => has(cap))
 
   useEffect(() => {
     if (!editorial) return
@@ -116,7 +105,7 @@ export function EditorialDrawerMount() {
   // Leaving the page, or opening the staff drawer, closes it.
   useEffect(() => {
     closeEditorialDrawer()
-  }, [pathname])
+  }, [pathname, scope])
   useEffect(() => {
     if (staffOpen) closeEditorialDrawer()
   }, [staffOpen])
@@ -128,8 +117,14 @@ export function EditorialDrawerMount() {
 
   return (
     <>
-      {hideTab ? null : <EditorialDrawerTab belowStaff={belowStaff} />}
-      {open ? <EditorialDrawer /> : null}
+      <span hidden={hideTab}>
+        <EditorialDrawerTab belowStaff={belowStaff} />
+      </span>
+      <DrawerPresence key={scope} open={open}>
+        {(onAfterClose) => (
+          <EditorialDrawer open={open} onAfterClose={onAfterClose} />
+        )}
+      </DrawerPresence>
     </>
   )
 }

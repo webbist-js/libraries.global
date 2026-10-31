@@ -103,7 +103,7 @@ export function AppFilePicker({
 
       <div
         className={cn(fieldClassName, "w-full rounded-lg border-2", {
-          "bg-gray-100": isDraggingOver,
+          "bg-(--t-bg-muted)": isDraggingOver,
           "cursor-pointer": !selectedFile,
         })}
         onDragOver={handleDragOver}
@@ -149,7 +149,7 @@ export function AppFilePicker({
                 e.preventDefault()
                 openFileInput()
               }}
-              className="size-full text-sm text-gray-500"
+              className="size-full text-sm text-(--t-ink-low)"
             >
               {t("dragAndDrop")}
             </button>

@@ -59,7 +59,7 @@ function ArticleResults({
                   allOrigins: true,
                   page: 1,
                 })}
-                className="inline-flex min-h-11 items-center rounded-full bg-(--t-ink-base) px-5 py-2.5 font-semibold text-white"
+                className="inline-flex min-h-11 items-center rounded-full bg-(--t-bg-inverse) px-5 py-2.5 font-semibold text-white"
               >
                 {d("allStories")}
               </GlobalLink>

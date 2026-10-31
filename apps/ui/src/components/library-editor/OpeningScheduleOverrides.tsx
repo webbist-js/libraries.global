@@ -12,11 +12,11 @@ import type * as React from "react"
 
 const control: React.CSSProperties = {
   minHeight: 44,
-  border: "1px solid #c9c7ce",
+  border: "1px solid var(--t-control-border)",
   borderRadius: 8,
   padding: "6px 10px",
-  color: "#211e2e",
-  background: "#fff",
+  color: "var(--t-ink-base)",
+  background: "var(--t-bg-deep)",
   maxWidth: "100%",
 }
 const row: React.CSSProperties = {

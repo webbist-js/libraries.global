@@ -4,9 +4,11 @@ import type { SubmissionType } from "@repo/access"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { useHydratedSession } from "@/lib/access-client"
+import { captureWorkspaceRouteAction } from "@/lib/workspace-analytics"
 
 export interface Submission {
   documentId: string
+  locale?: string | null
   submissionType: SubmissionType
   status: "draft" | "pending" | "approved" | "rejected" | "needs_info"
   targetEntityType?: string | null
@@ -84,12 +86,21 @@ export function useMySubmissions() {
 export function useCreateSubmission() {
   return useMutation({
     mutationFn: async (payload: CreateSubmissionPayload) => {
-      const json = await apiFetch("", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      })
+      const measured = payload.asDraft
+        ? () => false
+        : captureWorkspaceRouteAction("submit")
+      try {
+        const json = await apiFetch("", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        })
+        measured("success")
 
-      return json.data as Submission
+        return json.data as Submission
+      } catch (error) {
+        measured("error")
+        throw error
+      }
     },
   })
 }
@@ -126,15 +137,22 @@ export function useFinalizeDraft() {
       id: string
       formData: Record<string, unknown>
     }) => {
-      const res = await fetch(`/api/submissions/${id}/finalize`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`)
-      const json = await res.json()
+      const measured = captureWorkspaceRouteAction("submit")
+      try {
+        const res = await fetch(`/api/submissions/${id}/finalize`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        })
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+        const json = await res.json()
+        measured("success")
 
-      return json.data as Submission
+        return json.data as Submission
+      } catch (error) {
+        measured("error")
+        throw error
+      }
     },
   })
 }

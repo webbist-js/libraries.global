@@ -39,7 +39,7 @@ export function LibraryNetworks({
 
   return (
     <section
-      className="rounded-2xl border border-(--t-border-line) bg-white p-6"
+      className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-6"
       aria-label="Services and networks"
     >
       <h2 className="type-h2">Part of</h2>

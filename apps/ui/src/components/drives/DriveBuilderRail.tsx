@@ -255,7 +255,7 @@ export function ScopeCard({
             style={{
               width: `${percent}%`,
               minWidth: percent > 0 ? 6 : 0,
-              background: T.accent.primary,
+              background: T.action.primary,
             }}
           />
         </span>
@@ -372,7 +372,7 @@ export function StandingCard({
               className="h-full rounded-full"
               style={{
                 width: `${(shown / needed) * 100}%`,
-                background: T.accent.primary,
+                background: T.action.primary,
               }}
             />
           </div>

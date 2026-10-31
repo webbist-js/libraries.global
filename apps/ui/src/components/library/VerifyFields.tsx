@@ -1,5 +1,6 @@
 "use client"
 
+import { FIELD } from "@/components/contribute/wizard-ui"
 import { longDate } from "@/components/drives/focus-meta"
 import {
   SECTION_LABELS,
@@ -9,10 +10,6 @@ import {
   type VerifySection,
 } from "@/components/library/verify.logic"
 import { T } from "@/lib/design-tokens"
-
-// The correction drawer's own field style (ContributionWizard).
-const FIELD =
-  "w-full rounded-[14px] border border-(--t-border-hi) bg-white px-4 py-3 text-base outline-none transition-colors focus:border-(--t-accent-primary)"
 
 /** "Last checked 6 Oct 2025", or "" when the record carries no stamp. */
 function lastCheckedOf(record: VerifyRecord, section: VerifySection): string {

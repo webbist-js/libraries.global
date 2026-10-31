@@ -1,12 +1,11 @@
 import { Icon } from "@iconify/react"
 import { useTranslations, type Locale } from "next-intl"
 
+import { InformationPage } from "@/components/dashboard/InformationPage"
 import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
-import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
-import { T } from "@/lib/design-tokens"
 import type { LegalDocumentNavItem } from "@/lib/strapi-api/content/server"
 
 import { legalIcon } from "./legal.helpers"
@@ -24,7 +23,6 @@ const GROUPS = [
 ] as const
 
 export function LegalIndexPage({
-  locale,
   documents,
 }: {
   readonly locale: Locale
@@ -51,14 +49,16 @@ export function LegalIndexPage({
   ].filter((group) => group.documents.length > 0)
 
   return (
-    <div style={{ background: T.bg.void, color: T.ink.base }}>
-      <GlobalHeader locale={locale} />
+    <InformationPage
+      title={t("legal_policies")}
+      links={links.map((doc) => ({
+        href: `/legal/${doc.slug}`,
+        label: doc.navLabel || doc.title || doc.slug!,
+      }))}
+    >
       <MainContent>
         <PageHero
-          breadcrumb={[
-            { label: t("home"), href: "/" },
-            { label: t("legal_policies") },
-          ]}
+          variant="card"
           title={t("legal_policies")}
           lead={t("legal_policies_intro")}
         />
@@ -103,7 +103,7 @@ export function LegalIndexPage({
           ) : null}
         </Container>
       </MainContent>
-    </div>
+    </InformationPage>
   )
 }
 

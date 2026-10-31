@@ -4,6 +4,9 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import {
   FilterDrawer,
   FilterShowButton,
@@ -12,7 +15,6 @@ import {
   SearchField,
   useFilterSidebar,
 } from "@/components/ds"
-import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import {
@@ -74,6 +76,7 @@ function SourceStep({
 export function EventsPageClient() {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("eventListing")
+  const workspace = useUiTranslations("communityDashboard")
 
   const [upcoming, setUpcoming] = useState<EventSearchHit[]>([])
   const [state, setState] = useState<LoadState>("loading")
@@ -196,12 +199,36 @@ export function EventsPageClient() {
   )
 
   return (
-    <MainContent className="relative z-10 flex-1">
+    <DashboardPage
+      routeKey="/events"
+      title={tUi("events")}
+      className="dashboard-find-page dashboard-listing-page dashboard-events-page"
+      navigationHeading={null}
+      navigationHidden={filterSidebar.collapsed}
+      navigation={
+        <FilterSidebar sidebar={filterSidebar} sticky={false}>
+          {filterPanel(true)}
+        </FilterSidebar>
+      }
+      navigationFooter={
+        <DashboardSidebarCta
+          title={workspace("eventsTitle")}
+          body={workspace("eventsBody")}
+          action={{ label: workspace("eventsAction"), href: "/staff" }}
+          secondary={{
+            label: workspace("learnMore"),
+            href: "/knowledge?section=events",
+          }}
+        />
+      }
+      toolbar={
+        <RecordToolbar
+          items={[{ label: tUi("home"), href: "/" }, { label: tUi("events") }]}
+        />
+      }
+    >
       <PageHero
-        breadcrumb={[
-          { label: tUi("home"), href: "/" },
-          { label: tUi("events") },
-        ]}
+        variant="card"
         eyebrow={tUi("events")}
         eyebrowIcon="mdi:calendar-blank-outline"
         lead={t("lead")}
@@ -248,12 +275,10 @@ export function EventsPageClient() {
         {/* Filters + agenda */}
         <div className="flex items-start gap-8">
           {/* Sidebar — sticky on desktop, can be hidden */}
-          <FilterSidebar sidebar={filterSidebar}>
-            {filterPanel(true)}
-          </FilterSidebar>
 
           {/* Sidebar — drawer on mobile */}
           <FilterDrawer
+            edgeAligned
             open={filtersOpen}
             onClose={() => setFiltersOpen(false)}
             showLabel={t("showCount", { count: total })}
@@ -392,6 +417,6 @@ export function EventsPageClient() {
           </div>
         </section>
       </Container>
-    </MainContent>
+    </DashboardPage>
   )
 }

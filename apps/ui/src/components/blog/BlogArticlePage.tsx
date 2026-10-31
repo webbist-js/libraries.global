@@ -3,20 +3,29 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { ArticleContext } from "@/components/articles/ArticleContext"
 import { ArticleReaderActions } from "@/components/articles/ArticleReaderActions"
+import { JournalSidebarFooter } from "@/components/articles/EditorialSidebar"
+import { ReadingProgress } from "@/components/articles/ReadingProgress"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
 import { ArticleShareButtons } from "@/components/blog/ArticleShareButtons"
 import { BlogArticleCard } from "@/components/blog/BlogArticleCard"
+import { EntriesAdded } from "@/components/blog/EntriesAdded"
+import {
+  JournalSaveButton,
+  JournalSavedLink,
+} from "@/components/blog/JournalSaved"
+import { JournalSources } from "@/components/blog/JournalSources"
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
-import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { MainContent } from "@/components/ds/MainContent"
+import { MetadataList } from "@/components/ds/MetadataList"
 import { SidebarLinks } from "@/components/ds/SidebarLinks"
-import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
 import { articleReaderPath } from "@/lib/article-content-language"
-import { articleContextPlaces } from "@/lib/article-context"
 import {
   countWords,
   estimateReadingTime,
@@ -70,7 +79,6 @@ export function BlogArticlePage({
 }) {
   const tUi = useUiTranslations("ui")
   const tArticle = useUiTranslations("editorial")
-  const p = useUiTranslations("publishing")
 
   if (!article) {
     return (
@@ -78,7 +86,6 @@ export function BlogArticlePage({
         className="relative isolate flex min-h-screen w-full flex-col"
         style={{ background: T.bg.void, color: T.ink.base }}
       >
-        <GlobalHeader locale={locale} />
         <MainContent className="flex flex-1 items-center justify-center">
           <p style={{ color: T.ink.dim }}>{tArticle("articleNotFound")}</p>
         </MainContent>
@@ -103,12 +110,6 @@ export function BlogArticlePage({
     locale
   )
   const headings = extractHeadings(article.body)
-  const hasContext = Boolean(
-    article.topics?.some((item) => item.name) ||
-    article.libraries?.some((item) => item.name) ||
-    article.eventMentions?.some((item) => item.title) ||
-    articleContextPlaces(article).length
-  )
 
   // Curated related articles take priority; fall back to prop from page.tsx
   const relatedCards: BlogArticleSummary[] = (
@@ -147,49 +148,142 @@ export function BlogArticlePage({
   ].filter((row): row is { label: string; value: string } => !!row.value)
 
   return (
-    <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.void, color: T.ink.base }}
-    >
-      <GlobalHeader locale={locale} />
-
-      <MainContent
-        className="relative z-10 mx-auto w-full max-w-[1240px] flex-1 px-4 pt-6 pb-20 sm:px-8 sm:pt-8"
-        data-analytics-page="journal"
-        data-analytics-content-id={article.documentId}
-        data-analytics-path={
-          new URL(
-            absoluteUrl(
-              `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
-              locale
-            )
-          ).pathname
-        }
-      >
-        <div className="grid grid-cols-1 items-start gap-x-8 gap-y-6 lg:grid-cols-[minmax(0,860px)_240px]">
+    <DashboardPage
+      routeKey={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
+      title={article.title ?? "Journal"}
+      className="dashboard-editorial-page dashboard-journal-reader"
+      navigationHeading={
+        <RecordContextIdentity
+          title={tUi("journal")}
+          eyebrow={article.section?.name}
+        />
+      }
+      navigation={
+        <div className="editorial-sidebar">
+          <GlobalLink className="record-parent-chip" href="/journal">
+            ← {tUi("journal")}
+          </GlobalLink>
+          <ReadingProgress
+            bodyId={`analytics-journal-${article.documentId}`}
+            minutes={readingTime}
+          />
+          <p className="record-nav-label">{tArticle("upNext")}</p>
+          <nav aria-label={tArticle("upNext")}>
+            {relatedCards.map((item) => (
+              <GlobalLink
+                key={item.documentId}
+                href={`/journal/${item.section?.slug ?? "general"}/${item.slug}`}
+              >
+                {item.title}
+              </GlobalLink>
+            ))}
+          </nav>
+          <nav aria-label={tUi("journal")}>
+            <JournalSavedLink />
+          </nav>
+        </div>
+      }
+      navigationFooter={<JournalSidebarFooter />}
+      toolbar={
+        <RecordToolbar
+          share
+          shareContent={{
+            contentType: "journal",
+            contentId: article.documentId,
+          }}
+          items={[
+            { label: tUi("journal"), href: "/journal" },
+            ...(article.section?.name
+              ? [
+                  {
+                    label: article.section.name,
+                    href: `/journal?section=${article.section.slug}`,
+                  },
+                ]
+              : []),
+            { label: article.title ?? "" },
+          ]}
+        />
+      }
+      context={
+        <div className="editorial-reader-context">
+          {headings.length > 0 ? (
+            <nav
+              aria-label={tUi("in_this_article")}
+              className="block"
+              style={{ borderColor: T.border.line }}
+            >
+              <h2
+                className="type-panel-title m-0 mb-3"
+                style={{ color: T.ink.base }}
+              >
+                {tUi("in_this_article")}
+              </h2>
+              <SidebarLinks>
+                {headings.map((h) => (
+                  <li
+                    key={h.id}
+                    style={
+                      h.level > 2
+                        ? { paddingLeft: `${(h.level - 2) * 12}px` }
+                        : undefined
+                    }
+                  >
+                    <a href={`#${h.id}`} className="leading-snug">
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </SidebarLinks>
+            </nav>
+          ) : null}
+          {metaRows.length > 0 ? (
+            <div
+              className="border-t border-(--t-divider) pt-3"
+              style={{ borderColor: T.border.line }}
+            >
+              <p
+                className="m-0 mb-2 text-base font-semibold"
+                style={{ color: T.ink.base }}
+              >
+                {tArticle("aboutArticle")}
+              </p>
+              <MetadataList rows={metaRows} />
+            </div>
+          ) : null}
+          <JournalSources id="article-sources" sources={article.sources} />
+          <ArticleContext article={article} kind="journal" locale={locale} />
+          <JournalSaveButton documentId={article.documentId} />
+        </div>
+      }
+      overview={
+        <MainContent
+          className="editorial-reader-content"
+          data-analytics-page="journal"
+          data-analytics-content-id={article.documentId}
+          data-analytics-path={
+            new URL(
+              absoluteUrl(
+                `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                locale
+              )
+            ).pathname
+          }
+        >
+          {" "}
           <div className="min-w-0">
             <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-10 lg:p-12">
               <header>
-                <Breadcrumb
-                  ancestorsOnly
-                  items={[
-                    { label: tUi("journal"), href: "/journal" },
-                    ...(article.section?.slug
-                      ? [
-                          {
-                            label: article.section.name ?? article.section.slug,
-                            href: `/journal?section=${article.section.slug}`,
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
                 {article.category?.name ? (
                   <p className="mt-4 mb-2 text-xs font-semibold text-(--t-accent-primary)">
                     {article.category.name}
                   </p>
                 ) : null}
-                <h1 className="type-h1 mt-3 mb-0 text-balance">
+                <EntriesAdded
+                  value={article.entriesAdded}
+                  origin={article.publicationOrigin}
+                />
+                <h1 tabIndex={-1} className="type-h1 mt-3 mb-0 text-balance">
                   {article.title}
                 </h1>
                 {untranslatedLocale ? (
@@ -284,18 +378,6 @@ export function BlogArticlePage({
                   availableLocales={article.availableLocales}
                   authorUsername={authorProfile?.username}
                 />
-                {hasContext ? (
-                  <details className="mt-4 lg:hidden">
-                    <summary className="text-sm font-semibold">
-                      {p("contextStory")}
-                    </summary>
-                    <ArticleContext
-                      article={article}
-                      kind="journal"
-                      locale={locale}
-                    />
-                  </details>
-                ) : null}
               </header>
 
               {/* Hero image */}
@@ -483,6 +565,15 @@ export function BlogArticlePage({
                 }
               />
             </div>
+            {relatedCards[0] ? (
+              <GlobalLink
+                className="journal-next-story"
+                href={`/journal/${relatedCards[0].section?.slug ?? "general"}/${relatedCards[0].slug}`}
+              >
+                <span>{tArticle("nextStory")}</span>
+                <strong>{relatedCards[0].title} →</strong>
+              </GlobalLink>
+            ) : null}
             {relatedCards.length > 0 ? (
               <section aria-labelledby="related-heading" className="mt-10">
                 <h2 id="related-heading" className="type-h2 mb-5">
@@ -496,82 +587,11 @@ export function BlogArticlePage({
               </section>
             ) : null}
           </div>
-
-          {/* Sidebar */}
-          <aside className="flex flex-col gap-5 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain">
-            {headings.length > 0 ? (
-              <nav
-                aria-label={tUi("in_this_article")}
-                className="hidden lg:block"
-                style={{ borderColor: T.border.line }}
-              >
-                <h2
-                  className="type-panel-title m-0 mb-3"
-                  style={{ color: T.ink.base }}
-                >
-                  {tUi("in_this_article")}
-                </h2>
-                <SidebarLinks>
-                  {headings.map((h) => (
-                    <li
-                      key={h.id}
-                      style={
-                        h.level > 2
-                          ? { paddingLeft: `${(h.level - 2) * 12}px` }
-                          : undefined
-                      }
-                    >
-                      <a href={`#${h.id}`} className="leading-snug">
-                        {h.text}
-                      </a>
-                    </li>
-                  ))}
-                </SidebarLinks>
-              </nav>
-            ) : null}
-            <div className="hidden lg:block">
-              <ArticleContext
-                article={article}
-                kind="journal"
-                locale={locale}
-              />
-            </div>
-            {metaRows.length > 0 ? (
-              <div
-                className="border-t border-(--t-divider) pt-3"
-                style={{ borderColor: T.border.line }}
-              >
-                <p
-                  className="m-0 mb-2 text-base font-semibold"
-                  style={{ color: T.ink.base }}
-                >
-                  {tArticle("aboutArticle")}
-                </p>
-                <dl className="m-0">
-                  {metaRows.map((row) => (
-                    <div
-                      key={row.label}
-                      className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0"
-                      style={{ borderColor: T.border.divider }}
-                    >
-                      <dt className="text-sm" style={{ color: T.ink.dim }}>
-                        {row.label}
-                      </dt>
-                      <dd
-                        className="m-0 text-right text-sm font-semibold"
-                        style={{ color: T.ink.base }}
-                      >
-                        {row.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            ) : null}
-          </aside>
-        </div>
-      </MainContent>
-    </div>
+        </MainContent>
+      }
+    >
+      {null}
+    </DashboardPage>
   )
 }
 

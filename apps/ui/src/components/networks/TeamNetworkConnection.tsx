@@ -77,68 +77,78 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
   return (
     <details
       open={!!networkParam}
-      className="group my-5 rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6"
+      className="group my-5 min-w-0 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6"
     >
-      <summary className="min-h-11 cursor-pointer font-semibold">
-        <span className="inline-flex items-center gap-2">
-          <Icon
-            aria-hidden
-            icon="mdi:domain"
-            width={20}
-            className="text-(--t-accent-primary)"
-          />
-          {team.primaryNetwork
-            ? `Connected: ${team.primaryNetwork.name}`
-            : "Connect your library service"}
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-xl text-(--t-ink-base) outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) [&::-webkit-details-marker]:hidden">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-(--t-accent-chip) text-(--t-accent-primary)">
+          <Icon aria-hidden icon="mdi:domain" width={22} />
         </span>
+        <span className="grid min-w-0 flex-1 gap-1">
+          <span className="text-xs font-medium text-(--t-ink-dim)">
+            {team.primaryNetwork ? "Connected service" : "Service connection"}
+          </span>
+          <span className="type-small-heading [overflow-wrap:anywhere]">
+            {team.primaryNetwork?.name ?? "Connect your library service"}
+          </span>
+        </span>
+        <Icon
+          aria-hidden
+          icon="mdi:chevron-down"
+          width={20}
+          className="shrink-0 text-(--t-ink-dim) transition-transform group-open:rotate-180 motion-reduce:transition-none"
+        />
       </summary>
-      <p className="my-4 max-w-2xl text-sm text-(--t-ink-dim)">
-        Connect your service for widget defaults. Confirm whether to add its
-        current published libraries to Team coverage.
-      </p>
-      <NetworkPicker onSelect={setSelected} disabled={pending} />
-      {selected ? (
-        <div className="mt-5 space-y-3 rounded-2xl bg-(--t-bg-surface) p-4 sm:p-5">
-          <p className="font-semibold">{selected.name}</p>
-          <label className="flex min-h-11 items-center gap-3">
-            <input
-              type="checkbox"
-              className="size-4 accent-(--t-accent-primary)"
-              checked={addLibraries}
-              onChange={(event) => setAddLibraries(event.target.checked)}
-              disabled={pending}
-            />
-            Add its current libraries to Team coverage
-          </label>
-          <p className="text-sm text-(--t-ink-dim)">
-            Existing libraries remain. Future source additions require a
-            separate coverage decision and a batch management review.
-          </p>
-          <Button
-            type="button"
-            variant="primary"
-            size="pill"
-            disabled={pending}
-            onClick={connect}
-          >
-            Confirm connection
-          </Button>
-          <Link
-            className={`${STAFF_LINK} ml-4`}
-            href={`/staff/networks?network=${selected.documentId}`}
-          >
-            Request service management
-          </Link>
-        </div>
-      ) : null}
-      {message ? (
-        <p
-          role="status"
-          className="mt-4 rounded-xl bg-(--t-bg-surface) p-4 text-sm"
-        >
-          {message}
+      <div className="mt-5 grid gap-5 border-t border-(--t-border-line) pt-5">
+        <p className="m-0 max-w-[66ch] text-sm leading-relaxed text-(--t-ink-dim)">
+          Connect your service for widget defaults. Confirm whether to add its
+          current published libraries to Team coverage.
         </p>
-      ) : null}
+        <NetworkPicker onSelect={setSelected} disabled={pending} />
+        {selected ? (
+          <div className="grid gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5">
+            <p className="m-0 font-semibold">{selected.name}</p>
+            <label className="flex min-h-11 items-center gap-3">
+              <input
+                type="checkbox"
+                className="size-4 accent-(--t-accent-primary)"
+                checked={addLibraries}
+                onChange={(event) => setAddLibraries(event.target.checked)}
+                disabled={pending}
+              />
+              Add its current libraries to Team coverage
+            </label>
+            <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+              Existing libraries remain. Future source additions require a
+              separate coverage decision and a batch management review.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Button
+                type="button"
+                variant="primary"
+                size="pill"
+                disabled={pending}
+                onClick={connect}
+              >
+                Confirm connection
+              </Button>
+              <Link
+                className={`${STAFF_LINK} inline-flex min-h-11 items-center text-sm`}
+                href={`/staff/networks?network=${selected.documentId}`}
+              >
+                Request service management
+              </Link>
+            </div>
+          </div>
+        ) : null}
+        {message ? (
+          <p
+            role="status"
+            className="m-0 rounded-xl bg-(--t-bg-surface) p-4 text-sm"
+          >
+            {message}
+          </p>
+        ) : null}
+      </div>
     </details>
   )
 }

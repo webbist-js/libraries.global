@@ -7,6 +7,7 @@ import {
   Languages,
   Link2,
   MessageCircle,
+  MessageSquare,
   UsersRound,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
@@ -16,9 +17,8 @@ import {
   DiscussionReviewSkeleton,
   DiscussionThreadSkeleton,
 } from "@/components/discussions/DiscussionSkeleton"
-import { BackLink } from "@/components/ds/BackLink"
+import { DiscussionThreadHeading } from "@/components/discussions/DiscussionThreadHeading"
 import { Badge } from "@/components/ds/Badge"
-import { EmptyState } from "@/components/ds/EmptyState"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 
@@ -43,6 +43,7 @@ import {
   subjectPalette,
 } from "./DiscussionPresentation"
 import { DiscussionRecordCard } from "./DiscussionRecordCard"
+import { DiscussionReplyBranch } from "./DiscussionReplyBranch"
 import { DiscussionReviewCard } from "./DiscussionReviewCard"
 import { DiscussionThreadSidebar } from "./DiscussionThreadSidebar"
 import { useDiscussionActor } from "./useDiscussionActor"
@@ -113,6 +114,19 @@ function DiscussionThreadPanel({
   const [earlierBusy, setEarlierBusy] = useState(false)
   const composerRef = useRef<HTMLDivElement>(null)
   const joinComposerRef = useRef<HTMLDivElement>(null)
+  const [joinOpen, setJoinOpen] = useState(false)
+  useEffect(() => {
+    if (!joinOpen) return
+    joinComposerRef.current?.scrollIntoView({
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "nearest",
+    })
+    joinComposerRef.current
+      ?.querySelector<HTMLTextAreaElement>("textarea")
+      ?.focus({ preventScroll: true })
+  }, [joinOpen])
   const [composerAnchor, setComposerAnchor] = useState<string | null>(null)
   const [replyDraft, setReplyDraft] = useState<{
     body: string
@@ -286,11 +300,15 @@ function DiscussionThreadPanel({
       setBusy(false)
     }
   }
+  const readStateHeader = !embedded ? (
+    <DiscussionThreadHeading title={t("threads")} />
+  ) : null
   if (!actor.ready)
     return <DiscussionThreadSkeleton embedded={embedded} variant={variant} />
   if (error && (!thread || loadedScope !== scope))
     return (
-      <div className="grid justify-items-start gap-2">
+      <div className="grid justify-items-start gap-4">
+        {readStateHeader}
         <p role="alert" className="m-0">
           {error}
         </p>
@@ -321,7 +339,12 @@ function DiscussionThreadPanel({
     (thread.state === "pending" || thread.state === "rejected") &&
     (!actor.signedIn || (!ownThread && !actor.canModerate))
   )
-    return <p role="status">{t("unavailable")}</p>
+    return (
+      <div className="grid gap-4">
+        {readStateHeader}
+        <p role="status">{t("unavailable")}</p>
+      </div>
+    )
   const queuedRecords = new Set(
     moderatorView
       ? moderation.revisions.map((revision) => revision.recordId)
@@ -370,7 +393,7 @@ function DiscussionThreadPanel({
           disabled={busy}
           aria-pressed={thread.subscribed}
           aria-label={t(thread.subscribed ? "unfollow" : "follow")}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold ${thread.subscribed ? "border-(--t-ink-base) bg-(--t-ink-base) text-white" : "border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-accent-primary)"}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold ${thread.subscribed ? "border-(--t-ink-base) bg-(--t-bg-inverse) text-white" : "border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-accent-primary)"}`}
           onClick={() =>
             action(`threads/${encodeURIComponent(id)}/subscription`, {
               enabled: !thread.subscribed,
@@ -389,6 +412,7 @@ function DiscussionThreadPanel({
       record.state === "visible"
   )
   const focusJoinComposer = () => {
+    setJoinOpen(true)
     joinComposerRef.current?.scrollIntoView({
       behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
         ? "auto"
@@ -499,42 +523,41 @@ function DiscussionThreadPanel({
         }
       >
         {!embedded && (
-          <header className="grid gap-4 border-b border-(--t-border-line) pb-6">
-            <BackLink href="/community/discussions">{t("back")}</BackLink>
-            <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <Badge
-                color="violet"
-                label={thread.subject?.name ?? t("threads")}
-                style={{ background: palette.bg, color: palette.fg }}
-              />
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-(--t-bg-muted) px-3 py-1 text-sm">
-                <Languages size={13} aria-hidden />
-                {languageName(thread.language, languages, locale)}
-              </span>
-              {targetHref && thread.target && (
-                <a
-                  href={targetHref}
-                  className="inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm text-(--t-accent-primary) hover:underline"
-                  style={{ background: palette.soft }}
-                >
-                  <Link2 size={13} className="shrink-0" aria-hidden />
-                  <span className="min-w-0 break-words">
-                    {thread.target.title}
-                  </span>
-                </a>
-              )}
-            </div>
-            <h1
-              className="type-h1 m-0 max-w-[25ch] text-balance"
-              lang={thread.language}
-            >
-              {thread.title ||
-                ownThread?.pendingRevision?.title ||
-                ownThread?.latestRevision?.title ||
-                t("untitled")}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-              {thread.state === "visible" ? (
+          <DiscussionThreadHeading
+            title={
+              thread.title ||
+              ownThread?.pendingRevision?.title ||
+              ownThread?.latestRevision?.title ||
+              t("untitled")
+            }
+            language={thread.language}
+            context={
+              <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                <Badge
+                  color="violet"
+                  label={thread.subject?.name ?? t("threads")}
+                  style={{ background: palette.bg, color: palette.fg }}
+                />
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-(--t-bg-muted) px-3 py-1 text-sm">
+                  <Languages size={13} aria-hidden />
+                  {languageName(thread.language, languages, locale)}
+                </span>
+                {targetHref && thread.target && (
+                  <a
+                    href={targetHref}
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-sm text-(--t-accent-primary) hover:underline"
+                    style={{ background: palette.soft }}
+                  >
+                    <Link2 size={13} className="shrink-0" aria-hidden />
+                    <span className="min-w-0 break-words">
+                      {thread.target.title}
+                    </span>
+                  </a>
+                )}
+              </div>
+            }
+            activity={
+              thread.state === "visible" ? (
                 <p className="m-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-(--t-ink-dim)">
                   <span className="inline-flex items-center gap-1.5">
                     <UsersRound size={14} aria-hidden />
@@ -563,10 +586,10 @@ function DiscussionThreadPanel({
                 <p className="m-0 text-sm text-(--t-ink-dim)">
                   {t("privateConversation")}
                 </p>
-              )}
-              {subscriptionControl}
-            </div>
-          </header>
+              )
+            }
+            action={subscriptionControl}
+          />
         )}
         {moderatorAccess && (
           <DiscussionModeratorToolbar
@@ -595,7 +618,7 @@ function DiscussionThreadPanel({
               <button
                 type="button"
                 disabled={earlierBusy}
-                className="w-fit rounded-full border border-(--t-border-hi) bg-white px-4 py-2.5 text-sm font-semibold text-(--t-accent-primary) disabled:opacity-50"
+                className="w-fit rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2.5 text-sm font-semibold text-(--t-accent-primary) disabled:opacity-50"
                 onClick={async () => {
                   const requestScope = scope
                   setEarlierBusy(true)
@@ -668,28 +691,22 @@ function DiscussionThreadPanel({
             {embedded && !inlineSuggestion && subscriptionControl}
             {thread.state === "visible" && (
               <section aria-label={t("replies")} className="grid gap-4">
-                {!inlineSuggestion && (
-                  <h2 className="type-label m-0 text-(--t-ink-dim) uppercase">
+                {!inlineSuggestion && replyFlow.length > 0 && (
+                  <h2 className="type-small-heading m-0 flex items-center gap-2 text-(--t-ink-dim)">
+                    <MessageSquare size={17} aria-hidden />
                     {t("replyTotal", { count: replyCount })}
                   </h2>
                 )}
                 {replyFlow.length === 0 && !inlineSuggestion && (
-                  <EmptyState
-                    compact
-                    message={t("noReplies")}
-                    icon="mdi:comment-outline"
-                  />
+                  <p className="m-0 text-sm text-(--t-ink-dim)">
+                    {t("noReplies")}
+                  </p>
                 )}
                 {replyFlow.map(({ record: reply, depth, parent }) => (
-                  <div
+                  <DiscussionReplyBranch
                     key={reply.id}
-                    className={
-                      depth
-                        ? "ml-3 border-l-2 border-(--t-palette-violet-bg) pl-3 sm:ml-6 sm:pl-5"
-                        : inlineSuggestion
-                          ? undefined
-                          : "border-b border-(--t-border-line) pb-5"
-                    }
+                    depth={depth}
+                    compact={inlineSuggestion}
                   >
                     <DiscussionRecordCard
                       key={`${actor.scope}:${reply.id}`}
@@ -750,7 +767,7 @@ function DiscussionThreadPanel({
                     {inlineComposer && composerAnchor === reply.id && (
                       <div className="mt-4">{composer}</div>
                     )}
-                  </div>
+                  </DiscussionReplyBranch>
                 ))}
                 {nextOffset !== null && (
                   <button
@@ -811,7 +828,7 @@ function DiscussionThreadPanel({
               (moderation.total !== 0 || Boolean(moderation.error)) && (
                 <section aria-label={t("waitingReview")} className="grid gap-3">
                   <header>
-                    <h2 className="type-label m-0 text-[#875409] uppercase">
+                    <h2 className="type-label m-0 text-(--t-palette-amber-fg) uppercase">
                       <span
                         aria-hidden
                         className="mr-2 inline-block size-2 rounded-full bg-[#d88b18]"
@@ -874,8 +891,17 @@ function DiscussionThreadPanel({
                 <DiscussionComposer
                   {...commonComposerProps}
                   key={`${actor.scope}:join`}
+                  collapsed={!inlineSuggestion && !joinOpen}
+                  onExpand={focusJoinComposer}
                   quote={joinQuote}
-                  onCancel={joinQuote ? () => setJoinQuote(null) : undefined}
+                  onCancel={
+                    !inlineSuggestion || joinQuote
+                      ? () => {
+                          setJoinQuote(null)
+                          setJoinOpen(false)
+                        }
+                      : undefined
+                  }
                   onSubmitted={() => {
                     setJoinQuote(null)
                     refresh().catch((failure) =>

@@ -2,10 +2,14 @@
 
 import { Icon } from "@iconify/react"
 import * as Dialog from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { type ReactNode, useRef } from "react"
+import { type CSSProperties, type ReactNode, useRef } from "react"
 
 import { T } from "@/lib/design-tokens"
+import { cn } from "@/lib/styles"
+
+const DRAWER_WIDTH = { md: "440px", lg: "760px", xl: "1120px" } as const
 
 /**
  * Where focus starts when a drawer opens: the chosen radio card, else the
@@ -30,8 +34,8 @@ function firstControl(panel: HTMLElement): HTMLElement | null {
  * keeps Tab inside the panel, closes on Escape or a backdrop click, and
  * gives focus back to whatever had it when it opened. `children` fill the
  * panel below the header, as flex children of a column.
- * `size="md"` is an inset, rounded paper panel (the staff drawer); the
- * default is a wider panel with the same paper treatment. Radix handles
+ * `edgeAligned` pins a workspace drawer to the viewport, with a fixed
+ * header/footer and independently scrolling body. Radix handles
  * focus trapping, page scroll locking, background isolation and nesting.
  */
 export function Drawer({
@@ -42,11 +46,16 @@ export function Drawer({
   subtitle,
   eyebrow,
   headerContent,
+  headerActions,
   footer,
   icon,
   onClose,
   initialFocus = firstControl,
   size = "lg",
+  edgeAligned = false,
+  className,
+  onAfterClose,
+  returnFocusTo,
   children,
 }: {
   readonly open?: boolean
@@ -59,6 +68,7 @@ export function Drawer({
   /** A badge above the title, sharing a row with the close button. */
   readonly eyebrow?: ReactNode
   /** Controls beneath the title, inside the tinted header. */
+  readonly headerActions?: ReactNode
   readonly headerContent?: ReactNode
   /** Fixed below the scrolling content in an inset panel. */
   readonly footer?: ReactNode
@@ -73,6 +83,12 @@ export function Drawer({
   readonly initialFocus?: (panel: HTMLElement) => HTMLElement | null
   /** Inset paper panels: `md` 440 px, `lg` 760 px, `xl` 1120 px. */
   readonly size?: "lg" | "md" | "xl"
+  readonly edgeAligned?: boolean
+  readonly className?: string
+  /** Run after focus restoration when handing off to another dialog. */
+  readonly onAfterClose?: () => void
+  /** Explicit opener for browsers that do not focus buttons on pointer click. */
+  readonly returnFocusTo?: HTMLElement | null
   readonly children?: ReactNode
 }) {
   const tUi = useUiTranslations("ui")
@@ -105,12 +121,12 @@ export function Drawer({
   const closeButton = (
     <button
       aria-label={tUi("close")}
-      className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
+      className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-(--t-bg-deep) hover:bg-(--t-bg-surface)"
       onClick={onClose}
       style={{ borderColor: T.border.line, color: T.ink.base }}
       type="button"
     >
-      <Icon aria-hidden="true" height={20} icon="mdi:close" width={20} />
+      <X aria-hidden="true" height={20} width={20} />
     </button>
   )
 
@@ -144,15 +160,27 @@ export function Drawer({
             ) : null}
             {heading}
           </div>
-          {closeButton}
+          <div className="flex shrink-0 items-center gap-2">
+            {headerActions}
+            {closeButton}
+          </div>
         </div>
       )}
       {headerContent ? <div className="mt-4">{headerContent}</div> : null}
     </div>
   )
 
-  const panelClass =
-    side === "bottom"
+  const panelClass = edgeAligned
+    ? cn(
+        "inset-y-0 w-full rounded-none border-0",
+        side === "left" ? "left-0 border-r" : "right-0 border-l",
+        size === "md"
+          ? "max-w-[440px]"
+          : size === "xl"
+            ? "max-w-[1120px]"
+            : "max-w-[760px]"
+      )
+    : side === "bottom"
       ? "inset-x-0 bottom-0 max-h-[95dvh] rounded-t-[28px] border"
       : [
           "inset-y-2 w-[calc(100%-1rem)] rounded-[28px] border sm:inset-y-4 sm:w-[calc(100%-2rem)]",
@@ -183,20 +211,34 @@ export function Drawer({
           aria-describedby={undefined}
           aria-labelledby={titleId}
           aria-modal="true"
-          className={`fixed z-[81] flex flex-col overflow-hidden overscroll-contain ${panelClass}`}
+          data-drawer-panel={side}
+          data-drawer-edge={edgeAligned || undefined}
+          className={cn(
+            "fixed z-[81] flex flex-col overflow-hidden overscroll-contain",
+            panelClass,
+            className
+          )}
           onOpenAutoFocus={(event) => {
-            returnFocus.current = document.activeElement as HTMLElement | null
+            returnFocus.current =
+              returnFocusTo ?? (document.activeElement as HTMLElement | null)
             event.preventDefault()
             const panel = event.currentTarget as HTMLElement
-            ;(initialFocus(panel) ?? panel).focus()
+            ;(initialFocus(panel) ?? panel).focus({ preventScroll: true })
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
-            returnFocus.current?.focus()
+            returnFocus.current?.focus({ preventScroll: true })
+            onAfterClose?.()
           }}
-          style={{ background: T.bg.void, borderColor: T.border.hi }}
+          style={
+            {
+              background: T.bg.void,
+              borderColor: T.border.hi,
+              "--drawer-max-width": DRAWER_WIDTH[size],
+            } as CSSProperties
+          }
         >
-          {size === "md" ? (
+          {size === "md" && !edgeAligned ? (
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {header}
               {children}
@@ -204,7 +246,16 @@ export function Drawer({
           ) : (
             <>
               {header}
-              {children}
+              {edgeAligned ? (
+                <div
+                  data-drawer-body=""
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                >
+                  {children}
+                </div>
+              ) : (
+                children
+              )}
             </>
           )}
           {footer}

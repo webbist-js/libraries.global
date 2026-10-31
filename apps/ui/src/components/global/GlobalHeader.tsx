@@ -2,26 +2,20 @@ import { headers } from "next/headers"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import { AppearanceControl } from "@/components/appearance/AppearanceControl"
+import { DashboardNavigation } from "@/components/dashboard/DashboardNavigation"
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
+import { GLOBAL_NAVIGATION } from "@/components/global/global-navigation"
 import GlobalContributeMenu from "@/components/global/GlobalContributeMenu"
 import GlobalContributorShortcuts from "@/components/global/GlobalContributorShortcuts"
 import GlobalLink from "@/components/global/GlobalLink"
 import GlobalMobileMenu from "@/components/global/GlobalMobileMenu"
 import { GlobalNavbarAuthSection } from "@/components/global/GlobalNavbarAuthSection"
-import GlobalNavLinks, {
-  type NavLink,
-} from "@/components/global/GlobalNavLinks"
+import GlobalNavLinks from "@/components/global/GlobalNavLinks"
+import { SiteSearchTrigger } from "@/components/global/SiteSearch"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfileSnippet } from "@/lib/own-profile-server"
-
-const NAV_LINKS = [
-  { label: "atlas", href: "/map" },
-  { label: "find_libraries", href: "/libraries" },
-  { label: "community", href: "/community" },
-  { label: "journal", href: "/journal" },
-  { label: "knowledge", href: "/knowledge" },
-] as const
 
 export async function GlobalHeader({
   locale,
@@ -32,10 +26,10 @@ export async function GlobalHeader({
    * "site": centred nav in a max-width container (every page).
    * "app": full-bleed, nav beside the logo, for full-screen tools like the map.
    */
-  readonly variant?: "site" | "app"
+  readonly variant?: "site" | "app" | "dashboard"
 }) {
   const tUi = await getUiTranslations({ locale, namespace: "ui" })
-  const links: NavLink[] = NAV_LINKS.map((link) => ({
+  const links = GLOBAL_NAVIGATION.map((link) => ({
     ...link,
     label: tUi(link.label),
   }))
@@ -63,8 +57,12 @@ export async function GlobalHeader({
     <GlobalNavbarAuthSection
       sessionSSR={sessionSSR}
       profileSnippet={profileSnippet}
+      presentation={variant === "dashboard" ? "dashboard" : "menu"}
     />
   )
+
+  if (variant === "dashboard")
+    return <DashboardNavigation links={links} auth={auth} />
 
   return (
     <header
@@ -106,6 +104,8 @@ export async function GlobalHeader({
         {/* One Contribute panel across desktop and tablet breakpoints. On
             phones its shortcuts remain in the compact navigation menu. */}
         <div data-header-stable="" className="flex shrink-0 items-center gap-2">
+          <SiteSearchTrigger iconOnly />
+          <AppearanceControl />
           <div className="hidden items-center gap-2 lg:flex">
             {localeSwitcher}
             {auth}
@@ -147,6 +147,7 @@ function PublicBetaHeader({ locale }: { locale: Locale }) {
           </em>
         </GlobalLink>
         <div className="flex items-center gap-4">
+          <AppearanceControl />
           <LocaleSwitcher locale={locale} />
           <GlobalLink
             href="/beta"

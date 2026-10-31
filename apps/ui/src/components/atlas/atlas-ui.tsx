@@ -169,7 +169,7 @@ export function ProChip({
       style={
         soft
           ? { background: T.accent.chip, color: T.accent.primary }
-          : { background: T.ink.base }
+          : { background: T.bg.inverse }
       }
     >
       {locked ? <Icon name="lock" size={11} stroke={2.4} /> : null}
@@ -215,9 +215,13 @@ export function Chip({
       : {
           background: T.accent.chip,
           borderColor: T.accent.primary,
-          color: "#3730A3",
+          color: "var(--t-accent-primary-hover)",
         }
-    : { background: "#fff", borderColor: T.border.hi, color: T.ink.base }
+    : {
+        background: "var(--t-bg-deep)",
+        borderColor: T.border.hi,
+        color: T.ink.base,
+      }
 
   return (
     <button
@@ -275,12 +279,12 @@ export function Switch({
         background:
           variant === "layer"
             ? checked
-              ? T.accent.primary
+              ? T.action.primary
               : disabled
                 ? "transparent"
                 : T.bg.deep
             : checked
-              ? T.accent.primary
+              ? T.action.primary
               : locked || disabled
                 ? T.bg.surface
                 : "#fff",
@@ -288,15 +292,15 @@ export function Switch({
           variant === "layer"
             ? checked
               ? "1.5px solid transparent"
-              : `1.5px ${disabled ? "dashed" : "solid"} ${disabled ? T.border.hi : "#8A8799"}`
-            : `1.5px ${locked || disabled ? "dashed" : "solid"} ${checked ? T.accent.primary : "#8A8799"}`,
+              : `1.5px ${disabled ? "dashed" : "solid"} ${disabled ? T.border.hi : "var(--t-ink-low)"}`
+            : `1.5px ${locked || disabled ? "dashed" : "solid"} ${checked ? T.accent.primary : "var(--t-ink-low)"}`,
       }}
     >
       <i
         className="absolute top-[3px] left-[3px] h-[15px] w-[15px] rounded-full transition-transform duration-150 ease-out motion-reduce:transition-none"
         style={{
           transform: checked ? "translateX(16px)" : "translateX(0)",
-          background: checked ? "#fff" : "#8A8799",
+          background: checked ? "#fff" : "var(--t-ink-low)",
           opacity: variant === "layer" && disabled && !checked ? 0 : 1,
         }}
       />
@@ -339,7 +343,7 @@ export function Segmented<V extends string>({
             style={
               on
                 ? {
-                    background: "#fff",
+                    background: "var(--t-bg-deep)",
                     color: T.ink.base,
                     boxShadow: `inset 0 0 0 1px ${T.border.hi}`,
                   }
@@ -453,7 +457,7 @@ export function YearRange({
 
   const pct = (v: number) => ((v - min) / Math.max(1, max - min)) * 100
   const thumb =
-    "pointer-events-none absolute inset-0 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-(--t-accent-primary) [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-(--t-accent-primary) [&::-moz-range-thumb]:bg-white"
+    "pointer-events-none absolute inset-0 w-full appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-(--t-accent-primary) [&::-webkit-slider-thumb]:bg-(--t-bg-deep) [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-(--t-accent-primary) [&::-moz-range-thumb]:bg-(--t-bg-deep)"
 
   return (
     <div className="relative h-5">
@@ -468,7 +472,7 @@ export function YearRange({
         style={{
           left: `${pct(value[0])}%`,
           width: `${pct(value[1]) - pct(value[0])}%`,
-          background: T.accent.primary,
+          background: T.action.primary,
         }}
       />
       <input
@@ -499,6 +503,6 @@ export function YearRange({
 
 /** Card surface used by floating map panels. */
 export const PANEL_STYLE: React.CSSProperties = {
-  background: "#fff",
+  background: "var(--t-bg-deep)",
   border: `1px solid ${T.border.line}`,
 }

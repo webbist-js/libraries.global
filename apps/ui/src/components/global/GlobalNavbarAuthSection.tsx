@@ -1,10 +1,11 @@
 "use client"
 
 import type { ProfileBackground } from "@repo/shared-data"
+import { CircleUserRound } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useRef } from "react"
 
-import { GlobalLoggedUserMenu } from "@/components/global/GlobalLoggedUserMenu"
+import { ProfileDrawerTrigger } from "@/components/profile/ProfileDrawerTrigger"
 import { useHydratedSession } from "@/lib/access-client"
 import type { AuthSessionResult } from "@/lib/auth-server"
 import { Link, useRouter } from "@/lib/navigation"
@@ -12,6 +13,7 @@ import { Link, useRouter } from "@/lib/navigation"
 export function GlobalNavbarAuthSection({
   sessionSSR,
   profileSnippet,
+  presentation = "menu",
 }: {
   sessionSSR?: AuthSessionResult | null
   profileSnippet?: {
@@ -20,6 +22,7 @@ export function GlobalNavbarAuthSection({
     username?: string | null
     isVerifiedLibrarian?: boolean | null
   } | null
+  presentation?: "menu" | "dashboard"
 }) {
   const t = useTranslations("navbar")
 
@@ -48,16 +51,24 @@ export function GlobalNavbarAuthSection({
           …
         </span>
       ) : session?.user ? (
-        <GlobalLoggedUserMenu
+        <ProfileDrawerTrigger
           user={session.user}
           profileSnippet={currentSnippet}
         />
       ) : (
         <Link
           href="/auth/signin"
-          className="px-3 py-2 text-sm text-(--t-ink-dim) transition-colors hover:text-(--t-ink-base)"
+          aria-label={t("actions.signIn")}
+          className={
+            presentation === "dashboard"
+              ? "dashboard-rail-item"
+              : "px-3 py-2 text-sm text-(--t-ink-dim) transition-colors hover:text-(--t-ink-base)"
+          }
         >
-          {t("actions.signIn")}
+          {presentation === "dashboard" ? (
+            <CircleUserRound width={24} height={24} aria-hidden />
+          ) : null}
+          <span>{t("actions.signIn")}</span>
         </Link>
       )}
     </div>

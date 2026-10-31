@@ -153,7 +153,7 @@ export function LibrarySearchBox({
       </label>
       <div
         className={[
-          "flex items-center gap-2 rounded-full bg-white py-1.5 pr-1.5 pl-5 transition-colors focus-within:border-(--t-accent-primary)",
+          "flex items-center gap-2 rounded-full bg-(--t-bg-deep) py-1.5 pr-1.5 pl-5 transition-colors focus-within:border-(--t-accent-primary)",
           strong
             ? "border-2"
             : "border shadow-[0_8px_24px_rgba(23,22,43,0.08)]",
@@ -193,12 +193,12 @@ export function LibrarySearchBox({
           aria-pressed={nearActive}
           className={[
             "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2.5 text-base font-semibold whitespace-nowrap transition-colors sm:px-3.5",
-            nearActive ? "" : "bg-white hover:bg-(--t-bg-muted)",
+            nearActive ? "" : "bg-(--t-bg-deep) hover:bg-(--t-bg-muted)",
           ].join(" ")}
           style={
             nearActive
               ? {
-                  background: T.ink.base,
+                  background: T.bg.inverse,
                   borderColor: T.ink.base,
                   color: "#fff",
                 }
@@ -214,7 +214,7 @@ export function LibrarySearchBox({
         <button
           type="button"
           onClick={submit}
-          className="shrink-0 rounded-full bg-(--t-accent-primary) px-5 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) sm:px-6"
+          className="shrink-0 rounded-full bg-(--t-action-primary) px-5 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) sm:px-6"
         >
           {tUi("search")}{" "}
         </button>
@@ -225,7 +225,7 @@ export function LibrarySearchBox({
           id={listboxId}
           role="listbox"
           aria-label={tUi("search_suggestions")}
-          className="absolute top-[calc(100%+8px)] right-0 left-0 z-30 rounded-2xl border bg-white p-2 shadow-[0_16px_40px_rgba(23,22,43,0.12)]"
+          className="absolute top-[calc(100%+8px)] right-0 left-0 z-30 rounded-2xl border bg-(--t-bg-deep) p-2 shadow-[0_16px_40px_rgba(23,22,43,0.12)]"
           style={{ borderColor: T.border.line }}
         >
           {hits.map((hit, i) => {

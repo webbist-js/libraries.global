@@ -13,7 +13,7 @@ vi.mock("@/lib/strapi-api/content/server", () => ({
   fetchWikiSections: sections,
 }))
 
-import { GET as markdown } from "@/app/[locale]/knowledge/[section]/[slug]/markdown/route"
+import { GET as markdown } from "@/app/[locale]/(dashboard)/knowledge/[section]/[slug]/markdown/route"
 import { GET as llms } from "@/app/llms.txt/route"
 
 const article = {

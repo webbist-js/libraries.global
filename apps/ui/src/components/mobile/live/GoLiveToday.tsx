@@ -21,7 +21,7 @@ import { useMobileClock } from "../useMobileClock"
 import { liveRequest } from "./ConfirmIdentity"
 
 const OUTLINED =
-  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 
 /**
  * "Today and the way in": today's stops with Done / Here now chips from the
@@ -141,8 +141,8 @@ export function GoLiveToday({
                     aria-hidden="true"
                     className="flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums"
                     style={{
-                      background: here ? T.accent.primary : T.bg.muted2,
-                      color: here ? T.bg.deep : T.ink.base,
+                      background: here ? T.action.primary : T.bg.muted2,
+                      color: here ? T.ink.inverse : T.ink.base,
                     }}
                   >
                     {index + 1}
@@ -244,7 +244,7 @@ export function GoLiveToday({
         ) : (
           <div className="grid gap-2.5 sm:flex sm:flex-wrap sm:items-center">
             <a
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-(--t-action-primary) px-5 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
               href={consoleUrl}
             >
               <Icon aria-hidden="true" icon="mdi:circle" width={10} />

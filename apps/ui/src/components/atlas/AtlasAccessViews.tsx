@@ -86,7 +86,7 @@ function AccessKey({
         <span className="flex items-center gap-2">
           <i
             className="h-4 w-5 rounded border border-dashed border-black/30"
-            style={{ background: "#D8D4CA" }}
+            style={{ background: "var(--t-border-hi)" }}
           />
           No data
         </span>
@@ -262,7 +262,7 @@ export function AccessOverview({
           </p>
           <GlobalLink
             href="/community#drives"
-            className="flex min-h-11 items-center self-start rounded-full border bg-white px-4 font-semibold"
+            className="flex min-h-11 items-center self-start rounded-full border bg-(--t-bg-deep) px-4 font-semibold"
             style={{ borderColor: T.border.hi }}
           >
             Join a drive
@@ -302,7 +302,7 @@ export function AccessExplore({
           value={areaQuery}
           placeholder={tUi("try_leeds_or_glasgow")}
           onChange={(event) => setAreaQuery(event.target.value)}
-          className="min-h-12 w-full rounded-2xl border bg-white px-3 font-normal"
+          className="min-h-12 w-full rounded-2xl border bg-(--t-bg-deep) px-3 font-normal"
           style={{ borderColor: T.border.hi }}
         />
       </label>

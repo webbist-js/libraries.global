@@ -28,7 +28,7 @@ export function AuthorBadges({
           icon={badge === "moderator" ? "mdi:shield-check-outline" : undefined}
           style={
             badge === "editorial_board"
-              ? { background: "var(--t-ink-base)", color: "white" }
+              ? { background: "var(--t-bg-inverse)", color: "white" }
               : undefined
           }
         />

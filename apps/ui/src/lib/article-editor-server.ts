@@ -4,6 +4,7 @@ import { createHash } from "node:crypto"
 
 import {
   articleContentVersion,
+  parseArticleSources,
   articleSectionKeys,
   isSupportedLocale,
 } from "@repo/shared-data"
@@ -118,6 +119,9 @@ export function toExistingArticle(
 
   return {
     eventMentions,
+    ...(kind === "journal"
+      ? { sources: parseArticleSources(article.sources) }
+      : {}),
     baseRevision: createHash("sha256")
       .update(articleContentVersion(article))
       .digest("hex"),

@@ -14,7 +14,6 @@ import {
   type ProvisionDirection,
   type SortDirection,
 } from "@/components/atlas/atlas-access-analysis"
-import { ACCESS_GAP } from "@/components/atlas/atlas-map.style"
 import { Icon } from "@/components/atlas/atlas-ui"
 import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
@@ -130,7 +129,7 @@ export function AccessCompare({
             setQuery(event.target.value)
             setPage(0)
           }}
-          className="min-h-[48px] w-full rounded-2xl border bg-white px-3 font-normal focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+          className="min-h-[48px] w-full rounded-2xl border bg-(--t-bg-deep) px-3 font-normal focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
           style={{ borderColor: T.border.hi }}
         />
       </label>
@@ -251,7 +250,9 @@ function ComparisonRow({
         {note ? (
           <small
             className="mt-0.5 block text-xs leading-snug"
-            style={{ color: note === "Few records" ? ACCESS_GAP : T.ink.dim }}
+            style={{
+              color: note === "Few records" ? T.accent.warn : T.ink.dim,
+            }}
           >
             {note}
           </small>
@@ -364,7 +365,7 @@ export function AccessCompareFooter({
         setPage(0)
       }}
       aria-label={`Show all ${total.toLocaleString()} areas in the comparison table`}
-      className="min-h-[48px] w-full rounded-full border bg-white px-4 text-sm font-semibold"
+      className="min-h-[48px] w-full rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold"
       style={{ borderColor: T.border.hi }}
     >
       Show all {total.toLocaleString()}

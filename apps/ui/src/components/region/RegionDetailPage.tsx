@@ -4,14 +4,18 @@ import { cookies } from "next/headers"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { DrivesHere } from "@/components/drives/DrivesHere"
 import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
-import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { FeaturedLibraryCard } from "@/components/library/FeaturedLibraryCard"
 import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
+import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
+import { LIB_ICONS } from "@/components/library/LibrarySectionCard"
 import {
   countNoun,
   formatCount,
@@ -38,6 +42,10 @@ import {
   type HeroMapLibraryPin,
   LocationHeroMap,
 } from "@/components/location/LocationHeroMap"
+import {
+  LocationHierarchy,
+  LocationSidebarCta,
+} from "@/components/location/LocationSidebar"
 import { placeSummary } from "@/components/location/place-summary"
 import { PlaceFeaturedContribution } from "@/components/location/PlaceFeaturedContribution"
 import {
@@ -118,6 +126,7 @@ export async function RegionDetailPage({
   drives?: readonly { view: DriveView; here: number }[] | null
 }) {
   const tUi = await getUiTranslations("ui")
+  const d = await getUiTranslations("dashboard")
 
   const name = region.name ?? ""
   const place = { continent: continentSlug, country: countrySlug, region: slug }
@@ -237,7 +246,6 @@ export async function RegionDetailPage({
       ? `Nearby ${lowerFirst(labels.plural)}`
       : `More in ${countryName ?? "this country"}`
 
-  const areaFirst = libraryCount >= 60
   const areaBrowser = region.areas?.length ? (
     <LocationChildBrowser
       id="areas"
@@ -267,17 +275,102 @@ export async function RegionDetailPage({
     />
   ) : null
 
-  return (
-    <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.void, color: T.ink.base }}
-    >
-      <GlobalHeader locale={locale} />
+  const dashboardContext = (
+    <>
+      <DrivesHere
+        placeName={name}
+        items={drives}
+        addHref={addHref}
+        proposeHref={proposeHref({ places: { region: [slug] } })}
+      />
+      <PlaceFeaturedContribution
+        gaps={gapRows}
+        level="region"
+        slug={slug}
+        name={name}
+        place={place}
+        childPlaces={region.areas ?? []}
+        siblingPlaces={region.siblings ?? []}
+        childNoun={areaLabels.singular}
+        childrenAvailable={childrenAvailable}
+        drives={[]}
+        task={
+          commonestGap
+            ? {
+                gapKey: commonestGap.key,
+                title:
+                  commonestGap.key === "hours"
+                    ? `Help people plan a visit to a library in ${name}.`
+                    : `Help fill a gap in ${name}`,
+                description: `${formatCount(commonestGap.count)} records need ${GAP_DEFS.find((gap) => gap.key === commonestGap.key)?.label.toLowerCase() ?? commonestGap.key}. Choose a library you know and add a source.`,
+                label: "Find a library to improve",
+                href: `/libraries?region=${encodeURIComponent(slug)}&needs=${commonestGap.key}`,
+              }
+            : null
+        }
+      />
+    </>
+  )
 
-      <MainContent id="main" className="relative z-10 flex-1">
-        <LocationHero
-          untranslatedLocale={untranslatedLocale}
-          breadcrumbLabels={{
+  const sectionItems = [
+    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+
+    { href: "#libraries", label: "Libraries", icon: LIB_ICONS.list },
+    { href: "#areas", label: areaLabels.plural, icon: LIB_ICONS.pin },
+    {
+      href: "#drives-here",
+      label: d("getInvolved"),
+      icon: LIB_ICONS.people,
+    },
+  ]
+
+  return (
+    <DashboardPage
+      mobileSections={sectionItems}
+      routeKey={basePath}
+      title={name}
+      navigationHeading={
+        <RecordContextIdentity
+          title={name}
+          eyebrow={region.typeLabel?.trim() || labels.name}
+          parent={{
+            href: `/${continentSlug}/${countrySlug}`,
+            label: countryName ?? countrySlug,
+          }}
+        >
+          <p className="record-context-summary">
+            {countsAvailable ? (
+              <>
+                {formatCount(libraryCount)}{" "}
+                {countNoun(libraryCount, tUi("library"), tUi("libraries"))}
+                {childrenAvailable ? (
+                  <>
+                    {" "}
+                    ·{" "}
+                    {(region.areas?.length ?? 0) +
+                      " " +
+                      lowerFirst(areaLabels.plural)}
+                  </>
+                ) : null}
+              </>
+            ) : (
+              "Library counts unavailable"
+            )}
+          </p>
+        </RecordContextIdentity>
+      }
+      navigationFooter={
+        <LocationSidebarCta
+          name={name}
+          addHref={addHref}
+          proposeHref={proposeHref({ places: { region: [slug] } })}
+        />
+      }
+      eyebrow="Region"
+      className="dashboard-place-record"
+      toolbar={
+        <RecordToolbar
+          labels={{
             ...(continentSlug && continentName
               ? { [continentSlug]: continentName }
               : {}),
@@ -286,40 +379,10 @@ export async function RegionDetailPage({
               : {}),
             [slug]: name,
           }}
-          typeLabel={region.typeLabel?.trim() || labels.name}
-          typeIcon="mdi:map-outline"
-          title={name}
-          contribution={
-            <PlaceFeaturedContribution
-              gaps={gapRows}
-              level="region"
-              slug={slug}
-              name={name}
-              place={place}
-              childPlaces={region.areas ?? []}
-              siblingPlaces={region.siblings ?? []}
-              childNoun={areaLabels.singular}
-              childrenAvailable={childrenAvailable}
-              drives={drives}
-              task={
-                commonestGap
-                  ? {
-                      gapKey: commonestGap.key,
-                      title:
-                        commonestGap.key === "hours"
-                          ? `Help people plan a visit to a library in ${name}.`
-                          : `Help fill a gap in ${name}`,
-                      description: `${formatCount(commonestGap.count)} records need ${GAP_DEFS.find((gap) => gap.key === commonestGap.key)?.label.toLowerCase() ?? commonestGap.key}. Choose a library you know and add a source.`,
-                      label: "Find a library to improve",
-                      href: `/libraries?region=${encodeURIComponent(slug)}&needs=${commonestGap.key}`,
-                    }
-                  : null
-              }
-            />
-          }
-          intro={intro}
-          stats={stats}
-          search={{ level: "region", slug }}
+        />
+      }
+      overview={
+        <LocationHero
           aside={
             hasMap ? (
               <LocationHeroMap
@@ -339,163 +402,204 @@ export async function RegionDetailPage({
               />
             ) : undefined
           }
+          search={{ level: "region", slug }}
+          untranslatedLocale={untranslatedLocale}
+          typeLabel={region.typeLabel?.trim() || labels.name}
+          typeIcon="mdi:map-outline"
+          title={name}
+          intro={intro}
+          stats={stats}
         />
+      }
+      context={dashboardContext}
+      navigation={
+        <>
+          <LibraryAnchorNav sidebar items={sectionItems} />
+          <LocationHierarchy
+            entries={[
+              {
+                href: `/${continentSlug}`,
+                label: continentName ?? continentSlug,
+              },
+              {
+                href: `/${continentSlug}/${countrySlug}`,
+                label: countryName ?? countrySlug,
+                depth: 1,
+              },
+              {
+                href: basePath,
+                label: name,
+                current: true,
+                depth: 2,
+                count: countsAvailable ? libraryCount : undefined,
+              },
+              ...libraries.slice(0, 8).map((lib) => ({
+                href: `${basePath}/${lib.slug}`,
+                label: lib.name,
+                depth: 3,
+              })),
+            ]}
+          />
+        </>
+      }
+    >
+      <div
+        className="relative isolate flex min-h-0 w-full flex-col"
+        style={{ background: T.bg.void, color: T.ink.base }}
+      >
+        <MainContent id="main" className="relative z-10 flex-1">
+          <Container>
+            <div className="record-section-stack flex flex-col">
+              <div>
+                <section id="libraries" className="scroll-mt-24">
+                  <LocationSectionHeading title={`Libraries in ${name}`} />
+                  {libraries.length === 0 ? (
+                    <p
+                      className="mt-0 mb-4 text-base"
+                      style={{ color: T.ink.dim }}
+                    >
+                      {countsAvailable &&
+                      region.statistics?.preview !== false &&
+                      libraryCount === 0
+                        ? `No libraries in ${name} are documented yet.`
+                        : "Library results are temporarily unavailable. Use Find libraries to try again."}
+                    </p>
+                  ) : null}
+                  <RegionLibraryList
+                    addHref={addHref}
+                    regionName={name}
+                    basePath={basePath}
+                    libraries={libraries}
+                    featuredIds={nationalLibraries.map(
+                      (library) => library.documentId
+                    )}
+                    typeCounts={Object.fromEntries(
+                      (region.libraryTypeCounts ?? []).map((row) => [
+                        row.type,
+                        row.count,
+                      ])
+                    )}
+                    nearby={
+                      nearby.items.length > 0 ? (
+                        <NearbyRegions
+                          title={nearbyTitle}
+                          regions={nearby.items}
+                          basePath={`/${continentSlug}/${countrySlug}`}
+                        />
+                      ) : null
+                    }
+                    gapsBySlug={gapsBySlug}
+                    gapCounts={gapCounts?.gaps}
+                    total={libraryCount}
+                    countsAvailable={countsAvailable}
+                    findHref={`/libraries?region=${encodeURIComponent(slug)}`}
+                  />
+                </section>
+              </div>
 
-        <Container>
-          <div className="flex flex-col gap-16 pt-14 pb-20">
-            {countsAvailable ? (
-              <PlaceInsights
-                gapRows={gapRows}
-                name={name}
-                level="region"
-                slug={slug}
-                total={libraryCount}
-                types={region.libraryTypeCounts}
-                typesAvailable={region.statistics?.types !== false}
-                childrenAvailable={
-                  childrenAvailable &&
-                  (region.areas ?? []).every(
-                    (child) => child.placeBasedCount !== undefined
-                  )
-                }
-                childPlaces={(region.areas ?? []).map((child) => ({
-                  slug: child.slug,
-                  name: child.name,
-                  count: child.placeBasedCount ?? 0,
-                }))}
-              />
-            ) : null}
-            {areaFirst ? areaBrowser : null}
+              {nationalLibraries.length > 0 ? (
+                <section
+                  id="national-libraries"
+                  aria-label={`National libraries in ${name}`}
+                >
+                  <LocationSectionHeading
+                    title={`National libraries in ${name}`}
+                    description="Explore the national libraries documented in this region."
+                  />
+                  <ul className="m-0 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 xl:grid-cols-3">
+                    {nationalLibraries.map((library, index) => (
+                      <li key={library.documentId}>
+                        <FeaturedLibraryCard
+                          name={library.name}
+                          libraryType={libraryTypeName(library.libraryType)}
+                          city={library.city}
+                          countryName={countryName}
+                          imageUrl={library.heroImage?.url}
+                          openingTimes={
+                            library.openingTimes as OpeningTimesValue | null
+                          }
+                          href={`${basePath}/${library.slug}`}
+                          index={index}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  {(nationalSelection?.total ?? 0) >
+                  nationalLibraries.length ? (
+                    <GlobalLink
+                      href={`/libraries?region=${encodeURIComponent(slug)}&type=National`}
+                      className="mt-5 inline-flex min-h-11 items-center font-semibold underline underline-offset-3"
+                      style={{ color: T.accent.primary }}
+                    >
+                      See all {formatCount(nationalSelection?.total ?? 0)}{" "}
+                      national libraries in {name}
+                    </GlobalLink>
+                  ) : null}
+                </section>
+              ) : null}
 
-            {nationalLibraries.length > 0 ? (
-              <section aria-label={`National libraries in ${name}`}>
-                <LocationSectionHeading
-                  title={`National libraries in ${name}`}
-                  description="Explore the national libraries documented in this region."
-                />
-                <ul className="m-0 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 xl:grid-cols-3">
-                  {nationalLibraries.map((library, index) => (
-                    <li key={library.documentId}>
-                      <FeaturedLibraryCard
-                        name={library.name}
-                        libraryType={libraryTypeName(library.libraryType)}
-                        city={library.city}
-                        countryName={countryName}
-                        imageUrl={library.heroImage?.url}
-                        openingTimes={
-                          library.openingTimes as OpeningTimesValue | null
-                        }
-                        href={`${basePath}/${library.slug}`}
-                        index={index}
-                      />
-                    </li>
-                  ))}
-                </ul>
-                {(nationalSelection?.total ?? 0) > nationalLibraries.length ? (
-                  <GlobalLink
-                    href={`/libraries?region=${encodeURIComponent(slug)}&type=National`}
-                    className="mt-5 inline-flex min-h-11 items-center font-semibold underline underline-offset-3"
-                    style={{ color: T.accent.primary }}
-                  >
-                    See all {formatCount(nationalSelection?.total ?? 0)}{" "}
-                    national libraries in {name}
-                  </GlobalLink>
-                ) : null}
-              </section>
-            ) : null}
+              {areaBrowser}
 
-            <div>
-              <section id="libraries" className="scroll-mt-24">
-                <LocationSectionHeading title={`Libraries in ${name}`} />
-                {libraries.length === 0 ? (
-                  <p
-                    className="mt-0 mb-4 text-base"
-                    style={{ color: T.ink.dim }}
-                  >
-                    {countsAvailable &&
-                    region.statistics?.preview !== false &&
-                    libraryCount === 0
-                      ? `No libraries in ${name} are documented yet.`
-                      : "Library results are temporarily unavailable. Use Find libraries to try again."}
-                  </p>
-                ) : null}
-                <RegionLibraryList
-                  addHref={addHref}
-                  regionName={name}
-                  basePath={basePath}
-                  libraries={libraries}
-                  featuredIds={nationalLibraries.map(
-                    (library) => library.documentId
-                  )}
-                  typeCounts={Object.fromEntries(
-                    (region.libraryTypeCounts ?? []).map((row) => [
-                      row.type,
-                      row.count,
-                    ])
-                  )}
-                  nearby={
-                    nearby.items.length > 0 ? (
-                      <NearbyRegions
-                        title={nearbyTitle}
-                        regions={nearby.items}
-                        basePath={`/${continentSlug}/${countrySlug}`}
-                      />
-                    ) : null
-                  }
-                  gapsBySlug={gapsBySlug}
-                  gapCounts={gapCounts?.gaps}
+              {countsAvailable ? (
+                <PlaceInsights
+                  gapRows={gapRows}
+                  name={name}
+                  level="region"
+                  slug={slug}
                   total={libraryCount}
-                  countsAvailable={countsAvailable}
-                  findHref={`/libraries?region=${encodeURIComponent(slug)}`}
+                  types={region.libraryTypeCounts}
+                  typesAvailable={region.statistics?.types !== false}
+                  childrenAvailable={
+                    childrenAvailable &&
+                    (region.areas ?? []).every(
+                      (child) => child.placeBasedCount !== undefined
+                    )
+                  }
+                  childPlaces={(region.areas ?? []).map((child) => ({
+                    slug: child.slug,
+                    name: child.name,
+                    count: child.placeBasedCount ?? 0,
+                  }))}
                 />
-              </section>
+              ) : null}
+
+              <LocationEventsStrip regionSlug={slug} locationLabel={name} />
+              <MobilePlaceStops level="region" slug={slug} name={name} />
+
+              {hasQuickLinks ? (
+                <section className="scroll-mt-24">
+                  <LocationSectionHeading title={tUi("quick_links")} />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {region.quickLinks!.map((link, i) => (
+                      <QuickLinkCard
+                        key={((link as { id?: unknown }).id as string) ?? i}
+                        link={link}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              <LocationHelpPanel
+                addHref={addHref}
+                name={name}
+                body={helpBody}
+                actions={locationHelpActions({
+                  hoursLibrary: asWizardLibrary(firstWith("hours")),
+                  photoLibrary: asWizardLibrary(firstWith("photo")),
+                  propose: {
+                    placeName: name,
+                    href: proposeHref({
+                      places: { region: [slug] },
+                      ...(commonestGap ? { gaps: [commonestGap.key] } : {}),
+                    }),
+                  },
+                })}
+              />
             </div>
-
-            {!areaFirst ? areaBrowser : null}
-
-            <LocationEventsStrip regionSlug={slug} locationLabel={name} />
-            <MobilePlaceStops level="region" slug={slug} name={name} />
-
-            {hasQuickLinks ? (
-              <section className="scroll-mt-24">
-                <LocationSectionHeading title={tUi("quick_links")} />
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {region.quickLinks!.map((link, i) => (
-                    <QuickLinkCard
-                      key={((link as { id?: unknown }).id as string) ?? i}
-                      link={link}
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            <DrivesHere
-              placeName={name}
-              items={drives}
-              addHref={addHref}
-              proposeHref={proposeHref({ places: { region: [slug] } })}
-            />
-
-            <LocationHelpPanel
-              addHref={addHref}
-              name={name}
-              body={helpBody}
-              actions={locationHelpActions({
-                hoursLibrary: asWizardLibrary(firstWith("hours")),
-                photoLibrary: asWizardLibrary(firstWith("photo")),
-                propose: {
-                  placeName: name,
-                  href: proposeHref({
-                    places: { region: [slug] },
-                    ...(commonestGap ? { gaps: [commonestGap.key] } : {}),
-                  }),
-                },
-              })}
-            />
-          </div>
-        </Container>
-      </MainContent>
-    </div>
+          </Container>
+        </MainContent>
+      </div>
+    </DashboardPage>
   )
 }

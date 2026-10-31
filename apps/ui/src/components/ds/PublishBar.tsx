@@ -2,8 +2,8 @@
 import { Icon } from "@iconify/react"
 import type { ReactNode } from "react"
 
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { T } from "@/lib/design-tokens"
-import { primaryCtaSm } from "@/lib/styles"
 
 /**
  * The staff editors' publish control. With unpublished changes it is a
@@ -65,7 +65,7 @@ export function PublishBar({
             type="button"
             onClick={onDiscard}
             disabled={busy || !count}
-            className="inline-flex min-h-11 items-center rounded-full border bg-white px-5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+            className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-(--t-bg-deep)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             Discard

@@ -31,7 +31,7 @@ export function LibraryAboutDisclosure({
           <DialogTrigger asChild>
             <button
               type="button"
-              className="inline-flex min-h-11 cursor-pointer items-center rounded-full border bg-white px-4 font-semibold transition-colors hover:border-(--t-accent-primary) hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+              className="inline-flex min-h-11 cursor-pointer items-center rounded-full border bg-(--t-bg-deep) px-4 font-semibold transition-colors hover:border-(--t-accent-primary) hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
               style={{ borderColor: T.border.hi, color: T.ink.base }}
             >
               {label}

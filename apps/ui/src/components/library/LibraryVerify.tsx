@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { type FormEvent, useEffect, useId, useRef, useState } from "react"
 
+import { PRIMARY, SECONDARY } from "@/components/contribute/wizard-ui"
 import type { WizardLibrary } from "@/components/contribute/wizard.logic"
 import {
   availableSections,
@@ -22,12 +23,7 @@ import { Link } from "@/lib/navigation"
 /** The library the drawer is open on, with the values a reader confirms. */
 export type VerifyLibrary = WizardLibrary & VerifyRecord
 
-// The correction drawer's own button styles (ContributionWizard).
-const PRIMARY =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-base font-semibold transition-colors"
-const SECONDARY =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-white px-5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface)"
-const CTA = `${PRIMARY} bg-(--t-accent-primary) text-white no-underline hover:bg-(--t-accent-primary-hover)`
+const CTA = `${PRIMARY} bg-(--t-action-primary) text-white no-underline hover:bg-(--t-action-primary-hover)`
 
 /**
  * "Is this still right?": the correction drawer's confirm panel. A reader
@@ -129,7 +125,7 @@ export function LibraryVerify({
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div
           role="status"
-          className="mx-auto flex w-full max-w-[640px] flex-col items-start gap-3 px-5 py-7 sm:px-8"
+          className="flex w-full flex-col items-start gap-3 px-5 py-6 sm:px-6"
         >
           <span
             aria-hidden="true"
@@ -178,7 +174,7 @@ export function LibraryVerify({
       onSubmit={send}
     >
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-[640px] flex-col gap-6 px-5 py-7 sm:px-8">
+        <div className="flex w-full flex-col gap-6 px-5 py-6 sm:px-6">
           <div>
             <h3
               id={`${id}-title`}
@@ -226,7 +222,7 @@ export function LibraryVerify({
             className={`${PRIMARY} ${
               sending
                 ? "cursor-not-allowed"
-                : "bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)"
+                : "bg-(--t-action-primary) text-white hover:bg-(--t-action-primary-hover)"
             }`}
             style={
               sending

@@ -141,16 +141,91 @@ export function NetworkWorkspace({
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
       <div className="space-y-6">
-        <StaffPanel title="Find your institution" compact>
-          <p className="mb-5 text-sm text-(--t-ink-dim)">
-            Connect your work with a library service or network. Choose an
-            institution to verify your affiliation or request management access.
+        {!workspace && !error ? (
+          <p role="status" className="text-(--t-ink-dim)">
+            Loading your service access…
           </p>
-          <NetworkPicker
-            onSelect={(row) => {
-              void choose(row.documentId)
+        ) : null}
+        {workspace?.mandates.map((mandate) => (
+          <NetworkMandateCard
+            key={`${mandate.documentId}:${mandate.version}`}
+            mandate={mandate}
+            onChanged={refresh}
+            onAdditions={() => {
+              void choose(
+                mandate.network.documentId,
+                mandate.additionsAwaitingReview,
+                mandate.documentId
+              )
             }}
           />
+        ))}
+        {workspace?.requests.length ? (
+          <StaffPanel title="Service access requests" compact>
+            {workspace?.requests.map((row) => (
+              <div
+                key={row.documentId}
+                className="border-b border-(--t-border-line) py-3"
+              >
+                <h3 className="type-h3">{row.fields.networkName}</h3>
+                <p>
+                  {row.fields.intent === "employment"
+                    ? "Affiliation"
+                    : "Management access"}{" "}
+                  · {reviewStatus(row.status)} · {row.fields.libraryIds.length}{" "}
+                  libraries
+                </p>
+                {row.reviewNote ? <p>{row.reviewNote}</p> : null}
+                {row.status === "needs_info" ? (
+                  <button
+                    type="button"
+                    className={STAFF_LINK}
+                    onClick={() => {
+                      void choose(
+                        row.fields.networkId,
+                        undefined,
+                        row.fields.mandateId ?? undefined,
+                        row.fields
+                      )
+                    }}
+                  >
+                    Update and resubmit this request
+                  </button>
+                ) : null}
+              </div>
+            ))}
+            <SidebarLinks flushEnd>
+              <li>
+                <Link className={STAFF_LINK} href="/contribute/submissions">
+                  Your submissions
+                </Link>
+              </li>
+            </SidebarLinks>
+          </StaffPanel>
+        ) : null}
+        <StaffPanel
+          title={
+            workspace &&
+            (workspace.affiliations.length ||
+              workspace.mandates.length ||
+              workspace.requests.length)
+              ? "Find another service or network"
+              : "Find your service or network"
+          }
+          compact
+        >
+          <div className="grid gap-5">
+            <p className="m-0 max-w-[66ch] text-sm leading-relaxed text-(--t-ink-dim)">
+              Connect your work with a library service or network. Choose an
+              institution to verify your affiliation or request management
+              access.
+            </p>
+            <NetworkPicker
+              onSelect={(row) => {
+                void choose(row.documentId)
+              }}
+            />
+          </div>
         </StaffPanel>
         {error ? (
           <div role="alert">
@@ -191,23 +266,13 @@ export function NetworkWorkspace({
             />
           </StaffPanel>
         ) : null}
-        {workspace?.mandates.map((mandate) => (
-          <NetworkMandateCard
-            key={`${mandate.documentId}:${mandate.version}`}
-            mandate={mandate}
-            onChanged={refresh}
-            onAdditions={() => {
-              void choose(
-                mandate.network.documentId,
-                mandate.additionsAwaitingReview,
-                mandate.documentId
-              )
-            }}
-          />
-        ))}
       </div>
       <aside className="space-y-6">
         <StaffPanel title="Your affiliations" compact>
+          <p className="mt-0 text-sm text-(--t-ink-dim)">
+            Affiliation verifies where you work. Management access is reviewed
+            separately.
+          </p>
           {workspace && !workspace.affiliations.length ? (
             <p className="mb-4 text-base text-(--t-ink-dim)">
               No affiliations yet. Verified connections can appear on your
@@ -230,7 +295,7 @@ export function NetworkWorkspace({
               </p>
             </div>
           ))}
-          <SidebarLinks>
+          <SidebarLinks flushEnd>
             <li>
               <Link className={STAFF_LINK} href="/profile/settings">
                 Manage profile affiliations
@@ -238,54 +303,11 @@ export function NetworkWorkspace({
             </li>
           </SidebarLinks>
         </StaffPanel>
-        <StaffPanel title="Grouped requests" compact>
-          {workspace && !workspace.requests.length ? (
-            <p className="mb-4 text-base text-(--t-ink-dim)">
-              Your service requests will appear here with their review status.
-            </p>
-          ) : null}
-          {workspace?.requests.map((row) => (
-            <div
-              key={row.documentId}
-              className="border-b border-(--t-border-line) py-3"
-            >
-              <h3 className="type-h3">{row.fields.networkName}</h3>
-              <p>
-                {row.fields.intent === "employment"
-                  ? "Affiliation"
-                  : "Management access"}{" "}
-                · {reviewStatus(row.status)} · {row.fields.libraryIds.length}{" "}
-                libraries
-              </p>
-              {row.reviewNote ? <p>{row.reviewNote}</p> : null}
-              {row.status === "needs_info" ? (
-                <button
-                  type="button"
-                  className={STAFF_LINK}
-                  onClick={() => {
-                    void choose(
-                      row.fields.networkId,
-                      undefined,
-                      row.fields.mandateId ?? undefined,
-                      row.fields
-                    )
-                  }}
-                >
-                  Update and resubmit this request
-                </button>
-              ) : null}
-            </div>
-          ))}
-          <SidebarLinks>
-            <li>
-              <Link className={STAFF_LINK} href="/contribute/submissions">
-                Your submissions
-              </Link>
-            </li>
-          </SidebarLinks>
-        </StaffPanel>
-        <StaffPanel title="How access works" compact>
-          <ul className="m-0 list-none space-y-5 p-0">
+        <details className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
+          <summary className="min-h-11 cursor-pointer font-semibold text-(--t-ink-base)">
+            How access works
+          </summary>
+          <ul className="m-0 mt-4 list-none space-y-5 p-0">
             {[
               {
                 icon: "mdi:account-check-outline",
@@ -319,7 +341,7 @@ export function NetworkWorkspace({
               </li>
             ))}
           </ul>
-        </StaffPanel>
+        </details>
       </aside>
     </div>
   )

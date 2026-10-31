@@ -38,6 +38,7 @@ export function SocialLinksEditor({
           }}
         >
           <select
+            aria-label={`${tUi("social_media")} ${i + 1}`}
             value={link.platform}
             onChange={(e) => updateLink(i, { platform: e.target.value })}
             style={{
@@ -53,6 +54,7 @@ export function SocialLinksEditor({
             ))}
           </select>
           <input
+            aria-label={`${tUi("link_url")} ${i + 1}`}
             type="url"
             value={link.url}
             onChange={(e) => updateLink(i, { url: e.target.value })}
@@ -64,8 +66,8 @@ export function SocialLinksEditor({
             onClick={() => removeLink(i)}
             aria-label={tUi("remove_social_link")}
             style={{
-              width: "34px",
-              height: "34px",
+              width: "44px",
+              height: "44px",
               borderRadius: "6px",
               border: `1px solid ${T.border.line}`,
               background: "transparent",

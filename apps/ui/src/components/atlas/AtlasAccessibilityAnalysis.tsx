@@ -243,7 +243,7 @@ export function AtlasAccessibilityAnalysis({
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    className="min-h-11 w-full rounded-xl border bg-white px-3 font-normal"
+                    className="min-h-11 w-full rounded-xl border bg-(--t-bg-deep) px-3 font-normal"
                     style={{ borderColor: T.border.hi }}
                   />
                 </label>
@@ -351,7 +351,7 @@ export function AtlasAccessibilityAnalysis({
                   style={
                     view === value
                       ? {
-                          background: "#fff",
+                          background: "var(--t-bg-deep)",
                           color: T.ink.base,
                           boxShadow: `inset 0 0 0 1px ${T.border.hi}`,
                         }
@@ -393,7 +393,7 @@ export function AtlasAccessibilityAnalysis({
               onClick={() => listLibraries()}
               disabled={!onList || shownCount === 0}
               className="min-h-11 flex-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-50"
-              style={{ background: T.accent.primary, color: "#fff" }}
+              style={{ background: T.action.primary, color: "#fff" }}
             >
               List these libraries
             </button>
@@ -428,7 +428,7 @@ export function AtlasAccessibilityAnalysis({
                         exportLibraries.map((library) => library.id)
                     )
                   }}
-                  className="flex min-h-12 w-full items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left text-sm font-semibold disabled:opacity-50"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-xl border bg-(--t-bg-deep) px-4 py-3 text-left text-sm font-semibold disabled:opacity-50"
                   style={{ borderColor: T.border.hi }}
                 >
                   {busy ? "Downloading…" : "Download CSV"}{" "}
@@ -476,7 +476,7 @@ export function AtlasAccessibilityAnalysis({
                 type="button"
                 disabled={!onList}
                 onClick={() => listLibraries("gaps")}
-                className="min-h-11 self-start rounded-full border bg-white px-4 font-semibold"
+                className="min-h-11 self-start rounded-full border bg-(--t-bg-deep) px-4 font-semibold"
                 style={{ borderColor: T.border.hi }}
               >
                 Help fill them

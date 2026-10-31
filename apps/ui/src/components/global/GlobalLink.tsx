@@ -9,6 +9,7 @@ interface GlobalLinkProps extends Omit<
 > {
   readonly href?: string | null
   readonly fallbackAs?: "div" | "span"
+  readonly publicProfile?: boolean
 }
 
 export function GlobalLink({
@@ -18,6 +19,7 @@ export function GlobalLink({
   target,
   rel,
   fallbackAs = "span",
+  publicProfile,
   ...props
 }: GlobalLinkProps) {
   const formattedHref = formatHref(href ? membershipLink(href) : href)
@@ -38,7 +40,12 @@ export function GlobalLink({
 
   if (isAppLink(formattedHref)) {
     return (
-      <Link href={formattedHref} className={className} {...props}>
+      <Link
+        href={formattedHref}
+        publicProfile={publicProfile}
+        className={className}
+        {...props}
+      >
         {children}
       </Link>
     )

@@ -6,6 +6,7 @@ import { LIB_ICONS } from "@/components/library/LibrarySectionCard"
 export interface AnchorItem {
   href: string
   label: string
+  count?: string | number
   icon: string
   /** Marks a section with Pro analysis in it. */
   pro?: boolean

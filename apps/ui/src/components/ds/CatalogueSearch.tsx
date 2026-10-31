@@ -73,7 +73,7 @@ export function CatalogueSearch<T extends Option>({
   }
 
   return (
-    <div className="min-w-0 space-y-2">
+    <div className="flex min-w-0 flex-col gap-2.5">
       <p id={`${id}-label`} className="m-0 text-sm font-semibold">
         {label}
       </p>

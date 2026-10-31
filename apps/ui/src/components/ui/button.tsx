@@ -1,23 +1,27 @@
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { cloneElement, isValidElement, type ReactNode } from "react"
 import type * as React from "react"
 
 import { Spinner } from "@/components/elementary/Spinner"
 import { cn } from "@/lib/styles"
 
 const buttonStyles = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium no-underline transition-colors motion-reduce:transition-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     // Don't forget to keep in sync with Link component (LinkDecorations) in Strapi
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default:
+          "bg-(--t-action-primary) text-primary-foreground hover:bg-(--t-action-primary-hover)",
         primary:
-          "border border-transparent bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover) focus-visible:ring-(--t-accent-primary)/50",
+          "border border-transparent bg-(--t-action-primary) text-white hover:bg-(--t-action-primary-hover) focus-visible:ring-(--t-accent-primary)/50",
         surface:
           "border border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface) focus-visible:ring-(--t-accent-primary)/50",
+        inverse:
+          "border border-white/25 bg-transparent text-white hover:bg-white/10 focus-visible:ring-white/70",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-(--t-action-danger) text-white hover:bg-(--t-action-danger)/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
@@ -32,6 +36,8 @@ const buttonStyles = cva(
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         pill: "h-auto min-h-[44px] rounded-full px-6 py-3 text-base font-semibold whitespace-normal",
+        "pill-sm":
+          "h-auto min-h-11 rounded-full px-4 py-2 text-sm font-semibold whitespace-normal",
         "pill-lg":
           "h-auto min-h-[56px] rounded-full px-6 py-3 text-base font-semibold whitespace-normal",
         icon: "size-9",
@@ -58,6 +64,8 @@ function Button({
   size = "default",
   asChild = false,
   isLoading = false,
+  children,
+  disabled,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
@@ -65,19 +73,46 @@ function Button({
     isLoading?: boolean
   }) {
   const Comp = asChild ? Slot : "button"
-
-  if (isLoading) {
-    props.children = <Spinner className="h-4 w-4 border-2" />
-  }
+  const unavailable = disabled || isLoading
+  const loadingContent = (label: ReactNode) => (
+    <>
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-center"
+      >
+        <Spinner
+          className="h-4 w-4 border-2"
+          borderColorClass="border-current"
+        />
+      </span>
+      <span className="opacity-0">{label}</span>
+    </>
+  )
+  // Slot needs one element. Keep its link/content intact while preserving the name.
+  const content = isLoading
+    ? asChild && isValidElement<{ children?: ReactNode }>(children)
+      ? cloneElement(children, {}, loadingContent(children.props.children))
+      : loadingContent(children)
+    : children
 
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={buttonVariants({ variant, size, className })}
       {...props}
-    />
+      className={buttonVariants({
+        variant,
+        size,
+        className: cn(isLoading && "relative", className),
+      })}
+      disabled={asChild ? undefined : unavailable}
+      aria-busy={isLoading || props["aria-busy"]}
+      aria-disabled={unavailable || props["aria-disabled"]}
+      inert={asChild && unavailable ? true : undefined}
+    >
+      {content}
+    </Comp>
   )
 }
 

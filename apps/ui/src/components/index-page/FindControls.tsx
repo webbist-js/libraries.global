@@ -153,7 +153,7 @@ export function FindFilterChips({
             aria-label={`Remove filter: ${chip.label}`}
             onClick={chip.onRemove}
             className="flex size-5 cursor-pointer items-center justify-center rounded-full border-0 text-sm"
-            style={{ background: "#fff", color: T.ink.dim }}
+            style={{ background: "var(--t-bg-deep)", color: T.ink.dim }}
           >
             ×
           </button>
@@ -284,7 +284,7 @@ export function FindResultsControls({
               onClick={() => onChange({ view: v.key })}
               className="flex size-9 cursor-pointer items-center justify-center rounded-full border-0"
               style={{
-                background: active ? T.ink.base : "transparent",
+                background: active ? T.bg.inverse : "transparent",
               }}
             >
               <svg

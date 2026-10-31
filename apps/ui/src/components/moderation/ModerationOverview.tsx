@@ -39,7 +39,7 @@ export function ModerationOverview({
             <Link
               key={view.id}
               href={view.href}
-              className="group flex min-w-0 flex-col gap-4 rounded-[24px] border border-(--t-border-line) bg-white p-6 text-(--t-ink-base) no-underline hover:border-[#b9b4f5] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
+              className="group flex min-w-0 flex-col gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-6 text-(--t-ink-base) no-underline hover:border-[#b9b4f5] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
             >
               <div className="flex items-center gap-3">
                 <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">

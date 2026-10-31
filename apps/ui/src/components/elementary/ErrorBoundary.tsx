@@ -48,7 +48,7 @@ function ErrorBoundaryFallback({
         )}
 
         {isDev && (
-          <div className="mt-2 w-full overflow-x-auto bg-gray-100 p-3 text-xs">
+          <div className="mt-2 w-full overflow-x-auto bg-(--t-bg-muted) p-3 text-xs">
             <pre>{error.stack?.split("\n").slice(0, 5).join("\n")}</pre>
           </div>
         )}

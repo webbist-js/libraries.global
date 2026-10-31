@@ -18,7 +18,7 @@ export function staffPath(pathname: string): string | null {
 
 /**
  * Forwards a staff page's own path to its server components as the
- * `x-pathname` request header (read by `app/[locale]/staff/_lib/
+ * `x-pathname` request header (read by `app/[locale]/(dashboard)/staff/_lib/
  * staff-pathname.ts`), so a signed-out deep link comes back to the same
  * tab. The header is always dropped from the incoming request first: only
  * the proxy sets it. Every response goes through `liveSecurityResponse`,

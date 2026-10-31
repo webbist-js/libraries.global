@@ -11,6 +11,7 @@ import {
   libraryPathOf,
   providerLabel,
 } from "@/components/events/event-display"
+import { EventListSkeleton } from "@/components/events/EventListSkeleton"
 import {
   EVENT_TYPE_META,
   eventTypeKey,
@@ -147,20 +148,7 @@ export function EventsAgenda({
   const t = useUiTranslations("eventListing")
   const locale = useLocale()
   if (loading) {
-    return (
-      <div aria-busy="true" className="flex flex-col gap-3">
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="h-[92px] animate-pulse rounded-[18px] motion-reduce:animate-none"
-            style={{
-              background: T.bg.muted,
-              border: `1px solid ${T.border.line}`,
-            }}
-          />
-        ))}
-      </div>
-    )
+    return <EventListSkeleton />
   }
 
   if (events.length === 0) {
@@ -194,7 +182,7 @@ export function EventsAgenda({
             <>
               <GlobalLink
                 href="/knowledge/events/event-feeds"
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-action-primary) px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover)"
               >
                 {t("feedGuide")}
                 <Icon aria-hidden="true" icon="mdi:arrow-right" width={18} />

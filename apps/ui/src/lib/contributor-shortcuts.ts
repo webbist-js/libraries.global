@@ -134,9 +134,6 @@ export function selectedLibrary<L extends ShortcutLibrary>(
 
 const fmt = (n: number) => n.toLocaleString("en-GB")
 
-export const signInHref = (callbackUrl: string) =>
-  `/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`
-
 /**
  * Staff (`staff.area`): the staff area, then the selected library's Edit
  * record (with its suggestions waiting) and Event feeds. "Add a library" is
@@ -197,7 +194,7 @@ function teamCard(teams: readonly ShortcutTeam[]): ContributorCard {
     tint: "academic",
     links: [
       { label: "Members & libraries", href: "/staff/teams" },
-      { label: "API access", href: "/staff/teams/api" },
+      { label: "API access", href: "/developers" },
       ...(organiser
         ? [{ label: "Billing & seats", href: "/staff/teams/billing" }]
         : []),
@@ -249,7 +246,7 @@ function reviewCard(
     links: [
       {
         label: "Moderation queue",
-        href: "/contribute/moderation",
+        href: "/moderation",
         ...(moderation === 0 ? { sub: "Nothing waiting" } : {}),
         ...(moderation ? { badge: moderation } : {}),
       },
@@ -257,7 +254,7 @@ function reviewCard(
         ? [
             {
               label: "Suggested additions",
-              href: "/contribute/moderation/suggestions",
+              href: "/moderation/suggestions",
               sub: "Review new features and library types",
             },
           ]
@@ -337,8 +334,8 @@ function hubCard(
       ? [
           {
             label: "Add a library",
-            href: signInHref("/contribute/index/new"),
-            sub: "Sign in first",
+            href: "/contribute/index/new",
+            sub: "Free to contribute",
           },
           ALL_WAYS,
         ]

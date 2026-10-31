@@ -65,6 +65,28 @@ vi.mock("@/components/ds/SelectField", () => ({
       )
     ),
 }))
+// The real ProseMirror writing surface is exercised in browser stories; these tests cover requests and actor isolation.
+vi.mock("@/components/discussions/DiscussionWritingEditor", () => ({
+  DiscussionWritingEditor: ({
+    value,
+    onChange,
+    disabled,
+    describedBy,
+  }: {
+    value: string
+    onChange: (value: string) => void
+    disabled: boolean
+    describedBy: string
+  }) => (
+    <textarea
+      aria-label="Message"
+      aria-describedby={describedBy}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  ),
+}))
 vi.mock("./useDiscussionActor", () => ({ useDiscussionActor: () => actor }))
 vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -236,7 +258,7 @@ describe("discussion interactions", () => {
         name: "Send for review",
       }) as HTMLButtonElement
       expect(submit.disabled).toBe(true)
-      fireEvent.change(screen.getByLabelText("Message"), {
+      fireEvent.change(await screen.findByLabelText("Message"), {
         target: { value: "A question about the story" },
       })
       expect(submit.disabled).toBe(false)
@@ -422,7 +444,7 @@ describe("discussion interactions", () => {
     )
     await screen.findByText("Approved reply 0")
     expect(screen.getByText("Visible message")).toBeTruthy()
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "My private suggestion reply" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Post reply" }))
@@ -461,6 +483,9 @@ describe("discussion interactions", () => {
       "article"
     )!
     const join = screen.getByRole("form", { name: "Join the conversation" })
+    fireEvent.click(
+      within(join).getByRole("button", { name: "Join the conversation" })
+    )
     expect(
       (
         within(join).getByRole("combobox", {
@@ -652,6 +677,13 @@ describe("discussion interactions", () => {
     const firstOrder = screen
       .getByText("Top-level response")
       .closest("article")!
+    expect(firstOrder.parentElement?.dataset.replyDepth).toBe("0")
+    expect(nested.parentElement?.dataset.replyDepth).toBe("1")
+    expect(
+      within(nested)
+        .getByRole("link", { name: "Reply to Author" })
+        .getAttribute("href")
+    ).toBe("#discussion-reply-parent")
     expect(
       within(firstOrder).getByRole("button", { name: "Reply" })
     ).toBeTruthy()
@@ -726,6 +758,9 @@ describe("discussion interactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Load more" }))
     await screen.findByText("Second parent")
     const joinForm = screen.getByRole("form", { name: "Join the conversation" })
+    fireEvent.click(
+      within(joinForm).getByRole("button", { name: "Join the conversation" })
+    )
     const joinMessage = within(joinForm).getByLabelText(
       "Message"
     ) as HTMLTextAreaElement
@@ -817,6 +852,94 @@ describe("discussion interactions", () => {
     expect(screen.queryByText("A private draft reply")).toBeNull()
     expect(screen.queryByText("A separate thread-level draft")).toBeNull()
   })
+  it("opens the join editor from Reply and preserves its draft when closing and reopening", async () => {
+    fetch.mockImplementation(async (url: string) =>
+      Response.json(
+        url.includes("my/records") ||
+          url.includes("threads?") ||
+          url.includes("/replies")
+          ? { data: [] }
+          : { ...record, replyCount: 0 }
+      )
+    )
+    render(<DiscussionThread id="thread" />)
+    const opening = (await screen.findByText("Visible message")).closest(
+      "article"
+    )!
+    expect(screen.queryByRole("textbox", { name: "Message" })).toBeNull()
+    fireEvent.click(within(opening).getByRole("button", { name: "Reply" }))
+    const message = screen.getByRole("textbox", { name: "Message" })
+    expect(document.activeElement).toBe(message)
+    fireEvent.change(message, {
+      target: { value: "Keep my unsent experience" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+    expect(screen.queryByRole("textbox", { name: "Message" })).toBeNull()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Join the conversation" })
+    )
+    expect(
+      (screen.getByRole("textbox", { name: "Message" }) as HTMLTextAreaElement)
+        .value
+    ).toBe("Keep my unsent experience")
+    expect(fetch.mock.calls.some(([, init]) => init?.method === "POST")).toBe(
+      false
+    )
+  })
+  it("copies a message permalink and recovers after a clipboard failure", async () => {
+    const writeText = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Clipboard unavailable"))
+      .mockResolvedValue(undefined)
+    vi.stubGlobal("navigator", { clipboard: { writeText } })
+    window.history.replaceState(
+      null,
+      "",
+      "/community/discussions/thread?lang=en"
+    )
+    render(
+      <DiscussionRecordCard
+        record={record}
+        kind="reply"
+        layout="conversation"
+        own={false}
+        signedIn={false}
+        onReload={vi.fn()}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }))
+    await screen.findByRole("alert")
+    expect(writeText.mock.calls[0]![0]).toMatch(
+      /\/community\/discussions\/thread\?lang=en#discussion-reply-thread$/
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Copy link" }))
+    await screen.findByText("Link copied")
+    expect(screen.queryByRole("alert")).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
+  })
+  it("keeps the conversation owner's editing action in the message menu", () => {
+    render(
+      <DiscussionRecordCard
+        record={record}
+        kind="thread"
+        layout="conversation"
+        own
+        signedIn
+        onReload={vi.fn()}
+      />
+    )
+    expect(
+      screen.queryByRole("button", { name: "Edit your message" })
+    ).toBeNull()
+    fireEvent.click(
+      screen.getByRole("button", { name: "More message actions" })
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Edit your message" }))
+    expect(
+      (screen.getByRole("textbox", { name: "Message" }) as HTMLTextAreaElement)
+        .value
+    ).toBe(record.body)
+  })
   it("places the moderator menu last and marks restriction as a destructive moderator action", async () => {
     const props = {
       record,
@@ -897,6 +1020,10 @@ describe("discussion interactions", () => {
     expect(
       screen.getByRole("link", { name: "Link to post 1" }).getAttribute("href")
     ).toBe("#discussion-thread-thread")
+    expect(screen.queryByRole("textbox", { name: "Message" })).toBeNull()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Join the conversation" })
+    )
     expect(
       screen.getByRole("heading", { name: "Join the conversation" })
     ).toBeTruthy()
@@ -933,7 +1060,7 @@ describe("discussion interactions", () => {
         }}
       />
     )
-    const image = screen.getByRole("img", { hidden: true })
+    const image = screen.getByRole("presentation", { hidden: true })
     expect(image.getAttribute("src")).toBe("/api/asset/uploads/avatar.png")
     fireEvent.error(image)
     expect(screen.getByText("AB")).toBeTruthy()
@@ -1031,7 +1158,7 @@ describe("discussion interactions", () => {
     fireEvent.change(screen.getByLabelText("Discussion title"), {
       target: { value: "A library visit" },
     })
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "My experience" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Send for review" }))
@@ -1089,7 +1216,7 @@ describe("discussion interactions", () => {
       />
     )
     fireEvent.click(screen.getByRole("button", { name: "Edit your message" }))
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "Keep my unsent edit" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Send for review" }))
@@ -1433,6 +1560,9 @@ describe("discussion recovery isolation", () => {
         return
       }
       fireEvent.click(screen.getByRole("button", { name: "Retry" }))
+      fireEvent.click(
+        await screen.findByRole("button", { name: "Start a discussion" })
+      )
       await screen.findByLabelText("Discussion title")
       expect(screen.queryByRole("alert")).toBeNull()
     }
@@ -1657,7 +1787,7 @@ describe("discussion recovery isolation", () => {
     fireEvent.change(screen.getByLabelText("Discussion title"), {
       target: { value: "Keep my draft title" },
     })
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "Keep my unsent draft message" },
     })
     fireEvent.change(
@@ -1671,6 +1801,11 @@ describe("discussion recovery isolation", () => {
       (screen.getByLabelText("Message") as HTMLTextAreaElement).value
     ).toBe("Keep my unsent draft message")
     expect(document.querySelector('option[value="es"]')).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+    fireEvent(window, new Event("discussion:compose"))
+    expect(
+      ((await screen.findByLabelText("Message")) as HTMLTextAreaElement).value
+    ).toBe("Keep my unsent draft message")
   })
 
   it("shows immutable report evidence and pins removal to the current record version after deliberate confirmation", async () => {
@@ -1807,7 +1942,7 @@ describe("discussion recovery isolation", () => {
     fireEvent.change(screen.getByLabelText("Discussion title"), {
       target: { value: "A library visit" },
     })
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "We attended the workshop." },
     })
     fireEvent.click(screen.getByText("Add pictures"))
@@ -1888,7 +2023,7 @@ describe("discussion recovery isolation", () => {
         onSubmitted={onSubmitted}
       />
     )
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "I agree with this experience." },
     })
     fireEvent.click(screen.getByRole("button", { name: "Send for review" }))
@@ -1964,7 +2099,7 @@ describe("discussion recovery isolation", () => {
         onSubmitted={vi.fn()}
       />
     )
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "An experience from this library" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Send for review" }))
@@ -2026,7 +2161,7 @@ describe("discussion recovery isolation", () => {
       />
     )
     fireEvent.click(screen.getByRole("button", { name: "Edit your message" }))
-    fireEvent.change(screen.getByLabelText("Message"), {
+    fireEvent.change(await screen.findByLabelText("Message"), {
       target: { value: "Keep my unsent change" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Send for review" }))
@@ -2085,6 +2220,9 @@ it("opens library-life discussion authoring against the library's content locale
       title="Bibliothèque"
       language="fr"
     />
+  )
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Start a discussion" })
   )
   await screen.findByLabelText("Message")
   expect((screen.getByLabelText("Language") as HTMLInputElement).value).toBe(

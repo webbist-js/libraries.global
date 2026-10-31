@@ -8,6 +8,7 @@ import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { Container } from "@/components/elementary/Container"
 import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeButton"
 import { EventJsonLd } from "@/components/events/EventJsonLd"
+import { EventTags } from "@/components/events/EventTags"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -166,23 +167,7 @@ export function EventDetailPage({
             {/* Type chip + tags */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <EventTypeChip type={event.eventType} size="sm" />
-              {event.tags?.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  style={{
-                    fontFamily: T.font.mono,
-                    fontSize: "var(--type-caption-size)",
-                    letterSpacing: ".14em",
-                    textTransform: "uppercase",
-                    color: T.ink.faint,
-                    border: `1px solid ${T.border.line}`,
-                    borderRadius: "999px",
-                    padding: "2px 8px",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
+              <EventTags tags={event.tags} />
             </div>
 
             {/* Title */}
