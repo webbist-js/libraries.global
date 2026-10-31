@@ -484,7 +484,7 @@ describe("discussion interactions", () => {
     )!
     const join = screen.getByRole("form", { name: "Join the conversation" })
     fireEvent.click(
-      within(join).getByRole("button", { name: "Join the conversation" })
+      within(join).getByRole("button", { name: /^Join the conversation/ })
     )
     expect(
       (
@@ -759,7 +759,7 @@ describe("discussion interactions", () => {
     await screen.findByText("Second parent")
     const joinForm = screen.getByRole("form", { name: "Join the conversation" })
     fireEvent.click(
-      within(joinForm).getByRole("button", { name: "Join the conversation" })
+      within(joinForm).getByRole("button", { name: /^Join the conversation/ })
     )
     const joinMessage = within(joinForm).getByLabelText(
       "Message"
@@ -876,7 +876,7 @@ describe("discussion interactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
     expect(screen.queryByRole("textbox", { name: "Message" })).toBeNull()
     fireEvent.click(
-      screen.getByRole("button", { name: "Join the conversation" })
+      screen.getByRole("button", { name: /^Join the conversation/ })
     )
     expect(
       (screen.getByRole("textbox", { name: "Message" }) as HTMLTextAreaElement)
@@ -1022,7 +1022,7 @@ describe("discussion interactions", () => {
     ).toBe("#discussion-thread-thread")
     expect(screen.queryByRole("textbox", { name: "Message" })).toBeNull()
     fireEvent.click(
-      screen.getByRole("button", { name: "Join the conversation" })
+      screen.getByRole("button", { name: /^Join the conversation/ })
     )
     expect(
       screen.getByRole("heading", { name: "Join the conversation" })
