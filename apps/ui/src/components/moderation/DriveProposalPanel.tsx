@@ -419,7 +419,7 @@ export function DriveProposalPanel({
             href={drive.whereToLook.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${drive.whereToLook.name} (opens in a new tab)`}
+            title={`${drive.whereToLook.name} (opens in a new tab)`}
             className="text-sm underline underline-offset-2"
             style={{ color: T.accent.primary, wordBreak: "break-all" }}
           >

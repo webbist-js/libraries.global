@@ -42,7 +42,7 @@ it("opens the full profile workspace without a popover", () => {
       <State />
     </>
   )
-  const button = screen.getByRole("button", { name: "Your profile" })
+  const button = screen.getByRole("button", { name: /Your profile/ })
   expect(button.textContent).not.toContain("Profile")
   expect(button.classList.contains("dashboard-square")).toBe(true)
   fireEvent.click(button)
@@ -56,7 +56,7 @@ it("opens Notifications independently while the avatar still opens Overview", ()
       <State />
     </>
   )
-  const avatar = screen.getByRole("button", { name: "Your profile" })
+  const avatar = screen.getByRole("button", { name: /Your profile/ })
   const badge = screen.getByRole("button", { name: "3 unread notifications" })
   expect(badge.textContent).toBe("3")
   expect(badge.closest(".profile-trigger")).toBeNull()
@@ -78,5 +78,5 @@ it("omits the unread shortcut when there are no unread notifications", () => {
   notifications.unread = 0
   render(<ProfileDrawerTrigger user={user} />)
   expect(screen.getAllByRole("button")).toHaveLength(1)
-  expect(screen.getByRole("button", { name: "Your profile" })).toBeTruthy()
+  expect(screen.getByRole("button", { name: /Your profile/ })).toBeTruthy()
 })

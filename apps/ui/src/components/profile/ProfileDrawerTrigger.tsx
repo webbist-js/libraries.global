@@ -31,7 +31,7 @@ export function ProfileDrawerTrigger({
     <span className="profile-trigger-group">
       <button
         type="button"
-        aria-label={t("your_profile")}
+        aria-label={`${avatarInitials(user.name || user.email)} · ${t("your_profile")}`}
         title={t("your_profile")}
         aria-haspopup="dialog"
         aria-expanded={state.open && state.actor === user.id}

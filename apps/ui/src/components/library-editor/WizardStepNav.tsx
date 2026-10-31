@@ -58,7 +58,6 @@ function StepCircle({
 
   return (
     <span
-      aria-hidden="true"
       style={{
         width: "36px",
         height: "36px",
@@ -185,7 +184,7 @@ export function WizardStepNav({
                 <Link
                   href={findHref}
                   aria-current={preview ? "step" : undefined}
-                  aria-label={
+                  title={
                     preview
                       ? step.label
                       : `${step.label}, done. Choose a different library`
@@ -228,7 +227,7 @@ export function WizardStepNav({
                 onClick={() => onStepClick?.(step.n)}
                 disabled={preview}
                 aria-current={isActive ? "step" : undefined}
-                aria-label={`Step ${position}: ${label}${stepStatusText(state)}${changedText}`}
+                title={`Step ${position}: ${label}${stepStatusText(state)}${changedText}`}
                 className={itemClass}
                 style={itemStyle(isActive)}
               >

@@ -97,7 +97,7 @@ type Story = StoryObj<typeof meta>
 
 const openEditor = async (element: HTMLElement) => {
   await userEvent.click(
-    within(element).getByRole("button", { name: "Start a discussion" })
+    await within(element).findByRole("button", { name: "Start a discussion" })
   )
   const dialog = await within(element.ownerDocument.body).findByRole("dialog", {
     name: "Start a discussion",

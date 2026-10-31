@@ -106,7 +106,7 @@ export function AtlasAreaPicker({
         <PopoverTrigger asChild>
           <button
             type="button"
-            aria-label={t("chooseArea")}
+            title={t("chooseArea")}
             className="flex min-h-12 w-full items-center gap-2 rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) px-3 py-2 text-left font-semibold text-(--t-ink-base) focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
           >
             <Icon name="search" size={17} />

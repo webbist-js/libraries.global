@@ -283,7 +283,6 @@ export function AtlasInspect({
             <button
               key={entry.id}
               type="button"
-              aria-label={t("open", { name: entry.title })}
               title={`${entry.title} · ${entry.detail}${entry.metric ? ` · ${entry.metric}` : ""}`}
               onClick={() => onSelect(entry.id)}
               className="flex min-h-11 w-12 flex-col items-center justify-center overflow-hidden rounded-xl px-1 text-xs font-semibold aria-current:bg-(--t-accent-chip) aria-current:text-(--t-accent-primary)"

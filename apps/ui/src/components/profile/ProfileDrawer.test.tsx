@@ -198,7 +198,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 async function open() {
-  const trigger = screen.getByRole("button", { name: "Your profile" })
+  const trigger = screen.getByRole("button", { name: /Your profile/ })
   fireEvent.click(trigger)
   const dialog = await screen.findByRole("dialog", { name: "Your profile" })
   await within(dialog).findByText("Owner data: Reader")
@@ -289,7 +289,7 @@ it("keeps the account header and actions available before a community profile is
     })
   )
   mount()
-  fireEvent.click(screen.getByRole("button", { name: "Your profile" }))
+  fireEvent.click(screen.getByRole("button", { name: /Your profile/ }))
   const dialog = await screen.findByRole("dialog", { name: "Your profile" })
   await within(dialog).findByText(
     "Complete your profile to see your activity here."
