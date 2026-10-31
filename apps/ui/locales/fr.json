@@ -3646,7 +3646,7 @@
     "paymentsOff": "Les tests de paiement ne sont pas disponibles dans cet environnement. Explorez les autres fonctionnalités de la bêta.",
     "resetTitle": "Les données bêta seront effacées avant le lancement",
     "resetBody": "Les comptes, contributions, équipes et abonnements de test ne seront pas conservés. Gardez une copie de ce que vous souhaitez sauvegarder.",
-    "feedbackBody": "Attendez-vous à des bugs et à des détails inachevés. Utilisez l’onglet Commentaires sur le bord de la page pour signaler les problèmes ou proposer des idées. Décrivez le résultat attendu et ce qui s’est passé.",
+    "feedbackBody": "Attendez-vous à des bugs et à des détails inachevés. Utilisez Commentaires pour signaler les problèmes ou proposer des idées. Décrivez le résultat attendu et ce qui s’est passé.",
     "start": "Commencer les tests",
     "feedback": "Envoyer un commentaire",
     "apiGuide": "Démarrage API"
