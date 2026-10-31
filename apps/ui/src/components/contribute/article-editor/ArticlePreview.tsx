@@ -1,8 +1,10 @@
 "use client"
 
+import type { ArticleSource } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
+import { JournalSources } from "@/components/blog/JournalSources"
 import { T } from "@/lib/design-tokens"
 import type { ArticleBodyBlock } from "@/lib/strapi-api/content/server"
 
@@ -16,12 +18,14 @@ export function ArticlePreview({
   summary,
   doc,
   compact = false,
+  sources,
 }: {
   readonly kind: ArticleKind
   readonly title: string
   readonly summary: string
   readonly doc: TiptapDoc
   readonly compact?: boolean
+  readonly sources?: readonly ArticleSource[]
 }) {
   const tUi = useUiTranslations("ui")
   const Heading = compact ? "h3" : "h1"
@@ -77,6 +81,7 @@ export function ArticlePreview({
           {tUi("nothing_written_yet")}{" "}
         </p>
       )}
+      {kind === "journal" ? <JournalSources sources={sources} /> : null}
     </article>
   )
 }

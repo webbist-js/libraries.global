@@ -66,7 +66,7 @@ export function RegionLibraryList({
       />
       <GlobalLink
         href={addHref}
-        className="flex items-center gap-3.5 rounded-[20px] border border-dashed px-5 py-4 transition-colors hover:border-(--t-accent-primary) hover:bg-white"
+        className="flex items-center gap-3.5 rounded-[20px] border border-dashed px-5 py-4 transition-colors hover:border-(--t-accent-primary) hover:bg-(--t-bg-deep)"
         style={{ borderColor: T.border.hi }}
       >
         <span
@@ -133,7 +133,7 @@ export function NearbyRegions({
           <li key={region.slug}>
             <GlobalLink
               href={`${basePath}/${region.slug}`}
-              className="flex min-h-14 items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-white"
+              className="flex min-h-14 items-center gap-2 rounded-xl px-3 py-2 transition-colors hover:bg-(--t-bg-deep)"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">

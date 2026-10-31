@@ -463,8 +463,9 @@ function DriveTasksWorkspace({
           ) : null}
         </div>
       </div>
-      {drawerOpen && panel ? (
+      {panel ? (
         <Drawer
+          open={drawerOpen}
           icon={{ name: chip.icon, bg: chip.tint.bg, fg: chip.tint.fg }}
           initialFocus={nameOf}
           onClose={closeDrawer}

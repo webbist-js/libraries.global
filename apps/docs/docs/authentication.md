@@ -2,6 +2,13 @@
 
 Better Auth in `apps/ui` owns public user accounts and cookie sessions. The browser does not receive a Strapi user JWT or the service bridge secret. Strapi admin authentication is separate from public accounts.
 
+The Node server prepares the Better Auth schema in its awaited instrumentation
+startup hook, before accepting requests. A PostgreSQL advisory transaction lock
+serializes schema inspection and migration across server instances; lock waits
+are bounded at 30 seconds. A migration failure stops startup. Builds and unit
+imports do not run migrations. Google website sign-in is registered only when
+both OAuth credentials are configured.
+
 ## Request boundary
 
 1. A browser sends its Better Auth session cookie to a dedicated Next.js route.
@@ -27,6 +34,10 @@ if (!session?.user) {
 ```
 
 The session includes the user's identity and the access projection needed by the interface. UI capability checks explain or hide actions. Strapi remains authoritative for writes, scoped moderation, library staff access and plan-gated operations. Roles and plan entitlements are separate: payment never grants editorial or staff authority.
+
+Selected section entry pages show a contextual invitation before sign-in.
+See [Feature entry pages](feature-entry-pages.md) for the redirect audit, public
+discovery paths and the private actions that retain direct gates.
 
 The current configuration uses database sessions with a 30-day lifetime and a one-day update interval. The Better Auth cookie cache is disabled. Read `apps/ui/src/lib/auth.ts` for current verification, password reset, magic-link, OAuth, passkey and two-factor configuration rather than reproducing those settings elsewhere.
 

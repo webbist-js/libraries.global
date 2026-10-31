@@ -99,11 +99,12 @@ export function globeInteractionReady(
   story: boolean,
   top: number,
   bottom: number,
-  viewportHeight: number
+  viewportHeight: number,
+  viewportTop = 56
 ) {
   return story
-    ? progress >= 0.98 && top >= 56 && bottom <= viewportHeight + 1
-    : top >= 56 && bottom <= viewportHeight + 1
+    ? progress >= 0.98 && top >= viewportTop && bottom <= viewportHeight + 1
+    : top >= viewportTop && bottom <= viewportHeight + 1
 }
 
 export type LocalBoundaries = {

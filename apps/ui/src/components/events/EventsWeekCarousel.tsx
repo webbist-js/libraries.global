@@ -85,8 +85,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
         <div
           className="min-h-[240px] rounded-[16px] bg-cover bg-center"
           style={{ backgroundImage: `url(${event.imageUrl})` }}
-          role="img"
-          aria-label=""
+          aria-hidden="true"
         />
       ) : (
         <div
@@ -181,7 +180,7 @@ function FeaturedWeekCard({ event }: { readonly event: EventSearchHit }) {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-base font-semibold text-white transition-colors"
-            style={{ background: T.accent.primary }}
+            style={{ background: T.action.primary }}
           >
             {t("book", { provider })}
             <Icon

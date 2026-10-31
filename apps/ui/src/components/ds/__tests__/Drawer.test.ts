@@ -11,6 +11,7 @@ Object.assign(globalThis, { React })
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 
 const { Drawer } = await import("../Drawer")
+const { DrawerPresence } = await import("../DrawerPresence")
 
 afterEach(() => {
   cleanup()
@@ -49,6 +50,60 @@ function open(
 }
 
 describe("Drawer", () => {
+  it("pins workspace headers and footers outside the scrolling middle", () => {
+    open(vi.fn(), {
+      size: "md",
+      edgeAligned: true,
+      footer: h("footer", null, "Workspace"),
+    })
+    const panel = screen.getByRole("dialog")
+    const body = panel.querySelector("[data-drawer-body]")!
+    expect(panel.dataset.drawerEdge).toBe("true")
+    expect(panel.className).toContain("inset-y-0")
+    expect(body.contains(screen.getByLabelText("Field"))).toBe(true)
+    expect(body.contains(screen.getByRole("heading"))).toBe(false)
+    expect(body.contains(screen.getByText("Workspace"))).toBe(false)
+  })
+
+  it("keeps on-demand drawers through close and drops their contents after focus restoration", async () => {
+    const trigger = document.createElement("button")
+    trigger.dataset.drawerTestTrigger = ""
+    document.body.append(trigger)
+    trigger.focus()
+    function Workspace() {
+      const [opened, setOpened] = React.useState(false)
+
+      return h(
+        React.Fragment,
+        null,
+        h("button", { onClick: () => setOpened(true) }, "Open workspace"),
+        h(DrawerPresence, {
+          open: opened,
+          children: (onAfterClose) =>
+            h(
+              Drawer,
+              {
+                open: opened,
+                titleId: "workspace-heading",
+                title: "Workspace",
+                onClose: () => setOpened(false),
+                onAfterClose,
+              },
+              h("p", null, "Current account summary")
+            ),
+        })
+      )
+    }
+    render(h(Workspace))
+    expect(screen.queryByText("Current account summary")).toBeNull()
+    fireEvent.click(screen.getByText("Open workspace"))
+    expect(screen.getByRole("dialog")).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    await waitFor(() =>
+      expect(screen.queryByText("Current account summary")).toBeNull()
+    )
+    expect(Object.hasOwn(document.body.dataset, "scrollLocked")).toBe(false)
+  })
   it("is a modal dialog named by its title, with the line under it", () => {
     open()
     const dialog = screen.getByRole("dialog", { name: "Suggest a correction" })

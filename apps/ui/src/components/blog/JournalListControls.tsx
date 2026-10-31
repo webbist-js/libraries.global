@@ -72,7 +72,7 @@ export function JournalListControls({
               scroll={false}
               style={
                 active
-                  ? { background: T.ink.base, color: "#fff" }
+                  ? { background: T.bg.inverse, color: "#fff" }
                   : { color: T.ink.dim }
               }
             >

@@ -221,7 +221,7 @@ describe("moderator alerts", () => {
     const msg: any = send.mock.calls[0]![0]
     expect(msg.to).toBe("moderators@libraries.global")
     expect(msg.text).toContain(
-      `https://app.example.org/contribute/moderation/${created.documentId}`
+      `https://app.example.org/moderation/${created.documentId}`
     )
   })
 
@@ -344,7 +344,7 @@ describe("create's notify option", () => {
     const msg: any = send.mock.calls[0]![0]
     expect(msg.to).toBe("moderators@libraries.global")
     expect(msg.text).toContain(
-      `https://app.example.org/contribute/moderation/${created.documentId}`
+      `https://app.example.org/moderation/${created.documentId}`
     )
   })
 })
@@ -376,7 +376,7 @@ describe("moderator alerts on resubmission", () => {
     expect(send).toHaveBeenCalledTimes(1)
     const msg: any = send.mock.calls[0]![0]
     expect(msg.to).toBe("moderators@libraries.global")
-    expect(msg.text).toContain(`/contribute/moderation/${appId}`)
+    expect(msg.text).toContain(`/moderation/${appId}`)
   })
 
   it("stays quiet when an ordinary submission goes back to pending", async () => {
@@ -489,9 +489,9 @@ describe("email templates", () => {
     const e = moderatorAlertEmail({
       type: "role_application",
       summary: "Ada applied to be a Knowledge editor.",
-      url: "https://x/contribute/moderation/abc",
+      url: "https://x/moderation/abc",
     })
-    expect(e.text).toContain("https://x/contribute/moderation/abc")
-    expect(e.html).toContain('href="https://x/contribute/moderation/abc"')
+    expect(e.text).toContain("https://x/moderation/abc")
+    expect(e.html).toContain('href="https://x/moderation/abc"')
   })
 })

@@ -85,6 +85,23 @@ describe("PUT /api/profile/me/prompts", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it("persists and re-enables the API usage warning without losing other prompts", async () => {
+    stored(["find-contribute"])
+    expect(
+      (await put({ prompt: "api-playground-usage", dismissed: true })).status
+    ).toBe(200)
+    expect(savedList().dismissedPrompts).toEqual([
+      "find-contribute",
+      "api-playground-usage",
+    ])
+    stored(["find-contribute", "api-playground-usage"])
+    fetchMock.mockClear()
+    expect(
+      (await put({ prompt: "api-playground-usage", dismissed: false })).status
+    ).toBe(200)
+    expect(savedList().dismissedPrompts).toEqual(["find-contribute"])
+  })
+
   it("doesn't create a profile for a user who has none", async () => {
     readOwnProfile.mockResolvedValue({ ok: false, reason: "not_found" })
 

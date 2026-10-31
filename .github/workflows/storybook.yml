@@ -1,0 +1,80 @@
+name: Storybook
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: storybook-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NODE_OPTIONS: --max-old-space-size=2048
+
+jobs:
+  catalogue:
+    name: Catalogue and static artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-pnpm
+      - name: Check UI inventory is current
+        run: pnpm storybook:inventory:check
+      - name: Build source dependencies and check types
+        run: pnpm exec turbo run typecheck --filter=@repo/storybook --concurrency=1
+      - name: Require complete visual component coverage
+        run: pnpm --filter @repo/storybook coverage:check
+      - name: Lint the catalogue
+        run: pnpm --filter @repo/storybook lint
+      - name: Build static pattern library
+        run: pnpm build:storybook
+      - name: Retain static preview artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: storybook-${{ github.sha }}
+          path: apps/storybook/dist
+          retention-days: 7
+
+  stories:
+    name: Stories (${{ matrix.appearance }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        appearance: [light, dark]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-pnpm
+      - name: Install browser
+        run: pnpm --filter @repo/storybook exec playwright install --with-deps chromium
+      - name: Render every story, interaction and accessibility check
+        env:
+          STORYBOOK_APPEARANCE: ${{ matrix.appearance }}
+        run: pnpm test:storybook
+
+  verify:
+    needs: [catalogue, stories]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require the catalogue and both appearances
+        env:
+          CATALOGUE_RESULT: ${{ needs.catalogue.result }}
+          STORIES_RESULT: ${{ needs.stories.result }}
+        run: |
+          test "$CATALOGUE_RESULT" = success
+          test "$STORIES_RESULT" = success

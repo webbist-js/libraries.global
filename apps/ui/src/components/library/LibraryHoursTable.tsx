@@ -104,7 +104,7 @@ function useOpenStatus(
 }
 
 const MODE_STYLES: Record<string, string> = {
-  staffed: "#2F5D3A",
+  staffed: "var(--t-palette-mint-fg)",
   self_service:
     "repeating-linear-gradient(135deg, #2F5D3A 0 4px, #D5E6D8 4px 8px)",
   volunteer: "#CA8A24",
@@ -127,10 +127,12 @@ const MODE_DESCRIPTIONS: Record<string, string> = {
 export function LibraryHoursTable({
   openingTimes,
   compact = false,
+  dashboard = false,
   timezone,
   notices = NO_NOTICES,
 }: {
   readonly compact?: boolean
+  readonly dashboard?: boolean
   readonly openingTimes: OpeningTimesValue | null
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
@@ -195,7 +197,7 @@ export function LibraryHoursTable({
   }
 
   return (
-    <div>
+    <div className={dashboard ? "record-hours-table" : undefined}>
       {!compact ? (
         <div
           aria-hidden="true"
@@ -300,7 +302,21 @@ export function LibraryHoursTable({
                       {isToday ? " (today)" : ""}
                     </span>
                     <span className="tabular-nums" style={{ color: T.ink.dim }}>
-                      {range}
+                      {dashboard && frames.length > 1
+                        ? frames
+                            .map(
+                              (frame) =>
+                                `${frame.startTime}–${frame.endTime}${frame.overnight || frame.endTime < frame.startTime ? " · next day" : ""}`
+                            )
+                            .join(", ")
+                        : range}
+                      {dashboard && frames.length === 1 && !first?.note ? (
+                        <span className="block text-xs">
+                          {OPENING_MODE_LABELS[
+                            (first?.staffing ?? "open") as OpeningTimesStaffing
+                          ] ?? "Open"}
+                        </span>
+                      ) : null}
                     </span>
                   </div>
                   <div
@@ -336,7 +352,10 @@ export function LibraryHoursTable({
                         ))
                     })}
                   </div>
-                  {frames.length > 0 ? (
+                  {frames.length > 0 &&
+                  (!dashboard ||
+                    frames.length > 1 ||
+                    frames.some((frame) => frame.note)) ? (
                     <ul className="m-0 mt-2 list-none space-y-1 p-0 text-sm">
                       {frames.map((frame) => (
                         <li

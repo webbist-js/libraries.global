@@ -2,17 +2,23 @@ import { COMMUNITY_PALETTE, type ProfileBackground } from "@repo/shared-data"
 
 // apps/ui/src/lib/design-tokens.ts
 //
-// v2 design system — light only. Warm paper, dark ink, indigo accent.
+// Paired appearance roles. Warm paper, deep ink and an indigo accent.
 // Token values reference CSS custom properties defined in globals.css.
 
 export const T = {
   map: {
-    stopRing: "#2F5D3A",
-    route: "#2F5D3A",
-    coarseRing: "#3730A3",
+    stopRing: "var(--t-map-route)",
+    route: "var(--t-map-route)",
+    coarseRing: "var(--t-map-coarse)",
     coarseOpacity: 0.12,
   },
+  action: {
+    primary: "var(--t-action-primary)",
+    primaryHover: "var(--t-action-primary-hover)",
+    danger: "var(--t-action-danger)",
+  },
   bg: {
+    inverse: "var(--t-bg-inverse)",
     void: "var(--t-bg-void)", // page root — warm paper
     space: "var(--t-bg-space)", // deeper band — footer, cover strips
     deep: "var(--t-bg-deep)", // card / panel surface (white)
@@ -22,6 +28,7 @@ export const T = {
     selected: "var(--t-bg-selected)",
   },
   ink: {
+    inverse: "var(--t-ink-inverse)",
     base: "var(--t-ink-base)",
     dim: "var(--t-ink-dim)",
     low: "var(--t-ink-low)",
@@ -41,6 +48,7 @@ export const T = {
     danger: "var(--t-edge-danger)",
   },
   border: {
+    control: "var(--t-control-border)",
     line: "var(--t-border-line)",
     hi: "var(--t-border-hi)",
     divider: "var(--t-divider)",

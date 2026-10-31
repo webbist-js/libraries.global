@@ -329,10 +329,7 @@ test("an address change lands as a pending Staff request for Moderators", async 
 
   const page = await pageAs(browser, moderator, baseURL)
   browserContexts.push(page.context())
-  const review = await page.goto(
-    `/contribute/moderation/${requestId}`,
-    NAVIGATION
-  )
+  const review = await page.goto(`/moderation/${requestId}`, NAVIGATION)
   expect(review?.status()).toBe(200)
   await expect(page.getByText(street).first()).toBeVisible(NAVIGATION)
 })

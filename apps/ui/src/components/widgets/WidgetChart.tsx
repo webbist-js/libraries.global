@@ -37,7 +37,7 @@ export function WidgetChart({
             {t("Yes")}
           </li>
           <li className="flex items-center gap-2">
-            <span className="size-4 rounded bg-[#8A8799]" />
+            <span className="size-4 rounded bg-(--t-ink-low)" />
             {t("No")}
           </li>
           <li className="flex items-center gap-2">

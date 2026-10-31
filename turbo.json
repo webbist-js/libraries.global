@@ -1,6 +1,9 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env", "**/.env.*local"],
+  "globalDependencies": [
+    "**/.env",
+    "**/.env.*local"
+  ],
   "globalEnv": [
     "APP_PUBLIC_URL",
     "MOBILE_APP_URL",
@@ -18,6 +21,7 @@
     "MOBILE_VIEWPORTS_TESTING_ENABLED",
     "BASE_URL",
     "ANALYTICS_ACCEPTANCE",
+    "CHECKOUT_ANALYTICS_ENABLED",
     "ADMIN_PANEL_CONFIG_API_AUTH_TOKEN",
     "APP_BRAND",
     "APP_URL",
@@ -37,11 +41,14 @@
     "SLACK_FEEDBACK_WEBHOOK_URL",
     "INTERNAL_FEEDBACK_ENABLED",
     "BETTER_AUTH_SECRET",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
     "RECAPTCHA_SECRET_KEY",
     "NODE_OPTIONS",
     "NODE_ENV",
     "APP_ENV",
     "NEXT_RUNTIME",
+    "NEXT_PHASE",
     "BASIC_AUTH_ENABLED",
     "BASIC_AUTH_USERNAME",
     "BASIC_AUTH_PASSWORD",
@@ -173,15 +180,28 @@
     "EVENT_FEED_TEST_ICS_URL",
     "QA_AUDIT_ISOLATED_SERVICES",
     "QA_SMOKE_PORT",
-    "QA_AXE_MOBILE"
+    "QA_AXE_MOBILE",
+    "QA_DASHBOARD_BASELINE",
+    "QA_DASHBOARD_LIVE_CONTENT",
+    "NEXT_PUBLIC_FORCE_LIGHT_THEME",
+    "STORYBOOK_APPEARANCE"
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "public/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**",
+        "public/**"
+      ]
     },
     "build:static": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -191,10 +211,14 @@
       ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "lint:fix": {
-      "dependsOn": ["^lint:fix"]
+      "dependsOn": [
+        "^lint:fix"
+      ]
     },
     "sync-types": {
       "cache": false
@@ -210,19 +234,28 @@
       "persistent": true
     },
     "start": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": ["^build", "^typecheck"]
+      "dependsOn": [
+        "^build",
+        "^typecheck"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true
     },
     "test:unit": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true
     },
     "axe-test": {
@@ -250,14 +283,99 @@
       "persistent": false
     },
     "dev:analysis": {
-      "dependsOn": ["@repo/shared-data#build"],
+      "dependsOn": [
+        "@repo/shared-data#build"
+      ],
       "cache": false,
       "persistent": true
     },
     "dev:atlas": {
-      "dependsOn": ["@repo/shared-data#build"],
+      "dependsOn": [
+        "@repo/shared-data#build"
+      ],
       "cache": false,
       "persistent": true
+    },
+    "@repo/storybook#build": {
+      "dependsOn": [
+        "@repo/shared-data#build",
+        "@repo/access#build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/ui/src/**",
+        "$TURBO_ROOT$/apps/ui/locales/**",
+        "$TURBO_ROOT$/apps/ui/public/**",
+        "$TURBO_ROOT$/apps/ui/package.json",
+        "$TURBO_ROOT$/packages/design-system/src/**",
+        "$TURBO_ROOT$/packages/design-system/package.json",
+        "$TURBO_ROOT$/packages/strapi-types/**/*.ts",
+        "$TURBO_ROOT$/apps/strapi/types/generated/**"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "@repo/storybook#dev": {
+      "dependsOn": [
+        "@repo/shared-data#build",
+        "@repo/access#build"
+      ],
+      "cache": false,
+      "persistent": true
+    },
+    "@repo/storybook#typecheck": {
+      "dependsOn": [
+        "@repo/shared-data#build",
+        "@repo/access#build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/ui/src/**",
+        "$TURBO_ROOT$/apps/ui/locales/**",
+        "$TURBO_ROOT$/apps/ui/public/**",
+        "$TURBO_ROOT$/apps/ui/package.json",
+        "$TURBO_ROOT$/packages/design-system/src/**",
+        "$TURBO_ROOT$/packages/design-system/package.json",
+        "$TURBO_ROOT$/packages/strapi-types/**/*.ts",
+        "$TURBO_ROOT$/apps/strapi/types/generated/**"
+      ]
+    },
+    "@repo/storybook#test": {
+      "dependsOn": [
+        "@repo/shared-data#build",
+        "@repo/access#build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/ui/src/**",
+        "$TURBO_ROOT$/apps/ui/locales/**",
+        "$TURBO_ROOT$/apps/ui/public/**",
+        "$TURBO_ROOT$/apps/ui/package.json",
+        "$TURBO_ROOT$/packages/design-system/src/**",
+        "$TURBO_ROOT$/packages/design-system/package.json",
+        "$TURBO_ROOT$/packages/strapi-types/**/*.ts",
+        "$TURBO_ROOT$/apps/strapi/types/generated/**"
+      ],
+      "outputs": []
+    },
+    "@repo/storybook#lint": {
+      "dependsOn": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/ui/src/**",
+        "$TURBO_ROOT$/apps/ui/locales/**",
+        "$TURBO_ROOT$/apps/ui/public/**",
+        "$TURBO_ROOT$/apps/ui/package.json",
+        "$TURBO_ROOT$/packages/design-system/src/**",
+        "$TURBO_ROOT$/packages/design-system/package.json",
+        "$TURBO_ROOT$/packages/strapi-types/**/*.ts",
+        "$TURBO_ROOT$/apps/strapi/types/generated/**"
+      ]
+    },
+    "@repo/storybook#lint:fix": {
+      "dependsOn": [],
+      "cache": false
     }
   },
   "ui": "tui"

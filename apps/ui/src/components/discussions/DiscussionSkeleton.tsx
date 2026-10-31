@@ -6,6 +6,8 @@ import type { ReactNode } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/styles"
 
+import { DiscussionReplyBranch } from "./DiscussionReplyBranch"
+
 function LoadingRegion({
   children,
   className,
@@ -69,7 +71,18 @@ function ActionsPlaceholder() {
   )
 }
 
-function ComposerPlaceholder() {
+function ComposerPlaceholder({ compact = false }: { compact?: boolean }) {
+  if (compact)
+    return (
+      <div className="flex min-h-20 items-center gap-3 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4">
+        <Placeholder className="size-10 shrink-0" />
+        <div className="grid gap-2">
+          <Placeholder className="h-3 w-40" />
+          <Placeholder className="h-3 w-28" />
+        </div>
+      </div>
+    )
+
   return (
     <div className="grid gap-4 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
       <Placeholder className="h-4 w-44" />
@@ -164,27 +177,36 @@ export function DiscussionThreadSkeleton({
           </div>
         )}
         {!suggestion && (
-          <div className="grid gap-4 rounded-[24px] border border-[#e7e3ff] bg-[#f7f5fc] p-5 sm:p-6">
+          <div className="discussion-message grid gap-4">
             <AuthorPlaceholder />
-            <div className="grid gap-4 sm:pl-[52px]">
+            <div className="grid gap-4">
               <TextPlaceholder />
               <ActionsPlaceholder />
             </div>
           </div>
         )}
         {[0, 1, 2].map((index) => (
-          <div
+          <DiscussionReplyBranch
             key={index}
-            className="grid gap-3 border-b border-(--t-border-line) pb-5"
+            depth={index === 1 ? 1 : 0}
+            compact={suggestion}
           >
-            <AuthorPlaceholder />
-            <div className="grid gap-4 pl-[52px]">
-              <TextPlaceholder />
-              {!suggestion && <ActionsPlaceholder />}
+            <div
+              className={
+                suggestion
+                  ? "grid gap-3 border-b border-(--t-border-line) pb-5"
+                  : "discussion-message grid gap-3"
+              }
+            >
+              <AuthorPlaceholder />
+              <div className={cn("grid gap-4", suggestion && "pl-[52px]")}>
+                <TextPlaceholder />
+                {!suggestion && <ActionsPlaceholder />}
+              </div>
             </div>
-          </div>
+          </DiscussionReplyBranch>
         ))}
-        <ComposerPlaceholder />
+        <ComposerPlaceholder compact={!suggestion} />
       </div>
       {!embedded && (
         <div className="hidden gap-4 lg:grid">
@@ -217,7 +239,7 @@ export function DiscussionReviewSkeleton() {
       {[0, 1].map((index) => (
         <div
           key={index}
-          className="grid gap-4 rounded-[22px] border border-[#f0dab0] bg-[#fffbf0] p-5"
+          className="grid gap-4 rounded-[22px] border border-(--t-edge-warn) bg-(--t-palette-amber-soft) p-5"
         >
           <AuthorPlaceholder />
           <TextPlaceholder />

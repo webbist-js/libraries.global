@@ -49,8 +49,8 @@ export function CheckoutButton({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-3xl bg-white p-0 sm:max-w-[calc(100%-3rem)] lg:max-w-6xl"
-        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-white opacity-100 hover:bg-(--t-bg-surface)"
+        className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] gap-0 overflow-y-auto overscroll-contain rounded-3xl bg-(--t-bg-deep) p-0 sm:max-w-[calc(100%-3rem)] lg:max-w-6xl"
+        closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-(--t-bg-deep) opacity-100 hover:bg-(--t-bg-surface)"
       >
         <DialogTitle className="type-h2 sr-only">
           {t("secureCheckout")}

@@ -22,7 +22,7 @@ export function Element({
   children,
   className,
   variant,
-  textColor = "black",
+  textColor = "base",
   fontWeight = "normal",
   tag: Tag,
   id,

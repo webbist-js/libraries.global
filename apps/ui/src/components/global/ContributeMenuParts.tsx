@@ -53,7 +53,7 @@ export function CountPill({
   return (
     <span
       className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-sm font-bold text-white"
-      style={{ background: T.ink.base }}
+      style={{ background: T.bg.inverse }}
     >
       {count.toLocaleString("en-GB")}
       <span className="sr-only"> {what}</span>

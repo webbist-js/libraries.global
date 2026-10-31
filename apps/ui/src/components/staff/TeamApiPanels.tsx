@@ -41,7 +41,9 @@ export function ApiSubscriptionPanel({
   clearError,
   request,
   confirming,
+  setupRequested = false,
 }: {
+  readonly setupRequested?: boolean
   readonly data: ApiDashboard
   readonly locale: string
   readonly pending: boolean
@@ -117,6 +119,7 @@ export function ApiSubscriptionPanel({
             ) : null}
             <TeamApiSubscribeDialog
               key={data.teamId}
+              initialOpen={setupRequested}
               data={data}
               locale={locale}
               pending={pending}
@@ -335,7 +338,7 @@ export function ApiUsagePanel({
               aria-label={metric.title}
               value={Math.min(Math.max(0, metric.used), metric.limit)}
               max={metric.limit}
-              className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-(--t-border-line) [&::-moz-progress-bar]:bg-(--t-accent-primary) [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-(--t-accent-primary)"
+              className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-(--t-border-line) [&::-moz-progress-bar]:bg-(--t-action-primary) [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-(--t-action-primary)"
             />
             <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
               {metric.display(Math.max(0, metric.limit - metric.used))} left
@@ -498,7 +501,7 @@ export function ApiGuidePanel() {
           </div>
         </div>
         <div className="min-w-0 space-y-4">
-          <div className="overflow-hidden rounded-2xl bg-(--t-ink-base) text-(--t-ink-on-dark)">
+          <div className="overflow-hidden rounded-2xl bg-(--t-bg-inverse) text-(--t-ink-on-dark)">
             <pre
               translate="no"
               className="m-0 overflow-x-auto p-5 font-mono text-sm leading-[1.8]"
@@ -549,7 +552,7 @@ export function ApiGuidePanel() {
           </h3>
           <Badge label="Coming soon" color="dim" />
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-(--t-ink-dim)">
+        <p className="mt-3 mb-6 text-sm leading-relaxed text-(--t-ink-dim)">
           Proposed read-only APIs for public data. These endpoints are not
           available yet; paths and scope may change. They are not included in
           the current subscription.

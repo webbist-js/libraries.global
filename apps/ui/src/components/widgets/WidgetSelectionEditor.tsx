@@ -322,7 +322,7 @@ export function WidgetSelectionEditor({
           unresolvedIds={resolution.data?.diagnostics.unresolvedIds ?? []}
         />
       </div>
-      <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--t-border-line) bg-white p-4 shadow-lg">
+      <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-4 shadow-lg">
         <SelectionBackLink
           href={backHref}
           saved={saved}

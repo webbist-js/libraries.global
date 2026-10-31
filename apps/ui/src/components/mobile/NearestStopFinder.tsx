@@ -117,7 +117,7 @@ export function NearestStopFinder({
           type="button"
           onClick={locate}
           disabled={busy}
-          className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
           {busy ? "Finding your location…" : "Use my location"}

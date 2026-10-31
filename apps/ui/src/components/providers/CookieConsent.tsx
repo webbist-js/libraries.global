@@ -11,13 +11,13 @@ import {
   saveAnalyticsChoice,
   type AnalyticsChoice,
 } from "@/lib/analytics-consent"
-import { analyticsPageAllowed } from "@/lib/google-analytics"
+import { analyticsConsentPromptAllowed } from "@/lib/google-analytics"
 
 // This shell mounts outside NextIntlClientProvider, including the beta entrance.
 const copy = {
   en: {
     title: "Your cookie choices",
-    body: "Essential storage keeps the site working. With your permission, Google Analytics helps us understand visits and public-site actions. Analytics is optional; rejecting it does not affect beta access.",
+    body: "Essential storage keeps the site working. With your permission, Google Analytics measures visits, menus and searches, plus use of account, Staff, Contribute and Moderation tools. We send categories and action outcomes, not private URLs, private record IDs, search text or what you write. Analytics is optional; rejecting it does not affect access.",
     accept: "Accept analytics",
     reject: "Reject analytics",
     settings: "Cookie choices",
@@ -27,7 +27,7 @@ const copy = {
   },
   cs: {
     title: "Vaše volby cookies",
-    body: "Nezbytné úložiště zajišťuje fungování webu. S vaším svolením nám Google Analytics pomáhá porozumět návštěvám a akcím na veřejných stránkách. Analytika je volitelná; její odmítnutí neovlivní přístup do bety.",
+    body: "Nezbytné úložiště zajišťuje fungování webu. S vaším svolením Google Analytics měří návštěvy, nabídky a vyhledávání i používání účtu, nástrojů pro zaměstnance, přispívání a moderování. Odesíláme kategorie a výsledky akcí, nikoli soukromé adresy URL, identifikátory soukromých záznamů, hledané výrazy ani text, který píšete. Analytika je volitelná; odmítnutí neovlivní přístup.",
     accept: "Povolit analytiku",
     reject: "Odmítnout analytiku",
     settings: "Nastavení cookies",
@@ -37,7 +37,7 @@ const copy = {
   },
   fr: {
     title: "Vos choix de cookies",
-    body: "Le stockage essentiel permet au site de fonctionner. Avec votre accord, Google Analytics nous aide à comprendre les visites et les actions sur les pages publiques. L’analytique est facultative ; son refus ne modifie pas votre accès à la bêta.",
+    body: "Le stockage essentiel permet au site de fonctionner. Avec votre accord, Google Analytics mesure les visites, les menus et les recherches, ainsi que l’utilisation du compte et des outils de personnel, de contribution et de modération. Nous envoyons des catégories et les résultats des actions, sans URL privées, identifiants de dossiers privés, termes recherchés ni textes saisis. L’analytique est facultative ; la refuser ne modifie pas votre accès.",
     accept: "Accepter l’analytique",
     reject: "Refuser l’analytique",
     settings: "Choix des cookies",
@@ -116,7 +116,7 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
   }
 
   if (!ready) return null
-  const visible = open || (!decided && analyticsPageAllowed(pathname))
+  const visible = open || (!decided && analyticsConsentPromptAllowed(pathname))
 
   return (
     <>

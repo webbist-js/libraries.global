@@ -151,7 +151,7 @@ export function AtlasLibraryPanel({
   const statusBox =
     status.state === "open"
       ? {
-          bg: "#E6EFE6",
+          bg: "var(--t-palette-mint-bg)",
           fg: T.accent.ok,
           icon: "check" as const,
           text: tUi("open_now"),
@@ -217,7 +217,7 @@ export function AtlasLibraryPanel({
               type="button"
               aria-label={tUi("close")}
               onClick={onClose}
-              className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-white"
+              className="absolute top-2 right-2 flex size-10 items-center justify-center rounded-full bg-(--t-bg-deep)"
               style={{ color: T.ink.base }}
             >
               <Icon name="x" size={18} />
@@ -284,7 +284,10 @@ export function AtlasLibraryPanel({
         {closedForGood ? (
           <div
             className="flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-base font-semibold"
-            style={{ background: "#F6E3DA", color: T.accent.danger }}
+            style={{
+              background: "var(--t-palette-coral-bg)",
+              color: T.accent.danger,
+            }}
           >
             <Icon name="x" size={17} stroke={2.4} />
             Permanently closed{library.closed ? ` in ${library.closed}` : ""}
@@ -407,7 +410,7 @@ export function AtlasLibraryPanel({
         </div>
         <AtlasInspectFooter>
           <div
-            className={`${inInspect ? "border-t border-(--t-border-line) bg-white p-4" : "mt-2"} grid gap-2`}
+            className={`${inInspect ? "border-t border-(--t-border-line) bg-(--t-bg-deep) p-4" : "mt-2"} grid gap-2`}
           >
             {library.path ? (
               <GlobalLink
@@ -417,7 +420,7 @@ export function AtlasLibraryPanel({
                   content_type: "library",
                   library_document_id: library.id,
                 })}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-5 py-2 text-base font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-(--t-action-primary) px-5 py-2 text-base font-semibold text-white hover:bg-(--t-action-primary-hover)"
               >
                 {tLibrary("viewLibrary")}
                 <Icon name="chev" size={16} color="#fff" stroke={2.2} />
@@ -431,7 +434,7 @@ export function AtlasLibraryPanel({
                   action_type: "open",
                   library_document_id: library.id,
                 })}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-white px-5 py-2 text-base font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-surface)"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-5 py-2 text-base font-semibold text-(--t-accent-primary) hover:bg-(--t-bg-surface)"
               >
                 {tLibrary("improveRecord")}
                 <Icon name="chev" size={16} />
@@ -462,7 +465,7 @@ function SecondaryLink({
   const tUi = useUiTranslations("ui")
 
   const cls =
-    "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-white px-3.5 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
+    "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
   const style = { borderColor: T.border.hi, color: T.ink.base }
   const analytics = analyticsAttributes("library_action", {
     interaction_source: "atlas_panel",

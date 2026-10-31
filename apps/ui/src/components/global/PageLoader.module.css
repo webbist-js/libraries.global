@@ -1,0 +1,118 @@
+/* motion-site · profile: editorial · archetype: Brand assembly loader · patterns: sequential book arrival·window reveal·quiet hold · critique: P5 T4 C5 R5 A5 V5 */
+.root {
+  --loader-cycle: 2400ms;
+  display: grid;
+  min-height: max(320px, var(--page-loader-height, 100dvh));
+  place-content: center;
+  justify-items: center;
+  padding: 40px 24px;
+  background: var(--t-bg-void);
+  color: var(--t-accent-primary);
+}
+
+.mark {
+  width: 96px;
+  height: 96px;
+  overflow: visible;
+}
+
+.assembly {
+  animation: assembly-reset var(--loader-cycle) linear infinite;
+}
+
+.back,
+.middle,
+.front {
+  animation-duration: var(--loader-cycle);
+  animation-timing-function: var(
+    --motion-ease-out,
+    cubic-bezier(0.22, 1, 0.36, 1)
+  );
+  animation-iteration-count: infinite;
+}
+
+.back {
+  animation-name: book-back;
+}
+.middle {
+  animation-name: book-middle;
+}
+.front {
+  animation-name: book-front;
+}
+.window {
+  animation: book-window var(--loader-cycle) linear infinite;
+}
+
+.root[data-paused="true"] :is(.assembly, .back, .middle, .front, .window) {
+  animation-play-state: paused;
+}
+
+/* Each book travels along its angled top edge and settles before the next. */
+@keyframes book-back {
+  0% {
+    opacity: 0;
+    transform: translate3d(140px, -70px, 0);
+  }
+  14%,
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes book-middle {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translate3d(140px, -70px, 0);
+  }
+  29%,
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes book-front {
+  0%,
+  30% {
+    opacity: 0;
+    transform: translate3d(140px, -70px, 0);
+  }
+  44%,
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes book-window {
+  0%,
+  46% {
+    opacity: 0;
+  }
+  54%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes assembly-reset {
+  0%,
+  78% {
+    opacity: 1;
+  }
+  86%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assembly,
+  .back,
+  .middle,
+  .front,
+  .window {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

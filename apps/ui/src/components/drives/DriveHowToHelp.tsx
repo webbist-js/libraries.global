@@ -58,7 +58,7 @@ export function DriveHowToHelp({
           type="button"
           onClick={onRandom}
           disabled={busy || disabled}
-          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--t-accent-primary-hover) disabled:cursor-wait disabled:opacity-60"
+          className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--t-action-primary-hover) disabled:cursor-wait disabled:opacity-60"
         >
           <Icon aria-hidden icon="mdi:shuffle-variant" width={17} />
           {busy ? t("findingLibrary") : t("giveMeLibrary")}

@@ -22,7 +22,7 @@ export function Typography({
   children,
   className,
   variant,
-  textColor = "black",
+  textColor = "base",
   fontWeight,
   tag: Tag = "p",
   id,

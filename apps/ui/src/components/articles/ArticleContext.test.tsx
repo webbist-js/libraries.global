@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 import { NextIntlClientProvider } from "next-intl"
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { BlogArticlePage } from "@/components/blog/BlogArticlePage"
 import { toDocsSections } from "@/components/docs/docs.config"
 import { DocsArticlePage } from "@/components/docs/DocsArticlePage"
+import type * as AnalyticsModule from "@/lib/analytics-events"
 import {
   articleCitationHref,
   articleLibraryHref,
@@ -29,7 +30,8 @@ vi.mock("@/components/global/GlobalLink", () => ({
 vi.mock("@/components/global/GlobalHeader", () => ({ default: () => null }))
 vi.mock("@/components/ds/Breadcrumb", () => ({ Breadcrumb: () => null }))
 vi.mock("@/components/ds/Badge", () => ({ Badge: () => null }))
-vi.mock("@/lib/analytics-events", () => ({
+vi.mock("@/lib/analytics-events", async (importOriginal) => ({
+  ...(await importOriginal<typeof AnalyticsModule>()),
   captureAnalyticsEvent: () => vi.fn(),
   analyticsAttributes: () => ({}),
 }))
@@ -58,7 +60,15 @@ vi.mock("@/lib/avatar", async (importOriginal) => ({
   ...(await importOriginal<typeof AvatarModule>()),
   avatarSrc: () => null,
 }))
-vi.mock("@/lib/navigation", () => ({ routing: { defaultLocale: "en" } }))
+vi.mock("@/lib/navigation", () => ({
+  routing: { defaultLocale: "en", locales: ["en", "fr", "cs"] },
+  usePathname: () => "/journal/feature/story",
+  Link: ({ href, children, ...props }: ComponentProps<"a">) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}))
 vi.mock("@/lib/env-vars", () => ({
   getEnvVar: () => "https://libraries.global",
 }))
@@ -226,10 +236,10 @@ describe("public article context", () => {
     expect(
       screen.getAllByRole("region", { name: "In this story" })
     ).toBeTruthy()
-    expect(screen.getAllByText("Reading workshop")).toHaveLength(2)
-    expect(view.container.querySelector("details")?.hasAttribute("open")).toBe(
-      false
-    )
+    expect(screen.getAllByText("Reading workshop")).toHaveLength(1)
+    expect(
+      screen.getByRole("region", { name: "In this story" }).closest("details")
+    ).toBeNull()
     view.unmount()
     render(
       <DocsArticlePage

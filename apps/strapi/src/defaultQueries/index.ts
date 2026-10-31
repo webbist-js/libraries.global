@@ -40,7 +40,6 @@ export const pageDefaultQuery = {
 
 /** Editable homepage section copy — flat components, no nested relations. */
 export const homepageSectionPopulate = {
-  journeysIntro: true,
   journeys: true,
   featuredIntro: true,
   communityBand: true,
@@ -49,24 +48,15 @@ export const homepageSectionPopulate = {
   atlasBand: true,
   atlasImage: true,
   plansIntro: true,
-  coverageIntro: true,
-  eventsIntro: true,
   journalIntro: true,
-  knowledgeBand: true,
   knowledgeLinks: true,
   finalCta: true,
-  finalBenefits: true,
-  openIntro: true,
   openLinks: true,
 }
 
 export const homepageDefaultQuery = {
   populate: {
     seo: seoPopulate,
-    featuredLibraries: homepageLibraryPopulate,
-    featuredServices: {
-      fields: ["name", "summary", "category", "icon"],
-    },
     ...homepageSectionPopulate,
   },
 }

@@ -69,6 +69,7 @@ export default factories.createCoreController(
           populate: {
             ...ARTICLE_CONTEXT_POPULATE,
             eventMentions: ARTICLE_EVENTS_POPULATE,
+            sources: true,
             heroImage: true,
             authorAvatar: true,
             // Public profile fields only: the Document Service doesn't strip

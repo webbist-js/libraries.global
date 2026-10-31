@@ -149,6 +149,12 @@ export function publicArticleBrowseItem(
     author: string(article.author),
     authorUsername,
     publicationOrigin,
+    entriesAdded:
+      publicationOrigin === "index" &&
+      Number.isSafeInteger(article.entriesAdded) &&
+      Number(article.entriesAdded) >= 0
+        ? Number(article.entriesAdded)
+        : null,
     updatedAt: string(article.updatedAt),
     featured: article.featured === true,
     readingTimeMinutes:
@@ -227,7 +233,9 @@ export async function browseArticles(
   )
   const fields = [
     ...ARTICLE_BROWSE_FIELDS,
-    ...(kind === "blog" ? ["publicationOrigin"] : ["docsSections"]),
+    ...(kind === "blog"
+      ? ["publicationOrigin", "entriesAdded"]
+      : ["docsSections"]),
   ]
   for (let start = 0; start <= ceiling; start += batchSize) {
     const rows = await strapi.documents(uid).findMany({

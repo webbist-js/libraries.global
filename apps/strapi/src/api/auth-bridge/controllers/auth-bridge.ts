@@ -197,6 +197,7 @@ export default {
       "profileVisibility",
       "publicPrefs",
       "theme",
+      "appearancePreference",
       "profileBackground",
     ]
 
@@ -205,6 +206,14 @@ export default {
       !isProfileBackground(fields.profileBackground)
     )
       return ctx.badRequest("Invalid profile background")
+
+    if (
+      "appearancePreference" in fields &&
+      !["light", "dark", "system"].includes(
+        fields.appearancePreference as string
+      )
+    )
+      return ctx.badRequest("Invalid appearance preference")
 
     const data: Record<string, unknown> = {}
     for (const key of scalarFields) {

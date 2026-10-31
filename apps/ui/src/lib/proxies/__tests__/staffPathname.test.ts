@@ -23,7 +23,7 @@ describe("staffPath", () => {
   })
 
   it("is null for anything outside the staff section", () => {
-    expect(staffPath("/en/contribute/moderation")).toBeNull()
+    expect(staffPath("/en/moderation")).toBeNull()
     expect(staffPath("/staffing")).toBeNull()
     expect(staffPath("/en/staffing/x")).toBeNull()
     expect(staffPath("/en")).toBeNull()

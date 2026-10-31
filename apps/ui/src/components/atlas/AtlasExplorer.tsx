@@ -35,8 +35,10 @@ import {
 
 import type { AnalysisTab } from "@/components/atlas/AtlasAnalysisWorkspace"
 import { SelectField } from "@/components/ds/SelectField"
+import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import { useEntitlements } from "@/lib/access-client"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
+import { DASHBOARD_SIDEBAR_WIDTH } from "@/lib/dashboard-layout"
 import { T } from "@/lib/design-tokens"
 import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
 import { cn } from "@/lib/styles"
@@ -132,7 +134,7 @@ import panelStyles from "./AtlasAnalysisStack.module.css"
 type Tab = "search" | "filter" | "layers"
 type SheetSize = "peek" | "half" | "full"
 
-const LEFT_W = 400
+const LEFT_W = DASHBOARD_SIDEBAR_WIDTH
 
 function populationCoverageBounds(level: AtlasPopulationLevel) {
   if (level === "countries") return null
@@ -174,16 +176,31 @@ function writeStorage(key: string, value: unknown): void {
   }
 }
 
-function useIsMobile(query = "(max-width: 1023px)"): boolean {
+function useIsMobile(
+  root: { current: HTMLDivElement | null },
+  maxWidth = 1023
+): boolean {
+  const query = `(max-width: ${maxWidth}px)`
   const [mobile, setMobile] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia(query)
-    const update = () => setMobile(mq.matches)
+    const update = () =>
+      setMobile(
+        root.current?.clientWidth
+          ? root.current.clientWidth <= maxWidth
+          : mq.matches
+      )
     update()
     mq.addEventListener("change", update)
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update)
+    if (root.current) observer?.observe(root.current)
 
-    return () => mq.removeEventListener("change", update)
-  }, [query])
+    return () => {
+      mq.removeEventListener("change", update)
+      observer?.disconnect()
+    }
+  }, [query, root, maxWidth])
 
   return mobile
 }
@@ -247,8 +264,9 @@ export function AtlasExplorer({
 
   const mapRef = useRef<AtlasMapHandle>(null)
   const recentCameraId = useRef<string | null>(null)
-  const isMobile = useIsMobile()
-  const narrow = useIsMobile("(max-width: 1439px)")
+  const analysisRoot = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile(analysisRoot)
+  const narrow = useIsMobile(analysisRoot, 1439)
   const animateAtlas = useAtlasMotion()
   const { tier, ready: entitlementsReady, capacity, plan } = useTier()
 
@@ -343,7 +361,6 @@ export function AtlasExplorer({
       !inspectMinimised &&
       (!list || listLibraryOpen) &&
       Boolean(analysisMode || inspectTarget || selectedId || selectedStop))
-  const analysisRoot = useRef<HTMLDivElement>(null)
   const [libraryAccessTab, setLibraryAccessTab] =
     useState<AnalysisTab>("overview")
   const [layerSettings, setLayerSettings] = useState<LayerId | null>(null)
@@ -687,9 +704,11 @@ export function AtlasExplorer({
   }
 
   // ── URL sync ──────────────────────────────────────────────────────────────
+  const canSyncUrl = useRouteUrlSyncGuard()
   useEffect(() => {
     if (!hydrated || !entitlementsReady) return
     const t = setTimeout(() => {
+      if (!canSyncUrl()) return
       const params = toUrlParams({
         view: view
           ? { lat: view.lat, lng: view.lng, zoom: view.zoom }
@@ -758,7 +777,7 @@ export function AtlasExplorer({
       if (inspectMinimised) params.set("inspectMin", "1")
       const mobileQs = params.toString()
       window.history.replaceState(
-        null,
+        window.history.state,
         "",
         `${window.location.pathname}${mobileQs ? `?${mobileQs}` : ""}`
       )
@@ -766,6 +785,7 @@ export function AtlasExplorer({
 
     return () => clearTimeout(t)
   }, [
+    canSyncUrl,
     hydrated,
     entitlementsReady,
     view,
@@ -1946,7 +1966,7 @@ export function AtlasExplorer({
             style={
               on
                 ? {
-                    background: "#fff",
+                    background: "var(--t-bg-deep)",
                     color: T.accent.primary,
                     boxShadow: `inset 0 0 0 1px ${T.border.hi}`,
                   }
@@ -1958,7 +1978,7 @@ export function AtlasExplorer({
             {badge > 0 ? (
               <span
                 className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs text-white tabular-nums"
-                style={{ background: T.accent.primary }}
+                style={{ background: T.action.primary }}
               >
                 {badge}
                 <span className="sr-only"> active</span>
@@ -2139,9 +2159,9 @@ export function AtlasExplorer({
     ) && !list
   const drawerOpen = hasDrawerNavigation && !inspectMinimised
   const mapRightEdge = drawerOpen
-    ? RIGHT_W + GAP * 2
+    ? RIGHT_W + GAP
     : hasDrawerNavigation
-      ? 96
+      ? 64 + GAP
       : GAP
   const map = hydrated ? (
     <AtlasMap
@@ -2213,8 +2233,14 @@ export function AtlasExplorer({
         if (stop) pickStop(stop, false)
       }}
       padding={{
-        left: isMobile || collapsed ? 0 : LEFT_W + GAP,
-        right: isMobile ? 0 : drawerOpen ? RIGHT_W + GAP : 0,
+        left: isMobile ? 0 : collapsed ? 72 : LEFT_W,
+        right: isMobile
+          ? 0
+          : drawerOpen
+            ? RIGHT_W
+            : hasDrawerNavigation
+              ? 64
+              : 0,
         bottom: isMobile ? 200 : 90,
         bottomFraction:
           isMobile && (selected || selectedStop || showingAnalysis) ? 0.52 : 0,
@@ -2530,7 +2556,7 @@ export function AtlasExplorer({
                                 setReachScope("library")
                                 openInspectLayer("reach")
                               }}
-                              className="min-h-11 rounded-full bg-(--t-accent-primary) px-4 font-semibold text-white"
+                              className="min-h-11 rounded-full bg-(--t-action-primary) px-4 font-semibold text-white"
                             >
                               Switch to this library
                             </button>
@@ -2834,7 +2860,7 @@ export function AtlasExplorer({
     </div>
   )
   const toolbar = (
-    <div className="atlas-status flex min-h-12 min-w-0 items-center gap-3 rounded-full border border-(--t-border-line) bg-white px-3 py-1 shadow-sm">
+    <div className="atlas-status flex min-h-12 min-w-0 items-center gap-3 rounded-[14px] border border-(--t-border-line) bg-(--t-bg-deep) px-3 py-1 shadow-sm">
       <AtlasMapLegend
         layers={usableLayers}
         metric={accessMetric}
@@ -2869,14 +2895,15 @@ export function AtlasExplorer({
       <ViewToggle list={list} onChange={setList} />
     </div>
   )
-  const plans = plansOpen ? (
+  const plans = (
     <AtlasPlansSheet
+      open={plansOpen}
       tier={tier}
       currentPlan={capacity === 2 ? "team" : plan}
       signInHref={signInHref}
       onClose={() => setPlansOpen(false)}
     />
-  ) : null
+  )
 
   if (isMobile) {
     const showInspect =
@@ -2900,13 +2927,12 @@ export function AtlasExplorer({
         ref={analysisRoot}
         tabIndex={-1}
         className="atlas-motion absolute inset-0 overflow-clip outline-none"
-        data-hide-footer="true"
         style={{ background: T.bg.void }}
       >
         {map}
         {!list ? (
           <>
-            <div className="absolute top-3 left-3 z-20 rounded-full border border-(--t-border-line) bg-white px-3">
+            <div className="absolute top-3 left-3 z-20 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-3">
               <AtlasMapLegend
                 layers={usableLayers}
                 metric={accessMetric}
@@ -2933,7 +2959,7 @@ export function AtlasExplorer({
         ) : null}
         <section
           aria-label="Explore panel"
-          className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-white pb-[env(safe-area-inset-bottom)]`}
+          className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-(--t-bg-deep) pb-[env(safe-area-inset-bottom)]`}
           style={{
             height: heights[size],
             viewTransitionName: "atlas-mobile-sheet",
@@ -3044,20 +3070,19 @@ export function AtlasExplorer({
       </div>
     )
   }
-  const leftEdge = collapsed ? 104 : LEFT_W + GAP * 2
+  const leftEdge = collapsed ? 72 : LEFT_W
 
   return (
     <div
       ref={analysisRoot}
       tabIndex={-1}
       className="atlas-motion absolute inset-0 overflow-clip outline-none"
-      data-hide-footer="true"
       style={{ background: T.bg.void }}
     >
       {map}
       <aside
         aria-label="Explore panel"
-        className={`${panelStyles.stack} absolute top-4 bottom-4 left-4 z-20 flex min-h-0 flex-col overflow-clip rounded-[22px] border border-(--t-border-line) bg-white shadow-[0_8px_24px_rgb(23_22_43/0.06)]`}
+        className={`${panelStyles.stack} absolute inset-y-0 left-0 z-20 flex min-h-0 flex-col overflow-clip border-r border-(--t-border-line) bg-(--t-bg-deep)`}
         style={{
           width: collapsed ? 72 : LEFT_W,
           viewTransitionName: "atlas-sidebar",
@@ -3131,7 +3156,7 @@ export function AtlasExplorer({
                     setLeftPinned(false)
                   })
                 }
-                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-(--t-border-hi) bg-white"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep)"
               >
                 <Icon name="chev" className="rotate-180" size={17} />
               </button>
@@ -3155,7 +3180,7 @@ export function AtlasExplorer({
         <aside
           id="atlas-analysis-panel"
           aria-label="Inspect dock"
-          className="absolute top-4 right-4 bottom-4 z-20 flex min-h-0 flex-col"
+          className="absolute inset-y-0 right-0 z-20 flex min-h-0 flex-col"
           style={{
             width: inspectMinimised ? 64 : RIGHT_W,
             display: list && !listLibraryOpen ? "none" : undefined,
@@ -3195,7 +3220,7 @@ export function AtlasExplorer({
             </div>
           ) : null}
           <div
-            className="absolute bottom-4 z-20 min-w-0"
+            className="pointer-events-none absolute bottom-4 z-20 flex min-w-0 justify-center px-4 [&>*]:pointer-events-auto"
             style={{ left: leftEdge, right: mapRightEdge }}
           >
             {toolbar}
@@ -3204,10 +3229,10 @@ export function AtlasExplorer({
       ) : (
         <section
           aria-label="Library list"
-          className="absolute top-4 right-4 bottom-4 z-20 flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-(--t-border-line) bg-white"
+          className="absolute inset-y-0 right-0 z-20 flex min-w-0 flex-col overflow-hidden border-l border-(--t-border-line) bg-(--t-bg-deep)"
           style={{
             left: leftEdge,
-            right: listLibraryOpen ? RIGHT_W + GAP * 2 : GAP,
+            right: listLibraryOpen ? RIGHT_W : 0,
           }}
         >
           {listView}
@@ -3229,7 +3254,7 @@ function MapButtons({
 }) {
   const tUi = useUiTranslations("ui")
 
-  const btn = "flex size-11 items-center justify-center bg-white"
+  const btn = "flex size-11 items-center justify-center bg-(--t-bg-deep)"
 
   return (
     <div

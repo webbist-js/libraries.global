@@ -71,11 +71,11 @@ const field = {
   fontSize: 14,
 }
 const OUTLINED =
-  "inline-flex min-h-10 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex min-h-10 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-3 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
 const PILL_ACTIVE =
   "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold"
 const ICON_BUTTON =
-  "inline-flex size-7 items-center justify-center rounded-[8px] border bg-white transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-40"
+  "inline-flex size-7 items-center justify-center rounded-[8px] border bg-(--t-bg-deep) transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-40"
 const labelStyle = {
   fontSize: "var(--type-body-small-size)",
   fontWeight: 600,
@@ -108,7 +108,7 @@ function Chip({
     tone === "danger"
       ? { bg: TYPE_TINT.special.bg, fg: T.accent.danger }
       : tone === "warn"
-        ? { bg: "#F5EEDC", fg: T.accent.warn }
+        ? { bg: "var(--t-palette-amber-bg)", fg: T.accent.warn }
         : tone === "info"
           ? { bg: T.accent.chip, fg: T.accent.primary }
           : { bg: T.bg.muted, fg: T.ink.dim }
@@ -137,7 +137,11 @@ function TimetableAlert({
     tone === "danger"
       ? { bg: TYPE_TINT.special.bg, border: T.edge.danger, fg: T.accent.danger }
       : tone === "warn"
-        ? { bg: "#F5EEDC", border: T.edge.warn, fg: T.accent.warn }
+        ? {
+            bg: "var(--t-palette-amber-bg)",
+            border: T.edge.warn,
+            fg: T.accent.warn,
+          }
         : { bg: T.accent.chip, border: T.edge.info, fg: T.accent.primary }
 
   return (
@@ -507,7 +511,7 @@ export function TimetableEditor({
               className={active ? PILL_ACTIVE : OUTLINED}
               style={
                 active
-                  ? { background: T.ink.base, color: T.bg.deep }
+                  ? { background: T.bg.inverse, color: T.ink.inverse }
                   : { borderColor: T.border.hi }
               }
               aria-pressed={active}
@@ -525,7 +529,7 @@ export function TimetableEditor({
           className={allStops ? PILL_ACTIVE : OUTLINED}
           style={
             allStops
-              ? { background: T.ink.base, color: T.bg.deep }
+              ? { background: T.bg.inverse, color: T.ink.inverse }
               : { borderColor: T.border.hi }
           }
           aria-pressed={allStops}
@@ -1260,7 +1264,7 @@ export function TimetableEditor({
                                           <button
                                             key={date}
                                             type="button"
-                                            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-3 text-sm font-semibold hover:bg-(--t-bg-surface)"
+                                            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-3 text-sm font-semibold hover:bg-(--t-bg-surface)"
                                             style={{
                                               borderColor: T.border.hi,
                                             }}
@@ -1400,7 +1404,7 @@ export function TimetableEditor({
                 </label>
                 <button
                   type="button"
-                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-(--t-action-primary) px-5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={
                     disabled ||
                     !stopName.trim() ||
@@ -1485,7 +1489,7 @@ export function TimetableEditor({
                     <span
                       aria-hidden="true"
                       className="inline-block size-3 rounded-full"
-                      style={{ background: T.accent.primary }}
+                      style={{ background: T.action.primary }}
                     />
                     Selected stop
                   </li>
@@ -1585,7 +1589,7 @@ export function TimetableEditor({
                           className="flex min-h-13 w-full flex-col items-center justify-center rounded-[10px] border px-1 py-1.5 font-semibold transition-colors hover:bg-(--t-bg-surface)"
                           style={{
                             background: cell.notRunning
-                              ? "#F5EEDC"
+                              ? "var(--t-palette-amber-bg)"
                               : selected
                                 ? T.accent.chip
                                 : T.bg.surface,
@@ -1638,7 +1642,10 @@ export function TimetableEditor({
             <span
               aria-hidden="true"
               className="inline-block size-3 rounded-sm border"
-              style={{ borderColor: T.edge.warn, background: "#F5EEDC" }}
+              style={{
+                borderColor: T.edge.warn,
+                background: "var(--t-palette-amber-bg)",
+              }}
             />
             Not running (notice)
           </li>
@@ -1676,7 +1683,7 @@ export function TimetableEditor({
             <button
               type="button"
               className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-sm font-semibold text-white transition-colors"
-              style={{ background: T.accent.danger }}
+              style={{ background: T.action.danger }}
               onClick={confirmRemoveStop}
             >
               <Icon aria-hidden="true" icon="mdi:delete-outline" width={16} />
@@ -1701,7 +1708,7 @@ export function TimetableEditor({
         footer={
           <button
             type="button"
-            className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center rounded-full bg-(--t-action-primary) px-5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
             disabled={
               disabled ||
               !imported?.imported ||

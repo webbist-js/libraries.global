@@ -1,9 +1,9 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
+import { EventListSkeleton } from "@/components/events/EventListSkeleton"
 import { EventTypeChip } from "@/components/events/EventTypeChip"
 import { PriceBadge } from "@/components/events/PriceBadge"
 import type { FilterState } from "@/components/events/types"
@@ -89,7 +89,7 @@ function DateScrollPicker({
                 fontSize: "var(--type-caption-size)",
                 letterSpacing: ".14em",
                 textTransform: "uppercase",
-                color: isSelected ? T.accent.aurora : T.ink.ghost,
+                color: isSelected ? T.accent.aurora : T.ink.dim,
               }}
             >
               {DAY_LABELS[d.getDay()]}
@@ -254,8 +254,6 @@ interface EventTimelineProps {
 }
 
 export function EventTimeline({ filters }: EventTimelineProps) {
-  const tUi = useUiTranslations("ui")
-
   const [manualDate, setManualDate] = useState<Date>(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -394,19 +392,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
 
       {/* Timeline */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <span
-            style={{
-              fontFamily: T.font.mono,
-              fontSize: "var(--type-caption-size)",
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: T.ink.faint,
-            }}
-          >
-            {tUi("loading")}{" "}
-          </span>
-        </div>
+        <EventListSkeleton />
       ) : visible.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-12">
           <Icon

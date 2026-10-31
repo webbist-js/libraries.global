@@ -2,7 +2,6 @@ import type React from "react"
 import type { ControllerFieldState } from "react-hook-form"
 
 import { FormLabel } from "@/components/ui/form"
-import { removeThisWhenYouNeedMe } from "@/lib/general-helpers"
 import { cn } from "@/lib/styles"
 
 type Props = {
@@ -10,6 +9,7 @@ type Props = {
   readonly fieldState?: ControllerFieldState
   readonly required?: boolean
   readonly className?: string
+  readonly htmlFor?: string
 }
 
 export function AppFormLabel({
@@ -17,15 +17,15 @@ export function AppFormLabel({
   label,
   required,
   className,
+  htmlFor,
 }: Props) {
-  removeThisWhenYouNeedMe("AppFormLabel")
-
   if (label == null) {
     return null
   }
 
   return (
     <FormLabel
+      {...(htmlFor ? { htmlFor } : {})}
       className={cn(
         {
           "font-normal": !fieldState?.invalid,
@@ -35,7 +35,11 @@ export function AppFormLabel({
       )}
     >
       {label}
-      {required && <span className="text-red-500">*</span>}
+      {required && (
+        <span aria-hidden="true" className="text-(--t-accent-danger)">
+          *
+        </span>
+      )}
     </FormLabel>
   )
 }

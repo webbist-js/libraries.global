@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { MapLoading } from "@/components/map/MapLoading"
 import { T } from "@/lib/design-tokens"
+import { bindMapAppearance } from "@/lib/map-appearance"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { Link } from "@/lib/navigation"
 
@@ -24,7 +25,7 @@ const VOYAGER_NO_LABELS =
   "https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json"
 
 const PILL =
-  "pointer-events-auto inline-flex items-center gap-1.5 rounded-full border bg-white px-3.5 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "pointer-events-auto inline-flex items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-3.5 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /**
  * The library page's hero map: this library as a labelled indigo pin, its
@@ -60,6 +61,7 @@ export function LibraryHeroMap({
   useEffect(() => {
     if (!containerRef.current) return
     let alive = true
+    let disposeAppearance: (() => void) | undefined
     let observer: ResizeObserver | undefined
 
     import("maplibre-gl")
@@ -85,6 +87,7 @@ export function LibraryHeroMap({
 
           return
         }
+        disposeAppearance = bindMapAppearance(map)
         map.touchZoomRotate.disableRotation()
         map.addControl(
           new maplibregl.NavigationControl({ showCompass: false }),
@@ -123,6 +126,7 @@ export function LibraryHeroMap({
 
     return () => {
       alive = false
+      disposeAppearance?.()
       observer?.disconnect()
       mapRef.current?.remove()
       mapRef.current = null
@@ -226,14 +230,14 @@ export function LibraryHeroMap({
             >
               <span
                 className="mb-1.5 max-w-[220px] truncate rounded-lg px-2.5 py-1 text-sm font-semibold text-white"
-                style={{ background: T.ink.base }}
+                style={{ background: T.bg.inverse }}
               >
                 {name}
               </span>
               <span
                 className="size-[18px] rounded-full border-[3px] border-white"
                 style={{
-                  background: T.accent.primary,
+                  background: T.action.primary,
                   boxShadow: `0 0 0 2px ${T.accent.primary}`,
                 }}
               />

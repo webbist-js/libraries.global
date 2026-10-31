@@ -6,6 +6,14 @@ Use local, disposable fixtures. Do not use production accounts, real provider cr
 
 Run checks sequentially with bounded Node memory and `--workers=1`. Reuse the existing local UI/CMS and Docker PostgreSQL database for routine development. Projects needing disposable infrastructure run only in an approved isolated CI/acceptance environment. The smoke project starts a frontend, so do not run it alongside another local Next.js server.
 
+Public smoke checks run the built standalone server, including its static and
+public assets, with one browser worker. CI supplies an ephemeral PostgreSQL
+service for Better Auth. Videos are off by default; public failures retain
+screenshots. These checks run against the local CI server, not the production
+website. CI runs lint, unit suites and builds on independent runners; Storybook
+checks every story in light and dark on separate runners. The existing aggregate
+checks require every group to pass before a release can proceed.
+
 | Suite             | Command                                                                                                                               | Coverage                                                                                                                                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public smoke      | `pnpm --filter @repo/tests-playwright exec playwright test --project=smoke`                                                           | Built, hydrated public shells, skip-link focus, French/Czech routes and Events server search. Runs in CI after the UI build.                                                                             |
@@ -17,6 +25,51 @@ Run checks sequentially with bounded Node memory and `--workers=1`. Reuse the ex
 Snapshots are **never accepted automatically**. A missing baseline is a failure. To create or deliberately update them, run the appropriate project with `--update-snapshots`, inspect every generated image, then rerun the comparison without updates. Synthetic fixtures must be deterministic; arbitrary production content is not a visual baseline.
 
 The smoke project starts the built frontend on port 3101, disables the beta gate for that local fixture process and points CMS reads at an unavailable local port so fallback/error shells are exercised. It does not change a running application's environment. Run the richer content checks below against the normal local CMS as well.
+
+## Atlas dashboard gate
+
+`e2e/dashboard-shell.spec.ts` exercises the hydrated frontend with deterministic,
+public synthetic read responses. Reuse the existing local frontend and run
+`NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter @repo/tests-playwright exec playwright test e2e/dashboard-shell.spec.ts --project=chromium --workers=1 --retries=0`.
+Run Firefox and WebKit sequentially with their project names. Screenshots for
+manual comparison are written to ignored `.scratch/dashboard-batch-a/`.
+Bind the dev server to the hostname in the configured application origin
+(`--hostname localhost` for a localhost origin); a mismatched host can produce
+default-locale redirects before the Atlas page loads.
+
+The cross-section test requires the existing local CMS/database fixture services
+and is opt-in with `QA_DASHBOARD_LIVE_CONTENT=1`. Its pending status must be
+reported separately; synthetic responses do not verify real account access,
+entitlements or CMS integration. The baseline-only capture is deliberately
+excluded from normal acceptance; `QA_DASHBOARD_BASELINE=1` is only for capturing
+the previous Atlas shell before adoption. Review images rather than accepting
+them as automatic snapshot updates.
+
+## Location and profile dashboard gate
+
+`e2e/dashboard-geography.spec.ts` extends the Atlas gate through continent,
+country, region, library, Find and service/network routes. It checks the
+persistent rail, directional motion and its unsupported/reduced-motion fallbacks,
+workspace scroll history, compact section drawers, recovery states and fixed-panel
+accessibility. The profile case uses the real account sections and form with
+synthetic session/read/write responses; it does not write to a real account.
+
+Run the combined gate against the existing local services:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=4096 QA_DASHBOARD_LIVE_CONTENT=1 pnpm --filter @repo/tests-playwright exec playwright test e2e/dashboard-shell.spec.ts e2e/dashboard-geography.spec.ts --project=chromium --project=firefox --project=webkit --workers=1 --retries=0 --reporter=line
+```
+
+Motion assertions require native transition-type support. Firefox 146 exposes a
+partial native API without transition types, so its hierarchy/history checks
+exercise the functional fallback. Map-toolbar checks wait for the renderer;
+headless WebGL fallback keeps exercising List and URL history. Screenshots hide
+only GPU canvas pixels temporarily, leaving overlaid controls visible.
+
+The geography cases read the local Europe/England/Greater London/Abbey Wood
+Library records and the synthetic access-fixture library service. Their screenshots
+are written to ignored `.scratch/dashboard-batch-b/`. These layout checks do not
+replace real role/entitlement, billing-provider or production performance acceptance.
 
 ## Required release acceptance
 
@@ -42,3 +95,16 @@ Run `seed:access` against the fixture frontend, then run the separate Atlas proc
 The test files and URL inventory define public baseline coverage in Chromium, Firefox and WebKit. They fix the browser clock, use reduced motion and mask GPU canvases only; globe behavior has separate interaction/motion tests. CMS baselines cover the configured plugins' empty states in both themes at 390/1440px. Their read payloads and upstream release badge are fixed fixtures; native login/RBAC, route denials and direct reload checks remain live. Authenticated runs disable traces, videos, automatic screenshots and failure DOM contexts because those can contain fixture credentials. Manager browser state stays in memory and is reused to respect native login rate limits.
 
 Run public/admin screenshot comparison again **without** `--update-snapshots` after reviewing images. Set `QA_SMOKE_PORT` when the normal fixture frontend already occupies port 3101. Keep output directories distinct between sequential acceptance runs. The public `visual/` directory, including its test and reviewed PNGs, stays local and is ignored by Git. CMS baselines under `admin/` remain versioned. Local service configuration, keys, reports and customer data are not versioned.
+
+## Dashboard search review
+
+Against the already running local application:
+
+```bash
+BASE_URL=http://localhost:3000 pnpm --filter @repo/tests-playwright exec playwright test e2e/dashboard-search.spec.ts --project=chromium --workers=1
+```
+
+These two checks use the real search endpoint and its public response contract,
+then exercise the toolbar, keyboard selection and recent-query clearing. They
+start no servers and create no content. The local beta gate must already allow
+access. Other dashboard acceptance remains separate from this focused check.

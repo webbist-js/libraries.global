@@ -19,16 +19,13 @@ function followStyle(
     alignItems: "center",
     gap: "6px",
     padding: "9px 16px",
+    minHeight: 44,
     borderRadius: "10px",
-    border: isFollowing
-      ? `1px solid rgba(255,100,100,0.4)`
-      : `1px solid rgba(255,255,255,.22)`,
-    background: isFollowing
-      ? "rgba(255,100,100,0.08)"
-      : "rgba(255,255,255,.07)",
-    color: isFollowing ? "#ff8a8a" : "rgba(255,255,255,.80)",
+    border: `1px solid ${isFollowing ? T.accent.primary : T.border.control}`,
+    background: isFollowing ? T.accent.chip : T.bg.deep,
+    color: isFollowing ? T.accent.primary : T.ink.base,
     fontFamily: T.font.mono,
-    fontSize: "10px",
+    fontSize: "var(--type-caption-size)",
     letterSpacing: ".1em",
     textTransform: "uppercase",
     cursor: disabled ? "default" : "pointer",
@@ -74,7 +71,7 @@ export function LibraryFollowButton({
       <span
         aria-hidden="true"
         className="inline-block rounded-[10px]"
-        style={{ height: 34, width: 120, background: "rgba(255,255,255,.07)" }}
+        style={{ height: 44, width: 120, background: T.bg.muted }}
       />
     )
 
@@ -88,9 +85,10 @@ export function LibraryFollowButton({
           gap: "6px",
           padding: "9px 16px",
           borderRadius: "10px",
-          border: `1px solid rgba(255,255,255,.14)`,
-          background: `rgba(255,255,255,.07)`,
-          color: "rgba(255,255,255,.40)",
+          minHeight: 44,
+          border: `1px solid ${T.border.control}`,
+          background: T.bg.deep,
+          color: T.ink.dim,
           fontFamily: T.font.mono,
           fontSize: "var(--type-caption-size)",
           letterSpacing: ".1em",
@@ -112,6 +110,7 @@ export function LibraryFollowButton({
       <button
         type="button"
         onClick={error === "read" ? retry : toggle}
+        aria-pressed={isFollowing}
         disabled={loading || (following === null && error !== "read")}
         style={followStyle(
           isFollowing,

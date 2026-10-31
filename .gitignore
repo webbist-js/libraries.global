@@ -81,3 +81,8 @@ apps/strapi/scripts/ingests/**/.runs/
 # Python release helper caches
 __pycache__/
 *.pyc
+
+# Storybook browser-test output
+/apps/storybook/coverage/
+/apps/storybook/.vitest/
+/apps/storybook/debug-storybook.log

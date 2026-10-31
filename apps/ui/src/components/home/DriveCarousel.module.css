@@ -1,0 +1,91 @@
+/* motion-site · profile: product-ui · archetype: Fixed index deck · patterns: directional content fade·stationary card shell · critique: P5 T5 C5 R5 A5 V4 */
+.carousel {
+  min-width: 0;
+}
+.carousel:focus-visible,
+.control:focus-visible {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+.viewport {
+  /* Leave room for the stationary rear edges and card shadow. */
+  overflow: clip;
+  padding: 30px 16px 22px;
+  margin: -4px -16px -22px;
+}
+.deck {
+  display: grid;
+  position: relative;
+  isolation: isolate;
+  padding-right: 18px;
+}
+.card {
+  grid-area: 1 / 1;
+  display: flex;
+  min-width: 0;
+  transform: translate3d(
+      calc(var(--depth) * 8px),
+      calc(var(--depth) * -12px),
+      0
+    )
+    scale(calc(1 - var(--depth) * 0.025)) rotate(calc(var(--depth) * 0.65deg));
+  transform-origin: 50% 0%;
+  pointer-events: none;
+}
+.card[data-hidden="true"] {
+  visibility: hidden;
+}
+.card[data-front="true"] {
+  transform: none;
+  pointer-events: auto;
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+}
+.card[data-dragging="true"] {
+  cursor: grabbing;
+  user-select: none;
+}
+.card > article {
+  box-shadow: 0 6px 18px #17162b0a;
+}
+.card a {
+  transition: transform 160ms var(--motion-ease-out, ease-out);
+}
+.card a:active {
+  transform: scale(0.97);
+}
+.control {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--t-ink-base);
+  background: var(--t-bg-space);
+  border: 1px solid var(--t-border-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 160ms var(--motion-ease-out, ease-out);
+}
+.control:active {
+  transform: scale(0.97);
+}
+.control:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (hover: hover) and (pointer: fine) {
+  .control:hover {
+    background: var(--t-bg-deep);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card a,
+  .control {
+    transition: none;
+  }
+  .card[data-front="true"] {
+    transform: none;
+  }
+}

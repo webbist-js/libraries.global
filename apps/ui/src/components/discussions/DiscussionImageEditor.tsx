@@ -10,8 +10,9 @@ import {
 import { useTranslations } from "next-intl"
 import { useId, useRef, useState } from "react"
 
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { Input } from "@/components/ui/input"
-import { cn, primaryCtaSm } from "@/lib/styles"
+import { cn } from "@/lib/styles"
 
 import {
   discussionErrorKey,

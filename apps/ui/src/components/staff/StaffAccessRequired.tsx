@@ -2,8 +2,9 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
+import { useId } from "react"
 
-import { PageHero } from "@/components/ds"
+import { WorkspaceHero as PageHero } from "@/components/dashboard/WorkspaceHero"
 import { SectionTabs } from "@/components/ds/SectionTabs"
 import { Container } from "@/components/elementary/Container"
 import { StaffPanel, STAFF_LINK } from "@/components/staff/StaffPanel"
@@ -29,6 +30,7 @@ export function StaffAccessRequired({
   readonly returnTo?: string
 }) {
   const t = useTranslations("staffOnboarding")
+  const id = useId()
   const query = library
     ? new URLSearchParams({
         librarySlug: library.slug,
@@ -52,6 +54,7 @@ export function StaffAccessRequired({
   return (
     <>
       <PageHero
+        variant="card"
         eyebrow={t("eyebrow")}
         eyebrowIcon="mdi:shield-account-outline"
         title={library ? t("libraryTitle") : t("title")}
@@ -131,14 +134,20 @@ export function StaffAccessRequired({
               )}
             </p>
           </StaffPanel>
-          <aside className="rounded-3xl bg-(--t-bg-space) p-6 sm:p-7">
+          <aside
+            aria-labelledby={`${id}-trust`}
+            className="rounded-3xl bg-(--t-bg-space) p-6 sm:p-7"
+          >
             <Icon
               aria-hidden="true"
               icon="mdi:shield-check-outline"
               width={28}
               className="text-(--t-accent-primary)"
             />
-            <h2 className="type-panel-title mt-4 mb-3 text-(--t-ink-base)">
+            <h2
+              id={`${id}-trust`}
+              className="type-panel-title mt-4 mb-3 text-(--t-ink-base)"
+            >
               {t("trustTitle")}
             </h2>
             <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
@@ -169,7 +178,7 @@ export function StaffAccessRequired({
           <div className="grid gap-4 md:grid-cols-3">
             {benefits.map(({ id, icon }) => (
               <StaffPanel key={id} compact>
-                <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-(--t-accent-primary)/10 text-(--t-accent-primary)">
+                <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-(--t-action-primary)/10 text-(--t-accent-primary)">
                   <Icon aria-hidden="true" icon={icon} width={23} />
                 </span>
                 <h3 className="type-h3 mt-5 mb-2 text-(--t-ink-base)">
@@ -193,7 +202,7 @@ export function StaffAccessRequired({
               <li key={id} className="min-w-0">
                 <span
                   aria-hidden="true"
-                  className="mb-4 inline-flex size-8 items-center justify-center rounded-full bg-(--t-accent-primary)/10 text-sm font-semibold text-(--t-accent-primary)"
+                  className="mb-4 inline-flex size-8 items-center justify-center rounded-full bg-(--t-action-primary)/10 text-sm font-semibold text-(--t-accent-primary)"
                 >
                   {i + 1}
                 </span>
@@ -245,8 +254,13 @@ export function StaffAccessRequired({
               ))}
             </div>
           </StaffPanel>
-          <aside className="rounded-3xl bg-(--t-ink-base) p-6 text-white sm:p-7">
-            <h2 className="type-panel-title m-0">{t("helpTitle")}</h2>
+          <aside
+            aria-labelledby={`${id}-help`}
+            className="rounded-3xl bg-(--t-bg-inverse) p-6 text-white sm:p-7"
+          >
+            <h2 id={`${id}-help`} className="type-panel-title m-0">
+              {t("helpTitle")}
+            </h2>
             <p className="mt-3 mb-5 text-base leading-relaxed text-white/80">
               {t("helpCopy")}
             </p>

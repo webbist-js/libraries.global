@@ -20,6 +20,12 @@ import {
   type WidgetWorkspace,
 } from "@/lib/widgets/client"
 
+const WIDGET_STATUS_STYLE = {
+  maxWidth: "100%",
+  whiteSpace: "normal",
+  overflowWrap: "anywhere",
+} as const
+
 export function WidgetsOverview({
   initial,
 }: {
@@ -75,16 +81,6 @@ export function WidgetsOverview({
           {data.selections.length} reusable{" "}
           {data.selections.length === 1 ? "selection" : "selections"}
         </p>
-        <Badge label="Included with active Team access" color="aurora" />
-        <Link
-          className={buttonVariants({
-            variant: team.active ? "primary" : "surface",
-            size: "pill",
-          })}
-          href="/staff/teams/widgets/new"
-        >
-          Create widget
-        </Link>
       </div>
       <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5">
         <div className="flex items-start gap-4">
@@ -95,15 +91,10 @@ export function WidgetsOverview({
             <p className="mb-1 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
               Default library source
             </p>
-            <h2 className="type-h2">
+            <h2 className="type-small-heading m-0 wrap-anywhere">
               {team.primaryNetwork?.name ?? "Your Team libraries"}
             </h2>
-            <p className="mt-1 text-sm text-(--t-ink-dim)">
-              New widgets start here. You can choose a different selection for
-              each widget.
-            </p>
           </div>
-          <Badge color="dim" label="Connected" />
         </div>
         {team.organiser && team.active ? (
           <details className="mt-3 pl-0 sm:pl-14">
@@ -112,8 +103,8 @@ export function WidgetsOverview({
             </summary>
             <div className="mt-3 space-y-3">
               <p className="text-sm text-(--t-ink-dim)">
-                This chooses public data for new widgets. Management access is
-                reviewed separately.
+                New widgets use this public data source. Each widget can use a
+                different selection. Management access is reviewed separately.
               </p>
               <CataloguePicker
                 teamId={team.documentId}
@@ -154,37 +145,24 @@ export function WidgetsOverview({
           </details>
         ) : null}
       </div>
-      <StaffPanel title="Widgets">
+      <StaffPanel title="Widgets" className="@container/widgets">
         {!data.widgets.length ? (
           <EmptyState
             compact
             lead="Put your library data to work"
             detail="Create a finder, directory, chart or statistic card from the same library selection."
-            action={
-              team.active ? (
-                <Link
-                  className={buttonVariants({
-                    variant: "primary",
-                    size: "pill",
-                  })}
-                  href="/staff/teams/widgets/new"
-                >
-                  Create your first widget
-                </Link>
-              ) : undefined
-            }
           />
         ) : (
           <ul className="m-0 list-none space-y-4 p-0">
             {data.widgets.map((w) => (
               <li
                 key={w.documentId}
-                className="flex flex-wrap items-center gap-5 rounded-2xl border border-(--t-border-line) p-4 sm:p-5"
+                className="flex min-w-0 flex-col items-start gap-5 rounded-2xl border border-(--t-border-line) p-4 sm:p-5 @min-[640px]/widgets:flex-row @min-[640px]/widgets:flex-wrap @min-[640px]/widgets:items-center"
               >
-                <div className="h-24 w-40 shrink-0">
+                <div className="h-24 w-40 max-w-full shrink-0">
                   <WidgetThumbnail type={w.type} />
                 </div>
-                <div className="min-w-0 flex-1 space-y-2">
+                <div className="w-full min-w-0 space-y-2 wrap-anywhere @min-[640px]/widgets:w-auto @min-[640px]/widgets:flex-1">
                   <Link
                     className="text-lg font-semibold text-(--t-ink-base) hover:text-(--t-accent-primary)"
                     href={`/staff/teams/widgets/${w.documentId}`}
@@ -209,6 +187,7 @@ export function WidgetsOverview({
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Badge
+                      style={WIDGET_STATUS_STYLE}
                       color={
                         !team.active
                           ? "warn"
@@ -227,34 +206,41 @@ export function WidgetsOverview({
                       }
                     />
                     {w.hasChanges && w.publishedVersion > 0 ? (
-                      <Badge color="warn" label="Unpublished changes" />
+                      <Badge
+                        color="warn"
+                        label="Unpublished changes"
+                        style={WIDGET_STATUS_STYLE}
+                      />
                     ) : null}
                     {w.reviewRequested ? (
                       <Badge
+                        style={WIDGET_STATUS_STYLE}
                         color="aurora"
                         label="Ready for organiser review"
                       />
                     ) : null}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex w-full min-w-0 flex-wrap gap-2 @min-[640px]/widgets:w-auto">
                   <Link
                     className={buttonVariants({
                       variant: "surface",
                       size: "pill",
+                      className: "max-w-full",
                     })}
                     href={`/staff/teams/widgets/${w.documentId}`}
                   >
-                    Edit
+                    Edit widget
                   </Link>
                   <Link
                     className={buttonVariants({
                       variant: "surface",
                       size: "pill",
+                      className: "max-w-full",
                     })}
                     href={`/staff/teams/widgets/${w.documentId}/manage`}
                   >
-                    Manage
+                    Publishing & websites
                   </Link>
                 </div>
               </li>
@@ -287,7 +273,7 @@ export function WidgetsOverview({
                 key={s.documentId}
                 className="flex flex-wrap items-center justify-between gap-3 py-4"
               >
-                <div>
+                <div className="max-w-full min-w-0 wrap-anywhere">
                   <Link
                     className="font-semibold text-(--t-accent-primary) underline"
                     href={`/staff/teams/widgets/selections/${s.documentId}`}
@@ -307,6 +293,7 @@ export function WidgetsOverview({
                   className={buttonVariants({
                     variant: "surface",
                     size: "pill",
+                    className: "max-w-full",
                   })}
                   href={`/staff/teams/widgets/selections/${s.documentId}`}
                 >

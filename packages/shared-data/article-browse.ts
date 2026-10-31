@@ -13,7 +13,7 @@ export const ARTICLE_FACETS = [
   "sections",
 ] as const
 export type ArticleFacetKey = (typeof ARTICLE_FACETS)[number]
-export type ArticleSort = "newest" | "oldest" | "title"
+export type ArticleSort = "newest" | "oldest" | "title" | "shortest"
 export type ArticleFacetValue = {
   value: string
   label: string
@@ -43,6 +43,8 @@ export type ArticleBrowseItem = {
   summary: string | null
   author: string | null
   authorUsername: string | null
+  /** Optional editorial data-release count; never derived from article text. */
+  entriesAdded?: number | null
   publicationOrigin: "index" | "community" | null
   publishedAt: string
   updatedAt: string | null
@@ -142,7 +144,11 @@ export function parseArticleBrowseQuery(
     if (selected.length) filters[key] = selected
   }
   const sort: ArticleSort =
-    input.sort === "oldest" || input.sort === "title" ? input.sort : "newest"
+    input.sort === "oldest" ||
+    input.sort === "title" ||
+    input.sort === "shortest"
+      ? input.sort
+      : "newest"
   const documentIds = values(input.documentId)
 
   return {
@@ -253,8 +259,10 @@ function sortArticles(
     const primary =
       sort === "title"
         ? a.title.localeCompare(b.title)
-        : a.publishedAt.localeCompare(b.publishedAt) *
-          (sort === "oldest" ? 1 : -1)
+        : sort === "shortest"
+          ? a.readingTimeMinutes - b.readingTimeMinutes
+          : a.publishedAt.localeCompare(b.publishedAt) *
+            (sort === "oldest" ? 1 : -1)
 
     return (
       primary ||

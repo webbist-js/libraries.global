@@ -34,7 +34,10 @@ export function Avatar({
   const palette = tint
     ? TYPE_TINT[tint]
     : { bg: T.accent.chip, fg: T.accent.primaryHover }
-  const gradient = GRADIENTS[index % GRADIENTS.length]
+  const gradient =
+    GRADIENTS[
+      ((index % GRADIENTS.length) + GRADIENTS.length) % GRADIENTS.length
+    ]
   const dim = SIZES[size]
   const fs = FONT_SIZES[size]
 
@@ -56,13 +59,13 @@ export function Avatar({
         style={{
           fontFamily: T.font.sans,
           fontSize: fs,
-          color: tinted ? palette.fg : T.bg.deep,
+          color: tinted ? palette.fg : T.ink.inverse,
           fontWeight: tinted && (tint || size === "xl") ? 400 : 600,
           lineHeight: 1,
           userSelect: "none",
         }}
       >
-        {initials.slice(0, 2).toUpperCase()}
+        {Array.from(initials.trim()).slice(0, 2).join("").toUpperCase() || "?"}
       </span>
     </div>
   )

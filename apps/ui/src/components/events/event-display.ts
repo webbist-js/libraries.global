@@ -13,8 +13,14 @@ export const EVENT_TYPE_TINT: Record<string, { bg: string; fg: string }> = {
   exhibition: { bg: "var(--tint-special-bg)", fg: "var(--tint-special-fg)" },
   tour: { bg: "var(--tint-public-bg)", fg: "var(--tint-public-fg)" },
   drop_in: { bg: "var(--tint-public-bg)", fg: "var(--tint-public-fg)" },
-  book_club: { bg: "#F5EEDC", fg: "#6B5420" },
-  reading_group: { bg: "#F5EEDC", fg: "#6B5420" },
+  book_club: {
+    bg: "var(--t-palette-amber-bg)",
+    fg: "var(--t-palette-amber-fg)",
+  },
+  reading_group: {
+    bg: "var(--t-palette-amber-bg)",
+    fg: "var(--t-palette-amber-fg)",
+  },
   other: { bg: "var(--tint-neutral-bg)", fg: "var(--tint-neutral-fg)" },
 }
 

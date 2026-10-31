@@ -95,6 +95,9 @@ vi.mock("@/components/global/GlobalFooter", () => ({
     </footer>
   ),
 }))
+vi.mock("@/components/global/SiteSearch", () => ({
+  SiteSearchMount: () => null,
+}))
 vi.mock("@/components/providers/ClientProviders", () => ({
   ClientProviders: ({ children }: { children: ReactNode }) => children,
 }))
@@ -106,6 +109,9 @@ vi.mock("@/components/providers/TrackingScripts", () => ({
 }))
 vi.mock("@/components/staff/StaffDrawerMount", () => ({
   StaffDrawerMount: () => null,
+}))
+vi.mock("@/components/profile/ProfileDrawerMount", () => ({
+  ProfileDrawerMount: () => null,
 }))
 vi.mock("@/components/ui/sonner", () => ({ Toaster: () => null }))
 

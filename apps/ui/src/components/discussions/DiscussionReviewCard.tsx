@@ -89,13 +89,13 @@ export function DiscussionReviewCard({
   return (
     <article
       id={`discussion-review-${revision.id}`}
-      className="rounded-[24px] border border-[#ecd9a4] bg-[#fffcf2] p-5 text-base [--spacing:0.25rem] sm:p-6"
+      className="rounded-[24px] border border-(--t-edge-warn) bg-(--t-palette-amber-soft) p-5 text-base [--spacing:0.25rem] sm:p-6"
     >
       <div className="flex items-start gap-3.5">
         <DiscussionAvatar author={author} colourful />
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <h3 className="type-label m-0 text-[#875409] uppercase">
+            <h3 className="type-label m-0 text-(--t-palette-amber-fg) uppercase">
               {t(
                 editing
                   ? "editPublished"
@@ -235,7 +235,7 @@ export function DiscussionReviewCard({
             </blockquote>
           )}
           {editing && (
-            <div className="mt-3 rounded-xl border border-[#e8e5dc] bg-(--t-bg-deep) p-3">
+            <div className="mt-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-deep) p-3">
               <h4 className="type-label m-0 mb-1 text-(--t-ink-dim) uppercase">
                 {t("publishedNow")}
               </h4>
@@ -253,7 +253,7 @@ export function DiscussionReviewCard({
           <div
             className={
               editing
-                ? "mt-2 rounded-xl border border-[#acd3bd] bg-(--t-bg-deep) p-3"
+                ? "mt-2 rounded-xl border border-(--t-edge-ok) bg-(--t-bg-deep) p-3"
                 : "mt-3"
             }
           >

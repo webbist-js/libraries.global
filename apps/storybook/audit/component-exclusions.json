@@ -1,0 +1,14 @@
+{
+  "apps/ui/src/components/appearance/AccountAppearanceSync.tsx#AccountAppearanceSync": "Account-preference synchronization effect; returns null. Appearance UI and its provider are exercised by their stories; account synchronization belongs to the existing provider integration tests.",
+  "apps/ui/src/components/appearance/AppearanceProvider.tsx#AppearanceProvider": "Nonvisual context/controller ownership. The real lightweight provider wraps every preview and the Appearance stories exercise its light, dark and System choices.",
+  "apps/ui/src/components/elementary/StrapiPreviewListener/index.tsx#default": "CMS preview bootstrap. It only mounts the preview-window message listener and has no standalone visual output.",
+  "apps/ui/src/components/elementary/StrapiPreviewListener/StrapiPreviewListener.tsx#default": "CMS window-message/reload effect that returns null; mounting it would reload Storybook rather than expose a UI component.",
+  "apps/ui/src/components/mobile/live/LiveInstall.tsx#LiveInstall": "Service-worker installation and navigation bootstrap with no visible UI. Registering the application worker on the Storybook origin would interfere with isolated previews.",
+  "apps/ui/src/components/providers/ClientProviders.tsx#ClientProviders": "Application bootstrap for session-owned query caches, notifications and appearance synchronization. Stories use the individual real contexts with synthetic sessions instead of starting the application runtime.",
+  "apps/ui/src/components/providers/GoogleAnalytics.tsx#GoogleAnalytics": "Telemetry initialization and routing effects. CookieConsent is catalogued separately; executing the installer would load external telemetry scripts.",
+  "apps/ui/src/components/providers/ServerProviders.tsx#ServerProviders": "Request-owned locale/bootstrap provider with no standalone surface. The preview supplies real NextIntlClientProvider messages and locale.",
+  "apps/ui/src/components/providers/TrackingScripts.tsx#default": "Application telemetry/script bootstrap. It has no independent UI; third-party scripts must not execute in the isolated catalogue.",
+  "apps/ui/src/components/providers/TrackingScripts.tsx#TrackingScriptWrapper": "Third-party script installer; no visual output. Its script execution is outside a component-library preview.",
+  "apps/ui/src/components/seo/JsonLd.tsx#JsonLd": "Escaped application/ld+json metadata script only. It has no visual UI; serialization is covered by the existing dedicated tests.",
+  "apps/ui/src/components/widgets/WidgetAutoHeight.tsx#WidgetAutoHeight": "Embed resize/postMessage effect only; returns null. Its cross-origin parent protocol is an integration concern rather than a visual story."
+}

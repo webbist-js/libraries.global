@@ -236,14 +236,14 @@ export function emailSamples() {
         type: "event_feed",
         summary:
           "A staff member submitted a calendar feed for Sample Central Library. Check ownership and the feed before approval.",
-        url: base + "/contribute/moderation",
+        url: base + "/moderation",
       }),
     },
     simple(
       "staff-access-report",
       "Library staff access needs review",
       "A staff member reported an access problem at Sample Central Library. Review the claim in the moderation queue.",
-      "/contribute/moderation",
+      "/moderation",
       "Review access"
     ),
     simple(

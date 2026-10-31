@@ -4,14 +4,26 @@
 @import "@repo/design-system/custom-styles.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
 @import "./typography.css";
+@import "./scrollbars.css";
+@import "./motion.css";
 
 @plugin "tailwindcss-animate";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ── Design token CSS variables ─────────────────────────────────────────────
-   v2 design system — light only. Warm paper, dark ink, indigo accent.
+   Paired light/dark roles. Warm paper or deep ink, with an indigo accent.
    Reference: "Library index redesign" POCs (Sept 2026).                    */
 
 :root {
+  color-scheme: light;
+  --t-map-route: #2f5d3a;
+  --t-map-coarse: #3730a3;
+  --t-bg-inverse: #17162b;
+  --t-ink-inverse: #ffffff;
+  --t-action-primary: #4338ca;
+  --t-action-primary-hover: #3730a3;
+  --t-action-danger: #a13a1a;
+  --t-control-border: #85818d;
   /* Fallback clearance for standalone/portalled panels. The page shell
      supplies measured values for its header and navigation. */
   --sticky-header-height: 57px;
@@ -45,8 +57,8 @@
   /* ink / text */
   --t-ink-base: #17162b;
   --t-ink-dim: #55536a;
-  --t-ink-low: rgba(23, 22, 43, 0.52);
-  --t-ink-faint: rgba(23, 22, 43, 0.36);
+  --t-ink-low: #686475;
+  --t-ink-faint: #686475;
   --t-ink-ghost: rgba(23, 22, 43, 0.16);
 
   /* borders — solid, they carry elevation (no shadows) */
@@ -60,7 +72,7 @@
   --t-accent-chip: #ecebfb;
 
   /* legacy accent slots, re-pointed at the v2 palette */
-  --t-accent-aurora: #4338ca;
+  --t-accent-aurora: var(--t-accent-primary);
   --t-accent-violet: var(--t-palette-violet-fg);
   --t-accent-ember: var(--t-palette-coral-fg);
   --t-accent-gold: var(--t-palette-amber-fg);
@@ -77,8 +89,8 @@
   --tint-academic-fg: var(--t-palette-blue-fg);
   --tint-special-bg: var(--t-palette-coral-bg);
   --tint-special-fg: var(--t-palette-coral-fg);
-  --tint-neutral-bg: #f3f0ea;
-  --tint-neutral-fg: #55536a;
+  --tint-neutral-bg: var(--t-bg-muted);
+  --tint-neutral-fg: var(--t-ink-dim);
 
   /* soft tints — active states, selected rows */
   --t-aurora-soft: rgba(67, 56, 202, 0.08);
@@ -123,10 +135,50 @@
     180deg,
     transparent 0%,
     transparent 30%,
-    rgba(0, 0, 0, 0.52) 70%,
-    var(--t-bg-void) 100%
+    rgba(0, 0, 0, 0.58) 70%,
+    rgba(10, 10, 22, 0.94) 100%
   );
   --lib-card-border: rgba(23, 22, 43, 0.28);
+}
+
+.dark {
+  color-scheme: dark;
+  --t-map-route: #8ad5ae;
+  --t-map-coarse: #b8b2ff;
+  --t-bg-void: #0f0e1d;
+  --t-bg-space: #15142a;
+  --t-bg-deep: #1d1c33;
+  --t-bg-surface: #24233d;
+  --t-bg-muted: #2b2945;
+  --t-bg-muted-2: #302e4c;
+  --t-bg-selected: #302b52;
+  --t-bg-inverse: #0a0a16;
+  --t-ink-base: #f3f1fa;
+  --t-ink-dim: #c0bdd3;
+  --t-ink-low: #b3b0c8;
+  --t-ink-faint: #b3b0c8;
+  --t-ink-ghost: #69657e;
+  --t-border-line: #3e3b55;
+  --t-border-hi: #56516d;
+  --t-control-border: #8d879f;
+  --t-divider: #39364e;
+  --t-accent-primary: #b8b2ff;
+  --t-accent-primary-hover: #d2ceff;
+  --t-accent-chip: #342e5c;
+  --t-action-primary: #6352d9;
+  --t-action-primary-hover: #5745c4;
+  --t-action-danger: #aa3c45;
+  --t-edge-ok: #486e5a;
+  --t-edge-info: #60578e;
+  --t-edge-warn: #796742;
+  --t-edge-danger: #88534f;
+  --t-aurora-soft: #302b52;
+  --t-aurora-edge: #756ba9;
+  --t-danger-soft: #3d2833;
+  --t-danger-edge: #9b6769;
+  --t-scrim: rgba(0, 0, 0, 0.65);
+  --t-header-bg: rgba(15, 14, 29, 0.94);
+  --lib-card-border: #56516d;
 }
 
 /* Semantic utilities used by Shadcn and legacy page-builder controls. */
@@ -150,7 +202,7 @@
   --color-accent-foreground: var(--t-accent-primary-hover);
   --color-destructive: var(--t-accent-danger);
   --color-border: var(--t-border-line);
-  --color-input: var(--t-border-hi);
+  --color-input: var(--t-control-border);
   --color-ring: var(--t-accent-primary);
 }
 
@@ -213,7 +265,7 @@
   left: -9999px;
   top: 10px;
   z-index: 100;
-  background: var(--t-ink-base);
+  background: var(--t-bg-inverse);
   color: #fff;
   padding: 10px 16px;
   border-radius: 999px;
@@ -309,11 +361,14 @@
   scrollbar-width: none; /* Firefox */
 }
 
-/* Quiet scrollbar for panels that scroll inside the page (filter sidebar,
-   drawers): thin warm-grey thumb on a transparent track. */
+/* Compatibility utility; all native scroll containers share these tokens. */
 @utility scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--t-border-hi) transparent;
+  scrollbar-color: var(--t-scrollbar-thumb) var(--t-scrollbar-track);
+  @supports selector(::-webkit-scrollbar) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
 }
 
 @utility container {
@@ -456,7 +511,7 @@ body:has([data-hide-footer="true"]) .strapi-layout-footer {
   }
   .live-primary {
     color: white;
-    background: var(--t-accent-primary);
+    background: var(--t-action-primary);
     border-color: var(--t-accent-primary);
   }
   .live-input {
@@ -472,4 +527,71 @@ body:has([data-hide-footer="true"]) .strapi-layout-footer {
 .live-controls input,
 .live-controls select {
   min-height: 56px;
+}
+
+/* Native controls and third-party UI chrome. Data imagery keeps its own palette. */
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  color-scheme: inherit;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--t-ink-low);
+  opacity: 1;
+}
+::selection {
+  background: var(--t-accent-chip);
+  color: var(--t-ink-base);
+}
+.maplibregl-popup-content,
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-attrib {
+  background: var(--t-bg-deep);
+  color: var(--t-ink-base);
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--t-accent-primary);
+}
+.maplibregl-ctrl-group button {
+  border-color: var(--t-border-hi);
+}
+.dark .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+.dark .maplibregl-ctrl button:hover {
+  background: var(--t-bg-muted);
+}
+.dark .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--t-ink-inverse);
+}
+.dark .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--t-ink-inverse);
+}
+
+[data-slot="button"]:focus-visible {
+  outline: 2px solid var(--t-accent-primary);
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  [data-slot="button"]:focus-visible {
+    outline-color: Highlight;
+  }
+  .maplibregl-ctrl-icon {
+    filter: none;
+  }
+}
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background: var(--t-bg-deep);
+  color: var(--t-ink-dim);
+}
+.dark .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+/* A field boundary is functional UI, so it uses the control role rather than
+   the quieter card border. Existing token-based field recipes inherit this. */
+:where(input:not([type="hidden"]), textarea, select, button[role="combobox"]) {
+  --t-border-line: var(--t-control-border);
+  --t-border-hi: var(--t-control-border);
 }

@@ -1,5 +1,5 @@
 import type { Capability } from "@repo/access"
-import { isSupportedLocale } from "@repo/shared-data"
+import { type ArticleSource, isSupportedLocale } from "@repo/shared-data"
 
 import type { TiptapDoc } from "./articleBlocks"
 
@@ -43,6 +43,7 @@ export type ArticleDraft = {
   sections: string[]
   tags: ArticleTag[]
   editSummary: string
+  sources?: ArticleSource[]
   eventMentions?: ArticleEventMention[]
   /** New Journal stories only; author identity stays unchanged on edits. */
   byline?: string
@@ -64,6 +65,7 @@ export type ExistingArticle = {
   baseRevision?: string
   publishedAt?: string | null
   updatedAt?: string | null
+  sources?: ArticleSource[]
   eventMentions?: ArticleEventMention[]
 }
 

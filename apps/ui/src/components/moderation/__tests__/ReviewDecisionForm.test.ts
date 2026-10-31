@@ -9,6 +9,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 Object.assign(globalThis, { React })
 
 const refresh = vi.fn()
+const measured = vi.hoisted(() => vi.fn())
+const capture = vi.hoisted(() => vi.fn(() => measured))
+vi.mock("@/lib/workspace-analytics", () => ({
+  captureWorkspaceAction: capture,
+}))
 vi.mock("@/lib/navigation", async () => {
   const { createElement: h } = await import("react")
 
@@ -77,6 +82,32 @@ describe("ReviewDecisionForm", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     expect(sent().body).toEqual({ status: "approved" })
     await waitFor(() => expect(refresh).toHaveBeenCalled())
+    expect(capture).toHaveBeenCalledWith(
+      {
+        workspace_area: "moderation",
+        workspace_section: "review",
+        workspace_surface: "page",
+      },
+      "approve"
+    )
+    expect(measured).toHaveBeenCalledExactlyOnceWith("success")
+  })
+
+  it("records an error outcome after a refused decision without sending its note or ID", async () => {
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ error: "forbidden" }, { status: 403 })
+    )
+    renderForm()
+    fireEvent.change(screen.getByLabelText(/Note to the contributor/), {
+      target: { value: "PRIVATE_NOTE" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Reject" }))
+    await waitFor(() =>
+      expect(measured).toHaveBeenCalledExactlyOnceWith("error")
+    )
+    expect(JSON.stringify(capture.mock.calls)).not.toContain("PRIVATE_NOTE")
+    expect(JSON.stringify(capture.mock.calls)).not.toContain(DOC)
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it("offers Approve and publish only when canPublish", () => {
@@ -163,7 +194,7 @@ describe("ReviewDecisionForm — Next in this drive", () => {
     const link = await screen.findByRole("link", {
       name: /Next in this drive/,
     })
-    expect(link.getAttribute("href")).toBe(`/contribute/moderation/${NEXT}`)
+    expect(link.getAttribute("href")).toBe(`/moderation/${NEXT}`)
   })
 
   it("skips a result that's this same submission", async () => {

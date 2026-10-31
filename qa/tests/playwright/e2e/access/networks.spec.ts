@@ -359,7 +359,7 @@ test("submits one owner request and moderates a frozen subset through the existi
   }
   const review = await pageAs(browser, moderator, baseURL)
   try {
-    await review.goto(`/contribute/moderation/${requestId}`, {
+    await review.goto(`/moderation/${requestId}`, {
       waitUntil: "domcontentloaded",
     })
     await review.getByText(/Choose approved scope/).click()

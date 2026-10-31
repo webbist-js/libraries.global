@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { sanitizeAnalyticsEvent } from "@/lib/analytics-events"
+import {
+  navigationAttributes,
+  sanitizeAnalyticsEvent,
+} from "@/lib/analytics-events"
 import { createReadingTracker } from "@/lib/analytics-reading"
 import {
   analyticsPageAllowed,
@@ -46,6 +49,20 @@ const action = {
 }
 
 describe("public analytics events", () => {
+  it("keeps navigation metadata for localized and anchored public links", () => {
+    const attributes = navigationAttributes("/fr/plans#plan-team", "sidebar")
+    expect(JSON.parse(attributes["data-analytics-params"]!)).toMatchObject({
+      interaction_source: "sidebar",
+      destination: "membership",
+      action_type: "open",
+    })
+    expect(navigationAttributes("/library-networks")).toHaveProperty(
+      "data-analytics-event",
+      "navigation_action"
+    )
+    expect(navigationAttributes("/moderation?private=secret")).toEqual({})
+    expect(navigationAttributes("https://example.org/plans")).toEqual({})
+  })
   it("drops events and pending outcomes before grant, without loading a tag", () => {
     const { controller, browser, named, append } = fixture()
     const complete = controller.prepare("library_action", action)

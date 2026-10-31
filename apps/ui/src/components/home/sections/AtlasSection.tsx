@@ -1,211 +1,88 @@
-import {
-  type LucideIcon,
-  Accessibility,
-  Download,
-  Globe,
-  Map as MapIcon,
-  Target,
-} from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { Globe } from "lucide-react"
+import Image from "next/image"
 
 import GlobalLink from "@/components/global/GlobalLink"
-import AtlasGlobePreview from "@/components/home/AtlasGlobePreview"
 import Emphasis from "@/components/home/Emphasis"
-import { displayStyle } from "@/components/home/homepage.constants"
+import { homepageLinkAttributes } from "@/components/home/homepage.analytics"
 import type { CtaBand } from "@/components/home/homepage.types"
-import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
-import { T } from "@/lib/design-tokens"
-import { PRO_FEATURE_COPY } from "@/lib/plans"
+import { ReachTownIllustration } from "@/components/home/ReachTownIllustration"
+import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
-// Ink band palette: text and rules tuned for the #17162B ground.
-const LAVENDER = "#B9B4F5"
-const BODY = "#C9C7D8"
-const MUTED = "#A9A7BC"
-const RULE = "#2E2C47"
-const TILE = "#2B2A48"
-const OUTLINE = "#4A4866"
-
-type Access = "free" | "account" | "pro"
-
-const ACCESS_BADGE: Record<Access, { label: string; bg: string; fg: string }> =
-  {
-    free: { label: "Free", bg: "#E6EFE6", fg: "#2F5D3A" },
-    account: { label: "Free account", bg: T.bg.space, fg: T.ink.base },
-    pro: { label: "Pro / Team", bg: T.accent.chip, fg: T.accent.primary },
-  }
-
-const FEATURES: {
-  title: string
-  text: string
-  access: Access
-  Icon: LucideIcon
-  /** Built today? Pro features read it from the plan copy. */
-  live: boolean
-}[] = [
-  {
-    title: "Every library on one map",
-    text: "Clustered pins you can filter by type, hours and services",
-    access: "free",
-    Icon: MapIcon,
-    live: true,
-  },
-  {
-    title: "Access and events layers",
-    text: "Accessibility features, events feeds and record completeness",
-    access: "account",
-    Icon: Accessibility,
-    live: true,
-  },
-  {
-    title: "Library access",
-    text: "Libraries per 100k people or people per library, across countries and UK local areas",
-    access: "pro",
-    Icon: Globe,
-    live: true,
-  },
-  {
-    title: "Reach analysis",
-    text: "Residents within walking and cycling catchments · England",
-    access: "pro",
-    Icon: Target,
-    live: PRO_FEATURE_COPY["atlas.analysis"].status === "live",
-  },
-  {
-    title: "Export, draw and compare",
-    text: "Export any list as CSV or GeoJSON; drawing and comparing areas come next",
-    access: "pro",
-    Icon: Download,
-    live: PRO_FEATURE_COPY["atlas.export"].status === "live",
-  },
-]
-
-/** What the atlas is for, and which parts are free, need an account or
- * Pro, on a full-width ink band beside a globe preview of library locations. */
 export function AtlasSection({
   band,
-  markers,
+  image,
 }: {
   readonly band: CtaBand
-  readonly markers: readonly LibraryMarker[]
+  readonly image?: {
+    url?: string | null
+    alternativeText?: string | null
+  } | null
 }) {
-  const tUi = useUiTranslations("ui")
-
-  if (!band.title) return null
+  const imageUrl = formatStrapiMediaUrl(image?.url)
 
   return (
     <section
+      className="home-frame home-atlas-wrap"
       aria-labelledby="atlas-title"
-      className="w-full text-white"
-      style={{ background: T.ink.base }}
     >
-      <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-stretch gap-[clamp(40px,7vw,120px)] px-4 sm:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)]">
+      <div className="home-atlas-panel">
         <div>
-          <p
-            className="hero-eyebrow inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold"
-            style={{ borderColor: OUTLINE }}
-          >
-            <Globe aria-hidden="true" className="size-3.5" strokeWidth={2} />
+          <p className="home-kicker home-atlas-eyebrow">
+            <Globe size={14} strokeWidth={1.8} aria-hidden="true" />
             The Atlas
           </p>
-          <h2
-            id="atlas-title"
-            className="m-0 text-balance"
-            style={displayStyle("band")}
-          >
-            <Emphasis text={band.title} emStyle={{ color: LAVENDER }} />
+          <h2 id="atlas-title" className="type-display-band">
+            <Emphasis text={band.title ?? ""} />
           </h2>
-          {band.text ? (
-            <p
-              className="mt-8 max-w-[500px] text-lg leading-[1.65] text-pretty"
-              style={{ color: BODY }}
-            >
-              {band.text}
-            </p>
-          ) : null}
-
-          <ul
-            className="m-0 mt-7 list-none border-t p-0"
-            style={{ borderColor: RULE }}
-          >
-            {FEATURES.map(({ title, text, access, Icon, live }) => {
-              const badge = ACCESS_BADGE[access]
-
-              return (
-                <li
-                  key={title}
-                  className="flex items-center gap-3.5 border-b py-3.5"
-                  style={{ borderColor: RULE }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-[10px]"
-                    style={{ background: TILE }}
-                  >
-                    <Icon className="size-[18px]" strokeWidth={1.8} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-base font-semibold">
-                      {title}
-                    </span>
-                    <span
-                      className="block text-sm leading-[1.45]"
-                      style={{ color: MUTED }}
-                    >
-                      {text}
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                    <span
-                      className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
-                      style={{ background: badge.bg, color: badge.fg }}
-                    >
-                      {badge.label}
-                    </span>
-                    {live ? null : (
-                      <span
-                        className="rounded-full border px-2.5 py-0.5 text-sm font-medium"
-                        style={{ borderColor: OUTLINE, color: MUTED }}
-                      >
-                        {tUi("soon")}
-                      </span>
-                    )}
-                  </span>
-                </li>
-              )
-            })}
+          <p className="home-section-copy">{band.text}</p>
+          <ul className="home-atlas-labels">
+            <li>UK travel-time analysis</li>
+            <li>Reach · Pro / Team</li>
+            <li>Library map · free</li>
           </ul>
-
-          <div className="mt-8 flex flex-wrap gap-2.5">
-            {band.primaryLabel && band.primaryHref ? (
-              <GlobalLink
-                href={band.primaryHref}
-                className="rounded-full bg-white px-6 py-3.5 font-semibold no-underline transition-colors hover:bg-(--t-accent-chip)"
-                style={{ color: T.ink.base }}
-              >
-                {band.primaryLabel}
-              </GlobalLink>
-            ) : null}
-            {band.secondaryLabel && band.secondaryHref ? (
-              <GlobalLink
-                href={band.secondaryHref}
-                className="rounded-full border px-6 py-3.5 font-semibold text-white no-underline transition-colors hover:bg-[#2C2A48]"
-                style={{ borderColor: OUTLINE }}
-              >
-                {band.secondaryLabel}
-              </GlobalLink>
-            ) : null}
+          <div className="home-inline-links">
+            <GlobalLink
+              href={band.primaryHref}
+              {...homepageLinkAttributes(band.primaryHref)}
+              className="home-button home-button-light"
+            >
+              {band.primaryLabel}
+            </GlobalLink>
+            <GlobalLink
+              href={band.secondaryHref}
+              {...homepageLinkAttributes(band.secondaryHref)}
+              className="home-text-link"
+            >
+              {band.secondaryLabel}
+            </GlobalLink>
           </div>
         </div>
-
-        <AtlasGlobePreview
-          markers={markers}
-          href={band.primaryHref ?? "/map"}
-        />
+        <figure className="home-atlas-preview">
+          <GlobalLink
+            href="/map"
+            {...homepageLinkAttributes("/map")}
+            aria-label="Open the Atlas to explore library access"
+          >
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={image?.alternativeText ?? "Library access in the Atlas"}
+                fill
+                sizes="(min-width: 1100px) 600px, 90vw"
+              />
+            ) : (
+              <ReachTownIllustration />
+            )}
+          </GlobalLink>
+          <figcaption>
+            {imageUrl
+              ? "Explore library access in the Atlas"
+              : "Illustrative town · a fifteen-minute walking catchment"}
+          </figcaption>
+        </figure>
       </div>
     </section>
   )
 }
-
-AtlasSection.displayName = "AtlasSection"
 
 export default AtlasSection

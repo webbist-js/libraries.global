@@ -1,6 +1,14 @@
 "use client"
 
-import { Heart, ThumbsUp, Ellipsis, LockKeyhole } from "lucide-react"
+import {
+  Heart,
+  ThumbsUp,
+  Ellipsis,
+  LockKeyhole,
+  Reply,
+  CornerDownRight,
+  Link2,
+} from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
@@ -67,6 +75,8 @@ export function DiscussionRecordCard({
   replyingTo?: { id: string; name: string }
 }) {
   const t = useTranslations("discussions")
+  const ui = useTranslations("ui")
+  const dashboard = useTranslations("dashboard")
   const locale = useLocale()
   const author = discussionAuthor(record.author, t("member"))
   const [mode, setMode] = useState<"read" | "edit" | "report">("read")
@@ -88,6 +98,7 @@ export function DiscussionRecordCard({
   const targetHref = discussionHref(record.target?.url)
   const conversation = layout !== "card"
   const suggestionLayout = layout === "suggestion"
+  const messageLayout = layout === "conversation"
   const privateDraft = own && ["pending", "rejected"].includes(record.state)
   const displayedBody = privateDraft
     ? (record.pendingRevision?.body ??
@@ -179,18 +190,19 @@ export function DiscussionRecordCard({
   return (
     <article
       id={`discussion-${kind}-${record.id}`}
+      data-kind={kind}
       className={
-        conversation
-          ? kind === "thread" && !suggestionLayout
-            ? "scroll-mt-24 rounded-[24px] border border-(--t-palette-violet-bg) bg-[#f7f5fc] p-5 sm:p-6"
-            : privateDraft
+        messageLayout
+          ? `discussion-message ${privateDraft ? "discussion-message-private border-dashed" : ""}`
+          : conversation
+            ? privateDraft
               ? "scroll-mt-24 rounded-xl border border-dashed border-(--t-palette-violet-bg) bg-(--t-palette-violet-soft) p-4"
               : "scroll-mt-24 py-1"
-          : "scroll-mt-24 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-7"
+            : "scroll-mt-24 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-7"
       }
     >
-      <div className={conversation ? "flex items-start gap-3" : ""}>
-        {conversation && (
+      <div className={suggestionLayout ? "flex items-start gap-3" : ""}>
+        {suggestionLayout && (
           <DiscussionAvatar
             author={record.author}
             colourful
@@ -198,71 +210,82 @@ export function DiscussionRecordCard({
           />
         )}
         <div className="min-w-0 flex-1">
-          <div
-            className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${suggestionLayout ? "text-sm" : "text-xs"} text-(--t-ink-dim)`}
-          >
-            {!conversation && <DiscussionAvatar author={record.author} />}
-            {authorHref ? (
-              <a
-                href={authorHref}
-                rel="nofollow"
-                className="font-bold text-(--t-ink-base) hover:underline"
-              >
-                {author.name}
-              </a>
-            ) : (
-              <span className="font-bold text-(--t-ink-base)">
-                {author.name}
-              </span>
-            )}
-            <AuthorBadges badges={author.badges} />
-            {conversation && kind === "thread" && !suggestionLayout && (
-              <span>{t("startedThis")}</span>
-            )}
-            {replyingTo && (
-              <a
-                href={`#discussion-reply-${encodeURIComponent(replyingTo.id)}`}
-                className="hover:underline"
-              >
-                {t("replyTo", { name: replyingTo.name })}
-              </a>
-            )}
-            {!conversation && (
-              <span lang={record.language}>
-                {languageName(record.language, [], locale)}
-              </span>
-            )}
-            {(!conversation || record.state !== "visible") && (
-              <Badge
-                size="xs"
-                color={record.state === "rejected" ? "danger" : "violet"}
-                icon={
-                  record.state === "pending" ? "mdi:clock-outline" : undefined
-                }
-                label={t(`states.${discussionRecordState(record)}`)}
+          <div className="flex items-start gap-3">
+            {!suggestionLayout && (
+              <DiscussionAvatar
+                author={record.author}
+                colourful={conversation}
               />
             )}
-            {suggestionLayout && record.createdAt ? (
-              <DiscussionRelativeTime value={record.createdAt} />
-            ) : (
-              <DiscussionTime value={record.createdAt} />
-            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-(--t-ink-dim)">
+                {authorHref ? (
+                  <a
+                    href={authorHref}
+                    rel="nofollow"
+                    className="font-bold text-(--t-ink-base) hover:underline"
+                  >
+                    {author.name}
+                  </a>
+                ) : (
+                  <span className="font-bold text-(--t-ink-base)">
+                    {author.name}
+                  </span>
+                )}
+                <AuthorBadges badges={author.badges} />
+                {replyingTo && !messageLayout && (
+                  <a
+                    href={`#discussion-reply-${encodeURIComponent(replyingTo.id)}`}
+                    className="hover:underline"
+                  >
+                    {t("replyTo", { name: replyingTo.name })}
+                  </a>
+                )}
+                {!conversation && (
+                  <span lang={record.language}>
+                    {languageName(record.language, [], locale)}
+                  </span>
+                )}
+                {(!conversation || record.state !== "visible") && (
+                  <Badge
+                    size="xs"
+                    color={record.state === "rejected" ? "danger" : "violet"}
+                    icon={
+                      record.state === "pending"
+                        ? "mdi:clock-outline"
+                        : undefined
+                    }
+                    label={t(`states.${discussionRecordState(record)}`)}
+                  />
+                )}
+                {!conversation && !own && signedIn && author.slug && (
+                  <ProfileFollowButton
+                    key={author.slug}
+                    targetUsername={author.slug}
+                    isSignedIn={signedIn}
+                    compact
+                  />
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-(--t-ink-dim)">
+                {messageLayout && kind === "thread" && (
+                  <span>{t("startedThis")}</span>
+                )}
+                {conversation && record.createdAt ? (
+                  <DiscussionRelativeTime value={record.createdAt} />
+                ) : (
+                  <DiscussionTime value={record.createdAt} />
+                )}
+              </div>
+            </div>
             {number !== undefined && (
               <a
                 href={`#discussion-${kind}-${encodeURIComponent(record.id)}`}
-                className="ml-auto text-(--t-ink-low) hover:underline"
+                className="inline-flex min-h-8 min-w-8 shrink-0 items-center justify-center rounded-full text-xs text-(--t-ink-dim) hover:bg-(--t-bg-muted) hover:underline"
                 aria-label={t("postNumber", { number })}
               >
                 #{number}
               </a>
-            )}
-            {!conversation && !own && signedIn && author.slug && (
-              <ProfileFollowButton
-                key={author.slug}
-                targetUsername={author.slug}
-                isSignedIn={signedIn}
-                compact
-              />
             )}
           </div>
           {!conversation &&
@@ -376,13 +399,56 @@ export function DiscussionRecordCard({
               </div>
             )}
           {!suggestionLayout && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div
+              className={
+                messageLayout
+                  ? "discussion-message-actions"
+                  : "mt-3 flex flex-wrap items-center gap-2"
+              }
+            >
+              {messageLayout && replyingTo && (
+                <a
+                  href={`#discussion-reply-${encodeURIComponent(replyingTo.id)}`}
+                  className="discussion-reply-context"
+                >
+                  <CornerDownRight size={15} aria-hidden />
+                  <span>{t("replyTo", { name: replyingTo.name })}</span>
+                </a>
+              )}
+              {messageLayout && record.state === "visible" && (
+                <button
+                  type="button"
+                  className="discussion-copy-link"
+                  onClick={async () => {
+                    setMessage("")
+                    setError("")
+                    try {
+                      const url = new URL(window.location.href)
+                      url.hash = `discussion-${kind}-${record.id}`
+                      await navigator.clipboard.writeText(url.toString())
+                      setMessage(dashboard("linkCopied"))
+                    } catch {
+                      setError(dashboard("copyFailed"))
+                    }
+                  }}
+                >
+                  <Link2 size={15} aria-hidden />
+                  {ui("copy_link")}
+                </button>
+              )}
               {onReply &&
                 canReply &&
                 signedIn &&
                 !locked &&
                 record.state === "visible" && (
-                  <button type="button" className={pill} onClick={onReply}>
+                  <button
+                    type="button"
+                    className={
+                      messageLayout ? "discussion-message-reply" : pill
+                    }
+                    onClick={onReply}
+                  >
+                    <Reply size={16} aria-hidden />
                     {t(conversation ? "replyShort" : "reply")}
                   </button>
                 )}
@@ -405,7 +471,11 @@ export function DiscussionRecordCard({
                     disabled={!signedIn || !canReact || busy}
                     aria-pressed={record.myReaction === reaction}
                     aria-label={`${t(reaction)} ${record.reactions![reaction]}`}
-                    className={`${pill} ${record.myReaction === reaction ? "border-(--t-accent-primary) bg-(--t-palette-violet-soft) text-(--t-accent-primary)" : ""}`}
+                    className={
+                      messageLayout
+                        ? "discussion-reaction"
+                        : `${pill} ${record.myReaction === reaction ? "border-(--t-accent-primary) bg-(--t-palette-violet-soft) text-(--t-accent-primary)" : ""}`
+                    }
                     onClick={async () => {
                       setBusy(true)
                       setError("")
@@ -437,15 +507,18 @@ export function DiscussionRecordCard({
                       : ""}
                   </button>
                 ))}
-              {own && record.state !== "removed" && !locked && (
-                <button
-                  type="button"
-                  onClick={() => beginEdit()}
-                  className="text-xs font-semibold text-(--t-ink-dim) underline underline-offset-4"
-                >
-                  {t("edit")}
-                </button>
-              )}
+              {own &&
+                (!messageLayout || privateDraft) &&
+                record.state !== "removed" &&
+                !locked && (
+                  <button
+                    type="button"
+                    onClick={() => beginEdit()}
+                    className="text-xs font-semibold text-(--t-ink-dim) underline underline-offset-4"
+                  >
+                    {t("edit")}
+                  </button>
+                )}
               {!conversation && signedIn && record.state === "visible" && (
                 <button
                   type="button"
@@ -474,6 +547,7 @@ export function DiscussionRecordCard({
                     </button>
                   </PopoverTrigger>
                   <PopoverContent
+                    aria-label={t("messageActions")}
                     align="end"
                     className="w-fit min-w-48 rounded-xl border-(--t-border-line) bg-(--t-bg-deep) p-3"
                   >
@@ -481,6 +555,18 @@ export function DiscussionRecordCard({
                       {author.name}
                     </p>
                     <div className="grid gap-3">
+                      {messageLayout && own && !locked && (
+                        <button
+                          type="button"
+                          className="min-h-11 text-left text-sm font-semibold"
+                          onClick={() => {
+                            beginEdit()
+                            setProfileActionsOpen(false)
+                          }}
+                        >
+                          {t("edit")}
+                        </button>
+                      )}
                       {onQuote && canReply && !locked && (
                         <button
                           type="button"
@@ -488,8 +574,9 @@ export function DiscussionRecordCard({
                             onQuote()
                             setProfileActionsOpen(false)
                           }}
-                          className="text-left text-sm font-semibold"
+                          className="inline-flex min-h-11 items-center gap-2 text-left text-sm font-semibold"
                         >
+                          <Reply size={15} aria-hidden />
                           {t("quote")}
                         </button>
                       )}

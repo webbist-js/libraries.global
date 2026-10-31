@@ -84,6 +84,7 @@ export function FollowingSection({
   username,
   followedLibraries,
   followedDrives = [],
+  drivesUnavailable = false,
   followedUsers = [],
   claimedLibraries = [],
 }: {
@@ -91,11 +92,13 @@ export function FollowingSection({
   followedLibraries: FollowedLibrary[]
   /** Followed drives as cards, open and scheduled first (`loadFollowedDriveViews`). */
   followedDrives?: readonly DriveView[]
+  drivesUnavailable?: boolean
   followedUsers?: FollowedUser[]
   /** Libraries this user stewards (profile.claimedLibraries). */
   claimedLibraries?: ClaimedLibrary[]
 }) {
   const tUi = useUiTranslations("ui")
+  const tDashboard = useUiTranslations("dashboard")
 
   const cardStyle = { ...CARD, padding: "20px 24px 24px" }
 
@@ -144,7 +147,11 @@ export function FollowingSection({
               : undefined
           }
         />
-        <FollowedDrivesGrid drives={followedDrives} />
+        {drivesUnavailable ? (
+          <p role="status">{tDashboard("followedDrivesUnavailable")}</p>
+        ) : (
+          <FollowedDrivesGrid drives={followedDrives} />
+        )}
       </section>
 
       <section aria-labelledby="fl-people" style={cardStyle}>

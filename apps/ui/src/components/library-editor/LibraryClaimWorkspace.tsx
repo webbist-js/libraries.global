@@ -6,6 +6,7 @@ import { useRef, useState } from "react"
 
 import { Notice } from "@/components/ds/Notice"
 import { FindLibraryFirst } from "@/components/library-editor/FindLibraryFirst"
+import { StaffClaimSteps } from "@/components/staff/StaffClaimSteps"
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import type { ClaimLibrary } from "@/lib/library-claim"
@@ -120,60 +121,49 @@ export function LibraryClaimWorkspace({
             </div>
           )}
         </StaffPanel>
-        <StaffPanel title="Manage a wider service?">
-          <p>
-            Request employment verification or management of a reviewed group of
-            libraries in one service claim.
+        {!submitted ? (
+          <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+            Manage a wider service?{" "}
+            <Link
+              className="font-semibold underline underline-offset-4"
+              href="/staff/networks"
+            >
+              Find your service or network
+            </Link>
           </p>
-          <Link
-            className="font-semibold underline underline-offset-4"
-            href="/staff/networks"
-          >
-            Find your service or network
-          </Link>
-        </StaffPanel>
+        ) : null}
         <Notice icon="mdi:shield-check-outline" tone="info" title={t("after")}>
           <p className="m-0 max-w-[80ch]">{t("afterBody")}</p>
         </Notice>
       </div>
-      <aside
-        className="min-w-0 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
-        aria-label={t("next")}
-      >
-        <StaffPanel
-          title={t("next")}
-          compact
-          footer={
-            guide ? (
-              <Button asChild variant="surface" size="pill" className="w-full">
-                <Link href={guide.href}>
-                  {t("guide")}
-                  <Icon icon="mdi:arrow-right" width={18} aria-hidden />
-                </Link>
-              </Button>
-            ) : undefined
-          }
+      {!submitted ? (
+        <aside
+          className="min-w-0 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
+          aria-label={t("next")}
         >
-          <ol className="m-0 grid list-none gap-6 p-0">
-            {(["find", "details", "review"] as const).map((step, i) => (
-              <li key={step} className="flex gap-3 text-base leading-relaxed">
-                <span
-                  aria-hidden
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-(--t-accent-chip) font-semibold text-(--t-accent-primary)"
+          <StaffPanel
+            title={t("next")}
+            compact
+            footer={
+              guide ? (
+                <Button
+                  asChild
+                  variant="surface"
+                  size="pill"
+                  className="w-full"
                 >
-                  {i + 1}
-                </span>
-                <div className="min-w-0">
-                  <strong className="block">{t(step)}</strong>
-                  <p className="m-0 mt-1 text-(--t-ink-dim)">
-                    {t(`${step}Body`)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </StaffPanel>
-      </aside>
+                  <Link href={guide.href}>
+                    {t("guide")}
+                    <Icon icon="mdi:arrow-right" width={18} aria-hidden />
+                  </Link>
+                </Button>
+              ) : undefined
+            }
+          >
+            <StaffClaimSteps layout="vertical" />
+          </StaffPanel>
+        </aside>
+      ) : null}
     </main>
   )
 }

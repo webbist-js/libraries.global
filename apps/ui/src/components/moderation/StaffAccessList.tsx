@@ -18,7 +18,7 @@ export type StaffAccessRow = {
 }
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
 const PRIMARY_DANGER =
   "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50"
 
@@ -231,7 +231,7 @@ export function StaffAccessList({
           <button
             type="button"
             className={PRIMARY_DANGER}
-            style={{ background: T.accent.danger }}
+            style={{ background: T.action.danger }}
             disabled={busy}
             onClick={() => removing && void remove(removing)}
           >

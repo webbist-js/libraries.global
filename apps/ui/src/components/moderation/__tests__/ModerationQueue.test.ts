@@ -18,7 +18,7 @@ vi.mock("@/lib/navigation", async () => {
   return {
     Link: ({ href, children }: { href: string; children?: React.ReactNode }) =>
       h("a", { href }, children),
-    usePathname: () => "/contribute/moderation",
+    usePathname: () => "/moderation",
     useRouter: () => ({ replace: vi.fn(), refresh: vi.fn(), push: vi.fn() }),
     formatHref: (href?: string | null) => href || "#",
     isAppLink: () => true,
@@ -114,26 +114,26 @@ describe("queueHref", () => {
         page: 2,
       })
     ).toBe(
-      "/contribute/moderation?category=articles&queue=knowledge&locale=fr&q=hours&page=2"
+      "/moderation?category=articles&queue=knowledge&locale=fr&q=hours&page=2"
     )
   })
   const DRIVE = "drv1234567890123456789a"
 
   it("round-trips a drive filter into the URL", () => {
     expect(queueHref({ ...BASE_STATE, drive: DRIVE })).toBe(
-      `/contribute/moderation?drive=${DRIVE}`
+      `/moderation?drive=${DRIVE}`
     )
   })
 
   it("the clear link drops drive and keeps the rest", () => {
     const filtered = { ...BASE_STATE, drive: DRIVE, queue: "index" as const }
     expect(queueHref({ ...filtered, drive: "" })).toBe(
-      "/contribute/moderation?queue=index"
+      "/moderation?queue=index"
     )
   })
 
   it("omits drive when unset", () => {
-    expect(queueHref(BASE_STATE)).toBe("/contribute/moderation")
+    expect(queueHref(BASE_STATE)).toBe("/moderation")
   })
 })
 
@@ -191,7 +191,7 @@ describe("ModerationQueue drive filter", () => {
       expect(screen.getByText(/Filtered by drive My Drive/)).toBeTruthy()
     )
     const clear = screen.getByRole("link", { name: "Clear" })
-    expect(clear.getAttribute("href")).toBe("/contribute/moderation")
+    expect(clear.getAttribute("href")).toBe("/moderation")
   })
 
   it("shows an untitled banner when the filtered page has no matching rows", async () => {

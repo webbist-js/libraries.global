@@ -239,8 +239,8 @@ export const HOTSPOT_FRAGMENT_SHADER = `
 `
 
 // ── Atmosphere halo ────────────────────────────────────────────────────────
-// GitHub-style fresnel rim rendered BackSide on two concentric spheres.
-// Inner sphere: crisp terminator edge. Outer sphere: wide ambient halo.
+// BackSide on two concentric spheres. Fade at the outer silhouette and
+// toward the interior so the enlarged shell never reads as a solid band.
 
 export const HALO_VERTEX_SHADER = `
   varying vec3 vNormal;
@@ -266,11 +266,14 @@ export const HALO_FRAGMENT_SHADER = `
   void main() {
     vec3 normal   = normalize(vNormal);
     vec3 viewDir  = normalize(vViewPosition);
-    float fresnel = dot(normal, viewDir);
-    float intensity = pow(max(0.0, uC - fresnel), uP);
-    float alpha = intensity * uOpacity;
+    // Back faces have a negative dot product. Subtracting that signed value
+    // made the old Fresnel term exceed 1 and bloom into an opaque purple band.
+    float facing = abs(dot(normal, viewDir));
+    float edgeFade = smoothstep(0.0, 0.18, facing);
+    float intensity = pow(max(0.0, uC - facing), uP) * edgeFade;
+    float alpha = clamp(intensity * uOpacity, 0.0, 1.0);
     if (alpha < 0.001) discard;
-    gl_FragColor = vec4(uColor * intensity, alpha);
+    gl_FragColor = vec4(uColor, alpha);
   }
 `
 

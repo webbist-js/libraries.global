@@ -2,9 +2,10 @@
 
 import { atlasLocalGeography, atlasPopulationBaseline } from "@repo/shared-data"
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pin, X } from "lucide-react"
-import dynamic from "next/dynamic"
 import { useLocale } from "next-intl"
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -32,12 +33,12 @@ import { placeAddHref } from "@/lib/contribution-place"
 import { tintForLibraryType } from "@/lib/design-tokens"
 import { proposeHref } from "@/lib/drives/propose-link"
 
-const AboutGlobePickingLayer = dynamic(
-  () =>
-    import("@/components/about/AboutGlobePickingLayer").then(
-      (module) => module.AboutGlobePickingLayer
-    ),
-  { ssr: false }
+// This layer is rendered by React Three Fiber, so it must use React's
+// Suspense boundary rather than Next's DOM-oriented CSR bailout wrapper.
+const AboutGlobePickingLayer = lazy(() =>
+  import("@/components/about/AboutGlobePickingLayer").then((module) => ({
+    default: module.AboutGlobePickingLayer,
+  }))
 )
 
 type CountryHover = Extract<GlobeHover, { kind: "country" }>
@@ -276,17 +277,19 @@ export function AboutGlobeExplorer({
       {children({
         layer:
           enabled && boundaries ? (
-            <AboutGlobePickingLayer
-              countries={countries}
-              boundaries={boundaries}
-              markers={markers}
-              selected={shown}
-              hover={hover}
-              projections={projections}
-              onHover={updateHover}
-              onPin={setPinned}
-              allowRotation={allowRotation}
-            />
+            <Suspense fallback={null}>
+              <AboutGlobePickingLayer
+                countries={countries}
+                boundaries={boundaries}
+                markers={markers}
+                selected={shown}
+                hover={hover}
+                projections={projections}
+                onHover={updateHover}
+                onPin={setPinned}
+                allowRotation={allowRotation}
+              />
+            </Suspense>
           ) : null,
         inspecting: enabled && Boolean(shown || hover?.kind === "connection"),
         rotationScale: enabled && pinned ? 0.25 : 1,

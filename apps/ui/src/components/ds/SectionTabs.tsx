@@ -15,6 +15,7 @@ export type SectionTab = {
   /** Trailing count, e.g. pages in a Knowledge section. Zero is not shown. */
   count?: number
   badge?: ReactNode
+  publicProfile?: boolean
 }
 
 /**
@@ -29,6 +30,7 @@ export function SectionTabs({
   scroll,
   className,
   roomy = false,
+  variant = "underline",
 }: {
   readonly tabs: readonly SectionTab[]
   readonly activeId: string | null
@@ -38,6 +40,7 @@ export function SectionTabs({
   readonly scroll?: boolean
   readonly className?: string
   readonly roomy?: boolean
+  readonly variant?: "underline" | "pills"
 }) {
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -60,6 +63,7 @@ export function SectionTabs({
       className={[
         // A right-edge fade says the row scrolls on narrow screens.
         "relative -mb-px flex min-w-0 flex-1 gap-1 self-stretch overflow-x-auto [scrollbar-width:none] after:pointer-events-none after:sticky after:right-0 after:-ml-6 after:w-6 after:shrink-0 after:bg-linear-to-l after:from-(--t-bg-deep) after:to-transparent sm:after:hidden print:hidden [&::-webkit-scrollbar]:hidden",
+        variant === "pills" ? "section-tabs-pills" : "",
         className,
       ]
         .filter(Boolean)
@@ -81,6 +85,7 @@ export function SectionTabs({
                 : "border-transparent text-(--t-ink-dim) hover:border-(--t-accent-primary)/35 hover:text-(--t-accent-primary) focus-visible:text-(--t-accent-primary)",
             ].join(" ")}
             href={tab.href}
+            publicProfile={tab.publicProfile}
             key={tab.id}
             scroll={scroll}
           >

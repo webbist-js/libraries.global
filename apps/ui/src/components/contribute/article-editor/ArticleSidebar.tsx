@@ -84,7 +84,7 @@ function Chip({
       {badge && (
         <span
           className="rounded-full px-1.5 py-0.5 text-sm font-bold"
-          style={{ background: T.accent.primary, color: "#fff" }}
+          style={{ background: T.action.primary, color: "#fff" }}
         >
           {badge}
         </span>
@@ -296,7 +296,10 @@ export function StatusCard({
         <p
           role="alert"
           className="mt-3 mb-0 rounded-[14px] px-3.5 py-2.5 text-base font-semibold"
-          style={{ background: "#F6E3DA", color: T.accent.danger }}
+          style={{
+            background: "var(--t-palette-coral-bg)",
+            color: T.accent.danger,
+          }}
         >
           {submitError}
         </p>
@@ -656,7 +659,7 @@ export function TagsCard({
                     type="button"
                     aria-label={tEditor("removeTag", { tag: displayTag(tag) })}
                     onClick={() => remove(tag)}
-                    className="ml-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-white/60"
+                    className="ml-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-(--t-bg-muted)"
                     style={{
                       border: "none",
                       background: "transparent",
@@ -1203,7 +1206,7 @@ export function HowEditingWorks({
   const tUi = useUiTranslations("ui")
 
   return (
-    <aside
+    <section
       aria-label={tUi("how_editing_works")}
       className="rounded-[20px] px-6 py-5"
       style={{ background: "var(--tint-national-bg)" }}
@@ -1224,6 +1227,6 @@ export function HowEditingWorks({
             )}{" "}
         {tUi("published_articles_keep_their_revision_history")}{" "}
       </p>
-    </aside>
+    </section>
   )
 }

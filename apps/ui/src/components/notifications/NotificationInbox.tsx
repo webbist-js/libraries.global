@@ -303,7 +303,7 @@ export function NotificationInbox() {
           <div
             role="group"
             aria-label={tUi("filter_notifications")}
-            className="-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:thin] sm:-mx-7 sm:px-7"
+            className="scrollbar-thin -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-7 sm:px-7"
           >
             {(["all", "unread", ...Object.keys(categories)] as Filter[]).map(
               (key) => (
@@ -312,7 +312,7 @@ export function NotificationInbox() {
                   type="button"
                   aria-pressed={filter === key}
                   onClick={() => setFilter(key)}
-                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:-outline-offset-4! motion-reduce:transition-none ${filter === key ? "border-(--t-ink-base) bg-(--t-ink-base) text-(--t-bg-deep)" : "border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-dim) hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"}`}
+                  className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:-outline-offset-4! motion-reduce:transition-none ${filter === key ? "border-(--t-ink-base) bg-(--t-bg-inverse) text-(--t-ink-inverse)" : "border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-dim) hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"}`}
                 >
                   {key === "all"
                     ? "All"
@@ -496,7 +496,7 @@ export function NotificationInbox() {
                         </div>
                       </div>
                       {!item.readAt && (
-                        <span className="absolute top-6 right-5 size-2.5 rounded-full bg-(--t-accent-primary) sm:right-7">
+                        <span className="absolute top-6 right-5 size-2.5 rounded-full bg-(--t-action-primary) sm:right-7">
                           <span className="sr-only">Unread</span>
                         </span>
                       )}

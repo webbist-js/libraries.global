@@ -132,7 +132,7 @@ describe("GlobalContributeMenu", () => {
       within(nav)
         .getByRole("link", { name: /^Suggested additions/ })
         .getAttribute("href")
-    ).toBe("/contribute/moderation/suggestions")
+    ).toBe("/moderation/suggestions")
   })
 
   it("opens for a signed-out visitor with a sign-in card and the Everyone cards", async () => {
@@ -151,7 +151,7 @@ describe("GlobalContributeMenu", () => {
       within(nav)
         .getByRole("link", { name: /Add a library/ })
         .getAttribute("href")
-    ).toBe("/auth/signin?callbackUrl=%2Fcontribute%2Findex%2Fnew")
+    ).toBe("/contribute/index/new")
     expect(within(nav).queryByText("Your work")).toBeNull()
     expect(within(nav).queryByRole("link", { name: /My submissions/ })).toBe(
       null
@@ -235,7 +235,7 @@ describe("GlobalContributeMenu", () => {
     )
 
     const queue = within(nav).getByRole("link", { name: /Moderation queue/ })
-    expect(queue.getAttribute("href")).toBe("/contribute/moderation")
+    expect(queue.getAttribute("href")).toBe("/moderation")
     await waitFor(() => expect(queue.textContent).toContain("14 waiting"))
 
     await within(nav).findByText("74 of 198 libraries done")
@@ -301,8 +301,8 @@ describe("GlobalContributeMenu", () => {
         .getAttribute("href")
     ).toBe("/contribute/knowledge?type=journal")
     expect(
-      within(work).queryByRole("link", { name: /Moderation queue/ })
-    ).toBeNull()
+      within(work).getByRole("link", { name: /Moderation queue/ })
+    ).toBeTruthy()
     expect(
       within(nav).getByRole("group", { name: "Get involved" })
     ).toBeTruthy()
@@ -362,19 +362,19 @@ describe("GlobalContributeMenu", () => {
         "/staff/nailsea-library/edit",
         "/staff/nailsea-library/events",
         "/staff/teams",
-        "/staff/teams/api",
+        "/developers",
         "/staff/teams/billing",
         "/contribute/knowledge/new?type=knowledge",
         "/contribute/knowledge",
         "/contribute/knowledge/new?type=journal",
         "/contribute/knowledge?type=journal",
-        "/contribute/moderation",
-        "/contribute/moderation/suggestions",
+        "/moderation",
+        "/moderation/suggestions",
         "/contribute/index/new",
         "/contribute/submissions",
         "/community",
         "/community/drives/new",
-        "/profile/membership",
+        "/contribute/membership",
       ])
     )
     expect(within(nav).getByLabelText("Library")).toBeTruthy()
@@ -383,7 +383,11 @@ describe("GlobalContributeMenu", () => {
     )
     expect(screen.getByRole("dialog", { name: "Contribute menu" })).toBeTruthy()
 
-    fireEvent.click(within(nav).getByRole("button", { name: "Close menu" }))
+    fireEvent.click(
+      screen
+        .getByRole("dialog")
+        .querySelector<HTMLButtonElement>('button[aria-label="Close"]')!
+    )
     await waitFor(() =>
       expect(trigger.getAttribute("aria-expanded")).toBe("false")
     )
@@ -420,10 +424,10 @@ describe("GlobalContributeMenu", () => {
       else {
         expect(within(nav).queryByText("Nothing waiting")).toBeNull()
         expect(
-          within(nav).getByText("Review contributions within your scope.")
+          within(nav).getByText("Check community submissions.")
         ).toBeTruthy()
       }
-      expect(within(nav).queryByRole("group", { name: "Your work" })).toBeNull()
+      expect(within(nav).getByRole("group", { name: "Your work" })).toBeTruthy()
       expect(
         within(nav).queryByRole("link", { name: "Write an article" })
       ).toBeNull()

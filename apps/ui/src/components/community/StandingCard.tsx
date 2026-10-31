@@ -3,6 +3,7 @@ import { profilePalette, type ProfileBackground } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
+import { ProfileAvatar } from "@/components/ds/ProfileAvatar"
 import GlobalLink from "@/components/global/GlobalLink"
 import type { Standing } from "@/lib/community/leaderboard-server"
 import { T } from "@/lib/design-tokens"
@@ -34,27 +35,21 @@ function Header({
 
   return (
     <div className="flex items-center gap-3">
-      <span
-        aria-hidden="true"
-        className="flex shrink-0 items-center justify-center overflow-hidden rounded-full"
-        style={{
-          width: 44,
-          height: 44,
-          background: avatarUrl ? "transparent" : palette.bg,
-          color: palette.fg,
-          fontFamily: T.font.sans,
-          fontSize: "var(--type-body-large-size)",
-        }}
-      >
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatarUrl} alt="" className="size-full object-cover" />
-        ) : (
-          (initials ?? (
-            <Icon height={22} icon="mdi:account-outline" width={22} />
-          ))
-        )}
-      </span>
+      <ProfileAvatar
+        src={avatarUrl}
+        initials={initials}
+        size={44}
+        palette={palette}
+        className="text-lg"
+        fallback={
+          <Icon
+            aria-hidden="true"
+            height={22}
+            icon="mdi:account-outline"
+            width={22}
+          />
+        }
+      />
       <div className="min-w-0">
         <h2
           id="standing-heading"
@@ -75,12 +70,28 @@ function Header({
   )
 }
 
-function Shell({ children }: { readonly children: ReactNode }) {
+function Shell({
+  children,
+  compact,
+}: {
+  readonly children: ReactNode
+  readonly compact?: boolean
+}) {
   return (
     <section
       aria-labelledby="standing-heading"
-      className="flex flex-col gap-3.5"
-      style={CARD_STYLE}
+      className={`flex flex-col gap-3.5 ${compact ? "community-standing-compact" : ""}`}
+      style={
+        compact
+          ? {
+              ...CARD_STYLE,
+              background: T.bg.surface,
+              padding: 16,
+              border: "none",
+              borderRadius: 14,
+            }
+          : CARD_STYLE
+      }
     >
       {children}
     </section>
@@ -92,9 +103,11 @@ const NOT_RANKED = "Not ranked yet"
 function Tile({
   label,
   value,
+  compact,
 }: {
   readonly label: string
   readonly value: string
+  readonly compact?: boolean
 }) {
   return (
     <div
@@ -112,7 +125,11 @@ function Tile({
         className="m-0 mt-1"
         style={{
           fontFamily: T.font.sans,
-          fontSize: value === NOT_RANKED ? 20 : 26,
+          fontSize: compact
+            ? "var(--type-body-small-size)"
+            : value === NOT_RANKED
+              ? 20
+              : 26,
           lineHeight: 1.1,
           color: T.ink.base,
         }}
@@ -159,7 +176,7 @@ function Progress({ standing }: { readonly standing: Standing }) {
           className="rounded-full"
           style={{
             width: `${Math.round(percent * 10) / 10}%`,
-            background: T.accent.primary,
+            background: T.action.primary,
           }}
         />
       </div>
@@ -180,6 +197,7 @@ function Progress({ standing }: { readonly standing: Standing }) {
  * them to sign in. Server-safe: no hooks.
  */
 export function StandingCard({
+  compact = false,
   standing,
   signedIn,
   initials,
@@ -188,6 +206,7 @@ export function StandingCard({
   background,
 }: {
   readonly standing: Standing | null
+  readonly compact?: boolean
   readonly signedIn: boolean
   /** The viewer's initials, for the avatar. */
   readonly initials: string
@@ -200,7 +219,7 @@ export function StandingCard({
 
   if (!signedIn) {
     return (
-      <Shell>
+      <Shell compact={compact}>
         <Header initials={null} />
         <p
           className="m-0 text-base leading-[1.55]"
@@ -210,7 +229,7 @@ export function StandingCard({
         </p>
         <GlobalLink
           href={`/auth/signin?callbackUrl=${encodeURIComponent(signInReturnTo)}`}
-          className="inline-flex min-h-11 items-center self-start rounded-full bg-(--t-accent-primary) px-5 text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+          className="inline-flex min-h-11 items-center self-start rounded-full bg-(--t-action-primary) px-5 text-base font-semibold text-white no-underline hover:bg-(--t-action-primary-hover)"
         >
           {tUi("sign_in")}{" "}
         </GlobalLink>
@@ -220,7 +239,7 @@ export function StandingCard({
 
   if (!standing) {
     return (
-      <Shell>
+      <Shell compact={compact}>
         <Header
           initials={initials}
           avatarUrl={avatarUrl}
@@ -257,7 +276,7 @@ export function StandingCard({
   ]
 
   return (
-    <Shell>
+    <Shell compact={compact}>
       <Header
         initials={initials}
         avatarUrl={avatarUrl}
@@ -266,7 +285,12 @@ export function StandingCard({
       />
       <dl className="m-0 grid grid-cols-2 gap-2">
         {tiles.map((t) => (
-          <Tile key={t.label} label={t.label} value={t.value} />
+          <Tile
+            key={t.label}
+            label={t.label}
+            value={t.value}
+            compact={compact}
+          />
         ))}
       </dl>
       <Progress standing={standing} />

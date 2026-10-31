@@ -103,7 +103,7 @@ export const STATUS_META: Record<
   },
   needs_info: {
     label: "Changes requested",
-    color: "#6B5420",
+    color: "var(--t-palette-amber-fg)",
     icon: "mdi:alert-circle-outline",
   },
   approved: {

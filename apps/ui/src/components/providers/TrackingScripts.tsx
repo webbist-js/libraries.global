@@ -40,7 +40,13 @@ function TrackingScripts({
 }) {
   if (!productionAnalyticsEnabled()) return null
 
-  return <GoogleAnalytics nonce={nonce} locale={locale} />
+  return (
+    <GoogleAnalytics
+      nonce={nonce}
+      locale={locale}
+      checkoutEnabled={process.env.CHECKOUT_ANALYTICS_ENABLED === "true"}
+    />
+  )
 }
 
 export default TrackingScripts

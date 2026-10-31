@@ -5,7 +5,7 @@ import {
   closedNoticeDates,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import noticeController from "../src/api/library-notice/controllers/library-notice"
@@ -19,6 +19,8 @@ import {
   noticesForLibrary,
   refreshBranchNoticesAtMidnight,
 } from "../src/utils/library-notices"
+
+import staffAuditSchema from "../src/plugins/library-staff/server/content-types/staff-audit/schema.json"
 
 const id = "library00000000000000001",
   LIB = "api::library.library",
@@ -80,7 +82,7 @@ describe("library notices", () => {
     )
     expect(update).not.toHaveBeenCalled()
   })
-  it("keeps naturally expired notices in the staff's past 30 days, without serving them publicly", async () => {
+  it("keeps all past notices for staff without serving them publicly", async () => {
     const f = makeFakeStrapi({
       [LIB]: [branch],
       [NOTICE]: [
@@ -109,8 +111,37 @@ describe("library notices", () => {
     const now = new Date("2026-10-06T12:00:00Z")
     expect(
       (await noticesForLibrary(f.strapi, id, now, true)).map((n) => n.id)
-    ).toEqual(["default-expired", "recent-expired"])
+    ).toEqual(["old-expired", "default-expired", "recent-expired"])
     expect(await noticesForLibrary(f.strapi, id, now)).toEqual([])
+  })
+  it("loads notice history beyond one database page and isolates the library", async () => {
+    const history = Array.from({ length: 503 }, (_, i) => ({
+      ...base,
+      documentId: `past-${String(i).padStart(4, "0")}`,
+      from: "2025-01-01",
+      endedAt: "2025-01-02T12:00:00Z",
+      library: { documentId: id },
+    }))
+    const f = makeFakeStrapi({
+      [LIB]: [branch],
+      [NOTICE]: [
+        ...history,
+        {
+          ...history[0]!,
+          documentId: "unrelated",
+          library: { documentId: "another-library" },
+        },
+      ],
+    })
+    const result = await noticesForLibrary(
+      f.strapi,
+      id,
+      new Date("2026-10-06T12:00:00Z"),
+      true
+    )
+    expect(result).toHaveLength(503)
+    expect(new Set(result.map((item) => item.id)).size).toBe(503)
+    expect(result.some((item) => item.id === "unrelated")).toBe(false)
   })
   it("has an inclusive 30-day open-ended window", () => {
     expect(noticeIsActive(notice, "2026-11-04")).toBe(true)
@@ -435,5 +466,112 @@ describe("library notices", () => {
     } finally {
       delete (globalThis as any).strapi
     }
+  })
+})
+
+const setupReactivationNotice = (overrides: Record<string, unknown> = {}) => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date("2026-10-06T12:00:00Z"))
+
+  return makeFakeStrapi({
+    [LIB]: [branch],
+    [AFF]: [
+      {
+        documentId: "affiliation0000000000001",
+        baUserId: "staff",
+        library: { documentId: id },
+        role: "Librarian",
+        approvedAt: "2026-01-01",
+        staffRole: "editor",
+      },
+    ],
+    [NOTICE]: [
+      {
+        ...base,
+        documentId: "past-notice",
+        from: "2025-12-01",
+        to: "2025-12-02",
+        endedAt: "2025-12-01T12:00:00Z",
+        endedByBaUserId: "previous-staff",
+        library: { documentId: id },
+        ...overrides,
+      },
+    ],
+  })
+}
+
+describe("reactivating library notices", () => {
+  afterEach(() => vi.useRealTimers())
+
+  it.each([null, "2025-12-01T12:00:00Z"])(
+    "reactivates expired or explicitly ended notices (%s) with fresh dates and an audit",
+    async (endedAt) => {
+      const f = setupReactivationNotice({ endedAt })
+      const service = createNotices({ strapi: f.strapi })
+      const result = await service.reactivate("staff", id, "past-notice", base)
+      expect(result.notice).toMatchObject({
+        id: "past-notice",
+        from: base.from,
+        endedAt: null,
+      })
+      expect(f.store[NOTICE]).toHaveLength(1)
+      expect(f.store[NOTICE]![0]!.endedByBaUserId).toBeNull()
+      expect(noticeIsActive(result.notice, "2026-10-06")).toBe(true)
+      expect(staffAuditSchema.attributes.action.enum).toContain(
+        f.store["plugin::library-staff.staff-audit"]![0]!.action
+      )
+      expect(f.store["plugin::library-staff.staff-audit"]![0]).toMatchObject({
+        actor: "staff",
+        action: "notice_reactivated",
+        detail: {
+          noticeDocumentId: "past-notice",
+          previousFrom: "2025-12-01",
+          previousTo: "2025-12-02",
+          previousEndedAt: endedAt,
+        },
+      })
+      expect(
+        (await noticesForLibrary(f.strapi, id)).map((item) => item.id)
+      ).toEqual(["past-notice"])
+      await expect(
+        service.reactivate("staff", id, "past-notice", base)
+      ).rejects.toMatchObject({ status: 409 })
+    }
+  )
+  it("rejects old dates, invalid messages and cross-library or unrelated actors", async () => {
+    const f = setupReactivationNotice()
+    const service = createNotices({ strapi: f.strapi })
+    await expect(
+      service.reactivate("staff", id, "past-notice", {
+        ...base,
+        from: "2025-12-01",
+      })
+    ).rejects.toMatchObject({ status: 400 })
+    await expect(
+      service.reactivate("staff", id, "past-notice", { ...base, message: "" })
+    ).rejects.toMatchObject({ status: 400 })
+    await expect(
+      service.reactivate("stranger", id, "past-notice", base)
+    ).rejects.toMatchObject({ status: 404 })
+    f.store[NOTICE]![0]!.library = { documentId: "another-library" }
+    await expect(
+      service.reactivate("staff", id, "past-notice", base)
+    ).rejects.toMatchObject({ status: 404 })
+    expect(f.store[NOTICE]![0]!.endedAt).not.toBeNull()
+    expect(f.store["plugin::library-staff.staff-audit"] ?? []).toHaveLength(0)
+  })
+  it("checks fresh dates in the library timezone and allows a future schedule", async () => {
+    const f = setupReactivationNotice()
+    f.store[LIB]![0]!.timezone = "Pacific/Auckland"
+    vi.setSystemTime(new Date("2026-10-06T23:00:00Z"))
+    const service = createNotices({ strapi: f.strapi })
+    await expect(
+      service.reactivate("staff", id, "past-notice", base)
+    ).rejects.toMatchObject({ status: 400 })
+    const result = await service.reactivate("staff", id, "past-notice", {
+      ...base,
+      from: "2026-10-10",
+    })
+    expect(noticeIsUpcoming(result.notice, "2026-10-07")).toBe(true)
   })
 })

@@ -138,7 +138,7 @@ export function DriveTaskRow({
         ) : (
           <span
             aria-hidden="true"
-            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-(--t-border-hi) bg-white px-3 text-xs font-semibold"
+            className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-3 text-xs font-semibold"
             style={{ color: T.ink.base }}
           >
             {verb}

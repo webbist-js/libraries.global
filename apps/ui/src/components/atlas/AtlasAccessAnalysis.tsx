@@ -326,7 +326,7 @@ export function AtlasAccessAnalysis({
             downloads={
               <button
                 type="button"
-                className="min-h-12 w-full rounded-xl border bg-white px-4 py-3 text-left text-sm font-semibold hover:bg-(--t-bg-surface)"
+                className="min-h-12 w-full rounded-xl border bg-(--t-bg-deep) px-4 py-3 text-left text-sm font-semibold hover:bg-(--t-bg-surface)"
                 style={{ color: T.ink.base, borderColor: T.border.hi }}
                 onClick={() => {
                   const url = URL.createObjectURL(

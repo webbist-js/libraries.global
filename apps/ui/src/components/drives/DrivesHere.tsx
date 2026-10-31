@@ -73,7 +73,7 @@ export function DrivesHere({
         {items.slice(0, 3).map(({ view, here }) => (
           <li
             key={view.drive.documentId}
-            className="grid items-center gap-6 rounded-[28px] border bg-white p-6 sm:p-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
+            className="grid items-center gap-6 rounded-[28px] border bg-(--t-bg-deep) p-6 sm:p-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
             style={{ borderColor: T.border.line }}
           >
             <div>
@@ -110,7 +110,7 @@ export function DrivesHere({
                       className="block h-full rounded-full"
                       style={{
                         width: `${view.progress.percent}%`,
-                        background: T.accent.primary,
+                        background: T.action.primary,
                       }}
                     />
                   </span>
@@ -133,7 +133,7 @@ export function DrivesHere({
             <GlobalLink
               href={view.href}
               className="inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold text-white"
-              style={{ background: T.accent.primary }}
+              style={{ background: T.action.primary }}
             >
               Help with this drive
             </GlobalLink>

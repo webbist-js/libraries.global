@@ -62,9 +62,7 @@
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": [
-        "images"
-      ],
+      "allowedTypes": ["images"],
       "pluginOptions": {
         "i18n": {
           "localized": false
@@ -152,9 +150,7 @@
       "type": "media",
       "multiple": false,
       "required": false,
-      "allowedTypes": [
-        "images"
-      ],
+      "allowedTypes": ["images"],
       "pluginOptions": {
         "i18n": {
           "localized": false
@@ -260,10 +256,7 @@
     },
     "publicationOrigin": {
       "type": "enumeration",
-      "enum": [
-        "index",
-        "community"
-      ],
+      "enum": ["index", "community"],
       "default": "index",
       "pluginOptions": {
         "i18n": {
@@ -278,6 +271,27 @@
       "pluginOptions": {
         "i18n": {
           "localized": false
+        }
+      }
+    },
+    "entriesAdded": {
+      "type": "integer",
+      "min": 0,
+      "max": 2147483647,
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    },
+    "sources": {
+      "type": "component",
+      "repeatable": true,
+      "component": "content.article-source",
+      "max": 30,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
         }
       }
     }

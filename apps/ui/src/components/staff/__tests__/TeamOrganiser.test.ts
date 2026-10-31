@@ -153,11 +153,11 @@ describe("TeamOrganiser (organiser)", () => {
     render(organiser())
     expect(screen.getByRole("heading", { name: "Team details" })).toBeTruthy()
     expect(screen.getByText("Seats").parentElement?.textContent).toContain(
-      "2 of 5"
+      "2 of 5 seats used"
     )
-    expect(screen.getByText("Verified team")).toBeTruthy()
-    // The team and both active members carry an Active badge.
-    expect(screen.getAllByText("Active").length).toBe(3)
+    expect(screen.getByText("Team verification: Verified")).toBeTruthy()
+    expect(screen.getByText("Team membership: Active")).toBeTruthy()
+    expect(screen.getAllByText("Active").length).toBe(2)
     expect(screen.getByText("Organisers").parentElement?.textContent).toContain(
       "Ann"
     )
@@ -194,7 +194,9 @@ describe("TeamOrganiser (organiser)", () => {
     expect(screen.getAllByText("Invited").length).toBe(1)
     expect(screen.getByRole("button", { name: "Resend" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "Revoke" })).toBeTruthy()
-    const chip = screen.getByText(/· on acceptance/)
+    const chip = screen
+      .getByText("Library assignment: On acceptance")
+      .closest("li")!
     expect(chip.textContent).toContain("Kent Mobile Library")
     expect(chip.textContent).toContain("Editor")
     expect(screen.getByText("No libraries yet")).toBeTruthy()
@@ -338,9 +340,11 @@ describe("TeamOrganiser (organiser)", () => {
 
   it("explains that an unverified team's assignments go to a moderator", () => {
     render(organiser({ verifiedAt: null }))
-    expect(screen.getByText("Not yet verified")).toBeTruthy()
+    expect(screen.getByText("Team verification: Not verified")).toBeTruthy()
+    expect(screen.getByText("Team membership: Active")).toBeTruthy()
+    expect(screen.queryByText(/Waiting for Team verification/)).toBeNull()
     expect(
-      screen.getByText(/Assignments within approved service delegation scopes/)
+      screen.getByText(/Assignments need moderator review unless/)
     ).toBeTruthy()
   })
 
@@ -348,7 +352,50 @@ describe("TeamOrganiser (organiser)", () => {
     render(organiser({ status: "lapsed" }))
     expect(screen.getByText("This team isn't active")).toBeTruthy()
     expect(screen.getByText(/It has lapsed/)).toBeTruthy()
-    expect(screen.getByText("Lapsed")).toBeTruthy()
+    expect(screen.getByText("Team membership: Lapsed")).toBeTruthy()
+  })
+
+  it("distinguishes an unverified Team, pending staff access and an unsent draft", () => {
+    render(
+      organiser({
+        verifiedAt: null,
+        members: [
+          member({
+            isYou: true,
+            pending: [
+              {
+                submissionDocumentId: "claim-one",
+                libraryDocumentId: L1,
+                staffRole: "editor",
+                status: "pending",
+              },
+              {
+                submissionDocumentId: "claim-two",
+                libraryDocumentId: L2,
+                staffRole: "editor",
+                status: "draft",
+              },
+            ],
+          }),
+        ],
+      })
+    )
+    const libraries = within(
+      screen.getByRole("region", { name: "Libraries covered" })
+    )
+    // Already-approved staff access wins over any stale pending entry.
+    expect(
+      libraries.getByRole("link", { name: "Open Staff area" })
+    ).toBeTruthy()
+    expect(libraries.getByText("Library access: Draft claim")).toBeTruthy()
+    expect(libraries.queryByText("You’re not assigned here")).toBeNull()
+    expect(
+      within(
+        screen.getByRole("list", { name: "Library access for x@example.org" })
+      ).getByText("Library access: Awaiting review")
+    ).toBeTruthy()
+    expect(screen.getByText("Team membership: Active")).toBeTruthy()
+    expect(screen.getByText("Team verification: Not verified")).toBeTruthy()
   })
 })
 

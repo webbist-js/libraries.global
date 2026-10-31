@@ -63,8 +63,8 @@ vi.mock("@/lib/strapi-helpers", () => ({
   formatStrapiMediaUrl: (value: string) => value,
 }))
 
-import * as journal from "@/app/[locale]/journal/[section]/[slug]/page"
-import * as knowledge from "@/app/[locale]/knowledge/[section]/[slug]/page"
+import * as journal from "@/app/[locale]/(dashboard)/journal/[section]/[slug]/page"
+import * as knowledge from "@/app/[locale]/(dashboard)/knowledge/[section]/[slug]/page"
 
 function viewProps(node: ReactNode): Record<string, unknown> | null {
   if (Array.isArray(node)) {

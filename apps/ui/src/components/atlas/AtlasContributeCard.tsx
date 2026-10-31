@@ -7,9 +7,9 @@ import { T } from "@/lib/design-tokens"
 import { Icon } from "./atlas-ui"
 
 const PRIMARY =
-  "inline-flex h-9 items-center rounded-full bg-(--t-accent-primary) px-3.5 text-sm font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+  "inline-flex h-9 items-center rounded-full bg-(--t-action-primary) px-3.5 text-sm font-semibold text-white no-underline hover:bg-(--t-action-primary-hover)"
 const SECONDARY =
-  "inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-sm font-semibold no-underline hover:border-(--t-accent-primary)"
+  "inline-flex h-9 items-center rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold no-underline hover:border-(--t-accent-primary)"
 
 /**
  * The Atlas's invitation to contribute, under the search. Signed out it

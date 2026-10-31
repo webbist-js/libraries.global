@@ -6,19 +6,25 @@ import {
 } from "@repo/shared-data"
 import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import type { BreadcrumbItem } from "@/components/ds"
 import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
-import GlobalHeader from "@/components/global/GlobalHeader"
 import { CurrentLibraryMarker } from "@/components/library/CurrentLibraryMarker"
 import { LibrariesOnTheMove } from "@/components/library/LibrariesOnTheMove"
 import { LIBRARY_ANCHORS } from "@/components/library/library-anchors"
-import { toLatLng } from "@/components/library/library-page.helpers"
+import {
+  type OpeningTimesValue,
+  toLatLng,
+} from "@/components/library/library-page.helpers"
 import { libraryPresentation } from "@/components/library/library-presentation"
 import { LibraryAmenitiesSection } from "@/components/library/LibraryAdditionalDetails"
 import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
 import { LibraryAreaSection } from "@/components/library/LibraryArea"
 import { LibraryCommunity } from "@/components/library/LibraryCommunity"
+import { LibraryContributeCta } from "@/components/library/LibraryContributeCta"
 import {
   LibraryCorrectionProvider,
   OpenCorrectionLink,
@@ -27,9 +33,11 @@ import { LibraryEvents } from "@/components/library/LibraryEvents"
 import { LibraryFeaturedContribution } from "@/components/library/LibraryFeaturedContribution"
 import type { TranslateLocale } from "@/components/library/LibraryHelpPanel"
 import { LibraryHero } from "@/components/library/LibraryHero"
+import { LibraryOpenStatusBadge } from "@/components/library/LibraryHoursTable"
 import { LibraryMissingDetails } from "@/components/library/LibraryMissingDetails"
 import { LibraryNetworks } from "@/components/library/LibraryNetworks"
 import { LibraryNoticeBanners } from "@/components/library/LibraryNoticeBanners"
+import { LibraryOverviewMetrics } from "@/components/library/LibraryOverviewMetrics"
 import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"
 import {
   LIB_ICONS,
@@ -43,7 +51,9 @@ import {
 } from "@/components/library/LibrarySections"
 import { LibraryRecordPanel } from "@/components/library/LibrarySidebar"
 import { LibraryVisitRail } from "@/components/library/LibraryVisitRail"
+import { StaffLibraryEntry } from "@/components/library/StaffLibraryEntry"
 import { verifyRecordOf } from "@/components/library/verify.logic"
+import { LocationHierarchy } from "@/components/location/LocationSidebar"
 import { StopsTimesSection } from "@/components/mobile/StopsTimesSection"
 import { placeAddHref } from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
@@ -108,10 +118,9 @@ export function LibraryDetailPage({
   if (!library) {
     return (
       <div
-        className="relative flex min-h-screen w-full flex-col"
+        className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col"
         style={{ background: T.bg.void, color: T.ink.base }}
       >
-        <GlobalHeader locale={locale} />
         <MainContent className="flex flex-1 items-center justify-center">
           <p style={{ color: T.ink.dim }}>Library not found.</p>
         </MainContent>
@@ -178,6 +187,8 @@ export function LibraryDetailPage({
     { label: library.name ?? "" },
   ]
 
+  const parentCrumb = crumbs.at(-2)
+
   const presentation = libraryPresentation(library, area)
   const {
     mobile,
@@ -204,6 +215,10 @@ export function LibraryDetailPage({
   )
 
   const anchors = [
+    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+    ...(!mobile && !digital
+      ? [{ href: "#hours", label: tUi("opening_hours"), icon: LIB_ICONS.clock }]
+      : []),
     {
       ...(mobile ? LIBRARY_ANCHORS.stops : LIBRARY_ANCHORS.visit),
       label: tPage(mobile ? "stops" : digital ? "onlineAccess" : "visit"),
@@ -231,6 +246,7 @@ export function LibraryDetailPage({
           {
             href: "#missing",
             label: tPage("notRecorded"),
+            count: missing.length,
             icon: LIB_ICONS.pencil,
           },
         ]
@@ -244,10 +260,9 @@ export function LibraryDetailPage({
 
   return (
     <div
-      className="relative flex min-h-screen w-full flex-col"
+      className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col"
       style={{ background: T.bg.void, color: T.ink.base }}
     >
-      <GlobalHeader locale={locale} />
       <CurrentLibraryMarker documentId={library.documentId} />
 
       <LibraryCorrectionProvider
@@ -255,9 +270,82 @@ export function LibraryDetailPage({
         path={path}
         record={verifyRecordOf(library)}
       >
-        <MainContent id="main" className="flex-1">
-          <LibraryHero
-            contribution={
+        <DashboardPage
+          mobileSections={anchors}
+          routeKey={path}
+          title={library.name ?? "Library"}
+          eyebrow={libraryTypeName(library.libraryType) ?? "Library"}
+          navigation={
+            <>
+              <LibraryAnchorNav items={anchors} sidebar />
+              <LocationHierarchy
+                entries={crumbs.slice(1).map((crumb, index, rows) => ({
+                  href: crumb.href ?? path,
+                  label: crumb.label,
+                  depth: index,
+                  current: index === rows.length - 1,
+                }))}
+              />
+            </>
+          }
+          className="dashboard-library-record"
+          toolbar={<RecordToolbar items={crumbs} citeHref="#reuse" />}
+          overview={
+            <>
+              <LibraryHero
+                coords={coords}
+                library={library}
+                neighbours={mapNeighbours}
+                untranslatedLocale={untranslatedLocale}
+                wizardLibrary={wizardLibrary}
+              />
+              <LibraryOverviewMetrics library={library} />
+            </>
+          }
+          navigationHeading={
+            <RecordContextIdentity
+              title={library.name ?? "Library"}
+              eyebrow={libraryTypeName(library.libraryType) ?? "Library"}
+              parent={
+                parentCrumb?.href
+                  ? { href: parentCrumb.href, label: parentCrumb.label }
+                  : undefined
+              }
+            >
+              {!mobile && !digital ? (
+                <LibraryOpenStatusBadge
+                  openingTimes={
+                    library.openingTimes as OpeningTimesValue | null
+                  }
+                  timezone={
+                    typeof rec.timezone === "string" ? rec.timezone : null
+                  }
+                  operationalStatus={library.operationalStatus}
+                  notices={notices}
+                />
+              ) : null}
+            </RecordContextIdentity>
+          }
+          navigationFooter={
+            <>
+              <LibraryContributeCta
+                documentId={library.documentId}
+                slug={library.slug ?? ""}
+              />
+              <StaffLibraryEntry
+                card
+                libraryDocumentId={library.documentId}
+                librarySlug={library.slug ?? ""}
+                libraryName={library.name ?? ""}
+                libraryEntityRef={library.entityRef ?? undefined}
+                libraryType={libraryTypeName(library.libraryType)}
+                hasActiveFeed={Boolean(rec.hasActiveFeed)}
+              />
+            </>
+          }
+          context={
+            <>
+              {mobile ? <LibraryVisitRail library={library} /> : null}
               <LibraryFeaturedContribution
                 library={{
                   documentId: library.documentId,
@@ -288,154 +376,145 @@ export function LibraryDetailPage({
                 hasPhoto={Boolean(heroUrl || library.gallery?.length)}
                 path={path}
               />
-            }
-            coords={coords}
-            crumbs={crumbs}
-            hasPhoto={Boolean(heroUrl || library.gallery?.length)}
-            library={library}
-            neighbours={mapNeighbours}
-            untranslatedLocale={untranslatedLocale}
-            wizardLibrary={wizardLibrary}
-          />
-
-          <LibraryAnchorNav items={anchors} />
-
-          <Container className="pt-7 pb-22">
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-              <aside
-                aria-label={tPage("planVisit")}
-                className="lg:sticky lg:top-(--sticky-content-top) lg:col-start-2 lg:row-start-1 lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
-              >
-                <LibraryVisitRail library={library} />
-              </aside>
-              <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
-                {libraryTypeName(library.libraryType) === "Mobile" ? (
-                  <StopsTimesSection
-                    slug={library.slug ?? undefined}
-                    id={library.documentId}
-                    name={library.name ?? "Mobile library"}
-                    value={rec.mobileTimetable}
-                    timezone={String(rec.timezone ?? "UTC")}
-                    status={library.operationalStatus}
-                    notices={notices}
-                    timetableUrl={
-                      typeof rec.timetableUrl === "string"
-                        ? rec.timetableUrl
-                        : null
-                    }
-                  />
-                ) : (
-                  <>
-                    <LibraryNoticeBanners
+            </>
+          }
+        >
+          <MainContent id="main" className="flex-1">
+            <Container className="pb-10">
+              <div className="dashboard-record-content">
+                <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
+                  {libraryTypeName(library.libraryType) === "Mobile" ? (
+                    <StopsTimesSection
+                      slug={library.slug ?? undefined}
+                      id={library.documentId}
+                      name={library.name ?? "Mobile library"}
+                      value={rec.mobileTimetable}
+                      timezone={String(rec.timezone ?? "UTC")}
+                      status={library.operationalStatus}
                       notices={notices}
-                      timezone={
-                        typeof rec.timezone === "string" ? rec.timezone : null
+                      timetableUrl={
+                        typeof rec.timetableUrl === "string"
+                          ? rec.timetableUrl
+                          : null
                       }
                     />
-                    <LibraryVisitSection library={library} />
-                  </>
-                )}
-                {hasAccess ? (
-                  <LibraryFacilitiesSection library={library} path={path} />
-                ) : null}
-                {hasServices ? (
-                  <LibraryAmenitiesSection
-                    library={library}
-                    includeAmenities={!hasAccess}
-                  />
-                ) : null}
-                {libraryTypeName(library.libraryType) !== "Mobile" &&
-                library.mobileLibraries?.length ? (
-                  <LibrariesOnTheMove libraries={library.mobileLibraries} />
-                ) : null}
+                  ) : (
+                    <>
+                      <LibraryNoticeBanners
+                        notices={notices}
+                        timezone={
+                          typeof rec.timezone === "string" ? rec.timezone : null
+                        }
+                      />
+                      <LibraryVisitSection library={library} />
+                    </>
+                  )}
+                  {hasAccess ? (
+                    <LibraryFacilitiesSection library={library} path={path} />
+                  ) : null}
 
-                {hasAbout ? (
-                  <LibraryCollectionsSection library={library} />
-                ) : null}
-
-                {hasEvents ? (
-                  <LibrarySectionCard
-                    id="events"
-                    title={tUi("events")}
-                    iconPath={LIB_ICONS.calendar}
-                    tone="neutral"
-                  >
-                    <LibraryEvents
-                      entityRef={library.entityRef}
-                      hasActiveFeed
-                    />
-                  </LibrarySectionCard>
-                ) : null}
-
-                {libraryTypeName(library.libraryType) === "Mobile" ? (
-                  <LibrarySectionCard
-                    id="area"
-                    title="Base and returns"
-                    iconPath={LIB_ICONS.map}
-                  >
-                    <p>
-                      {library.homeLibrary?.name
-                        ? `This service is based at ${library.homeLibrary.name}. Check with the service for where borrowed items may be returned.`
-                        : "The service’s base and return arrangements are not recorded yet."}
-                    </p>
-                    <OpenCorrectionLink category="Stops & times">
-                      Suggest return arrangements
-                    </OpenCorrectionLink>
-                  </LibrarySectionCard>
-                ) : hasNearby ? (
-                  <LibraryAreaSection
-                    libraryId={library.documentId}
-                    addHref={addHref}
-                    showReach={hasReach}
-                    area={area}
-                    libraryName={library.name ?? "This library"}
-                    regionName={library.region?.name}
-                  />
-                ) : null}
-                <LibraryMissingDetails
-                  library={library}
-                  missing={missing}
-                  addHref={addHref}
-                />
-                {hasReach && !hasNearby ? (
-                  <LibrarySectionCard
-                    id="reach"
-                    title={tPage("reach")}
-                    iconPath={LIB_ICONS.map}
-                  >
-                    <LibraryReachTeaser
-                      libraryId={library.documentId}
-                      embedded
-                    />
-                  </LibrarySectionCard>
-                ) : null}
-                <LibraryChangesSection
-                  library={library}
-                  recordStatus={
-                    <LibraryRecordPanel
+                  <div className="record-module-pair">
+                    {hasServices ? (
+                      <LibraryAmenitiesSection
+                        library={library}
+                        includeAmenities={!hasAccess}
+                      />
+                    ) : null}
+                    <LibraryMissingDetails
                       library={library}
-                      followers={followers}
-                      embedded
+                      missing={missing}
+                      addHref={addHref}
                     />
-                  }
-                  history={history}
-                  stats={historyStats}
-                  datasets={datasets}
-                  reuseUrl={publicCanonicalUrl(canonicalUrl ?? path)}
-                />
-                <LibraryNetworks
-                  libraryId={library.documentId}
-                  networks={library.networks}
-                />
-                <LibraryCommunity
-                  id={library.documentId}
-                  locale={locale}
-                  contentLocale={contentLocale}
-                />
+                  </div>
+                  {libraryTypeName(library.libraryType) !== "Mobile" &&
+                  library.mobileLibraries?.length ? (
+                    <LibrariesOnTheMove libraries={library.mobileLibraries} />
+                  ) : null}
+
+                  {hasAbout ? (
+                    <LibraryCollectionsSection library={library} />
+                  ) : null}
+
+                  {hasEvents ? (
+                    <LibrarySectionCard
+                      id="events"
+                      title={tUi("events")}
+                      iconPath={LIB_ICONS.calendar}
+                      tone="neutral"
+                    >
+                      <LibraryEvents
+                        entityRef={library.entityRef}
+                        hasActiveFeed
+                      />
+                    </LibrarySectionCard>
+                  ) : null}
+
+                  {libraryTypeName(library.libraryType) === "Mobile" ? (
+                    <LibrarySectionCard
+                      id="area"
+                      title="Base and returns"
+                      iconPath={LIB_ICONS.map}
+                    >
+                      <p>
+                        {library.homeLibrary?.name
+                          ? `This service is based at ${library.homeLibrary.name}. Check with the service for where borrowed items may be returned.`
+                          : "The service’s base and return arrangements are not recorded yet."}
+                      </p>
+                      <OpenCorrectionLink category="Stops & times">
+                        Suggest return arrangements
+                      </OpenCorrectionLink>
+                    </LibrarySectionCard>
+                  ) : hasNearby ? (
+                    <LibraryAreaSection
+                      libraryId={library.documentId}
+                      addHref={addHref}
+                      showReach={hasReach}
+                      area={area}
+                      libraryName={library.name ?? "This library"}
+                      regionName={library.region?.name}
+                    />
+                  ) : null}
+
+                  {hasReach && !hasNearby ? (
+                    <LibrarySectionCard
+                      id="reach"
+                      title={tPage("reach")}
+                      iconPath={LIB_ICONS.map}
+                    >
+                      <LibraryReachTeaser
+                        libraryId={library.documentId}
+                        embedded
+                      />
+                    </LibrarySectionCard>
+                  ) : null}
+                  <LibraryChangesSection
+                    library={library}
+                    recordStatus={
+                      <LibraryRecordPanel
+                        library={library}
+                        followers={followers}
+                        embedded
+                      />
+                    }
+                    history={history}
+                    stats={historyStats}
+                    datasets={datasets}
+                    reuseUrl={publicCanonicalUrl(canonicalUrl ?? path)}
+                  />
+                  <LibraryNetworks
+                    libraryId={library.documentId}
+                    networks={library.networks}
+                  />
+                  <LibraryCommunity
+                    id={library.documentId}
+                    locale={locale}
+                    contentLocale={contentLocale}
+                  />
+                </div>
               </div>
-            </div>
-          </Container>
-        </MainContent>
+            </Container>
+          </MainContent>
+        </DashboardPage>
       </LibraryCorrectionProvider>
     </div>
   )

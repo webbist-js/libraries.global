@@ -23,7 +23,12 @@ export function JournalToolbar({
     <SectionNavigation>
       <div className="flex w-full min-w-0 flex-col lg:flex-row lg:flex-wrap lg:gap-x-6">
         <SectionTabs
-          activeId={journalCollectionKey(discovery.appliedFilters.origins)}
+          variant="pills"
+          activeId={
+            query.saved
+              ? null
+              : journalCollectionKey(discovery.appliedFilters.origins)
+          }
           label={t("origins")}
           scroll={false}
           tabs={(
@@ -45,6 +50,7 @@ export function JournalToolbar({
                 origins: origin === "all" ? [] : [origin],
               },
               allOrigins: origin === "all",
+              saved: false,
             }),
           }))}
         />

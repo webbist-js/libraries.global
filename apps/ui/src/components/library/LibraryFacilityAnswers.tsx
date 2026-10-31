@@ -248,7 +248,7 @@ export function LibraryFacilityAnswers({
                   onClick={() => choose(label, a)}
                   className={answerPill}
                   style={{
-                    background: on ? T.ink.base : T.bg.deep,
+                    background: on ? T.bg.inverse : T.bg.deep,
                     borderColor: on ? T.ink.base : T.border.hi,
                     color: on ? "#fff" : T.ink.base,
                   }}
@@ -280,7 +280,7 @@ export function LibraryFacilityAnswers({
 
                 return known.length ? (
                   <div key={category}>
-                    <h3 className="type-h3 m-0 mb-2">
+                    <h3 className="type-small-heading m-0 mb-2">
                       {tPage(
                         category === "accessibility" ? "access" : "facilities"
                       )}
@@ -298,14 +298,16 @@ export function LibraryFacilityAnswers({
               className="rounded-2xl border p-4 sm:p-5"
               style={{ borderColor: T.border.line, background: T.bg.space }}
             >
-              <h3 className="type-h3 m-0">{tPage("questionsTitle")}</h3>
+              <h3 className="type-small-heading m-0">
+                {tPage("questionsTitle")}
+              </h3>
               <p
                 className="mt-1 mb-3 text-sm leading-relaxed"
                 style={{ color: T.ink.dim }}
               >
                 {tPage("questionsIntro")}
               </p>
-              <ul className="m-0 grid list-none gap-x-4 p-0 sm:grid-cols-2">
+              <ul className="record-question-grid m-0 grid list-none gap-x-4 p-0 sm:grid-cols-2">
                 {rows
                   .filter((row) => row.state === "unknown")
                   .slice(0, 3)
@@ -320,7 +322,7 @@ export function LibraryFacilityAnswers({
                         3,
                     })}
                   </summary>
-                  <ul className="m-0 grid list-none gap-x-4 p-0 sm:grid-cols-2">
+                  <ul className="record-question-grid m-0 grid list-none gap-x-4 p-0 sm:grid-cols-2">
                     {rows
                       .filter((row) => row.state === "unknown")
                       .slice(3)
@@ -364,14 +366,14 @@ export function LibraryFacilityAnswers({
                 type="button"
                 onClick={() => void send()}
                 disabled={state === "sending"}
-                className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-70"
+                className="rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:opacity-70"
               >
                 {state === "sending" ? tUi("sending") : "Send for review"}
               </button>
             ) : (
               <Link
                 href={`/auth/signin?callbackUrl=${encodeURIComponent(`${libraryPath}#access`)}`}
-                className="rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                className="rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
               >
                 Sign in to send
               </Link>
@@ -387,7 +389,7 @@ export function LibraryFacilityAnswers({
           <button
             type="button"
             onClick={() => void send(false)}
-            className="mt-2 rounded-full border border-(--t-border-hi) bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
+            className="mt-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base }}
           >
             Send without the drive

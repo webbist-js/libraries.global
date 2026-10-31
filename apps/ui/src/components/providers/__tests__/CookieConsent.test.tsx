@@ -122,12 +122,16 @@ describe("beta cookie choices", () => {
     ).toHaveLength(1)
   })
 
-  it("does not load GTM on a private page even when a saved choice grants analytics", () => {
+  it("sends only categorized account views with the renewed consent", () => {
     route.path = "/fr/profile/settings"
     window.location.pathname = route.path
     saveAnalyticsChoice(localStorage, true)
     render(<GoogleAnalytics locale="fr" />)
-    expect(document.head.append).not.toHaveBeenCalled()
+    expect(document.head.append).toHaveBeenCalledTimes(1)
+    expect(JSON.stringify(window.dataLayer)).toContain(
+      "/workspace/account/page/settings"
+    )
+    expect(JSON.stringify(window.dataLayer)).not.toContain("/profile/settings")
     fireEvent.click(screen.getByRole("button", { name: "Choix des cookies" }))
     expect(
       screen
@@ -145,7 +149,8 @@ describe("beta cookie choices", () => {
     for (const value of [
       "invalid",
       "null",
-      JSON.stringify({ version: 2, analytics: true, expires: now + 1000 }),
+      JSON.stringify({ version: 3, analytics: true, expires: now + 1000 }),
+      JSON.stringify({ version: 1, analytics: true, expires: now + 1000 }),
       JSON.stringify({ version: 1, analytics: "true", expires: now + 1000 }),
       JSON.stringify({ version: 1, analytics: true, expires: now - 1 }),
     ]) {
@@ -159,5 +164,28 @@ describe("beta cookie choices", () => {
         },
       })
     ).toBeUndefined()
+  })
+
+  it("asks again for the wider purpose but preserves previous refusals", () => {
+    const expires = Date.now() + 10_000
+    localStorage.setItem(
+      ANALYTICS_CONSENT_KEY,
+      JSON.stringify({ version: 1, analytics: true, expires })
+    )
+    render(<GoogleAnalytics />)
+    expect(
+      screen.getByRole("region", { name: "Your cookie choices" })
+    ).toBeDefined()
+    expect(document.head.append).not.toHaveBeenCalled()
+    cleanup()
+    localStorage.setItem(
+      ANALYTICS_CONSENT_KEY,
+      JSON.stringify({ version: 1, analytics: false, expires })
+    )
+    render(<GoogleAnalytics />)
+    expect(
+      screen.queryByRole("region", { name: "Your cookie choices" })
+    ).toBeNull()
+    expect(document.head.append).not.toHaveBeenCalled()
   })
 })

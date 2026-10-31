@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
@@ -10,6 +12,7 @@ export function Pager({
   readonly prev?: { label: string; href: string }
   readonly next?: { label: string; href: string }
 }) {
+  const t = useTranslations("ui")
   if (!prev && !next) return null
 
   return (
@@ -28,7 +31,7 @@ export function Pager({
                 margin: "0 0 6px",
               }}
             >
-              ← Previous
+              ← {t("previous")}
             </p>
             <p
               style={{
@@ -58,7 +61,7 @@ export function Pager({
                 margin: "0 0 6px",
               }}
             >
-              Next →
+              {t("next")} →
             </p>
             <p
               style={{

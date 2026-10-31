@@ -149,14 +149,15 @@ afterEach(() => {
 
 const setup = (
   mode: "staff" | "improve" | "staff-new" | "new",
-  translating = false
+  translating = false,
+  initialStep: number | null = 3
 ) =>
   render(
     <IndexRecordWizard
       mode={mode}
       target={target}
       initialData={initialData}
-      initialStep={3}
+      initialStep={initialStep ?? undefined}
       timetableContext={context}
       locale={{
         code: translating ? "cs" : "en",
@@ -280,7 +281,7 @@ describe("the shared mobile library wizard", () => {
         stepCompleted,
         updatedAt: "2026-10-08T09:00:00Z",
       })
-      setup("improve")
+      setup("improve", false, null)
       fireEvent.click(screen.getByRole("button", { name: "Continue" }))
       expect(screen.getByText(heading)).toBeTruthy()
     }

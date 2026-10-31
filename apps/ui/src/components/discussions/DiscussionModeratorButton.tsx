@@ -27,7 +27,7 @@ export function DiscussionModeratorButton({
       className={cn(
         "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold disabled:opacity-50",
         tone === "danger"
-          ? "border-(--t-palette-coral-fg) bg-(--t-palette-coral-fg) text-white hover:brightness-110"
+          ? "border-(--t-action-danger) bg-(--t-action-danger) text-white hover:bg-(--t-action-danger)/90"
           : "border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface)",
         className
       )}

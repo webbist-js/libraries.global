@@ -145,8 +145,8 @@ export function BarSeries({
                         ? "bg-(--t-border-line)"
                         : ghost ||
                             (highlightLast && index !== points.length - 1)
-                          ? "bg-(--t-accent-primary)/35"
-                          : "bg-(--t-accent-primary)"
+                          ? "bg-(--t-action-primary)/35"
+                          : "bg-(--t-action-primary)"
                     )}
                     style={{
                       height:

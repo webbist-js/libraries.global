@@ -9,7 +9,7 @@ import { T, TYPE_TINT } from "@/lib/design-tokens"
 export const TONES = {
   ok: { bg: TYPE_TINT.public.bg, fg: T.accent.ok },
   info: { bg: T.accent.chip, fg: T.accent.primaryHover },
-  warn: { bg: "#F5EEDC", fg: T.accent.warn },
+  warn: { bg: "var(--t-palette-amber-bg)", fg: T.accent.warn },
 } as const
 
 export type NoticeTone = keyof typeof TONES

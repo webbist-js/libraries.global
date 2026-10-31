@@ -1,17 +1,20 @@
 "use client"
 
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-
-const CARD = "rounded-[20px] border p-5"
 
 /** "The monthly dispatch": the Journal newsletter sign-up. */
 export function MonthlyDispatchCard() {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("editorial")
+  // Desktop navigation and the mobile section drawer can be mounted together.
+  const id = useId()
+  const headingId = `${id}-dispatch`
+  const emailId = `${id}-email`
+  const noteId = `${id}-note`
 
   const [email, setEmail] = useState("")
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">(
@@ -36,20 +39,16 @@ export function MonthlyDispatchCard() {
   }
 
   return (
-    <section
-      aria-labelledby="journal-dispatch"
-      className={CARD}
-      style={{ background: T.bg.deep, borderColor: T.border.line }}
-    >
+    <section aria-labelledby={headingId} className="min-w-0">
       <h2
         className="type-panel-title m-0"
-        id="journal-dispatch"
+        id={headingId}
         style={{ color: T.ink.base }}
       >
         {t("dispatchTitle")}
       </h2>
       <p
-        className="mt-1.5 mb-4 text-base leading-[1.5]"
+        className="mt-1.5 mb-3 text-sm leading-[1.5]"
         style={{ color: T.ink.dim }}
       >
         {t("dispatchIntro")}
@@ -66,36 +65,37 @@ export function MonthlyDispatchCard() {
       ) : (
         <form onSubmit={subscribe}>
           <label
-            className="mb-1.5 block text-sm font-medium"
-            htmlFor="journal-subscribe"
+            className="sr-only"
+            htmlFor={emailId}
             style={{ color: T.ink.base }}
           >
             {tUi("email_address")}{" "}
           </label>
-          <input
-            aria-describedby="journal-subscribe-note"
-            autoComplete="email"
-            className="min-h-11 w-full rounded-full border px-3.5 py-2.5 text-base"
-            id="journal-subscribe"
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.org"
-            required
-            style={{
-              background: T.bg.deep,
-              borderColor: T.border.hi,
-              color: T.ink.base,
-            }}
-            type="email"
-            value={email}
-          />
-          <button
-            className="mt-3 min-h-11 w-fit cursor-pointer rounded-full px-4 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:opacity-60"
-            disabled={status === "saving"}
-            style={{ background: T.accent.primary }}
-            type="submit"
-          >
-            {status === "saving" ? t("subscribing") : tUi("subscribe")}
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              aria-describedby={noteId}
+              autoComplete="email"
+              className="min-h-11 min-w-0 flex-1 rounded-full border px-3 py-2.5 text-base"
+              id={emailId}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.org"
+              required
+              style={{
+                background: T.bg.deep,
+                borderColor: T.border.hi,
+                color: T.ink.base,
+              }}
+              type="email"
+              value={email}
+            />
+            <button
+              className="min-h-11 shrink-0 cursor-pointer rounded-full bg-(--t-action-primary) px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:opacity-60 motion-reduce:transition-none"
+              disabled={status === "saving"}
+              type="submit"
+            >
+              {status === "saving" ? t("subscribing") : tUi("subscribe")}
+            </button>
+          </div>
           {status === "error" ? (
             <p
               className="m-0 mt-2 text-base font-semibold"
@@ -109,20 +109,11 @@ export function MonthlyDispatchCard() {
       )}
 
       <p
-        className="m-0 mt-3 text-sm leading-[1.5]"
-        id="journal-subscribe-note"
+        className="m-0 mt-2 text-sm leading-[1.5]"
+        id={noteId}
         style={{ color: T.ink.dim }}
       >
         {t.rich("dispatchNote", {
-          notifications: (chunks) => (
-            <GlobalLink
-              className="underline underline-offset-[3px]"
-              href="/profile/settings#notifications"
-              style={{ color: T.accent.primary }}
-            >
-              {chunks}
-            </GlobalLink>
-          ),
           privacy: (chunks) => (
             <GlobalLink
               className="underline underline-offset-[3px]"

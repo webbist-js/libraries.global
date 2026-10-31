@@ -1,11 +1,16 @@
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import type { Locale } from "next-intl"
+import { getTranslations as getUiTranslations } from "next-intl/server"
 
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { DrivesHere } from "@/components/drives/DrivesHere"
 import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import { LocationEventsStrip } from "@/components/events/LocationEventsStrip"
-import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
+import { LibraryAnchorNav } from "@/components/library/LibraryAnchorNav"
+import { LIB_ICONS } from "@/components/library/LibrarySectionCard"
 import {
   countNoun,
   formatCount,
@@ -29,6 +34,10 @@ import {
   type HeroMapCountPoint,
   LocationHeroMap,
 } from "@/components/location/LocationHeroMap"
+import {
+  LocationHierarchy,
+  LocationSidebarCta,
+} from "@/components/location/LocationSidebar"
 import { placeSummary } from "@/components/location/place-summary"
 import { PlaceFeaturedContribution } from "@/components/location/PlaceFeaturedContribution"
 import {
@@ -39,7 +48,7 @@ import { placeAddHref } from "@/lib/contribution-place"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
 import { proposeHref } from "@/lib/drives/propose-link"
-import { Link } from "@/lib/navigation"
+import { sidebarLibraryPreview } from "@/lib/location-sidebar-server"
 import type {
   PopulatedCountryData,
   PopulatedFeaturedLibraryData,
@@ -49,7 +58,7 @@ function townOrRegion(library: PopulatedFeaturedLibraryData): string | null {
   return library.city ?? library.region?.name ?? null
 }
 
-export function CountryDetailPage({
+export async function CountryDetailPage({
   country,
   locale,
   slug,
@@ -66,7 +75,8 @@ export function CountryDetailPage({
   gapRows?: readonly PlaceGapInsight[] | null
   drives?: readonly { view: DriveView; here: number }[] | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = await getUiTranslations("ui")
+  const d = await getUiTranslations("dashboard")
 
   const name = country.name ?? ""
   const place = { continent: continentSlug, country: slug }
@@ -152,49 +162,99 @@ export function CountryDetailPage({
       ? `Some ${pluralLower} have no libraries documented yet. Know one? You could add the first.`
       : "Know a library we’ve missed, or seen its hours change? A reviewer checks every addition before it’s published."
 
-  return (
-    <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.void, color: T.ink.base }}
-    >
-      <GlobalHeader locale={locale} />
+  const hierarchyLibraries =
+    countsAvailable && libraryCount > 0
+      ? await sidebarLibraryPreview("country", slug, locale)
+      : []
 
-      <MainContent id="main" className="relative z-10 flex-1">
-        <LocationHero
-          untranslatedLocale={untranslatedLocale}
-          breadcrumbLabels={{
+  const dashboardContext = (
+    <>
+      <DrivesHere
+        placeName={name}
+        items={drives}
+        addHref={addHref}
+        proposeHref={proposeHref({ places: { country: [slug] } })}
+      />
+      <PlaceFeaturedContribution
+        gaps={gapRows}
+        level="country"
+        slug={slug}
+        name={name}
+        place={place}
+        childPlaces={regions}
+        childNoun={labels.singular}
+        childrenAvailable={childrenAvailable}
+        drives={[]}
+      />
+    </>
+  )
+
+  const sectionItems = [
+    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+
+    {
+      href: "#regions",
+      label: labels.plural,
+      count: childrenAvailable ? regions.length : undefined,
+      icon: LIB_ICONS.list,
+    },
+    {
+      href: "#drives-here",
+      label: d("getInvolved"),
+      icon: LIB_ICONS.people,
+    },
+  ]
+
+  return (
+    <DashboardPage
+      mobileSections={sectionItems}
+      routeKey={basePath}
+      title={name}
+      navigationHeading={
+        <RecordContextIdentity
+          title={name}
+          eyebrow="Country"
+          parent={{
+            href: `/${continentSlug}`,
+            label: country.continent?.name ?? continentSlug,
+          }}
+        >
+          <p className="record-context-summary">
+            {countsAvailable ? (
+              <>
+                {formatCount(libraryCount)}{" "}
+                {countNoun(libraryCount, tUi("library"), tUi("libraries"))}
+                {childrenAvailable ? (
+                  <> · {regions.length + " " + pluralLower}</>
+                ) : null}
+              </>
+            ) : (
+              "Library counts unavailable"
+            )}
+          </p>
+        </RecordContextIdentity>
+      }
+      navigationFooter={
+        <LocationSidebarCta
+          name={name}
+          addHref={addHref}
+          proposeHref={proposeHref({ places: { country: [slug] } })}
+        />
+      }
+      eyebrow="Country"
+      className="dashboard-place-record"
+      toolbar={
+        <RecordToolbar
+          labels={{
             ...(continentSlug && country.continent?.name
               ? { [continentSlug]: country.continent.name }
               : {}),
             [slug]: name,
           }}
-          typeLabel="Country"
-          typeIcon="mdi:flag-outline"
-          code={country.iso2}
-          title={name}
-          contribution={
-            <PlaceFeaturedContribution
-              gaps={gapRows}
-              level="country"
-              slug={slug}
-              name={name}
-              place={place}
-              childPlaces={regions}
-              childNoun={labels.singular}
-              childrenAvailable={childrenAvailable}
-              drives={drives}
-            />
-          }
-          intro={placeSummary({
-            name,
-            total: libraryCount,
-            children: regions,
-            noun: { singular: labels.singular, plural: pluralLower },
-            available: countsAvailable,
-            childrenAvailable,
-          })}
-          stats={stats}
-          search={{ level: "country", slug }}
+        />
+      }
+      overview={
+        <LocationHero
           aside={
             hasMap ? (
               <LocationHeroMap
@@ -211,149 +271,207 @@ export function CountryDetailPage({
               />
             ) : undefined
           }
+          search={{ level: "country", slug }}
+          untranslatedLocale={untranslatedLocale}
+          typeLabel="Country"
+          typeIcon="mdi:flag-outline"
+          code={country.iso2}
+          title={name}
+          intro={placeSummary({
+            name,
+            total: libraryCount,
+            children: regions,
+            noun: { singular: labels.singular, plural: pluralLower },
+            available: countsAvailable,
+            childrenAvailable,
+          })}
+          actions={
+            <GlobalLink
+              className="record-network-link"
+              href={`${basePath}/library-services`}
+            >
+              Explore library services and networks in {name} ↗
+            </GlobalLink>
+          }
+          stats={stats}
         />
-
-        <Container>
-          <div className="flex flex-col gap-16 pt-14 pb-20">
-            {countsAvailable ? (
-              <PlaceInsights
-                gapRows={gapRows}
-                name={name}
-                level="country"
-                slug={slug}
-                total={libraryCount}
-                types={country.libraryTypeCounts}
-                typesAvailable={country.statistics?.types !== false}
-                childrenAvailable={
-                  childrenAvailable &&
-                  regions.every((child) => child.placeBasedCount !== undefined)
-                }
-                childPlaces={regions.map((child) => ({
-                  slug: child.slug,
-                  name: child.name,
-                  count: child.placeBasedCount ?? 0,
-                }))}
-              />
-            ) : null}
-            <p className="mb-6">
-              <Link
-                className="font-semibold underline underline-offset-4"
-                href={`${basePath}/library-services`}
-              >
-                Explore library services and networks in {name}
-              </Link>
-            </p>
-            {regions.length > 0 ? (
-              <LocationChildBrowser
-                id="regions"
-                title={labels.plural}
-                description={country.systemDescription}
-                totalCount={
-                  libraryCount -
-                  ((country.libraryTypeCounts ?? []).find(
-                    (row) => row.type === "Digital"
-                  )?.count ?? 0)
-                }
-                shareLabel={
-                  "Share of " + name + "’s documented place-based libraries"
-                }
-                countsAvailable={childrenAvailable}
-                noun={{ singular: labels.singular, plural: pluralLower }}
-                addHref={addHref}
-                items={regions.map((r) => ({
-                  slug: r.slug,
-                  name: r.name,
-                  subtitle: r.typeLabel ?? null,
-                  coverage:
-                    r.descendantWithRecords != null
-                      ? formatCount(r.descendantWithRecords) +
-                        (r.descendantTotal != null
-                          ? " of " + formatCount(r.descendantTotal)
-                          : "") +
-                        " " +
-                        (r.descendantTotal === 1 ||
-                        (r.descendantTotal == null &&
-                          r.descendantWithRecords === 1)
-                          ? lowerFirst(placeLabels(country, r).area.singular)
-                          : lowerFirst(placeLabels(country, r).area.plural))
-                      : null,
-                  href: `${basePath}/${r.slug}`,
-                  count: r.libraryCount ?? 0,
-                  shareCount: r.placeBasedCount ?? 0,
-                  addHref: placeAddHref({ ...place, region: r.slug }),
-                }))}
-              />
-            ) : !countsAvailable ? (
-              <p role="status">
-                Library statistics are temporarily unavailable. You can still
-                use Find libraries.
-              </p>
-            ) : libraryCount > 0 ? (
-              <div
-                className="flex flex-wrap items-center justify-between gap-4 rounded-3xl px-7 py-6"
-                style={{
-                  background: T.bg.deep,
-                  border: `1px solid ${T.border.line}`,
-                }}
-              >
-                <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-                  {formatCount(libraryCount)}{" "}
-                  {libraryCount === 1 ? "library is" : "libraries are"}{" "}
-                  documented in {name}.
+      }
+      context={dashboardContext}
+      navigation={
+        <>
+          <LibraryAnchorNav sidebar items={sectionItems} />
+          <LocationHierarchy
+            entries={[
+              {
+                href: `/${continentSlug}`,
+                label: country.continent?.name ?? continentSlug,
+              },
+              {
+                href: basePath,
+                label: name,
+                current: true,
+                depth: 1,
+                count: countsAvailable ? libraryCount : undefined,
+              },
+              ...regions
+                .filter((child) => (child.libraryCount ?? 0) > 0)
+                .slice(0, 8)
+                .flatMap((child) => [
+                  {
+                    href: `${basePath}/${child.slug}`,
+                    label: child.name,
+                    count: childrenAvailable ? child.libraryCount : undefined,
+                    depth: 2,
+                  },
+                  ...hierarchyLibraries
+                    .filter((lib) => lib.region_slug === child.slug)
+                    .slice(0, 2)
+                    .map((lib) => ({
+                      href: `${basePath}/${child.slug}/${lib.slug}`,
+                      label: lib.name ?? "Library",
+                      depth: 3,
+                    })),
+                ]),
+            ]}
+          />
+        </>
+      }
+    >
+      <div
+        className="relative isolate flex min-h-0 w-full flex-col"
+        style={{ background: T.bg.void, color: T.ink.base }}
+      >
+        <MainContent id="main" className="relative z-10 flex-1">
+          <Container>
+            <div className="record-section-stack flex flex-col">
+              {regions.length > 0 ? (
+                <LocationChildBrowser
+                  id="regions"
+                  title={labels.plural}
+                  description={country.systemDescription}
+                  totalCount={
+                    libraryCount -
+                    ((country.libraryTypeCounts ?? []).find(
+                      (row) => row.type === "Digital"
+                    )?.count ?? 0)
+                  }
+                  shareLabel={
+                    "Share of " + name + "’s documented place-based libraries"
+                  }
+                  countsAvailable={childrenAvailable}
+                  noun={{ singular: labels.singular, plural: pluralLower }}
+                  addHref={addHref}
+                  items={regions.map((r) => ({
+                    slug: r.slug,
+                    name: r.name,
+                    subtitle: r.typeLabel ?? null,
+                    coverage:
+                      r.descendantWithRecords != null
+                        ? formatCount(r.descendantWithRecords) +
+                          (r.descendantTotal != null
+                            ? " of " + formatCount(r.descendantTotal)
+                            : "") +
+                          " " +
+                          (r.descendantTotal === 1 ||
+                          (r.descendantTotal == null &&
+                            r.descendantWithRecords === 1)
+                            ? lowerFirst(placeLabels(country, r).area.singular)
+                            : lowerFirst(placeLabels(country, r).area.plural))
+                        : null,
+                    href: `${basePath}/${r.slug}`,
+                    count: r.libraryCount ?? 0,
+                    shareCount: r.placeBasedCount ?? 0,
+                    addHref: placeAddHref({ ...place, region: r.slug }),
+                  }))}
+                />
+              ) : !countsAvailable ? (
+                <p role="status">
+                  Library statistics are temporarily unavailable. You can still
+                  use Find libraries.
                 </p>
-                <GlobalLink
-                  href={`/libraries?country=${encodeURIComponent(slug)}`}
-                  className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
-                  style={{ background: T.accent.primary }}
+              ) : libraryCount > 0 ? (
+                <div
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-3xl px-7 py-6"
+                  style={{
+                    background: T.bg.deep,
+                    border: `1px solid ${T.border.line}`,
+                  }}
                 >
-                  Find libraries in {name}
-                </GlobalLink>
-              </div>
-            ) : (
-              <LocationEmptyState name={name || "this country"} />
-            )}
+                  <p className="m-0 text-base" style={{ color: T.ink.dim }}>
+                    {formatCount(libraryCount)}{" "}
+                    {libraryCount === 1 ? "library is" : "libraries are"}{" "}
+                    documented in {name}.
+                  </p>
+                  <GlobalLink
+                    href={`/libraries?country=${encodeURIComponent(slug)}`}
+                    className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover)"
+                    style={{ background: T.action.primary }}
+                  >
+                    Find libraries in {name}
+                  </GlobalLink>
+                </div>
+              ) : (
+                <LocationEmptyState name={name || "this country"} />
+              )}
 
-            {hasFeaturedLibraries ? (
-              <section id="institutions" className="scroll-mt-24">
-                <LocationSectionHeading
-                  title={tUi("libraries_worth_knowing")}
-                  description={`The most significant institutions across ${name}.`}
+              {hasFeaturedLibraries ? (
+                <section id="institutions" className="scroll-mt-24">
+                  <LocationSectionHeading
+                    title={tUi("libraries_worth_knowing")}
+                    description={`The most significant institutions across ${name}.`}
+                  />
+                  <LocationFeaturedLibraries
+                    libraries={country.featuredLibraries}
+                    placeFor={townOrRegion}
+                  />
+                </section>
+              ) : null}
+
+              {countsAvailable ? (
+                <PlaceInsights
+                  gapRows={gapRows}
+                  name={name}
+                  level="country"
+                  slug={slug}
+                  total={libraryCount}
+                  types={country.libraryTypeCounts}
+                  typesAvailable={country.statistics?.types !== false}
+                  childrenAvailable={
+                    childrenAvailable &&
+                    regions.every(
+                      (child) => child.placeBasedCount !== undefined
+                    )
+                  }
+                  childPlaces={regions.map((child) => ({
+                    slug: child.slug,
+                    name: child.name,
+                    count: child.placeBasedCount ?? 0,
+                  }))}
                 />
-                <LocationFeaturedLibraries
-                  libraries={country.featuredLibraries}
-                  placeFor={townOrRegion}
-                />
-              </section>
-            ) : null}
+              ) : null}
 
-            <LocationAbout name={name} about={country.about} />
+              <LocationAbout name={name} about={country.about} />
 
-            <LocationEventsStrip
-              countrySlug={country.slug ?? undefined}
-              locationLabel={name}
-            />
+              <LocationEventsStrip
+                countrySlug={country.slug ?? undefined}
+                locationLabel={name}
+              />
 
-            <DrivesHere
-              placeName={name}
-              items={drives}
-              addHref={addHref}
-              proposeHref={proposeHref({ places: { country: [slug] } })}
-            />
-
-            <LocationHelpPanel
-              addHref={addHref}
-              name={name}
-              body={helpBody}
-              actions={locationHelpActions({
-                propose: {
-                  placeName: name,
-                  href: proposeHref({ places: { country: [slug] } }),
-                },
-              })}
-            />
-          </div>
-        </Container>
-      </MainContent>
-    </div>
+              <LocationHelpPanel
+                addHref={addHref}
+                name={name}
+                body={helpBody}
+                actions={locationHelpActions({
+                  propose: {
+                    placeName: name,
+                    href: proposeHref({ places: { country: [slug] } }),
+                  },
+                })}
+              />
+            </div>
+          </Container>
+        </MainContent>
+      </div>
+    </DashboardPage>
   )
 }

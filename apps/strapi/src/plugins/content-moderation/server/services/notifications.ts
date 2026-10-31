@@ -319,7 +319,7 @@ export default ({ strapi }: { strapi: any }) => {
           ...moderatorAlertEmail({
             type: s.submissionType,
             summary: alertSummary(s),
-            url: appUrl(`/contribute/moderation/${s.documentId}`),
+            url: appUrl(`/moderation/${s.documentId}`),
           }),
         })
       } catch (err) {

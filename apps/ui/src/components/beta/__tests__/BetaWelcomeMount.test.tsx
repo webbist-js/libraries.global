@@ -16,7 +16,15 @@ vi.mock("@/lib/access-client", () => ({
 }))
 vi.mock("next/dynamic", () => ({
   default: () =>
-    function Welcome({ onClose }: { onClose: () => void }) {
+    function Welcome({
+      open,
+      onClose,
+    }: {
+      open: boolean
+      onClose: () => void
+    }) {
+      if (!open) return null
+
       return (
         <div role="dialog" aria-label="Beta welcome">
           <button onClick={onClose}>Dismiss welcome</button>

@@ -1,4 +1,5 @@
-import { Notice, PageHero } from "@/components/ds"
+import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
+import { Notice } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { Link } from "@/lib/navigation"
 
@@ -6,9 +7,7 @@ import { Link } from "@/lib/navigation"
 export function TeamMembershipConflict() {
   return (
     <>
-      <PageHero
-        staff
-        eyebrow="Team membership"
+      <WorkspacePageHeader
         title="Let’s confirm your Team"
         lead="Your account has more than one existing Team membership."
       />

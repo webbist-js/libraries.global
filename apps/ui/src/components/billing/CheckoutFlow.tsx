@@ -7,6 +7,10 @@ import { useEffect, useRef, useState } from "react"
 import GlobalLink from "@/components/global/GlobalLink"
 import { Button } from "@/components/ui/button"
 import { MEMBERSHIP_TERMS_VERSION } from "@/lib/billing/constants"
+import {
+  captureCheckoutEvent,
+  pushCheckoutEvent,
+} from "@/lib/checkout-analytics"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -44,6 +48,7 @@ export function CheckoutFlow({
   const [step, setStep] = useState<"plan" | "details">("plan")
   const heading = useRef<HTMLHeadingElement>(null)
   const previousStep = useRef(step)
+  const began = useRef(false)
   const [terms, setTerms] = useState(false)
   const [listed, setListed] = useState(false)
   const [badge, setBadge] = useState(true)
@@ -55,6 +60,15 @@ export function CheckoutFlow({
   const price = catalogue?.prices.find(
     (p) => p.plan === plan && p.interval === interval
   )
+
+  useEffect(() => {
+    if (attempt || began.current) return
+    began.current = true
+    pushCheckoutEvent("begin_checkout", {
+      product: initialPlan,
+      billing_interval: initialInterval,
+    })
+  }, [attempt, initialPlan, initialInterval])
 
   useEffect(() => {
     if (previousStep.current !== step) heading.current?.focus()
@@ -135,6 +149,13 @@ export function CheckoutFlow({
   const checkout = async () => {
     setBusy(true)
     setError(false)
+    const fields = {
+      product: plan,
+      billing_interval: interval,
+      billing_mode: catalogue?.sandbox ? "sandbox" : "live",
+    } as const
+    const handoff = captureCheckoutEvent("checkout_handoff", fields)
+    const failed = captureCheckoutEvent("checkout_error", fields)
     try {
       const prefs = await fetch("/api/profile/me", {
         method: "PATCH",
@@ -160,8 +181,10 @@ export function CheckoutFlow({
       const url = new URL(result.url)
       if (url.protocol !== "https:" || url.hostname !== "checkout.stripe.com")
         throw new Error("provider")
+      handoff()
       window.location.assign(result.url)
     } catch {
+      failed()
       setError(true)
       setBusy(false)
     }
@@ -177,7 +200,7 @@ export function CheckoutFlow({
       >
         <CheckoutHeader sandbox={catalogue?.sandbox} />
         {state === "ready" && user?.verified ? (
-          <span className="grid size-16 place-items-center rounded-full bg-green-50 text-(--t-accent-ok)">
+          <span className="grid size-16 place-items-center rounded-full bg-(--t-palette-mint-soft) text-(--t-accent-ok)">
             <Check className="size-8" aria-hidden="true" />
           </span>
         ) : null}
@@ -259,7 +282,15 @@ export function CheckoutFlow({
               disabled={
                 !price || (plan === "pro" && Boolean(user?.complimentaryPro))
               }
-              onClick={() => setStep("details")}
+              onClick={() => {
+                pushCheckoutEvent("checkout_step", {
+                  product: plan,
+                  billing_interval: interval,
+                  checkout_step: "billing_review",
+                  billing_mode: catalogue?.sandbox ? "sandbox" : "live",
+                })
+                setStep("details")
+              }}
             >
               {t("join", { plan: t(plan) })}
               <ArrowRight className="size-4" aria-hidden="true" />
@@ -422,7 +453,7 @@ export function CheckoutFlow({
         )}
         {error ? (
           <p
-            className="m-0 rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-relaxed text-red-800"
+            className="m-0 rounded-xl border border-(--t-edge-danger) bg-(--t-palette-coral-soft) p-4 text-sm leading-relaxed text-(--t-palette-coral-fg)"
             role="alert"
           >
             {t("error")}

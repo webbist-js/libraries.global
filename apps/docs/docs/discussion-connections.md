@@ -43,7 +43,7 @@ Reads use bounded authorization-aware scans. Counts and pagination follow filter
 
 ## Moderation workspace
 
-`/contribute/moderation` provides an overview and categories for Library changes, Articles, Claims, Drives, Discussions and Role applications. A reviewer with only one category opens it directly. Checklist ideas remain available to eligible reviewers. Articles can be narrowed to Knowledge or Journal.
+`/moderation` provides an overview and categories for Library changes, Articles, Claims, Drives, Discussions and Role applications. A reviewer with only one category opens it directly. Checklist ideas remain available to eligible reviewers. Articles can be narrowed to Knowledge or Journal.
 
 These categories group submission types within the existing queue and language scopes; they grant no additional permissions. Library changes submitted through a Drive remain in Library changes, with a Drive filter. Drives contains proposals to create a Drive. Review links retain the category and filters when returning to the queue.
 

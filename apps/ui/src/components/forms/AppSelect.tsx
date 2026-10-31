@@ -68,7 +68,7 @@ export function AppSelect({
               <SelectTrigger
                 className={cn(
                   "w-full",
-                  { "border-red-600": fieldState.invalid },
+                  { "border-(--t-accent-danger)": fieldState.invalid },
                   fieldClassName
                 )}
                 tabIndex={nativeProps.tabIndex}

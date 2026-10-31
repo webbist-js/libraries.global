@@ -16,6 +16,12 @@ export type NetworkList = {
 }
 export type NetworkDetail = {
   network: NetworkSummary
+  total?: number
+  facets?: {
+    countries: { name: string; slug: string }[]
+    regions: { name: string; slug: string }[]
+    types: string[]
+  }
   libraries: WidgetLibrary[]
   page: number
   pageSize: number

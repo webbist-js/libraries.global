@@ -13,6 +13,7 @@ import { useEffect, useId, useState } from "react"
 import { reviewHref } from "@/components/moderation/queue-navigation"
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
+import { captureWorkspaceAction } from "@/lib/workspace-analytics"
 
 import { decisionErrorMessage, statusMeta } from "./submissionMeta"
 
@@ -161,6 +162,20 @@ export function ReviewDecisionForm({
     }
     setError(null)
     setBusy(publish ? "publish" : decision)
+    const measured = captureWorkspaceAction(
+      {
+        workspace_area: "moderation",
+        workspace_section: "review",
+        workspace_surface: "page",
+      },
+      publish
+        ? "approve_publish"
+        : decision === "approved"
+          ? "approve"
+          : decision === "rejected"
+            ? "reject"
+            : "request_changes"
+    )
     try {
       const res = await fetch(
         `/api/moderation/submissions/${encodeURIComponent(documentId)}/status`,
@@ -180,10 +195,12 @@ export function ReviewDecisionForm({
       )
       const body: unknown = await res.json().catch(() => null)
       if (!res.ok) {
+        measured("error")
         setError(decisionErrorMessage(res.status, body))
 
         return
       }
+      measured("success")
       setConfirming(false)
       setNote("")
       setDone(
@@ -197,6 +214,7 @@ export function ReviewDecisionForm({
       )
       router.refresh()
     } catch {
+      measured("error")
       setError("Something went wrong. Check your connection and try again.")
     } finally {
       setBusy(null)
@@ -250,7 +268,10 @@ export function ReviewDecisionForm({
         <p
           role="alert"
           className="m-0 flex items-start gap-2 rounded-[14px] px-3.5 py-2.5 text-sm leading-normal"
-          style={{ background: "#F6E3DA", color: T.accent.danger }}
+          style={{
+            background: "var(--t-palette-coral-bg)",
+            color: T.accent.danger,
+          }}
         >
           <AlertCircle size={18} aria-hidden className="mt-0.5 shrink-0" />
           {error}

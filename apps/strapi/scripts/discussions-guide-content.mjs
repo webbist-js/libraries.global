@@ -82,7 +82,7 @@ Knowledge editors edit and translate Knowledge in their granted languages. Journ
 
 Moderators review within their assigned queue and languages. Index covers library records and related requests; Knowledge and Journal cover their article submissions and reports; Discussions covers discussion messages, proposed edits, reports and restrictions. Applications access covers editor applications. Only the editorial board decides moderator applications.
 
-The [moderation workspace](/contribute/moderation) groups work into Library changes, Articles, Claims, Drives, Role applications and Discussions. These categories help you find work; they do not broaden your permissions. The board can review across queues and languages. Nobody reviews their own submissions, including board members.
+The [moderation workspace](/moderation) groups work into Library changes, Articles, Claims, Drives, Role applications and Discussions. These categories help you find work; they do not broaden your permissions. The board can review across queues and languages. Nobody reviews their own submissions, including board members.
 
 ## Discussion bylines and linked feeds
 
@@ -99,7 +99,7 @@ After five accepted formal changes you may apply for an editor or moderator role
 
 You can apply for Index, Knowledge, Journal or Discussions. Index covers library records and related requests; Knowledge and Journal cover article submissions and reports. Discussions covers new messages, proposed edits, reported messages and participant restrictions. Language access limits which work you can review. Knowledge and Journal applicants can also express section preferences.
 
-The [moderation workspace](/contribute/moderation) displays Library changes, Articles, Claims, Drives, Role applications and Discussions. Only work within your review scope appears. Applications access is separately assigned; only the editorial board decides moderator applications.
+The [moderation workspace](/moderation) displays Library changes, Articles, Claims, Drives, Role applications and Discussions. Only work within your review scope appears. Applications access is separately assigned; only the editorial board decides moderator applications.
 
 ## Applying
 
@@ -120,7 +120,7 @@ Nobody approves their own contribution, including moderators and board members. 
 
 ## One workspace, different kinds of work
 
-[Moderation](/contribute/moderation) groups Library changes, Articles, Claims, Drives, Role applications and Discussions in one workspace. A moderator’s queues and languages determine what appears. The editorial board can review across scopes and decides applications to become a moderator.
+[Moderation](/moderation) groups Library changes, Articles, Claims, Drives, Role applications and Discussions in one workspace. A moderator’s queues and languages determine what appears. The editorial board can review across scopes and decides applications to become a moderator.
 
 Nobody can approve their own contribution. A library’s verified staff can review another person’s record suggestion for that library. The first valid decision wins.
 
@@ -281,7 +281,7 @@ Les éditeurs Knowledge modifient et traduisent les guides dans les langues auto
 
 Les modérateurs interviennent dans leurs files et langues. Index couvre les fiches et demandes associées ; Knowledge et Journal couvrent les articles et signalements ; Discussions couvre les messages, modifications proposées, signalements et restrictions. L’accès Applications concerne les candidatures d’éditeurs. Seul le comité éditorial décide des candidatures de modérateurs.
 
-L’[espace de modération](/contribute/moderation) regroupe les modifications de bibliothèques, articles, rattachements, campagnes, candidatures et discussions. Ces catégories facilitent la navigation sans élargir les droits. Le comité peut examiner toutes les files et langues. Personne ne valide ses propres contributions, y compris ses membres.
+L’[espace de modération](/moderation) regroupe les modifications de bibliothèques, articles, rattachements, campagnes, candidatures et discussions. Ces catégories facilitent la navigation sans élargir les droits. Le comité peut examiner toutes les files et langues. Personne ne valide ses propres contributions, y compris ses membres.
 
 ## Noms et fils associés
 
@@ -298,7 +298,7 @@ Après cinq modifications formelles acceptées, vous pouvez demander un rôle d�
 
 Vous pouvez demander Index, Knowledge, Journal ou Discussions. Index couvre les fiches et demandes associées ; Knowledge et Journal, les articles et signalements. Discussions couvre les nouveaux messages, modifications proposées, messages signalés et restrictions de participation. Les langues autorisées limitent les éléments à examiner. Pour Knowledge et Journal, vous pouvez aussi préciser les sections souhaitées.
 
-L’[espace de modération](/contribute/moderation) regroupe modifications de bibliothèques, articles, rattachements, campagnes, candidatures et discussions. Seuls les éléments de votre périmètre apparaissent. L’accès Applications est attribué séparément ; seul le comité éditorial décide des candidatures de modérateurs.
+L’[espace de modération](/moderation) regroupe modifications de bibliothèques, articles, rattachements, campagnes, candidatures et discussions. Seuls les éléments de votre périmètre apparaissent. L’accès Applications est attribué séparément ; seul le comité éditorial décide des candidatures de modérateurs.
 
 ## Envoyer une candidature
 
@@ -319,7 +319,7 @@ Personne ne valide sa propre contribution, même les modérateurs et membres du 
 
 ## Un espace, plusieurs catégories
 
-[Modération](/contribute/moderation) regroupe modifications de bibliothèques, articles, rattachements, campagnes, candidatures et discussions. Les files et langues du modérateur déterminent ce qui apparaît. Le comité éditorial peut intervenir dans tous les périmètres et décide des candidatures de modérateurs.
+[Modération](/moderation) regroupe modifications de bibliothèques, articles, rattachements, campagnes, candidatures et discussions. Les files et langues du modérateur déterminent ce qui apparaît. Le comité éditorial peut intervenir dans tous les périmètres et décide des candidatures de modérateurs.
 
 Personne ne valide ses propres contributions. Le personnel vérifié peut examiner la proposition d’une autre personne pour sa bibliothèque. La première décision valide est conservée.
 
@@ -480,7 +480,7 @@ Editoři Knowledge upravují a překládají příručky v povolených jazycích
 
 Moderátoři pracují ve svých frontách a jazycích. Index pokrývá záznamy a související žádosti, Knowledge a Journal články a hlášení, Discussions zprávy, navrhované úpravy, hlášení a omezení účasti. Přístup Applications slouží žádostem o redakční role. O žádostech moderátorů rozhoduje pouze redakční rada.
 
-[Moderační prostor](/contribute/moderation) seskupuje změny knihoven, články, žádosti o přístup, kampaně, žádosti o role a diskuse. Kategorie pomáhají s orientací, nerozšiřují oprávnění. Rada může kontrolovat všechny fronty a jazyky. Nikdo neschvaluje vlastní příspěvky, ani členové rady.
+[Moderační prostor](/moderation) seskupuje změny knihoven, články, žádosti o přístup, kampaně, žádosti o role a diskuse. Kategorie pomáhají s orientací, nerozšiřují oprávnění. Rada může kontrolovat všechny fronty a jazyky. Nikdo neschvaluje vlastní příspěvky, ani členové rady.
 
 ## Jména a propojená vlákna
 
@@ -497,7 +497,7 @@ Po pěti přijatých formálních změnách můžete požádat o redakční či 
 
 Můžete požádat o Index, Knowledge, Journal nebo Discussions. Index zahrnuje záznamy a související žádosti; Knowledge a Journal články a hlášení. Discussions pokrývá nové zprávy, navrhované úpravy, nahlášené zprávy a omezení účasti. Jazyková oprávnění omezují dostupné položky. U Knowledge a Journal lze uvést také preferované sekce.
 
-[Moderační prostor](/contribute/moderation) seskupuje změny knihoven, články, žádosti o přístup, kampaně, žádosti o role a diskuse. Zobrazuje jen práci ve vašem rozsahu. Applications se přiděluje samostatně; žádosti moderátorů rozhoduje pouze redakční rada.
+[Moderační prostor](/moderation) seskupuje změny knihoven, články, žádosti o přístup, kampaně, žádosti o role a diskuse. Zobrazuje jen práci ve vašem rozsahu. Applications se přiděluje samostatně; žádosti moderátorů rozhoduje pouze redakční rada.
 
 ## Podání žádosti
 
@@ -518,7 +518,7 @@ Nikdo neschvaluje vlastní příspěvek, ani moderátor či člen rady. Dodržuj
 
 ## Jeden prostor, různé kategorie
 
-[Moderace](/contribute/moderation) seskupuje změny knihoven, články, žádosti o přístup, kampaně, žádosti o role a diskuse. Fronty a jazyky moderátora určují, co se zobrazí. Redakční rada může kontrolovat napříč rozsahy a rozhoduje žádosti o roli moderátora.
+[Moderace](/moderation) seskupuje změny knihoven, články, žádosti o přístup, kampaně, žádosti o role a diskuse. Fronty a jazyky moderátora určují, co se zobrazí. Redakční rada může kontrolovat napříč rozsahy a rozhoduje žádosti o roli moderátora.
 
 Nikdo neschvaluje vlastní příspěvky. Ověření zaměstnanci mohou posoudit cizí návrh ke své knihovně. Platí první oprávněné rozhodnutí.
 

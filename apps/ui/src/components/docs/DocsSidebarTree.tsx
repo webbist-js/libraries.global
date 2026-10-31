@@ -59,42 +59,44 @@ export function DocsSidebarTree({
     })
 
   return (
-    <nav aria-label={tUi("knowledge")} className="flex flex-col gap-5">
-      <SearchField
-        id={`${instanceId}-docs-filter`}
-        label={tUi("filter_articles")}
-        placeholder={tUi("filter_articles")}
-        size="sm"
-        onClear={() => setFilter("")}
-        inputProps={{
-          value: filter,
-          onChange: (event) => setFilter(event.target.value),
-          autoComplete: "off",
-        }}
-      />
+    <nav aria-label={tUi("knowledge")} className="docs-sidebar-tree">
+      <div className="docs-tree-header">
+        <SearchField
+          id={`${instanceId}-docs-filter`}
+          label={tArticle("filterGuides")}
+          placeholder={tArticle("filterGuides")}
+          className="bg-(--t-bg-surface) focus-within:ring-2 focus-within:ring-(--t-accent-primary) [&_input:focus-visible]:outline-none!"
+          size="sm"
+          onClear={() => setFilter("")}
+          inputProps={{
+            value: filter,
+            onChange: (event) => setFilter(event.target.value),
+            autoComplete: "off",
+          }}
+        />
 
-      <div className="flex items-center justify-between gap-3">
-        <GlobalLink
-          className="inline-flex min-h-10 items-center text-sm font-medium transition-colors hover:text-(--t-ink-base)"
-          href="/knowledge"
-          style={{ color: T.ink.dim }}
-        >
-          ← {tArticle("allArticles")}
-        </GlobalLink>
-        {query ? null : (
-          <button
-            type="button"
-            className="cursor-pointer rounded-full border-0 bg-transparent px-1 py-2 text-xs font-medium transition-colors hover:text-(--t-ink-base)"
-            style={{ color: T.ink.dim }}
-            onClick={() =>
-              setOpen(
-                allOpen ? new Set() : new Set(sections.map((s) => s.slug))
-              )
-            }
+        <div className="docs-tree-toolbar">
+          <GlobalLink
+            className="inline-flex min-h-10 items-center text-sm font-semibold no-underline transition-colors hover:text-(--t-accent-primary)"
+            href="/knowledge"
           >
-            {allOpen ? tArticle("collapseAll") : tArticle("expandAll")}
-          </button>
-        )}
+            ‹ {tArticle("allGuidesLabel")}
+          </GlobalLink>
+          {query ? null : (
+            <button
+              type="button"
+              className="cursor-pointer rounded-full border-0 bg-transparent px-1 py-2 text-xs font-medium transition-colors hover:text-(--t-ink-base)"
+              style={{ color: T.ink.dim }}
+              onClick={() =>
+                setOpen(
+                  allOpen ? new Set() : new Set(sections.map((s) => s.slug))
+                )
+              }
+            >
+              {allOpen ? tArticle("collapseAll") : tArticle("expandAll")}
+            </button>
+          )}
+        </div>
       </div>
 
       {query && !hasMatches ? (
@@ -105,7 +107,7 @@ export function DocsSidebarTree({
           {tArticle("noMatchingGuides")}
         </p>
       ) : null}
-      <ul className="m-0 flex list-none flex-col divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0 [&>li]:py-3">
+      <ul className="docs-tree-sections">
         {sections.map((section) => {
           const pages = tree[section.slug] ?? []
           const visiblePages =
@@ -126,13 +128,13 @@ export function DocsSidebarTree({
                 type="button"
                 aria-controls={listId}
                 aria-expanded={expanded}
-                className="flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] border-0 bg-transparent px-1 py-1 text-left text-base font-semibold transition-colors hover:bg-(--t-bg-muted)"
+                className="docs-tree-section-toggle"
                 style={{ color: T.ink.base }}
                 onClick={() => toggle(section.slug)}
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-lg"
+                  className="docs-section-icon flex size-8 shrink-0 items-center justify-center rounded-[10px]"
                   style={{ background: section.tintBg, color: section.tintFg }}
                 >
                   <Icon height={15} icon={section.icon} width={15} />
@@ -150,22 +152,18 @@ export function DocsSidebarTree({
                 <Icon
                   aria-hidden="true"
                   className="shrink-0 transition-transform"
-                  height={18}
+                  height={14}
                   icon="mdi:chevron-down"
                   style={{
                     color: T.ink.dim,
                     transform: expanded ? undefined : "rotate(-90deg)",
                   }}
-                  width={18}
+                  width={14}
                 />
               </button>
 
               {expanded ? (
-                <ul
-                  id={listId}
-                  className="m-0 mt-3 flex list-none flex-col divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0"
-                  style={{ borderColor: T.border.divider }}
-                >
+                <ul id={listId} className="docs-tree-pages">
                   {visiblePages.length === 0 ? (
                     <li
                       className="px-2.5 py-1.5 text-sm"
@@ -178,7 +176,7 @@ export function DocsSidebarTree({
                       <li key={page.documentId}>
                         <GlobalLink
                           aria-current={page.active ? "page" : undefined}
-                          className="flex min-h-11 items-center rounded-[8px] px-2.5 py-3 text-base underline underline-offset-4 transition-colors hover:bg-(--t-bg-muted)"
+                          className="docs-tree-page text-sm leading-normal no-underline hover:no-underline"
                           href={page.href}
                           style={
                             page.active
@@ -187,7 +185,7 @@ export function DocsSidebarTree({
                                   color: T.accent.primaryHover,
                                   fontWeight: 600,
                                 }
-                              : { color: T.ink.dim }
+                              : undefined
                           }
                         >
                           {page.title}
@@ -195,6 +193,15 @@ export function DocsSidebarTree({
                       </li>
                     ))
                   )}
+                  <li>
+                    <GlobalLink
+                      href={`/knowledge?section=${encodeURIComponent(section.slug)}`}
+                      className="docs-tree-page docs-tree-open-section text-sm no-underline hover:no-underline"
+                      aria-label={`${tArticle("openSection")} · ${section.title}`}
+                    >
+                      {tArticle("openSection")} ›
+                    </GlobalLink>
+                  </li>
                 </ul>
               ) : null}
             </li>

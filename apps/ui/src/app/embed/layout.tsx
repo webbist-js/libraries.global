@@ -17,9 +17,10 @@ export default function EmbedLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${fontFigtree.variable} ${fontNewsreader.variable} ${fontJetBrainsMono.variable}`}
     >
-      <body className="m-0 bg-white font-sans text-(--t-ink-base)">
+      <body className="m-0 bg-(--t-bg-deep) font-sans text-(--t-ink-base)">
         <a
           href="#widget-content"
           className="sr-only focus:not-sr-only focus:inline-flex focus:min-h-11 focus:p-3"

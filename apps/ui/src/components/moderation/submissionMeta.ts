@@ -1,6 +1,6 @@
 /**
  * Shapes, labels and pure helpers for the site's Moderation Queue
- * (`/contribute/moderation`). Matching summary/text/value rules live in
+ * (`/moderation`). Matching summary/text/value rules live in
  * shared-data; this adapter retains community shapes, redaction, badges,
  * scope copy and decision errors.
  */

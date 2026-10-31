@@ -6,14 +6,18 @@ import { cn } from "@/lib/styles"
 export function SidebarLinks({
   children,
   className,
+  flushEnd = false,
 }: {
   readonly children: ReactNode
   readonly className?: string
+  /** Card footers already provide the space below their final link. */
+  readonly flushEnd?: boolean
 }) {
   return (
     <ul
       className={cn(
         "m-0 list-none divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0 text-base leading-normal [&>li>a]:flex [&>li>a]:min-h-12 [&>li>a]:items-center [&>li>a]:gap-3 [&>li>a]:py-3 [&>li>a]:font-semibold [&>li>a]:text-(--t-accent-primary) [&>li>a]:underline [&>li>a]:underline-offset-4 [&>li>a:focus-visible]:rounded-sm [&>li>a:focus-visible]:outline-2 [&>li>a:focus-visible]:outline-offset-2 [&>li>a:focus-visible]:outline-(--t-accent-primary) [&>li>a:hover]:text-(--t-accent-primary-hover)",
+        flushEnd && "[&>li:last-child>a]:min-h-0 [&>li:last-child>a]:pb-0",
         className
       )}
     >

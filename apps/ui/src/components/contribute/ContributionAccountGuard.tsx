@@ -3,6 +3,7 @@
 import type { ReactNode } from "react"
 
 import { AccountGuard } from "@/components/auth/AccountGuard"
+import { CONTRIBUTION_DISCOVERY_PATHS } from "@/lib/feature-access"
 
 /** Contribution pages also invalidate local state when their authority changes. */
 export function ContributionAccountGuard({
@@ -15,7 +16,7 @@ export function ContributionAccountGuard({
   return (
     <AccountGuard
       expectedScope={expectedScope}
-      publicGuestPaths={["/contribute", "/contribute/membership"]}
+      publicGuestPaths={CONTRIBUTION_DISCOVERY_PATHS}
     >
       {children}
     </AccountGuard>

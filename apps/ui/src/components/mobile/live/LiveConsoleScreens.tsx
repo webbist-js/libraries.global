@@ -299,13 +299,13 @@ export function StopList({
                     s.state === "done"
                       ? TYPE_TINT.public.bg
                       : here
-                        ? T.accent.primary
+                        ? T.action.primary
                         : T.bg.muted2,
                   color:
                     s.state === "done"
                       ? TYPE_TINT.public.fg
                       : here
-                        ? T.bg.deep
+                        ? T.ink.inverse
                         : T.ink.base,
                 }}
               >
@@ -464,7 +464,7 @@ export function BeforeYouStartScreen({
       <label
         className="flex min-h-14 cursor-pointer items-start gap-3 rounded-[16px] p-4 transition-colors has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-(--t-accent-primary) has-focus-visible:outline-solid"
         style={{
-          border: `1.5px solid ${checked ? T.accent.primary : T.border.line}`,
+          border: `1.5px solid ${checked ? T.action.primary : T.border.line}`,
           background: checked
             ? "color-mix(in srgb, var(--t-accent-chip) 45%, var(--t-bg-deep))"
             : T.bg.deep,
@@ -482,7 +482,7 @@ export function BeforeYouStartScreen({
           icon={checked ? "mdi:check-circle" : "mdi:circle-outline"}
           width={22}
           className="mt-0.5 shrink-0"
-          style={{ color: checked ? T.accent.primary : T.border.hi }}
+          style={{ color: checked ? T.action.primary : T.border.hi }}
         />
         <span>
           <span className="block text-base font-semibold">{title}</span>

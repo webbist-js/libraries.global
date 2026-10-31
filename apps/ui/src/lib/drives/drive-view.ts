@@ -39,6 +39,20 @@ export interface DriveView {
 export const driveHref = (slug: string) =>
   `/community/drives/${encodeURIComponent(slug)}`
 
+/** A bounded homepage selection; preserve editorial order within each priority. */
+export function pickHomepageDrives(drives: readonly Drive[]): Drive[] {
+  const unique = [
+    ...new Map(
+      drives
+        .filter((drive) => drive.status === "open")
+        .map((drive) => [drive.documentId, drive])
+    ).values(),
+  ]
+  const priority = (drive: Drive) => (drive.featured ? 0 : drive.pinned ? 1 : 2)
+
+  return unique.sort((a, b) => priority(a) - priority(b)).slice(0, 6)
+}
+
 /** A Drive title without its `*italic*` markup, for alt text and metadata. */
 export const plainDriveTitle = (title: string) => title.replaceAll("*", "")
 

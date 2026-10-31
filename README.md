@@ -20,6 +20,7 @@ This is a pnpm workspace run with Turborepo.
 
 | Path                                                                     | What it is                                                                                                                                                                     |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/storybook`                                                         | Storybook component and pattern library. [Setup and deployment notes](./apps/docs/docs/storybook.md)                                                                           |
 | `apps/ui`                                                                | Next.js 16 site (App Router, React 19, Tailwind CSS v4, next-intl). Better Auth runs here too. [README](./apps/ui/README.md)                                                   |
 | `apps/strapi`                                                            | Strapi 5 CMS on Postgres, with content, access, staff, event and moderation plugins. [README](./apps/strapi/README.md)                                                         |
 | `apps/sync-worker`                                                       | Node service that pulls library events from Eventbrite, Spydus, Solus, Aspen, iCal feeds, TicketSource and WeGotTickets, matches them to libraries and writes them to Postgres |
@@ -168,6 +169,8 @@ pnpm -F @repo/strapi generate:types
 The Playwright suites need their documented fixtures and browsers. Use one worker, check whether the selected project starts a frontend, and follow the [browser acceptance guide](./qa/tests/playwright/README.md) before running it.
 
 ## Conventions
+
+Run `pnpm dev:storybook` to explore production components, controls and UI patterns at `http://127.0.0.1:6006`. [The pattern-library audit](./apps/docs/docs/pattern-library-audit.md) tracks consolidation decisions and remaining coverage.
 
 The UI follows the v2 "warm paper" design system: tokens in `apps/ui/src/lib/design-tokens.ts`, primitives in `apps/ui/src/components/ds`. The accessibility baseline (visible focus rings, a skip link, reduced motion, status shown as colour + icon + text) is required, not optional. [CLAUDE.md](./CLAUDE.md) has the full frontend conventions.
 

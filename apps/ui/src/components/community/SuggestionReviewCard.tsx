@@ -34,7 +34,7 @@ export function SuggestionReviewCard({
   }).format(new Date(round.reviewAt))
 
   return (
-    <section className="rounded-[32px] bg-(--t-ink-base) p-6 text-white sm:p-7">
+    <section className="rounded-[32px] bg-(--t-bg-inverse) p-6 text-white sm:p-7">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="type-label m-0 text-[#c5c0e9] uppercase">
           {t("nextReview")}

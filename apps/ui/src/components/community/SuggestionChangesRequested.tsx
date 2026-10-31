@@ -4,8 +4,9 @@ import { ClipboardPen, LockKeyhole, Pencil } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ds/Badge"
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { LIST_TINTS, type PublicSuggestion } from "@/lib/community/suggestions"
-import { cn, primaryCtaSm } from "@/lib/styles"
+import { cn } from "@/lib/styles"
 
 export function SuggestionChangesRequested({
   items,
@@ -47,7 +48,7 @@ export function SuggestionChangesRequested({
         {items.map((suggestion) => (
           <li
             key={suggestion.documentId}
-            className="grid gap-4 rounded-[20px] border border-[#eeddb6] bg-[#fffbf3] p-4 sm:p-5"
+            className="grid gap-4 rounded-[20px] border border-(--t-edge-warn) bg-(--t-palette-amber-soft) p-4 sm:p-5"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="grid min-w-0 flex-1 basis-48 gap-2">
@@ -73,7 +74,7 @@ export function SuggestionChangesRequested({
               />
             </div>
             {suggestion.decisionNote && (
-              <div className="grid gap-1.5 border-l-2 border-[#e4c98c] pl-3.5">
+              <div className="grid gap-1.5 border-l-2 border-(--t-edge-warn) pl-3.5">
                 <p className="m-0 text-xs font-bold tracking-[0.04em] text-(--t-palette-amber-fg) uppercase">
                   {t("reviewFeedback")}
                 </p>
@@ -82,7 +83,7 @@ export function SuggestionChangesRequested({
                 </p>
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#eeddb6] pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-(--t-edge-warn) pt-4">
               <p className="m-0 max-w-[46ch] text-sm leading-relaxed text-(--t-ink-dim)">
                 {t("resubmitHint")}
               </p>

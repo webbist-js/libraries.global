@@ -117,7 +117,7 @@ export function PlaceContributionCard({
   return (
     <section
       aria-labelledby={`${id}-title`}
-      className={`grid gap-8 rounded-[28px] border p-5 sm:p-8 ${alternatives.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-10" : ""}`}
+      className={`place-contribution-card grid gap-8 rounded-[28px] border p-5 sm:p-8 ${alternatives.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-10" : ""}`}
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="min-w-0">
@@ -145,7 +145,7 @@ export function PlaceContributionCard({
         </p>
         <GlobalLink
           href={ask.href}
-          className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-(--t-accent-primary) px-6 py-3 text-center text-base font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:w-auto"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-(--t-action-primary) px-6 py-3 text-center text-base font-semibold text-white no-underline hover:bg-(--t-action-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:w-auto"
         >
           {ask.label}
         </GlobalLink>
@@ -181,7 +181,7 @@ export function PlaceContributionCard({
             </label>
             <select
               id={`${id}-place`}
-              className="min-h-[44px] w-full rounded-xl border bg-white px-3 text-base focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
+              className="min-h-[44px] w-full rounded-xl border bg-(--t-bg-deep) px-3 text-base focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
               style={{ borderColor: T.border.hi }}
               value={
                 level === "region" ? siblingSlug || place.region : chosenSlug

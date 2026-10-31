@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import type { ArticleSource } from "@repo/shared-data"
 import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -12,6 +13,7 @@ import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 import { cn } from "@/lib/styles"
+import { captureWorkspaceAction } from "@/lib/workspace-analytics"
 
 import {
   ARTICLE_KIND_META,
@@ -44,6 +46,7 @@ import {
   TagsCard,
 } from "./ArticleSidebar"
 import { ArticleSourcePanel } from "./ArticleSourcePanel"
+import { ArticleSourcesEditor } from "./ArticleSourcesEditor"
 import {
   ArticleWorkspaceLayout,
   ArticleWorkspaceSidebar,
@@ -126,6 +129,7 @@ export function ArticleEditorShell({
   /** Server-authorized ownership; own edits still require moderation. */
   readonly canOwnEdit?: boolean
 }) {
+  const tSources = useUiTranslations("articleSources")
   const tUi = useUiTranslations("ui")
   const tLanguage = useUiTranslations("translation")
   const tEditor = useUiTranslations("articleEditor")
@@ -161,6 +165,7 @@ export function ArticleEditorShell({
             tags: article.tags,
             editSummary: "",
             eventMentions: article.eventMentions ?? [],
+            sources: article.sources ?? [],
           }
         : {
             title: "",
@@ -170,6 +175,7 @@ export function ArticleEditorShell({
             tags: initialTags,
             editSummary: "",
             eventMentions: initialEventMentions,
+            sources: [],
             byline: "",
             origin: "community",
           },
@@ -277,6 +283,7 @@ export function ArticleEditorShell({
         tags: from.tags ?? previous.tags,
         editSummary: from.editSummary ?? previous.editSummary,
         eventMentions: from.eventMentions ?? previous.eventMentions,
+        sources: from.sources ?? previous.sources,
         byline: from.byline ?? previous.byline,
         origin: from.origin ?? previous.origin,
       }
@@ -573,6 +580,7 @@ export function ArticleEditorShell({
                 sections?: string[]
                 tags?: ArticleTag[]
                 eventMentions?: ArticleEventMention[]
+                sources?: ArticleSource[]
                 publishedAt?: string | null
               } | null
             })
@@ -597,6 +605,7 @@ export function ArticleEditorShell({
           tags: existing?.tags ?? draftRef.current.tags,
           eventMentions:
             existing?.eventMentions ?? draftRef.current.eventMentions,
+          sources: existing?.sources ?? draftRef.current.sources,
         }
         draftRef.current = next
         setDraft(next)
@@ -681,6 +690,14 @@ export function ArticleEditorShell({
     }
     setSubmitState("submitting")
     setSubmitError(null)
+    const measured = captureWorkspaceAction(
+      {
+        workspace_area: "contribute",
+        workspace_section: kind === "knowledge" ? "knowledge" : "journal",
+        workspace_surface: "page",
+      },
+      "submit"
+    )
     try {
       if (saveTimer.current) clearTimeout(saveTimer.current)
       if (inFlight.current) await inFlight.current
@@ -723,7 +740,9 @@ export function ArticleEditorShell({
       dirty.current = false
       recovery.discard()
       setSubmitState("submitted")
+      measured("success")
     } catch (err) {
+      measured("error")
       setSubmitError(
         err instanceof Error ? err.message : tUi("couldnt_send_for_review")
       )
@@ -750,6 +769,7 @@ export function ArticleEditorShell({
             sections?: string[]
             tags?: ArticleTag[]
             eventMentions?: ArticleEventMention[]
+            sources?: ArticleSource[]
           } | null
         }
       }
@@ -770,6 +790,7 @@ export function ArticleEditorShell({
         sections: result.data.sections ?? [],
         tags: result.data.tags ?? [],
         eventMentions: result.data.eventMentions ?? [],
+        sources: result.data.sources ?? [],
       })
       setSubmitError(null)
     } catch (failure) {
@@ -865,6 +886,14 @@ export function ArticleEditorShell({
   const withdraw = async () => {
     if (!submissionRef.current || !submissionUpdatedAt || withdrawing) return
     setWithdrawing(true)
+    const measured = captureWorkspaceAction(
+      {
+        workspace_area: "contribute",
+        workspace_section: kind === "knowledge" ? "knowledge" : "journal",
+        workspace_surface: "page",
+      },
+      "withdraw"
+    )
     try {
       const response = await fetch(
         `/api/submissions/${submissionRef.current}/withdraw`,
@@ -889,7 +918,9 @@ export function ArticleEditorShell({
       setSubmitError(null)
       setWithdrawConfirm(false)
       setSaveState("saved")
+      measured("success")
     } catch (failure) {
+      measured("error")
       setSubmitError(
         failure instanceof Error ? failure.message : tUi("couldnt_save")
       )
@@ -1164,7 +1195,7 @@ export function ArticleEditorShell({
                 onClick={() => hydrate(resumable)}
                 className="rounded-full px-4 py-2 text-sm font-semibold text-white"
                 style={{
-                  background: T.accent.primary,
+                  background: T.action.primary,
                   border: "none",
                   cursor: "pointer",
                   fontFamily: T.font.sans,
@@ -1309,6 +1340,7 @@ export function ArticleEditorShell({
                   title={draft.title}
                   summary={draft.summary}
                   doc={draft.doc}
+                  sources={draft.sources}
                 />
               </div>
             )}
@@ -1470,6 +1502,16 @@ export function ArticleEditorShell({
             />
           </details>
         )}
+        {kind === "journal" ? (
+          <details className="article-sources-details">
+            <summary>{tSources("title")}</summary>
+            <ArticleSourcesEditor
+              sources={draft.sources ?? []}
+              onChange={(sources) => update({ sources })}
+              disabled={submitted || editorBusy || !canWrite}
+            />
+          </details>
+        ) : null}
         <HowEditingWorks publishesDirectly={canDirect} />
         {submissionId && (
           <details className="px-2 text-xs text-(--t-ink-dim)">

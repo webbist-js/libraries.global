@@ -20,6 +20,7 @@ vi.mock("@/components/global/GlobalLink", () => ({ default: () => null }))
 vi.mock("@/lib/navigation", () => ({ Link: () => null }))
 vi.mock("@/components/library/LibraryHoursTable", () => ({
   LibraryHoursTable: () => null,
+  LibraryOpenStatusBadge: () => null,
 }))
 vi.mock("@/components/library/LibraryCopyButton", () => ({
   LibraryCopyButton: () => null,

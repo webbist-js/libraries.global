@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_content_article_sources",
+  "info": {
+    "displayName": "Article source",
+    "icon": "link",
+    "description": "An editor-managed citation supporting a Journal article."
+  },
+  "options": {},
+  "attributes": {
+    "title": { "type": "string", "required": true, "maxLength": 180 },
+    "url": { "type": "string", "maxLength": 2048, "regex": "^https?://" },
+    "publisher": { "type": "string", "maxLength": 180 },
+    "accessedAt": { "type": "date" },
+    "notes": { "type": "text", "maxLength": 1000 }
+  }
+}

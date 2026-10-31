@@ -200,7 +200,7 @@ export function MobilePlaceStops({
             >
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
                 disabled={!page}
                 onClick={() => setPaging({ key, page: page - 1, cursors })}
@@ -209,7 +209,7 @@ export function MobilePlaceStops({
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
                 disabled={!visible.next}
                 onClick={() => {

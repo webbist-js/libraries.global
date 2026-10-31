@@ -16,6 +16,7 @@ import { coarseRing } from "@/components/atlas/mobile-map-data"
 import { EmptyState } from "@/components/ds/EmptyState"
 import { BASEMAP_ATTRIBUTION } from "@/components/map/map.helpers"
 import { T } from "@/lib/design-tokens"
+import { bindMapAppearance, mapAppearanceColor } from "@/lib/map-appearance"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import { weekdayCopy } from "@/lib/staff/format"
 
@@ -193,6 +194,7 @@ export function MobileRouteMap({
     })
   }
   useEffect(() => {
+    let disposeAppearance: (() => void) | undefined
     let stopped = false,
       observer: ResizeObserver | null = null
     import("maplibre-gl").then((lib) => {
@@ -221,6 +223,7 @@ export function MobileRouteMap({
           pitchWithRotate: false,
         })
         mapRef.current = map
+        disposeAppearance = bindMapAppearance(map)
         map.touchZoomRotate.disableRotation()
         // Canvas and MapLibre paint can't read CSS variables: resolve the
         // paper token once, falling back to white.
@@ -240,7 +243,7 @@ export function MobileRouteMap({
           canvas.height = 40
           const context = canvas.getContext("2d")!
           context.fillStyle = paper
-          context.strokeStyle = T.map.stopRing
+          context.strokeStyle = "#2f5d3a"
           context.lineWidth = 4
           context.beginPath()
           context.roundRect(3, 3, 34, 34, 9)
@@ -256,7 +259,7 @@ export function MobileRouteMap({
             type: "line",
             source: "mobile-route",
             paint: {
-              "line-color": T.map.route,
+              "line-color": mapAppearanceColor(T.map.route),
               "line-width": 3,
               "line-dasharray": [2, 2.67],
             },
@@ -266,7 +269,7 @@ export function MobileRouteMap({
             type: "fill",
             source: "mobile-coarse",
             paint: {
-              "fill-color": T.map.coarseRing,
+              "fill-color": mapAppearanceColor(T.map.coarseRing),
               "fill-opacity": T.map.coarseOpacity,
             },
           })
@@ -276,7 +279,7 @@ export function MobileRouteMap({
             source: "mobile-vehicle",
             paint: {
               "circle-radius": 9,
-              "circle-color": T.map.route,
+              "circle-color": mapAppearanceColor(T.map.route),
               "circle-stroke-color": paper,
               "circle-stroke-width": 3,
             },
@@ -308,7 +311,7 @@ export function MobileRouteMap({
                 "text-offset": [0, 1.9],
               },
               paint: {
-                "text-color": T.map.stopRing,
+                "text-color": mapAppearanceColor(T.map.stopRing),
                 "text-halo-color": paper,
                 "text-halo-width": 2,
               },
@@ -348,6 +351,7 @@ export function MobileRouteMap({
 
     return () => {
       stopped = true
+      disposeAppearance?.()
       observer?.disconnect()
       vehicle.current?.remove()
       mapRef.current?.remove()

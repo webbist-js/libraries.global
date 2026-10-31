@@ -1,151 +1,115 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
-import { displayStyle } from "@/components/home/homepage.constants"
-import { CLOSING_MEMBER_STEP } from "@/components/home/homepage.content"
+import { homepageLinkAttributes } from "@/components/home/homepage.analytics"
 import type {
   CtaBand,
   LinkCard,
   SectionIntro,
-  Step,
 } from "@/components/home/homepage.types"
-import { T } from "@/lib/design-tokens"
 
-// Indigo band palette: white at falling strengths over #4338CA.
-const SOFT = "#E2E0FB"
-const RULE = "rgba(255,255,255,.3)"
-const DIVIDER = "rgba(255,255,255,.18)"
+// Shipped CMS headings in each supported locale. Custom editorial cards keep
+// their own topic in the CTA rather than inheriting a label from their position.
+const TRUST_TOPICS = new Map<string, "sources" | "review" | "gaps" | "reuse">([
+  ["sources", "sources"],
+  ["zdroje", "sources"],
+  ["review", "review"],
+  ["relecture", "review"],
+  ["kontrola", "review"],
+  ["gaps", "gaps"],
+  ["lacunes", "gaps"],
+  ["mezery", "gaps"],
+  ["reuse", "reuse"],
+  ["réutilisation", "reuse"],
+  ["další využití", "reuse"],
+])
 
-/**
- * The homepage's closing ask on a full-width indigo band: the title, then one
- * action per column, the band's primary call to action under the
- * first (join) and the secondary under the second (contribute). Members get
- * `CLOSING_MEMBER_STEP` as the first step instead. The open-by-design links
- * close the band. The band's `text` isn't shown here; the steps carry the
- * explanation.
- */
 export function ClosingSection({
   band,
-  steps,
-  signedIn,
-  openIntro,
+  trustItems,
   openLinks,
+  plansIntro,
 }: {
   readonly band: CtaBand
-  readonly steps: readonly Step[]
-  readonly signedIn: boolean
-  readonly openIntro: SectionIntro
+  readonly trustItems: readonly LinkCard[]
   readonly openLinks: readonly LinkCard[]
+  readonly plansIntro: SectionIntro
 }) {
-  if (!band.title) return null
-
-  const primary = signedIn
-    ? { label: CLOSING_MEMBER_STEP.ctaLabel, href: CLOSING_MEMBER_STEP.ctaHref }
-    : { label: band.primaryLabel, href: band.primaryHref }
-  const ctas = [
-    primary.label && primary.href
-      ? { label: primary.label, href: primary.href, solid: true }
-      : null,
-    band.secondaryLabel && band.secondaryHref
-      ? { label: band.secondaryLabel, href: band.secondaryHref, solid: false }
-      : null,
-  ]
-  const columns = steps.slice(0, 2).map((step, i) => ({
-    step: signedIn && i === 0 ? CLOSING_MEMBER_STEP : step,
-    cta: ctas[i] ?? null,
-  }))
+  const t = useTranslations("homepageTrust")
 
   return (
-    <section
-      aria-labelledby="closing-title"
-      className="w-full text-white"
-      style={{ background: T.accent.primary }}
-    >
-      <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-8">
-        <h2
-          id="closing-title"
-          className="m-0 text-balance"
-          style={displayStyle("closing")}
-        >
-          <Emphasis text={band.title} emStyle={{ color: SOFT }} />
-        </h2>
-
-        {columns.length > 0 ? (
-          <ul
-            className={`m-0 mt-[clamp(40px,5vw,72px)] grid list-none border-t p-0 ${
-              columns.length > 1 ? "md:grid-cols-2" : ""
-            }`}
-            style={{ borderColor: RULE }}
+    <section className="home-closing" aria-labelledby="home-closing-title">
+      <div className="home-frame home-closing-grid">
+        <div>
+          <h2
+            id="home-closing-title"
+            className="type-display-closing font-semibold"
           >
-            {columns.map(({ step, cta }, i) => (
-              <li
-                key={step.title}
-                className={`flex flex-col items-start py-10 ${
-                  i > 0
-                    ? "border-t md:border-t-0 md:border-l md:pl-12"
-                    : "md:pr-12"
-                }`}
-                style={{ borderColor: DIVIDER }}
-              >
-                <h3 className="type-display-compact m-0">{step.title}</h3>
-                {step.text ? (
-                  <p
-                    className="m-0 mt-4 max-w-[520px] text-base leading-[1.65] text-pretty"
-                    style={{ color: SOFT }}
-                  >
-                    {step.text}
-                  </p>
-                ) : null}
-                {cta ? (
-                  <GlobalLink
-                    href={cta.href}
-                    className={
-                      cta.solid
-                        ? "mt-7 rounded-full bg-white px-6 py-3.5 font-semibold no-underline transition-colors hover:bg-(--t-accent-chip)"
-                        : "mt-7 rounded-full border-[1.5px] border-white px-6 py-3.5 font-semibold text-white no-underline transition-colors hover:bg-white/10"
-                    }
-                    style={cta.solid ? { color: T.ink.base } : undefined}
-                  >
-                    {cta.label}
-                  </GlobalLink>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        {openLinks.length > 0 ? (
-          <nav
-            aria-labelledby="open-title"
-            className="flex flex-wrap items-baseline gap-x-4 gap-y-2 border-t pt-6 text-base"
-            style={{ borderColor: RULE }}
-          >
-            <h2
-              id="open-title"
-              className="type-small-heading m-0"
-              style={{ color: SOFT }}
+            <Emphasis text={band.title ?? ""} />
+          </h2>
+          <p className="home-section-copy">{band.text}</p>
+          <div className="home-inline-links">
+            <GlobalLink
+              href={band.primaryHref}
+              {...homepageLinkAttributes(band.primaryHref)}
+              className="home-button home-button-light"
             >
-              {openIntro.title}:
-            </h2>
-            <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0">
-              {openLinks.map((link) => (
-                <li key={link.title}>
-                  <GlobalLink
-                    href={link.href ?? "/knowledge"}
-                    title={link.text ?? undefined}
-                    className="text-white underline underline-offset-[3px] hover:text-(--t-accent-chip)"
-                  >
-                    {link.title}
-                  </GlobalLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ) : null}
+              {band.primaryLabel}
+            </GlobalLink>
+            <GlobalLink
+              href={band.secondaryHref}
+              {...homepageLinkAttributes(band.secondaryHref)}
+              className="home-button home-button-outline"
+            >
+              {band.secondaryLabel}
+            </GlobalLink>
+            <GlobalLink
+              href="/plans"
+              {...homepageLinkAttributes("/plans")}
+              className="home-button home-button-outline"
+              title={plansIntro.text ?? undefined}
+            >
+              Plans
+            </GlobalLink>
+          </div>
+        </div>
+        <div className="home-trust-grid">
+          {trustItems.map((item) => {
+            const topic = TRUST_TOPICS.get(
+              item.title?.trim().toLowerCase() ?? ""
+            )
+
+            return (
+              <div key={item.title}>
+                <h3 className="type-h3">{item.title}</h3>
+                <p>{item.text}</p>
+                <GlobalLink
+                  href={item.href}
+                  {...homepageLinkAttributes(item.href)}
+                >
+                  {topic
+                    ? t(topic)
+                    : t("readAbout", { topic: item.title ?? "" })}
+                </GlobalLink>
+              </div>
+            )
+          })}
+        </div>
       </div>
+      <nav className="home-frame home-open-links" aria-label="Open by design">
+        {openLinks.map((link) => (
+          <GlobalLink
+            key={link.title}
+            href={link.href}
+            {...homepageLinkAttributes(link.href)}
+          >
+            {link.title}
+          </GlobalLink>
+        ))}
+      </nav>
     </section>
   )
 }
-
-ClosingSection.displayName = "ClosingSection"
 
 export default ClosingSection

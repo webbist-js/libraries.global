@@ -4,6 +4,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
+import { ProfileAvatar } from "@/components/ds/ProfileAvatar"
 import { SectionNavigation } from "@/components/ds/SectionNavigation"
 import GlobalLink from "@/components/global/GlobalLink"
 import { avatarSrc } from "@/lib/avatar"
@@ -98,7 +99,7 @@ function RoleCard({
 }) {
   return (
     <div
-      className="inline-flex items-center gap-3.5 rounded-[16px] border py-3 pr-5 pl-3.5"
+      className="profile-role-card inline-flex items-center gap-3.5 rounded-[16px] border py-3 pr-5 pl-3.5"
       style={{ borderColor: T.border.line, background: T.bg.deep }}
     >
       <span
@@ -126,12 +127,16 @@ export function ProfileHero({
   isOwnProfile,
   isSignedIn,
   tabs,
+  embedded = false,
+  showBreadcrumb = true,
 }: {
   profile: UserProfile
   isOwnProfile: boolean
   isSignedIn: boolean
   /** Section tabs (`ProfileTabNav`) on the band's bottom edge. */
   tabs?: ReactNode
+  embedded?: boolean
+  showBreadcrumb?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -162,41 +167,34 @@ export function ProfileHero({
   return (
     <>
       <section
-        className="border-b"
+        className={embedded ? "profile-identity-embedded border-b" : "border-b"}
         style={{
           background: T.bg.space,
           borderColor: T.border.line,
         }}
       >
         <div className="mx-auto w-full max-w-[1360px] px-4 pt-6 sm:px-8 sm:pt-10">
-          <Breadcrumb
-            className="mb-5"
-            items={[
-              { label: tUi("home"), href: "/" },
-              { label: tUi("community"), href: "/community" },
-              { label: `@${profile.username}` },
-            ]}
-          />
+          {!embedded && showBreadcrumb ? (
+            <Breadcrumb
+              className="mb-5"
+              items={[
+                { label: tUi("home"), href: "/" },
+                { label: tUi("community"), href: "/community" },
+                { label: `@${profile.username}` },
+              ]}
+            />
+          ) : null}
 
           {/* Hero row */}
-          <div className="flex flex-wrap items-start gap-7 pb-8">
+          <div className="profile-identity-row flex flex-wrap items-start gap-7 pb-8">
             {/* Avatar */}
-            <div
-              className="flex size-[80px] shrink-0 items-center justify-center overflow-hidden rounded-full text-[32px] sm:size-[128px] sm:text-[50px]"
-              style={{
-                background: avatar ? "transparent" : palette.bg,
-                color: avatar ? undefined : palette.fg,
-                fontFamily: T.font.sans,
-                fontWeight: 500,
-              }}
-            >
-              {avatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatar} alt="" className="size-full object-cover" />
-              ) : (
-                <span aria-hidden="true">{initials}</span>
-              )}
-            </div>
+            <ProfileAvatar
+              src={avatar}
+              initials={initials}
+              size="css"
+              palette={palette}
+              className="profile-identity-avatar size-[80px] text-[32px] font-medium sm:size-[128px] sm:text-[50px]"
+            />
 
             {/* Identity */}
             {/* Wraps under the avatar on narrow screens */}
@@ -239,7 +237,7 @@ export function ProfileHero({
               ) : null}
 
               {/* Role cards */}
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="profile-identity-roles mt-5 flex flex-wrap gap-3">
                 {isFounder(profile.username) ? (
                   <RoleCard
                     icon="mdi:star-four-points-outline"
@@ -306,10 +304,10 @@ export function ProfileHero({
                 />
               </div>
 
-              {isFounder(profile.username) ? (
+              {!embedded && isFounder(profile.username) ? (
                 <GlobalLink
                   href={KOFI_URL}
-                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-4 py-2.5 text-base font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
+                  className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 py-2.5 text-base font-semibold text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary)"
                   style={{ borderColor: T.border.hi }}
                 >
                   <Icon

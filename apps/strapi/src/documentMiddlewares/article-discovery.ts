@@ -1,4 +1,5 @@
-import { articleReadingMinutes } from "@repo/shared-data"
+import { articleReadingMinutes, parseArticleSources } from "@repo/shared-data"
+import { errors } from "@strapi/utils"
 
 import { queueArticleProjection } from "../lifeCycles/articlePrivacy"
 import { ARTICLE_UIDS, ARTICLE_BODY_POPULATE } from "../utils/article-content"
@@ -69,39 +70,56 @@ export function registerArticleDiscoveryMiddleware({
   strapi: any
 }) {
   strapi.documents.use(async (context: any, next: () => Promise<any>) => {
+    const { uid, action } = context
     if (
-      !ARTICLE_UIDS.has(context.uid) ||
-      !["create", "update", "publish"].includes(context.action)
+      !ARTICLE_UIDS.has(uid) ||
+      !["create", "update", "publish"].includes(action)
     )
       return next()
     const run = async () => {
       const { params } = context
-      const publishing =
-        context.action === "publish" || params.status === "published"
+      const { data, documentId: sourceDocumentId, locale, status } = params
+      if (
+        uid === "api::blog-article.blog-article" &&
+        data &&
+        "sources" in data
+      ) {
+        try {
+          data.sources = parseArticleSources(data.sources)
+        } catch (error) {
+          throw new errors.ValidationError(
+            error instanceof Error ? error.message : "Invalid article sources."
+          )
+        }
+      }
+      const publishing = action === "publish" || status === "published"
       const eventLibraries = publishing
-        ? await captureArticleEventLibraries(strapi, context.uid, params)
+        ? await captureArticleEventLibraries(strapi, uid, params)
         : []
       const changingGeography =
-        context.action === "update" &&
-        params.documentId &&
-        params.data &&
-        !("geographyFacet" in params.data) &&
-        GEOGRAPHY_KEYS.some((key) => key in params.data)
+        action === "update" &&
+        sourceDocumentId &&
+        data &&
+        !("geographyFacet" in data) &&
+        GEOGRAPHY_KEYS.some((key) => key in data)
       const previous = changingGeography
-        ? await strapi.documents(context.uid).findOne({
-            documentId: params.documentId,
+        ? await strapi.documents(uid).findOne({
+            documentId: sourceDocumentId,
             status: "draft",
-            ...(params.locale ? { locale: params.locale } : {}),
+            ...(locale ? { locale: locale } : {}),
             populate: DISCOVERY_POPULATE,
           })
         : null
-      if (context.action === "publish" && params.documentId) {
-        const draft = await strapi.documents(context.uid).findOne({
-          documentId: params.documentId,
+      if (action === "publish" && sourceDocumentId) {
+        const draft = await strapi.documents(uid).findOne({
+          documentId: sourceDocumentId,
           status: "draft",
-          ...(params.locale ? { locale: params.locale } : {}),
+          ...(locale ? { locale: locale } : {}),
           populate: {
             body: ARTICLE_BODY_POPULATE,
+            ...(uid === "api::blog-article.blog-article"
+              ? { sources: true }
+              : {}),
             continents: true,
             countries: true,
             regions: true,
@@ -113,8 +131,8 @@ export function registerArticleDiscoveryMiddleware({
           draft &&
           (draft.readingTimeMinutes == null || draft.geographyFacet == null)
         ) {
-          await strapi.documents(context.uid).update({
-            documentId: params.documentId,
+          await strapi.documents(uid).update({
+            documentId: sourceDocumentId,
             status: "draft",
             locale: draft.locale,
             data: {
@@ -125,22 +143,22 @@ export function registerArticleDiscoveryMiddleware({
             },
           })
         }
-      } else if (params.data && "body" in params.data) {
-        params.data.readingTimeMinutes = articleReadingMinutes(params.data.body)
+      } else if (data && "body" in data) {
+        data.readingTimeMinutes = articleReadingMinutes(data.body)
       }
 
       const result = await next()
-      const documentId = result?.documentId ?? params.documentId
+      const documentId = result?.documentId ?? sourceDocumentId
       const projectionIds = new Set<number>()
       if (publishing && documentId && result) {
         const repaired = await preservePublishedArticleRelations(
           strapi,
-          context.uid,
+          uid,
           documentId,
-          params.locale ?? result?.locale,
+          locale ?? result?.locale,
           eventLibraries
         )
-        const published = await strapi.db.query(context.uid).findMany({
+        const published = await strapi.db.query(uid).findMany({
           where: { documentId, publishedAt: { $notNull: true } },
           select: ["id"],
         })
@@ -152,7 +170,7 @@ export function registerArticleDiscoveryMiddleware({
       }
       if (changingGeography && result?.id) {
         const current = await strapi.db
-          .query(context.uid)
+          .query(uid)
           .findOne({ where: { id: result.id }, populate: DISCOVERY_POPULATE })
         if (current) {
           const geographyFacet = await frozenArticleGeography(
@@ -161,7 +179,7 @@ export function registerArticleDiscoveryMiddleware({
             previous
           )
           await strapi.db
-            .query(context.uid)
+            .query(uid)
             .update({ where: { id: current.id }, data: { geographyFacet } })
           result.geographyFacet = geographyFacet
         }
@@ -172,7 +190,7 @@ export function registerArticleDiscoveryMiddleware({
       if (projectionIds.size)
         await queueArticleProjection(
           strapi,
-          [...projectionIds].map((id) => ({ uid: context.uid, id }))
+          [...projectionIds].map((id) => ({ uid: uid, id }))
         )
 
       return result

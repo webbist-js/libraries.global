@@ -4,6 +4,10 @@ import { ArrowUpRight } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
+import {
+  aboutViewport,
+  setAboutViewport,
+} from "@/components/about/about-viewport"
 import type { AboutLibrary } from "@/components/about/about.types"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -33,7 +37,8 @@ export function AboutPhotoSequence({
 
     const desktop = window.matchMedia("(min-width: 1024px)")
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const stickyTop = 57
+    const scrollTarget =
+      section.closest<HTMLElement>(".dashboard-page") ?? window
     let travel = 0
     let scrollDistance = 1
     let frame = 0
@@ -49,7 +54,8 @@ export function AboutPhotoSequence({
         1,
         Math.max(
           0,
-          (stickyTop - section.getBoundingClientRect().top) / scrollDistance
+          (aboutViewport(section).top - section.getBoundingClientRect().top) /
+            scrollDistance
         )
       )
       const offset = fraction * travel
@@ -75,6 +81,7 @@ export function AboutPhotoSequence({
       cancelAnimationFrame(frame)
       frame = 0
       travel = 0
+      const viewportBounds = setAboutViewport(section)
       const enabled = desktop.matches && !motion.matches && libraries.length > 1
       section.dataset.scrolling = String(enabled)
       if (!enabled) {
@@ -84,7 +91,7 @@ export function AboutPhotoSequence({
         return
       }
       // Measure the content itself, rather than an already fixed-height stage.
-      if (content.offsetHeight > window.innerHeight - stickyTop - 32) {
+      if (content.offsetHeight > viewportBounds.height - 32) {
         section.dataset.scrolling = "false"
         section.style.removeProperty("height")
         track.style.removeProperty("transform")
@@ -98,8 +105,7 @@ export function AboutPhotoSequence({
         return element.offsetLeft + element.offsetWidth / 2
       })
       scrollDistance =
-        (window.innerHeight - stickyTop) *
-        Math.max(1, (libraries.length - 1) * 0.65)
+        viewportBounds.height * Math.max(1, (libraries.length - 1) * 0.65)
       section.style.height = `${stage.offsetHeight + scrollDistance}px`
       render()
     }
@@ -113,9 +119,12 @@ export function AboutPhotoSequence({
     desktop.addEventListener("change", measure)
     motion.addEventListener("change", measure)
     window.addEventListener("resize", measure)
-    window.addEventListener("scroll", schedule, { passive: true })
+    scrollTarget.addEventListener("scroll", schedule, {
+      passive: true,
+      capture: true,
+    })
     measure()
-    document.fonts.ready.then(measure)
+    document.fonts?.ready.then(measure)
 
     return () => {
       disposed = true
@@ -125,7 +134,7 @@ export function AboutPhotoSequence({
       desktop.removeEventListener("change", measure)
       motion.removeEventListener("change", measure)
       window.removeEventListener("resize", measure)
-      window.removeEventListener("scroll", schedule)
+      scrollTarget.removeEventListener("scroll", schedule, true)
       delete section.dataset.scrolling
       section.style.removeProperty("height")
       track.style.removeProperty("transform")

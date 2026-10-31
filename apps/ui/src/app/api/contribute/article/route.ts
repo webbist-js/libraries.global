@@ -66,6 +66,7 @@ export async function GET(req: Request) {
         sections: context.sections,
         tags: context.tags,
         eventMentions: context.eventMentions,
+        ...(kind === "journal" ? { sources: context.sources } : {}),
       },
     })
   } catch {

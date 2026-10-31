@@ -136,8 +136,8 @@ export function OverviewSection({
         <StatCard
           label={tUi("libraries_added")}
           value={String(stats.added)}
-          bg="#F5EEDC"
-          fg="#6B5420"
+          bg="var(--t-palette-amber-bg)"
+          fg="var(--t-palette-amber-fg)"
           icon="mdi:book-plus-outline"
         />
       </div>

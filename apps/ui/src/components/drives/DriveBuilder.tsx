@@ -831,7 +831,7 @@ export function DriveBuilder({
         <button
           type="button"
           onClick={showProblems}
-          aria-controls="drive-errors"
+          aria-controls={shownErrors.length > 0 ? "drive-errors" : undefined}
           className="cursor-pointer font-semibold underline underline-offset-[3px]"
           style={{
             color: T.ink.base,
@@ -893,7 +893,7 @@ export function DriveBuilder({
             type="button"
             aria-label={tUi("dismiss")}
             onClick={() => setRestored(false)}
-            className="absolute top-2 right-2 flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-white"
+            className="absolute top-2 right-2 flex size-9 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-(--t-bg-deep)"
             style={{
               color: T.accent.primaryHover,
               background: "none",
@@ -1141,7 +1141,7 @@ export function DriveBuilder({
                       type="button"
                       aria-label={`Remove ${p.name}`}
                       onClick={() => removePlace(p)}
-                      className="flex size-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-white"
+                      className="flex size-8 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-(--t-bg-deep)"
                       style={{
                         color: T.accent.primaryHover,
                         background: "none",

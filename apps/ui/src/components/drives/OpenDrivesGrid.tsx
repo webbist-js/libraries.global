@@ -124,7 +124,7 @@ export function OpenDrivesGrid({
           type="button"
           aria-pressed={near}
           onClick={toggleNear}
-          className={`${PILL} ${near ? "" : "bg-white hover:bg-(--t-bg-surface)"}`}
+          className={`${PILL} ${near ? "" : "bg-(--t-bg-deep) hover:bg-(--t-bg-surface)"}`}
           style={toggleStyle(near)}
         >
           <Icon
@@ -143,7 +143,7 @@ export function OpenDrivesGrid({
             type="button"
             aria-pressed={followOn}
             onClick={() => setFollowOn((v) => !v)}
-            className={`${PILL} ${followOn ? "" : "bg-white hover:bg-(--t-bg-surface)"}`}
+            className={`${PILL} ${followOn ? "" : "bg-(--t-bg-deep) hover:bg-(--t-bg-surface)"}`}
             style={toggleStyle(followOn)}
           >
             <Icon

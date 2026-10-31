@@ -1,17 +1,18 @@
 import type { QueueFilters } from "@/components/moderation/ModerationFilters"
 
-const BASE = "/contribute/moderation"
+export const MODERATION_PATH = "/moderation"
 
 /** Queue return links stay on this workspace; never accept an external URL. */
 export function reviewReturnHref(value: unknown): string | undefined {
   if (typeof value !== "string" || value.length > 1500) return undefined
-  if (value === BASE || value.startsWith(BASE + "?")) return value
+  if (value === MODERATION_PATH || value.startsWith(MODERATION_PATH + "?"))
+    return value
 
   return undefined
 }
 
 export function reviewHref(documentId: string, returnTo?: string): string {
-  const path = `${BASE}/${encodeURIComponent(documentId)}`
+  const path = `${MODERATION_PATH}/${encodeURIComponent(documentId)}`
   const safe = reviewReturnHref(returnTo)
 
   return safe ? `${path}?returnTo=${encodeURIComponent(safe)}` : path
@@ -31,5 +32,5 @@ export function queueHref(s: QueueState): string {
   if (s.page > 1) p.set("page", String(s.page))
   const qs = p.toString()
 
-  return qs ? `${BASE}?${qs}` : BASE
+  return qs ? `${MODERATION_PATH}?${qs}` : MODERATION_PATH
 }

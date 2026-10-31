@@ -17,16 +17,16 @@ const LIBRARIES = [
 ]
 
 describe("buildContributeMenu", () => {
-  it("gives a signed-out visitor the Everyone cards, with sign-in before adding a library", () => {
+  it("lets a signed-out visitor discover contribution before signing in", () => {
     const menu = buildContributeMenu({ status: "signedOut" })
     expect(menu.work).toEqual([])
     expect(keys(menu.common)).toEqual(["drives", "hub"])
     expect(links(menu.common[0])).toEqual([["All drives", "/community"]])
     expect(links(menu.common[1])).toEqual([
-      ["Add a library", "/auth/signin?callbackUrl=%2Fcontribute%2Findex%2Fnew"],
+      ["Add a library", "/contribute/index/new"],
       ["All ways to contribute", "/contribute"],
     ])
-    expect(menu.common[1]?.links[0]?.sub).toBe("Sign in first")
+    expect(menu.common[1]?.links[0]?.sub).toBe("Free to contribute")
   })
 
   it("shows only the Everyone cards while roles load, whatever the capabilities say", () => {
@@ -197,7 +197,7 @@ describe("buildContributeMenu", () => {
     expect(keys(menu.work)).toEqual(["team"])
     expect(links(menu.work[0])).toEqual([
       ["Members & libraries", "/staff/teams"],
-      ["API access", "/staff/teams/api"],
+      ["API access", "/developers"],
       ["Billing & seats", "/staff/teams/billing"],
     ])
     expect(menu.work[0]?.description).toBe("LibrariesGlobal · Organiser")
@@ -212,7 +212,7 @@ describe("buildContributeMenu", () => {
     expect(keys(menu.work)).toEqual(["libraries", "team"])
     expect(links(menu.work[1])).toEqual([
       ["Members & libraries", "/staff/teams"],
-      ["API access", "/staff/teams/api"],
+      ["API access", "/developers"],
     ])
   })
 
@@ -245,7 +245,7 @@ describe("buildContributeMenu", () => {
     })
     expect(keys(waiting.work)).toEqual(["review"])
     expect(links(waiting.work[0])).toEqual([
-      ["Moderation queue", "/contribute/moderation"],
+      ["Moderation queue", "/moderation"],
     ])
     expect(waiting.work[0]?.links[0]?.badge).toBe(14)
     expect(waiting.work[0]?.links[0]?.sub).toBeUndefined()
@@ -301,7 +301,7 @@ describe("buildContributeMenu", () => {
     })
     expect(links(board.work[0])).toContainEqual([
       "Suggested additions",
-      "/contribute/moderation/suggestions",
+      "/moderation/suggestions",
     ])
     const other = buildContributeMenu({
       status: "signedIn",

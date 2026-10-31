@@ -88,14 +88,14 @@ export function PlanGatePanel({
         <div className="flex flex-wrap gap-3">
           <Link
             href={compareHref}
-            className="inline-flex min-h-12 items-center justify-center rounded-full px-6 text-center font-semibold no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
-            style={{ background: T.accent.primary, color: T.bg.deep }}
+            className="inline-flex min-h-12 items-center justify-center rounded-full px-6 text-center font-semibold no-underline transition-colors hover:bg-(--t-action-primary-hover)"
+            style={{ background: T.action.primary, color: T.ink.inverse }}
           >
             Compare plans
           </Link>
           <a
             href={contactHref}
-            className="inline-flex min-h-12 items-center justify-center rounded-full border bg-white px-6 py-2 text-center font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border bg-(--t-bg-deep) px-6 py-2 text-center font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             Ask about Team for your service
@@ -106,7 +106,7 @@ export function PlanGatePanel({
         <div className="min-w-0 lg:self-center">
           <div
             aria-hidden="true"
-            className="pointer-events-none rounded-[24px] border bg-(--t-bg-surface) p-4 opacity-50 select-none"
+            className="pointer-events-none rounded-[24px] border bg-(--t-bg-surface) p-4 select-none"
             style={{ borderColor: T.border.line }}
           >
             {preview}

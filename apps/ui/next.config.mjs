@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url"
 
-import { withSentryConfig } from "@sentry/nextjs"
+import { withSentryConfig } from "@sentry/nextjs/config"
 import plugin from "next-intl/plugin"
 
 import { env } from "./src/env.mjs"
@@ -26,9 +26,8 @@ const nextConfig = {
   // Include shared workspace dependencies in the standalone Docker output.
   outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)),
   reactStrictMode: true,
-  devIndicators: {
-    position: "bottom-right",
-  },
+  // The floating dev badge covers the phone account control; error overlays remain enabled.
+  devIndicators: false,
   // Enable cacheComponents when caching strategy is introduced
   // cacheComponents: true,
   experimental: {
@@ -104,8 +103,9 @@ const withConfig = (() => {
     widenClientFileUpload: true,
 
     // Automatically annotate React components to show their full name in breadcrumbs and session replay
-    reactComponentAnnotation: {
-      enabled: true,
+    webpack: {
+      reactComponentAnnotation: { enabled: true },
+      treeshake: { removeDebugLogging: true },
     },
 
     // Uncomment to route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
@@ -121,9 +121,6 @@ const withConfig = (() => {
     //   // To disable sourcemap plugin, set this to true
     //   disable: true
     // }
-
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
-    disableLogger: true,
   })
 
   return config

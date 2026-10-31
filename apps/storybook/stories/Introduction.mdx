@@ -1,0 +1,32 @@
+import { Meta } from "@storybook/addon-docs/blocks"
+
+<Meta title="Start here/Pattern library" />
+
+# Libraries Global pattern library
+
+This workspace renders the components shipped by `apps/ui`. Change the application source to change the library. The Controls panel exposes content and visual variants; interaction stories also exercise keyboard and pointer behavior.
+
+## Find the right component
+
+- **Foundations:** the actual design tokens, type scale and library-type tints.
+- **Primitives:** the low-level Radix/Shadcn controls in `components/ui`.
+- **Patterns:** shared site components in `components/ds`, including surfaces, heroes, navigation, filters and drawers.
+- **Features:** domain-specific presentation for events, feed connections, library records, editorial content, staff access and dashboard headers/metrics.
+
+Use the locale toolbar for English, Czech or French. Translation messages come from the UI app. Story copy is synthetic and stays as supplied in Controls; the toolbar changes component-owned interface strings.
+
+Staff and API pages use **Features/Dashboard/WorkspacePageHeader**. Keep **Patterns/PageHero** for the public editorial treatment. The staff examples distinguish paid Team membership, Team verification and personal library access. An active membership can coexist with an unverified Team and a library claim awaiting review. Drafts, invitations and unavailable details have separate stories.
+
+**Features/Staff/Access overview** composes the production presentation components with synthetic claims. It does not mount an authenticated page or exercise its permission checks, billing service or moderation workflow. Narrow French and Czech examples check translated labels and shared guidance.
+
+## Write the next story
+
+Import the production component directly, provide typed synthetic props, and expose meaningful differences as args. Add empty, loading, error, disabled, long-content and responsive states where the component supports them. Compose compound controls under their real parent context. Data-fetching views use declared offline session, server-reader and HTTP fixtures. Production UI implementations stay intact.
+
+Controlled inputs use `useArgs` so canvas interactions update Controls. Actions use `fn()` from `storybook/test`. Interaction stories verify observable behavior with `play`, including real portalled dialogs. The test command renders every story in Chromium and runs the accessibility addon.
+
+## Review and consolidate
+
+The complete source inventory is in `apps/storybook/audit/inventory.csv`. Regenerate it with `pnpm storybook:inventory` after changing UI source or stories. `audit/coverage.md` distinguishes direct story imports, composition imports and uncovered components. Import coverage does not prove every state is tested.
+
+Read `apps/docs/docs/storybook.md` for commands, runtime fixtures, deployment notes and authoring rules. The pattern-library audit records what has been consolidated and the remaining review work. `audit/components.csv` tracks every distinct exported component, including route-owned UI. CI requires a direct example, a real composition reference or an explicit nonvisual classification. Runtime installers and context objects are documented separately. Backend enforcement, live publication and other service integration still belong to application tests.

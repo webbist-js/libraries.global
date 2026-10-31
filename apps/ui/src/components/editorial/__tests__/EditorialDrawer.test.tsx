@@ -75,12 +75,12 @@ describe("Editorial drawer", () => {
       within(queues)
         .getByRole("link", { name: "Discussions 2" })
         .getAttribute("href")
-    ).toBe("/contribute/moderation?tab=discussions")
+    ).toBe("/moderation?tab=discussions")
     expect(
       within(queues)
         .getByRole("link", { name: "Claims 0" })
         .getAttribute("href")
-    ).toBe("/contribute/moderation?category=claims")
+    ).toBe("/moderation?category=claims")
     expect(
       screen.getByRole("region", { name: "Publish and edit" })
     ).toBeTruthy()

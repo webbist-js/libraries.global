@@ -5,7 +5,7 @@ import {
   DEFAULT_FILTERS,
 } from "@/components/library-index/types"
 import { LIVE_LOCALES } from "@/lib/live-locales"
-import { routing } from "@/lib/navigation"
+import { routing } from "@/lib/routing"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 // Browsers use the gated, search-only proxy. Credentials are server-only.

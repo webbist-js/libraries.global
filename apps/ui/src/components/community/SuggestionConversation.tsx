@@ -105,7 +105,7 @@ export function SuggestionConversation({
         aria-expanded={expanded}
         aria-controls={panelId}
         onClick={onToggle}
-        className={`flex min-h-14 w-full cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3 text-left sm:px-6 ${expanded ? "bg-(--t-bg-surface)" : "bg-white"}`}
+        className={`flex min-h-14 w-full cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3 text-left sm:px-6 ${expanded ? "bg-(--t-bg-surface)" : "bg-(--t-bg-deep)"}`}
       >
         <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--t-ink-dim)">
           {!!summary?.participants.length && (

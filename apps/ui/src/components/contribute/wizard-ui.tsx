@@ -8,11 +8,11 @@ import { T } from "@/lib/design-tokens"
  */
 
 export const FIELD =
-  "w-full rounded-[14px] border border-(--t-border-hi) bg-white px-4 py-3 text-base outline-none transition-colors focus:border-(--t-accent-primary)"
+  "w-full rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-base outline-none transition-colors focus:border-(--t-accent-primary)"
 export const PRIMARY =
   "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-base font-semibold transition-colors"
 export const SECONDARY =
-  "inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-white px-5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-(--t-bg-deep) px-5 text-base font-semibold transition-colors hover:bg-(--t-bg-surface)"
 
 /** A field label with an optional dimmed hint after it ("Optional"). */
 export function Label({

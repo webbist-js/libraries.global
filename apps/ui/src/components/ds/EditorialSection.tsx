@@ -45,7 +45,7 @@ export function EditorialSection({
           {/* Text */}
           <div className="flex flex-col gap-5">
             {section.eyebrow ? (
-              <span className="text-xs font-semibold tracking-[0.16em] text-(--t-accent-aurora) opacity-70">
+              <span className="text-xs font-semibold tracking-[0.16em] text-(--t-accent-aurora)">
                 {section.eyebrow}
               </span>
             ) : null}
@@ -91,6 +91,7 @@ export function EditorialSection({
                 src={imageUrl}
                 alt={section.image?.alternativeText ?? section.title}
                 fill
+                sizes="(min-width: 1360px) 628px, (min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,8,22,0.05),rgba(5,8,22,0.3))]" />

@@ -529,7 +529,7 @@ export function LibraryClaimSearch({
             type="button"
             disabled={claiming}
             onClick={() => void handleClaim()}
-            className="inline-flex items-center gap-1.5 self-start rounded-full bg-(--t-accent-primary) px-5 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 self-start rounded-full bg-(--t-action-primary) px-5 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
             style={{ border: "none", fontFamily: T.font.sans }}
           >
             {claiming ? tUi("sending") : "Claim affiliation"}

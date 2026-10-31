@@ -53,6 +53,23 @@ afterEach(() => {
 })
 
 describe("profile appearance writes", () => {
+  it.each(["light", "dark", "system"])(
+    "persists a private interface preference: %s",
+    async (appearancePreference) => {
+      const result = await save({ appearancePreference })
+      expect(result.ctx.status).toBe(200)
+      expect(result.profile.appearancePreference).toBe(appearancePreference)
+      expect(result.profile.profileBackground).toBe("violet")
+    }
+  )
+  it.each(["auto", "Dark", null, {}])(
+    "rejects invalid interface preferences: %s",
+    async (appearancePreference) => {
+      const result = await save({ appearancePreference })
+      expect(result.ctx.status).toBe(400)
+      expect(result.profile.appearancePreference).toBeUndefined()
+    }
+  )
   it("persists a palette choice without changing the uploaded cover", async () => {
     const result = await save({ profileBackground: "mint" })
     expect(result.ctx.status).toBe(200)

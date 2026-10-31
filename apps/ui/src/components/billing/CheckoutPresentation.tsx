@@ -29,7 +29,7 @@ export function CheckoutHeader({ sandbox }: { readonly sandbox?: boolean }) {
         {t("secureCheckout")}
       </span>
       {sandbox ? (
-        <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-900">
+        <span className="rounded-full bg-(--t-palette-amber-soft) px-3 py-1 text-sm font-semibold text-(--t-palette-amber-fg)">
           {t("sandbox")}
         </span>
       ) : null}
@@ -138,7 +138,7 @@ export function CheckoutPlanPicker({
             className={cn(
               "flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-2.5 font-semibold transition-colors has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-(--t-accent-primary) sm:px-5",
               interval === value
-                ? "bg-(--t-ink-base) text-white hover:bg-(--t-ink-base)/90"
+                ? "bg-(--t-bg-inverse) text-white hover:bg-(--t-bg-inverse)/90"
                 : "bg-transparent text-(--t-ink-base) hover:bg-(--t-bg-surface)"
             )}
           >
@@ -152,7 +152,7 @@ export function CheckoutPlanPicker({
             />
             {t(value)}
             {value === "year" && twoMonthsFree ? (
-              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-800">
+              <span className="rounded-full bg-(--t-palette-mint-soft) px-2 py-0.5 text-xs text-(--t-palette-mint-fg)">
                 {t("twoMonthsFree")}
               </span>
             ) : null}
@@ -189,7 +189,7 @@ export function CheckoutPlanPicker({
               className={cn(
                 "flex min-w-0 flex-col gap-5 rounded-3xl border-2 p-5 transition-colors has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-4 has-[input:focus-visible]:outline-(--t-accent-primary) sm:p-6",
                 plan === value
-                  ? "border-(--t-accent-primary) bg-[#faf9ff]"
+                  ? "border-(--t-accent-primary) bg-(--t-bg-selected)"
                   : "border-(--t-border-line) bg-(--t-bg-deep)",
                 disabled
                   ? "cursor-not-allowed opacity-60"
@@ -336,7 +336,7 @@ export function CheckoutSummary({
           size="pill"
           disabled={disabled}
           onClick={() => onInterval("year")}
-          className="flex-col items-start gap-1 rounded-2xl border-green-200 bg-green-50 px-4 text-left text-sm font-normal text-green-800 hover:bg-green-100"
+          className="flex-col items-start gap-1 rounded-2xl border-(--t-edge-ok) bg-(--t-palette-mint-soft) px-4 text-left text-sm font-normal text-(--t-palette-mint-fg) hover:bg-(--t-palette-mint-bg)"
         >
           <span className="font-semibold">
             {t("switchYearly", {

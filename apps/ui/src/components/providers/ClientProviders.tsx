@@ -1,11 +1,12 @@
 "use client"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ThemeProvider } from "next-themes"
 import type React from "react"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { z } from "zod"
 
+import { AccountAppearanceSync } from "@/components/appearance/AccountAppearanceSync"
+import { AppearanceProvider } from "@/components/appearance/AppearanceProvider"
 import { NavigationProgress } from "@/components/global/NavigationProgress"
 import { NotificationProvider } from "@/components/notifications/NotificationProvider"
 import { useTranslatedZod } from "@/hooks/useTranslatedZod"
@@ -60,14 +61,11 @@ export function ClientProviders({
 
   return (
     <>
-      <NavigationProgress />
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        forcedTheme="light"
-        enableSystem={false}
-        nonce={nonce}
-      >
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
+      <AppearanceProvider nonce={nonce}>
+        <AccountAppearanceSync />
         <SessionQueries>
           {liveConsole ? (
             children
@@ -75,7 +73,7 @@ export function ClientProviders({
             <NotificationProvider>{children}</NotificationProvider>
           )}
         </SessionQueries>
-      </ThemeProvider>
+      </AppearanceProvider>
     </>
   )
 }

@@ -24,12 +24,14 @@ const fake = vi.hoisted(() => {
   }
 
   class FakeMap {
-    handlers = new Map<string, Handler>()
+    handlers = new Map<string, Set<Handler>>()
     flyTo = vi.fn()
     jumpTo = vi.fn()
     addControl = vi.fn()
     resize = vi.fn()
     remove = vi.fn()
+    getStyle = () => ({ layers: [] })
+    isStyleLoaded = () => true
     touchZoomRotate = { disableRotation: vi.fn() }
     keyboard = { disableRotation: vi.fn() }
     constructor() {
@@ -38,13 +40,21 @@ const fake = vi.hoisted(() => {
     }
 
     on(event: string, handler: Handler) {
-      this.handlers.set(event, handler)
+      const listeners = this.handlers.get(event) ?? new Set<Handler>()
+      listeners.add(handler)
+      this.handlers.set(event, listeners)
 
       return this
     }
 
     fire(event: string, payload?: unknown) {
-      this.handlers.get(event)?.(payload)
+      this.handlers.get(event)?.forEach((handler) => handler(payload))
+    }
+
+    off(event: string, handler: Handler) {
+      this.handlers.get(event)?.delete(handler)
+
+      return this
     }
   }
 

@@ -9,7 +9,7 @@ import type { HealthRow } from "@/lib/staff/types"
 import { TONES } from "./Notice"
 
 const PILL =
-  "inline-flex min-h-11 shrink-0 items-center rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex min-h-11 shrink-0 items-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /**
  * The record-health card (sans heading, so the sidebar sits under the main
@@ -23,7 +23,11 @@ export function HealthList({
   rows,
   score,
   renderAction,
+  headingId = "record-health-heading",
+  compact = false,
 }: {
+  readonly headingId?: string
+  readonly compact?: boolean
   readonly title: string
   readonly rows: HealthRow[]
   readonly score?: { done: number; total: number }
@@ -33,13 +37,15 @@ export function HealthList({
 
   return (
     <section
-      className="rounded-[28px] border p-5 sm:p-6"
+      className={
+        compact ? "staff-health-compact" : "rounded-[28px] border p-5 sm:p-6"
+      }
       style={{ background: T.bg.deep, borderColor: T.border.line }}
-      aria-labelledby="record-health-heading"
+      aria-labelledby={headingId}
     >
       <div className="flex items-baseline justify-between gap-4">
         <h2
-          id="record-health-heading"
+          id={headingId}
           className="type-panel-title m-0"
           style={{ color: T.ink.base }}
         >
