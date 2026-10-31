@@ -58,7 +58,7 @@ export function LibraryAnchorNav({
       }}
     >
       <Container>
-        <ul className="m-0 -mx-1 flex list-none gap-4 overflow-x-auto p-0 [scrollbar-width:none]">
+        <ul className="m-0 -mx-1 flex [scrollbar-width:none] list-none gap-4 overflow-x-auto p-0">
           {items.map((item) => {
             const active = current === item.href
 

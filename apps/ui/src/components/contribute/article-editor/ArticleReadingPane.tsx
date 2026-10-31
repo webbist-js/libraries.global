@@ -44,7 +44,7 @@ export function ArticleReadingPane({
         aria-labelledby={headingId}
         lang={lang}
         tabIndex={0}
-        className="max-h-[min(65dvh,800px)] min-h-0 overflow-y-auto overscroll-contain [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+        className="max-h-[min(65dvh,800px)] min-h-0 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--t-accent-primary)"
       >
         {children}
       </div>
