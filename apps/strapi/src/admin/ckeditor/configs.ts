@@ -46,6 +46,9 @@ const balloonToolbar = [
 const editorConfigDefaults = {
   ...defaultHtmlPreset.editorConfig,
   extraPlugins: [StyleChangePlugin],
+  // Raw source/embed editing is disabled for every CMS role. Public rendering
+  // also sanitizes saved HTML, including content written before this change.
+  removePlugins: ["SourceEditing", "HtmlEmbed"],
   style: {
     definitions: getStyleDefinitions(),
   },
@@ -95,7 +98,6 @@ export const simpleCkEditorConfig: Preset = {
       "|",
       "alignment",
       "link",
-      "SourceEditing",
       "|",
       "undo",
       "redo",
@@ -137,8 +139,6 @@ export const defaultCkEditorConfig: Preset = {
       "strapiMediaLib",
       "blockquote",
       "insertTable",
-      "htmlEmbed",
-      "SourceEditing",
       "horizontalLine",
       "pageBreak",
       "|",

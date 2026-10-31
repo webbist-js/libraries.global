@@ -16,7 +16,7 @@ const textOf = (node) =>
 export const dashboardCopy = {
   en: {
     navigation:
-      "On a computer, use the menu on the left to move between sections. On a phone, the main shortcuts sit at the bottom; the menu button opens the other destinations. Search and language selection are in the page's top bar. Plans and pricing is near the top of Navigation.",
+      "On a computer, use the menu on the left to move between sections. On a phone, the main shortcuts sit at the bottom; the menu button opens the other destinations. Search is in the page's top bar, with Feedback beside it. The Atlas has its own feedback control. Open Navigation to choose your language and Light, Dark or System appearance. Plans and pricing is near the top of Navigation.",
     profile:
       "Select your photo to open your profile drawer over the current page. Its tabs contain your contributions, following, recognition, notifications and settings. Use Public profile to see the separate page other people can visit. Closing the drawer returns you to the page you were reading.",
     notifications:
@@ -46,7 +46,7 @@ export const dashboardCopy = {
   },
   fr: {
     navigation:
-      "Sur ordinateur, utilisez le menu de gauche pour changer de rubrique. Sur téléphone, les raccourcis principaux sont en bas ; le bouton de menu ouvre les autres destinations. La recherche et le choix de langue sont dans la barre en haut de la page. Les offres et tarifs sont mis en avant dans Navigation.",
+      "Sur ordinateur, utilisez le menu de gauche pour changer de rubrique. Sur téléphone, les raccourcis principaux sont en bas ; le bouton de menu ouvre les autres destinations. La recherche est dans la barre en haut, à côté du bouton de retour d’expérience. L’Atlas possède son propre bouton. Ouvrez Navigation pour choisir la langue et l’apparence Claire, Sombre ou Système. Les offres et tarifs sont mis en avant dans Navigation.",
     profile:
       "Sélectionnez votre photo pour ouvrir le panneau de profil au-dessus de la page actuelle. Ses onglets regroupent vos contributions, abonnements, distinctions, notifications et paramètres. Profil public ouvre la page que les autres peuvent consulter. Fermez le panneau pour retrouver votre lecture.",
     notifications:
@@ -77,7 +77,7 @@ export const dashboardCopy = {
   },
   cs: {
     navigation:
-      "Na počítači přecházejte mezi sekcemi pomocí levé nabídky. Na telefonu jsou hlavní zkratky dole; tlačítko nabídky otevře další cíle. Vyhledávání a volba jazyka jsou v horní liště stránky. Plány a ceny najdete nahoře v Navigaci.",
+      "Na počítači přecházejte mezi sekcemi pomocí levé nabídky. Na telefonu jsou hlavní zkratky dole; tlačítko nabídky otevře další cíle. Vyhledávání je v horní liště vedle tlačítka zpětné vazby. Atlas má vlastní ovládání zpětné vazby. V Navigaci zvolíte jazyk a světlý, tmavý nebo systémový vzhled. Plány a ceny najdete nahoře v Navigaci.",
     profile:
       "Výběrem své fotografie otevřete panel profilu nad aktuální stránkou. Jeho karty obsahují příspěvky, sledování, ocenění, oznámení a nastavení. Veřejný profil otevře samostatnou stránku, kterou mohou navštívit ostatní. Zavřením panelu se vrátíte k původní stránce.",
     notifications:
@@ -171,6 +171,14 @@ export function dashboardGuideBody(doc, locale) {
     }
   }
   const add = (title, text) => {
+    const index = rich.body.findIndex(
+      (block) => block.type === "heading" && textOf(block) === title
+    )
+    if (index !== -1 && rich.body[index + 1]?.type === "paragraph") {
+      rich.body[index + 1] = paragraph(text)
+
+      return
+    }
     if (!rich.body.some((block) => textOf(block) === text))
       rich.body.push(heading(title), paragraph(text))
   }

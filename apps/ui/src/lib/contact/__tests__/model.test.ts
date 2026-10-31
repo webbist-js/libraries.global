@@ -57,3 +57,12 @@ it.each([
 ])("rejects unsafe automatic page context %s", (path) =>
   expect(contextPath(path)).toBe("/")
 )
+
+it.each([
+  "/auth/verify-email/private-token",
+  "/en/staff/team-secret/members",
+  "/fr/%61uth/private-token",
+  "/profile/settings/private-id",
+])("removes private path identifiers from automatic context %s", (path) => {
+  expect(contextPath(path)).not.toMatch(/private|secret|token|settings/)
+})

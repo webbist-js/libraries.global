@@ -162,7 +162,7 @@ export const LEGAL_SEED: SeedDocument[] = [
     order: 2,
     summaryPoints: [
       {
-        text: "No advertising, no third-party tracking and no selling of data.",
+        text: "No advertising or data sales. Optional analytics require your consent.",
       },
       {
         text: "Your email is never shown publicly. You choose what your profile displays.",
@@ -186,10 +186,10 @@ export const LEGAL_SEED: SeedDocument[] = [
       },
       {
         heading: "What we don’t do",
-        inShort: "No ads, no tracking pixels, no data sales.",
+        inShort: "No ads or data sales; analytics are optional.",
         body: [
           p(
-            "We don’t show advertising, use third-party analytics or tracking pixels, or sell or rent personal data to anyone."
+            "We do not show advertising or sell or rent personal data. With consent, Google Analytics and Google Tag Manager measure permitted public pages and restricted, coarse account, Staff and checkout events. Essential security records and service operations do not depend on analytics consent. Review the current published notice for the complete scope and retention details."
           ),
         ],
       },
@@ -209,7 +209,7 @@ export const LEGAL_SEED: SeedDocument[] = [
           "A small number of providers help run the service, under written agreements.",
         body: [
           p(
-            "We use a hosting provider in the EU, an email delivery service, and a payment provider for Pro subscriptions. Payment card details go directly to the payment provider; we never see or store them."
+            "DigitalOcean hosts the beta in the United Kingdom. Email and payment providers support account messages and subscriptions. Slack receives limited operational alerts and submitted product feedback in private project channels. Feedback can contain personal information you type. Payment card details go directly to the payment provider; we never see or store them. Consult the current published notice for provider details, retention and transfer safeguards."
           ),
         ],
       },
@@ -325,7 +325,7 @@ export const LEGAL_SEED: SeedDocument[] = [
     summaryPoints: [
       { text: "We only use cookies the site needs to work." },
       {
-        text: "No advertising or tracking cookies, so there’s no consent banner to click through.",
+        text: "Optional analytics cookies are set only after consent. You can refuse or withdraw consent in Cookie preferences.",
       },
       {
         text: "Blocking cookies won’t stop you browsing, but you need them to sign in.",
@@ -343,13 +343,14 @@ export const LEGAL_SEED: SeedDocument[] = [
       },
       {
         heading: "Cookies we use",
-        inShort: "Sign-in, language, and editor preview.",
+        inShort:
+          "Sign-in, verification security, language, and editor preview.",
         body: [
           list(
             [
               text("Session", true),
               text(
-                " keeps you signed in. It’s set when you sign in and removed when you sign out."
+                " keeps you signed in. A separate one-hour HttpOnly signup proof binds password verification to the browser that created the account, protecting against planted passwords."
               ),
             ],
             [
@@ -367,10 +368,10 @@ export const LEGAL_SEED: SeedDocument[] = [
       },
       {
         heading: "What we don’t use",
-        inShort: "No advertising, analytics or social media cookies.",
+        inShort: "No advertising cookies; optional analytics require consent.",
         body: [
           p(
-            "We don’t use advertising cookies, third-party analytics or social media trackers, so there’s nothing to opt into."
+            "Google Analytics and Google Tag Manager are optional. Refusing analytics leaves essential site features available. Consent covers only the events described in the current published privacy notice; Cookie preferences lets you refuse or withdraw it."
           ),
         ],
       },
