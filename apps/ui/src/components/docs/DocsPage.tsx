@@ -13,6 +13,7 @@ import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import {
   DEFAULT_SECTION_ICON,
+  compareDocsArticles,
   DOCS_REPO_URL,
   docsArticlePath,
   docsSectionSlugsOf,
@@ -174,7 +175,8 @@ export function DocsPage({
   const rowsBySection = new Map(
     sections.map((section) => [section.slug, [] as DocsPageRow[]])
   )
-  articles.forEach((article) => {
+  const readingOrder = [...articles].sort(compareDocsArticles)
+  readingOrder.forEach((article) => {
     // Filed under its home section (the first section when it has none),
     // and listed again under any other section the editor tagged.
     const home = homeSectionOf(article, sections)
@@ -225,7 +227,28 @@ export function DocsPage({
 
   const total = localizedDiscovery?.total ?? articles.length
   const isOverview = !queryActive && !activeSection
-  const firstGuide = activeSection ? localizedDiscovery?.items[0] : undefined
+  const query = parseArticleBrowseQuery(currentQuery)
+  const isReadingOrder = Boolean(
+    activeSection &&
+    !query.q &&
+    query.page === 1 &&
+    !currentQuery.sort &&
+    currentQuery.lang !== "all" &&
+    (query.filters.languages?.length ?? 0) <= 1 &&
+    Object.keys(query.filters).every(
+      (key) => key === "sections" || key === "languages"
+    )
+  )
+  const firstGuide = activeSection
+    ? isReadingOrder
+      ? readingOrder.find((article) =>
+          new Set([
+            homeSectionOf(article, sections)?.slug,
+            ...docsSectionSlugsOf(article),
+          ]).has(activeSection.slug)
+        )
+      : localizedDiscovery?.items[0]
+    : undefined
 
   return (
     <DashboardPage
@@ -379,7 +402,9 @@ export function DocsPage({
                 href={articleReaderPath(
                   docsArticlePath(firstGuide, sections),
                   locale,
-                  firstGuide.locale
+                  isReadingOrder
+                    ? contentLocale
+                    : (localizedDiscovery?.items[0]?.locale ?? contentLocale)
                 )}
                 className="group flex items-center justify-between gap-5 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 lg:ml-auto lg:max-w-sm"
               >
@@ -492,6 +517,13 @@ export function DocsPage({
                 ) : null}
                 {isOverview ? (
                   <DocsSectionsExplorer sections={sectionData} />
+                ) : isReadingOrder ? (
+                  <DocsSectionsExplorer
+                    focused
+                    sections={sectionData.filter(
+                      ({ section }) => section.slug === activeSection?.slug
+                    )}
+                  />
                 ) : localizedDiscovery ? (
                   <KnowledgeDiscovery
                     discovery={localizedDiscovery}

@@ -27,8 +27,10 @@ import type {
 } from "@/lib/strapi-api/content/server"
 
 import {
+  compareDocsArticles,
   docsArticlePath,
   homeSectionOf,
+  orderedDocsArticles,
   readingTimeMinutes,
   type DocsSection,
 } from "./docs.config"
@@ -43,24 +45,6 @@ function initialsOf(name: string): string {
       .map((part) => part[0]?.toUpperCase() ?? "")
       .join("") || "?"
   )
-}
-
-/** Keep the section lists' reading order when moving to the previous/next guide. */
-function orderedPages(
-  articles: DocsWikiArticle[],
-  sections: readonly DocsSection[]
-) {
-  const sectionOrder = new Map(
-    sections.map((section, index) => [section.slug, index])
-  )
-  const indexOf = (article: DocsWikiArticle) =>
-    sectionOrder.get(homeSectionOf(article, sections)?.slug ?? "") ?? 0
-
-  return [...articles].sort((a, b) => {
-    const bySection = indexOf(a) - indexOf(b)
-
-    return bySection
-  })
 }
 
 export function DocsArticlePage({
@@ -98,7 +82,8 @@ export function DocsArticlePage({
   const tree: DocsTree = Object.fromEntries(
     sections.map((s) => [s.slug, [] as DocsTree[string]])
   )
-  articles.forEach((entry) => {
+  const readingOrder = [...articles].sort(compareDocsArticles)
+  readingOrder.forEach((entry) => {
     const home = homeSectionOf(entry, sections)
     if (!home) return
     tree[home.slug]?.push({
@@ -109,7 +94,7 @@ export function DocsArticlePage({
     })
   })
 
-  const ordered = orderedPages(articles, sections)
+  const ordered = orderedDocsArticles(articles, sections)
   const currentIndex = ordered.findIndex((a) => a.slug === article.slug)
   const previous = currentIndex > 0 ? ordered[currentIndex - 1] : null
   const next =

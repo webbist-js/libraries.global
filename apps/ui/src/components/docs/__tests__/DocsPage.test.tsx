@@ -214,3 +214,52 @@ describe("Knowledge search discovery state", () => {
     expect(fields.has("page")).toBe(false)
   })
 })
+
+describe("Knowledge section reading order", () => {
+  it("shows every curated guide with account deletion last and starts with the introduction", () => {
+    const articles = [
+      {
+        documentId: "delete",
+        slug: "deleting-your-account",
+        title: "Deleting your account",
+        priority: -100,
+      },
+      ...Array.from({ length: 5 }, (_, index) => ({
+        documentId: `guide-${index}`,
+        slug: `guide-${index}`,
+        title: `Guide ${index}`,
+        priority: 80 - index,
+      })),
+      {
+        documentId: "about",
+        slug: "about",
+        title: "About Libraries Global",
+        priority: 100,
+      },
+    ]
+    const { container } = render(
+      <DocsPage
+        {...props}
+        articles={articles}
+        queryActive
+        currentQuery={{ section: "getting-started" }}
+      />
+    )
+    const main = container.querySelector("#getting-started")!
+    const links = within(main as HTMLElement).getAllByRole("link")
+    expect(links.slice(1).map((link) => link.textContent)).toEqual([
+      "About Libraries Global",
+      "Guide 0",
+      "Guide 1",
+      "Guide 2",
+      "Guide 3",
+      "Guide 4",
+      "Deleting your account",
+    ])
+    expect(
+      screen
+        .getByRole("link", { name: /Start with.*About Libraries Global/ })
+        .getAttribute("href")
+    ).toBe("/knowledge/getting-started/about")
+  })
+})
