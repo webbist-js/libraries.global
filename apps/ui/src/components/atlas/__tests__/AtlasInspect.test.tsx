@@ -237,7 +237,7 @@ it("preserves panel state across tabs and minimising, and exposes only the activ
     screen.getByRole("navigation", { name: "Minimised Inspect" })
   ).toBeTruthy()
   await act(async () =>
-    fireEvent.click(screen.getByRole("button", { name: "Open reach" }))
+    fireEvent.click(screen.getByRole("button", { name: /4\.4% reach/ }))
   )
   expect(
     (screen.getByRole("textbox", { name: "reach setting" }) as HTMLInputElement)

@@ -1607,7 +1607,7 @@ export function TimetableEditor({
                                   : T.ink.dim,
                           }}
                           aria-pressed={selected}
-                          aria-label={`${labels[WEEKDAYS.indexOf(cell.day)]} ${shortDate(cell.date)}, Week ${cell.week}: ${cell.notRunning ? "not running" : `${cell.stops} stops`}`}
+                          title={`${labels[WEEKDAYS.indexOf(cell.day)]} ${shortDate(cell.date)}, Week ${cell.week}: ${cell.notRunning ? "not running" : `${cell.stops} stops`}`}
                           onClick={() => {
                             setDay(cell.day)
                             setWeek(cell.week)

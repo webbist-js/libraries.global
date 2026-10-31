@@ -21,10 +21,12 @@ export function WritingToolbarButton({
   disabled,
   onClick,
 }: ToolButtonProps) {
+  const visibleLabel = text && /[\p{L}\p{N}]/u.test(text) ? text : label
+
   return (
     <button
       type="button"
-      aria-label={label}
+      aria-label={visibleLabel}
       aria-pressed={active}
       title={label}
       disabled={disabled}

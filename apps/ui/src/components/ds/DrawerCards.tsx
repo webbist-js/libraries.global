@@ -75,7 +75,6 @@ export function DrawerAction({
     <Link
       href={href}
       {...workspaceNavigationAttributes(href, "drawer")}
-      aria-label={tag ? `${label} (${tag})` : undefined}
       onClick={onClick}
       className="group flex min-h-12 min-w-0 items-center gap-2.5 rounded-[12px] px-2 py-2 text-(--t-ink-base) no-underline transition-colors hover:bg-(--t-bg-surface) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
     >
@@ -166,7 +165,6 @@ export function DrawerTile({
 }) {
   return (
     <Link
-      aria-label={tag ? `${label} (${tag})` : label}
       href={href}
       {...workspaceNavigationAttributes(href, "drawer")}
       className={TILE}

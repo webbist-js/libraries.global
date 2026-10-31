@@ -51,6 +51,8 @@ export const Choose: Story = {
       within(document.body).getByRole("option", { name: "Public" })
     )
     await expect(args.onValueChange).toHaveBeenCalledWith("public")
-    await expect(canvas.getByRole("combobox")).toHaveTextContent("Public")
+    await expect(await canvas.findByRole("combobox")).toHaveTextContent(
+      "Public"
+    )
   },
 }

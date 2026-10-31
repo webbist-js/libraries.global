@@ -47,10 +47,11 @@ const show = (props: Partial<Parameters<typeof DriveTaskRow>[0]> = {}) => {
 }
 
 describe("DriveTaskRow", () => {
-  it("names its action after the library", () => {
+  it("names the visible library and action, with contextual description", () => {
     const onSelect = show()
     const button = screen.getByRole("button", {
-      name: "Add hours for Worthington Libraries, Northwest",
+      name: /Worthington Libraries, Northwest.*Add hours/,
+      description: "Add hours for Worthington Libraries, Northwest",
     })
     expect(button.getAttribute("aria-pressed")).toBe("false")
     expect(screen.getByText("Columbus, Ohio")).toBeTruthy()
@@ -63,7 +64,7 @@ describe("DriveTaskRow", () => {
     expect(
       screen
         .getByRole("button", {
-          name: "Add hours for Worthington Libraries, Northwest",
+          name: /Worthington Libraries, Northwest/,
         })
         .getAttribute("aria-pressed")
     ).toBe("true")
@@ -77,7 +78,7 @@ describe("DriveTaskRow", () => {
   it("is “In review” once sent, and can't be picked again", () => {
     const onSelect = show({ inReview: true })
     const button = screen.getByRole("button", {
-      name: "Add hours for Worthington Libraries, Northwest",
+      name: /Worthington Libraries, Northwest/,
     })
     expect(button.getAttribute("aria-disabled")).toBe("true")
     const status = screen.getByText("In review")

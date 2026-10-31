@@ -91,7 +91,7 @@ export function SuggestionChangesRequested({
                 <button
                   type="button"
                   onClick={() => onRevise(suggestion)}
-                  aria-label={t("reviseNamed", { name: suggestion.name })}
+                  title={t("reviseNamed", { name: suggestion.name })}
                   className={cn(
                     primaryCtaSm,
                     "min-h-10 shrink-0 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
@@ -103,7 +103,7 @@ export function SuggestionChangesRequested({
               ) : (
                 <a
                   href="#suggest-option"
-                  aria-label={t("reviseNamed", { name: suggestion.name })}
+                  title={t("reviseNamed", { name: suggestion.name })}
                   className={cn(
                     primaryCtaSm,
                     "min-h-10 shrink-0 text-sm no-underline"

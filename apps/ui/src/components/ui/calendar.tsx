@@ -213,6 +213,14 @@ function CalendarDayButton({
         className
       )}
       {...props}
+      // Preserve the visible number as a word: full date labels can use ordinals (28th).
+      aria-label={
+        props["aria-label"] &&
+        (typeof props.children === "string" ||
+          typeof props.children === "number")
+          ? `${props.children}: ${props["aria-label"]}`
+          : props["aria-label"]
+      }
     />
   )
 }
