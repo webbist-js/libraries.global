@@ -20,10 +20,10 @@
   },
   "dependencies": {
     "@repo/shared-data": "workspace:*",
-    "fast-xml-parser": "^5.11.1",
+    "fast-xml-parser": "^5.11.2",
     "ical.js": "^2.0.1",
     "ipaddr.js": "^2.5.0",
-    "undici": "^8.11.2"
+    "undici": "^8.12.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

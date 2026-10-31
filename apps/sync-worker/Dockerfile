@@ -1,6 +1,6 @@
 # Build from the repository root. Events and Atlas use the same image with
 # separate commands: dist/index.js and dist/atlas/index.js.
-FROM node:22-bookworm-slim AS base
+FROM node:22.23.4-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 WORKDIR /app
@@ -22,7 +22,7 @@ COPY --from=prepare /app/out/full/ .
 RUN pnpm exec turbo run build --filter=@repo/sync-worker
 RUN pnpm --filter @repo/sync-worker deploy --legacy --prod --ignore-scripts /opt/worker
 
-FROM node:22-bookworm-slim AS runner
+FROM node:22.23.4-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=builder --chown=node:node /opt/worker/ .
