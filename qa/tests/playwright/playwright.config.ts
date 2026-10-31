@@ -105,10 +105,13 @@ if (smokeEnabled)
   projects.push({
     name: "smoke",
     testMatch: ["smoke/**/*.spec.ts"],
+    workers: 1,
+    fullyParallel: false,
     use: {
       ...devices["Desktop Chrome"],
       baseURL: smokeOrigin,
       trace: "off",
+      video: "off",
     },
   })
 if (process.env.QA_ADMIN_PROJECT === "1" || argv.includes("--project=admin")) {
@@ -149,7 +152,7 @@ export default defineConfig({
   ...(smokeEnabled
     ? {
         webServer: {
-          command: `pnpm --filter @repo/ui start --hostname localhost --port ${smokePort}`,
+          command: "node smoke/start-server.mjs",
           url: `${smokeOrigin}/events`,
           timeout: 120000,
           reuseExistingServer: !process.env.CI,
@@ -157,6 +160,8 @@ export default defineConfig({
             BETA_GATE_ENABLED: "false",
             APP_PUBLIC_URL: smokeOrigin,
             STRAPI_URL: "http://127.0.0.1:65534",
+            HOSTNAME: "localhost",
+            PORT: String(smokePort),
           },
         },
       }
@@ -178,7 +183,8 @@ export default defineConfig({
 
     trace: "on-first-retry",
     screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    // Diagnostic runs can opt in through a dedicated project/config override.
+    video: "off",
   },
   projects,
 })

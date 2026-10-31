@@ -6,6 +6,14 @@ Use local, disposable fixtures. Do not use production accounts, real provider cr
 
 Run checks sequentially with bounded Node memory and `--workers=1`. Reuse the existing local UI/CMS and Docker PostgreSQL database for routine development. Projects needing disposable infrastructure run only in an approved isolated CI/acceptance environment. The smoke project starts a frontend, so do not run it alongside another local Next.js server.
 
+Public smoke checks run the built standalone server, including its static and
+public assets, with one browser worker. CI supplies an ephemeral PostgreSQL
+service for Better Auth. Videos are off by default; public failures retain
+screenshots. These checks run against the local CI server, not the production
+website. CI runs lint, unit suites and builds on independent runners; Storybook
+checks every story in light and dark on separate runners. The existing aggregate
+checks require every group to pass before a release can proceed.
+
 | Suite             | Command                                                                                                                               | Coverage                                                                                                                                                                                                 |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public smoke      | `pnpm --filter @repo/tests-playwright exec playwright test --project=smoke`                                                           | Built, hydrated public shells, skip-link focus, French/Czech routes and Events server search. Runs in CI after the UI build.                                                                             |

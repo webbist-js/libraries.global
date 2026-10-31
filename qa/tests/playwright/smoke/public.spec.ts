@@ -2,6 +2,21 @@ import { expect, test } from "@playwright/test"
 
 import urls from "../helpers/urls.json"
 
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status === testInfo.expectedStatus) return
+  const focus = await page.evaluate(() => ({
+    documentFocused: document.hasFocus(),
+    mainFocused: document.activeElement === document.getElementById("main"),
+    activeTag: document.activeElement?.tagName,
+    activeId: document.activeElement?.id,
+    dashboardHydrated: document.documentElement.dataset.dashboardActive,
+  }))
+  await testInfo.attach("public-shell-focus", {
+    body: JSON.stringify(focus, null, 2),
+    contentType: "application/json",
+  })
+})
+
 for (const url of urls)
   test(`public shell ${url}`, async ({ page }) => {
     const response = await page.goto(url)
