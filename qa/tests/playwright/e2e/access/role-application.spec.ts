@@ -135,7 +135,7 @@ test("an applicant with five accepted changes applies; once approved, their sess
   // A Moderator whose scope covers the applications queue approves it.
   const review = await pageAs(browser, moderator, baseURL!)
   browserContexts.push(review.context())
-  await review.goto(`/contribute/moderation/${documentId}`, NAVIGATION)
+  await review.goto(`/moderation/${documentId}`, NAVIGATION)
   const approved = review.getByText("Approved.", { exact: true })
   await expect(async () => {
     if (await approved.isVisible()) return

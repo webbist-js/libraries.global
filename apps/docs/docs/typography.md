@@ -67,6 +67,11 @@ Copy uses the usual Tailwind steps: `text-xs` (12px), `text-sm` (14px),
 copy and sidebar descriptions. Reserve 12–14px for captions and metadata.
 Long-form article text uses 18px with a 1.7 line height.
 
+Homepage descriptions, feature summaries, guide rows, supporting copy and primary
+actions use `--type-body-size` (16px), matching ordinary site copy. Keep section
+titles on shared heading roles. Use 12–14px for eyebrows, badges, counts, dates,
+captions and legal metadata rather than explanatory paragraphs.
+
 Published article bodies and the article editor share the heading scale. Wrap
 rendered article content in `article-prose` to apply its reading styles.
 

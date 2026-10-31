@@ -49,7 +49,7 @@ let libraryId = ""
 let librarySlug = ""
 
 const reviewLink = (documentId: string) =>
-  `a[href^="/contribute/moderation/${documentId}"]`
+  `a[href^="/moderation/${documentId}"]`
 
 test.beforeAll(async ({ playwright }, testInfo) => {
   const baseURL = testInfo.project.use.baseURL!
@@ -148,7 +148,7 @@ test("a Moderator sees the masked test result, never the address, and approves",
   const page = await pageAs(browser, moderator, baseURL!)
   browserContexts.push(page.context())
 
-  await page.goto("/contribute/moderation?category=libraries", NAVIGATION)
+  await page.goto("/moderation?category=libraries", NAVIGATION)
   await page.waitForLoadState("networkidle")
   // The Libraries category includes event-feed requests.
 
@@ -159,7 +159,7 @@ test("a Moderator sees the masked test result, never the address, and approves",
   await expect(row.getByText("Event feed")).toBeVisible()
   await row.locator(reviewLink(feedSubmissionId)).click()
   await page.waitForURL(
-    (url) => url.pathname === `/contribute/moderation/${feedSubmissionId}`,
+    (url) => url.pathname === `/moderation/${feedSubmissionId}`,
     NAVIGATION
   )
 

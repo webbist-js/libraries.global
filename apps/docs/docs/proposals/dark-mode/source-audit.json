@@ -1,0 +1,1165 @@
+{
+  "date": "2026-10-30",
+  "scope": [
+    "apps/ui/src",
+    "packages/design-system/src",
+    "packages/shared-data/src"
+  ],
+  "method": "Static TS/TSX/CSS search excluding test, spec, stories and __tests__/__snapshots__ files. Counts are candidates, not defects. Contrast is uncomposited sRGB from supplied mockup tokens, not a browser conformance audit.",
+  "totals": {
+    "filesWithHex": 126,
+    "hexLiterals": 562,
+    "filesWithBgWhite": 134,
+    "bgWhite": 222
+  },
+  "contrast": [
+    {
+      "label": "Main text / canvas",
+      "foreground": "#F3F1FA",
+      "background": "#0F0E1D",
+      "ratio": 17.053,
+      "normalTextAA": true,
+      "largeTextAA": true
+    },
+    {
+      "label": "Secondary / panel",
+      "foreground": "#B3B0C8",
+      "background": "#1D1C33",
+      "ratio": 7.867,
+      "normalTextAA": true,
+      "largeTextAA": true
+    },
+    {
+      "label": "Muted / panel",
+      "foreground": "#8C89A6",
+      "background": "#1D1C33",
+      "ratio": 4.931,
+      "normalTextAA": true,
+      "largeTextAA": true
+    },
+    {
+      "label": "Link / panel",
+      "foreground": "#A9A3F5",
+      "background": "#1D1C33",
+      "ratio": 7.301,
+      "normalTextAA": true,
+      "largeTextAA": true
+    },
+    {
+      "label": "White / solid accent",
+      "foreground": "#FFFFFF",
+      "background": "#6D63F0",
+      "ratio": 4.475,
+      "normalTextAA": false,
+      "largeTextAA": true
+    },
+    {
+      "label": "Off-white / solid accent",
+      "foreground": "#F3F1FA",
+      "background": "#6D63F0",
+      "ratio": 4.0,
+      "normalTextAA": false,
+      "largeTextAA": true
+    },
+    {
+      "label": "Dark-theme accent / light canvas",
+      "foreground": "#A9A3F5",
+      "background": "#F1EDE5",
+      "ratio": 1.946,
+      "normalTextAA": false,
+      "largeTextAA": false
+    }
+  ],
+  "files": [
+    {
+      "path": "apps/ui/src/components/home/KnowledgeGlobeCanvas.tsx",
+      "hexLiterals": 40,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/home/homepage.css",
+      "hexLiterals": 27,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/styles/CkEditorDefaultStyles.css",
+      "hexLiterals": 26,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/styles/globals.css",
+      "hexLiterals": 24,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/home/ReachTownIllustration.tsx",
+      "hexLiterals": 23,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/atlas-map.style.ts",
+      "hexLiterals": 21,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/LibraryCard.tsx",
+      "hexLiterals": 16,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/home/AtlasGlobePreview.tsx",
+      "hexLiterals": 16,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasContext.tsx",
+      "hexLiterals": 16,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasEdgeStates.tsx",
+      "hexLiterals": 8,
+      "bgWhite": 6
+    },
+    {
+      "path": "apps/ui/src/components/atlas/atlas-ui.tsx",
+      "hexLiterals": 11,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetThumbnail.tsx",
+      "hexLiterals": 13,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasMap.tsx",
+      "hexLiterals": 12,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/home/sections/FinalCtaSection.tsx",
+      "hexLiterals": 11,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasPlansSheet.tsx",
+      "hexLiterals": 5,
+      "bgWhite": 5
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/hub/TakeOnARole.tsx",
+      "hexLiterals": 9,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryHoursTable.tsx",
+      "hexLiterals": 9,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasAccessibilityAnalysis.tsx",
+      "hexLiterals": 6,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasBottomBar.tsx",
+      "hexLiterals": 8,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/hub/HowReviewWorks.tsx",
+      "hexLiterals": 9,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/beta/beta.module.css",
+      "hexLiterals": 8,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasExplorer.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 7
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/TeamPlan.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 8
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionThreadSidebar.tsx",
+      "hexLiterals": 5,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/mobile/TimetableEditor.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasLibraryPanel.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 4
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasAccessViews.tsx",
+      "hexLiterals": 5,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasReachInterpretation.tsx",
+      "hexLiterals": 7,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionFeed.tsx",
+      "hexLiterals": 6,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionReviewCard.tsx",
+      "hexLiterals": 6,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/Badge.tsx",
+      "hexLiterals": 6,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/location/LocationHeroMap.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/atlas/atlas-reach-renderer.ts",
+      "hexLiterals": 6,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasFiltersTab.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareTable.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 5
+    },
+    {
+      "path": "apps/ui/src/components/home/knowledge-globe-data.ts",
+      "hexLiterals": 5,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionFeedItem.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/ds/EditorialToolbar.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/location/PlaceContributionCard.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/OpeningTimesEditor.tsx",
+      "hexLiterals": 5,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/staff/StaffDrawer.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasInspect.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 5
+    },
+    {
+      "path": "apps/ui/src/components/atlas/atlas-scalable-renderer.ts",
+      "hexLiterals": 5,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasAccessibility.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/editorial/EditorialDrawer.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/contributions/ContributionRow.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/DrawerCards.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/index-page/LibrarySearchBox.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveProgressSummary.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/library/LibrarySections.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/OpeningScheduleOverrides.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasListView.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasSearchTab.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/events/event-display.ts",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/community/SuggestionChangesRequested.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetMap.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/home/sections/CoverageSection.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/hub/DrivesYouCanHelpWith.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/PlanToggle.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 4
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/profile/[username]/_components/ContributionHeatmap.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/auth/_components/AuthOAuthButtons.tsx",
+      "hexLiterals": 4,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/lib/design-tokens.ts",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionThread.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionModeratorToolbar.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/ds/CardImageBlock.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveCard.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveBoardActions.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/articles/EditorialLoading.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/about/about.css",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/contribute/LibraryPicker.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/contribute/CorrectionEditor.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/staff/TeamCheckoutDialog.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/components/atlas/atlas-library-density-renderer.ts",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/events/EventTimeline.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/community/SuggestionReviewCard.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetChart.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetChartBar.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/contribute/article-editor/ArticleSidebar.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/staff/page.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/submissions/_components/SubmissionsShell.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/hub/RecordsThatNeedYou.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/hub/YourSubmissionsList.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/LibraryStaffSection.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 3
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/profile/settings/_components/DataAccountSection.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/auth/_components/AuthFormParts.tsx",
+      "hexLiterals": 3,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/discussions/DiscussionSkeleton.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/PublishBar.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/location/LocationChildBrowser.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/index-page/FindControls.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveFollowButton.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveBuilder.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/drives/OpenDrivesGrid.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryFacilityAnswers.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryHelpPanel.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/docs/docs.config.ts",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/region/RegionLibraryList.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/mobile/MobilePlaceStops.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/contribute/wizard-ui.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/contribute/actions.ts",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/contribute/RoleApplicationForm.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasAccessCompare.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/atlas/atlas-per-capita-renderer.ts",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/events/EventTypeChip.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/community/SuggestOptionForm.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/billing/PlanChangeDialog.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/billing/CheckoutButton.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetView.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/moderation/ModerationQueue.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/moderation/ModerationWorkspaceNav.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/components/moderation/ReviewDecisionForm.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/moderation/ModerationOverview.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/developers/ApiPlayground.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/PlanStatusBanner.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareMobile.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/ProFreeRoutes.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 2
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/correct/[slug]/_components/CorrectLibraryForm.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/live/manifest.webmanifest/route.ts",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/profile/[username]/_components/sections/OverviewSection.tsx",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "packages/design-system/src/theme.css",
+      "hexLiterals": 2,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/beta/BetaFeedback.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/settings/ToggleSwitch.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/home/HomepageHero.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/home/HomeSearch.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/home/homepage.constants.ts",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/home/DriveCarousel.module.css",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/contributions/contributions.ts",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/HealthList.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/ds/StatCard.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/Drawer.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/ds/IndexPager.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/ds/ActionCallout.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/ds/PaginationControls.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/ds/PlanGatePanel.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/ds/Notice.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/location/AtlasRegionMap.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/location/PlaceInsights.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/location/PlaceSearchForm.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/location/LocationLibraryCard.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/index-page/FindCards.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/index-page/FindMapPanel.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveHelpers.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveTaskList.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/drives/FeaturedDrive.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveTaskPanel.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/drives/DrivesHere.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/drives/DriveTaskRow.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryHero.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/VerifyFields.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryVerify.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryHeroMap.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryCopyButton.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryDriveNote.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryHeroActions.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryNetworks.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/FeaturedLibraryCard.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryFollowButton.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/library/StaffLibraryEntry.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library/LibraryAboutDisclosure.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/blog/JournalSectionBrowser.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/blog/JournalCards.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/blog/JournalListControls.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/blog/JournalPagination.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/networks/NetworkAffiliations.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/region/RegionLibraryIndex.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/mobile/MobileRouteMap.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/mobile/TimetableServiceNotices.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/mobile/NearestStopFinder.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/contribute/ContributionWizard.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/WizardStepNav.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/StaffPublishControls.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/LocationLookup.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/FindLibraryFirst.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/library-editor/ImageUploadEditor.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/staff/StaffBackLink.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/staff/TeamPurchaseJourney.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasPerCapita.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasExportButton.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasLayersTab.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasAnalysisHeader.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasAccessAnalysis.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasContributeCard.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/atlas/AtlasStopPanel.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/events/UpcomingEventsWidget.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/community/SuggestionConversation.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/community/SuggestionDecisions.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/event-feeds/feed-ui.ts",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/global/GlobalMobileMenu.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/notifications/NotificationInbox.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/billing/CheckoutPresentation.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetSelectionEditor.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/widgets/WidgetBuilder.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/moderation/StaffAccessList.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/moderation/TimetableReviewPanel.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/moderation/ClaimPanel.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/elementary/forms/NewsletterForm.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/components/mobile/live/GoLiveToday.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/embed/layout.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/embed/w/[publicId]/page.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/moderation/[documentId]/page.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/moderation/_components/ModerationAccessUnavailable.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/moderation/suggestions/page.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/community/_components/NoDrivesCard.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/community/_components/NoticeboardHeroActions.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/community/_components/ProposeBand.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/community/leaderboard/_components/LeaderboardRows.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/staff/[slug]/traffic/page.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/staff/networks/libraries/page.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/membership/checkout/page.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/hub/ContributionJourney.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareCell.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/ProFaq.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPlans.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPolicies.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/(dashboard)/contribute/_components/membership/FreePlansCard.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/profile/[username]/_components/ProfileSectionUI.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/profile/[username]/_components/ProfileHero.tsx",
+      "hexLiterals": 0,
+      "bgWhite": 1
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/profile/[username]/_components/ProfileFollowButton.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    },
+    {
+      "path": "apps/ui/src/app/[locale]/auth/_components/AuthLeftPanel.tsx",
+      "hexLiterals": 1,
+      "bgWhite": 0
+    }
+  ]
+}
