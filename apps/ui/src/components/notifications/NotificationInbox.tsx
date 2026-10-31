@@ -303,7 +303,7 @@ export function NotificationInbox() {
           <div
             role="group"
             aria-label={tUi("filter_notifications")}
-            className="scrollbar-thin -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-7 sm:px-7"
+            className="-mx-5 mt-5 flex scrollbar-thin gap-2 overflow-x-auto px-5 pb-1 sm:-mx-7 sm:px-7"
           >
             {(["all", "unread", ...Object.keys(categories)] as Filter[]).map(
               (key) => (

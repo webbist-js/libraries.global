@@ -54,7 +54,7 @@ export function JournalToolbar({
             }),
           }))}
         />
-        <div className="relative flex min-w-0 items-center gap-x-3 overflow-x-auto border-t border-(--t-divider) [scrollbar-width:none] after:pointer-events-none after:sticky after:right-0 after:order-last after:-ml-6 after:w-6 after:shrink-0 after:self-stretch after:bg-linear-to-l after:from-(--t-bg-deep) after:to-transparent lg:contents lg:after:hidden">
+        <div className="relative flex min-w-0 [scrollbar-width:none] items-center gap-x-3 overflow-x-auto border-t border-(--t-divider) after:pointer-events-none after:sticky after:right-0 after:order-last after:-ml-6 after:w-6 after:shrink-0 after:self-stretch after:bg-linear-to-l after:from-(--t-bg-deep) after:to-transparent lg:contents lg:after:hidden">
           <ArticleDiscoveryFilters
             compact
             toolbar
