@@ -663,15 +663,18 @@ body[data-dashboard-active] .strapi-layout-footer {
   animation: var(--duration-enter) linear both dashboard-fade;
 }
 ::view-transition-group(persistent-toolbar),
+::view-transition-group(persistent-section-toggle),
 ::view-transition-group(.dashboard-still) {
   animation: none;
   z-index: 100;
 }
 ::view-transition-old(persistent-toolbar),
+::view-transition-old(persistent-section-toggle),
 ::view-transition-old(.dashboard-still) {
   display: none;
 }
 ::view-transition-new(persistent-toolbar),
+::view-transition-new(persistent-section-toggle),
 ::view-transition-new(.dashboard-still) {
   animation: none;
 }

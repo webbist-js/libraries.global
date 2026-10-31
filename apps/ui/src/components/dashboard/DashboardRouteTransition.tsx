@@ -19,7 +19,7 @@ const directions = {
   default: "page-crossfade",
 }
 
-/** Before the page's first DOM node so React can pair the entire outgoing page. */
+/** The canvas moves; named sidebar and toolbar snapshots are excluded and anchored. */
 export function DashboardRouteTransition({
   children,
   routeKey,
@@ -43,7 +43,7 @@ export function DashboardRouteTransition({
   )
 }
 
-/** Section navigation stays in place; Atlas geography moves as one canvas. */
+/** Replace sidebar contents in place for every route, including Atlas geography. */
 export function DashboardContextTransition({
   children,
   routeKey,
@@ -55,11 +55,9 @@ export function DashboardContextTransition({
     <Transition
       key={routeKey}
       name="dashboard-context"
-      share={{
-        "section-forward": "dashboard-still",
-        "section-back": "dashboard-still",
-        default: "none",
-      }}
+      share="dashboard-still"
+      enter="dashboard-still"
+      exit="dashboard-still"
       default="none"
     >
       {children}

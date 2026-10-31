@@ -231,6 +231,7 @@ export function DashboardPage({
             <button
               type="button"
               className="dashboard-section-toggle"
+              style={{ viewTransitionName: "persistent-section-toggle" }}
               aria-haspopup="dialog"
               aria-expanded={overlay.panel === "section"}
               onClick={(event) =>
