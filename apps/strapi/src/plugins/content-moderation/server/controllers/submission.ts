@@ -2,6 +2,7 @@ import { can } from "@repo/access"
 
 import { ownsJournalArticle } from "../../../../utils/article-relations"
 import { resolveUserEntitlements } from "../../../../utils/entitlement-inputs"
+import { ensureFreshAdminApproval } from "../../../../utils/fresh-admin-auth"
 import { decodeHeaderName } from "../../../../utils/header-name"
 import { AccessError } from "../../../access/server/utils/admin"
 import {
@@ -513,6 +514,8 @@ export default ({ strapi }: { strapi: any }) => ({
         `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`
       )
     }
+
+    await ensureFreshAdminApproval(strapi, ctx, id, status)
 
     // The admin user the route's policies authenticated. The service refuses
     // self-review (see utils/reviewer).

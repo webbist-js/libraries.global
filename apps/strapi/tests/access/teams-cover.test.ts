@@ -246,6 +246,12 @@ describe("teams.invite and its email", () => {
 })
 
 describe("teams.forLibrary", () => {
+  it("does not present unverified paid coverage to nonmembers", async () => {
+    const { teams } = setup({ verifiedAt: null })
+    expect(await teams.forLibrary(LIB_A, "outsider")).toBeNull()
+    expect(await teams.forLibrary(LIB_A, "mem")).not.toBeNull()
+  })
+
   it("tells staff outside the Team who covers the library: its name and organiser only", async () => {
     const { teams } = setup()
     const covering = await teams.forLibrary(LIB_A, "outsider")

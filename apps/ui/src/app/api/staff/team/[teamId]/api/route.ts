@@ -65,11 +65,15 @@ export async function GET(req: Request, { params }: Params) {
 
 export async function POST(req: Request, { params }: Params) {
   try {
-    const user = await billingUser(req, true)
     const { teamId } = await params
     const parsed = Action.safeParse(await readBillingJson(req))
     if (!parsed.success) throw new BillingError("invalid_api_action", 400)
     const action = parsed.data
+    const user = await billingUser(
+      req,
+      true,
+      ["create", "rotate"].includes(action.action)
+    )
     const needsActiveTeam =
       action.action !== "revoke" && action.action !== "portal"
     const team = await requireApiTeam(teamId, user, true, needsActiveTeam)

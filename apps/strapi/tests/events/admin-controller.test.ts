@@ -5,13 +5,23 @@ import adminController from "../../src/plugins/events/server/controllers/admin"
 const ctxOf = (over: any = {}) => ({
   params: { documentId: "cred00000000000000000001" },
   request: { body: {} },
-  state: { user: { id: 9 } },
+  state: { user: { id: 9 }, session: { id: "admin-session" } },
   set: vi.fn(),
   ...over,
 })
 
 function strapiWith(service: any) {
-  return { plugin: () => ({ service: () => service }) } as any
+  return {
+    plugin: () => ({ service: () => service }),
+    db: {
+      query: () => ({
+        findOne: vi.fn(async () => ({
+          metadata: { loginAt: new Date().toISOString() },
+          expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+        })),
+      }),
+    },
+  } as any
 }
 
 describe("events admin controller", () => {

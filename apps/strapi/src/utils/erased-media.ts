@@ -1,9 +1,11 @@
+import type { Core } from "@strapi/strapi"
+
 const OWNERSHIP = "plugin::content-moderation.submission-upload"
 const FILE = "plugin::upload.file"
 
 /** Profile attachments are server-validated; draft JSON is never ownership evidence. */
 export async function queueErasedMedia(
-  strapi: any,
+  strapi: Core.Strapi,
   userId: string,
   erasedId: string,
   profileFileIds: number[]
@@ -26,7 +28,7 @@ export async function queueErasedMedia(
 }
 
 /** Bounded, retryable cleanup. Referenced assets are retained without an owner. */
-export async function purgeErasedMedia(strapi: any, owner?: string) {
+export async function purgeErasedMedia(strapi: Core.Strapi, owner?: string) {
   const rows = await strapi.db.query(OWNERSHIP).findMany({
     where: { baUserId: owner ?? { $startsWith: "deleted-" } },
     orderBy: [{ updatedAt: "asc" }, { id: "asc" }],

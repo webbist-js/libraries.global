@@ -18,6 +18,7 @@ export type BetterAuthUser = {
 } & Partial<SessionAccess> // Added by customSession. Missing means deny.
 
 export type BetterAuthSession = {
+  createdAt?: Date | string
   id: string
   userId: string
   expiresAt: Date

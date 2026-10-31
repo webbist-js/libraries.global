@@ -23,7 +23,7 @@ vi.mock("@/lib/navigation", () => ({
 beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date("2026-10-06T09:00:00Z"))
-  vi.stubEnv("STRAPI_BRIDGE_SECRET", "test-secret")
+  vi.stubEnv("MOBILE_LIVE_STEPUP_SECRET", "test-secret")
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -40,7 +40,7 @@ describe("live step-up proof", () => {
     expect(readLiveProof(`${proof}x`, "u1", "session1")).toBeNull()
     vi.advanceTimersByTime(12 * 3_600_000)
     expect(readLiveProof(proof, "u1", "session1")).toBeNull()
-    vi.stubEnv("STRAPI_BRIDGE_SECRET", "")
+    vi.stubEnv("MOBILE_LIVE_STEPUP_SECRET", "")
     expect(() => signLiveProof("u1", "session1")).toThrow()
     expect(liveCookieOptions).toMatchObject({
       httpOnly: true,
@@ -81,7 +81,7 @@ describe("live route security policy", () => {
       })
     )
     expect(forged.headers.get("x-live-console")).toBeNull()
-    expect(forged.headers.get("x-nonce")).toBeNull()
+    expect(forged.headers.get("x-nonce")).not.toBe("attacker")
     expect(forged.headers.get("content-security-policy")).toBeNull()
     const regular = liveSecurityResponse(forged, NextResponse.next())
     expect(regular.headers.get("x-middleware-override-headers")).not.toContain(

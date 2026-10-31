@@ -40,8 +40,14 @@ export function RevealCredentialButton({
       .then(({ data }) => {
         if (current) setValues((data as { data: Record<string, string> }).data)
       })
-      .catch(() => {
-        if (current) setError("Couldn’t reveal the value.")
+      .catch((error: unknown) => {
+        const reason = error as { response?: { data?: { error?: string } } }
+        if (current)
+          setError(
+            reason.response?.data?.error === "reauthentication_required"
+              ? "Sign out and sign back in to reveal credentials, then try again within five minutes."
+              : "Couldn’t reveal the value."
+          )
       })
 
     return () => {

@@ -9,6 +9,7 @@ import {
 import { decideFromRequest } from "./option-suggestion"
 import { claimAffiliationFilter } from "../../../../utils/affiliations"
 import { revokeAuthoritySource } from "../../../../utils/authority-grants"
+import { requireFreshBridgeAuth } from "../../../../utils/fresh-bridge-auth"
 import { decodeHeaderName } from "../../../../utils/header-name"
 import { removeServiceScopes } from "../../../access/server/services/network-fulfilment"
 import {
@@ -273,6 +274,7 @@ export default ({ strapi }: { strapi: any }) => {
      * person and writes the staff audit. 404 for a missing or proposer row.
      */
     async removeStaff(ctx: any) {
+      if (!requireFreshBridgeAuth(ctx)) return
       const auth = await authorise(ctx)
       if (!auth) return
       if (
@@ -482,6 +484,12 @@ export default ({ strapi }: { strapi: any }) => {
       // Refused before the service is asked to do anything (`canModerate`).
       const s = await decidable(ctx, auth)
       if (!s) return
+      if (
+        status === "approved" &&
+        ["role_application", "library_claim"].includes(s.submissionType) &&
+        !requireFreshBridgeAuth(ctx)
+      )
+        return
       const locale = await moderation().localeOf(s)
       const wantsPublish = publish === true && status === "approved"
       if (wantsPublish && !(await moderation().canPublish(s, locale)))

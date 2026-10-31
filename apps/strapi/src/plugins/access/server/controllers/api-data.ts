@@ -69,8 +69,32 @@ export default ({ strapi }: { strapi: any }) => {
       })
       if (!team) throw new AccessError(404, "not_found")
 
+      const creator = ctx.request.header["x-api-key-owner"]
+      let creatorAllowed: boolean | undefined
+      if (creator !== undefined) {
+        creatorAllowed = false
+        if (
+          typeof creator === "string" &&
+          creator.length > 0 &&
+          creator.length <= 200
+        ) {
+          const member = await strapi.db
+            .query("plugin::access.team-member")
+            .findOne({
+              where: {
+                team: { documentId: ctx.params.id },
+                baUserId: creator,
+                status: "active",
+                teamRole: "organiser",
+              },
+            })
+          creatorAllowed = Boolean(member)
+        }
+      }
+
       return {
         active: teamIsActive(team),
+        ...(creatorAllowed === undefined ? {} : { creatorAllowed }),
       }
     }),
     libraries: wrap(async (ctx) => {

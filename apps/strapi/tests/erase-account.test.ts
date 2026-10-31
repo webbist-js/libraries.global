@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto"
+
 import { describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
@@ -204,6 +206,65 @@ function seed() {
 }
 
 describe("eraseAccount", () => {
+  it("scrubs rejected content and remaining reviewer identities, including notification deduplication keys", async () => {
+    const { strapi, store } = seed()
+    const review = "plugin::content-moderation.review-event"
+    const suggestion = "plugin::content-moderation.option-suggestion"
+    const notification = "api::internal-notification.internal-notification"
+    const identity = createHash("sha256").update("u1").digest("hex")
+    store[SUB].push({
+      documentId: "rejected",
+      status: "rejected",
+      submittedByUserId: "u1",
+      fields: { private: "personal detail" },
+      draftData: { private: true },
+      note: "private",
+      editSummary: "private",
+    })
+    store[review] = [
+      { documentId: "own", reviewerId: "ba:u1" },
+      { documentId: "other", reviewerId: "u2" },
+    ]
+    store[suggestion] = [
+      {
+        documentId: "own",
+        suggestedBy: "u1",
+        decidedBy: "ba:u1",
+        publicationReviewedBy: "u1",
+      },
+      { documentId: "other", suggestedBy: "u2" },
+    ]
+    store[notification] = [
+      { documentId: "account", eventKey: `account:${identity}` },
+      { documentId: "login", eventKey: `login:${identity}:2026-10-31` },
+      { documentId: "active", eventKey: `active:${identity}:2026-10-31` },
+      { documentId: "actor", actorId: "u1", eventKey: "unrelated" },
+      { documentId: "other", actorId: "u2", eventKey: "account:other" },
+    ]
+    await eraseAccount(strapi, { baUserId: "u1" })
+    expect(
+      store[SUB].find((row) => row.documentId === "rejected")
+    ).toMatchObject({
+      fields: null,
+      draftData: null,
+      note: null,
+      editSummary: null,
+    })
+    expect(store[review]).toEqual([
+      { documentId: "own", reviewerId: null },
+      { documentId: "other", reviewerId: "u2" },
+    ])
+    expect(store[suggestion]).toEqual([
+      {
+        documentId: "own",
+        suggestedBy: null,
+        decidedBy: null,
+        publicationReviewedBy: null,
+      },
+      { documentId: "other", suggestedBy: "u2" },
+    ])
+    expect(store[notification].map((row) => row.documentId)).toEqual(["other"])
+  })
   it("retains anonymous cleanup evidence after storage failure and retries it", async () => {
     const { strapi, store, remove } = seed()
     remove.mockRejectedValueOnce(new Error("storage unavailable"))

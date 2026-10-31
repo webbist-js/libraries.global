@@ -1,4 +1,5 @@
 import { adminResetEmailTemplate } from "@repo/shared-data"
+import { signPreviewTicket } from "@repo/shared-data/preview-ticket"
 import type { UID } from "@strapi/strapi"
 
 import {
@@ -66,10 +67,14 @@ export default ({ env }) => {
           }
           // Use Next.js draft mode passing it a secret key and the content-type status
           const urlSearchParams = new URLSearchParams({
-            url: pathname,
-            locale,
-            secret: strapiPreviewConfig.previewSecret,
-            status,
+            ticket: signPreviewTicket(
+              {
+                url: pathname,
+                locale,
+                status: status === "draft" ? "draft" : "published",
+              },
+              strapiPreviewConfig.previewSecret
+            ),
           })
 
           return `${strapiPreviewConfig.clientUrl}/api/preview?${urlSearchParams}`

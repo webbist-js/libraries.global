@@ -1,3 +1,5 @@
+import { redirectForReauthentication } from "@/lib/fresh-auth"
+
 export async function staffRequest<T = unknown>(
   path: string,
   method: string,
@@ -10,6 +12,8 @@ export async function staffRequest<T = unknown>(
   })
   const value = response.status === 204 ? null : await response.json()
   if (!response.ok) {
+    if (redirectForReauthentication(value ?? {}))
+      throw new Error("Sign in again to continue.")
     const code = value?.error?.code ?? value?.error ?? "request_failed"
     const messages: Record<string, string> = {
       last_owner:

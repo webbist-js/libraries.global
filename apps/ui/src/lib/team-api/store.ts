@@ -16,9 +16,11 @@ export const keyDigest = (secret: string) =>
   createHash("sha256").update(secret).digest("hex")
 const token = () => `lg_api_${randomBytes(32).toString("base64url")}`
 type Queryable = Pick<Pool, "query">
-type KeyRow = {
+
+export type KeyRow = {
   id: string
   team_id: string
+  created_by: string | null
   name: string
   prefix: string
   scopes: ApiScope[]
