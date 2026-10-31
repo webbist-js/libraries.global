@@ -1,0 +1,14 @@
+[Unit]
+Description=Libraries Global CMS maintenance
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/libraries-global/maintenance.env
+ExecStart=/usr/bin/python3 /usr/local/lib/libraries-global/cms-maintenance.py
+TimeoutStartSec=90
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

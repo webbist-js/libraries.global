@@ -63,8 +63,8 @@ describe("configuration and messages", () => {
     expect(payload.text).not.toContain("<!channel>")
     expect(payload.text).toContain("&lt;!channel&gt;")
   })
-  it("masks signup addresses", () => {
-    expect(maskEmail("person@example.test")).toBe("p***@example.test")
+  it("withholds signup addresses and full domains", () => {
+    expect(maskEmail("person@example.test")).toBe("Email provided")
     expect(maskEmail(null)).toBe("Email withheld")
   })
 })
