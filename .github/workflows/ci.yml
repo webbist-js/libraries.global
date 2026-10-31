@@ -18,6 +18,7 @@ permissions:
 
 env:
   CI: true
+  NODE_OPTIONS: --max-old-space-size=4096
   NPM_CONFIG_IGNORE_SCRIPTS: "true"
   # Build/test fixture only; deployment supplies its own runtime secret.
   BETTER_AUTH_SECRET: dummy-ci-secret-not-for-runtime-only

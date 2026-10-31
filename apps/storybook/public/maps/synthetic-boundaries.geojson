@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"code":"example-district","iso3":"NBR","name":"Northbridge"},"geometry":{"type":"Polygon","coordinates":[[[-0.4,51.3],[0.15,51.3],[0.15,51.75],[-0.4,51.75],[-0.4,51.3]]]}}]}
