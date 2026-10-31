@@ -20,17 +20,28 @@ export function HomeFooter({
     legal: t("legal_policies"),
     plans: t("plans_and_pricing"),
   })
+  const isAllowedFooterHref = (href: string) => {
+    try {
+      const parsed = new URL(href, "https://libraries.global")
+      const hostname = parsed.hostname.toLowerCase()
+      const pathname = parsed.pathname.toLowerCase()
+      const isGithubHost =
+        hostname === "github.com" || hostname.endsWith(".github.com")
+      const isAllowedPath =
+        pathname.includes("methodology") ||
+        pathname.includes("how-the-data") ||
+        pathname.includes("data-licence")
+
+      return isGithubHost || isAllowedPath
+    } catch {
+      return false
+    }
+  }
   const links = [
     ...navigation.links,
     ...navigation.sections
       .flatMap((section) => section.links)
-      .filter(
-        (link) =>
-          link.href.includes("github.com") ||
-          link.href.includes("methodology") ||
-          link.href.includes("how-the-data") ||
-          link.href.includes("data-licence")
-      ),
+      .filter((link) => isAllowedFooterHref(link.href)),
   ]
   const unique = [...new Map(links.map((link) => [link.href, link])).values()]
 
