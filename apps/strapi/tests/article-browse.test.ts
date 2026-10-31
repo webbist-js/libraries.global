@@ -60,6 +60,41 @@ const row = {
 }
 
 describe("public article browse projection", () => {
+  it.each([0, 2367, 7473])(
+    "exposes an explicit editorial data-release count of %i",
+    (entriesAdded) => {
+      expect(
+        publicArticleBrowseItem(
+          { ...row, publicationOrigin: "index", entriesAdded },
+          "blog"
+        )?.entriesAdded
+      ).toBe(entriesAdded)
+    }
+  )
+  it.each([undefined, null, -1, 1.5, "2367", Number.MAX_SAFE_INTEGER + 1])(
+    "does not infer or coerce invalid release metadata %s",
+    (entriesAdded) => {
+      expect(
+        publicArticleBrowseItem(
+          { ...row, publicationOrigin: "index", entriesAdded },
+          "blog"
+        )?.entriesAdded
+      ).toBeNull()
+    }
+  )
+  it("keeps release counts off contributed articles and Knowledge guides", () => {
+    expect(
+      publicArticleBrowseItem({ ...row, entriesAdded: 7473 }, "blog")
+        ?.entriesAdded
+    ).toBeNull()
+    expect(
+      publicArticleBrowseItem(
+        { ...row, publicationOrigin: "index", entriesAdded: 7473 },
+        "wiki"
+      )?.entriesAdded
+    ).toBeNull()
+  })
+
   it("publishes only allowlisted facets and preserves Event citations after deletion", () => {
     const projected = publicArticleBrowseItem(row, "blog")!
     expect(projected.authorUsername).toBe("writer")

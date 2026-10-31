@@ -130,6 +130,7 @@ export function normalizeArticleBody(value: unknown): unknown {
 
 /** Feed this string to SHA256 in server adapters for optimistic revision checks. */
 export function articleContentVersion(article: {
+  sources?: unknown
   title?: unknown
   summary?: unknown
   body?: unknown
@@ -139,6 +140,71 @@ export function articleContentVersion(article: {
     title: article.title ?? "",
     summary: article.summary ?? "",
     body: normalizeArticleBody(article.body ?? []),
+    ...(Array.isArray(article.sources) && article.sources.length
+      ? { sources: normalizeArticleBody(article.sources) }
+      : {}),
     updatedAt: article.updatedAt ?? null,
+  })
+}
+
+export type ArticleSource = {
+  title: string
+  url?: string | null
+  publisher?: string | null
+  accessedAt?: string | null
+  notes?: string | null
+}
+
+/** Canonical citation data; never preserve submitted component IDs or relations. */
+export function parseArticleSources(value: unknown): ArticleSource[] {
+  if (value == null) return []
+  if (!Array.isArray(value) || value.length > 30)
+    throw new Error("Use at most 30 article sources.")
+
+  return value.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item))
+      throw new Error("Invalid article source.")
+    const row = item as Record<string, unknown>
+    const text = (key: string, max: number): string | null => {
+      if (row[key] == null || row[key] === "") return null
+      if (typeof row[key] !== "string" || row[key].length > max)
+        throw new Error(`Invalid source ${key}.`)
+
+      return row[key].trim() || null
+    }
+    const title = text("title", 180)
+    if (!title) throw new Error("Every source needs a title.")
+    let url = text("url", 2048)
+    if (url) {
+      let parsed: URL
+      try {
+        parsed = new URL(url)
+      } catch {
+        throw new Error("Source links must be public http or https URLs.")
+      }
+      if (
+        !["http:", "https:"].includes(parsed.protocol) ||
+        parsed.username ||
+        parsed.password
+      )
+        throw new Error("Source links must be public http or https URLs.")
+      url = parsed.href
+    }
+    const accessedAt = text("accessedAt", 10)
+    if (
+      accessedAt &&
+      (!/^\d{4}-\d{2}-\d{2}$/.test(accessedAt) ||
+        !Number.isFinite(Date.parse(accessedAt)) ||
+        new Date(accessedAt).toISOString().slice(0, 10) !== accessedAt)
+    )
+      throw new Error("Use a valid source access date.")
+
+    return {
+      title,
+      url,
+      publisher: text("publisher", 180),
+      accessedAt,
+      notes: text("notes", 1000),
+    }
   })
 }

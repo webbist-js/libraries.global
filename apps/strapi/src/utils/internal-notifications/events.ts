@@ -56,7 +56,7 @@ const sources: Source[] = [
       title: "Contribution submitted",
       actorId: r.submitted_by_user_id,
       detail: `${TYPES[r.submission_type] || "Submission"} · ${r.target_slug || r.target_entity_type || "Community"} · ${r.content_locale || "en"} · ${r.status}`,
-      href: `/contribute/moderation/${encodeURIComponent(r.document_id)}`,
+      href: `/moderation/${encodeURIComponent(r.document_id)}`,
     }),
   },
   {
@@ -78,7 +78,7 @@ const sources: Source[] = [
           : `Submission ${r.to_status === "approved" ? "accepted" : r.to_status === "needs_info" ? "needs changes" : r.to_status === "pending" ? "resubmitted" : "not accepted"}`,
       actorId: r.reviewer_kind === "admin" ? undefined : r.reviewer_id,
       detail: `Submission ${r.submission_document_id} · ${r.reviewer_kind || "reviewer"}`,
-      href: `/contribute/moderation/${encodeURIComponent(r.submission_document_id)}`,
+      href: `/moderation/${encodeURIComponent(r.submission_document_id)}`,
     }),
   },
   {
@@ -163,7 +163,7 @@ const sources: Source[] = [
         ? r.reporter_key.slice(3)
         : undefined,
       detail: `Report ${r.document_id} · ${r.record_type} · ${r.state}`,
-      href: "/contribute/moderation/discussions",
+      href: "/moderation/discussions",
     }),
   },
   // Direct editor publishing also has a durable Article Change, even without a Submission.

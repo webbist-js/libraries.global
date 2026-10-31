@@ -300,3 +300,16 @@ describe("article discovery predicates", () => {
     expect(canonicalReaderCountry("Somewhere", countries)).toBeNull()
   })
 })
+
+it("sorts shortest reads before pagination with a stable tie break", () => {
+  const query = parseArticleBrowseQuery({ sort: "shortest", pageSize: "2" })
+  expect(query.sort).toBe("shortest")
+  const records = [
+    article("long", { readingTimeMinutes: 12 }),
+    article("b", { readingTimeMinutes: 2 }),
+    article("a", { readingTimeMinutes: 2 }),
+  ]
+  const result = aggregateArticleBrowse(records, query)
+  expect(result.items.map((item) => item.documentId)).toEqual(["a", "b"])
+  expect(result.total).toBe(3)
+})

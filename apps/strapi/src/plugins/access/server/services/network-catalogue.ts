@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 
 import {
   NETWORK_LIMITS,
+  FACILITY_CHECKLIST,
   publicSourceUrl,
   type NetworkSummary,
   widgetText,
@@ -157,26 +158,105 @@ export async function networkDetail(
 ) {
   const row = await loadNetwork(strapi, id, publicOnly),
     page = pageNumber(query.page)
-  const libraries = await networkLibraries(strapi).findMany({
-    filters: { networks: { documentId: row.documentId } },
-    status: "published",
-    locale: "en",
-    populate: {
-      country: { fields: ["name", "slug"] },
-      continent: { fields: ["slug"] },
-      region: { fields: ["slug"] },
-      libraryType: { fields: ["name"] },
-      accessibility: { fields: ["name"] },
-      amenities: { fields: ["name"] },
-      services: { fields: ["name"] },
-    },
-    sort: ["name:asc", "documentId:asc"],
-    start: (page - 1) * 48,
-    limit: 48,
-  })
+  const base = { networks: { documentId: row.documentId } }
+  const filters: RecordInput = { ...base }
+  const q = widgetText(query.q ?? "", 120).trim()
+  if (q)
+    filters.$or = ["name", "city", "streetAddress"].map((field) => ({
+      [field]: { $containsi: q },
+    }))
+  if (query.country) filters.country = { slug: widgetText(query.country, 120) }
+  if (query.region) filters.region = { slug: widgetText(query.region, 120) }
+  if (query.type) filters.libraryType = { name: widgetText(query.type, 80) }
+  const requested = new Set(String(query.facility ?? "").split(","))
+  const facilities = FACILITY_CHECKLIST.filter((item) =>
+    requested.has(item.label)
+  )
+  if (facilities.length)
+    filters.$and = facilities.map((item) => ({
+      [{
+        amenity: "amenities",
+        service: "services",
+        accessibility: "accessibility",
+      }[item.collection]]: { name: item.name },
+    }))
+  const sort =
+    query.sort === "name-desc"
+      ? ["name:desc", "documentId:asc"]
+      : query.sort === "updated"
+        ? ["updatedAt:desc", "documentId:asc"]
+        : ["name:asc", "documentId:asc"]
+  // Facets belong to the whole network, independently of page and active filters.
+  const [total, facetRows, libraries] = await Promise.all([
+    networkLibraries(strapi).count({
+      filters,
+      status: "published",
+      locale: "en",
+    }),
+    networkLibraries(strapi).findMany({
+      filters: base,
+      status: "published",
+      locale: "en",
+      fields: ["documentId"],
+      populate: {
+        country: { fields: ["name", "slug"] },
+        region: { fields: ["name", "slug"] },
+        libraryType: { fields: ["name"] },
+      },
+      limit: NETWORK_LIMITS.libraries,
+    }),
+    networkLibraries(strapi).findMany({
+      filters,
+      status: "published",
+      locale: "en",
+      populate: {
+        country: { fields: ["name", "slug"] },
+        continent: { fields: ["slug"] },
+        region: { fields: ["name", "slug"] },
+        libraryType: { fields: ["name"] },
+        accessibility: { fields: ["name"] },
+        amenities: { fields: ["name"] },
+        services: { fields: ["name"] },
+      },
+      sort,
+      start: (page - 1) * 48,
+      limit: 48,
+    }),
+  ])
+  const places = (key: "country" | "region") =>
+    [
+      ...new Map(
+        facetRows.flatMap((library) => {
+          const place = library[key] as
+            | { name?: string; slug: string }
+            | undefined
+
+          return place?.slug
+            ? [
+                [
+                  place.slug,
+                  { slug: place.slug, name: place.name || place.slug },
+                ] as const,
+              ]
+            : []
+        })
+      ).values(),
+    ].sort((a, b) => a.name.localeCompare(b.name))
 
   return {
     network: await networkSummary(strapi, row),
+    total,
+    facets: {
+      countries: places("country"),
+      regions: places("region"),
+      types: [
+        ...new Set(
+          facetRows.flatMap((library) =>
+            library.libraryType?.name ? [library.libraryType.name] : []
+          )
+        ),
+      ].sort(),
+    },
     libraries: libraries.map((library) =>
       projectWidgetLibrary(library, [row.name])
     ),

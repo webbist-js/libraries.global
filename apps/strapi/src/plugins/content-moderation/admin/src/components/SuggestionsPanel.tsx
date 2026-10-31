@@ -64,7 +64,7 @@ const LIST_LABEL: Record<Suggestion["optionKey"], string> = {
 
 /** New, under review or planned: the board hasn't decided yet, and
  * contributors can still vote. The richer New/Under review/Planned/Added/
- * Not adding board lives on the site at /contribute/moderation/suggestions;
+ * Not adding board lives on the site at /moderation/suggestions;
  * this admin queue keeps the simpler open/accepted/declined split and
  * treats all three as "open" for the tab badge and this filter. */
 const UNDECIDED = new Set<Suggestion["status"]>([

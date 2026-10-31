@@ -204,6 +204,73 @@ describe("applyArticleSubmission: new articles", () => {
     expect(knowledge).toBe("created_draft")
   })
 
+  it("publishes reviewed Journal sources as fresh components in their authored order", async () => {
+    const { strapi } = harness(
+      { ...seed, [BLOG_SECTION]: [{ documentId: "bs1", slug: "feature" }] },
+      "journal_editor"
+    )
+    const sources = [
+      {
+        id: 999,
+        title: "Annual report",
+        url: "https://example.org/report",
+        publisher: "Library",
+      },
+      { title: "Printed catalogue", notes: "Page 42" },
+    ]
+    expect(
+      await applyArticleSubmission(
+        strapi,
+        {
+          documentId: "s-sources",
+          submittedByUserId: "u1",
+          draftData: { ...draft, sections: ["feature"], sources },
+        },
+        "journal"
+      )
+    ).toBe("created_published")
+    const created = strapi.documents(BLOG).create.mock.calls[0]?.[0]
+    expect(created.data.sources).toEqual([
+      {
+        title: "Annual report",
+        url: "https://example.org/report",
+        publisher: "Library",
+        accessedAt: null,
+        notes: null,
+      },
+      {
+        title: "Printed catalogue",
+        url: null,
+        publisher: null,
+        accessedAt: null,
+        notes: "Page 42",
+      },
+    ])
+  })
+  it("refuses unsafe source links before creating a published Journal article", async () => {
+    const { strapi } = harness(
+      { ...seed, [BLOG_SECTION]: [{ documentId: "bs1", slug: "feature" }] },
+      "journal_editor"
+    )
+    await expect(
+      applyArticleSubmission(
+        strapi,
+        {
+          documentId: "s-unsafe-source",
+          submittedByUserId: "u1",
+          draftData: {
+            ...draft,
+            sections: ["feature"],
+            // eslint-disable-next-line sonarjs/code-eval -- Unsafe fixture is rejected before publication.
+            sources: [{ title: "Reference", url: "javascript:alert(1)" }],
+          },
+        },
+        "journal"
+      )
+    ).rejects.toThrow()
+    expect(strapi.documents(BLOG).create).not.toHaveBeenCalled()
+  })
+
   it("never overwrites an existing article even when a slug is smuggled in", async () => {
     const { strapi, store } = harness(
       {

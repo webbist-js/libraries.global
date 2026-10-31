@@ -8,12 +8,8 @@ export function membershipLink(href: string): string {
     )
   if (!match) return href
   const [, origin = "", locale = "", path, query = "", hash = ""] = match
-  if (
-    path === "/contribute/membership" ||
-    path === "/contribute/membership/" ||
-    path === "/pro" ||
-    path === "/pro/"
-  )
+  // /contribute/membership is now the dashboard's live account view.
+  if (path === "/pro" || path === "/pro/")
     return `${origin}${locale}/plans${query}${hash}`
   if (path === "/membership" || path === "/membership/")
     return `${origin}${locale}/profile/membership${query}${hash}`
