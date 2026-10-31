@@ -38,10 +38,10 @@ jobs:
       - name: Build and test the isolated native runtime
         run: docker build --tag atlas-analysis-ci apps/analysis
 
-  build_and_verify:
-    name: Install, Lint, Test and Build
+  lint:
+    name: Lint and source guards
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,11 +75,69 @@ jobs:
           node --test scripts/release/*.test.mjs scripts/atlas/*.test.mjs
           python3 -m unittest discover -s scripts/release -p 'test_*.py'
 
-      # Includes the @repo/access type-level invariants and the Strapi unit
-      # suite (test:unit). Strapi's tests/app.test.ts boots a real Strapi on
-      # Postgres, so it stays out of CI and runs locally with pnpm test:strapi.
-      - name: Run unit tests
-        run: pnpm test:ci
+  unit_tests:
+    name: Unit tests (${{ matrix.suite }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [ui, backend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup pnpm with cache
+        uses: ./.github/actions/setup-pnpm
+      - name: Prepare Environment Variables
+        run: |
+          cp apps/strapi/.env.example apps/strapi/.env
+          cp apps/ui/.env.local.example apps/ui/.env.local
+      # Each suite retains one worker; independent runners overlap the work.
+      - name: Test UI
+        if: matrix.suite == 'ui'
+        run: pnpm exec turbo run test --filter=@repo/ui --concurrency=1
+      # Preserve every other package suite and the CMS unit suite. The CMS
+      # integration test still requires local seeded fixtures and stays opt-in.
+      - name: Test backend and shared packages
+        if: matrix.suite == 'backend'
+        run: |
+          pnpm exec turbo run test --filter=!@repo/ui --filter=!@repo/strapi --filter=!@repo/storybook --concurrency=1
+          pnpm exec turbo run test:unit --filter=@repo/strapi --concurrency=1
+
+  build:
+    name: Application builds and public smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ui_smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ui_smoke"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Ephemeral runner database, never a deployment credential or data source.
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/ui_smoke
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup pnpm with cache
+        uses: ./.github/actions/setup-pnpm
+      - name: Prepare Environment Variables
+        run: |
+          cp apps/strapi/.env.example apps/strapi/.env
+          cp apps/ui/.env.local.example apps/ui/.env.local
 
       - name: Build UI
         run: |
@@ -102,3 +160,31 @@ jobs:
 
       - name: Build Strapi
         run: pnpm build:strapi
+
+      - name: Retain public smoke failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: public-smoke-failures
+          path: qa/tests/playwright/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Keep the protected-branch and image-publisher check name stable. A failure,
+  # cancellation or skipped prerequisite must never produce a passing release.
+  build_and_verify:
+    name: Install, Lint, Test and Build
+    runs-on: ubuntu-24.04
+    needs: [lint, unit_tests, build]
+    if: ${{ always() }}
+    timeout-minutes: 2
+    steps:
+      - name: Require every verification group
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          UNIT_RESULT: ${{ needs.unit_tests.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          test "$LINT_RESULT" = success
+          test "$UNIT_RESULT" = success
+          test "$BUILD_RESULT" = success
