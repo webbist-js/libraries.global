@@ -1,4 +1,5 @@
 import {
+  SUPPORTED_LOCALES,
   libraryTypeName,
   normalizeOpeningSchedule,
   atlasWeeklyIntervals,
@@ -189,7 +190,7 @@ export default factories.createCoreController(
      * for five minutes per locale (cleared by any library write).
      */
     async atlas(ctx) {
-      if (process.env.ATLAS_LEGACY_SOURCE_ENABLED === "false") {
+      if (process.env.ATLAS_LEGACY_SOURCE_ENABLED !== "true") {
         ctx.status = 410
         ctx.body = { error: "The bulk Atlas source has been retired" }
 
@@ -198,6 +199,8 @@ export default factories.createCoreController(
       const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
       if (!q) return ctx.badRequest("Query parameters must be single strings")
       const locale = q.locale
+      if (locale && !(SUPPORTED_LOCALES as readonly string[]).includes(locale))
+        return ctx.badRequest("Unsupported locale")
 
       const build = async () => {
         const rows: AtlasSource[] = []

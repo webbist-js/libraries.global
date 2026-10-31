@@ -208,8 +208,17 @@ async function main() {
   async function fetchAll(apiPath: string, entriesQuery: EntriesQuery) {
     const all: Entry[] = []
     let page = 1
+    let afterId = 0
     for (;;) {
-      const params = entriesQueryParams(entriesQuery, page)
+      const params = entriesQueryParams(
+        entriesQuery,
+        apiPath === "libraries" ? 1 : page
+      )
+      if (apiPath === "libraries") {
+        params.set("sort", "id:asc")
+        params.set("pagination[withCount]", "false")
+        if (afterId) params.set("filters[id][$gt]", String(afterId))
+      }
       const res = await fetch(`${STRAPI}/api/${apiPath}?${params}`, {
         headers: { Authorization: `Bearer ${TOKEN}` },
       })
@@ -219,7 +228,16 @@ async function main() {
         data?: Entry[]
         meta: { pagination: { page: number; pageCount: number } }
       }
-      all.push(...(json.data ?? []))
+      const batch = json.data ?? []
+      all.push(...batch)
+      if (apiPath === "libraries") {
+        if (!batch.length) break
+        const cursor = Math.max(...batch.map((entry) => Number(entry.id)))
+        if (!Number.isSafeInteger(cursor) || cursor <= afterId)
+          throw new Error("Library seed cursor did not advance")
+        afterId = cursor
+        continue
+      }
       if (json.meta.pagination.page >= json.meta.pagination.pageCount) break
       page++
     }

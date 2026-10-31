@@ -48,7 +48,8 @@ async function fetchPage(
   endpoint: string,
   authHeader: string,
   page: number,
-  startDate: string
+  startDate: string,
+  signal?: AbortSignal
 ): Promise<any> {
   const url = new URL(endpoint)
   url.searchParams.set(
@@ -61,6 +62,7 @@ async function fetchPage(
 
   const res = await safeFetchText(url.toString(), {
     headers: { Authorization: authHeader, Accept: "application/json" },
+    signal,
   })
   if (!res.ok) throw new ProviderStatusError("aspen", res.status)
 
@@ -115,11 +117,22 @@ export const aspenProvider: EventProvider = {
     const authHeader = buildAuthHeader(clientId, clientSecret)
     const { startDate } = getFutureWindow()
     const events: RawEvent[] = []
+    const deadline = Date.now() + 120_000
+    const signal = AbortSignal.timeout(120_000)
+    let pagesRead = 0
     let page = 1
     let totalPages = 1
 
     while (page <= totalPages && events.length < 5000) {
-      const result = await fetchPage(endpoint, authHeader, page, startDate)
+      if (++pagesRead > 100 || Date.now() > deadline)
+        throw new FeedFormatError("Provider pagination budget exceeded")
+      const result = await fetchPage(
+        endpoint,
+        authHeader,
+        page,
+        startDate,
+        signal
+      )
       totalPages = Math.max(1, Number(result.totalPages) || 1)
 
       for (const item of result.items as any[]) {

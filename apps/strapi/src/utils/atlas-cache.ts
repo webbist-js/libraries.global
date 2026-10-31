@@ -29,6 +29,8 @@ export function getAtlasCache<T>(key: string): Promise<T> | null {
 }
 
 export function setAtlasCache<T>(key: string, value: Promise<T>): Promise<T> {
+  if (!entries.has(key) && entries.size >= 8)
+    entries.delete(entries.keys().next().value!)
   entries.set(key, { at: Date.now(), value })
   value.catch(() => {
     if (entries.get(key)?.value === value) entries.delete(key)

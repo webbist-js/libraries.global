@@ -281,8 +281,7 @@ function urlProblem(raw: string): string | null {
   } catch {
     return "Enter a full web address, starting with https://."
   }
-  if (url.protocol !== "https:" && url.protocol !== "http:")
-    return "The address must start with https:// or http://."
+  if (url.protocol !== "https:") return "The address must start with https://."
   if (url.username || url.password)
     return "Put the username and password in their own fields, not in the address."
 
