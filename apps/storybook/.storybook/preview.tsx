@@ -1,5 +1,6 @@
 import "./preview.css"
 import { AppearanceProvider } from "@/components/appearance/AppearanceProvider"
+import { ContactModalProvider } from "@/components/contact/ContactModalProvider"
 import {
   isAppearancePreference,
   type AppearancePreference,
@@ -101,7 +102,9 @@ function Providers({
         onPreferenceChange={onAppearanceChange}
       >
         <FixtureSessionProvider session={session}>
-          <QueryClientProvider client={client}>{children}</QueryClientProvider>
+          <QueryClientProvider client={client}>
+            <ContactModalProvider>{children}</ContactModalProvider>
+          </QueryClientProvider>
         </FixtureSessionProvider>
       </AppearanceProvider>
     </NextIntlClientProvider>
