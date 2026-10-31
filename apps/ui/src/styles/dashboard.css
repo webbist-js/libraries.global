@@ -158,6 +158,20 @@
   box-shadow: none;
 }
 
+/* Consent controls stay clear of the desktop account rail and mobile tabs. */
+body[data-dashboard-active] [data-cookie-consent-settings] {
+  right: 12px;
+  bottom: calc(var(--dashboard-mobile-nav-height) + 12px);
+  left: auto;
+}
+body[data-dashboard-active] [data-cookie-consent-panel] {
+  bottom: calc(var(--dashboard-mobile-nav-height) + 12px);
+  max-height: calc(
+    100dvh - var(--dashboard-bar-height) - env(safe-area-inset-top) -
+      var(--dashboard-mobile-nav-height) - 24px
+  );
+}
+
 /* Portal surfaces share the shell's viewport edges. Keep the masthead visible
    without changing Radix's modal focus trap or background isolation. */
 body[data-dashboard-active] [data-drawer-backdrop] {
@@ -177,6 +191,11 @@ body[data-dashboard-active]
 }
 
 @media (min-width: 768px) {
+  body[data-dashboard-active] [data-cookie-consent-settings],
+  body[data-dashboard-active] [data-cookie-consent-panel] {
+    bottom: 12px;
+    max-height: calc(100dvh - 24px);
+  }
   body[data-dashboard-active] [data-drawer-backdrop] {
     top: 0;
     bottom: 0;
