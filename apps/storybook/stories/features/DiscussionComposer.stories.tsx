@@ -52,7 +52,9 @@ export const JoinPrompt: Story = {
   globals: { locale: "en" },
   play: async ({ canvas }) => {
     await userEvent.click(
-      canvas.getByRole("button", { name: "Join the conversation" })
+      canvas.getByRole("button", {
+        name: "Join the conversation Add to the conversation…",
+      })
     )
     await userEvent.type(
       canvas.getByRole("textbox", { name: "Message" }),
@@ -63,7 +65,9 @@ export const JoinPrompt: Story = {
       canvas.queryByRole("textbox", { name: "Message" })
     ).not.toBeInTheDocument()
     await userEvent.click(
-      canvas.getByRole("button", { name: "Join the conversation" })
+      canvas.getByRole("button", {
+        name: "Join the conversation Add to the conversation…",
+      })
     )
     await expect(canvas.getByRole("textbox", { name: "Message" })).toHaveValue(
       "Keep this draft"
