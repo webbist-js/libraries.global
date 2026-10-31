@@ -329,7 +329,7 @@ export async function fetchLibrary(slug: string, locale: Locale) {
  * response is Strapi's **detail** shape (`LIBRARY_SHAPES.detail`): the
  * Mobile timetable, home base and vehicles, social links and long text.
  * The list route (`fetchOneBySlug`) keeps the light list shape and drops
- * them. The last published version wins, as `fetchOneBySlug` does.
+ * them. Slug and locale identify the published record, so no sort is needed.
  */
 async function fetchLibraryBySlug<T>(
   slug: string,
@@ -338,7 +338,7 @@ async function fetchLibraryBySlug<T>(
 ): Promise<APIResponse<T>> {
   const res = (await PublicStrapiClient.fetchAPI(
     `/libraries/by-slug/${encodeURIComponent(slug)}`,
-    { ...params, sort: { publishedAt: "desc" } },
+    params,
     requestInit
   )) as { data?: T[] | null }
 
