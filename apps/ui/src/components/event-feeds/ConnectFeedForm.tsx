@@ -13,7 +13,6 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
-import { Notice } from "@/components/ds/Notice"
 import {
   fieldInputStyle,
   fieldLabelStyle,
@@ -28,6 +27,7 @@ import {
   secondaryPillStyle,
   TOO_MANY_REQUESTS,
 } from "./feed-ui"
+import { FeedTestFeedback } from "./FeedTestFeedback"
 import { FeedValuesFields } from "./FeedValuesFields"
 import { useFeedTest } from "./useFeedTest"
 
@@ -292,26 +292,7 @@ export function ConnectFeedForm({
             </p>
           )}
 
-          <div aria-live="polite">
-            {test.error && (
-              <p role="alert" style={{ color: T.accent.danger, margin: 0 }}>
-                {test.error}
-              </p>
-            )}
-            {test.result && (
-              <Notice
-                icon={
-                  test.result === "ok"
-                    ? "mdi:check-circle-outline"
-                    : "mdi:alert-circle-outline"
-                }
-                tone={test.result === "ok" ? "ok" : "warn"}
-                title={tUi("test_result")}
-              >
-                <p className="m-0">{FEED_TEST_COPY[test.result]}</p>
-              </Notice>
-            )}
-          </div>
+          <FeedTestFeedback error={test.error} result={test.result} />
 
           {sendError && (
             <p role="alert" style={{ color: T.accent.danger, margin: 0 }}>

@@ -1,3 +1,5 @@
+import { SUPPORTED_LOCALES } from "@repo/shared-data"
+
 /** Public, consented product metrics. Never pass URLs, form fields or users. */
 const SOURCES = [
   "home",
@@ -32,6 +34,10 @@ const SOURCES = [
   "home_plans",
   "mobile_timetable",
   "navigation",
+  "sidebar",
+  "site_search",
+  "network_directory",
+  "network_members",
 ] as const
 const ACTIONS = [
   "directions",
@@ -65,8 +71,32 @@ const ACTIONS = [
   "select_stop",
   "locale",
 ] as const
-const CONTENT = ["library", "journal", "knowledge", "event", "drive"] as const
-const SEARCH = ["libraries", "atlas", "journal", "knowledge", "events"] as const
+const CONTENT = [
+  "library",
+  "journal",
+  "knowledge",
+  "event",
+  "drive",
+  "network",
+  "place",
+  "page",
+] as const
+const SEARCH = [
+  "libraries",
+  "atlas",
+  "journal",
+  "knowledge",
+  "events",
+  "site",
+  "networks",
+] as const
+const SEARCH_SCOPES = [
+  "all",
+  "libraries",
+  "journal",
+  "knowledge",
+  "events",
+] as const
 const RESULTS = ["zero", "one", "two_to_ten", "more_than_ten"] as const
 const SUBMISSIONS = [
   "beta_request",
@@ -85,6 +115,7 @@ export type AnalyticsParameters = {
   action_type?: (typeof ACTIONS)[number]
   content_type?: (typeof CONTENT)[number]
   search_type?: (typeof SEARCH)[number]
+  search_scope?: (typeof SEARCH_SCOPES)[number]
   result_bucket?: (typeof RESULTS)[number]
   submission_type?: (typeof SUBMISSIONS)[number]
   library_document_id?: string
@@ -97,6 +128,12 @@ export type AnalyticsParameters = {
     | "events"
     | "community"
     | "membership"
+    | "networks"
+    | "about"
+    | "legal"
+    | "navigation"
+    | "contribute"
+    | "search"
   target_locale?: "en" | "cs" | "fr"
   method?: "copy" | "x"
   format?: "csv" | "geojson"
@@ -134,6 +171,7 @@ const EVENT_FIELDS = {
     "content_id",
     "library_document_id",
     "view_mode",
+    "search_scope",
   ],
   near_me: ["action_type"],
   generate_lead: ["submission_type"],
@@ -154,6 +192,7 @@ const EVENT_FIELDS = {
     "action_type",
     "destination",
     "target_locale",
+    "search_scope",
   ],
 } as const
 
@@ -164,6 +203,7 @@ const ENUMS: Record<string, readonly string[]> = {
   action_type: ACTIONS,
   content_type: CONTENT,
   search_type: SEARCH,
+  search_scope: SEARCH_SCOPES,
   result_bucket: RESULTS,
   submission_type: SUBMISSIONS,
   method: ["copy", "x"],
@@ -198,6 +238,12 @@ const ENUMS: Record<string, readonly string[]> = {
     "events",
     "community",
     "membership",
+    "networks",
+    "about",
+    "legal",
+    "navigation",
+    "contribute",
+    "search",
   ],
   target_locale: ["en", "cs", "fr"],
 }
@@ -233,7 +279,7 @@ const EVENT_ACTIONS: Record<string, readonly string[]> = {
   membership_interest: ["compare", "upgrade"],
   upgrade_prompt: ["open"],
   mobile_service_action: ["open", "select_stop", "ics_handoff"],
-  navigation_action: ["open", "locale"],
+  navigation_action: ["open", "locale", "filter"],
 }
 const REQUIRED_FIELDS: Record<string, readonly string[]> = {
   library_action: ["library_document_id", "action_type"],
@@ -310,14 +356,30 @@ const DESTINATIONS: Record<string, AnalyticsParameters["destination"]> = {
   "/contribute/membership": "membership",
   "/profile/membership": "membership",
   "/plans": "membership",
+  "/membership": "membership",
+  "/library-networks": "networks",
+  "/about": "about",
+  "/legal": "legal",
 }
 
-export function navigationAttributes(href: string) {
-  const destination = DESTINATIONS[href]
+export function analyticsNavigationDestination(href: string) {
+  const path = href
+    .replace(/^https:\/\/libraries\.global(?=\/)/, "")
+    .split(/[?#]/)[0]
+    ?.replace(new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`), "")
+
+  return path ? DESTINATIONS[path] : undefined
+}
+
+export function navigationAttributes(
+  href: string,
+  interactionSource: InteractionSource = "navigation"
+) {
+  const destination = analyticsNavigationDestination(href)
 
   return destination
     ? analyticsAttributes("navigation_action", {
-        interaction_source: "navigation",
+        interaction_source: interactionSource,
         action_type: "open",
         destination,
       })
@@ -398,6 +460,22 @@ export function installAnalyticsClickTracking(browser: Window): () => void {
       return
     const target = event.target
     if (!(target instanceof Element)) return
+    const workspaceLink = target.closest<HTMLAnchorElement>(
+      "a[data-workspace-navigation]"
+    )
+    if (workspaceLink) {
+      try {
+        browser.librariesGlobalAnalytics?.trackWorkspace?.("workspace_action", {
+          ...JSON.parse(workspaceLink.dataset.workspaceNavigation ?? "{}"),
+          action_type: "select",
+          action_outcome: "intent",
+        })
+      } catch {
+        /* Invalid metadata cannot interrupt navigation. */
+      }
+
+      return
+    }
     const element = target.closest<HTMLElement>("[data-analytics-event]")
     if (element && !["A", "BUTTON"].includes(element.tagName)) return
     if (!element || (event.type === "auxclick" && element.tagName !== "A"))
@@ -422,12 +500,24 @@ export function installAnalyticsClickTracking(browser: Window): () => void {
     )
       return
     // Only explicitly marked search forms; no query or other field is sent.
-    if (!String(new FormData(form).get("q") ?? "").trim()) return
     try {
-      browser.librariesGlobalAnalytics?.track(
-        "search",
-        JSON.parse(form.dataset.analyticsParams ?? "{}")
-      )
+      const parameters = JSON.parse(form.dataset.analyticsParams ?? "{}")
+      if (!String(new FormData(form).get("q") ?? "").trim()) {
+        if (
+          ["network_directory", "network_members"].includes(
+            parameters.interaction_source
+          )
+        ) {
+          browser.librariesGlobalAnalytics?.track("navigation_action", {
+            interaction_source: parameters.interaction_source,
+            destination: "networks",
+            action_type: "filter",
+          })
+        }
+
+        return
+      }
+      browser.librariesGlobalAnalytics?.track("search", parameters)
     } catch {
       /* Ignore invalid metadata. */
     }

@@ -417,7 +417,7 @@ export function FeedRow({
                 </button>
                 <button
                   type="button"
-                  className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-danger) px-5 text-sm font-semibold text-white"
+                  className="inline-flex min-h-11 items-center rounded-full bg-(--t-action-danger) px-5 text-sm font-semibold text-white"
                   onClick={disconnect}
                 >
                   Disconnect

@@ -96,7 +96,7 @@ export default function HomeSearch() {
               content_type: "library",
               action_type: "open",
             })}
-            className="rounded-full border bg-white px-3.5 py-2 text-sm font-medium no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
+            className="rounded-full border bg-(--t-bg-deep) px-3.5 py-2 text-sm font-medium no-underline transition-colors hover:border-(--t-accent-primary) hover:text-(--t-accent-primary-hover)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             {label}

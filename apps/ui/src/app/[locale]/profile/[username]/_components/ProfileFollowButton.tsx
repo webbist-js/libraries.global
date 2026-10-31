@@ -123,7 +123,7 @@ function FollowPanel({
     padding: compact ? "7px 12px" : "10px 20px",
     borderRadius: "999px",
     border: `1px solid ${following ? T.ink.base : T.accent.primary}`,
-    background: following ? T.ink.base : T.bg.deep,
+    background: following ? T.bg.inverse : T.bg.deep,
     color: following ? "#fff" : T.ink.base,
     fontFamily: T.font.sans,
     fontSize: compact ? "13px" : "15px",

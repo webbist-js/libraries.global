@@ -14,6 +14,8 @@ import type {
   HeatmapLayerSpecification,
 } from "maplibre-gl"
 
+import { NEUTRAL_CLUSTER_METADATA } from "@/lib/map-appearance"
+
 import type { AtlasGeneration } from "./atlas-data-client"
 import {
   completenessColor,
@@ -71,7 +73,8 @@ export class AtlasScalableRenderer {
       paint: Record<string, unknown>,
       layout: Record<string, unknown> = {},
       layerName?: string,
-      minzoom = 0
+      minzoom = 0,
+      neutralCluster = false
     ) => {
       const id = `${prefix}-${graph.layers.length}`
       const opacity: Record<string, unknown> = {}
@@ -100,6 +103,7 @@ export class AtlasScalableRenderer {
       this.map.addLayer({
         id,
         type: kind,
+        ...(neutralCluster ? { metadata: NEUTRAL_CLUSTER_METADATA } : {}),
         source,
         minzoom,
         maxzoom: kind === "heatmap" ? 13 : 24,
@@ -259,7 +263,8 @@ export class AtlasScalableRenderer {
         },
         {},
         undefined,
-        pinZoom(population)
+        pinZoom(population),
+        true
       )
       if (population === "listed" && active.includes("complete")) {
         for (const [bin, color, offset] of [
@@ -300,7 +305,8 @@ export class AtlasScalableRenderer {
             "text-allow-overlap": true,
           },
           undefined,
-          pinZoom(population)
+          pinZoom(population),
+          true
         )
     }
     const clustered = (

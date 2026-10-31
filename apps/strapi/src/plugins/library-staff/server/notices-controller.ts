@@ -54,5 +54,8 @@ export default ({ strapi }: { strapi: any }) => {
     end: wrap((ctx, id, userId) =>
       service().end(userId, id, ctx.params.noticeId)
     ),
+    reactivate: wrap((ctx, id, userId) =>
+      service().reactivate(userId, id, ctx.params.noticeId, ctx.request.body)
+    ),
   }
 }

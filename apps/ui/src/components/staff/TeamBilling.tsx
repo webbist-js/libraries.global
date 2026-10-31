@@ -5,18 +5,25 @@ import { useLocale } from "next-intl"
 import { useEffect, useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
-import { Badge } from "@/components/ds"
+import { Badge, Notice } from "@/components/ds"
 import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import { Button } from "@/components/ui/button"
+import { captureCheckoutAttempt } from "@/lib/checkout-analytics"
 import pricing from "@/lib/membership-pricing.json"
 import { Link, useRouter } from "@/lib/navigation"
 import {
   TEAM_TERMS_VERSION,
   type TeamBillingDashboard,
 } from "@/lib/team-billing/types"
+import {
+  rememberTeamApiChoice,
+  teamApiChoiceSelected,
+} from "@/lib/team-purchase-intent"
 
 import { StaffPanel, STAFF_LINK } from "./StaffPanel"
 import { TeamCheckoutDialog } from "./TeamCheckoutDialog"
+import { TeamApiNextStep } from "./TeamPurchaseJourney"
+import { TeamSeatUsage } from "./TeamSeatUsage"
 
 const errors: Record<string, string> = {
   team_terms_required:
@@ -100,7 +107,7 @@ function PaidTeamDetails({
         </p>
       ) : null}
       {membership.revoked ? (
-        <p role="alert" className="mt-4 text-sm text-red-800">
+        <p role="alert" className="mt-4 text-sm text-(--t-palette-coral-fg)">
           Access is suspended following a payment reversal.
         </p>
       ) : null}
@@ -153,7 +160,7 @@ function TeamPaymentActions({
             </Button>
           ) : null}
           <Button
-            variant="surface"
+            variant="link"
             size="pill"
             disabled={pending || checking}
             onClick={() => request({ action: "refresh" })}
@@ -256,21 +263,21 @@ function billingStatus(active: boolean, waiting: boolean) {
   if (active)
     return {
       color: "ok" as const,
-      label: "Active Team",
+      label: "Team membership: Active",
       description:
         "Your Team is active. Manage your membership, invoices and renewal here.",
     }
   if (waiting)
     return {
       color: "warn" as const,
-      label: "Confirming payment",
+      label: "Team membership: Confirming payment",
       description:
         "Payment confirmation is pending. Team access starts after payment and activation are confirmed.",
     }
 
   return {
     color: "warn" as const,
-    label: "Not active",
+    label: "Team membership: Not active",
     description:
       "Set up annual billing to activate Pro for your Team’s members.",
   }
@@ -281,7 +288,9 @@ export function TeamBilling({
   initialSeats,
   confirming,
   refreshRequired = false,
+  initialApiAddon = false,
 }: {
+  readonly initialApiAddon?: boolean
   readonly initial: TeamBillingDashboard
   readonly initialSeats: number
   readonly confirming: boolean
@@ -419,6 +428,12 @@ export function TeamBilling({
 
   const request = (action: unknown) =>
     startTransition(async () => {
+      const fields = {
+        product: "team",
+        billing_interval: "year",
+        billing_mode: data.mode,
+      } as const
+      const { handoff, failed } = captureCheckoutAttempt(action, fields)
       setError("")
       try {
         const response = await fetch(endpoint, {
@@ -433,6 +448,7 @@ export function TeamBilling({
               "Team billing is temporarily unavailable. Please try again."
           )
         if (result.url) {
+          handoff()
           window.location.assign(result.url)
 
           return
@@ -445,6 +461,7 @@ export function TeamBilling({
         }
         setData(result as TeamBillingDashboard)
       } catch (failure) {
+        failed()
         setError(
           failure instanceof Error ? failure.message : "Please try again."
         )
@@ -463,6 +480,12 @@ export function TeamBilling({
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:gap-8">
       <div className="min-w-0 space-y-6">
+        <TeamApiNextStep
+          teamId={data.teamId}
+          initialSelected={initialApiAddon}
+          organiser={data.organiser}
+          ready={data.active && data.synced && !data.pending && !checking}
+        />
         <StaffPanel
           id="team-subscription"
           title={data.name}
@@ -482,10 +505,16 @@ export function TeamBilling({
           ) : (
             <>
               {data.mode === "sandbox" ? (
-                <p className="mt-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-                  <strong>Test mode.</strong> No real payment is taken. Use
-                  Stripe test payment details only.
-                </p>
+                <div className="mt-5">
+                  <Notice
+                    tone="warn"
+                    icon="mdi:flask-outline"
+                    title="Test mode"
+                  >
+                    No real payment is taken. Use Stripe test payment details
+                    only.
+                  </Notice>
+                </div>
               ) : null}
               {membership ? (
                 <PaidTeamDetails
@@ -512,10 +541,17 @@ export function TeamBilling({
               </p>
             </>
           )}
+          <p className="mt-5 mb-0 border-t border-(--t-border-line) pt-5 text-sm leading-relaxed text-(--t-ink-dim)">
+            Payment activates Team membership. Team verification and library
+            staff access are checked separately.{" "}
+            <Link className={STAFF_LINK} href="/staff/claim">
+              Request library access
+            </Link>
+          </p>
           {error ? (
             <p
               role="alert"
-              className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+              className="mt-5 rounded-2xl border border-(--t-edge-danger) bg-(--t-palette-coral-soft) p-4 text-sm text-(--t-palette-coral-fg)"
             >
               {error}
             </p>
@@ -539,31 +575,7 @@ export function TeamBilling({
             />
           }
         >
-          <p className="mt-0 mb-3 flex items-baseline gap-2">
-            <strong className="font-sans text-4xl font-medium">
-              {data.used}
-              <span className="text-2xl text-(--t-ink-dim)">
-                {" "}
-                / {data.seats}
-              </span>
-            </strong>
-            <span className="text-sm text-(--t-ink-dim)">occupied</span>
-          </p>
-          <div
-            role="progressbar"
-            aria-label="Team seats occupied"
-            aria-valuenow={data.used}
-            aria-valuemin={0}
-            aria-valuemax={Math.max(data.used, data.seats)}
-            className="my-5 h-2 overflow-hidden rounded-full bg-(--t-bg-muted)"
-          >
-            <div
-              className="h-full rounded-full bg-(--t-accent-primary)"
-              style={{
-                width: `${Math.min(100, (data.used / Math.max(1, data.seats)) * 100)}%`,
-              }}
-            />
-          </div>
+          <TeamSeatUsage used={data.used} total={data.seats} />
           <p className="text-base leading-relaxed text-(--t-ink-dim)">
             Members and pending invitations each use one seat, including your
             Organiser seat.
@@ -572,31 +584,6 @@ export function TeamBilling({
             <li>
               <Link className={STAFF_LINK} href="/staff/teams">
                 Manage members and libraries
-              </Link>
-            </li>
-          </SidebarLinks>
-        </StaffPanel>
-        <StaffPanel
-          id="team-library-access"
-          title="Library access"
-          compact
-          aside={
-            <Icon
-              aria-hidden
-              icon="mdi:shield-check-outline"
-              width={22}
-              className="text-(--t-accent-primary)"
-            />
-          }
-        >
-          <p className="mt-0 text-base leading-relaxed text-(--t-ink-dim)">
-            Payment activates your membership. Library staff authority is
-            checked separately before your Team can manage a library.
-          </p>
-          <SidebarLinks>
-            <li>
-              <Link className={STAFF_LINK} href="/staff/claim">
-                Request library access
               </Link>
             </li>
           </SidebarLinks>
@@ -621,18 +608,19 @@ export function TeamBilling({
           </p>
           <SidebarLinks>
             <li>
-              <Link className={STAFF_LINK} href="/staff/teams/api">
+              <Link className={STAFF_LINK} href="/developers">
                 API access and usage
               </Link>
             </li>
           </SidebarLinks>
         </StaffPanel>
       </aside>
-      {canSubscribe ? (
+      {canSubscribe && checkoutOpen ? (
         <TeamCheckoutDialog
           open={checkoutOpen}
           onOpenChange={setCheckoutOpen}
           initialSeats={seats}
+          initialApiAddon={teamApiChoiceSelected(data.teamId)}
           minimumSeats={Math.max(5, data.used)}
           teamName={data.name}
           discounted={data.discounted}
@@ -640,6 +628,7 @@ export function TeamBilling({
           busy={pending}
           error={error}
           onCheckout={(choice) => {
+            rememberTeamApiChoice(data.teamId, choice.apiAddon === true)
             setSeats(choice.seats)
             request({
               action: "checkout",

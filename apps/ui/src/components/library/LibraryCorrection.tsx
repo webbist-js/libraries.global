@@ -1,5 +1,6 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import {
   createContext,
   type ReactNode,
@@ -8,10 +9,11 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react"
+import { toast } from "sonner"
 
 import { actionMeta } from "@/components/contribute/actions"
-import { ContributionWizard } from "@/components/contribute/ContributionWizard"
 import type { WizardLibrary } from "@/components/contribute/wizard.logic"
 import { Drawer } from "@/components/ds/Drawer"
 import { LibraryVerify } from "@/components/library/LibraryVerify"
@@ -20,8 +22,24 @@ import {
   type VerifyRecord,
   type VerifySection,
 } from "@/components/library/verify.logic"
+import type { WizardDraftState } from "@/components/library-editor/wizard.types"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
+
+const LibraryContributionEditor = dynamic(
+  () =>
+    import("@/components/library/LibraryContributionEditor").then(
+      (module) => module.LibraryContributionEditor
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <p role="status" className="p-6">
+        Loading the editor…
+      </p>
+    ),
+  }
+)
 
 /** Added to the library URL so sign-in brings the user back into the drawer. */
 const REOPEN_PARAM = "suggest"
@@ -36,7 +54,7 @@ type CorrectionContext = {
 
 /** A correction (with a category picked or not), or a "Still right?". */
 type DrawerState =
-  | { category: string | null }
+  | { category: string | null; step?: string; locale?: string }
   | { verify: VerifySection[] }
   | null
 
@@ -55,6 +73,8 @@ const VERIFY_META = {
 }
 
 function CorrectionDrawer({
+  open,
+  onAfterClose,
   library,
   record,
   path,
@@ -64,36 +84,81 @@ function CorrectionDrawer({
   readonly library: WizardLibrary
   readonly record: VerifyRecord
   readonly path: string
+  readonly open: boolean
+  readonly onAfterClose: () => void
   readonly state: NonNullable<DrawerState>
   readonly onClose: () => void
 }) {
   const verify = "verify" in state ? state.verify : null
-  const meta = verify ? VERIFY_META : actionMeta("correction")
+  const meta = verify
+    ? VERIFY_META
+    : { ...actionMeta("correction"), title: "Improve this library" }
+  const editorState = useRef<WizardDraftState | null>(null)
+  const trackState = useCallback((value: WizardDraftState) => {
+    editorState.current = value
+  }, [])
+  const requestClose = () => {
+    if (editorState.current?.saving) {
+      toast.info("Your draft is still saving. Please wait before closing.")
+
+      return
+    }
+    if (
+      editorState.current?.dirty &&
+      !window.confirm(
+        "Some changes have not saved yet. Close and keep them in this browser session?"
+      )
+    )
+      return
+    onClose()
+  }
+  const category = "category" in state ? state.category : null
+  const step =
+    ("step" in state ? state.step : undefined) ??
+    (
+      {
+        "Opening hours": "hours",
+        "Stops & times": "stops",
+        "Address or location": "location",
+        Collections: "collections",
+        Photo: "photo",
+        Accessibility: "access",
+        Services: "visit",
+        "Contact details": "links",
+        History: "history",
+      } as Record<string, string>
+    )[category ?? ""]
 
   return (
     <Drawer
+      open={open}
+      onAfterClose={onAfterClose}
       icon={{ name: meta.icon, bg: meta.tintBg, fg: meta.tintFg }}
-      onClose={onClose}
+      onClose={requestClose}
+      size={verify ? "md" : "xl"}
+      side={verify ? "right" : "left"}
+      edgeAligned
       subtitle={`${library.name}${library.place ? ` · ${library.place}` : ""}`}
       title={meta.title}
       titleId="correction-drawer-title"
     >
       {verify ? (
-        <LibraryVerify
-          initial={verify}
-          library={{ ...record, ...library }}
-          onDone={onClose}
-          returnTo={`${path}?${REOPEN_PARAM}=verify&${SECTIONS_PARAM}=${verify.join(",")}`}
-        />
+        <div className="flex h-full min-h-0 flex-col">
+          <LibraryVerify
+            initial={verify}
+            library={{ ...record, ...library }}
+            onDone={onClose}
+            returnTo={`${path}?${REOPEN_PARAM}=verify&${SECTIONS_PARAM}=${verify.join(",")}`}
+          />
+        </div>
       ) : (
-        <ContributionWizard
-          action="correction"
-          headingId="correction-drawer-title"
-          initialCategory={"category" in state ? state.category : null}
-          initialLibrary={library}
-          layout="drawer"
-          lockLibrary
-          returnTo={`${path}?${REOPEN_PARAM}=correction`}
+        <LibraryContributionEditor
+          slug={library.slug}
+          path={path}
+          step={step}
+          locale={"locale" in state ? state.locale : undefined}
+          onState={trackState}
+          onClose={requestClose}
         />
       )}
     </Drawer>
@@ -120,21 +185,32 @@ export function LibraryCorrectionProvider({
   readonly children: ReactNode
 }) {
   const [state, setState] = useState<DrawerState>(null)
+  const [opened, setOpened] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const reopen = params.get(REOPEN_PARAM)
     if (reopen !== "correction" && reopen !== "verify") return
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- the page is static, so the URL is read after mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resume the drawer after the static page mounts
+    setOpened(true)
+
     setState(
       reopen === "verify"
         ? {
             verify: toSections((params.get(SECTIONS_PARAM) ?? "").split(",")),
           }
-        : { category: null }
+        : {
+            category: null,
+            step: params.get("step") ?? undefined,
+            locale: params.get("editLocale") ?? undefined,
+          }
     )
     params.delete(REOPEN_PARAM)
     params.delete(SECTIONS_PARAM)
+    if (reopen === "correction") {
+      params.delete("step")
+      params.delete("editLocale")
+    }
     const qs = params.toString()
     window.history.replaceState(
       null,
@@ -148,6 +224,7 @@ export function LibraryCorrectionProvider({
       interaction_source: "library_correction",
       action_type: "open",
     })
+    setOpened(true)
     setState({ category: category ?? null })
   }, [])
   const verify = useCallback((sections: readonly VerifySection[]) => {
@@ -155,9 +232,10 @@ export function LibraryCorrectionProvider({
       interaction_source: "library_correction",
       action_type: "open",
     })
+    setOpened(true)
     setState({ verify: toSections(sections) })
   }, [])
-  const close = useCallback(() => setState(null), [])
+  const close = useCallback(() => setOpened(false), [])
   const value = useMemo(() => ({ open, verify }), [open, verify])
 
   return (
@@ -165,6 +243,8 @@ export function LibraryCorrectionProvider({
       {children}
       {state ? (
         <CorrectionDrawer
+          open={opened}
+          onAfterClose={() => setState(null)}
           library={library}
           onClose={close}
           path={path}

@@ -1,16 +1,10 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
 
+import { ApplicantSummary } from "./ApplicantSummary"
 import { KeyValueList } from "./KeyValueList"
-import {
-  formatDate,
-  isHttpUrl,
-  moderationRowLabel,
-  type RoleApplicant,
-} from "./submissionMeta"
+import { isHttpUrl, type RoleApplicant } from "./submissionMeta"
 
 const ROLE_NAMES: Record<string, string> = {
   wiki_editor: "Knowledge editor",
@@ -47,8 +41,6 @@ export function RoleApplicationPanel({
   /** Locale code → name, for the languages asked for. */
   readonly localeNames: Record<string, string>
 }) {
-  const tUi = useUiTranslations("ui")
-
   const f = (raw && typeof raw === "object" ? raw : {}) as Record<
     string,
     unknown
@@ -133,82 +125,10 @@ export function RoleApplicationPanel({
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           The applicant
         </h3>
-        {applicant ? (
-          <>
-            <p className="m-0 text-base" style={{ color: T.ink.base }}>
-              {applicant.username ? (
-                <Link
-                  href={`/profile/${encodeURIComponent(applicant.username)}`}
-                  className="font-semibold underline underline-offset-2"
-                  style={{ color: T.accent.primary }}
-                >
-                  @{applicant.username}
-                </Link>
-              ) : (
-                <span style={{ color: T.ink.dim }}>No public profile</span>
-              )}
-              <span style={{ color: T.ink.dim }}>
-                {" "}
-                · {applicant.acceptedCount} accepted{" "}
-                {applicant.acceptedCount === 1 ? "change" : "changes"}
-              </span>
-            </p>
-            {applicant.recentAccepted.length > 0 ? (
-              <ul
-                aria-label={tUi("recent_accepted_changes")}
-                className="m-0 list-none overflow-hidden rounded-[14px] p-0"
-                style={{
-                  border: `1px solid ${T.border.line}`,
-                  background: T.bg.surface,
-                }}
-              >
-                {applicant.recentAccepted.map((c, i) => (
-                  <li
-                    key={`${c.decidedAt}-${i}`}
-                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
-                    style={
-                      i > 0
-                        ? { borderTop: `1px solid ${T.border.divider}` }
-                        : undefined
-                    }
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      icon="mdi:check"
-                      width={16}
-                      height={16}
-                      className="shrink-0"
-                      style={{ color: T.accent.ok }}
-                    />
-                    <span
-                      className="min-w-0 flex-1 truncate"
-                      style={{ color: T.ink.base }}
-                    >
-                      <span className="font-semibold">
-                        {moderationRowLabel({ submissionType: c.type })}
-                      </span>
-                      <span style={{ color: T.ink.dim }}> · {c.summary}</span>
-                    </span>
-                    <span
-                      className="shrink-0 text-sm"
-                      style={{ color: T.ink.dim }}
-                    >
-                      {formatDate(c.decidedAt)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                No accepted changes listed.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-            Applicant details aren’t available.
-          </p>
-        )}
+        <ApplicantSummary
+          applicant={applicant}
+          missingLabel="Applicant details aren’t available."
+        />
       </div>
 
       <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>

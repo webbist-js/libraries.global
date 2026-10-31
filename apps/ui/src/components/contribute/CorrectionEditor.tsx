@@ -150,7 +150,7 @@ function SuggestOption({
       <div className="flex gap-2">
         <input
           aria-describedby={message ? `${id}-message` : undefined}
-          className="w-full rounded-[14px] border border-(--t-border-hi) bg-white px-4 py-3 text-base outline-none focus:border-(--t-accent-primary)"
+          className="w-full rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-base outline-none focus:border-(--t-accent-primary)"
           id={id}
           maxLength={80}
           onChange={(e) => {
@@ -172,7 +172,7 @@ function SuggestOption({
           value={draft}
         />
         <button
-          className="inline-flex h-[50px] shrink-0 items-center rounded-full border bg-white px-5 text-base font-semibold hover:bg-(--t-bg-surface)"
+          className="inline-flex h-[50px] shrink-0 items-center rounded-full border bg-(--t-bg-deep) px-5 text-base font-semibold hover:bg-(--t-bg-surface)"
           onClick={add}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
           type="button"
@@ -201,7 +201,7 @@ function SuggestOption({
               New: {name}
               <button
                 aria-label={`Remove ${name}`}
-                className="flex size-7 items-center justify-center rounded-full hover:bg-white"
+                className="flex size-7 items-center justify-center rounded-full hover:bg-(--t-bg-deep)"
                 onClick={() => onSuggest(suggested.filter((s) => s !== name))}
                 type="button"
               >

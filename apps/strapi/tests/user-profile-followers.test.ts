@@ -35,6 +35,8 @@ describe("profile follower counts", () => {
       [PROFILE]: [
         {
           ...TARGET,
+          appearancePreference: "dark",
+          theme: "light",
           profileVisibility: "public",
           publicPrefs: { showFollows: false },
           followedProfiles: [{ documentId: "pOther", username: "other" }],
@@ -71,6 +73,29 @@ describe("profile follower counts", () => {
 
   afterEach(() => {
     delete (globalThis as any).strapi
+  })
+
+  it("keeps interface preferences private on both public profile addresses, even for the owner", async () => {
+    for (const [method, params] of [
+      ["findByUsername", { username: TARGET.username }],
+      ["findByDocumentId", { documentId: TARGET.documentId }],
+    ] as const) {
+      const c = ctx(
+        params,
+        {},
+        { "x-service-secret": "s3cret", "x-ba-user-id": TARGET.baUserId }
+      )
+      await controller[method](c)
+      expect(c.body.data).not.toHaveProperty("appearancePreference")
+      expect(c.body.data).not.toHaveProperty("theme")
+    }
+    const owner = ctx(
+      {},
+      {},
+      { "x-service-secret": "s3cret", "x-ba-user-id": TARGET.baUserId }
+    )
+    await controller.findMe(owner)
+    expect(owner.body.data.appearancePreference).toBe("dark")
   })
 
   it("counts incoming follows, including hidden people, without exposing their identities", async () => {

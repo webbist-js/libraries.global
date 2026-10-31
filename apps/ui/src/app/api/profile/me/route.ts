@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
+import { isAppearancePreference } from "@/lib/appearance"
 import { auth, authDbPool } from "@/lib/auth"
 import { BillingError } from "@/lib/billing/config"
 import { stopBillingBeforeDeletion } from "@/lib/billing/deletion"
@@ -14,6 +15,21 @@ import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
+
+function profileValidationError(body: Record<string, unknown>) {
+  if (
+    "appearancePreference" in body &&
+    !isAppearancePreference(body.appearancePreference)
+  )
+    return "Invalid appearance preference"
+  if (
+    "profileBackground" in body &&
+    !isProfileBackground(body.profileBackground)
+  )
+    return "Invalid profile background"
+
+  return null
+}
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -49,14 +65,9 @@ export async function PUT(req: Request) {
       { status: parsed.status }
     )
   const body = parsed.body
-  if (
-    "profileBackground" in body &&
-    !isProfileBackground(body.profileBackground)
-  )
-    return NextResponse.json(
-      { error: "Invalid profile background" },
-      { status: 400 }
-    )
+  const validationError = profileValidationError(body)
+  if (validationError)
+    return NextResponse.json({ error: validationError }, { status: 400 })
 
   const allowed = [
     "username",
@@ -82,6 +93,7 @@ export async function PUT(req: Request) {
     // set it, with the id of the file it just uploaded. Accepting it here would
     // let users attach any media-library file to their profile.
     "theme",
+    "appearancePreference",
     "profileBackground",
   ]
   const data: Record<string, unknown> = { baUserId: session.user.id }
@@ -141,17 +153,13 @@ export async function PATCH(req: Request) {
       { status: parsed.status }
     )
   const body = parsed.body
-  if (
-    "profileBackground" in body &&
-    !isProfileBackground(body.profileBackground)
-  )
-    return NextResponse.json(
-      { error: "Invalid profile background" },
-      { status: 400 }
-    )
+  const validationError = profileValidationError(body)
+  if (validationError)
+    return NextResponse.json({ error: validationError }, { status: 400 })
 
   const patchAllowed = [
     "theme",
+    "appearancePreference",
     "profileBackground",
     "notifPrefs",
     "profileVisibility",

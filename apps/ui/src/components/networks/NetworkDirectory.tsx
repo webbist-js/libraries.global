@@ -3,11 +3,15 @@ import {
   NETWORK_KIND_LABELS,
   networkHref,
 } from "@repo/shared-data"
+import Form from "next/form"
 
 import { EmptyState } from "@/components/ds/EmptyState"
+import { DirectoryPagination } from "@/components/networks/DirectoryPagination"
 import { NetworkCountryFilter } from "@/components/networks/NetworkCountryFilter"
+import { SearchResultsAnalytics } from "@/components/providers/SearchResultsAnalytics"
 import { STAFF_FIELD, STAFF_LINK } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
+import { analyticsAttributes } from "@/lib/analytics-events"
 import { Link } from "@/lib/navigation"
 import type { NetworkList } from "@/lib/networks/types"
 
@@ -20,23 +24,28 @@ export function NetworkDirectory({
   readonly query: URLSearchParams
   readonly basePath?: string
 }) {
-  const pageHref = (page: number) => {
-    const params = new URLSearchParams(query)
-    params.set("page", String(page))
-
-    return `${basePath}?${params}`
-  }
-
   return (
     <div className="space-y-8">
-      <form
-        method="get"
-        className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-4"
+      <SearchResultsAnalytics
+        source="network_directory"
+        searchType="networks"
+        searchKey={query.get("q")?.trim() ? query.toString() : ""}
+        count={data.total}
+      />
+      <Form
+        action=""
+        className="network-filter-card grid items-end gap-4 sm:grid-cols-2 @min-[900px]:grid-cols-4"
         aria-label="Filter services and networks"
+        {...analyticsAttributes("search", {
+          interaction_source: "network_directory",
+          search_type: "networks",
+        })}
       >
         <label className="grid gap-2">
           Name
           <input
+            type="search"
+            placeholder="Service or university name"
             name="q"
             defaultValue={query.get("q") ?? ""}
             className={STAFF_FIELD}
@@ -84,7 +93,10 @@ export function NetworkDirectory({
         <Button type="submit" variant="primary">
           Find services
         </Button>
-      </form>
+        <Link className="network-page-link" href={basePath}>
+          Clear filters
+        </Link>
+      </Form>
       <p role="status">{data.total.toLocaleString()} services and networks</p>
       {!data.networks.length ? (
         <EmptyState
@@ -92,43 +104,53 @@ export function NetworkDirectory({
           detail="Try another name, country or kind. New public pages appear after editorial review."
         />
       ) : null}
-      <ul className="m-0 grid list-none gap-4 p-0 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="network-directory-grid m-0 grid list-none gap-4 p-0">
         {data.networks.map((row) => (
-          <li
-            key={row.documentId}
-            className="rounded-2xl border border-(--t-border-line) bg-white p-6"
-          >
+          <li key={row.documentId} className="network-member-card">
             <p className="text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
               {NETWORK_KIND_LABELS[row.kind]}
             </p>
-            <h2 className="type-h2">
-              <Link href={networkHref(row.slug)}>{row.name}</Link>
+            <h2 className="type-h3 mt-2 mb-0">
+              <Link
+                href={networkHref(row.slug)}
+                {...analyticsAttributes("select_content", {
+                  interaction_source: "network_directory",
+                  content_type: "network",
+                  content_id: row.documentId,
+                })}
+              >
+                {row.name}
+              </Link>
             </h2>
-            <p>
+            <p className="text-sm text-(--t-ink-dim)">
               {row.libraryCount.toLocaleString()} published libraries ·{" "}
               {row.countries.map((c) => c.name).join(", ")}
             </p>
-            <p className="line-clamp-3 text-(--t-ink-dim)">{row.description}</p>
-            <Link className={STAFF_LINK} href={networkHref(row.slug)}>
+            <p className="line-clamp-3 text-sm leading-relaxed text-(--t-ink-dim)">
+              {row.description}
+            </p>
+            <Link
+              className={`${STAFF_LINK} mt-auto pt-4`}
+              href={networkHref(row.slug)}
+              {...analyticsAttributes("select_content", {
+                interaction_source: "network_directory",
+                content_type: "network",
+                content_id: row.documentId,
+              })}
+            >
               Explore the network
             </Link>
           </li>
         ))}
       </ul>
-      <nav aria-label="Directory pages" className="flex justify-between">
-        {data.page > 1 ? (
-          <Link className={STAFF_LINK} href={pageHref(data.page - 1)}>
-            Previous
-          </Link>
-        ) : (
-          <span />
-        )}
-        {data.page * data.pageSize < data.total ? (
-          <Link className={STAFF_LINK} href={pageHref(data.page + 1)}>
-            Next
-          </Link>
-        ) : null}
-      </nav>
+      <DirectoryPagination
+        basePath={basePath}
+        query={query}
+        page={data.page}
+        pageSize={data.pageSize}
+        total={data.total}
+        label="Directory pages"
+      />
     </div>
   )
 }

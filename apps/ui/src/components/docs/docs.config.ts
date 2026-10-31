@@ -49,7 +49,7 @@ const SECTION_TINTS: readonly SectionTint[] = [
   { bg: "var(--tint-neutral-bg)", fg: "var(--tint-neutral-fg)" },
   { bg: "var(--tint-academic-bg)", fg: "var(--tint-academic-fg)" },
   { bg: T.accent.chip, fg: T.accent.primaryHover },
-  { bg: "#F5EEDC", fg: "#6B5420" },
+  { bg: "var(--t-palette-amber-bg)", fg: "var(--t-palette-amber-fg)" },
   { bg: "var(--tint-public-bg)", fg: "var(--tint-public-fg)" },
   { bg: "var(--tint-national-bg)", fg: "var(--tint-national-fg)" },
   { bg: "var(--tint-special-bg)", fg: "var(--tint-special-fg)" },
@@ -62,7 +62,12 @@ export function tintForOrder(order: number | null | undefined): SectionTint {
       ? Math.abs(Math.trunc(order))
       : 0
 
-  return SECTION_TINTS[n % SECTION_TINTS.length]!
+  const tint = SECTION_TINTS[n % SECTION_TINTS.length]!
+
+  return {
+    ...tint,
+    bg: `color-mix(in srgb, ${tint.bg} 42%, var(--t-bg-surface))`,
+  }
 }
 
 /** Strapi Wiki Sections as Knowledge sections, in display order. */

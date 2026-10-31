@@ -45,6 +45,15 @@ export function articleDraftData(
     sections: draft.sections,
     tags: draft.tags,
     eventMentions: draft.eventMentions ?? [],
+    ...(options.journal
+      ? {
+          sources: (draft.sources ?? []).filter((source) =>
+            Object.values(source).some(
+              (value) => typeof value === "string" && value.trim()
+            )
+          ),
+        }
+      : {}),
     editSummary: draft.editSummary,
     editorMedia: draftMedia(draft.doc),
     ...(options.mode === "edit"
@@ -135,6 +144,9 @@ export function restoreArticleDraft(
       : undefined,
     eventMentions: Array.isArray(data.eventMentions)
       ? (data.eventMentions as ArticleDraft["eventMentions"])
+      : undefined,
+    sources: Array.isArray(data.sources)
+      ? (data.sources as ArticleDraft["sources"])
       : undefined,
     editSummary: str(data.editSummary),
     locale: str(data.locale),

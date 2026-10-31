@@ -98,7 +98,9 @@ export function TiptapRichText({
       markMapping: {
         code({ children }) {
           return (
-            <code className="bg-gray-100 px-2 py-1 font-mono">{children}</code>
+            <code className="bg-(--t-bg-muted) px-2 py-1 font-mono">
+              {children}
+            </code>
           )
         },
         link({ mark, children }) {

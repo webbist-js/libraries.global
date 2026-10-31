@@ -175,7 +175,7 @@ export function DataAccountSection({
                     style={{
                       ...pillButton,
                       border: "none",
-                      background: T.accent.danger,
+                      background: T.action.danger,
                       color: "#fff",
                       opacity: deactivating ? 0.6 : 1,
                     }}
@@ -213,7 +213,7 @@ export function DataAccountSection({
                 style={{
                   ...pillButton,
                   border: "none",
-                  background: T.accent.danger,
+                  background: T.action.danger,
                   color: "#fff",
                 }}
               >
@@ -257,7 +257,7 @@ export function DataAccountSection({
                     style={{
                       ...pillButton,
                       border: "none",
-                      background: T.accent.danger,
+                      background: T.action.danger,
                       color: "#fff",
                       opacity: deleting || !emailMatches ? 0.45 : 1,
                       cursor:

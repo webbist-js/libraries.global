@@ -171,7 +171,7 @@ export function ImageUploadEditor({
                     fontFamily: T.font.sans,
                     fontSize: "var(--type-body-small-size)",
                     color: "#fff",
-                    background: T.accent.primary,
+                    background: T.action.primary,
                     padding: "2px 7px",
                     borderRadius: "4px",
                     fontWeight: 700,

@@ -41,7 +41,7 @@ export function DriveCard({
 
   return (
     <article
-      className={`relative flex h-full flex-col gap-2.5 rounded-[24px] border border-(--t-border-line) bg-white p-5 ${preview ? "" : "transition-[border-color,box-shadow] focus-within:border-[#B9B4F5] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"}`}
+      className={`relative flex h-full flex-col gap-2.5 rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 ${preview ? "" : "transition-[border-color,box-shadow] focus-within:border-[#B9B4F5] hover:border-[#B9B4F5] hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <DriveFocusChip focus={drive.focus} />

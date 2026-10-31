@@ -4,12 +4,6 @@ import { membershipLink } from "../membership-links"
 
 describe("membership link destinations", () => {
   it.each([
-    ["/contribute/membership", "/plans"],
-    ["/cs/contribute/membership#plan-pro", "/cs/plans#plan-pro"],
-    [
-      "https://libraries.global/fr/contribute/membership?from=atlas",
-      "https://libraries.global/fr/plans?from=atlas",
-    ],
     ["/membership", "/profile/membership"],
     [
       "/cs/membership?billing=return#recognition",
@@ -25,6 +19,10 @@ describe("membership link destinations", () => {
     expect(membershipLink(input)).toBe(output)
   )
   it.each([
+    "/contribute/membership",
+    "/contribute/membership/",
+    "/cs/contribute/membership#recognition",
+    "https://libraries.global/fr/contribute/membership?from=atlas",
     "/contribute/membership/checkout?attempt=123",
     "/fr/contribute/membership/checkout?plan=pro",
     "/profile/settings#privacy",

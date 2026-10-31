@@ -20,3 +20,25 @@
   --t-palette-rose-fg: oklch(0.38 0.13 330);
   --t-palette-rose-soft: oklch(0.97 0.025 330);
 }
+
+/* Hue identities stay stable; every appearance has a paired readable ink. */
+.dark {
+  --t-palette-violet-bg: oklch(0.3 0.045 285);
+  --t-palette-violet-fg: oklch(0.87 0.075 285);
+  --t-palette-violet-soft: oklch(0.25 0.025 285);
+  --t-palette-coral-bg: oklch(0.3 0.045 25);
+  --t-palette-coral-fg: oklch(0.87 0.075 25);
+  --t-palette-coral-soft: oklch(0.25 0.025 25);
+  --t-palette-mint-bg: oklch(0.3 0.045 155);
+  --t-palette-mint-fg: oklch(0.87 0.075 155);
+  --t-palette-mint-soft: oklch(0.25 0.025 155);
+  --t-palette-amber-bg: oklch(0.3 0.045 75);
+  --t-palette-amber-fg: oklch(0.87 0.075 75);
+  --t-palette-amber-soft: oklch(0.25 0.025 75);
+  --t-palette-blue-bg: oklch(0.3 0.045 220);
+  --t-palette-blue-fg: oklch(0.87 0.075 220);
+  --t-palette-blue-soft: oklch(0.25 0.025 220);
+  --t-palette-rose-bg: oklch(0.3 0.045 330);
+  --t-palette-rose-fg: oklch(0.87 0.075 330);
+  --t-palette-rose-soft: oklch(0.25 0.025 330);
+}

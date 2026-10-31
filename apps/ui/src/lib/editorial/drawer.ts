@@ -2,7 +2,9 @@
 
 import { useSyncExternalStore } from "react"
 
+import { handoffProfileDrawer } from "@/lib/profile-drawer"
 import { closeStaffDrawer } from "@/lib/staff/drawer"
+import { workspaceView } from "@/lib/workspace-analytics"
 
 /**
  * Whether the editorial drawer is open. A tiny store so the user menu, the
@@ -19,7 +21,16 @@ function set(next: boolean): void {
 
 export function openEditorialDrawer(): void {
   closeStaffDrawer()
-  set(true)
+  handoffProfileDrawer(() => {
+    const changed = !open
+    set(true)
+    if (changed)
+      workspaceView({
+        workspace_area: "editorial",
+        workspace_section: "overview",
+        workspace_surface: "drawer",
+      })
+  })
 }
 
 export function closeEditorialDrawer(): void {

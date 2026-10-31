@@ -60,7 +60,7 @@ const formatDate = (iso: string, locale: string) =>
   }).format(new Date(iso))
 
 const PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-50"
 
 /**
  * A Library Claim: who the claimant says they are, whether their email
@@ -219,7 +219,7 @@ export function ClaimPanel({
                   type="button"
                   disabled={busy}
                   className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50"
-                  style={{ background: T.accent.danger }}
+                  style={{ background: T.action.danger }}
                   onClick={() => void remove()}
                 >
                   {busy ? "Removing…" : "Confirm removal"}
@@ -266,7 +266,7 @@ export function ClaimPanel({
       {libraryDocumentId && canRemove ? (
         <p className="m-0">
           <Link
-            href={`/contribute/moderation/staff/${encodeURIComponent(libraryDocumentId)}`}
+            href={`/moderation/staff/${encodeURIComponent(libraryDocumentId)}`}
             className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >

@@ -283,6 +283,7 @@ function LibrarySearchResults({
   failed: boolean
   needsHelp: readonly RecordNeedingHelp[]
 }) {
+  const tUi = useUiTranslations("ui")
   if (hasSearched)
     return (
       <FoundLibraryResults
@@ -314,7 +315,11 @@ function LibrarySearchResults({
             .join(" · ")}
           libraryType={record.libraryType}
           gaps={record.missing
-            .map((key) => GAP_LABELS[key])
+            .map((key) =>
+              key === "hours" && record.libraryType === "Mobile"
+                ? tUi("no_stops_or_times")
+                : GAP_LABELS[key]
+            )
             .filter((label): label is string => !!label)
             .slice(0, 3)}
           slug={record.slug}
@@ -530,7 +535,7 @@ export function FindLibraryFirst({
           )}
           style={{
             border: "none",
-            background: canAdd ? T.accent.primary : T.bg.muted,
+            background: canAdd ? T.action.primary : T.bg.muted,
             color: canAdd ? "#fff" : T.ink.dim,
           }}
         >

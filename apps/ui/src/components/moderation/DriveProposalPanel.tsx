@@ -21,11 +21,12 @@ import { driveHref, plainDriveTitle } from "@/lib/drives/drive-view"
 import { nameFromSlug } from "@/lib/find-places"
 import { Link, useRouter } from "@/lib/navigation"
 
+import { ApplicantSummary } from "./ApplicantSummary"
 import {
   decisionErrorMessage,
   type DriveProposalReview,
-  formatDate,
   type RoleApplicant,
+  formatDate,
 } from "./submissionMeta"
 
 const OPEN = new Set(["pending", "needs_info"])
@@ -78,87 +79,6 @@ function scopeDetailLines(scope: DriveScope): string[] {
   }
 
   return lines
-}
-
-/**
- * The applicant block, as `RoleApplicationPanel` renders it for a Role
- * Application: a link to their profile, their accepted count, and their
- * latest accepted changes.
- */
-function ProposerBlock({
-  applicant,
-}: {
-  readonly applicant: RoleApplicant | null
-}) {
-  const tUi = useUiTranslations("ui")
-
-  if (!applicant) {
-    return (
-      <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        Proposer details aren’t available.
-      </p>
-    )
-  }
-
-  return (
-    <>
-      <p className="m-0 text-base" style={{ color: T.ink.base }}>
-        {applicant.username ? (
-          <Link
-            href={`/profile/${encodeURIComponent(applicant.username)}`}
-            className="font-semibold underline underline-offset-2"
-            style={{ color: T.accent.primary }}
-          >
-            @{applicant.username}
-          </Link>
-        ) : (
-          <span style={{ color: T.ink.dim }}>No public profile</span>
-        )}
-        <span style={{ color: T.ink.dim }}>
-          {" "}
-          · {applicant.acceptedCount} accepted{" "}
-          {applicant.acceptedCount === 1 ? "change" : "changes"}
-        </span>
-      </p>
-      {applicant.recentAccepted.length > 0 ? (
-        <ul
-          aria-label={tUi("recent_accepted_changes")}
-          className="m-0 list-none overflow-hidden rounded-[14px] p-0"
-          style={{
-            border: `1px solid ${T.border.line}`,
-            background: T.bg.surface,
-          }}
-        >
-          {applicant.recentAccepted.map((c, i) => (
-            <li
-              key={`${c.decidedAt}-${i}`}
-              className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
-              style={
-                i > 0
-                  ? { borderTop: `1px solid ${T.border.divider}` }
-                  : undefined
-              }
-            >
-              <span
-                className="min-w-0 flex-1 truncate"
-                style={{ color: T.ink.base }}
-              >
-                <span className="font-semibold">{c.type}</span>
-                <span style={{ color: T.ink.dim }}> · {c.summary}</span>
-              </span>
-              <span className="shrink-0 text-sm" style={{ color: T.ink.dim }}>
-                {formatDate(c.decidedAt)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          No accepted changes listed.
-        </p>
-      )}
-    </>
-  )
 }
 
 /**
@@ -517,7 +437,10 @@ export function DriveProposalPanel({
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
           Proposed by
         </h3>
-        <ProposerBlock applicant={applicant} />
+        <ApplicantSummary
+          applicant={applicant}
+          missingLabel="Proposer details aren’t available."
+        />
       </div>
 
       {errors.length > 0 ? (

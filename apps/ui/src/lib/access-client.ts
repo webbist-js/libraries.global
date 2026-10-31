@@ -15,13 +15,13 @@ import {
 } from "@repo/access"
 
 import { useMounted } from "@/hooks/useMounted"
+import { authClient } from "@/lib/auth-client"
 
 import {
   sessionTeamsOf,
   staffLibrariesOf,
   teamLibraryIdsOf,
 } from "./access-server"
-import { authClient } from "./auth-client"
 
 export type { SessionTeam } from "./access-server"
 

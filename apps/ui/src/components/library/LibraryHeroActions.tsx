@@ -3,6 +3,7 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { announceFollow } from "@/components/library/follow-events"
+import { LibraryContributeCta } from "@/components/library/LibraryContributeCta"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
 import { useFollowTarget } from "@/hooks/useFollowTarget"
 import { useMounted } from "@/hooks/useMounted"
@@ -34,6 +35,7 @@ const pillBase: React.CSSProperties = {
 export function LibraryHeroActions({
   libraryName,
   libraryDocumentId,
+  librarySlug,
   directionsUrl,
   website,
 }: {
@@ -70,7 +72,7 @@ export function LibraryHeroActions({
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold"
             style={{
-              background: index === 0 ? T.accent.primary : T.bg.deep,
+              background: index === 0 ? T.action.primary : T.bg.deep,
               color: index === 0 ? "white" : T.ink.base,
               borderColor: T.border.line,
             }}
@@ -79,6 +81,13 @@ export function LibraryHeroActions({
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
         ))}
+      <div className="lg:hidden">
+        <LibraryContributeCta
+          compact
+          documentId={libraryDocumentId}
+          slug={librarySlug}
+        />
+      </div>
       <FollowPill
         libraryDocumentId={libraryDocumentId}
         libraryName={libraryName}
@@ -156,7 +165,7 @@ function FollowPill({
         style={{
           ...pillBase,
           border: "1px solid transparent",
-          background: isFollowing ? T.ink.base : "transparent",
+          background: isFollowing ? T.bg.inverse : "transparent",
           color: isFollowing ? "#fff" : T.ink.base,
           opacity: loading || following === null ? 0.7 : 1,
         }}

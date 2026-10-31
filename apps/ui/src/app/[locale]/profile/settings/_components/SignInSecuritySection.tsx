@@ -323,7 +323,7 @@ export function SignInSecuritySection() {
               {s.current ? (
                 <span
                   className="shrink-0 rounded-full px-3 py-1 text-sm font-semibold text-white"
-                  style={{ background: T.ink.base }}
+                  style={{ background: T.bg.inverse }}
                 >
                   This device
                 </span>

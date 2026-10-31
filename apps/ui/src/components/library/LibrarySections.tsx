@@ -3,7 +3,6 @@
 import {
   libraryTypeName,
   librarySourceKey,
-  publicSourceUrl,
   type LibrarySourceRecord,
   hasOpeningHours,
   type LibraryNotice,
@@ -12,7 +11,6 @@ import { useFormatter, useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import {
-  fieldLabel,
   isImportCreate,
   topFields,
 } from "@/components/library/change-history.helpers"
@@ -40,6 +38,8 @@ import {
   LibIcon,
   LibrarySectionCard,
 } from "@/components/library/LibrarySectionCard"
+import { LibrarySourceCredits } from "@/components/library/LibrarySourceCredits"
+import { LibraryVisitRail } from "@/components/library/LibraryVisitRail"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
 import {
   availableSections,
@@ -119,7 +119,7 @@ function HoursNote({
         background:
           // eslint-disable-next-line react-hooks/purity -- This server component evaluates freshness at request time, with no client render.
           !checkedAt || Date.now() - Date.parse(checkedAt) > 730 * 86_400_000
-            ? "#FFF5E5"
+            ? "var(--t-palette-amber-bg)"
             : T.bg.space,
         color: T.ink.dim,
       }}
@@ -152,7 +152,7 @@ function HoursNote({
       <div className="mt-3 flex flex-wrap gap-2">
         {hasHours && canVerify ? (
           <OpenVerifyLink
-            className="inline-flex min-h-11 items-center rounded-full border bg-white px-3 font-semibold"
+            className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-3 font-semibold"
             sections={["hours", "status"]}
           >
             These are right
@@ -165,7 +165,7 @@ function HoursNote({
         {hasHours ? (
           <OpenCorrectionLink
             category="Opening hours"
-            className="inline-flex min-h-11 items-center rounded-full border bg-white px-3 font-semibold"
+            className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-3 font-semibold"
           >
             Something’s changed
           </OpenCorrectionLink>
@@ -210,6 +210,7 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
         title="Online access"
         iconPath={LIB_ICONS.pin}
       >
+        <LibraryVisitRail library={library} embedded />
         <p>
           Use the official website or catalogue to access this library’s
           resources.
@@ -232,26 +233,18 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
     )
 
   return (
-    <LibrarySectionCard
-      id="visit"
-      title={tUi("visit")}
-      iconPath={LIB_ICONS.pin}
-    >
-      <div className="grid gap-x-8 gap-y-7 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="record-visit-panels">
+      <LibrarySectionCard
+        id="hours"
+        title={tUi("opening_hours")}
+        iconPath={LIB_ICONS.clock}
+      >
         <div className="min-w-0">
-          <h3
-            className="type-small-heading m-0 mb-1"
-            style={{ color: T.ink.base }}
-          >
-            {tUi("opening_hours")}{" "}
-            {timezone ? (
-              <span className="font-normal" style={{ color: T.ink.dim }}>
-                {timezone}
-              </span>
-            ) : null}
-          </h3>
+          {timezone ? (
+            <p className="mt-0 mb-3 text-sm text-(--t-ink-dim)">{timezone}</p>
+          ) : null}
           <LibraryHoursTable
-            compact
+            dashboard
             openingTimes={openingTimes}
             timezone={timezone}
             notices={rec.notices as LibraryNotice[] | undefined}
@@ -264,7 +257,14 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             staffing={staffing}
           />
         </div>
-        <div className="min-w-0">
+      </LibrarySectionCard>
+      <LibrarySectionCard
+        id="visit"
+        title={tPage("planVisit")}
+        iconPath={LIB_ICONS.pin}
+      >
+        <LibraryVisitRail library={library} embedded />
+        <div className="mt-5 min-w-0 border-t border-(--t-border-line) pt-5">
           <h3
             className="type-small-heading m-0 mb-2"
             style={{ color: T.ink.base }}
@@ -343,23 +343,6 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
               </div>
             ) : null
           )}
-          {library.phone || library.email ? (
-            <div className="mt-5">
-              <h3 className="type-small-heading m-0">{tPage("contact")}</h3>
-              <p className="mt-4 flex flex-wrap gap-4 text-sm">
-                {library.phone ? (
-                  <a className={LINK} href={`tel:${library.phone}`}>
-                    {library.phone}
-                  </a>
-                ) : null}
-                {library.email ? (
-                  <a className={LINK} href={`mailto:${library.email}`}>
-                    {library.email}
-                  </a>
-                ) : null}
-              </p>
-            </div>
-          ) : null}
           {nearestStation || transitInfo ? (
             <h3 className="type-small-heading mt-5 mb-0">
               {tPage("gettingThere")}
@@ -382,8 +365,8 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             </p>
           ) : null}
         </div>
-      </div>
-    </LibrarySectionCard>
+      </LibrarySectionCard>
+    </div>
   )
 }
 
@@ -999,12 +982,6 @@ export function LibraryEventsEmpty({
 
 // ── History and sources ────────────────────────────────────────────────────
 
-const SOURCE_NAMES: Record<string, string> = {
-  libraryon: "LibraryOn",
-  wikidata: "Wikidata",
-  manual: "A contributor",
-}
-
 export function LibraryChangesSection({
   library,
   history = null,
@@ -1072,10 +1049,6 @@ export function LibraryChangesSection({
     ),
     3
   )
-  const datasetByKey = new Map(
-    datasets.map((dataset) => [dataset.key, dataset])
-  )
-  const creditedDatasets = new Set<string>()
 
   return (
     <LibrarySectionCard
@@ -1087,7 +1060,7 @@ export function LibraryChangesSection({
       <div
         className={
           reuseUrl
-            ? `grid grid-cols-1 items-start gap-6 ${recordStatus ? "xl:grid-cols-3" : "md:grid-cols-2"}`
+            ? `record-source-grid grid grid-cols-1 items-start gap-4 ${recordStatus ? "xl:grid-cols-3" : "md:grid-cols-2"}`
             : ""
         }
       >
@@ -1098,150 +1071,12 @@ export function LibraryChangesSection({
               {tPage("sourceCredits")}
             </h3>
           ) : null}
-          {references.length ? (
-            <ul className="m-0 grid list-none gap-4 p-0">
-              {references.map((reference, index) => {
-                const credit = reference.dataset
-                  ? datasetByKey.get(reference.dataset)
-                  : undefined
-                const showCredit = Boolean(
-                  credit && !creditedDatasets.has(credit.key)
-                )
-                if (credit) creditedDatasets.add(credit.key)
-                const url =
-                  publicSourceUrl(reference.url) ??
-                  publicSourceUrl(credit?.sourceUrl)
-                const title =
-                  reference.label ||
-                  credit?.name ||
-                  (reference.dataset
-                    ? (SOURCE_NAMES[reference.dataset] ?? reference.dataset)
-                    : null) ||
-                  url ||
-                  tUi("history_source_reference")
-                const retrieved = formatDate(reference.retrievedAt)
-                const licenceUrl = publicSourceUrl(credit?.licenceUrl)
-                const licence =
-                  showCredit && credit?.licence ? (
-                    licenceUrl ? (
-                      <a
-                        href={licenceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline underline-offset-2"
-                      >
-                        {credit.licence}
-                      </a>
-                    ) : (
-                      credit.licence
-                    )
-                  ) : null
-                const supportedFields = Array.isArray(reference.fields)
-                  ? reference.fields.filter(
-                      (field) => typeof field === "string"
-                    )
-                  : []
-                const details = Boolean(
-                  reference.recordId ||
-                  retrieved ||
-                  supportedFields.length ||
-                  (showCredit && credit?.attribution && licence)
-                )
-
-                return (
-                  <li key={index} className="min-w-0">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <p
-                        className="m-0 text-base font-semibold"
-                        style={{ color: T.ink.base }}
-                      >
-                        {url ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline underline-offset-[3px]"
-                          >
-                            {title}
-                          </a>
-                        ) : (
-                          title
-                        )}
-                      </p>
-                      {index === 0 && added ? (
-                        <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                          {added}
-                        </p>
-                      ) : null}
-                    </div>
-                    {showCredit && credit?.attribution ? (
-                      <p
-                        className="m-0 mt-1 text-sm leading-normal"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {credit.attribution}
-                      </p>
-                    ) : showCredit && (credit?.publisher || licence) ? (
-                      <p
-                        className="m-0 mt-1 text-sm"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {credit?.publisher}
-                        {credit?.publisher && licence ? " · " : null}
-                        {licence}
-                      </p>
-                    ) : null}
-                    {details ? (
-                      <details
-                        className="mt-1.5 text-sm"
-                        style={{ color: T.ink.dim }}
-                      >
-                        <summary className="w-fit cursor-pointer underline underline-offset-2">
-                          {tUi("history_source_details")}
-                        </summary>
-                        <dl className="m-0 mt-2 grid gap-1">
-                          {showCredit && credit?.attribution && licence ? (
-                            <div className="flex flex-wrap gap-x-2">
-                              <dt>{tUi("history_source_licence")}</dt>
-                              <dd className="m-0">{licence}</dd>
-                            </div>
-                          ) : null}
-                          {reference.recordId ? (
-                            <div className="flex flex-wrap gap-x-2">
-                              <dt>{tUi("history_source_record_id")}</dt>
-                              <dd className="m-0 break-all">
-                                {reference.recordId}
-                              </dd>
-                            </div>
-                          ) : null}
-                          {retrieved ? (
-                            <div className="flex flex-wrap gap-x-2">
-                              <dt>{tUi("history_source_retrieved")}</dt>
-                              <dd className="m-0">{retrieved}</dd>
-                            </div>
-                          ) : null}
-                          {supportedFields.length ? (
-                            <div className="flex flex-wrap gap-x-2">
-                              <dt>{tUi("history_source_supports")}</dt>
-                              <dd className="m-0">
-                                {supportedFields.map(fieldLabel).join(", ")}
-                              </dd>
-                            </div>
-                          ) : null}
-                        </dl>
-                      </details>
-                    ) : null}
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-              {[added, tUi("history_source_missing")]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          )}
+          <LibrarySourceCredits
+            references={references}
+            datasets={datasets}
+            added={added}
+            formatDate={formatDate}
+          />
 
           <div
             className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3"
@@ -1262,7 +1097,7 @@ export function LibraryChangesSection({
                 </p>
               ) : null}
             </div>
-            <OpenCorrectionLink className="shrink-0 rounded-full bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white! hover:bg-(--t-accent-primary-hover)">
+            <OpenCorrectionLink className="shrink-0 rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white! hover:bg-(--t-action-primary-hover)">
               {tUi("suggest_a_correction")}
             </OpenCorrectionLink>
           </div>
@@ -1341,7 +1176,7 @@ export function LibraryChangesSection({
 // ── Cite or reuse ────────────────────────────────────────────────────────────
 
 const REUSE_PILL =
-  "inline-flex items-center gap-1.5 rounded-full border bg-white px-4 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 export function LibraryReuseSection({
   library,

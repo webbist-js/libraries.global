@@ -12,6 +12,7 @@ import {
   installGoogleAnalytics,
   type AnalyticsConsentController,
 } from "@/lib/google-analytics"
+import { workspaceNavigationAttributes } from "@/lib/workspace-analytics"
 
 let remove: (() => void) | undefined
 afterEach(() => {
@@ -45,6 +46,38 @@ function setup() {
 }
 
 describe("explicit semantic interactions", () => {
+  it("records a workspace menu intent once without its private URL or duplicate public event", () => {
+    const { controller, named } = setup()
+    const link = document.createElement("a")
+    link.href = "/staff/PRIVATE_LIBRARY/events?token=PRIVATE_TOKEN"
+    Object.entries(
+      workspaceNavigationAttributes(link.getAttribute("href")!, "drawer")
+    ).forEach(([key, value]) => link.setAttribute(key, value))
+    Object.entries(
+      analyticsAttributes("navigation_action", {
+        interaction_source: "navigation",
+        action_type: "open",
+        destination: "contribute",
+      })
+    ).forEach(([key, value]) => link.setAttribute(key, value))
+    link.innerHTML = "<span>PRIVATE_LABEL</span>"
+    link.addEventListener("click", (event) => event.preventDefault())
+    document.body.append(link)
+    controller.setConsent(true)
+    link.firstElementChild!.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true })
+    )
+    expect(named("workspace_action")).toHaveLength(1)
+    expect(named("navigation_action")).toHaveLength(0)
+    expect(named("workspace_action")[0]?.[2]).toMatchObject({
+      workspace_area: "staff",
+      workspace_section: "events",
+      workspace_surface: "drawer",
+      action_type: "select",
+      action_outcome: "intent",
+    })
+    expect(JSON.stringify(window.dataLayer)).not.toContain("PRIVATE_")
+  })
   it("does not fail an accepted async action when its analytics completion throws", () => {
     window.librariesGlobalAnalytics = {
       prepare: () => () => {
@@ -132,5 +165,28 @@ describe("explicit semantic interactions", () => {
       button.dispatchEvent(new MouseEvent("click", { bubbles: true }))
     ).not.toThrow()
     expect(named("library_action")).toHaveLength(0)
+  })
+  it("records network facet submissions as bounded filter actions, without field values", () => {
+    const { controller, named } = setup()
+    controller.setConsent(true)
+    const form = document.createElement("form")
+    Object.entries(
+      analyticsAttributes("search", {
+        interaction_source: "network_directory",
+        search_type: "networks",
+      })
+    ).forEach(([key, value]) => form.setAttribute(key, value))
+    form.innerHTML =
+      '<input name="q" value=""><input name="country" value="PRIVATE_COUNTRY">'
+    document.body.append(form)
+    form.dispatchEvent(new Event("submit", { bubbles: true }))
+    expect(named("search")).toHaveLength(0)
+    expect(named("navigation_action")).toHaveLength(1)
+    expect(named("navigation_action")[0]?.[2]).toMatchObject({
+      interaction_source: "network_directory",
+      action_type: "filter",
+      destination: "networks",
+    })
+    expect(JSON.stringify(named("navigation_action"))).not.toContain("PRIVATE_")
   })
 })

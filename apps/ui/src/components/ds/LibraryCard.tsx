@@ -40,6 +40,8 @@ export interface LibraryCardProps {
   foundedYear?: string | null
   heroImageUrl?: string | null
   heroImageAlt?: string | null
+  /** Override responsive image sizing for the host grid. */
+  imageSizes?: string
   href?: string | null
   /** Zero-based index for the card number badge. */
   index?: number
@@ -62,6 +64,7 @@ function CardInner({
   foundedYear,
   heroImageUrl,
   heroImageAlt,
+  imageSizes,
   index,
   isCompact,
 }: Omit<LibraryCardProps, "documentId" | "slug" | "href" | "variant"> & {
@@ -85,6 +88,12 @@ function CardInner({
             src={heroImageUrl}
             alt={heroImageAlt ?? name}
             fill
+            sizes={
+              imageSizes ??
+              (isCompact
+                ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                : "(max-width: 640px) 78vw, (max-width: 1024px) 42vw, (max-width: 1280px) 28vw, 26vw")
+            }
             className="lib-card-img object-cover"
           />
         ) : (
@@ -98,7 +107,7 @@ function CardInner({
 
       {/* Index badge — top left */}
       {index != null && (
-        <div className="absolute top-4 left-4 flex size-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-xs text-white/50 backdrop-blur-sm">
+        <div className="absolute top-4 left-4 flex size-7 items-center justify-center rounded-full border border-white/25 bg-black/50 text-xs text-white/90 backdrop-blur-sm">
           {padIndex(index)}
         </div>
       )}
@@ -110,7 +119,7 @@ function CardInner({
         </div>
       ) : libraryType ? (
         <div
-          className="absolute top-4 right-4 rounded px-2 py-0.5 text-xs tracking-[0.10em] text-white/70 backdrop-blur-sm"
+          className="absolute top-4 right-4 rounded px-2 py-0.5 text-xs tracking-[0.10em] text-white/90 backdrop-blur-sm"
           style={{ background: "rgba(0,0,0,0.55)" }}
         >
           {libraryType}
@@ -135,14 +144,14 @@ function CardInner({
         </h3>
 
         {!isCompact && locationParts.length > 0 && (
-          <p className="text-xs tracking-[0.08em] text-white/45">
+          <p className="text-xs tracking-[0.08em] text-white/80">
             {locationParts.join(" · ")}
           </p>
         )}
 
         {isCompact && (city || countryName) && (
           <p
-            className="truncate text-xs tracking-[0.08em] text-white/40"
+            className="truncate text-xs tracking-[0.08em] text-white/80"
             style={{ fontFamily: T.font.mono }}
           >
             {[city, countryName].filter(Boolean).join(", ")}
@@ -167,6 +176,7 @@ export function LibraryCard({
   foundedYear,
   heroImageUrl,
   heroImageAlt,
+  imageSizes,
   href,
   index,
   variant = "featured",
@@ -183,6 +193,7 @@ export function LibraryCard({
     foundedYear,
     heroImageUrl,
     heroImageAlt,
+    imageSizes,
     index,
     isCompact,
   }
@@ -190,7 +201,7 @@ export function LibraryCard({
   if (isCompact) {
     const inner = (
       <div
-        className="group relative overflow-hidden rounded-xl border transition-all duration-300 hover:brightness-110"
+        className="group relative overflow-hidden rounded-xl border transition-[filter] duration-300 hover:brightness-110 motion-reduce:transition-none"
         style={{
           background: typeGradient(libraryType),
           borderColor: "var(--lib-card-border)",
@@ -204,7 +215,11 @@ export function LibraryCard({
     if (!href) return inner
 
     return (
-      <a href={href} style={{ textDecoration: "none", display: "block" }}>
+      <a
+        href={href}
+        className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
+        style={{ textDecoration: "none", display: "block" }}
+      >
         {inner}
       </a>
     )
@@ -217,7 +232,7 @@ export function LibraryCard({
       key={documentId ?? slug ?? index}
       href={href}
       fallbackAs="div"
-      className="group relative h-[460px] w-[78vw] min-w-[260px] flex-none snap-start overflow-hidden border-r transition-all duration-700 last:border-r-0 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:outline-none sm:h-[500px] sm:w-[42vw] lg:w-[28vw] xl:w-[26vw]"
+      className="group relative inline-block h-[460px] w-[78vw] min-w-[260px] flex-none snap-start overflow-hidden border-r transition-[filter] duration-700 last:border-r-0 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none sm:h-[500px] sm:w-[42vw] lg:w-[28vw] xl:w-[26vw]"
       style={{
         background: typeGradient(libraryType),
         borderColor: "var(--lib-card-border)",

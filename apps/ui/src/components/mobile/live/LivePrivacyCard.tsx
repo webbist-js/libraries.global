@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
+import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -23,19 +24,17 @@ export function LivePrivacyCard({
   readonly libraryDocumentId: string
 }) {
   const tUi = useUiTranslations("ui")
+  const headingId = useId()
 
   const staffHref = useStaffLibraryHref(libraryDocumentId)
 
   return (
-    <aside
+    <section
       className="rounded-[24px] border p-5 sm:p-6 lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:self-start lg:overflow-y-auto lg:overscroll-contain"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
-      aria-labelledby="live-privacy-heading"
+      aria-labelledby={headingId}
     >
-      <h3
-        id="live-privacy-heading"
-        className="type-h3 m-0 flex items-center gap-2"
-      >
+      <h3 id={headingId} className="type-h3 m-0 flex items-center gap-2">
         <Icon
           aria-hidden="true"
           icon="mdi:shield-lock-outline"
@@ -81,6 +80,6 @@ export function LivePrivacyCard({
           Report a problem
         </Link>
       </div>
-    </aside>
+    </section>
   )
 }

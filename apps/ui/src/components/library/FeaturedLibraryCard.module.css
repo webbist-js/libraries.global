@@ -1,0 +1,36 @@
+.details {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.detailsInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .revealDetails .details {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 220ms ease-out,
+      opacity 160ms ease-out;
+  }
+
+  .revealDetails:hover .details,
+  .revealDetails:focus-within .details {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revealDetails .details,
+  .revealDetails img {
+    transition: none;
+  }
+
+  .revealDetails:hover img {
+    transform: none;
+  }
+}

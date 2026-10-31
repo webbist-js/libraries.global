@@ -35,14 +35,15 @@ export const Callout = Node.create({
     }
   },
   parseHTML() {
-    return [{ tag: "aside[data-callout]" }]
+    return [{ tag: "aside[data-callout]" }, { tag: "div[data-callout]" }]
   },
   renderHTML({ HTMLAttributes }) {
     return [
-      "aside",
+      "div",
       mergeAttributes(HTMLAttributes, {
         "data-callout": "",
         class: "ae-callout",
+        role: "note",
       }),
       0,
     ]

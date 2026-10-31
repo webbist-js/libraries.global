@@ -98,7 +98,7 @@ export function FindErrorState({ onRetry }: { onRetry: () => void }) {
         type="button"
         onClick={onRetry}
         className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-base font-semibold text-white"
-        style={{ background: T.ink.base }}
+        style={{ background: T.bg.inverse }}
       >
         {tUi("try_again")}{" "}
       </button>
@@ -146,7 +146,7 @@ export function FindEmptyState({ onClear }: { onClear: () => void }) {
           type="button"
           onClick={onClear}
           className="cursor-pointer rounded-full border-0 px-5 py-2.5 text-base font-semibold text-white"
-          style={{ background: T.ink.base }}
+          style={{ background: T.bg.inverse }}
         >
           {tUi("clear_filters")}{" "}
         </button>

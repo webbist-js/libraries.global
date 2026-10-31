@@ -377,3 +377,62 @@ describe("Team API staff dashboard", () => {
     expect(regenerate[1]!.disabled).toBe(true)
   })
 })
+
+it("opens the guided API review with fresh consent and does not create a payment automatically", () => {
+  render(
+    <TeamApiDashboard
+      initial={{ ...initial, active: false }}
+      confirming={false}
+      setupRequested
+    />
+  )
+  const dialog = within(screen.getByRole("dialog"))
+  expect(
+    (
+      dialog.getByRole("button", {
+        name: "Subscribe to API access",
+      }) as HTMLButtonElement
+    ).disabled
+  ).toBe(true)
+  expect((dialog.getByRole("checkbox") as HTMLInputElement).checked).toBe(false)
+})
+
+it("does not open API checkout for an inactive Team even with the setup URL hint", () => {
+  render(
+    <TeamApiDashboard
+      initial={{ ...initial, active: false, teamActive: false }}
+      confirming={false}
+      setupRequested
+    />
+  )
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(
+    screen.queryByRole("button", { name: "Subscribe to API access" })
+  ).toBeNull()
+})
+
+it("keeps the API overview free of key tooling and usage tables", () => {
+  render(
+    <TeamApiDashboard initial={initial} confirming={false} section="overview" />
+  )
+  expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
+  expect(screen.queryByRole("heading", { name: "This month" })).toBeNull()
+  expect(screen.queryByRole("heading", { name: "Using the API" })).toBeNull()
+})
+
+it("keeps key creation on its own page and preserves Organiser permissions", () => {
+  const view = render(
+    <TeamApiDashboard initial={initial} confirming={false} section="keys" />
+  )
+  expect(screen.getByRole("button", { name: "Create key" })).toBeTruthy()
+  expect(screen.queryByRole("heading", { name: "This month" })).toBeNull()
+  view.rerender(
+    <TeamApiDashboard
+      key="member"
+      initial={{ ...initial, organiser: false }}
+      confirming={false}
+      section="keys"
+    />
+  )
+  expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
+})

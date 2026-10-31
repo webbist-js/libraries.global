@@ -70,7 +70,7 @@ export function LocationChildBrowser({
     if (value) next.searchParams.set(`${id}_${key}`, value)
     else next.searchParams.delete(`${id}_${key}`)
     if (key !== "page") next.searchParams.delete(`${id}_page`)
-    window.history.replaceState(null, "", next)
+    window.history.replaceState(window.history.state, "", next)
     window.dispatchEvent(new Event("place-browser-change"))
   }
   const view =
@@ -128,10 +128,14 @@ export function LocationChildBrowser({
   ]
 
   return (
-    <section id={id} className="scroll-mt-24" aria-labelledby={`${id}-title`}>
+    <section
+      id={id}
+      className="location-child-browser scroll-mt-24"
+      aria-labelledby={`${id}-title`}
+    >
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h2 id={`${id}-title`} className="type-h2 m-0">
+          <h2 id={`${id}-title`} className="type-small-heading m-0">
             {title}
           </h2>
           {description ? (
@@ -153,7 +157,7 @@ export function LocationChildBrowser({
             value={query}
             onChange={(event) => set("q", event.target.value)}
             placeholder={`Find a ${noun.singular.toLocaleLowerCase()}`}
-            className="min-h-11 w-full rounded-full border bg-white px-4 text-sm sm:w-56"
+            className="min-h-11 w-full rounded-full border bg-(--t-bg-deep) px-4 text-sm sm:w-56"
             style={{ borderColor: T.border.hi }}
           />
         </div>
@@ -236,7 +240,7 @@ export function LocationChildBrowser({
         {pages > 1 && !preview ? ` · Page ${current} of ${pages}` : ""}
       </p>
       <div
-        className="overflow-hidden rounded-[22px] border bg-white"
+        className="overflow-hidden rounded-[22px] border bg-(--t-bg-deep)"
         style={{ borderColor: T.border.line }}
       >
         {countsAvailable ? (
@@ -274,7 +278,7 @@ export function LocationChildBrowser({
                 <div className="min-w-0">
                   <GlobalLink
                     href={item.href}
-                    className="inline-flex min-h-11 items-center text-xl leading-tight hover:underline"
+                    className="inline-flex min-h-11 items-center text-base leading-tight font-semibold hover:underline"
                     style={{ fontFamily: T.font.sans }}
                   >
                     {item.name}
@@ -307,7 +311,7 @@ export function LocationChildBrowser({
                               className="block h-full rounded-full"
                               style={{
                                 width: share + "%",
-                                background: T.accent.primary,
+                                background: T.action.primary,
                               }}
                             />
                           </span>

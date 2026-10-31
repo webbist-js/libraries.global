@@ -105,3 +105,39 @@ it("applies a current closure notice to the compact week", () => {
   expect(day.getByText("Closed")).toBeTruthy()
   expect(day.queryByText("09:00–12:30")).toBeNull()
 })
+
+it("keeps split sessions and access notes in the dashboard layout", () => {
+  render(
+    h(LibraryHoursTable, {
+      dashboard: true,
+      openingTimes: hours,
+      timezone: "Europe/London",
+    })
+  )
+  const day = within(screen.getByText(/Tuesday/).closest("li")!)
+  expect(day.queryByText("09:00–17:00")).toBeNull()
+  expect(day.getByText("Library card required")).toBeTruthy()
+  expect(day.getByText("Self-service")).toBeTruthy()
+})
+it("shows a simple dashboard session once, with its staffing mode", () => {
+  render(
+    h(LibraryHoursTable, {
+      dashboard: true,
+      openingTimes: {
+        days: [
+          {
+            day: "tuesday",
+            enabled: true,
+            timeframes: [
+              { startTime: "09:00", endTime: "17:00", staffing: "staffed" },
+            ],
+          },
+        ],
+      },
+      timezone: "Europe/London",
+    })
+  )
+  const day = within(screen.getByText(/Tuesday/).closest("li")!)
+  expect(day.getAllByText(/09:00–17:00/)).toHaveLength(1)
+  expect(day.getByText("Staffed")).toBeTruthy()
+})

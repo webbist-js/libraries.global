@@ -10,7 +10,7 @@ import { TYPE_TINT } from "@/lib/design-tokens"
 /** Articles per page in the Journal's "All articles" list. */
 export const JOURNAL_PAGE_SIZE = 9
 
-export const JOURNAL_SORTS = ["newest", "oldest", "title"] as const
+export const JOURNAL_SORTS = ["newest", "oldest", "shortest", "title"] as const
 export type JournalSort = (typeof JOURNAL_SORTS)[number]
 
 export type JournalView = "grid" | "list"
@@ -28,6 +28,7 @@ export type JournalQuery = {
   /** Explicit all-origin selection overrides a collection filter. */
   allOrigins?: boolean
   worldwide?: boolean
+  saved?: boolean
 }
 
 export const DEFAULT_JOURNAL_QUERY: JournalQuery = {
@@ -74,6 +75,7 @@ export function parseJournalQuery(params: SearchParams): JournalQuery {
     ...(first(params.collection ?? params.origin) === "all"
       ? { allOrigins: true }
       : {}),
+    ...(first(params.saved) === "1" ? { saved: true } : {}),
     ...(first(params.country) === "all" ? { worldwide: true } : {}),
   }
 }
@@ -106,6 +108,7 @@ export function journalHref(
   }
 
   const params = new URLSearchParams()
+  if (next.saved) params.set("saved", "1")
   if (next.q) params.set("q", next.q)
   if (next.section) params.set("section", next.section)
   if (next.sort !== "newest") params.set("sort", next.sort)
@@ -170,6 +173,8 @@ export function journalCollectionKey(
 /** Strapi sort for a list order; `id` breaks ties so pages never overlap. */
 export function journalSortParam(sort: JournalSort): string[] {
   switch (sort) {
+    case "shortest":
+      return ["readingTimeMinutes:asc", "id:asc"]
     case "oldest":
       return ["publishedAt:asc", "id:asc"]
     case "title":

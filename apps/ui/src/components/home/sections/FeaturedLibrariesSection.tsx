@@ -1,21 +1,17 @@
 import { libraryTypeName } from "@repo/shared-data"
 
 import GlobalLink from "@/components/global/GlobalLink"
+import {
+  homepageLinkAttributes,
+  homepageContentAttributes,
+} from "@/components/home/homepage.analytics"
 import type { SectionIntro } from "@/components/home/homepage.types"
+import { PillarCarousel } from "@/components/home/PillarCarousel"
 import SectionHeader from "@/components/home/sections/SectionHeader"
 import { FeaturedLibraryCard } from "@/components/library/FeaturedLibraryCard"
 import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
-import { T } from "@/lib/design-tokens"
+import { CarouselItem } from "@/components/ui/carousel"
 import type { PopulatedFeaturedLibraryData } from "@/lib/strapi-api/content/server"
-
-function libraryHref(library: PopulatedFeaturedLibraryData): string | null {
-  const { continent, country, region, slug } = library
-  if (continent?.slug && country?.slug && region?.slug && slug) {
-    return `/${continent.slug}/${country.slug}/${region.slug}/${slug}`
-  }
-
-  return null
-}
 
 export function FeaturedLibrariesSection({
   libraries,
@@ -24,40 +20,55 @@ export function FeaturedLibrariesSection({
 }: {
   readonly libraries?: PopulatedFeaturedLibraryData[] | null
   readonly intro: SectionIntro
-  /** Published records in the index, for the "Browse all" link. */
   readonly total?: number | null
 }) {
-  if (!Array.isArray(libraries) || libraries.length === 0) return null
-
-  const cards = libraries.slice(0, 3)
+  const cards = (libraries ?? []).filter(
+    (library) =>
+      library.continent?.slug &&
+      library.country?.slug &&
+      library.region?.slug &&
+      library.slug
+  )
+  if (!cards.length) return null
 
   return (
     <section
       id="featured"
       aria-labelledby="featured-title"
-      className="w-full bg-white"
+      className="home-featured"
+      data-homepage-surface="paper"
     >
-      <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-8">
+      <div className="home-frame">
         <SectionHeader
           id="featured-title"
           intro={intro}
           action={
             <GlobalLink
               href="/libraries"
-              className="font-semibold underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
+              {...homepageLinkAttributes("/libraries")}
+              className="home-text-link"
             >
               {total
-                ? `Browse all ${total.toLocaleString("en-US")} libraries`
-                : "Browse all libraries"}
+                ? `Browse all ${total.toLocaleString("en-GB")} libraries`
+                : "Browse all libraries"}{" "}
             </GlobalLink>
           }
         />
-
-        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-5 p-0">
-          {cards.map((library, index) => (
-            <li key={library.documentId}>
+      </div>
+      <PillarCarousel>
+        {cards.map((library, index) => {
+          return (
+            <CarouselItem
+              key={library.documentId}
+              className="home-pillar-slide"
+              aria-label={`${index + 1} of ${cards.length}`}
+            >
               <FeaturedLibraryCard
+                href={`/${library.continent!.slug}/${library.country!.slug}/${library.region!.slug}/${library.slug}`}
+                linkProps={{
+                  ...homepageContentAttributes("library", library.documentId),
+                  lang: library.locale ?? undefined,
+                }}
                 name={library.name}
                 libraryType={libraryTypeName(library.libraryType)}
                 city={library.city}
@@ -65,17 +76,17 @@ export function FeaturedLibrariesSection({
                 imageUrl={library.heroImage?.url}
                 imageAlt={library.heroImage?.alternativeText}
                 openingTimes={library.openingTimes as OpeningTimesValue | null}
-                href={libraryHref(library)}
+                summary={library.summary}
                 index={index}
+                revealDetails
+                imageSizes="(min-width: 761px) 48vw, 88vw"
               />
-            </li>
-          ))}
-        </ul>
-      </div>
+            </CarouselItem>
+          )
+        })}
+      </PillarCarousel>
     </section>
   )
 }
-
-FeaturedLibrariesSection.displayName = "FeaturedLibrariesSection"
 
 export default FeaturedLibrariesSection

@@ -41,7 +41,7 @@ const TAGLINE: Record<SheetPlan, string> = {
 }
 
 const PLANS = SHEET_PLANS.map(planCard)
-const PRO_TINT = "#F6F5FE"
+const PRO_TINT = "var(--t-bg-selected)"
 
 type SheetRow = {
   id: string
@@ -141,7 +141,7 @@ function SheetCell({
     )
 
   return (
-    <span style={{ color: "#8A8799" }}>
+    <span style={{ color: "var(--t-ink-low)" }}>
       <span aria-hidden="true">—</span>
       <span className="sr-only">Not included</span>
     </span>
@@ -165,7 +165,7 @@ function SeeAllPlansLink() {
 }
 
 const OUTLINE_PILL =
-  "inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-sm font-semibold no-underline"
+  "inline-flex h-9 items-center rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold no-underline"
 
 function PlanCta({
   plan,
@@ -235,11 +235,13 @@ function PlanCta({
 }
 
 export function AtlasPlansSheet({
+  open = true,
   tier,
   currentPlan = tier,
   onClose,
   signInHref,
 }: {
+  readonly open?: boolean
   readonly tier: Tier
   readonly currentPlan?: PlanCardKey
   readonly onClose: () => void
@@ -249,6 +251,7 @@ export function AtlasPlansSheet({
 
   return (
     <Drawer
+      open={open}
       titleId="atlas-plans-h"
       title={
         <>
@@ -271,7 +274,7 @@ export function AtlasPlansSheet({
           cost money to run, and help keep the rest free.
         </p>
         <div
-          className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-white [contain:paint]"
+          className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-(--t-bg-deep) [contain:paint]"
           style={{ borderColor: T.border.line }}
         >
           <table className="w-full min-w-[680px] border-collapse text-base">
@@ -279,7 +282,7 @@ export function AtlasPlansSheet({
             <thead>
               <tr>
                 <td
-                  className="w-[32%] border-b bg-white max-sm:sticky max-sm:left-0 max-sm:z-[1]"
+                  className="w-[32%] border-b bg-(--t-bg-deep) max-sm:sticky max-sm:left-0 max-sm:z-[1]"
                   style={{ borderColor: T.border.hi }}
                 />
                 {PLANS.map((p) => (
@@ -289,7 +292,7 @@ export function AtlasPlansSheet({
                     className="border-b px-3.5 pt-4 pb-3.5 text-left align-top font-bold"
                     style={{
                       borderColor: T.border.hi,
-                      background: p.key === "pro" ? T.accent.chip : "#fff",
+                      background: p.key === "pro" ? T.accent.chip : T.bg.deep,
                     }}
                   >
                     <span className="block text-base whitespace-nowrap">
@@ -316,7 +319,7 @@ export function AtlasPlansSheet({
                 <tr key={row.id}>
                   <th
                     scope="row"
-                    className="border-b bg-white px-4 py-2.5 text-left font-medium max-sm:sticky max-sm:left-0 max-sm:z-[1] max-sm:min-w-[170px]"
+                    className="border-b bg-(--t-bg-deep) px-4 py-2.5 text-left font-medium max-sm:sticky max-sm:left-0 max-sm:z-[1] max-sm:min-w-[170px]"
                     style={{ borderColor: T.border.divider }}
                   >
                     {row.label}
@@ -340,7 +343,7 @@ export function AtlasPlansSheet({
                 </tr>
               ))}
               <tr>
-                <td className="bg-white max-sm:sticky max-sm:left-0 max-sm:z-[1]" />
+                <td className="bg-(--t-bg-deep) max-sm:sticky max-sm:left-0 max-sm:z-[1]" />
                 {PLANS.map((p) => (
                   <td
                     key={p.key}
@@ -364,7 +367,7 @@ export function AtlasPlansSheet({
 
         <div
           className="mt-5 grid gap-4 text-sm leading-normal sm:grid-cols-2"
-          style={{ color: "#45435A" }}
+          style={{ color: "var(--t-ink-dim)" }}
         >
           <p className="m-0 flex gap-2">
             <Icon name="check" size={18} color={T.accent.ok} />
@@ -383,7 +386,7 @@ export function AtlasPlansSheet({
             </span>
           </p>
           <p className="m-0 flex gap-2">
-            <Icon name="globe" size={18} color="#4A3F8C" />
+            <Icon name="globe" size={18} color="var(--t-palette-violet-fg)" />
             <span>
               <strong style={{ color: T.ink.base }}>
                 Open source, open data.

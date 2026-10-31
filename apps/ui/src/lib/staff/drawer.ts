@@ -2,6 +2,9 @@
 
 import { useSyncExternalStore } from "react"
 
+import { handoffProfileDrawer } from "@/lib/profile-drawer"
+import { workspaceView } from "@/lib/workspace-analytics"
+
 /**
  * Whether the staff drawer is open, and which library it should show when
  * a menu item opens it for one. A tiny store so the user menu, the
@@ -17,7 +20,16 @@ function set(next: DrawerState): void {
 }
 
 export function openStaffDrawer(libraryDocumentId?: string): void {
-  set({ open: true, libraryDocumentId: libraryDocumentId ?? null })
+  handoffProfileDrawer(() => {
+    const changed = !state.open
+    set({ open: true, libraryDocumentId: libraryDocumentId ?? null })
+    if (changed)
+      workspaceView({
+        workspace_area: "staff",
+        workspace_section: "overview",
+        workspace_surface: "drawer",
+      })
+  })
 }
 
 export function closeStaffDrawer(): void {

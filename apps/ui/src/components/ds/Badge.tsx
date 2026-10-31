@@ -34,9 +34,9 @@ const COLOR_MAP: Record<
     bg: TYPE_TINT.special.bg,
   },
   gold: {
-    text: "#6B5420",
+    text: "var(--t-palette-amber-fg)",
     border: "transparent",
-    bg: "#F5EEDC",
+    bg: "var(--t-palette-amber-bg)",
   },
   ok: {
     text: TYPE_TINT.public.fg,
@@ -44,14 +44,14 @@ const COLOR_MAP: Record<
     bg: TYPE_TINT.public.bg,
   },
   warn: {
-    text: "#6B5420",
+    text: "var(--t-palette-amber-fg)",
     border: "transparent",
-    bg: "#F5EEDC",
+    bg: "var(--t-palette-amber-bg)",
   },
   danger: {
-    text: "#A13A1A",
+    text: "var(--t-palette-coral-fg)",
     border: "transparent",
-    bg: "#F6E3DA",
+    bg: "var(--t-palette-coral-bg)",
   },
   dim: {
     text: TYPE_TINT.neutral.fg,

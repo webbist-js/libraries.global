@@ -12,6 +12,7 @@ vi.mock("@/lib/access-server", () => ({
   requireStaff: mocks.requireStaff,
   requireEntitlement: () => null,
 }))
+import { POST as reactivate } from "@/app/api/staff/[documentId]/notices/[noticeId]/reactivate/route"
 import { POST } from "@/app/api/staff/[documentId]/notices/route"
 
 const documentId = "library00000000000000001"
@@ -45,6 +46,50 @@ beforeEach(() => {
   )
 })
 describe("staff notices proxy", () => {
+  it("reactivates through the staff bridge using only editable fields", async () => {
+    const noticeId = "notice000000000000000001"
+    const result = await reactivate(request(), {
+      params: Promise.resolve({ documentId, noticeId }),
+    })
+    expect(result.status).toBe(200)
+    const [url, options] = vi.mocked(fetch).mock.calls[0]!
+    expect(String(url)).toContain(`/notices/${noticeId}/reactivate`)
+    expect(options?.method).toBe("POST")
+    expect(JSON.parse(options?.body as string)).toEqual({
+      type: "closure",
+      from: "2026-10-06",
+      message: "Closed",
+    })
+    expect(mocks.requireStaff).toHaveBeenCalledWith(
+      expect.anything(),
+      documentId,
+      "notices"
+    )
+    expect(mocks.revalidateTag).toHaveBeenCalledWith("library", { expire: 0 })
+  })
+  it("protects reactivation against invalid IDs, cross-origin writes and non-staff", async () => {
+    const valid = {
+      params: Promise.resolve({
+        documentId,
+        noticeId: "notice000000000000000001",
+      }),
+    }
+    expect(
+      (
+        await reactivate(request(), {
+          params: Promise.resolve({ documentId, noticeId: "../bad" }),
+        })
+      ).status
+    ).toBe(400)
+    expect(
+      (await reactivate(request("https://another.example"), valid)).status
+    ).toBe(403)
+    mocks.requireStaff.mockReturnValue(
+      Response.json({ error: "Not found" }, { status: 404 })
+    )
+    expect((await reactivate(request(), valid)).status).toBe(404)
+    expect(fetch).not.toHaveBeenCalled()
+  })
   it("requires staff and forwards no browser supplied actor", async () => {
     expect((await POST(request(), context)).status).toBe(200)
     const args = vi.mocked(fetch).mock.calls[0]![1]!

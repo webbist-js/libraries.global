@@ -133,3 +133,8 @@ it("keeps the CMS UK countries distinct with the existing ONS display boundaries
   expect(lookup(51.48, -3.18)?.iso3).toBe("WLS")
   expect(lookup(54.6, -5.93)?.iso3).toBe("NIR")
 })
+
+it("checks globe visibility against the actual dashboard toolbar", () => {
+  expect(globeInteractionReady(1, true, 61, 982, 982, 61)).toBe(true)
+  expect(globeInteractionReady(1, true, 57, 982, 982, 61)).toBe(false)
+})

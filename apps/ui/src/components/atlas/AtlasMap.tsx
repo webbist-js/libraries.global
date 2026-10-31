@@ -17,6 +17,11 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 
 import type { AtlasContextRelease } from "@/lib/atlas-context"
 import { T } from "@/lib/design-tokens"
+import {
+  bindMapAppearance,
+  mapAppearanceColor,
+  NEUTRAL_CLUSTER_METADATA,
+} from "@/lib/map-appearance"
 import { MAP_WORKER_URL } from "@/lib/maplibre"
 import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
@@ -308,6 +313,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     // ── Create the map once ────────────────────────────────────────────────
     useEffect(() => {
       let alive = true
+      let disposeAppearance: (() => void) | undefined
       let observer: ResizeObserver | null = null
 
       import("maplibre-gl").then((maplibregl) => {
@@ -340,6 +346,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           return
         }
         mapRef.current = map
+        disposeAppearance = bindMapAppearance(map)
         map.touchZoomRotate.disableRotation()
 
         map.on("error", (e) => {
@@ -413,7 +420,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           square.height = 40
           const context = square.getContext("2d")!
           context.fillStyle = "#fff"
-          context.strokeStyle = T.map.stopRing
+          context.strokeStyle = "#2f5d3a"
           context.lineWidth = 4
           context.beginPath()
           context.roundRect(3, 3, 34, 34, 9)
@@ -430,7 +437,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             source: "mobile-routes",
             filter: ["!=", ["get", "live"], true],
             paint: {
-              "line-color": T.map.route,
+              "line-color": mapAppearanceColor(T.map.route),
               "line-width": 3,
               "line-opacity": 0.7,
               "line-dasharray": [2, 2],
@@ -441,14 +448,20 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             type: "line",
             source: "mobile-routes",
             filter: ["==", ["get", "live"], true],
-            paint: { "line-color": T.map.route, "line-width": 4 },
+            paint: {
+              "line-color": mapAppearanceColor(T.map.route),
+              "line-width": 4,
+            },
           })
           map.addLayer({
             id: "mobile-coarse-rings",
             type: "fill",
             source: "mobile-rings",
             minzoom: 12,
-            paint: { "fill-color": T.map.route, "fill-opacity": 0.15 },
+            paint: {
+              "fill-color": mapAppearanceColor(T.map.route),
+              "fill-opacity": 0.15,
+            },
           })
           map.addLayer({
             id: "mobile-stop-squares",
@@ -487,7 +500,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             source: "mobile-vehicles",
             minzoom: 12,
             paint: {
-              "circle-color": T.map.route,
+              "circle-color": mapAppearanceColor(T.map.route),
               "circle-radius": 10,
               "circle-stroke-color": "#fff",
               "circle-stroke-width": 3,
@@ -512,7 +525,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 "text-offset": [0, 1.9],
               },
               paint: {
-                "text-color": T.map.stopRing,
+                "text-color": mapAppearanceColor(T.map.stopRing),
                 "text-halo-color": "#fff",
                 "text-halo-width": 2,
               },
@@ -528,7 +541,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 "text-size": 12,
                 "text-allow-overlap": true,
               },
-              paint: { "text-color": T.map.stopRing },
+              paint: { "text-color": mapAppearanceColor(T.map.stopRing) },
             })
             map.addLayer({
               id: "mobile-cluster-count",
@@ -540,7 +553,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
                 "text-size": 12,
                 "text-allow-overlap": true,
               },
-              paint: { "text-color": T.map.stopRing },
+              paint: { "text-color": mapAppearanceColor(T.map.stopRing) },
             })
           }
 
@@ -635,6 +648,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           })
           map.addLayer({
             id: "clusters",
+            metadata: NEUTRAL_CLUSTER_METADATA,
             type: "circle",
             source: "atlas",
             filter: ["has", "point_count"],
@@ -681,6 +695,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           if (map.getStyle().glyphs) {
             map.addLayer({
               id: "cluster-count",
+              metadata: NEUTRAL_CLUSTER_METADATA,
               type: "symbol",
               source: "atlas",
               filter: ["has", "point_count"],
@@ -816,6 +831,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
 
       return () => {
         alive = false
+        disposeAppearance?.()
         observer?.disconnect()
         scalableRenderer.current?.destroy()
         scalableRenderer.current = null

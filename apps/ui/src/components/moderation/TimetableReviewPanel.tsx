@@ -117,7 +117,7 @@ export function TimetableReviewPanel({
       {moved && (
         <details className="group">
           <summary
-            className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold hover:bg-(--t-bg-surface)"
+            className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold hover:bg-(--t-bg-surface)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             <span aria-hidden="true" className="group-open:hidden">

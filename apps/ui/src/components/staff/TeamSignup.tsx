@@ -11,8 +11,10 @@ import {
   type TeamNetworkSelection,
 } from "@/components/networks/TeamNetworkChoice"
 import { Button } from "@/components/ui/button"
+import { captureCheckoutEvent } from "@/lib/checkout-analytics"
 import { Link, useRouter } from "@/lib/navigation"
 import { TEAM_TERMS_VERSION } from "@/lib/team-billing/types"
+import { rememberTeamApiChoice } from "@/lib/team-purchase-intent"
 
 import { StaffPanel, STAFF_LINK } from "./StaffPanel"
 import {
@@ -27,11 +29,15 @@ export function TeamSignup({
   sandbox,
   user,
   initialNetwork,
+  initialApiAddon = false,
+  initialPublicService = false,
 }: {
   readonly available: boolean
   readonly verified: boolean
   readonly initialSeats: number
   readonly sandbox: boolean
+  readonly initialApiAddon?: boolean
+  readonly initialPublicService?: boolean
   readonly initialNetwork?: string
   readonly user: { name: string; email: string }
 }) {
@@ -48,10 +54,18 @@ export function TeamSignup({
   const create = (choice: TeamCheckoutChoice): Promise<boolean> =>
     new Promise((resolve) => {
       if (team) {
+        rememberTeamApiChoice(team.id, choice.apiAddon === true)
         resolve(true)
 
         return
       }
+      const detailsAccepted = captureCheckoutEvent("checkout_step", {
+        product: "team",
+        billing_interval: "year",
+        checkout_step: "team_details",
+        api_addon: choice.apiAddon ? "selected" : "not_selected",
+        billing_mode: sandbox ? "sandbox" : "live",
+      })
       startTransition(async () => {
         setError("")
         try {
@@ -77,6 +91,8 @@ export function TeamSignup({
                 ? "Your account already belongs to a Team. Open your Team to manage members or add seats."
                 : "The Team could not be created. Retry with the same name."
             )
+          detailsAccepted()
+          rememberTeamApiChoice(result.teamId, choice.apiAddon === true)
           setTeam({ id: result.teamId, name: choice.name })
           await refresh()
           resolve(true)
@@ -91,6 +107,18 @@ export function TeamSignup({
   const checkout = (choice: TeamCheckoutChoice) =>
     startTransition(async () => {
       if (!team) return
+      rememberTeamApiChoice(team.id, choice.apiAddon === true)
+      const handoff = captureCheckoutEvent("checkout_handoff", {
+        product: "team",
+        billing_interval: "year",
+        api_addon: choice.apiAddon ? "selected" : "not_selected",
+        billing_mode: sandbox ? "sandbox" : "live",
+      })
+      const failed = captureCheckoutEvent("checkout_error", {
+        product: "team",
+        billing_interval: "year",
+        billing_mode: sandbox ? "sandbox" : "live",
+      })
       setError("")
       try {
         const response = await fetch(`/api/staff/team/${team.id}/billing`, {
@@ -110,8 +138,10 @@ export function TeamSignup({
               ? "An earlier payment is being confirmed. Open your Team billing to check its status."
               : "Checkout could not be opened. Your Team is saved; retry or continue from Team billing."
           )
+        handoff()
         window.location.assign(result.url)
       } catch (failure) {
+        failed()
         setError(
           failure instanceof Error ? failure.message : "Please try again."
         )
@@ -200,6 +230,8 @@ export function TeamSignup({
           if (!value && team) router.push(`/staff/teams/billing`)
         }}
         initialSeats={initialSeats}
+        initialApiAddon={initialApiAddon}
+        initialPublicService={initialPublicService}
         teamName={team?.name}
         initialName={network?.network.name}
         sandbox={sandbox}

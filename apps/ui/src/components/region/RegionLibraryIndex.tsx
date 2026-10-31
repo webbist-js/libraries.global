@@ -369,7 +369,7 @@ export function RegionLibraryIndex({
               {featuredMatches === 1
                 ? "One matching national library is"
                 : `${featuredMatches} matching national libraries are`}{" "}
-              featured above.
+              featured below.
             </p>
           ) : null}
           {error ? (
@@ -397,7 +397,7 @@ export function RegionLibraryIndex({
               aria-label={`Library results in ${regionName}`}
               className={
                 state.view === "list"
-                  ? "m-0 list-none overflow-hidden rounded-2xl border bg-white p-0"
+                  ? "m-0 list-none overflow-hidden rounded-2xl border bg-(--t-bg-deep) p-0"
                   : "m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3"
               }
               style={{ borderColor: T.border.line }}
@@ -411,7 +411,7 @@ export function RegionLibraryIndex({
             >
               <p className="m-0">
                 {featuredMatches > 0
-                  ? "The matching libraries are featured above."
+                  ? "The matching libraries are featured below."
                   : !result && !countsAvailable
                     ? "Results are temporarily unavailable."
                     : "No libraries match this search yet."}

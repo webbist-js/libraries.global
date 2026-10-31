@@ -1,0 +1,71 @@
+{
+  "locale": "en",
+  "releaseWording": "preview-before-feature-release",
+  "assets": {
+    "journal-dark-implemented": {
+      "file": "../assets/journal-dark-implemented.png",
+      "alternativeText": "Development Journal in dark appearance, with deep indigo panels, light text and the header appearance control.",
+      "caption": "Development preview of the Journal in dark mode. Includes labelled demonstration stories; dark mode has not shipped yet.",
+      "provenance": "Browser capture of the running development UI after choosing Dark through the real header control. No production account or billing details are shown."
+    },
+    "journal-light-implemented": {
+      "file": "../assets/journal-light-implemented.png",
+      "alternativeText": "The same development Journal in light appearance, with warm paper, dark ink and indigo accents.",
+      "caption": "Development preview of the same Journal in light mode. The coming release will offer Light, Dark and System in the header and account settings.",
+      "provenance": "Browser capture of the running development UI after saving Light in account settings and reloading the page."
+    },
+    "ui-overhaul-home": {
+      "file": "../assets/ui-overhaul-home.png",
+      "alternativeText": "Current development homepage excerpt showing the warm reading surface, serif headline, library search and globe illustration.",
+      "caption": "An excerpt from our development homepage. Dark mode is coming with the interface overhaul; it has not shipped yet.",
+      "provenance": "Browser capture of the running development UI, clipped to the public homepage hero to exclude account and moderation controls."
+    }
+  },
+  "articles": [
+    {
+      "file": "how-the-site-is-designed.md",
+      "model": "wiki-article",
+      "slug": "how-the-site-is-designed",
+      "sectionSlug": "design-system",
+      "operation": "update-existing-body-and-summary-preserve-metadata",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "stable"
+    },
+    {
+      "file": "colour-and-appearance.md",
+      "model": "wiki-article",
+      "slug": "colour-and-appearance",
+      "sectionSlug": "design-system",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "beta"
+    },
+    {
+      "file": "accessible-interface-interaction.md",
+      "model": "wiki-article",
+      "slug": "accessible-interface-interaction",
+      "sectionSlug": "design-system",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "stable"
+    },
+    {
+      "file": "shared-components-and-section-identity.md",
+      "model": "wiki-article",
+      "slug": "shared-components-and-section-identity",
+      "sectionSlug": "design-system",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "articleStatus": "stable"
+    },
+    {
+      "file": "journal.md",
+      "model": "blog-article",
+      "slug": "dark-mode-and-a-more-consistent-libraries-global",
+      "sectionSlug": "from-the-index",
+      "operation": "create-or-review-existing",
+      "author": "Libraries Global Editorial Team",
+      "publicationOrigin": "index"
+    }
+  ]
+}

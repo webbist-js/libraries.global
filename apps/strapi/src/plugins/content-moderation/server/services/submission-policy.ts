@@ -19,6 +19,7 @@ import {
   PANEL_FOCUS_MESSAGE,
   panelCanFill,
   proposedDrive,
+  parseArticleSources,
   validateDrive,
 } from "@repo/shared-data"
 
@@ -526,7 +527,7 @@ export default ({ strapi }: { strapi: any }) => ({
     // would otherwise double-count it once finalize is itself a retry).
     excludeDocumentId?: string
   }): Promise<Result> {
-    const { baUserId, submissionType } = input
+    const { baUserId, submissionType, excludeDocumentId } = input
     if (!isSubmissionType(submissionType))
       return { ok: false, status: 400, message: "Unknown submission type" }
     if (input.targetDocumentId != null && !isDocumentId(input.targetDocumentId))
@@ -562,9 +563,28 @@ export default ({ strapi }: { strapi: any }) => ({
       articleDraft &&
       (submissionType === "wiki_edit" || submissionType === "blog_submission")
     ) {
+      const { sources, tags, baseRevision, publicationOrigin } = articleDraft
       if (
-        Array.isArray(articleDraft.tags) &&
-        articleDraft.tags.some(
+        submissionType === "blog_submission" &&
+        excludeDocumentId &&
+        "sources" in articleDraft
+      ) {
+        try {
+          parseArticleSources(sources)
+        } catch (error) {
+          return {
+            ok: false,
+            status: 400,
+            message:
+              error instanceof Error
+                ? error.message
+                : "Invalid article sources.",
+          }
+        }
+      }
+      if (
+        Array.isArray(tags) &&
+        tags.some(
           (tag: any) =>
             !tag ||
             ![
@@ -584,13 +604,10 @@ export default ({ strapi }: { strapi: any }) => ({
           message:
             "Choose a published Topic, Library, place or Event from the list.",
         }
-      if (
-        articleDraft.baseRevision != null &&
-        !/^[a-f0-9]{64}$/.test(String(articleDraft.baseRevision))
-      )
+      if (baseRevision != null && !/^[a-f0-9]{64}$/.test(String(baseRevision)))
         return { ok: false, status: 400, message: "Invalid article revision." }
       if (
-        articleDraft.publicationOrigin === "index" &&
+        publicationOrigin === "index" &&
         !(
           caps.editorLocales.journal === "all" ||
           caps.editorLocales.journal.has(input.locale ?? "en")
@@ -658,7 +675,7 @@ export default ({ strapi }: { strapi: any }) => ({
       const eligible = await checkRoleApplication(strapi, {
         baUserId,
         fields: input.fields,
-        excludeDocumentId: input.excludeDocumentId,
+        excludeDocumentId: excludeDocumentId,
       })
       if (!eligible.ok) return eligible
     }
@@ -667,7 +684,7 @@ export default ({ strapi }: { strapi: any }) => ({
       const proposal = await checkDriveProposal(strapi, {
         baUserId,
         draftData: input.draftData,
-        excludeDocumentId: input.excludeDocumentId,
+        excludeDocumentId: excludeDocumentId,
       })
       if (!proposal.ok) return proposal
     }
@@ -703,15 +720,11 @@ export default ({ strapi }: { strapi: any }) => ({
     }
 
     const limits = contributionLimits(tier, role)
-    const excludeFilter = input.excludeDocumentId
-      ? { documentId: { $ne: input.excludeDocumentId } }
+    const excludeFilter = excludeDocumentId
+      ? { documentId: { $ne: excludeDocumentId } }
       : {}
 
-    const pending = await pendingCount(
-      strapi,
-      baUserId,
-      input.excludeDocumentId
-    )
+    const pending = await pendingCount(strapi, baUserId, excludeDocumentId)
     if (pending >= limits.pendingSubmissions)
       return {
         ok: false,

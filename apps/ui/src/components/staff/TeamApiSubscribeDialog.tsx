@@ -1,9 +1,10 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { STAFF_LINK } from "@/components/staff/StaffPanel"
+import { TeamPurchaseProgress } from "@/components/staff/TeamPurchaseJourney"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { pushCheckoutEvent } from "@/lib/checkout-analytics"
 import { Link } from "@/lib/navigation"
 import { API_TERMS_VERSION } from "@/lib/team-api/constants"
 import type { ApiDashboard } from "@/lib/team-api/types"
@@ -27,7 +29,9 @@ export function TeamApiSubscribeDialog({
   error,
   clearError,
   request,
+  initialOpen = false,
 }: {
+  readonly initialOpen?: boolean
   readonly data: ApiDashboard
   readonly locale: string
   readonly pending: boolean
@@ -36,9 +40,23 @@ export function TeamApiSubscribeDialog({
   readonly request: (body: unknown) => void
 }) {
   const t = useTranslations("teamApiSubscription")
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(initialOpen)
   const [consent, setConsent] = useState(false)
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const began = useRef(false)
+  useEffect(() => {
+    if (!open) {
+      began.current = false
+
+      return
+    }
+    if (began.current) return
+    began.current = true
+    pushCheckoutEvent("begin_checkout", {
+      product: "team_api",
+      billing_interval: "month",
+    })
+  }, [open])
   const count = (value: number) => new Intl.NumberFormat(locale).format(value)
   const price = data.price
     ? new Intl.NumberFormat(locale, {
@@ -92,6 +110,7 @@ export function TeamApiSubscribeDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {initialOpen ? <TeamPurchaseProgress stage="api" /> : null}
         <div className="space-y-5">
           <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5">
             {price ? (

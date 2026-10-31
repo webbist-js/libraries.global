@@ -1,14 +1,11 @@
 import { type LibraryNotice, libraryTypeName } from "@repo/shared-data"
 import { useTranslations } from "next-intl"
 
-import GlobalLink from "@/components/global/GlobalLink"
 import {
   toLatLng,
   type OpeningTimesValue,
 } from "@/components/library/library-page.helpers"
-import { libraryChecklist } from "@/components/library/library-presentation"
 import { LibraryOpenStatusBadge } from "@/components/library/LibraryHoursTable"
-import { StaffLibraryEntry } from "@/components/library/StaffLibraryEntry"
 import {
   analyticsAttributes,
   type AnalyticsParameters,
@@ -16,16 +13,22 @@ import {
 import { T } from "@/lib/design-tokens"
 import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 
+const NON_PHYSICAL_TYPES = new Set<string | null>(["Mobile", "Digital"])
+
 export function LibraryVisitRail({
   library,
+  embedded = false,
 }: {
+  readonly embedded?: boolean
   readonly library: PopulatedLibraryData
 }) {
   const t = useTranslations("libraryPage")
   const rec = library as unknown as Record<string, unknown>
   const type = libraryTypeName(library.libraryType)
   const coords = toLatLng(library.location)
-  const checklist = libraryChecklist(library)
+  const physical = !NON_PHYSICAL_TYPES.has(type)
+  const headings = { Digital: "onlineAccess", Mobile: "planJourney" } as const
+  const headingKey = headings[type as keyof typeof headings] ?? "planVisit"
   const operator = [rec.operatorName, rec.operatorType]
     .filter(
       (value): value is string =>
@@ -76,24 +79,22 @@ export function LibraryVisitRail({
       ? measure(linkActions[label as keyof typeof linkActions])
       : {}
   const action =
-    "flex min-h-12 items-center justify-between gap-3 border-t border-(--t-border-line) py-3 text-base font-semibold underline underline-offset-4 hover:bg-(--t-bg-surface)"
+    "flex min-h-11 items-center justify-between gap-3 border-t border-(--t-border-line) py-2.5 text-sm font-semibold no-underline hover:text-(--t-accent-primary)"
+
+  const Tag = embedded ? "div" : "section"
 
   return (
-    <section
-      className="rounded-3xl border p-5"
+    <Tag
+      className={embedded ? "library-visit-actions" : "record-support-card"}
       style={{ background: T.bg.deep, borderColor: T.border.line }}
-      aria-labelledby="visit-rail-heading"
+      aria-labelledby={embedded ? undefined : "visit-rail-heading"}
     >
-      <h2 id="visit-rail-heading" className="type-panel-title m-0">
-        {t(
-          type === "Digital"
-            ? "onlineAccess"
-            : type === "Mobile"
-              ? "planJourney"
-              : "planVisit"
-        )}
-      </h2>
-      {type !== "Mobile" && type !== "Digital" ? (
+      {!embedded ? (
+        <h2 id="visit-rail-heading" className="type-small-heading m-0">
+          {t(headingKey)}
+        </h2>
+      ) : null}
+      {physical ? (
         <div className="mt-3">
           <LibraryOpenStatusBadge
             openingTimes={library.openingTimes as OpeningTimesValue | null}
@@ -104,7 +105,7 @@ export function LibraryVisitRail({
         </div>
       ) : null}
       <div className="mt-4 grid">
-        {type !== "Digital" && type !== "Mobile" && coords ? (
+        {physical && coords ? (
           <a
             className={action}
             {...measure("directions")}
@@ -165,6 +166,9 @@ export function LibraryVisitRail({
           </div>
         </details>
       ) : null}
+      <a className="network-page-link mt-2 text-sm" href="#contribute">
+        {t("improve")}
+      </a>
       {operator ? (
         <p
           className="mt-3 mb-0 border-t pt-3 text-xs leading-relaxed"
@@ -173,32 +177,6 @@ export function LibraryVisitRail({
           {t("runBy", { name: operator })}
         </p>
       ) : null}
-      <div
-        className="mt-4 border-t pt-4"
-        style={{ borderColor: T.border.line }}
-      >
-        <GlobalLink
-          href="#contribute"
-          className="flex min-h-11 items-center justify-between gap-3 text-base font-semibold no-underline hover:underline"
-        >
-          {t("improve")}{" "}
-          <span
-            className="shrink-0 text-xs font-normal"
-            style={{ color: T.ink.dim }}
-          >
-            {t("coreCount", { done: checklist.done, total: checklist.total })}
-          </span>
-        </GlobalLink>
-        <StaffLibraryEntry
-          compact
-          libraryDocumentId={library.documentId}
-          librarySlug={library.slug ?? ""}
-          libraryName={library.name ?? ""}
-          libraryEntityRef={library.entityRef ?? undefined}
-          libraryType={type}
-          hasActiveFeed={Boolean(rec.hasActiveFeed)}
-        />
-      </div>
-    </section>
+    </Tag>
   )
 }

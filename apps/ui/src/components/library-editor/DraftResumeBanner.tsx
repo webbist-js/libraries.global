@@ -3,8 +3,8 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useMemo } from "react"
 
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { T } from "@/lib/design-tokens"
-import { primaryCtaSm } from "@/lib/styles"
 
 export function DraftResumeBanner({
   savedStep,

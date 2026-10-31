@@ -108,7 +108,10 @@ export type UserProfile = {
   pointsThisMonth?: number | null
   tier?: string | null
   streak?: number | null
+  /** Legacy schema default, not evidence of a user choice. */
   theme?: "dark" | "light" | null
+  /** Private owner preference; absent until explicitly chosen. */
+  appearancePreference?: "light" | "dark" | "system" | null
   earnedBadges?: { badgeId: string; awardedAt: string }[]
   createdAt: string
   updatedAt: string

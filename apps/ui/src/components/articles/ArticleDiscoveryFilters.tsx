@@ -357,11 +357,11 @@ export function ArticleDiscoveryFilters({
                 style={{
                   background:
                     (discovery.appliedFilters.origins?.[0] ?? "all") === value
-                      ? T.ink.base
+                      ? T.bg.inverse
                       : undefined,
                   color:
                     (discovery.appliedFilters.origins?.[0] ?? "all") === value
-                      ? T.bg.deep
+                      ? T.ink.inverse
                       : T.ink.base,
                 }}
               >
@@ -562,8 +562,8 @@ export function ArticleDiscoveryFilters({
                   if (mobile) navigate(new URLSearchParams(staged))
                   setOpen(false)
                 }}
-                className="min-h-12 w-full cursor-pointer rounded-full px-5 py-3 font-semibold transition-colors hover:bg-(--t-accent-primary-hover)"
-                style={{ background: T.accent.primary, color: T.bg.deep }}
+                className="min-h-12 w-full cursor-pointer rounded-full px-5 py-3 font-semibold transition-colors hover:bg-(--t-action-primary-hover)"
+                style={{ background: T.action.primary, color: T.ink.inverse }}
               >
                 {changingPreview
                   ? p("showResults")

@@ -1,3 +1,4 @@
+import type { NetworkSummary } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 import type { HomepageContent } from "@/components/home/homepage.content"
@@ -6,106 +7,88 @@ import type {
   HomepageContinentSummary,
   HomepageStats,
 } from "@/components/home/homepage.types"
-import type { LibraryMarker } from "@/components/home/knowledge-globe-data"
+import { HomepageFeatures } from "@/components/home/HomepageFeatures"
 import AtlasSection from "@/components/home/sections/AtlasSection"
 import ClosingSection from "@/components/home/sections/ClosingSection"
 import ContributeSection from "@/components/home/sections/ContributeSection"
-import CoverageSection, {
-  type CountryBreakdown,
-} from "@/components/home/sections/CoverageSection"
-import EventsSection from "@/components/home/sections/EventsSection"
+import { DiscoverySection } from "@/components/home/sections/DiscoverySection"
 import FeaturedLibrariesSection from "@/components/home/sections/FeaturedLibrariesSection"
-import JournalSection from "@/components/home/sections/JournalSection"
-import JourneysSection from "@/components/home/sections/JourneysSection"
-import KnowledgeSection from "@/components/home/sections/KnowledgeSection"
-import PlansSection from "@/components/home/sections/PlansSection"
+import { HomeEditorialSection } from "@/components/home/sections/HomeEditorialSection"
+import { LibraryStaffSection } from "@/components/home/sections/LibraryStaffSection"
 import type { DriveView } from "@/lib/drives/drive-view"
 import type { JournalTopStories } from "@/lib/journal-landing"
 import type { EventSearchHit } from "@/lib/meilisearch"
 import type { PopulatedFeaturedLibraryData } from "@/lib/strapi-api/content/server"
 
-/**
- * Homepage narrative, below the hero: offer the three journeys, something
- * small to do, a moment of discovery, then what the atlas shows,
- * how far we've got and what's free. Last, what's on, what to
- * read and learn, and the ask.
- */
+/** Discover → understand → contribute → manage → read → trust and support. */
 export function HomepageSections({
   content,
   stats,
   tasks,
-  featuredDrive,
-  globeMarkers,
+  drives,
   featuredLibraries,
   continents,
-  countryBreakdown,
+  networks,
   events,
   journal,
   locale,
-  viewerPlan,
+  atlasImage,
 }: {
   readonly content: HomepageContent
   readonly stats: HomepageStats | null
   readonly tasks: readonly ContributionTask[]
-  /** A pinned or featured open drive; replaces the task rows when set. */
-  readonly featuredDrive?: DriveView | null
-  readonly globeMarkers: readonly LibraryMarker[]
-  readonly featuredLibraries?: PopulatedFeaturedLibraryData[] | null
+  readonly drives: readonly DriveView[]
+  readonly featuredLibraries: PopulatedFeaturedLibraryData[]
   readonly continents: HomepageContinentSummary[]
-  readonly countryBreakdown?: CountryBreakdown
-  /** The next few events; the section is left out when there are none. */
+  readonly networks: readonly NetworkSummary[]
   readonly events: readonly EventSearchHit[]
   readonly journal: JournalTopStories
   readonly locale: Locale
-  /** The signed-in viewer's plan key; undefined for a visitor. */
-  readonly viewerPlan?: string
+  readonly atlasImage?: {
+    url?: string | null
+    alternativeText?: string | null
+  } | null
 }) {
   return (
-    <div id="homepage-content">
-      <JourneysSection
-        intro={content.journeysIntro}
-        journeys={content.journeys}
-      />
-      <ContributeSection
-        band={content.communityBand}
-        steps={content.communitySteps}
-        tasksIntro={content.tasksIntro}
-        tasks={tasks}
-        featuredDrive={featuredDrive}
-      />
+    <div id="homepage-content" className="home-flow">
       <FeaturedLibrariesSection
         libraries={featuredLibraries}
         intro={content.featuredIntro}
         total={stats?.libraries}
       />
-      <AtlasSection band={content.atlasBand} markers={globeMarkers} />
-      <CoverageSection
-        intro={content.coverageIntro}
+      <DiscoverySection
         continents={continents}
-        countryBreakdown={countryBreakdown}
-      />
-      <PlansSection intro={content.plansIntro} viewerPlan={viewerPlan} />
-      <EventsSection intro={content.eventsIntro} events={events} />
-      <JournalSection
-        intro={content.journalIntro}
-        stories={journal}
+        networks={networks}
+        events={events}
         locale={locale}
       />
-      <KnowledgeSection
-        band={content.knowledgeBand}
+      <AtlasSection band={content.atlasBand} image={atlasImage} />
+      <HomepageFeatures />
+      <ContributeSection
+        band={content.communityBand}
+        steps={content.communitySteps}
+        tasksIntro={content.tasksIntro}
+        tasks={tasks}
+        drives={drives}
+      />
+      <LibraryStaffSection
+        band={content.libraryBand}
+        tools={content.libraryTools}
+      />
+      <HomeEditorialSection
+        intro={content.journalIntro}
+        stories={journal}
         links={content.knowledgeLinks}
+        locale={locale}
       />
       <ClosingSection
         band={content.finalCta}
-        steps={content.finalBenefits}
-        signedIn={viewerPlan !== undefined}
-        openIntro={content.openIntro}
+        trustItems={content.trustItems}
         openLinks={content.openLinks}
+        plansIntro={content.plansIntro}
       />
     </div>
   )
 }
-
-HomepageSections.displayName = "HomepageSections"
 
 export default HomepageSections

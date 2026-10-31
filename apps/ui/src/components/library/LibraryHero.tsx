@@ -7,15 +7,9 @@ import {
 } from "@repo/shared-data"
 import { useTranslations } from "next-intl"
 
-import {
-  hubHref,
-  type WizardLibrary,
-} from "@/components/contribute/wizard.logic"
-import { Breadcrumb, type BreadcrumbItem } from "@/components/ds"
+import type { WizardLibrary } from "@/components/contribute/wizard.logic"
 import { Container } from "@/components/elementary/Container"
-import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
-import { facilityRows } from "@/components/library/facility-rows"
 import type {
   LatLng,
   OpeningTimesValue,
@@ -27,13 +21,8 @@ import {
   LibraryHeroMap,
 } from "@/components/library/LibraryHeroMap"
 import { LibraryHeroMedia } from "@/components/library/LibraryHeroMedia"
-import {
-  FactCard,
-  LibraryOpenStatusBadge,
-} from "@/components/library/LibraryHoursTable"
+import { LibraryOpenStatusBadge } from "@/components/library/LibraryHoursTable"
 import { LIB_ICONS, LibIcon } from "@/components/library/LibrarySectionCard"
-import { sectionCheckedAt } from "@/components/library/verify.logic"
-import { summariseWeek } from "@/components/location/location-page.helpers"
 import { MobileHeroFacts } from "@/components/mobile/MobileHeroFacts"
 import { MobileTodayStrip } from "@/components/mobile/MobileTodayStrip"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
@@ -42,26 +31,20 @@ import type { PopulatedLibraryData } from "@/lib/strapi-api/content/server"
 import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 /**
- * The library page's hero band (the atlas pages' LocationHero pattern):
- * breadcrumb, badges, serif name, place, actions and quick facts on the
- * left; the MapLibre map with this library and its neighbours on the right.
+ * Contained library identity and existing media/actions. The record shell
+ * owns breadcrumbs, supporting tasks and the separate metric strip.
  */
 export function LibraryHero({
   library,
-  crumbs,
   wizardLibrary,
   coords,
   neighbours,
   untranslatedLocale = null,
-  contribution,
 }: {
   readonly library: PopulatedLibraryData
-  readonly crumbs: BreadcrumbItem[]
   readonly wizardLibrary: WizardLibrary
   readonly coords: LatLng | null
   readonly neighbours: LibraryMapNeighbour[]
-  readonly contribution?: React.ReactNode
-  readonly hasPhoto: boolean
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
@@ -99,88 +82,13 @@ export function LibraryHero({
       : "/map"
 
   const digital = libraryTypeName(library.libraryType) === "Digital"
-  const accessRows = facilityRows(library).filter(
-    (row) => row.category !== "service"
-  )
-  const accessRecorded = accessRows.filter(
-    (row) => row.state !== "unknown"
-  ).length
-  const checked = sectionCheckedAt(library, "hours")
-  const facts = [
-    ...(!digital && summariseWeek(openingTimes)
-      ? [
-          {
-            icon: "mdi:clock-outline",
-            label: "Opening hours",
-            value: summariseWeek(openingTimes) ?? "Hours not recorded yet",
-            note: checked
-              ? "Checked " +
-                new Date(checked).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "Not yet checked · see the full week",
-            href: "#visit",
-          },
-        ]
-      : []),
-    ...(!digital && Boolean(rec.nearestStation)
-      ? [
-          {
-            icon: "mdi:train",
-            label: "Getting there",
-            value:
-              typeof rec.nearestStation === "string" && rec.nearestStation
-                ? clampDescription(rec.nearestStation, 120)!
-                : "Nearest station not recorded",
-            href: "#visit",
-          },
-        ]
-      : []),
-    ...(!digital && accessRecorded > 0
-      ? [
-          {
-            icon: "mdi:human",
-            label: "Accessibility & facilities",
-            value:
-              accessRecorded + " of " + accessRows.length + " details recorded",
-            note:
-              accessRows.length > accessRecorded
-                ? "Help answer what’s missing"
-                : "See recorded access information",
-            href: "#access",
-          },
-        ]
-      : []),
-    ...(rec.admissionInfo
-      ? [
-          {
-            icon: "mdi:card-account-details-outline",
-            label: t(digital ? "onlineAccess" : "admission"),
-            value: clampDescription(
-              String(rec.admissionInfo).match(/^[\s\S]*?[.!?](?=\s|$)/)?.[0] ??
-                String(rec.admissionInfo),
-              110
-            )!,
-            href: "#visit",
-          },
-        ]
-      : []),
-  ]
 
   return (
-    <section
-      id="overview"
-      className="border-b"
-      style={{ background: T.bg.space, borderColor: T.border.line }}
-    >
-      <Container className="pt-6 pb-8 sm:pt-8 sm:pb-10">
-        <Breadcrumb items={crumbs} />
-
-        <div className="mt-5 grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+    <section id="overview" className="record-hero library-record-hero">
+      <Container className="record-hero-inner">
+        <div className="library-hero-layout record-hero-layout">
           <div className="min-w-0">
-            <div className="hero-eyebrow flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="record-hero-badges flex flex-wrap items-center gap-2">
               {typeLabel ? (
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
@@ -191,7 +99,7 @@ export function LibraryHero({
                 </span>
               ) : null}
               <span
-                className="inline-flex min-h-7 items-center rounded-full border bg-white px-2.5 text-xs font-semibold"
+                className="inline-flex min-h-7 items-center rounded-full border bg-(--t-bg-deep) px-2.5 text-xs font-semibold"
                 style={{ borderColor: T.border.line, color: T.ink.dim }}
               >
                 {rec.hasStaff
@@ -201,7 +109,8 @@ export function LibraryHero({
             </div>
 
             <h1
-              className="type-h1 m-0 max-w-[20ch] text-balance"
+              tabIndex={-1}
+              className="type-page-compact m-0 text-balance"
               style={{
                 color: T.ink.base,
               }}
@@ -244,7 +153,6 @@ export function LibraryHero({
             {!mobile && libraryTypeName(library.libraryType) !== "Digital" ? (
               <div className="mt-4">
                 <LibraryOpenStatusBadge
-                  prominent
                   openingTimes={openingTimes}
                   timezone={timezone}
                   operationalStatus={library.operationalStatus}
@@ -292,51 +200,6 @@ export function LibraryHero({
                     : ""}
                 </p>
               </div>
-            ) : facts.length ? (
-              <div
-                className={
-                  facts.length <= 2
-                    ? "mt-5 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:gap-6"
-                    : "mt-5 grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2"
-                }
-                style={{ borderColor: T.border.line }}
-              >
-                {facts.map((fact) => (
-                  <a
-                    key={fact.label}
-                    href={fact.href}
-                    className={
-                      facts.length <= 2
-                        ? "flex min-h-11 min-w-0 flex-1 items-start gap-2 text-sm no-underline hover:underline"
-                        : "block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
-                    }
-                  >
-                    {facts.length <= 2 ? (
-                      <>
-                        <Icon
-                          icon={fact.icon}
-                          width={18}
-                          className="mt-0.5 shrink-0"
-                          aria-hidden="true"
-                        />
-                        <span>
-                          <span className="block font-semibold">
-                            {fact.label}
-                          </span>
-                          <span
-                            className="mt-0.5 block"
-                            style={{ color: T.ink.dim }}
-                          >
-                            {fact.value}
-                          </span>
-                        </span>
-                      </>
-                    ) : (
-                      <FactCard {...fact} className="h-full" />
-                    )}
-                  </a>
-                ))}
-              </div>
             ) : null}
           </div>
 
@@ -345,13 +208,12 @@ export function LibraryHero({
               atlasHref={!mobile && !digital && coords ? atlasHref : null}
               photoAction={
                 !library.heroImage?.url && !library.gallery?.length ? (
-                  <GlobalLink
-                    href={hubHref("photo", wizardLibrary)}
+                  <OpenCorrectionLink
+                    category="Photo"
                     className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold shadow-sm"
-                    style={{ borderColor: T.border.line }}
                   >
                     {t("addPhoto")}
-                  </GlobalLink>
+                  </OpenCorrectionLink>
                 ) : undefined
               }
               photo={formatStrapiMediaUrl(library.heroImage?.url) ?? null}
@@ -447,7 +309,6 @@ export function LibraryHero({
             />
           </div>
         </div>
-        {contribution ? <div className="mt-8">{contribution}</div> : null}
       </Container>
     </section>
   )

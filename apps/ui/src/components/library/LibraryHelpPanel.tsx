@@ -112,7 +112,7 @@ function tasksFor(
 }
 
 const ROW =
-  "group flex w-full items-center gap-3 rounded-2xl border bg-white px-3 py-2.5 text-left no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "group flex w-full items-center gap-3 rounded-2xl border bg-(--t-bg-deep) px-3 py-2.5 text-left no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 function TaskBody({
   task,
@@ -205,7 +205,7 @@ function TranslateRecord({
               <li key={l.code}>
                 <Link
                   href={translateHref(librarySlug, l.code)}
-                  className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+                  className="inline-flex items-center rounded-full border bg-(--t-bg-deep) px-3 py-1 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                 >
                   {l.name}

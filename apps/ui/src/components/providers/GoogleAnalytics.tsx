@@ -17,13 +17,16 @@ const noServerController = () => false
 export function GoogleAnalytics({
   nonce,
   locale = "en",
+  checkoutEnabled = false,
 }: {
+  readonly checkoutEnabled?: boolean
   readonly nonce?: string
   readonly locale?: string
 }) {
   const pathname = usePathname()
   // A nonce belongs to the document. Route renders must not pause/reinstall it.
   const documentNonce = useRef(nonce)
+  const documentCheckoutEnabled = useRef(checkoutEnabled)
   const installed = useSyncExternalStore(
     subscribeAnalyticsConsent,
     analyticsInstalled,
@@ -31,7 +34,11 @@ export function GoogleAnalytics({
   )
 
   useEffect(() => {
-    const analytics = installGoogleAnalytics(window, documentNonce.current)
+    const analytics = installGoogleAnalytics(
+      window,
+      documentNonce.current,
+      documentCheckoutEnabled.current
+    )
     const removeClicks = installAnalyticsClickTracking(window)
 
     return () => {

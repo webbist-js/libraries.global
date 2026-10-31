@@ -3,13 +3,16 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { ArticleContext } from "@/components/articles/ArticleContext"
 import { ArticleReaderActions } from "@/components/articles/ArticleReaderActions"
+import { KnowledgeSidebarFooter } from "@/components/articles/EditorialSidebar"
+import { ReadingProgress } from "@/components/articles/ReadingProgress"
 import { ArticleBodyBlocks } from "@/components/blog/ArticleBodyBlocks"
+import { DashboardPage } from "@/components/dashboard/DashboardPage"
+import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { AttachedDiscussion } from "@/components/discussions/AttachedDiscussion"
 import { ArticleEditHistorySection } from "@/components/docs/ArticleEditHistory"
-import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { MainContent } from "@/components/ds/MainContent"
+import { MetadataList } from "@/components/ds/MetadataList"
 import { SidebarLinks } from "@/components/ds/SidebarLinks"
-import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import { ArticleEngagement } from "@/components/providers/ArticleEngagement"
@@ -115,50 +118,116 @@ export function DocsArticlePage({
       : null
 
   return (
-    <div
-      className="relative isolate flex min-h-screen w-full flex-col"
-      style={{ background: T.bg.void, color: T.ink.base }}
-    >
-      <GlobalHeader locale={locale} />
+    <DashboardPage
+      routeKey={docsArticlePath(article, sections)}
+      title={title}
+      className="dashboard-editorial-page dashboard-knowledge-reader"
+      navigationHeading={null}
+      navigation={
+        <>
+          <DocsSidebarTree key={article.slug} sections={sections} tree={tree} />
+          <ReadingProgress
+            bodyId={`analytics-knowledge-${article.documentId}`}
+            minutes={readMinutes ?? 1}
+          />
+        </>
+      }
+      navigationFooter={
+        <KnowledgeSidebarFooter
+          slug={article.slug ?? ""}
+          contentLocale={
+            contentLocale ??
+            (untranslatedLocale ? routing.defaultLocale : locale)
+          }
+        />
+      }
+      toolbar={
+        <RecordToolbar
+          share
+          shareContent={{
+            contentType: "knowledge",
+            contentId: article.documentId,
+          }}
+          items={[
+            { label: tUi("knowledge"), href: "/knowledge" },
+            {
+              label: section.title,
+              href: `/knowledge?section=${section.slug}`,
+            },
+            { label: title },
+          ]}
+        />
+      }
+      context={
+        <div className="editorial-reader-context">
+          <div className="flex flex-col gap-5">
+            <ArticleContext
+              article={article}
+              kind="knowledge"
+              locale={locale}
+            />
+            {headings.length > 0 ? (
+              <nav
+                aria-label={tUi("on_this_page")}
+                className="rounded-[20px] border p-5"
+                style={{ background: T.bg.deep, borderColor: T.border.line }}
+              >
+                <h2
+                  className="type-panel-title m-0 mb-3"
+                  style={{ color: T.ink.base }}
+                >
+                  {tUi("on_this_page")}
+                </h2>
+                <SidebarLinks className="[&>li>a]:text-sm [&>li>a]:text-(--t-ink-base) [&>li>a]:no-underline [&>li>a:hover]:text-(--t-accent-primary)">
+                  {headings.map((heading) => (
+                    <li
+                      key={heading.id}
+                      style={
+                        heading.level === 3
+                          ? { paddingLeft: "12px" }
+                          : undefined
+                      }
+                    >
+                      <a className="leading-snug" href={`#${heading.id}`}>
+                        {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                </SidebarLinks>
+              </nav>
+            ) : null}
 
-      <MainContent
-        className="relative z-10 flex-1"
-        data-analytics-page="knowledge"
-        data-analytics-content-id={article.documentId}
-        data-analytics-path={
-          new URL(absoluteUrl(docsArticlePath(article, sections), locale))
-            .pathname
-        }
-      >
-        <div className="mx-auto grid w-full max-w-[1360px] grid-cols-1 items-start gap-6 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 lg:grid-cols-[230px_minmax(0,1fr)] xl:grid-cols-[230px_minmax(0,1fr)_220px] xl:gap-8">
-          <aside className="hidden self-stretch lg:block">
-            <div className="sticky top-(--sticky-content-top) max-h-(--sticky-content-max-height) overflow-y-auto overscroll-contain pr-2 pb-3">
-              <DocsSidebarTree sections={sections} tree={tree} />
-            </div>
-          </aside>
-          <div className="min-w-0 lg:hidden">
-            <details className="rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4">
-              <summary className="cursor-pointer text-sm font-semibold">
-                {tArticle("browseGuides")}
-              </summary>
-              <div className="mt-5">
-                <DocsSidebarTree sections={sections} tree={tree} />
-              </div>
-            </details>
-          </div>
-          <article className="min-w-0">
-            <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-8 xl:p-10">
-              <Breadcrumb
-                ancestorsOnly
-                items={[
-                  { label: tUi("knowledge"), href: "/knowledge" },
+            <div className="px-1">
+              <MetadataList
+                rows={[
+                  { label: tArticle("section"), value: section.title },
                   {
-                    label: section.title,
-                    href: `/knowledge?section=${section.slug}`,
+                    label: tArticle("words"),
+                    value: words > 0 ? words.toLocaleString(locale) : "—",
                   },
+                  { label: tArticle("licence"), value: "CC BY-SA 4.0" },
                 ]}
               />
-              <h1 className="type-h1 mt-4 mb-0 text-pretty">{title}</h1>
+            </div>
+          </div>
+        </div>
+      }
+      overview={
+        <MainContent
+          className="editorial-reader-content"
+          data-analytics-page="knowledge"
+          data-analytics-content-id={article.documentId}
+          data-analytics-path={
+            new URL(absoluteUrl(docsArticlePath(article, sections), locale))
+              .pathname
+          }
+        >
+          {" "}
+          <article className="min-w-0">
+            <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-8 xl:p-10">
+              <h1 tabIndex={-1} className="type-h1 mt-4 mb-0 text-pretty">
+                {title}
+              </h1>
               {untranslatedLocale ? (
                 <NotTranslatedNote locale={untranslatedLocale} />
               ) : null}
@@ -298,13 +367,7 @@ export function DocsArticlePage({
                 }
               />
             </div>
-            <div className="mt-4 xl:hidden">
-              <ArticleContext
-                article={article}
-                kind="knowledge"
-                locale={locale}
-              />
-            </div>
+
             {/* Previous / next */}
             {(previous ?? next) ? (
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -359,80 +422,11 @@ export function DocsArticlePage({
               </div>
             ) : null}
           </article>
-
-          {/* ── Right: on this page + meta ── */}
-          <aside className="hidden self-stretch xl:block">
-            <div className="sticky top-(--sticky-content-top) flex max-h-(--sticky-content-max-height) flex-col gap-5 overflow-y-auto overscroll-contain pb-2">
-              <ArticleContext
-                article={article}
-                kind="knowledge"
-                locale={locale}
-              />
-              {headings.length > 0 ? (
-                <nav
-                  aria-label={tUi("on_this_page")}
-                  className="rounded-[20px] border p-5"
-                  style={{ background: T.bg.deep, borderColor: T.border.line }}
-                >
-                  <h2
-                    className="type-panel-title m-0 mb-3"
-                    style={{ color: T.ink.base }}
-                  >
-                    {tUi("on_this_page")}
-                  </h2>
-                  <SidebarLinks>
-                    {headings.map((heading) => (
-                      <li
-                        key={heading.id}
-                        style={
-                          heading.level === 3
-                            ? { paddingLeft: "12px" }
-                            : undefined
-                        }
-                      >
-                        <a className="leading-snug" href={`#${heading.id}`}>
-                          {heading.text}
-                        </a>
-                      </li>
-                    ))}
-                  </SidebarLinks>
-                </nav>
-              ) : null}
-
-              <div className="px-1">
-                <dl className="m-0">
-                  {[
-                    { label: tArticle("section"), value: section.title },
-                    {
-                      label: tArticle("words"),
-                      value: words > 0 ? words.toLocaleString(locale) : "—",
-                    },
-                    { label: tArticle("licence"), value: "CC BY-SA 4.0" },
-                  ].map((row) => (
-                    <div
-                      key={row.label}
-                      className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0"
-                      style={{ borderColor: T.border.divider }}
-                    >
-                      <dt className="text-sm" style={{ color: T.ink.dim }}>
-                        {row.label}
-                      </dt>
-                      <dd
-                        className="m-0 text-right text-sm font-semibold"
-                        style={{ color: T.ink.base }}
-                      >
-                        {row.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </MainContent>
-    </div>
+        </MainContent>
+      }
+    >
+      {null}
+    </DashboardPage>
   )
 }
-
 export default DocsArticlePage

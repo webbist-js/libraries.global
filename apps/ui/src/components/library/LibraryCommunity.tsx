@@ -68,10 +68,10 @@ export function LibraryCommunity({
       iconPath={LIB_ICONS.people}
     >
       <div
-        className="mb-6 border-b pb-5"
+        className="record-community-stories"
         style={{ borderColor: T.border.line }}
       >
-        <h3 className="type-h3 m-0">{t("stories")}</h3>
+        <h3 className="type-small-heading m-0">{t("stories")}</h3>
         <p className="mt-2 text-sm" style={{ color: T.ink.dim }}>
           {t("storiesIntro")}
         </p>

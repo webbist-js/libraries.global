@@ -43,7 +43,7 @@ export function AtlasAnalysisHeader({
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
           style={
             badgeTone === "pin"
-              ? { background: "#E7F0E7", color: OK }
+              ? { background: "var(--t-palette-mint-bg)", color: OK }
               : { background: T.accent.chip, color: T.accent.primary }
           }
         >

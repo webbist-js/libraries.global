@@ -1,0 +1,20 @@
+{
+  "extends": "@repo/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["../ui/src/*"]
+    }
+  },
+  "include": [
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
+    "stories/**/*.ts",
+    "stories/**/*.tsx",
+    "vitest.config.ts",
+    "../ui/next-env.d.ts",
+    "../ui/src/types/global.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

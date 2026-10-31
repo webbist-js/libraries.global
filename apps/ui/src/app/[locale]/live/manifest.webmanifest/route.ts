@@ -19,7 +19,7 @@ export async function GET(
       start_url: mobile ? mobilePath(undefined, lang) : `/${lang}/live`,
       display: "standalone",
       background_color: "#F7F5EF",
-      theme_color: "#3730A3",
+      theme_color: "var(--t-accent-primary-hover)",
       icons: [
         {
           src: "/live-icon.svg",

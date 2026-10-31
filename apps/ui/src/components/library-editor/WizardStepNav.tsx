@@ -196,7 +196,7 @@ export function WizardStepNav({
                   {preview ? (
                     <span
                       aria-hidden
-                      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--t-accent-primary) text-white"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--t-action-primary) text-white"
                     >
                       <Icon icon="mdi:magnify" width={18} />
                     </span>
@@ -342,7 +342,7 @@ export function RecordProgress({
           style={{
             height: "100%",
             width: `${pct}%`,
-            background: doneCount === total ? T.accent.ok : T.accent.primary,
+            background: doneCount === total ? T.accent.ok : T.action.primary,
             borderRadius: "999px",
             transition: "width 0.3s ease",
           }}

@@ -203,7 +203,7 @@ export function AtlasPerCapitaControls({
         <button
           type="button"
           onClick={onAnalysis}
-          className="flex min-h-11 items-center justify-center gap-2 rounded-full border bg-white font-semibold"
+          className="flex min-h-11 items-center justify-center gap-2 rounded-full border bg-(--t-bg-deep) font-semibold"
           style={{ color: T.accent.primary, borderColor: T.border.hi }}
         >
           <Icon name="layers" size={18} />

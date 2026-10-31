@@ -60,13 +60,7 @@ export function ContactForm({
           label={t("email")}
           placeholder={t("emailPlaceholder")}
         />
-        <AppTextArea
-          name="message"
-          type="text"
-          required
-          label={t("message")}
-          aria-label="contact-message"
-        />
+        <AppTextArea name="message" required label={t("message")} />
       </AppForm>
       <div className="flex w-full flex-col gap-4">
         {gdpr?.href && (
@@ -93,7 +87,7 @@ export function ContactForm({
       </div>
 
       {contactFormMutation.error && (
-        <div className="text-center text-red-500">
+        <div className="text-center text-(--t-accent-danger)">
           <p>{contactFormMutation.error.message || t("error")}</p>
         </div>
       )}

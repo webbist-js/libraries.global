@@ -92,4 +92,29 @@ describe("contribution account boundary", () => {
       contributionAccountScope({ id: "b" })
     )
   })
+  it("invalidates private workspace content when Team membership, role or coverage changes", () => {
+    const team = {
+      id: "team",
+      slug: "team",
+      name: "Team",
+      role: "organiser",
+      status: "active",
+      libraryCount: 1,
+    }
+    const user = { id: "a", teams: [team], teamLibraryIds: ["library"] }
+    const original = contributionAccountScope(user)
+    for (const changed of [
+      { ...user, teams: [] },
+      { ...user, teams: [{ ...team, role: "member" }] },
+      { ...user, teams: [{ ...team, status: "lapsed" }] },
+      { ...user, teamLibraryIds: [] },
+    ])
+      expect(contributionAccountScope(changed)).not.toBe(original)
+    expect(
+      contributionAccountScope({
+        ...user,
+        teams: [{ ...team, name: "Renamed" }],
+      })
+    ).toBe(original)
+  })
 })

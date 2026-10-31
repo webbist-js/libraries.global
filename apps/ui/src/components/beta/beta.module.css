@@ -8,6 +8,7 @@
 }
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -27,7 +28,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  background: #fff;
+  background: var(--t-bg-deep);
   border: 1px solid var(--t-border-line);
   border-radius: 50px;
   padding: 8px 15px;
@@ -40,7 +41,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--t-accent-primary);
+  background: var(--t-action-primary);
 }
 .main {
   width: 94%;
@@ -87,7 +88,7 @@
   gap: 16px;
 }
 .card {
-  background: #fff;
+  background: var(--t-bg-deep);
   border: 1px solid var(--t-border-line);
   border-radius: 26px;
   padding: 36px;
@@ -116,7 +117,7 @@
   border: 1px solid var(--t-border-hi);
   border-radius: 15px;
   height: 58px;
-  background: #fff;
+  background: var(--t-bg-deep);
 }
 .passwordField:focus-within {
   outline: 2px solid var(--t-accent-primary);
@@ -157,12 +158,12 @@
 .primary {
   width: 100%;
   margin-top: 12px;
-  background: var(--t-accent-primary);
+  background: var(--t-action-primary);
   border: 0;
   color: white;
 }
 .primary:hover {
-  background: var(--t-accent-primary-hover);
+  background: var(--t-action-primary-hover);
 }
 .secondary {
   background: transparent;
@@ -207,7 +208,7 @@
   min-width: 0;
   border: 1px solid var(--t-border-hi);
   border-radius: 14px;
-  background: #fff;
+  background: var(--t-bg-deep);
   height: 56px;
   padding: 12px 16px;
   font-size: var(--type-body-large-size);
@@ -241,12 +242,12 @@
   align-items: center;
   gap: 16px;
   border-radius: 16px;
-  background: #e7f0e7;
+  background: var(--t-palette-mint-bg);
   padding: 20px;
 }
 .waitlistSuccess > svg {
   flex-shrink: 0;
-  color: #365c40;
+  color: var(--t-palette-mint-fg);
 }
 .waitlistSuccess p {
   font-size: var(--type-body-size);
@@ -259,8 +260,8 @@
   height: 58px;
   display: grid;
   place-items: center;
-  color: #365c40;
-  background: #e7f0e7;
+  color: var(--t-palette-mint-fg);
+  background: var(--t-palette-mint-bg);
   border-radius: 50%;
   margin-bottom: 24px;
 }

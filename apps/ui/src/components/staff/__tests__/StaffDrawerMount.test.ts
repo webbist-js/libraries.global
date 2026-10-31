@@ -15,6 +15,11 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@/lib/access-client", () => ({
   useStaff: () => ({ libraries: state.libraries, ready: state.ready }),
+  useHydratedSession: () => ({
+    data: { user: { id: "staff" } },
+    isPending: false,
+    error: null,
+  }),
 }))
 vi.mock("@/lib/navigation", () => ({ usePathname: () => state.pathname }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
@@ -22,8 +27,8 @@ vi.mock("@/components/staff/StaffDrawer", async () => {
   const { createElement: h } = await import("react")
 
   return {
-    StaffDrawer: () =>
-      h("div", { role: "dialog", "aria-label": "Staff drawer" }),
+    StaffDrawer: ({ open }: { open: boolean }) =>
+      open ? h("div", { role: "dialog", "aria-label": "Staff drawer" }) : null,
   }
 })
 

@@ -361,7 +361,7 @@ describe("staff access report", () => {
     expect(mail.to).toBe("mods@example.org")
     expect(mail.subject).toBe("Staff access report: Central")
     expect(mail.text).toContain(
-      `https://libraries.example/contribute/moderation/staff/${ID}`
+      `https://libraries.example/moderation/staff/${ID}`
     )
     expect(store[AUDIT]![0]).toMatchObject({
       actor: "owner",

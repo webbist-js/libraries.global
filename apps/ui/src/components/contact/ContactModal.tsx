@@ -34,11 +34,15 @@ export default function ContactModal({
   context,
   trigger,
   onClose,
+  open = true,
+  onAfterClose,
 }: {
   readonly intent: ContactIntent
   readonly context: ContactContext
   readonly trigger: HTMLElement | null
   readonly onClose: () => void
+  readonly open?: boolean
+  readonly onAfterClose?: () => void
 }) {
   const t = useTranslations("contactModal")
   const feedback = intent.mode === "feedback"
@@ -159,15 +163,16 @@ export default function ContactModal({
 
   return (
     <Dialog.Root
-      open
+      open={open}
       onOpenChange={(open) => {
         if (!open && !sending) onClose()
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className={styles.overlay} />
+        <Dialog.Overlay data-modal-overlay="" className={styles.overlay} />
         <Dialog.Content
           ref={panelRef}
+          data-modal-content=""
           aria-modal="true"
           className={styles.modal}
           onOpenAutoFocus={(event) => {
@@ -181,6 +186,7 @@ export default function ContactModal({
           onCloseAutoFocus={(event) => {
             event.preventDefault()
             if (trigger?.isConnected) trigger.focus()
+            onAfterClose?.()
           }}
           onEscapeKeyDown={(event) => {
             if (sending) event.preventDefault()

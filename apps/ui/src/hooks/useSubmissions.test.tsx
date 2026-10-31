@@ -9,7 +9,17 @@ const session = vi.hoisted(() => ({
   isPending: false,
 }))
 vi.mock("@/lib/access-client", () => ({ useHydratedSession: () => session }))
-import { useMySubmissions, useResumeDraft } from "./useSubmissions"
+const measured = vi.hoisted(() => vi.fn())
+const capture = vi.hoisted(() => vi.fn(() => measured))
+vi.mock("@/lib/workspace-analytics", () => ({
+  captureWorkspaceRouteAction: capture,
+}))
+import {
+  useCreateSubmission,
+  useFinalizeDraft,
+  useMySubmissions,
+  useResumeDraft,
+} from "./useSubmissions"
 
 const fetch = vi.fn()
 function clientWrapper(client: QueryClient) {
@@ -24,7 +34,64 @@ beforeEach(() => {
   session.data = { user: { id: "a" } }
   session.isPending = false
   fetch.mockReset()
+  capture.mockClear()
+  measured.mockClear()
   vi.stubGlobal("fetch", fetch)
+})
+
+describe("submission analytics outcomes", () => {
+  it("does not count draft creation as a submission", async () => {
+    fetch.mockResolvedValueOnce(
+      Response.json({ data: { documentId: "PRIVATE_DRAFT" } })
+    )
+    const view = renderHook(useCreateSubmission, {
+      wrapper: clientWrapper(client()),
+    })
+    await act(async () => {
+      await view.result.current.mutateAsync({
+        submissionType: "new_library",
+        asDraft: true,
+      })
+    })
+    expect(capture).not.toHaveBeenCalled()
+    expect(measured).not.toHaveBeenCalled()
+  })
+
+  it("records an accepted direct submission without its content", async () => {
+    fetch.mockResolvedValueOnce(
+      Response.json({ data: { documentId: "PRIVATE_SUBMISSION" } })
+    )
+    const view = renderHook(useCreateSubmission, {
+      wrapper: clientWrapper(client()),
+    })
+    await act(async () => {
+      await view.result.current.mutateAsync({
+        submissionType: "new_library",
+        note: "PRIVATE_NOTE",
+      })
+    })
+    expect(capture).toHaveBeenCalledExactlyOnceWith("submit")
+    expect(measured).toHaveBeenCalledExactlyOnceWith("success")
+  })
+
+  it("records a refused finalization once and preserves the caller's error", async () => {
+    fetch.mockResolvedValueOnce(
+      Response.json({ error: "private detail" }, { status: 403 })
+    )
+    const view = renderHook(useFinalizeDraft, {
+      wrapper: clientWrapper(client()),
+    })
+    await act(async () => {
+      await expect(
+        view.result.current.mutateAsync({
+          id: "PRIVATE_ID",
+          formData: { text: "PRIVATE_TEXT" },
+        })
+      ).rejects.toThrow("Request failed: 403")
+    })
+    expect(capture).toHaveBeenCalledExactlyOnceWith("submit")
+    expect(measured).toHaveBeenCalledExactlyOnceWith("error")
+  })
 })
 afterEach(() => {
   cleanup()

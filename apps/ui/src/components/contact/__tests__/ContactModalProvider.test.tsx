@@ -18,17 +18,20 @@ vi.mock("next/dynamic", () => ({
       intent,
       context,
       onClose,
+      open,
     }: {
       intent: unknown
       context: unknown
       onClose: () => void
-    }) => (
-      <div role="dialog">
-        <output data-testid="intent">{JSON.stringify(intent)}</output>
-        <output data-testid="context">{JSON.stringify(context)}</output>
-        <button onClick={onClose}>Close</button>
-      </div>
-    ),
+      open: boolean
+    }) =>
+      open ? (
+        <div role="dialog">
+          <output data-testid="intent">{JSON.stringify(intent)}</output>
+          <output data-testid="context">{JSON.stringify(context)}</output>
+          <button onClick={onClose}>Close</button>
+        </div>
+      ) : null,
 }))
 afterEach(() => {
   cleanup()

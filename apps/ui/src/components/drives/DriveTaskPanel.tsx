@@ -315,7 +315,7 @@ function SignInToHelp({ drivePath }: { readonly drivePath: string }) {
         Every change goes to a reviewer before it’s published.
       </p>
       <Link
-        className={`${PRIMARY} h-11 bg-(--t-accent-primary) px-5 text-base text-white no-underline hover:bg-(--t-accent-primary-hover)`}
+        className={`${PRIMARY} h-11 bg-(--t-action-primary) px-5 text-base text-white no-underline hover:bg-(--t-action-primary-hover)`}
         href={`/auth/signin?callbackUrl=${encodeURIComponent(drivePath)}`}
       >
         Sign in to help
@@ -474,7 +474,7 @@ function DriveRefusal({
 }
 
 const ROW_ACTION =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border bg-white px-4 text-base font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
+  "inline-flex h-10 items-center justify-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-4 text-base font-semibold no-underline transition-colors hover:bg-(--t-bg-surface)"
 
 /** One checklist row's action: an editor toggle, a photo, or the Index editor. */
 function LacksAction({
@@ -1122,7 +1122,7 @@ export function DriveTaskPanel({
             className={`${PRIMARY} ${
               full || sending
                 ? "cursor-not-allowed"
-                : "bg-(--t-accent-primary) text-white hover:bg-(--t-accent-primary-hover)"
+                : "bg-(--t-action-primary) text-white hover:bg-(--t-action-primary-hover)"
             }`}
             onClick={send}
             style={

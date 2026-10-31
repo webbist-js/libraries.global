@@ -84,7 +84,10 @@ export function ContributionRow({
           <div
             className="mt-3 flex items-start gap-2.5 rounded-[14px] px-4 py-3"
             style={{
-              background: note.tone === "warn" ? "#F5EEDC" : "#F6E3DA",
+              background:
+                note.tone === "warn"
+                  ? "var(--t-palette-amber-bg)"
+                  : "var(--t-palette-coral-bg)",
             }}
           >
             <Icon
@@ -94,7 +97,10 @@ export function ContributionRow({
               height={18}
               className="mt-0.5 shrink-0"
               style={{
-                color: note.tone === "warn" ? "#6B5420" : T.accent.danger,
+                color:
+                  note.tone === "warn"
+                    ? "var(--t-palette-amber-fg)"
+                    : T.accent.danger,
               }}
             />
             <p
@@ -104,7 +110,10 @@ export function ContributionRow({
               <span
                 className="font-semibold"
                 style={{
-                  color: note.tone === "warn" ? "#6B5420" : T.accent.danger,
+                  color:
+                    note.tone === "warn"
+                      ? "var(--t-palette-amber-fg)"
+                      : T.accent.danger,
                 }}
               >
                 Moderator’s note:{" "}

@@ -19,6 +19,12 @@ Entity references are identifiers, not public paths. The `entityRef` lifecycle d
 
 Journal articles use `/journal/{section}/{slug}`; Knowledge articles use `/knowledge/{section}/{slug}`. Their section relations and published article loaders determine the path. Legal documents use `/legal/{slug}`. Homepage, library search, Atlas, community and account pages have explicit application routes.
 
+Moderation is an independent private section at `/moderation`. Queue categories
+and filters use its query string; submission reviews use
+`/moderation/{documentId}`, and suggested additions use
+`/moderation/suggestions`. Its dashboard layout owns the scoped queue sidebar;
+page guards and backend authorization still check every review request.
+
 Next-intl uses the supported locales from `packages/shared-data/locales.ts`. English has no prefix; Czech and French use `/cs` and `/fr`.
 
 ## Retained Page model
@@ -32,3 +38,8 @@ The starter's hierarchy job queue, automatic full-path propagation and generic c
 Check the route loader, path helper, metadata/canonical URL, sitemap and incoming links together. The CMS retains a Redirect model, but that does not establish that an application route consumes it. Inspect the active route/proxy behavior and implement any required redirect explicitly. A slug edit must not be assumed to create redirects automatically.
 
 See [Architecture](architecture.md) and [Page builder](page-builder.md).
+
+About (`/about`), Plans (`/plans`) and Legal (`/legal`, `/legal/[slug]`) also
+live in the dashboard route group. Legal bypasses that shell for the existing
+public-beta policy request header. Utility/authentication routes and `/live/**`
+remain outside the group. The mobile miniapp host mapping is unchanged.

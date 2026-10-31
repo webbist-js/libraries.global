@@ -10,9 +10,10 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Sheet, PublishBar } from "@/components/ds"
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
-import { primaryCtaSm } from "@/lib/styles"
+import { captureWorkspaceAction } from "@/lib/workspace-analytics"
 
 import { recordChangesPayload, stepFields } from "./wizard.changes"
 import { fieldInputStyle } from "./wizard.constants"
@@ -20,7 +21,7 @@ import { wizardSteps, wizardStepCopy } from "./wizard.steps"
 import type { FormData } from "./wizard.types"
 
 const OUTLINED_PILL =
-  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-white px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
+  "inline-flex min-h-11 items-center gap-1.5 rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold no-underline transition-colors hover:bg-(--t-bg-surface) disabled:opacity-60"
 
 type StaleField = { field: string; byName?: string | null; changedAt: string }
 
@@ -112,6 +113,14 @@ export function StaffPublishControls({
     if (savingDraft) return
     setBusy(true)
     setError("")
+    const measured = captureWorkspaceAction(
+      {
+        workspace_area: "staff",
+        workspace_section: "record",
+        workspace_surface: "page",
+      },
+      "publish"
+    )
     try {
       const previous = { ...(payload.previous as Record<string, unknown>) }
       if ("mobileTimetable" in fields)
@@ -154,9 +163,11 @@ export function StaffPublishControls({
         `${data.published.length ? `Published ${data.published.length} change${data.published.length === 1 ? "" : "s"}` : "Changes sent"}${data.requested.length ? ` · ${data.requested.length} sent to a moderator` : ""} · ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
       )
       setOpen(false)
+      measured("success")
       setNote("")
       onPublished()
     } catch (e) {
+      measured("error")
       setError(
         e instanceof Error ? e.message : "Your changes could not be published."
       )

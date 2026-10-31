@@ -281,7 +281,7 @@ export function LiveSharingSettings({
         <button
           type="button"
           disabled={!accepted || busy}
-          className="inline-flex min-h-11 items-center rounded-full bg-(--t-accent-primary) px-5 font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center rounded-full bg-(--t-action-primary) px-5 font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:cursor-not-allowed disabled:opacity-50"
           onClick={() => save({ enabled: true, privacyAccepted: true })}
         >
           {tUi("allow_live_updates")}

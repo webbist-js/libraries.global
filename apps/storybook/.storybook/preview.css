@@ -1,0 +1,41 @@
+@import "@fontsource-variable/figtree/index.css";
+@import "@fontsource-variable/newsreader/standard.css";
+@import "@fontsource-variable/newsreader/standard-italic.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
+@import "../../ui/src/styles/globals.css";
+@import "../../ui/src/styles/dashboard.css";
+@import "../../ui/src/styles/records.css";
+@import "../../ui/src/styles/editorial.css";
+@import "../../ui/src/styles/site-search.css";
+@import "../../ui/src/styles/community-dashboard.css";
+@import "../../ui/src/styles/workspace-dashboard.css";
+@import "../../ui/src/styles/contribute-drawer.css";
+@import "../../ui/src/styles/listing-dashboard.css";
+@import "../../ui/src/styles/profile.css";
+@import "../../ui/src/components/home/homepage.css";
+@import "../../ui/src/components/about/about.css";
+@import "../../ui/src/components/atlas/atlas-motion.css";
+@source "../../ui/src";
+@source "../stories";
+/* Match next/font roles with self-hosted, offline font assets. */
+body {
+  --font-figtree: "Figtree Variable";
+  --font-newsreader: "Newsreader Variable";
+  --font-jetbrains-mono: "JetBrains Mono Variable";
+  background: var(--t-bg-void);
+  color: var(--t-ink-base);
+}
+.sb-show-main.sb-main-padded {
+  padding: 24px;
+}
+
+/* Audit paths and utility strings should wrap inside the documentation column. */
+.sb-audit-content :not(pre) > code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sb-audit-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}

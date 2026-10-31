@@ -120,7 +120,7 @@ export function AtlasStopPanel({
               type="button"
               onClick={onClose}
               aria-label={tUi("close_stop_panel")}
-              className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-full border bg-white hover:bg-(--t-bg-surface)"
+              className="absolute top-0 right-0 flex size-10 items-center justify-center rounded-full border bg-(--t-bg-deep) hover:bg-(--t-bg-surface)"
               style={{ borderColor: T.border.line, color: T.ink.base }}
             >
               <Icon aria-hidden="true" icon="mdi:close" width={20} />
@@ -307,7 +307,7 @@ export function AtlasStopPanel({
           <div className="flex flex-wrap gap-2 pt-1">
             <button
               type="button"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-accent-primary) px-5 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover)"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-(--t-action-primary) px-5 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover)"
               onClick={() => setDrawer(true)}
               {...analyticsAttributes("mobile_service_action", {
                 interaction_source: "atlas_panel",

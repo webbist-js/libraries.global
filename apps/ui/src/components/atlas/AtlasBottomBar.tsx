@@ -259,7 +259,7 @@ export function AtlasLegends({
               <i
                 aria-hidden="true"
                 className="inline-block h-3.5 w-4 rounded border border-dashed border-black/30"
-                style={{ background: "#D8D4CA" }}
+                style={{ background: "var(--t-border-hi)" }}
               />
             ),
           },
@@ -306,8 +306,8 @@ export function AtlasLegends({
                 className="inline-flex size-3.5 items-center justify-center rounded-full text-xs leading-none font-bold"
                 style={{
                   border: "1.5px solid #A13A1A",
-                  color: "#A13A1A",
-                  background: "#fff",
+                  color: "var(--t-palette-coral-fg)",
+                  background: "var(--t-bg-deep)",
                 }}
               >
                 ×
@@ -432,7 +432,7 @@ export function AtlasMapLegend({
           collisionPadding={16}
           sideOffset={12}
           aria-label={tUi("active_map_key")}
-          className="z-[90] grid max-h-[min(55dvh,480px)] w-[min(640px,calc(100vw-32px))] gap-4 overflow-y-auto overscroll-contain rounded-2xl border-(--t-border-hi) bg-white p-5 shadow-lg sm:grid-cols-2"
+          className="z-[90] grid max-h-[min(55dvh,480px)] w-[min(640px,calc(100vw-32px))] gap-4 overflow-y-auto overscroll-contain rounded-2xl border-(--t-border-hi) bg-(--t-bg-deep) p-5 shadow-lg sm:grid-cols-2"
         >
           {children}
         </PopoverContent>

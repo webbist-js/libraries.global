@@ -14,7 +14,7 @@ const calloutStyles = {
   },
   warning: {
     border: "border-amber-500/30",
-    bg: "bg-amber-500/8",
+    bg: "bg-(--t-palette-amber-soft)",
     bar: "bg-amber-400",
     label: "text-amber-700 dark:text-amber-300",
   },
@@ -115,7 +115,10 @@ export function ArticleBodyBlocks({
                     ) : null}
                   </div>
                 ) : null}
-                <pre className="overflow-x-auto p-5 font-mono text-sm leading-6 text-(--t-ink-dim)">
+                <pre
+                  tabIndex={0}
+                  className="overflow-x-auto p-5 font-mono text-sm leading-6 text-(--t-ink-dim) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                >
                   <code>{block.code}</code>
                 </pre>
               </div>

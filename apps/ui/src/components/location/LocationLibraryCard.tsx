@@ -62,7 +62,7 @@ export function LocationLibraryCard({
 
   return (
     <article
-      className="relative flex h-full flex-col rounded-[20px] border bg-white p-2 transition-[border-color,box-shadow] focus-within:border-(--t-border-hi) hover:border-(--t-border-hi) hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"
+      className="relative flex h-full flex-col rounded-[20px] border bg-(--t-bg-deep) p-2 transition-[border-color,box-shadow] focus-within:border-(--t-border-hi) hover:border-(--t-border-hi) hover:shadow-[0_12px_28px_rgba(23,22,43,.08)]"
       style={{ borderColor: T.border.line }}
     >
       <div className="relative aspect-[16/9] overflow-hidden rounded-2xl">

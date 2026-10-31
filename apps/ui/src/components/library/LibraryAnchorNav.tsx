@@ -11,7 +11,13 @@ import { T } from "@/lib/design-tokens"
  * Sticky "On this page" tabs under the 56px header, on the hero band's
  * colour. The tab for the section in view is marked as current.
  */
-export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
+export function LibraryAnchorNav({
+  items,
+  sidebar = false,
+}: {
+  readonly items: AnchorItem[]
+  readonly sidebar?: boolean
+}) {
   const tUi = useUiTranslations("ui")
 
   const [current, setCurrent] = useState<string | null>(null)
@@ -42,10 +48,14 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
 
   return (
     <nav
-      data-sticky-navigation=""
+      data-sticky-navigation={sidebar ? undefined : ""}
+      data-library-anchor-nav=""
       aria-label={tUi("on_this_page")}
       className="sticky top-(--sticky-header-height) z-5 border-b"
-      style={{ background: T.bg.space, borderColor: T.border.line }}
+      style={{
+        background: sidebar ? "transparent" : T.bg.space,
+        borderColor: T.border.line,
+      }}
     >
       <Container>
         <ul className="m-0 -mx-1 flex list-none gap-4 overflow-x-auto p-0 [scrollbar-width:none]">
@@ -64,6 +74,11 @@ export function LibraryAnchorNav({ items }: { readonly items: AnchorItem[] }) {
                   }}
                 >
                   {item.label}
+                  {item.count !== undefined ? (
+                    <span className="ml-auto text-xs tabular-nums">
+                      {item.count}
+                    </span>
+                  ) : null}
                   {item.pro ? (
                     <span
                       className="rounded-full px-1.5 text-xs font-bold"

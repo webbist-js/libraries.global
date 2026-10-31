@@ -1,4 +1,13 @@
 import "@/styles/globals.css"
+import "@/styles/dashboard.css"
+import "@/styles/records.css"
+import "@/styles/editorial.css"
+import "@/styles/site-search.css"
+import "@/styles/community-dashboard.css"
+import "@/styles/workspace-dashboard.css"
+import "@/styles/contribute-drawer.css"
+import "@/styles/listing-dashboard.css"
+import "@/styles/profile.css"
 
 import type { Metadata } from "next"
 import { headers } from "next/headers"
@@ -10,6 +19,7 @@ import {
   setRequestLocale,
 } from "next-intl/server"
 
+import { AppearanceProvider } from "@/components/appearance/AppearanceProvider"
 import { BetaFeedback } from "@/components/beta/BetaFeedback"
 import { BetaWelcomeMount } from "@/components/beta/BetaWelcomeMount"
 import { ContactModalProvider } from "@/components/contact/ContactModalProvider"
@@ -20,8 +30,12 @@ import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener
 import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
 import { EventModal } from "@/components/events/EventModal"
 import { EventModalProvider } from "@/components/events/EventModalContext"
+import { buildFooterNavigation } from "@/components/global/footer-navigation"
+import { FooterNavigationProvider } from "@/components/global/FooterNavigationContext"
 import GlobalFooter from "@/components/global/GlobalFooter"
+import { SiteSearchMount } from "@/components/global/SiteSearch"
 import { SkipToContent } from "@/components/global/SkipToContent"
+import { ProfileDrawerMount } from "@/components/profile/ProfileDrawerMount"
 import { ClientProviders } from "@/components/providers/ClientProviders"
 import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
@@ -63,13 +77,17 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/favicon.ico?v=globe-1",
+        url: "/favicon.ico?v=books-blue-2",
         sizes: "16x16 32x32 48x48 64x64 256x256",
       },
-      { url: "/favicon.svg?v=globe-1", type: "image/svg+xml" },
+      {
+        url: "/favicon.svg?v=books-blue-2",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
     ],
     apple: {
-      url: "/apple-touch-icon.png?v=globe-1",
+      url: "/apple-touch-icon.png?v=books-blue-2",
       sizes: "180x180",
       type: "image/png",
     },
@@ -114,7 +132,7 @@ export default async function RootLayout({
   // Keep the public entrance independent of CMS reads and account/data providers.
   if (betaShell)
     return (
-      <html lang={locale}>
+      <html lang={locale} suppressHydrationWarning>
         <head>
           <PublicRuntimeConfig nonce={nonce} />
         </head>
@@ -129,10 +147,12 @@ export default async function RootLayout({
           <SkipToContent>{tUi("skip_to_main_content")}</SkipToContent>
           <TrackingScripts nonce={nonce} locale={locale} />
           <ServerProviders>
-            <ContactModalProvider aliases={contactAliases}>
-              <StickyPageLayout id="page-shell">{children}</StickyPageLayout>
-              <BetaFeedback label={tUi("feedback")} />
-            </ContactModalProvider>
+            <AppearanceProvider nonce={nonce}>
+              <ContactModalProvider aliases={contactAliases}>
+                <StickyPageLayout id="page-shell">{children}</StickyPageLayout>
+                <BetaFeedback label={tUi("feedback")} />
+              </ContactModalProvider>
+            </AppearanceProvider>
           </ServerProviders>
         </body>
       </html>
@@ -163,12 +183,23 @@ export default async function RootLayout({
             <ClientProviders nonce={nonce} liveConsole={liveConsole}>
               <EventModalProvider>
                 <div className="relative flex min-h-screen flex-col">
-                  <StickyPageLayout
-                    id="page-shell"
-                    className="strapi-page-slot flex flex-1 flex-col"
+                  <FooterNavigationProvider
+                    navigation={buildFooterNavigation(
+                      footer,
+                      legalRes?.data ?? [],
+                      {
+                        legal: tUi("legal_policies"),
+                        plans: tUi("plans_and_pricing"),
+                      }
+                    )}
                   >
-                    {children}
-                  </StickyPageLayout>
+                    <StickyPageLayout
+                      id="page-shell"
+                      className="strapi-page-slot flex flex-1 flex-col"
+                    >
+                      {children}
+                    </StickyPageLayout>
+                  </FooterNavigationProvider>
 
                   {!liveConsole && <TailwindIndicator />}
 
@@ -187,6 +218,12 @@ export default async function RootLayout({
                   )}
                 </div>
                 {!liveConsole && <EventModal />}
+                {!liveConsole && (
+                  <>
+                    <ProfileDrawerMount />
+                    <SiteSearchMount />
+                  </>
+                )}
                 {!liveConsole && <StaffDrawerMount />}
                 {!liveConsole && <EditorialDrawerMount />}
                 {betaEnabled() && !liveConsole && (

@@ -1,4 +1,8 @@
-import { noticeIsUpcoming, noticeLocalDate } from "@repo/shared-data"
+import {
+  noticeEndDate,
+  noticeIsUpcoming,
+  noticeLocalDate,
+} from "@repo/shared-data"
 
 import {
   LIBRARY_NOTICE_UID,
@@ -9,6 +13,17 @@ import {
   refreshNoticeEffects,
 } from "../../../utils/library-notices"
 import { requireStaffMember } from "../../../utils/staff"
+
+type NoticeTransaction = {
+  raw?: (query: string, bindings: string[]) => PromiseLike<unknown>
+}
+
+async function lock(trx: NoticeTransaction, id: string) {
+  if (typeof trx?.raw === "function")
+    await trx.raw("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", [
+      `staff-library:${id}`,
+    ])
+}
 
 export default ({ strapi }: { strapi: any }) => {
   async function authorise(userId: string, id: string) {
@@ -27,7 +42,8 @@ export default ({ strapi }: { strapi: any }) => {
     id: string,
     actor: string,
     action: string,
-    noticeId: string
+    noticeId: string,
+    detail: Record<string, unknown> = {}
   ) {
     await strapi.documents("plugin::library-staff.staff-audit").create({
       data: {
@@ -35,16 +51,10 @@ export default ({ strapi }: { strapi: any }) => {
         actor,
         action,
         subject: null,
-        detail: { noticeDocumentId: noticeId },
+        detail: { noticeDocumentId: noticeId, ...detail },
         at: new Date(),
       },
     })
-  }
-  async function lock(trx: any, id: string) {
-    if (typeof trx?.raw === "function")
-      await trx.raw("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", [
-        `staff-library:${id}`,
-      ])
   }
 
   return {
@@ -127,6 +137,55 @@ export default ({ strapi }: { strapi: any }) => {
           .documents(LIBRARY_NOTICE_UID)
           .update({ documentId: noticeId, data })
         await audit(id, userId, "notice_updated", noticeId)
+
+        return updated
+      })
+      await refreshNoticeEffects(strapi, id)
+
+      return { notice: publicNotice(result) }
+    },
+    async reactivate(
+      userId: string,
+      id: string,
+      noticeId: string,
+      input: unknown
+    ) {
+      await authorise(userId, id)
+      const result = await strapi.db.transaction(async ({ trx }: any) => {
+        await lock(trx, id)
+        await authorise(userId, id)
+        const current = await strapi.documents(LIBRARY_NOTICE_UID).findOne({
+          documentId: noticeId,
+          populate: { library: { fields: ["documentId"] } },
+        })
+        if (!current || current.library?.documentId !== id)
+          throw new NoticeError(404, "not_found")
+        const record = await library(id)
+        const today = noticeLocalDate(new Date(), record.timezone)
+        if (!current.endedAt && noticeEndDate(publicNotice(current)) >= today)
+          throw new NoticeError(
+            409,
+            "notice_current",
+            "This notice is already current. Refresh the page to see it."
+          )
+        // Require fresh dates; never silently revive an old closure window.
+        const data = normalizeNotice(input, record)
+        if (String(data.from) < today)
+          throw new NoticeError(
+            400,
+            "invalid_dates",
+            "Choose today or a future date to reactivate this notice."
+          )
+        const previous = {
+          previousFrom: current.from,
+          previousTo: current.to ?? null,
+          previousEndedAt: current.endedAt ?? null,
+        }
+        const updated = await strapi.documents(LIBRARY_NOTICE_UID).update({
+          documentId: noticeId,
+          data: { ...data, endedAt: null, endedByBaUserId: null },
+        })
+        await audit(id, userId, "notice_reactivated", noticeId, previous)
 
         return updated
       })

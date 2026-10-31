@@ -77,7 +77,7 @@ export function fieldA11y(id: string, error?: string) {
 const HEADING_ICON_TONES = {
   info: { bg: T.accent.chip, fg: T.accent.primary },
   ok: { bg: "var(--tint-public-bg)", fg: T.accent.ok },
-  warn: { bg: "#F5EEDC", fg: T.accent.warn },
+  warn: { bg: "var(--t-palette-amber-bg)", fg: T.accent.warn },
 } as const
 
 const UTILITY_ICONS = {
@@ -304,13 +304,13 @@ export function AuthPrimaryButton({
       disabled={isDisabled}
       style={{
         ...pillBase,
-        background: T.accent.primary,
+        background: T.action.primary,
         color: "#fff",
         border: "none",
         opacity: isDisabled ? 0.6 : 1,
         cursor: isDisabled ? "default" : "pointer",
       }}
-      className="transition-colors enabled:hover:bg-(--t-accent-primary-hover)"
+      className="transition-colors enabled:hover:bg-(--t-action-primary-hover)"
       {...props}
     >
       {children}
@@ -357,11 +357,11 @@ export function AuthPrimaryLink({
       href={href}
       style={{
         ...pillBase,
-        background: T.accent.primary,
+        background: T.action.primary,
         color: "#fff",
         textDecoration: "none",
       }}
-      className="transition-colors hover:bg-(--t-accent-primary-hover)"
+      className="transition-colors hover:bg-(--t-action-primary-hover)"
     >
       {children}
     </GlobalLink>

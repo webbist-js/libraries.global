@@ -205,7 +205,7 @@ export function AtlasSearchTab({
       <label
         htmlFor={inputId}
         className="flex h-14 items-center gap-2.5 rounded-[16px] border px-3.5 focus-within:border-(--t-accent-primary) focus-within:shadow-[0_0_0_3px_var(--t-accent-chip)]"
-        style={{ borderColor: T.border.hi, background: "#fff" }}
+        style={{ borderColor: T.border.hi, background: "var(--t-bg-deep)" }}
       >
         <Icon name="search" size={20} color={T.ink.base} />
         <span className="sr-only">Search libraries, stops and places</span>
@@ -378,7 +378,7 @@ export function AtlasSearchTab({
                     <button
                       type="button"
                       onClick={() => onMobilePreset("today")}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold"
                       style={{ borderColor: T.border.hi }}
                     >
                       <Icon name="bus" size={16} color={T.map.stopRing} />
@@ -387,7 +387,7 @@ export function AtlasSearchTab({
                     <button
                       type="button"
                       onClick={() => onMobilePreset("live")}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold"
                       style={{ borderColor: T.border.hi }}
                     >
                       <Icon name="bus" size={16} color={T.map.stopRing} />
@@ -400,7 +400,7 @@ export function AtlasSearchTab({
                     key={p.label}
                     type="button"
                     onClick={() => onPreset(p.patch)}
-                    className="inline-flex min-h-11 items-center rounded-full border bg-white px-4 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
+                    className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"
                     style={{ borderColor: T.border.hi }}
                   >
                     {p.label}

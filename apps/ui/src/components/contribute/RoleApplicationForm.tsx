@@ -76,7 +76,7 @@ const ROLE_HOME: Record<ApplicationRole, { href: string; label: string }> = {
     href: "/contribute/knowledge?type=journal",
     label: "Open the Journal editor",
   },
-  moderator: { href: "/contribute/moderation", label: "Go to Moderation" },
+  moderator: { href: "/moderation", label: "Go to Moderation" },
 }
 
 type StatusMeta = { label: string; icon: string; fg: string; bg: string }
@@ -99,8 +99,8 @@ const STATUS_META: Record<string, StatusMeta> = {
   needs_info: {
     label: "Needs more information",
     icon: "mdi:help-circle-outline",
-    fg: "#6B5420",
-    bg: "#F5EEDC",
+    fg: "var(--t-palette-amber-fg)",
+    bg: "var(--t-palette-amber-bg)",
   },
 }
 
@@ -266,7 +266,7 @@ function EligibilityCard({
           className="h-full rounded-full"
           style={{
             width: `${percent}%`,
-            background: eligible ? T.accent.ok : T.accent.primary,
+            background: eligible ? T.accent.ok : T.action.primary,
           }}
         />
       </div>
@@ -1010,7 +1010,7 @@ export function RoleApplicationForm({
                 >
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-(--t-action-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
                     style={{ border: "none", fontFamily: T.font.sans }}
                   >
                     {state === "sending" ? tUi("sending") : "Send application"}

@@ -125,7 +125,7 @@ export function GlobalMobileMenu({
                         className="flex min-h-12 items-center rounded-2xl px-4 text-base font-medium"
                         style={
                           active
-                            ? { background: T.ink.base, color: "#fff" }
+                            ? { background: T.bg.inverse, color: "#fff" }
                             : { color: T.ink.base }
                         }
                       >

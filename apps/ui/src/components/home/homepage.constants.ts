@@ -22,3 +22,8 @@ export function displayStyle(size: DisplaySize): CSSProperties {
 
 /** The 2px ink rule that opens a list section (journeys, coverage). */
 export const SECTION_RULE = "#4D4C5B"
+
+/** Plain headings use the shared sans-serif hierarchy below the page hero. */
+export function plainHomepageTitle(title?: string | null): string {
+  return title?.replaceAll("*", "") ?? ""
+}

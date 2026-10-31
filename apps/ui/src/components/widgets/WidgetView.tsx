@@ -23,14 +23,14 @@ export function WidgetView({
   return (
     <article
       lang={c.locale}
-      className="@container min-w-0 bg-white wrap-break-word text-(--t-ink-base)"
+      className="@container min-w-0 bg-(--t-bg-deep) wrap-break-word text-(--t-ink-base)"
       aria-labelledby={`${id}-title`}
       style={{
         border:
           c.border === "none"
             ? 0
             : c.border === "strong"
-              ? "2px solid #17162B"
+              ? "2px solid var(--t-ink-base)"
               : "1px solid var(--t-border-line)",
         borderRadius: c.radius === "square" ? 0 : c.radius === "soft" ? 12 : 24,
         padding: c.density === "compact" ? 16 : 24,

@@ -76,7 +76,7 @@ async function pageFor(
 }
 
 const reviewLink = (documentId: string) =>
-  `a[href^="/contribute/moderation/${documentId}"]`
+  `a[href^="/moderation/${documentId}"]`
 
 test.beforeAll(async ({ playwright }, testInfo) => {
   const baseURL = testInfo.project.use.baseURL!
@@ -162,7 +162,7 @@ test("the Moderation tab shows for Moderators only", async ({
   await asContributor.waitForLoadState("networkidle")
   await expect(nav.getByRole("link", { name: "Moderation" })).toHaveCount(0)
   // The pages don't announce themselves, and the API refuses.
-  const denied = await asContributor.goto("/contribute/moderation", NAVIGATION)
+  const denied = await asContributor.goto("/moderation", NAVIGATION)
   await expectMissingPage(asContributor, denied)
   expect((await contributor.get("/api/moderation/submissions")).status()).toBe(
     403
@@ -209,18 +209,12 @@ test("the French Knowledge Moderator sees the French suggestion, not the English
   ).toBe(404)
 
   const page = await pageFor(browser, frModerator, baseURL!)
-  await page.goto(
-    `/contribute/moderation?q=${encodeURIComponent(STAMP)}`,
-    NAVIGATION
-  )
+  await page.goto(`/moderation?q=${encodeURIComponent(STAMP)}`, NAVIGATION)
   await expect(page.locator(reviewLink(ids.frWiki)).first()).toBeVisible(
     NAVIGATION
   )
   await expect(page.locator(reviewLink(ids.enJournal))).toHaveCount(0)
-  const outOfScope = await page.goto(
-    `/contribute/moderation/${ids.enJournal}`,
-    NAVIGATION
-  )
+  const outOfScope = await page.goto(`/moderation/${ids.enJournal}`, NAVIGATION)
   await expectMissingPage(page, outOfScope)
 })
 
@@ -236,7 +230,7 @@ test("a Moderator can't open or decide their own submission", async ({
   expect((await decided.json())?.error?.name).toBe("self_review")
 
   const page = await pageFor(browser, moderator, baseURL!)
-  const own = await page.goto(`/contribute/moderation/${ids.own}`, NAVIGATION)
+  const own = await page.goto(`/moderation/${ids.own}`, NAVIGATION)
   await expectMissingPage(page, own)
   await expect(
     page.getByRole("button", { name: "Approve", exact: true })
@@ -248,7 +242,7 @@ test("Approve and publish puts the French suggestion live", async ({
   baseURL,
 }) => {
   const page = await pageFor(browser, frModerator, baseURL!)
-  await page.goto(`/contribute/moderation/${ids.frWiki}`, NAVIGATION)
+  await page.goto(`/moderation/${ids.frWiki}`, NAVIGATION)
   const confirm = page.getByRole("button", { name: "Confirm and publish" })
   await clickUntil(
     page.getByRole("button", { name: "Approve and publish" }),
@@ -275,7 +269,7 @@ test("a needs-info note appears on the contributor's submission card", async ({
   baseURL,
 }) => {
   const review = await pageFor(browser, moderator, baseURL!)
-  await review.goto(`/contribute/moderation/${ids.needsInfo}`, NAVIGATION)
+  await review.goto(`/moderation/${ids.needsInfo}`, NAVIGATION)
   const sent = review.getByText(
     "Sent back for changes. The contributor will see your note."
   )

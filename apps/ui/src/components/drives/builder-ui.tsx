@@ -49,7 +49,7 @@ export const railCard = "rounded-[20px] p-5 sm:p-6"
 export const railTitleClass = "m-0 text-base font-semibold"
 
 export const PRIMARY =
-  "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-(--t-accent-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-accent-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-(--t-action-primary) px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
 export const SECONDARY =
   "inline-flex cursor-pointer items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-60"
 export const SECONDARY_LINK =

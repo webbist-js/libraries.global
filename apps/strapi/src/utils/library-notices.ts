@@ -210,36 +210,36 @@ export async function noticesForLibrary(
   })
   if (!library) return []
   const date = noticeLocalDate(now, library.timezone)
-  const rows = await strapi.documents(LIBRARY_NOTICE_UID).findMany({
-    filters: {
-      library: { documentId: id },
-      $or: [
-        {
+  // Only the authorised staff list asks for history. Public callers retain
+  // the current/upcoming date window and never receive ended notices.
+  const filters = {
+    library: { documentId: id },
+    ...(includeEnded
+      ? {}
+      : {
           endedAt: { $null: true },
           $or: [
-            { to: { $gte: includeEnded ? noticeAddDays(date, -29) : date } },
+            { to: { $gte: date } },
             {
               to: { $null: true },
-              from: { $gte: noticeAddDays(date, includeEnded ? -58 : -29) },
+              from: { $gte: noticeAddDays(date, -29) },
             },
           ],
-        },
-        ...(includeEnded
-          ? [
-              {
-                endedAt: {
-                  $gte: new Date(now.getTime() - 30 * 86_400_000).toISOString(),
-                },
-              },
-            ]
-          : []),
-      ],
-    },
-    sort: ["from:asc", "createdAt:desc"],
-    limit: 500,
-  })
+        }),
+  }
+  const result: LibraryNotice[] = []
+  for (let start = 0; ; start += 500) {
+    const rows = await strapi.documents(LIBRARY_NOTICE_UID).findMany({
+      filters,
+      sort: ["from:asc", "createdAt:desc", "documentId:asc"],
+      start,
+      limit: 500,
+    })
+    result.push(...rows.map(publicNotice))
+    if (rows.length < 500) break
+  }
 
-  return rows.map(publicNotice)
+  return result
 }
 /**
  * Active notices for up to a few hundred libraries in two queries, keyed by

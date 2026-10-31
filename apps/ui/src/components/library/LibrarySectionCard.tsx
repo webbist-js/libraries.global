@@ -106,17 +106,11 @@ export function LibrarySectionCard({
       aria-labelledby={`${id}-h`}
       className={
         compact
-          ? "flex scroll-mt-32 flex-col rounded-3xl p-5"
-          : "scroll-mt-32 rounded-3xl p-5 sm:p-7"
+          ? "library-section-card flex scroll-mt-8 flex-col"
+          : "library-section-card scroll-mt-8"
       }
-      style={{
-        background: id === "changes" ? T.bg.space : T.bg.deep,
-        border: dashed
-          ? `1px dashed ${T.border.hi}`
-          : `1px solid ${T.border.line}`,
-      }}
     >
-      <div className="flex items-start gap-3">
+      <div className="library-section-heading flex items-start gap-3">
         {showIcon ? (
           <span
             aria-hidden="true"
@@ -133,7 +127,7 @@ export function LibrarySectionCard({
         <div className="min-w-0">
           <h2
             id={`${id}-h`}
-            className={`type-h2 ${
+            className={`type-small-heading ${
               titleClassName ? `m-0 ${titleClassName} ` : "m-0"
             }`}
             style={{
@@ -152,7 +146,13 @@ export function LibrarySectionCard({
           ) : null}
         </div>
       </div>
-      <div className={compact ? "mt-3 flex flex-1 flex-col" : "mt-5"}>
+      <div
+        className={`library-section-body ${compact ? "flex flex-1 flex-col" : ""}`}
+        style={{
+          background: T.bg.deep,
+          border: `1px ${dashed ? "dashed" : "solid"} ${T.border.line}`,
+        }}
+      >
         {children}
       </div>
     </section>

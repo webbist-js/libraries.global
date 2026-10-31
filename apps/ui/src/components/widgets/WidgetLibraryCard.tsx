@@ -37,7 +37,10 @@ export function WidgetLibraryCard({
       style={{
         borderColor:
           r.documentId === selected ? accent : "var(--t-border-line)",
-        background: r.documentId === selected ? "var(--t-bg-surface)" : "white",
+        background:
+          r.documentId === selected
+            ? "var(--t-bg-surface)"
+            : "var(--t-bg-deep)",
       }}
     >
       {type === "finder" ? (

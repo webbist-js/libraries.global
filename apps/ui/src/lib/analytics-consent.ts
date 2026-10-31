@@ -1,6 +1,9 @@
 /** First-party preference storage contains no account or visitor identifier. */
 export const ANALYTICS_CONSENT_KEY = "lg.analytics-consent.v1"
 export const ANALYTICS_CONSENT_DAYS = 180
+// Keep the key stable so existing tabs notice withdrawal. A wider purpose needs
+// a fresh grant; a refusal remains a refusal without asking again.
+export const ANALYTICS_CONSENT_VERSION = 2
 const MAX_AGE = ANALYTICS_CONSENT_DAYS * 86_400_000
 
 export type AnalyticsChoice = { analytics: boolean; expires: number }
@@ -12,7 +15,8 @@ export function readAnalyticsChoice(
   try {
     const choice = JSON.parse(storage.getItem(ANALYTICS_CONSENT_KEY) ?? "null")
     if (
-      choice?.version === 1 &&
+      (choice?.version === ANALYTICS_CONSENT_VERSION ||
+        (choice?.version === 1 && choice.analytics === false)) &&
       typeof choice.analytics === "boolean" &&
       Number.isFinite(choice.expires) &&
       choice.expires > now &&
@@ -35,7 +39,7 @@ export function saveAnalyticsChoice(
   try {
     storage.setItem(
       ANALYTICS_CONSENT_KEY,
-      JSON.stringify({ version: 1, ...choice })
+      JSON.stringify({ version: ANALYTICS_CONSENT_VERSION, ...choice })
     )
   } catch {
     // The choice still applies to this document if storage is blocked.

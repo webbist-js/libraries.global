@@ -3,7 +3,6 @@
 import { normalizeMobileTimetable, sectionCheckedAt } from "@repo/shared-data"
 import { useLocale, useTranslations } from "next-intl"
 
-import { hubHref } from "@/components/contribute/wizard.logic"
 import GlobalLink from "@/components/global/GlobalLink"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
@@ -103,7 +102,7 @@ export function LibraryFeaturedContribution({
     key: "photo",
     title: t("tasks.photo"),
     description: t("tasks.photoNote"),
-    href: hubHref("photo", library),
+    category: "Photo",
   }
   const correction: Task = {
     key: "correction",
@@ -201,7 +200,7 @@ export function LibraryFeaturedContribution({
           : "suggestCorrection"
   )
   const actionClass =
-    "inline-flex min-h-12 items-center rounded-full bg-(--t-accent-primary) px-5 text-sm font-semibold text-white no-underline hover:bg-(--t-accent-primary-hover)"
+    "inline-flex min-h-12 items-center rounded-full bg-(--t-action-primary) px-5 text-sm font-semibold text-white no-underline hover:bg-(--t-action-primary-hover)"
 
   return (
     <div id="contribute" className="scroll-mt-(--sticky-content-top)">
@@ -214,7 +213,7 @@ export function LibraryFeaturedContribution({
             className="rounded-[28px] border p-6 sm:p-8"
             style={{ background: T.bg.deep, borderColor: T.border.line }}
           >
-            <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,.9fr)] lg:gap-7">
+            <div className="library-contribution-grid grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,.9fr)] lg:gap-7">
               <div className="flex flex-col items-start gap-3.5">
                 <p
                   className="m-0 text-sm font-semibold"

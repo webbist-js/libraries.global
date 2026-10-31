@@ -18,7 +18,7 @@ export default function DevNavbar() {
   ]
 
   return (
-    <div className="bg-gray-300">
+    <div className="bg-(--t-bg-space)">
       <Container>
         <div className="py-2">
           {links

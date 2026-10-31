@@ -293,7 +293,7 @@ export function FilterOption({
         {label}
       </span>
       {count != null ? (
-        <span className="text-sm tabular-nums" style={{ color: T.ink.low }}>
+        <span className="text-sm tabular-nums" style={{ color: T.ink.dim }}>
           {count}
         </span>
       ) : null}
@@ -388,7 +388,7 @@ function FilterPill({
       {activeCount > 0 ? (
         <span
           className="flex size-5 items-center justify-center rounded-full text-xs font-bold text-white"
-          style={{ background: T.accent.primary }}
+          style={{ background: T.action.primary }}
         >
           {activeCount}
           <span className="sr-only"> active</span>
@@ -477,7 +477,8 @@ export function FilterSidebar({
   const tUi = useUiTranslations("ui")
 
   return (
-    <aside
+    <div
+      role="region"
       id={sidebar.sidebarId}
       aria-label={tUi("filters")}
       className={[
@@ -489,7 +490,7 @@ export function FilterSidebar({
       ].join(" ")}
     >
       {children}
-    </aside>
+    </div>
   )
 }
 
@@ -502,11 +503,13 @@ export function FilterDrawer({
   onClose,
   children,
   showLabel,
+  edgeAligned = false,
 }: {
   readonly open: boolean
   readonly onClose: () => void
   readonly children: React.ReactNode
   readonly showLabel?: string
+  readonly edgeAligned?: boolean
 }) {
   const tUi = useUiTranslations("ui")
 
@@ -528,7 +531,8 @@ export function FilterDrawer({
       open={open}
       onClose={onClose}
       side="left"
-      size="md"
+      size={edgeAligned ? "lg" : "md"}
+      className={edgeAligned ? "dashboard-filter-drawer" : undefined}
       title={tUi("filters")}
       titleId={titleId}
       footer={
@@ -540,7 +544,7 @@ export function FilterDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-11 w-full rounded-full border-0 bg-(--t-accent-primary) px-5 py-3 text-base font-semibold text-white hover:bg-(--t-accent-primary-hover)"
+              className="min-h-11 w-full rounded-full border-0 bg-(--t-action-primary) px-5 py-3 text-base font-semibold text-white hover:bg-(--t-action-primary-hover)"
             >
               {showLabel}
             </button>
@@ -549,7 +553,15 @@ export function FilterDrawer({
       }
     >
       <FilterDrawerContext.Provider value>
-        <div className="px-5 py-4">{children}</div>
+        <div
+          className={
+            edgeAligned
+              ? "min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4"
+              : "px-5 py-4"
+          }
+        >
+          {children}
+        </div>
       </FilterDrawerContext.Provider>
     </Drawer>
   )

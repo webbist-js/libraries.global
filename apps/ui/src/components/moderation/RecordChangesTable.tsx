@@ -71,6 +71,7 @@ function Lines({
     <div className="flex flex-col gap-1">
       {lines.map((line, i) => (
         <span
+          // eslint-disable-next-line react/no-array-index-key -- Repeated text lines have no identity or local state beyond their display position.
           key={i}
           style={{
             color,
@@ -83,6 +84,22 @@ function Lines({
       ))}
     </div>
   )
+}
+
+function changeHeading(
+  count: number,
+  audience: string,
+  submissionType: string,
+  category: unknown
+) {
+  const plural = count === 1 ? "" : "s"
+  if (audience === "contributor") return `${count} proposed change${plural}`
+  const from =
+    submissionType === "correction"
+      ? "from a contributor without a claim"
+      : "from a claimant"
+
+  return `${count} change${plural} · ${from}${typeof category === "string" ? ` · ${category}` : ""}`
 }
 
 const cell = "px-4 py-3 align-top text-left text-sm"
@@ -98,7 +115,9 @@ export function RecordChangesTable({
   submissionType,
   fields: rawFields,
   review: rawReview,
+  audience = "moderator",
 }: {
+  readonly audience?: "moderator" | "contributor"
   readonly submissionType: string
   readonly fields: unknown
   readonly review: unknown
@@ -164,10 +183,6 @@ export function RecordChangesTable({
   }
 
   const count = changes.length + suggested.length
-  const from =
-    submissionType === "correction"
-      ? "from a contributor without a claim"
-      : "from a claimant"
 
   return (
     <div className="flex flex-col gap-4">
@@ -193,15 +208,18 @@ export function RecordChangesTable({
         }}
       >
         <p className="m-0 font-semibold" style={{ color: T.ink.base }}>
-          {`${count} change${count === 1 ? "" : "s"} · ${from}${typeof fields.category === "string" ? ` · ${fields.category}` : ""}`}
+          {changeHeading(count, audience, submissionType, fields.category)}
         </p>
         <p className="m-0 mt-1">
-          Approving writes the proposed values to the library record and
-          publishes it. Fields not listed here are left as they are.
+          {audience === "contributor"
+            ? "These are the changes in your contribution. Other fields are left unchanged. Changes appear on the public record after acceptance."
+            : "Approving writes the proposed values to the library record and publishes it. Fields not listed here are left as they are."}
           {suggested.length > 0
             ? " A suggested name that matches an existing option is linked. A new one goes to the editorial board’s monthly review."
             : ""}
-          {current ? "" : " The current values shown are the contributor’s."}
+          {current || audience === "contributor"
+            ? ""
+            : " The current values shown are the contributor’s."}
         </p>
       </div>
       <div
@@ -212,7 +230,13 @@ export function RecordChangesTable({
           <caption className="sr-only">Proposed changes to the record</caption>
           <thead>
             <tr style={{ background: T.bg.surface }}>
-              {["Field", "Current", "Proposed"].map((h) => (
+              {[
+                "Field",
+                audience === "contributor"
+                  ? "Published when editing"
+                  : "Current",
+                "Proposed",
+              ].map((h) => (
                 <th
                   key={h}
                   scope="col"

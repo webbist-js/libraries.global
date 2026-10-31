@@ -39,12 +39,38 @@ export function ArticleEngagement({
       if (analyticsPathKey(window.location.pathname) !== analyticsPathKey(path))
         return
       const rect = body.getBoundingClientRect()
-      const progress =
-        rect.height > 0 ? (window.innerHeight - rect.top) / rect.height : 0
+      // Dashboard pages scroll inside the canvas (or the page on phones).
+      // Intersect every clipping ancestor rather than using the window height.
+      let top = 0
+      let bottom = window.innerHeight
+      for (
+        let parent = body.parentElement;
+        parent;
+        parent = parent.parentElement
+      ) {
+        if (
+          /(auto|scroll|hidden|clip)/.test(getComputedStyle(parent).overflowY)
+        ) {
+          const bounds = parent.getBoundingClientRect()
+          top = Math.max(top, bounds.top)
+          bottom = Math.min(bottom, bounds.bottom)
+        }
+      }
+      const toolbar = body
+        .closest(".dashboard-page")
+        ?.querySelector(".record-toolbar")
+      if (toolbar) top = Math.max(top, toolbar.getBoundingClientRect().bottom)
+      const progress = rect.height > 0 ? (bottom - rect.top) / rect.height : 0
       if (
         sample(
           performance.now(),
-          document.visibilityState === "visible",
+          document.visibilityState === "visible" &&
+            bottom > top &&
+            rect.bottom > top &&
+            rect.top < bottom &&
+            !document.querySelector(
+              '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+            ),
           progress
         )
       ) {
@@ -58,12 +84,14 @@ export function ArticleEngagement({
     check()
     const timer = window.setInterval(check, 1000)
     document.addEventListener("visibilitychange", check)
-    window.addEventListener("scroll", check, { passive: true })
+    document.addEventListener("scroll", check, { capture: true, passive: true })
+    window.addEventListener("resize", check)
 
     return () => {
       window.clearInterval(timer)
       document.removeEventListener("visibilitychange", check)
-      window.removeEventListener("scroll", check)
+      document.removeEventListener("scroll", check, true)
+      window.removeEventListener("resize", check)
     }
   }, [bodyId, contentId, contentType, path, consentVersion])
 

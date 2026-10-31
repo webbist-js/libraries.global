@@ -9,7 +9,9 @@ const f = vi.hoisted(() => ({
   fetch: vi.fn(),
   refresh: vi.fn(),
   push: vi.fn(),
+  replace: vi.fn(),
 }))
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/components/billing/useMembershipRefresh", () => ({
   useMembershipRefresh: () => f.refresh,
 }))
@@ -17,7 +19,7 @@ vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   ),
-  useRouter: () => ({ push: f.push }),
+  useRouter: () => ({ push: f.push, replace: f.replace }),
 }))
 import { TeamBilling } from "../TeamBilling"
 
@@ -37,6 +39,7 @@ const initial: TeamBillingDashboard = {
   membership: null,
 }
 beforeEach(() => {
+  sessionStorage.clear()
   vi.clearAllMocks()
   vi.stubGlobal("fetch", f.fetch)
 })
@@ -58,7 +61,7 @@ describe("Team billing controls", () => {
     }) as HTMLButtonElement
     expect(subscribe.disabled).toBe(true)
     expect(screen.getByText(/Then £720 a year/)).toBeTruthy()
-    fireEvent.click(screen.getByRole("checkbox"))
+    fireEvent.click(screen.getByRole("checkbox", { name: /I accept the/ }))
     expect(subscribe.disabled).toBe(false)
     f.fetch.mockResolvedValueOnce(
       Response.json(
@@ -170,4 +173,60 @@ describe("Team billing controls", () => {
       vi.useRealTimers()
     }
   })
+})
+
+it("offers the separate API purchase path after Team activation", () => {
+  render(
+    <TeamBilling
+      initial={{ ...initial, active: true }}
+      initialSeats={5}
+      confirming={false}
+    />
+  )
+  expect(
+    screen
+      .getByRole("link", { name: "API access and usage" })
+      .getAttribute("href")
+  ).toBe("/developers")
+  expect(f.fetch).not.toHaveBeenCalled()
+})
+
+it("waits for verified Team activation before the optional API step and lets the organiser skip it", () => {
+  sessionStorage.setItem(
+    "lg.team-api-next.v1:" + initial.teamId,
+    JSON.stringify({ selected: true, expires: Date.now() + 3_600_000 })
+  )
+  const view = render(
+    <TeamBilling initial={initial} initialSeats={5} confirming={false} />
+  )
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Waiting for Team activation",
+      }) as HTMLButtonElement
+    ).disabled
+  ).toBe(true)
+  expect(
+    screen.queryByRole("link", { name: "Continue to API checkout" })
+  ).toBeNull()
+  view.unmount()
+  render(
+    <TeamBilling
+      initial={{ ...initial, active: true }}
+      initialSeats={5}
+      confirming={false}
+    />
+  )
+  expect(
+    screen
+      .getByRole("link", { name: "Continue to API checkout" })
+      .getAttribute("href")
+  ).toBe("/developers?setup=1")
+  fireEvent.click(screen.getByRole("button", { name: "Skip API for now" }))
+  expect(
+    sessionStorage.getItem("lg.team-api-next.v1:" + initial.teamId)
+  ).toBeNull()
+  expect(
+    screen.queryByRole("link", { name: "Continue to API checkout" })
+  ).toBeNull()
 })

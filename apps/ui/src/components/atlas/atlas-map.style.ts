@@ -14,8 +14,8 @@ import type { TypeGroupKey } from "./atlas.logic"
 
 export const INK = "#17162B"
 export const INDIGO = "#4338CA"
-export const OK = "#2F5D3A"
-export const MUTED = "#8A8799"
+export const OK = "var(--t-palette-mint-fg)"
+export const MUTED = "var(--t-ink-low)"
 // Blue and amber have distinct hue and luminance; filled vs hollow adds a
 // second encoding for colour-vision differences and monochrome displays.
 export const ACCESS_MATCH = "#0072B2"
@@ -105,12 +105,12 @@ export const BUS_ICON_PATH =
 
 /** Foreground of each type tint (TYPE_TINT fg). */
 export const TYPE_COLOR: Record<TypeGroupKey, string> = {
-  public: "#2F5D3A",
-  mobile: "#2F5D3A",
-  academic: "#28496E",
-  national: "#4A3F8C",
-  special: "#8A3F22",
-  monastic: "#8A3F22",
+  public: "var(--t-palette-mint-fg)",
+  mobile: "var(--t-palette-mint-fg)",
+  academic: "var(--t-palette-blue-fg)",
+  national: "var(--t-palette-violet-fg)",
+  special: "var(--t-palette-coral-fg)",
+  monastic: "var(--t-palette-coral-fg)",
   other: "#55536A",
 }
 
@@ -219,7 +219,7 @@ function drawClosed(size: number) {
   ctx.fillStyle = "#fff"
   ctx.fill()
   ctx.lineWidth = 1.5
-  ctx.strokeStyle = "#A13A1A"
+  ctx.strokeStyle = "var(--t-palette-coral-fg)"
   ctx.stroke()
   const k = size / 4.5
   ctx.beginPath()

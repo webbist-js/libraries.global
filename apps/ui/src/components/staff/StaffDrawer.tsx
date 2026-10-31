@@ -92,7 +92,13 @@ async function lookupPageLibrary(
  * include it. Opens from the edge tab, Alt+S, the user menu and the
  * Contribute dropdown; the page's own library is the default choice.
  */
-export function StaffDrawer() {
+export function StaffDrawer({
+  open = true,
+  onAfterClose,
+}: {
+  readonly open?: boolean
+  readonly onAfterClose?: () => void
+}) {
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("workspaceDrawer")
 
@@ -177,6 +183,9 @@ export function StaffDrawer() {
 
   return (
     <Drawer
+      open={open}
+      edgeAligned
+      onAfterClose={onAfterClose}
       size="md"
       titleId="staff-drawer-title"
       title={library.name}
@@ -237,7 +246,7 @@ export function StaffDrawer() {
             </label>
           ) : (
             <p className="m-0 flex flex-wrap items-center gap-2 text-sm text-(--t-ink-dim)">
-              <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-(--t-ink-base)">
+              <span className="rounded-full bg-(--t-bg-deep) px-2.5 py-1 font-semibold text-(--t-ink-base)">
                 {library.role === "owner"
                   ? t("libraryOwner")
                   : t("libraryEditor")}
@@ -285,7 +294,7 @@ export function StaffDrawer() {
               {canGoLive ? (
                 <Link
                   href={mobileConsoleHref(id, locale)}
-                  className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-(--t-accent-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-accent-primary-hover)"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-(--t-action-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
                 >
                   {tUi("go_live")}
                 </Link>

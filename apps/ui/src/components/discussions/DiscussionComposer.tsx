@@ -1,10 +1,20 @@
 "use client"
 
-import { ChevronDown, ImagePlus, Languages, ShieldCheck } from "lucide-react"
+import {
+  ChevronDown,
+  ImagePlus,
+  Languages,
+  ShieldCheck,
+  Reply,
+  MessageSquare,
+  ArrowUpRight,
+} from "lucide-react"
+import dynamic from "next/dynamic"
 import { useFormatter, useLocale, useTranslations } from "next-intl"
-import { useId, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
+import { primaryCtaSm } from "@/components/ui/action-styles"
 import { Textarea } from "@/components/ui/textarea"
 import {
   compositionLanguage,
@@ -12,7 +22,7 @@ import {
 } from "@/lib/composition-language"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
-import { cn, primaryCtaSm } from "@/lib/styles"
+import { cn } from "@/lib/styles"
 
 import {
   discussionErrorKey,
@@ -24,6 +34,27 @@ import {
   type Subject,
 } from "./api"
 import { DiscussionImageEditor } from "./DiscussionImageEditor"
+
+function WritingEditorLoading() {
+  const ui = useTranslations("ui")
+
+  return (
+    <p role="status" className="min-h-56 py-6">
+      {ui("loading")}
+    </p>
+  )
+}
+
+const DiscussionWritingEditor = dynamic(
+  () =>
+    import("@/components/discussions/DiscussionWritingEditor").then(
+      (module) => module.DiscussionWritingEditor
+    ),
+  {
+    ssr: false,
+    loading: WritingEditorLoading,
+  }
+)
 
 export function DiscussionComposer({
   subject,
@@ -53,6 +84,11 @@ export function DiscussionComposer({
   variant = "default",
   footerAction,
   embedded = false,
+  collapsed = false,
+  onExpand,
+  layout = "default",
+  subjectControl,
+  onBusyChange,
 }: {
   subject?: Subject
   threadId?: string
@@ -87,6 +123,11 @@ export function DiscussionComposer({
   variant?: "default" | "suggestion"
   footerAction?: ReactNode
   embedded?: boolean
+  collapsed?: boolean
+  onExpand?: () => void
+  layout?: "default" | "drawer"
+  subjectControl?: ReactNode
+  onBusyChange?: (busy: boolean) => void
 }) {
   const t = useTranslations("discussions")
   const locale = useLocale()
@@ -94,6 +135,7 @@ export function DiscussionComposer({
   const counterId = useId()
   const picturesId = useId()
   const inlineSuggestion = variant === "suggestion"
+  const drawer = layout === "drawer"
   const [title, setTitle] = useState(initialTitle)
   const [body, setBody] = useState(initialBody)
   const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage)
@@ -114,6 +156,17 @@ export function DiscussionComposer({
   >([...initialAttachments])
   const [uploading, setUploading] = useState(false)
   const [picturesOpen, setPicturesOpen] = useState(false)
+  const picturesPanel = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (drawer && picturesOpen)
+      picturesPanel.current?.scrollIntoView({
+        block: "nearest",
+        behavior: "instant",
+      })
+  }, [drawer, picturesOpen])
+  useEffect(() => {
+    onBusyChange?.(busy || uploading)
+  }, [busy, uploading, onBusyChange])
   const imageSubject = subject?.id ?? subjectId
   const wrongSubject = images.some(
     (image) => image.subjectId && image.subjectId !== imageSubject
@@ -158,6 +211,39 @@ export function DiscussionComposer({
         {footerAction}
       </div>
     )
+  if (collapsed && onExpand)
+    return (
+      <form
+        aria-label={heading ?? t("joinConversation")}
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <button
+          type="button"
+          onClick={onExpand}
+          className="discussion-composer-prompt"
+          aria-label={heading ?? t("joinConversation")}
+          aria-expanded={false}
+        >
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">
+            <Reply size={20} aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 text-left">
+            <span className="block font-semibold">
+              {heading ?? t("joinConversation")}
+            </span>
+            <span className="mt-1 block text-sm text-(--t-ink-dim)">
+              {t("inlineReplyPlaceholder")}
+            </span>
+          </span>
+          <ArrowUpRight
+            size={20}
+            className="shrink-0 text-(--t-accent-primary)"
+            aria-hidden
+          />
+        </button>
+        {footerAction}
+      </form>
+    )
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (
@@ -165,6 +251,8 @@ export function DiscussionComposer({
       uploading ||
       wrongSubject ||
       !body.trim() ||
+      body.length > 20000 ||
+      images.some((image) => !image.altText.trim()) ||
       (!threadId && (!subject || !title.trim()))
     )
       return
@@ -217,9 +305,11 @@ export function DiscussionComposer({
   const languageControl = (
     <div
       className={
-        threadId || inlineSuggestion
-          ? "flex flex-wrap items-center gap-2.5 text-sm text-(--t-ink-dim)"
-          : "grid gap-1 text-sm font-semibold"
+        drawer
+          ? "grid gap-1 text-xs font-semibold text-(--t-ink-dim)"
+          : threadId || inlineSuggestion
+            ? "flex flex-wrap items-center gap-2.5 text-sm text-(--t-ink-dim)"
+            : "grid gap-1 text-sm font-semibold"
       }
     >
       <span className="inline-flex items-center gap-1.5">
@@ -232,9 +322,11 @@ export function DiscussionComposer({
         disabled={busy || lockLanguage}
         required
         className={
-          threadId || inlineSuggestion
-            ? "min-h-[44px] w-auto min-w-[132px] rounded-full border-(--t-border-hi) px-3.5 text-sm font-medium shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
-            : "mt-1 min-h-12 px-4 text-base font-normal shadow-none"
+          drawer
+            ? "min-h-11 w-auto min-w-[132px] rounded-xl text-sm font-normal shadow-none"
+            : threadId || inlineSuggestion
+              ? "min-h-[44px] w-auto min-w-[132px] rounded-full border-(--t-border-hi) px-3.5 text-sm font-medium shadow-none dark:bg-(--t-bg-deep) dark:hover:bg-(--t-bg-surface)"
+              : "mt-1 min-h-12 px-4 text-base font-normal shadow-none"
         }
         onValueChange={(value) => {
           setSelectedLanguage(value)
@@ -249,6 +341,168 @@ export function DiscussionComposer({
       />
     </div>
   )
+
+  const pictureToggle = imageSubject && (
+    <button
+      type="button"
+      aria-label={t("addPictures")}
+      title={t("addPictures")}
+      aria-expanded={picturesOpen}
+      aria-controls={picturesId}
+      disabled={busy || uploading}
+      onClick={() => setPicturesOpen((open) => !open)}
+      className={cn(
+        "inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) text-sm font-medium text-(--t-ink-dim) hover:text-(--t-accent-primary) disabled:cursor-not-allowed disabled:opacity-50",
+        drawer ? "size-11 justify-center" : "px-4"
+      )}
+    >
+      <ImagePlus size={16} aria-hidden />
+      <span className={drawer ? "sr-only" : undefined}>{t("addPictures")}</span>
+      {!!images.length && (
+        <span className="rounded-full bg-(--t-bg-muted) px-1.5 text-xs">
+          {images.length}
+        </span>
+      )}
+      {!drawer && (
+        <ChevronDown
+          size={14}
+          className={picturesOpen ? "rotate-180" : undefined}
+          aria-hidden
+        />
+      )}
+    </button>
+  )
+  const pictureEditor = (
+    <div
+      ref={picturesPanel}
+      id={picturesId}
+      hidden={!picturesOpen}
+      className={drawer ? "mt-6" : undefined}
+    >
+      <DiscussionImageEditor
+        disclosure={false}
+        subjectId={imageSubject}
+        images={images}
+        disabled={busy}
+        onBusyChange={setUploading}
+        onChange={(next) => {
+          setImages(next)
+          onAttachmentsChange?.(next)
+        }}
+      />
+    </div>
+  )
+  const submitButton = (
+    <button
+      type="submit"
+      disabled={
+        busy ||
+        uploading ||
+        wrongSubject ||
+        images.some((image) => !image.altText.trim()) ||
+        !body.trim() ||
+        body.length > 20000 ||
+        (!threadId && !title.trim())
+      }
+      aria-busy={busy}
+      className={cn(
+        primaryCtaSm,
+        "min-h-11 w-fit cursor-pointer justify-center disabled:cursor-not-allowed disabled:opacity-50"
+      )}
+    >
+      {busy ? t("sending") : t(inlineSuggestion ? "inlinePostReply" : "submit")}
+      <ArrowUpRight size={16} aria-hidden />
+    </button>
+  )
+
+  if (drawer)
+    return (
+      <form
+        aria-label={heading ?? t("newThread")}
+        onSubmit={submit}
+        className="flex h-full min-h-0 flex-col text-base [--spacing:0.25rem]"
+      >
+        <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 border-b border-(--t-border-line) bg-(--t-bg-deep) px-5 py-3 sm:px-6">
+          <fieldset
+            disabled={busy || uploading}
+            className="m-0 min-w-0 border-0 p-0"
+          >
+            {subjectControl}
+          </fieldset>
+          {languageControl}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-(--t-bg-deep)">
+          <div className="mx-auto w-full max-w-[820px] px-5 py-6 sm:px-8 sm:py-8">
+            <label className="block">
+              <span className="mb-3 block text-sm font-semibold text-(--t-ink-dim)">
+                {t("threadTitle")}
+              </span>
+              <Textarea
+                value={title}
+                lang={language}
+                disabled={busy}
+                maxLength={250}
+                required
+                rows={1}
+                placeholder={t("titlePlaceholder")}
+                onChange={(event) => {
+                  setTitle(event.target.value)
+                  setSelectedLanguage(language)
+                  onDraftChange?.({ title: event.target.value, body, language })
+                }}
+                className="mb-5 min-h-12 resize-none rounded-none border-0 bg-transparent p-0 shadow-none"
+                style={{ font: "var(--type-h2)" }}
+              />
+            </label>
+            <DiscussionWritingEditor
+              value={body}
+              language={language}
+              disabled={busy}
+              describedBy={counterId}
+              onChange={(value) => {
+                setBody(value)
+                setSelectedLanguage(language)
+                setSent(false)
+                onDraftChange?.({ title, body: value, language })
+              }}
+            />
+            {pictureEditor}
+          </div>
+        </div>
+        <div className="shrink-0 border-t border-(--t-border-line) bg-(--t-bg-deep) px-5 py-4 sm:px-6">
+          <div className="mb-3 flex flex-wrap items-start justify-between gap-2 text-xs leading-relaxed text-(--t-ink-dim)">
+            <p className="m-0 flex max-w-[60ch] items-start gap-2">
+              <ShieldCheck size={15} className="shrink-0" aria-hidden />
+              {t("reviewLead")}
+            </p>
+            <span id={counterId}>
+              {formatter.number(body.length)} / {formatter.number(20000)}
+            </span>
+          </div>
+          {error && (
+            <p role="alert" className="mb-3 text-sm text-(--t-accent-danger)">
+              {error}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {pictureToggle}
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {onCancel && (
+                <button
+                  type="button"
+                  disabled={busy || uploading}
+                  onClick={onCancel}
+                  className="hidden min-h-11 rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold min-[360px]:inline-flex"
+                >
+                  {t("cancel")}
+                </button>
+              )}
+              {submitButton}
+            </div>
+          </div>
+        </div>
+      </form>
+    )
 
   return (
     <form
@@ -271,7 +525,25 @@ export function DiscussionComposer({
             : "flex items-center justify-between gap-3"
         }
       >
-        <h3 className="type-h3 m-0">
+        <h3
+          className={cn(
+            threadId ? "type-small-heading" : "type-h3",
+            "m-0 flex items-center gap-2"
+          )}
+        >
+          {threadId ? (
+            <Reply
+              size={20}
+              className="shrink-0 text-(--t-accent-primary)"
+              aria-hidden
+            />
+          ) : (
+            <MessageSquare
+              size={20}
+              className="shrink-0 text-(--t-accent-primary)"
+              aria-hidden
+            />
+          )}
           {heading ?? (threadId ? t("joinConversation") : t("newThread"))}
         </h3>
         {onCancel && !embedded && (
@@ -329,11 +601,14 @@ export function DiscussionComposer({
           }}
           maxLength={20000}
           required
-          rows={inlineSuggestion ? 3 : threadId ? 5 : 6}
+          rows={inlineSuggestion || threadId ? 3 : 6}
           className={
             inlineSuggestion
               ? "block field-sizing-fixed min-h-28 w-full rounded-[18px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-base leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-base dark:bg-(--t-bg-deep)"
-              : "mt-1 block field-sizing-fixed min-h-[140px] w-full rounded-[16px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-base leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-base dark:bg-(--t-bg-deep)"
+              : cn(
+                  "mt-1 block field-sizing-fixed w-full rounded-[16px] border-(--t-border-hi) bg-(--t-bg-deep) p-4 text-base leading-relaxed font-normal shadow-none placeholder:text-(--t-ink-dim) focus-visible:border-(--t-accent-primary) focus-visible:ring-(--t-accent-primary)/15 md:text-base dark:bg-(--t-bg-deep)",
+                  threadId ? "min-h-28" : "min-h-[140px]"
+                )
           }
         />
       </label>
@@ -347,43 +622,9 @@ export function DiscussionComposer({
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
             {(inlineSuggestion || threadId) && languageControl}
-            {imageSubject && (
-              <button
-                type="button"
-                aria-expanded={picturesOpen}
-                aria-controls={picturesId}
-                disabled={busy || uploading}
-                onClick={() => setPicturesOpen((open) => !open)}
-                className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-sm font-medium text-(--t-ink-dim) hover:text-(--t-accent-primary) disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <ImagePlus size={16} aria-hidden />
-                {t("addPictures")}
-                {!!images.length && (
-                  <span className="rounded-full bg-(--t-bg-muted) px-1.5 text-xs">
-                    {images.length}
-                  </span>
-                )}
-                <ChevronDown
-                  size={14}
-                  className={picturesOpen ? "rotate-180" : undefined}
-                  aria-hidden
-                />
-              </button>
-            )}
+            {pictureToggle}
           </div>
-          <div id={picturesId} hidden={!picturesOpen}>
-            <DiscussionImageEditor
-              disclosure={false}
-              subjectId={imageSubject}
-              images={images}
-              disabled={busy}
-              onBusyChange={setUploading}
-              onChange={(next) => {
-                setImages(next)
-                onAttachmentsChange?.(next)
-              }}
-            />
-          </div>
+          {pictureEditor}
         </>
       )}
       <div
@@ -428,26 +669,7 @@ export function DiscussionComposer({
               {t("cancel")}
             </button>
           )}
-          <button
-            type="submit"
-            disabled={
-              busy ||
-              uploading ||
-              wrongSubject ||
-              images.some((image) => !image.altText.trim()) ||
-              !body.trim() ||
-              (!threadId && !title.trim())
-            }
-            aria-busy={busy}
-            className={cn(
-              primaryCtaSm,
-              "min-h-11 w-fit cursor-pointer justify-center disabled:cursor-not-allowed disabled:opacity-50"
-            )}
-          >
-            {busy
-              ? t("sending")
-              : t(inlineSuggestion ? "inlinePostReply" : "submit")}
-          </button>
+          {submitButton}
           {inlineSuggestion && (
             <p className="m-0 flex max-w-[38ch] items-start gap-1.5 text-xs leading-relaxed text-(--t-ink-dim)">
               <ShieldCheck size={14} className="mt-0.5 shrink-0" aria-hidden />

@@ -43,6 +43,9 @@ export type JournalLandingData = JournalTopStories & {
   mostRead: JournalCardData[]
   discovery: ArticleBrowseResult
   communityPick: JournalCardData | null
+  fieldNotes?: JournalCardData[]
+  dataDrops?: JournalCardData[]
+  dataDropsTotal?: number
 }
 const toCard = (article: ArticleBrowseItem): JournalCardData => ({
   ...article,
@@ -95,14 +98,23 @@ export async function loadJournalLanding(
   query: JournalQuery,
   defaultLanguage = routeLocale as string
 ): Promise<JournalLandingData> {
-  const [initialDiscovery, sectionsRes, landingRes] = await Promise.all([
-    fetchArticleBrowse(
-      "blog",
-      journalBrowseParams(routeLocale, query, defaultLanguage)
-    ),
-    fetchBlogSections(routeLocale),
-    fetchBlogLanding(routeLocale),
-  ])
+  const [initialDiscovery, sectionsRes, landingRes, releases, fieldNotes] =
+    await Promise.all([
+      fetchArticleBrowse(
+        "blog",
+        journalBrowseParams(routeLocale, query, defaultLanguage)
+      ),
+      fetchBlogSections(routeLocale),
+      fetchBlogLanding(routeLocale),
+      fetchArticleBrowse(
+        "blog",
+        `origin=index&section=data&lang=${encodeURIComponent(query.lang && query.lang !== "all" ? query.lang : defaultLanguage)}&pageSize=6`
+      ).catch(() => null),
+      fetchArticleBrowse(
+        "blog",
+        `origin=community&lang=${encodeURIComponent(query.lang && query.lang !== "all" ? query.lang : defaultLanguage)}&pageSize=3`
+      ).catch(() => null),
+    ])
   const section = sectionsRes.data.some(
     (section) => section.slug === query.section
   )
@@ -147,6 +159,13 @@ export async function loadJournalLanding(
     lang,
     linkLocale,
     fallbackFrom: null,
+    fieldNotes: (fieldNotes?.items ?? [])
+      .filter((item) => item.publicationOrigin === "community")
+      .map(toCard),
+    dataDropsTotal: releases?.total ?? 0,
+    dataDrops: (releases?.items ?? [])
+      .filter((item) => item.publicationOrigin === "index")
+      .map(toCard),
     languages: discovery.facets.languages.map((facet) => ({
       code: facet.value,
       name: languageName(facet.value),

@@ -146,6 +146,8 @@ function publicFollowedDrives(
 const PRIVATE_PROFILE_FIELDS = [
   "baUserId",
   "notifPrefs",
+  "theme",
+  "appearancePreference",
   "dismissedPrompts",
   "contributorNumber",
   "earnedProUntil",

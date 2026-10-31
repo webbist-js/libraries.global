@@ -290,7 +290,9 @@ export function AtlasListView({
               {t("caption", { order: t(sort) })}
             </caption>
             <thead className="sticky top-0 z-10">
-              <tr style={{ background: T.bg.surface, color: "#45435A" }}>
+              <tr
+                style={{ background: T.bg.surface, color: "var(--t-ink-dim)" }}
+              >
                 <th
                   scope="col"
                   aria-sort={
@@ -485,7 +487,9 @@ export function AtlasListView({
                                   style={{
                                     width: `${l.complete}%`,
                                     background:
-                                      l.complete < 50 ? "#8A3F22" : "#2F5D3A",
+                                      l.complete < 50
+                                        ? "var(--t-palette-coral-fg)"
+                                        : "var(--t-palette-mint-fg)",
                                   }}
                                 />
                               </span>
@@ -658,7 +662,7 @@ function PagerButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex h-9 items-center rounded-full border bg-white px-3.5 text-sm font-semibold disabled:opacity-40"
+      className="inline-flex h-9 items-center rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold disabled:opacity-40"
       style={{ borderColor: T.border.hi }}
     >
       {children}

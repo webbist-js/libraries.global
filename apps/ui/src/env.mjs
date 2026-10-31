@@ -73,6 +73,7 @@ export const env = createEnv({
    * consider runtime injection instead (through `window.__ENV__` or similar hack).
    */
   client: {
+    NEXT_PUBLIC_FORCE_LIGHT_THEME: optionalZodBoolean(),
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: z.string().optional(),
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS: optionalZodBoolean(),
@@ -148,6 +149,7 @@ export const env = createEnv({
 
     // client
     // @dominik-juriga - find out if these are specific per environment
+    NEXT_PUBLIC_FORCE_LIGHT_THEME: process.env.NEXT_PUBLIC_FORCE_LIGHT_THEME,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
     NEXT_PUBLIC_PREVENT_UNUSED_FUNCTIONS_ERROR_LOGS:

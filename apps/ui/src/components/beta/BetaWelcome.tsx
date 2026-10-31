@@ -25,19 +25,24 @@ import { Link } from "@/lib/navigation"
 export default function BetaWelcome({
   sandbox,
   onClose,
+  open = true,
+  onAfterClose,
 }: {
   readonly sandbox: boolean
   readonly onClose: () => void
+  readonly open?: boolean
+  readonly onAfterClose?: () => void
 }) {
   const t = useTranslations("betaWelcome")
   const { openFeedback } = useContactModal()
   const [copied, setCopied] = useState(false)
   const [copyFailed, setCopyFailed] = useState(false)
   const title = useRef<HTMLHeadingElement>(null)
+  const pendingFeedback = useRef(false)
 
   return (
     <Dialog
-      open
+      open={open}
       onOpenChange={(next) => {
         if (!next) onClose()
       }}
@@ -45,6 +50,14 @@ export default function BetaWelcome({
       <DialogContent
         className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto rounded-[28px] border-(--t-border-line) bg-(--t-bg-deep) p-0 text-(--t-ink-base) sm:max-w-[880px]"
         closeButtonClassName="top-5 right-5"
+        onCloseAutoFocus={(event) => {
+          if (pendingFeedback.current) {
+            event.preventDefault()
+            pendingFeedback.current = false
+            openFeedback()
+          }
+          onAfterClose?.()
+        }}
         onOpenAutoFocus={(event) => {
           event.preventDefault()
           title.current?.focus()
@@ -194,8 +207,8 @@ export default function BetaWelcome({
               variant="surface"
               size="pill"
               onClick={() => {
+                pendingFeedback.current = true
                 onClose()
-                openFeedback()
               }}
             >
               <MessageSquare size={16} aria-hidden />

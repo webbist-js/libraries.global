@@ -59,7 +59,7 @@ export function UpcomingEventsWidget({
           <li key={event.documentId}>
             <GlobalLink
               href={`/events/${event.documentId}`}
-              className="group flex h-full gap-4 rounded-[20px] border bg-white p-4 no-underline transition-colors hover:border-(--t-accent-primary)"
+              className="group flex h-full gap-4 rounded-[20px] border bg-(--t-bg-deep) p-4 no-underline transition-colors hover:border-(--t-accent-primary)"
               style={{ borderColor: T.border.line }}
             >
               <span

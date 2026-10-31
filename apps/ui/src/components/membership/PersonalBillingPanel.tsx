@@ -329,7 +329,7 @@ export function PersonalBillingPanel({
           </div>
           {summary.paymentMethod ? (
             <div className="flex flex-wrap items-center gap-4 border-b border-(--t-border-line) pb-5 text-sm">
-              <span className="rounded-lg bg-(--t-ink-base) px-3 py-2 text-xs font-bold text-white">
+              <span className="rounded-lg bg-(--t-bg-inverse) px-3 py-2 text-xs font-bold text-white">
                 {summary.paymentMethod.brand.toUpperCase()}
               </span>
               <div className="min-w-0 flex-1">

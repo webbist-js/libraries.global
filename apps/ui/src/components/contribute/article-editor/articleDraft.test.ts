@@ -27,6 +27,36 @@ const draft: ArticleDraft = {
 }
 
 describe("article draft persistence", () => {
+  it("round-trips managed Journal citations without sending them as Knowledge fields", () => {
+    const sources = [
+      {
+        title: "Annual report",
+        url: "https://example.org/report",
+        publisher: "Library",
+      },
+    ]
+    const value = { ...draft, sources }
+    const options = {
+      mode: "edit" as const,
+      direct: false,
+      journal: true,
+      locale: "fr",
+      sourceLocale: "en",
+    }
+    const saved = articleDraftData(value, options)
+    expect(saved.sources).toEqual(sources)
+    const encoded = JSON.stringify(saved)
+    expect(
+      restoreArticleDraft(JSON.parse(encoded), (url) => url).sources
+    ).toEqual(sources)
+    expect(
+      articleDraftData(value, { ...options, journal: false })
+    ).not.toHaveProperty("sources")
+    expect(
+      articleDraftData({ ...value, sources: [] }, options).sources
+    ).toEqual([])
+  })
+
   it("restores a new Journal byline and origin without sending attribution during edits", () => {
     const story = { ...draft, byline: "Pen name", origin: "index" as const }
     const saved = articleDraftData(story, {
