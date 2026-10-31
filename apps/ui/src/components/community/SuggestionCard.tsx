@@ -57,7 +57,7 @@ function BoxContent({
   return (
     <>
       <Icon aria-hidden="true" height={18} icon="mdi:chevron-up" width={18} />
-      <span className="font-sans text-[28px] leading-tight">{votes}</span>
+      <span className="font-sans text-[28px] leading-tight">{votes}</span>{" "}
       <span className="text-xs font-bold uppercase">
         {t(voted ? "voteBoxVoted" : "voteBoxVote")}
       </span>
