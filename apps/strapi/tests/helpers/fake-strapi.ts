@@ -136,6 +136,8 @@ export function makeFakeStrapi(
         return Array.isArray(v) && v.some((f) => match(d, f ?? {}))
       if (k === "$and")
         return Array.isArray(v) && v.every((f) => match(d, f ?? {}))
+      if (v && typeof v === "object" && "$startsWith" in v)
+        return String(d[k] ?? "").startsWith(String(v.$startsWith))
       if (v && typeof v === "object" && "$containsi" in v)
         return String(
           typeof d[k] === "object" ? JSON.stringify(d[k]) : (d[k] ?? "")
