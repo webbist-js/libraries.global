@@ -5,7 +5,11 @@ import {
 } from "@repo/shared-data"
 
 import { T } from "@/lib/design-tokens"
-import type { WikiSection } from "@/lib/strapi-api/content/server"
+import type {
+  DocsWikiArticle,
+  WikiArticleSummary,
+  WikiSection,
+} from "@/lib/strapi-api/content/server"
 
 export const DOCS_REPO_URL = "https://github.com/webbist-js/libraries.global"
 export const DOCS_VERSION = "v1.0.0"
@@ -104,6 +108,18 @@ type SectionLike = {
   docsSections?: string[] | null
 }
 
+/** Higher CMS priority appears first; unranked guides follow, with stable ties. */
+export function compareDocsArticles(
+  a: Pick<WikiArticleSummary, "priority" | "title" | "slug" | "documentId">,
+  b: Pick<WikiArticleSummary, "priority" | "title" | "slug" | "documentId">
+): number {
+  return (
+    (b.priority ?? 0) - (a.priority ?? 0) ||
+    (a.title ?? a.slug ?? "").localeCompare(b.title ?? b.slug ?? "") ||
+    a.documentId.localeCompare(b.documentId)
+  )
+}
+
 /**
  * The section slugs an article is listed under: its home section (the
  * `section` relation) first, then any extra sections the editor tagged in
@@ -162,4 +178,22 @@ export function readingTimeMinutes(body: unknown): number | null {
   return body == null || !articleText(body).trim()
     ? null
     : articleReadingMinutes(body)
+}
+
+/** Keep the section lists' reading order when moving to the previous/next guide. */
+export function orderedDocsArticles(
+  articles: readonly DocsWikiArticle[],
+  sections: readonly DocsSection[]
+) {
+  const sectionOrder = new Map(
+    sections.map((section, index) => [section.slug, index])
+  )
+  const indexOf = (article: DocsWikiArticle) =>
+    sectionOrder.get(homeSectionOf(article, sections)?.slug ?? "") ?? 0
+
+  return [...articles].sort((a, b) => {
+    const bySection = indexOf(a) - indexOf(b)
+
+    return bySection || compareDocsArticles(a, b)
+  })
 }
