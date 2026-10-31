@@ -44,7 +44,23 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
-export const Dashboard: Story = { args: { presentation: "dashboard" } }
+export const Dashboard: Story = {
+  args: { presentation: "dashboard" },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          width: "fit-content",
+          padding: 16,
+          borderRadius: 14,
+          background: "var(--t-bg-inverse)",
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+}
 
 export const SignedIn: Story = {
   args: {
