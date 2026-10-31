@@ -61,7 +61,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .continueButton:hover {
-    background: color-mix(in srgb, var(--t-accent-primary) 14%, white);
+    background: color-mix(
+      in srgb,
+      var(--t-accent-primary) 14%,
+      var(--t-bg-surface)
+    );
   }
 
   .continueButton:hover .continueIcon {
@@ -112,7 +116,7 @@
   padding: 18px;
   border: 1px solid var(--t-border-line);
   border-radius: 18px;
-  background: white;
+  background: var(--t-bg-surface);
   color: var(--t-ink-base);
   text-decoration: none;
 }
