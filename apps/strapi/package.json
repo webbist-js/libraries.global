@@ -36,7 +36,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.admin.json"
   },
   "dependencies": {
-    "@_sh/strapi-plugin-ckeditor": "7.1.1",
+    "@_sh/strapi-plugin-ckeditor": "8.0.0",
     "@arshiash80/strapi-plugin-iconhub": "1.1.1",
     "@notum-cz/strapi-plugin-tiptap-editor": "^1.0.1",
     "@repo/access": "workspace:*",
@@ -56,7 +56,7 @@
     "@strapi/strapi": "5.60.0",
     "@strapi/utils": "5.60.0",
     "axios": "^1.21.0",
-    "ckeditor5": "47.7.6",
+    "ckeditor5": "48.5.1",
     "diff": "^9.0.0",
     "free-email-domains": "1.12.13",
     "jsonwebtoken": "9.0.3",
