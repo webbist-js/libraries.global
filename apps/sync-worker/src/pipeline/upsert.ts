@@ -31,7 +31,6 @@ export const EVENT_LIBRARY_LINK_TABLE = "ev_events_library_lnk"
  * `pending_review` (a moderator's decision) are deliberately left alone.
  */
 const UPDATE_COLUMNS = [
-  "credential_id",
   "sync_hash",
   "library_entity_ref",
   "title",
@@ -97,13 +96,14 @@ function toRow(e: NormalizedEvent): Record<string, unknown> {
   }
 }
 
-const pairKey = (provider: unknown, externalId: unknown) =>
-  `${String(provider)}|${String(externalId)}`
+const pairKey = (credential: unknown, provider: unknown, externalId: unknown) =>
+  JSON.stringify([credential, provider, externalId])
 
 /** Postgres refuses to touch the same row twice in one INSERT ... ON CONFLICT; keep the last occurrence. */
 function dedupe(events: NormalizedEvent[]): NormalizedEvent[] {
   const byKey = new Map<string, NormalizedEvent>()
-  for (const e of events) byKey.set(pairKey(e.sourceProvider, e.externalId), e)
+  for (const e of events)
+    byKey.set(pairKey(e.credentialId, e.sourceProvider, e.externalId), e)
 
   return [...byKey.values()]
 }
@@ -119,14 +119,17 @@ async function upsertChunk(
   const columns = Object.keys(rows[0]!)
 
   // Step 1: existing hashes, to classify created / updated / unchanged
-  const pairs = chunk.map((e) => [e.sourceProvider, e.externalId] as const)
+  const pairs = chunk.map(
+    (e) => [e.credentialId, e.sourceProvider, e.externalId] as const
+  )
   const existing = (
     (await trx.raw(
-      `SELECT source_provider, external_id, sync_hash FROM ${EVENTS_TABLE} WHERE (source_provider, external_id) IN (${pairs
-        .map(() => "(?, ?)")
+      `SELECT credential_id, source_provider, external_id, sync_hash FROM ${EVENTS_TABLE} WHERE (credential_id, source_provider, external_id) IN (${pairs
+        .map(() => "(?, ?, ?)")
         .join(", ")})`,
       pairs.flat() as Knex.RawBinding[]
     )) as Rows<{
+      credential_id: number
       source_provider: string
       external_id: string
       sync_hash: string
@@ -135,12 +138,14 @@ async function upsertChunk(
 
   const existingHash = new Map(
     existing.map((r) => [
-      pairKey(r.source_provider, r.external_id),
+      pairKey(r.credential_id, r.source_provider, r.external_id),
       r.sync_hash,
     ])
   )
   for (const e of chunk) {
-    const oldHash = existingHash.get(pairKey(e.sourceProvider, e.externalId))
+    const oldHash = existingHash.get(
+      pairKey(e.credentialId, e.sourceProvider, e.externalId)
+    )
     if (oldHash === undefined) stats.created++
     else if (oldHash !== e.syncHash) stats.updated++
     else stats.unchanged++
@@ -159,24 +164,34 @@ async function upsertChunk(
     (await trx.raw(
       `INSERT INTO ${EVENTS_TABLE} (${columns.join(", ")})
        VALUES ${valuesSql}
-       ON CONFLICT (source_provider, external_id) DO UPDATE SET
+       ON CONFLICT (credential_id, source_provider, external_id) DO UPDATE SET
          ${setSql}
-       RETURNING id, source_provider, external_id`,
+       RETURNING id, credential_id, source_provider, external_id`,
       rows.flatMap((r) => Object.values(r)) as Knex.RawBinding[]
-    )) as Rows<{ id: number; source_provider: string; external_id: string }>
+    )) as Rows<{
+      id: number
+      credential_id: number
+      source_provider: string
+      external_id: string
+    }>
   ).rows
 
   // Step 3: the library relation (join table). Drop any link that points at a
   // different library than this sync matched, then add the current one.
   const libraryByKey = new Map(
-    chunk.map((e) => [pairKey(e.sourceProvider, e.externalId), e.libraryId])
+    chunk.map((e) => [
+      pairKey(e.credentialId, e.sourceProvider, e.externalId),
+      e.libraryId,
+    ])
   )
   const links = inserted
     .map(
       (r) =>
         [
           r.id,
-          libraryByKey.get(pairKey(r.source_provider, r.external_id)),
+          libraryByKey.get(
+            pairKey(r.credential_id, r.source_provider, r.external_id)
+          ),
         ] as const
     )
     .filter((l): l is readonly [number, number] => typeof l[1] === "number")

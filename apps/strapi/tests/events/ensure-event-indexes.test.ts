@@ -23,6 +23,18 @@ function fakeStrapi({
   const hasTableFn = vi.fn(async () => hasTable)
   const hasColumnFn = vi.fn(async () => hasColumn)
   const rawFn = vi.fn(async (sql: string, bindings?: unknown[]) => {
+    if (sql.startsWith("select indexdef from pg_indexes")) {
+      return {
+        rows: existingIndexes.has(bindings?.[0] as string)
+          ? [
+              {
+                indexdef:
+                  "CREATE UNIQUE INDEX ON ev_events (credential_id, source_provider, external_id)",
+              },
+            ]
+          : [],
+      }
+    }
     if (sql.startsWith("select 1 from pg_indexes")) {
       const name = bindings?.[0] as string
 
@@ -54,7 +66,7 @@ const sqlCalls = (rawFn: ReturnType<typeof vi.fn>) =>
   rawFn.mock.calls.map((c) => c[0] as string)
 
 describe("ensureEventIndexes", () => {
-  it("creates the unique (source_provider, external_id) index, the entity-ref index and backfills the ref on Postgres", async () => {
+  it("creates installation-scoped identity, the entity-ref index and backfills the ref on Postgres", async () => {
     const { strapi, rawFn, transactionFn } = fakeStrapi({ client: "postgres" })
 
     await ensureEventIndexes(strapi)
@@ -62,17 +74,16 @@ describe("ensureEventIndexes", () => {
     expect(transactionFn).toHaveBeenCalledTimes(1)
     const sql = sqlCalls(rawFn)
     expect(sql.some((s) => s.includes("SET LOCAL lock_timeout"))).toBe(true)
-    // dedupe before the unique index, keeping the lowest id
-    const dedupeIdx = sql.findIndex((s) =>
-      /DELETE FROM ev_events a USING ev_events b/.test(s)
-    )
+    // Serialize the identity change; never delete events or their references.
+    const dedupeIdx = sql.findIndex((s) => s.includes("LOCK TABLE ev_events"))
     const uniqueIdx = sql.findIndex((s) =>
       s.includes(
-        `CREATE UNIQUE INDEX IF NOT EXISTS ${EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME} ON ev_events (source_provider, external_id)`
+        `CREATE UNIQUE INDEX IF NOT EXISTS ${EV_EVENTS_PROVIDER_EXTERNAL_INDEX_NAME} ON ev_events (credential_id, source_provider, external_id)`
       )
     )
     expect(dedupeIdx).toBeGreaterThanOrEqual(0)
     expect(uniqueIdx).toBeGreaterThan(dedupeIdx)
+    expect(sql.some((s) => s.includes("DELETE FROM ev_events"))).toBe(false)
     expect(
       sql.some((s) =>
         s.includes(
@@ -151,10 +162,10 @@ describe("ensureEventIndexes", () => {
     expect(noColumn.strapi.log.warn).toHaveBeenCalled()
   })
 
-  it("only logs when the database throws", async () => {
+  it("refuses startup when the required identity migration fails", async () => {
     const { strapi, transactionFn } = fakeStrapi({ client: "postgres" })
     transactionFn.mockRejectedValueOnce(new Error("lock timeout"))
-    await expect(ensureEventIndexes(strapi)).resolves.toBeUndefined()
+    await expect(ensureEventIndexes(strapi)).rejects.toThrow("lock timeout")
     expect(strapi.log.error).toHaveBeenCalled()
   })
 })
