@@ -10,6 +10,7 @@ const MACHINE_PATHS = new Set([
   "/api/health",
   "/api/cron/retention",
   "/api/cron/billing",
+  "/api/cron/cms",
   "/api/revalidate",
   "/api/preview",
   "/api/internal/session/invalidate",
