@@ -59,3 +59,20 @@ it("uses visible sidebar order, including localized links and nested destination
     "section-back"
   )
 })
+
+it("orders Knowledge and Journal by the global sidebar, including article routes", () => {
+  const destinations = [
+    "/map",
+    "/libraries",
+    "/library-networks",
+    "/community",
+    "/journal",
+    "/knowledge",
+  ]
+  expect(
+    dashboardDirection("/knowledge/guides/search", "/journal", destinations)
+  ).toBe("section-back")
+  expect(dashboardDirection("/journal", "/knowledge", destinations)).toBe(
+    "section-forward"
+  )
+})

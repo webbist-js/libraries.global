@@ -34,6 +34,7 @@ import {
 } from "react"
 
 import type { AnalysisTab } from "@/components/atlas/AtlasAnalysisWorkspace"
+import { DashboardContextTransition } from "@/components/dashboard/DashboardRouteTransition"
 import { SelectField } from "@/components/ds/SelectField"
 import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import { useEntitlements } from "@/lib/access-client"
@@ -2957,115 +2958,117 @@ export function AtlasExplorer({
             </div>
           </>
         ) : null}
-        <section
-          aria-label="Explore panel"
-          className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-(--t-bg-deep) pb-[env(safe-area-inset-bottom)]`}
-          style={{
-            height: heights[size],
-            viewTransitionName: "var(--atlas-mobile-sheet-transition, none)",
-          }}
-        >
-          <button
-            type="button"
-            aria-label={`Panel size: ${size}. Change size`}
-            onClick={() =>
-              animateAtlas(() => setSheet(size === "full" ? "half" : "full"))
-            }
-            className="flex h-6 shrink-0 items-center justify-center"
-          >
-            <span className="h-[5px] w-10 rounded-full bg-(--t-border-hi)" />
-          </button>
-          <nav
-            aria-label="Atlas workspace"
-            className="flex shrink-0 items-center gap-1.5 border-b border-(--t-border-line) px-3 pb-2 max-[350px]:[&_svg]:hidden"
+        <DashboardContextTransition routeKey="/map">
+          <section
+            aria-label="Explore panel"
+            className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-(--t-bg-deep) pb-[env(safe-area-inset-bottom)]`}
+            style={{
+              height: heights[size],
+              viewTransitionName: "var(--atlas-mobile-sheet-transition, none)",
+            }}
           >
             <button
               type="button"
-              aria-pressed={!showInspect && !list}
-              onClick={() => {
-                setList(false)
-                setMobileSurface("explore")
-                if (sheet === "peek") setSheet("half")
-              }}
-              className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
+              aria-label={`Panel size: ${size}. Change size`}
+              onClick={() =>
+                animateAtlas(() => setSheet(size === "full" ? "half" : "full"))
+              }
+              className="flex h-6 shrink-0 items-center justify-center"
             >
-              Explore
+              <span className="h-[5px] w-10 rounded-full bg-(--t-border-hi)" />
             </button>
-            <button
-              type="button"
-              disabled={!inspectEntries.length}
-              aria-pressed={showInspect}
-              onClick={() => {
-                if (!listLibraryOpen) setList(false)
-                setMobileSurface("inspect")
-                setInspectMinimised(false)
-                if (sheet === "peek") setSheet("half")
-              }}
-              className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap disabled:opacity-40 aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
+            <nav
+              aria-label="Atlas workspace"
+              className="flex shrink-0 items-center gap-1.5 border-b border-(--t-border-line) px-3 pb-2 max-[350px]:[&_svg]:hidden"
             >
-              {tInspect("inspect")}
-              {inspectEntries.length ? ` · ${inspectEntries.length}` : ""}
-            </button>
-            <ViewToggle
-              list={list}
-              onChange={(value) => {
-                setList(value)
-                if (value) {
-                  setSheet("full")
-                  setInspectMinimised(true)
+              <button
+                type="button"
+                aria-pressed={!showInspect && !list}
+                onClick={() => {
+                  setList(false)
                   setMobileSurface("explore")
-                  restoreListFocus()
-                }
+                  if (sheet === "peek") setSheet("half")
+                }}
+                className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
+              >
+                Explore
+              </button>
+              <button
+                type="button"
+                disabled={!inspectEntries.length}
+                aria-pressed={showInspect}
+                onClick={() => {
+                  if (!listLibraryOpen) setList(false)
+                  setMobileSurface("inspect")
+                  setInspectMinimised(false)
+                  if (sheet === "peek") setSheet("half")
+                }}
+                className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap disabled:opacity-40 aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
+              >
+                {tInspect("inspect")}
+                {inspectEntries.length ? ` · ${inspectEntries.length}` : ""}
+              </button>
+              <ViewToggle
+                list={list}
+                onChange={(value) => {
+                  setList(value)
+                  if (value) {
+                    setSheet("full")
+                    setInspectMinimised(true)
+                    setMobileSurface("explore")
+                    restoreListFocus()
+                  }
+                }}
+              />
+            </nav>
+            <div
+              hidden={!showList}
+              className="min-h-0 flex-1 overflow-clip"
+              style={{ display: showList ? "flex" : "none" }}
+            >
+              {list ? listView : null}
+            </div>
+            <div
+              hidden={list || showInspect}
+              className="flex min-h-0 flex-1 flex-col"
+              style={{
+                display: !list && !showInspect ? "flex" : "none",
               }}
-            />
-          </nav>
-          <div
-            hidden={!showList}
-            className="min-h-0 flex-1 overflow-clip"
-            style={{ display: showList ? "flex" : "none" }}
-          >
-            {list ? listView : null}
-          </div>
-          <div
-            hidden={list || showInspect}
-            className="flex min-h-0 flex-1 flex-col"
-            style={{
-              display: !list && !showInspect ? "flex" : "none",
-            }}
-          >
-            <div className="shrink-0 px-3 pt-2">{tabs}</div>
-            <div
-              id="atlas-tabpanel"
-              role="tabpanel"
-              aria-labelledby={`atlas-tab-${tab}`}
-              className={`min-h-0 flex-1 overflow-y-auto px-5 pt-4 ${tab === "filter" ? "pb-0" : "pb-5"}`}
             >
-              {tabContent}
+              <div className="shrink-0 px-3 pt-2">{tabs}</div>
+              <div
+                id="atlas-tabpanel"
+                role="tabpanel"
+                aria-labelledby={`atlas-tab-${tab}`}
+                className={`min-h-0 flex-1 overflow-y-auto px-5 pt-4 ${tab === "filter" ? "pb-0" : "pb-5"}`}
+              >
+                {tabContent}
+              </div>
+              <div
+                className={`flex shrink-0 items-center gap-3 border-t border-(--t-border-line) px-3 ${tab === "filter" ? "justify-end" : "justify-between"}`}
+              >
+                {tab !== "filter" ? (
+                  <AtlasCount
+                    count={resultCount ?? inView.length}
+                    sub={countSub}
+                    loading={scalable && !data.counts && !data.error}
+                  />
+                ) : null}
+                {feedbackPrompt}
+              </div>
             </div>
             <div
-              className={`flex shrink-0 items-center gap-3 border-t border-(--t-border-line) px-3 ${tab === "filter" ? "justify-end" : "justify-between"}`}
+              id="atlas-analysis-panel"
+              hidden={!showInspect}
+              className="flex min-h-0 flex-1 flex-col"
+              style={{
+                display: showInspect ? "flex" : "none",
+              }}
             >
-              {tab !== "filter" ? (
-                <AtlasCount
-                  count={resultCount ?? inView.length}
-                  sub={countSub}
-                  loading={scalable && !data.counts && !data.error}
-                />
-              ) : null}
-              {feedbackPrompt}
+              {analysisPanels}
             </div>
-          </div>
-          <div
-            id="atlas-analysis-panel"
-            hidden={!showInspect}
-            className="flex min-h-0 flex-1 flex-col"
-            style={{
-              display: showInspect ? "flex" : "none",
-            }}
-          >
-            {analysisPanels}
-          </div>
-        </section>
+          </section>
+        </DashboardContextTransition>
         {plans}
       </div>
     )
@@ -3080,105 +3083,107 @@ export function AtlasExplorer({
       style={{ background: T.bg.void }}
     >
       {map}
-      <aside
-        aria-label="Explore panel"
-        className={`${panelStyles.stack} absolute inset-y-0 left-0 z-20 flex min-h-0 flex-col overflow-clip border-r border-(--t-border-line) bg-(--t-bg-deep)`}
-        style={{
-          width: collapsed ? 72 : LEFT_W,
-          viewTransitionName: "var(--atlas-sidebar-transition, none)",
-        }}
-      >
-        {collapsed ? (
-          <>
-            <nav
-              aria-label="Explore"
-              className="flex flex-col items-center gap-1.5 p-2 pt-3"
-            >
-              {(
-                [
-                  ["search", "Search"],
-                  ["filter", "Filters"],
-                  ["layers", "Layers"],
-                ] as const
-              ).map(([key, label]) => (
+      <DashboardContextTransition routeKey="/map">
+        <aside
+          aria-label="Explore panel"
+          className={`${panelStyles.stack} absolute inset-y-0 left-0 z-20 flex min-h-0 flex-col overflow-clip border-r border-(--t-border-line) bg-(--t-bg-deep)`}
+          style={{
+            width: collapsed ? 72 : LEFT_W,
+            viewTransitionName: "var(--atlas-sidebar-transition, none)",
+          }}
+        >
+          {collapsed ? (
+            <>
+              <nav
+                aria-label="Explore"
+                className="flex flex-col items-center gap-1.5 p-2 pt-3"
+              >
+                {(
+                  [
+                    ["search", "Search"],
+                    ["filter", "Filters"],
+                    ["layers", "Layers"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-label={`Open ${label}`}
+                    aria-pressed={tab === key}
+                    onClick={() =>
+                      animateAtlas(() => {
+                        setTab(key)
+                        setUserCollapsed(false)
+                        setLeftPinned(true)
+                        if (narrow) setInspectMinimised(true)
+                      })
+                    }
+                    className="flex min-h-[64px] w-[56px] shrink-0 flex-col items-center justify-center gap-2 rounded-xl px-1 py-3 text-xs leading-4 font-semibold"
+                    style={{
+                      background: tab === key ? T.accent.chip : undefined,
+                      color: tab === key ? T.accent.primary : T.ink.dim,
+                    }}
+                  >
+                    <Icon name={key === "filter" ? "filter" : key} size={19} />
+                    {label}
+                  </button>
+                ))}
+              </nav>
+              <div className="atlas-rail-feedback mt-auto flex flex-col items-center gap-2 pb-3">
+                {feedbackPrompt}
                 <button
-                  key={key}
                   type="button"
-                  aria-label={`Open ${label}`}
-                  aria-pressed={tab === key}
+                  aria-label="Expand Explore"
                   onClick={() =>
                     animateAtlas(() => {
-                      setTab(key)
                       setUserCollapsed(false)
                       setLeftPinned(true)
                       if (narrow) setInspectMinimised(true)
                     })
                   }
-                  className="flex min-h-[64px] w-[56px] shrink-0 flex-col items-center justify-center gap-2 rounded-xl px-1 py-3 text-xs leading-4 font-semibold"
-                  style={{
-                    background: tab === key ? T.accent.chip : undefined,
-                    color: tab === key ? T.accent.primary : T.ink.dim,
-                  }}
+                  className="flex min-h-11 w-12 items-center justify-center"
                 >
-                  <Icon name={key === "filter" ? "filter" : key} size={19} />
-                  {label}
+                  <Icon name="chev" size={18} />
                 </button>
-              ))}
-            </nav>
-            <div className="atlas-rail-feedback mt-auto flex flex-col items-center gap-2 pb-3">
-              {feedbackPrompt}
-              <button
-                type="button"
-                aria-label="Expand Explore"
-                onClick={() =>
-                  animateAtlas(() => {
-                    setUserCollapsed(false)
-                    setLeftPinned(true)
-                    if (narrow) setInspectMinimised(true)
-                  })
-                }
-                className="flex min-h-11 w-12 items-center justify-center"
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex shrink-0 items-center gap-1 border-b border-(--t-divider) bg-(--t-bg-surface) p-2">
+                {tabs}
+                <button
+                  type="button"
+                  aria-label="Collapse panel"
+                  onClick={() =>
+                    animateAtlas(() => {
+                      setUserCollapsed(true)
+                      setLeftPinned(false)
+                    })
+                  }
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep)"
+                >
+                  <Icon name="chev" className="rotate-180" size={17} />
+                </button>
+              </div>
+              <div
+                id="atlas-tabpanel"
+                role="tabpanel"
+                aria-labelledby={`atlas-tab-${tab}`}
+                className={`min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] ${tab === "filter" ? "pb-0" : "pb-5"}`}
+                style={{
+                  viewTransitionName:
+                    "var(--atlas-sidebar-content-transition, none)",
+                }}
               >
-                <Icon name="chev" size={18} />
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex shrink-0 items-center gap-1 border-b border-(--t-divider) bg-(--t-bg-surface) p-2">
-              {tabs}
-              <button
-                type="button"
-                aria-label="Collapse panel"
-                onClick={() =>
-                  animateAtlas(() => {
-                    setUserCollapsed(true)
-                    setLeftPinned(false)
-                  })
-                }
-                className="flex size-9 shrink-0 items-center justify-center rounded-full border border-(--t-border-hi) bg-(--t-bg-deep)"
-              >
-                <Icon name="chev" className="rotate-180" size={17} />
-              </button>
-            </div>
-            <div
-              id="atlas-tabpanel"
-              role="tabpanel"
-              aria-labelledby={`atlas-tab-${tab}`}
-              className={`min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] ${tab === "filter" ? "pb-0" : "pb-5"}`}
-              style={{
-                viewTransitionName:
-                  "var(--atlas-sidebar-content-transition, none)",
-              }}
-            >
-              {tabContent}
-            </div>
-            <div className="flex shrink-0 justify-end border-t border-(--t-border-line) px-3 py-1">
-              {feedbackPrompt}
-            </div>
-          </>
-        )}
-      </aside>
+                {tabContent}
+              </div>
+              <div className="flex shrink-0 justify-end border-t border-(--t-border-line) px-3 py-1">
+                {feedbackPrompt}
+              </div>
+            </>
+          )}
+        </aside>
+      </DashboardContextTransition>
       {inspectEntries.length ? (
         <aside
           id="atlas-analysis-panel"
