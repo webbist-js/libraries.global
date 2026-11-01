@@ -3021,7 +3021,7 @@ export interface ApiLibraryNetworkLibraryNetwork
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
     publicPageEnabled: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>
+      Schema.Attribute.DefaultTo<true>
     publicPageReviewedAt: Schema.Attribute.DateTime
     publicPageReviewedBy: Schema.Attribute.String & Schema.Attribute.Private
     publishedAt: Schema.Attribute.DateTime
