@@ -6,9 +6,9 @@ afterEach(() => vi.unstubAllEnvs())
 const args = { production: "true", "ssh-tunnel": "true", "check-cms": "true" }
 function configure() {
   for (const [key, value] of Object.entries({
-    STRAPI_URL: "http://127.0.0.1:18013",
+    STRAPI_URL: "http://127.0.0.1:18443",
     DATABASE_HOST: "127.0.0.1",
-    DATABASE_PORT: "15460",
+    DATABASE_PORT: "16432",
     DATABASE_URL: "",
     DATABASE_SSL: "true",
     DATABASE_SSL_REJECT_UNAUTHORIZED: "true",
@@ -51,7 +51,7 @@ it("rejects URL TLS settings that override explicit certificate verification", (
   configure()
   vi.stubEnv(
     "DATABASE_URL",
-    "postgresql://operator@127.0.0.1:15460/cms?sslmode=no-verify"
+    "postgresql://operator@127.0.0.1:16432/cms?sslmode=no-verify"
   )
   expect(() => assertIngestTarget(args)).toThrow("not URL parameters")
 })
