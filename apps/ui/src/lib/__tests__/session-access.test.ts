@@ -198,17 +198,20 @@ describe("buildSessionAccess", () => {
     const a = buildSessionAccess({
       ...baseProfile,
       tier: "Archivist",
+      rewardsPoints: 5000,
+      earnedProUntil: "2099-01-01T00:00:00Z",
     })
     expect(a.plan).toBe("pro")
     expect(a.planSource).toBe("earned")
   })
 
-  it("earnedProUntil a day in the future resolves to pro via earned at a Cartographer tier", () => {
+  it("earnedProUntil a day in the future resolves to pro via earned at 5,000 points regardless of tier", () => {
     const now = new Date("2026-01-01T00:00:00Z")
     const a = buildSessionAccess(
       {
         ...baseProfile,
         tier: "Cartographer",
+        rewardsPoints: 5000,
         earnedProUntil: "2026-01-02T00:00:00Z",
       },
       now

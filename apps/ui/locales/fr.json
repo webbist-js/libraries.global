@@ -1700,7 +1700,12 @@
     "atlas_population_background": "Population background",
     "plans_and_pricing": "Formules et tarifs",
     "no_stops_or_times": "Aucun arrêt ni horaire",
-    "library_networks": "Réseaux"
+    "library_networks": "Réseaux",
+    "history_contributed_by": "Ajouté par",
+    "history_community_member": "Membre de la communauté",
+    "atlas_controls": "Commandes",
+    "atlas_show_controls": "Afficher les commandes de l’Atlas",
+    "atlas_hide_controls": "Masquer les commandes de l’Atlas"
   },
   "translation": {
     "language": "Langue",
@@ -2925,7 +2930,7 @@
     "teamSeat": "Place Team",
     "paidMembership": "Adhésion payante",
     "grantDetail": "Accordée par l’équipe Libraries Global, sans paiement requis pour cet accès.",
-    "earnedDetail": "Inclus pour vos contributions acceptées au niveau Archivist. L’accès Pro suit les règles d’admissibilité des contributeurs.",
+    "earnedDetail": "Inclus avec au moins 5 000 points et une contribution acceptée au cours des 30 derniers jours. Chaque contribution acceptée renouvelle Pro pour 30 jours.",
     "verifiedDetail": "Inclus en tant que personnel de bibliothèque vérifié, étudiant ou personnel associatif, sans paiement pour cet accès. Vérifiez votre admissibilité si un renouvellement est nécessaire.",
     "teamDetail": "L’accès Pro est inclus dans votre place Team. Les droits de modification sont vérifiés séparément.",
     "paidDetail": "Gérez votre abonnement, son renouvellement et vos factures dans les paramètres d’adhésion.",
@@ -3329,8 +3334,8 @@
       "staffTitle": "Personnel de bibliothèque, étudiants et associations vérifiés",
       "staffBody": "Le personnel des bibliothèques et des associations ainsi que les étudiants peuvent demander Pro gratuitement. Écrivez-nous depuis votre adresse professionnelle, étudiante ou associative. La vérification autonome de Pro sera bientôt disponible.",
       "write": "Écrivez-nous",
-      "earnedTitle": "Obtenu au niveau Archiviste",
-      "earnedBody": "Atteignez le niveau Archiviste grâce à vos contributions acceptées et Pro s’active automatiquement. Si vous redescendez sous ce niveau, Pro reste actif pendant {days, number} jours.",
+      "earnedTitle": "Obtenu grâce aux contributions",
+      "earnedBody": "Cumulez {points, number} points et une contribution acceptée au cours des {days, number} derniers jours pour débloquer Pro. Chaque contribution acceptée relance cette période de {days, number} jours.",
       "start": "Commencer à contribuer",
       "grantTitle": "Attributions pour la presse et les partenaires",
       "grantBody": "Les journalistes, chercheurs de projets partenaires et organismes partenaires peuvent demander une attribution Pro à l’équipe.",
@@ -4211,6 +4216,8 @@
     "loadingDrive": "Chargement de la campagne à la une…"
   },
   "workspaceDashboard": {
+    "resumePromptBody": "Vous avez des contributions inachevées. Reprenez-en une ci-dessous ou fermez ce rappel pour explorer. Vos brouillons seront conservés.",
+    "dismissResume": "Fermer et explorer",
     "summaryUnavailable": "Le résumé de la fiche est indisponible.",
     "retry": "Réessayer",
     "recordComplete": "Fiche complète",

@@ -7866,6 +7866,11 @@ export interface PluginRewardsPointEvent extends Struct.CollectionTypeSchema {
         "drive_task_accepted",
         "drive_finished",
         "drive_proposal_accepted",
+        "discussion_thread_accepted",
+        "discussion_reply_accepted",
+        "discussion_edit_accepted",
+        "event_feed_accepted",
+        "option_suggestion_accepted",
       ]
     > &
       Schema.Attribute.Required

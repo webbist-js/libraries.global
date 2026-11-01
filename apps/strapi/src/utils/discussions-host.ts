@@ -9,6 +9,7 @@ import type {
 
 import { publicArticleProfile } from "./article-attribution"
 import { isBoardMember } from "./board"
+import { awardDiscussionContribution } from "./discussion-rewards"
 import { publicAuthorRoleBadges } from "./public-author-badges"
 import { activeGrants } from "./role-grants"
 import { loadStaffClaims } from "./staff"
@@ -330,6 +331,7 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
       }
     },
   },
+  onEvent: async (event) => awardDiscussionContribution(strapi, event),
   notify: async ({ idempotencyKey, actorKey, event }) => {
     if (!actorKey.startsWith(PREFIX)) return
     // Outbox delivery has already rechecked the recipient and target. Keep

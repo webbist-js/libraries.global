@@ -23,7 +23,7 @@ it.each([
   ],
   [
     "earned",
-    /accepted contributions at Archivist tier/,
+    /at least 5,000 points and an accepted contribution in the last 30 days/,
     "See your contributions",
     "/contribute/submissions",
   ],

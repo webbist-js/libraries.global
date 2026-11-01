@@ -1700,7 +1700,12 @@
     "atlas_population_background": "Population background",
     "plans_and_pricing": "Plans and pricing",
     "no_stops_or_times": "No stops or times",
-    "library_networks": "Networks"
+    "library_networks": "Networks",
+    "history_contributed_by": "Contributed by",
+    "history_community_member": "Community member",
+    "atlas_controls": "Controls",
+    "atlas_show_controls": "Show Atlas controls",
+    "atlas_hide_controls": "Hide Atlas controls"
   },
   "translation": {
     "language": "Language",
@@ -2925,7 +2930,7 @@
     "teamSeat": "Team seat",
     "paidMembership": "Paid membership",
     "grantDetail": "Granted by the Libraries Global team, with no payment required for this access.",
-    "earnedDetail": "Included for your accepted contributions at Archivist tier. Pro access follows the contributor eligibility rules.",
+    "earnedDetail": "Included with at least 5,000 points and an accepted contribution in the last 30 days. Each accepted contribution renews Pro for 30 days.",
     "verifiedDetail": "Included as verified library staff, a student or charity staff, with nothing to pay for this access. Check your eligibility if you need to renew.",
     "teamDetail": "Your Pro access is included with your Team seat. Library editing permissions are checked separately.",
     "paidDetail": "Manage your subscription, renewal and invoices in membership settings.",
@@ -3329,8 +3334,8 @@
       "staffTitle": "Verified library staff, students and charities",
       "staffBody": "Library staff, students and charity staff can request complimentary Pro. Write to us from your work, student or charity address. Self-service Pro verification is coming soon.",
       "write": "Write to us",
-      "earnedTitle": "Earned at Archivist tier",
-      "earnedBody": "Reach Archivist tier through accepted contributions and Pro switches on by itself. If you drop below Archivist, Pro holds for {days, number} days.",
+      "earnedTitle": "Earned through contributions",
+      "earnedBody": "Earn {points, number} points and have an accepted contribution within the last {days, number} days to unlock Pro. Each accepted contribution resets the {days, number}-day period.",
       "start": "Start contributing",
       "grantTitle": "Grants for press and partners",
       "grantBody": "Journalists, researchers on partner projects and partner organisations can ask the team for a Pro grant.",
@@ -4211,6 +4216,8 @@
     "loadingDrive": "Loading the featured drive…"
   },
   "workspaceDashboard": {
+    "resumePromptBody": "You have unfinished contributions. Continue one below, or dismiss this reminder and explore the hub. Your drafts will be kept.",
+    "dismissResume": "Dismiss and explore",
     "summaryUnavailable": "Record summary is unavailable.",
     "retry": "Try again",
     "recordComplete": "Record complete",

@@ -71,6 +71,28 @@ function fakeStrapi(opts: {
 }
 
 describe("badges.checkAndAward", () => {
+  it("recognises discussions, corrections, translations and the earned-Pro milestone", async () => {
+    const { strapi, created } = fakeStrapi({
+      total: 5000,
+      counts: [
+        { action: "discussion_thread_accepted", count: 1 },
+        { action: "discussion_reply_accepted", count: 10 },
+        { action: "correction_approved", count: 1 },
+        { action: "journal_translated", count: 10 },
+      ],
+    })
+    await createBadges({ strapi }).checkAndAward("u1")
+    expect(created).toEqual(
+      expect.arrayContaining([
+        "conversation_starter",
+        "helpful_voice",
+        "active_contributor",
+        "reading_group",
+        "copy_editor",
+      ])
+    )
+  })
+
   it("awards streak badges from the profile's current streak", async () => {
     const { strapi, created } = fakeStrapi({})
     const enqueue = vi.fn().mockResolvedValue({})

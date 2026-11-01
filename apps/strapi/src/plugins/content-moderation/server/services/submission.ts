@@ -1,8 +1,4 @@
-import {
-  submittedSourceRecords,
-  proposedDrive,
-  validateDrive,
-} from "@repo/shared-data"
+import { proposedDrive, validateDrive } from "@repo/shared-data"
 
 import createNotifications, { scheduleNotification } from "./notifications"
 import { approveNetworkClaim } from "../../../../plugins/access/server/services/network-claims"
@@ -87,6 +83,7 @@ import {
   claimReview,
   preloadStaffReviewHints,
 } from "../utils/staff-review-hint"
+import { newLibrarySources } from "../utils/submission-sources"
 import { withTargetLabels } from "../utils/target-labels"
 import { applyTopicSuggestion } from "../utils/topic-suggestion"
 import { canTransition } from "../utils/transitions"
@@ -291,19 +288,7 @@ function withMarker(note: string | null | undefined, marker: string): string {
   return base.includes(marker) ? base : `${base}${marker}`
 }
 
-// Evidence types that point at a public document. Only these are shown in a
-// library's public revision history; the rest may identify a person.
-const PUBLIC_EVIDENCE_TYPES = new Set(["institutional_url", "press_release"])
-
-export function publicEvidenceUrl(
-  evidenceType: string | null | undefined,
-  evidenceUrl: string | null | undefined
-): string | null {
-  if (!evidenceType || !PUBLIC_EVIDENCE_TYPES.has(evidenceType)) return null
-  const url = evidenceUrl?.trim()
-
-  return url && /^https?:\/\//i.test(url) ? url : null
-}
+export { publicEvidenceUrl } from "../utils/submission-sources"
 
 // Library schema fields that count toward the library_edit points tier.
 // Anything else in `fields` (unknown keys, typos, injected junk) is ignored
@@ -1286,7 +1271,7 @@ export default ({ strapi }: { strapi: any }) => ({
                 iiifEndpoint: link(f.iiifEndpoint),
                 classificationSystem:
                   (f.classificationSystem as string) || undefined,
-                sourceRecords: submittedSourceRecords(f.sourceRecords),
+                sourceRecords: newLibrarySources(submission),
                 closureReason: (f.closureReason as string) || undefined,
                 openingTimes: f.openingTimes || undefined,
                 ...(f.libraryType === "Mobile"
@@ -1704,6 +1689,19 @@ export default ({ strapi }: { strapi: any }) => ({
                   data: { resultDocumentId: credentialDocumentId },
                 })
               updated.resultDocumentId = credentialDocumentId
+              // Keep acceptance and its reward atomic; a failed award leaves
+              // the submission retryable. The key also protects against replay.
+              await strapi
+                .plugin("rewards")
+                .service("points")
+                .award(
+                  submission.submittedByUserId,
+                  "event_feed_accepted",
+                  5,
+                  { submissionId: documentId, credentialDocumentId },
+                  `${documentId}:event_feed_accepted`,
+                  reviewedAt
+                )
             } else if (status === "rejected") {
               await feeds.rejectSubmission(submission, reviewer.id)
             }

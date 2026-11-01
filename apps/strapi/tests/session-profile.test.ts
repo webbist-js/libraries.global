@@ -39,6 +39,7 @@ describe("auth-bridge sessionProfile", () => {
           country: "CO",
           languages: [{ code: "es", proficiency: "native", id: 1 }],
           tier: "Indexer",
+          points: 5000,
           earnedProUntil: FUTURE_ISO,
           dismissedPrompts: ["find-contribute", "not-a-prompt"],
         },
@@ -145,6 +146,7 @@ describe("auth-bridge sessionProfile", () => {
       ],
       verifications: [{ expiresAt: FUTURE_ISO }],
       teams: [],
+      rewardsPoints: 5000,
       earnedProUntil: FUTURE_ISO,
       dismissedPrompts: ["find-contribute"],
     })
@@ -165,6 +167,7 @@ describe("auth-bridge sessionProfile", () => {
       roleGrants: [],
       verifications: [],
       teams: [],
+      rewardsPoints: 0,
       earnedProUntil: null,
       dismissedPrompts: [],
     })

@@ -27,6 +27,7 @@ export type PlanRows = {
 }
 
 export type EntitlementInputs = PlanRows & {
+  points: number
   tier: string | null
   earnedProUntil: string | null
   /** Active Team memberships (R2-B): Pro personally, Team per library. */
@@ -84,7 +85,7 @@ export async function loadPlanRows(
 /**
  * Everything `resolveEntitlements` needs for one user, read from the same
  * rows the session bridge sends the site: plan grants, Pro verifications,
- * the rewards tier, the earned-Pro hold and the Teams they belong to.
+ * the rewards points, the earned-Pro expiry and the Teams they belong to.
  */
 export async function loadEntitlementInputs(
   strapi: any,
@@ -94,15 +95,22 @@ export async function loadEntitlementInputs(
   const [[profile], planRows, teams] = await Promise.all([
     strapi.db.query(PROFILE).findMany({
       where: { baUserId: { $eq: baUserId } },
-      select: ["tier", "earnedProUntil"],
+      select: ["tier", "points", "earnedProUntil"],
       limit: 1,
-    }) as Promise<{ tier?: string | null; earnedProUntil?: string | null }[]>,
+    }) as Promise<
+      {
+        points?: number
+        tier?: string | null
+        earnedProUntil?: string | null
+      }[]
+    >,
     loadPlanRows(strapi, baUserId, now),
     loadTeamInputs(strapi, baUserId),
   ])
 
   return {
     ...planRows,
+    points: profile?.points ?? 0,
     tier: profile?.tier ?? null,
     earnedProUntil: profile?.earnedProUntil ?? null,
     teams,
@@ -126,6 +134,7 @@ export async function resolveUserEntitlements(
     grants: inputs.grants,
     verifications: inputs.verifications,
     rewardsTier: inputs.tier,
+    rewardsPoints: inputs.points,
     earnedProUntil: inputs.earnedProUntil,
     teams: inputs.teams,
     subscription: paidMembershipInput(inputs.paidMembership),
