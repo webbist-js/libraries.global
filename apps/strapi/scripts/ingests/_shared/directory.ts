@@ -18,7 +18,10 @@ import type { StrapiEntity } from "../../strapi-client"
 export interface DirectoryLibrary extends PreparedLibrary {
   countryCode: string
   regionName: string
+  /** Reviewed equivalent names only; ambiguity across aliases is an error. */
+  regionAliases?: string[]
   areaName?: string
+  areaAliases?: string[]
 }
 
 export function directoryPlaceKey(name: string) {
@@ -31,14 +34,47 @@ export function directoryPlaceKey(name: string) {
 }
 
 /** Match within the supplied parent; names never move a place between countries or regions. */
-export function matchDirectoryPlace(places: StrapiEntity[], name: string) {
-  const key = directoryPlaceKey(name)
-  const found = places.filter(
-    (place) => directoryPlaceKey(String(place.name)) === key
+export function matchDirectoryPlace(
+  places: StrapiEntity[],
+  name: string,
+  aliases: readonly string[] = []
+) {
+  const keys = new Set([name, ...aliases].map(directoryPlaceKey))
+  const found = places.filter((place) =>
+    keys.has(directoryPlaceKey(String(place.name)))
   )
   if (found.length > 1) throw new Error(`Ambiguous place ${name}`)
 
   return found[0]
+}
+
+/** The core REST API excludes component filters. Use the verified ingest DB
+ * and its dataset/record_id index, including published-only identities. */
+export async function directorySourceRecords(
+  database: ReturnType<typeof ingestDatabase>,
+  dataset: string
+) {
+  const rows = await database("components_library_source_records as s")
+    .join("libraries_cmps as j", "j.cmp_id", "s.id")
+    .join("libraries as l", "l.id", "j.entity_id")
+    .where({
+      "s.dataset": dataset,
+      "j.component_type": "library.source-record",
+      "j.field": "sourceRecords",
+    })
+    .select("s.record_id", "l.document_id")
+  const result = new Map<string, string>()
+  for (const row of rows) {
+    if (!row.record_id) continue
+    const existing = result.get(row.record_id)
+    if (existing && existing !== row.document_id)
+      throw new Error(
+        `Source Record ${dataset}/${row.record_id} belongs to multiple Libraries`
+      )
+    result.set(row.record_id, row.document_id)
+  }
+
+  return result
 }
 
 /** Directories with existing geography reuse the same validation, checkpoints and draft writer. */
@@ -166,7 +202,8 @@ export async function executeDirectoryIngest(options: {
         regions.filter(
           (place) => (place.country as any)?.documentId === country.documentId
         ),
-        row.regionName
+        row.regionName,
+        row.regionAliases
       )
       if (!region)
         throw new Error(
@@ -182,7 +219,8 @@ export async function executeDirectoryIngest(options: {
                 (place.country as any)?.documentId === country.documentId &&
                 (place.region as any)?.documentId === region.documentId
             ),
-            row.areaName
+            row.areaName,
+            row.areaAliases
           )
         : undefined
       if (row.areaName && !area) {
@@ -191,8 +229,11 @@ export async function executeDirectoryIngest(options: {
         const other = areas.some(
           (place) =>
             (place.country as any)?.documentId === country.documentId &&
-            directoryPlaceKey(String(place.name)) ===
-              directoryPlaceKey(row.areaName!)
+            [row.areaName!, ...(row.areaAliases ?? [])].some(
+              (name) =>
+                directoryPlaceKey(String(place.name)) ===
+                directoryPlaceKey(name)
+            )
         )
         if (other) {
           log.add({
@@ -247,7 +288,7 @@ export async function executeDirectoryIngest(options: {
       if (rows.length !== ids.size)
         throw new Error(`REST and database disagree on ${table}`)
     }
-    const existing = await client.librariesBySourceRecord(dataset)
+    const existing = await directorySourceRecords(database, dataset)
     for (const [recordId, documentId] of options.existingMatches ?? []) {
       if (existing.has(recordId) && existing.get(recordId) !== documentId)
         throw new Error(`Conflicting source identity ${recordId}`)
@@ -281,9 +322,24 @@ export async function executeDirectoryIngest(options: {
     const registered = await client.findAll("datasets", {
       filters: { key: { $eq: dataset } },
     })
-    if (!registered.length) await client.post("/datasets", { data: seed })
+    if (!registered.length)
+      throw new Error(
+        `Dataset ${dataset} is not registered; deploy/restart the CMS with its dataset seed before importing`
+      )
     if (registered.length > 1)
       throw new Error(`Duplicate registered Dataset ${dataset}`)
+    for (const field of [
+      "licence",
+      "licenceUrl",
+      "licenceStatus",
+      "redistribution",
+      "attribution",
+      "sourceUrl",
+    ] as const)
+      if (registered[0][field] !== seed[field])
+        throw new Error(
+          `Registered Dataset ${dataset} has different ${field}; review the registry before importing`
+        )
     const connect = (documentId: string) => ({ connect: [{ documentId }] })
     report.created = await importLibraryDrafts({
       client,

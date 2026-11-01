@@ -32,6 +32,8 @@ export interface PopulationControlsProps {
   readonly country?: string
   readonly countries?: readonly { value: string; label: string }[]
   readonly onCountry?: (country: string) => void
+  readonly onUnavailable?: (level: AtlasPopulationDetail) => void
+  readonly administrativeAvailable?: boolean
   readonly gridAvailable?: boolean
   readonly resolvedLabel?: string
 }
@@ -91,6 +93,8 @@ export function AtlasPopulationDensityControls({
   countries,
   onCountry,
   gridAvailable = true,
+  administrativeAvailable = true,
+  onUnavailable,
   resolvedLabel,
   showOpacity = true,
 }: PopulationControlsProps & { showOpacity?: boolean }) {
@@ -104,21 +108,43 @@ export function AtlasPopulationDensityControls({
         <SelectField
           label={context("detail")}
           value={level}
-          onValueChange={(value) => onLevel(value as AtlasPopulationDetail)}
+          onValueChange={(value) => {
+            const detail = value as AtlasPopulationDetail
+            if (
+              ((detail === "regions" || detail === "local") &&
+                !administrativeAvailable) ||
+              (detail === "grid" && !gridAvailable)
+            ) {
+              onUnavailable?.(detail)
+
+              return
+            }
+            onLevel(detail)
+          }}
           options={[
             { value: "auto", label: context("automatic") },
             { value: "countries", label: t("countries") },
             {
               value: "regions",
+              disabled: !administrativeAvailable && !onUnavailable,
               label:
                 country === "GB" ? t("englandCounties") : context("regions"),
             },
             {
               value: "local",
+              disabled: !administrativeAvailable && !onUnavailable,
               label:
-                country === "GB" ? t("ukDistricts") : context("municipalities"),
+                country === "GB"
+                  ? t("ukDistricts")
+                  : country === "IT"
+                    ? context("provinces")
+                    : context("municipalities"),
             },
-            { value: "grid", label: context("grid"), disabled: !gridAvailable },
+            {
+              value: "grid",
+              label: context("grid"),
+              disabled: !gridAvailable && !onUnavailable,
+            },
           ]}
         />
       </label>

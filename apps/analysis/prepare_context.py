@@ -101,8 +101,13 @@ def publish(root, meta, features):
         p = feature["properties"]
         if not p["name"] or not isinstance(p.get("value"), (int, float)) or not math.isfinite(p["value"]):
             raise ValueError("Missing context value")
-        if meta["theme"] == "deprivation" and (not 1 <= p["value"] <= 10 or not 1 <= p["rank"] <= len(features)):
-            raise ValueError("Invalid national rank or decile")
+        if meta["theme"] == "deprivation":
+            if meta.get("classification") == "source-categories":
+                categories = {c["value"]: c["label"] for c in meta["categories"]}
+                if p["value"] not in categories or p.get("category") != categories[p["value"]]:
+                    raise ValueError("Invalid source-native deprivation category")
+            elif not 1 <= p["value"] <= 10 or not 1 <= p["rank"] <= len(features):
+                raise ValueError("Invalid national rank or decile")
         shape = make_valid(geometry.shape(feature["geometry"]))
         if shape.geom_type == "GeometryCollection":
             # Repair can leave zero-area boundary spurs. Retain every polygon.
@@ -217,11 +222,12 @@ def deprivation(root, nation):
     return publish(root, meta, features)
 
 
-def population(root):
+def population(root, country="GB", entry=None, bounds=(-9, 49, 3, 61), name="United Kingdom"):
     # Copy for overviews: preserve the immutable raster used by Reach.
-    active = json.loads((root / "active.json").read_text())
-    entries = active if isinstance(active, list) else active["releases"]
-    entry = next(r for r in entries if r.get("profile") == "uk" or "GB-ENG" in r.get("countries", []))
+    if entry is None:
+        active = json.loads((root / "active.json").read_text())
+        entries = active if isinstance(active, list) else active["releases"]
+        entry = next(r for r in entries if r.get("profile") == "uk" or "GB-ENG" in r.get("countries", []))
     if len(entry["populationFiles"]) != 1:
         raise ValueError("Context preparation expects a single installed population surface")
     source = root / entry["populationFiles"][0]
@@ -236,11 +242,11 @@ def population(root):
             dataset.build_overviews([2, 4, 8, 16, 32, 64], Resampling.average)
             dataset.update_tags(ns="rio_overview", resampling="average")
         temporary.replace(target)
-    return {"id": f"population-gb-{version}", "theme": "population", "country": "GB", "name": "United Kingdom",
+    return {"id": f"population-{country.lower()}-{version}", "theme": "population", "country": country, "name": name,
             "edition": "GHS-POP 2020 · R2023A", "year": 2020, "boundary": "100 m equal-area population cells", "raster": relative,
             "source": "European Commission · Joint Research Centre", "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php", "licence": "CC BY 4.0",
             "attribution": "European Commission, Joint Research Centre (JRC), GHS-POP R2023A, 2020.",
-            "bounds": bounds_dict((-9, 49, 3, 61)), "note": "Modelled residents on a 100 m equal-area grid for 2020. Zoomed-out tiles average cells for display. Reach counts residents from the original grid; newer official area totals are a separate measure. Transparent cells have no data."}
+            "bounds": bounds_dict(bounds), "note": "Modelled residents on a 100 m equal-area grid for 2020. Zoomed-out tiles average cells for display. Reach counts residents from the original grid; newer official area totals are a separate measure. Transparent cells have no data."}
 
 
 def cars(root, existing):

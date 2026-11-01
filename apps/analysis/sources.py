@@ -23,7 +23,7 @@ def sha256(file: Path):
     return digest.hexdigest()
 
 
-def download(url: str, target: Path, max_bytes: int, reserve_bytes=2 * 1024 ** 3, refresh=False):
+def download(url: str, target: Path, max_bytes: int, reserve_bytes=2 * 1024 ** 3, refresh=False, workers=1):
     if not url.startswith("https://"):
         raise ValueError("Public sources require HTTPS")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -34,6 +34,15 @@ def download(url: str, target: Path, max_bytes: int, reserve_bytes=2 * 1024 ** 3
             raise ValueError("Snapshot hash or request mismatch")
         return previous
     temporary = target.with_suffix(target.suffix + ".part")
+    if workers != 1:
+        from range_download import fetch_ranges
+        result = fetch_ranges(url, temporary, max_bytes, reserve_bytes, workers)
+        if result is not None:
+            info = {"url": url, **result, "sha256": sha256(temporary),
+                    "retrievedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+            temporary.replace(target)
+            write_json(metadata, info)
+            return info
     request = urllib.request.Request(url, headers={"User-Agent": "LibrariesGlobalIngest/1.0 (https://libraries.global)"})
     with urllib.request.urlopen(request, timeout=60) as response:
         expected = int(response.headers.get("Content-Length", "0"))

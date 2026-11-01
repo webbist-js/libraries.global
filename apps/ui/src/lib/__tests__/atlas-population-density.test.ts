@@ -58,62 +58,98 @@ it("rejects mixed-vintage, duplicate and oversized catalogues before displaying 
     "budget"
   )
 })
-it("uses a newer country-specific municipal observation only with matching boundary codes and vintage", async () => {
-  const row = {
-    level: "area",
-    reportingCode: "0114",
-    name: "Upplands Väsby",
-    population: 50000,
-    year: 2025,
-    boundaryVersion: "2025-01-01",
-    source: "SCB",
-    sourceUrl: "https://scb.se",
-    licence: "CC0",
-  }
-  const bridge = vi.fn(async (path: string) =>
-    path.includes("population/context")
-      ? { observations: [row] }
-      : path.includes("catalogue")
-        ? {
-            releases: [
-              {
-                id: "administrative-se-test",
-                country: "SE",
-                theme: "administrative",
-                level: "local",
-                boundaryDate: "2025-01-01",
-                year: 2025,
-              },
-            ],
-          }
-        : {
-            features: [
-              {
-                properties: {
-                  code: "0114",
-                  name: "0114",
-                  areaKm2: 100,
-                  bounds: { west: 17, east: 18, south: 59, north: 60 },
+it.each(["SE", "IT"])(
+  "uses country-specific %s observations only with matching boundary codes and vintage",
+  async (country) => {
+    const row = {
+      level: "area",
+      reportingCode: "0114",
+      name: "Upplands Väsby",
+      population: 50000,
+      year: 2025,
+      boundaryVersion: "2025-01-01",
+      source: "SCB",
+      sourceUrl: "https://scb.se",
+      licence: "CC0",
+    }
+    const bridge = vi.fn(async (path: string) =>
+      path.includes("population/context")
+        ? { observations: [row] }
+        : path.includes("catalogue")
+          ? {
+              releases: [
+                {
+                  id: "administrative-se-test",
+                  country,
+                  theme: "administrative",
+                  level: "local",
+                  boundaryDate: "2025-01-01",
+                  year: 2025,
                 },
-              },
-            ],
-          }
-  )
+              ],
+            }
+          : {
+              features: [
+                {
+                  properties: {
+                    code: "0114",
+                    name: "0114",
+                    areaKm2: 100,
+                    bounds: { west: 17, east: 18, south: 59, north: 60 },
+                  },
+                },
+              ],
+            }
+    )
+    const backend = {
+      bridge,
+      state: vi.fn(),
+      search: vi.fn(),
+    } as unknown as AtlasBackend
+    const result = await queryPopulationDensity(backend, "local", country)
+    expect(result.areas[0]).toMatchObject({
+      name: "Upplands Väsby",
+      year: 2025,
+      peoplePerKm2: 500,
+      population: 50000,
+    })
+    expect(backend.search).not.toHaveBeenCalled()
+    row.boundaryVersion = "2026-01-01"
+    await expect(
+      queryPopulationDensity(backend, "local", country)
+    ).rejects.toThrow("vintage")
+  }
+)
+
+it("accepts Italy's 2023 population in the world catalogue without downgrading newer observations", async () => {
+  const observation = {
+    reportingCode: "ITA",
+    year: 2023,
+    population: 58971230,
+    source: "Istat",
+    sourceUrl: "https://www.istat.it",
+    licence: "CC BY 4.0",
+  }
   const backend = {
-    bridge,
-    state: vi.fn(),
+    bridge: vi.fn(async (path: string) => ({
+      observations: path.includes("context") ? [observation] : [],
+    })),
+    state: vi.fn().mockResolvedValue(null),
     search: vi.fn(),
   } as unknown as AtlasBackend
-  const result = await queryPopulationDensity(backend, "local", "SE")
-  expect(result.areas[0]).toMatchObject({
-    name: "Upplands Väsby",
-    year: 2025,
-    peoplePerKm2: 500,
-    population: 50000,
+  const result = await queryPopulationDensity(backend, "countries")
+  expect(result.areas.find((a) => a.id === "ITA")).toMatchObject({
+    population: 58971230,
+    year: 2023,
   })
-  expect(backend.search).not.toHaveBeenCalled()
-  row.boundaryVersion = "2026-01-01"
-  await expect(queryPopulationDensity(backend, "local", "SE")).rejects.toThrow(
-    "vintage"
-  )
+  vi.mocked(backend.bridge).mockImplementation(async (path: string) => ({
+    observations: path.includes("context")
+      ? [observation]
+      : [{ ...observation, year: 2024, population: 59000000 }],
+  }))
+  const updated = await queryPopulationDensity(backend, "countries")
+  expect(updated.areas.find((a) => a.id === "ITA")).toMatchObject({
+    population: 59000000,
+    year: 2024,
+  })
 })

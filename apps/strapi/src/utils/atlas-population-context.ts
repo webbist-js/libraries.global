@@ -9,6 +9,7 @@ const PROFILES: Record<string, string> = {
   DK: "DNK",
   FI: "FIN",
   AX: "ALA",
+  IT: "ITA",
 }
 
 type ContextObservation = Partial<PopulationObservation> & {
