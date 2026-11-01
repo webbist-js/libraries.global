@@ -1,6 +1,8 @@
-/** A public page is an explicit editorial choice; imports omit this flag. */
+/** New networks are public; later updates preserve an editor's visibility choice. */
 export default {
   beforeCreate(event: { params: { data: Record<string, unknown> } }) {
+    if (event.params.data.publicPageEnabled === undefined)
+      event.params.data.publicPageEnabled = true
     reviewPublicPage(event.params.data)
   },
   beforeUpdate(event: { params: { data: Record<string, unknown> } }) {
