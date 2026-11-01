@@ -28,3 +28,16 @@ export function placeAddHref(
 
   return `${path}${params.size ? `?${params}` : ""}`
 }
+
+/** Keep the owning draft in the sign-in return URL. */
+export function withLibraryDraft(
+  href: string,
+  params: { draft?: string; resume?: string }
+): string {
+  const [path, query] = href.split("?")
+  const search = new URLSearchParams(query)
+  if (params.draft === "contribute") search.set("draft", "contribute")
+  if (params.resume) search.set("resume", params.resume)
+
+  return `${path}${search.size ? `?${search}` : ""}`
+}

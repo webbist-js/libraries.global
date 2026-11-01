@@ -1,7 +1,7 @@
 "use client"
 
 import type { SubmissionType } from "@repo/access"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useHydratedSession } from "@/lib/access-client"
 import { captureWorkspaceRouteAction } from "@/lib/workspace-analytics"
@@ -84,7 +84,13 @@ export function useMySubmissions() {
 }
 
 export function useCreateSubmission() {
+  const client = useQueryClient()
+
   return useMutation({
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["my-submissions"] })
+      client.invalidateQueries({ queryKey: ["draft"] })
+    },
     mutationFn: async (payload: CreateSubmissionPayload) => {
       const measured = payload.asDraft
         ? () => false
@@ -106,7 +112,13 @@ export function useCreateSubmission() {
 }
 
 export function useSaveDraft() {
+  const client = useQueryClient()
+
   return useMutation({
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["my-submissions"] })
+      client.invalidateQueries({ queryKey: ["draft"] })
+    },
     mutationFn: async ({
       id,
       draftData,
@@ -129,7 +141,13 @@ export function useSaveDraft() {
 }
 
 export function useFinalizeDraft() {
+  const client = useQueryClient()
+
   return useMutation({
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["my-submissions"] })
+      client.invalidateQueries({ queryKey: ["draft"] })
+    },
     mutationFn: async ({
       id,
       formData,
