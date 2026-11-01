@@ -13,6 +13,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
+import { SelectField } from "@/components/ds/SelectField"
 import {
   fieldInputStyle,
   fieldLabelStyle,
@@ -188,18 +189,16 @@ export function ConnectFeedForm({
             <label htmlFor="connect-feed-library" style={fieldLabelStyle}>
               Choose a library
             </label>
-            <select
+            <SelectField
               id="connect-feed-library"
-              value={libraryDocumentId}
-              onChange={(e) => selectLibrary(e.target.value)}
+              value={String(libraryDocumentId ?? "")}
+              onValueChange={(selectedValue) => selectLibrary(selectedValue)}
               style={fieldInputStyle}
-            >
-              {libraries.map((l) => (
-                <option key={l.documentId} value={l.documentId}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
+              options={libraries.map((l) => ({
+                value: String(l.documentId),
+                label: String(l.name),
+              }))}
+            />
           </div>
         )}
       </section>

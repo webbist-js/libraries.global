@@ -76,9 +76,8 @@ it("uses owner record bridge paths, shows contributor feedback safely, and never
   view.rerender(tree())
   expect(await screen.findByText("Private work B")).toBeTruthy()
   expect(screen.queryByText("Private work A")).toBeNull()
-  fireEvent.change(screen.getByLabelText("Type"), {
-    target: { value: "reply" },
-  })
+  fireEvent.keyDown(screen.getByLabelText("Type"), { key: "ArrowDown" })
+  fireEvent.click(screen.getByRole("option", { name: "Replies" }))
   expect(
     await screen.findByRole("link", { name: "Open the conversation" })
   ).toBeTruthy()

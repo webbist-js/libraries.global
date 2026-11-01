@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -252,25 +253,29 @@ export function ArticleImageDialog({
                 </div>
                 <label className="grid gap-1.5 text-sm font-semibold">
                   {t("crop")}
-                  <select
+                  <SelectField
                     className={field}
-                    value={aspect ?? "original"}
+                    value={String(aspect ?? "original")}
                     disabled={invalid || !dimensions}
-                    onChange={(event) => {
+                    onValueChange={(selectedValue) => {
                       setAspect(
-                        event.target.value === "original"
+                        selectedValue === "original"
                           ? null
-                          : Number(event.target.value)
+                          : Number(selectedValue)
                       )
                       setZoom(1)
                       setPosition(centered)
                     }}
-                  >
-                    <option value="original">{t("original")}</option>
-                    <option value={16 / 9}>{t("landscape")}</option>
-                    <option value={1}>{t("square")}</option>
-                    <option value={4 / 5}>{t("portrait")}</option>
-                  </select>
+                    options={[
+                      {
+                        value: "original",
+                        label: String(t("original")),
+                      },
+                      { value: String(16 / 9), label: String(t("landscape")) },
+                      { value: String(1), label: String(t("square")) },
+                      { value: String(4 / 5), label: String(t("portrait")) },
+                    ]}
+                  />
                 </label>
                 {aspect !== null && (
                   <>

@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react"
 import { useId, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
 import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
@@ -25,8 +26,8 @@ const LINK =
   "inline-flex min-h-[44px] items-center rounded-md text-sm font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
 const TINTS: Record<string, { bg: string; fg: string }> = {
   indigo: { bg: "var(--t-accent-chip)", fg: T.accent.primary },
-  green: { bg: "#E6F3EE", fg: "#287456" },
-  rust: { bg: "#FAEFE4", fg: "#B75A27" },
+  green: { bg: "var(--t-palette-mint-soft)", fg: "var(--t-palette-mint-fg)" },
+  rust: { bg: "var(--t-palette-coral-soft)", fg: "var(--t-palette-coral-fg)" },
 }
 
 export function PlaceContributionCard({
@@ -179,40 +180,46 @@ export function PlaceContributionCard({
             >
               Choose a {chooserNoun}
             </label>
-            <select
+            <SelectField
               id={`${id}-place`}
               className="min-h-[44px] w-full rounded-xl border bg-(--t-bg-deep) px-3 text-base focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
               style={{ borderColor: T.border.hi }}
-              value={
-                level === "region" ? siblingSlug || place.region : chosenSlug
-              }
-              onChange={(event) => {
+              value={String(
+                level === "region"
+                  ? siblingSlug || place.region
+                  : (chosenSlug ?? "")
+              )}
+              onValueChange={(selectedValue) => {
                 if (level === "region")
                   setSiblingSlug(
-                    event.target.value === place.region
-                      ? ""
-                      : event.target.value
+                    selectedValue === place.region ? "" : selectedValue
                   )
-                else setChosenSlug(event.target.value)
+                else setChosenSlug(selectedValue)
               }}
-            >
-              {level !== "region" && (!chosenSlug || drive) ? (
-                <option value="" disabled={!drive}>
-                  {drive
-                    ? `All ${level === "continent" ? "countries" : "regions"} in ${name}`
-                    : `Choose a ${chooserNoun}`}
-                </option>
-              ) : null}
-              {level === "region" &&
-              !siblings.some((row) => row.slug === place.region) ? (
-                <option value={place.region}>{name}</option>
-              ) : null}
-              {choices.map((row) => (
-                <option key={row.slug} value={row.slug}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                ...(level !== "region" && (!chosenSlug || drive)
+                  ? [
+                      {
+                        value: "",
+                        label: String(
+                          drive
+                            ? `All ${level === "continent" ? "countries" : "regions"} in ${name}`
+                            : `Choose a ${chooserNoun}`
+                        ),
+                        disabled: !drive,
+                      },
+                    ]
+                  : []),
+                ...(level === "region" &&
+                !siblings.some((row) => row.slug === place.region)
+                  ? [{ value: String(place.region), label: String(name) }]
+                  : []),
+                ...choices.map((row) => ({
+                  value: String(row.slug),
+                  label: String(row.name),
+                })),
+              ]}
+            />
             <p className="mt-2 mb-0 text-sm" style={{ color: T.ink.dim }}>
               Your invitation and its destination update before you start.
             </p>

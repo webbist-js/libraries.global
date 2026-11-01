@@ -6,6 +6,7 @@ import { EditorContent, useEditor, useEditorState } from "@tiptap/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { WritingToolbarButton as ToolButton } from "@/components/ds/WritingToolbarButton"
 import { T } from "@/lib/design-tokens"
 
@@ -154,22 +155,20 @@ function ContextRow({ editor }: { editor: Editor }) {
     rows.push(
       <div key="callout" className="flex flex-wrap items-center gap-2">
         <span style={labelStyle}>{tUi("callout")}</span>
-        <select
-          aria-label={tUi("callout_kind")}
-          value={state.calloutKind}
-          onChange={(e) =>
+        <SelectField
+          label={tUi("callout_kind")}
+          value={String(state.calloutKind ?? "")}
+          onValueChange={(selectedValue) =>
             editor.commands.setCalloutKind(
-              e.target.value as (typeof CALLOUT_KINDS)[number]
+              selectedValue as (typeof CALLOUT_KINDS)[number]
             )
           }
           style={{ ...smallInput, width: 140 }}
-        >
-          {CALLOUT_KINDS.map((k) => (
-            <option key={k} value={k}>
-              {k[0]!.toUpperCase() + k.slice(1)}
-            </option>
-          ))}
-        </select>
+          options={CALLOUT_KINDS.map((k) => ({
+            value: String(k),
+            label: String(k[0]!.toUpperCase() + k.slice(1)),
+          }))}
+        />
         <input
           aria-label={tUi("callout_title")}
           value={state.calloutTitle}

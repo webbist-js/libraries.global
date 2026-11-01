@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { ChoiceCard, Notice } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { NetworkAffiliationEditor } from "@/components/networks/NetworkAffiliationEditor"
 import { AvatarUpload } from "@/components/settings/AvatarUpload"
 import { CountryCombobox } from "@/components/settings/CountryCombobox"
@@ -20,7 +21,6 @@ import {
   fieldInput,
   fieldLabel,
   SectionCard,
-  Select,
   Tag,
 } from "./FormParts"
 import { LibraryClaimSearch } from "./LibraryClaimSearch"
@@ -195,18 +195,16 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
           <label htmlFor={ids.pronouns} style={fieldLabel}>
             Pronouns<Tag>{tUi("required")}</Tag>
           </label>
-          <Select
+          <SelectField
             id={ids.pronouns}
             aria-required="true"
-            value={form.pronouns}
-            onChange={(e) => form.setPronouns(e.target.value)}
-          >
-            {PRONOUNS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </Select>
+            value={String(form.pronouns ?? "")}
+            onValueChange={(selectedValue) => form.setPronouns(selectedValue)}
+            options={PRONOUNS.map((p) => ({
+              value: String(p.value),
+              label: String(p.label),
+            }))}
+          />
         </div>
         <div>
           <label htmlFor={ids.city} style={fieldLabel}>
@@ -540,36 +538,36 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
             <label htmlFor={languageId} style={fieldLabel}>
               {tUi("language")}{" "}
             </label>
-            <Select
+            <SelectField
               id={languageId}
-              value={addingLang}
-              onChange={(e) => setAddingLang(e.target.value)}
-            >
-              <option value="">Choose a language</option>
-              {LANGUAGE_OPTIONS.filter(
-                (l) => !form.languages.some((ll) => ll.code === l.code)
-              ).map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </Select>
+              value={String(addingLang ?? "")}
+              onValueChange={(selectedValue) => setAddingLang(selectedValue)}
+              options={[
+                { value: "", label: "Choose a language" },
+                ...LANGUAGE_OPTIONS.filter(
+                  (l) => !form.languages.some((ll) => ll.code === l.code)
+                ).map((l) => ({
+                  value: String(l.code),
+                  label: String(l.name),
+                })),
+              ]}
+            />
           </div>
           <div>
             <label htmlFor={proficiencyId} style={fieldLabel}>
               Proficiency
             </label>
-            <Select
+            <SelectField
               id={proficiencyId}
-              value={addingProf}
-              onChange={(e) => setAddingProf(e.target.value as Proficiency)}
-            >
-              {PROFICIENCY.map((p) => (
-                <option key={p} value={p}>
-                  {PROFICIENCY_LABEL[p]}
-                </option>
-              ))}
-            </Select>
+              value={String(addingProf ?? "")}
+              onValueChange={(selectedValue) =>
+                setAddingProf(selectedValue as Proficiency)
+              }
+              options={PROFICIENCY.map((p) => ({
+                value: String(p),
+                label: String(PROFICIENCY_LABEL[p]),
+              }))}
+            />
           </div>
           <button
             type="button"

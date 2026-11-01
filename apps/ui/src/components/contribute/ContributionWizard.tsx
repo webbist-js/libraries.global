@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { useCapabilities } from "@/lib/access-client"
 import { captureAnalyticsEvent } from "@/lib/analytics-events"
 import { authClient } from "@/lib/auth-client"
@@ -1018,17 +1019,19 @@ export function ContributionWizard({
                       ? "Which detail does it back up?"
                       : "What needs changing?"}
                   </Label>
-                  <select
+                  <SelectField
                     className={FIELD}
                     id={`${titleId}-category`}
-                    onChange={(e) => patch({ category: e.target.value })}
+                    onValueChange={(selectedValue) =>
+                      patch({ category: selectedValue })
+                    }
                     style={{ color: T.ink.base }}
-                    value={draft.category}
-                  >
-                    {categoriesFor(record?.libraryType).map((c) => (
-                      <option key={c.value}>{c.value}</option>
-                    ))}
-                  </select>
+                    value={String(draft.category ?? "")}
+                    options={categoriesFor(record?.libraryType).map((c) => ({
+                      value: String(c.value),
+                      label: String(c.value),
+                    }))}
+                  />
                 </div>
                 {(action === "correction" ? editorView : null) ?? (
                   <div>

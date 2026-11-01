@@ -6,11 +6,12 @@ import { useEffect, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { SearchField } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { CONTINENT_COUNTRIES, CONTINENTS } from "@/lib/data/continents"
 import { COUNTRIES } from "@/lib/data/countries"
 import { T } from "@/lib/design-tokens"
 
-import { fieldInput, fieldLabel, Select, Tag } from "./FormParts"
+import { fieldInput, fieldLabel, Tag } from "./FormParts"
 
 type LibraryHit = {
   id: number
@@ -396,18 +397,20 @@ export function LibraryClaimSearch({
           <label htmlFor={ids.continent} style={fieldLabel}>
             {tUi("continent")}{" "}
           </label>
-          <Select
+          <SelectField
             id={ids.continent}
-            value={continentSlug}
-            onChange={(e) => handleContinentChange(e.target.value)}
-          >
-            <option value="">All continents</option>
-            {CONTINENTS.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+            value={String(continentSlug ?? "")}
+            onValueChange={(selectedValue) =>
+              handleContinentChange(selectedValue)
+            }
+            options={[
+              { value: "", label: "All continents" },
+              ...CONTINENTS.map((c) => ({
+                value: String(c.slug),
+                label: String(c.name),
+              })),
+            ]}
+          />
         </div>
 
         <div>

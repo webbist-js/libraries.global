@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { ProfileFollowButton } from "@/app/[locale]/profile/[username]/_components/ProfileFollowButton"
+import { SelectField } from "@/components/ds/SelectField"
 import { useCapabilities, useHydratedSession } from "@/lib/access-client"
 import { articleReaderPath } from "@/lib/article-content-language"
 import { languageName } from "@/lib/locale-fallback"
@@ -131,22 +132,26 @@ export function ArticleReaderActions({
               ) : (
                 <label>
                   {t("chooseTranslation")}{" "}
-                  <select
-                    value={targetLanguage}
-                    onChange={(event) => setTargetLanguage(event.target.value)}
+                  <SelectField
+                    value={String(targetLanguage ?? "")}
+                    onValueChange={(selectedValue) =>
+                      setTargetLanguage(selectedValue)
+                    }
                     className="rounded-lg border p-2"
-                  >
-                    <option value="">—</option>
-                    {languages.map((language) => (
-                      <option key={language.code} value={language.code}>
-                        {languageName(
-                          language.code,
-                          languages,
-                          interfaceLocale
-                        )}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "—" },
+                      ...languages.map((language) => ({
+                        value: String(language.code),
+                        label: String(
+                          languageName(
+                            language.code,
+                            languages,
+                            interfaceLocale
+                          )
+                        ),
+                      })),
+                    ]}
+                  />
                 </label>
               )}
               {!languageLoading && targetLanguage && (

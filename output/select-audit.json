@@ -1,0 +1,5 @@
+{
+  "scope": "Frontend source declarations in apps/ui/src; excludes tests. Strapi admin is intentionally outside this UI audit. Radix may render an internal native control for browser form support.",
+  "sharedComponent": "apps/ui/src/components/ds/SelectField.tsx",
+  "remainingNativeSelectDeclarations": []
+}

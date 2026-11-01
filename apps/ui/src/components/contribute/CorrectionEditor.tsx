@@ -5,6 +5,7 @@ import { checkText } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useEffect, useId, useMemo, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { ChangedFieldsContext } from "@/components/library-editor/ChangedFieldsContext"
 import { OpeningTimesEditor } from "@/components/library-editor/OpeningTimesEditor"
 import { OPERATIONAL_STATUSES } from "@/components/library-editor/wizard.constants"
@@ -309,19 +310,19 @@ export function CorrectionEditor({
             <div className="space-y-3">
               <label className="block">
                 Which stop?
-                <select
+                <SelectField
                   className="mt-1 min-h-11 w-full rounded-md border px-3"
                   style={{ borderColor: T.border.hi, background: T.bg.deep }}
-                  value={stopId}
-                  onChange={(event) => setStopId(event.target.value)}
-                >
-                  <option value="">Choose a stop</option>
-                  {timetable.stops.map((stop) => (
-                    <option key={stop.id} value={stop.id}>
-                      {stop.name}
-                    </option>
-                  ))}
-                </select>
+                  value={String(stopId ?? "")}
+                  onValueChange={(selectedValue) => setStopId(selectedValue)}
+                  options={[
+                    { value: "", label: "Choose a stop" },
+                    ...timetable.stops.map((stop) => ({
+                      value: String(stop.id),
+                      label: String(stop.name),
+                    })),
+                  ]}
+                />
               </label>
               {chosenStop && (
                 <button

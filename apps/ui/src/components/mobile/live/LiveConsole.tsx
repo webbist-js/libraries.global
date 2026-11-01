@@ -13,6 +13,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { AppearanceControl } from "@/components/appearance/AppearanceControl"
+import { SelectField } from "@/components/ds/SelectField"
 import { Sheet } from "@/components/ds/Sheet"
 import { authClient } from "@/lib/auth-client"
 import { T } from "@/lib/design-tokens"
@@ -891,24 +892,23 @@ export function LiveConsole({
             <>
               <label className="block text-base font-semibold">
                 Reason
-                <select
+                <SelectField
                   className="live-input mt-2 font-normal"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                >
-                  <option value="">Choose a reason</option>
-                  {(sheet === "skip"
-                    ? [
-                        "Road closed",
-                        "Nobody waiting",
-                        "Running too late",
-                        "Other",
-                      ]
-                    : ["Breakdown", "Weather", "Staffing", "Other"]
-                  ).map((r) => (
-                    <option key={r}>{r}</option>
-                  ))}
-                </select>
+                  value={String(reason ?? "")}
+                  onValueChange={(selectedValue) => setReason(selectedValue)}
+                  options={[
+                    { value: "", label: "Choose a reason" },
+                    ...(sheet === "skip"
+                      ? [
+                          "Road closed",
+                          "Nobody waiting",
+                          "Running too late",
+                          "Other",
+                        ]
+                      : ["Breakdown", "Weather", "Staffing", "Other"]
+                    ).map((r) => ({ value: String(r), label: String(r) })),
+                  ]}
+                />
               </label>
               {sheet === "breakdown" && (
                 <label className="block text-base font-semibold">

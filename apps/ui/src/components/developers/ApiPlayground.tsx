@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { ApiPlaygroundUsageDialog } from "@/components/developers/ApiPlaygroundUsageDialog"
+import { SelectField } from "@/components/ds/SelectField"
 import { Button } from "@/components/ui/button"
 import { LIVE_LOCALES } from "@/lib/live-locales"
 import {
@@ -271,21 +272,19 @@ export function ApiPlayground({
             )}
             <label className="font-semibold">
               Locale
-              <select
+              <SelectField
                 name="locale"
                 className={field}
-                value={locale}
-                onChange={(event) => {
-                  setLocale(event.target.value)
+                value={String(locale ?? "")}
+                onValueChange={(selectedValue) => {
+                  setLocale(selectedValue)
                   clear()
                 }}
-              >
-                {LIVE_LOCALES.map((value) => (
-                  <option key={value} value={value}>
-                    {value === "en" ? "English" : value}
-                  </option>
-                ))}
-              </select>
+                options={LIVE_LOCALES.map((value) => ({
+                  value: String(value),
+                  label: String(value === "en" ? "English" : value),
+                }))}
+              />
             </label>
           </div>
         </fieldset>

@@ -1,7 +1,5 @@
-"use client"
-import { useId, useState } from "react"
-
-import { CountryCombobox } from "@/components/settings/CountryCombobox"
+import { SelectField } from "@/components/ds/SelectField"
+import { STAFF_FIELD } from "@/components/staff/StaffPanel"
 
 export function NetworkCountryFilter({
   initial,
@@ -12,31 +10,30 @@ export function NetworkCountryFilter({
   readonly countries: readonly { slug: string; name: string }[]
   readonly locked?: boolean
 }) {
-  const [value, setValue] = useState(initial),
-    id = useId()
-
   return (
-    <div className="grid gap-2">
-      <label id={`${id}-label`} htmlFor={id}>
-        Country
-      </label>
-      <input type="hidden" name="country" value={value} />
+    <label className="grid gap-2">
+      Country
       {locked ? (
-        <p className="m-0 py-3">
-          {countries.find((row) => row.slug === value)?.name ?? value}
-        </p>
+        <>
+          <input type="hidden" name="country" value={initial} />
+          <span className={`${STAFF_FIELD} h-12`}>
+            {countries.find((row) => row.slug === initial)?.name ?? initial}
+          </span>
+        </>
       ) : (
-        <CountryCombobox
-          id={id}
-          labelledBy={`${id}-label`}
-          value={value}
-          onChange={setValue}
-          countries={[
-            { code: "", name: "All countries" },
-            ...countries.map((row) => ({ code: row.slug, name: row.name })),
+        <SelectField
+          name="country"
+          defaultValue={initial}
+          className={`${STAFF_FIELD} h-12`}
+          options={[
+            { value: "", label: "All countries" },
+            ...countries.map((row) => ({
+              value: String(row.slug),
+              label: String(row.name),
+            })),
           ]}
         />
       )}
-    </div>
+    </label>
   )
 }

@@ -64,13 +64,13 @@ it("keeps published variants tied to the displayed language and chooses a config
   ).toContain("mode=report&locale=cs")
   expect(screen.queryByRole("link", { name: "Read in Spanish" })).toBeNull()
   fireEvent.click(screen.getByRole("button", { name: "Add a translation" }))
-  await waitFor(() =>
-    expect(screen.getByRole("option", { name: "French" })).toBeTruthy()
+  fireEvent.keyDown(
+    await screen.findByLabelText("Choose a translation language"),
+    { key: "ArrowDown" }
   )
+  expect(screen.getByRole("option", { name: "French" })).toBeTruthy()
   expect(screen.queryByRole("option", { name: "Spanish" })).toBeNull()
-  fireEvent.change(screen.getByLabelText("Choose a translation language"), {
-    target: { value: "fr" },
-  })
+  fireEvent.click(screen.getByRole("option", { name: "French" }))
   expect(
     screen.getByRole("link", { name: "Add a translation" }).getAttribute("href")
   ).toBe("/contribute/knowledge/guide?locale=fr&sourceLocale=cs&mode=edit")
