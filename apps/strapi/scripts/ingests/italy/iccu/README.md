@@ -56,3 +56,5 @@ They do not translate between boundary editions or merge abolished provinces.
 Run the target geography preflight to verify every province match. Aliases remain
 scoped to the parent Region and ambiguity is an error. Existing Source Records
 are skipped; this import does not rematch already imported Libraries.
+
+For operator-managed SSH forwards, explicitly combine `--production --ssh-tunnel`. Both CMS and database must use explicit loopback forwarding ports rather than the default service ports. Database TLS verification remains required: set `DATABASE_SSL=true`, `DATABASE_SSL_CA_FILE` to the trusted CA file and `DATABASE_SSL_SERVERNAME` to the remote database certificate name. The existing REST/database identity checks still run. Never pass `DATABASE_SSL_REJECT_UNAUTHORIZED=false`.
