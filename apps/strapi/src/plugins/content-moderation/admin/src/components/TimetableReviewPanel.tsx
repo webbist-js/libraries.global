@@ -8,7 +8,6 @@ import {
 import {
   Alert,
   Box,
-  Table,
   Tbody,
   Td,
   Th,
@@ -18,6 +17,7 @@ import {
 } from "@strapi/design-system"
 
 import type { Submission } from "./submissionMeta"
+import { PluginTable } from "../../../../../admin/components/PluginUI"
 
 export function TimetableReviewPanel({ sub }: { sub: Submission }) {
   const before = normalizeMobileTimetable(
@@ -93,7 +93,7 @@ export function TimetableReviewPanel({ sub }: { sub: Submission }) {
           </Alert>
         </Box>
       )}
-      <Table colCount={3} rowCount={rows.length + 1}>
+      <PluginTable colCount={3} rowCount={rows.length + 1}>
         <Thead>
           <Tr>
             {["Change", "Current", "Proposed"].map((h) => (
@@ -118,7 +118,7 @@ export function TimetableReviewPanel({ sub }: { sub: Submission }) {
             </Tr>
           ))}
         </Tbody>
-      </Table>
+      </PluginTable>
     </Box>
   )
 }

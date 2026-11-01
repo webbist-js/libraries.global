@@ -9,7 +9,6 @@ import {
   Loader,
   Searchbar,
   Status,
-  Table,
   Tbody,
   Td,
   Th,
@@ -22,7 +21,10 @@ import { EmptyDocuments } from "@strapi/icons/symbols"
 import { Layouts, useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
-import { PluginPage } from "../../../../../admin/components/PluginUI"
+import {
+  PluginTable,
+  PluginPage,
+} from "../../../../../admin/components/PluginUI"
 import { type AccessSection, PluginNav } from "../components/PluginNav"
 import { TeamDetailModal } from "../components/TeamDetailModal"
 import { TeamModal } from "../components/TeamModal"
@@ -165,7 +167,7 @@ export function TeamsPage({
                 }
               />
             ) : (
-              <Table colCount={6} rowCount={rows.length + 1}>
+              <PluginTable colCount={6} rowCount={rows.length + 1}>
                 <Thead>
                   <Tr>
                     <Th>
@@ -243,7 +245,7 @@ export function TeamsPage({
                     </Tr>
                   ))}
                 </Tbody>
-              </Table>
+              </PluginTable>
             )}
           </Box>
         </Layouts.Content>

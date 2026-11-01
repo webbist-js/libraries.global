@@ -2,7 +2,6 @@ import {
   Box,
   Button,
   Flex,
-  Table,
   Tbody,
   Td,
   Th,
@@ -12,6 +11,8 @@ import {
 } from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
+
+import { PluginTable } from "../../../../../admin/components/PluginUI"
 
 interface CredentialRow {
   documentId: string
@@ -103,7 +104,7 @@ export function ProviderAnalytics() {
           events.
         </Typography>
       ) : (
-        <Table colCount={5} rowCount={rows.length}>
+        <PluginTable colCount={5} rowCount={rows.length + 1}>
           <Thead>
             <Tr>
               <Th>
@@ -177,7 +178,7 @@ export function ProviderAnalytics() {
               </Tr>
             ))}
           </Tbody>
-        </Table>
+        </PluginTable>
       )}
     </Box>
   )

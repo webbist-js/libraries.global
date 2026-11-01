@@ -8,7 +8,6 @@ import {
   NumberInput,
   SingleSelect,
   SingleSelectOption,
-  Table,
   Tbody,
   Td,
   Textarea,
@@ -27,7 +26,10 @@ import {
 } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { PluginPage } from "../../../../../admin/components/PluginUI"
+import {
+  PluginTable,
+  PluginPage,
+} from "../../../../../admin/components/PluginUI"
 
 type PointEvent = {
   id: number
@@ -251,7 +253,7 @@ function EventLog({
       </Typography>
       {events.length ? (
         <Box style={{ overflowX: "auto" }}>
-          <Table
+          <PluginTable
             colCount={canAward ? 6 : 5}
             rowCount={events.length}
             aria-label="Point events"
@@ -323,7 +325,7 @@ function EventLog({
                 </Tr>
               ))}
             </Tbody>
-          </Table>
+          </PluginTable>
         </Box>
       ) : !result.loading && !result.error ? (
         <Typography tag="p" textColor="neutral600">
@@ -610,7 +612,7 @@ function Activity({ revision }: { revision: number }) {
                 <summary style={{ cursor: "pointer", padding: "1rem 0" }}>
                   View daily values
                 </summary>
-                <Table
+                <PluginTable
                   colCount={2}
                   rowCount={daily.length}
                   aria-label="Daily points"
@@ -639,7 +641,7 @@ function Activity({ revision }: { revision: number }) {
                       </Tr>
                     ))}
                   </Tbody>
-                </Table>
+                </PluginTable>
               </details>
             </>
           )}
@@ -648,7 +650,7 @@ function Activity({ revision }: { revision: number }) {
               <Typography tag="h3" variant="delta" paddingBottom={3}>
                 Points by action
               </Typography>
-              <Table
+              <PluginTable
                 colCount={3}
                 rowCount={actions.length}
                 aria-label="Action breakdown"
@@ -677,7 +679,7 @@ function Activity({ revision }: { revision: number }) {
                     </Tr>
                   ))}
                 </Tbody>
-              </Table>
+              </PluginTable>
             </Box>
           )}
         </>

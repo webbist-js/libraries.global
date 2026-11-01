@@ -34,12 +34,17 @@ import {
   SourcesPanel,
 } from "./SubmissionPanels"
 import { WikiEditDiffPanel } from "./WikiEditDiffPanel"
+import { PluginModalContent } from "../../../../../admin/components/PluginUI"
 
 export function TypeBadge({ type }: { type: string }) {
   const c = TYPE_COLORS[type] ?? { bg: "primary100", text: "primary600" }
 
   return (
-    <Badge backgroundColor={c.bg} textColor={c.text}>
+    <Badge
+      backgroundColor={c.bg}
+      textColor={c.text}
+      style={{ whiteSpace: "nowrap" }}
+    >
       {TYPE_LABELS[type] ?? type}
     </Badge>
   )
@@ -52,7 +57,15 @@ export function StatusPill({ status }: { status: string }) {
   }
 
   return (
-    <Status variant={meta.variant} size="S">
+    <Status
+      variant={meta.variant}
+      size="S"
+      style={{
+        display: "inline-flex",
+        width: "fit-content",
+        whiteSpace: "nowrap",
+      }}
+    >
       <Typography>{meta.label}</Typography>
     </Status>
   )
@@ -140,7 +153,7 @@ export function ReviewModal({
 
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
-      <Modal.Content>
+      <PluginModalContent>
         <Modal.Header>
           <Flex gap={2} alignItems="center" wrap="wrap">
             <TypeBadge type={sub.submissionType} />
@@ -314,7 +327,7 @@ export function ReviewModal({
             </>
           )}
         </Modal.Footer>
-      </Modal.Content>
+      </PluginModalContent>
     </Modal.Root>
   )
 }
