@@ -2859,9 +2859,9 @@ export function AtlasExplorer({
     />
   )
   const gapLayer =
-    inspectTarget === "density"
+    inspectActive === "density"
       ? "density"
-      : analysisDrawers.find((d) => d.mode === analysisMode)?.layer
+      : analysisDrawers.find((d) => d.mode === inspectActive)?.layer
   let detectedGap: AtlasDataGap | null = null
   switch (gapLayer) {
     case "deprivation":
