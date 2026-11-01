@@ -167,7 +167,8 @@ def tile(root, release, z, x, y):
         values = np.ma.masked_less(values, 0)
     rgba = np.zeros((4, 256, 256), dtype="uint8")
     valid = ~np.ma.getmaskarray(values)
-    for minimum, color in PALETTES[release["theme"]]:
+    palette = [(c["value"], c["color"]) for c in release["categories"]] if release.get("classification") == "source-categories" else PALETTES[release["theme"]]
+    for minimum, color in palette:
         match = valid & (values.filled(-1) >= minimum)
         for channel in range(3):
             rgba[channel][match] = int(color[1 + channel * 2:3 + channel * 2], 16)

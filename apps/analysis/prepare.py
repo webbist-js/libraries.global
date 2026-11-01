@@ -33,6 +33,9 @@ def pending_tiles(graph: Path, full: dict) -> dict:
 
 def routing_source(root: Path, profile: dict, refresh=False):
     """Retain reference-complete routing objects, not buildings/land-use data."""
+    if profile["network"].get("bufferSources"):
+        from routing_buffer import buffered_source
+        return buffered_source(root, profile, refresh)
     import osmium
     compact = root / f"sources/{profile['id']}-routing.osm.pbf"
     metadata = compact.with_suffix(".pbf.json")
@@ -42,8 +45,9 @@ def routing_source(root: Path, profile: dict, refresh=False):
             raise ValueError("Prepared routing source mismatch")
         return compact, previous["source"]
     source = root / f"sources/{profile['id']}.osm.pbf"
-    snapshot = download(profile["network"]["url"], source, profile["network"]["maxBytes"], refresh=refresh)
+    snapshot = download(profile["network"]["url"], source, profile["network"]["maxBytes"], refresh=refresh, workers=profile["network"].get("downloadWorkers", 1))
     temporary = compact.with_name(compact.stem + ".part.osm.pbf")
+    print(json.dumps({"stage": "routing-compact", "profile": profile["id"], "sourceBytes": source.stat().st_size}), flush=True)
     processor = osmium.FileProcessor(source).with_filter(osmium.filter.KeyFilter("highway", "barrier", "route", "type", "railway", "public_transport"))
     next_check = time.monotonic() + 2
     with osmium.BackReferenceWriter(temporary, ref_src=source, overwrite=True, remove_tags=False, relation_depth=1) as writer:
@@ -62,6 +66,7 @@ def routing_source(root: Path, profile: dict, refresh=False):
     # hash. Avoid retaining a second multi-gigabyte copy of unrelated OSM data.
     if not profile["network"].get("retainDownload", False):
         source.unlink()
+    print(json.dumps({"stage": "routing-compacted", "profile": profile["id"], "bytes": compact.stat().st_size}), flush=True)
     return compact, snapshot
 
 
@@ -244,6 +249,10 @@ def validate_canaries(engine, release, profile):
 def activate(root: Path, graph_manifest: Path, population_manifest: Path, profile: dict, publish=True):
     graph = json.loads(graph_manifest.read_text())
     population = json.loads(population_manifest.read_text())
+    if profile["network"].get("bufferSources"):
+        expected = [profile["network"]["url"], *[s["url"] for s in profile["network"]["bufferSources"]]]
+        if [s["url"] for s in graph["source"].get("sources", [])] != expected:
+            raise ValueError("Prepared graph lacks the required neighbouring routing sources")
     from engine import inside
     if graph["source"]["url"] != profile["network"]["url"] or population["source"]["sourceUrl"] != profile["population"]["url"] or population["population"]["release"] != profile["population"]["id"] or population["population"]["year"] != profile["population"]["year"]:
         raise ValueError("Prepared assets do not match the requested profile")

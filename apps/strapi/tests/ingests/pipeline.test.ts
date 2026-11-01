@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import { limitOf, concurrencyOf } from "../../scripts/ingests/_shared/cli"
 import { libraryDirectory } from "../../scripts/ingests/_shared/json-source"
 import {
+  checkLibrarySlugs,
   importLibraryDrafts,
   validateLibraries,
 } from "../../scripts/ingests/_shared/pipeline"
@@ -43,6 +44,30 @@ describe("complete API snapshots", () => {
 })
 
 describe("resumable draft pipeline", () => {
+  it("bounds collision-check URLs for long slugs", async () => {
+    const findAll = vi.fn(async (_type, options) => {
+      const query = new URLSearchParams()
+      options.filters.slug.$in.forEach((slug: string, i: number) =>
+        query.set(`filters[slug][$in][${i}]`, slug)
+      )
+      expect(query.toString().length).toBeLessThan(8000)
+
+      return []
+    })
+    const records = Array.from({ length: 100 }, (_, i) => ({
+      recordId: String(i),
+      data: {
+        name: `Library ${i}`,
+        slug: `${"a".repeat(195)}-${i}`,
+        libraryType: "Public" as const,
+      },
+      warnings: [],
+    }))
+    await checkLibrarySlugs({ findAll } as never, records, new Map())
+    expect(
+      findAll.mock.calls.flatMap((call) => call[1].filters.slug.$in)
+    ).toHaveLength(100)
+  })
   const records = [1, 2, 3].map((id) => ({
     recordId: String(id),
     data: {

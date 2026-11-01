@@ -107,21 +107,25 @@ const KEYS = {
 
 export function AtlasContextLegend({
   theme,
+  categories,
   missing = "transparent",
 }: {
   readonly theme: keyof typeof KEYS
+  readonly categories?: AtlasContextRelease["categories"]
   readonly missing?: "transparent" | "grey"
 }) {
   const t = useTranslations("atlasContext")
   const analysis = useTranslations("atlasAnalysis")
   const colors =
-    theme === "deprivation"
+    categories?.map((category) => category.color) ??
+    (theme === "deprivation"
       ? ["#9E3A64", "#CE7891", "#E7BCC5", "#BCCBDC", "#6084AB"]
       : theme === "carAccess"
         ? ["#EFF3FF", "#BDD7E7", "#6BAED6", "#3182BD", "#08519C"]
-        : ["#F0F4E5", "#D7E5B0", "#9DC776", "#57A266", "#22634C"]
+        : ["#F0F4E5", "#D7E5B0", "#9DC776", "#57A266", "#22634C"])
   const labels =
-    theme === "deprivation"
+    categories?.map((category) => category.label) ??
+    (theme === "deprivation"
       ? [
           t("decile12"),
           t("decile34"),
@@ -131,7 +135,7 @@ export function AtlasContextLegend({
         ]
       : theme === "carAccess"
         ? ["<10%", "10–<25%", "25–<40%", "40–<60%", "60%+"]
-        : ["<50", "50–<200", "200–<1,000", "1,000–<5,000", "5,000+"]
+        : ["<50", "50–<200", "200–<1,000", "1,000–<5,000", "5,000+"])
 
   return (
     <section
@@ -139,7 +143,7 @@ export function AtlasContextLegend({
       className="rounded-xl bg-(--t-bg-surface) p-3"
     >
       <p className="mt-0 mb-3 text-xs font-semibold text-(--t-ink-dim)">
-        {t(`${KEYS[theme]}Unit`)}
+        {categories ? t("publishedCategories") : t(`${KEYS[theme]}Unit`)}
       </p>
       <div className="flex h-3 overflow-hidden rounded-full" aria-hidden="true">
         {colors.map((color) => (
@@ -240,7 +244,7 @@ type ContextAnalysisProps = {
 }
 
 export function AtlasContextAnalysis(props: ContextAnalysisProps) {
-  const { theme, point, collapsed, onCollapse, onClose } = props
+  const { theme, point, collapsed, onCollapse, onClose, release } = props
   const t = useTranslations("atlasContext")
   const [selected, setSelected] = useState<AtlasContextArea | null>(null)
   const area = point !== undefined ? point.area : selected
@@ -249,7 +253,11 @@ export function AtlasContextAnalysis(props: ContextAnalysisProps) {
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <AtlasAnalysisHeader
         title={t(theme)}
-        description={t(`${theme}Unit`)}
+        description={
+          release?.classification === "source-categories"
+            ? t("publishedCategories")
+            : t(`${theme}Unit`)
+        }
         badge={t("contextLayer")}
         badgeTone="area"
         collapsed={collapsed}
@@ -300,7 +308,25 @@ function ContextAnalysisBody({
       </div>
     )
   if (loading) return <AtlasLoadingSkeleton label={t("loading")} />
-  if (!release) return <p role="status">{t("notInstalled")}</p>
+  if (!release)
+    return (
+      <div className="space-y-3">
+        <p role="status">
+          {t(releases.length ? "chooseCoverage" : "notInstalled")}
+        </p>
+        {releases.length ? (
+          <SelectField
+            label={t("nationEdition")}
+            value=""
+            onValueChange={onRelease}
+            options={releases.map((r) => ({
+              value: r.id,
+              label: `${r.name} · ${r.edition}`,
+            }))}
+          />
+        ) : null}
+      </div>
+    )
 
   return (
     <>
@@ -341,7 +367,7 @@ function ContextAnalysisBody({
           }}
         />
       </AtlasInspectSettings>
-      <AtlasContextLegend theme={theme} />
+      <AtlasContextLegend theme={theme} categories={release.categories} />
       <div className="rounded-xl bg-(--t-bg-surface) p-4">
         <p className="m-0 text-xs leading-relaxed">{t("reachHint")}</p>
         <button
@@ -383,16 +409,25 @@ function ContextAreaSummary({
       </p>
       <p className="my-3 text-3xl font-semibold">
         {theme === "deprivation"
-          ? t("decile", { value: area.value ?? "—" })
+          ? release.classification === "source-categories"
+            ? (area.category ?? "—")
+            : t("decile", { value: area.value ?? "—" })
           : `${area.value?.toLocaleString(undefined, { maximumFractionDigits: 1 }) ?? "—"}%`}
       </p>
       <p className="m-0 text-xs leading-relaxed">
         {theme === "deprivation"
-          ? t("rank", {
-              rank: area.rank?.toLocaleString() ?? "—",
-              total: release.areaCount?.toLocaleString() ?? "—",
-              nation: release.name,
-            })
+          ? release.classification === "source-categories"
+            ? t("relativeScore", {
+                value:
+                  area.relativeScore?.toLocaleString(undefined, {
+                    maximumFractionDigits: 2,
+                  }) ?? "—",
+              })
+            : t("rank", {
+                rank: area.rank?.toLocaleString() ?? "—",
+                total: release.areaCount?.toLocaleString() ?? "—",
+                nation: release.name,
+              })
           : t("households", {
               count: area.withoutCar?.toLocaleString() ?? "—",
               total: area.households?.toLocaleString() ?? "—",
