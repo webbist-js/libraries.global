@@ -55,6 +55,15 @@ function setup(seed: Record<string, any[]> = {}) {
   return { ...fake, run, rows, getMw: () => mw }
 }
 
+function reads(strapi: ReturnType<typeof setup>["strapi"]) {
+  return strapi.documents.mock.results
+    .map(
+      (result: { value: { findOne: { mock: { calls: unknown[] } } } }) =>
+        result.value.findOne.mock.calls.length
+    )
+    .reduce((a: number, b: number) => a + b, 0)
+}
+
 const lib = () => ({
   documentId: "lib1",
   locale: "en",
@@ -453,11 +462,6 @@ describe("change-records middleware", () => {
       actorKind: "token" as const,
       actorId: "ingest-uk",
     }
-    const reads = (strapi: any) =>
-      strapi.documents.mock.results
-        .map((r: any) => r.value.findOne.mock.calls.length)
-        .reduce((a: number, b: number) => a + b, 0)
-
     it("records nothing for an import's create and reads nothing", async () => {
       const { strapi, run, rows } = setup()
       const created = (await runWithChangeContext(importer, async () =>
