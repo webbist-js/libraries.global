@@ -6,7 +6,7 @@
  * @license Copyright (c) 2003-2025, CKSource Holding sp. z o.o. All rights reserved.
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-licensing-options
  */
-:root {
+.ck-content {
   --ck-color-mention-background: var(--t-palette-rose-bg);
   --ck-color-mention-text: var(--t-palette-rose-fg);
 }
@@ -17,7 +17,7 @@
 }
 
 .ck-content code {
-  background-color: hsla(0, 0%, 78%, 0.3);
+  background-color: var(--t-bg-muted);
   border-radius: 2px;
   padding: 0.15em;
 }
@@ -38,7 +38,7 @@
 }
 
 .ck-content pre {
-  background: hsla(0, 0%, 78%, 0.3);
+  background: var(--t-bg-muted);
   border: 1px solid var(--t-border-hi);
   border-radius: 2px;
   color: var(--t-ink-base);
@@ -332,7 +332,7 @@
 }
 
 .ck-content .todo-list .todo-list__label > input:before {
-  border: 1px solid #333;
+  border: 1px solid var(--t-control-border);
   border-radius: 2px;
   box-sizing: border-box;
   content: "";
@@ -366,8 +366,8 @@
 }
 
 .ck-content .todo-list .todo-list__label > input[checked]:before {
-  background: #26ab33;
-  border-color: #26ab33;
+  background: var(--t-action-primary);
+  border-color: var(--t-action-primary);
 }
 
 .ck-content .todo-list .todo-list__label > input[checked]:after {
@@ -409,11 +409,11 @@
 }
 
 .ck-content .page-break__label {
-  background: #fff;
+  background: var(--t-bg-deep);
   border: 1px solid var(--t-border-hi);
   border-radius: 2px;
   box-shadow: 2px 2px 1px rgba(0, 0, 0, 0.15);
-  color: #333;
+  color: var(--t-ink-base);
   display: block;
   font-size: 0.75em;
   font-weight: 700;
@@ -464,7 +464,7 @@
 
 .ck-content figure.table:not(.layout-table) > table,
 .ck-content table.table:not(.layout-table) {
-  border: 1px double #b3b3b3;
+  border: 1px double var(--t-border-hi);
   border-collapse: collapse;
   border-spacing: 0;
 }
@@ -473,7 +473,7 @@
 .ck-content figure.table:not(.layout-table) > table > thead > tr > th,
 .ck-content table.table:not(.layout-table) > tbody > tr > th,
 .ck-content table.table:not(.layout-table) > thead > tr > th {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--t-bg-muted);
   font-weight: 700;
 }
 
@@ -485,7 +485,7 @@
 .ck-content table.table:not(.layout-table) > tbody > tr > th,
 .ck-content table.table:not(.layout-table) > thead > tr > td,
 .ck-content table.table:not(.layout-table) > thead > tr > th {
-  border: 1px solid #bfbfbf;
+  border: 1px solid var(--t-border-hi);
   min-width: 2em;
   padding: 0.4em;
 }
@@ -505,9 +505,9 @@
 .ck-content table.table.layout-table {
   border-spacing: 0;
 }
-:root {
+.ck-content {
   --ck-color-selector-caption-background: var(--t-bg-surface);
-  --ck-color-selector-caption-text: #333;
+  --ck-color-selector-caption-text: var(--t-ink-dim);
 }
 
 .ck-content .table > figcaption {

@@ -88,7 +88,7 @@ export function WidgetsOverview({
             <Icon aria-hidden icon="mdi:domain" width={21} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="mb-1 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
+            <p className="m-0 mb-1 text-xs font-semibold tracking-wide text-(--t-ink-dim) uppercase">
               Default library source
             </p>
             <h2 className="type-small-heading m-0 wrap-anywhere">
@@ -98,11 +98,11 @@ export function WidgetsOverview({
         </div>
         {team.organiser && team.active ? (
           <details className="mt-3 pl-0 sm:pl-14">
-            <summary className="min-h-11 cursor-pointer text-sm font-semibold text-(--t-accent-primary)">
+            <summary className="cursor-pointer py-2 text-sm font-semibold text-(--t-accent-primary)">
               Change default source
             </summary>
             <div className="mt-3 space-y-3">
-              <p className="text-sm text-(--t-ink-dim)">
+              <p className="m-0 max-w-prose text-sm leading-relaxed text-(--t-ink-dim)">
                 New widgets use this public data source. Each widget can use a
                 different selection. Management access is reviewed separately.
               </p>
@@ -164,7 +164,7 @@ export function WidgetsOverview({
                 </div>
                 <div className="w-full min-w-0 space-y-2 wrap-anywhere @min-[640px]/widgets:w-auto @min-[640px]/widgets:flex-1">
                   <Link
-                    className="text-lg font-semibold text-(--t-ink-base) hover:text-(--t-accent-primary)"
+                    className="type-small-heading inline-block font-semibold text-(--t-ink-base) hover:text-(--t-accent-primary)"
                     href={`/staff/teams/widgets/${w.documentId}`}
                   >
                     {w.name}
@@ -262,7 +262,7 @@ export function WidgetsOverview({
         }
       >
         {!data.selections.length ? (
-          <p className="text-sm text-(--t-ink-dim)">
+          <p className="m-0 max-w-prose text-sm leading-relaxed text-(--t-ink-dim)">
             Selections are saved separately so a map, directory and chart can
             use the same libraries.
           </p>

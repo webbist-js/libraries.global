@@ -14,7 +14,7 @@ import {
   nextTask,
   panelGapsOf,
   photoPayload,
-  pointsToArchivist,
+  pointsToEarnedPro,
   quotaLine,
   quotaReason,
   randomTask,
@@ -390,9 +390,9 @@ describe("quota and earned Pro", () => {
     expect(quotaLine(null)).toBeNull()
   })
 
-  it("counts the points to Archivist below it, and nothing from it up", () => {
+  it("counts points to 5,000 independently of recognition tiers", () => {
     expect(
-      pointsToArchivist({
+      pointsToEarnedPro({
         totalPoints: 1160,
         tier: {
           name: "Cartographer",
@@ -400,22 +400,23 @@ describe("quota and earned Pro", () => {
           nextThreshold: 1500,
         },
       })
-    ).toBe(340)
+    ).toBe(3840)
     expect(
-      pointsToArchivist({
+      pointsToEarnedPro({
         totalPoints: 64,
         tier: { name: "Indexer", nextName: "Cartographer", nextThreshold: 500 },
       })
-    ).toBe(1436)
+    ).toBe(4936)
     expect(
-      pointsToArchivist({
+      pointsToEarnedPro({
         totalPoints: 1600,
         tier: { name: "Archivist", nextName: "Scholar", nextThreshold: 4000 },
       })
-    ).toBeNull()
-    expect(pointsToArchivist(null)).toBeNull()
-    expect(earnedProLine(1436)).toBe(
-      "Drive work counts toward earned Pro: 1,436 points to Archivist."
+    ).toBe(3400)
+    expect(pointsToEarnedPro({ totalPoints: 5000 })).toBe(0)
+    expect(pointsToEarnedPro(null)).toBeNull()
+    expect(earnedProLine(4936)).toBe(
+      "Drive work counts toward earned Pro: 4,936 points to 5,000. Keep contributing at least once every 30 days to retain it."
     )
   })
 })

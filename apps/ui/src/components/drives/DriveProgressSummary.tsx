@@ -8,6 +8,9 @@ import type { DriveProgressLogEntry, DriveUnit } from "@/lib/drives/types"
 import { unitNoun } from "./focus-meta"
 import { publishedThisWeek } from "./progress-summary"
 
+const REVIEW_COLOR =
+  "color-mix(in srgb, var(--t-palette-mint-fg) 45%, var(--t-bg-deep))"
+
 const fmt = (n: number) => n.toLocaleString("en-GB")
 
 /** Compact hero summary; uses published tallies, keeping pending work separate. */
@@ -93,15 +96,17 @@ export function DriveProgressSummary({
         >
           <span
             data-segment="done"
-            className="h-full bg-[#315f3b]"
+            className="h-full bg-(--t-palette-mint-fg)"
             style={{ width: width(done) }}
           />
           <span
             data-segment="in-review"
-            className="h-full bg-[#a0b99f]"
+            className="h-full"
             style={{
+              background: REVIEW_COLOR,
               width: width(review),
-              boxShadow: review > 0 ? "inset 1px 0 white" : undefined,
+              boxShadow:
+                review > 0 ? "inset 1px 0 var(--t-bg-deep)" : undefined,
             }}
           />
         </span>
@@ -128,8 +133,8 @@ export function DriveProgressSummary({
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm text-(--t-ink-dim)">
         <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-1 p-0">
           {[
-            [t("published"), done, "#315f3b"],
-            [t("inReview"), review, "#a0b99f"],
+            [t("published"), done, T.accent.ok],
+            [t("inReview"), review, REVIEW_COLOR],
             [t("todo"), todo, T.border.divider],
           ].map(([name, n, color]) => (
             <li key={name} className="inline-flex items-center gap-1.5">

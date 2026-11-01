@@ -10,11 +10,11 @@ export type DriveMine = { sent: number; inReview: number; accepted: number }
 export function DriveYourPart({
   mine,
   quota,
-  toArchivist,
+  toEarnedPro,
 }: {
   readonly mine: DriveMine | null
   readonly quota: PendingQuota | null
-  readonly toArchivist: number | null
+  readonly toEarnedPro: number | null
 }) {
   const t = useTranslations("drivePage")
   const ui = useTranslations("ui")
@@ -75,8 +75,8 @@ export function DriveYourPart({
           <p className="m-0">{t("nothingSent")}</p>
         ) : null}
         {line ? <p className="m-0">{line}</p> : null}
-        {toArchivist != null ? (
-          <p className="m-0">{earnedProLine(toArchivist)}</p>
+        {toEarnedPro != null ? (
+          <p className="m-0">{earnedProLine(toEarnedPro)}</p>
         ) : null}
       </div>
     </section>

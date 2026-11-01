@@ -219,7 +219,7 @@ describe("DriveTaskArea", () => {
     )
     expect(
       within(part).getByText(
-        "Drive work counts toward earned Pro: 1,436 points to Archivist."
+        "Drive work counts toward earned Pro: 4,936 points to 5,000. Keep contributing at least once every 30 days to retain it."
       )
     ).toBeTruthy()
   })

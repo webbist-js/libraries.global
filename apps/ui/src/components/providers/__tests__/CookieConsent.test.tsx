@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { CookieSettingsButton } from "@/components/providers/CookieSettingsButton"
 import { GoogleAnalytics } from "@/components/providers/GoogleAnalytics"
 import {
   ANALYTICS_CONSENT_KEY,
@@ -92,6 +93,8 @@ describe("beta cookie choices", () => {
     render(<GoogleAnalytics />)
     fireEvent.click(screen.getByRole("button", { name: "Accept analytics" }))
     expect(document.head.append).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole("button", { name: "Cookie choices" })).toBeNull()
+    render(<CookieSettingsButton />)
     fireEvent.click(screen.getByRole("button", { name: "Cookie choices" }))
     fireEvent.click(screen.getByRole("button", { name: "Reject analytics" }))
     expect(window["ga-disable-G-8M465CHXJ6"]).toBe(true)
@@ -132,6 +135,7 @@ describe("beta cookie choices", () => {
       "/workspace/account/page/settings"
     )
     expect(JSON.stringify(window.dataLayer)).not.toContain("/profile/settings")
+    render(<CookieSettingsButton locale="fr" />)
     fireEvent.click(screen.getByRole("button", { name: "Choix des cookies" }))
     expect(
       screen

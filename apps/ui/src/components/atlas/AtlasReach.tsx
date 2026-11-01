@@ -309,7 +309,7 @@ function ReachStatus({
     )
   if (!response || response.state === "pending")
     return (
-      <div>
+      <div className="grid gap-3">
         <AtlasLoadingSkeleton label={t("calculatingReach")} compact />
         <button
           type="button"

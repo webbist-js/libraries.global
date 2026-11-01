@@ -21,7 +21,7 @@ function firstControl(panel: HTMLElement): HTMLElement | null {
       "input[type=radio]:checked:not(:disabled)"
     ) ??
     panel.querySelector<HTMLElement>(
-      "select:not(:disabled), textarea:not(:disabled), input:not(:disabled):not([type=hidden])"
+      'button[role="combobox"]:not(:disabled), textarea:not(:disabled), input:not(:disabled):not([type=hidden])'
     ) ??
     panel.querySelector<HTMLElement>("button")
   )

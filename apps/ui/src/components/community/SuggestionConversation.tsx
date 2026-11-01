@@ -113,7 +113,7 @@ export function SuggestionConversation({
               {summary.participants.map((author, index) => (
                 <span
                   key={`${author.slug ?? author.name}:${index}`}
-                  className="rounded-full ring-2 ring-white"
+                  className="rounded-full ring-2 ring-(--t-bg-deep)"
                 >
                   <DiscussionAvatar author={author} size="feed" colourful />
                 </span>

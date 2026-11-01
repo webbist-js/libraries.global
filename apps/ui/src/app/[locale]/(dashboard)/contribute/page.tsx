@@ -400,15 +400,15 @@ export default async function ContributePage({
               initialMetrics={initialStaffMetrics}
             />
           ) : null}
-          {session?.user ? <ResumeWork /> : null}
+          {session?.user ? <ResumeWork prompt /> : null}
           <QuickFixes records={incompleteRecords} />
           <section>
             <h2 className="type-panel-title mb-2">
               What would you like to do?
             </h2>
             <p className="mt-0 mb-5 text-sm text-(--t-ink-dim)">
-              Choose one to start. Drafts save on this device, so you can come
-              back later.
+              Choose one to start. Saved drafts are available from your account,
+              so you can come back later.
             </p>
             <HubActionChooser
               publishedCount={libraryCount}

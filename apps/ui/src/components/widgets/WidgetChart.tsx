@@ -1,13 +1,10 @@
 "use client"
 
-import {
-  FACILITY_CHECKLIST,
-  WIDGET_ACCENTS,
-  widgetMetric,
-} from "@repo/shared-data"
+import { FACILITY_CHECKLIST, widgetMetric } from "@repo/shared-data"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { WIDGET_DATA_COLORS } from "@/components/widgets/appearance"
 import type { WidgetPresentationData } from "@/components/widgets/presentation"
 import { WidgetChartBar } from "@/components/widgets/WidgetChartBar"
 import { useMounted } from "@/hooks/useMounted"
@@ -22,7 +19,7 @@ export function WidgetChart({
   const t = (text: string) => widgetCopy(c.locale, text)
   const mounted = useMounted()
   const [table, setTable] = useState(c.showTable)
-  const accent = WIDGET_ACCENTS[c.accent]
+  const accent = WIDGET_DATA_COLORS[c.accent]
   const metric = widgetMetric(rows, spec, c)
 
   return (
@@ -45,7 +42,7 @@ export function WidgetChart({
               className="size-4 rounded border"
               style={{
                 background:
-                  "repeating-linear-gradient(135deg,#E7E3DB 0 5px,#fff 5px 10px)",
+                  "repeating-linear-gradient(135deg, var(--t-border-hi) 0 5px, var(--t-bg-deep) 5px 10px)",
               }}
             />
             {t("Not recorded")}

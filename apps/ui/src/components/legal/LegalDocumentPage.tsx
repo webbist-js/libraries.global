@@ -14,6 +14,7 @@ import GlobalHeader from "@/components/global/GlobalHeader"
 import GlobalLink from "@/components/global/GlobalLink"
 import { NotTranslatedNote } from "@/components/global/NotTranslatedNote"
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
+import { CookieSettingsButton } from "@/components/providers/CookieSettingsButton"
 import { Button } from "@/components/ui/button"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import type {
@@ -229,6 +230,7 @@ export function LegalDocumentPage({
           </SectionNavigation>
         ) : null}
 
+        <LegalCookieChoices slug={doc.slug} locale={locale} />
         <Container className="py-10 sm:py-12">
           <div
             className={
@@ -582,6 +584,25 @@ export function LegalDocumentPage({
 }
 
 export default LegalDocumentPage
+
+function LegalCookieChoices({
+  slug,
+  locale,
+}: {
+  readonly slug: LegalDocumentDetail["slug"]
+  readonly locale: Locale
+}) {
+  if (slug !== "cookies") return null
+
+  return (
+    <Container className="pt-6">
+      <CookieSettingsButton
+        locale={locale}
+        className="min-h-11 rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-5 text-sm font-semibold"
+      />
+    </Container>
+  )
+}
 
 function LegalContents({
   items,

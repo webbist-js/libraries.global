@@ -91,7 +91,7 @@ export function LibraryHero({
             <div className="record-hero-badges flex flex-wrap items-center gap-2">
               {typeLabel ? (
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold"
                   style={{ background: tint.bg, color: tint.fg }}
                 >
                   <LibIcon d={LIB_ICONS.building} size={14} />
@@ -99,7 +99,7 @@ export function LibraryHero({
                 </span>
               ) : null}
               <span
-                className="inline-flex min-h-7 items-center rounded-full border bg-(--t-bg-deep) px-2.5 text-xs font-semibold"
+                className="inline-flex min-h-8 items-center rounded-full border bg-(--t-bg-deep) px-2.5 py-1 text-sm font-semibold"
                 style={{ borderColor: T.border.line, color: T.ink.dim }}
               >
                 {rec.hasStaff
@@ -280,13 +280,7 @@ export function LibraryHero({
                     neighbours={neighbours}
                   />
                 ) : (
-                  <div
-                    className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 rounded-3xl px-8 text-center"
-                    style={{
-                      background: T.bg.deep,
-                      border: `1px dashed ${T.border.hi}`,
-                    }}
-                  >
+                  <div className="missing-content flex h-full min-h-[240px] flex-col items-center justify-center gap-2 rounded-3xl px-8 text-center">
                     <Icon
                       aria-hidden="true"
                       height={30}
