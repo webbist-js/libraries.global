@@ -9,11 +9,13 @@ A Library Network is a sourced grouping of libraries. It is separate from a Team
 
 ## Public discovery
 
-`/library-networks` lists reviewed public pages, with name, country, region and kind filters. `/library-networks/{slug}` is the canonical page, including multinational networks. It shows published member records, a map and list, provenance, institutional links and entry points for affiliation, management and Team setup.
+`/library-networks` lists enabled public pages, with name, country, region and kind filters. `/library-networks/{slug}` is the canonical page, including multinational networks. It shows published member records, a map and list, provenance, institutional links and entry points for affiliation, management and Team setup.
 
-`/{continent}/{country}/library-services` is a geographic directory. Its `/{slug}` aliases redirect to the global canonical page only when the network belongs to that country. `library-services` is reserved against new Region slugs. Library detail pages show reviewed memberships under “Part of”.
+`/{continent}/{country}/library-services` is a geographic directory. Its `/{slug}` aliases redirect to the global canonical page only when the network belongs to that country. `library-services` is reserved against new Region slugs. Library detail pages show enabled public memberships under “Part of”.
 
-An editor enables `publicPageEnabled` on the existing Library Network collection. The lifecycle records `publicPageReviewedAt`. Imported networks remain available to authenticated selectors and Atlas without automatically acquiring an endorsed public page. Existing records are not bulk-published by a code deployment. Before release, check existing Region slugs for a conflict with the new geographic hub.
+New networks, including imports, default to `publicPageEnabled: true`. An editor can hide an individual network in the Library Network collection; updates that omit the toggle preserve that choice. The lifecycle maintains the existing `publicPageReviewedAt` field as an enablement timestamp for compatibility with public queries; automatic enablement does not imply an editorial review. Existing records are not bulk-enabled by a code deployment.
+
+Hiding a network removes its public directory page, sitemap entry and “Part of” links without unpublishing its libraries or deleting their memberships. Authenticated selectors and Atlas can still use the grouping. Claimants cannot change public-page visibility from the staff area; their optional public affiliation is a separate setting. Before release, check existing Region slugs for a conflict with the geographic hub.
 
 ## Affiliation and management
 

@@ -144,8 +144,8 @@ export function NetworkDirectory({
           </div>
         </dl>
         <p className="mb-0 text-(--t-ink-dim)">
-          Only reviewed public network pages appear here. Imported networks may
-          be available in the Atlas before their directory page is reviewed.
+          Explore library services, university systems and consortia. Each page
+          lists its published member libraries and available source information.
         </p>
       </details>
       <p role="status">{data.total.toLocaleString()} services and networks</p>
@@ -154,12 +154,12 @@ export function NetworkDirectory({
           message={
             hasFilters
               ? "No matching services"
-              : "Public network pages are being prepared"
+              : "No services and networks listed yet"
           }
           detail={
             hasFilters
               ? "Try another name, country or kind, or clear the filters."
-              : "Network records are available in the Atlas. Pages appear in this directory after their details have been reviewed."
+              : "Explore the Atlas to find libraries while this directory grows."
           }
           action={
             <Link href="/map" className="network-page-link">
