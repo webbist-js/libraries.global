@@ -20,7 +20,10 @@ export interface AtlasContextRelease {
   attribution: string
   note: string
   bounds: AtlasBounds
+  coverage?: { status: "partial"; gaps: string[] }
   areaCount?: number
+  classification?: "source-categories"
+  categories?: { value: number; label: string; color: string }[]
   level?: "local" | "regions"
 }
 export interface AtlasContextArea {
@@ -28,6 +31,8 @@ export interface AtlasContextArea {
   name: string
   value: number | null
   rank?: number
+  category?: string
+  relativeScore?: number
   households?: number
   withoutCar?: number
   bounds: AtlasBounds

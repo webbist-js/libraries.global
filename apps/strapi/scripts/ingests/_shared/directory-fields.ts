@@ -47,6 +47,9 @@ export function directoryPoint(
     : undefined
 }
 
-export function directorySlug(name: string, suffix: string) {
-  return `${slugify(name).slice(0, 210).replace(/-+$/, "")}-${suffix.toLowerCase()}`
+export function directorySlug(name: string, suffix: string, maxLength = 255) {
+  const nameLength = Math.min(210, maxLength - suffix.length - 1)
+  if (nameLength < 1) throw new Error("Directory slug suffix is too long")
+
+  return `${slugify(name).slice(0, nameLength).replace(/-+$/, "")}-${suffix.toLowerCase()}`
 }

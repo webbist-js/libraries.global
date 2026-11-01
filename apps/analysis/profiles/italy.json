@@ -1,0 +1,104 @@
+{
+  "id": "italy",
+  "country": "IT",
+  "originBounds": [
+    6.6,
+    35.4,
+    18.6,
+    47.15
+  ],
+  "network": {
+    "url": "https://download.geofabrik.de/europe/italy-latest.osm.pbf",
+    "maxBytes": 4294967296,
+    "minimumBuildFreeBytes": 21474836480,
+    "source": "OpenStreetMap contributors \u00b7 Geofabrik Italy and Alpine/Slovenian border extracts",
+    "sourceUrl": "https://download.geofabrik.de/europe/italy.html",
+    "licence": "ODbL 1.0",
+    "bufferSources": [
+      {
+        "url": "https://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf"
+      },
+      {
+        "url": "https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-latest.osm.pbf"
+      },
+      {
+        "url": "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf"
+      },
+      {
+        "url": "https://download.geofabrik.de/europe/austria-latest.osm.pbf"
+      },
+      {
+        "url": "https://download.geofabrik.de/europe/slovenia-latest.osm.pbf"
+      }
+    ],
+    "downloadWorkers": 4
+  },
+  "population": {
+    "id": "ghsl-2020-r2023a-100m",
+    "url": "https://jrc-ghsl.s3.eu-central-1.amazonaws.com/ghs-pop/r2023a/54009/100m/2020/GHS_POP_E2020_GLOBE_R2023A_54009_100_V1_0.tif",
+    "bounds": [
+      5.8,
+      34.8,
+      19.4,
+      47.8
+    ],
+    "source": "GHS-POP R2023A \u00b7 native population grid",
+    "sourceUrl": "https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php",
+    "licence": "CC BY 4.0",
+    "year": 2020
+  },
+  "canary": {
+    "lat": 41.9,
+    "lng": 12.5
+  },
+  "countries": [
+    "IT"
+  ],
+  "replacesProfiles": [],
+  "canaries": [
+    {
+      "lat": 41.9,
+      "lng": 12.5
+    },
+    {
+      "lat": 45.4642,
+      "lng": 9.19
+    },
+    {
+      "lat": 38.1157,
+      "lng": 13.3615
+    },
+    {
+      "lat": 39.2238,
+      "lng": 9.1217
+    },
+    {
+      "lat": 35.501,
+      "lng": 12.609
+    },
+    {
+      "lat": 45.737,
+      "lng": 7.32
+    },
+    {
+      "lat": 45.9314,
+      "lng": 7.62623
+    },
+    {
+      "lat": 45.95859,
+      "lng": 8.84407
+    },
+    {
+      "lat": 45.94,
+      "lng": 13.62
+    },
+    {
+      "lat": 43.79,
+      "lng": 7.61
+    },
+    {
+      "lat": 47.0024,
+      "lng": 11.5056
+    }
+  ]
+}

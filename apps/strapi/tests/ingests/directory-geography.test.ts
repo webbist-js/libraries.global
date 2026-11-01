@@ -47,8 +47,12 @@ vi.mock("../../scripts/ingests/_shared/population", () => ({
   ingestDatabase: () =>
     Object.assign(
       () => ({
+        join() {
+          return this
+        },
         where: () => ({
           first: mexicoIdentity,
+          select: emptyRows,
         }),
         whereIn: selectIdentities,
       }),
@@ -160,4 +164,8 @@ describe("directory geography preflight", () => {
 
 function selectIdentities(_field: string, ids: string[]) {
   return { distinct: async () => ids.map(documentIdentity) }
+}
+
+async function emptyRows() {
+  return []
 }

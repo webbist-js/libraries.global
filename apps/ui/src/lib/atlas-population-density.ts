@@ -134,7 +134,7 @@ async function countryDensity(
   level: AtlasPopulationLevel,
   country: string
 ): Promise<AtlasPopulationDensityResponse> {
-  if (!["SE", "NO", "DK", "FI", "AX"].includes(country))
+  if (!["SE", "NO", "DK", "FI", "AX", "IT"].includes(country))
     throw new Error("Unsupported population geography")
   const [catalogue, context] = await Promise.all([
     backend.bridge(`/api/atlas/population/context?country=${country}`),
@@ -270,15 +270,19 @@ function applyNewerObservations(
   ) {
     for (const row of newer.observations as PopulationObservation[]) {
       if (
-        !["SWE", "NOR", "DNK", "FIN", "ALA"].includes(row.reportingCode) ||
+        !["SWE", "NOR", "DNK", "FIN", "ALA", "ITA"].includes(
+          row.reportingCode
+        ) ||
         !Number.isInteger(row.year) ||
-        row.year < 2024 ||
+        row.year < (row.reportingCode === "ITA" ? 2023 : 2024) ||
         row.year > 2100 ||
         (row.population !== null &&
           (!Number.isSafeInteger(row.population) || row.population < 0))
       )
         throw new Error("Invalid latest population catalogue")
-      observations.set(row.reportingCode, row)
+      const previous = observations.get(row.reportingCode)
+      if (!previous || row.year >= previous.year)
+        observations.set(row.reportingCode, row)
     }
   }
 }
