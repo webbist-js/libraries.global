@@ -246,11 +246,9 @@ describe("library staff authority", () => {
       "editor",
     ])
   })
-  it("keeps the last owner when leaving, removing or demoting", async () => {
+  it("keeps the last owner when removing or demoting", async () => {
     const { staff, store } = setup()
     for (const change of [
-      () =>
-        staff.changeMember("owner", library.documentId, "", {}, false, true),
       () =>
         staff.changeMember(
           "owner",
@@ -271,6 +269,19 @@ describe("library staff authority", () => {
     }
     expect(store[AFFILIATION_UID]).toHaveLength(2)
     expect(store[AUDIT]).toHaveLength(0)
+  })
+  it("lets the sole claimant renounce their claim and records the departure", async () => {
+    const { staff, store } = setup([affiliation("owner", "owner")], false)
+    expect((await staff.team("owner", library.documentId)).canLeave).toBe(true)
+    await staff.changeMember("owner", library.documentId, "", {}, false, true)
+    expect(store[AFFILIATION_UID]).toHaveLength(0)
+    expect(store[AUDIT]?.[0]).toMatchObject({
+      action: "left",
+      subject: "owner",
+    })
+    await expect(
+      staff.changeMember("owner", library.documentId, "", {}, false, true)
+    ).rejects.toMatchObject({ status: 404 })
   })
   it("lets an editor leave for free: the row goes, the audit is written, and the lifecycle does the rest", async () => {
     const { staff, store, services } = setup(undefined, false)

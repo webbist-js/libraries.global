@@ -6,6 +6,7 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, Sheet, Switch } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
@@ -158,9 +159,6 @@ export function TeamManager({
                 Your access
               </span>{" "}
               · {yourAccess}
-              {!data.canLeave && yourRole === "owner"
-                ? " · The last owner can’t leave"
-                : ""}
             </p>
             {data.canLeave ? (
               <Button
@@ -246,29 +244,30 @@ export function TeamManager({
                   {owner ? (
                     <label className="flex items-center gap-2 text-sm">
                       <span className="sr-only">Level for {member.name}</span>
-                      <select
-                        value={member.staffRole}
+                      <SelectField
+                        value={String(member.staffRole ?? "")}
                         disabled={
                           busy || (member.staffRole === "owner" && owners === 1)
                         }
                         className={INPUT}
                         style={{ borderColor: T.border.hi }}
-                        onChange={(event) =>
+                        onValueChange={(selectedValue) =>
                           setConfirm({
-                            title: `Make ${member.name} an ${event.target.value}?`,
+                            title: `Make ${member.name} an ${selectedValue}?`,
                             body:
-                              event.target.value === "owner"
+                              selectedValue === "owner"
                                 ? "Owners manage the staff list, live sharing and notices."
                                 : "Editors keep the record, hours and notices up to date but can’t change who has access.",
                             path: `${base}/team/members/${member.affiliationDocumentId}`,
                             method: "PUT",
-                            payload: { staffRole: event.target.value },
+                            payload: { staffRole: selectedValue },
                           })
                         }
-                      >
-                        <option value="owner">Owner</option>
-                        <option value="editor">Editor</option>
-                      </select>
+                        options={[
+                          { value: "owner", label: "Owner" },
+                          { value: "editor", label: "Editor" },
+                        ]}
+                      />
                     </label>
                   ) : (
                     <Badge
@@ -434,20 +433,21 @@ export function TeamManager({
                 </label>
                 <label className="flex flex-col gap-2 text-sm font-semibold">
                   Level
-                  <select
+                  <SelectField
                     name="staffRole"
-                    value={inviteRole}
-                    onChange={(event) =>
+                    value={String(inviteRole ?? "")}
+                    onValueChange={(selectedValue) =>
                       setInviteRole(
-                        event.target.value === "owner" ? "owner" : "editor"
+                        selectedValue === "owner" ? "owner" : "editor"
                       )
                     }
                     className={INPUT}
                     style={{ borderColor: T.border.hi }}
-                  >
-                    <option value="editor">Editor</option>
-                    <option value="owner">Owner</option>
-                  </select>
+                    options={[
+                      { value: "editor", label: "Editor" },
+                      { value: "owner", label: "Owner" },
+                    ]}
+                  />
                 </label>
                 <Button
                   variant="primary"

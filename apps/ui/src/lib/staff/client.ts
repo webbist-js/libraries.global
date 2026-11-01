@@ -17,7 +17,7 @@ export async function staffRequest<T = unknown>(
     const code = value?.error?.code ?? value?.error ?? "request_failed"
     const messages: Record<string, string> = {
       last_owner:
-        "The last owner cannot leave, be removed or become an editor.",
+        "The last owner cannot be removed or demoted. They can renounce their own library claim.",
       email_failed:
         "The invitation email could not be sent. Try again shortly.",
       email_mismatch: "Sign in with the email address this invite was sent to.",

@@ -334,8 +334,9 @@ describe("StaffDrawer", () => {
       expect(localStorage.getItem(DRAWER_LIBRARY_KEY)).toBe(MOBILE.id)
     )
     const select = screen.getByRole("combobox", { name: "Library" })
-    expect((select as HTMLSelectElement).value).toBe(MOBILE.id)
-    fireEvent.change(select, { target: { value: PUBLIC.id } })
+    expect(select.textContent).toContain(MOBILE.name)
+    fireEvent.keyDown(select, { key: "ArrowDown" })
+    fireEvent.click(screen.getByRole("option", { name: PUBLIC.name }))
     expect(screen.getByRole("dialog", { name: "Central Library" })).toBeTruthy()
     await waitFor(() =>
       expect(localStorage.getItem(DRAWER_LIBRARY_KEY)).toBe(PUBLIC.id)

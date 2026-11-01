@@ -12,6 +12,7 @@ import {
   DrawerSection,
 } from "@/components/ds/DrawerCards"
 import { TONES as NOTICE_TONES } from "@/components/ds/Notice"
+import { SelectField } from "@/components/ds/SelectField"
 import { useFeaturedDrive } from "@/hooks/useContributeMenu"
 import { useEntitlements, useStaff } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
@@ -220,28 +221,19 @@ export function StaffDrawer({
                 width={18}
               />
               <span className="sr-only">{tUi("library")}</span>
-              <select
+              <SelectField
                 className="min-h-12 w-full min-w-0 appearance-none truncate rounded-[14px] border py-2 pr-10 pl-10 text-base font-semibold"
-                onChange={(event) => setSelected(event.target.value)}
+                onValueChange={(selectedValue) => setSelected(selectedValue)}
                 style={{
                   background: T.bg.deep,
                   borderColor: T.border.hi,
                   color: T.ink.base,
                 }}
-                value={id}
-              >
-                {libraries.map((lib) => (
-                  <option key={lib.id} value={lib.id}>
-                    {lib.name}
-                  </option>
-                ))}
-              </select>
-              <Icon
-                aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2"
-                height={18}
-                icon="mdi:chevron-down"
-                width={18}
+                value={String(id ?? "")}
+                options={libraries.map((lib) => ({
+                  value: String(lib.id),
+                  label: String(lib.name),
+                }))}
               />
             </label>
           ) : (

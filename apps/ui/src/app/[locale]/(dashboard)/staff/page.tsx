@@ -9,6 +9,7 @@ import {
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { Badge, HealthList, Notice } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
+import { RenounceLibraryClaim } from "@/components/staff/RenounceLibraryClaim"
 import { staffHealthRows } from "@/components/staff/staff-health"
 import { StaffAccessRequests } from "@/components/staff/StaffAccessRequests"
 import { StaffAccessRequired } from "@/components/staff/StaffAccessRequired"
@@ -284,6 +285,10 @@ export default async function StaffLibrariesPage({
                         Moves, type changes and permanent closures still need
                         review.
                       </p>
+                      <RenounceLibraryClaim
+                        libraryId={lib.id}
+                        libraryName={lib.name}
+                      />
                       {overview ? (
                         <HealthList
                           headingId={`staff-health-${lib.id}`}
