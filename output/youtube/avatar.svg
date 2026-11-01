@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800"><rect width="800" height="800" fill="white"/><g transform="translate(112 110) scale(.9)">
+  <g fill="#4338ca">
+    <path d="M76 164 340 32v72l-192 96v284l-72-36Z"/>
+    <path d="m180 220 264-132v72l-192 96v284l-72-36Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="m284 276 280-140v360L332 612l-48-24ZM356 312v216l136-68V244Z"/>
+  </g>
+
+</g></svg>
