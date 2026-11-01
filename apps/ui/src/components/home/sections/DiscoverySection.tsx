@@ -77,6 +77,10 @@ export function DiscoverySection({
       </div>
       <div>
         <h2 className="type-h3 home-discovery-title">By place and network</h2>
+        <p className="home-discovery-intro">
+          Explore libraries country by country, or discover the services and
+          networks that connect them.
+        </p>
         <ul className="home-link-rows">
           {countries.map((country) => (
             <li key={country.href}>

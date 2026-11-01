@@ -91,30 +91,46 @@ export function ProfileWorkspaceHeader({
           </div>
         </div>
       </div>
-      <div className="profile-workspace-primary-actions">
-        <Button
-          variant="primary"
-          size="pill"
-          onClick={() => openProfileDrawer("settings", user.id)}
-        >
-          <Pencil aria-hidden="true" />
-          {t("editProfile")}
-        </Button>
-        {profile?.username ? (
-          <Button variant="surface" size="pill" asChild>
-            <Link
-              publicProfile
-              href={`/profile/${profile.username}`}
-              onNavigate={(event) => {
-                if (!closeProfileDrawer()) event.preventDefault()
-              }}
-            >
-              <Globe aria-hidden="true" />
-              {t("viewPublicProfile")}
-            </Link>
-          </Button>
-        ) : null}
+      <div className="profile-workspace-desktop-actions">
+        <ProfileWorkspacePrimaryActions user={user} profile={profile} />
       </div>
+    </div>
+  )
+}
+
+export function ProfileWorkspacePrimaryActions({
+  user,
+  profile,
+}: {
+  readonly user: BetterAuthUser
+  readonly profile?: UserProfile | null
+}) {
+  const t = useTranslations("dashboard")
+
+  return (
+    <div className="profile-workspace-primary-actions">
+      <Button
+        variant="primary"
+        size="pill"
+        onClick={() => openProfileDrawer("settings", user.id)}
+      >
+        <Pencil aria-hidden="true" />
+        {t("editProfile")}
+      </Button>
+      {profile?.username ? (
+        <Button variant="surface" size="pill" asChild>
+          <Link
+            publicProfile
+            href={`/profile/${profile.username}`}
+            onNavigate={(event) => {
+              if (!closeProfileDrawer()) event.preventDefault()
+            }}
+          >
+            <Globe aria-hidden="true" />
+            {t("viewPublicProfile")}
+          </Link>
+        </Button>
+      ) : null}
     </div>
   )
 }

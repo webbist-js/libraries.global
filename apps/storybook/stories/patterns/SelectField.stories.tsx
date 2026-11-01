@@ -28,7 +28,7 @@ const meta = {
           <SelectField
             {...args}
             onValueChange={(value) => {
-              args.onValueChange(value)
+              args.onValueChange?.(value)
               updateArgs({ value })
             }}
           />

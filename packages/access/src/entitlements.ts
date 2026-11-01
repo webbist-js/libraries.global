@@ -1,4 +1,4 @@
-import { TIER_NAMES } from "./limits"
+import { hasEarnedPro } from "./earned-pro"
 
 export type PlanKey = "public" | "free" | "supporter" | "pro" | "team"
 export type PlanSource =
@@ -68,7 +68,8 @@ export interface EntitlementInput {
   /** Free-Pro verifications (C5, P-D). */
   verifications?: { expiresAt: string | null }[]
   rewardsTier?: string | null
-  /** End of the 90-day hold after dropping below Archivist. */
+  rewardsPoints?: number | null
+  /** Thirty days after the latest accepted contribution. */
   earnedProUntil?: string | null
   /**
    * Teams the user is an active member of (R2-B). An active, unexpired Team
@@ -170,15 +171,6 @@ const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
 
 const PAST_DUE_GRACE_MS = 7 * 86_400_000
 
-/** End of the 90-day hold after dropping below Archivist (D-P4). */
-export const EARNED_PRO_HOLD_DAYS = 90
-const EARNED_PRO_TIERS: ReadonlySet<string> = new Set(
-  TIER_NAMES.slice(TIER_NAMES.indexOf("Archivist"))
-)
-
-export function isEarnedProTier(tier: string | null | undefined): boolean {
-  return EARNED_PRO_TIERS.has(tier ?? "")
-}
 const PLAN_RANK: Record<PlanKey, number> = {
   public: 0,
   free: 1,
@@ -279,10 +271,7 @@ export function resolveEntitlements(i: EntitlementInput): Entitlements {
       candidates.push({ plan: g.plan, source: "grant" })
   if ((i.verifications ?? []).some((v) => notExpired(v.expiresAt, i.now)))
     candidates.push({ plan: "pro", source: "verified" })
-  if (
-    isEarnedProTier(i.rewardsTier) ||
-    (i.earnedProUntil != null && notExpired(i.earnedProUntil, i.now))
-  )
+  if (hasEarnedPro(i.rewardsPoints, i.earnedProUntil, i.now))
     candidates.push({ plan: "pro", source: "earned" })
 
   if (candidates.length === 0) return build("free", "none", teamLibraryIds)

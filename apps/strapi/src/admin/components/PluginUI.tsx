@@ -1,4 +1,4 @@
-import { Box, Flex, Modal, Typography } from "@strapi/design-system"
+import { Box, Flex, Modal, Table, Typography } from "@strapi/design-system"
 import { Page } from "@strapi/strapi/admin"
 import type { ReactNode } from "react"
 import { styled } from "styled-components"
@@ -24,18 +24,50 @@ export const PluginPage = styled(Page.Main)`
     border-radius: 8px 8px 0 0;
     padding-inline: 20px;
   }
-  th,
-  td {
-    vertical-align: top;
-  }
-  td {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
   @media (max-width: 700px) {
     header {
       flex-wrap: wrap;
       gap: 16px;
+    }
+  }
+`
+
+/** Our tables start with content, rather than Strapi's compact checkbox column. */
+export const PluginTable = styled(Table)`
+  min-width: 640px;
+  && th,
+  && td {
+    padding: 16px;
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+  && th {
+    height: auto;
+    padding-block: 12px;
+    white-space: nowrap;
+  }
+  && td {
+    min-width: 120px;
+    max-width: 360px;
+  }
+  && td:last-child {
+    min-width: 80px;
+  }
+  && button {
+    white-space: nowrap;
+  }
+  && td > * {
+    max-width: 100%;
+  }
+  && tbody tr:hover {
+    background: ${({ theme }) => theme.colors.neutral100};
+  }
+  @media (max-width: 700px) {
+    && th,
+    && td {
+      padding-inline: 12px;
     }
   }
 `

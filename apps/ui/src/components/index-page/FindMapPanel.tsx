@@ -58,7 +58,7 @@ export function FindMapPanel({
       className="sticky top-(--sticky-content-top) flex max-h-(--sticky-content-max-height) min-h-[min(420px,var(--sticky-content-max-height))] flex-col gap-4 overflow-y-auto overscroll-contain p-6"
       style={{
         background: "var(--tint-academic-bg)",
-        border: `1px dashed #D3DEEB`,
+        border: `1px dashed ${T.edge.info}`,
         borderRadius: 20,
         color: "var(--tint-academic-fg)",
       }}

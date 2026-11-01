@@ -203,12 +203,15 @@ describe("points.award: atomicity", () => {
       lastActivityDate: null,
     })
     const tx = strapi.db.transaction
-    strapi.db.transaction = vi.fn(async (cb: any) => {
-      const res = await tx(cb)
-      order.push("commit")
+    strapi.db.transaction = vi.fn(async (cb: any) =>
+      tx((context: { onCommit: (callback: () => void) => void }) => {
+        context.onCommit(() => {
+          order.push("commit")
+        })
 
-      return res
-    })
+        return cb(context)
+      })
+    )
     checkAndAward.mockImplementation(async () => {
       order.push("badges")
     })

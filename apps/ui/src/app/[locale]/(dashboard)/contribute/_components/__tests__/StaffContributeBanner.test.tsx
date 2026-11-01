@@ -96,9 +96,12 @@ describe("StaffContributeBanner", () => {
     vi.stubGlobal("fetch", fetcher)
     renderBanner()
 
-    fireEvent.change(screen.getByRole("combobox", { name: "Library" }), {
-      target: { value: "mobile" },
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Library" }), {
+      key: "ArrowDown",
     })
+    fireEvent.click(
+      screen.getByRole("option", { name: "Somerset Mobile Library" })
+    )
     expect(
       screen.getByRole("heading", {
         name: "Look after Somerset Mobile Library.",
@@ -135,9 +138,12 @@ describe("StaffContributeBanner", () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: false })
     vi.stubGlobal("fetch", fetcher)
     renderBanner()
-    fireEvent.change(screen.getByRole("combobox", { name: "Library" }), {
-      target: { value: "mobile" },
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Library" }), {
+      key: "ArrowDown",
     })
+    fireEvent.click(
+      screen.getByRole("option", { name: "Somerset Mobile Library" })
+    )
 
     await waitFor(() =>
       expect(

@@ -52,9 +52,8 @@ it("finds and claims an imported library in Staff without a public-record detour
   })
   const submit = screen.getByRole("button", { name: "Send claim for review" })
   expect((submit as HTMLButtonElement).disabled).toBe(true)
-  fireEvent.change(screen.getByLabelText(/Your role/), {
-    target: { value: "librarian" },
-  })
+  fireEvent.keyDown(screen.getByLabelText(/Your role/), { key: "ArrowDown" })
+  fireEvent.click(screen.getByRole("option", { name: "Librarian" }))
   fireEvent.click(submit)
   expect(mocks.mutate).toHaveBeenCalledTimes(1)
   expect(mocks.mutate.mock.calls[0]![0]).toEqual({
@@ -102,9 +101,8 @@ it("keeps verification details after a failed submission and permits retry", () 
       }}
     />
   )
-  fireEvent.change(screen.getByLabelText(/Your role/), {
-    target: { value: "volunteer" },
-  })
+  fireEvent.keyDown(screen.getByLabelText(/Your role/), { key: "ArrowDown" })
+  fireEvent.click(screen.getByRole("option", { name: "Volunteer" }))
   fireEvent.change(screen.getByLabelText(/Verification details/), {
     target: { value: "I volunteer in the children's reading room." },
   })

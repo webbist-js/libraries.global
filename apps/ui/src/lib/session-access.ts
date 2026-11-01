@@ -71,6 +71,7 @@ export function buildSessionAccess(
     grants: profile?.grants ?? [],
     verifications: profile?.verifications ?? [],
     rewardsTier: profile?.tier ?? null,
+    rewardsPoints: profile?.rewardsPoints ?? 0,
     earnedProUntil: profile?.earnedProUntil ?? null,
     teams: (profile?.teams ?? []).map((t) => ({
       libraryDocumentIds: t.libraryDocumentIds,

@@ -4,7 +4,7 @@
  * account without it, then records it with the time of acceptance. Bump it
  * when a legal document changes in a way people must re-accept.
  */
-export const TERMS_VERSION = "1.1"
+export const TERMS_VERSION = "1.2"
 
 /** Shown next to every way of creating an account. */
 export const MINIMUM_ACCOUNT_AGE = 18

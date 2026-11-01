@@ -10,6 +10,7 @@ import {
   type DiscussionList,
   type DiscussionRecord,
 } from "@/components/discussions/api"
+import { SelectField } from "@/components/ds/SelectField"
 import { useHydratedSession } from "@/lib/access-client"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
@@ -42,34 +43,36 @@ export function DiscussionWork() {
       <div className="flex flex-wrap gap-3">
         <label>
           {p("recordType")}{" "}
-          <select
-            value={kind}
-            onChange={(event) => {
-              setKind(event.target.value === "reply" ? "reply" : "thread")
+          <SelectField
+            value={String(kind ?? "")}
+            onValueChange={(selectedValue) => {
+              setKind(selectedValue === "reply" ? "reply" : "thread")
               setOffset(0)
             }}
             className="rounded-lg border p-2"
-          >
-            <option value="thread">{p("threads")}</option>
-            <option value="reply">{p("replies")}</option>
-          </select>
+            options={[
+              { value: "thread", label: String(p("threads")) },
+              { value: "reply", label: String(p("replies")) },
+            ]}
+          />
         </label>
         <label>
           {p("status")}{" "}
-          <select
-            value={state}
-            onChange={(event) => {
-              setState(event.target.value)
+          <SelectField
+            value={String(state ?? "")}
+            onValueChange={(selectedValue) => {
+              setState(selectedValue)
               setOffset(0)
             }}
             className="rounded-lg border p-2"
-          >
-            <option value="">{p("allWork")}</option>
-            <option value="pending">{p("inReview")}</option>
-            <option value="visible">{p("accepted")}</option>
-            <option value="rejected">{p("notAccepted")}</option>
-            <option value="removed">{p("removed")}</option>
-          </select>
+            options={[
+              { value: "", label: String(p("allWork")) },
+              { value: "pending", label: String(p("inReview")) },
+              { value: "visible", label: String(p("accepted")) },
+              { value: "rejected", label: String(p("notAccepted")) },
+              { value: "removed", label: String(p("removed")) },
+            ]}
+          />
         </label>
       </div>
       {(actor.isPending || result.isLoading) && (

@@ -83,80 +83,115 @@ function fakeStrapi(initial: { points: number | null; tier: string }) {
   return { strapi, profile, profileUpdate }
 }
 
-describe("points.award: earned-Pro hold (D-P4)", () => {
-  it("sets earnedProUntil ~90 days out when dropping below Archivist", async () => {
-    const { strapi, profileUpdate } = fakeStrapi({
-      points: 1500,
-      tier: "Archivist",
-    })
-    const svc: any = createPoints({ strapi })
+describe("points.award: earned-Pro activity", () => {
+  it("defers badge checks until the enclosing moderation transaction commits", async () => {
+    const { strapi } = fakeStrapi({ points: 4995, tier: "Scholar" })
+    const callbacks: (() => void)[] = []
+    strapi.db.transaction = vi.fn(async (work) =>
+      work({
+        trx: {},
+        onCommit: (callback: () => void) => callbacks.push(callback),
+      })
+    )
+    const checkAndAward = vi.fn().mockResolvedValue(undefined)
+    strapi.plugin = () => ({ service: () => ({ checkAndAward }) })
+    const svc = createPoints({ strapi })
     svc.updateStreak = vi.fn(async () => 1)
-
-    const before = Date.now()
-    // Admin manual_deduct is the real path that can lower a profile's
-    // points (rewards.ts calls award with a negative pts for it).
-    await svc.award("u1", "manual_deduct", -600, {}, "deduct-1")
-    const after = Date.now()
-
-    expect(profileUpdate).toHaveBeenCalledTimes(1)
-    const data = profileUpdate.mock.calls[0][0].data
-    expect(data.tier).toBe("Cartographer")
-    expect(data.earnedProUntil).toBeDefined()
-    expect(data.earnedProUntil).not.toBeNull()
-    const until = Date.parse(data.earnedProUntil)
-    expect(until).toBeGreaterThanOrEqual(before + 89 * 86_400_000)
-    expect(until).toBeLessThanOrEqual(after + 90 * 86_400_000)
+    await svc.award("u1", "event_feed_accepted", 5, {}, "feed-1")
+    expect(checkAndAward).not.toHaveBeenCalled()
+    expect(callbacks).toHaveLength(1)
+    callbacks[0]()
+    expect(checkAndAward).toHaveBeenCalledWith("u1", { streak: 1 })
   })
 
-  it("clears earnedProUntil to null when reaching Archivist", async () => {
-    const { strapi, profileUpdate } = fakeStrapi({
-      points: 400,
-      tier: "Cartographer",
+  it.each([
+    "correction_approved",
+    "event_feed_accepted",
+    "option_suggestion_accepted",
+  ])(
+    "%s renews from acceptance, including below the threshold",
+    async (action) => {
+      const { strapi, profileUpdate } = fakeStrapi({
+        points: 100,
+        tier: "Indexer",
+      })
+      const svc: any = createPoints({ strapi })
+      svc.updateStreak = vi.fn(async () => 1)
+      const before = Date.now()
+      await svc.award("u1", action, 5, {}, "accepted-1")
+      const until = Date.parse(
+        profileUpdate.mock.calls[0][0].data.earnedProUntil
+      )
+      expect(until).toBeGreaterThanOrEqual(before + 30 * 86_400_000)
+      expect(until).toBeLessThanOrEqual(Date.now() + 30 * 86_400_000)
+    }
+  )
+
+  it.each(["manual_award", "manual_deduct", "daily_streak", "drive_finished"])(
+    "%s does not renew access",
+    async (action) => {
+      const { strapi, profileUpdate } = fakeStrapi({
+        points: 5000,
+        tier: "Scholar",
+      })
+      const svc: any = createPoints({ strapi })
+      svc.updateStreak = vi.fn(async () => 1)
+      await svc.award(
+        "u1",
+        action,
+        action === "manual_deduct" ? -1 : 1,
+        {},
+        action
+      )
+      expect(profileUpdate.mock.calls[0][0].data).not.toHaveProperty(
+        "earnedProUntil"
+      )
+    }
+  )
+
+  it("a repeated award cannot renew an expired membership", async () => {
+    const { strapi, profile, profileUpdate } = fakeStrapi({
+      points: 5000,
+      tier: "Scholar",
     })
     const svc: any = createPoints({ strapi })
     svc.updateStreak = vi.fn(async () => 1)
-
-    await svc.award("u1", "manual_award", 1200, {}, "award-1")
-
-    expect(profileUpdate).toHaveBeenCalledTimes(1)
-    const data = profileUpdate.mock.calls[0][0].data
-    expect(data.tier).toBe("Archivist")
-    expect(data.earnedProUntil).toBeNull()
+    await svc.award("u1", "new_library_approved", 50, {}, "one-library")
+    profile.earnedProUntil = "2020-01-01T00:00:00Z"
+    profileUpdate.mockClear()
+    expect(
+      await svc.award("u1", "new_library_approved", 50, {}, "one-library")
+    ).toEqual({ awarded: false })
+    expect(profileUpdate).not.toHaveBeenCalled()
   })
 
-  it("leaves earnedProUntil out of the update when staying below Archivist", async () => {
-    const { strapi, profileUpdate } = fakeStrapi({
-      points: 50,
-      tier: "Reader",
+  it("uses the approval time for delayed discussion delivery and never shortens a newer expiry", async () => {
+    const { strapi, profile, profileUpdate } = fakeStrapi({
+      points: 5000,
+      tier: "Scholar",
     })
     const svc: any = createPoints({ strapi })
     svc.updateStreak = vi.fn(async () => 1)
-
-    await svc.award("u1", "correction_approved", 10, {}, "small-1")
-
-    expect(profileUpdate).toHaveBeenCalledTimes(1)
-    const data = profileUpdate.mock.calls[0][0].data
-    expect(data.tier).toBe("Reader")
-    expect("earnedProUntil" in data).toBe(false)
-  })
-
-  it("leaves earnedProUntil out of the update when staying at or above Archivist", async () => {
-    // Previous tier is already earned (Archivist); this award crosses into
-    // Scholar, still earned. There's no downward-to-upward crossing here,
-    // so the hold column is already correct (null) and must not be
-    // rewritten on every award while a contributor climbs the top tiers.
-    const { strapi, profileUpdate } = fakeStrapi({
-      points: 3000,
-      tier: "Archivist",
-    })
-    const svc: any = createPoints({ strapi })
-    svc.updateStreak = vi.fn(async () => 1)
-
-    await svc.award("u1", "manual_award", 2000, {}, "award-2")
-
-    expect(profileUpdate).toHaveBeenCalledTimes(1)
-    const data = profileUpdate.mock.calls[0][0].data
-    expect(data.tier).toBe("Scholar")
-    expect("earnedProUntil" in data).toBe(false)
+    await svc.award(
+      "u1",
+      "discussion_reply_accepted",
+      1,
+      {},
+      "reply-1",
+      new Date("2026-01-01T12:00:00Z")
+    )
+    expect(profile.earnedProUntil).toBe("2026-01-31T12:00:00.000Z")
+    profileUpdate.mockClear()
+    await svc.award(
+      "u1",
+      "discussion_reply_accepted",
+      1,
+      {},
+      "reply-2",
+      new Date("2025-12-01T12:00:00Z")
+    )
+    expect(profileUpdate.mock.calls[0][0].data).not.toHaveProperty(
+      "earnedProUntil"
+    )
   })
 })

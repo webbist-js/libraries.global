@@ -9,9 +9,14 @@ import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
-import { contributionPlaceParams, placeAddHref } from "@/lib/contribution-place"
+import {
+  contributionPlaceParams,
+  placeAddHref,
+  withLibraryDraft,
+} from "@/lib/contribution-place"
 import { contributionPlacePrefill } from "@/lib/contribution-place-server"
 import { T } from "@/lib/design-tokens"
+import { loadNewLibraryDraft } from "@/lib/new-library-draft-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { isActiveTeam } from "@/lib/staff/team-status"
 import type { TeamSummary } from "@/lib/staff/types"
@@ -25,6 +30,7 @@ export default async function AddLibraryPage({
   searchParams,
 }: {
   searchParams: Promise<{
+    resume?: string
     name?: string
     draft?: string
     continent?: string
@@ -41,10 +47,18 @@ export default async function AddLibraryPage({
   const session = await getSessionSSR(await headers())
   if (!session?.user) {
     const base = placeAddHref(place, "/contribute/index/new", params.name)
-    const callback = `${locale === "en" ? "" : `/${locale}`}${base}${params.draft === "contribute" ? `${base.includes("?") ? "&" : "?"}draft=contribute` : ""}`
+    const callback = withLibraryDraft(
+      `${locale === "en" ? "" : `/${locale}`}${base}`,
+      params
+    )
 
     return <FeatureAccessLanding feature="add" returnTo={callback} />
   }
+  const resumeSubmission = await loadNewLibraryDraft(
+    params.resume,
+    session.user,
+    false
+  )
   const prefill = await contributionPlacePrefill(params, locale)
   const { name, draft } = params
   // Existing ordinary proposals keep their original review flow when the
@@ -81,6 +95,7 @@ export default async function AddLibraryPage({
       />
       <IndexRecordWizard
         mode="new"
+        resumeSubmission={resumeSubmission ?? undefined}
         initialData={{
           ...prefill,
           ...(name?.trim() ? { name: name.trim().slice(0, 200) } : {}),

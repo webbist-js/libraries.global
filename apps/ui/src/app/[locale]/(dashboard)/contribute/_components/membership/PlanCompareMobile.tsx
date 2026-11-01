@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { PlanCompareCell } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareCell"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 import {
   useMembershipContent,
@@ -55,20 +56,19 @@ export function PlanCompareSelectors({
           className="flex min-w-0 flex-col gap-1.5 text-sm font-semibold"
         >
           <label htmlFor={choice.id}>{choice.label}</label>
-          <select
+          <SelectField
             id={choice.id}
             className="min-h-11 w-full rounded-[12px] border border-(--t-border-hi) bg-(--t-bg-deep) px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
-            value={choice.value}
-            onChange={(event) =>
-              choice.onChange(event.target.value as PlanCardKey)
+            value={String(choice.value ?? "")}
+            onValueChange={(selectedValue) =>
+              choice.onChange(selectedValue as PlanCardKey)
             }
-          >
-            {COMPARE_PLANS.map((key) => (
-              <option key={key} disabled={key === choice.other} value={key}>
-                {planCard(key).name}
-              </option>
-            ))}
-          </select>
+            options={COMPARE_PLANS.map((key) => ({
+              value: String(key),
+              label: String(planCard(key).name),
+              disabled: key === choice.other,
+            }))}
+          />
         </div>
       ))}
     </div>

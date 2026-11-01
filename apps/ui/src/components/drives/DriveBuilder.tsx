@@ -22,6 +22,7 @@ import {
 } from "react"
 
 import { ChoiceCard, Notice } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { SECTION_LABELS } from "@/components/library/verify.logic"
 import { T, TYPE_TINT, tintForLibraryType } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
@@ -1700,20 +1701,20 @@ export function DriveBuilder({
             hintId="drive-unit-hint"
             hintBelow
           >
-            <select
+            <SelectField
               id={fieldId("unit")}
-              value={state.unit}
-              onChange={(e) => update({ unit: e.target.value as DriveUnit })}
+              value={String(state.unit ?? "")}
+              onValueChange={(selectedValue) =>
+                update({ unit: selectedValue as DriveUnit })
+              }
               className="cursor-pointer"
               style={styleOf("unit")}
               aria-describedby={describedBy("unit", "drive-unit-hint")}
-            >
-              {UNITS.map((u) => (
-                <option key={u.value} value={u.value}>
-                  {u.label}
-                </option>
-              ))}
-            </select>
+              options={UNITS.map((u) => ({
+                value: String(u.value),
+                label: String(u.label),
+              }))}
+            />
             <FieldMessage field="unit" message={errorOf("unit")} />
           </Field>
         </div>

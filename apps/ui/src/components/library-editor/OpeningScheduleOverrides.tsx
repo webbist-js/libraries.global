@@ -10,6 +10,8 @@ import {
 } from "@repo/shared-data"
 import type * as React from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
+
 const control: React.CSSProperties = {
   minHeight: 44,
   border: "1px solid var(--t-control-border)",
@@ -44,22 +46,20 @@ export function OpeningBlockDetails({
     <div style={row}>
       <label>
         Access mode{" "}
-        <select
+        <SelectField
           style={control}
-          value={frame.staffing}
-          onChange={(event) =>
+          value={String(frame.staffing ?? "")}
+          onValueChange={(selectedValue) =>
             onChange({
               ...frame,
-              staffing: event.target.value as OpeningTimesStaffing,
+              staffing: selectedValue as OpeningTimesStaffing,
             })
           }
-        >
-          {OPENING_MODES.map((mode) => (
-            <option key={mode} value={mode}>
-              {OPENING_MODE_LABELS[mode]}
-            </option>
-          ))}
-        </select>
+          options={OPENING_MODES.map((mode) => ({
+            value: String(mode),
+            label: String(OPENING_MODE_LABELS[mode]),
+          }))}
+        />
       </label>
       <label style={row}>
         <input
@@ -100,7 +100,7 @@ function Blocks({
         <fieldset
           key={frame.id}
           style={{
-            border: "1px solid #ddd",
+            border: "1px solid var(--t-border-line)",
             borderRadius: 8,
             padding: 12,
             margin: "8px 0",

@@ -233,7 +233,7 @@ export function AtlasLegends({
             swatch: (
               <i
                 aria-hidden="true"
-                className="inline-block h-3.5 w-4 rounded border border-black/10"
+                className="inline-block h-3.5 w-4 rounded border border-(--t-border-hi)"
                 style={{ background: bin.color }}
               />
             ),
@@ -258,7 +258,7 @@ export function AtlasLegends({
             swatch: (
               <i
                 aria-hidden="true"
-                className="inline-block h-3.5 w-4 rounded border border-dashed border-black/30"
+                className="inline-block h-3.5 w-4 rounded border border-dashed border-(--t-ink-low)"
                 style={{ background: "var(--t-border-hi)" }}
               />
             ),
@@ -305,7 +305,7 @@ export function AtlasLegends({
                 aria-hidden="true"
                 className="inline-flex size-3.5 items-center justify-center rounded-full text-xs leading-none font-bold"
                 style={{
-                  border: "1.5px solid #A13A1A",
+                  border: "1.5px solid var(--t-palette-coral-fg)",
                   color: "var(--t-palette-coral-fg)",
                   background: "var(--t-bg-deep)",
                 }}

@@ -14,6 +14,7 @@ import { usePathname } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
+import { ResumeWork } from "@/app/[locale]/(dashboard)/contribute/_components/hub/ResumeWork"
 import { Drawer } from "@/components/ds/Drawer"
 import {
   CardMonogram,
@@ -269,6 +270,9 @@ export function ContributeMenuPanel({
               </GlobalLink>
             </div>
           </section>
+        ) : null}
+        {menu.status === "signedIn" ? (
+          <ResumeWork compact onNavigate={onNavigate} />
         ) : null}
         <section
           role="group"

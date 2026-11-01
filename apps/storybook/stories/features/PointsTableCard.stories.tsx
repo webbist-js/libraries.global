@@ -5,6 +5,13 @@ const meta = {
   title: "Features/Community/PointsTableCard",
   component: PointsTableCard,
   args: {},
+  decorators: [
+    (Story) => (
+      <div className="w-full max-w-[440px]">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof PointsTableCard>
 
 export default meta

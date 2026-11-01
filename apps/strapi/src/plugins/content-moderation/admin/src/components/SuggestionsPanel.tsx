@@ -10,7 +10,6 @@ import {
   Modal,
   SingleSelect,
   SingleSelectOption,
-  Table,
   Tbody,
   Td,
   Textarea,
@@ -27,6 +26,10 @@ import { useCallback, useEffect, useState } from "react"
 
 import { relativeTime } from "./submissionMeta"
 import { SuggestionRoundPanel } from "./SuggestionRoundPanel"
+import {
+  PluginTable,
+  PluginModalContent,
+} from "../../../../../admin/components/PluginUI"
 
 export type Suggestion = {
   publicationStatus?: "pending" | "published" | "rejected"
@@ -187,7 +190,7 @@ function DecisionModal({
 
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
-      <Modal.Content>
+      <PluginModalContent>
         <Modal.Header>
           <Modal.Title>
             {decision === "publish"
@@ -355,7 +358,7 @@ function DecisionModal({
                 : "Decline"}
           </Button>
         </Modal.Footer>
-      </Modal.Content>
+      </PluginModalContent>
     </Modal.Root>
   )
 }
@@ -491,8 +494,8 @@ export function SuggestionsPanel({
             }
           />
         ) : (
-          <Table
-            colCount={status === "open" ? 7 : 6}
+          <PluginTable
+            colCount={["open", "reviewing", "planned"].includes(status) ? 7 : 6}
             rowCount={shown.length + 1}
           >
             <Thead>
@@ -641,7 +644,7 @@ export function SuggestionsPanel({
                 </Tr>
               ))}
             </Tbody>
-          </Table>
+          </PluginTable>
         )}
       </Flex>
       <DecisionModal

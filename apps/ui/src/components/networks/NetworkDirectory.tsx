@@ -6,6 +6,7 @@ import {
 import Form from "next/form"
 
 import { EmptyState } from "@/components/ds/EmptyState"
+import { SelectField } from "@/components/ds/SelectField"
 import { DirectoryPagination } from "@/components/networks/DirectoryPagination"
 import { NetworkCountryFilter } from "@/components/networks/NetworkCountryFilter"
 import { SearchResultsAnalytics } from "@/components/providers/SearchResultsAnalytics"
@@ -24,6 +25,10 @@ export function NetworkDirectory({
   readonly query: URLSearchParams
   readonly basePath?: string
 }) {
+  const hasFilters = ["q", "kind", "country", "region"].some((key) =>
+    Boolean(query.get(key))
+  )
+
   return (
     <div className="space-y-8">
       <SearchResultsAnalytics
@@ -33,6 +38,7 @@ export function NetworkDirectory({
         count={data.total}
       />
       <Form
+        key={query.toString()}
         action=""
         className="network-filter-card grid items-end gap-4 sm:grid-cols-2 @min-[900px]:grid-cols-4"
         aria-label="Filter services and networks"
@@ -48,24 +54,24 @@ export function NetworkDirectory({
             placeholder="Service or university name"
             name="q"
             defaultValue={query.get("q") ?? ""}
-            className={STAFF_FIELD}
+            className={`${STAFF_FIELD} h-12`}
             maxLength={120}
           />
         </label>
         <label className="grid gap-2">
           Kind
-          <select
+          <SelectField
             name="kind"
             defaultValue={query.get("kind") ?? ""}
-            className={STAFF_FIELD}
-          >
-            <option value="">All networks</option>
-            {NETWORK_KINDS.map((kind) => (
-              <option key={kind} value={kind}>
-                {NETWORK_KIND_LABELS[kind]}
-              </option>
-            ))}
-          </select>
+            className={`${STAFF_FIELD} h-12`}
+            options={[
+              { value: "", label: "All networks" },
+              ...NETWORK_KINDS.map((kind) => ({
+                value: String(kind),
+                label: String(NETWORK_KIND_LABELS[kind]),
+              })),
+            ]}
+          />
         </label>
         <NetworkCountryFilter
           key={query.get("country")}
@@ -76,32 +82,90 @@ export function NetworkDirectory({
         {data.regions?.length ? (
           <label className="grid gap-2">
             Region
-            <select
+            <SelectField
               name="region"
               defaultValue={query.get("region") ?? ""}
-              className={STAFF_FIELD}
-            >
-              <option value="">All regions</option>
-              {data.regions.map((row) => (
-                <option key={row.slug} value={row.slug}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
+              className={`${STAFF_FIELD} h-12`}
+              options={[
+                { value: "", label: "All regions" },
+                ...data.regions.map((row) => ({
+                  value: String(row.slug),
+                  label: String(row.name),
+                })),
+              ]}
+            />
           </label>
         ) : null}
-        <Button type="submit" variant="primary">
+        <Button
+          type="submit"
+          variant="primary"
+          size="pill"
+          className="h-12 min-h-12 py-2.5"
+        >
           Find services
         </Button>
         <Link className="network-page-link" href={basePath}>
           Clear filters
         </Link>
       </Form>
+      <details className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 text-sm">
+        <summary className="cursor-pointer font-semibold">
+          How to use this directory
+        </summary>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <dt className="font-semibold">Name</dt>
+            <dd className="m-0 text-(--t-ink-dim)">
+              Search for all or part of a service, university system or
+              consortium name.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Kind</dt>
+            <dd className="m-0 text-(--t-ink-dim)">
+              Choose a public library service, a university system or a
+              consortium connecting institutions.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Country and region</dt>
+            <dd className="m-0 text-(--t-ink-dim)">
+              Narrow the directory geographically. Country pages keep their
+              country selected; regions appear where available.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">Find services and clear filters</dt>
+            <dd className="m-0 text-(--t-ink-dim)">
+              Apply your chosen filters, or reset them to browse again. Results
+              link to member libraries, maps and source information; pagination
+              shows more matches.
+            </dd>
+          </div>
+        </dl>
+        <p className="mb-0 text-(--t-ink-dim)">
+          Only reviewed public network pages appear here. Imported networks may
+          be available in the Atlas before their directory page is reviewed.
+        </p>
+      </details>
       <p role="status">{data.total.toLocaleString()} services and networks</p>
       {!data.networks.length ? (
         <EmptyState
-          message="No services found"
-          detail="Try another name, country or kind. New public pages appear after editorial review."
+          message={
+            hasFilters
+              ? "No matching services"
+              : "Public network pages are being prepared"
+          }
+          detail={
+            hasFilters
+              ? "Try another name, country or kind, or clear the filters."
+              : "Network records are available in the Atlas. Pages appear in this directory after their details have been reviewed."
+          }
+          action={
+            <Link href="/map" className="network-page-link">
+              Explore the Atlas
+            </Link>
+          }
         />
       ) : null}
       <ul className="network-directory-grid m-0 grid list-none gap-4 p-0">

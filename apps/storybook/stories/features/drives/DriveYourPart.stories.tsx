@@ -12,7 +12,7 @@ const meta = {
   args: {
     mine: { sent: 6, inReview: 2, accepted: 4 },
     quota: { pendingCount: 2, pendingLimit: 5 },
-    toArchivist: 8,
+    toEarnedPro: 8,
   },
   parameters: {
     serverFixtures: publicServerFixtures,
@@ -25,5 +25,5 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 export const NoContributions: Story = {
-  args: { mine: null, quota: null, toArchivist: null },
+  args: { mine: null, quota: null, toEarnedPro: null },
 }

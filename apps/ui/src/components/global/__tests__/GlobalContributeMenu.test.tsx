@@ -21,6 +21,9 @@ vi.mock("@/lib/auth-client", () => ({
     useSession: () => ({ data: session.data, isPending: session.isPending }),
   },
 }))
+vi.mock("@/lib/navigation", () => ({
+  Link: (props: React.ComponentProps<"a">) => <a {...props} />,
+}))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("next/navigation", () => ({ usePathname: () => "/" }))
 vi.mock("@/components/global/GlobalLink", () => {
@@ -214,9 +217,12 @@ describe("GlobalContributeMenu", () => {
     expect(edit.getAttribute("href")).toBe("/staff/nailsea-library/edit")
     await waitFor(() => expect(edit.textContent).toContain("2 waiting"))
 
-    fireEvent.change(within(nav).getByLabelText("Library"), {
-      target: { value: "lib2" },
+    fireEvent.keyDown(within(nav).getByRole("combobox", { name: "Library" }), {
+      key: "ArrowDown",
     })
+    fireEvent.click(
+      screen.getByRole("option", { name: "Ealing Central Library" })
+    )
     expect(
       within(nav)
         .getByRole("link", { name: /Edit Ealing Central Library/ })
@@ -349,9 +355,10 @@ describe("GlobalContributeMenu", () => {
     responses.set("/api/contribute/standing", { pendingCount: 0 })
     renderMenu()
     const { nav, trigger } = await openMenu()
-    fireEvent.change(within(nav).getByLabelText("Library"), {
-      target: { value: "lib1" },
+    fireEvent.keyDown(within(nav).getByRole("combobox", { name: "Library" }), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "Nailsea Library" }))
     const destinations = within(nav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"))
@@ -433,5 +440,35 @@ describe("GlobalContributeMenu", () => {
       ).toBeNull()
       expect(within(nav).queryByRole("link", { name: /New drive/ })).toBeNull()
     }
+  )
+})
+
+it("shows a named unfinished library above the contribution actions", async () => {
+  session.data = { user: { id: "u1", capabilities: ["submit.correction"] } }
+  responses.set("/api/submissions/my", {
+    data: [
+      {
+        documentId: "saved-library",
+        status: "draft",
+        submissionType: "new_library",
+        updatedAt: "2026-11-01",
+        draftData: { name: "Saved Library" },
+      },
+    ],
+  })
+  renderMenu()
+  const { nav, trigger } = await openMenu()
+  const heading = await within(nav).findByRole("heading", {
+    name: "Saved Library",
+  })
+  const link = within(heading.closest("li")!).getByRole("link", {
+    name: /Continue/,
+  })
+  expect(link.getAttribute("href")).toBe(
+    "/contribute/index/new?draft=contribute&resume=saved-library"
+  )
+  fireEvent.click(link)
+  await waitFor(() =>
+    expect(trigger.getAttribute("aria-expanded")).toBe("false")
   )
 })

@@ -294,8 +294,9 @@ a.record-metric:hover {
   flex: 1;
 }
 .dashboard-record-page #missing .library-section-body {
-  background: transparent !important;
-  border-style: dashed !important;
+  background: color-mix(in srgb, var(--t-bg-muted) 40%, transparent) !important;
+  color: var(--t-ink-dim);
+  border: 3px dashed var(--t-border-line) !important;
 }
 .dashboard-record-page .library-contribution-grid {
   display: grid;
@@ -497,7 +498,12 @@ a.record-metric:hover {
   padding-bottom: 20px;
   border-bottom: 1px solid var(--t-border-line);
 }
-@container record-hours (min-width: 320px) {
+@container record-hours (min-width: 480px) {
+  .record-hours-table > .hours-time-axis {
+    margin-left: 102px;
+    margin-right: 114px;
+    padding-inline: 0;
+  }
   .record-hours-table > ol > li {
     display: grid;
     grid-template-columns: 88px minmax(0, 1fr) 100px;

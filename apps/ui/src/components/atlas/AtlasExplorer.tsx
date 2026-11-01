@@ -107,6 +107,11 @@ import { AtlasLibraryPanel } from "./AtlasLibraryPanel"
 import { AtlasListView } from "./AtlasListView"
 import { AtlasLoadingSkeleton } from "./AtlasLoadingSkeleton"
 import { AtlasMap, type AtlasMapHandle, type AtlasView } from "./AtlasMap"
+import {
+  AtlasMobileSheet,
+  expandAtlasSheet,
+  type AtlasSheetSize,
+} from "./AtlasMobileSheet"
 import { AtlasMobileFilters, AtlasMobileStops } from "./AtlasMobileStops"
 import { useAtlasNetworkSelection } from "./AtlasNetworkPicker"
 import { AtlasNetworkReach, useNetworkReach } from "./AtlasNetworkReach"
@@ -133,7 +138,6 @@ import { useMobileAtlas } from "./useMobileAtlas"
 import panelStyles from "./AtlasAnalysisStack.module.css"
 
 type Tab = "search" | "filter" | "layers"
-type SheetSize = "peek" | "half" | "full"
 
 const LEFT_W = DASHBOARD_SIDEBAR_WIDTH
 
@@ -378,7 +382,7 @@ export function AtlasExplorer({
   } | null>(null)
   const [hintDismissed, setHintDismissed] = useState(true)
   const [recent, setRecent] = useState<RecentItem[]>([])
-  const [sheet, setSheet] = useState<SheetSize>("peek")
+  const [sheet, setSheet] = useState<AtlasSheetSize>("peek")
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -414,8 +418,10 @@ export function AtlasExplorer({
           "events",
         ].includes(layer)
       )
-    )
+    ) {
       setMobileSurface("inspect")
+      setSheet("half")
+    }
     if (!s.view) recentCameraId.current = s.library
     const populationArea = params.get("populationArea")
     if (
@@ -666,7 +672,7 @@ export function AtlasExplorer({
       usableLayers.includes("population") ? "population" : "libraryAccess"
     )
 
-    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+    if (isMobile) setSheet(expandAtlasSheet)
   }
   const mobiles = useMobileAtlas(
     view,
@@ -1196,8 +1202,7 @@ export function AtlasExplorer({
             ? "Mobile library"
             : [lib.city, lib.region, lib.country].filter(Boolean).join(", "),
       })
-      if (isMobile)
-        setSheet((current) => (current === "peek" ? "half" : current))
+      if (isMobile) setSheet(expandAtlasSheet)
     },
     [remember, isMobile]
   )
@@ -1317,8 +1322,7 @@ export function AtlasExplorer({
       })
       if (fly && stop._geo)
         mapRef.current?.flyTo(stop._geo.lat, stop._geo.lng, 14)
-      if (isMobile)
-        setSheet((current) => (current === "peek" ? "half" : current))
+      if (isMobile) setSheet(expandAtlasSheet)
     },
     [isMobile, remember]
   )
@@ -1361,8 +1365,7 @@ export function AtlasExplorer({
         setMobileSurface("inspect")
         setLeftPinned(false)
         setList(false)
-        if (isMobile)
-          setSheet((current) => (current === "peek" ? "half" : current))
+        if (isMobile) setSheet(expandAtlasSheet)
       } else if (
         !atlasAnalysisDrawers(next).some(({ mode }) => mode === analysisMode)
       ) {
@@ -1407,7 +1410,7 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
 
     setList(false)
-    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+    if (isMobile) setSheet(expandAtlasSheet)
   }
   const populationCountries = [
     { value: "GB", label: tUi("atlas_population_uk") },
@@ -1460,7 +1463,7 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
 
     setList(false)
-    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+    if (isMobile) setSheet(expandAtlasSheet)
   }
   const reachAnalysis = (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -1647,7 +1650,7 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
     setLeftPinned(false)
     setList(false)
-    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+    if (isMobile) setSheet(expandAtlasSheet)
   }
   const layerSummaries: Partial<Record<LayerId, string>> = Object.fromEntries(
     atlasAnalysisDrawers(usableLayers).map(({ layer, mode }) => [
@@ -1820,8 +1823,7 @@ export function AtlasExplorer({
             setMobileSurface("inspect")
 
             setList(false)
-            if (isMobile)
-              setSheet((current) => (current === "peek" ? "half" : current))
+            if (isMobile) setSheet(expandAtlasSheet)
           }}
           onToggle={onToggleLayer}
           onClear={() => {
@@ -1874,12 +1876,10 @@ export function AtlasExplorer({
               })),
             onAnalysis: () => {
               setList(false)
-              if (isMobile)
-                setSheet((current) => (current === "peek" ? "half" : current))
+              if (isMobile) setSheet(expandAtlasSheet)
               setAnalysisMode("libraryAccess")
 
-              if (isMobile)
-                setSheet((current) => (current === "peek" ? "half" : current))
+              if (isMobile) setSheet(expandAtlasSheet)
             },
           }}
           population={{
@@ -1914,8 +1914,7 @@ export function AtlasExplorer({
               setMobileSurface("inspect")
 
               setList(false)
-              if (isMobile)
-                setSheet((current) => (current === "peek" ? "half" : current))
+              if (isMobile) setSheet(expandAtlasSheet)
             },
           }}
           onContextAnalysis={(id) => {
@@ -1925,8 +1924,7 @@ export function AtlasExplorer({
             setMobileSurface("inspect")
 
             setList(false)
-            if (isMobile)
-              setSheet((current) => (current === "peek" ? "half" : current))
+            if (isMobile) setSheet(expandAtlasSheet)
           }}
         />
       ) : null}
@@ -1962,7 +1960,12 @@ export function AtlasExplorer({
             id={`atlas-tab-${key}`}
             aria-selected={on}
             aria-controls="atlas-tabpanel"
-            onClick={() => animateAtlas(() => setTab(key))}
+            onClick={() =>
+              animateAtlas(() => {
+                setTab(key)
+                if (isMobile) setSheet(expandAtlasSheet)
+              })
+            }
             className="flex min-h-11 flex-[1_0_auto] items-center justify-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap max-[350px]:gap-1 max-[350px]:px-1.5 max-[350px]:text-sm"
             style={
               on
@@ -2184,8 +2187,7 @@ export function AtlasExplorer({
         setInspectTarget("density")
         setInspectMinimised(false)
         setMobileSurface("inspect")
-        if (isMobile)
-          setSheet((current) => (current === "peek" ? "half" : current))
+        if (isMobile) setSheet(expandAtlasSheet)
       }}
       perCapita={perCapitaGeometryError ? null : perCapita.value}
       populationDensity={population.data}
@@ -2203,8 +2205,7 @@ export function AtlasExplorer({
           contextTheme === "population" ? "population" : contextTheme
         )
 
-        if (isMobile)
-          setSheet((current) => (current === "peek" ? "half" : current))
+        if (isMobile) setSheet(expandAtlasSheet)
       }}
       reach={reach.result}
       reachMinutes={reachMinutes}
@@ -2719,7 +2720,7 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
     setLeftPinned(false)
     if (!(list && id === "library")) setList(false)
-    if (isMobile) setSheet((current) => (current === "peek" ? "half" : current))
+    if (isMobile) setSheet(expandAtlasSheet)
   }
   const removeInspect = (entry: AtlasInspectEntry) => {
     if (entry.layer) {
@@ -2912,16 +2913,7 @@ export function AtlasExplorer({
       inspectEntries.length > 0 &&
       (!list || listLibraryOpen)
     const showList = list && !listLibraryOpen
-    const size = list
-      ? "full"
-      : sheet === "peek" && showInspect && inspectEntries.length
-        ? "half"
-        : sheet
-    const heights: Record<SheetSize, string> = {
-      peek: "188px",
-      half: "54%",
-      full: "calc(100% - 12px)",
-    }
+    const size = list ? "full" : sheet
 
     return (
       <div
@@ -2959,24 +2951,13 @@ export function AtlasExplorer({
           </>
         ) : null}
         <DashboardContextTransition routeKey="/map">
-          <section
-            aria-label="Explore panel"
-            className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-(--t-bg-deep) pb-[env(safe-area-inset-bottom)]`}
-            style={{
-              height: heights[size],
-              viewTransitionName: "var(--atlas-mobile-sheet-transition, none)",
+          <AtlasMobileSheet
+            size={size}
+            onSizeChange={(next) => {
+              setSheet(next)
+              if (next !== "full") setList(false)
             }}
           >
-            <button
-              type="button"
-              aria-label={`Panel size: ${size}. Change size`}
-              onClick={() =>
-                animateAtlas(() => setSheet(size === "full" ? "half" : "full"))
-              }
-              className="flex h-6 shrink-0 items-center justify-center"
-            >
-              <span className="h-[5px] w-10 rounded-full bg-(--t-border-hi)" />
-            </button>
             <nav
               aria-label="Atlas workspace"
               className="flex shrink-0 items-center gap-1.5 border-b border-(--t-border-line) px-3 pb-2 max-[350px]:[&_svg]:hidden"
@@ -2987,7 +2968,7 @@ export function AtlasExplorer({
                 onClick={() => {
                   setList(false)
                   setMobileSurface("explore")
-                  if (sheet === "peek") setSheet("half")
+                  setSheet(expandAtlasSheet)
                 }}
                 className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
               >
@@ -3001,7 +2982,7 @@ export function AtlasExplorer({
                   if (!listLibraryOpen) setList(false)
                   setMobileSurface("inspect")
                   setInspectMinimised(false)
-                  if (sheet === "peek") setSheet("half")
+                  setSheet(expandAtlasSheet)
                 }}
                 className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap disabled:opacity-40 aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
               >
@@ -3040,6 +3021,7 @@ export function AtlasExplorer({
                 id="atlas-tabpanel"
                 role="tabpanel"
                 aria-labelledby={`atlas-tab-${tab}`}
+                hidden={size === "peek"}
                 className={`min-h-0 flex-1 overflow-y-auto px-5 pt-4 ${tab === "filter" ? "pb-0" : "pb-5"}`}
               >
                 {tabContent}
@@ -3067,7 +3049,7 @@ export function AtlasExplorer({
             >
               {analysisPanels}
             </div>
-          </section>
+          </AtlasMobileSheet>
         </DashboardContextTransition>
         {plans}
       </div>

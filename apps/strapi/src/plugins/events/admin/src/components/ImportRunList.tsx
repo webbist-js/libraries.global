@@ -6,7 +6,6 @@ import {
   Flex,
   Loader,
   Modal,
-  Table,
   Tbody,
   Td,
   Th,
@@ -18,6 +17,7 @@ import { useFetchClient } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
 
 import { ImportRunDetail, type RunRecord } from "./ImportRunDetail"
+import { PluginTable } from "../../../../../admin/components/PluginUI"
 
 type Runs = {
   data: RunRecord[]
@@ -140,7 +140,11 @@ export function ImportRunList({ canManage = false }: { canManage?: boolean }) {
         </Typography>
       ) : (
         <Box style={{ overflowX: "auto" }}>
-          <Table colCount={6} rowCount={rows.length} aria-label="Import runs">
+          <PluginTable
+            colCount={6}
+            rowCount={rows.length + 1}
+            aria-label="Import runs"
+          >
             <Thead>
               <Tr>
                 {[
@@ -197,7 +201,7 @@ export function ImportRunList({ canManage = false }: { canManage?: boolean }) {
                 </Tr>
               ))}
             </Tbody>
-          </Table>
+          </PluginTable>
         </Box>
       )}
       {pages > 1 && (

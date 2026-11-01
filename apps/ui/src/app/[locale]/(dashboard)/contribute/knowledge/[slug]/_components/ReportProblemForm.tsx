@@ -3,6 +3,7 @@
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 import { editorApplyHref } from "@/lib/editor-gate"
 import { Link } from "@/lib/navigation"
@@ -143,17 +144,15 @@ export function ReportProblemForm({
       </p>
       <label className="flex flex-col gap-2 text-base font-semibold">
         What needs changing?
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+        <SelectField
+          value={String(category ?? "")}
+          onValueChange={(selectedValue) => setCategory(selectedValue)}
           style={input}
-        >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+          options={CATEGORIES.map((c) => ({
+            value: String(c),
+            label: String(c),
+          }))}
+        />
       </label>
       <label className="flex flex-col gap-2 text-base font-semibold">
         Describe the issue

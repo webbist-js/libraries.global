@@ -1,4 +1,4 @@
-import { Select } from "@/components/profile-form/FormParts"
+import { SelectField } from "@/components/ds/SelectField"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
 import {
@@ -8,23 +8,21 @@ import {
 
 const meta = {
   title: "Features/Profile form/Select",
-  component: Select,
+  component: SelectField,
   args: {
-    "aria-label": "Preferred language",
+    label: "Preferred language",
     defaultValue: "en",
-    children: (
-      <>
-        <option value="en">English</option>
-        <option value="fr">French</option>
-      </>
-    ),
+    options: [
+      { value: "en", label: "English" },
+      { value: "fr", label: "French" },
+    ],
   },
   parameters: {
     fixtureSession: readerSession,
     fixtureResponses: profileResponses,
     docs: { story: { inline: false } },
   },
-} satisfies Meta<typeof Select>
+} satisfies Meta<typeof SelectField>
 
 export default meta
 type Story = StoryObj<typeof meta>

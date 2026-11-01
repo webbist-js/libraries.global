@@ -756,6 +756,7 @@ export default {
           "username",
           "tier",
           "earnedProUntil",
+          "points",
           "dismissedPrompts",
           "country",
         ],
@@ -767,6 +768,7 @@ export default {
           username?: string
           tier?: string
           earnedProUntil?: string | null
+          points?: number
           dismissedPrompts?: unknown
           country?: string | null
           languages?: { code: string; proficiency: string }[]
@@ -886,6 +888,7 @@ export default {
         organiserName: t.organiserName,
       })),
       earnedProUntil: profile?.earnedProUntil ?? null,
+      rewardsPoints: profile?.points ?? 0,
       dismissedPrompts: Array.isArray(profile?.dismissedPrompts)
         ? profile.dismissedPrompts.filter(isDismissiblePrompt)
         : [],

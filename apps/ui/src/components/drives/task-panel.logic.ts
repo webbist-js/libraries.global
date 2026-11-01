@@ -7,7 +7,7 @@
  * session's skip list, picking the next library, and the quota and
  * earned-Pro lines of "Your part". No React, so it's unit-testable.
  */
-import { isEarnedProTier } from "@repo/access"
+import { EARNED_PRO_POINTS } from "@repo/access"
 import {
   COMPLETENESS_GAP_KEYS,
   type DriveFocus,
@@ -487,9 +487,6 @@ export function quotaReason(q: PendingQuota | null): string | null {
   return `You have ${fmt(q.pendingCount)} changes waiting for review, the most you can have at once. Send more once some are reviewed.`
 }
 
-/** Archivist's points (rewards' `TIERS`): where earned Pro starts. */
-export const ARCHIVIST_POINTS = 1500
-
 /** The parts of `/api/contribute/standing`'s rewards standing read here. */
 export type StandingTier = {
   totalPoints?: number | null
@@ -500,19 +497,17 @@ export type StandingTier = {
   } | null
 }
 
-/** Points still needed for Archivist (earned Pro), or null at it or above. */
-export function pointsToArchivist(s: StandingTier | null): number | null {
-  if (!s?.tier?.name || isEarnedProTier(s.tier.name)) return null
-  const threshold =
-    s.tier.nextName === "Archivist" && s.tier.nextThreshold
-      ? s.tier.nextThreshold
-      : ARCHIVIST_POINTS
+/** Remaining points for earned Pro; activity is required even above the threshold. */
+export function pointsToEarnedPro(s: StandingTier | null): number | null {
+  if (s?.totalPoints == null) return null
 
-  return Math.max(1, threshold - (s.totalPoints ?? 0))
+  return Math.max(0, EARNED_PRO_POINTS - s.totalPoints)
 }
 
 export const earnedProLine = (points: number) =>
-  `Drive work counts toward earned Pro: ${fmt(points)} points to Archivist.`
+  points > 0
+    ? `Drive work counts toward earned Pro: ${fmt(points)} points to 5,000. Keep contributing at least once every 30 days to retain it.`
+    : "You have enough points for earned Pro. An accepted contribution renews access for 30 days."
 
 // ── Place and search ─────────────────────────────────────────────────────
 

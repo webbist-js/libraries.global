@@ -13,8 +13,13 @@ import { StaffAccessRequired } from "@/components/staff/StaffAccessRequired"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
-import { contributionPlaceParams, placeAddHref } from "@/lib/contribution-place"
+import {
+  contributionPlaceParams,
+  placeAddHref,
+  withLibraryDraft,
+} from "@/lib/contribution-place"
 import { contributionPlacePrefill } from "@/lib/contribution-place-server"
+import { loadNewLibraryDraft } from "@/lib/new-library-draft-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { isActiveTeam } from "@/lib/staff/team-status"
 import type { TeamSummary } from "@/lib/staff/types"
@@ -26,6 +31,7 @@ export default async function StaffNewLibraryPage({
   searchParams,
 }: {
   readonly searchParams: Promise<{
+    resume?: string
     name?: string
     continent?: string
     country?: string
@@ -42,9 +48,17 @@ export default async function StaffNewLibraryPage({
   const session = await getSessionSSR(await headers())
   if (!session?.user) {
     const base = placeAddHref(place, "/staff/new", params.name)
-    const callback = `${locale === "en" ? "" : `/${locale}`}${base}`
+    const callback = withLibraryDraft(
+      `${locale === "en" ? "" : `/${locale}`}${base}`,
+      params
+    )
     redirect(`/auth/signin?callbackUrl=${encodeURIComponent(callback)}`)
   }
+  const resumeSubmission = await loadNewLibraryDraft(
+    params.resume,
+    session.user,
+    true
+  )
   const libraries = staffLibrariesOf(session.user)
   const memberships = sessionTeamsOf(session.user)
   if (!libraries.length && !memberships.length)
@@ -99,6 +113,7 @@ export default async function StaffNewLibraryPage({
       <Container className="py-10">
         <IndexRecordWizard
           mode="staff-new"
+          resumeSubmission={resumeSubmission ?? undefined}
           creationTeams={teams.map((team) => ({
             id: team.id,
             name: team.name,

@@ -1,6 +1,7 @@
 // Server-rendered content sections for the library detail page (v2).
 
 import {
+  appendSourceRecords,
   libraryTypeName,
   librarySourceKey,
   type LibrarySourceRecord,
@@ -32,7 +33,10 @@ import {
 } from "@/components/library/LibraryCorrection"
 import { LibraryEventsEmptyAction } from "@/components/library/LibraryEventsEmptyAction"
 import { LibraryFacilityAnswers } from "@/components/library/LibraryFacilityAnswers"
-import { LibraryHoursTable } from "@/components/library/LibraryHoursTable"
+import {
+  LibraryHoursTable,
+  LibraryOpenStatusBadge,
+} from "@/components/library/LibraryHoursTable"
 import {
   LIB_ICONS,
   LibIcon,
@@ -240,9 +244,19 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
         iconPath={LIB_ICONS.clock}
       >
         <div className="min-w-0">
-          {timezone ? (
-            <p className="mt-0 mb-3 text-sm text-(--t-ink-dim)">{timezone}</p>
-          ) : null}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <LibraryOpenStatusBadge
+              openingTimes={openingTimes}
+              timezone={timezone}
+              notices={rec.notices as LibraryNotice[] | undefined}
+              operationalStatus={rec.operationalStatus as string | undefined}
+            />
+            <p className="m-0 text-xs text-(--t-ink-dim)">
+              {timezone
+                ? `Local time · ${timezone.replaceAll("_", " ")}`
+                : "Local opening hours"}
+            </p>
+          </div>
           <LibraryHoursTable
             dashboard
             openingTimes={openingTimes}
@@ -1003,7 +1017,10 @@ export function LibraryChangesSection({
   const tPage = useUiTranslations("libraryPage")
   const formatter = useFormatter()
   const rec = asRecord(library)
-  const sourceRecords = (rec.sourceRecords ?? []) as LibrarySourceRecord[]
+  const sourceRecords = appendSourceRecords(
+    (rec.sourceRecords ?? []) as LibrarySourceRecord[],
+    history?.origin?.references ?? []
+  )
   const references = [
     ...sourceRecords.filter((record) => record.role === "origin"),
     ...sourceRecords.filter((record) => record.role !== "origin"),
@@ -1072,6 +1089,7 @@ export function LibraryChangesSection({
             </h3>
           ) : null}
           <LibrarySourceCredits
+            contributor={history?.origin?.actor}
             references={references}
             datasets={datasets}
             added={added}

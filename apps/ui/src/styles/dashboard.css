@@ -861,6 +861,13 @@ body:not([data-dashboard-aware]):has([data-dashboard-shell])
   .dashboard-shell {
     padding-bottom: var(--dashboard-mobile-nav-height);
   }
+  /* Atlas shares the fixed navigation's viewport. Mobile browser chrome can
+     leave the outer 100vh document taller than this 100dvh workspace; scrolling
+     that document must not pull the map and sheet away from the bottom tabs. */
+  .dashboard-shell[data-dashboard-workspace="atlas"] {
+    position: fixed;
+    inset: 0;
+  }
   .dashboard-global-actions {
     position: fixed;
     inset: auto 0 0;

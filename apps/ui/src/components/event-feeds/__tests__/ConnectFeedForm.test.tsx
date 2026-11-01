@@ -74,8 +74,8 @@ describe("ConnectFeedForm", () => {
       />
     )
     expect(
-      (screen.getByLabelText(/Choose a library/) as HTMLSelectElement).value
-    ).toBe(TWO_LIBS[0]!.documentId)
+      screen.getByRole("combobox", { name: /Choose a library/ }).textContent
+    ).toBe(TWO_LIBS[0]!.name)
   })
 
   it("keeps the selected library inside one encoded OAuth query parameter", () => {
@@ -90,9 +90,10 @@ describe("ConnectFeedForm", () => {
         oauth={{ eventbrite: true }}
       />
     )
-    fireEvent.change(screen.getByLabelText(/Choose a library/), {
-      target: { value: documentId },
+    fireEvent.keyDown(screen.getByLabelText(/Choose a library/), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "Unusual library" }))
     fireEvent.click(screen.getByRole("radio", { name: /Eventbrite/ }))
     const link = screen.getByRole("link", {
       name: "Connect with Eventbrite",
@@ -117,9 +118,10 @@ describe("ConnectFeedForm", () => {
       expect(screen.getByText(/refused these details/)).toBeTruthy()
     )
 
-    fireEvent.change(screen.getByLabelText(/Choose a library/), {
-      target: { value: TWO_LIBS[1]!.documentId },
+    fireEvent.keyDown(screen.getByLabelText(/Choose a library/), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "Branch Library" }))
 
     expect(screen.queryByText(/refused these details/)).toBeNull()
     expect(

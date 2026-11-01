@@ -6,13 +6,22 @@
     "pluralName": "point-events",
     "displayName": "Point Event"
   },
-  "options": { "draftAndPublish": false },
+  "options": {
+    "draftAndPublish": false
+  },
   "pluginOptions": {
-    "content-manager": { "visible": false },
-    "content-type-builder": { "visible": false }
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
   },
   "attributes": {
-    "baUserId": { "type": "string", "required": true },
+    "baUserId": {
+      "type": "string",
+      "required": true
+    },
     "action": {
       "type": "enumeration",
       "required": true,
@@ -37,12 +46,29 @@
         "manual_deduct",
         "drive_task_accepted",
         "drive_finished",
-        "drive_proposal_accepted"
+        "drive_proposal_accepted",
+        "discussion_thread_accepted",
+        "discussion_reply_accepted",
+        "discussion_edit_accepted",
+        "event_feed_accepted",
+        "option_suggestion_accepted"
       ]
     },
-    "points": { "type": "integer", "required": true },
-    "metadata": { "type": "json" },
-    "awardedAt": { "type": "datetime", "required": true },
-    "idempotencyKey": { "type": "string", "unique": true, "private": true }
+    "points": {
+      "type": "integer",
+      "required": true
+    },
+    "metadata": {
+      "type": "json"
+    },
+    "awardedAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "unique": true,
+      "private": true
+    }
   }
 }

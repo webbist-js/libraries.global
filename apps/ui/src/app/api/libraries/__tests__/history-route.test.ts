@@ -52,6 +52,7 @@ function strapiCall() {
   return {
     url: new URL(url),
     headers: new Headers(init?.headers as HeadersInit),
+    cache: init.cache,
   }
 }
 
@@ -103,7 +104,45 @@ describe("GET /api/libraries/[documentId]/history", () => {
     const res = await call()
     expect(res.status).toBe(200)
     expect(strapiCall().url.searchParams.has("values")).toBe(false)
+    // Public attribution must follow privacy changes on the next read.
+    expect(strapiCall().cache).toBe("no-store")
+    expect(res.headers.get("Cache-Control")).toContain("no-store")
   })
+
+  it.each(["ada", null])(
+    "preserves public contributor credit and removes publication snapshots: %s",
+    async (username) => {
+      getSession.mockResolvedValue(user(["library.history"]))
+      fetchMock.mockImplementation(async () =>
+        Response.json({
+          ...STRAPI_PAGE,
+          origin: {
+            actor: { kind: "contributor", username, baUserId: "private-id" },
+            references: [
+              { role: "reference", url: "https://library.example/" },
+            ],
+          },
+          data: [
+            {
+              ...STRAPI_PAGE.data[0],
+              action: "publish",
+              actor: { kind: "admin", username: null },
+              fields: [
+                { field: "*", previous: null, next: { name: "Raw snapshot" } },
+              ],
+            },
+          ],
+        })
+      )
+      const body = await (await call()).json()
+      expect(body.origin).toEqual({
+        actor: { kind: "contributor", username },
+        references: [{ role: "reference", url: "https://library.example/" }],
+      })
+      expect(body.data[0]).toMatchObject({ action: "publish", fields: [] })
+      expect(JSON.stringify(body)).not.toContain("Raw snapshot")
+    }
+  )
 
   it("rejects a malformed documentId without calling Strapi", async () => {
     getSession.mockResolvedValue(null)
@@ -153,5 +192,6 @@ describe("fetchArticleHistory", () => {
     )
     const res = await fetchArticleHistory("wiki", DOC)
     expect(res!.data[0]!.locale).toBe("en")
+    expect(strapiCall().cache).toBe("no-store")
   })
 })

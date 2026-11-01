@@ -240,14 +240,14 @@ export default function WidgetMap({
                   width: b.rows.length > 1 ? 36 : 20,
                   height: b.rows.length > 1 ? 36 : 20,
                   outline: b.rows.some((r) => r.documentId === selected)
-                    ? "3px solid #17162B"
+                    ? "3px solid var(--t-ink-base)"
                     : undefined,
                 }}
               >
                 {b.rows.length > 1 ? b.rows.length : null}
               </span>
               {labels && b.rows.length === 1 ? (
-                <span className="absolute top-10 max-w-36 rounded bg-(--t-bg-deep) px-2 py-1 text-xs font-semibold text-black shadow">
+                <span className="absolute top-10 max-w-36 rounded bg-(--t-bg-deep) px-2 py-1 text-xs font-semibold text-(--t-ink-base) shadow">
                   {b.rows[0]!.name}
                 </span>
               ) : null}

@@ -7,9 +7,11 @@ import {
   normalizeMobileTimetable,
   summarizeDiff,
 } from "@repo/shared-data"
+import type { Core } from "@strapi/strapi"
 
 import { isActivityPublic } from "../../../../utils/activity-visibility"
 import { isRecordCorrection, recordFieldNames } from "../utils/library-record"
+import { newLibrarySources } from "../utils/submission-sources"
 
 /**
  * Public history read from Change Records (`library-change`) and Article
@@ -145,11 +147,53 @@ function actorOf(
   }
 }
 
+export type LibraryOrigin = {
+  actor: HistoryActor
+  references: LibrarySourceRecord[]
+}
+
+/** Resolve at read time so profile privacy changes also apply to old submissions. */
+async function libraryOrigin(
+  strapi: Core.Strapi,
+  documentId: string
+): Promise<LibraryOrigin | undefined> {
+  const published = await strapi.documents("api::library.library").findOne({
+    documentId,
+    status: "published",
+    fields: ["documentId", "publishedAt"],
+  })
+  if (!published?.publishedAt) return undefined
+  const [submission] = await strapi.documents(SUBMISSION).findMany({
+    filters: {
+      submissionType: "new_library",
+      status: "approved",
+      resultDocumentId: documentId,
+    },
+    fields: ["submittedByUserId", "evidenceType", "evidenceUrl", "fields"],
+    sort: ["reviewedAt:asc", "id:asc"],
+    limit: 1,
+  })
+  if (!submission) return undefined
+  const actorId = submission.submittedByUserId
+    ? `ba:${submission.submittedByUserId}`
+    : null
+  const names = await publicUsernames(strapi, [actorId])
+
+  return {
+    actor: actorOf({ actorKind: "contributor", actorId }, names),
+    references: newLibrarySources(submission),
+  }
+}
+
 export default ({ strapi }: { strapi: any }) => ({
   async libraryHistory(
     documentId: string,
     o: { page: number; pageSize: number; values: boolean }
-  ): Promise<{ data: LibraryHistoryBatch[]; meta: HistoryMeta }> {
+  ): Promise<{
+    data: LibraryHistoryBatch[]
+    meta: HistoryMeta
+    origin?: LibraryOrigin
+  }> {
     const knex = strapi.db.connection
     const scoped = () =>
       knex(TABLE)
@@ -157,7 +201,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .where("version_status", "published")
 
     // One page of batch ids by their latest row, then those batches' rows.
-    const [totalRow, page] = await Promise.all([
+    const [totalRow, page, origin] = await Promise.all([
       scoped().countDistinct({ total: "batch_id" }).first(),
       scoped()
         .select("batch_id")
@@ -169,6 +213,7 @@ export default ({ strapi }: { strapi: any }) => ({
         ])
         .limit(o.pageSize)
         .offset((o.page - 1) * o.pageSize),
+      libraryOrigin(strapi, documentId),
     ])
     const meta = {
       page: o.page,
@@ -178,7 +223,8 @@ export default ({ strapi }: { strapi: any }) => ({
     const order = ((page ?? []) as { batch_id: string }[]).map(
       (r) => r.batch_id
     )
-    if (order.length === 0) return { data: [], meta }
+    if (order.length === 0)
+      return { data: [], meta, ...(origin ? { origin } : {}) }
 
     const rows = (await strapi.documents(LIBRARY_CHANGE).findMany({
       filters: {
@@ -217,21 +263,24 @@ export default ({ strapi }: { strapi: any }) => ({
           action: head.action ?? "update",
           source: head.source ?? "system",
           actor: actorOf(head, names),
-          fields: group.map((r) => ({
-            field: r.field,
-            ...(r.field === "mobileTimetable" &&
-            (r.previous != null || r.next != null)
-              ? {
-                  summary: summarizeDiff(
-                    diffTimetable(
-                      normalizeMobileTimetable(r.previous),
-                      normalizeMobileTimetable(r.next)
-                    )
-                  ),
-                }
-              : {}),
-            ...(o.values ? { previous: r.previous, next: r.next } : {}),
-          })),
+          // Whole-document snapshots belong to the internal audit, not field diffs.
+          fields: group
+            .filter((r) => r.field !== "*")
+            .map((r) => ({
+              field: r.field,
+              ...(r.field === "mobileTimetable" &&
+              (r.previous != null || r.next != null)
+                ? {
+                    summary: summarizeDiff(
+                      diffTimetable(
+                        normalizeMobileTimetable(r.previous),
+                        normalizeMobileTimetable(r.next)
+                      )
+                    ),
+                  }
+                : {}),
+              ...(o.values ? { previous: r.previous, next: r.next } : {}),
+            })),
           submissionDocumentId: head.submissionDocumentId ?? null,
           references: group.flatMap((r) => {
             const value =
@@ -254,7 +303,7 @@ export default ({ strapi }: { strapi: any }) => ({
       ]
     })
 
-    return { data, meta }
+    return { data, meta, ...(origin ? { origin } : {}) }
   },
 
   async libraryHistoryStats(

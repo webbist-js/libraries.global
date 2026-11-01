@@ -174,7 +174,7 @@ function selectionElement(name: string, small: boolean): HTMLElement {
     const label = document.createElement("span")
     label.textContent = name
     label.style.cssText =
-      "font:700 13px var(--font-figtree),system-ui,sans-serif;color:#17162B;background:#fff;border:1px solid #D9D3C9;border-radius:999px;padding:4px 10px;white-space:nowrap"
+      "font:700 13px var(--font-figtree),system-ui,sans-serif;color:var(--t-ink-base);background:var(--t-bg-deep);border:1px solid var(--t-border-hi);border-radius:999px;padding:4px 10px;white-space:nowrap"
     el.append(label)
   }
 

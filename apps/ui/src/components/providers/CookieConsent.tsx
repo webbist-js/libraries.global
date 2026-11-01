@@ -54,8 +54,9 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
   const [ready, setReady] = useState(false)
   const [decided, setDecided] = useState(false)
   const [open, setOpen] = useState(false)
+  const panel = useRef<HTMLElement>(null)
   const granted = useRef(false)
-  const settingsButton = useRef<HTMLButtonElement>(null)
+  const settingsButton = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     let expiryTimer: ReturnType<typeof setTimeout> | undefined
@@ -88,16 +89,29 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
     const changed = (event: StorageEvent) => {
       if (event.key === ANALYTICS_CONSENT_KEY || event.key === null) restore()
     }
+    const openSettings = () => {
+      settingsButton.current = document.activeElement as HTMLElement | null
+      setOpen(true)
+    }
+    window.addEventListener("open-cookie-settings", openSettings)
     restore()
     window.addEventListener("storage", changed)
     window.addEventListener("focus", restore)
 
     return () => {
       clearTimeout(expiryTimer)
+      window.removeEventListener("open-cookie-settings", openSettings)
       window.removeEventListener("storage", changed)
       window.removeEventListener("focus", restore)
     }
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const frame = requestAnimationFrame(() => panel.current?.focus())
+
+    return () => cancelAnimationFrame(frame)
+  }, [open])
 
   function choose(analytics: boolean) {
     const wasGranted = granted.current
@@ -120,19 +134,10 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
 
   return (
     <>
-      <button
-        ref={settingsButton}
-        data-cookie-consent-settings
-        type="button"
-        className="fixed right-3 bottom-3 z-[88] min-h-[44px] rounded-full border border-(--t-border-line) bg-(--t-bg-deep) px-4 text-xs text-(--t-ink-base) shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4"
-        onClick={() => setOpen(true)}
-        aria-expanded={visible}
-        aria-controls={visible ? "cookie-choices" : undefined}
-      >
-        {t.settings}
-      </button>
       {visible && (
         <section
+          ref={panel}
+          tabIndex={-1}
           id="cookie-choices"
           data-cookie-consent-panel
           role="region"
@@ -158,7 +163,10 @@ export function CookieConsent({ locale }: { readonly locale: string }) {
               <Button
                 variant="ghost"
                 size="pill"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false)
+                  settingsButton.current?.focus()
+                }}
               >
                 {t.close}
               </Button>

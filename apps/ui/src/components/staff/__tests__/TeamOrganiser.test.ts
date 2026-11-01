@@ -223,9 +223,10 @@ describe("TeamOrganiser (organiser)", () => {
     expect(sheet.getByText("No libraries yet.")).toBeTruthy()
     const save = sheet.getByRole("button", { name: "Save changes" })
     expect((save as HTMLButtonElement).disabled).toBe(true)
-    fireEvent.change(sheet.getByLabelText("Add a library"), {
-      target: { value: L2 },
+    fireEvent.keyDown(sheet.getByLabelText("Add a library"), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "Kent Mobile Library" }))
     fireEvent.click(sheet.getByRole("radio", { name: "Owner" }))
     fireEvent.click(sheet.getByRole("button", { name: "Add" }))
     expect(

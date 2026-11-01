@@ -16,6 +16,34 @@ export type BadgeDefinition = {
 }
 
 export const BADGE_CATALOG: BadgeDefinition[] = [
+  {
+    id: "active_contributor",
+    name: "Active Contributor",
+    description:
+      "Earned 5,000 contribution points. Keep contributing to maintain earned Pro.",
+    rarity: "UNCOMMON",
+    icon: "mdi:star-check-outline",
+    variant: "aurora",
+  },
+
+  {
+    id: "conversation_starter",
+    name: "Conversation Starter",
+    description: "Your first discussion thread approved.",
+    rarity: "COMMON",
+    icon: "mdi:forum-outline",
+    variant: "aurora",
+  },
+
+  {
+    id: "helpful_voice",
+    name: "Helpful Voice",
+    description: "Ten discussion replies approved.",
+    rarity: "UNCOMMON",
+    icon: "mdi:comment-check-outline",
+    variant: "aurora",
+  },
+
   // ── Points milestones ────────────────────────────────────────────────────
   {
     id: "first_light",

@@ -154,7 +154,7 @@ function PlanColumn({
         padding: current ? 19 : 20,
         background:
           plan.key === "pro"
-            ? "color-mix(in srgb, var(--t-accent-primary) 2%, white)"
+            ? "color-mix(in srgb, var(--t-accent-primary) 2%, var(--t-bg-deep))"
             : T.bg.deep,
       }}
     >

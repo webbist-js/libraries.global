@@ -40,6 +40,7 @@ import {
 } from "react"
 
 import { EmptyState, Sheet, Switch } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { LocationLookup } from "@/components/library-editor/LocationLookup"
 import { LocationPinMap } from "@/components/library-editor/LocationPinMap"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -391,13 +392,13 @@ export function TimetableEditor({
       >
         <label className="flex flex-col gap-1.5" style={labelStyle}>
           Timetable repeats every
-          <select
-            aria-label={tUi("cycle_length")}
+          <SelectField
+            label={tUi("cycle_length")}
             disabled={disabled}
-            value={tt.cycle.weeks}
+            value={String(tt.cycle.weeks ?? "")}
             style={{ ...field, width: "auto", minWidth: 140, fontWeight: 400 }}
-            onChange={(e) => {
-              const weeks = Number(e.target.value) as 1 | 2 | 3 | 4
+            onValueChange={(selectedValue) => {
+              const weeks = Number(selectedValue) as 1 | 2 | 3 | 4
               setWeek(1)
               onChange({
                 ...tt,
@@ -417,13 +418,11 @@ export function TimetableEditor({
                 ),
               })
             }}
-          >
-            {[1, 2, 3, 4].map((w) => (
-              <option key={w} value={w}>
-                {w === 1 ? "Week" : `${w} weeks`}
-              </option>
-            ))}
-          </select>
+            options={[1, 2, 3, 4].map((w) => ({
+              value: String(w),
+              label: String(w === 1 ? "Week" : `${w} weeks`),
+            }))}
+          />
         </label>
         <label className="flex flex-col gap-1.5" style={labelStyle}>
           {tUi("week_1_starts")}
@@ -1086,26 +1085,26 @@ export function TimetableEditor({
                                     <div className="grid grid-cols-3 gap-2">
                                       <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
                                         Day
-                                        <select
-                                          aria-label={`Day of the ${visitName} visit`}
+                                        <SelectField
+                                          label={`Day of the ${visitName} visit`}
                                           style={{
                                             ...field,
                                             minWidth: 0,
                                             fontWeight: 400,
                                           }}
-                                          value={sv.day}
-                                          onChange={(e) =>
+                                          value={String(sv.day ?? "")}
+                                          onValueChange={(selectedValue) =>
                                             updateVisit(sv.id, {
-                                              day: e.target.value as Weekday,
+                                              day: selectedValue as Weekday,
                                             })
                                           }
-                                        >
-                                          {WEEKDAYS.map((d) => (
-                                            <option key={d} value={d}>
-                                              {labels[WEEKDAYS.indexOf(d)]}
-                                            </option>
-                                          ))}
-                                        </select>
+                                          options={WEEKDAYS.map((d) => ({
+                                            value: String(d),
+                                            label: String(
+                                              labels[WEEKDAYS.indexOf(d)]
+                                            ),
+                                          }))}
+                                        />
                                       </label>
                                       <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
                                         Arrives
@@ -1147,38 +1146,43 @@ export function TimetableEditor({
                                       </label>
                                       <label className="col-span-3 flex min-w-0 flex-col gap-1 text-xs font-semibold sm:col-span-2">
                                         Repeats
-                                        <select
-                                          aria-label={`Repeats, ${visitName} visit`}
-                                          value={svSelected}
+                                        <SelectField
+                                          label={`Repeats, ${visitName} visit`}
+                                          value={String(svSelected ?? "")}
                                           style={{
                                             ...field,
                                             minWidth: 0,
                                             fontWeight: 400,
                                           }}
-                                          onChange={(e) => {
+                                          onValueChange={(selectedValue) => {
                                             const option = svOptions.find(
-                                              (o) => o.value === e.target.value
+                                              (o) => o.value === selectedValue
                                             )
                                             if (option)
                                               updateVisit(sv.id, {
                                                 repeat: option.repeat,
                                               })
                                           }}
-                                        >
-                                          {svSelected === "custom" && (
-                                            <option value="custom">
-                                              {describeRepeat(sv, tt.cycle)}
-                                            </option>
-                                          )}
-                                          {svOptions.map((o) => (
-                                            <option
-                                              key={o.value}
-                                              value={o.value}
-                                            >
-                                              {o.label}
-                                            </option>
-                                          ))}
-                                        </select>
+                                          options={[
+                                            ...(svSelected === "custom"
+                                              ? [
+                                                  {
+                                                    value: "custom",
+                                                    label: String(
+                                                      describeRepeat(
+                                                        sv,
+                                                        tt.cycle
+                                                      )
+                                                    ),
+                                                  },
+                                                ]
+                                              : []),
+                                            ...svOptions.map((o) => ({
+                                              value: String(o.value),
+                                              label: String(o.label),
+                                            })),
+                                          ]}
+                                        />
                                       </label>
                                       <div className="flex items-end justify-end">
                                         <button
@@ -1766,23 +1770,23 @@ export function TimetableEditor({
                     lng: tUi("longitude"),
                   }[column]
                 }
-                <select
+                <SelectField
                   style={{ ...field, fontWeight: 400 }}
-                  value={matchedColumns[column]}
-                  onChange={(e) =>
+                  value={String(matchedColumns[column] ?? "")}
+                  onValueChange={(selectedValue) =>
                     setColumnMapping((current) => ({
                       ...current,
-                      [column]: Number(e.target.value),
+                      [column]: Number(selectedValue),
                     }))
                   }
-                >
-                  <option value={-1}>Not included</option>
-                  {importHeaders.map((header, i) => (
-                    <option key={i} value={i}>
-                      {header || `Column ${i + 1}`}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: String(-1), label: "Not included" },
+                    ...importHeaders.map((header, i) => ({
+                      value: String(i),
+                      label: String(header || `Column ${i + 1}`),
+                    })),
+                  ]}
+                />
               </label>
             ))}
           </div>
