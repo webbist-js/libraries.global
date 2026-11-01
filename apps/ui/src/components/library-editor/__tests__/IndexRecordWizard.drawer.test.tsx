@@ -186,3 +186,48 @@ it("requires explicit comparison before using a newer published baseline", async
   expect(mocks.finalize.mock.calls[0]![0].formData).not.toHaveProperty("city")
   client.clear()
 })
+
+it("recovers a new library after leaving before the autosave debounce", () => {
+  const client = new QueryClient()
+  const mount = () =>
+    render(
+      <QueryClientProvider client={client}>
+        <IndexRecordWizard mode="new" />
+      </QueryClientProvider>
+    )
+  const view = mount()
+  fireEvent.change(screen.getByLabelText("Name"), {
+    target: { value: "Unsent library" },
+  })
+  view.unmount()
+  expect(mocks.create).not.toHaveBeenCalled()
+  mount()
+  expect(screen.getByText("Recover unsaved edits")).toBeTruthy()
+  fireEvent.click(screen.getByRole("button", { name: /Restore/ }))
+  expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe(
+    "Unsent library"
+  )
+  client.clear()
+})
+
+it("autosaves a new library without requiring Next", async () => {
+  const client = new QueryClient()
+  render(
+    <QueryClientProvider client={client}>
+      <IndexRecordWizard mode="new" />
+    </QueryClientProvider>
+  )
+  fireEvent.change(screen.getByLabelText("Name"), {
+    target: { value: "Autosaved library" },
+  })
+  await waitFor(() => expect(mocks.create).toHaveBeenCalledOnce(), {
+    timeout: 1500,
+  })
+  expect(mocks.create.mock.calls[0]![0]).toMatchObject({
+    asDraft: true,
+    submissionType: "new_library",
+    draftData: { name: "Autosaved library" },
+  })
+  await act(async () => acknowledge!())
+  client.clear()
+})

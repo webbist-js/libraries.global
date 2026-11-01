@@ -3,7 +3,7 @@ import type { AnchorHTMLAttributes } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
 import type { Submission } from "@/hooks/useSubmissions"
-import { cleanup, fireEvent, render, screen } from "@/test/render"
+import { cleanup, fireEvent, render, screen, within } from "@/test/render"
 
 import { ResumeWork } from "./ResumeWork"
 
@@ -63,4 +63,30 @@ it("labels an untitled draft and retains role gating when it is resumed", () => 
   expect(
     screen.getByRole("link", { name: /Apply to edit/ }).getAttribute("href")
   ).toContain("/contribute/knowledge/apply")
+})
+
+it("offers a named library draft and dismisses the prompt without removing the card", () => {
+  state.data = [
+    {
+      documentId: "older-library",
+      submissionType: "new_library",
+      status: "draft",
+      createdAt: "2026-01-01",
+      updatedAt: "2026-01-01",
+      draftData: { name: "Town Library" },
+    },
+  ]
+  render(<ResumeWork prompt />)
+  const dialog = screen.getByRole("dialog")
+  expect(
+    within(dialog)
+      .getByRole("link", { name: /Town Library/ })
+      .getAttribute("href")
+  ).toBe("/contribute/index/new?draft=contribute&resume=older-library")
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Dismiss and explore" })
+  )
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(screen.getByRole("heading", { name: "Town Library" })).toBeTruthy()
+  expect(state.data).toHaveLength(1)
 })
