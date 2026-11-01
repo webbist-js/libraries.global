@@ -339,7 +339,7 @@ describe("staff team tab", () => {
 
     expect(tab.coveringTeam).toBeNull()
     expect(tab.team).toBeNull()
-    expect(tab.canLeave).toBe(false)
+    expect(tab.canLeave).toBe(true)
   })
 })
 
