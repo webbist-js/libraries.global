@@ -46,3 +46,12 @@ it("rejects tunnel mode with local selection", () => {
     assertIngestTarget({ local: "true", "ssh-tunnel": "true", apply: "true" })
   ).toThrow()
 })
+
+it("rejects URL TLS settings that override explicit certificate verification", () => {
+  configure()
+  vi.stubEnv(
+    "DATABASE_URL",
+    "postgresql://operator@127.0.0.1:15460/cms?sslmode=no-verify"
+  )
+  expect(() => assertIngestTarget(args)).toThrow("not URL parameters")
+})
