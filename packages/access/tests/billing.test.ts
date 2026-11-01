@@ -80,6 +80,8 @@ describe("verified paid access", () => {
         signedIn: true,
         now,
         rewardsTier: "Archivist",
+        rewardsPoints: 5000,
+        earnedProUntil: "2099-01-01T00:00:00Z",
         subscription: paidMembershipInput({ ...membership, revoked: true }),
       })
     ).toMatchObject({ plan: "pro", source: "earned" })

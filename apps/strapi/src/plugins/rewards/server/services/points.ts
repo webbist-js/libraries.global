@@ -1,4 +1,4 @@
-import { EARNED_PRO_HOLD_DAYS, isEarnedProTier } from "@repo/access"
+import { contributionProExpiry, isQualifyingContribution } from "@repo/access"
 
 import { nextContributorNumber } from "../utils/contributor-number"
 
@@ -24,6 +24,11 @@ export type PointAction =
   | "drive_task_accepted"
   | "drive_finished"
   | "drive_proposal_accepted"
+  | "discussion_thread_accepted"
+  | "discussion_reply_accepted"
+  | "discussion_edit_accepted"
+  | "event_feed_accepted"
+  | "option_suggestion_accepted"
 
 export type TierInfo = {
   level: number
@@ -130,7 +135,8 @@ export default ({ strapi }: { strapi: any }) => ({
     action: PointAction,
     pts: number,
     metadata?: Record<string, unknown>,
-    idempotencyKey?: string
+    idempotencyKey?: string,
+    contributedAt?: Date
   ): Promise<{ awarded: boolean }> {
     const now = new Date()
 
@@ -147,57 +153,75 @@ export default ({ strapi }: { strapi: any }) => ({
     // and the caller can retry. `strapi.db.query()` joins the ambient
     // transaction on its own (AsyncLocalStorage in @strapi/database); the
     // raw knex statement needs `.transacting(trx)` explicitly.
+    // Rewards may join a moderation transaction. Badge totals use pooled
+    // reads, so wait for the outermost commit before checking them or
+    // awarding optional bonuses. Their failures must not abort acceptance.
+    const afterAward = async (streak: number) => {
+      try {
+        await strapi
+          .plugin("rewards")
+          .service("badges")
+          .checkAndAward(baUserId, { streak })
+      } catch (err) {
+        strapi.log.warn(`[rewards] badge check failed for ${baUserId}:`, err)
+      }
+
+      // A consecutive day of activity earns the daily_streak point, once per
+      // day (the key), and never for the streak point itself.
+      if (action !== "daily_streak" && streak >= 2) {
+        const today = now.toISOString().slice(0, 10)
+        try {
+          await (this as any).award(
+            baUserId,
+            "daily_streak",
+            1,
+            { streak: streak },
+            `streak:${baUserId}:${today}`
+          )
+        } catch (err) {
+          strapi.log.warn(
+            `[rewards] daily_streak award failed for ${baUserId}:`,
+            err
+          )
+        }
+      }
+    }
+    let followUpScheduled = false
     let newStreak = 0
     try {
       newStreak = await strapi.db.transaction(
-        async ({ trx }: { trx: unknown }) =>
-          (this as any).awardInTransaction(
+        async ({
+          trx,
+          onCommit,
+        }: {
+          trx: unknown
+          onCommit?: (callback: () => void) => void
+        }) => {
+          const streak = await (this as any).awardInTransaction(
             trx,
             baUserId,
             action,
             pts,
             metadata,
             idempotencyKey,
-            now
+            now,
+            contributedAt
           )
+          if (onCommit) {
+            onCommit(() => afterAward(streak))
+            followUpScheduled = true
+          }
+
+          return streak
+        }
       )
     } catch (err) {
       if (err instanceof DuplicateAward) return { awarded: false }
       throw err
     }
 
-    // Badges read committed rows through the pool, so they run after the
-    // commit. Awarding is idempotent, so a failure here never burns the key —
-    // and the points are already committed, so it must not fail the award
-    // either; the next award re-checks.
-    try {
-      await strapi
-        .plugin("rewards")
-        .service("badges")
-        .checkAndAward(baUserId, { streak: newStreak })
-    } catch (err) {
-      strapi.log.warn(`[rewards] badge check failed for ${baUserId}:`, err)
-    }
-
-    // A consecutive day of activity earns the daily_streak point, once per
-    // day (the key), and never for the streak point itself.
-    if (action !== "daily_streak" && newStreak >= 2) {
-      const today = now.toISOString().slice(0, 10)
-      try {
-        await (this as any).award(
-          baUserId,
-          "daily_streak",
-          1,
-          { streak: newStreak },
-          `streak:${baUserId}:${today}`
-        )
-      } catch (err) {
-        strapi.log.warn(
-          `[rewards] daily_streak award failed for ${baUserId}:`,
-          err
-        )
-      }
-    }
+    // Test adapters without transaction hooks still check after their commit.
+    if (!followUpScheduled) await afterAward(newStreak)
 
     return { awarded: true }
   },
@@ -211,7 +235,8 @@ export default ({ strapi }: { strapi: any }) => ({
     pts: number,
     metadata: Record<string, unknown> | undefined,
     idempotencyKey: string | undefined,
-    now: Date
+    now: Date,
+    contributedAt?: Date
   ): Promise<number> {
     try {
       await strapi.db.query("plugin::rewards.point-event").create({
@@ -281,20 +306,17 @@ export default ({ strapi }: { strapi: any }) => ({
       .findOne({ where: { baUserId } })
     const newStreak = await (this as any).updateStreak(baUserId)
     const tier = computeTier(fresh?.points ?? 0)
-    const wasEarned = isEarnedProTier(fresh?.tier)
-    const isEarned = isEarnedProTier(tier.name)
-    // D-P4: dropping below Archivist keeps earned Pro for 90 days. The hold
-    // is set once, on the downward crossing, and cleared once, on the
-    // upward crossing — no write at all on either side of a non-crossing
-    // award, since earnedProUntil is already correct there.
+    // Bonus/admin events must never manufacture fresh contributor activity.
+    const contributionExpiry = isQualifyingContribution(action, pts)
+      ? contributionProExpiry(contributedAt ?? now)
+      : undefined
+    const previousExpiry = Date.parse(fresh?.earnedProUntil ?? "")
     const earnedProUntil =
-      isEarned && !wasEarned
-        ? null
-        : !isEarned && wasEarned
-          ? new Date(
-              Date.now() + EARNED_PRO_HOLD_DAYS * 86_400_000
-            ).toISOString()
-          : undefined
+      contributionExpiry &&
+      (Number.isNaN(previousExpiry) ||
+        Date.parse(contributionExpiry) > previousExpiry)
+        ? contributionExpiry
+        : undefined
 
     await strapi.db.query("api::user-profile.user-profile").update({
       where: { baUserId },

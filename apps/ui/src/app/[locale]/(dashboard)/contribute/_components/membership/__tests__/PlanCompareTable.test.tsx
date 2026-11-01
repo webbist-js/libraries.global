@@ -14,9 +14,7 @@ it("compares two selected plans on mobile using the same export limits as the fu
     screen.getByRole("region", { name: "Compare two plans" })
   )
   expect(mobile.getByText("10,000")).toBeTruthy()
-  fireEvent.change(screen.getByLabelText("Second plan"), {
-    target: { value: "supporter" },
-  })
+  choose(screen.getByLabelText("Second plan"), "Supporter")
   expect(mobile.getByText("500")).toBeTruthy()
   expect(mobile.queryByText("10,000")).toBeNull()
   fireEvent.click(mobile.getByRole("button", { name: /Atlas analysis/ }))
@@ -35,9 +33,7 @@ it("keeps the highlighted column distinct from the current membership and syncs 
   expect(team.getAttribute("aria-pressed")).toBe("true")
   const pro = full.getByRole("button", { name: /Pro.*Your plan/ })
   expect(pro.getAttribute("aria-pressed")).toBe("false")
-  expect(
-    (screen.getByLabelText("Second plan") as HTMLSelectElement).value
-  ).toBe("team")
+  expect(screen.getByLabelText("Second plan").textContent).toBe("Team")
 })
 
 it("filters roadmap features across both layouts without losing the selected plans", () => {
@@ -45,9 +41,7 @@ it("filters roadmap features across both layouts without losing the selected pla
   const controls = within(
     screen.getByRole("region", { name: "Comparison controls" })
   )
-  fireEvent.change(controls.getByLabelText("Second plan"), {
-    target: { value: "team" },
-  })
+  choose(controls.getByLabelText("Second plan"), "Team")
   const full = within(
     screen.getByRole("region", { name: "What each plan includes" })
   )
@@ -74,9 +68,7 @@ it("filters roadmap features across both layouts without losing the selected pla
   expect(
     full.getByRole("button", { name: /Team £600/ }).getAttribute("aria-pressed")
   ).toBe("true")
-  expect(
-    (controls.getByLabelText("Second plan") as HTMLSelectElement).value
-  ).toBe("team")
+  expect(controls.getByLabelText("Second plan").textContent).toBe("Team")
 
   fireEvent.click(controls.getByRole("radio", { name: "All features" }))
   expect(
@@ -109,3 +101,8 @@ it("expands and collapses the visible feature groups from the shared toolbar", (
       .every((button) => button.getAttribute("aria-expanded") === "true")
   ).toBe(true)
 })
+
+function choose(control: HTMLElement, label: string) {
+  fireEvent.keyDown(control, { key: "ArrowDown" })
+  fireEvent.click(screen.getByRole("option", { name: label }))
+}

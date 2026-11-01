@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { EARNED_PRO_HOLD_DAYS } from "@repo/access"
+import { EARNED_PRO_ACTIVITY_DAYS, EARNED_PRO_POINTS } from "@repo/access"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -65,7 +65,10 @@ export function ProFreeRoutes() {
       status: "live",
       icon: "mdi:star-outline",
       tint: TYPE_TINT.public,
-      body: m("copy.earnedBody", { days: EARNED_PRO_HOLD_DAYS }),
+      body: m("copy.earnedBody", {
+        days: EARNED_PRO_ACTIVITY_DAYS,
+        points: EARNED_PRO_POINTS,
+      }),
       link: { label: m("copy.start"), href: "/contribute" },
     },
     {

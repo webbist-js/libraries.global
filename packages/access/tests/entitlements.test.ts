@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import {
   can,
-  EARNED_PRO_HOLD_DAYS,
-  isEarnedProTier,
+  EARNED_PRO_ACTIVITY_DAYS,
+  EARNED_PRO_POINTS,
+  hasEarnedPro,
   limitOf,
   resolveEntitlements,
   type EntitlementInput,
@@ -77,6 +78,8 @@ describe("Supporter digital tools plan", () => {
         base({
           grants: [{ plan: "supporter", expiresAt: null }],
           rewardsTier: "Archivist",
+          rewardsPoints: 5000,
+          earnedProUntil: days(30),
         })
       ).plan
     ).toBe("pro")
@@ -191,18 +194,26 @@ describe("resolveEntitlements: grants, verifications and earned Pro", () => {
   })
 
   it.each([
-    ["Cartographer", null, "free"],
-    ["Archivist", null, "pro"],
-    ["Curator", null, "pro"],
-    ["Cartographer", days(10), "pro"],
-    ["Cartographer", days(-1), "free"],
-  ] as const)("tier %s with hold %s resolves to %s", (tier, hold, plan) => {
-    const e = resolveEntitlements(
-      base({ rewardsTier: tier, earnedProUntil: hold })
-    )
-    expect(e.plan).toBe(plan)
-    if (plan === "pro") expect(e.source).toBe("earned")
-  })
+    [4999, days(30), "free"],
+    [5000, days(30), "pro"],
+    [9000, null, "free"],
+    [5000, days(0), "free"],
+    [5000, days(-1), "free"],
+    [5000, "invalid", "free"],
+  ] as const)(
+    "%s points with expiry %s resolves to %s",
+    (points, until, plan) => {
+      expect(
+        resolveEntitlements(
+          base({
+            rewardsTier: "Curator",
+            rewardsPoints: points,
+            earnedProUntil: until,
+          })
+        ).plan
+      ).toBe(plan)
+    }
+  )
 
   it("prefers paid over grant over verified over earned at the same plan", () => {
     const all = {
@@ -230,17 +241,16 @@ describe("resolveEntitlements: grants, verifications and earned Pro", () => {
   })
 })
 
-describe("isEarnedProTier", () => {
-  it("is true from Archivist up and false below or unknown", () => {
-    expect(isEarnedProTier("Archivist")).toBe(true)
-    expect(isEarnedProTier("Scholar")).toBe(true)
-    expect(isEarnedProTier("Curator")).toBe(true)
-    expect(isEarnedProTier("Cartographer")).toBe(false)
-    expect(isEarnedProTier(null)).toBe(false)
-    expect(isEarnedProTier("archivist")).toBe(false)
-  })
-  it("holds for 90 days", () => {
-    expect(EARNED_PRO_HOLD_DAYS).toBe(90)
+describe("earned Pro policy", () => {
+  it("requires 5,000 points and expires exactly 30 days after a contribution", () => {
+    expect(EARNED_PRO_POINTS).toBe(5000)
+    expect(EARNED_PRO_ACTIVITY_DAYS).toBe(30)
+    const until = "2026-02-01T12:00:00Z"
+    expect(
+      hasEarnedPro(5000, until, new Date("2026-02-01T11:59:59.999Z"))
+    ).toBe(true)
+    expect(hasEarnedPro(5000, until, new Date(until))).toBe(false)
+    expect(hasEarnedPro(Number.NaN, until, new Date("2026-01-01"))).toBe(false)
   })
 })
 

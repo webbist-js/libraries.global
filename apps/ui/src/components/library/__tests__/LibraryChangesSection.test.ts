@@ -214,3 +214,54 @@ describe("LibraryChangesSection", () => {
     expect(screen.queryByText("No changes since import.")).toBeNull()
   })
 })
+
+it.each(["alice", null])(
+  "credits a library submitter independently of the publishing staff: %s",
+  (username) => {
+    const publication: LibraryHistoryBatch = {
+      ...edit,
+      action: "publish",
+      source: "admin",
+      actor: { kind: "admin", username: null },
+      fields: [
+        {
+          field: "*",
+          previous: null,
+          next: { name: "Raw snapshot", internal: "hidden" },
+        },
+      ],
+    }
+    render(
+      createElement(LibraryChangesSection, {
+        library: {
+          documentId: "library",
+          createdAt: "2026-10-04T12:00:00Z",
+          sourceRecords: [],
+        } as never,
+        history: {
+          ...page([publication]),
+          origin: {
+            actor: { kind: "contributor", username },
+            references: [
+              { url: "https://library.example.org/", role: "reference" },
+            ],
+          },
+        },
+      })
+    )
+    expect(screen.queryByText(/No public source recorded/)).toBeNull()
+    expect(screen.getByText("Contributed by", { exact: false })).toBeTruthy()
+    if (username)
+      expect(
+        screen.getByRole("link", { name: "@alice" }).getAttribute("href")
+      ).toContain("/profile/alice")
+    else expect(screen.getByText(/Community member/)).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "https://library.example.org/" })
+    ).toBeTruthy()
+    expect(screen.getByText("Published")).toBeTruthy()
+    expect(screen.getByText(/Libraries Global staff/)).toBeTruthy()
+    expect(screen.queryByText("1 detail changed")).toBeNull()
+    expect(screen.queryByText(/Raw snapshot/)).toBeNull()
+  }
+)

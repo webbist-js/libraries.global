@@ -139,7 +139,16 @@ export function DetailsDisclosure({
   )
 }
 
-function BatchRow({ batch }: { readonly batch: LibraryHistoryBatch }) {
+function BatchRow({
+  batch: rawBatch,
+}: {
+  readonly batch: LibraryHistoryBatch
+}) {
+  // Older CMS responses may still contain whole-record audit snapshots.
+  const batch = {
+    ...rawBatch,
+    fields: rawBatch.fields.filter((field) => field.field !== "*"),
+  }
   const row = batchRow(batch)
   const actor = actorLabel(batch)
   const shown = batch.fields.filter(hasValues)

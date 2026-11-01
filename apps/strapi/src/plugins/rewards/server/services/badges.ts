@@ -19,6 +19,34 @@ function isUniqueViolation(err: unknown): boolean {
 }
 
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
+  {
+    id: "active_contributor",
+    name: "Active Contributor",
+    description:
+      "Earned 5,000 contribution points. Keep contributing to maintain earned Pro.",
+    rarity: "UNCOMMON",
+    icon: "AC",
+    check: (c) => (c.__total_points ?? 0) >= 5000,
+  },
+
+  {
+    id: "conversation_starter",
+    name: "Conversation Starter",
+    description: "Your first discussion thread approved.",
+    rarity: "COMMON",
+    icon: "CS",
+    check: (c) => (c.discussion_thread_accepted ?? 0) >= 1,
+  },
+
+  {
+    id: "helpful_voice",
+    name: "Helpful Voice",
+    description: "Ten discussion replies approved.",
+    rarity: "UNCOMMON",
+    icon: "HV",
+    check: (c) => (c.discussion_reply_accepted ?? 0) >= 10,
+  },
+
   // ── Points milestones ────────────────────────────────────────────────────
   {
     id: "first_light",
@@ -104,7 +132,10 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     rarity: "COMMON",
     icon: "RG",
     check: (c) =>
-      (c.edit_accepted_minor ?? 0) + (c.edit_accepted_major ?? 0) >= 1,
+      (c.correction_approved ?? 0) +
+        (c.edit_accepted_minor ?? 0) +
+        (c.edit_accepted_major ?? 0) >=
+      1,
   },
   {
     id: "annotator",
@@ -113,7 +144,10 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     rarity: "UNCOMMON",
     icon: "AN",
     check: (c) =>
-      (c.edit_accepted_minor ?? 0) + (c.edit_accepted_major ?? 0) >= 20,
+      (c.correction_approved ?? 0) +
+        (c.edit_accepted_minor ?? 0) +
+        (c.edit_accepted_major ?? 0) >=
+      20,
   },
   {
     id: "archivist",
@@ -122,7 +156,10 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     rarity: "RARE",
     icon: "AR",
     check: (c) =>
-      (c.edit_accepted_minor ?? 0) + (c.edit_accepted_major ?? 0) >= 50,
+      (c.correction_approved ?? 0) +
+        (c.edit_accepted_minor ?? 0) +
+        (c.edit_accepted_major ?? 0) >=
+      50,
   },
 
   // ── Verification ─────────────────────────────────────────────────────────
@@ -342,7 +379,8 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
       "10 Journal edits or translations approved. Not one stray semicolon.",
     rarity: "UNCOMMON",
     icon: "CP",
-    check: (c) => (c.journal_edit_accepted ?? 0) >= 10,
+    check: (c) =>
+      (c.journal_edit_accepted ?? 0) + (c.journal_translated ?? 0) >= 10,
   },
 
   // ── All-rounder ──────────────────────────────────────────────────────────────

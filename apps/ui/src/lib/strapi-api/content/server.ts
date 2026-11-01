@@ -1747,6 +1747,7 @@ export interface HistoryMeta {
 }
 
 export interface LibraryHistoryPage {
+  origin?: { actor: HistoryActor; references: LibrarySourceRecord[] }
   data: LibraryHistoryBatch[]
   meta: HistoryMeta
 }
@@ -1825,7 +1826,8 @@ function toBatch(v: unknown, values: boolean): LibraryHistoryBatch | null {
   const changedAt = str(v.changedAt)
   if (!batchId || !changedAt) return null
   const fields = (Array.isArray(v.fields) ? v.fields : []).flatMap((f) => {
-    if (!isObject(f) || typeof f.field !== "string") return []
+    if (!isObject(f) || typeof f.field !== "string" || f.field === "*")
+      return []
     const out: LibraryHistoryField = { field: f.field }
     if (typeof f.summary === "string") out.summary = f.summary
     if (values && "previous" in f) out.previous = f.previous
@@ -1862,7 +1864,8 @@ function logHistoryError(message: string, e: unknown) {
  * only with a `user`, whose bridge headers carry the service secret; the
  * caller decides it from the session's `library.history` entitlement.
  * Without values only service authentication is sent, without user proof;
- * the bounded public field-name read is cached.
+ * contributor names still depend on current profile privacy, so neither read
+ * is persisted in the shared data cache.
  */
 export async function fetchLibraryHistory(
   documentId: string,
@@ -1887,17 +1890,35 @@ export async function fetchLibraryHistory(
       `${historyBase()}/libraries/${encodeURIComponent(documentId)}/history?${qs}`,
       withValues
         ? { headers: bridgeUserHeaders(user), cache: "no-store" }
-        : { headers: strapiServiceHeaders(), next: { revalidate: 300 } }
+        : { headers: strapiServiceHeaders(), cache: "no-store" }
     )
     if (!res.ok) return null
-    const json = (await res.json()) as { data?: unknown; meta?: unknown }
+    const json = (await res.json()) as {
+      data?: unknown
+      meta?: unknown
+      origin?: unknown
+    }
     const data = (Array.isArray(json.data) ? json.data : []).flatMap((b) => {
       const batch = toBatch(b, withValues)
 
       return batch ? [batch] : []
     })
 
-    return { data, meta: toMeta(json.meta, page, data.length) }
+    const origin =
+      isObject(json.origin) &&
+      isObject(json.origin.actor) &&
+      json.origin.actor.kind === "contributor"
+        ? {
+            actor: toActor(json.origin.actor),
+            references: submittedSourceRecords(json.origin.references),
+          }
+        : undefined
+
+    return {
+      data,
+      meta: toMeta(json.meta, page, data.length),
+      ...(origin ? { origin } : {}),
+    }
   } catch (e: unknown) {
     logHistoryError(`Error fetching history for library '${documentId}'`, e)
 
@@ -1977,7 +1998,7 @@ export async function fetchArticleHistory(
   try {
     const res = await fetch(
       `${historyBase()}/articles/${kind}/${encodeURIComponent(documentId)}/history?page=1&pageSize=${HISTORY_PAGE_SIZE}`,
-      { headers: strapiServiceHeaders(), next: { revalidate: 300 } }
+      { headers: strapiServiceHeaders(), cache: "no-store" }
     )
     if (!res.ok) return null
     const json = (await res.json()) as { data?: unknown; meta?: unknown }

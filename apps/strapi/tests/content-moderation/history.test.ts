@@ -192,6 +192,89 @@ const PROFILES = [
   },
 ]
 
+describe("contributor library provenance", () => {
+  const submission = {
+    documentId: "accepted-library",
+    submissionType: "new_library",
+    status: "approved",
+    resultDocumentId: LIB,
+    submittedByUserId: "u1",
+    evidenceType: "institutional_url",
+    evidenceUrl: "https://library.example.org",
+    fields: {},
+    reviewedAt: "2026-01-01",
+  }
+  it("retains the contributor and evidence when a draft is later published by an admin", async () => {
+    const { history } = setup(
+      [
+        row({
+          batchId: "published",
+          action: "publish",
+          actorKind: "admin",
+          actorId: "admin:1",
+          field: "*",
+          next: { name: "Library", internal: "not public" },
+        }),
+      ],
+      {
+        [SUB]: [submission],
+        [PROFILE]: PROFILES,
+        "api::library.library": [
+          { documentId: LIB, publishedAt: "2026-01-02" },
+        ],
+      }
+    )
+    const result = await history.libraryHistory(LIB, {
+      page: 1,
+      pageSize: 10,
+      values: true,
+    })
+    expect(result.origin).toEqual({
+      actor: { kind: "contributor", username: "alice" },
+      references: [{ role: "reference", url: "https://library.example.org/" }],
+    })
+    expect(result.data[0].actor.kind).toBe("admin")
+    expect(result.data[0].fields).toEqual([])
+    expect(JSON.stringify(result)).not.toContain("not public")
+  })
+  it.each(["u2", "u3", "deleted-user"])(
+    "anonymises private, opted-out and deleted contributors: %s",
+    async (id) => {
+      const { history } = setup([], {
+        [SUB]: [
+          {
+            ...submission,
+            submittedByUserId: id,
+            evidenceType: "personal_communication",
+          },
+        ],
+        [PROFILE]: PROFILES,
+        "api::library.library": [
+          { documentId: LIB, publishedAt: "2026-01-02" },
+        ],
+      })
+      const result = await history.libraryHistory(LIB, {
+        page: 1,
+        pageSize: 10,
+        values: false,
+      })
+      expect(result.origin).toEqual({
+        actor: { kind: "contributor", username: null },
+        references: [],
+      })
+    }
+  )
+  it("never exposes an approved but unpublished submission as public provenance", async () => {
+    const { history } = setup([], { [SUB]: [submission], [PROFILE]: PROFILES })
+    const result = await history.libraryHistory(LIB, {
+      page: 1,
+      pageSize: 10,
+      values: false,
+    })
+    expect(result.origin).toBeUndefined()
+  })
+})
+
 describe("libraryHistory", () => {
   const seed = () => [
     row({
@@ -499,7 +582,13 @@ describe("history routes and controller", () => {
     const { strapi, history } = setup([], {
       [PROFILE]: [
         { documentId: "pp", baUserId: "pro", tier: "Reader" },
-        { documentId: "pa", baUserId: "archivist", tier: "Archivist" },
+        {
+          documentId: "pa",
+          baUserId: "archivist",
+          tier: "Archivist",
+          points: 5000,
+          earnedProUntil: "2099-01-01T00:00:00.000Z",
+        },
         { documentId: "pf", baUserId: "free", tier: "Reader" },
         {
           documentId: "pe",

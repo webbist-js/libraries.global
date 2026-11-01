@@ -6,3 +6,5 @@ export * from "./limits"
 export * from "./roles"
 export * from "./review-categories"
 export * from "./staff"
+
+export * from "./earned-pro"

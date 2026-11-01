@@ -1700,7 +1700,12 @@
     "atlas_population_background": "Population background",
     "plans_and_pricing": "Plány a ceny",
     "no_stops_or_times": "Chybí zastávky a časy",
-    "library_networks": "Sítě"
+    "library_networks": "Sítě",
+    "history_contributed_by": "Přidal(a)",
+    "history_community_member": "Člen komunity",
+    "atlas_controls": "Ovládání",
+    "atlas_show_controls": "Zobrazit ovládání atlasu",
+    "atlas_hide_controls": "Skrýt ovládání atlasu"
   },
   "translation": {
     "language": "Jazyk",
@@ -2925,7 +2930,7 @@
     "teamSeat": "Místo v Team",
     "paidMembership": "Placené členství",
     "grantDetail": "Uděleno týmem Libraries Global. Za tento přístup nemusíte platit.",
-    "earnedDetail": "Součástí za přijaté příspěvky na úrovni Archivist. Přístup Pro se řídí pravidly způsobilosti přispěvatelů.",
+    "earnedDetail": "Zahrnuto při alespoň 5 000 bodech a přijatém příspěvku za posledních 30 dní. Každý přijatý příspěvek obnoví Pro na 30 dní.",
     "verifiedDetail": "Součástí pro ověřený personál knihoven, studenty nebo pracovníky neziskových organizací, bez platby za tento přístup. Pokud potřebujete přístup obnovit, ověřte podmínky způsobilosti.",
     "teamDetail": "Přístup Pro je součástí vašeho místa v Team. Práva k úpravám se ověřují zvlášť.",
     "paidDetail": "Předplatné, obnovení a faktury najdete v nastavení členství.",
@@ -3329,8 +3334,8 @@
       "staffTitle": "Ověření pracovníci knihoven, studenti a neziskové organizace",
       "staffBody": "Pracovníci knihoven a neziskových organizací a studenti mohou požádat o bezplatné Pro. Napište nám z pracovní, studentské nebo organizační adresy. Samoobslužné ověření Pro připravujeme.",
       "write": "Napište nám",
-      "earnedTitle": "Získáno na úrovni Archivář",
-      "earnedBody": "Dosáhněte úrovně Archivář přijatými příspěvky a Pro se zapne automaticky. Pokud pod tuto úroveň klesnete, Pro zůstane aktivní ještě {days, number} dní.",
+      "earnedTitle": "Získáno za příspěvky",
+      "earnedBody": "Získejte {points, number} bodů a alespoň jeden přijatý příspěvek za posledních {days, number} dní pro odemčení Pro. Každý přijatý příspěvek obnoví období {days, number} dní.",
       "start": "Začít přispívat",
       "grantTitle": "Pro pro novináře a partnery",
       "grantBody": "Novináři, výzkumníci partnerských projektů a partnerské organizace mohou požádat tým o udělení Pro.",
@@ -4211,6 +4216,8 @@
     "loadingDrive": "Načítání zvýrazněné iniciativy…"
   },
   "workspaceDashboard": {
+    "resumePromptBody": "Máte rozpracované příspěvky. Pokračujte v některém z nich, nebo zavřete připomenutí a prohlédněte si přehled. Koncepty zůstanou uložené.",
+    "dismissResume": "Zavřít a prohlížet",
     "summaryUnavailable": "Souhrn záznamu není dostupný.",
     "retry": "Zkusit znovu",
     "recordComplete": "Úplnost záznamu",

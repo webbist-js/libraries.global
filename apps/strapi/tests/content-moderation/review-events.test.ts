@@ -198,6 +198,8 @@ describe("Review Events on updateStatus", () => {
         pending({
           submissionType: "new_library",
           fields: { name: "New Lib" },
+          evidenceType: "institutional_url",
+          evidenceUrl: "https://library.example.org/",
           editSummary: null,
         }),
       ],
@@ -209,6 +211,9 @@ describe("Review Events on updateStatus", () => {
     )
     expect("data" in res).toBe(true)
     const lib = store[LIBRARY][0]
+    expect(lib.sourceRecords).toEqual([
+      { role: "reference", url: "https://library.example.org/" },
+    ])
     expect(store[SUB][0].resultDocumentId).toBe(lib.documentId)
     expect((res as any).data.resultDocumentId).toBe(lib.documentId)
   })
