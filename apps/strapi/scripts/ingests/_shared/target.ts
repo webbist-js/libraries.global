@@ -20,6 +20,16 @@ export function assertIngestTarget(args: IngestArgs) {
   if (local && (!loopback(cms.hostname) || !loopback(databaseHost)))
     throw new Error("--local requires loopback CMS and database targets")
   if (tunnel) {
+    if (
+      process.env.DATABASE_URL &&
+      [...new URL(process.env.DATABASE_URL).searchParams.keys()].some((key) =>
+        key.toLowerCase().startsWith("ssl")
+      )
+    )
+      throw new Error(
+        "Configure tunnel TLS through DATABASE_SSL settings, not URL parameters"
+      )
+
     const databasePort = process.env.DATABASE_URL
       ? new URL(process.env.DATABASE_URL).port
       : process.env.DATABASE_PORT
