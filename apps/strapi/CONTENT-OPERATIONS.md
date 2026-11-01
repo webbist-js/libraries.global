@@ -128,6 +128,34 @@ verification and cannot stage changes. Publish the reviewed drafts only with the
 matching dashboard release. The new search guide has separate release copy in
 `apps/docs/docs/proposals/site-search-knowledge-article.md`.
 
+## Contributor rewards and access guides
+
+`rewards-guide-content.mjs` contains the pre-launch corrections for earned Pro,
+discussion, event-feed and option rewards, badge milestones, voluntary claim
+renunciation, exports, source credits and cookie-choice navigation. It updates
+14 existing Knowledge guides in English, French and Czech and four English legal
+documents. The 5,000-point threshold and 30-day activity window replace the old
+Archivist entitlement and 90-day hold. There is no rollout grace period in this
+pre-launch release.
+
+```sh
+# Save the exact production payloads and private before-images for review.
+node apps/strapi/scripts/update-rewards-guides.mjs
+
+# Publish that preview, rejecting unrelated drafts and concurrent changes.
+node apps/strapi/scripts/update-rewards-guides.mjs --apply
+```
+
+Use `CMS_ENV_FILE` for the existing production editorial connection. Previews,
+backups and resumable publication checkpoints stay in ignored
+`.scratch/rewards-guide-rollout/`. Every publication is read back, including
+editorial metadata and the CMS-derived reading time. General terms revision 1.2
+is recorded for new signups; historical account consent is preserved. Membership
+document revision 1.4 clarifies complimentary access without changing personal,
+Team or API purchase-consent versions, prices or renewal instructions. Privacy
+and cookie document revision 2.1 clarifies existing controls and attribution;
+analytics purposes and retention are unchanged.
+
 ## Homepage refresh
 
 The discovery-led homepage reuses the existing Homepage single type. Hero,
