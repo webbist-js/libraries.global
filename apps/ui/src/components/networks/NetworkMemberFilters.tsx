@@ -1,6 +1,7 @@
 import { FACILITY_CHECKLIST, networkHref } from "@repo/shared-data"
 import Form from "next/form"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import { analyticsAttributes } from "@/lib/analytics-events"
@@ -20,6 +21,7 @@ export function NetworkMemberFilters({
 
   return (
     <Form
+      key={query.toString()}
       action=""
       className="network-filter-card network-member-filters"
       aria-label="Filter member libraries"
@@ -49,47 +51,55 @@ export function NetworkMemberFilters({
           options?.length ? (
             <label className="grid gap-2 text-sm font-semibold" key={key}>
               {label}
-              <select
+              <SelectField
                 name={key}
                 className={STAFF_FIELD}
                 defaultValue={query.get(key) ?? ""}
-              >
-                <option value="">
-                  All {key === "country" ? "countries" : "regions"}
-                </option>
-                {options.map((option) => (
-                  <option key={option.slug} value={option.slug}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  {
+                    value: "",
+                    label: String(
+                      ["All", key === "country" ? "countries" : "regions"].join(
+                        " "
+                      )
+                    ),
+                  },
+                  ...options.map((option) => ({
+                    value: String(option.slug),
+                    label: String(option.name),
+                  })),
+                ]}
+              />
             </label>
           ) : null
         )}
         <label className="grid gap-2 text-sm font-semibold">
           Library type
-          <select
+          <SelectField
             className={STAFF_FIELD}
             name="type"
             defaultValue={query.get("type") ?? ""}
-          >
-            <option value="">All library types</option>
-            {data.facets?.types.map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "All library types" },
+              ...(data.facets?.types ?? []).map((type) => ({
+                value: String(type),
+                label: String(type),
+              })),
+            ]}
+          />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
           Sort by
-          <select
+          <SelectField
             className={STAFF_FIELD}
             name="sort"
             defaultValue={query.get("sort") ?? "name"}
-          >
-            <option value="name">Name A–Z</option>
-            <option value="name-desc">Name Z–A</option>
-            <option value="updated">Recently updated</option>
-          </select>
+            options={[
+              { value: "name", label: "Name A–Z" },
+              { value: "name-desc", label: "Name Z–A" },
+              { value: "updated", label: "Recently updated" },
+            ]}
+          />
         </label>
       </div>
       <details

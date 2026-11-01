@@ -4,6 +4,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useMemo } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -129,21 +130,8 @@ const monoSm: React.CSSProperties = {
 
 function selectStyle(hasError: boolean): React.CSSProperties {
   return {
-    appearance: "none" as const,
-    WebkitAppearance: "none" as const,
-    padding: "7px 30px 7px 11px",
-    borderRadius: "7px",
-    border: `1px solid ${hasError ? T.accent.danger + "80" : T.border.line}`,
-    background: hasError ? "rgba(255,138,138,0.06)" : T.bg.deep,
-    color: T.ink.base,
-    fontSize: "13px",
-    fontFamily: T.font.sans,
-    cursor: "pointer",
+    borderColor: hasError ? T.accent.danger : undefined,
     width: "112px",
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(23,22,43,0.45)'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "right 10px center",
-    boxSizing: "border-box" as const,
   }
 }
 
@@ -238,11 +226,11 @@ function CopyDaySelect({
   const weekend: OpeningTimesDayKey[] = ["saturday", "sunday"]
 
   return (
-    <select
-      aria-label={`Copy ${DAY_LABELS[sourceDay]} hours to another day`}
-      defaultValue=""
-      onChange={(e) => {
-        const val = e.target.value
+    <SelectField
+      label={`Copy ${DAY_LABELS[sourceDay]} hours to another day`}
+      value=""
+      onValueChange={(selectedValue) => {
+        const val = selectedValue
         if (!val) return
         switch (val) {
           case "weekdays":
@@ -258,57 +246,32 @@ function CopyDaySelect({
           default:
             onCopy([val as OpeningTimesDayKey])
         }
-        e.target.value = ""
       }}
-      style={{
-        ...monoSm,
-        fontSize: "var(--type-body-small-size)",
-        color: T.accent.primary,
-        fontWeight: 600,
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        padding: 0,
-        marginLeft: "auto",
-        appearance: "none" as const,
-        WebkitAppearance: "none" as const,
-      }}
-    >
-      <option
-        value=""
-        disabled
-        style={{ background: "var(--t-bg-surface)", color: T.ink.dim }}
-      >
-        {tUi("copy_to")}{" "}
-      </option>
-      <option
-        value="weekdays"
-        style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
-      >
-        {tUi("mon_fri")}{" "}
-      </option>
-      <option
-        value="weekend"
-        style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
-      >
-        {tUi("sat_sun")}{" "}
-      </option>
-      <option
-        value="all"
-        style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
-      >
-        {tUi("all_days")}{" "}
-      </option>
-      {otherDays.map((d) => (
-        <option
-          key={d}
-          value={d}
-          style={{ background: "var(--t-bg-surface)", color: T.ink.base }}
-        >
-          {DAY_LABELS[d]}
-        </option>
-      ))}
-    </select>
+      className="ml-auto w-auto min-w-32"
+      options={[
+        {
+          value: "",
+          label: tUi("copy_to"),
+          disabled: true,
+        },
+        {
+          value: "weekdays",
+          label: tUi("mon_fri"),
+        },
+        {
+          value: "weekend",
+          label: tUi("sat_sun"),
+        },
+        {
+          value: "all",
+          label: tUi("all_days"),
+        },
+        ...otherDays.map((d) => ({
+          value: String(d),
+          label: String(DAY_LABELS[d]),
+        })),
+      ]}
+    />
   )
 }
 
@@ -356,38 +319,44 @@ function TimeframeRow({
       }}
     >
       {/* Start time */}
-      <select
-        value={timeframe.startTime}
-        onChange={(e) => onStartTimeChange(e.target.value)}
+      <SelectField
+        value={String(timeframe.startTime ?? "")}
+        onValueChange={(selectedValue) => onStartTimeChange(selectedValue)}
         style={selectStyle(hasError)}
-        aria-label={`Slot ${index + 1} open from`}
-      >
-        {!timeframe.startTime && <option value="">{tUi("from")}</option>}
-        {FROM_OPTIONS.map((t) => (
-          <option key={t} value={t} disabled={toMins(t) < minFromMins}>
-            {t}
-          </option>
-        ))}
-      </select>
+        label={`Slot ${index + 1} open from`}
+        options={[
+          ...(!timeframe.startTime
+            ? [{ value: "", label: String(tUi("from")) }]
+            : []),
+          ...FROM_OPTIONS.map((t) => ({
+            value: String(t),
+            label: String(t),
+            disabled: toMins(t) < minFromMins,
+          })),
+        ]}
+      />
 
       <span style={{ ...monoSm, fontSize: "var(--type-body-small-size)" }}>
         to
       </span>
 
       {/* End time */}
-      <select
-        value={timeframe.endTime}
-        onChange={(e) => onEndTimeChange(e.target.value)}
+      <SelectField
+        value={String(timeframe.endTime ?? "")}
+        onValueChange={(selectedValue) => onEndTimeChange(selectedValue)}
         style={selectStyle(hasError)}
-        aria-label={`Slot ${index + 1} close at`}
-      >
-        {!timeframe.endTime && <option value="">{tUi("until")}</option>}
-        {TO_OPTIONS.map((t) => (
-          <option key={t} value={t} disabled={toMins(t) < minToMins}>
-            {displayTime(t)}
-          </option>
-        ))}
-      </select>
+        label={`Slot ${index + 1} close at`}
+        options={[
+          ...(!timeframe.endTime
+            ? [{ value: "", label: String(tUi("until")) }]
+            : []),
+          ...TO_OPTIONS.map((t) => ({
+            value: String(t),
+            label: String(displayTime(t)),
+            disabled: toMins(t) < minToMins,
+          })),
+        ]}
+      />
 
       <OpeningBlockDetails frame={timeframe} onChange={onDetailsChange} />
       {hasError && (

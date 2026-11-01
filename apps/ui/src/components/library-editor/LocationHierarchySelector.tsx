@@ -4,6 +4,7 @@ import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import {
   lowerFirst,
   placeLabels,
@@ -166,11 +167,11 @@ export function LocationHierarchySelector({
           <label style={fieldLabelStyle} htmlFor="hier-continent">
             {tUi("continent")}{" "}
           </label>
-          <select
+          <SelectField
             id="hier-continent"
-            value={f.continentDocumentId}
-            onChange={(e) => {
-              const v = e.target.value
+            value={String(f.continentDocumentId ?? "")}
+            onValueChange={(selectedValue) => {
+              const v = selectedValue
               setFormData((prev) => ({
                 ...prev,
                 continentDocumentId: v,
@@ -180,25 +181,25 @@ export function LocationHierarchySelector({
               }))
             }}
             style={selectStyle}
-          >
-            <option value="">{tUi("select")}</option>
-            {continents.map((c) => (
-              <option key={c.documentId} value={c.documentId}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: String(tUi("select")) },
+              ...continents.map((c) => ({
+                value: String(c.documentId),
+                label: String(c.name),
+              })),
+            ]}
+          />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-country">
             {tUi("country")}{" "}
           </label>
-          <select
+          <SelectField
             id="hier-country"
-            value={f.countryDocumentId}
+            value={String(f.countryDocumentId ?? "")}
             disabled={!f.continentDocumentId}
-            onChange={(e) => {
-              const v = e.target.value
+            onValueChange={(selectedValue) => {
+              const v = selectedValue
               setFormData((prev) => ({
                 ...prev,
                 countryDocumentId: v,
@@ -210,25 +211,25 @@ export function LocationHierarchySelector({
               ...selectStyle,
               opacity: f.continentDocumentId ? 1 : 0.4,
             }}
-          >
-            <option value="">{tUi("select")}</option>
-            {countries.map((c) => (
-              <option key={c.documentId} value={c.documentId}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: String(tUi("select")) },
+              ...countries.map((c) => ({
+                value: String(c.documentId),
+                label: String(c.name),
+              })),
+            ]}
+          />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-region">
             {labels.region.name}
           </label>
-          <select
+          <SelectField
             id="hier-region"
-            value={f.regionDocumentId}
+            value={String(f.regionDocumentId ?? "")}
             disabled={!f.countryDocumentId}
-            onChange={(e) => {
-              const v = e.target.value
+            onValueChange={(selectedValue) => {
+              const v = selectedValue
               setFormData((prev) => ({
                 ...prev,
                 regionDocumentId: v,
@@ -239,14 +240,14 @@ export function LocationHierarchySelector({
               ...selectStyle,
               opacity: f.countryDocumentId ? 1 : 0.4,
             }}
-          >
-            <option value="">{tUi("select")}</option>
-            {regions.map((r) => (
-              <option key={r.documentId} value={r.documentId}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: String(tUi("select")) },
+              ...regions.map((r) => ({
+                value: String(r.documentId),
+                label: String(r.name),
+              })),
+            ]}
+          />
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <label style={fieldLabelStyle} htmlFor="hier-area">
@@ -255,30 +256,33 @@ export function LocationHierarchySelector({
               {tUi("optional")}{" "}
             </span>
           </label>
-          <select
+          <SelectField
             id="hier-area"
-            value={f.areaDocumentId}
+            value={String(f.areaDocumentId ?? "")}
             disabled={!areaEnabled}
-            onChange={(e) => {
-              const v = e.target.value
+            onValueChange={(selectedValue) => {
+              const v = selectedValue
               setFormData((prev) => ({ ...prev, areaDocumentId: v }))
             }}
             style={{
               ...selectStyle,
               opacity: areaEnabled ? 1 : 0.4,
             }}
-          >
-            <option value="">
-              {noAreas
-                ? `No ${lowerFirst(labels.area.plural)} listed`
-                : tUi("select")}
-            </option>
-            {areas.map((a) => (
-              <option key={a.documentId} value={a.documentId}>
-                {a.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              {
+                value: "",
+                label: String(
+                  noAreas
+                    ? `No ${lowerFirst(labels.area.plural)} listed`
+                    : tUi("select")
+                ),
+              },
+              ...areas.map((a) => ({
+                value: String(a.documentId),
+                label: String(a.name),
+              })),
+            ]}
+          />
         </div>
       </div>
     </div>

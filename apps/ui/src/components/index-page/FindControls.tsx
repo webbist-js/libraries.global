@@ -8,6 +8,7 @@ import {
   type FilterSidebarState,
   FilterToggleButton,
 } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 
 import {
@@ -244,26 +245,20 @@ export function FindResultsControls({
             : `${total.toLocaleString("en-GB")} ${total === 1 ? "library" : "libraries"}`}
       </p>
 
-      <label className="flex items-center gap-2 text-base font-semibold">
-        <span className="sr-only">Sort results</span>
-        <select
-          value={state.sort}
-          onChange={(e) =>
-            onChange({ sort: e.target.value as SortKey, page: 0 })
-          }
-          className="cursor-pointer rounded-[10px] px-3 py-2.5 text-base font-semibold"
-          style={{
-            background: T.bg.deep,
-            border: `1px solid ${T.border.hi}`,
-            color: T.ink.base,
-          }}
-        >
-          <option value="complete">Most complete first</option>
-          <option value="gaps">Most gaps first</option>
-          <option value="name">Name A–Z</option>
-          {state.nearLat != null ? <option value="near">Nearest</option> : null}
-        </select>
-      </label>
+      <SelectField
+        label="Sort results"
+        appearance="pill"
+        value={state.sort}
+        onValueChange={(value) => onChange({ sort: value as SortKey, page: 0 })}
+        options={[
+          { value: "complete", label: "Most complete first" },
+          { value: "gaps", label: "Most gaps first" },
+          { value: "name", label: "Name A–Z" },
+          ...(state.nearLat != null
+            ? [{ value: "near", label: "Nearest" }]
+            : []),
+        ]}
+      />
 
       <div
         role="radiogroup"

@@ -47,9 +47,8 @@ describe("place contribution invitation", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Choose another country" })
     )
-    fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "france" },
-    })
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" })
+    fireEvent.click(screen.getByRole("option", { name: "France" }))
     expect(
       screen.getByRole("heading", {
         name: "Put a library in France on the map.",
@@ -146,9 +145,8 @@ describe("place contribution invitation", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Choose another region" })
     )
-    fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: "saxony" },
-    })
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" })
+    fireEvent.click(screen.getByRole("option", { name: "Saxony" }))
     expect(
       screen
         .getByRole("link", { name: "Find libraries missing hours" })
@@ -214,9 +212,8 @@ it("keeps the drive when a country is selected and updates its destination", () 
   fireEvent.click(
     screen.getByRole("button", { name: "Choose the country now" })
   )
-  fireEvent.change(screen.getByRole("combobox"), {
-    target: { value: "germany" },
-  })
+  fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" })
+  fireEvent.click(screen.getByRole("option", { name: "Germany" }))
   expect(
     screen
       .getByRole("link", { name: "Help with this drive in Germany" })

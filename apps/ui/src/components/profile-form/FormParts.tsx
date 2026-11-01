@@ -1,4 +1,3 @@
-import { Icon } from "@iconify/react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 
@@ -46,35 +45,6 @@ export function Tag({ children }: { readonly children: React.ReactNode }) {
       {" "}
       {children}
     </span>
-  )
-}
-
-/** A native select in the field style, with the v2 chevron. */
-export function Select({
-  style,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <div className="relative">
-      <select
-        {...props}
-        className="appearance-none"
-        style={{
-          ...fieldInput,
-          paddingRight: 44,
-          cursor: "pointer",
-          ...style,
-        }}
-      />
-      <Icon
-        aria-hidden="true"
-        icon="mdi:chevron-down"
-        width={18}
-        height={18}
-        className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2"
-        style={{ color: T.ink.dim }}
-      />
-    </div>
   )
 }
 

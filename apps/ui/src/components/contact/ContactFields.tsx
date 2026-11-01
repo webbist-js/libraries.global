@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import type { RefObject } from "react"
 
 import styles from "@/components/contact/contact.module.css"
+import { SelectField } from "@/components/ds/SelectField"
 import {
   ATLAS_FEEDBACK_TASKS,
   CONTACT_TYPES,
@@ -91,37 +92,35 @@ export function FeedbackQuestions({
         <span className={styles.label}>
           {t(atlas ? "atlas.task" : "feedback.task")}
         </span>
-        <select
-          value={task}
-          onChange={(event) => setTask(event.target.value as FeedbackTask)}
+        <SelectField
+          value={String(task ?? "")}
+          onValueChange={(selectedValue) =>
+            setTask(selectedValue as FeedbackTask)
+          }
           required
-        >
-          <option value="" disabled>
-            {t("choose")}
-          </option>
-          {tasks.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: String(t("choose")), disabled: true },
+            ...tasks.map(({ value, label }) => ({
+              value: String(value),
+              label: String(label),
+            })),
+          ]}
+        />
       </label>
       <label className={styles.field}>
         <span className={styles.label}>{t("feedback.outcome")}</span>
-        <select
-          value={outcome}
-          onChange={(event) => setOutcome(event.target.value)}
+        <SelectField
+          value={String(outcome ?? "")}
+          onValueChange={(selectedValue) => setOutcome(selectedValue)}
           required
-        >
-          <option value="" disabled>
-            {t("choose")}
-          </option>
-          {TASK_OUTCOMES.map((value) => (
-            <option key={value} value={value}>
-              {t(`feedback.outcomes.${value}`)}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: String(t("choose")), disabled: true },
+            ...TASK_OUTCOMES.map((value) => ({
+              value: String(value),
+              label: String(t(`feedback.outcomes.${value}`)),
+            })),
+          ]}
+        />
       </label>
       <fieldset className={styles.group}>
         <legend className={styles.label}>
@@ -213,16 +212,16 @@ export function ContactDetails({
       {!feedback ? (
         <label className={styles.field}>
           <span className={styles.label}>{t("contact.reason")}</span>
-          <select
-            value={type}
-            onChange={(event) => setType(event.target.value as ContactType)}
-          >
-            {CONTACT_TYPES.map((value) => (
-              <option key={value} value={value}>
-                {t(`contact.types.${value}`)}
-              </option>
-            ))}
-          </select>
+          <SelectField
+            value={String(type ?? "")}
+            onValueChange={(selectedValue) =>
+              setType(selectedValue as ContactType)
+            }
+            options={CONTACT_TYPES.map((value) => ({
+              value: String(value),
+              label: String(t(`contact.types.${value}`)),
+            }))}
+          />
         </label>
       ) : (
         <p className={styles.summary}>

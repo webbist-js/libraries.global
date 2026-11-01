@@ -909,19 +909,19 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           >
             <label className="flex flex-col gap-2 text-sm font-semibold">
               {tUi("add_a_library")}
-              <select
-                value={addLibrary}
+              <SelectField
+                value={String(addLibrary ?? "")}
                 className={INPUT}
                 style={{ borderColor: T.border.hi }}
-                onChange={(event) => setAddLibrary(event.target.value)}
-              >
-                <option value="">Choose a library…</option>
-                {draftFree.map((l) => (
-                  <option key={l.documentId} value={l.documentId}>
-                    {l.name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(selectedValue) => setAddLibrary(selectedValue)}
+                options={[
+                  { value: "", label: "Choose a library…" },
+                  ...draftFree.map((l) => ({
+                    value: String(l.documentId),
+                    label: String(l.name),
+                  })),
+                ]}
+              />
             </label>
             <div className="flex flex-wrap items-center gap-3">
               <SegmentedControl

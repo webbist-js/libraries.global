@@ -2,6 +2,7 @@
 
 import { useTranslations as useUiTranslations } from "next-intl"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 
 import { fieldInputStyle, SOCIAL_PLATFORMS } from "./wizard.constants"
@@ -37,22 +38,22 @@ export function SocialLinksEditor({
             alignItems: "center",
           }}
         >
-          <select
-            aria-label={`${tUi("social_media")} ${i + 1}`}
-            value={link.platform}
-            onChange={(e) => updateLink(i, { platform: e.target.value })}
+          <SelectField
+            label={`${tUi("social_media")} ${i + 1}`}
+            value={String(link.platform ?? "")}
+            onValueChange={(selectedValue) =>
+              updateLink(i, { platform: selectedValue })
+            }
             style={{
               ...fieldInputStyle,
               cursor: "pointer",
               padding: "9px 12px",
             }}
-          >
-            {SOCIAL_PLATFORMS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
+            options={SOCIAL_PLATFORMS.map((p) => ({
+              value: String(p.value),
+              label: String(p.label),
+            }))}
+          />
           <input
             aria-label={`${tUi("link_url")} ${i + 1}`}
             type="url"

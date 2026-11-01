@@ -6,6 +6,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
 import { Badge } from "@/components/ds/Badge"
+import { SelectField } from "@/components/ds/SelectField"
 import type { ContributeMenu } from "@/hooks/useContributeMenu"
 import type { ContributorTint } from "@/lib/contributor-shortcuts"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -96,19 +97,17 @@ export function LibrarySelect({
       >
         {tUi("library")}{" "}
       </label>
-      <select
+      <SelectField
         id={id}
-        value={library.selectedId ?? ""}
-        onChange={(e) => library.select(e.target.value)}
+        value={String(library.selectedId ?? "")}
+        onValueChange={(selectedValue) => library.select(selectedValue)}
         className="min-w-0 flex-1 cursor-pointer truncate rounded-md border-0 bg-transparent text-sm font-semibold outline-none"
         style={{ color: T.ink.base, fontFamily: T.font.sans }}
-      >
-        {library.options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
+        options={library.options.map((option) => ({
+          value: String(option.id),
+          label: String(option.name),
+        }))}
+      />
     </div>
   )
 }

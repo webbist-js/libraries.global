@@ -166,9 +166,8 @@ describe("OnboardingShell", () => {
     await renderShell()
 
     screen.getByRole("group", { name: "Languages you can review in" })
-    fireEvent.change(screen.getByLabelText("Language"), {
-      target: { value: "fr" },
-    })
+    fireEvent.keyDown(screen.getByLabelText("Language"), { key: "ArrowDown" })
+    fireEvent.click(screen.getByRole("option", { name: "French" }))
     fireEvent.click(screen.getByRole("button", { name: "Add language" }))
     fireEvent.click(screen.getByRole("button", { name: "Remove French" }))
 
@@ -213,9 +212,10 @@ describe("OnboardingShell", () => {
     fireEvent.change(screen.getByLabelText(USERNAME), {
       target: { value: "amelie" },
     })
-    fireEvent.change(screen.getByLabelText("Pronouns Required"), {
-      target: { value: "she_her" },
+    fireEvent.keyDown(screen.getByLabelText("Pronouns Required"), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "She / Her" }))
     fireEvent.click(
       screen.getByRole("radio", { name: /^Reader \/ enthusiast/ })
     )

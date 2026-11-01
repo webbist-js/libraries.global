@@ -366,7 +366,15 @@ test("submits one owner request and moderates a frozen subset through the existi
     await review
       .getByLabel("Access Fixture Second Library", { exact: true })
       .uncheck()
-    await review.getByLabel("Approved responsibility").selectOption("owner")
+    await review
+      .getByRole("combobox", { name: "Approved responsibility" })
+      .click()
+    await review
+      .getByRole("option", {
+        name: "Owner responsibility and delegation",
+        exact: true,
+      })
+      .click()
     await review
       .getByLabel("Note to the contributor")
       .fill(

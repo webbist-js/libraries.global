@@ -177,8 +177,11 @@ export async function completeOnboarding(page: Page, username: string) {
   )
   await expect(usernameInput).toHaveAccessibleDescription(/^Available /)
   await page
-    .getByLabel("Pronouns Required", { exact: true })
-    .selectOption({ label: "Prefer not to say" })
+    .getByRole("combobox", { name: "Pronouns Required", exact: true })
+    .click()
+  await page
+    .getByRole("option", { name: "Prefer not to say", exact: true })
+    .click()
   // The radio is visually hidden inside its card, so the card is clicked.
   const affiliation = page.getByRole("radiogroup", { name: "Affiliation" })
   await affiliation.getByText("Reader / enthusiast", { exact: true }).click()

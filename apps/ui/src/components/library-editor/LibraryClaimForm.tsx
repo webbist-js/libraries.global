@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import { useState, type FormEvent } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { RequiredTag } from "@/components/library-editor/WizardFields"
 import { STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
@@ -101,20 +102,20 @@ export function LibraryClaimForm({
             >
               {t("role")} <RequiredTag />
             </label>
-            <select
+            <SelectField
               id="claim-role"
               required
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              value={String(role ?? "")}
+              onValueChange={(selectedValue) => setRole(selectedValue)}
               className={STAFF_FIELD}
-            >
-              <option value="">{t("chooseRole")}</option>
-              {ROLES.map((value) => (
-                <option key={value} value={value}>
-                  {t(`roles.${value}`)}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: String(t("chooseRole")) },
+                ...ROLES.map((value) => ({
+                  value: String(value),
+                  label: String(t(`roles.${value}`)),
+                })),
+              ]}
+            />
           </div>
           <div>
             <label

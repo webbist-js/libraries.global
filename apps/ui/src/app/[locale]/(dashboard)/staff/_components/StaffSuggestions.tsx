@@ -12,6 +12,7 @@ import { useTranslations as useUiTranslations, useLocale } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { DiffCard, EmptyState, Sheet } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { TimetableReviewPanel } from "@/components/moderation/TimetableReviewPanel"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
@@ -400,18 +401,18 @@ export function StaffSuggestions({
       >
         <label className="block text-base font-semibold">
           Reason
-          <select
+          <SelectField
             className="my-2 block min-h-11 w-full rounded-[14px] border px-3 py-2 font-normal"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}
-            value={reason}
-            onChange={(e) => setReason(e.target.value as DeclineReason)}
-          >
-            {DECLINE_REASONS.map((r) => (
-              <option key={r} value={r}>
-                {DECLINE_REASON_LABELS[r]}
-              </option>
-            ))}
-          </select>
+            value={String(reason ?? "")}
+            onValueChange={(selectedValue) =>
+              setReason(selectedValue as DeclineReason)
+            }
+            options={DECLINE_REASONS.map((r) => ({
+              value: String(r),
+              label: String(DECLINE_REASON_LABELS[r]),
+            }))}
+          />
         </label>
         <label className="block text-base font-semibold">
           Note {reason === "other" ? "(required)" : tUi("optional")}

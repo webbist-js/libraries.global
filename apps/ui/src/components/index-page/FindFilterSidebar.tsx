@@ -10,6 +10,7 @@ import {
   FilterPanelHeader,
   type FilterSidebarState,
 } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 import type { FindLocation } from "@/lib/find-search"
 
@@ -367,25 +368,29 @@ function PlaceSelects({
             style={{ color: T.ink.dim }}
           >
             {label}
-            <select
-              value={path[level]}
-              onChange={(e) => onChange(pickPlace(path, level, e.target.value))}
+            <SelectField
+              value={String(path[level] ?? "")}
+              onValueChange={(selectedValue) =>
+                onChange(pickPlace(path, level, selectedValue))
+              }
               className="min-h-11 w-full cursor-pointer rounded-[14px] px-3 text-base font-normal"
               style={{
                 background: T.bg.deep,
                 border: `1px solid ${T.border.hi}`,
                 color: T.ink.base,
               }}
-            >
-              <option value="">{all}</option>
-              {placeChoices(level, path, location).map((c) => (
-                <option key={c.slug} value={c.slug}>
-                  {c.count == null
-                    ? c.name
-                    : `${c.name} (${c.count.toLocaleString("en-GB")})`}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: String(all) },
+                ...placeChoices(level, path, location).map((c) => ({
+                  value: String(c.slug),
+                  label: String(
+                    c.count == null
+                      ? c.name
+                      : `${c.name} (${c.count.toLocaleString("en-GB")})`
+                  ),
+                })),
+              ]}
+            />
           </label>
         )
       })}
