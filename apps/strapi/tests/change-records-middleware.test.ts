@@ -447,33 +447,111 @@ describe("change-records middleware", () => {
     expect(rows(LIBRARY_CHANGE)[0].publishedAt).toBeInstanceOf(Date)
   })
 
-  it("records an import's create as one * row without reading the library back", async () => {
-    const { strapi, run, rows } = setup()
-    const actor = {
+  describe("imports record no whole-record snapshots", () => {
+    const importer = {
       source: "import" as const,
       actorKind: "token" as const,
       actorId: "ingest-uk",
     }
-    await runWithChangeContext(actor, async () =>
-      run(LIBRARY, "create", { data: { name: "Imported" } }, () =>
-        strapi.documents(LIBRARY).create({ data: { name: "Imported" } })
-      )
-    )
-    const written = rows(LIBRARY_CHANGE)
-    expect(written).toHaveLength(1)
-    expect(written[0]).toMatchObject({
-      action: "create",
-      field: "*",
-      source: "import",
-      actorId: "ingest-uk",
+    const reads = (strapi: any) =>
+      strapi.documents.mock.results
+        .map((r: any) => r.value.findOne.mock.calls.length)
+        .reduce((a: number, b: number) => a + b, 0)
+
+    it("records nothing for an import's create and reads nothing", async () => {
+      const { strapi, run, rows } = setup()
+      const created = (await runWithChangeContext(importer, async () =>
+        run(LIBRARY, "create", { data: { name: "Imported" } }, () =>
+          strapi.documents(LIBRARY).create({ data: { name: "Imported" } })
+        )
+      )) as { documentId: string }
+      expect(created.documentId).toBeTruthy()
+      expect(rows(LIBRARY).map((r) => r.name)).toEqual(["Imported"])
+      expect(rows(LIBRARY_CHANGE)).toHaveLength(0)
+      expect(reads(strapi)).toBe(0)
     })
-    expect(written[0].next.name).toBe("Imported")
-    // Relations the create didn't return aren't recorded as empty.
-    expect(written[0].next).not.toHaveProperty("services")
-    const reads = strapi.documents.mock.results
-      .map((r: any) => r.value.findOne.mock.calls.length)
-      .reduce((a: number, b: number) => a + b, 0)
-    expect(reads).toBe(0)
+
+    it("records nothing for an import's first publish", async () => {
+      const { strapi, run, rows } = setup({
+        [LIBRARY]: [{ ...lib(), publishedAt: null }],
+      })
+      const params = { documentId: "lib1", status: "published", data: {} }
+      await runWithChangeContext(importer, async () =>
+        run(LIBRARY, "update", params, () =>
+          strapi.documents(LIBRARY).update(params)
+        )
+      )
+      expect(rows(LIBRARY)[0].publishedAt).toBeTruthy()
+      expect(rows(LIBRARY_CHANGE)).toHaveLength(0)
+    })
+
+    it("records nothing for an import's unchanged republish", async () => {
+      const { strapi, run, rows } = setup({ [LIBRARY]: [lib()] })
+      await runWithChangeContext(importer, async () =>
+        run(LIBRARY, "publish", { documentId: "lib1" }, () =>
+          strapi
+            .documents(LIBRARY)
+            .update({ documentId: "lib1", status: "published", data: {} })
+        )
+      )
+      expect(rows(LIBRARY_CHANGE)).toHaveLength(0)
+    })
+
+    it("records the fields a later import changes on a published library", async () => {
+      const { strapi, run, rows } = setup({ [LIBRARY]: [lib()] })
+      const params = {
+        documentId: "lib1",
+        status: "published",
+        data: { name: "Renamed Library" },
+      }
+      await runWithChangeContext(importer, async () =>
+        run(LIBRARY, "update", params, () =>
+          strapi.documents(LIBRARY).update(params)
+        )
+      )
+      expect(rows(LIBRARY_CHANGE)).toEqual([
+        expect.objectContaining({
+          action: "update",
+          versionStatus: "published",
+          field: "name",
+          previous: '"Old Library"',
+          next: '"Renamed Library"',
+          source: "import",
+          actorId: "ingest-uk",
+        }),
+      ])
+    })
+
+    it("still records an import's delete as the removed version", async () => {
+      const { strapi, run, rows } = setup({ [LIBRARY]: [lib()] })
+      await runWithChangeContext(importer, async () =>
+        run(LIBRARY, "delete", { documentId: "lib1" }, () =>
+          strapi.documents(LIBRARY).delete({ documentId: "lib1" })
+        )
+      )
+      expect(rows(LIBRARY_CHANGE)).toEqual([
+        expect.objectContaining({
+          action: "delete",
+          field: "*",
+          source: "import",
+        }),
+      ])
+      expect(rows(LIBRARY_CHANGE)[0].previous.name).toBe("Old Library")
+    })
+
+    it("still records a person's first publish as one * row", async () => {
+      const { strapi, run, rows } = setup({
+        [LIBRARY]: [{ ...lib(), publishedAt: null }],
+      })
+      await run(LIBRARY, "publish", { documentId: "lib1" }, () =>
+        strapi
+          .documents(LIBRARY)
+          .update({ documentId: "lib1", status: "published", data: {} })
+      )
+      expect(rows(LIBRARY_CHANGE)).toEqual([
+        expect.objectContaining({ action: "publish", field: "*" }),
+      ])
+    })
   })
 
   it("rejects the outer write when the change-record insert fails", async () => {
