@@ -5,6 +5,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
 import { useState } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
   fieldHintStyle,
@@ -32,16 +33,6 @@ interface CorrectLibraryFormProps {
   slug: string
   libraryName: string
   sessionUser: { id: string; email: string; name: string }
-}
-
-const selectStyle: React.CSSProperties = {
-  ...fieldInputStyle,
-  appearance: "none",
-  cursor: "pointer",
-  paddingRight: "44px",
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2355536A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 16px center",
 }
 
 const cardStyle: React.CSSProperties = {
@@ -252,25 +243,27 @@ export function CorrectLibraryForm({
                     What needs correcting?
                     <RequiredTag />
                   </label>
-                  <select
+                  <SelectField
                     id="category"
                     required
-                    value={category}
-                    onChange={(e) =>
-                      setCategory(e.target.value as CorrectionCategory)
+                    value={String(category ?? "")}
+                    onValueChange={(selectedValue) =>
+                      setCategory(selectedValue as CorrectionCategory)
                     }
                     style={{
-                      ...selectStyle,
                       color: category ? T.ink.base : T.ink.dim,
                     }}
-                  >
-                    <option value="">Select a category…</option>
-                    {CORRECTION_CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      {
+                        value: "",
+                        label: "Select a category…",
+                      },
+                      ...CORRECTION_CATEGORIES.map((c) => ({
+                        value: String(c.value),
+                        label: String(c.label),
+                      })),
+                    ]}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-2">

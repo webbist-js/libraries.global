@@ -9,6 +9,7 @@ export function continueHref(submission: Submission): string {
     documentId,
     draftData,
     targetDocumentId,
+    locale,
   } = submission
   if (submissionType === "network_claim")
     return `/staff/networks?${new URLSearchParams({ ...(targetDocumentId ? { network: targetDocumentId } : {}), request: documentId })}`
@@ -33,12 +34,12 @@ export function continueHref(submission: Submission): string {
     (submissionType === "library_edit" || submissionType === "correction") &&
     targetSlug
   )
-    return `/contribute/index/${encodeURIComponent(targetSlug)}`
+    return `/contribute/index/${encodeURIComponent(targetSlug)}?${new URLSearchParams({ draft: documentId, ...(locale ? { locale } : {}) })}`
 
   if (submissionType === "new_library")
     return draftData?.staffCreation
-      ? "/staff/new"
-      : "/contribute/index/new?draft=contribute"
+      ? `/staff/new?resume=${encodeURIComponent(documentId)}`
+      : `/contribute/index/new?draft=contribute&resume=${encodeURIComponent(documentId)}`
 
   return "/contribute/index/new"
 }

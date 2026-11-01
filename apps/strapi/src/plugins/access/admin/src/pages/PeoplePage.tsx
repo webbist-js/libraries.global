@@ -8,7 +8,6 @@ import {
   IconButton,
   Loader,
   Searchbar,
-  Table,
   Tbody,
   Td,
   Th,
@@ -21,7 +20,10 @@ import { EmptyDocuments } from "@strapi/icons/symbols"
 import { Layouts, useFetchClient } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
-import { PluginPage } from "../../../../../admin/components/PluginUI"
+import {
+  PluginTable,
+  PluginPage,
+} from "../../../../../admin/components/PluginUI"
 import {
   errorMessage,
   nameOf,
@@ -166,7 +168,7 @@ export function PeoplePage({
                 }
               />
             ) : (
-              <Table colCount={5} rowCount={rows.length + 1}>
+              <PluginTable colCount={5} rowCount={rows.length + 1}>
                 <Thead>
                   <Tr>
                     <Th>
@@ -205,7 +207,7 @@ export function PeoplePage({
                         <Flex
                           direction="column"
                           alignItems="flex-start"
-                          gap={0}
+                          gap={1}
                         >
                           <Typography
                             fontWeight="semiBold"
@@ -252,7 +254,7 @@ export function PeoplePage({
                     </Tr>
                   ))}
                 </Tbody>
-              </Table>
+              </PluginTable>
             )}
           </Box>
         </Layouts.Content>

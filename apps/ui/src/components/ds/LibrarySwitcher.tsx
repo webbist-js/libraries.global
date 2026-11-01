@@ -1,6 +1,7 @@
 "use client"
 import { Icon } from "@iconify/react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import type { StaffLibrarySummary } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
 import { useRouter } from "@/lib/navigation"
@@ -45,29 +46,21 @@ export function LibrarySwitcher({
           className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2"
           style={{ color: T.accent.ok }}
         />
-        <select
+        <SelectField
           className="min-h-14 w-full appearance-none truncate rounded-[16px] border py-3 pr-10 pl-10 text-base font-semibold"
           style={{
             borderColor: T.border.hi,
             background: T.bg.deep,
             color: T.ink.base,
           }}
-          value={currentId}
-          onChange={(event) => router.push(hrefFor(event.target.value))}
-        >
-          {libraries.map((lib) => (
-            <option key={lib.id} value={lib.id}>
-              {lib.name} · {libraryTypeLabel(lib.libraryType)}
-            </option>
-          ))}
-        </select>
-        <Icon
-          aria-hidden="true"
-          icon="mdi:chevron-down"
-          width={20}
-          height={20}
-          className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-          style={{ color: T.ink.dim }}
+          value={String(currentId ?? "")}
+          onValueChange={(selectedValue) => router.push(hrefFor(selectedValue))}
+          options={libraries.map((lib) => ({
+            value: String(lib.id),
+            label: String(
+              [lib.name, "·", libraryTypeLabel(lib.libraryType)].join(" ")
+            ),
+          }))}
         />
       </span>
     </label>

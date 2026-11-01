@@ -471,7 +471,7 @@ export function planStatusCopy(
     case "grant":
       return `You have ${name}, granted by the libraries.global team.`
     case "earned":
-      return `You have ${name} for your contributions (Archivist tier).`
+      return `You have ${name} for earning 5,000 points and contributing within the last 30 days.`
     case "verified":
       return `You have ${name} as verified library staff, student or charity.`
     case "team":

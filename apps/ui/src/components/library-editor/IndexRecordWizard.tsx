@@ -178,10 +178,10 @@ export function IndexRecordWizard({
     () => [
       "index-editor-recovery",
       mode,
-      target?.documentId ?? "new",
+      target?.documentId ?? resumeSubmission?.documentId ?? "new",
       locale?.code ?? "default",
     ],
-    [mode, target?.documentId, locale?.code]
+    [mode, target?.documentId, resumeSubmission?.documentId, locale?.code]
   )
   const [recovery, setRecovery] = useState<RecoveryDraft | null>(() => {
     const saved = queryClient?.getQueryData<RecoveryDraft>(recoveryKey)
@@ -1031,24 +1031,25 @@ export function IndexRecordWizard({
                       style={fieldLabelStyle}
                     >
                       {tUi("team_coverage")}{" "}
-                      <select
-                        aria-label={tUi("team_coverage")}
-                        value={creationTeamId}
+                      <SelectField
+                        label={tUi("team_coverage")}
+                        value={String(creationTeamId ?? "")}
                         disabled={!!draftId}
-                        onChange={(event) =>
-                          setCreationTeamId(event.target.value)
+                        onValueChange={(selectedValue) =>
+                          setCreationTeamId(selectedValue)
                         }
                         style={fieldInputStyle}
-                      >
-                        <option value="">
-                          {tUi("no_team_free_staff_access")}
-                        </option>
-                        {creationTeams.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
-                          </option>
-                        ))}
-                      </select>
+                        options={[
+                          {
+                            value: "",
+                            label: String(tUi("no_team_free_staff_access")),
+                          },
+                          ...creationTeams.map((team) => ({
+                            value: String(team.id),
+                            label: String(team.name),
+                          })),
+                        ]}
+                      />
                       <span
                         style={{
                           color: T.ink.dim,

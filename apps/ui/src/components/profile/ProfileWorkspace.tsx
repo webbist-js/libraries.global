@@ -25,6 +25,7 @@ import { MembershipDashboard } from "@/components/membership/MembershipDashboard
 import { NetworkAffiliations } from "@/components/networks/NetworkAffiliations"
 import { NotificationInbox } from "@/components/notifications/NotificationInbox"
 import { useNotifications } from "@/components/notifications/NotificationProvider"
+import { ProfileWorkspacePrimaryActions } from "@/components/profile/ProfileWorkspaceHeader"
 import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -84,6 +85,8 @@ export function ProfileWorkspace(props: Props) {
     const scroller = content.current
     if (scroller && previousSection.current !== props.section) {
       scroller.scrollTop = 0
+      const panel = scroller.closest<HTMLElement>(".profile-workspace-drawer")
+      if (panel) panel.scrollTop = 0
     }
     previousSection.current = props.section
   }, [props.section])
@@ -96,6 +99,14 @@ export function ProfileWorkspace(props: Props) {
           className="profile-workspace-section"
           data-profile-section={props.section}
         >
+          {props.section === "overview" ? (
+            <div className="profile-workspace-mobile-actions">
+              <ProfileWorkspacePrimaryActions
+                user={props.user}
+                profile={props.query.data?.profile}
+              />
+            </div>
+          ) : null}
           {props.query.isPending ? (
             <div role="status" aria-busy="true">
               <span className="sr-only">{t("loadingProfile")}</span>

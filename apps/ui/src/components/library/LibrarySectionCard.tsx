@@ -147,10 +147,11 @@ export function LibrarySectionCard({
         </div>
       </div>
       <div
-        className={`library-section-body ${compact ? "flex flex-1 flex-col" : ""}`}
+        className={`library-section-body ${dashed ? "missing-content" : ""} ${compact ? "flex flex-1 flex-col" : ""}`}
         style={{
-          background: T.bg.deep,
-          border: `1px ${dashed ? "dashed" : "solid"} ${T.border.line}`,
+          ...(dashed
+            ? {}
+            : { background: T.bg.deep, border: `1px solid ${T.border.line}` }),
         }}
       >
         {children}

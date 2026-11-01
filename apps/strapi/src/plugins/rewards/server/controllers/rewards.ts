@@ -190,6 +190,31 @@ export default ({ strapi }: { strapi: any }) => ({
             points: 15,
           },
           {
+            action: "event_feed_accepted",
+            label: "Event feed accepted",
+            points: 5,
+          },
+          {
+            action: "option_suggestion_accepted",
+            label: "Option suggestion accepted",
+            points: 5,
+          },
+          {
+            action: "discussion_thread_accepted",
+            label: "Discussion thread approved",
+            points: 2,
+          },
+          {
+            action: "discussion_reply_accepted",
+            label: "Discussion reply approved",
+            points: 1,
+          },
+          {
+            action: "discussion_edit_accepted",
+            label: "Discussion edit approved",
+            points: 1,
+          },
+          {
             action: "daily_streak",
             label: "Daily contribution streak",
             points: 1,

@@ -179,7 +179,7 @@ export default function ContactModal({
             event.preventDefault()
             panelRef.current
               ?.querySelector<HTMLElement>(
-                "input[type=radio]:checked, select, textarea"
+                'input[type=radio]:checked, button[role="combobox"], textarea'
               )
               ?.focus()
           }}

@@ -176,7 +176,7 @@ describe("planStatusCopy", () => {
       "You have Pro, granted by the libraries.global team."
     )
     expect(planStatusCopy("pro", "earned")).toBe(
-      "You have Pro for your contributions (Archivist tier)."
+      "You have Pro for earning 5,000 points and contributing within the last 30 days."
     )
     expect(planStatusCopy("pro", "verified")).toBe(
       "You have Pro as verified library staff, student or charity."

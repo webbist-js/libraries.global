@@ -525,7 +525,7 @@ body:has([data-hide-footer="true"]) .strapi-layout-footer {
   }
 }
 .live-controls input,
-.live-controls select {
+.live-controls button[role="combobox"] {
   min-height: 56px;
 }
 
@@ -594,4 +594,11 @@ textarea::placeholder {
 :where(input:not([type="hidden"]), textarea, select, button[role="combobox"]) {
   --t-border-line: var(--t-control-border);
   --t-border-hi: var(--t-control-border);
+}
+
+/* Shared convention for content that has not been supplied yet. */
+.missing-content {
+  border: 3px dashed var(--t-border-line);
+  background: color-mix(in srgb, var(--t-bg-muted) 40%, transparent);
+  color: var(--t-ink-dim);
 }

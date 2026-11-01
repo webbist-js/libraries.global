@@ -241,10 +241,8 @@ export default ({ strapi }: { strapi: any }) => ({
           subjectName: row.subject ? await this.name(row.subject) : null,
         }))
       ),
-      canLeave: !(
-        actor.staffRole === "owner" &&
-        members.filter((row) => row.staffRole === "owner").length === 1
-      ),
+      // A personal claim is voluntary, even when no other staff have joined.
+      canLeave: true,
       covered: full,
       team:
         team && team.viewerIsMember
@@ -416,9 +414,10 @@ export default ({ strapi }: { strapi: any }) => ({
       )
       if (!member) throw new StaffError(404, "not_found")
       if (
+        !leave &&
         member.staffRole === "owner" &&
         members.filter((row) => row.staffRole === "owner").length === 1 &&
-        (remove || leave || body.staffRole === "editor")
+        (remove || body.staffRole === "editor")
       )
         throw new StaffError(409, "last_owner")
       if (remove || leave) {

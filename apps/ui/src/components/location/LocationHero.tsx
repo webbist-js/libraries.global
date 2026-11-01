@@ -203,10 +203,7 @@ export function LocationSectionHeading({
 /** Honest empty state for locations with no records yet. */
 export function LocationEmptyState({ name }: { readonly name: string }) {
   return (
-    <div
-      className="rounded-3xl px-8 py-12 text-center"
-      style={{ border: `1px dashed ${T.border.hi}`, background: T.bg.deep }}
-    >
+    <div className="missing-content rounded-3xl px-8 py-12 text-center">
       <h3 className="type-h3 m-0" style={{ color: T.ink.base }}>
         No records yet
       </h3>

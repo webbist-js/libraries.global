@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ds/EmptyState"
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
 import { STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
+import { WIDGET_DATA_COLORS } from "@/components/widgets/appearance"
 import {
   type WidgetPresentationData,
   widgetDistance,
@@ -289,7 +290,6 @@ function WidgetListPane({
     c,
     type,
     t,
-    accent,
     selected,
     setPage,
     location,
@@ -318,7 +318,7 @@ function WidgetListPane({
             r={r}
             c={c}
             type={type}
-            accent={accent}
+            accent={WIDGET_DATA_COLORS[c.accent]}
             selected={selected}
             onSelect={selectLibrary}
             siteUrl={siteUrl}

@@ -58,6 +58,7 @@ export type SessionProfile = {
   /** Contributor Role grants (capabilities). */
   roleGrants: RoleGrant[]
   verifications: SessionVerification[]
+  rewardsPoints?: number
   earnedProUntil: string | null
   /** Prompts the user has hidden in their settings. */
   dismissedPrompts: DismissiblePrompt[]
@@ -94,6 +95,7 @@ const Body = z.object({
     .array(z.object({ expiresAt: z.string().nullable() }))
     .max(20)
     .optional(),
+  rewardsPoints: z.number().finite().optional(),
   earnedProUntil: z.string().nullable().optional(),
   dismissedPrompts: z.array(z.unknown()).max(20).optional(),
   teams: z
@@ -263,6 +265,7 @@ async function loadSessionProfile(
       roleGrants: parseRoleGrants(d.roleGrants, contributorRole),
       verifications: d.verifications ?? [],
       earnedProUntil: d.earnedProUntil ?? null,
+      rewardsPoints: d.rewardsPoints ?? 0,
       dismissedPrompts: (d.dismissedPrompts ?? []).filter(isDismissiblePrompt),
       teams: (d.teams ?? []).map((t) => ({
         ...t,

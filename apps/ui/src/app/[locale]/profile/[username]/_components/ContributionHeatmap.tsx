@@ -9,11 +9,13 @@ import { T } from "@/lib/design-tokens"
 
 function heatColor(count: number, isFuture: boolean): string {
   if (isFuture) return "transparent"
-  if (count === 0) return "#F0ECE5"
-  if (count <= 2) return "#D6D2F6"
-  if (count <= 5) return "#A59DEB"
+  if (count === 0) return T.bg.muted2
+  if (count <= 2)
+    return "color-mix(in srgb, var(--t-accent-primary) 25%, var(--t-bg-muted-2))"
+  if (count <= 5)
+    return "color-mix(in srgb, var(--t-accent-primary) 55%, var(--t-bg-muted-2))"
 
-  return "#4338CA"
+  return T.accent.primary
 }
 
 function calendarKey(date: Date): string {

@@ -48,6 +48,7 @@ describe("fetchSessionProfile", () => {
       roleGrants: [{ role: "contributor", queue: "all", locale: null }],
       verifications: [],
       earnedProUntil: null,
+      rewardsPoints: 0,
       dismissedPrompts: [],
       teams: [],
     }

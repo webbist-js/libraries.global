@@ -1,6 +1,6 @@
 import {
   isSupporterPlan,
-  TIER_NAMES,
+  EARNED_PRO_POINTS,
   isPaidMembership,
   selectPaidMembership,
 } from "@repo/access"
@@ -108,12 +108,8 @@ export async function readSupporters(
       }),
       readAll(strapi, PROFILE, {
         filters: {
-          $or: [
-            {
-              tier: { $in: TIER_NAMES.slice(TIER_NAMES.indexOf("Archivist")) },
-            },
-            { earnedProUntil: { $gt: now.toISOString() } },
-          ],
+          points: { $gte: EARNED_PRO_POINTS },
+          earnedProUntil: { $gt: now.toISOString() },
         },
         fields: ["baUserId"],
       }),

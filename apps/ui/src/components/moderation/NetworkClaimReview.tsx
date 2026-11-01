@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState, useTransition } from "react"
 
+import { SelectField } from "@/components/ds/SelectField"
 import { ReviewDecisionForm } from "@/components/moderation/ReviewDecisionForm"
 import { NetworkMandateCard } from "@/components/networks/NetworkMandateCard"
 import { STAFF_FIELD } from "@/components/staff/StaffPanel"
@@ -121,18 +122,24 @@ export function NetworkClaimReview({
       {review.snapshot.intent === "management" ? (
         <label className="grid gap-2">
           Approved responsibility
-          <select
+          <SelectField
             className={STAFF_FIELD}
-            value={staffRole}
-            onChange={(event) =>
-              setStaffRole(event.target.value as "editor" | "owner")
+            value={String(staffRole ?? "")}
+            onValueChange={(selectedValue) =>
+              setStaffRole(selectedValue as "editor" | "owner")
             }
-          >
-            <option value="editor">Editor access</option>
-            {review.snapshot.staffRole === "owner" ? (
-              <option value="owner">Owner responsibility and delegation</option>
-            ) : null}
-          </select>
+            options={[
+              { value: "editor", label: "Editor access" },
+              ...(review.snapshot.staffRole === "owner"
+                ? [
+                    {
+                      value: "owner",
+                      label: "Owner responsibility and delegation",
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </label>
       ) : null}
       <ReviewDecisionForm

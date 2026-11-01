@@ -63,7 +63,7 @@ function AccessKey({
             </div>
             <i
               aria-hidden="true"
-              className="h-5 w-full rounded border border-black/10"
+              className="h-5 w-full rounded border border-(--t-border-hi)"
               style={{ background: bin.color }}
             />
             <span className="text-center text-xs font-semibold">
@@ -75,7 +75,7 @@ function AccessKey({
       <div className="flex flex-wrap gap-4 text-sm">
         <span className="flex items-center gap-2">
           <i
-            className="h-4 w-5 rounded border border-black/20"
+            className="h-4 w-5 rounded border border-(--t-border-hi)"
             style={{
               background:
                 "repeating-linear-gradient(135deg,#bdb7ed 0px,#bdb7ed 4px,#7d71bd 4px,#7d71bd 5px)",
@@ -85,7 +85,7 @@ function AccessKey({
         </span>
         <span className="flex items-center gap-2">
           <i
-            className="h-4 w-5 rounded border border-dashed border-black/30"
+            className="h-4 w-5 rounded border border-dashed border-(--t-ink-low)"
             style={{ background: "var(--t-border-hi)" }}
           />
           No data
@@ -393,7 +393,7 @@ function AccessRanking({
         >
           <i
             aria-hidden="true"
-            className="size-4 shrink-0 rounded border border-black/10"
+            className="size-4 shrink-0 rounded border border-(--t-border-hi)"
             style={{ background: atlasAccessColor(item.per100k) }}
           />
           <span className="flex-1">{item.name}</span>

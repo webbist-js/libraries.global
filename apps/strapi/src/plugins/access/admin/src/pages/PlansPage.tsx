@@ -14,7 +14,6 @@ import {
   SingleSelect,
   SingleSelectOption,
   Status,
-  Table,
   Tabs,
   Tbody,
   Td,
@@ -31,6 +30,7 @@ import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
 import {
+  PluginTable,
   PluginPage,
   PluginModalContent,
   FormGrid,
@@ -220,7 +220,7 @@ export function PlansPage({
                   ) : grants.length === 0 ? (
                     empty("plan grants")
                   ) : (
-                    <Table colCount={7} rowCount={grants.length + 1}>
+                    <PluginTable colCount={7} rowCount={grants.length + 1}>
                       <Thead>
                         <Tr>
                           <Th>
@@ -315,7 +315,7 @@ export function PlansPage({
                           </Tr>
                         ))}
                       </Tbody>
-                    </Table>
+                    </PluginTable>
                   )}
                 </Box>
               </Tabs.Content>
@@ -328,7 +328,10 @@ export function PlansPage({
                   ) : verifications.length === 0 ? (
                     empty("verifications")
                   ) : (
-                    <Table colCount={6} rowCount={verifications.length + 1}>
+                    <PluginTable
+                      colCount={6}
+                      rowCount={verifications.length + 1}
+                    >
                       <Thead>
                         <Tr>
                           <Th>
@@ -409,7 +412,7 @@ export function PlansPage({
                           </Tr>
                         ))}
                       </Tbody>
-                    </Table>
+                    </PluginTable>
                   )}
                 </Box>
               </Tabs.Content>

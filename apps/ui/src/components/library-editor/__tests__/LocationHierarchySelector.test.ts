@@ -3,7 +3,7 @@ import * as React from "react"
 import { createElement } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { cleanup, render, screen, waitFor } from "@/test/render"
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 Object.assign(globalThis, { React })
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
@@ -66,8 +66,7 @@ const renderWith = (countryDocumentId: string, regionDocumentId = "") =>
     })
   )
 
-const areaSelect = () =>
-  screen.getByLabelText(/District/) as unknown as HTMLSelectElement
+const areaSelect = () => screen.getByLabelText(/District/) as HTMLButtonElement
 
 describe("LocationHierarchySelector", () => {
   it("names the Region and Area selects as the country does", async () => {
@@ -97,9 +96,9 @@ describe("LocationHierarchySelector", () => {
 
   it("keeps the Area select open when the Region has Areas", async () => {
     renderWith("ch", "bern")
-    await waitFor(() =>
-      expect(screen.getByText("Bern-Mittelland")).toBeTruthy()
-    )
+    await waitFor(() => expect(areaSelect().disabled).toBe(false))
+    fireEvent.keyDown(areaSelect(), { key: "ArrowDown" })
+    expect(screen.getByRole("option", { name: "Bern-Mittelland" })).toBeTruthy()
     expect(areaSelect().disabled).toBe(false)
     expect(screen.queryByText("No districts listed")).toBeNull()
   })

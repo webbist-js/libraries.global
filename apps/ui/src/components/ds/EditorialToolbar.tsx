@@ -10,7 +10,7 @@ export const EDITORIAL_ACTION_PILL = buttonVariants({
 })
 
 export const EDITORIAL_DANGER_PILL =
-  "border-(--t-palette-coral-fg) bg-(--t-palette-coral-fg) text-white hover:bg-(--t-palette-coral-fg) hover:brightness-110"
+  "border-(--t-action-danger) bg-(--t-action-danger) text-white hover:bg-(--t-action-danger) hover:brightness-110"
 
 export const EDITORIAL_SUBTLE_PILL = buttonVariants({
   variant: "surface",

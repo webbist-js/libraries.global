@@ -51,6 +51,7 @@ vi.mock("@/components/global/GlobalLink", () => ({
   default: (props: AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props} />,
 }))
 vi.mock("@/lib/access-client", () => ({
+  useCapabilities: () => ({ has: () => false }),
   useHydratedSession: () => ({
     data: state.actor
       ? { user: { id: state.actor, capabilities: [], ...state.extra } }

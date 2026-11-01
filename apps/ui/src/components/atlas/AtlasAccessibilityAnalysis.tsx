@@ -581,7 +581,7 @@ function AccessibilityHeadline({
             style={{
               borderColor: T.border.hi,
               background:
-                "repeating-linear-gradient(45deg, #fff, #fff 5px, #F1EADC 5px, #F1EADC 10px)",
+                "repeating-linear-gradient(45deg, var(--t-bg-deep) 0 5px, var(--t-border-hi) 5px 10px)",
             }}
           >
             <span style={{ width: `${share}%`, background: ACCESS_MATCH }} />

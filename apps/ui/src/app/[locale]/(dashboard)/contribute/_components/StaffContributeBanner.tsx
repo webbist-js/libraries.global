@@ -5,7 +5,9 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
+import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
+import { RenounceLibraryClaim } from "@/components/staff/RenounceLibraryClaim"
 import type { StaffLibrarySummary } from "@/lib/access-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { staffLibraryHref } from "@/lib/staff/paths"
@@ -149,30 +151,21 @@ export function StaffContributeBanner({
             {tUi("library")}{" "}
           </label>
           <span className="relative max-w-full min-w-0">
-            <select
+            <SelectField
               id={selectId}
-              className="min-h-11 w-full max-w-[320px] cursor-pointer appearance-none truncate rounded-full border py-2 pr-10 pl-4 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+              appearance="pill"
+              className="w-full max-w-[320px] min-w-0"
               style={{
                 background: T.bg.deep,
                 borderColor: T.border.hi,
                 color: T.ink.base,
               }}
-              value={id}
-              onChange={(event) => setSelectedId(event.target.value)}
-            >
-              {libraries.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <Icon
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-              icon="mdi:chevron-down"
-              width={18}
-              height={18}
-              style={{ color: T.ink.dim }}
+              value={String(id ?? "")}
+              onValueChange={(selectedValue) => setSelectedId(selectedValue)}
+              options={libraries.map((item) => ({
+                value: String(item.id),
+                label: String(item.name),
+              }))}
             />
           </span>
         </div>
@@ -314,6 +307,11 @@ export function StaffContributeBanner({
           icon="mdi:arrow-right"
         />
       </div>
+      <RenounceLibraryClaim
+        key={library.id}
+        libraryId={library.id}
+        libraryName={library.name}
+      />
     </section>
   )
 }

@@ -19,16 +19,16 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
       />
       {type === "finder" ? (
         <>
-          <path d="M26 22H142V90H26Z" fill="#E9EDE3" />
+          <path d="M26 22H142V90H26Z" fill="var(--t-palette-mint-bg)" />
           <path
             d="M30 78L128 26M40 26L134 78M26 56L142 42M82 22L67 90"
-            stroke="#fff"
+            stroke="var(--t-bg-deep)"
             strokeWidth="7"
           />
           <path
             d="M112 22Q84 54 118 90"
             fill="none"
-            stroke="#C6DDE2"
+            stroke="var(--t-palette-blue-bg)"
             strokeWidth="8"
           />
           {[
@@ -42,13 +42,20 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
               cy={y}
               r="5"
               fill="currentColor"
-              stroke="#fff"
+              stroke="var(--t-bg-deep)"
               strokeWidth="2"
             />
           ))}
           {[30, 52, 74].map((y) => (
             <g key={y}>
-              <rect x="154" y={y} width="52" height="5" rx="2" fill="#C1BDCF" />
+              <rect
+                x="154"
+                y={y}
+                width="52"
+                height="5"
+                rx="2"
+                fill="var(--t-ink-ghost)"
+              />
               <rect
                 x="154"
                 y={y + 9}
@@ -64,10 +71,17 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
         <>
           {[28, 52, 76].map((y) => (
             <g key={y}>
-              <rect x="30" y={y} width="16" height="16" rx="4" fill="#EAE7FF" />
+              <rect
+                x="30"
+                y={y}
+                width="16"
+                height="16"
+                rx="4"
+                fill="var(--t-accent-chip)"
+              />
               <path
                 d={`M54 ${y + 3}h76`}
-                stroke="#A6A1B6"
+                stroke="var(--t-ink-low)"
                 strokeWidth="4"
                 strokeLinecap="round"
               />
@@ -97,7 +111,7 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
                 width="38"
                 height="4"
                 rx="2"
-                fill="#C1BDCF"
+                fill="var(--t-ink-ghost)"
               />
               <rect
                 x="80"
@@ -113,7 +127,14 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
         </>
       ) : (
         <>
-          <rect x="42" y="28" width="46" height="7" rx="3" fill="#C1BDCF" />
+          <rect
+            x="42"
+            y="28"
+            width="46"
+            height="7"
+            rx="3"
+            fill="var(--t-ink-ghost)"
+          />
           <path
             d="M44 70V45h10v25m9 0V45h10v25m9 0V45h10v25"
             stroke="currentColor"
@@ -121,7 +142,7 @@ export function WidgetThumbnail({ type }: { readonly type: WidgetType }) {
           />
           <path
             d="M122 46h72m-72 12h60m-60 12h68"
-            stroke="#D7D3DF"
+            stroke="var(--t-border-hi)"
             strokeWidth="4"
             strokeLinecap="round"
           />

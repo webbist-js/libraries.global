@@ -1026,20 +1026,20 @@ export function ArticleEventsCard({
           </label>
           <label>
             {tRelations("eventLibrary")}
-            <select
+            <SelectField
               className="mt-1 w-full rounded-lg border p-2"
-              value={libraryId}
-              onChange={(event) => setLibraryId(event.target.value)}
-            >
-              <option value="">{tRelations("noLibrary")}</option>
-              {libraries
-                .filter((tag) => tag.kind === "library" && tag.documentId)
-                .map((tag) => (
-                  <option key={tag.documentId} value={tag.documentId}>
-                    {tag.label}
-                  </option>
-                ))}
-            </select>
+              value={String(libraryId ?? "")}
+              onValueChange={(selectedValue) => setLibraryId(selectedValue)}
+              options={[
+                { value: "", label: String(tRelations("noLibrary")) },
+                ...libraries
+                  .filter((tag) => tag.kind === "library" && tag.documentId)
+                  .map((tag) => ({
+                    value: String(tag.documentId),
+                    label: String(tag.label),
+                  })),
+              ]}
+            />
           </label>
           <button
             type="button"

@@ -201,6 +201,67 @@ describe("decideSuggestion", () => {
     libraries: [L1, L2],
   }
 
+  it("rewards the original suggester once, not the decision maker or voters", async () => {
+    const { strapi, services } = memoised({
+      [SUGGESTION]: [{ ...open, suggestedBy: "writer", libraries: [] }],
+    })
+    const award = vi.fn().mockResolvedValue({ awarded: true })
+    services["rewards.points"] = { award }
+    const input = {
+      documentId: open.documentId,
+      decision: "accept" as const,
+      decidedBy: "Board",
+    }
+    expect(await decideSuggestion(strapi, input)).toHaveProperty("ok", true)
+    expect(award).toHaveBeenCalledWith(
+      "writer",
+      "option_suggestion_accepted",
+      5,
+      expect.objectContaining({ suggestionId: open.documentId }),
+      `${open.documentId}:option_suggestion_accepted`,
+      expect.any(Date)
+    )
+    await decideSuggestion(strapi, input)
+    expect(award).toHaveBeenCalledTimes(1)
+  })
+
+  it("rolls back the option and acceptance if its reward fails", async () => {
+    const { strapi, services, store } = memoised({
+      [SUGGESTION]: [{ ...open, suggestedBy: "writer", libraries: [] }],
+    })
+    const award = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("reward unavailable"))
+      .mockResolvedValue({ awarded: true })
+    services["rewards.points"] = { award }
+    const input = {
+      documentId: open.documentId,
+      decision: "accept" as const,
+      decidedBy: "Board",
+    }
+    await expect(decideSuggestion(strapi, input)).rejects.toThrow(
+      "reward unavailable"
+    )
+    expect(store[SUGGESTION]![0].status).toBe("open")
+    expect(store[SERVICE] ?? []).toHaveLength(0)
+    expect(await decideSuggestion(strapi, input)).toHaveProperty("ok", true)
+  })
+
+  it("does not reward declined suggestions", async () => {
+    const { strapi, services } = memoised({
+      [SUGGESTION]: [{ ...open, suggestedBy: "writer" }],
+    })
+    const award = vi.fn()
+    services["rewards.points"] = { award }
+    await decideSuggestion(strapi, {
+      documentId: open.documentId,
+      decision: "decline",
+      decidedBy: "Board",
+      note: "Duplicate idea",
+    })
+    expect(award).not.toHaveBeenCalled()
+  })
+
   it("accepting creates the option, links it to every library that asked, and closes it", async () => {
     const { strapi, store } = memoised({
       [SUGGESTION]: [open],

@@ -793,6 +793,22 @@ async function decideSuggestionUnlocked(
     `[content-moderation] accepted suggestion "${name}" (${suggestion.optionKey}) for ${(suggestion.libraries ?? []).length} libraries${unlinkedLibraries.length ? ` (${unlinkedLibraries.length} not linked)` : ""}`
   )
 
+  // The board lock owns the transaction, so a failed reward rolls back
+  // the decision and published changes. Legacy anonymous ideas have no recipient.
+  if (suggestion.suggestedBy) {
+    await strapi.plugin("rewards").service("points").award(
+      suggestion.suggestedBy,
+      "option_suggestion_accepted",
+      5,
+      {
+        suggestionId: suggestion.documentId,
+        optionDocumentId: option.documentId,
+      },
+      `${suggestion.documentId}:option_suggestion_accepted`,
+      decided.decidedAt
+    )
+  }
+
   return {
     ok: true,
     data: await strapi.documents(SUGGESTION).update({

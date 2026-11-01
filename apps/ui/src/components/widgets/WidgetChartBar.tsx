@@ -62,7 +62,7 @@ export function WidgetChartBar({
             <span
               style={{
                 background:
-                  "repeating-linear-gradient(135deg,#E7E3DB 0 5px,#fff 5px 10px)",
+                  "repeating-linear-gradient(135deg, var(--t-border-hi) 0 5px, var(--t-bg-deep) 5px 10px)",
                 [axis]: `${(m.unknown / max) * 100}%`,
               }}
             />

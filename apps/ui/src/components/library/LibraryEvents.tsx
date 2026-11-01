@@ -196,7 +196,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
               textTransform: "uppercase",
               color: T.ink.low,
               borderColor: T.border.line,
-              background: "rgba(255,255,255,0.03)",
+              background: T.bg.surface,
             }}
           >
             <Icon icon={typeIcon} className="size-2.5 shrink-0" />
@@ -212,12 +212,10 @@ function EventCard({ event }: { event: LibraryEvent }) {
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: event.isFree ? T.accent.ok : T.accent.ember,
-              borderColor: event.isFree
-                ? "rgba(142,240,179,0.18)"
-                : "rgba(255,184,138,0.18)",
+              borderColor: event.isFree ? T.edge.ok : T.edge.danger,
               background: event.isFree
-                ? "rgba(142,240,179,0.06)"
-                : "rgba(255,184,138,0.06)",
+                ? "var(--t-palette-mint-soft)"
+                : "var(--t-palette-coral-soft)",
             }}
           >
             {priceLabel}
@@ -362,8 +360,8 @@ export function LibraryEvents({
               letterSpacing: ".14em",
               textTransform: "uppercase",
               color: T.accent.ok,
-              background: "rgba(142,240,179,0.08)",
-              border: "1px solid rgba(142,240,179,0.2)",
+              background: "var(--t-palette-mint-soft)",
+              border: `1px solid ${T.edge.ok}`,
               borderRadius: "999px",
               padding: "2px 8px",
             }}
@@ -428,8 +426,10 @@ export function LibraryEvents({
                 fontFamily: T.font.mono,
                 letterSpacing: ".1em",
                 textTransform: "uppercase",
-                background: freeOnly ? "rgba(142,240,179,0.1)" : "transparent",
-                borderColor: freeOnly ? "rgba(142,240,179,0.3)" : T.border.line,
+                background: freeOnly
+                  ? "var(--t-palette-mint-soft)"
+                  : "transparent",
+                borderColor: freeOnly ? T.edge.ok : T.border.line,
                 color: freeOnly ? T.accent.ok : T.ink.low,
               }}
             >

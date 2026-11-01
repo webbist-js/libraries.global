@@ -89,16 +89,19 @@ function setup(
       caps: { claimedLibraryIds: claims, set: new Set(["events.feed"]) },
     })),
   }
+  const award = vi.fn().mockResolvedValue({ awarded: true })
   const feeds = feedsFactory({ strapi })
   strapi.plugin = vi.fn((name: string) => ({
     service: (s: string) =>
-      name === "events"
-        ? s === "feeds"
-          ? feeds
-          : credentials
-        : s === "submission-policy"
-          ? policy
-          : undefined,
+      name === "rewards"
+        ? { award }
+        : name === "events"
+          ? s === "feeds"
+            ? feeds
+            : credentials
+          : s === "submission-policy"
+            ? policy
+            : undefined,
   }))
 
   // The seed is deep-cloned into the store (`makeFakeStrapi`), so the local
@@ -108,6 +111,7 @@ function setup(
   // convention `tests/events/feeds.test.ts` uses (`row = store[CRED]![0]!`).
   return {
     ...fake,
+    award,
     service: createService({ strapi }),
     cred: fake.store[CRED]![0]!,
     sub: fake.store[SUB]![0]!,
@@ -115,6 +119,54 @@ function setup(
 }
 
 describe("event_feed decisions", () => {
+  it.each(["connect", "replace"] as const)(
+    "rewards an accepted %s once at approval time",
+    async (kind) => {
+      const { service, award, sub } = setup(kind)
+      const before = Date.now()
+      await service.updateStatus(sub.documentId, "approved", REVIEWER)
+      expect(award).toHaveBeenCalledWith(
+        "ba-owner",
+        "event_feed_accepted",
+        5,
+        { submissionId: sub.documentId, credentialDocumentId: CID },
+        `${sub.documentId}:event_feed_accepted`,
+        expect.any(Date)
+      )
+      expect(award.mock.calls[0][5].getTime()).toBeGreaterThanOrEqual(before)
+      await service.updateStatus(sub.documentId, "approved", REVIEWER)
+      expect(award).toHaveBeenCalledTimes(1)
+    }
+  )
+
+  it("rolls back acceptance when its reward fails, allowing a retry", async () => {
+    const { service, award, store, sub } = setup("connect")
+    award.mockRejectedValueOnce(new Error("reward unavailable"))
+    expect(
+      await service.updateStatus(sub.documentId, "approved", REVIEWER)
+    ).toEqual({ error: "apply_failed" })
+    expect(store[SUB]![0].status).toBe("pending")
+    expect(store[CRED]![0].status).toBe("pending")
+    expect(
+      await service.updateStatus(sub.documentId, "approved", REVIEWER)
+    ).toHaveProperty("data")
+    expect(award).toHaveBeenCalledTimes(2)
+  })
+
+  it.each(["rejected", "needs_info"] as const)(
+    "does not reward %s feeds",
+    async (status) => {
+      const { service, award, sub } = setup("connect")
+      await service.updateStatus(
+        sub.documentId,
+        status,
+        REVIEWER,
+        "Please check"
+      )
+      expect(award).not.toHaveBeenCalled()
+    }
+  )
+
   it("approving a connection activates the credential and records the result", async () => {
     const { service, cred, store } = setup("connect")
     const r: any = await service.updateStatus(
@@ -266,25 +318,27 @@ describe("event_feed decisions", () => {
     const realFeeds = strapi.plugin("events").service("feeds")
     ;(strapi.plugin as any).mockImplementation((name: string) => ({
       service: (s: string) =>
-        name === "events"
-          ? s === "feeds"
-            ? {
-                ...realFeeds,
-                approveSubmission: async () => {
-                  throw new ForeignApplyRefusedError()
-                },
-              }
-            : realFeeds
-          : s === "submission-policy"
-            ? {
-                loadCapabilities: async () => ({
-                  caps: {
-                    claimedLibraryIds: new Set([L1]),
-                    set: new Set(["events.feed"]),
+        name === "rewards"
+          ? { award }
+          : name === "events"
+            ? s === "feeds"
+              ? {
+                  ...realFeeds,
+                  approveSubmission: async () => {
+                    throw new ForeignApplyRefusedError()
                   },
-                }),
-              }
-            : undefined,
+                }
+              : realFeeds
+            : s === "submission-policy"
+              ? {
+                  loadCapabilities: async () => ({
+                    caps: {
+                      claimedLibraryIds: new Set([L1]),
+                      set: new Set(["events.feed"]),
+                    },
+                  }),
+                }
+              : undefined,
     }))
     const r: any = await service.updateStatus(
       "sub00000000000000000001",

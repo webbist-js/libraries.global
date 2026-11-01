@@ -5,7 +5,6 @@ import {
   Dialog,
   Flex,
   Loader,
-  Table,
   Tbody,
   Td,
   Th,
@@ -15,6 +14,8 @@ import {
 } from "@strapi/design-system"
 import { useFetchClient } from "@strapi/strapi/admin"
 import { useEffect, useRef, useState } from "react"
+
+import { PluginTable } from "../../../../../admin/components/PluginUI"
 
 type PendingEvent = {
   documentId: string
@@ -134,9 +135,9 @@ export function PendingReviewList({
         </Box>
       ) : (
         <Box style={{ overflowX: "auto" }}>
-          <Table
+          <PluginTable
             colCount={canReview ? 5 : 4}
-            rowCount={rows.length}
+            rowCount={rows.length + 1}
             aria-label="Events awaiting review"
           >
             <Thead>
@@ -210,7 +211,7 @@ export function PendingReviewList({
                 </Tr>
               ))}
             </Tbody>
-          </Table>
+          </PluginTable>
         </Box>
       )}
       {pages > 1 && (

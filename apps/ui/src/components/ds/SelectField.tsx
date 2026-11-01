@@ -1,6 +1,14 @@
 "use client"
 
-import { useId, type ReactNode } from "react"
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type AriaAttributes,
+  type CSSProperties,
+  type ReactNode,
+} from "react"
 
 import {
   DROPDOWN_OPTION,
@@ -21,7 +29,8 @@ const optionValue = (value: string) => (value ? `option:${value}` : EMPTY_VALUE)
 
 /** The shared site Select, with labelled options and support for an empty choice. */
 export function SelectField({
-  value,
+  value: controlledValue,
+  defaultValue = "",
   onValueChange,
   options,
   label,
@@ -32,15 +41,20 @@ export function SelectField({
   className,
   appearance = "field",
   leading,
+  style,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
+  "aria-required": ariaRequired,
 }: {
-  readonly value: string
-  readonly onValueChange: (value: string) => void
+  readonly value?: string
+  readonly defaultValue?: string
+  readonly onValueChange?: (value: string) => void
   readonly options: readonly {
     value: string
     label: string
     disabled?: boolean
   }[]
-  readonly label: string
+  readonly label?: string
   readonly id?: string
   readonly name?: string
   readonly required?: boolean
@@ -48,16 +62,35 @@ export function SelectField({
   readonly className?: string
   readonly appearance?: "field" | "pill"
   readonly leading?: ReactNode
+  readonly style?: CSSProperties
+  readonly "aria-describedby"?: string
+  readonly "aria-invalid"?: AriaAttributes["aria-invalid"]
+  readonly "aria-required"?: AriaAttributes["aria-required"]
 }) {
   const generatedId = useId()
   const pill = appearance === "pill"
+  const [localValue, setLocalValue] = useState(defaultValue)
+  const value = controlledValue ?? localValue
+  const trigger = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const form = trigger.current?.form
+    if (!form || controlledValue !== undefined) return
+    const reset = () => setLocalValue(defaultValue)
+    form.addEventListener("reset", reset)
+
+    return () => form.removeEventListener("reset", reset)
+  }, [controlledValue, defaultValue])
 
   return (
     <Select
       value={value ? optionValue(value) : ""}
-      onValueChange={(next) =>
-        onValueChange(next === EMPTY_VALUE ? "" : next.slice("option:".length))
-      }
+      onValueChange={(next) => {
+        const selected =
+          next === EMPTY_VALUE ? "" : next.slice("option:".length)
+        if (controlledValue === undefined) setLocalValue(selected)
+        onValueChange?.(selected)
+      }}
       required={required}
       disabled={disabled}
     >
@@ -65,7 +98,12 @@ export function SelectField({
         <input type="hidden" name={name} value={value} disabled={disabled} />
       )}
       <SelectTrigger
+        ref={trigger}
         id={id ?? generatedId}
+        style={style}
+        aria-describedby={describedBy}
+        aria-invalid={invalid}
+        aria-required={ariaRequired ?? required}
         aria-label={label}
         className={cn(
           "min-h-11 w-full rounded-xl border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-base)",

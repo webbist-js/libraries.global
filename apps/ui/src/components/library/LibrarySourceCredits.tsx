@@ -2,9 +2,11 @@ import { publicSourceUrl, type LibrarySourceRecord } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
+import GlobalLink from "@/components/global/GlobalLink"
 import { fieldLabel } from "@/components/library/change-history.helpers"
 import { T } from "@/lib/design-tokens"
 import type { DatasetRecord } from "@/lib/strapi-api/content/datasets"
+import type { HistoryActor } from "@/lib/strapi-api/content/server"
 
 const SOURCE_NAMES: Record<string, string> = {
   libraryon: "LibraryOn",
@@ -113,11 +115,13 @@ function SourceDetails({
 
 /** Source provenance stays readable while identifiers and field coverage remain available on demand. */
 export function LibrarySourceCredits({
+  contributor,
   references,
   datasets,
   added,
   formatDate,
 }: {
+  readonly contributor?: HistoryActor
   readonly references: readonly LibrarySourceRecord[]
   readonly datasets: readonly DatasetRecord[]
   readonly added: string | null
@@ -131,6 +135,24 @@ export function LibrarySourceCredits({
 
   return (
     <div className="library-source-credits">
+      {contributor ? (
+        <p
+          className="m-0 mb-3 text-sm leading-relaxed"
+          style={{ color: T.ink.dim }}
+        >
+          {tUi("history_contributed_by")}{" "}
+          {contributor.username ? (
+            <GlobalLink
+              href={`/profile/${encodeURIComponent(contributor.username)}`}
+              className="text-(--t-accent-primary) underline underline-offset-2"
+            >
+              @{contributor.username}
+            </GlobalLink>
+          ) : (
+            tUi("history_community_member")
+          )}
+        </p>
+      ) : null}
       {references.length ? (
         <ul className="m-0 grid list-none divide-y divide-(--t-border-line) p-0">
           {references.map((reference, index) => {
@@ -211,11 +233,13 @@ export function LibrarySourceCredits({
             )
           })}
         </ul>
-      ) : (
+      ) : added || !contributor ? (
         <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          {[added, tUi("history_source_missing")].filter(Boolean).join(" · ")}
+          {[added, contributor ? null : tUi("history_source_missing")]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
-      )}
+      ) : null}
     </div>
   )
 }

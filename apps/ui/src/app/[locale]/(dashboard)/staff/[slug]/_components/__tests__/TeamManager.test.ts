@@ -169,7 +169,7 @@ describe("TeamManager without Team cover", () => {
       )
     )
     expect(screen.getByText("Your access").parentElement?.textContent).toBe(
-      "Your access · Owner · The last owner can’t leave"
+      "Your access · Owner"
     )
     expect(
       screen.queryByRole("button", { name: "Leave this library" })
@@ -204,15 +204,15 @@ describe("TeamManager with Team cover", () => {
       (
         screen.getByRole("combobox", {
           name: "Level for Bea",
-        }) as HTMLSelectElement
-      ).value
-    ).toBe("editor")
+        }) as HTMLButtonElement
+      ).textContent
+    ).toBe("Editor")
     // The only owner can't be demoted, and nobody removes themselves.
     expect(
       (
         screen.getByRole("combobox", {
           name: "Level for Ann",
-        }) as HTMLSelectElement
+        }) as HTMLButtonElement
       ).disabled
     ).toBe(true)
     // Remove is a quiet link naming the person; nobody removes themselves.
@@ -257,9 +257,10 @@ describe("TeamManager with Team cover", () => {
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "dee@example.org" },
     })
-    fireEvent.change(screen.getByLabelText("Level"), {
-      target: { value: "owner" },
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Level" }), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "Owner" }))
     expect(
       screen.getByText(
         /get owner access to Kent Mobile Library as soon as they accept/
@@ -308,9 +309,10 @@ describe("TeamManager with Team cover", () => {
 
   it("changes a level after confirmation and toggles who can go live", async () => {
     render(manager())
-    fireEvent.change(screen.getByRole("combobox", { name: "Level for Bea" }), {
-      target: { value: "owner" },
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Level for Bea" }), {
+      key: "ArrowDown",
     })
+    fireEvent.click(screen.getByRole("option", { name: "Owner" }))
     expect(screen.getByText("Make Bea an owner?")).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }))
     await waitFor(() =>
@@ -341,12 +343,12 @@ describe("TeamManager with Team cover", () => {
     expect(screen.queryByRole("button", { name: /^Remove / })).toBeNull()
   })
 
-  it("keeps the last owner from leaving", () => {
+  it("respects an unavailable leave action", () => {
     render(manager({}, { canLeave: false }))
     expect(
       screen.queryByRole("button", { name: "Leave this library" })
     ).toBeNull()
-    expect(screen.getByText(/The last owner can’t leave/)).toBeTruthy()
+    expect(screen.queryByText(/The last owner can’t leave/)).toBeNull()
   })
 
   it("removes a member only after a danger confirm", async () => {

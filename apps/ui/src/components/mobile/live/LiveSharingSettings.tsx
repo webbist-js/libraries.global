@@ -4,6 +4,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, ChoiceCard, Sheet, Switch } from "@/components/ds"
+import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { Link, useRouter } from "@/lib/navigation"
@@ -239,20 +240,20 @@ export function LiveSharingSettings({
         </fieldset>
         <label className="mt-5 flex flex-wrap items-center gap-3 text-base">
           Stop sharing automatically
-          <select
-            aria-label={tUi("minutes_after_the_last_stop")}
+          <SelectField
+            label={tUi("minutes_after_the_last_stop")}
             className="min-h-11 rounded-[14px] border px-3"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}
-            value={settings.autoStopMinutes}
+            value={String(settings.autoStopMinutes ?? "")}
             disabled={locked}
-            onChange={(e) => save({ autoStopMinutes: Number(e.target.value) })}
-          >
-            {[15, 30, 60].map((n) => (
-              <option key={n} value={n}>
-                {n} minutes
-              </option>
-            ))}
-          </select>
+            onValueChange={(selectedValue) =>
+              save({ autoStopMinutes: Number(selectedValue) })
+            }
+            options={[15, 30, 60].map((n) => ({
+              value: String(n),
+              label: String([n, "minutes"].join(" ")),
+            }))}
+          />
           after the last stop
         </label>
       </section>
