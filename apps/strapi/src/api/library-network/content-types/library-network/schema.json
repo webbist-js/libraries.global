@@ -22,11 +22,7 @@
     },
     "kind": {
       "type": "enumeration",
-      "enum": [
-        "library_service",
-        "university_system",
-        "consortium"
-      ],
+      "enum": ["library_service", "university_system", "consortium"],
       "required": true,
       "default": "library_service"
     },
@@ -57,7 +53,7 @@
     },
     "publicPageEnabled": {
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "description": {
       "type": "text"
