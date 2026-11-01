@@ -24,11 +24,17 @@ import {
  * The inserts are awaited and never caught. Inside `strapi.db.transaction`
  * a failed insert therefore fails, and rolls back, the write it describes.
  *
+ * Imports (source `import`) record no whole-record `*` snapshots: the
+ * library's own fields and its `origin` source record are the imported
+ * record. An import's create records nothing and reads nothing; its first
+ * publish and unchanged republishes record nothing; a later import that
+ * changes fields on an existing version records those fields like any
+ * other write, and an import's delete or unpublish still records the
+ * removed version.
+ *
  * Cost per write: a library update reads the version before and after, and
  * inserts one batch of rows. Ingest and import scripts must batch their
- * writes (CLAUDE.md "Scale target": bulk imports bypass per-row paths);
- * an import token's `create` (source `import`) skips the read after the
- * write and records one `*` row from what the create returned.
+ * writes (CLAUDE.md "Scale target": bulk imports bypass per-row paths).
  */
 
 const LIBRARY = "api::library.library"
@@ -275,22 +281,7 @@ function versionStatusFor(
   return writeStatus
 }
 
-/**
- * `normaliseForDiff` for a document read without `populate` (what a
- * `create` returns): relations and media it doesn't carry are left out
- * rather than recorded as empty.
- */
-function normaliseLoaded(doc: Doc, attrs: TrackedAttributes): Doc {
-  const out = normaliseForDiff(doc, attrs)
-  for (const f of [...attrs.relations, ...attrs.media])
-    if (!(f in doc)) delete out[f]
-
-  return out
-}
-
-async function recordLibrary(
-  args: RecordArgs & { batchId: string; unpopulated?: boolean }
-) {
+async function recordLibrary(args: RecordArgs & { batchId: string }) {
   const { strapi, action, attrs, documentId, after, snap, actor } = args
   // A delete that removes a published version is public: describe what the
   // public saw, never unpublished draft edits.
@@ -299,12 +290,13 @@ async function recordLibrary(
       ? snap.publishedBefore
       : snap.before
   const prev = removed ? normaliseForDiff(removed, attrs) : null
-  let nextDoc: Doc | null = null
-  if (after)
-    nextDoc = args.unpopulated
-      ? normaliseLoaded(after, attrs)
-      : normaliseForDiff(after, attrs)
-  const changes = libraryChanges(action, prev, nextDoc, FIELD_GROUPS(attrs))
+  const nextDoc = after ? normaliseForDiff(after, attrs) : null
+  const all = libraryChanges(action, prev, nextDoc, FIELD_GROUPS(attrs))
+  // An import's snapshots repeat the record it wrote (see the header).
+  const changes =
+    actor.source === "import" && (action === "update" || action === "publish")
+      ? all.filter((change) => change.field !== "*")
+      : all
   if (changes.length === 0) return
 
   const entityRef =
@@ -428,8 +420,9 @@ export function registerChangeRecordsMiddleware({
       // Who is writing; read before the write so an import's create can
       // skip the reads it doesn't need.
       const actor = resolveChangeContext(strapi)
-      const importCreate =
-        uid === LIBRARY && action === "create" && actor.source === "import"
+      // An import's create records nothing (see the header).
+      if (uid === LIBRARY && action === "create" && actor.source === "import")
+        return next()
 
       const locales = await localesFor(
         strapi,
@@ -463,8 +456,7 @@ export function registerChangeRecordsMiddleware({
 
       for (const snap of snapshots) {
         let after: Doc | null = null
-        if (importCreate) after = result ?? null
-        else if (action !== "delete" && action !== "unpublish")
+        if (action !== "delete" && action !== "unpublish")
           after = await load(documentId, snap.locale, readStatus)
         const versionStatus = versionStatusFor(action, writeStatus, snap)
         const common = {
@@ -479,7 +471,7 @@ export function registerChangeRecordsMiddleware({
           changedAt,
         }
         await (uid === LIBRARY
-          ? recordLibrary({ ...common, batchId, unpopulated: importCreate })
+          ? recordLibrary({ ...common, batchId })
           : recordArticle({ ...common, uid }))
       }
 
