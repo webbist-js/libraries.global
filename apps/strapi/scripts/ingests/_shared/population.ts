@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
 
@@ -72,6 +73,12 @@ export function ingestDatabase() {
   const ssl =
     process.env.DATABASE_SSL === "true"
       ? {
+          ...(process.env.DATABASE_SSL_CA_FILE
+            ? { ca: readFileSync(process.env.DATABASE_SSL_CA_FILE, "utf8") }
+            : {}),
+          ...(process.env.DATABASE_SSL_SERVERNAME
+            ? { servername: process.env.DATABASE_SSL_SERVERNAME }
+            : {}),
           rejectUnauthorized:
             process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
         }
