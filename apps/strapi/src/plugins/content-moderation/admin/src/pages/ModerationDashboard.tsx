@@ -10,7 +10,6 @@ import {
   Searchbar,
   SingleSelect,
   SingleSelectOption,
-  Table,
   Tabs,
   Tbody,
   Td,
@@ -25,7 +24,10 @@ import { Layouts, useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
-import { PluginPage } from "../../../../../admin/components/PluginUI"
+import {
+  PluginTable,
+  PluginPage,
+} from "../../../../../admin/components/PluginUI"
 import { ReviewModal, StatusPill, TypeBadge } from "../components/ReviewModal"
 import {
   articleDecisionErrorMessage,
@@ -321,7 +323,7 @@ export function ModerationDashboard() {
                       }
                     />
                   ) : (
-                    <Table colCount={6} rowCount={rows.length + 1}>
+                    <PluginTable colCount={6} rowCount={rows.length + 1}>
                       <Thead>
                         <Tr>
                           <Th>
@@ -372,7 +374,7 @@ export function ModerationDashboard() {
                                 <Flex
                                   direction="column"
                                   alignItems="flex-start"
-                                  gap={0}
+                                  gap={1}
                                 >
                                   <Typography
                                     fontWeight="semiBold"
@@ -394,7 +396,7 @@ export function ModerationDashboard() {
                                 <Flex
                                   direction="column"
                                   alignItems="flex-start"
-                                  gap={0}
+                                  gap={1}
                                 >
                                   <Typography textColor="neutral800">
                                     {sub.submittedByName ??
@@ -439,7 +441,7 @@ export function ModerationDashboard() {
                           )
                         })}
                       </Tbody>
-                    </Table>
+                    </PluginTable>
                   )}
                   {pageCount > 1 && (
                     <Flex justifyContent="space-between" paddingTop={4} gap={3}>

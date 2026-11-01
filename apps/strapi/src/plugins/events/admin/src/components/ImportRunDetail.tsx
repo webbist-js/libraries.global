@@ -1,7 +1,6 @@
 import {
   Box,
   Flex,
-  Table,
   Tbody,
   Td,
   Th,
@@ -9,6 +8,8 @@ import {
   Tr,
   Typography,
 } from "@strapi/design-system"
+
+import { PluginTable } from "../../../../../admin/components/PluginUI"
 
 export type RunRecord = {
   runId: string
@@ -86,7 +87,7 @@ export function ImportRunDetail({ run }: { run: RunRecord }) {
             No provider breakdown was recorded.
           </Typography>
         ) : (
-          <Table colCount={3} rowCount={providers.length}>
+          <PluginTable colCount={3} rowCount={providers.length + 1}>
             <Thead>
               <Tr>
                 {["Provider", "Fetched", "Created"].map((label) => (
@@ -111,7 +112,7 @@ export function ImportRunDetail({ run }: { run: RunRecord }) {
                 </Tr>
               ))}
             </Tbody>
-          </Table>
+          </PluginTable>
         )}
       </Box>
       {!!run.failedCredentials?.length && (

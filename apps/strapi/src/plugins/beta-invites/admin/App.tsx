@@ -10,7 +10,6 @@ import {
   Searchbar,
   SingleSelect,
   SingleSelectOption,
-  Table,
   Tbody,
   Td,
   Th,
@@ -28,6 +27,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
+  PluginTable,
   PluginPage,
   PluginEmptyState,
   StatsGrid,
@@ -366,7 +366,7 @@ function Dashboard() {
                 }
               />
             ) : (
-              <Table colCount={6} rowCount={result.data.length + 1}>
+              <PluginTable colCount={6} rowCount={result.data.length + 1}>
                 <Thead>
                   <Tr>
                     {[
@@ -468,7 +468,7 @@ function Dashboard() {
                     </Tr>
                   ))}
                 </Tbody>
-              </Table>
+              </PluginTable>
             )}
             <Flex justifyContent="space-between" paddingTop={5}>
               <Typography aria-live="polite">

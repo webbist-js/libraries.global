@@ -105,20 +105,17 @@ export const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   drive_proposal: { bg: "success100", text: "success600" },
 }
 
-/**
- * A same-origin path for an uploaded image, or null when the value isn't
- * an http(s) URL or an absolute path. Strips the origin so images load
- * relative to the current Strapi admin host.
- */
+/** Keep upload/CDN URLs intact, including signatures; local uploads stay relative. */
 export function assetPath(url: unknown): string | null {
   if (typeof url !== "string") return null
   const raw = url.trim()
+  // Reject browser URL normalisation tricks before using the address in a link.
+  // eslint-disable-next-line no-control-regex
+  if (/[\\\u0000-\u001F\u007F]/.test(raw)) return null
   if (isHttpUrl(raw)) {
-    try {
-      return new URL(raw).pathname
-    } catch {
-      return null
-    }
+    const parsed = new URL(raw)
+
+    return parsed.username || parsed.password ? null : raw
   }
 
   return /^\/(?!\/)/.test(raw) ? raw : null

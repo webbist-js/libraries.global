@@ -2,7 +2,6 @@ import {
   Alert,
   Box,
   Flex,
-  Table,
   Tag,
   Tbody,
   Td,
@@ -14,6 +13,7 @@ import {
 
 import { humanise, renderValue, type Submission } from "./submissionMeta"
 import { TimetableReviewPanel } from "./TimetableReviewPanel"
+import { PluginTable } from "../../../../../admin/components/PluginUI"
 
 /** Keys in `fields` that describe the submission, not library fields. */
 const META_KEYS = new Set([
@@ -175,7 +175,7 @@ export function RecordChangesPanel({ sub }: { sub: Submission }) {
           {current ? "" : " The current values shown are the contributor’s."}
         </Alert>
       </Box>
-      <Table colCount={3} rowCount={rows + 1}>
+      <PluginTable colCount={3} rowCount={rows + 1}>
         <Thead>
           <Tr>
             <Th>
@@ -239,7 +239,7 @@ export function RecordChangesPanel({ sub }: { sub: Submission }) {
             </Tr>
           ))}
         </Tbody>
-      </Table>
+      </PluginTable>
     </>
   )
 }

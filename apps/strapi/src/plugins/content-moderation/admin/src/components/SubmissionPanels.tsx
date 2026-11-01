@@ -144,7 +144,78 @@ function RelationTags({ type, ids }: { type: string; ids: unknown }) {
 
 // ── Photos ─────────────────────────────────────────────────────────────────
 
-function PhotosPanel({
+function SubmittedPhoto({
+  image,
+  index,
+  single,
+}: {
+  image: UploadedImage
+  index: number
+  single: boolean
+}) {
+  const [failed, setFailed] = useState(false)
+  const src = assetPath(image.url)
+
+  return (
+    <Box
+      position="relative"
+      style={{ maxWidth: "100%", width: single ? "24rem" : "12rem" }}
+    >
+      {src ? (
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "block" }}
+        >
+          {failed ? (
+            <Box
+              background="neutral100"
+              borderColor="neutral200"
+              padding={5}
+              hasRadius
+            >
+              <Typography tag="p" textColor="neutral600">
+                Preview unavailable
+              </Typography>
+              <Typography tag="p" variant="pi" textColor="primary600">
+                Open original image ↗
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              tag="img"
+              src={src}
+              alt={`Submitted photo ${index + 1}${image.isHero ? " (hero)" : ""}`}
+              width="100%"
+              hasRadius
+              borderColor="neutral150"
+              onError={() => setFailed(true)}
+              style={{
+                aspectRatio: "3 / 2",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          )}
+        </a>
+      ) : (
+        <Typography variant="pi" textColor="neutral600">
+          Image address not accepted
+        </Typography>
+      )}
+      {image.isHero && !failed && src ? (
+        <Box position="absolute" top={1} left={1}>
+          <Badge active size="S">
+            Hero
+          </Badge>
+        </Box>
+      ) : null}
+    </Box>
+  )
+}
+
+export function PhotosPanel({
   images,
   title = "Photos",
   note,
@@ -166,37 +237,12 @@ function PhotosPanel({
       ) : null}
       <Flex gap={2} wrap="wrap">
         {images.map((img, i) => (
-          <Box key={img.strapiId ?? i} position="relative">
-            {assetPath(img.url) ? (
-              <a
-                href={assetPath(img.url)!}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Box
-                  tag="img"
-                  src={assetPath(img.url)!}
-                  alt=""
-                  width={images.length === 1 ? "24rem" : "12rem"}
-                  height={images.length === 1 ? "16rem" : "8rem"}
-                  hasRadius
-                  borderColor="neutral150"
-                  style={{ objectFit: "cover", display: "block" }}
-                />
-              </a>
-            ) : (
-              <Typography variant="pi" textColor="neutral600">
-                Image address not accepted
-              </Typography>
-            )}
-            {img.isHero && (
-              <Box position="absolute" top={1} left={1}>
-                <Badge active size="S">
-                  Hero
-                </Badge>
-              </Box>
-            )}
-          </Box>
+          <SubmittedPhoto
+            key={`${img.strapiId ?? i}:${img.url}`}
+            image={img}
+            index={i}
+            single={images.length === 1}
+          />
         ))}
       </Flex>
     </Section>
