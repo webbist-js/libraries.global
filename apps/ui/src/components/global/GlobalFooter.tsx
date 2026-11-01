@@ -2,6 +2,7 @@ import { useTranslations as useUiTranslations, type Locale } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import { CookieSettingsButton } from "@/components/providers/CookieSettingsButton"
 import { SITE_NAME } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 import type { LegalDocumentNavItem } from "@/lib/strapi-api/content/server"
@@ -9,7 +10,7 @@ import type { LegalDocumentNavItem } from "@/lib/strapi-api/content/server"
 import { buildFooterNavigation, type FooterData } from "./footer-navigation"
 
 export function GlobalFooter({
-  locale: _locale,
+  locale,
   footer,
   legalDocuments = [],
 }: {
@@ -117,6 +118,10 @@ export function GlobalFooter({
             © {year} {SITE_NAME} · Indexing the world&rsquo;s libraries
           </p>
 
+          <CookieSettingsButton
+            locale={locale}
+            className="min-h-11 text-sm text-(--t-ink-dim) underline underline-offset-4"
+          />
           {/* Right: legal links */}
           {links.length > 0 ? (
             <nav

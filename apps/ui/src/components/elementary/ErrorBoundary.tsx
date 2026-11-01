@@ -44,7 +44,7 @@ function ErrorBoundaryFallback({
       <AlertTitle>{customErrorTitle ?? t("invalidContent")}</AlertTitle>
       <AlertDescription>
         {(showErrorMessage || isDev) && (
-          <p className="mt-1 text-sm text-black">{error.message}</p>
+          <p className="mt-1 text-sm text-(--t-ink-base)">{error.message}</p>
         )}
 
         {isDev && (

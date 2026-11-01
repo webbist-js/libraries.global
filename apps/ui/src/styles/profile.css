@@ -133,6 +133,9 @@
 .profile-workspace-meta .profile-workspace-verified {
   color: var(--tint-public-fg);
 }
+.profile-workspace-mobile-actions {
+  display: none;
+}
 .profile-workspace-primary-actions {
   display: flex;
   flex-wrap: wrap;
@@ -304,6 +307,40 @@
   }
 }
 @media (max-width: 767px) {
+  /* One mobile scroll surface keeps the footer below the section content. */
+  .profile-workspace-drawer {
+    overflow-y: auto;
+  }
+  .profile-workspace-drawer > div:first-child {
+    padding: 12px 20px;
+  }
+  .profile-workspace-drawer > div:first-child > .mt-4 {
+    margin-top: 8px;
+  }
+  .profile-workspace,
+  .profile-workspace-content {
+    flex: 1 0 auto;
+    overflow: visible;
+  }
+  .profile-workspace-desktop-actions,
+  .profile-workspace-avatar {
+    display: none;
+  }
+  .profile-workspace-mobile-actions {
+    display: block;
+    margin-bottom: 20px;
+  }
+  .profile-workspace-section {
+    padding-top: 16px;
+  }
+  .profile-workspace-identity-copy h3 {
+    margin-bottom: 4px;
+  }
+  .profile-workspace-tools {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
   .dashboard-account-action .profile-trigger-group {
     width: 44px;
     height: 44px;
@@ -349,7 +386,7 @@
   }
   .profile-workspace-actions {
     gap: 8px;
-    padding-block: 10px;
+    padding-block: 14px max(14px, env(safe-area-inset-bottom));
   }
   .profile-workspace-tools kbd {
     display: none;

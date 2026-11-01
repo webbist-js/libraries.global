@@ -165,7 +165,7 @@ export function AtlasPerCapitaControls({
                 }
                 className="flex min-h-11 items-center gap-1.5 rounded-full border px-3 font-semibold disabled:opacity-70"
                 style={{
-                  background: checked ? T.accent.chip : "white",
+                  background: checked ? T.accent.chip : T.bg.deep,
                   color: checked ? T.accent.primary : T.ink.dim,
                   borderColor: checked ? T.accent.primary : T.border.divider,
                 }}

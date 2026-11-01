@@ -67,7 +67,9 @@ vi.mock("../AtlasListView", async (importOriginal) => {
   }
 })
 vi.mock("../AtlasSearchTab", () => ({
-  AtlasSearchTab: () => null,
+  AtlasSearchTab: () => (
+    <input type="search" aria-label="Search libraries and places" />
+  ),
   buildPlaces: () => [],
 }))
 vi.mock("../AtlasLibraryPanel", () => ({
@@ -110,6 +112,93 @@ afterEach(() => {
   observed.flyTo.mockClear()
   observed.fitBounds.mockClear()
 })
+
+async function mobileAtlas(query = "layers=pins") {
+  vi.useFakeTimers()
+  window.history.replaceState(null, "", `/en/map?${query}`)
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((media: string) => ({
+      matches: media === "(max-width: 1023px)",
+      media,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+  )
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({ type: "FeatureCollection", features: [] })
+    )
+  )
+  render(<AtlasExplorer />)
+  await act(async () => vi.advanceTimersByTimeAsync(1000))
+}
+
+function swipePanel(from: number, to: number) {
+  const handle = screen.getByRole("button", { name: /^Panel size:/ })
+  fireEvent.pointerDown(handle, {
+    pointerId: 1,
+    button: 0,
+    clientY: from,
+    isPrimary: true,
+  })
+  fireEvent.pointerMove(handle, { pointerId: 1, clientY: to, isPrimary: true })
+  fireEvent.pointerUp(handle, { pointerId: 1, clientY: to, isPrimary: true })
+}
+
+it.each(["Search", "Filters", "Layers"])(
+  "expands the mobile controls when tapping %s, including the active tab",
+  async (tab) => {
+    await mobileAtlas()
+    fireEvent.click(screen.getByRole("tab", { name: new RegExp(`^${tab}`) }))
+    expect(
+      screen.getByRole("region", { name: "Explore panel" }).style.height
+    ).toBe("54%")
+    expect(
+      screen
+        .getByRole("tab", { name: new RegExp(`^${tab}`) })
+        .getAttribute("aria-selected")
+    ).toBe("true")
+  }
+)
+
+it("swipes mobile controls up, back to peek and completely off the map, then reopens", async () => {
+  await mobileAtlas()
+  swipePanel(500, 200)
+  expect(
+    screen.getByRole("button", { name: "Panel size: half. Change size" })
+  ).toBeTruthy()
+  swipePanel(200, 450)
+  expect(
+    screen.getByRole("button", { name: "Panel size: peek. Change size" })
+  ).toBeTruthy()
+  swipePanel(450, 700)
+  expect(screen.queryByRole("region", { name: "Explore panel" })).toBeNull()
+  expect(screen.queryByRole("tab", { name: "Search" })).toBeNull()
+  fireEvent.click(screen.getByRole("button", { name: "Show Atlas controls" }))
+  expect(
+    screen.getByRole("button", { name: "Panel size: half. Change size" })
+  ).toBeTruthy()
+  expect(
+    screen.getByRole("searchbox", { name: "Search libraries and places" })
+  ).toBeTruthy()
+})
+
+it("allows Inspect to collapse without removing its active map layer", async () => {
+  await mobileAtlas("layers=pins,density")
+  expect(
+    screen.getByRole("button", { name: "Panel size: half. Change size" })
+  ).toBeTruthy()
+  swipePanel(200, 450)
+  expect(
+    screen.getByRole("button", { name: "Panel size: peek. Change size" })
+  ).toBeTruthy()
+  swipePanel(450, 700)
+  expect(screen.queryByRole("region", { name: "Explore panel" })).toBeNull()
+  expect(observed.map.layers).toContain("density")
+})
+
 it("opens the installed context analysis panel and keeps the background when Reach is added", async () => {
   window.history.replaceState(
     null,

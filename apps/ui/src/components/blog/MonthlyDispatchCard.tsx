@@ -71,11 +71,11 @@ export function MonthlyDispatchCard() {
           >
             {tUi("email_address")}{" "}
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-stretch gap-2">
             <input
               aria-describedby={noteId}
               autoComplete="email"
-              className="min-h-11 min-w-0 flex-1 rounded-full border px-3 py-2.5 text-base"
+              className="h-11 min-h-11 min-w-0 flex-1 rounded-full border px-3 py-2 text-sm"
               id={emailId}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.org"
@@ -89,7 +89,7 @@ export function MonthlyDispatchCard() {
               value={email}
             />
             <button
-              className="min-h-11 shrink-0 cursor-pointer rounded-full bg-(--t-action-primary) px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:opacity-60 motion-reduce:transition-none"
+              className="h-11 min-h-11 shrink-0 cursor-pointer rounded-full bg-(--t-action-primary) px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:opacity-60 motion-reduce:transition-none"
               disabled={status === "saving"}
               type="submit"
             >

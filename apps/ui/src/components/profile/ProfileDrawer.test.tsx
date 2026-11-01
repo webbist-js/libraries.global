@@ -228,10 +228,10 @@ it("loads the owner workspace only on demand, switches sections without changing
       dialog.querySelector(".profile-workspace-avatar img")?.getAttribute("src")
     ).toBe("/profile-avatar.png")
     expect(
-      within(dialog).getByRole("button", { name: "Edit profile" })
+      within(dialog).getAllByRole("button", { name: "Edit profile" })[0]!
     ).toBeTruthy()
     expect(
-      within(dialog).getByRole("link", { name: "View public profile" })
+      within(dialog).getAllByRole("link", { name: "View public profile" })[0]!
     ).toBeTruthy()
   }
   expect(
@@ -260,7 +260,9 @@ it("opens the notification shortcut directly and restores focus to its count but
 it("keeps unsaved settings when dismissal or tab navigation is declined", async () => {
   mount()
   const { dialog } = await open()
-  fireEvent.click(within(dialog).getByRole("button", { name: "Edit profile" }))
+  fireEvent.click(
+    within(dialog).getAllByRole("button", { name: "Edit profile" })[0]!
+  )
   fireEvent.change(screen.getByLabelText("Profile name"), {
     target: { value: "Unsaved" },
   })
@@ -296,7 +298,7 @@ it("keeps the account header and actions available before a community profile is
   )
   expect(within(dialog).getByRole("heading", { name: /^Reader$/ })).toBeTruthy()
   expect(
-    within(dialog).getByRole("button", { name: "Edit profile" })
+    within(dialog).getAllByRole("button", { name: "Edit profile" })[0]!
   ).toBeTruthy()
   expect(within(dialog).getByRole("link", { name: "Sign out" })).toBeTruthy()
   expect(
@@ -407,3 +409,19 @@ it.each([/View public profile/, /Sign out/])(
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   }
 )
+
+it("provides profile actions inside Overview and removes them on other sections", async () => {
+  mount()
+  const { dialog } = await open()
+  const actions = dialog.querySelector<HTMLElement>(
+    ".profile-workspace-mobile-actions"
+  )!
+  expect(
+    within(actions)
+      .getByRole("link", { name: "View public profile" })
+      .getAttribute("href")
+  ).toBe("/profile/reader")
+  fireEvent.click(within(actions).getByRole("button", { name: "Edit profile" }))
+  expect(screen.getByLabelText("Profile name")).toBeTruthy()
+  expect(dialog.querySelector(".profile-workspace-mobile-actions")).toBeNull()
+})

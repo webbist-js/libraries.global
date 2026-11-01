@@ -43,18 +43,19 @@ function mount(mode: "contact" | "feedback" | "atlas" = "feedback") {
     </NextIntlClientProvider>
   )
 }
-function questions(atlas = false) {
-  fireEvent.change(
-    screen.getByLabelText(
-      atlas ? "What were you using Atlas to do?" : "What were you here to do?"
-    ),
-    {
-      target: { value: "find_library" },
-    }
+async function questions(atlas = false) {
+  await choose(
+    screen.getByRole("combobox", {
+      name: atlas
+        ? "What were you using Atlas to do?"
+        : "What were you here to do?",
+    }),
+    "Find a library"
   )
-  fireEvent.change(screen.getByLabelText("Did you manage to do it?"), {
-    target: { value: "no" },
-  })
+  await choose(
+    screen.getByRole("combobox", { name: "Did you manage to do it?" }),
+    "No, I got stuck"
+  )
   fireEvent.click(screen.getByLabelText("2 out of 5"))
   if (atlas) fireEvent.click(screen.getByRole("checkbox", { name: "Search" }))
   fireEvent.click(screen.getByRole("button", { name: "Continue" }))
@@ -73,7 +74,7 @@ describe("guided feedback and contact modal", () => {
         .getByRole("dialog", { name: "How did it go?" })
         .getAttribute("aria-modal")
     ).toBe("true")
-    questions()
+    await questions()
     fireEvent.change(screen.getByRole("textbox", { name: /What happened/ }), {
       target: { value: "The map did not show any libraries." },
     })
@@ -103,7 +104,7 @@ describe("guided feedback and contact modal", () => {
   })
   it("retains the complete draft after failure and while going back to the questions", async () => {
     mount()
-    questions()
+    await questions()
     fetchMock.mockResolvedValue(
       Response.json({ error: "unavailable" }, { status: 503 })
     )
@@ -122,9 +123,9 @@ describe("guided feedback and contact modal", () => {
     ).toBe(message)
     fireEvent.click(screen.getByRole("button", { name: "Back" }))
     expect(
-      (screen.getByLabelText("What were you here to do?") as HTMLSelectElement)
-        .value
-    ).toBe("find_library")
+      screen.getByRole("combobox", { name: "What were you here to do?" })
+        .textContent
+    ).toBe("Find a library")
     fireEvent.click(screen.getByRole("button", { name: "Continue" }))
     expect(
       (
@@ -137,16 +138,17 @@ describe("guided feedback and contact modal", () => {
   it("prefills the contact purpose, adapts the prompt and requires a reply email", async () => {
     mount("contact")
     expect(
-      (screen.getByLabelText("What’s your message about?") as HTMLSelectElement)
-        .value
-    ).toBe("plans")
+      screen.getByRole("combobox", { name: "What’s your message about?" })
+        .textContent
+    ).toBe("Plans and membership")
     expect(screen.getByText("Team plan")).toBeTruthy()
     expect(
       (screen.getByLabelText("Email address") as HTMLInputElement).required
     ).toBe(true)
-    fireEvent.change(screen.getByLabelText("What’s your message about?"), {
-      target: { value: "report_issue" },
-    })
+    await choose(
+      screen.getByRole("combobox", { name: "What’s your message about?" }),
+      "Report an issue"
+    )
     fireEvent.change(screen.getByRole("textbox", { name: /What went wrong/ }), {
       target: { value: "I cannot open the plans page." },
     })
@@ -170,15 +172,16 @@ describe("guided feedback and contact modal", () => {
     expect(
       screen.queryByRole("option", { name: "Manage my library" })
     ).toBeNull()
-    fireEvent.change(
-      screen.getByLabelText("What were you using Atlas to do?"),
-      {
-        target: { value: "compare_areas" },
-      }
+    await choose(
+      screen.getByRole("combobox", {
+        name: "What were you using Atlas to do?",
+      }),
+      "Compare areas or library coverage"
     )
-    fireEvent.change(screen.getByLabelText("Did you manage to do it?"), {
-      target: { value: "partly" },
-    })
+    await choose(
+      screen.getByRole("combobox", { name: "Did you manage to do it?" }),
+      "Partly"
+    )
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Map layers and keys" })
     )
@@ -218,15 +221,16 @@ describe("guided feedback and contact modal", () => {
   })
   it("requires a feature selection and moves focus to the checkbox group", async () => {
     mount("atlas")
-    fireEvent.change(
-      screen.getByLabelText("What were you using Atlas to do?"),
-      {
-        target: { value: "explore" },
-      }
+    await choose(
+      screen.getByRole("combobox", {
+        name: "What were you using Atlas to do?",
+      }),
+      "Explore the map"
     )
-    fireEvent.change(screen.getByLabelText("Did you manage to do it?"), {
-      target: { value: "browsing" },
-    })
+    await choose(
+      screen.getByRole("combobox", { name: "Did you manage to do it?" }),
+      "I was just browsing"
+    )
     fireEvent.click(screen.getByRole("button", { name: "Continue" }))
     expect(screen.getByRole("alert").textContent).toBe(
       "Choose at least one part of Atlas, or Other."
@@ -244,7 +248,7 @@ describe("guided feedback and contact modal", () => {
   it("asks for Atlas ideas once without a duplicate wishes field", async () => {
     mount("atlas")
     fireEvent.click(screen.getByRole("radio", { name: "I have an idea" }))
-    questions(true)
+    await questions(true)
     const idea = screen.getByRole("textbox", {
       name: /Things I’d like to see in Atlas/,
     }) as HTMLTextAreaElement
@@ -267,7 +271,7 @@ describe("guided feedback and contact modal", () => {
   })
   it("keeps a long Atlas draft valid when switching to the idea topic", async () => {
     mount("atlas")
-    questions(true)
+    await questions(true)
     const message = "I’d like to see more detail about libraries. ".repeat(60)
     fireEvent.change(
       screen.getByRole("textbox", { name: /What happened in Atlas/ }),
@@ -296,7 +300,7 @@ describe("guided feedback and contact modal", () => {
   it("retains Atlas answers, feature choices and wishes after failure and going back", async () => {
     mount("atlas")
     fireEvent.click(screen.getByLabelText("Clarity: 4 out of 5"))
-    questions(true)
+    await questions(true)
     fetchMock.mockResolvedValue(
       Response.json({ error: "unavailable" }, { status: 503 })
     )
@@ -346,3 +350,10 @@ describe("guided feedback and contact modal", () => {
     expect(close).toHaveBeenCalled()
   })
 })
+
+async function choose(control: HTMLElement, label: string) {
+  fireEvent.keyDown(control, { key: "ArrowDown" })
+  fireEvent.click(screen.getByRole("option", { name: label }))
+  // Let Radix restore focus before the next interaction.
+  await waitFor(() => expect(document.activeElement).toBe(control))
+}

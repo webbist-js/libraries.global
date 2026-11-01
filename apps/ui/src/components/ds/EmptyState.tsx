@@ -43,11 +43,9 @@ export function EmptyState({
   return (
     <div
       className={[
-        "flex flex-col items-center gap-3 text-center",
+        "missing-content flex flex-col items-center gap-3 rounded-2xl text-center",
         compact ? "px-4 py-8" : "px-4 py-16",
-        surface
-          ? "rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep)"
-          : "",
+        surface ? "rounded-3xl" : "",
         className,
       ]
         .filter(Boolean)
@@ -60,10 +58,7 @@ export function EmptyState({
       >
         <Icon height={22} icon={icon} width={22} />
       </span>
-      <Headline
-        className="type-small-heading m-0"
-        style={{ color: T.ink.base }}
-      >
+      <Headline className="type-small-heading m-0" style={{ color: T.ink.dim }}>
         {headline}
       </Headline>
       {detail ? (

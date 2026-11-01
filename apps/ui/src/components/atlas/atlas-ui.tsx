@@ -287,7 +287,7 @@ export function Switch({
               ? T.action.primary
               : locked || disabled
                 ? T.bg.surface
-                : "#fff",
+                : T.bg.deep,
         border:
           variant === "layer"
             ? checked

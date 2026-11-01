@@ -29,6 +29,7 @@ import { ContributeMenuPanel } from "@/components/global/GlobalContributeMenu"
 import GlobalLink from "@/components/global/GlobalLink"
 import type { NavLink } from "@/components/global/GlobalNavLinks"
 import { LibrariesGlobalMark } from "@/components/global/LibrariesGlobalMark"
+import { CookieSettingsButton } from "@/components/providers/CookieSettingsButton"
 import {
   Tooltip,
   TooltipContent,
@@ -308,6 +309,11 @@ export function DashboardNavigation({
               triggerClassName="w-32 gap-2 rounded-full border-(--t-border-line) bg-(--t-bg-deep) px-4 font-semibold uppercase text-(--t-ink-base) shadow-none [&_svg]:text-(--t-ink-base) [&_svg]:opacity-100"
             />
             <AppearanceControl className="rounded-full" />
+            <CookieSettingsButton
+              onOpen={overlay.handleClose}
+              locale={locale}
+              className="min-h-11 text-sm underline underline-offset-4"
+            />
           </div>
         }
       >
@@ -333,6 +339,10 @@ export function DashboardNavigation({
             {[
               ["/events", t("events")],
               ["/about", t("about_the_project")],
+              ["/about#coverage-by-continent", "Data coverage"],
+              ["/about#how-we-build-it", "Sources and review"],
+              ["/about#open-by-design", "Open data and source code"],
+              ["/legal/accessibility", "Accessibility"],
               ["/legal", t("legal_policies")],
             ].map(([href, label]) =>
               !footerDestinations.has(href!) ? (

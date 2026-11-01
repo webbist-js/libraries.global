@@ -101,7 +101,7 @@ export function GlobalMobileMenu({
             tabIndex={-1}
             onClick={() => setOpen(false)}
             className="fixed inset-x-0 top-14 bottom-0 z-[59] cursor-default"
-            style={{ background: "rgba(23,22,43,.18)" }}
+            style={{ background: T.overlay.scrim }}
           />
           <div
             id={panelId}

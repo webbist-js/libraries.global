@@ -106,11 +106,11 @@ function useOpenStatus(
 const MODE_STYLES: Record<string, string> = {
   staffed: "var(--t-palette-mint-fg)",
   self_service:
-    "repeating-linear-gradient(135deg, #2F5D3A 0 4px, #D5E6D8 4px 8px)",
-  volunteer: "#CA8A24",
+    "repeating-linear-gradient(135deg, var(--t-palette-mint-fg) 0 4px, var(--t-palette-mint-bg) 4px 8px)",
+  volunteer: "var(--t-palette-amber-fg)",
   appointment:
-    "repeating-linear-gradient(90deg, #716B86 0 2px, #E7E3EE 2px 6px)",
-  open: "#8D85C9",
+    "repeating-linear-gradient(90deg, var(--t-ink-low) 0 2px, var(--t-bg-muted) 2px 6px)",
+  open: "var(--t-accent-primary)",
 }
 
 const MODE_DESCRIPTIONS: Record<string, string> = {
@@ -201,7 +201,7 @@ export function LibraryHoursTable({
       {!compact ? (
         <div
           aria-hidden="true"
-          className="mb-2 flex justify-between px-3 text-xs tabular-nums"
+          className="hours-time-axis mb-2 flex justify-between px-3 text-xs tabular-nums"
           style={{ color: T.ink.dim }}
         >
           <span>{hourLabel(window.startHour)}</span>
@@ -322,7 +322,7 @@ export function LibraryHoursTable({
                   <div
                     aria-hidden="true"
                     className="relative mt-2 h-2.5 overflow-hidden rounded-full border"
-                    style={{ background: "#EEEAE2", borderColor: "#D8D3CA" }}
+                    style={{ background: T.bg.muted, borderColor: T.border.hi }}
                   >
                     {frames.flatMap((frame, index) => {
                       const left = timelinePercent(frame.startTime, window)

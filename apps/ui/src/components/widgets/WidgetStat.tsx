@@ -1,10 +1,7 @@
 "use client"
-import {
-  FACILITY_CHECKLIST,
-  WIDGET_ACCENTS,
-  widgetMetric,
-} from "@repo/shared-data"
+import { FACILITY_CHECKLIST, widgetMetric } from "@repo/shared-data"
 
+import { WIDGET_DATA_COLORS } from "@/components/widgets/appearance"
 import type { WidgetPresentationData } from "@/components/widgets/presentation"
 import { widgetCopy } from "@/lib/widgets/copy"
 
@@ -15,7 +12,7 @@ export function WidgetStat({
 }) {
   const { config: c, spec, rows } = data
   const t = (text: string) => widgetCopy(c.locale, text)
-  const accent = WIDGET_ACCENTS[c.accent]
+  const accent = WIDGET_DATA_COLORS[c.accent]
   const metric = widgetMetric(rows, { ...spec, groups: [] }, c)
 
   return (

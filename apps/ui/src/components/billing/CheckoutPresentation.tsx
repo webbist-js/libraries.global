@@ -65,16 +65,20 @@ export function CheckoutSteps({
               className="flex size-8 shrink-0 items-center justify-center rounded-full border sm:size-9"
               style={{
                 background: complete
-                  ? T.accent.ok
+                  ? "var(--t-palette-mint-bg)"
                   : current
-                    ? T.accent.primary
-                    : "white",
+                    ? T.action.primary
+                    : T.bg.deep,
                 borderColor: complete
-                  ? T.accent.ok
+                  ? T.edge.ok
                   : current
                     ? T.accent.primary
                     : T.border.line,
-                color: complete || current ? "white" : T.ink.dim,
+                color: complete
+                  ? T.accent.ok
+                  : current
+                    ? T.ink.inverse
+                    : T.ink.dim,
               }}
             >
               {complete ? (

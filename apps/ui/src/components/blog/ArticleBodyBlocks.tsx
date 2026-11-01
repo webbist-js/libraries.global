@@ -66,8 +66,8 @@ export function ArticleBodyBlocks({
               <figure
                 key={block.id}
                 className={cn(
-                  "overflow-hidden rounded-2xl",
-                  block.fullWidth ? "-mx-6 sm:-mx-10" : ""
+                  "mx-auto w-full min-w-0",
+                  block.fullWidth ? "max-w-none" : "max-w-prose"
                 )}
               >
                 <div className="w-full">
@@ -83,7 +83,7 @@ export function ArticleBodyBlocks({
                     width={block.image.width ?? 1600}
                     height={block.image.height ?? 900}
                     sizes="(max-width: 1023px) 100vw, 800px"
-                    className="h-auto w-full"
+                    className="mx-auto h-auto max-w-full rounded-2xl"
                   />
                 </div>
                 {block.caption ? (

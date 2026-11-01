@@ -1,6 +1,7 @@
 import type { Locale } from "next-intl"
 import { getTranslations } from "next-intl/server"
 
+import { CookieSettingsButton } from "@/components/providers/CookieSettingsButton"
 import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
 
 import styles from "./beta.module.css"
@@ -19,6 +20,7 @@ export async function BetaFooter({ locale }: { readonly locale: Locale }) {
     <footer className={styles.footer} data-beta-footer="">
       <p>{t("independent")}</p>
       <nav aria-label={t("footerLabel")}>
+        <CookieSettingsButton locale={locale} />
         <a href={legal}>{t("legal")}</a>
         <a href={`${legal}#privacy`}>{t("privacy")}</a>
         <a href={`mailto:${email}`}>{email}</a>
