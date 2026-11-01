@@ -138,8 +138,9 @@ export async function checkLibrarySlugs(
 ) {
   validateLibraries(records)
   const pending = records.filter((record) => !existing.has(record.recordId))
-  for (let start = 0; start < pending.length; start += 100) {
-    const batch = pending.slice(start, start + 100)
+  // Bound the encoded URL as well as the number of filter operands.
+  for (let start = 0; start < pending.length; start += 20) {
+    const batch = pending.slice(start, start + 20)
     const collisions = await client.findAll("libraries", {
       filters: { slug: { $in: batch.map((record) => record.data.slug) } },
       fields: ["slug"],

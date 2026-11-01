@@ -63,6 +63,24 @@ it("rejects conflicting same-year observations and unsupported country input", a
     RangeError
   )
 })
+it("includes Italy's sourced census observations in local and country catalogues", async () => {
+  state.rows = [
+    {
+      ...row,
+      key: "istat:IT:2023:country:ITA",
+      iso2: "IT",
+      level: "country",
+      reportingCode: "ITA",
+      year: 2023,
+      population: 58_971_230,
+      boundaryVersion: "20240101",
+    },
+  ]
+  expect((await atlasPopulationContext(strapi, "all")).observations).toEqual([
+    expect.objectContaining({ reportingCode: "ITA", population: 58_971_230 }),
+  ])
+  expect((await atlasPopulationContext(strapi, "IT")).iso3).toBe("ITA")
+})
 it("keeps Finnish mainland and Åland separate when updating country totals", async () => {
   state.rows = [
     {

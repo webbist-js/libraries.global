@@ -50,6 +50,12 @@ import {
   atlasAnalysisDrawers,
   type AtlasAnalysisMode as AnalysisMode,
 } from "./atlas-analysis-panels"
+import {
+  contextDataGap,
+  reachDataGap,
+  contextReleaseAtLocation,
+  type AtlasDataGap,
+} from "./atlas-data-gaps"
 import { atlasBuildingFilters, atlasViewportCamera } from "./atlas-query-input"
 import { Icon, type IconName, PANEL_STYLE } from "./atlas-ui"
 import {
@@ -89,6 +95,7 @@ import {
   useAtlasContextCatalogue,
   useAtlasContextPoint,
 } from "./AtlasContext"
+import { AtlasDataGapNotice } from "./AtlasDataGapNotice"
 import {
   AtlasBanner,
   AtlasLoading,
@@ -262,6 +269,16 @@ export function AtlasExplorer({
 }) {
   const tUi = useUiTranslations("ui")
   const tContext = useUiTranslations("atlasContext")
+  const tGaps = useUiTranslations("atlasDataGaps")
+  const [gapEncounter, setGapEncounter] = useState(0)
+  const [explicitGap, setExplicitGap] = useState<{
+    gap: AtlasDataGap
+    scope: string
+  } | null>(null)
+  const encounterDataGap = useCallback(() => {
+    setGapEncounter((n) => n + 1)
+    setExplicitGap(null)
+  }, [])
   const tNetwork = useUiTranslations("atlasNetwork")
   const tDrawers = useUiTranslations("atlasDrawers")
   const tInspect = useUiTranslations("atlasInspect")
@@ -540,6 +557,11 @@ export function AtlasExplorer({
     context.releases.find(
       (r) => r.theme === "population" && r.country === populationCountry
     ) ?? null
+  const populationAdministrativeAvailable =
+    populationCountry === "GB" ||
+    context.releases.some(
+      (r) => r.theme === "administrative" && r.country === populationCountry
+    )
   const insidePopulation =
     accessView &&
     (populationCountry === "GB"
@@ -549,7 +571,7 @@ export function AtlasExplorer({
         accessView.lat <= 61
       : context.releases.some(
           (r) =>
-            r.theme === "administrative" &&
+            (r.theme === "administrative" || r.theme === "population") &&
             r.country === populationCountry &&
             accessView.lng >= r.bounds.west &&
             accessView.lng <= r.bounds.east &&
@@ -560,10 +582,17 @@ export function AtlasExplorer({
     populationLevel === "auto"
       ? insidePopulation && (accessView?.zoom ?? 0) >= 9 && populationGrid
         ? "grid"
-        : insidePopulation && (accessView?.zoom ?? 0) >= 6
+        : insidePopulation &&
+            populationAdministrativeAvailable &&
+            (accessView?.zoom ?? 0) >= 6
           ? "local"
           : "countries"
-      : populationLevel
+      : (populationLevel === "regions" || populationLevel === "local") &&
+          !populationAdministrativeAvailable
+        ? populationGrid
+          ? "grid"
+          : "countries"
+        : populationLevel
   const contextTheme = usableLayers.includes("deprivation")
     ? "deprivation"
     : usableLayers.includes("carAccess")
@@ -575,16 +604,10 @@ export function AtlasExplorer({
   const contextChoices = context.releases.filter(
     (r) => r.theme === contextTheme
   )
-  const previousContextCountry = context.releases.find(
-    (r) => r.id === contextReleaseId
-  )?.country
   const contextRelease =
     contextTheme === "population"
       ? populationGrid
-      : (contextChoices.find((r) => r.id === contextReleaseId) ??
-        contextChoices.find((r) => r.country === previousContextCountry) ??
-        contextChoices[0] ??
-        null)
+      : contextReleaseAtLocation(contextChoices, contextReleaseId, accessView)
   const contextPoint = useAtlasContextPoint(contextRelease, contextLocation)
   useEffect(() => {
     if (
@@ -664,6 +687,7 @@ export function AtlasExplorer({
       (perCapitaGeometryError ? "Area geometry unavailable" : undefined))
     : undefined
   const selectCountry = (iso3: string) => {
+    encounterDataGap()
     setSelectedCountry(iso3 || null)
     setInspectTarget(null)
     setInspectMinimised(false)
@@ -1257,6 +1281,8 @@ export function AtlasExplorer({
 
   const pickPlace = useCallback(
     (p: Place) => {
+      encounterDataGap()
+      setContextReleaseId("")
       pushAnalyticsEvent("atlas_action", {
         interaction_source: "atlas_search",
         action_type: "filter",
@@ -1267,11 +1293,12 @@ export function AtlasExplorer({
       remember({ kind: "place", key: p.key, label: p.label, sub: p.sub })
       if (isMobile) setSheet("peek")
     },
-    [remember, isMobile, scalable, data.world, view]
+    [remember, isMobile, scalable, data.world, view, encounterDataGap]
   )
 
   const onMapSelect = useCallback(
     (id: string | null) => {
+      encounterDataGap()
       if (id)
         pushAnalyticsEvent("select_content", {
           interaction_source: "atlas_map",
@@ -1288,7 +1315,7 @@ export function AtlasExplorer({
       setSelectedStop(null)
       if (id && isMobile) setSheet("half")
     },
-    [isMobile]
+    [isMobile, encounterDataGap]
   )
   const pickStop = useCallback(
     (stop: MobileStopHit, fly = true) => {
@@ -1337,13 +1364,12 @@ export function AtlasExplorer({
 
   const onToggleLayer = useCallback(
     (id: LayerId) => {
+      encounterDataGap()
       const { layers: next, replaced: removed } = toggleLayer(usableLayers, id)
-      if (
-        (id === "deprivation" || id === "carAccess") &&
-        next.includes(id) &&
-        !next.includes("reach")
-      )
-        contextFocus.current = true
+      if (["deprivation", "carAccess"].includes(id) && next.includes(id)) {
+        setContextReleaseId("")
+        contextFocus.current = !next.includes("reach")
+      }
       pushAnalyticsEvent("atlas_action", {
         interaction_source: "atlas_layers",
         action_type: next.includes(id) ? "layer_on" : "layer_off",
@@ -1375,7 +1401,7 @@ export function AtlasExplorer({
 
       setReplaced(removed ? { removed, added: id, prev: usableLayers } : null)
     },
-    [usableLayers, isMobile, analysisMode, layerSettings]
+    [usableLayers, isMobile, analysisMode, layerSettings, encounterDataGap]
   )
 
   const closeAnalysis = () => {
@@ -1388,6 +1414,7 @@ export function AtlasExplorer({
   }
 
   const openReach = () => {
+    encounterDataGap()
     if (reachScope === "network" && usableLayers.includes("reach")) {
       setAskReachScope(true)
 
@@ -1414,25 +1441,50 @@ export function AtlasExplorer({
   }
   const populationCountries = [
     { value: "GB", label: tUi("atlas_population_uk") },
-    ...context.releases
-      .filter((r) => r.theme === "administrative" && r.level === "local")
-      .map((r) => ({ value: r.country, label: r.name })),
+    ...Array.from(
+      new Map(
+        context.releases
+          .filter(
+            (r) =>
+              r.country !== "GB" &&
+              ((r.theme === "administrative" && r.level === "local") ||
+                r.theme === "population")
+          )
+          .map((r) => [r.country, { value: r.country, label: r.name }])
+      ).values()
+    ),
   ]
   const changePopulationCountry = (country: string) => {
+    encounterDataGap()
     setPopulationCountry(country)
     setSelectedCountry(null)
     setContextLocation(null)
-    if (populationLevel === "grid" && country !== "GB")
-      setPopulationLevel("local")
+    const hasGrid = context.releases.some(
+      (r) => r.theme === "population" && r.country === country
+    )
+    const hasAdministrative =
+      country === "GB" ||
+      context.releases.some(
+        (r) => r.theme === "administrative" && r.country === country
+      )
+    if (populationLevel === "grid" && !hasGrid) setPopulationLevel("local")
+    if (
+      (populationLevel === "local" || populationLevel === "regions") &&
+      !hasAdministrative
+    )
+      setPopulationLevel(hasGrid ? "grid" : "countries")
     const bounds =
       country === "GB"
         ? populationCoverageBounds("local")
         : context.releases.find(
-            (r) => r.theme === "administrative" && r.country === country
+            (r) =>
+              (r.theme === "administrative" || r.theme === "population") &&
+              r.country === country
           )?.bounds
     if (bounds) mapRef.current?.fitBounds(bounds)
   }
   const changePopulationDetail = (level: AtlasPopulationDetail) => {
+    encounterDataGap()
     setPopulationLevel(level)
     setSelectedCountry(null)
     setContextLocation(null)
@@ -1638,6 +1690,7 @@ export function AtlasExplorer({
     },
   })
   const openInspectLayer = (layer: LayerId) => {
+    encounterDataGap()
     const drawer = atlasAnalysisDrawers([layer]).find(
       (entry) => entry.layer === layer
     )
@@ -1812,6 +1865,7 @@ export function AtlasExplorer({
             analysisMode === "accessibility" && !selectedStop
           }
           onAccessibilityAnalysis={() => {
+            encounterDataGap()
             if (analysisMode === "accessibility" && !selectedStop) {
               setAnalysisMode(null)
 
@@ -1827,6 +1881,7 @@ export function AtlasExplorer({
           }}
           onToggle={onToggleLayer}
           onClear={() => {
+            encounterDataGap()
             setUndoLayers({
               layers: usableLayers,
               mode: analysisMode,
@@ -1875,6 +1930,7 @@ export function AtlasExplorer({
                 types: types as AtlasFilters["types"],
               })),
             onAnalysis: () => {
+              encounterDataGap()
               setList(false)
               if (isMobile) setSheet(expandAtlasSheet)
               setAnalysisMode("libraryAccess")
@@ -1885,6 +1941,7 @@ export function AtlasExplorer({
           population={{
             level: populationLevel,
             onLevel: (level) => {
+              encounterDataGap()
               setPopulationLevel(level)
               setSelectedCountry(null)
               const bounds =
@@ -1905,9 +1962,25 @@ export function AtlasExplorer({
             countries: populationCountries,
             onCountry: changePopulationCountry,
             gridAvailable: Boolean(populationGrid),
+            administrativeAvailable: populationAdministrativeAvailable,
+            onUnavailable: (level) => {
+              encounterDataGap()
+              setExplicitGap({
+                gap: {
+                  id: `population-unavailable:${populationCountry}:${level}`,
+                  reasons: [
+                    level === "grid"
+                      ? "notInstalled"
+                      : "administrativeUnavailable",
+                  ],
+                },
+                scope: `${populationCountries.find((c) => c.value === populationCountry)?.label ?? populationCountry} · ${level === "grid" ? tContext("grid") : level === "regions" ? tContext("regions") : tContext(populationCountry === "IT" ? "provinces" : "municipalities")}`,
+              })
+            },
             opacity: populationOpacity,
             onOpacity: setPopulationOpacity,
             onAnalysis: () => {
+              encounterDataGap()
               setAnalysisMode("population")
               setInspectTarget(null)
               setInspectMinimised(false)
@@ -2197,6 +2270,7 @@ export function AtlasExplorer({
       }
       onContextError={() => setContextFailure(contextRelease?.id ?? null)}
       onContextPoint={(location) => {
+        encounterDataGap()
         setContextLocation(location)
         setInspectTarget(null)
         setInspectMinimised(false)
@@ -2283,6 +2357,7 @@ export function AtlasExplorer({
             releases={contextChoices}
             release={contextRelease}
             onRelease={(id) => {
+              encounterDataGap()
               setContextReleaseId(id)
               setContextLocation(null)
               const release = contextChoices.find((r) => r.id === id)
@@ -2326,6 +2401,21 @@ export function AtlasExplorer({
               countries: populationCountries,
               onCountry: changePopulationCountry,
               gridAvailable: Boolean(populationGrid),
+              administrativeAvailable: populationAdministrativeAvailable,
+              onUnavailable: (level) => {
+                encounterDataGap()
+                setExplicitGap({
+                  gap: {
+                    id: `population-unavailable:${populationCountry}:${level}`,
+                    reasons: [
+                      level === "grid"
+                        ? "notInstalled"
+                        : "administrativeUnavailable",
+                    ],
+                  },
+                  scope: `${populationCountries.find((c) => c.value === populationCountry)?.label ?? populationCountry} · ${level === "grid" ? tContext("grid") : level === "regions" ? tContext("regions") : tContext(populationCountry === "IT" ? "provinces" : "municipalities")}`,
+                })
+              },
               opacity: populationOpacity,
               onOpacity: setPopulationOpacity,
               resolvedLabel:
@@ -2711,6 +2801,7 @@ export function AtlasExplorer({
     inspectEntries[0]?.id ??
     ""
   const selectInspect = (id: string) => {
+    encounterDataGap()
     const descriptor = analysisDrawers.find(({ mode }) => mode === id)
     if (descriptor) {
       setAnalysisMode(descriptor.mode)
@@ -2767,8 +2858,138 @@ export function AtlasExplorer({
       onRemove={(entry) => animateAtlas(() => removeInspect(entry))}
     />
   )
+  const gapLayer =
+    inspectActive === "density"
+      ? "density"
+      : analysisDrawers.find((d) => d.mode === inspectActive)?.layer
+  let detectedGap: AtlasDataGap | null = null
+  switch (gapLayer) {
+    case "deprivation":
+    case "carAccess":
+      detectedGap = contextDataGap({
+        release: contextRelease,
+        releases: contextChoices,
+        location: contextLocation ?? accessView,
+        point: contextPoint.value,
+        loading: context.loading || contextPoint.loading,
+        error: Boolean(context.error || contextPoint.error || contextFailed),
+      })
+
+      break
+
+    case "population":
+      if (resolvedPopulationLevel === "grid")
+        detectedGap = contextDataGap({
+          release: populationGrid,
+          location: contextLocation ?? accessView,
+          releases: context.releases.filter((r) => r.theme === "population"),
+          point: contextPoint.value,
+          loading: context.loading || contextPoint.loading,
+          error: Boolean(context.error || contextPoint.error || contextFailed),
+          grid: true,
+        })
+      else if (
+        populationCountry !== "GB" &&
+        resolvedPopulationLevel !== "countries" &&
+        !context.loading &&
+        !context.error &&
+        !context.releases.some(
+          (r) =>
+            r.theme === "administrative" &&
+            r.country === populationCountry &&
+            r.level === resolvedPopulationLevel
+        )
+      )
+        detectedGap = {
+          id: `population-boundaries:${populationCountry}:${resolvedPopulationLevel}`,
+          reasons: ["administrativeUnavailable"],
+        }
+      else if (population.error)
+        detectedGap = { id: "population-error", reasons: ["temporaryFailure"] }
+      else if (population.data) {
+        const missing = population.data.areas.filter(
+          (a) =>
+            (selectedCountry ? a.id === selectedCountry : true) &&
+            (a.population === null || a.peoplePerKm2 === null)
+        )
+        if (missing.length)
+          detectedGap = {
+            id: `population-missing:${selectedCountry ?? "all"}`,
+            reasons: ["missingPopulation"],
+            count: missing.length,
+            details: missing.slice(0, 8).map((a) => a.name),
+          }
+      }
+
+      break
+
+    case "reach": {
+      const response =
+        reachScope === "network" ? networkReach.response : libraryReach.response
+      const reachError = reachScope === "library" ? libraryReach.error : null
+      if (response)
+        detectedGap = reachDataGap(response, reachScope === "network")
+      else if (
+        reachScope === "network" &&
+        networkSelection.selected &&
+        !networkSelection.selected.available
+      )
+        detectedGap = {
+          id: "network-unsupported",
+          reasons: ["unsupportedReach", "communityUnavailable"],
+        }
+      else if (reachError && !["rate", "allowance"].includes(reachError))
+        detectedGap = { id: "reach-error", reasons: ["temporaryFailure"] }
+
+      break
+    }
+
+    default:
+      if (
+        gapLayer === "access" &&
+        accessibilityCoverage &&
+        accessibilityCoverage.unconfirmed + accessibilityCoverage.partial > 0
+      ) {
+        detectedGap = {
+          id: "access-unconfirmed",
+          reasons: ["unconfirmedAccess"],
+          count:
+            accessibilityCoverage.unconfirmed + accessibilityCoverage.partial,
+        }
+      } else if (gapLayer === "perCapita" || gapLayer === "density") {
+        detectedGap = {
+          id: "directory-unverified",
+          reasons: ["unverifiedDirectory"],
+        }
+      }
+  }
+  const currentGap = explicitGap?.gap ?? detectedGap
+  const gapScope =
+    explicitGap?.scope ??
+    (contextLocation &&
+    ["population", "deprivation", "carAccess"].includes(gapLayer ?? "")
+      ? tGaps("location", {
+          lat: contextLocation.lat.toFixed(4),
+          lng: contextLocation.lng.toFixed(4),
+        })
+      : gapLayer === "population"
+        ? (populationCountries.find((c) => c.value === populationCountry)
+            ?.label ?? populationCountry)
+        : gapLayer === "reach"
+          ? ((reachScope === "network"
+              ? networkSelection.selected?.name
+              : selected?.name) ?? tGaps("scope"))
+          : tGaps("scope"))
   const notices = (
     <>
+      {currentGap && (gapLayer || explicitGap) ? (
+        <AtlasDataGapNotice
+          key={`${gapLayer}:${currentGap.id}:${gapEncounter}:${gapScope}:${gapLayer === "reach" ? `${reachScope}:${networkSelection.selected?.documentId ?? selectedId}:${reachMode}:${reachMinutes}` : ""}`}
+          gap={currentGap}
+          layer={layerDef(explicitGap ? "population" : gapLayer!).name}
+          scope={gapScope}
+        />
+      ) : null}
       {overlays}
       {undoLayers ? (
         <AtlasToast
@@ -3324,7 +3545,16 @@ function analysisUrlSettings(params: URLSearchParams): {
     )
       ? (populationAreas as AtlasPopulationDetail)
       : ("auto" as const),
-    populationCountry: ["GB", "SE", "NO", "DK", "FI", "AX"].includes(country)
+    populationCountry: [
+      "GB",
+      "SE",
+      "NO",
+      "DK",
+      "FI",
+      "AX",
+      "IT",
+      "IE",
+    ].includes(country)
       ? country
       : "GB",
     contextRelease: /^[a-z0-9-]{1,100}$/.test(context) ? context : "",

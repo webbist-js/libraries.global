@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": ".venv/bin/python run.py",
+    "prepare:community": ".venv/bin/python prepare_community.py",
     "prepare:context": ".venv/bin/python prepare_context.py",
-    "prepare:community": ".venv/bin/python prepare_community.py"
+    "prepare:europe": ".venv/bin/python prepare_europe_sources.py",
+    "prepare:europe-context": ".venv/bin/python prepare_europe_context.py"
   }
 }

@@ -135,6 +135,13 @@ async function mobileAtlas(query = "layers=pins") {
   await act(async () => vi.advanceTimersByTimeAsync(1000))
 }
 
+function acknowledgeGap(name: string) {
+  const dialog = screen.getByRole("dialog", { name: `Data gap · ${name}` })
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Continue with available data" })
+  )
+}
+
 function swipePanel(from: number, to: number) {
   const handle = screen.getByRole("button", { name: /^Panel size:/ })
   fireEvent.pointerDown(handle, {
@@ -187,6 +194,7 @@ it("swipes mobile controls up, back to peek and completely off the map, then reo
 
 it("allows Inspect to collapse without removing its active map layer", async () => {
   await mobileAtlas("layers=pins,density")
+  acknowledgeGap("Library density")
   expect(
     screen.getByRole("button", { name: "Panel size: half. Change size" })
   ).toBeTruthy()
@@ -245,6 +253,17 @@ it("opens the installed context analysis panel and keeps the background when Rea
   await act(async () => {
     render(<AtlasExplorer scalable />)
   })
+  acknowledgeGap("Deprivation")
+  // An installed English edition must not be selected for the initial (0, 0) view.
+  expect(observed.map.contextRelease).toBeNull()
+  await act(async () =>
+    observed.map.onView({
+      lat: 53,
+      lng: -2,
+      zoom: 8,
+      bounds: { west: -3, east: -1, south: 52, north: 54 },
+    })
+  )
   expect(screen.getByRole("tabpanel", { name: "Deprivation" })).toBeTruthy()
   expect(
     screen.getByRole("combobox", { name: "Nation and edition" })
@@ -675,6 +694,7 @@ it("keeps the mobile sheet expanded and the service calculation when switching d
   fireEvent.click(screen.getByRole("button", { name: "Calculate coverage" }))
   await act(async () => vi.advanceTimersByTimeAsync(1000))
   expect(calculationsSoFar()).toHaveLength(1)
+  acknowledgeGap("Travel-time reach")
   fireEvent.click(
     screen.getByRole("button", { name: "Panel size: half. Change size" })
   )
@@ -706,6 +726,7 @@ it("keeps the mobile sheet expanded and the service calculation when switching d
   expect(calculationsSoFar()).toHaveLength(1)
   fireEvent.click(screen.getByRole("button", { name: "Calculate coverage" }))
   await act(async () => vi.advanceTimersByTimeAsync(1000))
+  acknowledgeGap("Travel-time reach")
   const calculations = vi
     .mocked(fetch)
     .mock.calls.filter(([url]) => url === "/api/atlas/network-reach")
@@ -719,8 +740,10 @@ it("keeps the mobile sheet expanded and the service calculation when switching d
     .mock.calls.filter(([url]) => url === "/api/atlas/network-reach").length
   const fits = observed.fitBounds.mock.calls.length
   fireEvent.click(within(drawerCards).getByRole("tab", { name: "Population" }))
+  acknowledgeGap("Population density")
   expect(screen.getByRole("tabpanel", { name: "Population" })).toBeTruthy()
   fireEvent.click(within(drawerCards).getByRole("tab", { name: "Reach" }))
+  acknowledgeGap("Travel-time reach")
   await act(async () => vi.advanceTimersByTimeAsync(1000))
   expect(
     screen.getByRole("combobox", { name: "Reach scope" }).textContent
@@ -771,6 +794,7 @@ it("restores the chosen drawer from a link and supports keyboard navigation with
   )
   render(<AtlasExplorer />)
   await act(async () => vi.advanceTimersByTimeAsync(1000))
+  acknowledgeGap("Population density")
   const drawerCards = within(screen.getByRole("tablist", { name: "Inspect" }))
   expect(screen.getByRole("tabpanel", { name: "Population" })).toBeTruthy()
   expect(
@@ -908,6 +932,7 @@ it("retains the selected library as the Reach target while inspecting another la
   fireEvent.click(drawerCards.getByRole("tab", { name: "Reach" }))
   expect(observed.map.selected.id).toBe("one")
   fireEvent.click(drawerCards.getByRole("tab", { name: "Population" }))
+  acknowledgeGap("Population density")
   expect(screen.getByRole("tabpanel", { name: "Population" })).toBeTruthy()
   expect(observed.map.selected.id).toBe("one")
   fireEvent.click(drawerCards.getByRole("tab", { name: "Reach" }))
@@ -1017,7 +1042,9 @@ it("keeps service Reach independent from record inspection and switches origin o
       .mock.calls.filter(([url]) => url === "/api/atlas/network-reach").length
   const initialCalls = calls()
   expect(initialCalls).toBe(1)
+  acknowledgeGap("Travel-time reach")
   fireEvent.click(screen.getByRole("tab", { name: "Fixture library" }))
+  expect(screen.queryByRole("dialog")).toBeNull()
   fireEvent.click(screen.getByRole("button", { name: "Reach from here" }))
   expect(screen.getByText(/Reach is set to Wirral/)).toBeTruthy()
   fireEvent.click(screen.getByRole("button", { name: "Reach from here" }))
@@ -1038,6 +1065,7 @@ it("keeps service Reach independent from record inspection and switches origin o
   expect(
     new URLSearchParams(window.location.search).get("reachScope")
   ).toBeNull()
+  acknowledgeGap("Travel-time reach")
   expect(screen.getByRole("tabpanel", { name: "Reach" })).toBeTruthy()
   expect(observed.map.selected.id).toBe("one")
   expect(calls()).toBe(initialCalls)

@@ -54,9 +54,9 @@ export const ABOUT: Record<LayerId, string> = {
   population:
     "Compare official population averages across supported reporting areas, or explore the 100 m resident grid within them. Automatic detail follows map zoom. Source years stay visible. Library filters do not change population, and the shading can stay beneath Reach.",
   deprivation:
-    "Small-area deprivation in England (IMD 2025), Wales (WIMD 2025), Scotland (SIMD 2020v2) and Northern Ireland (NIMDM 2017). Compare areas within the same nation and edition. Show this beneath Reach to explore access in context; ranks do not measure individual residents or library use.",
+    "Published deprivation measures where coverage is available. Compare areas within the same country and edition; source categories and national deciles are kept distinct. Missing areas remain unknown. Show this beneath Reach to explore access in context.",
   carAccess:
-    "Share of households with no car or van available in Census 2021, for England and Wales. Compare walking and cycling reach with household transport constraints. These are household figures, not resident counts.",
+    "Share of households with no car available in supported census areas. Source years and definitions, including whether vans are included, stay visible. These are household figures, not resident counts; missing coverage remains unknown.",
   transit:
     "Public transport stops and lines from OpenStreetMap and GTFS feeds.",
   schools: "Schools from government registers.",

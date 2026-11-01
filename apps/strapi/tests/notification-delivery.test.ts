@@ -274,6 +274,9 @@ describe("weekly community report", () => {
         documentId: "c1",
         libraryDocumentId: "new",
         batchId: "new-batch",
+        // A first publish records the published version as one * row.
+        field: "*",
+        next: { documentId: "new" },
         versionStatus: "published",
         action: "publish",
         source: "admin",
@@ -283,6 +286,9 @@ describe("weekly community report", () => {
         documentId: "c2",
         libraryDocumentId: "old",
         batchId: "old-batch",
+        // A first publish records the published version as one * row.
+        field: "*",
+        next: { documentId: "old" },
         versionStatus: "published",
         action: "publish",
         source: "admin",
@@ -302,6 +308,9 @@ describe("weekly community report", () => {
         documentId: "d1",
         libraryDocumentId: "draft",
         batchId: "secret",
+        // A first publish records the published version as one * row.
+        field: "*",
+        next: { documentId: "draft" },
         versionStatus: "published",
         action: "publish",
         source: "admin",

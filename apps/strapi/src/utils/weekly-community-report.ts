@@ -90,31 +90,29 @@ export async function communityWeek(strapi: any, start: Date, end: Date) {
     "documentId",
   ])
   const publicIds = new Set(libraries.map((r) => r.documentId))
-  const published = [
-    ...new Set<string>(
-      changes
-        .filter(
-          (r) => r.action !== "update" && publicIds.has(r.libraryDocumentId)
-        )
-        .map((r) => r.libraryDocumentId)
-    ),
-  ]
-  const old = new Set<string>()
-  for (let i = 0; i < published.length; i += 100) {
-    const earlier = await rows(
-      strapi,
-      LIBRARY_CHANGE,
-      {
-        libraryDocumentId: { $in: published.slice(i, i + 100) },
-        versionStatus: "published",
-        action: { $in: ["create", "publish"] },
-        changedAt: { $lt: start.toISOString() },
-      },
-      ["libraryDocumentId"]
-    )
-    for (const r of earlier) old.add(r.libraryDocumentId)
-  }
-  const newLibraries = published.filter((id) => !old.has(id)).length
+  // Newly published: a library whose first public version arrived this
+  // week, i.e. a whole-version `*` row with content (a first publish, an
+  // approved new library or a republish after an unpublish). Imports record
+  // no such rows. Earlier history isn't consulted, so pruning old Change
+  // Records can't turn an existing library into a "new" one.
+  const firstVersions = await rows(
+    strapi,
+    LIBRARY_CHANGE,
+    {
+      versionStatus: "published",
+      action: { $in: ["create", "publish", "update"] },
+      source: { $ne: "import" },
+      field: "*",
+      next: { $notNull: true },
+      changedAt: period,
+    },
+    ["libraryDocumentId"]
+  )
+  const newLibraries = new Set(
+    firstVersions
+      .map((r) => r.libraryDocumentId)
+      .filter((id) => publicIds.has(id))
+  ).size
   const edits = new Set(
     changes
       .filter(

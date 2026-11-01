@@ -12,6 +12,8 @@ ingests/
   czechia/     National Library CADR directory
   mexico/      SIC National Network of Public Libraries (all 32 states)
   canada/      Statistics Canada ODCAF library subset (historical, partial coverage)
+  ireland/     Four licensed council feeds (partial national coverage)
+  italy/       ICCU national directory (CC0)
   usa/         states.ts (every US ingest), plus one folder per dataset
     imls-pls/
 ```
@@ -36,6 +38,8 @@ pnpm ingest --dataset=fr-culture-libraries --check-cms
 pnpm ingest --dataset=nkp-cadr --check-cms
 pnpm ingest --dataset=mx-sic-rnbp --check-cms
 pnpm ingest --dataset=ca-statcan-odcaf --check-cms
+pnpm ingest --dataset=it-iccu --local --check-cms
+pnpm ingest --dataset=ie-fingal-libraries --local --check-cms
 
 # Existing adapters retain their own flags and mapping rules
 pnpm ingest --dataset=imls-pls --state=NY
@@ -56,6 +60,11 @@ Library creates default to one request at a time. `--concurrency=1..4` enables b
 Before launch, review and publish new drafts, then run the existing Meilisearch reseed. The report lists legacy places that need editorial review. Finland's old provinces and Lapland subregions remain untouched; the adapter creates the current Regions and Municipalities alongside them and uses only the current hierarchy for new Libraries. The general GeoNames importer still uses its existing Finland profile and should not be used to refresh Finland's current hierarchy.
 
 ## Adding one
+
+Ireland and Italy have explicit target selection for CMS checks/writes. See
+[Ireland](ireland/councils/README.md), [Italy](italy/iccu/README.md) and
+[Atlas source preparation](../../../analysis/EUROPE-IMPORTS.md) for coverage,
+licences, replay commands and remaining analytical acceptance.
 
 1. Check the licence allows republication under CC BY-SA 4.0 (see CONTRIBUTING.md, Provenance), then add the dataset to `src/seeds/datasets.ts`.
 2. Make a folder `<country>/<dataset-key>/` with:

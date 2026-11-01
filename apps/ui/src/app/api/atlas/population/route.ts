@@ -57,7 +57,8 @@ export async function GET(req: Request) {
       (key) =>
         !["level", "country"].includes(key) || params.getAll(key).length !== 1
     ) ||
-    !["GB", "SE", "NO", "DK", "FI", "AX"].includes(country) ||
+    (!["GB", "SE", "NO", "DK", "FI", "AX", "IT"].includes(country) &&
+      !(country === "IE" && level === "countries")) ||
     !["countries", "regions", "local"].includes(level)
   )
     return Response.json(
