@@ -295,7 +295,6 @@ export function PlaceContributionCard({
                 <li key={key}>
                   <GlobalLink
                     href={gapLibrariesHref(place, key)}
-                    aria-label={`${copy.title}: ${total ? `${total.missing.toLocaleString("en-GB")} ${total.missing === 1 ? "library" : "libraries"} ${copy.need}` : `Libraries in ${name} ${copy.need}`}`}
                     className="-mx-2 block min-h-11 rounded-xl px-2 py-3 no-underline hover:bg-(--t-bg-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
                   >
                     <span className="block text-sm leading-[1.4] font-semibold text-(--t-accent-primary) underline underline-offset-3">
@@ -308,6 +307,9 @@ export function PlaceContributionCard({
                       {total
                         ? `${total.missing.toLocaleString("en-GB")} ${total.missing === 1 ? "library" : "libraries"}`
                         : "Choose a library"}
+                    </span>
+                    <span className="sr-only">
+                      {total ? ` ${copy.need}` : ` in ${name} ${copy.need}`}
                     </span>
                   </GlobalLink>
                 </li>
